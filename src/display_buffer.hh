@@ -30,10 +30,10 @@ size_t hash_value(const BufferRange& range)
 struct DisplayAtom : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:
-    enum Type { BufferRange, ReplacedBufferRange, Text };
+    enum Type { Range, ReplacedRange, Text };
 
     DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end)
-        : m_type(BufferRange), m_buffer(&buffer), m_range{begin, end}
+        : m_type(Range), m_buffer(&buffer), m_range{begin, end}
      { check_invariant(); }
 
     DisplayAtom(String str, Face face = Face{})
@@ -57,14 +57,14 @@ public:
 
     void replace(String text)
     {
-        kak_assert(m_type == BufferRange);
-        m_type = ReplacedBufferRange;
+        kak_assert(m_type == Range);
+        m_type = ReplacedRange;
         m_text = std::move(text);
     }
 
     bool has_buffer_range() const
     {
-        return m_type == BufferRange or m_type == ReplacedBufferRange;
+        return m_type == Range or m_type == ReplacedRange;
     }
 
     const Buffer& buffer() const { kak_assert(m_buffer); return *m_buffer; }
@@ -91,7 +91,7 @@ private:
     Type m_type;
 
     const Buffer* m_buffer = nullptr;
-    Kakoune::BufferRange m_range;
+    BufferRange m_range;
     String m_text;
 };
 

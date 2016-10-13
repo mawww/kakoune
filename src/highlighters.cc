@@ -41,7 +41,7 @@ void highlight_range(DisplayBuffer& display_buffer,
 
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            bool is_replaced = atom_it->type() == DisplayAtom::ReplacedBufferRange;
+            bool is_replaced = atom_it->type() == DisplayAtom::ReplacedRange;
 
             if (not atom_it->has_buffer_range() or
                 (skip_replaced and is_replaced))
@@ -103,7 +103,7 @@ void apply_highlighter(const Context& context,
                 if (not atom_it->has_buffer_range() or end <= atom_it->begin() or begin >= atom_it->end())
                     continue;
 
-                bool is_replaced = atom_it->type() == DisplayAtom::ReplacedBufferRange;
+                bool is_replaced = atom_it->type() == DisplayAtom::ReplacedRange;
                 if (atom_it->begin() <= begin)
                 {
                     if (is_replaced or atom_it->begin() == begin)
@@ -654,7 +654,7 @@ void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuf
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            if (atom_it->type() != DisplayAtom::BufferRange)
+            if (atom_it->type() != DisplayAtom::Range)
                 continue;
 
             auto begin = buffer.iterator_at(atom_it->begin());
@@ -690,7 +690,7 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            if (atom_it->type() != DisplayAtom::BufferRange)
+            if (atom_it->type() != DisplayAtom::Range)
                 continue;
 
             auto begin = buffer.iterator_at(atom_it->begin());
@@ -878,7 +878,7 @@ void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuf
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            if (atom_it->type() == DisplayAtom::BufferRange)
+            if (atom_it->type() == DisplayAtom::Range)
             {
                 for (auto it  = buffer.iterator_at(atom_it->begin()),
                           end = buffer.iterator_at(atom_it->end()); it < end;)

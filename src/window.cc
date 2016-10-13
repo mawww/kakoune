@@ -197,7 +197,7 @@ static ColumnCount adapt_view_pos(const DisplayBuffer& display_buffer, ColumnCou
                 if (atom.begin() <= pos and atom.end() > pos)
                 {
                     ColumnCount pos_beg, pos_end;
-                    if (atom.type() == DisplayAtom::BufferRange)
+                    if (atom.type() == DisplayAtom::Range)
                     {
                         auto& buf = atom.buffer();
                         pos_beg = buffer_column +
@@ -271,7 +271,7 @@ ColumnCount find_display_column(const DisplayLine& line, const Buffer& buffer,
         if (atom.has_buffer_range() and
             coord >= atom.begin() and coord < atom.end())
         {
-            if (atom.type() == DisplayAtom::BufferRange)
+            if (atom.type() == DisplayAtom::Range)
                 column += column_length(buffer, atom.begin(), coord);
             return column;
         }
@@ -289,7 +289,7 @@ BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
         ColumnCount len = atom.length();
         if (atom.has_buffer_range() and column < len)
         {
-            if (atom.type() == DisplayAtom::BufferRange)
+            if (atom.type() == DisplayAtom::Range)
                 return buffer.clamp(
                     utf8::advance(buffer.iterator_at(atom.begin()),
                                   buffer.iterator_at(range.end),

@@ -41,7 +41,7 @@ StringView DisplayAtom::content() const
 {
     switch (m_type)
     {
-        case BufferRange:
+        case Range:
         {
             auto line = (*m_buffer)[m_range.begin.line];
             if (m_range.begin.line == m_range.end.line)
@@ -51,7 +51,7 @@ StringView DisplayAtom::content() const
             break;
         }
         case Text:
-        case ReplacedBufferRange:
+        case ReplacedRange:
             return m_text;
     }
     kak_assert(false);
@@ -62,10 +62,10 @@ ColumnCount DisplayAtom::length() const
 {
     switch (m_type)
     {
-        case BufferRange:
+        case Range:
             return column_length(*m_buffer, m_range.begin, m_range.end);
         case Text:
-        case ReplacedBufferRange:
+        case ReplacedRange:
             return m_text.column_length();
     }
     kak_assert(false);
@@ -74,7 +74,7 @@ ColumnCount DisplayAtom::length() const
 
 void DisplayAtom::trim_begin(ColumnCount count)
 {
-    if (m_type == BufferRange)
+    if (m_type == Range)
         m_range.begin = utf8::advance(m_buffer->iterator_at(m_range.begin),
                                       m_buffer->iterator_at(m_range.end),
                                       count).coord();
@@ -85,7 +85,7 @@ void DisplayAtom::trim_begin(ColumnCount count)
 
 void DisplayAtom::trim_end(ColumnCount count)
 {
-    if (m_type == BufferRange)
+    if (m_type == Range)
         m_range.end = utf8::advance(m_buffer->iterator_at(m_range.end),
                                     m_buffer->iterator_at(m_range.begin),
                                     -count).coord();
@@ -113,7 +113,7 @@ DisplayLine::DisplayLine(AtomList atoms)
 
 DisplayLine::iterator DisplayLine::split(iterator it, BufferCoord pos)
 {
-    kak_assert(it->type() == DisplayAtom::BufferRange);
+    kak_assert(it->type() == DisplayAtom::Range);
     kak_assert(it->begin() < pos);
     kak_assert(it->end() > pos);
 
@@ -182,12 +182,12 @@ void DisplayLine::optimize()
             atom.type() ==  next_atom.type())
         {
             auto type = atom.type();
-            if ((type == DisplayAtom::BufferRange or
-                 type == DisplayAtom::ReplacedBufferRange) and
+            if ((type == DisplayAtom::Range or
+                 type == DisplayAtom::ReplacedRange) and
                 next_atom.begin() == atom.end())
             {
                 atom.m_range.end = next_atom.end();
-                if (type == DisplayAtom::ReplacedBufferRange)
+                if (type == DisplayAtom::ReplacedRange)
                     atom.m_text += next_atom.m_text;
                 merged = true;
             }
