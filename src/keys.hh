@@ -100,12 +100,6 @@ constexpr Key ctrlalt(Codepoint key) { return { Key::Modifiers::ControlAlt, key 
 
 constexpr Codepoint encode_coord(DisplayCoord coord) { return (Codepoint)(((int)coord.line << 16) | ((int)coord.column & 0x0000FFFF)); }
 
-constexpr Key mouse_press(DisplayCoord pos) { return { Key::Modifiers::MousePress, encode_coord(pos) }; }
-constexpr Key mouse_release(DisplayCoord pos) { return { Key::Modifiers::MouseRelease, encode_coord(pos) }; }
-constexpr Key mouse_pos(DisplayCoord pos) { return { Key::Modifiers::MousePos, encode_coord(pos) }; }
-constexpr Key mouse_wheel_down(DisplayCoord pos) { return { Key::Modifiers::MouseWheelDown, encode_coord(pos) }; }
-constexpr Key mouse_wheel_up(DisplayCoord pos) { return { Key::Modifiers::MouseWheelUp, encode_coord(pos) }; }
-
 constexpr Key resize(DisplayCoord dim) { return { Key::Modifiers::Resize, encode_coord(dim) }; }
 
 inline size_t hash_value(const Key& key) { return hash_values(key.modifiers, key.key); }

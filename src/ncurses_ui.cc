@@ -487,6 +487,7 @@ bool NCursesUI::is_key_available()
     return c != ERR;
 }
 
+
 Key NCursesUI::get_key()
 {
     check_resize();
@@ -498,12 +499,27 @@ Key NCursesUI::get_key()
         MEVENT ev;
         if (getmouse(&ev) == OK)
         {
-            DisplayCoord pos{ ev.y - (m_status_on_top ? 1 : 0), ev.x };
-            if (BUTTON_PRESS(ev.bstate, 1)) return mouse_press(pos);
-            if (BUTTON_RELEASE(ev.bstate, 1)) return mouse_release(pos);
-            if (BUTTON_PRESS(ev.bstate, m_wheel_down_button)) return mouse_wheel_down(pos);
-            if (BUTTON_PRESS(ev.bstate, m_wheel_up_button)) return mouse_wheel_up(pos);
-            return mouse_pos(pos);
+            auto get_modifiers = [this](mmask_t mask) {
+                Key::Modifiers res{};
+
+                if (mask & BUTTON_CTRL)
+                    res |= Key::Modifiers::Control;
+                if (mask & BUTTON_ALT)
+                    res |= Key::Modifiers::Alt;
+
+                if (BUTTON_PRESS(mask, 1))
+                    return res | Key::Modifiers::MousePress;
+                if (BUTTON_RELEASE(mask, 1))
+                    return res | Key::Modifiers::MouseRelease;
+                if (BUTTON_PRESS(mask, m_wheel_down_button))
+                    return res | Key::Modifiers::MouseWheelDown;
+                if (BUTTON_PRESS(mask, m_wheel_up_button))
+                    return res | Key::Modifiers::MouseWheelUp;
+                return res | Key::Modifiers::MousePos;
+            };
+
+            return { get_modifiers(ev.bstate),
+                     encode_coord({ ev.y - (m_status_on_top ? 1 : 0), ev.x }) };
         }
     }
 

@@ -113,10 +113,10 @@ KeyList parse_keys(StringView str)
 
 String key_to_str(Key key)
 {
-    if (key.modifiers & Key::Modifiers::MouseEvent)
+    if (auto mouse_event = (key.modifiers & Key::Modifiers::MouseEvent))
     {
         const auto coord = key.coord() + DisplayCoord{1,1};
-        switch (key.modifiers)
+        switch ((Key::Modifiers)mouse_event)
         {
             case Key::Modifiers::MousePos:
                 return format("<mouse:move:{}.{}>", coord.line, coord.column);

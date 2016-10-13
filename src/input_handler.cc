@@ -75,12 +75,21 @@ struct MouseHandler
 
         Buffer& buffer = context.buffer();
         BufferCoord cursor;
-        switch (key.modifiers)
+        auto& selections = context.selections();
+        switch ((Key::Modifiers)(key.modifiers & Key::Modifiers::MouseEvent))
         {
         case Key::Modifiers::MousePress:
             m_dragging = true;
             m_anchor = context.window().buffer_coord(key.coord());
-            context.selections_write_only() = SelectionList{ buffer, m_anchor };
+            if (not (key.modifiers & Key::Modifiers::Control))
+                context.selections_write_only() = { buffer, m_anchor};
+            else
+            {
+                size_t main = selections.size();
+                selections.push_back({m_anchor});
+                selections.set_main_index(main);
+                selections.sort_and_merge_overlapping();
+            }
             return true;
 
         case Key::Modifiers::MouseRelease:
@@ -88,16 +97,16 @@ struct MouseHandler
                 return true;
             m_dragging = false;
             cursor = context.window().buffer_coord(key.coord());
-            context.selections_write_only() =
-                SelectionList{ buffer, Selection{buffer.clamp(m_anchor), cursor} };
+            selections.main() = {buffer.clamp(m_anchor), cursor};
+            selections.sort_and_merge_overlapping();
             return true;
 
         case Key::Modifiers::MousePos:
             if (not m_dragging)
                 return true;
             cursor = context.window().buffer_coord(key.coord());
-            context.selections_write_only() =
-                SelectionList{ buffer, Selection{buffer.clamp(m_anchor), cursor} };
+            selections.main() = {buffer.clamp(m_anchor), cursor};
+            selections.sort_and_merge_overlapping();
             return true;
 
         case Key::Modifiers::MouseWheelDown:
