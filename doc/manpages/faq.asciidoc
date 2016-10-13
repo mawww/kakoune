@@ -1,0 +1,149 @@
+KAKOUNE(1)
+==========
+
+NAME
+----
+faq - a
+
+How to pronounce the name of the project and what does it mean ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The name of the project is pronounced "Kak-oon", and is a word taken from a
+New Caledonian dialect based on french. It means a hard blow, usually a punch,
+but generally refers to a blow into which which all of one's strength went.
+
+Is there going to be a Windows port of Kakoune ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As many features provided by UNIX systems would be missing, or if anything
+much less efficient on a Windows system, the incentive to porting the
+project to this operating system is pretty low.
+
+Moreover, you can get pretty decent performance by using Kakoune on Cygwin
+(which is officially supported).
+
+Can you get rid of the `boost` dependency and just use std::regex ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `boost-regex` library provides use with several features that are heavily
+relied upon across several core scripts, and a few of them are not available
+in the standard `std::regex` implementations. Therefore, until the standard
+catches up with `boost` in terms of features, the latter will remain a hard
+-mandatory- dependency.
+
+Kakoune is very slow on big files, what can I do about it ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The default build mode (set in the `Makefile` of the `src` directory of the
+project) is "debug", which makes it convenient to track issues but also
+affects performance. To disable the debug mode, recompile the project by
+setting the `debug` variable in `src/Makefile` to `no`.
+
+Note that if your distribution provides a "kakoune" package, the program should
+already be built in non-debug mode (if you still experience slowness, please
+report the issue on the bug tracker).
+
+Can I use Kakoune as a pager ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Kakoune can be used as a pager, either by setting the `EDITOR` environment
+variable to `kak`, or by writing data directly to its standard input using a
+shell pipeline. However, since the program relies on several heavy dynamic
+libraries (`boost` being one of them), it will be slightly less practical
+than other regular pagers (such as `less` or `more`) which have a minimal
+amount of runtime dependencies.
+
+Are there any non-console based frontends available ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+No graphical frontend is currently officially maintained, you can however
+try experimental community-developed ones.
+
+Why are colors misrendered in my Kakoune clients ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The most probable cause for that is a very widespread practice that consists
+in setting the `TERM` environment variable in the shell's configuration file.
+This variable should be set by the terminal emulator, and not overridden with
+an arbitrary value, otherwise it might interfere with general UI rendering on
+the terminal's window.
+
+Note that if you're using `tmux`, the proper -official- way to get Kakoune to
+work is to add the following line to your `tmux` configuration file:
+`set -sg default-terminal screen-256color`
+
+How do I automatically indent code, as Vim does with `=` ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As `Kakoune` doesn't parse the contents of the buffers, there is no builtin
+equivalent for this Vim feature. Use a formatter/prettifier dedicated to
+the language you're using with the help of the `|` key.
+
+Example: `%|indent<ret>` to indent an entire buffer with C code.
+
+Note that some languages have a default formatter set, which you can use
+with the `:format` command.
+
+Can Kakoune automatically complete the parameters of my functions ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As mentioned in the above question about Vim's `=` key, Kakoune does not
+parse the contents of a buffer by itself, which makes it impossible for
+the editor to propose candidates upon completion.
+
+However, support for such a feature can be achieved through the use of a
+dedicated tool, as is the case with `clang` and C code: you can use the
+`clang-enable-autocomplete` and `clang-complete` builtin commands whenever
+editing a C/C++ file, and completion will work on function parameters.
+
+Note that the same features are available for python buffers, with the
+`jedi` script.
+
+Why aren't widely known command line shortcuts such as <c-w> or <c-u> available in Kakoune ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Despite their widespread availability in multiple tools, those shortcuts do
+not fit the paradigm that Kakoune implements, which is based on selections
+first.
+
+However, you can easily declare key mappings in your configuration file
+to be able to use those control-based shortcuts in insert mode (c.f. the
+"map" command in the "commands" documentation page).
+
+How can I explore the filesystem the way Vim's NerdTree does ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The builtin file completion engine used when opening a file for editing
+(using the `:edit` command and letting the suggestions popup in the menu
+beneath) is much more convenient than Vim's, which should suit basic needs.
+
+However, if you need an actual explorer to interact with the editor,
+you can create a Kakoune script that will spawn the tool in question,
+which should in return send an "edit" command followed by the path of the
+file you selected to the current Kakoune session (e.g. `echo "eval -client
+$kak_client edit /path/to/file" | kak -p $kak_session`).
+
+Why aren't there other scopes similar to `%sh{}` e.g. python ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Supporting custom scopes would add hard dependencies to the project, which
+is too much of an drawback when balanced against the low cost of using
+an interpreter in a regular shell scope (e.g. `%sh{ python -c "..." }`).
+The shell scope allows users to spawn any interpreter they want, for a minimal
+cost in terms of performance, it is therefore the reason why it's the only
+one available by default.
+
+Can I disable auto-indentation completely ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All the indentation hooks are conventionally named `<lang>-indent`, which
+allows us to use the `disabled_hooks` variable to disable indentation
+globally with the following command: `set global disabled_hooks '.+-indent'`
+
+Can I disable syntax highlighting completely ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Similarly to the indentation hooks, the name format followed by the
+highlighting hooks is `<lang>-highlight`. You can thus disable syntax
+highlighting using the following command: `set global disabled_hooks
+'.+-highlight'`
