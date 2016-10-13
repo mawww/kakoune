@@ -60,8 +60,8 @@ def -hidden _python_indent_on_new_line %{
         # cleanup trailing whitespaces from previous line
         try %{ exec -draft k <a-x> s \h+$ <ret> d }
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
-        # indent after :
+        try %{ exec -draft k x s ^\h*#\h* <ret> y jgh P }
+        # indent after line ending with :
         try %{ exec -draft <space> k x <a-k> :$ <ret> j <a-gt> }
     }
 }
