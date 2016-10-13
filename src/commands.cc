@@ -566,9 +566,6 @@ void delete_buffer(const ParametersParser& parser, Context& context, const Shell
     if (not force and (buffer.flags() & Buffer::Flags::File) and buffer.is_modified())
         throw runtime_error(format("buffer '{}' is modified", buffer.name()));
 
-    if (manager.count() == 1)
-        throw runtime_error(format("buffer '{}' is the last one", buffer.name()));
-
     manager.delete_buffer(buffer);
 }
 

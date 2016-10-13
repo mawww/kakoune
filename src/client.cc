@@ -144,7 +144,8 @@ void Client::change_buffer(Buffer& buffer)
     if (m_buffer_reload_dialog_opened)
         close_buffer_reload_dialog();
 
-    m_last_buffer = &m_window->buffer();
+    auto* current = &m_window->buffer();
+    m_last_buffer = contains(BufferManager::instance(), current) ? current : nullptr;
 
     auto& client_manager = ClientManager::instance();
     m_window->options().unregister_watcher(*this);

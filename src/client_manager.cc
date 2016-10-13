@@ -109,33 +109,21 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
 {
     for (auto& client : m_clients)
     {
-        client->context().jump_list().forget_buffer(buffer);
+        auto& context = client->context();
+        context.jump_list().forget_buffer(buffer);
         if (client->last_buffer() == &buffer)
             client->set_last_buffer(nullptr);
 
-        if (&client->context().buffer() != &buffer)
+        if (&context.buffer() != &buffer)
             continue;
 
-        if (client->context().is_editing())
+        if (context.is_editing())
             throw runtime_error(format("client '{}' is inserting in buffer '{}'",
-                                       client->context().name(),
+                                       context.name(),
                                        buffer.display_name()));
 
-        if (Buffer* last_buffer = client->last_buffer())
-        {
-            client->context().change_buffer(*last_buffer);
-            continue;
-        }
-
-        for (auto& buf : BufferManager::instance())
-        {
-            if (buf.get() != &buffer)
-            {
-               client->context().change_buffer(*buf);
-               client->set_last_buffer(nullptr);
-               break;
-            }
-        }
+        Buffer* last = client->last_buffer();
+        context.change_buffer(last ? *last : BufferManager::instance().get_first_buffer());
     }
     auto end = std::remove_if(m_free_windows.begin(), m_free_windows.end(),
                               [&buffer](const WindowAndSelections& ws)
