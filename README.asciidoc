@@ -871,12 +871,15 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
  * `scrolloff` _coord_: number of lines,columns to keep visible around
    the cursor when scrolling.
  * `eolformat` _enum(lf|crlf)_: the format of end of lines when
-   writing a buffer, this is autodetected on load.
+   writing a buffer, this is autodetected on load; values of this option
+   assigned to the `window` scope are ignored
  * `BOM` _enum(none|utf8)_: define if the file should be written
-   with an unicode byte order mark.
+   with an unicode byte order mark. Values of this option assigned to the
+   `window` scope are ignored
  * `readonly` _bool_: prevent modifications from being saved to disk, all
    buffers if set to `true` in the `global` scope, or current buffer if set in
-   the `buffer` scope.
+   the `buffer` scope; values of this option assigned to the `window` scope are
+   ignored
  * `incsearch` _bool_: execute search as it is typed
  * `aligntab` _bool_: use tabs for alignment command
  * `autoinfo` _flags(command|onkey|normal)_: display automatic information

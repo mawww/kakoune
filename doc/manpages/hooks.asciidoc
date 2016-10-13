@@ -15,7 +15,8 @@ register a hook use the following command:
 hook [-group <group>] <scope> <hook_name> <filtering_regex> <commands>
 ----------------------------------------------------------------------
 
-*scope* can be one of *global*, *buffer* or *window*.
+*scope* can be one of *global*, *buffer* or *window* (c.f. the
+'scopes' documentation page).
 
 *command* is a string containing the commands to execute when the hook
 is called.

@@ -38,23 +38,8 @@ Types
 	a set of flags, taking a combination of the given values joined by a
 	'|' character
 
-Scopes
-------
-*window*::
-	context linked to the window displaying a buffer
-*buffer*::
-	context linked directly to the buffer
-*global*::
-	global context linked to the instance of Kakoune
-
-Options can have individual values that change from one scope to the other,
-which will be considered one after another in the following order: *window*
-→  *buffer* →  *global*.  That means that two windows on the same buffer
-can use different options (e.g. different *filetype*).  However some options
-might end up being ignored if their scope is not in the command context.
-For example, writing a file never uses the *window* scope when considering
-options, so any option related to writing won't be taken into account if
-set in the *window* scope (e.g. *BOM*, *eolformat*).
+Refer to the 'scopes' documentation page for more information about
+scopes.
 
 Builtin options
 ---------------
@@ -71,15 +56,18 @@ Builtin options
 
 *eolformat* 'enum(lf|crlf)'::
 	the format of end of lines when writing a buffer, this is autodetected
-	on load
+	on load; values of this option assigned to the `window` scope are
+	ignored
 
 *BOM* 'enum(none|utf8)'::
-	define if the file should be written with an unicode byte order mark
+	define if the file should be written with an unicode byte order mark;
+	values of this option assigned to the `window` scope are ignored
 
 *readonly* 'bool'::
-	prevent modifications from being saved to disk, all
-	buffers if set to `true` in the `global` scope, or current buffer if set in
-	the `buffer` scope.
+	prevent modifications from being saved to disk, all buffers if set
+	to `true` in the `global` scope, or current buffer if set in the
+	`buffer` scope; values of this option assigned to the `window`
+	scope are ignored
 
 *incsearch* 'bool'::
 	execute search as it is typed

@@ -83,7 +83,9 @@ command *q!* has to be used).
 	does nothing, but arguments will be evaluated (e.g. shell expansion)
 
 *set* <scope> <name> <value>::
-	change the value of an option (c.f. the 'options' documentation page)
+	change the value of an option (c.f. the 'options' documentation page),
+	note that the name of a particular buffer can be specified when the
+	target *scope* is 'buffer', e.g. set buffer=/path/to/buffer foo "bar"
 
 *unset* <scope> <name>::
 	unset the value of an option (c.f. the 'options' documentation page)
