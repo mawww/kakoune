@@ -392,24 +392,26 @@ static CandidateList candidates(ConstArrayView<RankedMatch> matches, StringView 
 }
 
 CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
-                                ByteCount cursor_pos, bool only_dir)
+                                ByteCount cursor_pos, FilenameFlags flags)
 {
-    String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
+    prefix = prefix.substr(0, cursor_pos);
     StringView dirname, fileprefix;
-    std::tie(dirname, fileprefix) = split_path(real_prefix);
+    std::tie(dirname, fileprefix) = split_path(prefix);
+    auto parsed_dirname = parse_filename(dirname);
 
     const bool check_ignored_regex = not ignored_regex.empty() and
         not regex_match(fileprefix.begin(), fileprefix.end(), ignored_regex);
     const bool include_hidden = fileprefix.substr(0_byte, 1_byte) == ".";
+    const bool only_dirs = (flags & FilenameFlags::OnlyDirectories);
 
-    auto filter = [&ignored_regex, check_ignored_regex, include_hidden, only_dir](const dirent& entry, struct stat& st)
+    auto filter = [&ignored_regex, check_ignored_regex, include_hidden, only_dirs](const dirent& entry, struct stat& st)
     {
         StringView name{entry.d_name};
         return (include_hidden or name.substr(0_byte, 1_byte) != ".") and
                (not check_ignored_regex or not regex_match(name.begin(), name.end(), ignored_regex)) and
-               (not only_dir or S_ISDIR(st.st_mode));
+               (not only_dirs or S_ISDIR(st.st_mode));
     };
-    auto files = list_files(dirname, filter);
+    auto files = list_files(parsed_dirname, filter);
     Vector<RankedMatch> matches;
     for (auto& file : files)
     {
@@ -417,7 +419,8 @@ CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
             matches.push_back(match);
     }
     std::sort(matches.begin(), matches.end());
-    return candidates(matches, dirname);
+    const bool expand = (flags & FilenameFlags::Expand);
+    return candidates(matches, expand ? parsed_dirname : dirname);
 }
 
 Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)

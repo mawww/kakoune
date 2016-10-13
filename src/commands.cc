@@ -111,7 +111,7 @@ auto filename_completer = make_completer(
     { return Completions{ 0_byte, cursor_pos,
                           complete_filename(prefix,
                                             context.options()["ignored_files"].get<Regex>(),
-                                            cursor_pos) }; });
+                                            cursor_pos, FilenameFlags::Expand) }; });
 
 static Completions complete_buffer_name(const Context& context, CompletionFlags flags,
                                         StringView prefix, ByteCount cursor_pos)
@@ -873,7 +873,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
              auto& ignored_files = context.options()["ignored_files"].get<Regex>();
              return Completions{ 0_byte, pos_in_token,
                                  complete_filename(prefix, ignored_files,
-                                                   pos_in_token) };
+                                                   pos_in_token, FilenameFlags::Expand) };
         };
     }
     else if (parser.get_switch("client-completion"))
@@ -1678,7 +1678,8 @@ const CommandDesc prompt_cmd = {
                            StringView prefix, ByteCount cursor_pos) -> Completions {
                 auto& ignored_files = context.options()["ignored_files"].get<Regex>();
                 return { 0_byte, cursor_pos,
-                         complete_filename(prefix, ignored_files, cursor_pos) };
+                         complete_filename(prefix, ignored_files, cursor_pos,
+                                           FilenameFlags::Expand) };
             };
         else if (parser.get_switch("client-completion"))
             completer = [](const Context& context, CompletionFlags,
@@ -1968,7 +1969,7 @@ const CommandDesc change_working_directory_cmd = {
              return { 0_byte, cursor_pos,
                       complete_filename(prefix,
                                         context.options()["ignored_files"].get<Regex>(),
-                                        cursor_pos, true) };
+                                        cursor_pos, FilenameFlags::OnlyDirectories) };
         }),
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {

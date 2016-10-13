@@ -5,6 +5,7 @@
 #include "completion.hh"
 #include "exception.hh"
 #include "regex.hh"
+#include "flags.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -83,8 +84,18 @@ constexpr bool operator!=(const timespec& lhs, const timespec& rhs)
     return not (lhs == rhs);
 }
 
+enum class FilenameFlags
+{
+    None = 0,
+    OnlyDirectories = 1 << 0,
+    Expand = 1 << 1
+};
+
+template<> struct WithBitOps<FilenameFlags> : std::true_type {};
+
 CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,
-                                ByteCount cursor_pos = -1, bool only_dir = false);
+                                ByteCount cursor_pos = -1,
+                                FilenameFlags flags = FilenameFlags::None);
 
 CandidateList complete_command(StringView prefix, ByteCount cursor_pos = -1);
 
