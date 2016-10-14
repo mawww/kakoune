@@ -118,7 +118,6 @@ hook global WinSetOption filetype=perl %{
     hook window InsertChar \{ -group perl-indent _perl-indent-on-opening-curly-brace
     hook window InsertChar \} -group perl-indent _perl-indent-on-closing-curly-brace
 
-    set window formatcmd "perltidy"
     set window comment_selection_chars ""
     set window comment_line_chars "#"
 }

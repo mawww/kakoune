@@ -111,7 +111,6 @@ hook global WinSetOption filetype=d %{
     hook window InsertChar \{ -group d-indent _d-indent-on-opening-curly-brace
     hook window InsertChar \} -group d-indent _d-indent-on-closing-curly-brace
 
-    set window formatcmd "dfmt"
     set window comment_selection_chars "/+:+/"
 }
 

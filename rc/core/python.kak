@@ -75,8 +75,6 @@ hook global WinSetOption filetype=python %{
     hook window InsertChar \n -group python-indent _python_indent_on_new_line
     # cleanup trailing whitespaces on current line insert end
     hook window InsertEnd .* -group python-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
-
-    set window formatcmd "autopep8 -"
 }
 
 hook -group python-highlight global WinSetOption filetype=(?!python).* %{ rmhl python }
