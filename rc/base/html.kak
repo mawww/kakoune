@@ -69,8 +69,6 @@ hook global WinSetOption filetype=html %{
     hook window InsertEnd  .* -group html-hooks  _html_filter_around_selections
     hook window InsertChar .* -group html-indent _html_indent_on_char
     hook window InsertChar \n -group html-indent _html_indent_on_new_line
-
-    set window comment_selection_chars '<!--:-->'
 }
 
 hook -group html-highlight global WinSetOption filetype=(?!html).* %{ rmhl html }

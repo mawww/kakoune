@@ -35,8 +35,4 @@ addhl -group /latex/content regex '\\textbf\{([^}]+)\}' 1:default+b
 
 hook -group latex-highlight global WinSetOption filetype=latex %{ addhl ref latex }
 
-hook global WinSetOption filetype=latex %{
-    set window comment_line_chars '%'
-}
-
 hook -group latex-highlight global WinSetOption filetype=(?!latex).* %{ rmhl latex }

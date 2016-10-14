@@ -4,6 +4,50 @@ decl str-list comment_selection_chars "/*:*/"
 ## Characters that will be inserted at the beginning of a line to comment
 decl str comment_line_chars "//"
 
+## Default characters for all languages
+hook global BufSetOption filetype=coffee %{
+    set buffer comment_line_chars '#'
+    set buffer comment_selection_chars '###:###'
+}
+
+hook global BufSetOption filetype=css %{
+    set buffer comment_line_chars ''
+}
+
+hook global BufSetOption filetype=d %{
+    set buffer comment_selection_chars '/+:+/'
+}
+
+hook global BufSetOption filetype=html %{
+    set buffer comment_line_chars ''
+    set buffer comment_selection_chars '<!--:-->'
+}
+
+hook global BufSetOption filetype=latex %{
+    set buffer comment_line_chars '%'
+    set buffer comment_selection_chars ''
+}
+
+hook global BufSetOption filetype=lua %{
+    set buffer comment_line_chars '--'
+    set buffer comment_selection_chars '--[[:]]'
+}
+
+hook global BufSetOption filetype=moon %{
+    set buffer comment_line_chars '--'
+    set buffer comment_selection_chars ''
+}
+
+hook global BufSetOption filetype=(perl|makefile) %{
+    set buffer comment_line_chars '#'
+    set buffer comment_selection_chars ''
+}
+
+hook global BufSetOption filetype=ruby %{
+    set buffer comment_line_chars '#'
+    set buffer comment_selection_chars '^begin=:^=end'
+}
+
 def comment-selection -docstring "Comment/uncomment the current selection" %{
     %sh{
         function exec_proof {

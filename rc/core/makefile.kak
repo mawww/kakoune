@@ -58,9 +58,6 @@ hook -group makefile-highlight global WinSetOption filetype=makefile %{ addhl re
 
 hook global WinSetOption filetype=makefile %{
     hook window InsertChar \n -group makefile-indent _makefile-indent-on-new-line
-
-    set window comment_selection_chars ""
-    set window comment_line_chars "#"
 }
 
 hook -group makefile-highlight global WinSetOption filetype=(?!makefile).* %{ rmhl makefile }

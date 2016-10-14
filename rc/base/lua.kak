@@ -1,8 +1,6 @@
 # http://lua.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# require commenting.kak
-
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -103,9 +101,6 @@ hook global WinSetOption filetype=lua %{
     hook window InsertChar \n -group lua-indent _lua_indent_on_new_line
 
     alias window alt lua-alternative-file
-
-    set window comment_line_chars '--'
-    set window comment_selection_chars '\Q--[[:]]'
 }
 
 hook -group lua-highlight global WinSetOption filetype=(?!lua).* %{ rmhl lua }

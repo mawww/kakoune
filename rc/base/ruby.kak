@@ -1,8 +1,6 @@
 # http://ruby-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# require commenting.kak
-
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -158,9 +156,6 @@ hook global WinSetOption filetype=ruby %{
     hook window InsertChar \n -group ruby-insert _ruby_insert_on_new_line
 
     alias window alt ruby-alternative-file
-
-    set window comment_line_chars '#'
-    set window comment_selection_chars '^begin=:^=end'
 }
 
 hook -group ruby-highlight global WinSetOption filetype=(?!ruby).* %{ rmhl ruby }

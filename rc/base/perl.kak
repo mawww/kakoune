@@ -117,9 +117,6 @@ hook global WinSetOption filetype=perl %{
     hook window InsertChar \n -group perl-indent _perl-indent-on-new-line
     hook window InsertChar \{ -group perl-indent _perl-indent-on-opening-curly-brace
     hook window InsertChar \} -group perl-indent _perl-indent-on-closing-curly-brace
-
-    set window comment_selection_chars ""
-    set window comment_line_chars "#"
 }
 
 hook -group perl-highlight global WinSetOption filetype=(?!perl).* %{ rmhl perl }

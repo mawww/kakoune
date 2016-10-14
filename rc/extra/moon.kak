@@ -1,8 +1,6 @@
 # http://moonscript.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# require commenting.kak
-
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -106,9 +104,6 @@ hook global WinSetOption filetype=moon %{
     hook window InsertChar \n -group moon-indent _moon_indent_on_new_line
 
     alias window alt moon-alternative-file
-
-    set window comment_line_chars '--'
-    set window comment_selection_chars ''
 }
 
 hook -group moon-highlight global WinSetOption filetype=(?!moon).* %{ rmhl moon }
