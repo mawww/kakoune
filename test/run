@@ -53,7 +53,12 @@ main() {
         quit!
       "
       session="kak-tests"
-      rm -f ${tmpdir}/kakoune/$USER/$session
+      rm -f /tmp/kakoune/$USER/$session
+      if [ -e dependencies ] && ! /bin/sh dependencies; then
+          number_skipped=$((number_skipped + 1))
+          echo "$indent$name" | colorize yellow normal
+          continue
+      fi
       ${test}/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > display
       retval=$?
       if [ $should_fail -eq 0 ]; then
@@ -96,7 +101,7 @@ main() {
         else
             sed -i -e 's/^[0-9]*:[0-9]*: //g' stderr
             if [ -s error ] && ! cmp -s error stderr; then
-              echo "$indent$name" | colorize yellow normal
+              echo "$indent$name" | colorize magenta normal
               show_diff error stderr
               failed=yes
             fi
@@ -114,8 +119,8 @@ main() {
     color=green
   fi
   echo
-  echo Resume:
-  echo $number_tests tests, $number_failures failures | colorize $color normal
+  echo Summary:
+  echo $number_tests tests, $number_failures failures, $number_skipped skipped | colorize $color normal
   exit $number_failures
 }
 
