@@ -1,0 +1,4 @@
+source "%val{runtime}/colors/default.kak"
+source "%val{runtime}/rc/core/formatter.kak"
+source "%val{runtime}/rc/core/c-family.kak"
+set buffer filetype cpp

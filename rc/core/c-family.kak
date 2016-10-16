@@ -54,7 +54,7 @@ def -hidden _c-family-indent-on-newline %[ eval -draft -itersel %[
     ## indent after an opening brace
     try %[ exec -draft K s\{\h*$<ret> j <a-gt> ]
     ## indent after a label
-    try %[ exec -draft K <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> ]
+    try %[ exec -draft k <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> ]
     ## indent after a statement not followed by an opening brace
     try %[ exec -draft k <a-x> <a-k>\b(if|else|for|while)\h*\(.+?\)\h*$<ret> j <a-gt> ]
     ## align to the opening parenthesis on a previous line if its followed by text on the same line

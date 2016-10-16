@@ -1,0 +1,9 @@
+class foo { 
+    %(p)rivate: 
+        int a; 
+        int b; 
+    public: 
+        foo() {} 
+        void bar() { 
+        } 
+}; 

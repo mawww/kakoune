@@ -1,0 +1,10 @@
+class foo { 
+
+    private: 
+        int a; 
+        int b; 
+    public: 
+        foo() {} 
+        void bar() { 
+        } 
+}; 
