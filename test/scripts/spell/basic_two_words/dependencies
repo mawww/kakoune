@@ -1,0 +1,4 @@
+set -e
+command -v aspell >/dev/null
+# Assume that the english dictionary will be installed along with `aspell`
+aspell dump dicts | grep -q '^en$'
