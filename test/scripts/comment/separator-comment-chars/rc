@@ -1,0 +1,4 @@
+source "%val{runtime}/colors/default.kak"
+source "%val{runtime}/rc/core/comment.kak"
+set global comment_line_chars "::"
+set global comment_block "[//]: # (:)"
