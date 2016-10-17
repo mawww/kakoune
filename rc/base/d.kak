@@ -110,9 +110,6 @@ hook global WinSetOption filetype=d %{
     hook window InsertChar \n -group d-indent _d-indent-on-new-line
     hook window InsertChar \{ -group d-indent _d-indent-on-opening-curly-brace
     hook window InsertChar \} -group d-indent _d-indent-on-closing-curly-brace
-
-    set window formatcmd "dfmt"
-    set window comment_selection_chars "/+:+/"
 }
 
 hook -group d-highlight global WinSetOption filetype=(?!d).* %{ rmhl d }

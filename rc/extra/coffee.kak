@@ -1,8 +1,6 @@
 # http://coffeescript.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# require commenting.kak
-
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -80,9 +78,6 @@ hook -group coffee-highlight global WinSetOption filetype=coffee %{ addhl ref co
 hook global WinSetOption filetype=coffee %{
     hook window InsertEnd  .* -group coffee-hooks  _coffee_filter_around_selections
     hook window InsertChar \n -group coffee-indent _coffee_indent_on_new_line
-
-    set window comment_line_chars '#'
-    set window comment_selection_chars '###:###'
 }
 
 hook -group coffee-highlight global WinSetOption filetype=(?!coffee).* %{ rmhl coffee }

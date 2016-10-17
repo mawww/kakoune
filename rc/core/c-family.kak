@@ -240,8 +240,6 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
     hook -group c-family-insert window InsertChar \n _c-family-insert-on-newline
 
     alias window alt c-family-alternative-file
-
-    set window formatcmd "astyle"
 ]
 
 hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[
