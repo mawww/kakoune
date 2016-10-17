@@ -12,9 +12,8 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
         ## Find the name of the latest backup created for the buffer that was open
         ## The backup file has to have been last modified more recently than the file we are editing
         ## Other backups are removed
-        backup_path=$(find "${buffer_dirname}" -maxdepth 1 -type f -readable -name "\.${buffer_basename}\.kak\.*" \
-                           \( \( -newer "${kak_buffile}" -printf '%A@/%p\n' \) -o \( -delete \) \) 2>/dev/null |
-                      sort -n -t. -k1 | sed 's/^[^\/]\+\///')
+        backup_path=$(find "${buffer_dirname}" -maxdepth 1 -type f -name "\.${buffer_basename}\.kak\.*" \
+                           \( \( -newer "${kak_buffile}" -exec ls -1t {} + \) -o \( -exec rm {} \; \) \) 2>/dev/null)
 
         if [ -z "${backup_path}" ]; then
             exit
