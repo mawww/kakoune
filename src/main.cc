@@ -532,7 +532,8 @@ int run_server(StringView session, StringView init_command,
     catch (Kakoune::runtime_error& error)
     {
         startup_error = true;
-        write_to_debug_buffer(format("error while parsing kakrc:\n    {}", error.what()));
+        write_to_debug_buffer(format("error while parsing kakrc:\n"
+                                     "    {}", error.what()));
     }
 
     {
@@ -555,8 +556,8 @@ int run_server(StringView session, StringView init_command,
             catch (Kakoune::runtime_error& error)
             {
                 startup_error = true;
-                write_to_debug_buffer(format("error while opening file '{}':\n    {}",
-                                             file, error.what()));
+                write_to_debug_buffer(format("error while opening file '{}':\n"
+                                             "    {}", file, error.what()));
             }
         }
     }
