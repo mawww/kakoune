@@ -1,0 +1,4 @@
+:edit! a<ret>
+:write<ret>
+:nop %sh{echo restore me > .a.kak.1234; touch -t 12312359 .a.kak.1234}<ret>
+:autorestore-restore-buffer<ret>
