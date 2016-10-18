@@ -9,7 +9,7 @@ hook global BufSetOption mimetype=text/x-tex %{
 }
 
 hook global BufCreate .*\.tex %{
-    set buffer filetype latex
+    set buffer mimetype "text/x-tex"
 }
 
 # Highlighters

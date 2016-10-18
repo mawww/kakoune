@@ -9,7 +9,7 @@ hook global BufSetOption mimetype=text/x-markdown %{
 }
 
 hook global BufCreate .*[.](markdown|md|mkd) %{
-    set buffer filetype markdown
+    set buffer mimetype "text/x-markdown"
 }
 
 # Highlighters

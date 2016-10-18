@@ -7,6 +7,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*Dockerfile %{
+    set buffer mimetype ""
     set buffer filetype dockerfile
 }
 

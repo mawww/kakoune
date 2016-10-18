@@ -1,4 +1,5 @@
 hook global BufCreate .*COMMIT_EDITMSG %{
+    set buffer mimetype ""
     set buffer filetype git-commit
 }
 
