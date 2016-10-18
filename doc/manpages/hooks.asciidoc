@@ -145,9 +145,12 @@ Default hooks
 	filtering text is the client name
 
 *InsertCompletionShow*::
-	Triggered when the insert completion menu gets displayed.
+	Triggered when the insert completion menu gets displayed
 
 *InsertCompletionHide*::
-	Triggered when the insert completion menu gets hidden.
+	Triggered when the insert completion menu gets hidden
 
-When not specified, the filtering text is an empty string.
+When not specified, the filtering text is an empty string. Note that
+some hooks will not consider underlying scopes depending on what context
+they are bound to be run into, e.g. the `BufWritePost` hook is a buffer
+hook, and will not consider the `window` scope.
