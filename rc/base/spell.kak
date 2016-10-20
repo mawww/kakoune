@@ -55,7 +55,7 @@ Formats of language supported:
     }
 }
 
-def spell_replace %{%sh{
+def spell-replace %{%sh{
     suggestions=$(echo "$kak_selection" | aspell -a | grep '^&' | cut -d: -f2)
     menu=$(echo "${suggestions#?}" | awk -F', ' '
     {
