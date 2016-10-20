@@ -18,35 +18,39 @@ Formats of language supported:
         if [ $# -ge 1 ]; then
             if [ ${#1} -ne 2 -a ${#1} -ne 5 ]; then
                 echo 'echo -color Error Invalid language code (examples of expected format: en, en_US, en-US)'
-                rm -r $(dirname $kak_opt_spell_tmp_file)
+                rm -r "$(dirname "$kak_opt_spell_tmp_file")"
                 exit 1
             else
-                options="-l $1"
+                options="-l '$1'"
             fi
         fi
-        sed 's/^/^/' < $kak_opt_spell_tmp_file | aspell -a $options 2>&1 | tee /tmp/spell-out | {
-            line_num=1
-            regions=$kak_timestamp
-            read line # drop the identification message
-            while read line; do
-                case "$line" in
-                    [\#\&]*)
-                        if expr "$line" : '^&' >/dev/null; then
-                           begin=$(printf %s\\n "$line" | cut -d ' ' -f 4 | sed 's/:$//')
-                        else
-                           begin=$(printf %s\\n "$line" | cut -d ' ' -f 3)
-                        fi
-                        word=$(printf %s\\n "$line" | cut -d ' ' -f 2)
-                        end=$((begin + ${#word}))
-                        regions="$regions:$line_num.$begin,$line_num.$end|Error"
-                        ;;
-                    '') line_num=$((line_num + 1));;
-                    \*) ;;
-                    *) printf 'echo -color Error %%{%s}\n' "${line}";;
-                esac
-            done
-            printf 'set buffer spell_regions %%{%s}' "${regions}"
-        }
-        rm -r $(dirname $kak_opt_spell_tmp_file)
+
+        {
+            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell -a $options" 2>&1 | {
+                line_num=1
+                regions=$kak_timestamp
+                read line # drop the identification message
+                while read -r line; do
+                    case "$line" in
+                        [\#\&]*)
+                            if expr "$line" : '^&' >/dev/null; then
+                               begin=$(printf %s\\n "$line" | cut -d ' ' -f 4 | sed 's/:$//')
+                            else
+                               begin=$(printf %s\\n "$line" | cut -d ' ' -f 3)
+                            fi
+                            word=$(printf %s\\n "$line" | cut -d ' ' -f 2)
+                            end=$((begin + ${#word}))
+                            regions="$regions:$line_num.$begin,$line_num.$end|Error"
+                            ;;
+                        '') line_num=$((line_num + 1));;
+                        \*) ;;
+                        *) printf 'echo -color Error %%{%s}\n' "${line}" | kak -p "${kak_session}";;
+                    esac
+                done
+                printf 'set "buffer=%s" spell_regions %%{%s}' "${kak_bufname}" "${regions}" \
+                    | kak -p "${kak_session}"
+            }
+            rm -r $(dirname "$kak_opt_spell_tmp_file")
+        } </dev/null >/dev/null 2>&1 &
     }
 }
