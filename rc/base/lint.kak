@@ -81,7 +81,7 @@ def lint-next -docstring "Jump to the next line that contains an error" %{ %sh{
         while read -r line
         do
             # get line,column pair
-            coords="${line%,*}"
+            coords=$(printf %s "$line" | cut -d, -f1,2)
             candidate="${coords%,*}"
             if [ "$candidate" -gt "$kak_cursor_line" ]
             then
