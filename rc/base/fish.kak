@@ -56,18 +56,18 @@ def -hidden _fish_indent_on_new_line %{
         # filter previous line
         try %{ exec -draft k:_fish_filter_around_selections<ret> }
         # indent after start structure
-        try %{ exec -draft kx<a-k>^\h*(begin|case|else|for|function|if|switch|while)\b<ret>j<a-gt> }
+        try %{ exec -draft k<a-x><a-k>^\h*(begin|case|else|for|function|if|switch|while)\b<ret>j<a-gt> }
     }
 }
 
 def -hidden _fish_insert_on_new_line %{
     eval -no-hooks -draft -itersel %{
         # copy _#_ comment prefix and following white spaces
-        try %{ exec -draft kxs^\h*\K#\h*<ret>yjp }
+        try %{ exec -draft k<a-x>s^\h*\K#\h*<ret>yjp }
         # wisely add end structure
         eval -save-regs x %{
-            try %{ exec -draft kxs^\h+<ret>"xy } catch %{ reg x '' }
-            try %{ exec -draft kx<a-k>^<c-r>x(begin|for|function|if|switch|while)<ret>j<a-a>iX<a-\;>K<a-K>^<c-r>x(begin|for|function|if|switch|while).*\n<c-r>xend$<ret>jxypjaend<esc><a-lt> }
+            try %{ exec -draft k<a-x>s^\h+<ret>"xy } catch %{ reg x '' }
+            try %{ exec -draft k<a-x><a-k>^<c-r>x(begin|for|function|if|switch|while)<ret>j<a-a>iX<a-\;>K<a-K>^<c-r>x(begin|for|function|if|switch|while).*\n<c-r>xend$<ret>jxypjaend<esc><a-lt> }
         }
     }
 }
