@@ -224,7 +224,8 @@ bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
     wrapped = false;
     if (direction == Forward)
     {
-        if (regex_search(pos, buffer.end(), matches, ex,
+        if (pos != buffer.end() and
+            regex_search(pos, buffer.end(), matches, ex,
                          match_flags(is_bol(pos.coord()), true,
                                      is_bow(buffer, pos.coord()), true)))
             return true;
