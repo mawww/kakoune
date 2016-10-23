@@ -1,0 +1,67 @@
+KAKOUNE(1)
+==========
+
+NAME
+----
+scopes - a
+
+Description
+-----------
+
+Scopes are groups in which a particular Kakoune object (a variable,
+hook, alias etc) can have different values, depending on the group the
+value was declared in.
+
+Names and hierarchy
+-------------------
+
+Scopes are named as follows:
+
+*window*::
+	context linked to the window displaying a buffer
+*buffer*::
+	context linked directly to the buffer
+*global*::
+	global context linked to the instance of Kakoune
+
+The following order of priority applies to the above scopes:
+
+--------------------------
+window ]> buffer ]> global
+--------------------------
+
+The above priority line implies that objects can have individual values that
+will be resolved first in the *window* scope (highest priority), then in
+the *buffer* scope, and finally in the *global* scope (lowest priority).
+
+Uses
+----
+
+The scope paradigm is very useful as it allows the user to customize the
+behavior of the editor without modifying the configuration globally, as
+is the case with other editors who only have a single *global* scope by
+default.
+
+Examples:
+
+*filetype*::
+	A single buffer opened in two separate windows can have different
+	filetypes declared in the *window* scope with 'set' (c.f. the 'options'
+	documentation page)
+
+*status line*::
+	All the buffers of the current session can have the same information
+	displayed in the status line, except for a specific buffer (the
+	'modelinefmt' option can be declared in the *global* scope, and
+	customized in the *buffer* scope with 'set', c.f. the 'options'
+	documentation page)
+
+Execution context
+-----------------
+
+Some commands work in a specific context that might exclude one or
+several scopes altogether, consequently ignoring some values of a given
+object.
+
+Example: the *window* scope is never considered when resolving the
+values of options when writing a buffer (e.g. 'BOM', 'eolformat').
