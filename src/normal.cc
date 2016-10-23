@@ -410,12 +410,15 @@ void pipe(Context& context, NormalParams)
 
             Buffer& buffer = context.buffer();
             SelectionList& selections = context.selections();
+            const int old_main = selections.main_index();
+            auto restore_main = on_scope_end([&] { selections.set_main_index(old_main); });
             if (replace)
             {
                 Vector<String> strings;
-                for (auto& sel : selections)
+                for (int i = 0; i < selections.size(); ++i)
                 {
-                    String in = content(buffer, sel);
+                    selections.set_main_index(i);
+                    String in = content(buffer, selections.main());
                     const bool insert_eol = in.back() != '\n';
                     if (insert_eol)
                         in += '\n';
@@ -432,10 +435,13 @@ void pipe(Context& context, NormalParams)
             }
             else
             {
-                for (auto& sel : selections)
+                for (int i = 0; i < selections.size(); ++i)
+                {
+                    selections.set_main_index(i);
                     ShellManager::instance().eval(real_cmd, context,
-                                                  content(buffer, sel),
+                                                  content(buffer, selections.main()),
                                                   ShellManager::Flags::None);
+                }
             }
         });
 }
