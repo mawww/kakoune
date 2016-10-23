@@ -1212,18 +1212,13 @@ private:
             break;
         case InsertMode::OpenLineAbove:
             for (auto& sel : selections)
-            {
-                auto line = sel.min().line;
-                sel = line > 0 ? BufferCoord{line - 1, buffer[line-1].length() - 1}
-                               : BufferCoord{0, 0};
-            }
-            insert('\n');
-            // fix case where we inserted at begining
-            for (auto& sel : selections)
-            {
-                if (sel.anchor() == buffer.char_next({0,0}))
-                    sel = Selection{{0,0}};
-            }
+                sel = BufferCoord{sel.min().line};
+            // Do not use insert method here as we need to fixup selection
+            // before running the InsertChar hook.
+            selections.insert("\n"_str, InsertMode::InsertCursor);
+            for (auto& sel : selections) // fix case where we inserted at begining
+                sel = BufferCoord{sel.cursor().line - 1};
+            context().hooks().run_hook("InsertChar", "\n", context());
             break;
         case InsertMode::InsertAtLineBegin:
             for (auto& sel : selections)
