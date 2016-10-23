@@ -104,7 +104,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
         kak_assert(buffer->flags() & Buffer::Flags::Fifo);
         watcher->close_fd();
         buffer->run_hook_in_own_context("BufCloseFifo", "");
-        buffer->flags() &= ~Buffer::Flags::Fifo;
+        buffer->flags() &= ~(Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
         delete watcher;
     };
 
