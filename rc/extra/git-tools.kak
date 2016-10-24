@@ -123,7 +123,7 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
 		EOF
 
         # fails, and generate COMMIT_EDITMSG
-        GIT_EDITOR='' EDITOR='' git commit > /dev/null 2>&1
+        GIT_EDITOR='' EDITOR='' git commit "$@" > /dev/null 2>&1
         msgfile="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
         printf %s "edit '$msgfile'
               hook buffer BufWritePost '.*\Q$msgfile\E' %{ %sh{
