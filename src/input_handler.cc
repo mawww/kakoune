@@ -952,7 +952,7 @@ private:
 class Insert : public InputMode
 {
 public:
-    Insert(InputHandler& input_handler, InsertMode mode)
+    Insert(InputHandler& input_handler, InsertMode mode, int count)
         : InputMode(input_handler),
           m_insert_mode(mode),
           m_edition(context()),
@@ -969,7 +969,7 @@ public:
         last_insert().keys.clear();
         last_insert().disable_hooks = context().hooks_disabled();
         context().hooks().run_hook("InsertBegin", "", context());
-        prepare(m_insert_mode);
+        prepare(m_insert_mode, count);
     }
 
     ~Insert()
@@ -1177,10 +1177,23 @@ private:
         context().hooks().run_hook("InsertChar", str, context());
     }
 
-    void prepare(InsertMode mode)
+    void prepare(InsertMode mode, int count)
     {
         SelectionList& selections = context().selections();
         Buffer& buffer = context().buffer();
+
+        auto duplicate_selections = [](SelectionList& sels, int count) {
+            count = count > 0 ? count : 1;
+            Vector<Selection> new_sels;
+            new_sels.reserve(count * sels.size());
+            for (auto& sel : sels)
+                for (int i = 0; i < count; ++i)
+                    new_sels.push_back(sel);
+
+            size_t new_main = sels.main_index() * count + count - 1;
+            sels = SelectionList{sels.buffer(), std::move(new_sels)};
+            sels.set_main_index(new_main);
+        };
 
         switch (mode)
         {
@@ -1208,15 +1221,17 @@ private:
         case InsertMode::OpenLineBelow:
             for (auto& sel : selections)
                 sel = BufferCoord{sel.max().line, buffer[sel.max().line].length() - 1};
+            duplicate_selections(selections, count);
             insert('\n');
             break;
         case InsertMode::OpenLineAbove:
             for (auto& sel : selections)
                 sel = BufferCoord{sel.min().line};
+            duplicate_selections(selections, count);
             // Do not use insert method here as we need to fixup selection
             // before running the InsertChar hook.
             selections.insert("\n"_str, InsertMode::InsertCursor);
-            for (auto& sel : selections) // fix case where we inserted at begining
+            for (auto& sel : selections) // fixup selection positions
                 sel = BufferCoord{sel.cursor().line - 1};
             context().hooks().run_hook("InsertChar", "\n", context());
             break;
@@ -1291,9 +1306,9 @@ void InputHandler::reset_normal_mode()
     current_mode().on_enabled();
 }
 
-void InputHandler::insert(InsertMode mode)
+void InputHandler::insert(InsertMode mode, int count)
 {
-    push_mode(new InputModes::Insert(*this, mode));
+    push_mode(new InputModes::Insert(*this, mode, count));
 }
 
 void InputHandler::repeat_last_insert()
@@ -1307,7 +1322,7 @@ void InputHandler::repeat_last_insert()
                                 m_last_insert.disable_hooks);
     // context.last_insert will be refilled by the new Insert
     // this is very inefficient.
-    push_mode(new InputModes::Insert(*this, m_last_insert.mode));
+    push_mode(new InputModes::Insert(*this, m_last_insert.mode, 1));
     for (auto& key : keys)
         current_mode().handle_key(key);
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);

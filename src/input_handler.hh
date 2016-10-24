@@ -53,7 +53,7 @@ public:
     ~InputHandler();
 
     // switch to insert mode
-    void insert(InsertMode mode);
+    void insert(InsertMode mode, int count);
     // repeat last insert mode key sequence
     void repeat_last_insert();
 

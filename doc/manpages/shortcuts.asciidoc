@@ -190,10 +190,12 @@ Changes
 	enter insert mode at current selection end line end
 
 *o*::
-	enter insert mode in a new line below current selection end
+	enter insert mode in one (or given count) new lines below
+	current selection end
 
 *O*::
-	enter insert mode in a new line above current selection begin
+	enter insert mode in a on (or given count) lines above
+	current selection begin
 
 *y*::
 	yank selections

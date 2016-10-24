@@ -93,9 +93,9 @@ void select_coord(Buffer& buffer, BufferCoord coord, SelectionList& selections)
 }
 
 template<InsertMode mode>
-void enter_insert_mode(Context& context, NormalParams)
+void enter_insert_mode(Context& context, NormalParams params)
 {
-    context.input_handler().insert(mode);
+    context.input_handler().insert(mode, params.count);
 }
 
 void repeat_last_insert(Context& context, NormalParams)

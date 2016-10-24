@@ -376,8 +376,10 @@ Changes
 
  * `I`: enter insert mode at current selection begin line start
  * `A`: enter insert mode at current selection end line end
- * `o`: enter insert mode in a new line below current selection end
- * `O`: enter insert mode in a new line above current selection begin
+ * `o`: enter insert mode in one (or given count) new lines below
+        current selection end
+ * `O`: enter insert mode in one (or given count)  new lines above
+        current selection begin
 
  * `y`: yank selections
  * `p`: paste after current selection end
