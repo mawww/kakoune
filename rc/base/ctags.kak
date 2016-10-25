@@ -16,8 +16,9 @@ def -params 0..1 \
         for tags in "$@"
         do
             [ -f "$tags" ] || continue
-            namecache="$(dirname "$tags")"/.kak."$(basename "$tags")".namecache
-            if [ "$namecache" -ot "$tags" ]; then
+            namecache="${tags%/*}"/.kak."${tags##*/}".namecache
+            if [ -z "$(find "$namecache" -prune -newer "$tags")" ]
+            then
                 cut -f1 "$tags" | grep -v \'^!_\' | uniq > "$namecache"
             fi
             cat "$namecache"
