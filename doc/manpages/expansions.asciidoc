@@ -74,6 +74,8 @@ informations about Kakoune's state:
 	which is incremented each time the buffer is modified
 *kak_runtime*::
 	directory containing the kak binary
+*kak_count*::
+	count parameter passed to the command
 *kak_opt_<name>*::
 	value of option *name*
 *kak_reg_<r>*::
