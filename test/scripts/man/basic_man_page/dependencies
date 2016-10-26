@@ -1,0 +1,2 @@
+set -e
+command -v man 1>/dev/null
