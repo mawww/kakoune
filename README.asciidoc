@@ -824,9 +824,9 @@ Options are typed, their type can be
   if an element needs to contain a colon, it can be escaped with a
   backslash.
  * `range-faces`: a `:` separated list of a pairs of a buffer range
-   (`<begin line>.<begin column>,<end line>.<end column>`) and  a face
-   (separated by `|`), except for the first element which is just the
-   timestamp of the buffer.
+   (`<begin line>.<begin column>,<end line>.<end column>` or
+   `<begin line>.<end line>+<length>`) and  a face (separated by `|`),
+   except for the first element which is just the timestamp of the buffer.
  * `completions`: a `:` separated list of `<text>|<docstring>|<menu text>`
    candidates, except for the first element which follows the
    `<line>.<column>[+<length>]@<timestamp>` format to define where the

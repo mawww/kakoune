@@ -34,13 +34,12 @@ Formats of language supported:
                     case "$line" in
                         [\#\&]*)
                             if expr "$line" : '^&' >/dev/null; then
-                               begin=$(printf %s\\n "$line" | cut -d ' ' -f 4 | sed 's/:$//')
+                               pos=$(printf %s\\n "$line" | cut -d ' ' -f 4 | sed 's/:$//')
                             else
-                               begin=$(printf %s\\n "$line" | cut -d ' ' -f 3)
+                               pos=$(printf %s\\n "$line" | cut -d ' ' -f 3)
                             fi
                             word=$(printf %s\\n "$line" | cut -d ' ' -f 2)
-                            end=$((begin + ${#word}))
-                            regions="$regions:$line_num.$begin,$line_num.$end|Error"
+                            regions="$regions:$line_num.$pos+${#word}|Error"
                             ;;
                         '') line_num=$((line_num + 1));;
                         \*) ;;

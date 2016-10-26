@@ -24,9 +24,9 @@ Types
 	with a backslash
 *range-faces*::
 	a `:` separated list of a pairs of a buffer range
-	(`<begin line>.<begin column>,<end line>.<end column>`) and  a face
-	(separated by `|`), except for the first element which is just the
-	timestamp of the buffer.
+	(`<begin line>.<begin column>,<end line>.<end column>` or
+	`<begin line>.<begin column>+<length>`) and  a face (separated by `|`),
+	except for the first element which is just the timestamp of the buffer.
 *completions*::
 	a `:` separated list of `<text>|<docstring>|<menu text>`
 	candidates, except for the first element which follows the
