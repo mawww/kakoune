@@ -13,6 +13,7 @@ compiler:
 before_install:
   - if [ $TRAVIS_OS_NAME = osx ]; then
       brew update;
+      brew install aspell --with-lang-en;
     fi;
 
 install:
@@ -41,6 +42,8 @@ addons:
       - g++-5
       - libncursesw5-dev
       - libboost-regex1.55-dev
+      - aspell
+      - aspell-en
   coverity_scan:
     project:
       name: "mawww/kakoune"
