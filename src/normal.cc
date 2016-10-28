@@ -1262,17 +1262,18 @@ void align(Context& context, NormalParams)
         for (auto& sel : col)
         {
             auto insert_coord = sel->min();
-            auto lastcol = get_column(buffer, tabstop, sel->cursor());
+            ColumnCount lastcol = get_column(buffer, tabstop, sel->cursor());
+            ColumnCount inscount = maxcol - lastcol;
             String padstr;
             if (not use_tabs)
-                padstr = String{ ' ', maxcol - lastcol };
+                padstr = String{ ' ', inscount };
             else
             {
-                auto inscol = get_column(buffer, tabstop, insert_coord);
-                auto targetcol = maxcol - (lastcol - inscol);
-                auto tabcol = inscol - (inscol % tabstop);
-                auto tabs = (targetcol - tabcol) / tabstop;
-                auto spaces = targetcol - (tabs ? (tabcol + tabs * tabstop) : inscol);
+                ColumnCount inscol = get_column(buffer, tabstop, insert_coord);
+                ColumnCount targetcol = inscol + inscount;
+                ColumnCount tabcol = inscol - (inscol % tabstop);
+                CharCount tabs = (int)((targetcol - tabcol) / tabstop);
+                CharCount spaces = (int)(targetcol - (tabs ? (tabcol + (int)tabs * tabstop) : inscol));
                 padstr = String{ '\t', tabs } + String{ ' ', spaces };
             }
             buffer.insert(insert_coord, std::move(padstr));
