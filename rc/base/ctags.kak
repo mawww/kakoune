@@ -89,11 +89,16 @@ def update-tags -docstring 'Update tags for the given file' %{
 	        trap 'rmdir .tags.kaklock' EXIT
 
             if ctags -f .file_tags.kaktmp ${kak_opt_ctagsopts} $kak_bufname; then
-                grep -Fv "$(printf '\t%s\t' "$kak_bufname")" tags | grep -v '^!' | sort --merge - .file_tags.kaktmp > .tags.kaktmp
+                export LC_COLLATE=C LC_ALL=C # ensure ASCII sorting order
+                # merge the updated tags tags with the general tags (filtering out out of date tags from it) into the target file
+                grep -Fv "$(printf '\t%s\t' "$kak_bufname")" tags | grep -v '^!' | sort --merge - .file_tags.kaktmp >> .tags.kaktmp
+                rm .file_tags.kaktmp
                 mv .tags.kaktmp tags
                 msg="tags updated for $kak_bufname"
             else
                 msg="tags update failed for $kak_bufname"
             fi
+
+	        printf %s\\n "eval -client $kak_client echo -color Information '${msg}'" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null & }
 }
