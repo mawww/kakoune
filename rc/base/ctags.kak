@@ -8,11 +8,10 @@ decl str-list ctagsfiles 'tags'
 def -params 0..1 \
     -shell-candidates '
         {
-        oldIFS="$IFS"
         IFS=:
         # $1=tag1, $2=tag2 ...
         set -- $kak_opt_ctagsfiles
-        IFS="$oldIFS"
+        unset IFS
         for tags in "$@"
         do
             [ -f "$tags" ] || continue
@@ -29,10 +28,9 @@ def -params 0..1 \
     %{ %sh{
         export tagname="${1:-$kak_selection}"
 
-        oldIFS="$IFS"
         IFS=:
         set -- $kak_opt_ctagsfiles
-        IFS="$oldIFS"
+        unset IFS
 
         for tags in "$@"
         do
