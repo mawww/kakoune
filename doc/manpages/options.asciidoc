@@ -155,5 +155,18 @@ Builtin options
 			specify the nice assistant you get in info boxes,
 			can be *clippy* (the default), *cat* or *none*
 
+		*ncurses_enable_mouse*:::
+			boolean option that enables mouse support
+
 		*ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
 			specify which button send for wheel down/up events
+
+		*ncurses_buffer_padding_str*:::
+			string that will be used to mark the end of the buffer
+
+		*ncurses_buffer_padding_type*:::
+			if set to `fill`, the padding string will fill the entire space
+			between the end of the buffer and the bottom of the current
+			window, if set to `single` the padding string will be inserted
+			once at the end of the buffer. A value of `off` disables any
+			kind of padding
