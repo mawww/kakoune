@@ -53,3 +53,14 @@ Formats of language supported:
         } </dev/null >/dev/null 2>&1 &
     }
 }
+
+def spell-replace %{%sh{
+    suggestions=$(echo "$kak_selection" | aspell -a | grep '^&' | cut -d: -f2)
+    menu=$(echo "${suggestions#?}" | awk -F', ' '
+    {
+        for (i=1; i<=NF; i++)
+            printf "%s", "%{"$i"}" "%{exec -itersel c"$i"<esc>be}"
+    }
+    ')
+    printf '%s\n' "try %{ menu -auto-single $menu }"
+}}
