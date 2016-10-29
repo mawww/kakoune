@@ -41,7 +41,7 @@ public:
     void info_show(String title, String content, BufferCoord anchor, InfoStyle style);
     void info_hide();
 
-    void print_status(DisplayLine status_line);
+    void print_status(DisplayLine status_line, bool immediate = false);
 
     DisplayCoord dimensions() const { return m_ui->dimensions(); }
 

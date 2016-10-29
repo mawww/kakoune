@@ -98,10 +98,18 @@ void Client::handle_available_input(EventMode mode)
     }
 }
 
-void Client::print_status(DisplayLine status_line)
+void Client::print_status(DisplayLine status_line, bool immediate)
 {
     m_status_line = std::move(status_line);
-    m_ui_pending |= StatusLine;
+    if (immediate)
+    {
+        m_ui->draw_status(m_status_line, m_mode_line, get_face("StatusLine"));
+        m_ui->refresh(true);
+    }
+    else
+    {
+        m_ui_pending |= StatusLine;
+    }
 }
 
 DisplayLine Client::generate_mode_line() const

@@ -128,7 +128,7 @@ public:
     KeymapManager& keymaps() const { return scope().keymaps(); }
     AliasRegistry& aliases() const { return scope().aliases(); }
 
-    void print_status(DisplayLine status) const;
+    void print_status(DisplayLine status, bool immediate = false) const;
 
     StringView main_sel_register_value(StringView reg) const;
 

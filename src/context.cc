@@ -69,10 +69,10 @@ void Context::set_window(Window& window)
     m_window.reset(&window);
 }
 
-void Context::print_status(DisplayLine status) const
+void Context::print_status(DisplayLine status, bool immediate) const
 {
     if (has_client())
-        client().print_status(std::move(status));
+        client().print_status(std::move(status), immediate);
 }
 
 void JumpList::push(SelectionList jump)

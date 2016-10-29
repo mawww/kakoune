@@ -5,6 +5,8 @@
 #include "buffer_utils.hh"
 #include "event_manager.hh"
 #include "file.hh"
+#include "face_registry.hh"
+#include "display_buffer.hh"
 
 #include <cstring>
 #include <sys/types.h>
@@ -150,7 +152,7 @@ std::pair<String, int> ShellManager::eval(
     write(child_stdin.write_fd(), input);
     child_stdin.close_write_fd();
 
-    auto wait_time = profile ? Clock::now() : Clock::time_point{};
+    auto wait_time = Clock::now();
 
     struct PipeReader : FDWatcher
     {
@@ -186,6 +188,10 @@ std::pair<String, int> ShellManager::eval(
     // check for termination now that SIGCHLD is blocked
     bool terminated = waitpid(pid, &status, WNOHANG);
 
+    using namespace std::chrono;
+    static constexpr seconds wait_timeout{1};
+    auto next_wait_notification = duration_cast<milliseconds>(wait_timeout);
+
     while (not terminated or
            ((flags & Flags::WaitForStdout) and
             (child_stdout.read_fd() != -1 or child_stderr.read_fd() != -1)))
@@ -193,6 +199,15 @@ std::pair<String, int> ShellManager::eval(
         EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
         if (not terminated)
             terminated = waitpid(pid, &status, WNOHANG);
+
+        auto wait_duration = Clock::now() - wait_time;
+        if (wait_duration > next_wait_notification)
+        {
+            next_wait_notification = duration_cast<milliseconds>(wait_duration + wait_timeout);
+            context.print_status({ format("waiting for shell command to finish ({}s)",
+                                          duration_cast<seconds>(wait_duration).count()),
+                                    get_face("Information") }, true);
+        }
     }
 
     if (not stderr_contents.empty())
@@ -200,7 +215,6 @@ std::pair<String, int> ShellManager::eval(
 
     if (profile)
     {
-        using namespace std::chrono;
         auto end_time = Clock::now();
         auto full = duration_cast<milliseconds>(end_time - start_time);
         auto spawn = duration_cast<milliseconds>(wait_time - spawn_time);
