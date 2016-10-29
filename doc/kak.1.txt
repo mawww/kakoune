@@ -7,7 +7,7 @@ kak - a vim inspired, selection oriented code editor
 
 SYNOPSIS
 --------
-*kak* [-q] [-u] [-n] [-l] [-e command] [-f command] [-p session_id] [-c session_id|[[-d] -s session_id] file ...
+*kak* [-q] [-n] [-l] [-ro] [-clear] [-ui ui_type] [-e command] [-f keys] [-p session_id] [-c session_id|[[-d] -s session_id] file ...
 
 DESCRIPTION
 -----------
@@ -26,14 +26,8 @@ stays fixed and the cursor one moves around.
 
 OPTIONS
 -------
--q::
-	in filter mode, be quiet about errors applying keys
-
--u::
-	use a dummy user interface, for testing purposes
-
 -n::
-	do not source kakrc files on startup
+	do not load resource files on startup ('kakrc', 'autoload', 'rc' etc)
 
 -l::
 	list existing sessions
@@ -42,19 +36,31 @@ OPTIONS
 	run as a headless session (requires -s)
 
 -e <command>::
-	execute argument on initialisation
+	execute the *command* after the initialization phase
 
--f <command>::
-	act as a filter, executing given keys on given files
+-f <keys>::
+	enter in 'filter mode' and execute *keys* on the files passed as arguments
+
+-q::
+	when in 'filter mode', don't print any errors
 
 -p <session_id>::
-	just send stdin as commands to the given session
+	send the commands written on the standard input to session *session_id*
 
 -c <session_id>::
-	connect to given session
+	connect to the given session
 
 -s <session_id>::
-	set session name
+	rename the current session name to *session_id*
+
+-ui <type>::
+	select the user interface, can be one of 'ncurses', 'dummy' or 'json'
+
+-clear::
+	remove sessions that terminated in an incorrect state (e.g. after a crash)
+
+-ro::
+	enter in 'readonly mode', all the buffers opened will not be written to disk
 
 file::
 	one or more files to edit
@@ -79,9 +85,6 @@ kak ./file1.txt /path/to/file2.c::
 
 kak -f "ggO// kak: tabstop=8<esc>" *.c::
 	Insert a modeline that sets the tabstop variable at the beginning of several source code files
-
-kak -e "man dup2"::
-	Use Kakoune as a man pager
 
 FILES
 -----
