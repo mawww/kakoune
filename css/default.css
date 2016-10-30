@@ -164,7 +164,15 @@ a:hover {
     margin-bottom: 1em;
 }
 
-.screenshot-title {
+.thumbnail .caption {
     font-size: 1.2em;
-    margin-bottom: .5em;
+    text-align: center;
+}
+
+.thumbnail .caption p {
+    margin: 0;
+}
+
+.thumbnail {
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
 }
