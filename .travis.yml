@@ -26,6 +26,7 @@ install:
       fi;
     elif [ $TRAVIS_OS_NAME = osx ]; then
       brew outdated gcc || brew upgrade gcc;
+      brew install python3;
     fi;
 env:
   global:

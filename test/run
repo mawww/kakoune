@@ -1,136 +1,486 @@
-#!/bin/sh
+#!/usr/bin/env python3
 
-# Color codes ├──────────────────────────────────────────────────────────────────
-none="00"; red="31"; green="32"; yellow="33"; magenta="35"; bold="01"
+import os
+import sys
+import math
+import stat
+import time
+import shutil
+import difflib
+import hashlib
+import logging
+import argparse
+import tempfile
+import subprocess
 
-# Main ├────────────────────────────────────────────────────────────────────────
 
-main() {
-  kak_commands='
+class ANSIColor:
+    DEFAULT = "\033[0m"
+    GREEN = "\033[32m"
+    RED = "\033[31m"
+    MAGENTA = "\033[35m"
+    YELLOW = "\033[33m"
+
+
+class Utils:
+
+    @staticmethod
+    def DigitsInInteger(n):
+        assert(isinstance(n, int))
+
+        return int(math.log10(n)) + 1 if n > 0 else 1
+
+    @staticmethod
+    def FileExists(path):
+        try:
+            return os.stat(path)
+        except:
+            pass
+
+        return None
+
+    @staticmethod
+    def FileExecutable(path):
+        st = Utils.FileExists(path)
+        if not st:
+            return False
+
+        return stat.S_IXUSR & st.st_mode
+
+    @staticmethod
+    def FileMd5(path):
+        h = hashlib.md5()
+        with open(path, "rb") as fin:
+            for data in iter(lambda: fin.read(4096), b""):
+                h.update(data)
+
+        return h.hexdigest()
+
+
+class KakouneTestResult:
+    STATUS_UNKNOWN = -1
+    STATUS_PASSED = 0
+    STATUS_FAILED = 1
+    STATUS_SKIPPED = 2
+    STATUS_DISABLED = 3
+
+    def __init__(self, status):
+        self.status = status
+
+    def __str__(self):
+        return {
+            self.STATUS_UNKNOWN: "unknown",
+            self.STATUS_PASSED: "passed",
+            self.STATUS_FAILED: "failed",
+            self.STATUS_SKIPPED: "skipped",
+            self.STATUS_DISABLED: "disabled",
+        }[self.status]
+
+    def ToANSIColor(self):
+        return {
+            self.STATUS_UNKNOWN: ANSIColor.DEFAULT,
+            self.STATUS_PASSED: ANSIColor.GREEN,
+            self.STATUS_FAILED: ANSIColor.RED,
+            self.STATUS_SKIPPED: ANSIColor.MAGENTA,
+            self.STATUS_DISABLED: ANSIColor.YELLOW,
+        }[self.status]
+
+KakouneTestResultUnknown = KakouneTestResult(KakouneTestResult.STATUS_UNKNOWN)
+KakouneTestResultPassed = KakouneTestResult(KakouneTestResult.STATUS_PASSED)
+KakouneTestResultFailed = KakouneTestResult(KakouneTestResult.STATUS_FAILED)
+KakouneTestResultSkipped = KakouneTestResult(KakouneTestResult.STATUS_SKIPPED)
+KakouneTestResultDisabled = KakouneTestResult(KakouneTestResult.STATUS_DISABLED)
+
+
+class KakouneTest(object):
+    BOOSTRAP_COMMAND = """
         set global autoreload yes
         set global autoinfo ""
         set global autoshowcompl false
-        try %{ source rc }
-        try %{
-            exec -save-regs / %{%s%\(\K[^)]+<ret><c-s>ld<a-t>(hHdi<c-u><esc><c-o>}
-        } catch %{ exec gg }
-        hook global RuntimeError .+ %{
-            echo -debug -- error: %val{hook_param}
+        try %[ source rc ]
+        try %[
+            exec -save-regs '/' '%s%\(\K[^)]+<ret><c-s>ld<a-t>(hHdi<c-u><esc><c-o>'
+        ] catch %[ exec gg ]
+        hook global RuntimeError .+ %[
+            echo -debug -- error: %val[hook_param]
             eval -buffer *debug* write debug
             quit!
-        }
-        try %{ exec "%sh{cat cmd}" }
+        ]
+        try %, exec '{commands}' ,
         exec <c-l>
         eval -buffer *debug* write debug
-        nop %sh{
-          printf %s\\n "$kak_selections"      > selections
-          printf %s\\n "$kak_selections_desc" > state
-        }
+        nop %sh[
+          IFS==
+          printf %s\\\\n "$kak_selections"      > selections
+          printf %s\\\\n "$kak_selections_desc" > state
+        ]
         write out
         quit!
-      '
+      """
 
-  root=$PWD
-  tmpdir="${TMPDIR:-/tmp}"
-  work=$(mktemp -d $tmpdir/kak-tests.XXXXXXXX)
-  trap "rm -R $work" EXIT
+    def __init__(self, path_dir, name, category=None):
+        super().__init__()
 
-  number_tests=0
-  number_failures=0
-  for dir in $(find "${@:-.}" -type d | sort); do
-    cd $root/$dir;
-    mkdir -p $work/$dir
-    for file in in cmd rc; do
-      [ -f $file ] && cp $file $work/$dir/
-    done
-    cd $work/$dir;
-    indent="$(echo "$dir/" | sed -e 's|[^/]*/\+|  |g')"
-    name=${PWD##*/}
-    if [ ! -f cmd ]; then
-      echo "$indent$name"
-      continue
-    elif [ -x enabled ] && ! ./enabled; then
-      echo "$indent$name (disabled)" | colorize $yellow $none
-      continue
-    fi
+        logging.debug("New test %s in category %s: %s",
+                      name, category, path_dir)
 
-    number_tests=$(($number_tests + 1))
-    touch in; cp in out
-    session="kak-tests"
-    rm -f $tmpdir/kakoune/$USER/$session
-    $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > display
-    retval=$?
-    failed=0
-    if [ ! -e error ]; then # failure not expected
-      if [ $retval -ne 0 ]; then
-        echo "$indent$name" | colorize $red $none
-        echo "$indent  Kakoune returned error $retval"
-        failed=1
-      else
-        for file in out selections state display; do
-          if [ -f $root/$dir/$file ] && ! cmp -s $root/$dir/$file $file; then
-            if [ $failed -eq 0 ]; then
-              echo "$indent$name" | colorize $red $none
-              failed=1
-            fi
-            show_diff $root/$dir/$file $file
-          fi
-        done
-        if [ $failed -ne 0 ] && [ -f debug ]; then
-          printf "\ndebug buffer:\n" | colorize $yellow $none
-          cat debug
-        fi
-      fi
-    else # failure expected
-      if [ -f stderr ]; then
-        sed -i -e 's/^[0-9]*:[0-9]*: //g' stderr
-        if [ -s error ] && ! cmp -s error stderr; then
-          echo "$indent$name" | colorize $yellow $none
-          show_diff error stderr
-          failed=1
-        fi
-      elif [ $retval -eq 0 ]; then
-        echo "$indent$name" | colorize $red $none
-        echo "$indent  Expected failure, but Kakoune returned 0"
-        failed=1
-      fi
-    fi
+        self.path = path_dir
+        self.name = name
+        self.category = category
 
-    if [ $failed -eq 0 ]; then
-      echo "$indent$name" | colorize $green $none
-    else
-      number_failures=$(($number_failures + 1))
-    fi
-  done
+        try:
+            path_enable_script = os.path.join(self.path, "enable")
+            self.enabled = subprocess.call(path_enable_script) == 0
+            logging.debug("Predicate script found at: %s", path_enable_script)
+        except OSError:
+            logging.debug("No predicate script, or invalid execution permission, enabling the test by default")
+            self.enabled = True
 
-  if [ $number_failures -gt 0 ]; then
-    color=$red
-  else
-    color=$green
-  fi
-  printf "\nResume: %s tests, %s failures\n" $number_tests $number_failures | colorize $color $none
-  exit $number_failures
-}
+        self.should_fail = Utils.FileExists(
+            os.path.join(self.path, "error")) is not None
 
-# Utility ├─────────────────────────────────────────────────────────────────────
+    def Run(self, path_workdir, path_kakoune):
+        if not self.enabled:
+            logging.debug("Test disabled, not running")
+            return [KakouneTestResultDisabled, None]
 
-colorize() {
-  color=${1:-$none}
-  style=${2:-$none}
-  printf '\033[%s;%sm%s\033[00;00m\n' $style $color "$(cat)"
-}
+        def cb_onerror_walk(e):
+            logging.error("Unable to walk through directory: %s", str(e))
 
-show_diff() {
-  diff -u $1 $2 | while IFS='' read -r line; do
-    first_character=$(printf '%s\n' "$line" | cut -b 1)
-    case $first_character in
-      +) color=$green ;;
-      -) color=$red ;;
-      @) color=$magenta ;;
-      *) color=$none ;;
-    esac
-    printf '%s\n' "$line" | colorize $color $none
-  done
-}
+        for (_, directories, filenames) in os.walk(path_workdir, onerror=cb_onerror_walk):
+            def onerror_rmtree(_, path, __):
+                logging.error("Unable to remove directory: %s", path)
+            for directory in directories:
+                shutil.rmtree(directory, onerror=onerror_rmtree)
+            for filename in filenames:
+                os.unlink(filename)
 
-main "$@"
+            break
+
+        for file_bootstrap in ["in", "cmd", "rc", "dependencies"]:
+            path_file = os.path.join(self.path, file_bootstrap)
+            if Utils.FileExists(path_file):
+                try:
+                    logging.debug("Copying test file '%s' to: %s", file_bootstrap, path_workdir)
+                    shutil.copy(path_file, path_workdir)
+                except IOError as e:
+                    logging.error("Unable to copy test file: %s", e)
+
+        try:
+            logging.debug("Changing the current working directory to: %s", path_workdir)
+            os.chdir(path_workdir)
+        except OSError as e:
+            logging.error("Unable to change to the work directory: %s", e)
+            return [KakouneTestResultUnknown, None]
+
+        if not Utils.FileExists("in"):
+            logging.debug("Creating input file")
+            open("in", "w").close()
+
+        try:
+            logging.debug("Copying the input file to: out")
+            shutil.copy("in", "out")
+        except IOError as e:
+            logging.error("Unable to copy input file: %s", e)
+            return [KakouneTestResultUnknown, None]
+
+        commands = ""
+        try:
+            logging.debug("Opening the commands file and reading its contents")
+            with open("cmd", "r") as fcmd:
+                commands = fcmd.read().replace("'", "\\'").rstrip("\n")
+        except IOError as e:
+            logging.error("Unable to open command file: %s", e)
+            return [KakouneTestResultUnknown, None]
+
+        commands_bootstrap = self.BOOSTRAP_COMMAND.format(commands=commands)
+        id_session = "kak-tests"
+
+        code_return = 1
+        stdout, stderr = None, None
+        try:
+            logging.debug("Spawning session: %s", id_session)
+            logging.debug("Command bootstrap: {0}".format(commands_bootstrap))
+            process = subprocess.Popen([path_kakoune,
+                                        "-n", "-ui", "json",
+                                        "-s", id_session,
+                                        "-e", commands_bootstrap,
+                                        "out"],
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
+
+            def communicate_scoped(timeout_s, max_tries, p, acc):
+                try:
+                    return p.communicate(timeout=timeout_s)
+                except subprocess.TimeoutExpired:
+                    p.kill()
+                    if acc >= max_tries:
+                        logging.debug("maximum amount of retries reached")
+                        raise
+                    else:
+                        logging.debug("communicating with the process failed, trying again (%d / %d)", acc + 1, max_tries)
+                        return communicate_scoped(timeout_s, max_tries, p, acc + 1)
+
+            try:
+                stdout, stderr = communicate_scoped(timeout_s=1, max_tries=3, p=process, acc=1)
+                stdout, stderr = stdout.decode("utf-8", "ignore"), stderr.decode("utf-8", "ignore")
+            except subprocess.TimeoutExpired:
+                logging.error("Couldn't communicate with the underlying process")
+                return [KakouneTestResultUnknown, None]
+
+            with open("display", "w") as fout:
+                logging.debug("Command output: %s", stdout)
+                fout.write(stdout)
+            with open("stderr", "w") as fout:
+                logging.debug("Command error output: %s", stderr)
+                fout.write(stderr)
+
+            code_return = process.returncode
+            logging.debug("Return code of the test session: %s", code_return)
+        except OSError as e:
+            logging.error("Unable to execute the test: %s", e)
+            return [KakouneTestResultUnknown, None]
+
+        if self.should_fail:
+            logging.debug("The test is expected to fail")
+            if Utils.FileExists("stderr"):
+                # FIXME: remove line/column numbers and compare with expected
+                # error
+                pass
+            elif code_return == 0:
+                return [KakouneTestResultFailed, None]
+        else:
+            logging.debug("The test isn't expected to fail")
+            if code_return != 0:
+                return [KakouneTestResultFailed,
+                        "Return code: {0:d}".format(code_return)]
+            else:
+                diff_expected_files = {}
+                for output_expected in ["out", "selections", "state", "display"]:
+                    if not Utils.FileExists(output_expected):
+                        logging.debug("Output file doesn't exist, skipping: %s", output_expected)
+                        continue
+
+                    path_reference = os.path.join(self.path, output_expected)
+                    if not Utils.FileExists(path_reference):
+                        logging.debug("No reference file to compare against: %s", output_expected)
+                        continue
+                    if Utils.FileMd5(output_expected) != Utils.FileMd5(path_reference):
+                        lines_from = []
+                        lines_to = []
+                        try:
+                            with open(path_reference) as f:
+                                lines_from = f.readlines()
+                            with open(output_expected) as f:
+                                lines_to = f.readlines()
+                        except OSError as e:
+                            logging.warning("Unable to open output file: %s", e)
+
+                        logging.debug("The output differs from the expected one, diffing file: %s", output_expected)
+                        diff_expected_files[output_expected] = difflib.unified_diff(
+                            lines_from, lines_to)
+
+                if diff_expected_files:
+                    return [KakouneTestResultFailed, diff_expected_files]
+
+        return [KakouneTestResultPassed, None]
+
+
+class KakouneTester(object):
+    PREFIX_WORKDIR = "kak-tests."
+    FORMAT_RESULTS = "{n:%dd}/{N:d} %s[{category:^%ds}]%s {name:%ds} {result:s} {time:.3f}s"
+    FORMAT_DATA = "{space: >%d}  {data}"
+
+    def __init__(self, directories):
+        super().__init__()
+
+        assert(isinstance(directories, list)
+               and isinstance(directories[0], str))
+
+        self._workdir_handle = tempfile.TemporaryDirectory(prefix=self.PREFIX_WORKDIR)
+        self._workdir = self._workdir_handle.name
+        logging.debug("Path to the work directory: %s", self._workdir)
+
+        self.tests = {}
+        self.stats = {
+            KakouneTestResult.STATUS_UNKNOWN: 0,
+            KakouneTestResult.STATUS_PASSED: 0,
+            KakouneTestResult.STATUS_FAILED: 0,
+            KakouneTestResult.STATUS_SKIPPED: 0,
+            KakouneTestResult.STATUS_DISABLED: 0,
+        }
+        self._scan_directories([os.path.abspath(d) for d in directories])
+
+    def _scan_directories(self, directories):
+        def cb_onerror_walk(e):
+            logging.error("Unable to walk through directory: %s", str(e))
+
+        for directory in directories:
+            logging.debug("Descending into directory: %s", directory)
+            for (dirpath, dirnames, filenames) in os.walk(directory,
+                                                          topdown=True,
+                                                          onerror=cb_onerror_walk,
+                                                          followlinks=True):
+                if dirnames:
+                    continue
+
+                isatest = False
+                for filename in ["cmd", "in", "out", "rc", "dependencies",
+                                 "selections", "state", "display",
+                                 "enable", "error", "stderr"]:
+                    if filename in filenames:
+                        logging.debug("Found test file %s in %s, test detected", filename, dirpath)
+                        isatest = True
+                        break
+                if not isatest:
+                    continue
+
+                category_test = os.path.dirname(dirpath)
+                if category_test and category_test != ".":
+                    category_test = os.path.basename(category_test)
+                else:
+                    category_test = None
+
+                name_test = os.path.basename(dirpath)
+
+                logging.debug("Name and category detected: %s - %s", name_test, category_test)
+
+                if category_test not in self.tests:
+                    self.tests[category_test] = {}
+                self.tests[category_test][name_test] = KakouneTest(
+                    dirpath, name_test, category_test)
+
+    def RunAndDisplay(self, path_kakoune, fails_only=False, time_execution=False):
+        n_test = 0
+        nb_tests = sum([len(x) for x in list(self.tests.values())])
+        if not nb_tests:
+            logging.debug("No tests to run")
+            return False
+
+        keys_category = sorted(self.tests.keys())
+        length_longest_category = max([len(x) for x in keys_category])
+        length_longest_test = max([len(x) for _, y in self.tests.items() for x in y])
+
+        logging.debug("Total number of tests: %s", nb_tests)
+        logging.debug("Number of categories: %s", len(keys_category))
+        logging.debug("Longest category and test name: %s - %s", length_longest_category, length_longest_test)
+
+        time_execution_net = 0
+        for id_category, category_test in enumerate(keys_category):
+            keys_test = sorted(self.tests[category_test].keys())
+            for id_test, name_test in enumerate(keys_test):
+                n_test += 1
+                test = self.tests[category_test][name_test]
+
+                try:
+                    logging.debug("Clearing dead sessions")
+                    subprocess.call([path_kakoune, "-clear"])
+                except OSError as e:
+                    logging.warning("Unable to clear dead sesssions: %s", e)
+
+                logging.debug("Running test in category: %s - %s", name_test, category_test)
+
+                time_exec = None
+                if time_execution:
+                    time_exec = time.time()
+
+                result_test, data = test.Run(self._workdir, path_kakoune)
+
+                if time_execution:
+                    time_exec = time.time() - time_exec
+                    time_execution_net += time_exec
+
+                self.stats[result_test.status] += 1
+                if fails_only and result_test.status != KakouneTestResult.STATUS_FAILED:
+                    continue
+
+                format_results = KakouneTester.FORMAT_RESULTS % (
+                    Utils.DigitsInInteger(nb_tests),
+                    ANSIColor.YELLOW,
+                    length_longest_category,
+                    ANSIColor.DEFAULT,
+                    length_longest_test)
+
+                result_test = "{0}{1}{2}".format(result_test.ToANSIColor(), str(result_test), ANSIColor.DEFAULT)
+
+                print(format_results.format(n=n_test, N=nb_tests,
+                                            category=category_test,
+                                            name=name_test, result=result_test,
+                                            time=time_exec if time_exec is not None else 0))
+
+                if not data:
+                    continue
+
+                if isinstance(data, str):
+                    logging.debug("Error description: %s", data)
+                else:
+                    logging.debug("Failure diffs available, formatting data")
+
+                    format_data_padded = KakouneTester.FORMAT_DATA % (Utils.DigitsInInteger(nb_tests) * 2)
+                    data_output = ""
+                    for output_expected, diff in data.items():
+                        data_output += format_data_padded.format(
+                            space=' ', data="{0}:\n".format(output_expected))
+
+                        for line in diff:
+                            if line.startswith("+"):
+                                line = "{0}{1}{2}".format(
+                                    ANSIColor.GREEN, line, ANSIColor.DEFAULT)
+                            elif line.startswith("-"):
+                                line = "{0}{1}{2}".format(
+                                    ANSIColor.RED, line, ANSIColor.DEFAULT)
+                            elif line.startswith("@"):
+                                line = "{0}{1}{2}".format(
+                                    ANSIColor.MAGENTA, line, ANSIColor.DEFAULT)
+
+                            data_output += "{0}".format(
+                                format_data_padded.format(space=' ', data=line))
+
+                    print(data_output)
+
+        print("Summary: {0} tests, {1} failures, {2} skipped".format(nb_tests, self.stats[KakouneTestResult.STATUS_FAILED], self.stats[KakouneTestResult.STATUS_SKIPPED]))
+        if time_execution:
+            print("Net execution time: {0:.3f}s".format(time_execution_net))
+
+        return True
+
+
+def get_options(av):
+    parser = argparse.ArgumentParser(description="Kakoune test engine")
+
+    parser.add_argument("-d", "--debug", action="store_true",
+                        help="Display debug information")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Display more information")
+    parser.add_argument("-f", "--fails-only", action="store_true",
+                        help="Only display tests that have failed")
+    parser.add_argument("-t", "--no-timers", action="store_true",
+                        help="Do not time all the tests and give a final summary about the time spent executing each test")
+    parser.add_argument("-p", "--path-kakoune", default=os.path.abspath(os.path.join(os.path.dirname(av[0]), "../src/kak")),
+                        help="Path to the Kakoune executable to test")
+    parser.add_argument("directories", nargs="*", default=[os.path.dirname(av[0])],
+                        help="Directories that contain the test suites")
+
+    return parser.parse_args(av[1:])
+
+
+def main(av):
+    options = get_options(av)
+
+    logging_level = logging.WARNING
+    if options.debug:
+        logging_level = logging.DEBUG
+    elif options.verbose:
+        logging_level = logging.INFO
+    logging.basicConfig(level=logging_level,
+                        format="[%(asctime)s][%(levelname)s]: %(message)s")
+
+    tester = KakouneTester(options.directories)
+    if not tester.RunAndDisplay(options.path_kakoune, options.fails_only, not options.no_timers):
+        logging.warning("No tests were run")
+        return 1
+
+    return tester.stats[KakouneTestResult.STATUS_FAILED]
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
