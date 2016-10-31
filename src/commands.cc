@@ -324,7 +324,7 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
 const CommandDesc write_cmd = {
     "write",
     "w",
-    "write [filename]: write the current buffer to it's file "
+    "write [filename]: write the current buffer to its file "
     "or to [filename] if specified",
     single_optional_name_param,
     CommandFlags::None,
