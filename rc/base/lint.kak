@@ -48,7 +48,9 @@ def lint -docstring 'Parse the current buffer with a linter' %{
             }
             END {
                 print "set \"buffer=" file "\" lint_flags  %{" stamp ":" substr(flags,  1, length(flags)-1)  "}"
-                print "set \"buffer=" file "\" lint_errors %{"           substr(errors, 1, length(errors)-1) "}"
+                errors = substr(errors, 1, length(errors)-1)
+                gsub("~", "\\~", errors)
+                print "set \"buffer=" file "\" lint_errors %~" errors "~"
             }
         ' "$dir"/stderr | kak -p "$kak_session"
 
