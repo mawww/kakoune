@@ -105,8 +105,7 @@ def lint-prev -docstring "Jump to the previous line that contains an error" %{ %
     printf '%s\n' "$kak_opt_lint_errors" | sort -t, -k1,1 -rn | {
         while read -r line
         do
-            # get line,column pair
-            coords="${line%,*}"
+            coords=$(printf %s "$line" | cut -d, -f1,2)
             candidate="${coords%,*}"
             if [ "$candidate" -lt "$kak_cursor_line" ]
             then
