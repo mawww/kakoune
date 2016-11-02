@@ -1,4 +1,5 @@
 debug ?= yes
+static ?= no
 pedantic ?= yes
 
 ifeq ($(debug),yes)
@@ -56,6 +57,11 @@ else
     LIBS += -lncursesw -lboost_regex
     CPPFLAGS += -I$(NCURSESW_INCLUDE)
     LDFLAGS += -rdynamic
+endif
+
+ifeq ($(static),yes)
+    LIBS += -ltinfo -lgpm
+    LDFLAGS += -static -pthread
 endif
 
 CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -Wno-address
