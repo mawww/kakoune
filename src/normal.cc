@@ -1508,7 +1508,7 @@ void exec_user_mappings(Context& context, NormalParams params)
         auto mapping = context.keymaps().get_mapping(key, KeymapMode::User);
         ScopedSetBool disable_keymaps(context.keymaps_disabled());
 
-        InputHandler::ScopedForceNormal force_normal{context.input_handler()};
+        InputHandler::ScopedForceNormal force_normal{context.input_handler(), params};
 
         ScopedEdition edition(context);
         for (auto& key : mapping)

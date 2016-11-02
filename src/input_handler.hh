@@ -94,7 +94,7 @@ public:
     // Force an input handler into normal mode temporarily
     struct ScopedForceNormal
     {
-        ScopedForceNormal(InputHandler& handler);
+        ScopedForceNormal(InputHandler& handler, NormalParams params);
         ~ScopedForceNormal();
 
     private:

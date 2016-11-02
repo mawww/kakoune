@@ -292,6 +292,8 @@ public:
     KeymapMode keymap_mode() const override { return KeymapMode::Normal; }
 
 private:
+    friend struct InputHandler::ScopedForceNormal;
+
     NormalParams m_params = { 0, 0 };
     bool m_hooks_disabled = false;
     bool m_enabled = false;
@@ -1353,14 +1355,16 @@ void InputHandler::on_next_key(KeymapMode keymap_mode, KeyCallback callback)
     push_mode(new InputModes::NextKey(*this, keymap_mode, callback));
 }
 
-InputHandler::ScopedForceNormal::ScopedForceNormal(InputHandler& handler)
+InputHandler::ScopedForceNormal::ScopedForceNormal(InputHandler& handler, NormalParams params)
     : m_handler(handler), m_mode(nullptr)
 {
-    if (handler.m_mode_stack.size() == 1)
-        return;
+    if (handler.m_mode_stack.size() != 1)
+    {
+        handler.push_mode(new InputModes::Normal(handler));
+        m_mode = handler.m_mode_stack.back().get();
+    }
 
-    handler.push_mode(new InputModes::Normal(handler));
-    m_mode = handler.m_mode_stack.back().get();
+    static_cast<InputModes::Normal*>(handler.m_mode_stack.back().get())->m_params = params;
 }
 
 InputHandler::ScopedForceNormal::~ScopedForceNormal()
