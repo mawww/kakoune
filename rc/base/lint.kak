@@ -70,7 +70,6 @@ def -hidden lint-show %{ %sh{
 def lint-enable -docstring "Activate automatic diagnostics of the code" %{
     addhl flag_lines default lint_flags
     hook window -group lint-diagnostics NormalIdle .* %{ lint-show }
-    hook window -group lint-diagnostics WinSetOption ^lint_errors=.* %{ info; lint-show }
 }
 
 def lint-disable -docstring "Disable automatic diagnostics of the code" %{
