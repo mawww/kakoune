@@ -23,7 +23,7 @@ def lint -docstring 'Parse the current buffer with a linter' %{
 
         { # do the parsing in the background and when ready send to the session
 
-        eval "$kak_opt_lintcmd '$dir'/buf" | sort -t: -k2 -n > "$dir"/stderr
+        eval "$kak_opt_lintcmd '$dir'/buf" | sort -t: -k2,2 -n > "$dir"/stderr
         printf '%s\n' "eval -client $kak_client echo 'linting done'" | kak -p "$kak_session"
 
         # Flags for the gutter:
@@ -96,6 +96,30 @@ def lint-next -docstring "Jump to the next line that contains an error" %{ %sh{
         else
             candidate="${kak_opt_lint_errors%%,*}"
             col=$(printf '%s\n' "$kak_opt_lint_errors" | head -n1 | cut -d, -f2)
+        fi
+        printf '%s\n' "select $candidate.$col,$candidate.$col"
+    }
+}}
+
+def lint-prev -docstring "Jump to the previous line that contains an error" %{ %sh{
+    printf '%s\n' "$kak_opt_lint_errors" | sort -t, -k1,1 -rn | {
+        while read -r line
+        do
+            # get line,column pair
+            coords="${line%,*}"
+            candidate="${coords%,*}"
+            if [ "$candidate" -lt "$kak_cursor_line" ]
+            then
+                break
+            fi
+        done
+        if [ "$candidate" -lt "$kak_cursor_line" ]
+        then
+            col="${coords#*,}"
+        else
+            last=$(printf '%s\n' "$kak_opt_lint_errors" | tail -n1)
+            candidate=$(printf '%s\n' "$last" | cut -d, -f1)
+            col=$(printf '%s\n' "$last" | cut -d, -f2)
         fi
         printf '%s\n' "select $candidate.$col,$candidate.$col"
     }
