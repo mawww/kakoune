@@ -1,19 +1,21 @@
+decl str docsclient
+
 def -hidden -params 1..2 _doc-open %{
     %sh{
         manout=$(mktemp /tmp/kak-man-XXXXXX)
-        colout=$(mktemp /tmp/kak-man-XXXXXX)
 
-        MANWIDTH=${kak_window_width} man "$1" > $manout
-        retval=$?
+        # Those options are handled by the `man-db` implementation
+        export MAN_KEEP_FORMATTING=y
+        export MANWIDTH=${kak_window_width}
 
-        col -b -x > ${colout} < ${manout}
-        rm ${manout}
+        # The BSD implementation requires an `-l` flag to detect a filetype as argument
+        if man -l "$1" > "${manout}"; then
+            sed -i 's/.\x8//g' "${manout}"
 
-        if [ "${retval}" -eq 0 ]; then
             printf %s\\n "
                 edit! -scratch '*doc*'
-                exec |cat<space>${colout}<ret>gg
-                nop %sh{rm ${colout}}
+                exec |cat<space>${manout}<ret>gg
+                nop %sh{rm ${manout}}
                 set buffer filetype man
             "
 
@@ -23,7 +25,7 @@ def -hidden -params 1..2 _doc-open %{
             fi
         else
            printf %s\\n "echo -color Error %{doc '$@' failed: see *debug* buffer for details}"
-           rm ${colout}
+           rm ${manout}
         fi
     }
 }
