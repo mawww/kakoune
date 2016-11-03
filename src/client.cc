@@ -38,6 +38,9 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
 
     m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
     m_ui->set_input_callback([this](EventMode mode) { handle_available_input(mode); });
+
+    m_window->hooks().run_hook("WinDisplay", m_window->buffer().name(), context());
+
     force_redraw();
 }
 
