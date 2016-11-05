@@ -118,9 +118,7 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
             continue;
 
         if (context.is_editing())
-            throw runtime_error(format("client '{}' is inserting in buffer '{}'",
-                                       context.name(),
-                                       buffer.display_name()));
+            context.input_handler().reset_normal_mode();
 
         Buffer* last = client->last_buffer();
         context.change_buffer(last ? *last : BufferManager::instance().get_first_buffer());
