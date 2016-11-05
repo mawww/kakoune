@@ -1,6 +1,6 @@
 # Provides integration of the following tools:
 # - gocode for code completion (github.com/nsf/gocode)
-# - goimports for code formatting on save 
+# - goimports for code formatting on save
 # - gogetdoc for documentation display and source jump (needs jq) (github.com/zmb3/gogetdoc)
 # Needs the following tools in the path:
 # - jq for json deserializaton
@@ -149,7 +149,7 @@ def -hidden -params 1..2 _gogetdoc-cmd %{
                         col=$(printf %s "${pos}" | cut -d: -f3)
                         printf %s\\n "eval -client '${kak_client}' %{
                             eval -try-client '${kak_opt_jumpclient}' edit -existing ${file} ${line} ${col}
-                            try %{ focus '${kak_opt_jumpclient}' }                   
+                            try %{ focus '${kak_opt_jumpclient}' }
                         }" | kak -p ${kak_session}
                     fi
                     ;;
@@ -178,5 +178,5 @@ def go-jump -docstring "Jump to the symbol definition" %{
 
 def go-share-selection -docstring "Share the selection using the Go Playground" %{ %sh{
     snippet_id=$(printf %s\\n "${kak_selection}" | curl -s https://play.golang.org/share --data-binary @-)
-    printf "echo https://play.golang.org/p/%s" ${snippet_id} 
+    printf "echo https://play.golang.org/p/%s" ${snippet_id}
 } }
