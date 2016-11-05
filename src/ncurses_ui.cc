@@ -261,6 +261,11 @@ NCursesUI::NCursesUI()
 NCursesUI::~NCursesUI()
 {
     enable_mouse(false);
+    if (can_change_color()) // try to reset palette
+    {
+        fputs("\033]104;\007", stdout);
+        fflush(stdout);
+    }
     endwin();
     set_signal_handler(SIGWINCH, SIG_DFL);
     set_signal_handler(SIGCONT, SIG_DFL);
