@@ -54,7 +54,7 @@ def go-disable-autocomplete -docstring "Disable gocode completion" %{
 decl -hidden str go_format_tmp_dir
 
 def -params ..1 go-format \
-    -docstring "go-format [goimports]: custom formatter for go files" %{
+    -docstring "go-format [-use-goimports]: custom formatter for go files" %{
     %sh{
         dir=$(mktemp -d -t kak-go.XXXXXXXX)
         printf %s\\n "set buffer go_format_tmp_dir ${dir}"
@@ -62,7 +62,7 @@ def -params ..1 go-format \
     }
     %sh{
         dir=${kak_opt_go_format_tmp_dir}
-        if [ "$1" = "1" ]; then
+        if [ "$1" = "-use-goimports" ]; then
             fmt_cmd="goimports -srcdir '${kak_buffile}'"
         else
             fmt_cmd="gofmt -s"
@@ -77,18 +77,6 @@ def -params ..1 go-format \
         rm -r ${dir}
     }
     edit!
-}
-
-def go-enable-format-onsave -docstring "Enable formatting on save for go files" %{
-    hook buffer -group go-format-onsave BufWritePre .+\.go %{ go-format }
-}
-
-def go-enable-format-imports-onsave -docstring "Enable formatting (with goimports) on save for go files" %{
-    hook buffer -group go-format-onsave BufWritePre .+\.go %{ go-format 1 }
-}
-
-def go-disable-format-onsave -docstring "Disable formatting on save for go files" %{
-    rmhooks buffer go-format-onsave
 }
 
 # Documentation
