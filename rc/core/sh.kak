@@ -36,7 +36,7 @@ addhl -group /sh/code regex [\[\]\(\)&|]{1,2} 0:operator
 addhl -group /sh/code regex (\w+)= 1:identifier
 addhl -group /sh/code regex ^\h*(\w+)\h*\(\) 1:identifier
 
-addhl -group /sh/code regex \$(\w+|\{.+?\}|#|@|\?|\$|!|-|\*) 0:identifier
+addhl -group /sh/code regex \$(\w+|\{.+?\}|#|@|\?|\$|!|-|\*) 0:value
 addhl -group /sh/double_string regex \$(\w+|\{.+?\}) 0:identifier
 
 hook -group sh-highlight global WinSetOption filetype=sh %{ addhl ref sh }
