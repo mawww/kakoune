@@ -1418,7 +1418,7 @@ const ParameterDesc context_wrap_params = {
       { "no-hooks",   { false, "disable hooks" } },
       { "with-maps",  { false, "use user defined key mapping when executing keys" } },
       { "itersel",    { false, "run once for each selection with that selection as the only one" } },
-      { "save-regs",  { true, "restore all given registers after execution" } },
+      { "save-regs",  { true, "restore all given registers after execution (defaults to '/\"|^@')" } },
       { "collapse-jumps",  { false, "collapse all jumps into a single one from initial selection" } } },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 1
 };
