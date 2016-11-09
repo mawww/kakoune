@@ -1380,26 +1380,8 @@ void spaces_to_tabs(Context& context, NormalParams params)
         SelectionList{ buffer, std::move(spaces) }.insert("\t"_str, InsertMode::Replace);
 }
 
-void save_selections(Context& context, NormalParams params)
+SelectionList read_selections_from_register(char reg, Context& context)
 {
-    const char reg = to_lower(params.reg ? params.reg : '^');
-    if (not is_basic_alpha(reg) and reg != '^')
-        throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
-
-    String desc = format("{}@{}%{}",
-                         selection_list_to_string(context.selections()),
-                         context.buffer().name(),
-                         context.buffer().timestamp());
-
-    RegisterManager::instance()[reg] = desc;
-
-    context.print_status({format("Saved selections in register '{}'", reg), get_face("Information")});
-}
-
-template<bool add>
-void restore_selections(Context& context, NormalParams params)
-{
-    const char reg = to_lower(params.reg ? params.reg : '^');
     if (not is_basic_alpha(reg) and reg != '^')
         throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
 
@@ -1422,29 +1404,67 @@ void restore_selections(Context& context, NormalParams params)
     for (auto sel_desc : StringView{desc.begin(), arobase} | split<StringView>(':'))
         sels.push_back(selection_from_string(sel_desc));
 
-    SelectionList sel_list{buffer, std::move(sels), timestamp};
+    return {buffer, std::move(sels), timestamp};
+}
+
+template<bool add>
+void save_selections(Context& context, NormalParams params)
+{
+    const char reg = to_lower(params.reg ? params.reg : '^');
+    if (not is_basic_alpha(reg) and reg != '^')
+        throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
+
+    auto gen_desc = [&] {
+        if (not add)
+            return selection_list_to_string(context.selections());
+
+        auto selections = read_selections_from_register(reg, context);
+        if (&selections.buffer() != &context.buffer())
+            throw runtime_error("cannot save selections from different buffers in the same register");
+        selections.update();
+
+        for (auto& sel : context.selections())
+            selections.push_back(sel);
+        selections.sort_and_merge_overlapping();
+        return selection_list_to_string(selections);
+    };
+
+    String desc = format("{}@{}%{}", gen_desc(),
+                         context.buffer().name(),
+                         context.buffer().timestamp());
+
+    RegisterManager::instance()[reg] = desc;
+
+    context.print_status({format("{} selections to register '{}'", add ? "Added" : "Saved", reg), get_face("Information")});
+}
+
+template<bool add>
+void restore_selections(Context& context, NormalParams params)
+{
+    const char reg = to_lower(params.reg ? params.reg : '^');
+    auto selections = read_selections_from_register(reg, context); 
 
     if (not add)
     {
-        if (&buffer != &context.buffer())
-            context.change_buffer(buffer);
+        if (&selections.buffer() != &context.buffer())
+            context.change_buffer(selections.buffer());
     }
     else
     {
-        if (&buffer != &context.buffer())
+        if (&selections.buffer() != &context.buffer())
             throw runtime_error("Cannot add selections from another buffer");
 
-        sel_list.update();
-        int main_index = sel_list.size() + context.selections_write_only().main_index();
+        selections.update();
+        int main_index = selections.size() + context.selections_write_only().main_index();
         for (auto& sel : context.selections())
-            sel_list.push_back(std::move(sel));
+            selections.push_back(std::move(sel));
 
-        sel_list.set_main_index(main_index);
-        sel_list.sort_and_merge_overlapping();
+        selections.set_main_index(main_index);
+        selections.sort_and_merge_overlapping();
     }
 
-    context.selections_write_only() = std::move(sel_list);
-    context.print_status({format("Restored selections from register '{}'", reg), get_face("Information")});
+    context.selections_write_only() = std::move(selections);
+    context.print_status({format("{} selections from register '{}'", add ? "Added" : "Restored", reg), get_face("Information")});
 }
 
 void undo(Context& context, NormalParams params)
@@ -1808,9 +1828,10 @@ static NormalCmdDesc cmds[] =
     { Key::PageUp,   "scroll one page up", scroll<Backward> },
     { Key::PageDown, "scroll one page down", scroll<Forward> },
 
-    { 'z', "restore selections", restore_selections<false> },
-    { alt('z'), "append saved selections", restore_selections<true> },
-    { 'Z', "save selections", save_selections },
+    { 'z', "restore selections from register", restore_selections<false> },
+    { alt('z'), "append selections from register", restore_selections<true> },
+    { 'Z', "save selections to register", save_selections<false> },
+    { alt('Z'), "append selections to register", save_selections<true> },
 
     { ctrl('l'), "force redraw", force_redraw },
 };

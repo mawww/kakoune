@@ -373,11 +373,14 @@ Marks use the *^* register by default.
 *Z*::
 	will save the current selections to the register
 
+*<a-Z>*::
+	will append the current selections to the register
+
 *z*::
 	will restore the selections from the register
 
 *<a-z>*::
-	will add the selections from the register to the existing ones
+	will append the selections from the register to the existing ones
 
 Macros
 ------

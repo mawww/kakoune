@@ -482,6 +482,7 @@ By default, marks use the '^' register, but using the register can be set
 using `"<reg>` prefix.
 
 `Z` will save the current selections to the register.
+`alt-Z` will append the current selections to the register.
 `z` will restore the selections from the register.
 `alt-z` will add the selections from the register to the existing ones.
 
