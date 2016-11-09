@@ -8,7 +8,6 @@ face value rgb:0086B3+b
 face type rgb:795DA3
 face identifier rgb:0086B3
 face string rgb:183691
-face error rgb:F8F8FF,rgb:BD2C00
 face keyword rgb:A71D5D+b
 face operator yellow
 face attribute rgb:A71D5D

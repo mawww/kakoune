@@ -26,7 +26,6 @@
         face type       ${orange}
         face identifier default
         face string     ${green}
-        face error      ${red},${grey_light}
         face keyword    ${brown_dark}
         face operator   default
         face attribute  ${green}

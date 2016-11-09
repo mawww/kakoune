@@ -22,7 +22,6 @@
         face type ${orange_light}
         face identifier ${magenta_dark}
         face string ${green_dark}
-        face error ${grey_light},${magenta_light}
         face keyword ${purple_dark}+b
         face operator ${grey_light}
         face attribute ${orange_dark}

@@ -33,7 +33,6 @@
         face type ${zentype}
         face identifier ${zenidentifier}
         face string ${zenstring}
-        face error ${zenexception}
         face keyword ${zenkeyword}
         face operator ${zenfunction}
         face attribute ${zenstatement}

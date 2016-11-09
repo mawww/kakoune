@@ -5,7 +5,6 @@ face value red
 face type yellow
 face identifier green
 face string magenta
-face error default,red
 face keyword blue
 face operator yellow
 face attribute green

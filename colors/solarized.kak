@@ -26,7 +26,6 @@
         face type       ${yellow}
         face identifier ${blue}
         face string     ${cyan}
-        face error      ${base03},${red}
         face keyword    ${green}
         face operator   default
         face attribute  ${violet}

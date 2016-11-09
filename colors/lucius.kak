@@ -28,7 +28,6 @@
         face type ${lucius_blue}
         face identifier ${lucius_green}
         face string ${lucius_light_green}
-        face error ${lucius_light_green}
         face keyword ${lucius_light_blue}
         face operator ${lucius_green}
         face attribute ${lucius_light_blue}
