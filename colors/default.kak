@@ -10,6 +10,7 @@ face operator yellow
 face attribute green
 face comment cyan
 face meta magenta
+face builtin default+b
 
 # For markup
 face title blue

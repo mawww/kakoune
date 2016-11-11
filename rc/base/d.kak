@@ -35,26 +35,36 @@ addhl -group /d/code regex "\b(this)\b\s*[^(]" 1:value
 
 %sh{
     # Grammar
-    keywords="alias|asm|assert|body|cast|class|delegate|delete|enum|function"
-    keywords="${keywords}|import|in|interface|invariant|is|lazy|mixin|module"
-    keywords="${keywords}|new|out|pragma|struct|super|typeid|typeof|union"
-    keywords="${keywords}|unittest|__parameters|__traits|__vector|break|case"
-    keywords="${keywords}|catch|continue|default|do|else|finally|for|foreach"
-    keywords="${keywords}|foreach_reverse|goto|if|return|switch|throw|try|with|while"
+
+    keywords="abstract|alias|align|asm|assert|auto|body|break|case|cast"
+    keywords="${keywords}|catch|cent|class|const|continue|debug"
+    keywords="${keywords}|default|delegate|delete|deprecated|do|else|enum|export|extern"
+    keywords="${keywords}|final|finally|for|foreach|foreach_reverse|function|goto"
+    keywords="${keywords}|if|immutable|import|in|inout|interface|invariant"
+    keywords="${keywords}|is|lazy|macro|mixin|module|new|nothrow|out|override"
+    keywords="${keywords}|package|pragma|private|protected|public|pure|ref|return|scope"
+    keywords="${keywords}|shared|static|struct|super|switch|synchronized|template"
+    keywords="${keywords}|throw|try|typedef|typeid|typeof|union"
+    keywords="${keywords}|unittest|version|volatile|while|with"
     attributes="abstract|align|auto|const|debug|deprecated|export|extern|final"
     attributes="${attributes}|immutable|inout|nothrow|package|private|protected"
-    attributes="${attributes}|public|pure|ref|override|scope|shared|static|synchronized|version|__gshared"
-    types="bool|byte|cdouble|cfloat|char|creal|dchar|double|dstring|float"
+    attributes="${attributes}|public|pure|ref|override|scope|shared|static|synchronized|version"
+    attributes="${attributes}|__gshared|__traits|__vector|__parameters"
+    types="bool|byte|cdouble|cent|cfloat|char|creal|dchar|double|dstring|float"
     types="${types}|idouble|ifloat|int|ireal|long|ptrdiff_t|real|size_t|short"
-    types="${types}|string|ubyte|uint|ulong|ushort|void|wchar|wstring"
-    values="true|false|null|__FILE__|__MODULE__|__LINE__|__FUNCTION__"
-    values="${values}|__PRETTY_FUNCTION__|__DATE__|__EOF__|__TIME__"
-    values="${values}|__TIMESTAMP__|__VENDOR__|__VERSION__"
+    types="${types}|string|ubyte|ucent|uint|ulong|ushort|void|wchar|wstring"
+    values="true|false|null"
+    tokens="__FILE__|__MODULE__|__LINE__|__FUNCTION__"
+    tokens="${tokens}|__PRETTY_FUNCTION__|__DATE__|__EOF__|__TIME__"
+    tokens="${tokens}|__TIMESTAMP__|__VENDOR__|__VERSION__|#line"
+    properties="this|init|sizeof|alignof|mangleof|stringof|infinity|nan|dig|epsilon|mant_dig"
+    properties="${properties}|max_10_exp|min_exp|max|min_normal|re|im|classinfo"
+    properties="${properties}|length|dup|keys|values|rehash|clear"
     decorators="disable|property|nogc|safe|trusted|system"
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=d %{
-        set window static_words '${keywords}:${attributes}:${types}:${values}:${decorators}'
+        set window static_words '${keywords}:${attributes}:${types}:${values}:${decorators}:${properties}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -64,6 +74,8 @@ addhl -group /d/code regex "\b(this)\b\s*[^(]" 1:value
         addhl -group /d/code regex \b(${types})\b 0:type
         addhl -group /d/code regex \b(${values})\b 0:value
         addhl -group /d/code regex @(${decorators})\b 0:attribute
+        addhl -group /d/code regex \b(${tokens})\b 0:builtin
+        addhl -group /d/code regex \.(${properties})\b 1:builtin
     "
 }
 

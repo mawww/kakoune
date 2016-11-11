@@ -28,17 +28,17 @@ addhl -group /go/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)
 
 %sh{
     # Grammar
-    keywords="break|default|defer|else|fallthrough|for|func|go|goto|if|import"
-    keywords="${keywords}|make|new|package|range|return|select|case|switch|type|continue"
-    keywords="${keywords}|append|cap|close|complex|copy|delete|imag|len|panic|print|println|real|recover"
-    attributes="const|var"
+    keywords="break|default|func|interface|select|case|defer|go|map|struct"
+    keywords="${keywords}|chan|else|goto|package|switch|const|fallthrough|if|range|type"
+    keywords="${keywords}|continue|for|import|return|var"
     types="bool|byte|chan|complex128|complex64|float32|float64|int|int16|int32"
     types="${types}|int64|int8|interface|intptr|map|rune|string|struct|uint|uint16|uint32|uint64|uint8"
-    values="false|true|nil"
+    values="false|true|nil|iota"
+    functions="append|cap|close|complex|copy|delete|imag|len|make|new|panic|print|println|real|recover"
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=go %{
-        set window static_words '${keywords}:${attributes}:${types}:${values}'
+        set window static_words '${keywords}:${attributes}:${types}:${values}:${functions}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -47,6 +47,7 @@ addhl -group /go/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)
         addhl -group /go/code regex \b(${attributes})\b 0:attribute
         addhl -group /go/code regex \b(${types})\b 0:type
         addhl -group /go/code regex \b(${values})\b 0:value
+        addhl -group /go/code regex \b(${functions})\b 0:builtin
     "
 }
 
