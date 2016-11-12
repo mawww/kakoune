@@ -837,7 +837,12 @@ void keep(Context& context, NormalParams)
         {
             auto begin = buffer.iterator_at(sel.min());
             auto end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
-            if (regex_search(begin, end, ex, RegexConstant::match_any) == matching)
+            const auto flags = match_flags(is_bol(begin.coord()),
+                                           is_eol(buffer, end.coord()),
+                                           is_bow(buffer, begin.coord()),
+                                           is_eow(buffer, end.coord())) |
+                               RegexConstant::match_any;
+            if (regex_search(begin, end, ex, flags) == matching)
                 keep.push_back(sel);
         }
         if (keep.empty())
