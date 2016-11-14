@@ -37,6 +37,7 @@ struct TestableFlags
     Flags value;
     constexpr operator bool() const { return (UnderlyingType<Flags>)value; }
     constexpr operator Flags() const { return value; }
+    constexpr operator UnderlyingType<Flags>() const { return (UnderlyingType<Flags>)value; }
 
     bool operator==(const TestableFlags<Flags>& other) const { return value == other.value; }
     bool operator!=(const TestableFlags<Flags>& other) const { return value != other.value; }

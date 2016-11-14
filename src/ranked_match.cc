@@ -216,6 +216,8 @@ UnitTest test_ranked_match{[] {
     kak_assert(not (RankedMatch{"source", "so"} < RankedMatch{"source", "so"}));
     kak_assert(RankedMatch{"single/word", "wo"} < RankedMatch{"multiw/ord", "wo"});
     kak_assert(RankedMatch{"foo/bar/foobar", "foobar"} < RankedMatch{"foo/bar/baz", "foobar"});
+    kak_assert(RankedMatch{"delete-buffer", "db"} < RankedMatch{"debug", "db"});
+    kak_assert(RankedMatch{"create_task", "ct"} < RankedMatch{"constructor", "ct"});
 }};
 
 UnitTest test_used_letters{[]()
