@@ -58,13 +58,13 @@ command *q!* has to be used).
 *colorscheme* <name>::
 	load named colorscheme
 
-*nameclient* <name>::
+*rename-client* <name>::
 	set current client name
 
-*namebuf* <name>::
+*rename-buffer* <name>::
 	set current buffer name
 
-*namesession* <name>::
+*rename-session* <name>::
 	set current session name
 
 *echo* [options] <text>::
@@ -99,7 +99,7 @@ command *q!* has to be used).
 	remove an alias if its current value is the same as the one passed
 	as an optional parameter, remove it unconditionally otherwise
 
-*decl* [-hidden] <type> <name> [<value>]::
+*declare-option* [-hidden] <type> <name> [<value>]::
 	declare a new option, the -hidden hides the option in completion
 	suggestions (c.f. the 'options' documentation page)
 
@@ -114,7 +114,7 @@ command *q!* has to be used).
 	execute commands, as if they were entered in the command prompt
 	(c.f. the 'execeval' documentation page)
 
-*def* [<flags>] <name> <command>::
+*define-command* [<flags>] <name> <command>::
 	define a new command (c.f. the 'Declaring new commands' section below)
 
 *map* <scope> <mode> <key> <keys>::
@@ -134,15 +134,15 @@ command *q!* has to be used).
 	execute a command whenever an event is triggered (c.f. the 'hooks'
 	documentation page)
 
-*rmhooks* <scope> <group>::
+*remove-hooks* <scope> <group>::
 	remove every hooks in *scope* that are part of the given *group*
 	(c.f. the 'hooks' documentation page)
 
-*addhl* [<flags>] <highlighter_name> <highlighter_parameters> ...::
+*add-highlighter* [<flags>] <highlighter_name> <highlighter_parameters> ...::
 	add a highlighter to the current window (c.f. the 'highlighters'
 	documentation page)
 
-*rmhl* <highlighter_id>::
+*remove-highlighter* <highlighter_id>::
 	remove the highlighter whose id is *highlighter_id* (c.f. the
 	'highlighters' documentation page)
 
@@ -206,9 +206,9 @@ backslash (\;) to be considered as a literal semicolon argument
 
 Declaring new commands
 ----------------------
-New commands can be defined using the *def* command:
+New commands can be defined using the *define-command* command:
 
-*def* [flags] <command_name> <commands>::
+*define-command* [flags] <command_name> <commands>::
 	*commands* is a string containing the commands to execute, and *flags*
 	can be any combination of the following parameters:
 

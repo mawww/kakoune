@@ -128,7 +128,7 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
         printf %s "edit '$msgfile'
               hook buffer BufWritePost '.*\Q$msgfile\E' %{ %sh{
                   if git commit -F '$msgfile' --cleanup=strip $@ > /dev/null; then
-                     printf %s 'eval -client $kak_client echo -color Information Commit succeeded; delbuf'
+                     printf %s 'eval -client $kak_client echo -color Information Commit succeeded; delete-buffer'
                   else
                      printf %s 'eval -client $kak_client echo -color Error Commit failed'
                   fi

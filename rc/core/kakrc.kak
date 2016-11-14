@@ -12,7 +12,7 @@ addhl -group / regions -default code kakrc \
     # Grammar
     keywords="hook|rmhooks|addhl|rmhl|exec|eval|source|runtime|def|alias"
     keywords="${keywords}|unalias|decl|echo|edit|set|map|face|prompt|menu|info"
-    keywords="${keywords}|try|catch|nameclient|namebuf|cd|colorscheme"
+    keywords="${keywords}|try|catch|rename-client|rename-buffer|rename-session|change-directory|colorscheme"
     values="default|black|red|green|yellow|blue|magenta|cyan|white"
 
     # Add the language's grammar to the static completion list
