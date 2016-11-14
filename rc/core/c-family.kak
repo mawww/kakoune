@@ -36,28 +36,28 @@ hook global BufSetOption mimetype=text/x-objc %{
 }
 
 def -hidden _c-family-trim-autoindent %[ eval -draft -itersel %[
-    ## remove the line if it's empty when leaving the insert mode
+    # remove the line if it's empty when leaving the insert mode
     try %[ exec <a-x> 1s^(\h+)$<ret> d ]
 ] ]
 
 def -hidden _c-family-indent-on-newline %[ eval -draft -itersel %[
     exec \;
     try %[
-        ## if previous line closed a paren, copy indent of the opening paren line
+        # if previous line closed a paren, copy indent of the opening paren line
         exec -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?$<ret> m<a-\;>J s\`|.\'<ret> 1<a-&>
     ] catch %[
-        ## else indent new lines with the same level as the previous one
+        # else indent new lines with the same level as the previous one
         exec -draft K <a-&>
     ]
-    ## remove previous empty lines resulting from the automatic indent
+    # remove previous empty lines resulting from the automatic indent
     try %[ exec -draft k <a-x>H <a-k>^\h+$<ret> d ]
-    ## indent after an opening brace
+    # indent after an opening brace
     try %[ exec -draft K s\{\h*$<ret> j <a-gt> ]
-    ## indent after a label
+    # indent after a label
     try %[ exec -draft k <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> ]
-    ## indent after a statement not followed by an opening brace
+    # indent after a statement not followed by an opening brace
     try %[ exec -draft k <a-x> <a-k>\b(if|else|for|while)\h*\(.+?\)\h*$<ret> j <a-gt> ]
-    ## align to the opening parenthesis on a previous line if its followed by text on the same line
+    # align to the opening parenthesis on a previous line if its followed by text on the same line
     try %[ exec -draft {b <a-k>\`\([^\n]+\n[^\n]*\n?\'<ret> L s\`|.\'<ret> & ]
 ] ]
 
@@ -80,42 +80,47 @@ def -hidden _c-family-insert-on-newline %[ eval -draft %[
     exec \;
     try %[
         eval -draft %[
-            ## copy the commenting prefix
+            # copy the commenting prefix
             exec -save-regs '' k <a-x>1s^\h*(//+\h*)<ret> y
             try %[
-                ## if the previous comment isn't empty, create a new one
+                # if the previous comment isn't empty, create a new one
                 exec <a-x><a-K>^\h*//+\h*$<ret> j<a-x>s^\h*<ret>p
             ] catch %[
-                ## if there is no text in the previous comment, remove it completely
+                # if there is no text in the previous comment, remove it completely
                 exec d
             ]
         ]
     ]
     try %[
-        ## select the previous line
-        exec k <a-x>
-        ## if the previous line isn't within a comment scope, break
-        exec <a-k>^(\h*/\*|\h+\*[^/])<ret>
-        ## simple test to check that the previous comment has been left open
-        exec <a-K>\*/\h*$<ret>
+        # if the previous line isn't within a comment scope, break
+        exec -draft k<a-x> <a-k>^(\h*/\*|\h+\*(?!/))<ret>
+
+        # find comment opening, validate it was not closed, and check its using star prefixes
+        exec -draft <a-?>/\*<ret><a-H> <a-K>\*/<ret> <a-k>\`\h*/\*([^\n]*\n\h*\*)*[^\n]*\n\h*.\'<ret>
 
         try %[
-            ## if the next line is a comment line, add a star
-            exec -draft 2j<a-x><a-k>^\h+\*<ret>
-            exec -draft j<a-x>s^\h*<ret>a*<space><esc>
+            # if the previous line is opening the comment, insert star preceeded by space
+            exec -draft k<a-x><a-k>^\h*/\*<ret>
+            exec -draft i<space>*<space><esc>
         ] catch %[
-            try %[
-                ## if the previous line is an empty comment line, close the comment scope
-                exec -draft <a-k>^\h+\*\h+$<ret> <a-x>1s\*(\h*)<ret>c/<esc>
+           try %[
+                # if the next line is a comment line insert a star
+                exec -draft j<a-x><a-k>^\h+\*<ret>
+                exec -draft i*<space><esc>
             ] catch %[
-                ## if the previous line is a non-empty comment line, add a star
-                exec -draft j<a-x>s^\h*<ret>a*<space><esc>
+                try %[
+                    # if the previous line is an empty comment line, close the comment scope
+                    exec -draft k<a-x><a-k>^\h+\*\h+$<ret> <a-x>1s\*(\h*)<ret>c/<esc>
+                ] catch %[
+                    # if the previous line is a non-empty comment line, add a star
+                    exec -draft i*<space><esc>
+                ]
             ]
         ]
 
-        ## trim trailing whitespace on the previous line
+        # trim trailing whitespace on the previous line
         try %[ exec -draft 1s(\h+)$<ret>d ]
-        ## align the new star with the previous one
+        # align the new star with the previous one
         exec J<a-x>1s^[^*]*(\*)<ret>&
     ]
 ] ]
