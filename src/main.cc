@@ -357,6 +357,7 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
             local_ui = this;
             m_old_sighup = set_signal_handler(SIGHUP, [](int) {
                 ClientManager::instance().remove_client(*local_client, false);
+                static_cast<LocalUI*>(local_ui)->on_sighup();
             });
 
             m_old_sigtstp = set_signal_handler(SIGTSTP, [](int) {
@@ -373,9 +374,8 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 
                     raise(SIGTSTP);
 
-                    sigprocmask(SIG_SETMASK, &old_mask, nullptr);
-
                     set_signal_handler(SIGTSTP, current);
+                    sigprocmask(SIG_SETMASK, &old_mask, nullptr);
                 }
                 else
                     convert_to_client_pending = true;

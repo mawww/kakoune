@@ -480,8 +480,19 @@ void NCursesUI::check_resize(bool force)
     werase(curscr);
 }
 
+void NCursesUI::on_sighup()
+{
+    set_signal_handler(SIGWINCH, SIG_DFL);
+    set_signal_handler(SIGCONT, SIG_DFL);
+
+    m_window = nullptr;
+}
+
 bool NCursesUI::is_key_available()
 {
+    if (not m_window)
+        return false;
+
     check_resize();
 
     wtimeout(m_window, 0);
@@ -491,7 +502,6 @@ bool NCursesUI::is_key_available()
     wtimeout(m_window, -1);
     return c != ERR;
 }
-
 
 Key NCursesUI::get_key()
 {

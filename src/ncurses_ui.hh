@@ -59,6 +59,10 @@ public:
         DisplayCoord pos;
         DisplayCoord size;
     };
+
+protected:
+    void on_sighup();
+
 private:
     void check_resize(bool force = false);
     void redraw();
