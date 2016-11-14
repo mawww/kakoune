@@ -528,6 +528,10 @@ public:
             if (context().has_client())
                 context().client().menu_hide();
             context().print_status(DisplayLine{});
+
+            // Maintain hooks disabled in callback if they were before pop_mode
+            ScopedSetBool disable_hooks(context().hooks_disabled(),
+                                        context().hooks_disabled());
             pop_mode();
             int selected = m_selected - m_choices.begin();
             m_callback(selected, MenuEvent::Validate, context());
@@ -546,6 +550,10 @@ public:
             {
                 if (context().has_client())
                     context().client().menu_hide();
+
+                // Maintain hooks disabled in callback if they were before pop_mode
+                ScopedSetBool disable_hooks(context().hooks_disabled(),
+                                            context().hooks_disabled());
                 pop_mode();
                 int selected = m_selected - m_choices.begin();
                 m_callback(selected, MenuEvent::Abort, context());
@@ -680,6 +688,10 @@ public:
             context().print_status(DisplayLine{});
             if (context().has_client())
                 context().client().menu_hide();
+
+            // Maintain hooks disabled in callback if they were before pop_mode
+            ScopedSetBool disable_hooks(context().hooks_disabled(),
+                                        context().hooks_disabled());
             pop_mode();
             // call callback after pop_mode so that callback
             // may change the mode
@@ -693,6 +705,10 @@ public:
             context().print_status(DisplayLine{});
             if (context().has_client())
                 context().client().menu_hide();
+
+            // Maintain hooks disabled in callback if they were before pop_mode
+            ScopedSetBool disable_hooks(context().hooks_disabled(),
+                                        context().hooks_disabled());
             pop_mode();
             m_callback(line, PromptEvent::Abort, context());
             return;
@@ -935,6 +951,9 @@ public:
 
     void on_key(Key key) override
     {
+        // maintain hooks disabled in the callback if they were before pop_mode
+        ScopedSetBool disable_hooks(context().hooks_disabled(),
+                                    context().hooks_disabled());
         pop_mode();
         m_callback(key, context());
     }

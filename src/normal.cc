@@ -201,7 +201,12 @@ void goto_commands(Context& context, NormalParams params)
 
                 Buffer* buffer = BufferManager::instance().get_buffer_ifp(path);
                 if (not buffer)
-                    buffer = open_file_buffer(path);
+                {
+                    buffer = open_file_buffer(path, context.hooks_disabled() ?
+                                                      Buffer::Flags::NoHooks
+                                                    : Buffer::Flags::None);
+                    buffer->flags() &= ~Buffer::Flags::NoHooks;
+                }
 
                 if (buffer != &context.buffer())
                 {

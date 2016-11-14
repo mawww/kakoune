@@ -109,8 +109,9 @@ public:
         New      = 1 << 1,
         Fifo     = 1 << 2,
         NoUndo   = 1 << 3,
-        Debug    = 1 << 4,
-        ReadOnly = 1 << 5,
+        NoHooks  = 1 << 4,
+        Debug    = 1 << 5,
+        ReadOnly = 1 << 6,
     };
 
     Buffer(String name, Flags flags, StringView data = {},

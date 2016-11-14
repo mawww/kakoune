@@ -222,6 +222,8 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
     auto& buffer_manager = BufferManager::instance();
 
     Buffer* buffer = buffer_manager.get_buffer_ifp(name);
+    const bool no_hooks = context.hooks_disabled();
+    const auto flags = no_hooks ? Buffer::Flags::NoHooks : Buffer::Flags::None;
 
     if (force_reload and buffer and buffer->flags() & Buffer::Flags::File)
         reload_file_buffer(*buffer);
@@ -236,18 +238,20 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
             }
 
             if (not buffer)
-                buffer = buffer_manager.create_buffer(name, Buffer::Flags::None);
+                buffer = buffer_manager.create_buffer(name, flags);
         }
         else if (auto fifo = parser.get_switch("fifo"))
             buffer = open_fifo(name, *fifo, (bool)parser.get_switch("scroll"));
         else if (not buffer)
         {
-            buffer = parser.get_switch("existing") ? open_file_buffer(name)
-                                                   : open_or_create_file_buffer(name);
+            buffer = parser.get_switch("existing") ? open_file_buffer(name, flags)
+                                                   : open_or_create_file_buffer(name, flags);
             if (buffer->flags() & Buffer::Flags::New)
                 context.print_status({ format("new file '{}'", name),
                                        get_face("StatusLine") });
         }
+
+        buffer->flags() &= ~Buffer::Flags::NoHooks;
     }
 
     const size_t param_count = parser.positional_count();
