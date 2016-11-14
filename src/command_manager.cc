@@ -536,10 +536,7 @@ Completions CommandManager::complete_command_name(const Context& context,
     if (not with_aliases)
         return {0, query.length(), Kakoune::complete(query, query.length(), commands)};
 
-    auto candidates = Kakoune::complete(query, query.length(),
-        concatenated(commands,
-                     context.aliases().flatten_aliases() |
-                     transform(std::mem_fn(&AliasRegistry::AliasDesc::first))));
+    auto candidates = Kakoune::complete(query, query.length(), commands);
     return {0, query.length(), std::move(candidates)};
 }
 
