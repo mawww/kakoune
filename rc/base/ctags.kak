@@ -7,30 +7,39 @@ decl str-list ctagsfiles 'tags'
 
 def -params ..1 \
     -shell-candidates '
-        ( for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr \':\' \'\n\'); do
-              namecache=$(dirname ${tags})/.kak.$(basename ${tags}).namecache
-              if [ -z "$(find ${namecache} -prune -newer ${tags})" ]; then
-                  cat ${tags} | cut -f 1 | uniq > ${namecache}
-              fi
-              cat ${namecache}
-          done )' \
+        printf %s\\n "$kak_opt_ctagsfiles" | tr \':\' \'\n\' |
+        while read -r candidate; do
+            [ -f "$candidate" ] && readlink -f "$candidate"
+        done | awk \'!x[$0]++\' | # remove duplicates
+        while read -r tags; do
+            namecache=$(dirname "$tags")/.kak.$(basename "$tags").namecache
+            if [ -z "$(find "$namecache" -prune -newer "$tags")" ]; then
+                cut -f 1 "$tags" | uniq > "$namecache"
+            fi
+            cat "$namecache"
+        done' \
     -docstring %{tag [<symbol>]: jump to a symbol's definition
 If no symbol is passed then the current selection is used as symbol name} \
     tag \
     %{ %sh{
         export tagname=${1:-${kak_selection}}
-        for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr ':' '\n'); do
-            export tagroot="$(readlink -f $(dirname "$tags"))/"
-            readtags -t "${tags}" ${tagname} | awk -F '\t|\n' '
-            /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
-                re=$0;
-                sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
-                keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
-                out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps %{ try %{ edit %{" ENVIRON["tagroot"] $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
-            }
-            /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps %{ edit %{" ENVIRON["tagroot"] $2 "} %{" $3 "}}}" }
-            END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out }'
-        done
+        printf %s\\n "$kak_opt_ctagsfiles" | tr ':' '\n' |
+        while read -r candidate; do
+            [ -f "$candidate" ] && readlink -f "$candidate"
+        done | awk '!x[$0]++' | # remove duplicates
+        while read -r tags; do
+            printf '!TAGROOT\t%s\n' "$(readlink -f $(dirname "$tags"))/"
+            readtags -t "$tags" $tagname
+        done | awk -F '\t|\n' '
+        /^!TAGROOT\t/ { tagroot=$2 }
+        /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
+            re=$0;
+            sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
+            keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
+            out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps %{ try %{ edit %{" tagroot $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
+        }
+        /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps %{ edit %{" tagroot $2 "} %{" $3 "}}}" }
+        END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out }'
     }}
 
 def tag-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ eval -draft %{
