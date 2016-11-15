@@ -351,7 +351,7 @@ void write_all_buffers()
     }
 }
 
-const CommandDesc writeall_cmd = {
+const CommandDesc write_all_cmd = {
     "write-all",
     "wa",
     "write all buffers that are associated to a file",
@@ -475,7 +475,7 @@ const CommandDesc force_write_quit_cmd = {
     write_quit<true>
 };
 
-const CommandDesc writeall_quit_cmd = {
+const CommandDesc write_all_quit_cmd = {
     "write-all-quit",
     "waq",
     "write all buffers associated to a file and quit current client",
@@ -540,7 +540,7 @@ void cycle_buffer(const ParametersParser& parser, Context& context, const ShellC
     }
 }
 
-const CommandDesc buffernext_cmd = {
+const CommandDesc buffer_next_cmd = {
     "buffer-next",
     "bn",
     "buffer-next: move to the next buffer in the list",
@@ -551,10 +551,10 @@ const CommandDesc buffernext_cmd = {
     cycle_buffer<true>
 };
 
-const CommandDesc bufferprev_cmd = {
-    "buffer-prev",
+const CommandDesc buffer_previous_cmd = {
+    "buffer-previous",
     "bp",
-    "buffer-prev: move to the previous buffer in the list",
+    "buffer-previous: move to the previous buffer in the list",
     no_params,
     CommandFlags::None,
     CommandHelper{},
@@ -573,7 +573,7 @@ void delete_buffer(const ParametersParser& parser, Context& context, const Shell
     manager.delete_buffer(buffer);
 }
 
-const CommandDesc delbuf_cmd = {
+const CommandDesc delete_buffer_cmd = {
     "delete-buffer",
     "db",
     "delete-buffer [name]: delete current buffer or the buffer named <name> if given",
@@ -584,7 +584,7 @@ const CommandDesc delbuf_cmd = {
     delete_buffer<false>
 };
 
-const CommandDesc force_delbuf_cmd = {
+const CommandDesc force_delete_buffer_cmd = {
     "delete-buffer!",
     "db!",
     "delete-buffer! [name]: delete current buffer or the buffer named <name> if "
@@ -596,7 +596,7 @@ const CommandDesc force_delbuf_cmd = {
     delete_buffer<true>
 };
 
-const CommandDesc namebuf_cmd = {
+const CommandDesc rename_buffer_cmd = {
     "rename-buffer",
     nullptr,
     "rename-buffer <name>: change current buffer name",
@@ -627,7 +627,7 @@ Completions complete_highlighter(const Context& context,
     }
 }
 
-Completions rm_highlighter_completer(
+Completions remove_highlighter_completer(
     const Context& context, CompletionFlags flags, CommandParameters params,
     size_t token_to_complete, ByteCount pos_in_token)
 {
@@ -722,14 +722,14 @@ const CommandDesc add_highlighter_cmd = {
     }
 };
 
-const CommandDesc rm_highlighter_cmd = {
+const CommandDesc remove_highlighter_cmd = {
     "remove-highlighter",
     "rmhl",
     "add-highlighter <path>: remove highlighter <name>",
     ParameterDesc{ {}, ParameterDesc::Flags::None, 1, 1 },
     CommandFlags::None,
     CommandHelper{},
-    rm_highlighter_completer,
+    remove_highlighter_completer,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         StringView path = parser[0];
@@ -783,7 +783,7 @@ const CommandDesc add_hook_cmd = {
     }
 };
 
-const CommandDesc rm_hook_cmd = {
+const CommandDesc remove_hook_cmd = {
     "remove-hooks",
     "rmhooks",
     "remove-hooks <scope> <group>: remove all hooks whose group is <group>",
@@ -1179,9 +1179,9 @@ static OptionManager& get_options(StringView scope, const Context& context, Stri
 }
 
 const CommandDesc set_option_cmd = {
+    "set-option",
     "set",
-    nullptr,
-    "set <switches> <scope> <name> <value>: set option <name> in <scope> to <value>\n"
+    "set-option <switches> <scope> <name> <value>: set option <name> in <scope> to <value>\n"
     "<scope> can be global, buffer, window, or current which refers to the narrowest\n"
     "scope the option is set in",
     ParameterDesc{
@@ -1226,9 +1226,9 @@ const CommandDesc set_option_cmd = {
 };
 
 const CommandDesc unset_option_cmd = {
+    "unset-option",
     "unset",
-    nullptr,
-    "unset <scope> <name>: remove <name> option from scope, falling back on parent scope value"
+    "unset-option <scope> <name>: remove <name> option from scope, falling back on parent scope value"
     "<scope> can be buffer, window, or current which refers to the narrowest\n"
     "scope the option is set in",
     ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
@@ -1888,10 +1888,10 @@ static Completions complete_face(const Context&, CompletionFlags flags,
             FaceRegistry::instance().complete_alias_name(prefix, cursor_pos)};
 }
 
-const CommandDesc face_cmd = {
+const CommandDesc set_face_cmd = {
+    "set-face",
     "face",
-    nullptr,
-    "face <name> <facespec>: set face <name> to refer to <facespec>\n"
+    "set-face <name> <facespec>: set face <name> to refer to <facespec>\n"
     "\n"
     "facespec format is <fg color>[,<bg color>][+<attributes>]\n"
     "colors are either a color name, or rgb:###### values.\n"
@@ -1912,10 +1912,10 @@ const CommandDesc face_cmd = {
     }
 };
 
-const CommandDesc set_client_name_cmd = {
+const CommandDesc rename_client_cmd = {
     "rename-client",
     "nc",
-    "nameclient <name>: set current client name to <name>",
+    "rename-client <name>: set current client name to <name>",
     single_name_param,
     CommandFlags::None,
     CommandHelper{},
@@ -1930,9 +1930,9 @@ const CommandDesc set_client_name_cmd = {
 };
 
 const CommandDesc set_register_cmd = {
+    "set-register",
     "reg",
-    nullptr,
-    "reg <name> <value>: set register <name> to <value>",
+    "set-register <name> <value>: set register <name> to <value>",
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
     CommandFlags::None,
     CommandHelper{},
@@ -1957,7 +1957,7 @@ const CommandDesc select_cmd = {
     }
 };
 
-const CommandDesc change_working_directory_cmd = {
+const CommandDesc change_directory_cmd = {
     "change-directory",
     "cd",
     "change-directory [<directory>]: change the server's working directory to <directory>, or the home directory if unspecified",
@@ -1982,7 +1982,7 @@ const CommandDesc change_working_directory_cmd = {
     }
 };
 
-const CommandDesc set_session_name = {
+const CommandDesc rename_session_cmd = {
     "rename-session",
     nullptr,
     "rename-session <name>: change remote session name",
@@ -2014,8 +2014,8 @@ void register_commands()
     register_command(edit_cmd);
     register_command(force_edit_cmd);
     register_command(write_cmd);
-    register_command(writeall_cmd);
-    register_command(writeall_quit_cmd);
+    register_command(write_all_cmd);
+    register_command(write_all_quit_cmd);
     register_command(kill_cmd);
     register_command(force_kill_cmd);
     register_command(quit_cmd);
@@ -2023,15 +2023,15 @@ void register_commands()
     register_command(write_quit_cmd);
     register_command(force_write_quit_cmd);
     register_command(buffer_cmd);
-    register_command(buffernext_cmd);
-    register_command(bufferprev_cmd);
-    register_command(delbuf_cmd);
-    register_command(force_delbuf_cmd);
-    register_command(namebuf_cmd);
+    register_command(buffer_next_cmd);
+    register_command(buffer_previous_cmd);
+    register_command(delete_buffer_cmd);
+    register_command(force_delete_buffer_cmd);
+    register_command(rename_buffer_cmd);
     register_command(add_highlighter_cmd);
-    register_command(rm_highlighter_cmd);
+    register_command(remove_highlighter_cmd);
     register_command(add_hook_cmd);
-    register_command(rm_hook_cmd);
+    register_command(remove_hook_cmd);
     register_command(define_command_cmd);
     register_command(alias_cmd);
     register_command(unalias_cmd);
@@ -2050,12 +2050,12 @@ void register_commands()
     register_command(onkey_cmd);
     register_command(info_cmd);
     register_command(try_catch_cmd);
-    register_command(face_cmd);
-    register_command(set_client_name_cmd);
+    register_command(set_face_cmd);
+    register_command(rename_client_cmd);
     register_command(set_register_cmd);
     register_command(select_cmd);
-    register_command(change_working_directory_cmd);
-    register_command(set_session_name);
+    register_command(change_directory_cmd);
+    register_command(rename_session_cmd);
 }
 
 }
