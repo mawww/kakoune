@@ -12,7 +12,7 @@ def -params ..1 \
             [ -f "$candidate" ] && readlink -f "$candidate"
         done | awk \'!x[$0]++\' | # remove duplicates
         while read -r tags; do
-            namecache=$(dirname "$tags")/.kak.$(basename "$tags").namecache
+            namecache="${tags%/*}/.kak.${tags##*/}.namecache"
             if [ -z "$(find "$namecache" -prune -newer "$tags")" ]; then
                 cut -f 1 "$tags" | uniq > "$namecache"
             fi
@@ -28,7 +28,7 @@ If no symbol is passed then the current selection is used as symbol name} \
             [ -f "$candidate" ] && readlink -f "$candidate"
         done | awk '!x[$0]++' | # remove duplicates
         while read -r tags; do
-            printf '!TAGROOT\t%s\n' "$(readlink -f $(dirname "$tags"))/"
+            printf '!TAGROOT\t%s\n' "$(readlink -f "${tags%/*}")/"
             readtags -t "$tags" $tagname
         done | awk -F '\t|\n' '
         /^!TAGROOT\t/ { tagroot=$2 }
