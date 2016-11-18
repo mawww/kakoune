@@ -401,14 +401,12 @@ CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
 
     const bool check_ignored_regex = not ignored_regex.empty() and
         not regex_match(fileprefix.begin(), fileprefix.end(), ignored_regex);
-    const bool include_hidden = fileprefix.substr(0_byte, 1_byte) == ".";
     const bool only_dirs = (flags & FilenameFlags::OnlyDirectories);
 
-    auto filter = [&ignored_regex, check_ignored_regex, include_hidden, only_dirs](const dirent& entry, struct stat& st)
+    auto filter = [&ignored_regex, check_ignored_regex, only_dirs](const dirent& entry, struct stat& st)
     {
         StringView name{entry.d_name};
-        return (include_hidden or name.substr(0_byte, 1_byte) != ".") and
-               (not check_ignored_regex or not regex_match(name.begin(), name.end(), ignored_regex)) and
+        return (not check_ignored_regex or not regex_match(name.begin(), name.end(), ignored_regex)) and
                (not only_dirs or S_ISDIR(st.st_mode));
     };
     auto files = list_files(parsed_dirname, filter);
