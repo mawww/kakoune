@@ -16,15 +16,15 @@ hook global BufCreate .*\.tex %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 addhl -group / regions -default content latex \
-    comment '^%' '\n' ''
+    comment '(?<!\\)%' '\n' ''
 
 addhl -group /latex/comment fill comment
 # Scopes, starting with a backslash
-addhl -group /latex/content regex '\\\w+\b' 0:keyword
+addhl -group /latex/content regex '\\(?!_)\w+\b' 0:keyword
 # Options passed to scopes, between brackets
-addhl -group /latex/content regex '\\\w+\b\[([^]]+)\]' 1:value
+addhl -group /latex/content regex '\\(?!_)\w+\b\[([^]]+)\]' 1:value
 # Content between dollar signs/pairs
-addhl -group /latex/content regex '\$\$?[^$]+\$\$?' 0:magenta
+addhl -group /latex/content regex '(?<!\\)\$\$?([^$]|(?<=\\)\$)+\$\$?' 0:magenta
 # Emphasized text
 addhl -group /latex/content regex '\\(emph|textit)\{([^}]+)\}' 2:default+i
 # Bold text
