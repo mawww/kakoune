@@ -250,7 +250,7 @@ public:
             throw runtime_error("wrong parameter count");
 
         FacesSpec faces;
-        for (auto& spec : params.subrange(1, params.size()-1))
+        for (auto& spec : params.subrange(1))
         {
             auto colon = find(spec, ':');
             if (colon == spec.end())
@@ -440,7 +440,7 @@ HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
         throw runtime_error("Wrong parameter count");
 
     FacesSpec faces;
-    for (auto& spec : params.subrange(1, params.size()-1))
+    for (auto& spec : params.subrange(1))
     {
         auto colon = find(spec, ':');
         if (colon == spec.end())

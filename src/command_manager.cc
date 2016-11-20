@@ -662,7 +662,7 @@ Completions CommandManager::complete(const Context& context,
         auto command_it = find_command(context, command_name);
         if (command_it != m_commands.end() and command_it->second.completer)
             return command_it->second.completer(
-                context, flags, params.subrange(1, params.size()-1),
+                context, flags, params.subrange(1),
                 token_to_complete-1, pos_in_token);
     }
     return Completions{};

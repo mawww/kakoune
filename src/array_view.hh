@@ -60,9 +60,10 @@ public:
 
     constexpr bool empty() const { return m_size == 0; }
 
-    constexpr ArrayView subrange(size_t first, size_t count) const
+    constexpr ArrayView subrange(size_t first, size_t count = -1) const
     {
-        return ArrayView(m_pointer + first, count);
+        return ArrayView(m_pointer + std::min(first, m_size),
+                         std::min(count, m_size - std::min(first, m_size)));
     }
 
 private:
