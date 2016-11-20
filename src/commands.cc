@@ -93,7 +93,8 @@ struct PerArgumentCommandCompleter<Completer, Rest...> : PerArgumentCommandCompl
             return m_completer(context, flags, arg, pos_in_token);
         }
         return PerArgumentCommandCompleter<Rest...>::operator()(
-            context, flags, params, token_to_complete-1, pos_in_token);
+            context, flags, params.subrange(1),
+            token_to_complete-1, pos_in_token);
     }
 
     Completer m_completer;
