@@ -746,11 +746,25 @@ const CommandDesc remove_highlighter_cmd = {
     }
 };
 
+static Completions complete_hooks(const Context&, CompletionFlags,
+                                  const String& prefix, ByteCount cursor_pos)
+{
+    static constexpr auto hooks = {
+        "BufWritePost", "BufWritePre", "FocusIn", "FocusOut",
+        "InsertBegin", "InsertChar", "InsertEnd", "InsertIdle",
+        "InsertKey", "InsertMove", "KakBegin", "KakEnd",
+        "InsertCompletionHide", "InsertCompletionShow",
+        "NormalBegin", "NormalEnd", "NormalIdle", "NormalKey",
+        "RuntimeError", "WinDisplay",
+    };
+    return { 0_byte, cursor_pos, complete(prefix, cursor_pos, hooks) };
+}
+
 const CommandDesc add_hook_cmd = {
     "hook",
     nullptr,
-    "hook <switches> <scope> <hook_name> <command>: add <command> in <scope> "
-    "to be executed on hook <hook_name>\n"
+    "hook <switches> <scope> <hook_name> <filter> <command>: add <command> in <scope> "
+    "to be executed on hook <hook_name> when its parameter matches the <filter> regex\n"
     "scope can be: \n"
     "  * global: hook is executed for any buffer or window\n"
     "  * buffer: hook is executed only for the current buffer\n"
@@ -762,7 +776,7 @@ const CommandDesc add_hook_cmd = {
     },
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_scope, complete_nothing, complete_nothing,
+    make_completer(complete_scope, complete_hooks, complete_nothing,
                    [](const Context& context, CompletionFlags flags,
                       const String& prefix, ByteCount cursor_pos)
                    { return CommandManager::instance().complete(
