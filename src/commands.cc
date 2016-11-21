@@ -746,17 +746,19 @@ const CommandDesc remove_highlighter_cmd = {
     }
 };
 
+static constexpr auto hooks = {
+    "BufCreate", "BufNew", "BufOpen", "BufClose", "BufWritePost", "BufWritePre",
+    "BufOpenFifo", "BufCloseFifo", "BufReadFifo", "BufSetOption",
+    "InsertBegin", "InsertChar", "InsertEnd", "InsertIdle", "InsertKey",
+    "InsertMove", "InsertCompletionHide", "InsertCompletionShow",
+    "KakBegin", "KakEnd", "FocusIn", "FocusOut", "RuntimeError",
+    "NormalBegin", "NormalEnd", "NormalIdle", "NormalKey",
+    "WinClose", "WinCreate", "WinDisplay", "WinResize", "WinSetOption",
+};
+
 static Completions complete_hooks(const Context&, CompletionFlags,
                                   const String& prefix, ByteCount cursor_pos)
 {
-    static constexpr auto hooks = {
-        "BufWritePost", "BufWritePre", "FocusIn", "FocusOut",
-        "InsertBegin", "InsertChar", "InsertEnd", "InsertIdle",
-        "InsertKey", "InsertMove", "KakBegin", "KakEnd",
-        "InsertCompletionHide", "InsertCompletionShow",
-        "NormalBegin", "NormalEnd", "NormalIdle", "NormalKey",
-        "RuntimeError", "WinDisplay",
-    };
     return { 0_byte, cursor_pos, complete(prefix, cursor_pos, hooks) };
 }
 
@@ -783,6 +785,9 @@ const CommandDesc add_hook_cmd = {
                          context, flags, prefix, cursor_pos); }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
+        if (not contains(hooks, parser[1]))
+            throw runtime_error{format("Unknown hook '{}'", parser[1])};
+
         Regex regex(parser[2], Regex::optimize | Regex::nosubs | Regex::ECMAScript);
         const String& command = parser[3];
 
