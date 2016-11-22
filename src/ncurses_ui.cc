@@ -3,10 +3,7 @@
 #include "containers.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
-#include "file.hh"
 #include "keys.hh"
-#include "register_manager.hh"
-#include "utf8_iterator.hh"
 
 #include <algorithm>
 
