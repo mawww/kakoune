@@ -14,15 +14,15 @@ UsedLetters used_letters(StringView str)
     for (auto c : str)
     {
         if (c >= 'a' and c <= 'z')
-            res |= 1uL << (c - 'a');
+            res |= 1uLL << (c - 'a');
         else if (c >= 'A' and c <= 'Z')
-            res |= 1uL << (c - 'A' + 26);
+            res |= 1uLL << (c - 'A' + 26);
         else if (c == '_')
-            res |= 1uL << 53;
+            res |= 1uLL << 53;
         else if (c == '-')
-            res |= 1uL << 54;
+            res |= 1uLL << 54;
         else
-            res |= 1uL << 63;
+            res |= 1uLL << 63;
     }
     return res;
 }
