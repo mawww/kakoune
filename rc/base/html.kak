@@ -4,11 +4,11 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-html %{
+hook global BufSetOption mimetype=(text/((x-)?html|xml)|application/((\w+\+)?xml)) %{
     set buffer filetype html
 }
 
-hook global BufCreate .*[.](html) %{
+hook global BufCreate .*\.(html|xml) %{
     set buffer filetype html
 }
 
