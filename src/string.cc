@@ -283,17 +283,16 @@ String replace(StringView str, StringView substr, StringView replacement)
 
 Optional<int> str_to_int_ifp(StringView str)
 {
+    bool negative = not str.empty() and str[0] == '-';
+    if (negative)
+        str = str.substr(1_byte);
+
     unsigned int res = 0;
-    bool negative = false;
-    for (auto it = str.begin(), end = str.end(); it != end; ++it)
+    for (auto c : str)
     {
-        const char c = *it;
-        if (it == str.begin() and c == '-')
-            negative = true;
-        else if (c >= '0' and c <= '9')
-            res = res * 10 + c - '0';
-        else
+        if (c < '0' or c > '9')
             return {};
+        res = res * 10 + c - '0';
     }
     return negative ? -(int)res : (int)res;
 }
@@ -474,11 +473,9 @@ void format_impl(StringView fmt, ArrayView<const StringView> params, AppendFunc 
             auto closing = std::find(opening, end, '}');
             if (closing == end)
                 throw runtime_error("Format string error, unclosed '{'");
-            int index;
-            if (closing == opening + 1)
-                index = implicitIndex;
-            else
-                index = str_to_int({opening+1, closing});
+
+            const int index = (closing == opening + 1) ?
+                implicitIndex : str_to_int({opening+1, closing});
 
             if (index >= params.size())
                 throw runtime_error("Format string parameter index too big");
