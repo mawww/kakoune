@@ -423,10 +423,11 @@ Vector<StringView> wrap_lines(StringView text, ColumnCount max_width)
             ++word_end;
 
         while (word_end > line_begin and
-               StringView{line_begin.base(), word_end.base()}.column_length() >= max_width)
+               utf8::column_distance(line_begin.base(), word_end.base()) >= max_width)
         {
-            auto line_end = last_word_end <= line_begin ? Utf8It{utf8::advance(line_begin.base(), text.end(), max_width), text}
-                                                        : last_word_end;
+            auto line_end = last_word_end <= line_begin ?
+                Utf8It{utf8::advance(line_begin.base(), text.end(), max_width), text}
+              : last_word_end;
 
             lines.emplace_back(line_begin.base(), line_end.base());
 
