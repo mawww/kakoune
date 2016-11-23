@@ -365,24 +365,23 @@ const CommandDesc write_all_cmd = {
 
 static void ensure_all_buffers_are_saved()
 {
-    Vector<String> names;
-    for (auto& buffer : BufferManager::instance())
+    auto is_modified = [](const std::unique_ptr<Buffer>& buf) {
+        return (buf->flags() & Buffer::Flags::File) and buf->is_modified();
+    };
+
+    auto it = find_if(BufferManager::instance(), is_modified);
+    const auto end = BufferManager::instance().end();
+    if (it == end)
+        return;
+
+    String message = "modified buffers remaining: [";
+    while (it != end)
     {
-        if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified())
-            names.push_back(buffer->name());
+        message += (*it)->name();
+        it = std::find_if(it+1, end, is_modified);
+        message += (it != end) ? ", " : "]";
     }
-    if (not names.empty())
-    {
-        String message = "modified buffers remaining: [";
-        for (auto it = names.begin(); it != names.end(); ++it)
-        {
-            if (it != names.begin())
-                message += ", ";
-            message += *it;
-        }
-        message += "]";
-        throw runtime_error(message);
-    }
+    throw runtime_error(message);
 }
 
 const CommandDesc kill_cmd = {
