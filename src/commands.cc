@@ -340,7 +340,12 @@ const CommandDesc write_cmd = {
 
 void write_all_buffers()
 {
+    // Copy buffer list because hooks might be creating/deleting buffers
+    Vector<SafePtr<Buffer>> buffers;
     for (auto& buffer : BufferManager::instance())
+        buffers.emplace_back(buffer.get());
+
+    for (auto& buffer : buffers)
     {
         if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified()
             and !(buffer->flags() & Buffer::Flags::ReadOnly))
