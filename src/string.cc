@@ -34,7 +34,7 @@ String::Data::Data(Data&& other) noexcept
     if (other.is_long())
     {
         l = other.l;
-        other.s.size = 1;
+        other.set_empty();
     }
     else
         s = other.s;
@@ -52,6 +52,8 @@ String::Data& String::Data::operator=(const Data& other)
 
 String::Data& String::Data::operator=(Data&& other) noexcept
 {
+    release();
+
     if (other.is_long())
     {
         l = other.l;
