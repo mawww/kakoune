@@ -338,7 +338,7 @@ const CommandDesc write_cmd = {
     write_buffer,
 };
 
-void write_all_buffers()
+void write_all_buffers(Context& context)
 {
     // Copy buffer list because hooks might be creating/deleting buffers
     Vector<SafePtr<Buffer>> buffers;
@@ -350,9 +350,9 @@ void write_all_buffers()
         if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified()
             and !(buffer->flags() & Buffer::Flags::ReadOnly))
         {
-            buffer->run_hook_in_own_context("BufWritePre", buffer->name());
+            buffer->run_hook_in_own_context("BufWritePre", buffer->name(), context.name());
             write_buffer_to_file(*buffer, buffer->name());
-            buffer->run_hook_in_own_context("BufWritePost", buffer->name());
+            buffer->run_hook_in_own_context("BufWritePost", buffer->name(), context.name());
         }
     }
 }
@@ -365,7 +365,7 @@ const CommandDesc write_all_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser&, Context&, const ShellContext&){ write_all_buffers(); }
+    [](const ParametersParser&, Context& context, const ShellContext&){ write_all_buffers(context); }
 };
 
 static void ensure_all_buffers_are_saved()
@@ -490,7 +490,7 @@ const CommandDesc write_all_quit_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        write_all_buffers();
+        write_all_buffers(context);
         quit<false>(context);
     }
 };

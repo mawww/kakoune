@@ -708,12 +708,14 @@ void Buffer::on_option_changed(const Option& option)
                             format("{}={}", option.name(), option.get_as_string()));
 }
 
-void Buffer::run_hook_in_own_context(StringView hook_name, StringView param)
+void Buffer::run_hook_in_own_context(StringView hook_name, StringView param, String client_name)
 {
     if (m_flags & Buffer::Flags::NoHooks)
         return;
 
-    InputHandler hook_handler({ *this, Selection{} }, Context::Flags::Transient);
+    InputHandler hook_handler{{ *this, Selection{} },
+                              Context::Flags::Transient,
+                              std::move(client_name)};
     hooks().run_hook(hook_name, param, hook_handler.context());
 }
 

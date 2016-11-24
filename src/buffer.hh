@@ -190,7 +190,8 @@ public:
 
     ValueMap& values() const { return m_values; }
 
-    void run_hook_in_own_context(StringView hook_name, StringView param);
+    void run_hook_in_own_context(StringView hook_name, StringView param,
+                                 String client_name = "");
 
     void reload(StringView data, timespec fs_timestamp = InvalidTime);
 

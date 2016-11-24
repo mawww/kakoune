@@ -367,12 +367,15 @@ void Window::on_option_changed(const Option& option)
 }
 
 
-void Window::run_hook_in_own_context(StringView hook_name, StringView param)
+void Window::run_hook_in_own_context(StringView hook_name, StringView param,
+                                     String client_name)
 {
     if (m_buffer->flags() & Buffer::Flags::NoHooks)
         return;
 
-    InputHandler hook_handler({ *m_buffer, Selection{} }, Context::Flags::Transient);
+    InputHandler hook_handler{{ *m_buffer, Selection{} },
+                              Context::Flags::Transient,
+                              std::move(client_name)};
     hook_handler.context().set_window(*this);
     if (m_client)
         hook_handler.context().set_client(*m_client);
