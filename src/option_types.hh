@@ -242,17 +242,19 @@ enum class DebugFlags
     Hooks = 1 << 0,
     Shell = 1 << 1,
     Profile = 1 << 2,
+    Keys = 1 << 3,
 };
 
 template<>
 struct WithBitOps<DebugFlags> : std::true_type {};
 
-constexpr Array<EnumDesc<DebugFlags>, 3> enum_desc(DebugFlags)
+constexpr Array<EnumDesc<DebugFlags>, 4> enum_desc(DebugFlags)
 {
     return { {
         { DebugFlags::Hooks, "hooks" },
         { DebugFlags::Shell, "shell" },
-        { DebugFlags::Profile, "profile" }
+        { DebugFlags::Profile, "profile" },
+        { DebugFlags::Keys, "keys" }
     } };
 }
 

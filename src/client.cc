@@ -77,8 +77,14 @@ void Client::handle_available_input(EventMode mode)
 
     try
     {
+        const bool debug_keys = (bool)(context().options()["debug"].get<DebugFlags>() & DebugFlags::Keys);
+
         while (Optional<Key> key = get_next_key(mode))
         {
+            if (debug_keys)
+                write_to_debug_buffer(format("Client '{}' got key '{}'",
+                                             context().name(), key_to_str(*key)));
+
             if (*key == ctrl('c'))
                 killpg(getpgrp(), SIGINT);
             else if (*key == Key::FocusIn)
