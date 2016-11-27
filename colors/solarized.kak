@@ -31,6 +31,7 @@
         face attribute  ${violet}
         face comment    ${base01}
         face meta       ${orange}
+        face builtin   default+b
 
         # and markup
         face title      ${yellow}

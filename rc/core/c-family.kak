@@ -150,16 +150,17 @@ def -hidden _c-family-insert-on-newline %[ eval -draft %[
 }
 
 # c specific
-addhl -group /c/code regex %{\bNULL\b|\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+addhl -group /c/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 %sh{
     # Grammar
     keywords="while|for|if|else|do|switch|case|default|goto|asm|break|continue|return|sizeof"
     attributes="const|auto|register|inline|static|volatile|struct|enum|union|typedef|extern|restrict"
     types="void|char|short|int|long|signed|unsigned|float|double|size_t"
+    values="NULL"
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=c %{
-        set window static_words '${keywords}:${attributes}:${types}'
+        set window static_words '${keywords}:${attributes}:${types}:${values}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -167,6 +168,7 @@ addhl -group /c/code regex %{\bNULL\b|\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[
         addhl -group /c/code regex \b(${keywords})\b 0:keyword
         addhl -group /c/code regex \b(${attributes})\b 0:attribute
         addhl -group /c/code regex \b(${types})\b 0:type
+        addhl -group /c/code regex \b(${values})\b 0:value
     "
 }
 
@@ -198,6 +200,16 @@ addhl -group /cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'
         addhl -group /cpp/code regex \b(${attributes})\b 0:attribute
         addhl -group /cpp/code regex \b(${types})\b 0:type
         addhl -group /cpp/code regex \b(${values})\b 0:value
+    "
+}
+
+# c and c++ compiler macros
+%sh{
+    gcc_macros="__cplusplus|__STDC_HOSTED__|__FILE__|__LINE__|__DATE__|__TIME__|__STDCPP_DEFAULT_NEW_ALIGNMENT__"
+
+    printf %s "
+        addhl -group /c/code regex \b(${gcc_macros})\b 0:builtin
+        addhl -group /cpp/code regex \b(${gcc_macros})\b 0:builtin
     "
 }
 

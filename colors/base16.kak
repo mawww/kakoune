@@ -27,6 +27,7 @@
         face attribute ${orange_dark}
         face comment ${grey_dark}
         face meta ${orange_light}
+        face builtin default+b
     "
 
     ## markup
