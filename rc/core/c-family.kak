@@ -205,11 +205,11 @@ addhl -group /cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'
 
 # c and c++ compiler macros
 %sh{
-    gcc_macros="__cplusplus|__STDC_HOSTED__|__FILE__|__LINE__|__DATE__|__TIME__|__STDCPP_DEFAULT_NEW_ALIGNMENT__"
+    builtin_macros="__cplusplus|__STDC_HOSTED__|__FILE__|__LINE__|__DATE__|__TIME__|__STDCPP_DEFAULT_NEW_ALIGNMENT__"
 
     printf %s "
-        addhl -group /c/code regex \b(${gcc_macros})\b 0:builtin
-        addhl -group /cpp/code regex \b(${gcc_macros})\b 0:builtin
+        addhl -group /c/code regex \b(${builtin_macros})\b 0:builtin
+        addhl -group /cpp/code regex \b(${builtin_macros})\b 0:builtin
     "
 }
 
