@@ -1675,8 +1675,8 @@ const CommandDesc eval_string_cmd = {
 const CommandDesc prompt_cmd = {
     "prompt",
     nullptr,
-    "prompt <prompt> <register> <command>: prompt the use to enter a text string "
-    "stores it in <register> and then executes <command>",
+    "prompt <prompt> <command>: prompt the use to enter a text string"
+    "and then executes <command>, entered text is available in the 'text' value",
     ParameterDesc{
         { { "init", { true, "set initial prompt content" } },
           { "password", { false, "Do not display entered text and clear reg after command" } },
@@ -1684,17 +1684,14 @@ const CommandDesc prompt_cmd = {
           { "client-completion", { false, "use client completion for prompt" } },
           { "buffer-completion", { false, "use buffer completion for prompt" } },
           { "command-completion", { false, "use command completion for prompt" } } },
-        ParameterDesc::Flags::None, 3, 3
+        ParameterDesc::Flags::None, 2, 2
     },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
-        if (parser[1].length() != 1)
-            throw runtime_error("register name should be a single character");
-        const char reg = parser[1][0_byte];
-        const String& command = parser[2];
+        const String& command = parser[1];
         auto initstr = parser.get_switch("init").value_or(StringView{});
 
         Completer completer;
@@ -1724,24 +1721,26 @@ const CommandDesc prompt_cmd = {
         const auto flags = parser.get_switch("password") ?
             PromptFlags::Password : PromptFlags::None;
 
+        // const cast so that lambda capute is mutable
+        ShellContext& sc = const_cast<ShellContext&>(shell_context);
         context.input_handler().prompt(
             parser[0], initstr.str(), get_face("Prompt"),
             flags, std::move(completer),
-            [=](StringView str, PromptEvent event, Context& context)
+            [=](StringView str, PromptEvent event, Context& context) mutable
             {
                 if (event != PromptEvent::Validate)
                     return;
-                RegisterManager::instance()[reg] = ConstArrayView<String>(str.str());
+                sc.env_vars["text"] = str.str();
 
                 ScopedSetBool disable_history{context.history_disabled()};
 
-                CommandManager::instance().execute(command, context, shell_context);
+                CommandManager::instance().execute(command, context, sc);
 
                 if (flags & PromptFlags::Password)
                 {
-                    const String& str = RegisterManager::instance()[reg].values(context)[0];
-                    memset(const_cast<String&>(str).data(), 0, (int)str.length());
-                    RegisterManager::instance()[reg] = ConstArrayView<String>("");
+                    String& str = sc.env_vars["text"];;
+                    memset(str.data(), 0, (int)str.length());
+                    str = "";
                 }
             });
     }
@@ -1802,24 +1801,27 @@ const CommandDesc menu_cmd = {
     }
 };
 
-const CommandDesc onkey_cmd = {
-    "onkey",
+const CommandDesc on_key_cmd = {
+    "on-key",
     nullptr,
-    "onkey <register> <command>: wait for next user key, store it in <register> and execute <command>",
-    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    "on-key <command>: wait for next user key then and execute <command>, "
+    "with key availabe in the `key` value",
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 1, 1 },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
-        String reg = parser[0];
-        String command = parser[1];
-        context.input_handler().on_next_key(KeymapMode::None,
-                                            [=](Key key, Context& context) {
-            RegisterManager::instance()[reg] = key_to_str(key);
+        String command = parser[0];
+
+        // const cast so that the lambda capute is mutable
+        ShellContext& sc = const_cast<ShellContext&>(shell_context);
+        context.input_handler().on_next_key(
+            KeymapMode::None, [=](Key key, Context& context) mutable {
+            sc.env_vars["key"] = key_to_str(key);
             ScopedSetBool disable_history{context.history_disabled()};
 
-            CommandManager::instance().execute(command, context, shell_context);
+            CommandManager::instance().execute(command, context, sc);
         });
     }
 };
@@ -2071,7 +2073,7 @@ void register_commands()
     register_command(eval_string_cmd);
     register_command(prompt_cmd);
     register_command(menu_cmd);
-    register_command(onkey_cmd);
+    register_command(on_key_cmd);
     register_command(info_cmd);
     register_command(try_catch_cmd);
     register_command(set_face_cmd);

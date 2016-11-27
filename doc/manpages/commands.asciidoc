@@ -151,15 +151,19 @@ Helpers
 Kakoune provides some helper commands that can be used to define composite
 commands:
 
-*prompt* <prompt> <register> <command>::
-	prompt the user for a string, when the user validates, store the
-	result in given *register* and run *commmand*. the *-init <str>*
-	switch allows setting initial content, the *-password* switch hides
-        the entered text and clears the register after command execution.
+*prompt* <prompt> <command>::
+	prompt the user for a string, when the user validates, executes the
+	command. The entered text is available in the `text` value accessible
+	through `$kak_text` in shells or `%val{text}` in commands.
 
-*onkey* <register> <command>::
-	wait for next key from user, writes it into given <register> and
-	execute commands
+	The *-init <str>* switch allows setting initial content, the
+	*-password* switch hides the entered text and clears the register
+	after command execution.
+
+*on-key* <command>::
+	wait for next key from user, then execute <command>, the key is
+	available through the `key` value, accessiable through `$kak_key`
+	in shells, or `%val{key}` in commands.
 
 *menu* <label1> <commands1> <label2> <commands2> ...::
 	display a menu using labels, the selected label’s commands are
