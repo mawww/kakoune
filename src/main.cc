@@ -18,6 +18,7 @@
 #include "parameters_parser.hh"
 #include "register_manager.hh"
 #include "remote.hh"
+#include "regex.hh"
 #include "scope.hh"
 #include "shell_manager.hh"
 #include "string.hh"
@@ -37,6 +38,9 @@ struct startup_error : Kakoune::runtime_error
 {
     using Kakoune::runtime_error::runtime_error;
 };
+
+inline void write_stdout(StringView str) { write(1, str); }
+inline void write_stderr(StringView str) { write(2, str); }
 
 String runtime_directory()
 {

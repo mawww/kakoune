@@ -4,6 +4,8 @@
 #include "event_manager.hh"
 #include "file.hh"
 
+#include <unistd.h>
+
 #if defined(__APPLE__)
 #define st_mtim st_mtimespec
 #endif
@@ -128,7 +130,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
         ssize_t count = 0;
         do
         {
-            count = read(fifo, data, buffer_size);
+            count = ::read(fifo, data, buffer_size);
             auto pos = buffer->back_coord();
 
             const bool prevent_scrolling = pos == BufferCoord{0,0} and not scroll;
@@ -165,8 +167,8 @@ void write_to_debug_buffer(StringView str)
 {
     if (not BufferManager::has_instance())
     {
-        write_stderr(str);
-        write_stderr("\n");
+        write(2, str);
+        write(2, "\n");
         return;
     }
 

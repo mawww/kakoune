@@ -2,6 +2,7 @@
 
 #include "containers.hh"
 #include "display_buffer.hh"
+#include "exception.hh"
 #include "keys.hh"
 #include "file.hh"
 #include "event_manager.hh"
@@ -159,7 +160,7 @@ void rpc_call(StringView method, Args&&... args)
     auto q = format(R"(\{ "jsonrpc": "2.0", "method": "{}", "params": [{}] }{})",
                     method, concat(std::forward<Args>(args)...), "\n");
 
-    write_stdout(q);
+    write(1, q);
 }
 
 JsonUI::JsonUI()
@@ -424,8 +425,8 @@ void JsonUI::parse_requests(EventMode mode)
         }
         catch (runtime_error& error)
         {
-            write_stderr(format("error while handling requests '{}': '{}'",
-                                m_requests, error.what()));
+            write(2, format("error while handling requests '{}': '{}'",
+                            m_requests, error.what()));
             // try to salvage request by dropping its first line
             pos = std::min(m_requests.end(), find(m_requests, '\n')+1);
         }

@@ -1,12 +1,15 @@
 #include "ranked_match.hh"
 
-#include "utf8_iterator.hh"
+#include "flags.hh"
 #include "unit_tests.hh"
+#include "utf8_iterator.hh"
 
 #include <algorithm>
 
 namespace Kakoune
 {
+
+template<> struct WithBitOps<RankedMatch::Flags> : std::true_type {};
 
 UsedLetters used_letters(StringView str)
 {

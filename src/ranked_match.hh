@@ -2,7 +2,6 @@
 #define ranked_match_hh_INCLUDED
 
 #include "string.hh"
-#include "flags.hh"
 
 namespace Kakoune
 {
@@ -50,8 +49,6 @@ private:
     int m_word_boundary_match_count = 0;
     int m_max_index = 0;
 };
-
-template<> struct WithBitOps<RankedMatch::Flags> : std::true_type {};
 
 }
 

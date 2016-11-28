@@ -1,12 +1,13 @@
 #include "shell_manager.hh"
 
+#include "buffer_utils.hh"
 #include "clock.hh"
 #include "context.hh"
-#include "buffer_utils.hh"
-#include "event_manager.hh"
-#include "file.hh"
-#include "face_registry.hh"
 #include "display_buffer.hh"
+#include "event_manager.hh"
+#include "face_registry.hh"
+#include "file.hh"
+#include "regex.hh"
 
 #include <cstring>
 #include <sys/types.h>

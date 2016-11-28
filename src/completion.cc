@@ -1,6 +1,7 @@
 #include "completion.hh"
 #include "file.hh"
 #include "context.hh"
+#include "regex.hh"
 
 namespace Kakoune
 {

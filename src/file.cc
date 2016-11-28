@@ -2,10 +2,11 @@
 
 #include "assert.hh"
 #include "buffer.hh"
-#include "unicode.hh"
+#include "exception.hh"
 #include "ranked_match.hh"
 #include "regex.hh"
 #include "string.hh"
+#include "unicode.hh"
 
 #include <errno.h>
 #include <sys/mman.h>
@@ -32,6 +33,14 @@
 
 namespace Kakoune
 {
+
+struct file_access_error : runtime_error
+{
+public:
+    file_access_error(StringView filename,
+                      StringView error_desc)
+        : runtime_error(format("{}: {}", filename, error_desc)) {}
+};
 
 String parse_filename(StringView filename)
 {
@@ -168,14 +177,9 @@ String read_file(StringView filename, bool text)
 {
     int fd = open(parse_filename(filename).c_str(), O_RDONLY);
     if (fd == -1)
-    {
-        if (errno == ENOENT)
-            throw file_not_found(filename);
-
         throw file_access_error(filename, strerror(errno));
-    }
-    auto close_fd = on_scope_end([fd]{ close(fd); });
 
+    auto close_fd = on_scope_end([fd]{ close(fd); });
     return read_fd(fd, text);
 }
 
@@ -185,12 +189,7 @@ MappedFile::MappedFile(StringView filename)
 
     fd = open(real_filename.c_str(), O_RDONLY | O_NONBLOCK);
     if (fd == -1)
-    {
-        if (errno == ENOENT)
-            throw file_not_found{real_filename};
-
         throw file_access_error(real_filename, strerror(errno));
-    }
 
     fstat(fd, &st);
     if (S_ISDIR(st.st_mode))
@@ -206,6 +205,11 @@ MappedFile::~MappedFile()
         munmap((void*)data, st.st_size);
         close(fd);
     }
+}
+
+MappedFile::operator StringView() const
+{
+    return { data, (int)st.st_size };
 }
 
 bool file_exists(StringView filename)

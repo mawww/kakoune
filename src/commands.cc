@@ -21,6 +21,7 @@
 #include "register_manager.hh"
 #include "insert_completer.hh"
 #include "remote.hh"
+#include "regex.hh"
 #include "shell_manager.hh"
 #include "string.hh"
 #include "window.hh"

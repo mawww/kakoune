@@ -114,7 +114,7 @@ public:
     explicit String(Codepoint cp, ColumnCount count)
     {
         kak_assert(count % codepoint_width(cp) == 0);
-        int cp_count = (int)count / codepoint_width(cp);
+        int cp_count = (int)(count / codepoint_width(cp));
         reserve(utf8::codepoint_size(cp) * cp_count);
         while (cp_count-- > 0)
             utf8::dump(std::back_inserter(*this), cp);
@@ -289,7 +289,7 @@ inline String& operator+=(String& lhs, StringView rhs)
 inline String operator+(StringView lhs, StringView rhs)
 {
     String res;
-    res.reserve((int)(lhs.length() + rhs.length()));
+    res.reserve(lhs.length() + rhs.length());
     res.append(lhs.data(), lhs.length());
     res.append(rhs.data(), rhs.length());
     return res;
@@ -310,6 +310,11 @@ inline bool operator<(const StringView& lhs, const StringView& rhs)
 {
     return std::lexicographical_compare(lhs.begin(), lhs.end(),
                                         rhs.begin(), rhs.end());
+}
+
+inline String operator"" _str(const char* str, size_t)
+{
+    return String(str);
 }
 
 Vector<String> split(StringView str, char separator, char escape);
@@ -335,10 +340,16 @@ String join(const Container& container, char joiner, bool esc_joiner = true)
     return res;
 }
 
-inline String operator"" _str(const char* str, size_t)
+inline bool prefix_match(StringView str, StringView prefix)
 {
-    return String(str);
+    return str.substr(0_byte, prefix.length()) == prefix;
 }
+
+bool subsequence_match(StringView str, StringView subseq);
+
+String expand_tabs(StringView line, ColumnCount tabstop, ColumnCount col = 0);
+
+Vector<StringView> wrap_lines(StringView text, ColumnCount max_width);
 
 int str_to_int(StringView str); // throws on error
 Optional<int> str_to_int_ifp(StringView str);
@@ -376,17 +387,6 @@ to_string(const StronglyTypedNumber<RealType, ValueType>& val)
 {
     return to_string((ValueType)val);
 }
-
-inline bool prefix_match(StringView str, StringView prefix)
-{
-    return str.substr(0_byte, prefix.length()) == prefix;
-}
-
-bool subsequence_match(StringView str, StringView subseq);
-
-String expand_tabs(StringView line, ColumnCount tabstop, ColumnCount col = 0);
-
-Vector<StringView> wrap_lines(StringView text, ColumnCount max_width);
 
 namespace detail
 {

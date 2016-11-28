@@ -2,10 +2,9 @@
 #define file_hh_INCLUDED
 
 #include "array_view.hh"
-#include "completion.hh"
-#include "exception.hh"
-#include "regex.hh"
 #include "flags.hh"
+#include "units.hh"
+#include "vector.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -13,23 +12,12 @@
 namespace Kakoune
 {
 
-struct file_access_error : runtime_error
-{
-public:
-    file_access_error(StringView filename,
-                      StringView error_desc)
-        : runtime_error(format("{}: {}", filename, error_desc)) {}
-};
-
-struct file_not_found : file_access_error
-{
-    file_not_found(StringView filename)
-        : file_access_error(filename, "file not found") {}
-};
-
 class Buffer;
 class String;
 class StringView;
+class Regex;
+
+using CandidateList = Vector<String, MemoryDomain::Completion>;
 
 // parse ~/ and $env values in filename and returns the translated filename
 String parse_filename(StringView filename);
@@ -45,16 +33,13 @@ bool fd_readable(int fd);
 String read_fd(int fd, bool text = false);
 String read_file(StringView filename, bool text = false);
 void write(int fd, StringView data);
-inline void write_stdout(StringView str) { write(1, str); }
-inline void write_stderr(StringView str) { write(2, str); }
-
 
 struct MappedFile
 {
     MappedFile(StringView filename);
     ~MappedFile();
 
-    operator StringView() const { return { data, (int)st.st_size }; }
+    operator StringView() const;
 
     int fd;
     const char* data;

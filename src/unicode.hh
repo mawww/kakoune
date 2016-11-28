@@ -5,6 +5,8 @@
 #include <wchar.h>
 #include <locale>
 
+#include "units.hh"
+
 namespace Kakoune
 {
 
@@ -49,7 +51,7 @@ inline bool is_basic_alpha(Codepoint c)
     return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z');
 }
 
-inline size_t codepoint_width(Codepoint c)
+inline ColumnCount codepoint_width(Codepoint c)
 {
     return c == '\n' ? 1 : wcwidth((wchar_t)c);
 }
