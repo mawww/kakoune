@@ -837,13 +837,15 @@ void keep(Context& context, NormalParams)
         if (ex.empty())
             return;
         const Buffer& buffer = context.buffer();
+
         Vector<Selection> keep;
         for (auto& sel : context.selections())
         {
             auto begin = buffer.iterator_at(sel.min());
             auto end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
-            const auto flags = match_flags(is_bol(begin.coord()),
-                                           is_eol(buffer, end.coord()),
+            // We do not consider if end is on an eol, as it seems to
+            // give more intuitive behaviours in keep use cases.
+            const auto flags = match_flags(is_bol(begin.coord()), false,
                                            is_bow(buffer, begin.coord()),
                                            is_eow(buffer, end.coord())) |
                                RegexConstant::match_any;
