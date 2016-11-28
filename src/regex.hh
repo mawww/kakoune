@@ -135,7 +135,7 @@ bool regex_search(It begin, It end, const Regex& re,
     using Utf8It = RegexUtf8It<It>;
     try
     {
-        return boost::regex_search(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re);
+        return boost::regex_search(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re, flags);
     }
     catch (std::runtime_error& err)
     {
@@ -150,7 +150,7 @@ bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
     using Utf8It = RegexUtf8It<It>;
     try
     {
-        return boost::regex_search(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, res, re);
+        return boost::regex_search(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, res, re, flags);
     }
     catch (std::runtime_error& err)
     {
