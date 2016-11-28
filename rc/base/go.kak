@@ -28,7 +28,7 @@ addhl -group /go/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)
 
 %sh{
     # Grammar
-    keywords="break|default|func|interface|select|case|defer|go|map|struct"
+    keywords="break|default|error|func|interface|select|case|defer|go|map|struct"
     keywords="${keywords}|chan|else|goto|package|switch|const|fallthrough|if|range|type"
     keywords="${keywords}|continue|for|import|return|var"
     types="bool|byte|chan|complex128|complex64|float32|float64|int|int16|int32"
