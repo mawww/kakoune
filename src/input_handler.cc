@@ -208,7 +208,7 @@ public:
 
         if (m_mouse_handler.handle_key(key, context()))
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
-        if (cp and isdigit(*cp))
+        else if (cp and isdigit(*cp))
         {
             int new_val = m_params.count * 10 + *cp - '0';
             if (new_val < 0)
@@ -1021,7 +1021,9 @@ public:
 
         bool update_completions = true;
         bool moved = false;
-        if (key == Key::Escape or key == ctrl('c'))
+        if (m_mouse_handler.handle_key(key, context()))
+            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        else if (key == Key::Escape or key == ctrl('c'))
         {
             if (m_in_end)
                 throw runtime_error("Asked to exit insert mode while running InsertEnd hook");
@@ -1285,6 +1287,7 @@ private:
     bool             m_autoshowcompl;
     Timer            m_idle_timer;
     bool             m_in_end = false;
+    MouseHandler     m_mouse_handler;
 };
 
 }
