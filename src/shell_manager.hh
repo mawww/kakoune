@@ -44,7 +44,7 @@ public:
 
 private:
     struct EnvVarDesc { String str; bool prefix; EnvVarRetriever func; };
-    Vector<EnvVarDesc> m_env_vars;
+    Vector<EnvVarDesc, MemoryDomain::EnvVars> m_env_vars;
 };
 
 template<> struct WithBitOps<ShellManager::Flags> : std::true_type {};

@@ -82,11 +82,11 @@ public:
 private:
     friend class FDWatcher;
     friend class Timer;
-    Vector<FDWatcher*>  m_fd_watchers;
-    Vector<Timer*>      m_timers;
+    Vector<FDWatcher*, MemoryDomain::Events> m_fd_watchers;
+    Vector<Timer*, MemoryDomain::Events>     m_timers;
     fd_set m_forced_fd;
 
-    TimePoint        m_last;
+    TimePoint m_last;
 };
 
 using SignalHandler = void(*)(int);

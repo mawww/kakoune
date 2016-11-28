@@ -12,7 +12,7 @@ namespace Kakoune
 class BufferManager : public Singleton<BufferManager>
 {
 public:
-    using BufferList = Vector<std::unique_ptr<Buffer>>;
+    using BufferList = Vector<std::unique_ptr<Buffer>, MemoryDomain::BufferMeta>;
     using iterator = BufferList::const_iterator;
 
     ~BufferManager();

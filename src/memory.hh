@@ -33,6 +33,8 @@ enum class MemoryDomain
     Selections,
     History,
     Remote,
+    Events,
+    Completion,
     Count
 };
 
@@ -61,6 +63,8 @@ inline const char* domain_name(MemoryDomain domain)
         case MemoryDomain::Selections: return "Selections";
         case MemoryDomain::History: return "History";
         case MemoryDomain::Remote: return "Remote";
+        case MemoryDomain::Events: return "Events";
+        case MemoryDomain::Completion: return "Completion";
         case MemoryDomain::Count: break;
     }
     kak_assert(false);

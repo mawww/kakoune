@@ -75,7 +75,7 @@ private:
         DisplayCoord dimensions;
         size_t timestamp;
         size_t main_selection;
-        Vector<BufferRange> selections;
+        Vector<BufferRange, MemoryDomain::Display> selections;
     };
     Setup build_setup(const Context& context) const;
     Setup m_last_setup;

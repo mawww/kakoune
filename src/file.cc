@@ -421,7 +421,7 @@ CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
     return candidates(matches, expand ? parsed_dirname : dirname);
 }
 
-Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
+CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
 {
     String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
     StringView dirname, fileprefix;

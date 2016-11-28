@@ -71,7 +71,7 @@ struct HighlighterFactoryAndDocstring
     String docstring;
 };
 
-struct HighlighterRegistry : IdMap<HighlighterFactoryAndDocstring>,
+struct HighlighterRegistry : IdMap<HighlighterFactoryAndDocstring, MemoryDomain::Highlight>,
                              Singleton<HighlighterRegistry>
 {};
 

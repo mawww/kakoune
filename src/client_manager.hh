@@ -58,7 +58,7 @@ private:
     ClientList m_clients;
     ClientList m_client_trash;
     Vector<WindowAndSelections, MemoryDomain::Client> m_free_windows;
-    Vector<std::unique_ptr<Window>> m_window_trash;
+    Vector<std::unique_ptr<Window>, MemoryDomain::Client> m_window_trash;
 };
 
 }

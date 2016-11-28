@@ -940,7 +940,11 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
             String output = ShellManager::instance().eval(shell_cmd, context, {},
                                                           ShellManager::Flags::WaitForStdout,
                                                           shell_context).first;
-            return Completions{ 0_byte, pos_in_token, split(output, '\n', 0) };
+            CandidateList candidates;
+            for (auto& str : split(output, '\n', 0))
+                candidates.push_back(std::move(str));
+
+            return Completions{ 0_byte, pos_in_token, std::move(candidates) };
         };
     }
     else if (auto shell_cmd_opt = parser.get_switch("shell-candidates"))

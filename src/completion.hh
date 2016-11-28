@@ -15,7 +15,7 @@ namespace Kakoune
 
 class Context;
 
-using CandidateList = Vector<String>;
+using CandidateList = Vector<String, MemoryDomain::Completion>;
 
 struct Completions
 {

@@ -62,7 +62,7 @@ struct InsertCompletion
         bool operator<(const Candidate& other) const { return completion < other.completion; }
     };
 
-    using CandidateList = Vector<Candidate>;
+    using CandidateList = Vector<Candidate, MemoryDomain::Completion>;
 
     BufferCoord begin;
     BufferCoord end;

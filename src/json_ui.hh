@@ -54,7 +54,7 @@ private:
 
     InputCallback m_input_callback;
     FDWatcher m_stdin_watcher;
-    Vector<Key> m_pending_keys;
+    Vector<Key, MemoryDomain::Client> m_pending_keys;
     DisplayCoord m_dimensions;
     String m_requests;
 };

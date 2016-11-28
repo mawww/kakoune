@@ -30,7 +30,7 @@ private:
 
     SafePtr<HookManager> m_parent;
     IdMap<IdMap<HookFunc, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hook;
-    mutable Vector<std::pair<StringView, StringView>> m_running_hooks;
+    mutable Vector<std::pair<StringView, StringView>, MemoryDomain::Hooks> m_running_hooks;
 };
 
 }

@@ -60,7 +60,7 @@ private:
 
     String m_session;
     std::unique_ptr<FDWatcher> m_listener;
-    Vector<std::unique_ptr<Accepter>> m_accepters;
+    Vector<std::unique_ptr<Accepter>, MemoryDomain::Remote> m_accepters;
 };
 
 bool check_session(StringView session);

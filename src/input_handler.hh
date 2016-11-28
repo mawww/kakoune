@@ -106,7 +106,7 @@ private:
     Context m_context;
 
     friend class InputMode;
-    Vector<RefPtr<InputMode>> m_mode_stack;
+    Vector<RefPtr<InputMode>, MemoryDomain::Client> m_mode_stack;
 
     InputMode& current_mode() const { return *m_mode_stack.back(); }
 

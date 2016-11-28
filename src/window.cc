@@ -76,7 +76,7 @@ void Window::center_column(ColumnCount buffer_column)
 
 Window::Setup Window::build_setup(const Context& context) const
 {
-    Vector<BufferRange> selections;
+    Vector<BufferRange, MemoryDomain::Display> selections;
     for (auto& sel : context.selections())
         selections.push_back({sel.cursor(), sel.anchor()});
 
