@@ -11,11 +11,6 @@
 namespace Kakoune
 {
 
-struct name_not_unique : runtime_error
-{
-    name_not_unique() : runtime_error("buffer name is already in use") {}
-};
-
 BufferManager::~BufferManager()
 {
     // Move buffers to m_buffer_trash to avoid running BufClose
@@ -37,7 +32,7 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
     {
         if (buf->name() == name or
             (buf->flags() & Buffer::Flags::File and buf->name() == path))
-            throw name_not_unique();
+            throw runtime_error{"buffer name is already in use"};
     }
 
     m_buffers.emplace(m_buffers.begin(),
@@ -46,7 +41,7 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
     buffer.on_registered();
 
     if (contains(m_buffer_trash, &buffer))
-        throw runtime_error("Buffer got removed during its creation");
+        throw runtime_error{"Buffer got removed during its creation"};
 
     return &buffer;
 }
@@ -81,7 +76,7 @@ Buffer& BufferManager::get_buffer(StringView name)
 {
     Buffer* res = get_buffer_ifp(name);
     if (not res)
-        throw runtime_error(format("no such buffer '{}'", name));
+        throw runtime_error{format("no such buffer '{}'", name)};
     return *res;
 }
 

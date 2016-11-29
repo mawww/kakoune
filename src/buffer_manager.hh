@@ -2,9 +2,9 @@
 #define buffer_manager_hh_INCLUDED
 
 #include "buffer.hh"
-#include "completion.hh"
-#include "utils.hh"
-#include "safe_ptr.hh"
+#include "vector.hh"
+
+#include <memory>
 
 namespace Kakoune
 {
