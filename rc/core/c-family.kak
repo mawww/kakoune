@@ -50,7 +50,7 @@ def -hidden _c-family-indent-on-newline %[ eval -draft -itersel %[
         exec -draft K <a-&>
     ]
     # remove previous empty lines resulting from the automatic indent
-    try %[ exec -draft k <a-x>H <a-k>^\h+$<ret> d ]
+    try %[ exec -draft k <a-x> <a-k>^\h+$<ret> Hd ]
     # indent after an opening brace
     try %[ exec -draft K s\{\h*$<ret> j <a-gt> ]
     # indent after a label
