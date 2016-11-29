@@ -16,6 +16,7 @@
 #include "selectors.hh"
 #include "shell_manager.hh"
 #include "string.hh"
+#include "user_interface.hh"
 #include "window.hh"
 
 namespace Kakoune

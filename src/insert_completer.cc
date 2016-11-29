@@ -11,6 +11,7 @@
 #include "window.hh"
 #include "word_db.hh"
 #include "utf8_iterator.hh"
+#include "user_interface.hh"
 
 #include <numeric>
 

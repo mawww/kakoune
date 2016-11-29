@@ -8,6 +8,7 @@
 #include "event_manager.hh"
 #include "file.hh"
 #include "id_map.hh"
+#include "user_interface.hh"
 
 #include <sys/types.h>
 #include <sys/socket.h>

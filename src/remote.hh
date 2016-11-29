@@ -1,10 +1,8 @@
 #ifndef remote_hh_INCLUDED
 #define remote_hh_INCLUDED
 
-#include "coord.hh"
 #include "env_vars.hh"
 #include "exception.hh"
-#include "user_interface.hh"
 #include "utils.hh"
 
 #include <memory>
@@ -20,6 +18,7 @@ struct remote_error : runtime_error
 };
 
 class FDWatcher;
+class UserInterface;
 
 // A remote client handle communication between a client running on the server
 // and a user interface running on the local process.

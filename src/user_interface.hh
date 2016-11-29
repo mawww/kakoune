@@ -2,7 +2,6 @@
 #define user_interface_hh_INCLUDED
 
 #include "array_view.hh"
-#include "safe_ptr.hh"
 #include "id_map.hh"
 
 #include <functional>
@@ -36,7 +35,7 @@ enum class EventMode;
 
 using InputCallback = std::function<void(EventMode mode)>;
 
-class UserInterface : public SafeCountable
+class UserInterface
 {
 public:
     virtual ~UserInterface() {}

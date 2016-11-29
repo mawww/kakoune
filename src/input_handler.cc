@@ -10,6 +10,7 @@
 #include "regex.hh"
 #include "register_manager.hh"
 #include "unordered_map.hh"
+#include "user_interface.hh"
 #include "utf8.hh"
 #include "window.hh"
 

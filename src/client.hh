@@ -8,16 +8,19 @@
 #include "utils.hh"
 #include "option_manager.hh"
 #include "enum.hh"
-#include "user_interface.hh"
 
 namespace Kakoune
 {
 
 class Window;
+class UserInterface;
 class String;
 struct Key;
 
 enum class EventMode;
+enum class InfoStyle;
+enum class MenuStyle;
+
 
 class Client : public SafeCountable, public OptionManagerWatcher
 {
@@ -43,7 +46,7 @@ public:
 
     void print_status(DisplayLine status_line, bool immediate = false);
 
-    DisplayCoord dimensions() const { return m_ui->dimensions(); }
+    DisplayCoord dimensions() const;
 
     void force_redraw();
     void redraw_ifn();

@@ -121,6 +121,12 @@ void Client::print_status(DisplayLine status_line, bool immediate)
     }
 }
 
+
+DisplayCoord Client::dimensions() const
+{
+    return m_ui->dimensions();
+}
+
 DisplayLine Client::generate_mode_line() const
 {
     DisplayLine modeline;
