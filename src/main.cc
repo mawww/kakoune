@@ -465,14 +465,9 @@ int run_client(StringView session, StringView init_command, UIType ui_type)
         while (true)
             event_manager.handle_next_events(EventMode::Normal);
     }
-    catch (remote_error&)
+    catch (remote_error& e)
     {
-        write_stderr("disconnected from server\n");
-        return -1;
-    }
-    catch (connection_failed& e)
-    {
-        write_stderr(format("{}\n", e.what()));
+        write_stderr(format("{}\ndisconnecting\n", e.what()));
         return -1;
     }
     return 0;
@@ -713,9 +708,9 @@ int run_pipe(StringView session)
     {
         send_command(session, command);
     }
-    catch (connection_failed& e)
+    catch (remote_error& e)
     {
-        write_stderr(format("{}\n", e.what()));
+        write_stderr(format("{}\ndisconnecting\n", e.what()));
         return -1;
     }
     return 0;

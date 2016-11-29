@@ -19,13 +19,6 @@ struct remote_error : runtime_error
     {}
 };
 
-struct connection_failed : runtime_error
-{
-    connection_failed(StringView filename)
-        : runtime_error{format("connect to {} failed", filename)}
-    {}
-};
-
 class FDWatcher;
 
 // A remote client handle communication between a client running on the server

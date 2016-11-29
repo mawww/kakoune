@@ -49,10 +49,18 @@ public:
 
     ~MsgWriter() noexcept(false)
     {
-        *reinterpret_cast<uint32_t*>(m_stream.data()+1) = (uint32_t)m_stream.size();
-        int res = ::write(m_socket, m_stream.data(), m_stream.size());
-        if (res == 0)
-            throw remote_error{"peer disconnected"};
+        uint32_t count = (uint32_t)m_stream.size();
+        char* data = m_stream.data();
+        *reinterpret_cast<uint32_t*>(data+1) = count;
+        while (count > 0)
+        {
+            int res = ::write(m_socket, data, count);
+            if (res <= 0)
+                throw remote_error{res ? "peer disconnected"
+                                       : format("socket write failed: {}", strerror(errno))};
+            data += res;
+            count -= res;
+        }
     }
 
     void write(const char* val, size_t size)
@@ -226,10 +234,9 @@ private:
     void read_from_socket(int sock, size_t size)
     {
         int res = ::read(sock, m_stream.data() + m_write_pos, size);
-        if (res == 0)
-            throw remote_error{"peer disconnected"};
-        if (res < 0)
-            throw remote_error{format("socket error, read returned {}", res)};
+        if (res <= 0)
+            throw remote_error{res ? "peer disconnected"
+                                   : format("socket read failed: {}", strerror(errno))};
         m_write_pos += res;
     }
 
@@ -238,6 +245,7 @@ private:
     uint32_t m_write_pos = 0;
     uint32_t m_read_pos = header_size;
 };
+
 template<>
 String MsgReader::read<String>()
 {
@@ -493,7 +501,7 @@ static int connect_to(StringView session)
     fcntl(sock, F_SETFD, FD_CLOEXEC);
     sockaddr_un addr = session_addr(session);
     if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
-        throw connection_failed(addr.sun_path);
+        throw remote_error(format("connect to {} failed", addr.sun_path));
     return sock;
 }
 
