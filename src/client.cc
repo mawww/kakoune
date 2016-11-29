@@ -37,7 +37,12 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
     m_window->options().register_watcher(*this);
 
     m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
-    m_ui->set_input_callback([this](EventMode mode) { handle_available_input(mode); });
+    m_ui->set_on_key([this](Key key) {
+        if (key == ctrl('c'))
+            killpg(getpgrp(), SIGINT);
+        else
+            m_pending_keys.push_back(key);
+    });
 
     m_window->hooks().run_hook("WinDisplay", m_window->buffer().name(), context());
 
@@ -50,54 +55,31 @@ Client::~Client()
     m_window->set_client(nullptr);
 }
 
-Optional<Key> Client::get_next_key(EventMode mode)
+void Client::process_pending_inputs()
 {
-    if (not m_pending_keys.empty())
-    {
-        Key key = m_pending_keys.front();
-        m_pending_keys.erase(m_pending_keys.begin());
-        return key;
-    }
-    if (mode != EventMode::Pending and m_ui->is_key_available())
-        return m_ui->get_key();
-    return {};
-}
-
-void Client::handle_available_input(EventMode mode)
-{
-    if (mode == EventMode::Urgent)
-    {
-        Key key = m_ui->get_key();
-        if (key == ctrl('c'))
-            killpg(getpgrp(), SIGINT);
-        else
-            m_pending_keys.push_back(key);
-        return;
-    }
-
     try
     {
         const bool debug_keys = (bool)(context().options()["debug"].get<DebugFlags>() & DebugFlags::Keys);
 
-        while (Optional<Key> key = get_next_key(mode))
+        // steal keys as we might receive new keys while handling them.
+        Vector<Key, MemoryDomain::Client> keys = std::move(m_pending_keys);
+        for (auto& key : keys)
         {
             if (debug_keys)
                 write_to_debug_buffer(format("Client '{}' got key '{}'",
-                                             context().name(), key_to_str(*key)));
+                                             context().name(), key_to_str(key)));
 
-            if (*key == ctrl('c'))
-                killpg(getpgrp(), SIGINT);
-            else if (*key == Key::FocusIn)
+            if (key == Key::FocusIn)
                 context().hooks().run_hook("FocusIn", context().name(), context());
-            else if (*key == Key::FocusOut)
+            else if (key == Key::FocusOut)
                 context().hooks().run_hook("FocusOut", context().name(), context());
-            else if (key->modifiers == Key::Modifiers::Resize)
+            else if (key.modifiers == Key::Modifiers::Resize)
             {
                 m_window->set_dimensions(m_ui->dimensions());
                 force_redraw();
             }
             else
-                m_input_handler.handle_key(*key);
+                m_input_handler.handle_key(key);
         }
     }
     catch (Kakoune::runtime_error& error)

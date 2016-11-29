@@ -184,18 +184,6 @@ void JsonUI::draw_status(const DisplayLine& status_line,
     rpc_call("draw_status", status_line, mode_line, default_face);
 }
 
-bool JsonUI::is_key_available()
-{
-    return not m_pending_keys.empty();
-}
-
-Key JsonUI::get_key()
-{
-    kak_assert(not m_pending_keys.empty());
-    Key key = m_pending_keys.front();
-    m_pending_keys.erase(m_pending_keys.begin());
-    return key;
-}
 
 void JsonUI::menu_show(ConstArrayView<DisplayLine> items,
                        DisplayCoord anchor, Face fg, Face bg,
@@ -231,11 +219,6 @@ void JsonUI::refresh(bool force)
     rpc_call("refresh", force);
 }
 
-void JsonUI::set_input_callback(InputCallback callback)
-{
-    m_input_callback = std::move(callback);
-}
-
 void JsonUI::set_ui_options(const Options& options)
 {
     // rpc_call("set_ui_options", options);
@@ -244,6 +227,11 @@ void JsonUI::set_ui_options(const Options& options)
 DisplayCoord JsonUI::dimensions()
 {
     return m_dimensions;
+}
+
+void JsonUI::set_on_key(OnKeyCallback callback)
+{
+    m_on_key = std::move(callback);
 }
 
 using JsonArray = Vector<Value>;
@@ -384,7 +372,7 @@ void JsonUI::eval_json(const Value& json)
         for (auto& key_val : params)
         {
             for (auto& key : parse_keys(key_val.as<String>()))
-                m_pending_keys.push_back(key);
+                m_on_key(key);
         }
     }
     else if (method == "resize")
@@ -394,7 +382,7 @@ void JsonUI::eval_json(const Value& json)
 
         DisplayCoord dim{params[0].as<int>(), params[1].as<int>()};
         m_dimensions = dim;
-        m_pending_keys.push_back(resize(dim));
+        m_on_key(resize(dim));
     }
     else
         throw runtime_error("unknown method");
@@ -412,6 +400,9 @@ void JsonUI::parse_requests(EventMode mode)
 
         m_requests += StringView{buf, buf + size};
     }
+
+    if (not m_on_key)
+        return;
 
     while (not m_requests.empty())
     {
@@ -435,9 +426,6 @@ void JsonUI::parse_requests(EventMode mode)
 
         m_requests = String{pos, m_requests.end()};
     }
-
-    while (m_input_callback and not m_pending_keys.empty())
-        m_input_callback(mode);
 }
 
 UnitTest test_json_parser{[]()

@@ -34,7 +34,7 @@ public:
     void add_free_window(std::unique_ptr<Window>&& window, SelectionList selections);
 
     void redraw_clients() const;
-    void handle_pending_inputs() const;
+    void process_pending_inputs() const;
 
     Client*  get_client_ifp(StringView name);
     Client&  get_client(StringView name);

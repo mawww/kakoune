@@ -220,8 +220,11 @@ void on_term_resize(int)
 
 NCursesUI::NCursesUI()
     : m_stdin_watcher{0, [this](FDWatcher&, EventMode mode) {
-        if (m_input_callback)
-            m_input_callback(mode);
+        if (not m_on_key)
+            return;
+
+        while (auto key = get_next_key())
+            m_on_key(*key);
       }},
       m_assistant(assistant_clippy),
       m_colors{
@@ -485,26 +488,19 @@ void NCursesUI::on_sighup()
     m_window = nullptr;
 }
 
-bool NCursesUI::is_key_available()
+Optional<Key> NCursesUI::get_next_key()
 {
     if (not m_window)
-        return false;
+        return {};
 
     check_resize();
 
     wtimeout(m_window, 0);
     const int c = wgetch(m_window);
-    if (c != ERR)
-        ungetch(c);
     wtimeout(m_window, -1);
-    return c != ERR;
-}
 
-Key NCursesUI::get_key()
-{
-    check_resize();
-
-    const int c = wgetch(m_window);
+    if (c == ERR)
+        return {};
 
     if (c == KEY_MOUSE)
     {
@@ -530,21 +526,21 @@ Key NCursesUI::get_key()
                 return res | Key::Modifiers::MousePos;
             };
 
-            return { get_modifiers(ev.bstate),
-                     encode_coord({ ev.y - (m_status_on_top ? 1 : 0), ev.x }) };
+            return Key{ get_modifiers(ev.bstate),
+                        encode_coord({ ev.y - (m_status_on_top ? 1 : 0), ev.x }) };
         }
     }
 
     if (c > 0 and c < 27)
     {
         if (c == control('m') or c == control('j'))
-            return Key::Return;
+            return {Key::Return};
         if (c == control('i'))
-            return Key::Tab;
+            return {Key::Tab};
         if (c == control('z'))
         {
             raise(SIGTSTP);
-            return Key::Invalid;
+            return {};
         }
         return ctrl(Codepoint(c) - 1 + 'a');
     }
@@ -557,8 +553,8 @@ Key NCursesUI::get_key()
             const Codepoint csi_val = wgetch(m_window);
             switch (csi_val)
             {
-                case 'I': return Key::FocusIn;
-                case 'O': return Key::FocusOut;
+                case 'I': return {Key::FocusIn};
+                case 'O': return {Key::FocusOut};
                 default: break; // nothing
             }
         }
@@ -570,28 +566,28 @@ Key NCursesUI::get_key()
             return alt(new_c);
         }
         else
-            return Key::Escape;
+            return {Key::Escape};
     }
     else switch (c)
     {
-    case KEY_BACKSPACE: case 127: return Key::Backspace;
-    case KEY_DC: return Key::Delete;
-    case KEY_UP: return Key::Up;
-    case KEY_DOWN: return Key::Down;
-    case KEY_LEFT: return Key::Left;
-    case KEY_RIGHT: return Key::Right;
-    case KEY_PPAGE: return Key::PageUp;
-    case KEY_NPAGE: return Key::PageDown;
-    case KEY_HOME: return Key::Home;
-    case KEY_END: return Key::End;
-    case KEY_BTAB: return Key::BackTab;
+    case KEY_BACKSPACE: case 127: return {Key::Backspace};
+    case KEY_DC: return {Key::Delete};
+    case KEY_UP: return {Key::Up};
+    case KEY_DOWN: return {Key::Down};
+    case KEY_LEFT: return {Key::Left};
+    case KEY_RIGHT: return {Key::Right};
+    case KEY_PPAGE: return {Key::PageUp};
+    case KEY_NPAGE: return {Key::PageDown};
+    case KEY_HOME: return {Key::Home};
+    case KEY_END: return {Key::End};
+    case KEY_BTAB: return {Key::BackTab};
     case KEY_RESIZE: return resize(m_dimensions);
     }
 
     for (int i = 0; i < 12; ++i)
     {
         if (c == KEY_F(i+1))
-            return Key::F1 + i;
+            return {Key::F1 + i};
     }
 
     if (c >= 0 and c < 256)
@@ -607,9 +603,10 @@ Key NCursesUI::get_key()
 
             WINDOW* window;
        };
-       return utf8::codepoint(getch_iterator{m_window}, getch_iterator{m_window});
+       return Key{utf8::codepoint(getch_iterator{m_window},
+                                  getch_iterator{m_window})};
     }
-    return Key::Invalid;
+    return {};
 }
 
 template<typename T>
@@ -954,14 +951,14 @@ void NCursesUI::mark_dirty(const Window& win)
     wredrawln(m_window, (int)win.pos.line, (int)win.size.line);
 }
 
+void NCursesUI::set_on_key(OnKeyCallback callback)
+{
+    m_on_key = std::move(callback);
+}
+
 DisplayCoord NCursesUI::dimensions()
 {
     return m_dimensions;
-}
-
-void NCursesUI::set_input_callback(InputCallback callback)
-{
-    m_input_callback = std::move(callback);
 }
 
 void NCursesUI::abort()

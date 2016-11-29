@@ -33,7 +33,7 @@ enum class InfoStyle
 
 enum class EventMode;
 
-using InputCallback = std::function<void(EventMode mode)>;
+using OnKeyCallback = std::function<void(Key key)>;
 
 class UserInterface
 {
@@ -60,12 +60,10 @@ public:
                              const Face& default_face) = 0;
 
     virtual DisplayCoord dimensions() = 0;
-    virtual bool is_key_available() = 0;
-    virtual Key  get_key() = 0;
 
     virtual void refresh(bool force) = 0;
 
-    virtual void set_input_callback(InputCallback callback) = 0;
+    virtual void set_on_key(OnKeyCallback callback) = 0;
 
     using Options = IdMap<String, MemoryDomain::Options>;
     virtual void set_ui_options(const Options& options) = 0;

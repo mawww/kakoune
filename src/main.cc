@@ -332,10 +332,8 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
         void draw(const DisplayBuffer&, const Face&, const Face&) override {}
         void draw_status(const DisplayLine&, const DisplayLine&, const Face&) override {}
         DisplayCoord dimensions() override { return {24,80}; }
-        bool is_key_available() override { return false; }
-        Key  get_key() override { return Key::Invalid; }
         void refresh(bool) override {}
-        void set_input_callback(InputCallback) override {}
+        void set_on_key(OnKeyCallback callback) override {}
         void set_ui_options(const Options&) override {}
     };
 
@@ -587,7 +585,7 @@ int run_server(StringView session, StringView init_command,
         {
             client_manager.redraw_clients();
             event_manager.handle_next_events(EventMode::Normal);
-            client_manager.handle_pending_inputs();
+            client_manager.process_pending_inputs();
             client_manager.clear_client_trash();
             client_manager.clear_window_trash();
             buffer_manager.clear_buffer_trash();

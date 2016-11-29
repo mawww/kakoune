@@ -18,7 +18,6 @@ enum class EventMode
 {
     Normal,
     Urgent,
-    Pending
 };
 
 class FDWatcher

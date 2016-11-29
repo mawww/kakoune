@@ -324,11 +324,10 @@ public:
 
     void refresh(bool force) override;
 
-    bool is_key_available() override;
-    Key  get_key() override;
-    DisplayCoord dimensions() override;
+    DisplayCoord dimensions() override { return m_dimensions; }
 
-    void set_input_callback(InputCallback callback) override;
+    void set_on_key(OnKeyCallback callback) override
+    { m_on_key = std::move(callback); }
 
     void set_ui_options(const Options& options) override;
 
@@ -336,46 +335,45 @@ public:
     Client* client() const { return m_client.get(); }
 
 private:
-    FDWatcher    m_socket_watcher;
-    MsgReader    m_reader;
-    DisplayCoord m_dimensions;
-    InputCallback m_input_callback;
+    FDWatcher     m_socket_watcher;
+    MsgReader     m_reader;
+    DisplayCoord  m_dimensions;
+    OnKeyCallback m_on_key;
 
     SafePtr<Client> m_client;
-    Optional<Key>   m_pending_key;
 };
 
 
 RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
     : m_socket_watcher(socket, [this](FDWatcher& watcher, EventMode mode) {
           const int sock = watcher.fd();
-          bool disconnect = false;
           try
           {
-              while (fd_readable(sock) and not m_reader.ready())
+              while (fd_readable(sock))
+              {
                   m_reader.read_available(sock);
 
-              if (m_reader.ready() and not m_pending_key)
-              {
-                   if (m_reader.type() == MessageType::Key)
+                  if (not m_reader.ready())
+                      continue;
+
+                   if (m_reader.type() != MessageType::Key)
                    {
-                       m_pending_key = m_reader.read<Key>();
-                       m_reader.reset();
+                      ClientManager::instance().remove_client(*m_client, false);
+                      return;
                    }
-                   else
-                       disconnect = true;
+
+                   auto key = m_reader.read<Key>();
+                   m_reader.reset();
+                   if (key.modifiers == Key::Modifiers::Resize)
+                       m_dimensions = key.coord();
+                   m_on_key(key);
               }
           }
           catch (const remote_error& err)
           {
               write_to_debug_buffer(format("Error while reading remote message: {}", err.what()));
-              disconnect = true;
-          }
-
-          if (disconnect)
               ClientManager::instance().remove_client(*m_client, false);
-          else if (m_pending_key and m_input_callback)
-              m_input_callback(mode);
+          }
       }),
       m_dimensions(dimensions)
 {
@@ -460,31 +458,6 @@ void RemoteUI::set_ui_options(const Options& options)
     msg.write(options);
 }
 
-bool RemoteUI::is_key_available()
-{
-    return (bool)m_pending_key;
-}
-
-Key RemoteUI::get_key()
-{
-    kak_assert(m_pending_key);
-    auto key = *m_pending_key;
-    m_pending_key.reset();
-    if (key.modifiers == Key::Modifiers::Resize)
-        m_dimensions = key.coord();
-    return key;
-}
-
-DisplayCoord RemoteUI::dimensions()
-{
-    return m_dimensions;
-}
-
-void RemoteUI::set_input_callback(InputCallback callback)
-{
-    m_input_callback = std::move(callback);
-}
-
 static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
@@ -527,7 +500,10 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
         msg.write(env_vars);
     }
 
-    m_ui->set_input_callback([this](EventMode){ send_available_keys(); });
+    m_ui->set_on_key([this](Key key){
+        MsgWriter msg(m_socket_watcher->fd(), MessageType::Key);
+        msg.write(key);
+     });
 
     MsgReader reader;
     m_socket_watcher.reset(new FDWatcher{sock, [this, reader](FDWatcher& watcher, EventMode) mutable {
@@ -596,15 +572,6 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
             kak_assert(false);
         }
     }});
-}
-
-void RemoteClient::send_available_keys()
-{
-    while (m_ui->is_key_available())
-    {
-        MsgWriter msg(m_socket_watcher->fd(), MessageType::Key);
-        msg.write(m_ui->get_key());
-    }
 }
 
 void send_command(StringView session, StringView command)

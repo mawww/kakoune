@@ -30,9 +30,6 @@ public:
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
 
-    bool is_key_available() override;
-    Key  get_key() override;
-
     void menu_show(ConstArrayView<DisplayLine> items,
                    DisplayCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
@@ -46,11 +43,10 @@ public:
 
     void refresh(bool force) override;
 
-    void set_input_callback(InputCallback callback) override;
-
-    void set_ui_options(const Options& options) override;
 
     DisplayCoord dimensions() override;
+    void set_on_key(OnKeyCallback callback) override;
+    void set_ui_options(const Options& options) override;
 
     static void abort();
 
@@ -73,6 +69,8 @@ private:
     void draw_line(NCursesWin* window, const DisplayLine& line,
                    ColumnCount col_index, ColumnCount max_column,
                    const Face& default_face);
+
+    Optional<Key> get_next_key();
 
     NCursesWin* m_window = nullptr;
 
@@ -119,8 +117,8 @@ private:
         InfoStyle style;
     } m_info;
 
-    FDWatcher     m_stdin_watcher;
-    InputCallback m_input_callback;
+    FDWatcher m_stdin_watcher;
+    OnKeyCallback m_on_key;
 
     bool m_status_on_top = false;
     ConstArrayView<StringView> m_assistant;

@@ -26,9 +26,6 @@ public:
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
 
-    bool is_key_available() override;
-    Key  get_key() override;
-
     void menu_show(ConstArrayView<DisplayLine> items,
                    DisplayCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
@@ -42,18 +39,16 @@ public:
 
     void refresh(bool force) override;
 
-    void set_input_callback(InputCallback callback) override;
-
-    void set_ui_options(const Options& options) override;
-
     DisplayCoord dimensions() override;
+    void set_on_key(OnKeyCallback callback) override;
+    void set_ui_options(const Options& options) override;
 
 private:
     void parse_requests(EventMode mode);
     void eval_json(const Value& value);
 
-    InputCallback m_input_callback;
     FDWatcher m_stdin_watcher;
+    OnKeyCallback m_on_key;
     Vector<Key, MemoryDomain::Client> m_pending_keys;
     DisplayCoord m_dimensions;
     String m_requests;

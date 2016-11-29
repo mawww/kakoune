@@ -61,10 +61,10 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     return contains(m_clients, client) ? client : nullptr;
 }
 
-void ClientManager::handle_pending_inputs() const
+void ClientManager::process_pending_inputs() const
 {
     for (auto& client : m_clients)
-        client->handle_available_input(EventMode::Pending);
+        client->process_pending_inputs();
 }
 
 void ClientManager::remove_client(Client& client, bool graceful)

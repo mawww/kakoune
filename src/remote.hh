@@ -19,6 +19,7 @@ struct remote_error : runtime_error
 
 class FDWatcher;
 class UserInterface;
+struct Key;
 
 // A remote client handle communication between a client running on the server
 // and a user interface running on the local process.
@@ -29,8 +30,6 @@ public:
                  const EnvVarMap& env_vars, StringView init_command);
 
 private:
-    void send_available_keys();
-
     std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<FDWatcher>     m_socket_watcher;
 };

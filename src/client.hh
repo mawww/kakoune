@@ -34,8 +34,7 @@ public:
 
     Client(Client&&) = delete;
 
-    // handle all the keys currently available in the user interface
-    void handle_available_input(EventMode mode);
+    void process_pending_inputs();
 
     void menu_show(Vector<DisplayLine> choices, BufferCoord anchor, MenuStyle style);
     void menu_select(int selected);
