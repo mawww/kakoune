@@ -191,7 +191,14 @@ std::pair<String, int> ShellManager::eval(
 
     using namespace std::chrono;
     static constexpr seconds wait_timeout{1};
-    auto next_wait_notification = duration_cast<milliseconds>(wait_timeout);
+    Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer)
+    {
+        auto wait_duration = Clock::now() - wait_time;
+        context.print_status({ format("waiting for shell command to finish ({}s)",
+                                      duration_cast<seconds>(wait_duration).count()),
+                                get_face("Information") }, true);
+        timer.set_next_date(Clock::now() + wait_timeout);
+    }, EventMode::Urgent};
 
     while (not terminated or
            ((flags & Flags::WaitForStdout) and
@@ -200,15 +207,6 @@ std::pair<String, int> ShellManager::eval(
         EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
         if (not terminated)
             terminated = waitpid(pid, &status, WNOHANG);
-
-        auto wait_duration = Clock::now() - wait_time;
-        if (wait_duration > next_wait_notification)
-        {
-            next_wait_notification = duration_cast<milliseconds>(wait_duration + wait_timeout);
-            context.print_status({ format("waiting for shell command to finish ({}s)",
-                                          duration_cast<seconds>(wait_duration).count()),
-                                    get_face("Information") }, true);
-        }
     }
 
     if (not stderr_contents.empty())
