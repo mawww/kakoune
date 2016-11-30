@@ -158,8 +158,8 @@ std::pair<String, int> ShellManager::eval(
     struct PipeReader : FDWatcher
     {
         PipeReader(Pipe& pipe, String& contents)
-            : FDWatcher(pipe.read_fd(),
-                        [&contents, &pipe](FDWatcher& watcher, EventMode) {
+            : FDWatcher(pipe.read_fd(), FdEvents::Read,
+                        [&contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) {
                             char buffer[1024];
                             size_t size = ::read(pipe.read_fd(), buffer, 1024);
                             if (size <= 0)

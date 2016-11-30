@@ -345,7 +345,8 @@ private:
 
 
 RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
-    : m_socket_watcher(socket, [this](FDWatcher& watcher, EventMode mode) {
+    : m_socket_watcher(socket,  FdEvents::Read,
+                       [this](FDWatcher& watcher, FdEvents, EventMode mode) {
           const int sock = watcher.fd();
           try
           {
@@ -506,7 +507,8 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
      });
 
     MsgReader reader;
-    m_socket_watcher.reset(new FDWatcher{sock, [this, reader](FDWatcher& watcher, EventMode) mutable {
+    m_socket_watcher.reset(new FDWatcher{sock, FdEvents::Read,
+                           [this, reader](FDWatcher& watcher, FdEvents, EventMode) mutable {
         const int sock = watcher.fd();
         while (fd_readable(sock) and not reader.ready())
             reader.read_available(sock);
@@ -593,8 +595,8 @@ class Server::Accepter
 {
 public:
     Accepter(int socket)
-        : m_socket_watcher(socket,
-                           [this](FDWatcher&, EventMode mode) {
+        : m_socket_watcher(socket, FdEvents::Read,
+                           [this](FDWatcher&, FdEvents, EventMode mode) {
                                if (mode == EventMode::Normal)
                                    handle_available_input();
                            })
@@ -681,7 +683,7 @@ Server::Server(String session_name)
     if (listen(listen_sock, 4) == -1)
        throw runtime_error(format("unable to listen on socket '{}'", addr.sun_path));
 
-    auto accepter = [this](FDWatcher& watcher, EventMode mode) {
+    auto accepter = [this](FDWatcher& watcher, FdEvents, EventMode mode) {
         sockaddr_un client_addr;
         socklen_t   client_addr_len = sizeof(sockaddr_un);
         int sock = accept(watcher.fd(), (sockaddr*) &client_addr,
@@ -692,7 +694,7 @@ Server::Server(String session_name)
 
         m_accepters.emplace_back(new Accepter{sock});
     };
-    m_listener.reset(new FDWatcher{listen_sock, accepter});
+    m_listener.reset(new FDWatcher{listen_sock, FdEvents::Read, accepter});
 }
 
 bool Server::rename_session(StringView name)

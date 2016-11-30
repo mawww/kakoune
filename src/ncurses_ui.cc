@@ -219,7 +219,8 @@ void on_term_resize(int)
 }
 
 NCursesUI::NCursesUI()
-    : m_stdin_watcher{0, [this](FDWatcher&, EventMode mode) {
+    : m_stdin_watcher{0, FdEvents::Read,
+                      [this](FDWatcher&, FdEvents, EventMode mode) {
         if (not m_on_key)
             return;
 

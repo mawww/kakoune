@@ -20,24 +20,38 @@ enum class EventMode
     Urgent,
 };
 
+enum class FdEvents
+{
+    None = 0,
+    Read = 1 << 0,
+    Write = 1 << 1,
+    Except = 1 << 2,
+};
+
+template<> struct WithBitOps<FdEvents> : std::true_type {};
+
 class FDWatcher
 {
 public:
-    using Callback = std::function<void (FDWatcher& watcher, EventMode mode)>;
-    FDWatcher(int fd, Callback callback);
+    using Callback = std::function<void (FDWatcher& watcher, FdEvents events, EventMode mode)>;
+    FDWatcher(int fd, FdEvents events, Callback callback);
     FDWatcher(const FDWatcher&) = delete;
     FDWatcher& operator=(const FDWatcher&) = delete;
     ~FDWatcher();
 
     int fd() const { return m_fd; }
-    void run(EventMode mode);
+    FdEvents events() const { return m_events; }
+    FdEvents& events() { return m_events; }
+
+    void run(FdEvents events, EventMode mode);
 
     void close_fd();
     void disable() { m_fd = -1; }
 private:
 
-    int       m_fd;
-    Callback  m_callback;
+    int      m_fd;
+    FdEvents m_events;
+    Callback m_callback;
 };
 
 class Timer

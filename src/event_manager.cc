@@ -7,8 +7,8 @@
 namespace Kakoune
 {
 
-FDWatcher::FDWatcher(int fd, Callback callback)
-    : m_fd{fd}, m_callback{std::move(callback)}
+FDWatcher::FDWatcher(int fd, FdEvents events, Callback callback)
+    : m_fd{fd}, m_events{events}, m_callback{std::move(callback)}
 {
     EventManager::instance().m_fd_watchers.push_back(this);
 }
@@ -18,9 +18,9 @@ FDWatcher::~FDWatcher()
     unordered_erase(EventManager::instance().m_fd_watchers, this);
 }
 
-void FDWatcher::run(EventMode mode)
+void FDWatcher::run(FdEvents events, EventMode mode)
 {
-    m_callback(*this, mode);
+    m_callback(*this, events, mode);
 }
 
 void FDWatcher::close_fd()
@@ -71,15 +71,21 @@ EventManager::~EventManager()
 void EventManager::handle_next_events(EventMode mode, sigset_t* sigmask)
 {
     int max_fd = 0;
-    fd_set rfds;
-    FD_ZERO(&rfds);
+    fd_set rfds, wfds, efds;
+    FD_ZERO(&rfds); FD_ZERO(&wfds); FD_ZERO(&efds);
     for (auto& watcher : m_fd_watchers)
     {
         const int fd = watcher->fd();
         if (fd != -1)
         {
             max_fd = std::max(fd, max_fd);
-            FD_SET(fd, &rfds);
+            auto events = watcher->events();
+            if (events & FdEvents::Read)
+                FD_SET(fd, &rfds);
+            if (events & FdEvents::Write)
+                FD_SET(fd, &wfds);
+            if (events & FdEvents::Except)
+                FD_SET(fd, &efds);
         }
     }
 
@@ -101,7 +107,7 @@ void EventManager::handle_next_events(EventMode mode, sigset_t* sigmask)
             ts = timespec{ (time_t)secs.count(), (long)(nsecs - secs).count() };
         }
     }
-    int res = pselect(max_fd + 1, &rfds, nullptr, nullptr,
+    int res = pselect(max_fd + 1, &rfds, &wfds, &efds,
                       with_timeout ? &ts : nullptr, sigmask);
 
     // copy forced fds *after* select, so that signal handlers can write to
@@ -111,12 +117,18 @@ void EventManager::handle_next_events(EventMode mode, sigset_t* sigmask)
 
     for (int fd = 0; fd < max_fd + 1; ++fd)
     {
-        if ((res > 0 and FD_ISSET(fd, &rfds)) or FD_ISSET(fd, &forced))
+        auto events =  FD_ISSET(fd, &forced) ? FdEvents::Read : FdEvents::None;
+        if (res > 0)
+            events |= (FD_ISSET(fd, &rfds) ? FdEvents::Read : FdEvents::None) |
+                      (FD_ISSET(fd, &wfds) ? FdEvents::Write : FdEvents::None) |
+                      (FD_ISSET(fd, &efds) ? FdEvents::Except : FdEvents::None);
+
+        if (events != FdEvents::None)
         {
             auto it = find_if(m_fd_watchers,
                               [fd](const FDWatcher* w){return w->fd() == fd; });
             if (it != m_fd_watchers.end())
-                (*it)->run(mode);
+                (*it)->run(events, mode);
         }
     }
 

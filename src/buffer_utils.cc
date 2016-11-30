@@ -114,7 +114,8 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
     ValueId fifo_watcher_id = s_fifo_watcher_id;
 
     std::unique_ptr<FDWatcher, decltype(watcher_deleter)> watcher(
-        new FDWatcher(fd, [buffer, scroll, fifo_watcher_id](FDWatcher& watcher, EventMode mode) {
+        new FDWatcher(fd, FdEvents::Read,
+                      [buffer, scroll, fifo_watcher_id](FDWatcher& watcher, FdEvents, EventMode mode) {
         if (mode != EventMode::Normal)
             return;
 
