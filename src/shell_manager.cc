@@ -191,6 +191,7 @@ std::pair<String, int> ShellManager::eval(
 
     using namespace std::chrono;
     static constexpr seconds wait_timeout{1};
+    bool wait_notified = false;
     Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer)
     {
         auto wait_duration = Clock::now() - wait_time;
@@ -198,6 +199,7 @@ std::pair<String, int> ShellManager::eval(
                                       duration_cast<seconds>(wait_duration).count()),
                                 get_face("Information") }, true);
         timer.set_next_date(Clock::now() + wait_timeout);
+        wait_notified = true;
     }, EventMode::Urgent};
 
     while (not terminated or
@@ -221,6 +223,9 @@ std::pair<String, int> ShellManager::eval(
         write_to_debug_buffer(format("shell execution took {} ms (spawn: {}, wait: {})",
                                      (size_t)full.count(), (size_t)spawn.count(), (size_t)wait.count()));
     }
+
+    if (wait_notified) // clear the status line
+        context.print_status({ "", get_face("Information") }, true);
 
     return { stdout_contents, WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
 }
