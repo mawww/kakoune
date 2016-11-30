@@ -63,8 +63,15 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
 
 void ClientManager::process_pending_inputs() const
 {
-    for (auto& client : m_clients)
-        client->process_pending_inputs();
+    while (true)
+    {
+        bool had_input = false;
+        for (auto& client : m_clients)
+            had_input = client->process_pending_inputs() or had_input;
+
+        if (not had_input)
+            break;
+    }
 }
 
 void ClientManager::remove_client(Client& client, bool graceful)

@@ -34,7 +34,7 @@ public:
 
     Client(Client&&) = delete;
 
-    void process_pending_inputs();
+    bool process_pending_inputs();
 
     void menu_show(Vector<DisplayLine> choices, BufferCoord anchor, MenuStyle style);
     void menu_select(int selected);

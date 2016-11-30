@@ -55,15 +55,14 @@ Client::~Client()
     m_window->set_client(nullptr);
 }
 
-void Client::process_pending_inputs()
+bool Client::process_pending_inputs()
 {
-    try
+    const bool debug_keys = (bool)(context().options()["debug"].get<DebugFlags>() & DebugFlags::Keys);
+    // steal keys as we might receive new keys while handling them.
+    Vector<Key, MemoryDomain::Client> keys = std::move(m_pending_keys);
+    for (auto& key : keys)
     {
-        const bool debug_keys = (bool)(context().options()["debug"].get<DebugFlags>() & DebugFlags::Keys);
-
-        // steal keys as we might receive new keys while handling them.
-        Vector<Key, MemoryDomain::Client> keys = std::move(m_pending_keys);
-        for (auto& key : keys)
+        try
         {
             if (debug_keys)
                 write_to_debug_buffer(format("Client '{}' got key '{}'",
@@ -81,12 +80,13 @@ void Client::process_pending_inputs()
             else
                 m_input_handler.handle_key(key);
         }
+        catch (Kakoune::runtime_error& error)
+        {
+            context().print_status({ error.what().str(), get_face("Error") });
+            context().hooks().run_hook("RuntimeError", error.what(), context());
+        }
     }
-    catch (Kakoune::runtime_error& error)
-    {
-        context().print_status({ error.what().str(), get_face("Error") });
-        context().hooks().run_hook("RuntimeError", error.what(), context());
-    }
+    return not keys.empty();
 }
 
 void Client::print_status(DisplayLine status_line, bool immediate)
