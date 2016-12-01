@@ -712,7 +712,7 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
                         atom_it->replace("→" + String(' ', CharCount{count-1}));
                     }
                     else if (c == ' ')
-                        atom_it->replace("·");
+                        atom_it->replace("⠐");
                     else if (c == '\n')
                         atom_it->replace("¬");
                     atom_it->face = whitespaceface;
