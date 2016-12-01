@@ -454,12 +454,12 @@ void signal_handler(int signal)
         abort();
 }
 
-int run_client(StringView session, StringView init_command, UIType ui_type)
+int run_client(StringView session, StringView init_cmds, UIType ui_type)
 {
     try
     {
         EventManager event_manager;
-        RemoteClient client{session, make_ui(ui_type), get_env_vars(), init_command};
+        RemoteClient client{session, make_ui(ui_type), get_env_vars(), init_cmds};
         while (true)
             event_manager.handle_next_events(EventMode::Normal);
     }
@@ -471,9 +471,10 @@ int run_client(StringView session, StringView init_command, UIType ui_type)
     return 0;
 }
 
-int run_server(StringView session, StringView init_command,
+int run_server(StringView session,
+               StringView init_cmds, BufferCoord init_coord,
                bool ignore_kakrc, bool daemon, bool readonly, UIType ui_type,
-               ConstArrayView<StringView> files, BufferCoord target_coord)
+               ConstArrayView<StringView> files)
 {
     static bool terminate = false;
     if (daemon)
@@ -565,21 +566,15 @@ int run_server(StringView session, StringView init_command,
 
     try
     {
-        if (not daemon and
-            (local_client = client_manager.create_client(
-                 create_local_ui(ui_type), get_env_vars(), init_command)))
-        {
-            auto& selections = local_client->context().selections_write_only();
-            auto& buffer = selections.buffer();
-            selections = SelectionList(buffer, buffer.clamp(target_coord));
-            local_client->context().window().center_line(target_coord.line);
+        if (not daemon)
+            local_client = client_manager.create_client(
+                 create_local_ui(ui_type), get_env_vars(), init_cmds, init_coord);
 
-            if (startup_error)
-                local_client->print_status({
-                    "error during startup, see *debug* buffer for details",
-                    get_face("Error")
-                });
-        }
+        if (local_client and startup_error)
+            local_client->print_status({
+                "error during startup, see *debug* buffer for details",
+                get_face("Error")
+            });
 
         while (not terminate and (not client_manager.empty() or daemon))
         {
@@ -794,7 +789,7 @@ int main(int argc, char* argv[])
             return run_pipe(*session);
         }
 
-        auto init_command = parser.get_switch("e").value_or(StringView{});
+        auto init_cmds = parser.get_switch("e").value_or(StringView{});
         const UIType ui_type = parse_ui_type(parser.get_switch("ui").value_or("ncurses"));
 
         if (auto keys = parser.get_switch("f"))
@@ -809,7 +804,7 @@ int main(int argc, char* argv[])
             for (size_t i = 0; i < parser.positional_count(); ++i)
                 files.emplace_back(parser[i]);
 
-            return run_filter(*keys, init_command, files,
+            return run_filter(*keys, init_cmds, files,
                               (bool)parser.get_switch("q"));
         }
 
@@ -827,11 +822,11 @@ int main(int argc, char* argv[])
             for (auto name : parser)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
-            return run_client(*server_session, new_files + init_command, ui_type);
+            return run_client(*server_session, new_files + init_cmds, ui_type);
         }
         else
         {
-            BufferCoord target_coord;
+            BufferCoord init_coord;
             Vector<StringView> files;
             for (auto& name : parser)
             {
@@ -840,9 +835,9 @@ int main(int argc, char* argv[])
                     auto colon = find(name, ':');
                     if (auto line = str_to_int_ifp({name.begin()+1, colon}))
                     {
-                        target_coord.line = *line - 1;
+                        init_coord.line = *line - 1;
                         if (colon != name.end())
-                            target_coord.column = str_to_int_ifp({colon+1, name.end()}).value_or(1) - 1;
+                            init_coord.column = str_to_int_ifp({colon+1, name.end()}).value_or(1) - 1;
 
                         continue;
                     }
@@ -854,11 +849,11 @@ int main(int argc, char* argv[])
             StringView session = parser.get_switch("s").value_or(StringView{});
             try
             {
-                return run_server(session, init_command,
+                return run_server(session, init_cmds, init_coord,
                                   (bool)parser.get_switch("n"),
                                   (bool)parser.get_switch("d"),
                                   (bool)parser.get_switch("ro"),
-                                  ui_type, files, target_coord);
+                                  ui_type, files);
             }
             catch (convert_to_client_mode& convert)
             {

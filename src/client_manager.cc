@@ -37,8 +37,8 @@ String ClientManager::generate_name() const
 }
 
 Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
-                                     EnvVarMap env_vars,
-                                     StringView init_commands)
+                                     EnvVarMap env_vars, StringView init_cmds,
+                                     BufferCoord init_coord)
 {
     Buffer& buffer = BufferManager::instance().get_first_buffer();
     WindowAndSelections ws = get_free_window(buffer);
@@ -46,9 +46,14 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
                                 std::move(ws.selections), std::move(env_vars),
                                 generate_name()};
     m_clients.emplace_back(client);
+
+    auto& selections = client->context().selections_write_only();
+    selections = SelectionList(buffer, buffer.clamp(init_coord));
+    client->context().window().center_line(init_coord.line);
+
     try
     {
-        CommandManager::instance().execute(init_commands, client->context());
+        CommandManager::instance().execute(init_cmds, client->context());
     }
     catch (Kakoune::runtime_error& error)
     {

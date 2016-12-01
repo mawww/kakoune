@@ -650,13 +650,13 @@ private:
             {
             case MessageType::Connect:
             {
-                auto init_command = m_reader.read<String>();
+                auto init_cmds = m_reader.read<String>();
                 auto dimensions = m_reader.read<DisplayCoord>();
                 auto env_vars = m_reader.read_idmap<String, MemoryDomain::EnvVars>();
                 RemoteUI* ui = new RemoteUI{sock, dimensions};
                 if (auto* client = ClientManager::instance().create_client(
-                                       std::unique_ptr<UserInterface>{ui},
-                                       std::move(env_vars), init_command))
+                                       std::unique_ptr<UserInterface>(ui),
+                                       std::move(env_vars), init_cmds, {}))
                     ui->set_client(client);
 
                 Server::instance().remove_accepter(this);
