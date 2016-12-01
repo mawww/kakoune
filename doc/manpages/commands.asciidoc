@@ -162,7 +162,7 @@ commands:
 
 *on-key* <command>::
 	wait for next key from user, then execute <command>, the key is
-	available through the `key` value, accessiable through `$kak_key`
+	available through the `key` value, accessible through `$kak_key`
 	in shells, or `%val{key}` in commands.
 
 *menu* <label1> <commands1> <label2> <commands2> ...::
