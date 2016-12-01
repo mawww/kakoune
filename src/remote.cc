@@ -42,7 +42,8 @@ enum class MessageType : char
 class MsgWriter
 {
 public:
-    MsgWriter(int sock, MessageType type) : m_socket(sock)
+    MsgWriter(RemoteBuffer& buffer, MessageType type)
+        : m_buffer{buffer}, m_start{(uint32_t)buffer.size()}
     {
         write(type);
         write((uint32_t)0); // message size, to be patched on write
@@ -50,23 +51,13 @@ public:
 
     ~MsgWriter() noexcept(false)
     {
-        uint32_t count = (uint32_t)m_stream.size();
-        char* data = m_stream.data();
-        *reinterpret_cast<uint32_t*>(data+1) = count;
-        while (count > 0)
-        {
-            int res = ::write(m_socket, data, count);
-            if (res <= 0)
-                throw remote_error{res ? "peer disconnected"
-                                       : format("socket write failed: {}", strerror(errno))};
-            data += res;
-            count -= res;
-        }
+        uint32_t count = (uint32_t)m_buffer.size() - m_start;
+        *reinterpret_cast<uint32_t*>(m_buffer.data() + m_start + 1) = count;
     }
 
     void write(const char* val, size_t size)
     {
-        m_stream.insert(m_stream.end(), val, val + size);
+        m_buffer.insert(m_buffer.end(), val, val + size);
     }
 
     template<typename T>
@@ -139,8 +130,8 @@ public:
     }
 
 private:
-    Vector<char, MemoryDomain::Remote> m_stream;
-    int m_socket;
+    RemoteBuffer& m_buffer;
+    uint32_t m_start;
 };
 
 class MsgReader
@@ -344,18 +335,34 @@ private:
     MsgReader     m_reader;
     DisplayCoord  m_dimensions;
     OnKeyCallback m_on_key;
+    RemoteBuffer  m_send_buffer;
 
     SafePtr<Client> m_client;
 };
 
+static bool send_data(int fd, RemoteBuffer& buffer)
+{
+    while (buffer.size() > 0 and fd_writable(fd))
+    {
+      int res = ::write(fd, buffer.data(), buffer.size());
+      if (res <= 0)
+          throw remote_error{res ? "peer disconnected"
+                                 : format("socket write failed: {}", strerror(errno))};
+      buffer.erase(buffer.begin(), buffer.begin() + res);
+    }
+    return buffer.empty();
+}
 
 RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
-    : m_socket_watcher(socket,  FdEvents::Read,
-                       [this](FDWatcher& watcher, FdEvents, EventMode mode) {
+    : m_socket_watcher(socket,  FdEvents::Read | FdEvents::Write,
+                       [this](FDWatcher& watcher, FdEvents events, EventMode mode) {
           const int sock = watcher.fd();
           try
           {
-              while (fd_readable(sock))
+              if (events & FdEvents::Write and send_data(sock, m_send_buffer))
+                  m_socket_watcher.events() &= ~FdEvents::Write;
+
+              while (events & FdEvents::Read and fd_readable(sock))
               {
                   m_reader.read_available(sock);
 
@@ -377,7 +384,7 @@ RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
           }
           catch (const remote_error& err)
           {
-              write_to_debug_buffer(format("Error while reading remote message: {}", err.what()));
+              write_to_debug_buffer(format("Error while transfering remote messages: {}", err.what()));
               ClientManager::instance().remove_client(*m_client, false);
           }
       }),
@@ -396,72 +403,81 @@ void RemoteUI::menu_show(ConstArrayView<DisplayLine> choices,
                          DisplayCoord anchor, Face fg, Face bg,
                          MenuStyle style)
 {
-    MsgWriter msg{m_socket_watcher.fd(), MessageType::MenuShow};
+    MsgWriter msg{m_send_buffer, MessageType::MenuShow};
     msg.write(choices);
     msg.write(anchor);
     msg.write(fg);
     msg.write(bg);
     msg.write(style);
+    m_socket_watcher.events() |= FdEvents::Write;
 }
 
 void RemoteUI::menu_select(int selected)
 {
-    MsgWriter msg{m_socket_watcher.fd(), MessageType::MenuSelect};
+    MsgWriter msg{m_send_buffer, MessageType::MenuSelect};
     msg.write(selected);
+    m_socket_watcher.events() |= FdEvents::Write;
 }
 
 void RemoteUI::menu_hide()
 {
-    MsgWriter msg{m_socket_watcher.fd(), MessageType::MenuHide};
+    MsgWriter msg{m_send_buffer, MessageType::MenuHide};
+    m_socket_watcher.events() |= FdEvents::Write;
 }
 
 void RemoteUI::info_show(StringView title, StringView content,
                          DisplayCoord anchor, Face face,
                          InfoStyle style)
 {
-    MsgWriter msg{m_socket_watcher.fd(), MessageType::InfoShow};
+    MsgWriter msg{m_send_buffer, MessageType::InfoShow};
     msg.write(title);
     msg.write(content);
     msg.write(anchor);
     msg.write(face);
     msg.write(style);
+    m_socket_watcher.events() |= FdEvents::Write;
 }
 
 void RemoteUI::info_hide()
 {
-    MsgWriter msg{m_socket_watcher.fd(), MessageType::InfoHide};
+    MsgWriter msg{m_send_buffer, MessageType::InfoHide};
+    m_socket_watcher.events() |= FdEvents::Write;
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
                     const Face& default_face,
                     const Face& padding_face)
 {
-    MsgWriter msg{m_socket_watcher.fd(), MessageType::Draw};
+    MsgWriter msg{m_send_buffer, MessageType::Draw};
     msg.write(display_buffer);
     msg.write(default_face);
     msg.write(padding_face);
+    m_socket_watcher.events() |= FdEvents::Write;
 }
 
 void RemoteUI::draw_status(const DisplayLine& status_line,
                            const DisplayLine& mode_line,
                            const Face& default_face)
 {
-    MsgWriter msg{m_socket_watcher.fd(), MessageType::DrawStatus};
+    MsgWriter msg{m_send_buffer, MessageType::DrawStatus};
     msg.write(status_line);
     msg.write(mode_line);
     msg.write(default_face);
+    m_socket_watcher.events() |= FdEvents::Write;
 }
 
 void RemoteUI::refresh(bool force)
 {
-    MsgWriter msg{m_socket_watcher.fd(), MessageType::Refresh};
+    MsgWriter msg{m_send_buffer, MessageType::Refresh};
     msg.write(force);
+    m_socket_watcher.events() |= FdEvents::Write;
 }
 
 void RemoteUI::set_ui_options(const Options& options)
 {
-    MsgWriter msg{m_socket_watcher.fd(), MessageType::SetOptions};
+    MsgWriter msg{m_send_buffer, MessageType::SetOptions};
     msg.write(options);
+    m_socket_watcher.events() |= FdEvents::Write;
 }
 
 static sockaddr_un session_addr(StringView session)
@@ -500,83 +516,90 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
     int sock = connect_to(session);
 
     {
-        MsgWriter msg{sock, MessageType::Connect};
+        MsgWriter msg{m_send_buffer, MessageType::Connect};
         msg.write(init_command);
         msg.write(m_ui->dimensions());
         msg.write(env_vars);
     }
 
     m_ui->set_on_key([this](Key key){
-        MsgWriter msg(m_socket_watcher->fd(), MessageType::Key);
+        MsgWriter msg(m_send_buffer, MessageType::Key);
         msg.write(key);
+        m_socket_watcher->events() |= FdEvents::Write;
      });
 
     MsgReader reader;
-    m_socket_watcher.reset(new FDWatcher{sock, FdEvents::Read,
-                           [this, reader](FDWatcher& watcher, FdEvents, EventMode) mutable {
+    m_socket_watcher.reset(new FDWatcher{sock, FdEvents::Read | FdEvents::Write,
+                           [this, reader](FDWatcher& watcher, FdEvents events, EventMode) mutable {
         const int sock = watcher.fd();
-        while (fd_readable(sock) and not reader.ready())
+        if (events & FdEvents::Write and send_data(sock, m_send_buffer))
+            m_socket_watcher->events() &= ~FdEvents::Write;
+
+        while (events & FdEvents::Read and
+               not reader.ready() and fd_readable(sock))
+        {
             reader.read_available(sock);
 
-        if (not reader.ready())
-            return;
+            if (not reader.ready())
+                continue;
 
-        auto clear_reader = on_scope_end([&reader] { reader.reset(); });
-        switch (reader.type())
-        {
-        case MessageType::MenuShow:
-        {
-            auto choices = reader.read_vector<DisplayLine>();
-            auto anchor = reader.read<DisplayCoord>();
-            auto fg = reader.read<Face>();
-            auto bg = reader.read<Face>();
-            auto style = reader.read<MenuStyle>();
-            m_ui->menu_show(choices, anchor, fg, bg, style);
-            break;
-        }
-        case MessageType::MenuSelect:
-            m_ui->menu_select(reader.read<int>());
-            break;
-        case MessageType::MenuHide:
-            m_ui->menu_hide();
-            break;
-        case MessageType::InfoShow:
-        {
-            auto title = reader.read<String>();
-            auto content = reader.read<String>();
-            auto anchor = reader.read<DisplayCoord>();
-            auto face = reader.read<Face>();
-            auto style = reader.read<InfoStyle>();
-            m_ui->info_show(title, content, anchor, face, style);
-            break;
-        }
-        case MessageType::InfoHide:
-            m_ui->info_hide();
-            break;
-        case MessageType::Draw:
-        {
-            auto display_buffer = reader.read<DisplayBuffer>();
-            auto default_face = reader.read<Face>();
-            auto padding_face = reader.read<Face>();
-            m_ui->draw(display_buffer, default_face, padding_face);
-            break;
-        }
-        case MessageType::DrawStatus:
-        {
-            auto status_line = reader.read<DisplayLine>();
-            auto mode_line = reader.read<DisplayLine>();
-            auto default_face = reader.read<Face>();
-            m_ui->draw_status(status_line, mode_line, default_face);
-            break;
-        }
-        case MessageType::Refresh:
-            m_ui->refresh(reader.read<bool>());
-            break;
-        case MessageType::SetOptions:
-            m_ui->set_ui_options(reader.read_idmap<String, MemoryDomain::Options>());
-            break;
-        default:
-            kak_assert(false);
+            auto clear_reader = on_scope_end([&reader] { reader.reset(); });
+            switch (reader.type())
+            {
+            case MessageType::MenuShow:
+            {
+                auto choices = reader.read_vector<DisplayLine>();
+                auto anchor = reader.read<DisplayCoord>();
+                auto fg = reader.read<Face>();
+                auto bg = reader.read<Face>();
+                auto style = reader.read<MenuStyle>();
+                m_ui->menu_show(choices, anchor, fg, bg, style);
+                break;
+            }
+            case MessageType::MenuSelect:
+                m_ui->menu_select(reader.read<int>());
+                break;
+            case MessageType::MenuHide:
+                m_ui->menu_hide();
+                break;
+            case MessageType::InfoShow:
+            {
+                auto title = reader.read<String>();
+                auto content = reader.read<String>();
+                auto anchor = reader.read<DisplayCoord>();
+                auto face = reader.read<Face>();
+                auto style = reader.read<InfoStyle>();
+                m_ui->info_show(title, content, anchor, face, style);
+                break;
+            }
+            case MessageType::InfoHide:
+                m_ui->info_hide();
+                break;
+            case MessageType::Draw:
+            {
+                auto display_buffer = reader.read<DisplayBuffer>();
+                auto default_face = reader.read<Face>();
+                auto padding_face = reader.read<Face>();
+                m_ui->draw(display_buffer, default_face, padding_face);
+                break;
+            }
+            case MessageType::DrawStatus:
+            {
+                auto status_line = reader.read<DisplayLine>();
+                auto mode_line = reader.read<DisplayLine>();
+                auto default_face = reader.read<Face>();
+                m_ui->draw_status(status_line, mode_line, default_face);
+                break;
+            }
+            case MessageType::Refresh:
+                m_ui->refresh(reader.read<bool>());
+                break;
+            case MessageType::SetOptions:
+                m_ui->set_ui_options(reader.read_idmap<String, MemoryDomain::Options>());
+                break;
+            default:
+                kak_assert(false);
+            }
         }
     }});
 }
@@ -585,8 +608,12 @@ void send_command(StringView session, StringView command)
 {
     int sock = connect_to(session);
     auto close_sock = on_scope_end([sock]{ close(sock); });
-    MsgWriter msg{sock, MessageType::Command};
-    msg.write(command);
+    RemoteBuffer buffer;
+    {
+        MsgWriter msg{buffer, MessageType::Command};
+        msg.write(command);
+    }
+    write(sock, {buffer.data(), buffer.data() + buffer.size()});
 }
 
 
@@ -613,11 +640,8 @@ private:
         const int sock = m_socket_watcher.fd();
         try
         {
-            do
-            {
+            while (not m_reader.ready() and fd_readable(sock))
                 m_reader.read_available(sock);
-            }
-            while (fd_readable(sock) and not m_reader.ready());
 
             if (not m_reader.ready())
                 return;

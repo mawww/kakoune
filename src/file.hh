@@ -30,6 +30,7 @@ std::pair<StringView, StringView> split_path(StringView path);
 String get_kak_binary_path();
 
 bool fd_readable(int fd);
+bool fd_writable(int fd);
 String read_fd(int fd, bool text = false);
 String read_file(StringView filename, bool text = false);
 void write(int fd, StringView data);

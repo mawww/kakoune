@@ -143,6 +143,16 @@ bool fd_readable(int fd)
     return select(fd+1, &rfds, nullptr, nullptr, &tv) == 1;
 }
 
+bool fd_writable(int fd)
+{
+    fd_set  rfds;
+    FD_ZERO(&rfds);
+    FD_SET(fd, &rfds);
+
+    timeval tv{0,0};
+    return select(fd+1, nullptr, &rfds, nullptr, &tv) == 1;
+}
+
 String read_fd(int fd, bool text)
 {
     String content;

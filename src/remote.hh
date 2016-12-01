@@ -4,6 +4,7 @@
 #include "env_vars.hh"
 #include "exception.hh"
 #include "utils.hh"
+#include "vector.hh"
 
 #include <memory>
 
@@ -12,14 +13,13 @@ namespace Kakoune
 
 struct remote_error : runtime_error
 {
-    remote_error(String error)
-        : runtime_error{std::move(error)}
-    {}
+    using runtime_error::runtime_error;
 };
 
 class FDWatcher;
 class UserInterface;
-struct Key;
+
+using RemoteBuffer = Vector<char, MemoryDomain::Remote>;
 
 // A remote client handle communication between a client running on the server
 // and a user interface running on the local process.
@@ -32,6 +32,7 @@ public:
 private:
     std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<FDWatcher>     m_socket_watcher;
+    RemoteBuffer                   m_send_buffer;
 };
 
 void send_command(StringView session, StringView command);
