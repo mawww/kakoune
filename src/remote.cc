@@ -153,7 +153,11 @@ public:
             m_stream.resize(header_size);
             read_from_socket(sock, header_size - m_write_pos);
             if (m_write_pos == header_size)
+            {
+                if (size() < header_size)
+                    throw remote_error{"invalid message received"};
                 m_stream.resize(size());
+            }
         }
         else
             read_from_socket(sock, size() - m_write_pos);
@@ -234,6 +238,7 @@ public:
 private:
     void read_from_socket(int sock, size_t size)
     {
+        kak_assert(m_write_pos + size <= m_stream.size());
         int res = ::read(sock, m_stream.data() + m_write_pos, size);
         if (res <= 0)
             throw remote_error{res ? "peer disconnected"
