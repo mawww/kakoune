@@ -71,8 +71,12 @@ void ClientManager::process_pending_inputs() const
     while (true)
     {
         bool had_input = false;
-        for (auto& client : m_clients)
-            had_input = client->process_pending_inputs() or had_input;
+        // Use index based iteration as a m_clients might get mutated during
+        // client input processing, which would break iterator based iteration.
+        // (its fine to skip a client if that happens as had_input will be true
+        // if a client triggers client removal)
+        for (int i = 0; i < m_clients.size(); ++i)
+            had_input = m_clients[i]->process_pending_inputs() or had_input;
 
         if (not had_input)
             break;
