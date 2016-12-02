@@ -695,26 +695,29 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
 
             auto begin = buffer.iterator_at(atom_it->begin());
             auto end = buffer.iterator_at(atom_it->end());
-            for (BufferIterator it = begin; it != end; ++it)
+            for (BufferIterator it = begin; it != end; )
             {
-                auto c = *it;
-                if (c == '\t' or c == ' ' or c == '\n')
+                auto coord = it.coord();
+                Codepoint cp = utf8::read_codepoint<utf8::InvalidPolicy::Pass>(it, end);
+                if (cp == '\t' or cp == ' ' or cp == '\n' or cp == 0xA0)
                 {
-                    if (it != begin)
-                        atom_it = ++line.split(atom_it, it.coord());
-                    if (it+1 != end)
-                        atom_it = line.split(atom_it, (it+1).coord());
+                    if (coord != begin.coord())
+                        atom_it = ++line.split(atom_it, coord);
+                    if (it != end)
+                        atom_it = line.split(atom_it, it.coord());
 
-                    if (c == '\t')
+                    if (cp == '\t')
                     {
                         int column = (int)get_column(buffer, tabstop, it.coord());
                         int count = tabstop - (column % tabstop);
                         atom_it->replace("→" + String(' ', CharCount{count-1}));
                     }
-                    else if (c == ' ')
+                    else if (cp == ' ')
                         atom_it->replace("·");
-                    else if (c == '\n')
+                    else if (cp == '\n')
                         atom_it->replace("¬");
+                    else if (cp == 0xA0)
+                        atom_it->replace("⍽");
                     atom_it->face = whitespaceface;
                     break;
                 }
