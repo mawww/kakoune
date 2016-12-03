@@ -181,7 +181,7 @@ static HighlighterAndId create_fill_highlighter(HighlighterParameters params)
 template<typename T>
 struct BufferSideCache
 {
-    BufferSideCache() : m_id{ValueId::get_free_id()} {}
+    BufferSideCache() : m_id{get_free_value_id()} {}
 
     T& get(const Buffer& buffer)
     {

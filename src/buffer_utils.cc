@@ -89,7 +89,7 @@ void reload_file_buffer(Buffer& buffer)
 
 Buffer* create_fifo_buffer(String name, int fd, bool scroll)
 {
-    static ValueId s_fifo_watcher_id = ValueId::get_free_id();
+    static ValueId s_fifo_watcher_id = get_free_value_id();
 
     auto& buffer_manager = BufferManager::instance();
     Buffer* buffer = buffer_manager.get_buffer_ifp(name);

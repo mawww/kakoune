@@ -67,7 +67,7 @@ namespace
 
 WordDB& get_word_db(const Buffer& buffer)
 {
-    static const ValueId word_db_id = ValueId::get_free_id();
+    static const ValueId word_db_id = get_free_value_id();
     Value& cache_val = buffer.values()[word_db_id];
     if (not cache_val)
         cache_val = Value(WordDB{buffer});

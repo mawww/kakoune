@@ -68,16 +68,13 @@ private:
     std::unique_ptr<Concept> m_value;
 };
 
-struct ValueId : public StronglyTypedNumber<ValueId, int>
-{
-    constexpr ValueId(int value = 0) : StronglyTypedNumber(value) {}
+enum class ValueId : int {};
 
-    static ValueId get_free_id()
-    {
-        static ValueId next;
-        return next++;
-    }
-};
+inline ValueId get_free_value_id()
+{
+    static int next = 0;
+    return (ValueId)(next++);
+}
 
 using ValueMap = UnorderedMap<ValueId, Value, MemoryDomain::Values>;
 
