@@ -24,7 +24,14 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
     [[gnu::always_inline]]
     StringView strview() const { return {data(), length}; }
 
-    static RefPtr<StringData> create(StringView str, char back = 0)
+    struct PtrPolicy
+    {
+        static void inc_ref(StringData* r, void*) { ++r->refcount; }
+        static void dec_ref(StringData* r, void*) { if (--r->refcount == 0) delete r; }
+        static void ptr_moved(StringData*, void*, void*) noexcept {}
+    };
+
+    static RefPtr<StringData, PtrPolicy> create(StringView str, char back = 0)
     {
         const int len = (int)str.length() + (back != 0 ? 1 : 0);
         void* ptr = StringData::operator new(sizeof(StringData) + len + 1);
@@ -34,7 +41,7 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
             res->data()[len-1] = back;
         res->data()[len] = 0;
         res->hash = hash_data(res->data(), res->length);
-        return RefPtr<StringData>(res);
+        return RefPtr<StringData, PtrPolicy>{res};
     }
 
     static void destroy(StringData* s)
@@ -54,7 +61,7 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
     }
 };
 
-using StringDataPtr = RefPtr<StringData>;
+using StringDataPtr = RefPtr<StringData, StringData::PtrPolicy>;
 
 class StringRegistry : public Singleton<StringRegistry>
 {

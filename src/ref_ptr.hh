@@ -6,12 +6,20 @@
 namespace Kakoune
 {
 
-struct WorstMatch { [[gnu::always_inline]] WorstMatch(...) {} };
+struct RefCountable
+{
+    int refcount = 0;
+    virtual ~RefCountable() = default;
+};
 
-[[gnu::always_inline]]
-inline void ref_ptr_moved(WorstMatch, void*, void*) noexcept {}
+struct RefCountablePolicy
+{
+    static void inc_ref(RefCountable* r, void*) { ++r->refcount; }
+    static void dec_ref(RefCountable* r, void*) { if (--r->refcount == 0) delete r; }
+    static void ptr_moved(RefCountable*, void*, void*) noexcept {}
+};
 
-template<typename T, typename TForOverload = T>
+template<typename T, typename Policy = RefCountablePolicy>
 struct RefPtr
 {
     RefPtr() = default;
@@ -83,40 +91,23 @@ private:
     void acquire()
     {
         if (m_ptr)
-            inc_ref_count(static_cast<TForOverload*>(m_ptr), this);
+            Policy::inc_ref(m_ptr, this);
     }
 
     [[gnu::always_inline]]
     void release()
     {
         if (m_ptr)
-            dec_ref_count(static_cast<TForOverload*>(m_ptr), this);
+            Policy::dec_ref(m_ptr, this);
         m_ptr = nullptr;
     }
 
     [[gnu::always_inline]]
     void moved(void* from)
-        noexcept(noexcept(ref_ptr_moved(static_cast<TForOverload*>(nullptr), nullptr, nullptr)))
+        noexcept(noexcept(Policy::ptr_moved(nullptr, nullptr, nullptr)))
     {
         if (m_ptr)
-            ref_ptr_moved(static_cast<TForOverload*>(m_ptr), from, this);
-    }
-};
-
-struct RefCountable
-{
-    int refcount = 0;
-    virtual ~RefCountable() = default;
-
-    friend void inc_ref_count(RefCountable* r, void*)
-    {
-        ++r->refcount;
-    }
-
-    friend void dec_ref_count(RefCountable* r, void*)
-    {
-        if (--r->refcount == 0)
-            delete r;
+            Policy::ptr_moved(m_ptr, from, this);
     }
 };
 
