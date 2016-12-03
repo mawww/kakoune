@@ -161,14 +161,17 @@ std::pair<String, int> ShellManager::eval(
             : FDWatcher(pipe.read_fd(), FdEvents::Read,
                         [&contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) {
                             char buffer[1024];
-                            size_t size = ::read(pipe.read_fd(), buffer, 1024);
-                            if (size <= 0)
+                            while (fd_readable(pipe.read_fd()))
                             {
-                                pipe.close_read_fd();
-                                watcher.disable();
-                                return;
+                                size_t size = ::read(pipe.read_fd(), buffer, 1024);
+                                if (size <= 0)
+                                {
+                                    pipe.close_read_fd();
+                                    watcher.disable();
+                                    return;
+                                }
+                                contents += StringView{buffer, buffer+size};
                             }
-                            contents += StringView{buffer, buffer+size};
                         })
         {}
     };
@@ -227,7 +230,7 @@ std::pair<String, int> ShellManager::eval(
     if (wait_notified) // clear the status line
         context.print_status({ "", get_face("Information") }, true);
 
-    return { stdout_contents, WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
+    return { std::move(stdout_contents), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
 }
 
 void ShellManager::register_env_var(StringView str, bool prefix,
