@@ -1,5 +1,6 @@
 #include "assert.hh"
 #include "buffer.hh"
+#include "backtrace.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
 #include "client_manager.hh"
