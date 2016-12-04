@@ -418,13 +418,16 @@ void InsertCompleter::update()
 
 void InsertCompleter::reset()
 {
-    m_completions = InsertCompletion{};
     m_explicit_completer = nullptr;
-    if (m_context.has_client())
+    if (m_completions.is_valid())
     {
-        m_context.client().menu_hide();
-        m_context.client().info_hide();
-        m_context.hooks().run_hook("InsertCompletionHide", "", m_context);
+        m_completions = InsertCompletion{};
+        if (m_context.has_client())
+        {
+            m_context.client().menu_hide();
+            m_context.client().info_hide();
+            m_context.hooks().run_hook("InsertCompletionHide", "", m_context);
+        }
     }
 }
 
