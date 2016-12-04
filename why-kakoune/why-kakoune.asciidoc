@@ -6,25 +6,25 @@ image::kakoune_logo.svg[align="center"]
 Why invest time into text editing
 ---------------------------------
 
-While discussing with fellow developpers, I was a few times asked the
-following question: We spend most of our time as developpers thinking, not
-editing code, so why invest time into mastering a complicated code editor,
-and why lose some cognitive resources on thinking about text edition instead
-of about the real programming problem.
+While discussing with fellow developers, I was asked the following question
+a few times: We spend most of our time as developers thinking, not editing
+code; so, why invest time into mastering a complicated code editor, and why
+lose some cognitive resources on thinking about text editing instead of
+about the real programming problem?
 
 I think this point of view is misguided, for a few reasons:
 
-* Despite their name, code editors are not only about edition, but also about
+* Despite their name, code editors are not only about editing, but also about
 code navigation. Programming is a hard task partly due to the huge amount of
 context we have to keep in mind, and being able to quickly navigate code helps
-us refresh that context, by looking at definitions, implementations, comments.
+us refresh that context, by looking at definitions, implementations, and comments.
 
-* Although code edition itself is not the most important part of programming,
-it still takes non negligible time to perform, and can be optimized by using
-better tools. 
+* Although code editing itself is not the most important part of programming,
+it still takes non-negligible time to perform, and can be optimized by using
+better tools.
 
 * Finally, a programming career spans a few decades, so investing a few weeks
-to improve our editing and navigating speed is definitely worth it.
+to improving our editing and navigating speed is definitely worth it.
 
 Why a modal text editor
 -----------------------
@@ -32,77 +32,72 @@ Why a modal text editor
 What is modal text editing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now that we have, hopefully, established that investing time into mastering  
-text editing is worth it, lets focus on why I think modal text editors are the
-way to go.
+Now that we have established that investing time into mastering text editing
+is worth it, let's focus on why I think modal text editors are the way to go.
 
-A modal text editor can be, as its name imply, in different modes. Depending
-on the current mode, keys have a different effect: in *insert* mode most keys
-effect would be to insert their character in the buffer, as in non-modal
-editors, but in normal (default) mode keys have a different effect. For
-example, `w` can move the cursor to the next word, `y` can yank (copy)
-the current selection, `p` can paste, `u` can undo, `g` followed by `f`
-can open the filename under the cursor...
+A modal text editor can be, as its name implies, in different modes. Depending
+on the current mode, keys have different effects: in *insert* mode most keys
+insert their character in the buffer, as in non-modal editors, but in normal
+(default) mode, keys have a different effect. For example, `w` can move the
+cursor to the next word, `y` can yank (copy) the current selection, `p` can
+paste, `u` can undo, `g` followed by `f` can open the filename under the cursor...
 
 Some commands from *normal* mode would change the mode, for example `i` would
 enter *insert* mode, from which the `<esc>` key would return to *normal* mode.
 
-The first thing to realize that that non modal text editor are extremely biased
+The first thing to realize is that non-modal text editors are extremely biased
 towards insertion. They make insertion easy (by making the default behaviour of
 most keys to insert a character into the buffer) at the expense of making most
 other operations suboptimal, by requiring hard to reach keys or modifiers (or,
 even worse, moving your hand all the way to your mouse).
 
-Insertion is an key part of text editing, and is worth optimizing, which is
+Insertion is a key part of text editing, and is worth optimizing, which is
 the whole point of completion systems. But it is only a small part of text
 editing, we spend a huge amount of our editing time navigating, moving code
 around, copying, pasting and reformating.
 
-Modal editors, on the other hand, and by modal here I focus mostly on the
-vi lineage, default *normal* mode, which is tailored towards non insertion
-operations, (copy, pasting, navigation), but still give access to a fully
-blown *insert* mode a single keystroke away.
+A modal text editor makes all these operations much more accessible, and easier
+to express. But they are not only about having convenient shortcuts.
 
-Modal editing as a text edition language
+Modal editing as a text editing language
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Many vi users have any epiphany when they realize that vi does not just
+Many vi users have an epiphany when they realize that vi does not just
 provide a set of modes making various text editing shortcuts easier to type,
 but actually provides a text editing language.
 
 Commands are composable in order to express complex changes, `dw` in vi is
-not just a shortcut to delete a word, it is the combination of a *verb* `d`
-for delete, with an *object* `w` for word. There are more complex objects:
+not just a shortcut to delete a word, it is the combination of a *verb*: `d`
+for delete, with an *object* `w` for word. There are more complex objects like
 `ib` (inside block) refers to the content of the parenthesis surrounding
 the cursor, so `yib` would yank (copy) the text inside the surround
 parenthesis.
 
-This language allows the programmer to express his intent much more closely
-than in other editors; of course most editors can express "delete the word
-after the next parenthesis", but more often than not, expressing that intent
-is more cumbersome than simply doing an ad-hoc edition. Text editing as a
-language changes that, by making clearly expressing your intent the fastest
-and easiest way to do your edit.
+This language allows the programmer to express their intent much more closely
+than in other editors; most editors can express "delete the word after the
+next parenthesis", but more often than not, expressing that intent is more
+cumbersome than simply doing an ad-hoc edit. Text editing as a language
+changes that, by making clearly expressing your intent the fastest and easiest
+way to do your edit.
 
 This is a desirable property because a lot of text editing operations are
-repetitive, but on only structurally similar text: the subject text are
+repetitive, but only on structurally similar text: the subject text are
 different, but they follow the same structure. Being able to express the
-text edition at the structural level allows for reusable commands, and make
-the compute do the repetitive job.
+text editing at the structural level allows for reusable commands, and makes
+the computer do the repetitive job.
 
-Another often overlooked property of using text edition language is that
-its fun. Programmers are problem solvers, we enjoy solving problems, and
+Another often overlooked property of using a text editing language is that
+it's fun. Programmers are problem solvers, we enjoy solving problems, and
 we enjoy even more solving them with a clean and efficient solution. This
 kind of text editor transform a dull and repetitive edition task into an
-interesting puzzle to solve, and thats an engaging thing.
+interesting puzzle to solve, and that is an engaging thing.
 
-Think about it this way: Yes programming is about thinking, concentrating
+Think about it this way: Yes, programming is about thinking, concentrating
 on a design problem, or on a bug, understanding what needs to be done,
-designing a solution, and the writing it. More often that not, once you get
+designing a solution, and then writing it. More often that not, once you get
 to the writing phase, most of the thinking, problem solving, part is done,
 now the remaining task is just editing the code.  Modal editors make this
 phase both faster, and more fun.
-
 
 Why Kakoune
 -----------
@@ -113,22 +108,22 @@ vi and clones are the best modal text editor out there.
 
 I have been working, for the last 5 years, on a new modal editor called
 Kakoune. It first started as a reimplementation of Vim (the most popular vi
-clone) whose source code is quite dated. But I soon realized that we could
+clone) whose source code is quite dated. But, I soon realized that we could
 improve a lot on vi editing model.
 
 Improving on the editing model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-vi basic grammar is *verb* followed by *object*, its nice because it matches
-well with the order we use in english, "delete word". On the other hand,
+vi basic grammar is *verb* followed by *object*; it's nice because it matches
+well with the order we use in English, "delete word". On the other hand,
 it does not match well with the nature of what we express: There is only a
-handfull of *verbs* in text edition (*d*elete, *y*ank, *p*aste, *i*nsert...),
-and they dont compose, contrarily to *objects* which can be arbitrarily
+handfull of *verbs* in text editing (*d*elete, *y*ank, *p*aste, *i*nsert...),
+and they don't compose, contrarily to *objects* which can be arbitrarily
 complex, and difficult to express. That means that errors are not handled
 well. If you express your object wrongly with a delete verb, the wrong text
 will get deleted, you will need to undo, and try again.
 
-Kakoune grammar is *object* followed by *verb*, combined with instantaneous
+Kakoune's grammar is *object* followed by *verb*, combined with instantaneous
 feedback, that means you always see the current object (In Kakoune we call
 that the selection) before you apply your change, which allows you to correct
 errors on the go.
@@ -138,13 +133,13 @@ lack of interactivity. Because of the *verb* followed by *object* grammar,
 vi changes are made in the dark, we dont see their effect until the whole
 editing *sentence* is finished. `dtf` will delete to next *f*, if you then
 realize that was one *f* before the one you targeted, you need to undo,
-go back to your initial position, and try again with `d2tf`. In kakoune you
-would to `tf` see immediatly that is not the *f* you were looking for, type
-`Tf` to extend the selection until that *f*, then `d` to delete. At each
-step you get visual feedback and have the opportunity to correct.
+go back to your initial position, and try again with `d2tf`. In Kakoune, you
+would do `tf`, see immediately that that is not the *f* you were looking for,
+type `Tf` to extend the selection until the correct *f*, then `d` to delete.
+At each step you get visual feedback, and have the opportunity to correct it.
 
-At lower level, the problem is that vi treats moving around and selecting an
-object as two different things. Kakoune unifies that, moving *is* selecting.
+At the lower level, the problem is that vi treats moving around and selecting
+an object as two different things. Kakoune unifies that, moving *is* selecting.
 `w` does not just go to the next word, it selects from current position to
 the next word. By convention, capital commands tend to expand the selection,
 so `W` would expand the current selection to the next word.
@@ -207,19 +202,19 @@ video::video/regroup.webm[align="center", options="autoplay,loop"]
 Discoverability
 ~~~~~~~~~~~~~~~
 
-Keyboard oriented programs tends to be at a disadvantage compared to GUI
-applications because they are less discoverable, there is no menu bar on
-which to click to see the available options, no tooltips appearing when you
+Keyboard oriented programs tend to be at a disadvantage compared to GUI
+applications because they are less discoverable; there is no menu bar on
+which to click to see the available options, no tooltip appearing when you
 hover above a button explaining what it does.
 
-Kakoune solves this problem through the use of two mechanism: extensive
+Kakoune solves this problem through the use of two mechanisms: extensive
 completion support, and auto-information display.
 
 When a command is written in a prompt, Kakoune will automatically open a menu
 providing you with the available completions for the current parameter. It
 will know if the parameter is supposed to be a word against a fixed set
 of word, the name of a buffer, a filename, etc... Actually, as soon as `:`
-is typed, entering command prompt mode, the list of existing command will
+is typed, entering command prompt mode, the list of existing commands will
 be displayed in the completion menu.
 
 Additionally, Kakoune will display an information box, describing what the
@@ -241,7 +236,7 @@ explaining what the key pressed just did.
 Extensive completion support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Keyboard oriented programs are much easier to work with when the provide
+Keyboard oriented programs are much easier to work with when they provide
 extensive completion support. For a long time, completion has been prefix
 based, and that has been working very well.
 
@@ -252,7 +247,7 @@ a candidate to be considered matching, instead of a prefix. That will generate
 more candidates (all prefix matches are also subsequence matches), so it
 needs a good ranking algorithm to sort the matches and put the best ones first.
 
-Kakoune embrace fuzzy matching for its completion support, which kicks in both
+Kakoune embraces fuzzy matching for its completion support, which kicks in both
 during insert mode, and prompt mode.
 
 .Word completion support
@@ -261,7 +256,7 @@ video::video/completion.webm[align="center", options="autoplay,loop"]
 Insert mode completion provides completion suggestions while inserting in the
 buffer, it can complete words from the buffer, or from all buffers, lines,
 filenames, or get completion candidates from an external source, making it
-possible to implement intelligent code completer.
+possible to implement intelligent code completion.
 
 .Language specific completion support
 video::video/cpp-completion.webm[align="center", options="autoplay,loop"]
@@ -274,13 +269,13 @@ A better unix citizen
 ~~~~~~~~~~~~~~~~~~~~~
 
 Easily making programs cooperate with each others is one of the main strength
-of the Unix environment. Kakoune is designed to integrate nicely with a Posix
-system: various text editing commands give direct access to the power of Posix
-tools, like `|` that prompts for a shell command and pipe selections through
+of the Unix environment. Kakoune is designed to integrate nicely with a POSIX
+system: various text editing commands give direct access to the power of POSIX
+tools, like `|`, which prompts for a shell command and pipe selections through
 it, replacing their contents with the command output, or `$` that prompts for
 a command, and keeps selections for which the command returned success.
 
-This is only the tip of the iceberg, Kakoune is very easily controlable from
+This is only the tip of the iceberg, Kakoune is very easily controllable from
 the shell, just pipe whatever commands you like to `kak -p <session>`, and the
 target Kakoune session will execute these.
 
@@ -291,13 +286,13 @@ can be accessed in these expand through environment variables, which, along
 with shell scripting forms the basis of Kakoune extension model.
 
 This model, although a bit less familiar than integrating a scripting language,
-is conceptually very simple, relatively simple implementation-wise, and
-expressive enough to implement custom code completer, linters, formatters...
+is conceptually very simple, relatively simple implementation-wise, and is
+expressive enough to implement a custom code completer, linters, formatters...
 
-Kakoune also tries to limit its scope to code edition, in particular it does
-not try to manage windows, and lets the system window manager, or terminal
-multiplexer (as tmux), handle their responsiblity. This is achieved through
-a client/server design: An edition session runs on a server process, and
+Kakoune also tries to limit its scope to code editing: in particular, it does
+not try to manage windows, and lets the system's window manager, or terminal
+multiplexer (such as tmux), handle that responsiblity. This is achieved through
+a client/server design: An editing session runs on a server process, and
 multiple clients can connect to that session to display different buffers.
 
 Final Thoughts
@@ -307,13 +302,13 @@ Kakoune provides an efficient code editing environment, both very predictible,
 hence scriptable, and very interactive. Its learning curve is considerably
 easier than Vim thanks to a more consistent design associated with strong
 discoverability, while still being faster (as in less keystrokes) in most
-use cases. 
+use cases.
 
 Although easier to learn than Vim, the learning curve is still quite steep,
 however we have established that investing time into optimizing the text
 editing workflow is worth it for programmers. Moreover, Kakoune simply makes
 code editing a fun and rewarding experience.
 
-Kakoune is still evolving, getting better as we get more users, and more use
-cases to catter for, its already a very good code editor, and we need you to
-use it so that it can be made even better. 
+Kakoune is still evolving, getting better as we get more users, and gathering
+more use cases to cater for. It's already a very good code editor, and we need
+you to use it so that it can be made even better.
