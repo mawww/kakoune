@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240">
+  <defs>
+    <linearGradient id="gtl" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffa"/>
+      <stop offset="75%" stop-color="#cc8"/>
+      <stop offset="100%" stop-color="#8b6"/>
+    </linearGradient>
+    <linearGradient id="gtr" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ac7"/>
+      <stop offset="60%" stop-color="#896"/>
+      <stop offset="100%" stop-color="#685"/>
+    </linearGradient>
+    <linearGradient id="gbl" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8a7"/>
+      <stop offset="50%" stop-color="#ba5"/>
+      <stop offset="100%" stop-color="#226a3a"/>
+    </linearGradient>
+    <linearGradient id="gbr" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#798"/>
+      <stop offset="15%" stop-color="#586"/>
+      <stop offset="100%" stop-color="#232"/>
+    </linearGradient>
+    <linearGradient id="grad2" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="rgb(178, 255, 160)" />
+      <stop offset="25%" stop-color="rgb(178, 245, 118)" />
+      <stop offset="50%" stop-color="rgb(138, 235, 118)" />
+      <stop offset="100%" stop-color="rgb(108, 185, 88)" />
+    </linearGradient>
+    <linearGradient id="grad3" x1="20%" y1="0" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="rgb(60, 80, 130)" />
+      <stop offset="40%" stop-color="rgb(20, 80, 130)" />
+      <stop offset="80%" stop-color="rgb(20, 115, 140)" />
+      <stop offset="100%" stop-color="rgb(50, 120, 150)" />
+    </linearGradient>
+    <linearGradient id="grad4" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgb(200, 75, 65)" />
+      <stop offset="50%" stop-color="rgb(250, 100, 77)" />
+      <stop offset="100%" stop-color="rgb(250, 150, 97)" />
+    </linearGradient>
+    <linearGradient id="grad5" x1="45%" y1="0%" x2="55%" y2="100%">
+      <stop offset="0%" stop-color="rgb(255, 130, 100)" />
+      <stop offset="20%" stop-color="rgb(235, 90, 65)" />
+      <stop offset="50%" stop-color="rgb(220, 95, 70)" />
+      <stop offset="80%" stop-color="rgb(200, 75, 55)" />
+      <stop offset="100%" stop-color="rgb(220, 95, 75)" />
+    </linearGradient>
+    <filter id="blur2">
+      <feOffset result="offOut" in="SourceGraphic" dx="2" dy="3"/>
+      <feColorMatrix result="matrixOut" in="offOut" type="matrix"
+        values = "0.3 0 0 0 0 0 0.3 0 0 0 0 0 0.3 0 0 0 0 0 0.1 0"/>
+      <feGaussianBlur result="blurOut" in="matrixOut" 
+                      stdDeviation="4"/>
+      <feBlend in="SourceGraphic" in2="blurOut" mode="normal"/>
+    </filter>
+    <filter id="blur3">
+      <feOffset result="offOut" in="SourceGraphic" dx="2" dy="3"/>
+      <feColorMatrix result="matrixOut" in="offOut" type="matrix"
+        values = "0.0 0 0 0 0 0 0.0 0 0 0 0 0 0.0 0 0 0 0 0 0.3 0"/>
+      <feGaussianBlur result="blurOut" in="matrixOut" 
+                      stdDeviation="4"/>
+      <feBlend in="SourceGraphic" in2="blurOut" mode="normal"/>
+    </filter>
+    <filter id="blur4">
+      <feOffset result="offOut" in="SourceGraphic" dx="4" dy="4"/>
+      <feColorMatrix result="matrixOut" in="offOut" type="matrix"
+        values = "0.1 0 0 0 0 0 0.1 0 0 0 0 0 0.1 0 0 0 0 0 0.25 0"/>
+      <feGaussianBlur result="blurOut" in="matrixOut" 
+                      stdDeviation="6"/>
+      <feBlend in="SourceGraphic" in2="blurOut" mode="normal"/>
+    </filter>
+  </defs>
+
+  <!-- Logo part -->
+  <g transform="translate(120,120)">
+
+    <!-- green rombus -->
+    <polygon fill="url(#gtr)" filter="url(#blur2)"
+             points="0,-100 100,0 0,0"/> <!-- top-right -->
+    <polygon fill="url(#gtl)" filter="url(#blur2)" 
+             points="0,-100 -100,0 0,0"/> <!-- top-left -->
+    <polygon fill="url(#gbr)" filter="url(#blur2)" 
+             points="0,100 100,0 0,0"/> <!-- bottom-right -->
+    <polygon fill="url(#gbl)" filter="url(#blur2)" 
+             points="0,100 -100,0 0,0"/> <!-- bottom-left -->
+
+    <!-- K letter -->
+    <g transform="translate(6, 0)">
+        <polygon fill="url(#grad3)" filter="url(#blur3)" 
+                 points="63,69 19,69 -19,34 9,3"/>
+        <g filter="url(#blur4)">
+          <polygon fill="url(#grad4)" 
+                   points="69,-68 30,-68 -26,-10 -29,48"/>
+          <polygon fill="url(#grad5)"
+                   points="-68,-68 -68,71 -30,71 -22,-68"/>
+        </g>
+    </g>
+  </g>
+</svg>

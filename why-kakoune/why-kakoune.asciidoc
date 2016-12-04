@@ -1,6 +1,8 @@
 Why Kakoune
 ===========
 
+image::kakoune_logo.svg[align="center"]
+
 Why invest time into text editing
 ---------------------------------
 
@@ -161,6 +163,9 @@ end up with one selection for each match of your regex and use the insert
 mode to do your change. Globally replacing foo with bar would be done with
 `%sfoo<ret>cbar<esc>` which is just the combination of basic building blocks.
 
+.Global replace
+video::video/global-replace.webm[align="center", options="autoplay,loop"]
+
 Multiple selections provides us with a very powerfull to express structural
 selection: we can subselect matches inside the current selections, keep
 selections containing/not containing a match, split selections on a regex,
@@ -175,9 +180,29 @@ lower casing them with ``` and then inserting an underscode before them with
 `i_<esc>` This operation could be put in a macro, and would be reusable
 easily to convert any identifier.
 
+.Camel case to snake case
+video::video/camel.webm[align="center", options="autoplay,loop"]
+
 Another example would be parameter swapping, if you had `func(arg2, arg1);`
 you could select the contents of the parenthesis with `<a-i>(`, split the
 selection on comma with `S, <ret>`, and swap selection contents with `<a-'>`.
+
+.Swapping arguments
+video::video/args-swap.webm[align="center", options="autoplay,loop"]
+
+It is as well easy to use multiple selections for alignment, as the `&`
+command will align all selection cursors by inserting blanks before
+selection start
+
+.Aligning variables
+video::video/align.webm[align="center", options="autoplay,loop"]
+
+Or to use multiple selections as a way to gather some text from different
+places and regroup it in another place, thanks to a special form of pasting
+`<a-p>` that will paste every yanked selections instead of the first one.
+
+.Regrouping manager objects together
+video::video/regroup.webm[align="center", options="autoplay,loop"]
 
 Discoverability
 ~~~~~~~~~~~~~~~
@@ -199,6 +224,9 @@ be displayed in the completion menu.
 
 Additionally, Kakoune will display an information box, describing what the
 command does, what optional switches it can take, what they do...
+
+.Command discoverability
+video::video/discoverability.webm[align="center", options="autoplay,loop"]
 
 That information box gets displayed in other cases, for example if the `g`
 key is hit, which then waits for another key (`g` is the *goto* commands
@@ -227,10 +255,16 @@ needs a good ranking algorithm to sort the matches and put the best ones first.
 Kakoune embrace fuzzy matching for its completion support, which kicks in both
 during insert mode, and prompt mode.
 
+.Word completion support
+video::video/completion.webm[align="center", options="autoplay,loop"]
+
 Insert mode completion provides completion suggestions while inserting in the
 buffer, it can complete words from the buffer, or from all buffers, lines,
 filenames, or get completion candidates from an external source, making it
 possible to implement intelligent code completer.
+
+.Language specific completion support
+video::video/cpp-completion.webm[align="center", options="autoplay,loop"]
 
 Prompt completion is displayed whenever we enter command mode, and provides
 completion candidates that are adapted to the command being entered, and to
