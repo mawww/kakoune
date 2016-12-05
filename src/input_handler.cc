@@ -168,8 +168,8 @@ public:
 
         if (context().has_client())
         {
-            context().client().check_if_buffer_needs_reloading();
             context().client().info_hide();
+            context().client().check_if_buffer_needs_reloading();
         }
 
         m_fs_check_timer.set_next_date(Clock::now() + get_fs_check_timeout(context()));
