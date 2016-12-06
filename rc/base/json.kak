@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-json %{
-    set buffer filetype json
-}
-
 hook global BufCreate .*[.](json) %{
     set buffer filetype json
 }

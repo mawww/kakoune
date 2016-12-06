@@ -2,10 +2,6 @@ hook global BufCreate .*\.java %{
     set buffer filetype java
 }
 
-hook global BufSetOption mimetype=text/java %{
-    set buffer filetype java
-}
-
 addhl -group / regions -default code java \
     string %{(?<!')"} %{(?<!\\)(\\\\)*"} '' \
     comment /\* \*/ '' \

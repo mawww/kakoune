@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-haml %{
-    set buffer filetype haml
-}
-
 hook global BufCreate .*[.](haml) %{
     set buffer filetype haml
 }

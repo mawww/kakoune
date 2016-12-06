@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-lua %{
-    set buffer filetype lua
-}
-
 hook global BufCreate .*[.](lua) %{
     set buffer filetype lua
 }

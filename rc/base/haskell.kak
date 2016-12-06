@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-haskell %{
-    set buffer filetype haskell
-}
-
 hook global BufCreate .*[.](hs) %{
     set buffer filetype haskell
 }

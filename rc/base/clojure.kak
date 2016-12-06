@@ -6,10 +6,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-clojure %{
-    set buffer filetype clojure
-}
-
 hook global BufCreate .*[.](cljs?) %{
     set buffer filetype clojure
 }

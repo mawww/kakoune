@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-perl %{
-    set buffer filetype perl
-}
-
 hook global BufCreate .*\.pl %{
     set buffer filetype perl
 }

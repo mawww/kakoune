@@ -1,11 +1,13 @@
 hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H)$ %{
     set buffer filetype cpp
-    set buffer mimetype ''
+}
+
+hook global BufSetOption filetype=c\+\+ %{
+    set buffer filetype cpp
 }
 
 hook global BufCreate .*\.c$ %{
     set buffer filetype c
-    set buffer mimetype ''
 }
 
 hook global BufCreate .*\.h$ %{
@@ -15,23 +17,9 @@ hook global BufCreate .*\.h$ %{
     } catch %{
         set buffer filetype c
     }
-    set buffer mimetype ''
-}
-
-hook global BufSetOption mimetype=text/x-c %{
-    set buffer filetype c
-}
-
-hook global BufSetOption mimetype=text/x-c\+\+ %{
-    set buffer filetype cpp
 }
 
 hook global BufCreate .*\.m %{
-    set buffer filetype objc
-    set buffer mimetype ''
-}
-
-hook global BufSetOption mimetype=text/x-objc %{
     set buffer filetype objc
 }
 

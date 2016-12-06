@@ -5,7 +5,6 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*\.di? %{
-    set buffer mimetype ""
     set buffer filetype d
 }
 

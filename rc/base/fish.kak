@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-fish %{
-    set buffer filetype fish
-}
-
 hook global BufCreate .*[.](fish) %{
     set buffer filetype fish
 }

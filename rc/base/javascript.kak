@@ -1,10 +1,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-javascript %{
-    set buffer filetype javascript
-}
-
 hook global BufCreate .*[.](js) %{
     set buffer filetype javascript
 }

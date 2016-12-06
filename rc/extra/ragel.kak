@@ -6,10 +6,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-ragel %{
-    set buffer filetype ragel
-}
-
 hook global BufCreate .*[.](ragel|rl) %{
     set buffer filetype ragel
 }

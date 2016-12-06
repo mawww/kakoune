@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-css %{
-    set buffer filetype css
-}
-
 hook global BufCreate .*[.](css) %{
     set buffer filetype css
 }

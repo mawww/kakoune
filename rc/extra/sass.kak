@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-sass %{
-    set buffer filetype sass
-}
-
 hook global BufCreate .*[.](sass) %{
     set buffer filetype sass
 }

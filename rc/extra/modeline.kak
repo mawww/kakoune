@@ -52,7 +52,6 @@ def -hidden _modeline-parse %{
                 autowrap_column
                 eolformat
                 filetype
-                mimetype
                 BOM
             )
 

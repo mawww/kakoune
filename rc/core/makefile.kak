@@ -1,10 +1,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-makefile %{
-    set buffer filetype makefile
-}
-
 hook global BufCreate .*/?[mM]akefile %{
     set buffer filetype makefile
 }
