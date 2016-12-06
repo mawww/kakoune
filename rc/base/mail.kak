@@ -1,4 +1,10 @@
-hook global BufSetOption mimetype=message/rfc822 %{ set buffer filetype mail }
+hook global BufCreate .+\.eml %{
+    set buffer filetype mail
+}
+
+hook global BufSetOption mimetype=message/rfc822 %{
+    set buffer filetype mail
+}
 
 addhl -group / group mail
 addhl -group /mail regex ^(From|To|Cc|Bcc|Subject|Reply-To|In-Reply-To):([^\n]*(?:\n\h+[^\n]+)*)$ 1:keyword 2:attribute
