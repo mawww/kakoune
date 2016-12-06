@@ -133,9 +133,10 @@ void EventManager::handle_next_events(EventMode mode, sigset_t* sigmask)
     }
 
     TimePoint now = Clock::now();
-    for (auto& timer : m_timers)
+    auto timers = m_timers; // copy timers in case m_timers gets mutated
+    for (auto& timer : timers)
     {
-        if (timer->next_date() <= now)
+        if (contains(m_timers, timer) and timer->next_date() <= now)
             timer->run(mode);
     }
 }
