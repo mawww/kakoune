@@ -263,7 +263,7 @@ void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
 namespace
 {
 ColumnCount find_display_column(const DisplayLine& line, const Buffer& buffer,
-                              BufferCoord coord)
+                                BufferCoord coord)
 {
     ColumnCount column = 0;
     for (auto& atom : line)
