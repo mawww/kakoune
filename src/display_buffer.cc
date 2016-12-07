@@ -316,8 +316,14 @@ DisplayLine parse_display_line(StringView line)
                 it = closing;
                 pos = closing + 1;
             }
-            was_antislash = false;
         }
+        if (c == '\n') // line breaks are forbidden, replace with space
+        {
+            content += StringView{pos, it+1};
+            content.back() = ' ';
+            pos = it + 1;
+        }
+
         if (c == '\\')
         {
             if (was_antislash)
@@ -329,13 +335,8 @@ DisplayLine parse_display_line(StringView line)
             else
                 was_antislash = true;
         }
-        if (c == '\n') // line breaks are forbidden, replace with space
-        {
-            content += StringView{pos, it+1};
-            content.back() = ' ';
-            pos = it + 1;
+        else
             was_antislash = false;
-        }
     }
     content += StringView{pos, line.end()};
     if (not content.empty())
