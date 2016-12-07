@@ -133,6 +133,10 @@ private:
 String expand(StringView str, const Context& context,
               const ShellContext& shell_context = ShellContext{});
 
+String expand(StringView str, const Context& context,
+              const ShellContext& shell_context,
+              std::function<String (String)> postprocess);
+
 }
 
 #endif // command_manager_hh_INCLUDED

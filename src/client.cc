@@ -116,7 +116,8 @@ DisplayLine Client::generate_mode_line() const
     {
         const String& modelinefmt = context().options()["modelinefmt"].get<String>();
 
-        modeline = parse_display_line(expand(modelinefmt, context()));
+        modeline = parse_display_line(expand(modelinefmt, context(), ShellContext{},
+                                             [](String s) { return escape(s, '{', '\\'); }));
     }
     catch (runtime_error& err)
     {

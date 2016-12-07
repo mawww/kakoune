@@ -348,8 +348,10 @@ TokenList parse(StringView line)
     return result;
 }
 
-String expand(StringView str, const Context& context,
-              const ShellContext& shell_context)
+template<typename Postprocess>
+String expand_impl(StringView str, const Context& context,
+                   const ShellContext& shell_context,
+                   Postprocess postprocess)
 {
     Reader reader{str};
     String res;
@@ -370,8 +372,8 @@ String expand(StringView str, const Context& context,
         else if (c == '%')
         {
             res += reader.substr_from(beg);
-            Token token = parse_percent_token<true>(reader);
-            res += expand_token(token, context, shell_context);
+            res += postprocess(expand_token(parse_percent_token<true>(reader),
+                                            context, shell_context));
             beg = (++reader).pos;
         }
         else
@@ -379,6 +381,21 @@ String expand(StringView str, const Context& context,
     }
     res += reader.substr_from(beg);
     return res;
+}
+
+String expand(StringView str, const Context& context,
+              const ShellContext& shell_context)
+{
+    return expand_impl(str, context, shell_context,
+                       [](String s) { return std::move(s); });
+}
+
+String expand(StringView str, const Context& context,
+              const ShellContext& shell_context,
+              std::function<String (String)> postprocess)
+{
+    return expand_impl(str, context, shell_context,
+                       [&](String s) { return postprocess(std::move(s)); });
 }
 
 struct command_not_found : runtime_error
