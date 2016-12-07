@@ -254,14 +254,13 @@ public:
         {
             auto colon = find(spec, ':');
             if (colon == spec.end())
-                throw runtime_error("wrong face spec: '" + spec +
-                                     "' expected <capture>:<facespec>");
+                throw runtime_error(format("wrong face spec: '{}' expected <capture>:<facespec>", spec));
             get_face({colon+1, spec.end()}); // throw if wrong face spec
             int capture = str_to_int({spec.begin(), colon});
             faces.emplace_back(capture, String{colon+1, spec.end()});
         }
 
-        String id = "hlregex'" + params[0] + "'";
+        String id = format("hlregex'{}'", params[0]);
 
         Regex ex{params[0], Regex::optimize};
 
