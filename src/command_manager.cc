@@ -431,7 +431,7 @@ void CommandManager::execute(StringView command_line,
 
     DisplayCoord command_coord;
     Vector<String> params;
-    for (auto it = tokens.begin(); it != tokens.end(); ++it)
+    for (auto it = tokens.begin(); it != tokens.end(); )
     {
         if (params.empty())
             command_coord = it->coord();
@@ -444,22 +444,20 @@ void CommandManager::execute(StringView command_line,
         // Shell expand are retokenized
         else if (it->type() == Token::Type::ShellExpand)
         {
-            auto shell_tokens = parse<true>(expand_token(*it, context,
-                                                         shell_context));
-            it = tokens.erase(it);
-            for (Token& token : shell_tokens)
-                it = ++tokens.emplace(it, std::move(token));
-
-            if (tokens.empty())
-                break;
-
-            it -= shell_tokens.size() + 1;
+            auto new_tokens = parse<true>(expand_token(*it, context,
+                                                       shell_context));
+            it = tokens.insert(tokens.erase(it),
+                               std::make_move_iterator(new_tokens.begin()),
+                               std::make_move_iterator(new_tokens.end()));
+            continue; // skip incrementing, we already point to next token
         }
         else if (it->type() == Token::Type::ArgExpand and it->content() == '@')
-            std::copy(shell_context.params.begin(), shell_context.params.end(),
-                      std::back_inserter(params));
+            params.insert(params.end(), shell_context.params.begin(),
+                          shell_context.params.end());
         else
             params.push_back(expand_token(*it, context, shell_context));
+
+        ++it;
     }
     execute_single_command(params, context, shell_context, command_coord);
 }
