@@ -109,7 +109,7 @@ things easier to understand, bugs easier to fix, and code easier to change.
  * *Limited smartness*: Kakoune should not try to be too smart, being smart
    is often unpredictable for the user, and makes things context dependent.
    When Kakoune tries to be smart, it should provide the alternative, 'non
-   smart' version (+*+ tries to detect word boundaries on the selection, but
+   smart' version (+\*+ tries to detect word boundaries on the selection, but
    +alt-*+ permits to avoid this behavior).
    
 
