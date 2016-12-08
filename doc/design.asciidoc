@@ -62,7 +62,7 @@ normal mode even though they could arguably be moved to command mode.
 
 Modes should be orthogonal, and commands in modes should be as well. For
 example, Vim uses +d+ and +x+ for very similar things: deleting text. In
-Kakoune only +d+ exists, and things are done so that +x+ is not needed.
+Kakoune only +d+ exists, and the design ensures that +x+ is not needed.
 
 Speed
 -----
