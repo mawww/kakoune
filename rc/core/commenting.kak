@@ -78,7 +78,7 @@ hook global BufSetOption filetype=(pug|rust) %{
 }
 
 hook global BufSetOption filetype=python %{
-    set buffer comment_selection_chars '""":"""'
+    set buffer comment_selection_chars '\'\'\':\'\'\''
 }
 
 hook global BufSetOption filetype=ragel %{
