@@ -1,5 +1,5 @@
 decl str makecmd make
-decl str make_error_pattern "[0-9]+: (?:fatal )?error:"
+decl str make_error_pattern " (?:fatal )?error:"
 
 decl str toolsclient
 decl -hidden int _make_current_error_line
@@ -61,7 +61,7 @@ def -hidden make-jump %{
 def make-next -docstring 'Jump to the next make error' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*make*'
-        exec "%opt{_make_current_error_line}g<a-l>/%opt{make_error_pattern}<ret>"
+        exec "%opt{_make_current_error_line}g<a-l>/(?:\w:)?[^:]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
         make-jump
     }
     try %{ eval -client %opt{toolsclient} %{ exec %opt{_make_current_error_line}g } }
@@ -70,7 +70,7 @@ def make-next -docstring 'Jump to the next make error' %{
 def make-prev -docstring 'Jump to the previous make error' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*make*'
-        exec "%opt{_make_current_error_line}g<a-h><a-/>%opt{make_error_pattern}<ret>"
+        exec "%opt{_make_current_error_line}g<a-h><a-/>(?:\w:)?[^:]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
         make-jump
     }
     try %{ eval -client %opt{toolsclient} %{ exec %opt{_make_current_error_line}g } }
