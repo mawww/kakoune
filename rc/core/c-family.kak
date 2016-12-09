@@ -35,12 +35,12 @@ hook global BufSetOption mimetype=text/x-objc %{
     set buffer filetype objc
 }
 
-def -hidden _c-family-trim-autoindent %[ eval -draft -itersel %[
+def -hidden c-family-trim-autoindent %[ eval -draft -itersel %[
     # remove the line if it's empty when leaving the insert mode
     try %[ exec <a-x> 1s^(\h+)$<ret> d ]
 ] ]
 
-def -hidden _c-family-indent-on-newline %[ eval -draft -itersel %[
+def -hidden c-family-indent-on-newline %[ eval -draft -itersel %[
     exec \;
     try %[
         # if previous line closed a paren, copy indent of the opening paren line
@@ -61,22 +61,22 @@ def -hidden _c-family-indent-on-newline %[ eval -draft -itersel %[
     try %[ exec -draft {b <a-k>\`\([^\n]+\n[^\n]*\n?\'<ret> L s\`|.\'<ret> & ]
 ] ]
 
-def -hidden _c-family-indent-on-opening-curly-brace %[
+def -hidden c-family-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ exec -draft -itersel h<a-F>)M <a-k> \`\(.*\)\h*\n\h*\{\' <ret> s \`|.\' <ret> 1<a-&> ]
 ]
 
-def -hidden _c-family-indent-on-closing-curly-brace %[
+def -hidden c-family-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-:><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
 
-def -hidden _c-family-insert-on-closing-curly-brace %[
+def -hidden c-family-insert-on-closing-curly-brace %[
     # add a semicolon after a closing brace if part of a class, union or struct definition
     try %[ exec -itersel -draft hm<a-x>B<a-x><a-k>\`\h*(class|struct|union)<ret> a\;<esc> ]
 ]
 
-def -hidden _c-family-insert-on-newline %[ eval -draft %[
+def -hidden c-family-insert-on-newline %[ eval -draft %[
     exec \;
     try %[
         eval -draft %[
@@ -249,12 +249,12 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
         rmhooks window c-family-indent
     }
 
-    hook -group c-family-indent window InsertEnd .* _c-family-trim-autoindent
-    hook -group c-family-indent window InsertChar \n _c-family-indent-on-newline
-    hook -group c-family-indent window InsertChar \{ _c-family-indent-on-opening-curly-brace
-    hook -group c-family-indent window InsertChar \} _c-family-indent-on-closing-curly-brace
-    hook -group c-family-insert window InsertChar \} _c-family-insert-on-closing-curly-brace
-    hook -group c-family-insert window InsertChar \n _c-family-insert-on-newline
+    hook -group c-family-indent window InsertEnd .* c-family-trim-autoindent
+    hook -group c-family-indent window InsertChar \n c-family-indent-on-newline
+    hook -group c-family-indent window InsertChar \{ c-family-indent-on-opening-curly-brace
+    hook -group c-family-indent window InsertChar \} c-family-indent-on-closing-curly-brace
+    hook -group c-family-insert window InsertChar \} c-family-insert-on-closing-curly-brace
+    hook -group c-family-insert window InsertChar \n c-family-insert-on-newline
 
     alias window alt c-family-alternative-file
 ]
@@ -277,7 +277,7 @@ hook -group objc-highlight global WinSetOption filetype=objc %[ addhl ref objc ]
 hook -group objc-highlight global WinSetOption filetype=(?!objc$).* %[ rmhl objc ]
 
 decl str c_include_guard_style "ifdef"
-def -hidden _c-family-insert-include-guards %{
+def -hidden c-family-insert-include-guards %{
     %sh{
         case "${kak_opt_c_include_guard_style}" in
             ifdef)
@@ -291,7 +291,7 @@ def -hidden _c-family-insert-include-guards %{
     }
 }
 
-hook global BufNew .*\.(h|hh|hpp|hxx|H) _c-family-insert-include-guards
+hook global BufNew .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
 
 decl str-list alt_dirs ".;.."
 
