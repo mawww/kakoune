@@ -68,12 +68,12 @@ def -hidden _c-family-indent-on-opening-curly-brace %[
 
 def -hidden _c-family-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
-    try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
+    try %[ exec -itersel -draft <a-h><a-:><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
 
 def -hidden _c-family-insert-on-closing-curly-brace %[
     # add a semicolon after a closing brace if part of a class, union or struct definition
-    try %[ exec -itersel -draft hm<a-x>B<a-x><a-k>^\h*(class|struct|union)<ret> a\;<esc> ]
+    try %[ exec -itersel -draft hm<a-x>B<a-x><a-k>\`\h*(class|struct|union)<ret> a\;<esc> ]
 ]
 
 def -hidden _c-family-insert-on-newline %[ eval -draft %[
