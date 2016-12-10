@@ -1515,9 +1515,11 @@ void scroll_window(Context& context, LineCount offset)
     SelectionList& selections = context.selections();
     const BufferCoord cursor = selections.main().cursor();
 
+    auto line = clamp(cursor.line, win_pos.line + scrolloff.line,
+                      win_pos.line + win_dim.line - 1 - scrolloff.line);
+    line = clamp(line, 0_line, line_count-1);
+
     using std::min; using std::max;
-    auto line = clamp(cursor.line, max(0_line, win_pos.line + scrolloff.line),
-                   min(line_count-1, win_pos.line + win_dim.line - 1 - scrolloff.line));
     // This is not exactly a clamp, and must be done in this order as
     // byte_count_to could return line length
     auto col = min(max(cursor.column, buffer[line].byte_count_to(win_pos.column)),
