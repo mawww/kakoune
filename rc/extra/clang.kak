@@ -22,7 +22,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
         printf %s\\n "eval -draft %{
                   edit! -fifo ${dir}/fifo *clang-output*
                   set buffer filetype make
-                  set buffer _make_current_error_line 0
+                  set buffer make_current_error_line 0
                   hook -group fifo buffer BufCloseFifo .* %{
                       nop %sh{ rm -r ${dir} }
                       rmhooks buffer fifo
