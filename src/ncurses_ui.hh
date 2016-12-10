@@ -96,7 +96,7 @@ private:
 
     struct Menu : Window
     {
-        Vector<DisplayLine> items;
+        Vector<DisplayLine, MemoryDomain::Display> items;
         Face fg;
         Face bg;
         DisplayCoord anchor;
