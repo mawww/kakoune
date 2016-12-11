@@ -37,7 +37,7 @@ is worth it, let's focus on why I think modal text editors are the way to go.
 
 A modal text editor can be, as its name implies, in different modes. Depending
 on the current mode, keys have different effects: in *insert* mode most keys
-insert their character in the buffer, as in non-modal editors, but in normal
+insert their character in the buffer, as in non-modal editors, but in *normal*
 (default) mode, keys have a different effect. For example, `w` can move the
 cursor to the next word, `y` can yank (copy) the current selection, `p` can
 paste, `u` can undo, `g` followed by `f` can open the filename under the cursor...
@@ -289,11 +289,20 @@ This model, although a bit less familiar than integrating a scripting language,
 is conceptually very simple, relatively simple implementation-wise, and is
 expressive enough to implement a custom code completer, linters, formatters...
 
+Moreover, combined with support for `fifo` buffers, that read data from a
+named `fifo`, Kakoune ends up with an extension model that easily support
+asynchronous tasks, by forking a shell in the background to do long lived
+work (`grep` or `make` for example) while displaying the result as they
+come through the `fifo`.
+
 Kakoune also tries to limit its scope to code editing: in particular, it does
 not try to manage windows, and lets the system's window manager, or terminal
 multiplexer (such as tmux), handle that responsiblity. This is achieved through
 a client/server design: An editing session runs on a server process, and
 multiple clients can connect to that session to display different buffers.
+
+.Asynchronous make and multiple clients in tmux
+video::video/async.webm[align="center", options="autoplay,loop"]
 
 Final Thoughts
 --------------
