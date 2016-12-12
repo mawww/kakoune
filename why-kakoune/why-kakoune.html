@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.4">
-<title>Why Kakoune</title>
+<title>Why Kakoune&#8201;&#8212;&#8201;The quest for a better code editor</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -419,7 +419,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article">
 <div id="header">
-<h1>Why Kakoune</h1>
+<h1>Why Kakoune&#8201;&#8212;&#8201;The quest for a better code editor</h1>
 </div>
 <div id="content">
 <div id="preamble">
@@ -690,6 +690,38 @@ Your browser does not support the video tag.
 </div>
 </div>
 <div class="sect2">
+<h3 id="_interactive_predictible_and_fast">Interactive, predictible and fast</h3>
+<div class="paragraph">
+<p>A design goal of Kakoune is to beat vim at its own game, while providing a
+cleaner editing model. The combination of multiple selections and cleaned up
+grammar shows thats its possible to have text edition that is interactive,
+predictible, and fast at the same time.</p>
+</div>
+<div class="paragraph">
+<p>Interactivity comes by providing feedback on every commands, the inverted
+<strong>object</strong> then <strong>verb</strong> grammar makes that possible, every selection modification
+has direct visual feedback, regex based selections incrementally show what
+will get selected, including when the regular expression is invalid, and even
+yanking some text displays a message notifying how many selections were yanked.</p>
+</div>
+<div class="paragraph">
+<p>Predictibilty comes from the simple effect of most commands. Each command is
+conceptually simple, doing one single thing. <code>d</code> deletes whatever is selected,
+nothing more. <code>%</code> selects the whole buffer, <code>s</code> prompts for a regex and
+selects matches in the previous selection. It is the combination of these
+building blocks that allows for complex, but predictible, actions on the text.</p>
+</div>
+<div class="paragraph">
+<p>Being fast, as in less keystrokes, is provided by carefully designing the set
+of editing commands so that they interact well together, and by sometimes
+sacrificing beauty for useability. For example, <code>&lt;a-s&gt;</code> is equivalent to
+<code>S^&lt;ret&gt;</code>, they both split on new lines, but this is a so common use case that
+it deserves to have its own key. As shown in <a href="http://github.com/mawww/golf" class="bare">http://github.com/mawww/golf</a>,
+Kakoune manages to beat Vim at the keystroke count game in most cases,
+using much more idiomatic commands.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_discoverability">Discoverability</h3>
 <div class="paragraph">
 <p>Keyboard oriented programs tend to be at a disadvantage compared to GUI
@@ -791,6 +823,14 @@ tools, like <code>|</code>, which prompts for a shell command and pipe selection
 it, replacing their contents with the command output, or <code>$</code> that prompts for
 a command, and keeps selections for which the command returned success.</p>
 </div>
+<div class="videoblock">
+<div class="title">Using external commands as filters</div>
+<div class="content">
+<video src="video/filters.webm" autoplay controls loop>
+Your browser does not support the video tag.
+</video>
+</div>
+</div>
 <div class="paragraph">
 <p>This is only the tip of the iceberg, Kakoune is very easily controllable from
 the shell, just pipe whatever commands you like to <code>kak -p &lt;session&gt;</code>, and the
@@ -802,6 +842,14 @@ does in a shell. If you type <code>echo %sh{ echo hello }</code> in the command 
 "hello" will get displayed in the status line. Various values from Kakoune
 can be accessed in these expand through environment variables, which, along
 with shell scripting forms the basis of Kakoune extension model.</p>
+</div>
+<div class="videoblock">
+<div class="title">Interaction with external shell</div>
+<div class="content">
+<video src="video/external.webm" autoplay controls loop>
+Your browser does not support the video tag.
+</video>
+</div>
 </div>
 <div class="paragraph">
 <p>This model, although a bit less familiar than integrating a scripting language,
@@ -859,7 +907,7 @@ you to use it so that it can be made even better.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-12-11 19:08:08 GMT
+Last updated 2016-12-12 20:22:57 GMT
 </div>
 </div>
 </body>
