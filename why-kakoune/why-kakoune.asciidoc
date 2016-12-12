@@ -1,5 +1,6 @@
 Why Kakoune -- The quest for a better code editor
 =================================================
+Maxime Coste <mawww@kakoune.org>
 
 image::kakoune_logo.svg[align="center"]
 
