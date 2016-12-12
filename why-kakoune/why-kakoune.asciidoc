@@ -1,5 +1,5 @@
-Why Kakoune
-===========
+Why Kakoune -- The quest for a better code editor
+=================================================
 
 image::kakoune_logo.svg[align="center"]
 
