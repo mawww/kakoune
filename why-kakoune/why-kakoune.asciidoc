@@ -304,6 +304,9 @@ tools, like `|`, which prompts for a shell command and pipe selections through
 it, replacing their contents with the command output, or `$` that prompts for
 a command, and keeps selections for which the command returned success.
 
+.Using external commands as filters
+video::video/filters.webm[align="center", options="autoplay,loop"]
+
 This is only the tip of the iceberg, Kakoune is very easily controllable from
 the shell, just pipe whatever commands you like to `kak -p <session>`, and the
 target Kakoune session will execute these.
@@ -313,6 +316,9 @@ does in a shell. If you type `echo %sh{ echo hello }` in the command prompt,
 "hello" will get displayed in the status line. Various values from Kakoune
 can be accessed in these expand through environment variables, which, along
 with shell scripting forms the basis of Kakoune extension model.
+
+.Interaction with external shell
+video::video/external.webm[align="center", options="autoplay,loop"]
 
 This model, although a bit less familiar than integrating a scripting language,
 is conceptually very simple, relatively simple implementation-wise, and is
