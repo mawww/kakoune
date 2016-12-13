@@ -117,12 +117,12 @@ Improving on the editing model
 
 vi basic grammar is *verb* followed by *object*; it's nice because it matches
 well with the order we use in English, "delete word". On the other hand,
-it does not match well with the nature of what we express: There is only a
-handfull of *verbs* in text editing (*d*elete, *y*ank, *p*aste, *i*nsert...),
-and they don't compose, contrarily to *objects* which can be arbitrarily
-complex, and difficult to express. That means that errors are not handled
-well. If you express your object wrongly with a delete verb, the wrong text
-will get deleted, you will need to undo, and try again.
+it does not match well with the nature of what we express: There is only
+a handfull of *verbs* in text editing (**d**elete, **y**ank, **p**aste,
+**i**nsert...), and they don't compose, contrarily to *objects* which can be
+arbitrarily complex, and difficult to express. That means that errors are
+not handled well. If you express your object wrongly with a delete verb,
+the wrong text will get deleted, you will need to undo, and try again.
 
 Kakoune's grammar is *object* followed by *verb*, combined with instantaneous
 feedback, that means you always see the current object (In Kakoune we call
