@@ -18,7 +18,7 @@ def -hidden _editorconfig-bufwritepre-hook %{
     } }
 }
 
-def editorconfig-load -docstring "Set indentation optins and whitespace behavior according to editorconfig file" %{
+def editorconfig-load -docstring "Set indentation options and whitespace behavior according to editorconfig" %{
     %sh{
         command -v editorconfig >/dev/null 2>&1 || { echo 'echo -color Error The editorconfig tool could not be found'; exit 1; }
         editorconfig "${kak_buffile}" | awk -F= -- '
