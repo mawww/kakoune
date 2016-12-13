@@ -9,6 +9,8 @@ class Kakoune < Formula
   depends_on 'asciidoc' => [:build, 'with-docbook-xsl']
 
   def install
+    ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
+
     cd 'src' do
       system "make", "install", "PREFIX=#{prefix}"
     end
