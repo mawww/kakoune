@@ -620,6 +620,8 @@ Some commands take an exclamation mark (`!`), which can be used to force
 the execution of the command (i.e. to quit a modified buffer, the
 command `q!` has to be used).
 
+ * `doc <topic>`: display documentation about a topic. The completion list
+     displays the available topics.
  * `cd <directory>`: change the current directory to the one passed
  * `e[dit][!] <filename> [<line> [<column>]]`: open buffer on file, go to given
      line and column. If file is already opened, just switch to this file.
