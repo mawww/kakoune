@@ -50,3 +50,6 @@ An optional keyword argument can be passed to the function, which will be automa
         printf %s\\n "eval -try-client %opt{docsclient} _doc-open ${PATH_DOC} $@"
     }
 }
+
+alias global help doc
+alias global h doc
