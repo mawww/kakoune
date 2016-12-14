@@ -52,4 +52,3 @@ An optional keyword argument can be passed to the function, which will be automa
 }
 
 alias global help doc
-alias global h doc
