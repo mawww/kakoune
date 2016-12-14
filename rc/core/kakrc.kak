@@ -1,4 +1,5 @@
 hook global BufCreate (.*/)?(kakrc|.*.kak) %{
+    set buffer mimetype ""
     set buffer filetype kak
 }
 

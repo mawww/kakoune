@@ -1,4 +1,5 @@
 hook global BufCreate .*\.(diff|patch) %{
+    set buffer mimetype ""
     set buffer filetype diff
 }
 

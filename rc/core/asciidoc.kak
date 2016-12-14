@@ -4,7 +4,10 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*\.asciidoc %{ set buffer filetype asciidoc }
+hook global BufCreate .*\.asciidoc %{
+    set buffer mimetype ""
+    set buffer filetype asciidoc
+}
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
