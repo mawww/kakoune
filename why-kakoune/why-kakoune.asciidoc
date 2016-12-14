@@ -2,7 +2,7 @@ Why Kakoune -- The quest for a better code editor
 =================================================
 Maxime Coste <mawww@kakoune.org>
 
-image::kakoune_logo.svg[align="center"]
+image::kakoune_logo.svg[align="center", link="http://kakoune.org"]
 
 Why invest time into text editing
 ---------------------------------
