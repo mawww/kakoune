@@ -101,7 +101,7 @@ struct FilterView
     Iterator end()   const { return {*this, std::end(m_container), std::end(m_container)}; }
 
     Container m_container;
-    Filter m_filter;
+    mutable Filter m_filter;
 };
 
 template<typename Filter>
@@ -158,7 +158,7 @@ struct TransformView
     Iterator end()   const { return {*this, std::end(m_container)}; }
 
     Container m_container;
-    Transform m_transform;
+    mutable Transform m_transform;
 };
 
 template<typename Transform>
