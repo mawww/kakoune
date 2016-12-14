@@ -357,3 +357,6 @@ code editing a fun and rewarding experience.
 Kakoune is still evolving, getting better as we get more users, and gathering
 more use cases to cater for. It's already a very good code editor, and we need
 you to use it so that it can be made even better.
+
+Kakoune is available at http://github.com/mawww/kakoune and has a website at
+http://kakoune.org
