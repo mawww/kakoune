@@ -3,7 +3,7 @@
 ## make_deb.bash for kakoune
 ## by lenormf
 ##
-## Dependencies: build-essential, devscripts, debmake
+## Dependencies: build-essential, devscripts, debmake, asciidoc
 ## Guidelines for making binary packages: https://www.debian.org/doc/debian-policy/ch-binary.html
 
 set -e
@@ -72,6 +72,10 @@ function main {
         echo "No maintainer full name detected, set one using the '-f' flag"
         exit
     fi
+
+## os.getlogin() does not always work, e.g. in docker
+    export DEBEMAIL="${maintainer_email}"
+    export DEBFULLNAME="${maintainer_fullname}"
 
     readonly PATH_KAKOUNE=$(readlink -e $(dirname $(readlink -f "$0"))/..)
     readonly PATH_DIR_TMP=$(mktemp -d)
