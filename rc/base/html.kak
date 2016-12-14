@@ -4,12 +4,12 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=(text/((x-)?html|xml)|application/((\w+\+)?xml)) %{
+hook global BufCreate .*\.html %{
     set buffer filetype html
 }
 
-hook global BufCreate .*\.(html|xml) %{
-    set buffer filetype html
+hook global BufCreate .*\.xml %{
+    set buffer filetype xml
 }
 
 # Highlighters
@@ -63,17 +63,17 @@ def -hidden _html_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group html-highlight global WinSetOption filetype=html %{ addhl ref html }
+hook -group html-highlight global WinSetOption filetype=(?:html|xml) %{ addhl ref html }
 
-hook global WinSetOption filetype=html %{
+hook global WinSetOption filetype=(?:html|xml) %{
     hook window InsertEnd  .* -group html-hooks  _html_filter_around_selections
     hook window InsertChar .* -group html-indent _html_indent_on_char
     hook window InsertChar \n -group html-indent _html_indent_on_new_line
 }
 
-hook -group html-highlight global WinSetOption filetype=(?!html).* %{ rmhl html }
+hook -group html-highlight global WinSetOption filetype=(?!html|xml).* %{ rmhl html }
 
-hook global WinSetOption filetype=(?!html).* %{
+hook global WinSetOption filetype=(?!html|xml).* %{
     rmhooks window html-indent
     rmhooks window html-hooks
 }
