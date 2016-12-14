@@ -27,6 +27,8 @@ Optional<Codepoint> Key::codepoint() const
         return '\n';
     if (*this == Key::Tab)
         return '\t';
+    if (*this == Key::Escape)
+        return 0x1B;
     if (modifiers == Modifiers::None and key > 27 and
         (key < 0xD800 or key > 0xDFFF)) // avoid surrogates
         return key;
