@@ -133,9 +133,9 @@ brew install --HEAD https://raw.githubusercontent.com/mawww/kakoune/master/contr
 -----------------------------------------------------------------------------------------------
 
 To update kakoune,
------------------------------------------------------------------------------------------------
-brew reinstall --HEAD https://raw.githubusercontent.com/mawww/kakoune/master/contrib/kakoune.rb
------------------------------------------------------------------------------------------------
+---------------------------------
+brew upgrade --fetch-HEAD kakoune
+---------------------------------
 ====
 
 [TIP]
