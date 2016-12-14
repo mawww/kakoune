@@ -113,7 +113,7 @@ function main {
 
 ## FIXME: make a patch
     echo "Disabling copying the README file to the doc directory"
-    sed -r -i 's,(install -m [0-9]+ \.\./README\.asciidoc .+),#\1,' "${DIR_KAKOUNE}/Makefile"
+    sed -r -i 's,(install.*\.\./README\.asciidoc.+),#\1,' "${DIR_KAKOUNE}/Makefile"
 
 ## FIXME: make a patch
     echo "Setting the prefix of the installation procedure"
