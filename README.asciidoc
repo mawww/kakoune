@@ -345,6 +345,8 @@ Movement
  * `alt-;`: flip the selections direction
  * `alt-:`: ensure selections are in forward direction (cursor after anchor)
 
+ * `alt-.`: repeat last object or `f`/`t` selection command.
+
 
 A word is a sequence of alphanumeric characters or underscore, a WORD is a
 sequence of non whitespace characters.

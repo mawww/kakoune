@@ -164,6 +164,9 @@ is a sequence of non whitespace characters
 *<a-:>*::
 	ensure selections are in forward direction (cursor after anchor)
 
+*<a-.>*::
+	repeat last object or *f*/*t* selection command
+
 Changes
 -------
 
