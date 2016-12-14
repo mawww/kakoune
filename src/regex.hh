@@ -20,8 +20,9 @@ struct regex_error : runtime_error
 using RegexBase = boost::basic_regex<wchar_t, boost::c_regex_traits<wchar_t>>;
 
 // Regex that keeps track of its string representation
-struct Regex : RegexBase
+class Regex : RegexBase
 {
+public:
     Regex() = default;
 
     explicit Regex(StringView re, flag_type flags = ECMAScript);
