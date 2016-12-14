@@ -8,8 +8,7 @@ def -hidden -params 1..2 _doc-open %{
         export MAN_KEEP_FORMATTING=y
         export MANWIDTH=${kak_window_width}
 
-        # The BSD implementation requires an `-l` flag to detect a filetype as argument
-        if man -l "$1" > "${manout}"; then
+        if man "$1" > "${manout}"; then
             sed -i 's/.\x8//g' "${manout}"
 
             printf %s\\n "
