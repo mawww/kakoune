@@ -32,8 +32,8 @@ def -hidden -params 1..2 _doc-open %{
 
 def -params 1..2 \
     -shell-candidates %{
-        find "${kak_runtime}/../doc/kak/manpages/" -type f -iname "*.gz" -printf '%f\n' | while read l; do
-            printf %s\\n "${l%.*}"
+        find "${kak_runtime}/../doc/kak/manpages/" -type f -iname "*.gz" | while read l; do
+            basename "${l%.*}"
         done
     } \
     doc -docstring %{doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
