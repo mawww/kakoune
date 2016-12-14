@@ -8,10 +8,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-pug %{
-    set buffer filetype pug
-}
-
 hook global BufCreate .*[.](pug|jade) %{
     set buffer filetype pug
 }

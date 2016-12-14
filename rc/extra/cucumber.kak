@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-cucumber %{
-    set buffer filetype cucumber
-}
-
 hook global BufCreate .*[.](feature|story) %{
     set buffer filetype cucumber
 }

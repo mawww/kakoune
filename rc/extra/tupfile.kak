@@ -5,7 +5,6 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate (.+/)?[Tt]upfile %{
-    set buffer mimetype ""
     set buffer filetype tupfile
 }
 

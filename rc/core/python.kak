@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-python %{
-    set buffer filetype python
-}
-
 hook global BufCreate .*[.](py) %{
     set buffer filetype python
 }

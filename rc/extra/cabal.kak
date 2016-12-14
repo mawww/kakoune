@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-cabal %{
-    set buffer filetype cabal
-}
-
 hook global BufCreate .*[.](cabal) %{
     set buffer filetype cabal
 }

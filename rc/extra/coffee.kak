@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-coffee %{
-    set buffer filetype coffee
-}
-
 hook global BufCreate .*[.](coffee) %{
     set buffer filetype coffee
 }

@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-scala %{
-    set buffer filetype scala
-}
-
 hook global BufCreate .*[.](scala) %{
     set buffer filetype scala
 }

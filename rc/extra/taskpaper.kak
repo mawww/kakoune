@@ -5,7 +5,6 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*\.taskpaper %{
-    set buffer mimetype ""
     set buffer filetype taskpaper
 } 
 

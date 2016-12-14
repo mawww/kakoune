@@ -4,12 +4,8 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-moon %{
-    set buffer filetype moon
-}
-
 hook global BufCreate .*[.](moon) %{
-    set buffer mimetype text/x-moon
+    set buffer filetype moon
 }
 
 # Highlighters

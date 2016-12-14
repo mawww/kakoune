@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-tex %{
-    set buffer filetype latex
-}
-
 hook global BufCreate .*\.tex %{
     set buffer filetype latex
 }

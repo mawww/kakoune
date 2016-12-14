@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-yaml %{
-    set buffer filetype yaml
-}
-
 hook global BufCreate .*[.](yaml) %{
     set buffer filetype yaml
 }

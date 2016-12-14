@@ -2,10 +2,6 @@ hook global BufCreate .*\.(z|ba|c|k)?sh(rc|_profile)? %{
     set buffer filetype sh
 }
 
-hook global BufSetOption mimetype=text/x-shellscript %{
-    set buffer filetype sh
-}
-
 addhl -group / regions -default code sh \
     double_string  %{(?<!\\)(\\\\)*\K"} %{(?<!\\)(\\\\)*"} '' \
     single_string %{(?<!\\)(\\\\)*\K'} %{'} '' \

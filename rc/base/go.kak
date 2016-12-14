@@ -5,7 +5,6 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*\.go %{
-    set buffer mimetype ""
     set buffer filetype go
 }
 

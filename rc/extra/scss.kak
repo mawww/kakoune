@@ -6,10 +6,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufSetOption mimetype=text/x-scss %{
-    set buffer filetype scss
-}
-
 hook global BufCreate .*[.](scss) %{
     set buffer filetype scss
 }
