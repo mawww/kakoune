@@ -425,6 +425,13 @@ public:
             to_next_word_end<Word>(m_cursor_pos, m_line);
         else if (key == ctrlalt('e'))
             to_next_word_end<WORD>(m_cursor_pos, m_line);
+        else if (key == ctrl('k'))
+            m_line = m_line.substr(0_char, m_cursor_pos).str();
+        else if (key == ctrl('u'))
+        {
+            m_line = m_line.substr(m_cursor_pos).str();
+            m_cursor_pos = 0;
+        }
         else if (auto cp = key.codepoint())
             insert(*cp);
     }
