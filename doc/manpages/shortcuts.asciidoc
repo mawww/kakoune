@@ -96,6 +96,9 @@ is a sequence of non whitespace characters
 *<a-[ft]>*::
 	same as [ft] but in the other direction
 
+*<a-.>*::
+	repeat last select or character find
+
 *m*::
 	select to matching character
 
