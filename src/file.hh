@@ -56,7 +56,7 @@ bool file_exists(StringView filename);
 
 Vector<String> list_files(StringView directory);
 
-void make_directory(StringView dir);
+void make_directory(StringView dir, mode_t mode);
 
 timespec get_fs_timestamp(StringView filename);
 

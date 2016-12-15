@@ -480,14 +480,22 @@ void RemoteUI::set_ui_options(const Options& options)
     m_socket_watcher.events() |= FdEvents::Write;
 }
 
+static const char* tmpdir()
+{
+    if (const char* tmpdir = getenv("TMPDIR"))
+        return tmpdir;
+    return "/tmp";
+}
+
 static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
     if (find(session, '/')!= session.end())
-        format_to(addr.sun_path, "/tmp/kakoune/{}", session);
+        format_to(addr.sun_path, "{}/kakoune/{}", tmpdir(), session);
     else
-        format_to(addr.sun_path, "/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, session);
+        format_to(addr.sun_path, "{}/kakoune/{}/{}", tmpdir(),
+                  getpwuid(geteuid())->pw_name, session);
     return addr;
 }
 
@@ -704,7 +712,13 @@ Server::Server(String session_name)
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
     sockaddr_un addr = session_addr(m_session);
 
-    make_directory(split_path(addr.sun_path).first);
+    // set sticky bit on the shared kakoune directory
+    make_directory(format("{}/kakoune", tmpdir()), 01777);
+    make_directory(split_path(addr.sun_path).first, 0711);
+
+    // Do not give any access to the socket to other users by default
+    auto old_mask = umask(0077);
+    auto restore_mask = on_scope_end([old_mask]() { umask(old_mask); });
 
     if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
        throw runtime_error(format("unable to bind listen socket '{}'", addr.sun_path));

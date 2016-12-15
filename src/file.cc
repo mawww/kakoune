@@ -334,7 +334,7 @@ String find_file(StringView filename, ConstArrayView<String> paths)
     return "";
 }
 
-void make_directory(StringView dir)
+void make_directory(StringView dir, mode_t mode)
 {
     auto it = dir.begin(), end = dir.end();
     while(it != end)
@@ -352,7 +352,7 @@ void make_directory(StringView dir)
             auto old_mask = umask(0);
             auto restore_mask = on_scope_end([old_mask]() { umask(old_mask); });
 
-            if (mkdir(dirname.zstr(), S_IRWXU | S_IRWXG | S_IRWXO) != 0)
+            if (mkdir(dirname.zstr(), mode) != 0)
                 throw runtime_error(format("mkdir failed for directory '{}' errno {}", dirname, errno));
         }
     }
