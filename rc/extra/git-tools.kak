@@ -20,6 +20,7 @@ decl line-flags git_blame_flags
 decl line-flags git_diff_flags
 
 face GitBlame default,magenta
+face GitDiffFlags default,black
 
 def -params 1.. \
   -docstring %sh{printf '%%{git [<arguments>]: git wrapping helper
@@ -145,7 +146,7 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
             }"
             ;;
        show-diff)
-           echo 'try %{ addhl flag_lines default,black git_diff_flags }'
+           echo 'try %{ addhl flag_lines GitDiffFlags git_diff_flags }'
            update_diff
            ;;
        update-diff) update_diff ;;
