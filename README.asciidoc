@@ -645,9 +645,9 @@ command `q!` has to be used).
  * `runtime <filename>`: execute commands in <filename>, <filename>
      is relative to kak executable path.
  * `colorscheme <name>`: load named colorscheme.
- * `nameclient <name>`: set current client name
- * `namebuf <name>`: set current buffer name
- * `namesession <name>`: set current session name
+ * `rename-client <name>`: set current client name
+ * `rename-buffer <name>`: set current buffer name
+ * `rename-session <name>`: set current session name
  * `echo [options] <text>`: show <text> in status line, with the following options:
    ** `-color` <face>: print the given text with <face>, most commonly `Error` or `Information`
    ** `-markup`: expand the markup strings in <text>
