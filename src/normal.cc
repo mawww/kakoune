@@ -1011,7 +1011,7 @@ void select_object(Context& context, NormalParams params)
                         return;
 
                     Vector<String> params = split(cmdline, ',', '\\');
-                    if (params.size() != 2)
+                    if (params.size() != 2 or params[0].empty() or params[1].empty())
                         throw runtime_error{"desc parsing failed, expected <open>,<close>"};
 
                     select_and_set_last<mode>(
