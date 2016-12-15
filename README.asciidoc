@@ -99,7 +99,8 @@ Building
 
 Kakoune dependencies are:
 
- * A C++11 compliant compiler (GCC >= 5 or clang >= 3.4)
+ * A C\+\+11 compliant compiler (GCC >= 5 or clang >= 3.4) along with its
+   associated C\+\+ standard library (libstdc\+\+ or libc\+\+)
  * boost (>= 1.50)
  * ncurses with wide-characters support (>= 5.3, generally referred to as libncursesw)
  * asciidoc (for the `a2k` tool), to generate man pages
