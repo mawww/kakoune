@@ -196,8 +196,8 @@ public:
 
     void on_key(Key key) override
     {
-        m_in_on_key = true;
-        auto unset_in_on_key = on_scope_end([this]{ m_in_on_key = false; });
+        m_in_on_key.set();
+        auto unset_in_on_key = on_scope_end([this]{ m_in_on_key.unset(); });
 
         bool do_restore_hooks = false;
         auto restore_hooks = on_scope_end([&, this]{
@@ -301,7 +301,7 @@ private:
     NormalParams m_params = { 0, 0 };
     bool m_hooks_disabled = false;
     bool m_enabled = false;
-    bool m_in_on_key = false;
+    NestedBool m_in_on_key;
     Timer m_idle_timer;
     Timer m_fs_check_timer;
     MouseHandler m_mouse_handler;
