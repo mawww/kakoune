@@ -1681,7 +1681,7 @@ const CommandDesc eval_string_cmd = {
 const CommandDesc prompt_cmd = {
     "prompt",
     nullptr,
-    "prompt <prompt> <command>: prompt the use to enter a text string"
+    "prompt <prompt> <command>: prompt the user to enter a text string "
     "and then executes <command>, entered text is available in the 'text' value",
     ParameterDesc{
         { { "init", { true, "set initial prompt content" } },
