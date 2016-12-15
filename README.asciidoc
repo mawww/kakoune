@@ -123,15 +123,15 @@ its source directory, type *make install*, you can specify the `PREFIX` and
 NOTE: The ncurses library that comes with OSX is not new enough to support some of the mouse based features of Kakoune
 (only tested on OSX 10.11.3, where the packaged ncurses library is version 5.4, whereas the latest version is 6.0).
 Currently, a fresh Kakoune install requires that you install ncurses 6.0. You can install ncurses 6.0 via Homebrew,
------------------------------------------------------------------------------------------------
+-----------------------------------
 brew tap homebrew/dupes
 brew install homebrew/dupes/ncurses
------------------------------------------------------------------------------------------------
+-----------------------------------
 
 Then, to install,
------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
 brew install --HEAD https://raw.githubusercontent.com/mawww/kakoune/master/contrib/kakoune.rb
------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
 
 To update kakoune,
 ---------------------------------
@@ -142,7 +142,8 @@ brew upgrade --fetch-HEAD kakoune
 [TIP]
 .Fedora 22/23/24/Rawhide
 ====
-Use the https://copr.fedoraproject.org/coprs/jkonecny/kakoune/[copr] repository.
+Use the https://copr.fedoraproject.org/coprs/jkonecny/kakoune/[copr]
+repository.
 
 ---------------------------------
 dnf copr enable jkonecny/kakoune
@@ -154,12 +155,13 @@ dnf install kakoune
 .Arch Linux
 ====
 A PKGBUILD https://aur.archlinux.org/packages/kakoune-git[kakoune-git]
-to install Kakoune is available in the https://wiki.archlinux.org/index.php/Arch_User_Repository[AUR].
+to install Kakoune is available in the
+https://wiki.archlinux.org/index.php/Arch_User_Repository[AUR].
 
---------------------------------
+--------------------------------------------------
 # For example build and install Kakoune via yaourt
 yaourt -Sy kakoune-git
---------------------------------
+--------------------------------------------------
 ====
 
 [TIP]
@@ -181,27 +183,31 @@ cave resolve -x kakoune
 [TIP]
 .openSUSE
 ====
-kakoune can be found in the https://build.opensuse.org/package/show/editors/kakoune[editors] devel project.
-Make sure to adjust the link below to point to the repository of your openSUSE version.
+kakoune can be found in the
+https://build.opensuse.org/package/show/editors/kakoune[editors] devel
+project.  Make sure to adjust the link below to point to the repository of
+your openSUSE version.
 
---------------------------------
+---------------------------------------------------------------------------------------------------
 #Example for Tumbleweed:
 sudo zypper addrepo http://download.opensuse.org/repositories/editors/openSUSE_Factory/editors.repo
 sudo zypper refresh
 sudo zypper install kakoune
---------------------------------
+---------------------------------------------------------------------------------------------------
 ====
 
 [TIP]
 .Debian
 ====
-There is a script in https://github.com/mawww/kakoune/blob/master/contrib/make_deb.bash[contrib/make_deb.bash] that can be used to generate a debian package for kakoune.
-You can then install the generated .deb package with the dpkg tool.
+There is a script in
+https://github.com/mawww/kakoune/blob/master/contrib/make_deb.bash[contrib/make_deb.bash]
+that can be used to generate a debian package for kakoune.  You can then
+install the generated .deb package with the dpkg tool.
 
---------------------------------
+--------------------------------------------------
 ./make_deb.bash -e "your_email" -f "your_username"
 sudo dpkg -i thePackageName.deb
---------------------------------
+--------------------------------------------------
 
 ====
 
