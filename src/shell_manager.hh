@@ -43,6 +43,8 @@ public:
     CandidateList complete_env_var(StringView prefix, ByteCount cursor_pos) const;
 
 private:
+    String m_shell;
+
     struct EnvVarDesc { String str; bool prefix; EnvVarRetriever func; };
     Vector<EnvVarDesc, MemoryDomain::EnvVars> m_env_vars;
 };

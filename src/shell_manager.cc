@@ -22,9 +22,38 @@ namespace Kakoune
 
 ShellManager::ShellManager()
 {
-    const char* path = getenv("PATH");
-    auto new_path = format("{}:{}", path, split_path(get_kak_binary_path()).first);
-    setenv("PATH", new_path.c_str(), 1);
+    // Get a guaranteed to be POSIX shell binary
+    {
+        auto size = confstr(_CS_PATH, 0, 0);
+        String path; path.resize(size, 0);
+        confstr(_CS_PATH, path.data(), size);
+        for (auto dir : StringView{path} | split<StringView>(':'))
+        {
+            String candidate = format("{}/sh", dir);
+            struct stat st;
+            if (stat(candidate.c_str(), &st))
+                continue;
+
+            bool executable = (st.st_mode & S_IXUSR)
+                            | (st.st_mode & S_IXGRP)
+                            | (st.st_mode & S_IXOTH);
+            if (S_ISREG(st.st_mode) and executable)
+            {
+                m_shell = std::move(candidate);
+                break;
+            }
+        }
+        if (m_shell.empty())
+            throw runtime_error{format("unable to find a posix shell in {}", path)};
+    }
+
+    // Add Kakoune binary location to the path to guarantee that %sh{ ... }
+    // have access to the kak command regardless of if the user installed it
+    {
+        const char* path = getenv("PATH");
+        auto new_path = format("{}:{}", path, split_path(get_kak_binary_path()).first);
+        setenv("PATH", new_path.c_str(), 1);
+    }
 }
 
 namespace
@@ -52,8 +81,10 @@ private:
 };
 
 template<typename Func>
-pid_t spawn_shell(StringView cmdline, ConstArrayView<String> params,
-                  ConstArrayView<String> kak_env, Func setup_child)
+pid_t spawn_shell(const char* shell, StringView cmdline,
+                  ConstArrayView<String> params,
+                  ConstArrayView<String> kak_env,
+                  Func setup_child)
 {
     Vector<const char*> envptrs;
     for (char** envp = environ; *envp; ++envp)
@@ -62,7 +93,6 @@ pid_t spawn_shell(StringView cmdline, ConstArrayView<String> params,
         envptrs.push_back(env.c_str());
     envptrs.push_back(nullptr);
 
-    const char* shell = "/bin/sh";
     auto cmdlinezstr = cmdline.zstr();
     Vector<const char*> execparams = { shell, "-c", cmdlinezstr };
     if (not params.empty())
@@ -129,7 +159,7 @@ std::pair<String, int> ShellManager::eval(
     auto spawn_time = profile ? Clock::now() : Clock::time_point{};
 
     Pipe child_stdin{not input.empty()}, child_stdout, child_stderr;
-    pid_t pid = spawn_shell(cmdline, shell_context.params, kak_env,
+    pid_t pid = spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env,
                             [&child_stdin, &child_stdout, &child_stderr] {
         auto move = [](int oldfd, int newfd) { dup2(oldfd, newfd); close(oldfd); };
 
