@@ -1402,7 +1402,7 @@ existing hooks are:
        used for filtering.
  * `BufClose`: Executed when a buffer is deleted, while it is still valid.
  * `BufOpenFifo`: Executed when a buffer opens a fifo.
- * `BufReadFifo`: Executed after some data has been red from a fifo and
+ * `BufReadFifo`: Executed after some data has been read from a fifo and
        inserted in the buffer.
  * `BufCloseFifo`: Executed when a fifo buffer closes its fifo file descriptor
        either because the buffer is being deleted, or because the writing
