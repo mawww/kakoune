@@ -51,7 +51,7 @@ main() {
         write out
         quit!
       "
-      session="kak-test-$(printf '%s' "$dir" | sed -e 's+^\./++; s+/+-+g')"
+      session="kak-tests"
       rm -f /tmp/kakoune/$USER/$session
       ${test}/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > display
       retval=$?
