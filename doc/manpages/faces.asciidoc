@@ -65,7 +65,7 @@ areas of the user interface:
 *LineNumbers*::
 	face used by the number_lines highlighter
 
-*LineNumberAbsolute*::
+*LineNumberCursor*::
 	face used to highlight the line number of the main selection
 
 *MenuForeground*::
@@ -73,6 +73,9 @@ areas of the user interface:
 
 *MenuBackground*::
 	face for the not selected elements in menus
+
+*MenuInfo*::
+	face for additional information for elements in menus
 
 *Information*::
 	face for the informations windows and information messages
@@ -83,6 +86,15 @@ areas of the user interface:
 *StatusLine*::
 	face used for the status line
 
+*StatusLineMode*::
+	face used for the current mode except the normal mode
+
+*StatusLineInfo*::
+	face used for special information
+
+*StatusLineValue*::
+	face used for special values (numeric prefixes, registers, etc.)
+
 *StatusCursor*::
 	face used for the status line cursor
 
@@ -92,8 +104,8 @@ areas of the user interface:
 *MatchingChar*::
 	face used by the show_matching highlighter
 
-*Search*::
-	face used to highlight search results
-
 *BufferPadding*::
 	face applied on the characters that follow the last line of a buffer
+
+*Whitespace*::
+	face used by the show_whitespaces highlighter
