@@ -117,7 +117,7 @@ Default hooks
 	executed when a buffer opens a fifo
 
 *BufReadFifo*::
-	executed after some data has been red from a fifo and inserted in
+	executed after some data has been read from a fifo and inserted in
 	the buffer
 
 *BufCloseFifo*::
