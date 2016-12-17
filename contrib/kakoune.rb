@@ -6,6 +6,7 @@ class Kakoune < Formula
 
   depends_on 'boost'
   depends_on 'docbook-xsl' => :build
+  depends_on 'ncurses' => [:build, :recommended]
   depends_on 'asciidoc' => [:build, 'with-docbook-xsl']
 
   def install
