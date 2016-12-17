@@ -330,13 +330,13 @@ String replace(StringView str, StringView substr, StringView replacement);
 template<typename Container>
 String join(const Container& container, char joiner, bool esc_joiner = true)
 {
-    const char to_escape[] = { joiner, '\\' };
+    const char to_escape[2] = { joiner, '\\' };
     String res;
     for (const auto& str : container)
     {
         if (not res.empty())
             res += joiner;
-        res += esc_joiner ? escape(str, to_escape, '\\') : str;
+        res += esc_joiner ? escape(str, {to_escape, 2}, '\\') : str;
     }
     return res;
 }
