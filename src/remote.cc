@@ -480,10 +480,12 @@ void RemoteUI::set_ui_options(const Options& options)
     m_socket_watcher.events() |= FdEvents::Write;
 }
 
-static const char* tmpdir()
+static StringView tmpdir()
 {
-    if (const char* tmpdir = getenv("TMPDIR"))
-        return tmpdir;
+    StringView tmpdir = getenv("TMPDIR");
+    if (not tmpdir.empty())
+        return tmpdir.back() == '/' ? tmpdir.substr(0_byte, tmpdir.length()-1)
+                                    : tmpdir;
     return "/tmp";
 }
 
