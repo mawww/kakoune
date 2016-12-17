@@ -149,14 +149,14 @@ colorize() {
 
 show_diff() {
   diff -u $1 $2 | while IFS='' read -r line; do
-    first_character=$(echo "$line" | cut -b 1)
+    first_character=$(printf '%s\n' "$line" | cut -b 1)
     case $first_character in
       +) color=green ;;
       -) color=red ;;
       @) color=magenta ;;
       *) color=none ;;
     esac
-    echo "$line" | colorize $color normal
+    printf '%s\n' "$line" | colorize $color normal
   done
 }
 
