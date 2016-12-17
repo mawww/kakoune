@@ -1026,7 +1026,7 @@ Registers
 ~~~~~~~~~
 
 Registers are named lists of text. They are used for various purposes, like
-storing the last yanked test, or the captured groups associated with the
+storing the last yanked text, or the captured groups associated with the
 selections.
 
 Yanking and pasting uses the register `"`, however most commands using a register

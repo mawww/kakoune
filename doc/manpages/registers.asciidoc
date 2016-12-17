@@ -9,7 +9,7 @@ Description
 -----------
 Registers are named lists of text -instead of simply text- in order to interact
 well with multiselection.  They are used for various purposes, like storing
-the last yanked test, or the captured groups associated with the selections.
+the last yanked text, or the captured groups associated with the selections.
 
 Interacting
 -----------
