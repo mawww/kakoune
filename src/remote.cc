@@ -723,10 +723,12 @@ Server::Server(String session_name)
     auto restore_mask = on_scope_end([old_mask]() { umask(old_mask); });
 
     if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
-       throw runtime_error(format("unable to bind listen socket '{}'", addr.sun_path));
+       throw runtime_error(format("unable to bind listen socket '{}': {}",
+                                  addr.sun_path, strerror(errno)));
 
     if (listen(listen_sock, 4) == -1)
-       throw runtime_error(format("unable to listen on socket '{}'", addr.sun_path));
+       throw runtime_error(format("unable to listen on socket '{}': {}",
+                                  addr.sun_path, strerror(errno)));
 
     auto accepter = [this](FDWatcher& watcher, FdEvents, EventMode mode) {
         sockaddr_un client_addr;
