@@ -46,8 +46,8 @@ main() {
         eval -buffer *debug* write debug
         nop %sh{
           IFS==
-          echo \"\$kak_selections\"      > selections
-          echo \"\$kak_selections_desc\" > state
+          printf '%s\\n' \"\$kak_selections\"      > selections
+          printf '%s\\n' \"\$kak_selections_desc\" > state
         }
         write out
         quit!
@@ -144,7 +144,7 @@ colorize() {
   text=$(cat)
   color_name=${1:-none}
   style_name=${2:-none}
-  echo "$(get_ansi_code $color_name $style_name)$text$(get_ansi_code none none)"
+  printf '%s\n' "$(get_ansi_code $color_name $style_name)$text$(get_ansi_code none none)"
 }
 
 show_diff() {
