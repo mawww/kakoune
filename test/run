@@ -7,7 +7,8 @@ main() {
   number_failures=0
   dirs="${@:-.}"
   test=$(pwd)
-  work=$(mktemp -d /tmp/kak-tests.XXXXXXXX)
+  tmpdir="${TMPDIR:-/tmp}"
+  work=$(mktemp -d ${tmpdir}/kak-tests.XXXXXXXX)
   trap "rm -R $work" EXIT
   for dir in $(find $dirs -type d | sort); do
     cd $test/$dir;
@@ -52,7 +53,7 @@ main() {
         quit!
       "
       session="kak-tests"
-      rm -f /tmp/kakoune/$USER/$session
+      rm -f ${tmpdir}/kakoune/$USER/$session
       ${test}/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > display
       retval=$?
       if [ $should_fail -eq 0 ]; then
