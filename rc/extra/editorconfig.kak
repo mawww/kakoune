@@ -28,7 +28,7 @@ def editorconfig-load -docstring "Set indentation options according to editorcon
                         print "error"
                 }
                 if (charset)
-                    print "set buffer BOM" (charset == "utf-8-bom" ? true : false)
+                    print "set buffer BOM " (charset == "utf-8-bom" ? "utf8" : "none")
             }
         '
     }
