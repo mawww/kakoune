@@ -73,7 +73,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                                     gsub(/[^[:alnum:]{}_]+/, "{operator}&{}", menu)
                                     print id  "|" docstrings[id] "|" menu
                                 }
-                            }' | paste -s -d ':' | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
+                            }' | paste -s -d ':' - | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
                 printf %s\\n "eval -client ${kak_client} echo 'clang completion done'
                       set 'buffer=${kak_buffile}' clang_completions '${header}:${compl}'" | kak -p ${kak_session}
             else
@@ -84,7 +84,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
             flags=$(cat ${dir}/stderr | sed -rne "
                         /^<stdin>:[0-9]+:([0-9]+:)? (fatal )?error/ { s/^<stdin>:([0-9]+):.*/\1|{red}█/; p }
                         /^<stdin>:[0-9]+:([0-9]+:)? warning/ { s/^<stdin>:([0-9]+):.*/\1|{yellow}█/; p }
-                    " | paste -s -d ':')
+                    " | paste -s -d ':' -)
 
             errors=$(cat ${dir}/stderr | sed -rne "
                         /^<stdin>:[0-9]+:([0-9]+:)? ((fatal )?error|warning)/ { s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/\1,\3/; s/'/\\\\'/g; p }
