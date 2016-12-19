@@ -66,6 +66,25 @@ endif
 
 CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -Wno-address
 
+
+# Version number handling. This save the current version number to a file and
+# rebuilds version.cc iff the version number has actually changed.
+version := $(shell git describe --always --dirty 2>/dev/null)
+version_old = $(shell cat .version 2>/dev/null)
+
+ifneq ($(version_old),$(version))
+# Mark version.cc for rebuild. Do not use .PHONY because this needs to be
+# persistent if make is interrupted. Do not use the $(file) function as it
+# segfaults in GNU Make 4.0
+$(shell touch version.cc)
+$(file > .version,$(version))
+endif
+
+# Special treatment for version.cc: define KAK_VERSION
+# This needs to be an "=" rather than ":=" to be expanded in rule context
+version_cppflag = $(if $(filter version.cc,$<),-DKAK_VERSION=\"$(version)\")
+
+
 all : kak
 kak : $(objects)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) $(LIBS) -o $@
@@ -73,7 +92,8 @@ kak : $(objects)
 -include $(deps)
 
 .%$(suffix).o: %.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(version_cppflag) \
+	    -MD -MP -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
 
 # Generate the man page
 ../doc/kak.1.gz: ../doc/kak.1.txt
@@ -138,3 +158,4 @@ uninstall:
 
 .PHONY: check TAGS clean distclean installdirs install install-strip uninstall
 .PHONY: tags test man doc
+

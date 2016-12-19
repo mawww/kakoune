@@ -24,6 +24,7 @@
 #include "shell_manager.hh"
 #include "string.hh"
 #include "unit_tests.hh"
+#include "version.hh"
 #include "window.hh"
 
 #include <fcntl.h>
@@ -747,7 +748,8 @@ int main(int argc, char* argv[])
                    { "ui", { true, "set the type of user interface to use (ncurses, dummy, or json)" } },
                    { "l", { false, "list existing sessions" } },
                    { "clear", { false, "clear dead sessions" } },
-                   { "ro", { false, "readonly mode" } } }
+                   { "ro", { false, "readonly mode" } },
+                   { "version", { false, "print version and exit" } } }
     };
     try
     {
@@ -756,6 +758,13 @@ int main(int argc, char* argv[])
                   { return lhs.key < rhs.key; });
 
         ParametersParser parser(params, param_desc);
+
+        const bool print_version = (bool)parser.get_switch("version");
+        if (print_version)
+        {
+            write_stdout(format("Kakoune {}\n", Kakoune::version));
+            return 0;
+        }
 
         const bool list_sessions = (bool)parser.get_switch("l");
         const bool clear_sessions = (bool)parser.get_switch("clear");
