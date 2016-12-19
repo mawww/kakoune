@@ -46,7 +46,7 @@ def editorconfig-load -docstring "Set indentation options and whitespace behavio
                     print "set buffer eolformat " end_of_line
                 }
                 if (charset == "utf-8-bom") {
-                    print "set buffer BOM utf-8"
+                    print "set buffer BOM utf8"
                 }
                 if (trim_trailing_whitespace == "true") {
                     print "set buffer editorconfig_trim_trailing_whitespace true"
