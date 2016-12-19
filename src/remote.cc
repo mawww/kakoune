@@ -751,7 +751,7 @@ Server::Server(String session_name)
 
 bool Server::rename_session(StringView name)
 {
-    if (rename(session_file(m_session).data(), session_file(name).data()) != 0)
+    if (rename(session_file(m_session).zstr(), session_file(name).zstr()) != 0)
         return false;
 
     m_session = name.str();
@@ -762,7 +762,7 @@ void Server::close_session(bool do_unlink)
 {
     if (do_unlink)
     {
-        unlink(session_file(m_session).data());
+        unlink(session_file(m_session).zstr());
     }
     m_listener->close_fd();
     m_listener.reset();
