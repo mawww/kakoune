@@ -880,12 +880,12 @@ int main(int argc, char* argv[])
     }
     catch (Kakoune::exception& error)
     {
-        write_stderr(format("uncaught exception ({}):\n{}", typeid(error).name(), error.what()));
+        write_stderr(format("uncaught exception ({}):\n{}\n", typeid(error).name(), error.what()));
         return -1;
     }
     catch (std::exception& error)
     {
-        write_stderr(format("uncaught exception ({}):\n{}", typeid(error).name(), error.what()));
+        write_stderr(format("uncaught exception ({}):\n{}\n", typeid(error).name(), error.what()));
         return -1;
     }
     catch (...)
