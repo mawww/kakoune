@@ -9,7 +9,7 @@ def -hidden -params 1..2 _doc-open %{
         export MANWIDTH=${kak_window_width}
 
         if man "$1" > "${manout}"; then
-            sed -i 's/.\x8//g' "${manout}"
+            sed -ie $(printf 's/.\x8//g') "${manout}"
 
             printf %s\\n "
                 edit! -scratch '*doc*'
