@@ -740,7 +740,7 @@ for example: `%sh{ ls }` is replaced with the output of the ls command.
 Some of Kakoune state is available through environment variables:
 
  * `kak_selection`: content of the main selection
- * `kak_selections`: content of the selection separated by colons, colons in
+ * `kak_selections`: content of the selection separated by colons, colons and backslashes in
         the selection contents are escaped with a backslash.
  * `kak_selection_desc`: range of the main selection, represented as `anchor,cursor`;
         anchor and cursor are in this format: `line.column` 
