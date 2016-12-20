@@ -146,7 +146,7 @@ public:
             if (m_write_pos == header_size)
             {
                 if (size() < header_size)
-                    throw remote_error{"invalid message received"};
+                    throw disconnected{"invalid message received"};
                 m_stream.resize(size());
             }
         }
@@ -174,7 +174,7 @@ public:
     void read(char* buffer, size_t size)
     {
         if (m_read_pos + size > m_stream.size())
-            throw remote_error{"tried to read after message end"};
+            throw disconnected{"tried to read after message end"};
         memcpy(buffer, m_stream.data() + m_read_pos, size);
         m_read_pos += size;
     }
@@ -232,8 +232,8 @@ private:
         kak_assert(m_write_pos + size <= m_stream.size());
         int res = ::read(sock, m_stream.data() + m_write_pos, size);
         if (res <= 0)
-            throw remote_error{res ? "peer disconnected"
-                                   : format("socket read failed: {}", strerror(errno))};
+            throw disconnected{res ? format("socket read failed: {}", strerror(errno))
+                                   : "peer disconnected", res == 0};
         m_write_pos += res;
     }
 
@@ -346,8 +346,8 @@ static bool send_data(int fd, RemoteBuffer& buffer)
     {
       int res = ::write(fd, buffer.data(), buffer.size());
       if (res <= 0)
-          throw remote_error{res ? "peer disconnected"
-                                 : format("socket write failed: {}", strerror(errno))};
+          throw disconnected{res ? format("socket write failed: {}", strerror(errno))
+                                 : "peer disconnected", res == 0};
       buffer.erase(buffer.begin(), buffer.begin() + res);
     }
     return buffer.empty();
@@ -382,7 +382,7 @@ RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
                    m_on_key(key);
               }
           }
-          catch (const remote_error& err)
+          catch (const disconnected& err)
           {
               write_to_debug_buffer(format("Error while transfering remote messages: {}", err.what()));
               ClientManager::instance().remove_client(*m_client, false);
@@ -507,7 +507,7 @@ static int connect_to(StringView session)
     fcntl(sock, F_SETFD, FD_CLOEXEC);
     sockaddr_un addr = session_addr(session);
     if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
-        throw remote_error(format("connect to {} failed", addr.sun_path));
+        throw disconnected(format("connect to {} failed", addr.sun_path));
     return sock;
 }
 
@@ -695,7 +695,7 @@ private:
                 Server::instance().remove_accepter(this);
             }
         }
-        catch (const remote_error& err)
+        catch (const disconnected& err)
         {
             write_to_debug_buffer(format("accepting connection failed: {}", err.what()));
             close(sock);
