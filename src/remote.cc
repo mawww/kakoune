@@ -746,8 +746,10 @@ Server::Server(String session_name)
 
 bool Server::rename_session(StringView name)
 {
-    String old_socket_file = format("/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, m_session);
-    String new_socket_file = format("/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, name);
+    String old_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
+                                    getpwuid(geteuid())->pw_name, m_session);
+    String new_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
+                                    getpwuid(geteuid())->pw_name, name);
 
     if (rename(old_socket_file.c_str(), new_socket_file.c_str()) != 0)
         return false;
@@ -760,7 +762,8 @@ void Server::close_session(bool do_unlink)
 {
     if (do_unlink)
     {
-        String socket_file = format("/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, m_session);
+        String socket_file = format("{}/kakoune/{}/{}", tmpdir(),
+                                    getpwuid(geteuid())->pw_name, m_session);
         unlink(socket_file.c_str());
     }
     m_listener->close_fd();
