@@ -105,7 +105,8 @@ Kakoune dependencies are:
  * ncurses with wide-characters support (>= 5.3, generally referred to as libncursesw)
  * asciidoc (for the `a2k` tool), to generate man pages
 
-To build, just type *make* in the src directory
+To build, just type *make* in the src directory.
+To generate man pages, type *make doc* in the src directory.
 
 Kakoune can be built on Linux, MacOS, and Cygwin. Due to Kakoune relying heavily
 on being in a Unix-like environment, no native Windows version is planned.
