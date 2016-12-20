@@ -1,6 +1,7 @@
 *.o
 .*.d
 *.pyc
+*.1-r
 src/kak
 doc/kak.1.gz
 doc/manpages/*.gz
