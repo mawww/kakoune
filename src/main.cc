@@ -466,7 +466,8 @@ int run_client(StringView session, StringView init_cmds, UIType ui_type)
     }
     catch (disconnected& e)
     {
-        write_stderr(format("{}\ndisconnecting\n", e.what()));
+        if (!e.m_graceful)
+            write_stderr(format("{}\ndisconnecting\n", e.what()));
         return e.m_graceful ? 0 : -1;
     }
     return 0;
