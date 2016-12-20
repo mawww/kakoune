@@ -489,15 +489,20 @@ static StringView tmpdir()
     return "/tmp";
 }
 
+static StringView session_file(StringView session)
+{
+    if (find(session, '/')!= session.end())
+        return format("{}/kakoune/{}", tmpdir(), session);
+    else
+        return format("{}/kakoune/{}/{}", tmpdir(),
+                  getpwuid(geteuid())->pw_name, session);
+}
+
 static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    if (find(session, '/')!= session.end())
-        format_to(addr.sun_path, "{}/kakoune/{}", tmpdir(), session);
-    else
-        format_to(addr.sun_path, "{}/kakoune/{}/{}", tmpdir(),
-                  getpwuid(geteuid())->pw_name, session);
+    format_to(addr.sun_path, session_file(session));
     return addr;
 }
 
@@ -746,10 +751,7 @@ Server::Server(String session_name)
 
 bool Server::rename_session(StringView name)
 {
-    String old_socket_file = format("/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, m_session);
-    String new_socket_file = format("/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, name);
-
-    if (rename(old_socket_file.c_str(), new_socket_file.c_str()) != 0)
+    if (rename(session_file(m_session).zstr(), session_file(name).zstr()) != 0)
         return false;
 
     m_session = name.str();
@@ -760,8 +762,7 @@ void Server::close_session(bool do_unlink)
 {
     if (do_unlink)
     {
-        String socket_file = format("/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, m_session);
-        unlink(socket_file.c_str());
+        unlink(session_file(m_session).zstr());
     }
     m_listener->close_fd();
     m_listener.reset();
