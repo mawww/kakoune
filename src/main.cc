@@ -519,7 +519,7 @@ int run_server(StringView session,
 
     GlobalScope::instance().options().get_local_option("readonly").set(readonly);
 
-    Server server(session.empty() ? to_string(getpid()) : session.str());
+    Server server{session.empty() ? to_string(getpid()) : session.str()};
 
     bool startup_error = false;
     if (not ignore_kakrc) try
