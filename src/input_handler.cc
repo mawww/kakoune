@@ -1002,6 +1002,11 @@ public:
         last_insert().disable_hooks = context().hooks_disabled();
         context().hooks().run_hook("InsertBegin", "", context());
         prepare(m_insert_mode, count);
+
+        if (context().has_client() and
+            context().options()["readonly"].get<bool>())
+            context().print_status({ "Entering insert mode while readonly",
+                                     get_face("Information") });
     }
 
     ~Insert()
