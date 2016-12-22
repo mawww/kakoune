@@ -10,26 +10,43 @@
 
 .gitignore
 
-debug = yes
+debug    = yes
+static   = no
+pedantic = yes
 
-CXX = g++
-CXXFLAGS = -std=gnu++11 -Wall -Wno-reorder -Wno-sign-compare -pedantic
+suffix   = .opt
+
+CXX      = g++
+CXXFLAGS = -std=gnu++11 -Wall -Wno-reorder -Wno-sign-compare -Wno-address
 CPPFLAGS =
-LDFLAGS =
-LIBS =
+LDFLAGS  =
+LIBS     =
 
 ifeq ($(debug),yes)
-	CXXFLAGS += -O0 -g
+	CXXFLAGS += -g
 	CPPFLAGS += -DKAK_DEBUG
+	suffix = .debug
 else
 	CXXFLAGS += -O3
 endif
 
+ifeq ($(static),yes)
+	LIBS += -ltinfo -lgpm
+	LDFLAGS += -static -pthread
+endif
+
+ifeq ($(pedantic),yes)
+	CXXFLAGS += -pedantic
+endif
+
 ifeq (@(TUP_PLATFORM),macosx)
 	LIBS += -lncurses -lboost_regex-mt
+	CPPFLAGS += -I/usr/local/opt/ncurses/include
+	LDFLAGS += -L/usr/local/opt/ncurses/lib
 else
 	ifeq (@(TUP_PLATFORM),win32)
 		LIBS += -lncursesw -lboost_regex -ldbghelp
+		CPPFLAGS += -D_XOPEN_SOURCE=700
 	else
 		LIBS += -lncursesw -lboost_regex
 		CPPFLAGS += -I/usr/include/ncursesw
@@ -40,8 +57,12 @@ else
 	endif
 endif
 
+ifeq ($(CXX),clang++)
+	CXXFLAGS += -Wno-unknown-attributes
+endif
+
 !cxx = |> $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c %f -o %o |>
 !ld = |> $(CXX) $(LDFLAGS) $(LIBS) %f -o %o |>
 
-:foreach *.cc |> !cxx |> obj/%B.o {objects}
+:foreach *.cc |> !cxx |> obj/%B$(suffix).o {objects}
 :{objects} |> !ld |> kak
