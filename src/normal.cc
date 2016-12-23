@@ -643,8 +643,7 @@ void regex_prompt(Context& context, String prompt, T func)
                     context.input_handler().set_prompt_face(get_face("Prompt"));
                 }
 
-                if (event == PromptEvent::Abort or
-                    (event == PromptEvent::Change and (not incsearch or str.empty())))
+                if (not incsearch and event == PromptEvent::Change)
                     return;
 
                 if (event == PromptEvent::Validate)
@@ -678,13 +677,20 @@ void search(Context& context, NormalParams params)
       : (direction == Forward ? "search:"          : "reverse search:");
 
     const char reg = to_lower(params.reg ? params.reg : '/');
+    auto reg_content = RegisterManager::instance()[reg].values(context);
+    Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
+    int main_index = context.selections().main_index();
     int count = params.count;
     regex_prompt(context, prompt.str(),
-                 [reg, count](Regex ex, PromptEvent event, Context& context) {
+                 [reg, count, saved_reg, main_index]
+                 (Regex ex, PromptEvent event, Context& context) {
                      if (ex.empty())
-                         ex = Regex{context.main_sel_register_value(reg)};
-                     else if (event == PromptEvent::Validate)
+                         ex = Regex{saved_reg[main_index]};
+                     if (event == PromptEvent::Abort)
+                         RegisterManager::instance()[reg] = saved_reg;
+                     else
                          RegisterManager::instance()[reg] = ex.str();
+
                      if (not ex.empty() and not ex.str().empty())
                      {
                          bool main_wrapped = false;
