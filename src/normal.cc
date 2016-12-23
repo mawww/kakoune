@@ -366,16 +366,21 @@ void command(Context& context, NormalParams params)
             if (context.has_client())
             {
                 context.client().info_hide();
-                auto autoinfo = context.options()["autoinfo"].get<AutoInfo>();
-                if (event == PromptEvent::Change and autoinfo & AutoInfo::Command)
+                if (event == PromptEvent::Change)
                 {
-                    if (cmdline.length() == 1 and is_horizontal_blank(cmdline[0_byte]))
-                        context.client().info_show("prompt", "commands preceded by a blank wont be saved to history",
-                                                   {}, InfoStyle::Prompt);
-
                     auto info = CommandManager::instance().command_info(context, cmdline);
-                    if (not info.first.empty() and not info.second.empty())
-                        context.client().info_show(info.first, info.second, {}, InfoStyle::Prompt);
+                    context.input_handler().set_prompt_face(get_face(info ? "Prompt" : "Error"));
+
+                    auto autoinfo = context.options()["autoinfo"].get<AutoInfo>();
+                    if (autoinfo & AutoInfo::Command)
+                    {
+                        if (cmdline.length() == 1 and is_horizontal_blank(cmdline[0_byte]))
+                            context.client().info_show("prompt",
+                                                       "commands preceded by a blank wont be saved to history",
+                                                       {}, InfoStyle::Prompt);
+                        else if (info and not info->info.empty())
+                            context.client().info_show(info->name, info->info, {}, InfoStyle::Prompt);
+                    }
                 }
             }
             if (event == PromptEvent::Validate)

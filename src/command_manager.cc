@@ -479,7 +479,7 @@ void CommandManager::execute(StringView command_line,
     execute_single_command(params, context, shell_context, command_coord);
 }
 
-CommandInfo CommandManager::command_info(const Context& context, StringView command_line) const
+Optional<CommandInfo> CommandManager::command_info(const Context& context, StringView command_line) const
 {
     TokenList tokens = parse<false>(command_line);
     size_t cmd_idx = 0;
@@ -489,19 +489,19 @@ CommandInfo CommandManager::command_info(const Context& context, StringView comm
             cmd_idx = i+1;
     }
 
-    CommandInfo res;
     if (cmd_idx == tokens.size() or
         (tokens[cmd_idx].type() != Token::Type::Raw and
          tokens[cmd_idx].type() != Token::Type::RawQuoted))
-        return res;
+        return {};
 
     auto cmd = find_command(context, tokens[cmd_idx].content());
     if (cmd == m_commands.end())
-        return res;
+        return {};
 
-    res.first = cmd->first;
+    CommandInfo res;
+    res.name = cmd->first;
     if (not cmd->second.docstring.empty())
-        res.second += cmd->second.docstring + "\n";
+        res.info += cmd->second.docstring + "\n";
 
     if (cmd->second.helper)
     {
@@ -520,7 +520,7 @@ CommandInfo CommandManager::command_info(const Context& context, StringView comm
         {
             if (helpstr.back() != '\n')
                 helpstr += '\n';
-            res.second += helpstr;
+            res.info += helpstr;
         }
     }
 
@@ -528,14 +528,14 @@ CommandInfo CommandManager::command_info(const Context& context, StringView comm
     for (auto& alias : context.aliases().aliases_for(cmd->first))
         aliases += " " + alias;
     if (not aliases.empty())
-        res.second += "Aliases:" + aliases + "\n";
+        res.info += "Aliases:" + aliases + "\n";
 
 
     auto& switches = cmd->second.param_desc.switches;
     if (not switches.empty())
     {
-        res.second += "Switches:\n";
-        res.second += generate_switches_doc(switches);
+        res.info += "Switches:\n";
+        res.info += generate_switches_doc(switches);
     }
 
     return res;
