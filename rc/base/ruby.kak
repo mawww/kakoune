@@ -56,7 +56,7 @@ addhl -group /ruby/code regex \b([A-Za-z]\w*:(?=[^:]))|([$@][A-Za-z]\w*)|((?<=[^
     keywords="${keywords}|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield"
     attributes="attr_reader|attr_writer|attr_accessor"
     values="false|true|nil"
-    meta="require|include"
+    meta="require|include|extend"
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=ruby %{
