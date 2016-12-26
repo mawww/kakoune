@@ -752,7 +752,7 @@ void show_line_numbers(const Context& context, HighlightFlags flags,
         const int line_to_format = (relative and not is_cursor_line) ?
                                    current_line - main_selection : current_line;
         char buffer[16];
-        snprintf(buffer, 16, format, line_to_format);
+        snprintf(buffer, 16, format, std::abs(line_to_format));
         DisplayAtom atom{buffer};
         atom.face = (hl_cursor_line and is_cursor_line) ? face_absolute : face;
         line.insert(line.begin(), std::move(atom));
