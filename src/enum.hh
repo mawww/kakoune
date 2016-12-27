@@ -73,6 +73,15 @@ EnableIfWithoutBitOps<Enum> option_from_string(StringView str, Enum& e)
     e = it->value;
 }
 
+template<typename Flags, typename = decltype(enum_desc(Flags{}))>
+EnableIfWithBitOps<Flags, bool> option_add(Flags& opt, StringView str)
+{
+    Flags res = Flags{};
+    option_from_string(str, res);
+    opt |= res;
+    return res != (Flags)0;
+}
+
 }
 
 #endif // enum_hh_INCLUDED

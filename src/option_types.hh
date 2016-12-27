@@ -214,8 +214,7 @@ inline bool option_add(StronglyTypedNumber<RealType, ValueType>& opt,
     return val != 0;
 }
 
-template<typename T>
-bool option_add(T&, StringView str)
+inline bool option_add(...)
 {
     throw runtime_error("no add operation supported for this option type");
 }
