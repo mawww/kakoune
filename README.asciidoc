@@ -408,9 +408,9 @@ Changes
             in place of line breaks
  * `<a-m>`: merge contiguous selections together (works across lines as well)
 
- * `>`: indent selected lines
+ * `<gt> (>)`: indent selected lines
  * `<a-gt>`: indent selected lines, including empty lines
- * `<`: deindent selected lines
+ * `<lt> (<)`: deindent selected lines
  * `<a-lt>`: deindent selected lines, do not remove incomplete
         indent (3 leading spaces when indent is 4)
 
