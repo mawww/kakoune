@@ -409,7 +409,7 @@ Changes
  * `alt-m`: merge contiguous selections together (works across lines as well)
 
  * `>`: indent selected lines
- * `alt->`: indent selected lines, including empty lines
+ * `alt\->`: indent selected lines, including empty lines
  * `<`: deindent selected lines
  * `alt-<`: deindent selected lines, do not remove incomplete
         indent (3 leading spaces when indent is 4)
