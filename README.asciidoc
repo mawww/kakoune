@@ -316,34 +316,34 @@ Movement
  * `w`: select the word and following whitespaces  on the right of selection end
  * `b`: select preceding whitespaces and the word on the left of selection end
  * `e`: select preceding whitespaces and the word on the right of selection end
- * `alt-[wbe]`: same as [wbe] but select WORD instead of word
+ * `<a-[wbe]>`: same as [wbe] but select WORD instead of word
 
  * `f`: select to the next occurence of given character
  * `t`: select until the next occurence of given character
- * `<alt-[ft]>`: same as [ft] but in the other direction
+ * `<a-[ft]>`: same as [ft] but in the other direction
 
  * `m`: select to matching character
  * `M`: extend selection to matching character
 
  * `x`: select line on which selection end lies (or next line when end lies on
         an end-of-line)
- * `alt-x`: expand selections to contain full lines (including end-of-lines)
- * `alt-X`: trim selections to only contain full lines (not including last
+ * `<a-x>`: expand selections to contain full lines (including end-of-lines)
+ * `<a-X>`: trim selections to only contain full lines (not including last
             end-of-line)
 
  * `%`: select whole buffer
 
- * `alt-h`: select to line begin
- * `alt-l`: select to line end
+ * `<a-h>`: select to line begin
+ * `<a-l>`: select to line end
 
  * `/`: search (select next match)
- * `alt-/`: search (select previous match)
+ * `<a-/>`: search (select previous match)
  * `?`: search (extend to next match)
- * `alt-?`: search (extend to previous match)
+ * `<a-?>`: search (extend to previous match)
  * `n`: select next match
  * `N`: add a new selection with next match
- * `alt-n`: select previous match
- * `alt-N`: add a new selection with previous match
+ * `<a-n>`: select previous match
+ * `<a-N>`: add a new selection with previous match
 
  * `pageup`: scroll up
  * `pagedown`: scroll down
@@ -351,10 +351,10 @@ Movement
  * `'`: rotate selections (the main selection becomes the next one)
 
  * `;`: reduce selections to their cursor
- * `alt-;`: flip the selections direction
- * `alt-:`: ensure selections are in forward direction (cursor after anchor)
+ * `<a-;>`: flip the selections direction
+ * `<a-:>`: ensure selections are in forward direction (cursor after anchor)
 
- * `alt-.`: repeat last object or `f`/`t` selection command.
+ * `<a-.>`: repeat last object or `f`/`t` selection command.
 
 
 A word is a sequence of alphanumeric characters or underscore, a WORD is a
@@ -395,28 +395,28 @@ Changes
  * `y`: yank selections
  * `p`: paste after current selection end
  * `P`: paste before current selection begin
- * `alt-p`: paste all after current selection end, and
+ * `<a-p>`: paste all after current selection end, and
             select each pasted string.
- * `alt-P`: paste all before current selection begin, and
+ * `<a-P>`: paste all before current selection begin, and
             select each pasted string.
  * `R`: replace current selection with yanked text
 
  * `r`: replace each character with the next entered one
 
- * `alt-j`: join selected lines
- * `alt-J`: join selected lines and select spaces inserted
+ * `<a-j>`: join selected lines
+ * `<a-J>`: join selected lines and select spaces inserted
             in place of line breaks
- * `alt-m`: merge contiguous selections together (works across lines as well)
+ * `<a-m>`: merge contiguous selections together (works across lines as well)
 
  * `>`: indent selected lines
- * `alt->`: indent selected lines, including empty lines
+ * `<a-gt>`: indent selected lines, including empty lines
  * `<`: deindent selected lines
- * `alt-<`: deindent selected lines, do not remove incomplete
+ * `<a-lt>`: deindent selected lines, do not remove incomplete
         indent (3 leading spaces when indent is 4)
 
  * `|`: pipe each selections through the given external filter program
         and replace the selection with it's output.
- * `alt-|`: pipe each selections through the given external filter program
+ * `<a-|>`: pipe each selections through the given external filter program
         and ignore its output
 
  * `!`: insert command output before selection
@@ -429,19 +429,19 @@ Changes
 
  * `&`: align selection, align the cursor of selections by inserting
         spaces before the first character of the selection
- * `alt-&`: copy indent, copy the indentation of the main selection
+ * `<a-&>`: copy indent, copy the indentation of the main selection
         (or the count one if a count is given) to all other ones
 
  * ```: to lower case
  * `~`: to upper case
- * `alt-``: swap case
+ * `<a-`>`: swap case
 
  * `@`: convert tabs to spaces in current selections, uses the buffer
         tabstop option or the count parameter for tabstop.
- * `alt-@`: convert spaces to tabs in current selections, uses the buffer
+ * `<a-@>`: convert spaces to tabs in current selections, uses the buffer
             tabstop option or the count parameter for tabstop.
 
- * `alt-'`: rotate selections content, if specified, the count groups
+ * `<a-'>`: rotate selections content, if specified, the count groups
             selections, so `3<a-'>` rotate (1, 2, 3) and (3, 4, 6)
             independently.
 
@@ -493,9 +493,9 @@ By default, marks use the '^' register, but using the register can be set
 using `"<reg>` prefix.
 
 `Z` will save the current selections to the register.
-`alt-Z` will append the current selections to the register.
+`<a-Z>` will append the current selections to the register.
 `z` will restore the selections from the register.
-`alt-z` will add the selections from the register to the existing ones.
+`<a-z>` will add the selections from the register to the existing ones.
 
 Jump list
 ~~~~~~~~~
@@ -504,9 +504,9 @@ Some commands, like the goto commands, buffer switch or search commands,
 push the previous selections to the client's jump list. It is possible
 to forward or backward in the jump list using:
 
- * `control-i`: Jump forward
- * `control-o`: Jump backward
- * `control-s`: save current selections
+ * `<c-i>`: Jump forward
+ * `<c-o>`: Jump backward
+ * `<c-s>`: save current selections
 
 Multi Selection
 ~~~~~~~~~~~~~~~
@@ -531,18 +531,18 @@ here <<Regex syntax>>.
 `s` and `S` share the search pattern with `/`, and hence entering an empty
 pattern uses the last one.
 
-As a convenience, `alt-s` allows you to split the current selections on
+As a convenience, `<a-s>` allows you to split the current selections on
 line boundaries.
 
 To clear multiple selections, use `space`. To keep only the nth selection
-use `n` followed by `space`, in order to remove a selection, use `alt-space`.
+use `n` followed by `space`, in order to remove a selection, use `<a-space>`.
 
-`alt-k` allows you to enter a regex and keep only the selections that
-contains a match for this regex. using `alt-K` you can keep the selections
+`<a-k>` allows you to enter a regex and keep only the selections that
+contains a match for this regex. using `<a-K>` you can keep the selections
 not containing a match.
 
 `C` copies the current selection to the next line (or lines if a count is given)
-`alt-C` does the same to previous lines.
+`<a-C>` does the same to previous lines.
 
 `$` allows you to enter a shell command and pipe each selections to it.
 Selections whose shell command returns 0 will be kept, other will be dropped.
@@ -552,8 +552,8 @@ Object Selection
 
 Some keys allow you to select a text object:
 
- * `alt-a`: selects the whole object
- * `alt-i`: selects the inner object, that is the object excluding it's surrounder.
+ * `<a-a>`: selects the whole object
+ * `<a-i>`: selects the inner object, that is the object excluding it's surrounder.
             for example, for a quoted string, this will not select the quote, and
             for a word this will not select trailing spaces.
  * `[`: selects to object start
@@ -1035,11 +1035,11 @@ can have their default register overridden by using the `"` key followed by the
 register. For example `"sy` will yank (`y` command) in the `s` register. `"sp`
 will paste from the `s` register.
 
-While in insert mode or in a prompt, `ctrl-r` followed by a register name
+While in insert mode or in a prompt, `<c-r>` followed by a register name
 (one character) inserts it.
 
-For example, `ctrl-r` followed by " will insert the currently yanked text.
-`ctrl-r` followed by 2 will insert the second capture group from the last regex
+For example, `<c-r>` followed by " will insert the currently yanked text.
+`<c-r>` followed by 2 will insert the second capture group from the last regex
 selection.
 
 Registers are lists, instead of simply text in order to interact well with
@@ -1091,7 +1091,7 @@ Using the `*` key, you can set the search pattern to the current selection.
 This tries to be intelligent. It will for example detect if the current selection
 begins and/or ends at word boundaries and set the search pattern accordingly.
 
-with `alt-*` you can set the search pattern to the current selection without
+with `<a-*>` you can set the search pattern to the current selection without
 Kakoune trying to be smart.
 
 Regex syntax
@@ -1148,13 +1148,13 @@ Insert mode completion
 Kakoune can propose completions while inserting text, the `completers` option
 controls automatic completion, which kicks in when a certain idle timeout is
 reached (100 milliseconds). Insert mode completion can be explicitly triggered
-using *control-x*, followed, by:
+using `<c-x>`, followed, by:
 
  * *f* : filename completion
  * *w* : buffer word completion
  * *l* : buffer line completion
 
-Completion candidates can be selected using `ctrl-n` and `ctrl-p`.
+Completion candidates can be selected using `<c-n>` and `<c-p>`.
 
 Escape to normal mode
 ~~~~~~~~~~~~~~~~~~~~~
@@ -1562,8 +1562,8 @@ program when the buffer is deleted.
 Menus
 ~~~~~
 
-When a menu is displayed, you can use `j`, `<ctrl-n>` or `<tab>` to select the next
-entry, and `k`, `<ctrl-p>` or `<shift-tab>` to select the previous one.
+When a menu is displayed, you can use `j`, `<c-n>` or `<tab>` to select the next
+entry, and `k`, `<c-p>` or `<shift-tab>` to select the previous one.
 
 Using the `/` key, you can enter some regex in order to restrict available choices
 to the matching ones.
