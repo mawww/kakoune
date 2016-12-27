@@ -1005,8 +1005,8 @@ public:
 
         if (context().has_client() and
             context().options()["readonly"].get<bool>())
-            context().print_status({ "Entering insert mode while readonly",
-                                     get_face("Information") });
+            context().print_status({ "Warning: This buffer is readonly",
+                                     get_face("Error") });
     }
 
     ~Insert()
