@@ -421,7 +421,7 @@ void CommandManager::execute_single_command(CommandParameters params,
     if (params.empty())
         return;
 
-    ConstArrayView<String> param_view(params.begin()+1, params.end());
+    ParameterList param_view(params.begin()+1, params.end());
     auto command_it = find_command(context, params[0]);
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);

@@ -23,7 +23,7 @@ ParametersParser::ParametersParser(ParameterList params,
     {
         if (not only_pos and params[i] == "--")
             only_pos = true;
-        else if (not only_pos and params[i][0_byte] == '-')
+        else if (not only_pos and params[i].length() > 0 and params[i][0_byte] == '-')
         {
             auto it = m_desc.switches.find(params[i].substr(1_byte));
             if (it == m_desc.switches.end())
@@ -36,7 +36,7 @@ ParametersParser::ParametersParser(ParameterList params,
                    throw missing_option_value(it->key);
             }
         }
-        else
+        else // positional
         {
             if (desc.flags & ParameterDesc::Flags::SwitchesOnlyAtStart)
                 only_pos = true;
