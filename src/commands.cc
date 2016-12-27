@@ -1427,7 +1427,7 @@ const CommandDesc unmap_key_cmd = {
     "    view\n"
     "    user\n"
     "    object\n",
-    ParameterDesc{{}, ParameterDesc::Flags::None, 4, 4},
+    ParameterDesc{{}, ParameterDesc::Flags::None, 3, 4},
     CommandFlags::None,
     CommandHelper{},
     map_key_completer,
