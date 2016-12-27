@@ -12,51 +12,51 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 addhl -group / regions -default content markdown \
-    c          ```c          ```          '' \
-    cabal      ```cabal      ```          '' \
-    clojure    ```clojure    ```          '' \
-    coffee     ```coffee     ```          '' \
-    cpp        ```cpp        ```          '' \
-    css        ```css        ```          '' \
-    cucumber   ```cucumber   ```          '' \
-    d          ```d          ```          '' \
-    diff       ```diff       ```          '' \
-    dockerfile ```dockerfile ```          '' \
-    fish       ```fish       ```          '' \
-    gas        ```gas        ```          '' \
-    go         ```go         ```          '' \
-    haml       ```haml       ```          '' \
-    haskell    ```haskell    ```          '' \
-    html       ```html       ```          '' \
-    ini        ```ini        ```          '' \
-    java       ```java       ```          '' \
-    javascript ```javascript ```          '' \
-    json       ```json       ```          '' \
-    julia      ```julia      ```          '' \
-    kak        ```kak        ```          '' \
-    kickstart  ```kickstart  ```          '' \
-    latex      ```latex      ```          '' \
-    lisp       ```lisp       ```          '' \
-    lua        ```lua        ```          '' \
-    makefile   ```makefile   ```          '' \
-    moon       ```moon       ```          '' \
-    objc       ```objc       ```          '' \
-    perl       ```perl       ```          '' \
-    pug        ```pug        ```          '' \
-    python     ```python     ```          '' \
-    ragel      ```ragel      ```          '' \
-    ruby       ```ruby       ```          '' \
-    rust       ```rust       ```          '' \
-    sass       ```sass       ```          '' \
-    scala      ```scala      ```          '' \
-    scss       ```scss       ```          '' \
-    sh         ```sh         ```          '' \
-    swift      ```swift      ```          '' \
-    tupfile    ```tupfile    ```          '' \
-    yaml       ```yaml       ```          '' \
-    code       ```           ```          '' \
-    code       ``            ``           '' \
-    code       `             `            ''
+    c          ```\h*c          ```          '' \
+    cabal      ```\h*cabal      ```          '' \
+    clojure    ```\h*clojure    ```          '' \
+    coffee     ```\h*coffee     ```          '' \
+    cpp        ```\h*cpp        ```          '' \
+    css        ```\h*css        ```          '' \
+    cucumber   ```\h*cucumber   ```          '' \
+    d          ```\h*d          ```          '' \
+    diff       ```\h*diff       ```          '' \
+    dockerfile ```\h*dockerfile ```          '' \
+    fish       ```\h*fish       ```          '' \
+    gas        ```\h*gas        ```          '' \
+    go         ```\h*go         ```          '' \
+    haml       ```\h*haml       ```          '' \
+    haskell    ```\h*haskell    ```          '' \
+    html       ```\h*html       ```          '' \
+    ini        ```\h*ini        ```          '' \
+    java       ```\h*java       ```          '' \
+    javascript ```\h*javascript ```          '' \
+    json       ```\h*json       ```          '' \
+    julia      ```\h*julia      ```          '' \
+    kak        ```\h*kak        ```          '' \
+    kickstart  ```\h*kickstart  ```          '' \
+    latex      ```\h*latex      ```          '' \
+    lisp       ```\h*lisp       ```          '' \
+    lua        ```\h*lua        ```          '' \
+    makefile   ```\h*makefile   ```          '' \
+    moon       ```\h*moon       ```          '' \
+    objc       ```\h*objc       ```          '' \
+    perl       ```\h*perl       ```          '' \
+    pug        ```\h*pug        ```          '' \
+    python     ```\h*python     ```          '' \
+    ragel      ```\h*ragel      ```          '' \
+    ruby       ```\h*ruby       ```          '' \
+    rust       ```\h*rust       ```          '' \
+    sass       ```\h*sass       ```          '' \
+    scala      ```\h*scala      ```          '' \
+    scss       ```\h*scss       ```          '' \
+    sh         ```\h*sh         ```          '' \
+    swift      ```\h*swift      ```          '' \
+    tupfile    ```\h*tupfile    ```          '' \
+    yaml       ```\h*yaml       ```          '' \
+    code       ```              ```          '' \
+    code       ``               ``           '' \
+    code       `                `            ''
 
 addhl -group /markdown/code fill meta
 
