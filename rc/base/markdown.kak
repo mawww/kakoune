@@ -131,7 +131,7 @@ def -hidden _markdown_indent_on_new_line %{
         # remove trailing white spaces
         try %{ exec -draft -itersel %{ k<a-x> s \h+$ <ret> d } }
         # copy block quote(s), list item prefix and following white spaces
-        try %{ exec -draft k x s ^\h*\K((>\h*)|[*+-])+\h* <ret> y j p }
+        try %{ exec -draft k x s ^\h*\K((>\h*)|[*+-])+\h* <ret> y gh j P }
     }
 }
 
