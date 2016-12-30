@@ -14,7 +14,7 @@ def editorconfig-load -docstring "Set indentation options according to editorcon
                     print "set buffer indentwidth 0"
                     print "set buffer aligntab true"
                 }
-                if (indent_style == "spaces") {
+                if (indent_style == "space") {
                     print "set buffer indentwidth " (indent_size == "tab" ? 4 : indent_size)
                     print "set buffer aligntab false"
                 }
@@ -28,7 +28,7 @@ def editorconfig-load -docstring "Set indentation options according to editorcon
                         print "error"
                 }
                 if (charset)
-                    print "set buffer BOM" (charset == "utf-8-bom" ? true : false)
+                    print "set buffer BOM" (charset == "utf-8" ? true : false)
             }
         '
     }
