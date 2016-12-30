@@ -214,7 +214,7 @@ void on_term_resize(int)
     EventManager::instance().force_signal(0);
 }
 
-static constexpr std::initializer_list<std::pair<const Kakoune::Color, int>>
+static const std::initializer_list<std::pair<const Kakoune::Color, int>>
 default_colors = {
     { Color::Default, -1 },
     { Color::Black,   COLOR_BLACK },
