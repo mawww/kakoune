@@ -68,7 +68,7 @@ def -hidden _cucumber_indent_on_new_line %{
         # filter previous line
         try %{ exec -draft k : _cucumber_filter_around_selections <ret> }
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
+        try %{ exec -draft k x s ^\h*\K#\h* <ret> y gh j P }
         # indent after lines containing :
         try %{ exec -draft <space> k x <a-k> : <ret> j <a-gt> }
     }

@@ -53,7 +53,7 @@ def -hidden _javascript_indent_on_new_line %<
         # filter previous line
         try %{ exec -draft k : _javascript_filter_around_selections <ret> }
         # copy // comments prefix and following white spaces
-        try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
+        try %{ exec -draft k x s ^\h*\K#\h* <ret> y gh j P }
         # indent after lines beginning / ending with opener token
         try %_ exec -draft k x <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
     >
