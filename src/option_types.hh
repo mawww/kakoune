@@ -214,7 +214,9 @@ inline bool option_add(StronglyTypedNumber<RealType, ValueType>& opt,
     return val != 0;
 }
 
-inline bool option_add(...)
+struct WorstMatch { template<typename T> WorstMatch(T&&) {} };
+
+inline bool option_add(WorstMatch, StringView str)
 {
     throw runtime_error("no add operation supported for this option type");
 }
