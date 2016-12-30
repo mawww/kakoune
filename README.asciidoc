@@ -946,6 +946,8 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    - `ncurses_assistant`: specify the nice assistant you get in info boxes, can
       be 'clippy' (the default), 'cat' or 'none'
    - `ncurses_enable_mouse`: boolean option that enables mouse support
+   - `ncurses_change_colors`: boolean option that can disable color palette
+     changing if the terminfo enables it but the terminal does not support it.
    - `ncurses_wheel_down_button` and `ncurses_wheel_up_button`: specify which
       button send for wheel down/up events.
    - `ncurses_buffer_padding_str`: string that will be used to mark the

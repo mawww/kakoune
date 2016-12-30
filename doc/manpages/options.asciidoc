@@ -158,6 +158,10 @@ Builtin options
 		*ncurses_enable_mouse*:::
 			boolean option that enables mouse support
 
+		*ncurses_change_colors*:::
+			boolean option that can disable color palette changing if the
+			terminfo enables it but the terminal does not support it.
+
 		*ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
 			specify which button send for wheel down/up events
 

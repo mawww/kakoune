@@ -80,6 +80,8 @@ private:
     UnorderedMap<Color, int, MemoryDomain::Faces> m_colors;
     UnorderedMap<ColorPair, int, MemoryDomain::Faces> m_colorpairs;
     int m_next_color = 16;
+    int m_next_pair = 1;
+    int m_active_pair = -1;
 
     struct Window : Rect
     {
@@ -130,6 +132,7 @@ private:
     int m_wheel_down_button = 5;
 
     bool m_set_title = true;
+    bool m_change_colors = true;
 
     bool m_dirty = false;
 };

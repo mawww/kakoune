@@ -133,7 +133,7 @@ int NCursesUI::get_color(Color color)
     auto it = m_colors.find(color);
     if (it != m_colors.end())
         return it->second;
-    else if (can_change_color() and COLORS > 16)
+    else if (m_change_colors and can_change_color() and COLORS > 16)
     {
         kak_assert(color.color == Color::RGB);
         if (m_next_color > COLORS)
@@ -168,26 +168,22 @@ int NCursesUI::get_color(Color color)
 
 int NCursesUI::get_color_pair(const Face& face)
 {
-    static int next_pair = 1;
-
     ColorPair colors{face.fg, face.bg};
     auto it = m_colorpairs.find(colors);
     if (it != m_colorpairs.end())
         return it->second;
     else
     {
-        init_pair(next_pair, get_color(face.fg), get_color(face.bg));
-        m_colorpairs[colors] = next_pair;
-        return next_pair++;
+        init_pair(m_next_pair, get_color(face.fg), get_color(face.bg));
+        m_colorpairs[colors] = m_next_pair;
+        return m_next_pair++;
     }
 }
 
 void NCursesUI::set_face(NCursesWin* window, Face face, const Face& default_face)
 {
-    static int current_pair = -1;
-
-    if (current_pair != -1)
-        wattroff(window, COLOR_PAIR(current_pair));
+    if (m_active_pair != -1)
+        wattroff(window, COLOR_PAIR(m_active_pair));
 
     if (face.fg == Color::Default)
         face.fg = default_face.fg;
@@ -196,8 +192,8 @@ void NCursesUI::set_face(NCursesWin* window, Face face, const Face& default_face
 
     if (face.fg != Color::Default or face.bg != Color::Default)
     {
-        current_pair = get_color_pair(face);
-        wattron(window, COLOR_PAIR(current_pair));
+        m_active_pair = get_color_pair(face);
+        wattron(window, COLOR_PAIR(m_active_pair));
     }
 
     set_attribute(window, A_UNDERLINE, face.attributes & Attribute::Underline);
@@ -218,6 +214,19 @@ void on_term_resize(int)
     EventManager::instance().force_signal(0);
 }
 
+static constexpr std::initializer_list<std::pair<const Kakoune::Color, int>>
+default_colors = {
+    { Color::Default, -1 },
+    { Color::Black,   COLOR_BLACK },
+    { Color::Red,     COLOR_RED },
+    { Color::Green,   COLOR_GREEN },
+    { Color::Yellow,  COLOR_YELLOW },
+    { Color::Blue,    COLOR_BLUE },
+    { Color::Magenta, COLOR_MAGENTA },
+    { Color::Cyan,    COLOR_CYAN },
+    { Color::White,   COLOR_WHITE },
+};
+
 NCursesUI::NCursesUI()
     : m_stdin_watcher{0, FdEvents::Read,
                       [this](FDWatcher&, FdEvents, EventMode mode) {
@@ -228,17 +237,7 @@ NCursesUI::NCursesUI()
             m_on_key(*key);
       }},
       m_assistant(assistant_clippy),
-      m_colors{
-        { Color::Default, -1 },
-        { Color::Black,   COLOR_BLACK },
-        { Color::Red,     COLOR_RED },
-        { Color::Green,   COLOR_GREEN },
-        { Color::Yellow,  COLOR_YELLOW },
-        { Color::Blue,    COLOR_BLUE },
-        { Color::Magenta, COLOR_MAGENTA },
-        { Color::Cyan,    COLOR_CYAN },
-        { Color::White,   COLOR_WHITE },
-      }
+      m_colors{default_colors}
 {
     initscr();
     raw();
@@ -1013,6 +1012,24 @@ void NCursesUI::set_ui_options(const Options& options)
         auto it = options.find("ncurses_set_title");
         m_set_title = it == options.end() or
             (it->value == "yes" or it->value == "true");
+    }
+
+    {
+        auto it = options.find("ncurses_change_colors");
+        auto value = it == options.end() or
+            (it->value == "yes" or it->value == "true");
+
+        if (can_change_color() and m_change_colors != value)
+        {
+            fputs("\033]104;\007", stdout); // try to reset palette
+            fflush(stdout);
+            m_colorpairs.clear();
+            m_colors = default_colors;
+            m_next_color = 16;
+            m_next_pair = 1;
+            m_active_pair = -1;
+        }
+        m_change_colors = value;
     }
 
     {
