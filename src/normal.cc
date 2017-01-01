@@ -594,21 +594,22 @@ void paste_all(Context& context, NormalParams params)
         offsets.push_back(all.length());
     }
 
+    Vector<BufferCoord> insert_pos;
     auto& selections = context.selections();
     {
         ScopedEdition edition(context);
-        selections.insert(all, effective_mode, true);
+        selections.insert(all, effective_mode, &insert_pos);
     }
 
     const Buffer& buffer = context.buffer();
     Vector<Selection> result;
-    for (auto& selection : selections)
+    for (auto& ins_pos : insert_pos)
     {
         ByteCount pos = 0;
         for (auto offset : offsets)
         {
-            result.push_back({ buffer.advance(selection.min(), pos),
-                               buffer.advance(selection.min(), offset-1) });
+            result.push_back({ buffer.advance(ins_pos, pos),
+                               buffer.advance(ins_pos, offset-1) });
             pos = offset;
         }
     }

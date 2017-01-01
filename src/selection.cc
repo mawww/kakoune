@@ -513,7 +513,7 @@ BufferCoord prepare_insert(Buffer& buffer, const Selection& sel, InsertMode mode
 }
 
 void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
-                           bool select_inserted)
+                           Vector<BufferCoord>* out_insert_pos)
 {
     if (strings.empty())
         return;
@@ -525,43 +525,39 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
         auto& sel = m_selections[index];
 
         sel.anchor() = changes_tracker.get_new_coord(sel.anchor());
-        kak_assert(m_buffer->is_valid(sel.anchor()));
         sel.cursor() = changes_tracker.get_new_coord(sel.cursor());
-        kak_assert(m_buffer->is_valid(sel.cursor()));
-
-        auto pos = prepare_insert(*m_buffer, sel, mode);
-        changes_tracker.update(*m_buffer, m_timestamp);
+        kak_assert(m_buffer->is_valid(sel.anchor()) and
+                   m_buffer->is_valid(sel.cursor()));
 
         const String& str = strings[std::min(index, strings.size()-1)];
 
-        if (mode == InsertMode::Replace)
-            pos = replace(*m_buffer, sel, str);
-        else
-            pos = m_buffer->insert(pos, str);
+        const auto pos = (mode == InsertMode::Replace) ?
+            replace(*m_buffer, sel, str)
+          : m_buffer->insert(prepare_insert(*m_buffer, sel, mode), str);
 
-        auto& change = m_buffer->changes_since(m_timestamp).back();
+        if (out_insert_pos)
+            out_insert_pos->push_back(pos);
+
         changes_tracker.update(*m_buffer, m_timestamp);
         m_timestamp = m_buffer->timestamp();
 
-        if (select_inserted or mode == InsertMode::Replace)
+        if (mode == InsertMode::Replace)
         {
             if (str.empty())
-            {
                 sel.anchor() = sel.cursor() = m_buffer->clamp(pos);
-                continue;
+            else
+            {
+                // we want min and max from *before* we do any change
+                auto& min = sel.min();
+                auto& max = sel.max();
+                auto& change = m_buffer->changes_since(0).back();
+                min = change.begin;
+                max = m_buffer->char_prev(change.end);
             }
-
-            // we want min and max from *before* we do any change
-            auto& min = sel.min();
-            auto& max = sel.max();
-            min = change.begin;
-            max = m_buffer->char_prev(change.end);
         }
-        else
+        else if (not str.empty())
         {
-            if (str.empty())
-                continue;
-
+            auto& change = m_buffer->changes_since(0).back();
             sel.anchor() = m_buffer->clamp(update_insert(sel.anchor(), change.begin, change.end));
             sel.cursor() = m_buffer->clamp(update_insert(sel.cursor(), change.begin, change.end));
         }
