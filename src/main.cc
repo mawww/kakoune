@@ -761,8 +761,13 @@ int main(int argc, char* argv[])
         const bool clear_sessions = (bool)parser.get_switch("clear");
         if (list_sessions or clear_sessions)
         {
+            StringView tmpdir = getenv("TMPDIR");
+            if (tmpdir.empty())
+                tmpdir = "/tmp";
+            else if (tmpdir.back() == '/')
+                tmpdir = tmpdir.substr(0_byte, tmpdir.length()-1);
             StringView username = getpwuid(geteuid())->pw_name;
-            for (auto& session : list_files(format("/tmp/kakoune/{}/", username)))
+            for (auto& session : list_files(format("/{}/kakoune/{}/", tmpdir, username)))
             {
                 const bool valid = check_session(session);
                 if (list_sessions)
@@ -770,7 +775,7 @@ int main(int argc, char* argv[])
                 if (not valid and clear_sessions)
                 {
                     char socket_file[128];
-                    format_to(socket_file, "/tmp/kakoune/{}/{}", username, session);
+                    format_to(socket_file, "/{}/kakoune/{}/{}", tmpdir, username, session);
                     unlink(socket_file);
                 }
             }
