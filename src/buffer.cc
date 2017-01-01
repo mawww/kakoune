@@ -484,7 +484,8 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
                    std::make_move_iterator(new_lines.end()));
 
     const LineCount last_line = pos.line + new_lines.size() - 1;
-    const BufferCoord end = BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
+    const auto end = at_end ? line_count()
+                            : BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
 
     m_changes.push_back({ Change::Insert, at_end, pos, end });
     return pos;
