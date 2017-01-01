@@ -550,14 +550,15 @@ void change(Context& context, NormalParams params)
     enter_insert_mode<InsertMode::Replace>(context, params);
 }
 
-constexpr InsertMode adapt_for_linewise(InsertMode mode)
+InsertMode adapt_for_linewise(InsertMode mode)
 {
-    return ((mode == InsertMode::Append) ?
-             InsertMode::InsertAtNextLineBegin :
-             ((mode == InsertMode::Insert) ?
-               InsertMode::InsertAtLineBegin :
-               ((mode == InsertMode::Replace) ?
-                 InsertMode::Replace : InsertMode::Insert)));
+    switch (mode)
+    {
+        case InsertMode::Append: return InsertMode::InsertAtNextLineBegin;
+        case InsertMode::Insert: return InsertMode::InsertAtLineBegin;
+        case InsertMode::Replace: return InsertMode::Replace;
+        default: return InsertMode::Insert;
+    }
 }
 
 template<InsertMode mode>
@@ -565,15 +566,11 @@ void paste(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
     auto strings = RegisterManager::instance()[reg].values(context);
-    InsertMode effective_mode = mode;
-    for (auto& str : strings)
-    {
-        if (not str.empty() and str.back() == '\n')
-        {
-            effective_mode = adapt_for_linewise(mode);
-            break;
-        }
-    }
+    const bool linewise = contains_that(strings, [](StringView str) {
+        return not str.empty() and str.back() == '\n';
+    });
+    const auto effective_mode = linewise ? adapt_for_linewise(mode) : mode;
+
     ScopedEdition edition(context);
     context.selections().insert(strings, effective_mode);
 }
