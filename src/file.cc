@@ -133,6 +133,15 @@ String compact_path(StringView filename)
     return filename.str();
 }
 
+StringView tmpdir()
+{
+    StringView tmpdir = getenv("TMPDIR");
+    if (not tmpdir.empty())
+        return tmpdir.back() == '/' ? tmpdir.substr(0_byte, tmpdir.length()-1)
+                                    : tmpdir;
+    return "/tmp";
+}
+
 bool fd_readable(int fd)
 {
     fd_set  rfds;

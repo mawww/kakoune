@@ -480,15 +480,6 @@ void RemoteUI::set_ui_options(const Options& options)
     m_socket_watcher.events() |= FdEvents::Write;
 }
 
-static StringView tmpdir()
-{
-    StringView tmpdir = getenv("TMPDIR");
-    if (not tmpdir.empty())
-        return tmpdir.back() == '/' ? tmpdir.substr(0_byte, tmpdir.length()-1)
-                                    : tmpdir;
-    return "/tmp";
-}
-
 static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
