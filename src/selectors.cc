@@ -1,13 +1,146 @@
 #include "selectors.hh"
 
+#include "buffer_utils.hh"
 #include "optional.hh"
+#include "regex.hh"
 #include "string.hh"
+#include "unicode.hh"
 #include "unit_tests.hh"
+#include "utf8_iterator.hh"
 
 #include <algorithm>
 
 namespace Kakoune
 {
+
+using Utf8Iterator = utf8::iterator<BufferIterator>;
+
+namespace
+{
+
+Selection target_eol(Selection sel)
+{
+    sel.cursor().target = INT_MAX;
+    return sel;
+}
+
+Selection utf8_range(const BufferIterator& first, const BufferIterator& last)
+{
+    return {first.coord(), last.coord()};
+}
+
+Selection utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
+{
+    return {first.base().coord(), last.base().coord()};
+}
+
+}
+
+template<WordType word_type>
+Selection select_to_next_word(const Buffer& buffer, const Selection& selection)
+{
+    Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
+    if (begin+1 == buffer.end())
+        return selection;
+    if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
+        ++begin;
+
+    if (not skip_while(begin, buffer.end(),
+                       [](Codepoint c) { return is_eol(c); }))
+        return selection;
+    Utf8Iterator end = begin+1;
+
+    if (word_type == Word and is_punctuation(*begin))
+        skip_while(end, buffer.end(), is_punctuation);
+    else if (is_word<word_type>(*begin))
+        skip_while(end, buffer.end(), is_word<word_type>);
+
+    skip_while(end, buffer.end(), is_horizontal_blank);
+
+    return utf8_range(begin, end-1);
+}
+template Selection select_to_next_word<WordType::Word>(const Buffer&, const Selection&);
+template Selection select_to_next_word<WordType::WORD>(const Buffer&, const Selection&);
+
+template<WordType word_type>
+Selection select_to_next_word_end(const Buffer& buffer, const Selection& selection)
+{
+    Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
+    if (begin+1 == buffer.end())
+        return selection;
+    if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
+        ++begin;
+
+    if (not skip_while(begin, buffer.end(),
+                       [](Codepoint c) { return is_eol(c); }))
+        return selection;
+    Utf8Iterator end = begin;
+    skip_while(end, buffer.end(), is_horizontal_blank);
+
+    if (word_type == Word and is_punctuation(*end))
+        skip_while(end, buffer.end(), is_punctuation);
+    else if (is_word<word_type>(*end))
+        skip_while(end, buffer.end(), is_word<word_type>);
+
+    return utf8_range(begin, end-1);
+}
+template Selection select_to_next_word_end<WordType::Word>(const Buffer&, const Selection&);
+template Selection select_to_next_word_end<WordType::WORD>(const Buffer&, const Selection&);
+
+template<WordType word_type>
+Selection select_to_previous_word(const Buffer& buffer, const Selection& selection)
+{
+    Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
+    if (begin == buffer.begin())
+        return selection;
+    if (categorize<word_type>(*begin) != categorize<word_type>(*(begin-1)))
+        --begin;
+
+    skip_while_reverse(begin, buffer.begin(), [](Codepoint c){ return is_eol(c); });
+    Utf8Iterator end = begin;
+
+    bool with_end = skip_while_reverse(end, buffer.begin(), is_horizontal_blank);
+    if (word_type == Word and is_punctuation(*end))
+        with_end = skip_while_reverse(end, buffer.begin(), is_punctuation);
+
+    else if (is_word<word_type>(*end))
+        with_end = skip_while_reverse(end, buffer.begin(), is_word<word_type>);
+
+    return utf8_range(begin, with_end ? end : end+1);
+}
+template Selection select_to_previous_word<WordType::Word>(const Buffer&, const Selection&);
+template Selection select_to_previous_word<WordType::WORD>(const Buffer&, const Selection&);
+
+template<WordType word_type>
+Selection select_word(const Buffer& buffer, const Selection& selection,
+                      int count, ObjectFlags flags)
+{
+    Utf8Iterator first{buffer.iterator_at(selection.cursor()), buffer};
+    if (not is_word<word_type>(*first) and
+        ((flags & ObjectFlags::Inner) or
+         not skip_while(first, buffer.end(), [](Codepoint c)
+                        { return not is_word<word_type>(c); })))
+        return selection;
+
+    Utf8Iterator last = first;
+    if (flags & ObjectFlags::ToBegin)
+    {
+        skip_while_reverse(first, buffer.begin(), is_word<word_type>);
+        if (not is_word<word_type>(*first))
+            ++first;
+    }
+    if (flags & ObjectFlags::ToEnd)
+    {
+        skip_while(last, buffer.end(), is_word<word_type>);
+        if (not (flags & ObjectFlags::Inner))
+            skip_while(last, buffer.end(), is_horizontal_blank);
+        --last;
+    }
+    return (flags & ObjectFlags::ToEnd) ? utf8_range(first, last)
+                                        : utf8_range(last, first);
+}
+template Selection select_word<WordType::Word>(const Buffer&, const Selection&, int, ObjectFlags);
+template Selection select_word<WordType::WORD>(const Buffer&, const Selection&, int, ObjectFlags);
 
 Selection select_line(const Buffer& buffer, const Selection& selection)
 {
@@ -23,6 +156,30 @@ Selection select_line(const Buffer& buffer, const Selection& selection)
         ++last;
     return target_eol(utf8_range(first, last));
 }
+
+template<bool only_move>
+Selection select_to_line_end(const Buffer& buffer, const Selection& selection)
+{
+    BufferCoord begin = selection.cursor();
+    LineCount line = begin.line;
+    BufferCoord end = utf8::previous(buffer.iterator_at({line, buffer[line].length() - 1}),
+                                   buffer.iterator_at(line)).coord();
+    if (end < begin) // Do not go backward when cursor is on eol
+        end = begin;
+    return target_eol({only_move ? end : begin, end});
+}
+template Selection select_to_line_end<false>(const Buffer&, const Selection&);
+template Selection select_to_line_end<true>(const Buffer&, const Selection&);
+
+template<bool only_move>
+Selection select_to_line_begin(const Buffer& buffer, const Selection& selection)
+{
+    BufferCoord begin = selection.cursor();
+    BufferCoord end = begin.line;
+    return {only_move ? end : begin, end};
+}
+template Selection select_to_line_begin<false>(const Buffer&, const Selection&);
+template Selection select_to_line_begin<true>(const Buffer&, const Selection&);
 
 Selection select_matching(const Buffer& buffer, const Selection& selection)
 {
@@ -605,6 +762,82 @@ void select_buffer(SelectionList& selections)
     auto& buffer = selections.buffer();
     selections = SelectionList{ buffer, target_eol({{0,0}, buffer.back_coord()}) };
 }
+
+template<Direction direction>
+bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
+                          MatchResults<BufferIterator>& matches,
+                          const Regex& ex, bool& wrapped)
+{
+    wrapped = false;
+    if (direction == Forward)
+    {
+        if (pos != buffer.end() and
+            regex_search(pos, buffer.end(), matches, ex,
+                         match_flags(is_bol(pos.coord()), true,
+                                     is_bow(buffer, pos.coord()), true)))
+            return true;
+        wrapped = true;
+        return regex_search(buffer.begin(), buffer.end(), matches, ex);
+    }
+    else
+    {
+        auto find_last_match = [&](const BufferIterator& pos) {
+            MatchResults<BufferIterator> m;
+            const bool is_pos_eol = is_eol(buffer, pos.coord());
+            const bool is_pos_eow = is_eow(buffer, pos.coord());
+            auto begin = buffer.begin();
+            while (begin != pos and
+                   regex_search(begin, pos, m, ex,
+                                match_flags(is_bol(begin.coord()), is_pos_eol,
+                                            is_bow(buffer, begin.coord()), is_pos_eow)))
+            {
+                begin = utf8::next(m[0].first, pos);
+                if (matches.empty() or m[0].second > matches[0].second)
+                    matches.swap(m);
+            }
+            return not matches.empty();
+        };
+
+        if (find_last_match(pos))
+            return true;
+        wrapped = true;
+        return find_last_match(buffer.end());
+    }
+}
+template bool find_match_in_buffer<Forward>(const Buffer&, const BufferIterator,
+                          MatchResults<BufferIterator>&, const Regex&, bool&);
+template bool find_match_in_buffer<Backward>(const Buffer&, const BufferIterator,
+                          MatchResults<BufferIterator>&, const Regex&, bool&);
+
+template<Direction direction>
+Selection find_next_match(const Buffer& buffer, const Selection& sel, const Regex& regex, bool& wrapped)
+{
+    auto begin = buffer.iterator_at(direction == Backward ? sel.min() : sel.max());
+    auto end = begin;
+
+    CaptureList captures;
+    MatchResults<BufferIterator> matches;
+    bool found = false;
+    auto pos = direction == Forward ? utf8::next(begin, buffer.end()) : begin;
+    if ((found = find_match_in_buffer<direction>(buffer, pos, matches, regex, wrapped)))
+    {
+        begin = matches[0].first;
+        end = matches[0].second;
+        for (const auto& match : matches)
+            captures.push_back(buffer.string(match.first.coord(),
+                                             match.second.coord()));
+    }
+    if (not found or begin == buffer.end())
+        throw runtime_error(format("'{}': no matches found", regex.str()));
+
+    end = (begin == end) ? end : utf8::previous(end, begin);
+    if (direction == Backward)
+        std::swap(begin, end);
+
+    return {begin.coord(), end.coord(), std::move(captures)};
+}
+template Selection find_next_match<Forward>(const Buffer&, const Selection&, const Regex&, bool&);
+template Selection find_next_match<Backward>(const Buffer&, const Selection&, const Regex&, bool&);
 
 using RegexIt = RegexIterator<BufferIterator>;
 

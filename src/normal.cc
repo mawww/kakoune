@@ -12,6 +12,7 @@
 #include "file.hh"
 #include "flags.hh"
 #include "option_manager.hh"
+#include "regex.hh"
 #include "register_manager.hh"
 #include "selectors.hh"
 #include "shell_manager.hh"
