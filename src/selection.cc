@@ -481,7 +481,8 @@ void SelectionList::avoid_eol()
     }
 }
 
-BufferCoord prepare_insert(Buffer& buffer, const Selection& sel, InsertMode mode)
+BufferCoord get_insert_pos(const Buffer& buffer, const Selection& sel,
+                           InsertMode mode)
 {
     switch (mode)
     {
@@ -489,8 +490,6 @@ BufferCoord prepare_insert(Buffer& buffer, const Selection& sel, InsertMode mode
         return sel.min();
     case InsertMode::InsertCursor:
         return sel.cursor();
-    case InsertMode::Replace:
-        return {}; // replace is handled specially, by calling Buffer::replace
     case InsertMode::Append:
     {
         // special case for end of lines, append to current line instead
@@ -503,13 +502,10 @@ BufferCoord prepare_insert(Buffer& buffer, const Selection& sel, InsertMode mode
         return {sel.max().line, buffer[sel.max().line].length() - 1};
     case InsertMode::InsertAtNextLineBegin:
         return sel.max().line+1;
-    case InsertMode::OpenLineBelow:
-        return buffer.insert(sel.max().line + 1, "\n");
-    case InsertMode::OpenLineAbove:
-        return buffer.insert(sel.min().line, "\n");
+    default:
+        kak_assert(false);
+        return {};
     }
-    kak_assert(false);
-    return {};
 }
 
 void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
@@ -519,13 +515,21 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
         return;
 
     update();
+
+    Vector<BufferCoord> insert_pos;
+    if (mode != InsertMode::Replace)
+    {
+        for (auto& sel : m_selections)
+            insert_pos.push_back(get_insert_pos(*m_buffer, sel, mode));
+    }
+
     ForwardChangesTracker changes_tracker;
     for (size_t index = 0; index < m_selections.size(); ++index)
     {
         auto& sel = m_selections[index];
 
-        sel.anchor() = changes_tracker.get_new_coord(sel.anchor());
-        sel.cursor() = changes_tracker.get_new_coord(sel.cursor());
+        sel.anchor() = changes_tracker.get_new_coord_tolerant(sel.anchor());
+        sel.cursor() = changes_tracker.get_new_coord_tolerant(sel.cursor());
         kak_assert(m_buffer->is_valid(sel.anchor()) and
                    m_buffer->is_valid(sel.cursor()));
 
@@ -533,13 +537,12 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
 
         const auto pos = (mode == InsertMode::Replace) ?
             replace(*m_buffer, sel, str)
-          : m_buffer->insert(prepare_insert(*m_buffer, sel, mode), str);
+          : m_buffer->insert(changes_tracker.get_new_coord(insert_pos[index]), str);
+
+        changes_tracker.update(*m_buffer, m_timestamp);
 
         if (out_insert_pos)
             out_insert_pos->push_back(pos);
-
-        changes_tracker.update(*m_buffer, m_timestamp);
-        m_timestamp = m_buffer->timestamp();
 
         if (mode == InsertMode::Replace)
         {
