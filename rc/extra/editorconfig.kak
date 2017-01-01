@@ -2,21 +2,6 @@
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 decl -hidden bool editorconfig_trim_trailing_whitespace false
-decl -hidden int  editorconfig_insert_final_newline     0
-
-def -hidden _editorconfig-bufwritepre-hook %{
-    hook buffer BufWritePre %val{buffile} -group editorconfig-hooks %{ %sh{
-        if [ ${kak_opt_editorconfig_trim_trailing_whitespace} = "true" ]; then
-            printf %s\\n "try %{ exec -draft %{ %s\h+$<ret>d } }"
-        fi
-        if [ ${kak_opt_editorconfig_insert_final_newline} -gt 0 ]; then
-            printf %s\\n "try %{ exec -draft %{ %s\v+\Z<ret>d } }"
-        fi
-        if [ ${kak_opt_editorconfig_insert_final_newline} -gt 1 ]; then
-            printf %s\\n "try %{ exec -draft %{ geo<esc> } }"
-        fi
-    } }
-}
 
 def editorconfig-load -params ..1 -docstring "editorconfig-load [file]: set formatting behavior according to editorconfig" %{
     remove-hooks buffer editorconfig-hooks
@@ -29,7 +14,6 @@ def editorconfig-load -params ..1 -docstring "editorconfig-load [file]: set form
             /end_of_line=/             { end_of_line = $2 }
             /charset=/                 { charset = $2 }
             /trim_trailing_whitespace/ { trim_trailing_whitespace = $2 }
-            /insert_final_newline/     { insert_final_newline = $2 }
 
             END {
                 if (indent_style == "tab") {
@@ -52,11 +36,12 @@ def editorconfig-load -params ..1 -docstring "editorconfig-load [file]: set form
                 if (trim_trailing_whitespace == "true") {
                     print "set buffer editorconfig_trim_trailing_whitespace true"
                 }
-                if (insert_final_newline) {
-                    print "set buffer editorconfig_insert_final_newline " (insert_final_newline == "true" ? 2 : 1)
-                }
             }
         '
     }
-    _editorconfig-bufwritepre-hook
+    hook buffer BufWritePre %val{buffile} -group editorconfig-hooks %{ %sh{
+        if [ ${kak_opt_editorconfig_trim_trailing_whitespace} = "true" ]; then
+            printf %s\\n "try %{ exec -draft %{ %s\h+$<ret>d } }"
+        fi
+    } }
 }
