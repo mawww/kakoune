@@ -80,8 +80,6 @@ informations about Kakoune's state:
 	value of option *name*
 *kak_reg_<r>*::
 	value of register *r*
-*kak_socket*::
-	filename of session socket ('/tmp/kak-<session>')
 *kak_session*::
 	name of the current session
 *kak_client*::
