@@ -72,7 +72,7 @@ def -hidden c-family-insert-on-newline %[ eval -draft %[
             exec -save-regs '' k <a-x>1s^\h*(//+\h*)<ret> y
             try %[
                 # if the previous comment isn't empty, create a new one
-                exec <a-x><a-K>^\h*//+\h*$<ret> j<a-x>s^\h*<ret>p
+                exec <a-x><a-K>^\h*//+\h*$<ret> j<a-x>s^\h*<ret>P
             ] catch %[
                 # if there is no text in the previous comment, remove it completely
                 exec d
