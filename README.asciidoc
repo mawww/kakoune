@@ -220,7 +220,7 @@ Just running *kak* launch a new kak session with a client on local terminal.
 *kak* accepts some switches:
 
  * `-c <session>`: connect to given session, sessions are unix sockets
-       `/tmp/kak-<session>`
+       `/tmp/kakoune/<user>/<session>`
  * `-e <commands>`: execute commands on startup
  * `-n`: ignore kakrc file
  * `-s <session>`: set the session name, by default it will be the pid
