@@ -307,7 +307,7 @@ void replace_with_char(Context& context, NormalParams)
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [](Key key, Context& context) {
         auto cp = key.codepoint();
-        if (not cp)
+        if (not cp or key == Key::Escape)
             return;
         ScopedEdition edition(context);
         Buffer& buffer = context.buffer();
