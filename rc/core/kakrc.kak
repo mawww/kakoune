@@ -1,6 +1,15 @@
+# http://kakoune.org
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+# Detection
+# ‾‾‾‾‾‾‾‾‾
+
 hook global BufCreate (.*/)?(kakrc|.*.kak) %{
     set buffer filetype kak
 }
+
+# Highlighters & Completion
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 addhl -group / regions -default code kakrc \
     comment (^|\h)\K\# $ '' \
@@ -37,5 +46,32 @@ addhl -group /kakrc/single_string fill string
 addhl -group /kakrc/comment fill comment
 addhl -group /kakrc/shell ref sh
 
+# Commands
+# ‾‾‾‾‾‾‾‾
+
+def -hidden kak-indent-on-new-line %{
+    eval -draft -itersel %{
+        # preserve previous line indent
+        try %{ exec -draft <space> K <a-&> }
+        # cleanup trailing whitespaces from previous line
+        try %{ exec -draft k <a-x> s \h+$ <ret> d }
+        # copy '#' comment prefix and following white spaces
+        try %{ exec -draft k x s ^\h*#\h* <ret> y jgh P }
+        # indent after line ending with %[[:punct:]]
+        try %{ exec -draft k <a-x> <a-k> \%[[:punct:]]$ <ret> j <a-gt> }
+    }
+}
+
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
 hook -group kak-highlight global WinSetOption filetype=kak %{ addhl ref kakrc }
+
+hook global WinSetOption filetype=kak %{
+    hook window InsertChar \n -group kak-indent kak-indent-on-new-line
+    # cleanup trailing whitespaces on current line insert end
+    hook window InsertEnd .* -group kak-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
+}
+
 hook -group kak-highlight global WinSetOption filetype=(?!kak).* %{ rmhl kakrc }
+hook global WinSetOption filetype=(?!kak).* %{ rmhooks window kak-indent }
