@@ -63,7 +63,7 @@ addhl -group /python/comment       fill comment
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _python_indent_on_new_line %{
+def -hidden python-indent-on-new-line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
@@ -82,7 +82,7 @@ def -hidden _python_indent_on_new_line %{
 hook -group python-highlight global WinSetOption filetype=python %{ addhl ref python }
 
 hook global WinSetOption filetype=python %{
-    hook window InsertChar \n -group python-indent _python_indent_on_new_line
+    hook window InsertChar \n -group python-indent python-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
     hook window InsertEnd .* -group python-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
 }
