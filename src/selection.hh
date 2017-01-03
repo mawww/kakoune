@@ -101,7 +101,8 @@ struct SelectionList
 
     SelectionList& operator=(Vector<Selection> list)
     {
-        set(std::move(list), list.size()-1);
+        const size_t main_index = list.size()-1;
+        set(std::move(list), main_index);
         return *this;
     }
 
