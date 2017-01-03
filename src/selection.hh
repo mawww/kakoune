@@ -101,12 +101,18 @@ struct SelectionList
 
     SelectionList& operator=(Vector<Selection> list)
     {
+        set(std::move(list), list.size()-1);
+        return *this;
+    }
+
+    void set(Vector<Selection> list, size_t main)
+    {
+        kak_assert(main < list.size());
         m_selections = std::move(list);
-        m_main = size()-1;
+        m_main = main;
         sort_and_merge_overlapping();
         update_timestamp();
         check_invariant();
-        return *this;
     }
 
     using iterator = Vector<Selection>::iterator;

@@ -1100,12 +1100,17 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
     auto& buffer = context.buffer();
     const ColumnCount tabstop = context.options()["tabstop"].get<int>();
     Vector<Selection> result;
+    size_t main_index = 0;
     for (auto& sel : selections)
     {
+        const bool is_main = (&sel == &selections.main());
         auto anchor = sel.anchor();
         auto cursor = sel.cursor();
         ColumnCount cursor_col = get_column(buffer, tabstop, cursor);
         ColumnCount anchor_col = get_column(buffer, tabstop, anchor);
+
+        if (is_main)
+            main_index = result.size();
         result.push_back(std::move(sel));
         for (int i = 0; i < std::max(params.count, 1); ++i)
         {
@@ -1123,11 +1128,15 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
 
             if (anchor_byte != buffer[anchor_line].length() and
                 cursor_byte != buffer[cursor_line].length())
+            {
+                if (is_main)
+                    main_index = result.size();
                 result.emplace_back(BufferCoord{anchor_line, anchor_byte},
                                     BufferCoordAndTarget{cursor_line, cursor_byte, cursor.target});
+            }
         }
     }
-    selections = std::move(result);
+    selections.set(std::move(result), main_index);
     selections.sort_and_merge_overlapping();
 }
 
