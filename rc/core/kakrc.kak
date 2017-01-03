@@ -19,8 +19,8 @@ addhl -group / regions -default code kakrc \
 
 %sh{
     # Grammar
-    keywords="hook|rmhooks|addhl|rmhl|exec|eval|source|runtime|def|alias"
-    keywords="${keywords}|unalias|decl|echo|edit|set|map|face|prompt|menu|info"
+    keywords="hook|remove-hooks|rmhooks|add-highlighter|addhl|remove-highlighter|rmhl|exec|eval|source|runtime|define-command|def|alias"
+    keywords="${keywords}|unalias|declare-option|decl|echo|edit|set-option|set|unset-option|unset|map|unmap|set-face|face|prompt|menu|info"
     keywords="${keywords}|try|catch|rename-client|rename-buffer|rename-session|change-directory|colorscheme"
     values="default|black|red|green|yellow|blue|magenta|cyan|white"
 
