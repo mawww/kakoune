@@ -11,24 +11,24 @@ hook global BufCreate .*[.](hbs) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default html hbs  \
+add-highlighter -group / regions -default html hbs  \
     comment          {{!-- --}} '' \
     comment          {{!   }}   '' \
     block-expression {{    }}   '' 
 
-addhl -group /hbs/comment fill comment
-addhl -group /hbs/block-expression regex {{((#|/|)(\w|-)+) 1:meta
+add-highlighter -group /hbs/comment fill comment
+add-highlighter -group /hbs/block-expression regex {{((#|/|)(\w|-)+) 1:meta
 
 # some hbs tags have a special meaning
-addhl -group /hbs/block-expression regex {{((#|/|)(if|else|unless|with|lookup|log)) 1:keyword
+add-highlighter -group /hbs/block-expression regex {{((#|/|)(if|else|unless|with|lookup|log)) 1:keyword
 
 # 'each' is special as it really is two words 'each' and 'as'
-addhl -group /hbs/block-expression regex {{((#|/|)((each).*(as))) 2:keyword 4:keyword 5:keyword
+add-highlighter -group /hbs/block-expression regex {{((#|/|)((each).*(as))) 2:keyword 4:keyword 5:keyword
 
-addhl -group /hbs/block-expression regex ((\w|-)+)= 1:attribute
+add-highlighter -group /hbs/block-expression regex ((\w|-)+)= 1:attribute
 
 # highlight the string values of attributes as a bonus
-addhl -group /hbs/block-expression regex ((\w|-)+)=(('|").*?('|")) 1:attribute 3:value
+add-highlighter -group /hbs/block-expression regex ((\w|-)+)=(('|").*?('|")) 1:attribute 3:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -55,8 +55,8 @@ def -hidden _hbs_indent_on_new_line %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook -group hbs-highlight global WinSetOption filetype=hbs %{ 
-    addhl ref hbs 
-    addhl ref html
+    add-highlighter ref hbs 
+    add-highlighter ref html
 }
 
 hook global WinSetOption filetype=hbs %{
@@ -65,11 +65,11 @@ hook global WinSetOption filetype=hbs %{
 }
 
 hook -group hbs-highlight global WinSetOption filetype=(?!hbs).* %{ 
-    rmhl hbs 
-    rmhl html
+    remove-highlighter hbs 
+    remove-highlighter html
 }
 
 hook global WinSetOption filetype=(?!hbs).* %{
-    rmhooks window hbs-indent
-    rmhooks window hbs-hooks
+    remove-hooks window hbs-indent
+    remove-hooks window hbs-hooks
 }

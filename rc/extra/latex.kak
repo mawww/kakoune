@@ -11,24 +11,24 @@ hook global BufCreate .*\.tex %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default content latex \
+add-highlighter -group / regions -default content latex \
     comment '(?<!\\)%' '\n' ''
 
-addhl -group /latex/comment fill comment
+add-highlighter -group /latex/comment fill comment
 # Scopes, starting with a backslash
-addhl -group /latex/content regex '\\(?!_)\w+\b' 0:keyword
+add-highlighter -group /latex/content regex '\\(?!_)\w+\b' 0:keyword
 # Options passed to scopes, between brackets
-addhl -group /latex/content regex '\\(?!_)\w+\b\[([^]]+)\]' 1:value
+add-highlighter -group /latex/content regex '\\(?!_)\w+\b\[([^]]+)\]' 1:value
 # Content between dollar signs/pairs
-addhl -group /latex/content regex '(?<!\\)\$\$?([^$]|(?<=\\)\$)+\$\$?' 0:magenta
+add-highlighter -group /latex/content regex '(?<!\\)\$\$?([^$]|(?<=\\)\$)+\$\$?' 0:magenta
 # Emphasized text
-addhl -group /latex/content regex '\\(emph|textit)\{([^}]+)\}' 2:default+i
+add-highlighter -group /latex/content regex '\\(emph|textit)\{([^}]+)\}' 2:default+i
 # Bold text
-addhl -group /latex/content regex '\\textbf\{([^}]+)\}' 1:default+b
+add-highlighter -group /latex/content regex '\\textbf\{([^}]+)\}' 1:default+b
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group latex-highlight global WinSetOption filetype=latex %{ addhl ref latex }
+hook -group latex-highlight global WinSetOption filetype=latex %{ add-highlighter ref latex }
 
-hook -group latex-highlight global WinSetOption filetype=(?!latex).* %{ rmhl latex }
+hook -group latex-highlight global WinSetOption filetype=(?!latex).* %{ remove-highlighter latex }

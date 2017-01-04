@@ -11,14 +11,14 @@ hook global BufCreate .*[.](feature|story) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code cucumber \
+add-highlighter -group / regions -default code cucumber \
     language ^\h*#\h*language: $           '' \
     comment  ^\h*#             $           ''
 
-addhl -group /cucumber/language fill meta
-addhl -group /cucumber/comment  fill comment
+add-highlighter -group /cucumber/language fill meta
+add-highlighter -group /cucumber/comment  fill comment
 
-addhl -group /cucumber/language regex \S+$ 0:value
+add-highlighter -group /cucumber/language regex \S+$ 0:value
 
 # Spoken languages
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
@@ -51,7 +51,7 @@ addhl -group /cucumber/language regex \S+$ 0:value
 #   …
 # }
 
-addhl -group /cucumber/code regex \b(Feature|Business\h+Need|Ability|Background|Scenario|Scenario\h+Outline|Scenario\h+Template|Examples|Scenarios|Given|When|Then|And|But)\b 0:keyword
+add-highlighter -group /cucumber/code regex \b(Feature|Business\h+Need|Ability|Background|Scenario|Scenario\h+Outline|Scenario\h+Template|Examples|Scenarios|Given|When|Then|And|But)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -77,16 +77,16 @@ def -hidden _cucumber_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group cucumber-highlight global WinSetOption filetype=cucumber %{ addhl ref cucumber }
+hook -group cucumber-highlight global WinSetOption filetype=cucumber %{ add-highlighter ref cucumber }
 
 hook global WinSetOption filetype=cucumber %{
     hook window InsertEnd  .* -group cucumber-hooks  _cucumber_filter_around_selections
     hook window InsertChar \n -group cucumber-indent _cucumber_indent_on_new_line
 }
 
-hook -group cucumber-highlight global WinSetOption filetype=(?!cucumber).* %{ rmhl cucumber }
+hook -group cucumber-highlight global WinSetOption filetype=(?!cucumber).* %{ remove-highlighter cucumber }
 
 hook global WinSetOption filetype=(?!cucumber).* %{
-    rmhooks window cucumber-indent
-    rmhooks window cucumber-hooks
+    remove-hooks window cucumber-indent
+    remove-hooks window cucumber-hooks
 }

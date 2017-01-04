@@ -1,1 +1,1 @@
-addhl regex '[“”]' 0:red
+add-highlighter regex '[“”]' 0:red

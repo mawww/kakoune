@@ -15,24 +15,24 @@ hook global BufCreate .*\.xml %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions html                  \
+add-highlighter -group / regions html                  \
     comment <!--     -->                  '' \
     tag     <          >                  '' \
     style   <style\b.*?>\K  (?=</style>)  '' \
     script  <script\b.*?>\K (?=</script>) ''
 
-addhl -group /html/comment fill comment
+add-highlighter -group /html/comment fill comment
 
-addhl -group /html/style  ref css
-addhl -group /html/script ref javascript
+add-highlighter -group /html/style  ref css
+add-highlighter -group /html/script ref javascript
 
-addhl -group /html/tag regex </?(\w+) 1:keyword
+add-highlighter -group /html/tag regex </?(\w+) 1:keyword
 
-addhl -group /html/tag regions content \
+add-highlighter -group /html/tag regions content \
     string '"' (?<!\\)(\\\\)*"      '' \
     string "'" "'"                  ''
 
-addhl -group /html/tag/content/string fill string
+add-highlighter -group /html/tag/content/string fill string
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -63,7 +63,7 @@ def -hidden _html_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group html-highlight global WinSetOption filetype=(?:html|xml) %{ addhl ref html }
+hook -group html-highlight global WinSetOption filetype=(?:html|xml) %{ add-highlighter ref html }
 
 hook global WinSetOption filetype=(?:html|xml) %{
     hook window InsertEnd  .* -group html-hooks  _html_filter_around_selections
@@ -71,9 +71,9 @@ hook global WinSetOption filetype=(?:html|xml) %{
     hook window InsertChar \n -group html-indent _html_indent_on_new_line
 }
 
-hook -group html-highlight global WinSetOption filetype=(?!html|xml).* %{ rmhl html }
+hook -group html-highlight global WinSetOption filetype=(?!html|xml).* %{ remove-highlighter html }
 
 hook global WinSetOption filetype=(?!html|xml).* %{
-    rmhooks window html-indent
-    rmhooks window html-hooks
+    remove-hooks window html-indent
+    remove-hooks window html-hooks
 }

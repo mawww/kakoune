@@ -54,7 +54,7 @@ def autorestore-purge-backups -docstring "Remove all the backups of the current 
 
 ## If for some reason, backup files need to be ignored
 def autorestore-disable -docstring "Disable automatic backup recovering" %{
-    rmhooks global autorestore
+    remove-hooks global autorestore
 }
 
 hook -group autorestore global BufOpen .* %{ autorestore-restore-buffer }

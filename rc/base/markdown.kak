@@ -11,7 +11,7 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default content markdown \
+add-highlighter -group / regions -default content markdown \
     c          ```\h*c          ```          '' \
     cabal      ```\h*cabal      ```          '' \
     clojure    ```\h*clojure    ```          '' \
@@ -58,68 +58,68 @@ addhl -group / regions -default content markdown \
     code       ``               ``           '' \
     code       `                `            ''
 
-addhl -group /markdown/code fill meta
+add-highlighter -group /markdown/code fill meta
 
-addhl -group /markdown/c          ref c
-addhl -group /markdown/cabal      ref cabal
-addhl -group /markdown/clojure    ref clojure
-addhl -group /markdown/coffee     ref coffee
-addhl -group /markdown/cpp        ref cpp
-addhl -group /markdown/css        ref css
-addhl -group /markdown/cucumber   ref cucumber
-addhl -group /markdown/d          ref d
-addhl -group /markdown/diff       ref diff
-addhl -group /markdown/dockerfile ref dockerfile
-addhl -group /markdown/fish       ref fish
-addhl -group /markdown/gas        ref gas
-addhl -group /markdown/go         ref go
-addhl -group /markdown/haml       ref haml
-addhl -group /markdown/haskell    ref haskell
-addhl -group /markdown/html       ref html
-addhl -group /markdown/ini        ref ini
-addhl -group /markdown/java       ref java
-addhl -group /markdown/javascript ref javascript
-addhl -group /markdown/json       ref json
-addhl -group /markdown/julia      ref julia
-addhl -group /markdown/kak        ref kak
-addhl -group /markdown/kickstart  ref kickstart
-addhl -group /markdown/latex      ref latex
-addhl -group /markdown/lisp       ref lisp
-addhl -group /markdown/lua        ref lua
-addhl -group /markdown/makefile   ref makefile
-addhl -group /markdown/moon       ref moon
-addhl -group /markdown/objc       ref objc
-addhl -group /markdown/perl       ref perl
-addhl -group /markdown/pug        ref pug
-addhl -group /markdown/python     ref python
-addhl -group /markdown/ragel      ref ragel
-addhl -group /markdown/ruby       ref ruby
-addhl -group /markdown/rust       ref rust
-addhl -group /markdown/sass       ref sass
-addhl -group /markdown/scala      ref scala
-addhl -group /markdown/scss       ref scss
-addhl -group /markdown/sh         ref sh
-addhl -group /markdown/swift      ref swift
-addhl -group /markdown/tupfile    ref tupfile
-addhl -group /markdown/yaml       ref yaml
+add-highlighter -group /markdown/c          ref c
+add-highlighter -group /markdown/cabal      ref cabal
+add-highlighter -group /markdown/clojure    ref clojure
+add-highlighter -group /markdown/coffee     ref coffee
+add-highlighter -group /markdown/cpp        ref cpp
+add-highlighter -group /markdown/css        ref css
+add-highlighter -group /markdown/cucumber   ref cucumber
+add-highlighter -group /markdown/d          ref d
+add-highlighter -group /markdown/diff       ref diff
+add-highlighter -group /markdown/dockerfile ref dockerfile
+add-highlighter -group /markdown/fish       ref fish
+add-highlighter -group /markdown/gas        ref gas
+add-highlighter -group /markdown/go         ref go
+add-highlighter -group /markdown/haml       ref haml
+add-highlighter -group /markdown/haskell    ref haskell
+add-highlighter -group /markdown/html       ref html
+add-highlighter -group /markdown/ini        ref ini
+add-highlighter -group /markdown/java       ref java
+add-highlighter -group /markdown/javascript ref javascript
+add-highlighter -group /markdown/json       ref json
+add-highlighter -group /markdown/julia      ref julia
+add-highlighter -group /markdown/kak        ref kak
+add-highlighter -group /markdown/kickstart  ref kickstart
+add-highlighter -group /markdown/latex      ref latex
+add-highlighter -group /markdown/lisp       ref lisp
+add-highlighter -group /markdown/lua        ref lua
+add-highlighter -group /markdown/makefile   ref makefile
+add-highlighter -group /markdown/moon       ref moon
+add-highlighter -group /markdown/objc       ref objc
+add-highlighter -group /markdown/perl       ref perl
+add-highlighter -group /markdown/pug        ref pug
+add-highlighter -group /markdown/python     ref python
+add-highlighter -group /markdown/ragel      ref ragel
+add-highlighter -group /markdown/ruby       ref ruby
+add-highlighter -group /markdown/rust       ref rust
+add-highlighter -group /markdown/sass       ref sass
+add-highlighter -group /markdown/scala      ref scala
+add-highlighter -group /markdown/scss       ref scss
+add-highlighter -group /markdown/sh         ref sh
+add-highlighter -group /markdown/swift      ref swift
+add-highlighter -group /markdown/tupfile    ref tupfile
+add-highlighter -group /markdown/yaml       ref yaml
 
 # Setext-style header
-addhl -group /markdown/content regex (\A|\n\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
-addhl -group /markdown/content regex (\A|\n\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
+add-highlighter -group /markdown/content regex (\A|\n\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
+add-highlighter -group /markdown/content regex (\A|\n\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
 
 # Atx-style header
-addhl -group /markdown/content regex ^(#+)(\h+)([^\n]+) 1:header
+add-highlighter -group /markdown/content regex ^(#+)(\h+)([^\n]+) 1:header
 
-addhl -group /markdown/content regex ^\h?+((?:[\s\t]+)?[-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*\n)*$ 0:list 1:bullet
-addhl -group /markdown/content regex ^([-=~]+)\n[^\n\h].*?\n\1$ 0:block
-addhl -group /markdown/content regex \B\+[^\n]+?\+\B 0:mono
-addhl -group /markdown/content regex \B\*[^\n]+?\*\B 0:italic
-addhl -group /markdown/content regex \b_[^\n]+?_\b 0:italic
-addhl -group /markdown/content regex \B\*\*[^\n]+?\*\*\B 0:bold
-addhl -group /markdown/content regex \B__[^\n]+?__\B 0:bold
-addhl -group /markdown/content regex <(([a-z]+://.*?)|((mailto:)?[\w+-]+@[a-z]+[.][a-z]+))> 0:link
-addhl -group /markdown/content regex ^\h*(>\h*)+ 0:comment
-addhl -group /markdown/content regex \H\K\h\h$ 0:PrimarySelection
+add-highlighter -group /markdown/content regex ^\h?+((?:[\s\t]+)?[-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*\n)*$ 0:list 1:bullet
+add-highlighter -group /markdown/content regex ^([-=~]+)\n[^\n\h].*?\n\1$ 0:block
+add-highlighter -group /markdown/content regex \B\+[^\n]+?\+\B 0:mono
+add-highlighter -group /markdown/content regex \B\*[^\n]+?\*\B 0:italic
+add-highlighter -group /markdown/content regex \b_[^\n]+?_\b 0:italic
+add-highlighter -group /markdown/content regex \B\*\*[^\n]+?\*\*\B 0:bold
+add-highlighter -group /markdown/content regex \B__[^\n]+?__\B 0:bold
+add-highlighter -group /markdown/content regex <(([a-z]+://.*?)|((mailto:)?[\w+-]+@[a-z]+[.][a-z]+))> 0:link
+add-highlighter -group /markdown/content regex ^\h*(>\h*)+ 0:comment
+add-highlighter -group /markdown/content regex \H\K\h\h$ 0:PrimarySelection
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -138,14 +138,14 @@ def -hidden _markdown_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group markdown-highlight global WinSetOption filetype=markdown %{ addhl ref markdown }
+hook -group markdown-highlight global WinSetOption filetype=markdown %{ add-highlighter ref markdown }
 
 hook global WinSetOption filetype=markdown %{
     hook window InsertChar \n -group markdown-indent _markdown_indent_on_new_line
 }
 
-hook -group markdown-highlight global WinSetOption filetype=(?!markdown).* %{ rmhl markdown }
+hook -group markdown-highlight global WinSetOption filetype=(?!markdown).* %{ remove-highlighter markdown }
 
 hook global WinSetOption filetype=(?!markdown).* %{
-    rmhooks window markdown-indent
+    remove-hooks window markdown-indent
 }

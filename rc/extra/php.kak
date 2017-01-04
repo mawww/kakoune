@@ -8,25 +8,25 @@ hook global BufCreate .*[.](php) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code php  \
+add-highlighter -group / regions -default code php  \
     double_string '"'  (?<!\\)(\\\\)*" '' \
     single_string "'"  (?<!\\)(\\\\)*' '' \
     comment       //   '$'             '' \
     comment       /\*  \*/             ''
 
-addhl -group /php/double_string fill string
-addhl -group /php/single_string fill string
-addhl -group /php/comment       fill comment
+add-highlighter -group /php/double_string fill string
+add-highlighter -group /php/single_string fill string
+add-highlighter -group /php/comment       fill comment
 
-addhl -group /php/code regex \$\w* 0:identifier
-addhl -group /php/code regex \b(false|null|parent|self|this|true)\b 0:value
-addhl -group /php/code regex "-?[0-9]*\.?[0-9]+" 0:value
-addhl -group /php/code regex \b((string|int|bool)|[A-Z][a-z].*?)\b 0:type
-addhl -group /php/code regex (?<=\W)/[^\n/]+/[gimy]* 0:meta
+add-highlighter -group /php/code regex \$\w* 0:identifier
+add-highlighter -group /php/code regex \b(false|null|parent|self|this|true)\b 0:value
+add-highlighter -group /php/code regex "-?[0-9]*\.?[0-9]+" 0:value
+add-highlighter -group /php/code regex \b((string|int|bool)|[A-Z][a-z].*?)\b 0:type
+add-highlighter -group /php/code regex (?<=\W)/[^\n/]+/[gimy]* 0:meta
 
 # Keywords are collected at
 # http://php.net/manual/en/reserved.keywords.php
-addhl -group /php/code regex \b(__halt_compiler|abstract|and|array|as|break|callable|case|catch|class|clone|const|continue|declare|default|die|do|echo|else|elseif|empty|enddeclare|endfor|endforeach|endif|endswitch|endwhile|eval|exit|extends|final|finally|for|foreach|function|global|goto|if|implements|include|include_once|instanceof|insteadof|interface|isset|list|namespace|new|or|print|private|protected|public|require|require_once|return|static|switch|throw|trait|try|unset|use|var|while|xor|yield|__CLASS__|__DIR__|__FILE__|__FUNCTION__|__LINE__|__METHOD__|__NAMESPACE__|__TRAIT__)\b 0:keyword
+add-highlighter -group /php/code regex \b(__halt_compiler|abstract|and|array|as|break|callable|case|catch|class|clone|const|continue|declare|default|die|do|echo|else|elseif|empty|enddeclare|endfor|endforeach|endif|endswitch|endwhile|eval|exit|extends|final|finally|for|foreach|function|global|goto|if|implements|include|include_once|instanceof|insteadof|interface|isset|list|namespace|new|or|print|private|protected|public|require|require_once|return|static|switch|throw|trait|try|unset|use|var|while|xor|yield|__CLASS__|__DIR__|__FILE__|__FUNCTION__|__LINE__|__METHOD__|__NAMESPACE__|__TRAIT__)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -59,7 +59,7 @@ def -hidden _php_indent_on_new_line %<
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group php-highlight global WinSetOption filetype=php %{ addhl ref php }
+hook -group php-highlight global WinSetOption filetype=php %{ add-highlighter ref php }
 
 hook global WinSetOption filetype=php %{
     hook window InsertEnd  .* -group php-hooks  _php_filter_around_selections
@@ -67,9 +67,9 @@ hook global WinSetOption filetype=php %{
     hook window InsertChar \n -group php-indent _php_indent_on_new_line
 }
 
-hook -group php-highlight global WinSetOption filetype=(?!php).* %{ rmhl php }
+hook -group php-highlight global WinSetOption filetype=(?!php).* %{ remove-highlighter php }
 
 hook global WinSetOption filetype=(?!php).* %{
-    rmhooks window php-indent
-    rmhooks window php-hooks
+    remove-hooks window php-indent
+    remove-hooks window php-hooks
 }

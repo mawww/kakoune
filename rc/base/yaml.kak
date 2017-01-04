@@ -11,18 +11,18 @@ hook global BufCreate .*[.](yaml) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code yaml      \
+add-highlighter -group / regions -default code yaml      \
     double_string '"' (?<!\\)(\\\\)*"       '' \
     single_string "'" "'"                   '' \
     comment       '#' '$'                   ''
 
-addhl -group /yaml/double_string fill string
-addhl -group /yaml/single_string fill string
-addhl -group /yaml/comment       fill comment
+add-highlighter -group /yaml/double_string fill string
+add-highlighter -group /yaml/single_string fill string
+add-highlighter -group /yaml/comment       fill comment
 
-addhl -group /yaml/code regex ^(---|\.\.\.)$ 0:meta
-addhl -group /yaml/code regex ^(\h*:\w*) 0:keyword
-addhl -group /yaml/code regex \b(true|false|null)\b 0:value
+add-highlighter -group /yaml/code regex ^(---|\.\.\.)$ 0:meta
+add-highlighter -group /yaml/code regex ^(\h*:\w*) 0:keyword
+add-highlighter -group /yaml/code regex \b(true|false|null)\b 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -48,16 +48,16 @@ def -hidden _yaml_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group yaml-highlight global WinSetOption filetype=yaml %{ addhl ref yaml }
+hook -group yaml-highlight global WinSetOption filetype=yaml %{ add-highlighter ref yaml }
 
 hook global WinSetOption filetype=yaml %{
     hook window InsertEnd  .* -group yaml-hooks  _yaml_filter_around_selections
     hook window InsertChar \n -group yaml-indent _yaml_indent_on_new_line
 }
 
-hook -group yaml-highlight global WinSetOption filetype=(?!yaml).* %{ rmhl yaml }
+hook -group yaml-highlight global WinSetOption filetype=(?!yaml).* %{ remove-highlighter yaml }
 
 hook global WinSetOption filetype=(?!yaml).* %{
-    rmhooks window yaml-indent
-    rmhooks window yaml-hooks
+    remove-hooks window yaml-indent
+    remove-hooks window yaml-hooks
 }

@@ -17,7 +17,7 @@ def lint -docstring 'Parse the current buffer with a linter' %{
                   set buffer make_current_error_line 0
                   hook -group fifo buffer BufCloseFifo .* %{
                       nop %sh{ rm -r '$dir' }
-                      rmhooks buffer fifo
+                      remove-hooks buffer fifo
                   }
               }"
 
@@ -68,13 +68,13 @@ def -hidden lint-show %{ %sh{
 }}
 
 def lint-enable -docstring "Activate automatic diagnostics of the code" %{
-    addhl flag_lines default lint_flags
+    add-highlighter flag_lines default lint_flags
     hook window -group lint-diagnostics NormalIdle .* %{ lint-show }
 }
 
 def lint-disable -docstring "Disable automatic diagnostics of the code" %{
-    rmhl hlflags_lint_flags
-    rmhooks window lint-diagnostics
+    remove-highlighter hlflags_lint_flags
+    remove-hooks window lint-diagnostics
 }
 
 def lint-next -docstring "Jump to the next line that contains an error" %{ %sh{

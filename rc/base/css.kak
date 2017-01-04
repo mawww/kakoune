@@ -11,27 +11,27 @@ hook global BufCreate .*[.](css) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default selector css \
+add-highlighter -group / regions -default selector css \
     declaration [{] [}]                   '' \
     comment    /[*] [*]/                  ''
 
-addhl -group /css/comment fill comment
+add-highlighter -group /css/comment fill comment
 
-addhl -group /css/declaration regions content \
+add-highlighter -group /css/declaration regions content \
     string '"' (?<!\\)(\\\\)*"             '' \
     string "'" "'"                         ''
 
-addhl -group /css/declaration/content/string fill string
+add-highlighter -group /css/declaration/content/string fill string
 
-addhl -group /css/declaration regex (#[0-9A-Fa-f]+)|((\d*\.)?\d+(em|px)) 0:value
-addhl -group /css/declaration regex ([A-Za-z][A-Za-z0-9_-]*)\h*: 1:keyword
-addhl -group /css/declaration regex :(before|after) 0:attribute
-addhl -group /css/declaration regex !important 0:keyword
+add-highlighter -group /css/declaration regex (#[0-9A-Fa-f]+)|((\d*\.)?\d+(em|px)) 0:value
+add-highlighter -group /css/declaration regex ([A-Za-z][A-Za-z0-9_-]*)\h*: 1:keyword
+add-highlighter -group /css/declaration regex :(before|after) 0:attribute
+add-highlighter -group /css/declaration regex !important 0:keyword
 
 # element#id element.class
 # universal selector
-addhl -group /css/selector regex         [A-Za-z][A-Za-z0-9_-]* 0:keyword
-addhl -group /css/selector regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:identifier
+add-highlighter -group /css/selector regex         [A-Za-z][A-Za-z0-9_-]* 0:keyword
+add-highlighter -group /css/selector regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:identifier
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -62,7 +62,7 @@ def -hidden _css_indent_on_closing_curly_brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group css-highlight global WinSetOption filetype=css %{ addhl ref css }
+hook -group css-highlight global WinSetOption filetype=css %{ add-highlighter ref css }
 
 hook global WinSetOption filetype=css %[
     hook window InsertEnd  .* -group css-hooks  _css_filter_around_selections
@@ -70,9 +70,9 @@ hook global WinSetOption filetype=css %[
     hook window InsertChar \} -group css-indent _css_indent_on_closing_curly_brace
 ]
 
-hook -group css-highlight global WinSetOption filetype=(?!css).* %{ rmhl css }
+hook -group css-highlight global WinSetOption filetype=(?!css).* %{ remove-highlighter css }
 
 hook global WinSetOption filetype=(?!css).* %{
-    rmhooks window css-indent
-    rmhooks window css-hooks
+    remove-hooks window css-indent
+    remove-hooks window css-hooks
 }

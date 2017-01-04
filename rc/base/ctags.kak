@@ -70,7 +70,7 @@ def ctags-enable-autoinfo -docstring "Automatically display ctags information ab
      hook window -group ctags-autoinfo InsertIdle .* ctags-funcinfo
 }
 
-def ctags-disable-autoinfo -docstring "Disable automatic ctags information displaying" %{ rmhooks window ctags-autoinfo }
+def ctags-disable-autoinfo -docstring "Disable automatic ctags information displaying" %{ remove-hooks window ctags-autoinfo }
 
 decl str ctagsopts "-R"
 decl str ctagspaths "."

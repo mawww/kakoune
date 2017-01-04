@@ -783,7 +783,7 @@ const CommandDesc add_hook_cmd = {
     "            (and any window for that buffer)\n"
     "  * window: hook is executed only for the current window\n",
     ParameterDesc{
-        { { "group", { true, "set hook group, see rmhooks" } } },
+        { { "group", { true, "set hook group, see remove-hooks" } } },
         ParameterDesc::Flags::None, 4, 4
     },
     CommandFlags::None,

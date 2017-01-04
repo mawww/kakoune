@@ -43,5 +43,5 @@ def autowrap-enable -docstring "Automatically wrap the lines in which characters
 }
 
 def autowrap-disable -docstring "Disable automatic line wrapping" %{
-    rmhooks window autowrap
+    remove-hooks window autowrap
 }

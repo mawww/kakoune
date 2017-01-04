@@ -11,7 +11,7 @@ hook global BufCreate .*[.](coffee) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code coffee     \
+add-highlighter -group / regions -default code coffee     \
     double_string '"""' '"""'                '' \
     single_string "'''" "'''"                '' \
     comment       '###' '###'                '' \
@@ -24,23 +24,23 @@ addhl -group / regions -default code coffee     \
 # Regular expression flags are: g → global match, i → ignore case, m → multi-lines, y → sticky
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
 
-addhl -group /coffee/double_string fill string
-addhl -group /coffee/double_string regions regions interpolation \Q#{ \} \{
-addhl -group /coffee/double_string/regions/interpolation fill meta
-addhl -group /coffee/single_string fill string
-addhl -group /coffee/regex fill meta
-addhl -group /coffee/regex regions regions interpolation \Q#{ \} \{
-addhl -group /coffee/regex/regions/interpolation fill meta
-addhl -group /coffee/comment fill comment
+add-highlighter -group /coffee/double_string fill string
+add-highlighter -group /coffee/double_string regions regions interpolation \Q#{ \} \{
+add-highlighter -group /coffee/double_string/regions/interpolation fill meta
+add-highlighter -group /coffee/single_string fill string
+add-highlighter -group /coffee/regex fill meta
+add-highlighter -group /coffee/regex regions regions interpolation \Q#{ \} \{
+add-highlighter -group /coffee/regex/regions/interpolation fill meta
+add-highlighter -group /coffee/comment fill comment
 
 # Keywords are collected at
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
 # http://coffeescript.org/documentation/docs/lexer.html#section-63
-addhl -group /coffee/code regex [$@]\w* 0:identifier
-addhl -group /coffee/code regex \b(Array|Boolean|Date|Function|Number|Object|RegExp|String)\b 0:type
-addhl -group /coffee/code regex \b(document|false|no|null|off|on|parent|self|this|true|undefined|window|yes)\b 0:value
-addhl -group /coffee/code regex \b(and|is|isnt|not|or)\b 0:operator
-addhl -group /coffee/code regex \b(break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|function|if|implements|import|in|instanceof|interface|let|native|new|package|private|protected|public|return|static|super|switch|throw|try|typeof|var|void|while|with|yield)\b 0:keyword
+add-highlighter -group /coffee/code regex [$@]\w* 0:identifier
+add-highlighter -group /coffee/code regex \b(Array|Boolean|Date|Function|Number|Object|RegExp|String)\b 0:type
+add-highlighter -group /coffee/code regex \b(document|false|no|null|off|on|parent|self|this|true|undefined|window|yes)\b 0:value
+add-highlighter -group /coffee/code regex \b(and|is|isnt|not|or)\b 0:operator
+add-highlighter -group /coffee/code regex \b(break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|function|if|implements|import|in|instanceof|interface|let|native|new|package|private|protected|public|return|static|super|switch|throw|try|typeof|var|void|while|with|yield)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -69,16 +69,16 @@ def -hidden _coffee_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group coffee-highlight global WinSetOption filetype=coffee %{ addhl ref coffee }
+hook -group coffee-highlight global WinSetOption filetype=coffee %{ add-highlighter ref coffee }
 
 hook global WinSetOption filetype=coffee %{
     hook window InsertEnd  .* -group coffee-hooks  _coffee_filter_around_selections
     hook window InsertChar \n -group coffee-indent _coffee_indent_on_new_line
 }
 
-hook -group coffee-highlight global WinSetOption filetype=(?!coffee).* %{ rmhl coffee }
+hook -group coffee-highlight global WinSetOption filetype=(?!coffee).* %{ remove-highlighter coffee }
 
 hook global WinSetOption filetype=(?!coffee).* %{
-    rmhooks window coffee-indent
-    rmhooks window coffee-hooks
+    remove-hooks window coffee-indent
+    remove-hooks window coffee-hooks
 }

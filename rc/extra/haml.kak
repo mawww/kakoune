@@ -11,7 +11,7 @@ hook global BufCreate .*[.](haml) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code haml                                                         \
+add-highlighter -group / regions -default code haml                                                         \
     comment ^\h*/                                                                 $            '' \
     eval    ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)?\{\K|#\{\K (?=\})        \{ \
     eval    ^\h*[=-]\K                                                           (?=[^|]\n)    '' \
@@ -21,14 +21,14 @@ addhl -group / regions -default code haml                                       
 # Filters
 # http://haml.info/docs/yardoc/file.REFERENCE.html#filters
 
-addhl -group /haml/comment fill comment
+add-highlighter -group /haml/comment fill comment
 
-addhl -group /haml/eval   ref ruby
-addhl -group /haml/coffee ref coffee
-addhl -group /haml/sass   ref sass
+add-highlighter -group /haml/eval   ref ruby
+add-highlighter -group /haml/coffee ref coffee
+add-highlighter -group /haml/sass   ref sass
 
-addhl -group /haml/code regex ^\h*(:[a-z]+|-|=)|^(!!!)$ 0:meta
-addhl -group /haml/code regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)? 1:keyword 2:identifier
+add-highlighter -group /haml/code regex ^\h*(:[a-z]+|-|=)|^(!!!)$ 0:meta
+add-highlighter -group /haml/code regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)? 1:keyword 2:identifier
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -54,16 +54,16 @@ def -hidden _haml_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group haml-highlight global WinSetOption filetype=haml %{ addhl ref haml }
+hook -group haml-highlight global WinSetOption filetype=haml %{ add-highlighter ref haml }
 
 hook global WinSetOption filetype=haml %{
     hook window InsertEnd  .* -group haml-hooks  _haml_filter_around_selections
     hook window InsertChar \n -group haml-indent _haml_indent_on_new_line
 }
 
-hook -group haml-highlight global WinSetOption filetype=(?!haml).* %{ rmhl haml }
+hook -group haml-highlight global WinSetOption filetype=(?!haml).* %{ remove-highlighter haml }
 
 hook global WinSetOption filetype=(?!haml).* %{
-    rmhooks window haml-indent
-    rmhooks window haml-hooks
+    remove-hooks window haml-indent
+    remove-hooks window haml-hooks
 }

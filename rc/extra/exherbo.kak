@@ -27,79 +27,79 @@ hook global BufCreate .*/etc/paludis(-.*)?/suggestions(\.conf.d/.*.conf|\.conf) 
 
 # Highlighters
 ## exheres-0 Repository metadata files
-addhl -group / group exheres-0-metadata
-addhl -group /exheres-0-metadata regex ^#.*?$ 0:comment
-addhl -group /exheres-0-metadata regex ^(?:[\s\t]+)?(\*)?(\S+)(?:[\s\t]+)?=(?:[\s\t]+)?(.+?)?$ 1:type 2:attribute 3:string
-addhl -group /exheres-0-metadata regex ^(?:[\s\t]+)?[\S]+[\s\t]+=[\s\t]+\[.+?[\s\t]+\] 0:string
-addhl -group /exheres-0-metadata regex ^(?:[\s\t]+)?(\S+)\s\[\[$ 0:type
-addhl -group /exheres-0-metadata regex ^(?:[\s\t]+)?\]\]$ 0:type
+add-highlighter -group / group exheres-0-metadata
+add-highlighter -group /exheres-0-metadata regex ^#.*?$ 0:comment
+add-highlighter -group /exheres-0-metadata regex ^(?:[\s\t]+)?(\*)?(\S+)(?:[\s\t]+)?=(?:[\s\t]+)?(.+?)?$ 1:type 2:attribute 3:string
+add-highlighter -group /exheres-0-metadata regex ^(?:[\s\t]+)?[\S]+[\s\t]+=[\s\t]+\[.+?[\s\t]+\] 0:string
+add-highlighter -group /exheres-0-metadata regex ^(?:[\s\t]+)?(\S+)\s\[\[$ 0:type
+add-highlighter -group /exheres-0-metadata regex ^(?:[\s\t]+)?\]\]$ 0:type
 
-hook -group exheres-0-metadata-highlight global WinSetOption filetype=exheres-0-metadata %{ addhl ref exheres-0-metadata }
-hook -group exheres-0-metadata-highlight global WinSetOption filetype=(?!exheres-0-metadata).* %{ rmhl exheres-0-metadata }
+hook -group exheres-0-metadata-highlight global WinSetOption filetype=exheres-0-metadata %{ add-highlighter ref exheres-0-metadata }
+hook -group exheres-0-metadata-highlight global WinSetOption filetype=(?!exheres-0-metadata).* %{ remove-highlighter exheres-0-metadata }
 
 ## exheres-0 options descriptions
-addhl -group / group exheres-0-options-descriptions
-addhl -group /exheres-0-options-descriptions regex ^#.*?$ 0:comment
-addhl -group /exheres-0-options-descriptions regex ^(?:[\s\t]+)?[\S]+[\s\t]+-[\s\t]+\[.+?[\s\t]+\] 0:string
-addhl -group /exheres-0-options-descriptions regex ^(?:[\s\t]+)?(\S+)\s\[\[$ 0:type
-addhl -group /exheres-0-options-descriptions regex ^(?:[\s\t]+)?\]\]$ 0:type
+add-highlighter -group / group exheres-0-options-descriptions
+add-highlighter -group /exheres-0-options-descriptions regex ^#.*?$ 0:comment
+add-highlighter -group /exheres-0-options-descriptions regex ^(?:[\s\t]+)?[\S]+[\s\t]+-[\s\t]+\[.+?[\s\t]+\] 0:string
+add-highlighter -group /exheres-0-options-descriptions regex ^(?:[\s\t]+)?(\S+)\s\[\[$ 0:type
+add-highlighter -group /exheres-0-options-descriptions regex ^(?:[\s\t]+)?\]\]$ 0:type
 
-hook -group exheres-0-options-descriptions-highlight global WinSetOption filetype=exheres-0-options-descriptions %{ addhl ref exheres-0-options-descriptions }
-hook -group exheres-0-options-descriptions-highlight global WinSetOption filetype=(?!exheres-0-options-descriptions).* %{ rmhl exheres-0-options-descriptions }
+hook -group exheres-0-options-descriptions-highlight global WinSetOption filetype=exheres-0-options-descriptions %{ add-highlighter ref exheres-0-options-descriptions }
+hook -group exheres-0-options-descriptions-highlight global WinSetOption filetype=(?!exheres-0-options-descriptions).* %{ remove-highlighter exheres-0-options-descriptions }
 
 ## metadata/licence_groups.conf
-addhl -group / group exheres-0-licence-groups
-addhl -group /exheres-0-licence-groups regex [\s\t]+(\S+(?:[\s\t]+))*$ 0:attribute
-addhl -group /exheres-0-licence-groups regex ^(\S+) 0:type
-addhl -group /exheres-0-licence-groups regex ^#.*?$ 0:comment
+add-highlighter -group / group exheres-0-licence-groups
+add-highlighter -group /exheres-0-licence-groups regex [\s\t]+(\S+(?:[\s\t]+))*$ 0:attribute
+add-highlighter -group /exheres-0-licence-groups regex ^(\S+) 0:type
+add-highlighter -group /exheres-0-licence-groups regex ^#.*?$ 0:comment
 
-hook -group exheres-0-licence-groups-highlight global WinSetOption filetype=exheres-0-licence-groups %{ addhl ref exheres-0-licence-groups }
-hook -group exheres-0-licence-groups-highlight global WinSetOption filetype=(?!exheres-0-licence-groups).* %{ rmhl exheres-0-licence-groups }
+hook -group exheres-0-licence-groups-highlight global WinSetOption filetype=exheres-0-licence-groups %{ add-highlighter ref exheres-0-licence-groups }
+hook -group exheres-0-licence-groups-highlight global WinSetOption filetype=(?!exheres-0-licence-groups).* %{ remove-highlighter exheres-0-licence-groups }
 
 ## Paludis configurations
 ### options.conf
-addhl -group / group paludis-options-conf
-addhl -group /paludis-options-conf regex [\s\t]+(\S+(?:[\s\t]+))*$ 0:attribute
-addhl -group /paludis-options-conf regex (?::)(?:[\s\t]+)(.*?$) 1:attribute
-addhl -group /paludis-options-conf regex [\s\t]+(\S+=)(\S+) 1:attribute 2:value
-addhl -group /paludis-options-conf regex [\s\t](\S+:) 0:keyword
-addhl -group /paludis-options-conf regex [\s\t](-\S+)(.*?) 1:red
-addhl -group /paludis-options-conf regex ^(\S+/\S+) 0:type
-addhl -group /paludis-options-conf regex ^#.*?$ 0:comment
+add-highlighter -group / group paludis-options-conf
+add-highlighter -group /paludis-options-conf regex [\s\t]+(\S+(?:[\s\t]+))*$ 0:attribute
+add-highlighter -group /paludis-options-conf regex (?::)(?:[\s\t]+)(.*?$) 1:attribute
+add-highlighter -group /paludis-options-conf regex [\s\t]+(\S+=)(\S+) 1:attribute 2:value
+add-highlighter -group /paludis-options-conf regex [\s\t](\S+:) 0:keyword
+add-highlighter -group /paludis-options-conf regex [\s\t](-\S+)(.*?) 1:red
+add-highlighter -group /paludis-options-conf regex ^(\S+/\S+) 0:type
+add-highlighter -group /paludis-options-conf regex ^#.*?$ 0:comment
 
-hook -group paludis-options-conf-highlight global WinSetOption filetype=paludis-options-conf %{ addhl ref paludis-options-conf }
-hook -group paludis-options-conf-highlight global WinSetOption filetype=(?!paludis-options-conf).* %{ rmhl paludis-options-conf }
+hook -group paludis-options-conf-highlight global WinSetOption filetype=paludis-options-conf %{ add-highlighter ref paludis-options-conf }
+hook -group paludis-options-conf-highlight global WinSetOption filetype=(?!paludis-options-conf).* %{ remove-highlighter paludis-options-conf }
 
 ## general.conf, repository.template
-addhl -group / group paludis-key-value-conf
-addhl -group /paludis-key-value-conf regex ^[\s\t]?(\S+)[\s\t+]=[\s\t+](.*?)$ 1:attribute 2:value
-addhl -group /paludis-key-value-conf regex ^#.*?$ 0:comment
+add-highlighter -group / group paludis-key-value-conf
+add-highlighter -group /paludis-key-value-conf regex ^[\s\t]?(\S+)[\s\t+]=[\s\t+](.*?)$ 1:attribute 2:value
+add-highlighter -group /paludis-key-value-conf regex ^#.*?$ 0:comment
 
-hook -group paludis-key-value-conf-highlight global WinSetOption filetype=paludis-key-value-conf %{ addhl ref paludis-key-value-conf }
-hook -group paludis-key-value-conf-highlight global WinSetOption filetype=(?!paludis-key-value-conf).* %{ rmhl paludis-key-value-conf }
+hook -group paludis-key-value-conf-highlight global WinSetOption filetype=paludis-key-value-conf %{ add-highlighter ref paludis-key-value-conf }
+hook -group paludis-key-value-conf-highlight global WinSetOption filetype=(?!paludis-key-value-conf).* %{ remove-highlighter paludis-key-value-conf }
 
 ## mirrors.conf
-addhl -group / group paludis-mirrors-conf
-addhl -group /paludis-mirrors-conf regex ^[\s\t+]?(\S+)[\s\t+](.*?)$ 1:type 2:value
-addhl -group /paludis-mirrors-conf regex ^#.*?$ 0:comment
+add-highlighter -group / group paludis-mirrors-conf
+add-highlighter -group /paludis-mirrors-conf regex ^[\s\t+]?(\S+)[\s\t+](.*?)$ 1:type 2:value
+add-highlighter -group /paludis-mirrors-conf regex ^#.*?$ 0:comment
 
-hook -group paludis-mirrors-conf-highlight global WinSetOption filetype=paludis-mirrors-conf %{ addhl ref paludis-mirrors-conf }
-hook -group paludis-mirrors-conf-highlight global WinSetOption filetype=(?!paludis-mirrors-conf).* %{ rmhl paludis-mirrors-conf }
+hook -group paludis-mirrors-conf-highlight global WinSetOption filetype=paludis-mirrors-conf %{ add-highlighter ref paludis-mirrors-conf }
+hook -group paludis-mirrors-conf-highlight global WinSetOption filetype=(?!paludis-mirrors-conf).* %{ remove-highlighter paludis-mirrors-conf }
 
 ## package_(unmask|mask).conf, platforms.conf
-addhl -group / group paludis-specs-conf
-addhl -group /paludis-specs-conf regex [\s\t]+(\S+(?:[\s\t]+))*$ 0:attribute
-addhl -group /paludis-specs-conf regex ^(\S+/\S+) 0:type
-addhl -group /paludis-specs-conf regex ^#.*?$ 0:comment
+add-highlighter -group / group paludis-specs-conf
+add-highlighter -group /paludis-specs-conf regex [\s\t]+(\S+(?:[\s\t]+))*$ 0:attribute
+add-highlighter -group /paludis-specs-conf regex ^(\S+/\S+) 0:type
+add-highlighter -group /paludis-specs-conf regex ^#.*?$ 0:comment
 
-hook -group paludis-specs-conf-highlight global WinSetOption filetype=paludis-specs-conf %{ addhl ref paludis-specs-conf }
-hook -group paludis-specs-conf-highlight global WinSetOption filetype=(?!paludis-specs-conf).* %{ rmhl paludis-specs-conf }
+hook -group paludis-specs-conf-highlight global WinSetOption filetype=paludis-specs-conf %{ add-highlighter ref paludis-specs-conf }
+hook -group paludis-specs-conf-highlight global WinSetOption filetype=(?!paludis-specs-conf).* %{ remove-highlighter paludis-specs-conf }
 
 ## News items (GLEP42)
-addhl -group / group glep42
-addhl -group /glep42 regex ^(Title|Author|Translator|Content-Type|Posted|Revision|News-Item-Format|Display-If-Installed|Display-If-Keyword|Display-If-Profile):([^\n]*(?:\n\h+[^\n]+)*)$ 1:keyword 2:attribute
-addhl -group /glep42 regex <[^@>]+@.*?> 0:string
-addhl -group /glep42 regex ^>.*?$ 0:comment
+add-highlighter -group / group glep42
+add-highlighter -group /glep42 regex ^(Title|Author|Translator|Content-Type|Posted|Revision|News-Item-Format|Display-If-Installed|Display-If-Keyword|Display-If-Profile):([^\n]*(?:\n\h+[^\n]+)*)$ 1:keyword 2:attribute
+add-highlighter -group /glep42 regex <[^@>]+@.*?> 0:string
+add-highlighter -group /glep42 regex ^>.*?$ 0:comment
 
-hook -group glep42-highlight global WinSetOption filetype=glep42 %{ addhl ref glep42 }
-hook -group glep42-highlight global WinSetOption filetype=(?!glep42).* %{ rmhl glep42 }
+hook -group glep42-highlight global WinSetOption filetype=glep42 %{ add-highlighter ref glep42 }
+hook -group glep42-highlight global WinSetOption filetype=(?!glep42).* %{ remove-highlighter glep42 }

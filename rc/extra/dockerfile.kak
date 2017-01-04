@@ -13,30 +13,30 @@ hook global BufCreate .*Dockerfile %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions dockerfile                                                                                             \
+add-highlighter -group / regions dockerfile                                                                                             \
     instruction '^(?i)(ONBUILD\h+)?(FROM|MAINTAINER|RUN|CMD|LABEL|EXPOSE|ENV|ADD|COPY|ENTRYPOINT|VOLUME|USER|WORKDIR)' '$' '' \
     comment     '#'                                                                                                    '$' ''
 
-addhl -group /dockerfile/instruction regex '^(?i)(ONBUILD\h+)?(FROM|MAINTAINER|RUN|CMD|LABEL|EXPOSE|ENV|ADD|COPY|ENTRYPOINT|VOLUME|USER|WORKDIR)' 0:keyword
+add-highlighter -group /dockerfile/instruction regex '^(?i)(ONBUILD\h+)?(FROM|MAINTAINER|RUN|CMD|LABEL|EXPOSE|ENV|ADD|COPY|ENTRYPOINT|VOLUME|USER|WORKDIR)' 0:keyword
 
-addhl -group /dockerfile/instruction regions regions                           \
+add-highlighter -group /dockerfile/instruction regions regions                           \
     plain '^(?i)(ONBUILD\h+)?(LABEL|ENV)'                               '$' '' \
     json  '^(?i)(ONBUILD\h+)?(RUN|CMD|ADD|COPY|ENTRYPOINT|VOLUME)\h+\[' \]  \[ \
     sh    '^(?i)(ONBUILD\h+)?(RUN|CMD|ENTRYPOINT)\h+([A-Z/a-z])+'       '$' ''
 
-addhl -group /dockerfile/instruction/regions/plain regions regions \
+add-highlighter -group /dockerfile/instruction/regions/plain regions regions \
     string '"' '(?<!\\)(\\\\)*"' ''                                \
     string "'" "'"               ''
 
-addhl -group /dockerfile/instruction/regions/plain/regions/string fill string
+add-highlighter -group /dockerfile/instruction/regions/plain/regions/string fill string
 
-addhl -group /dockerfile/instruction/regions/json ref json
-addhl -group /dockerfile/instruction/regions/sh   ref sh
+add-highlighter -group /dockerfile/instruction/regions/json ref json
+add-highlighter -group /dockerfile/instruction/regions/sh   ref sh
 
-addhl -group /dockerfile/comment fill comment
+add-highlighter -group /dockerfile/comment fill comment
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group dockerfile-highlight global WinSetOption filetype=dockerfile %{ addhl ref dockerfile }
-hook -group dockerfile-highlight global WinSetOption filetype=(?!dockerfile).* %{ rmhl dockerfile }
+hook -group dockerfile-highlight global WinSetOption filetype=dockerfile %{ add-highlighter ref dockerfile }
+hook -group dockerfile-highlight global WinSetOption filetype=(?!dockerfile).* %{ remove-highlighter dockerfile }

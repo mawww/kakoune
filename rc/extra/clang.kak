@@ -25,7 +25,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                   set buffer make_current_error_line 0
                   hook -group fifo buffer BufCloseFifo .* %{
                       nop %sh{ rm -r ${dir} }
-                      rmhooks buffer fifo
+                      remove-hooks buffer fifo
                   }
               }"
         # this runs in a detached shell, asynchronously, so that kakoune does
@@ -126,7 +126,7 @@ def clang-enable-autocomplete -docstring "Enable automatic clang completion" %{
 
 def clang-disable-autocomplete -docstring "Disable automatic clang completion" %{
     set window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed -e 's/option=clang_completions://g' }
-    rmhooks window clang-autocomplete
+    remove-hooks window clang-autocomplete
     unalias window complete clang-complete
 }
 
@@ -140,14 +140,14 @@ def -hidden clang-show-error-info %{ %sh{
 def clang-enable-diagnostics -docstring %{Activate automatic error reporting and diagnostics
 Information about the analysis are showned after the buffer has been parsed with the clang-parse function} \
 %{
-    addhl flag_lines default clang_flags
+    add-highlighter flag_lines default clang_flags
     hook window -group clang-diagnostics NormalIdle .* %{ clang-show-error-info }
     hook window -group clang-diagnostics WinSetOption ^clang_errors=.* %{ info; clang-show-error-info }
 }
 
 def clang-disable-diagnostics -docstring "Disable automatic error reporting and diagnostics" %{
-    rmhl hlflags_clang_flags
-    rmhooks window clang-diagnostics
+    remove-highlighter hlflags_clang_flags
+    remove-hooks window clang-diagnostics
 }
 
 def clang-diagnostics-next -docstring "Jump to the next line that contains an error" %{ %sh{

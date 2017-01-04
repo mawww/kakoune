@@ -13,11 +13,11 @@ hook global BufCreate .*[.](cljs?) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / group clojure
+add-highlighter -group / group clojure
 
-addhl -group /clojure ref lisp
+add-highlighter -group /clojure ref lisp
 
-addhl -group /clojure regex \b(clojure.core/['/\w]+)\b 0:keyword
+add-highlighter -group /clojure regex \b(clojure.core/['/\w]+)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -27,16 +27,16 @@ def -hidden _clojure_indent_on_new_line       _lisp_indent_on_new_line
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-hook -group clojure-highlight global WinSetOption filetype=clojure %{ addhl ref clojure }
+hook -group clojure-highlight global WinSetOption filetype=clojure %{ add-highlighter ref clojure }
 
 hook global WinSetOption filetype=clojure %[
     hook window InsertEnd  .* -group clojure-hooks  _clojure_filter_around_selections
     hook window InsertChar \n -group clojure-indent _clojure_indent_on_new_line
 ]
 
-hook -group clojure-highlight global WinSetOption filetype=(?!clojure).* %{ rmhl clojure }
+hook -group clojure-highlight global WinSetOption filetype=(?!clojure).* %{ remove-highlighter clojure }
 
 hook global WinSetOption filetype=(?!clojure).* %{
-    rmhooks window clojure-indent
-    rmhooks window clojure-hooks
+    remove-hooks window clojure-indent
+    remove-hooks window clojure-hooks
 }
