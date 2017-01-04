@@ -28,7 +28,8 @@ enum class InfoStyle
     Inline,
     InlineAbove,
     InlineBelow,
-    MenuDoc
+    MenuDoc,
+    Modal
 };
 
 enum class EventMode;

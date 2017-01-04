@@ -287,7 +287,7 @@ void Client::close_buffer_reload_dialog()
 {
     kak_assert(m_buffer_reload_dialog_opened);
     m_buffer_reload_dialog_opened = false;
-    info_hide();
+    info_hide(true);
     m_input_handler.reset_normal_mode();
 }
 
@@ -311,7 +311,7 @@ void Client::check_if_buffer_needs_reloading()
         info_show(format("reload '{}' ?", bufname),
                   format("'{}' was modified externally\n"
                          "press <ret> or y to reload, <esc> or n to keep",
-                         bufname), {}, InfoStyle::Prompt);
+                         bufname), {}, InfoStyle::Modal);
 
         m_buffer_reload_dialog_opened = true;
         m_input_handler.on_next_key(KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
@@ -360,13 +360,19 @@ void Client::menu_hide()
 
 void Client::info_show(String title, String content, BufferCoord anchor, InfoStyle style)
 {
+    if (m_info.style == InfoStyle::Modal) // We already have a modal info opened, do not touch it.
+        return;
+
     m_info = Info{ std::move(title), std::move(content), anchor, {}, style };
     m_ui_pending |= InfoShow;
     m_ui_pending &= ~InfoHide;
 }
 
-void Client::info_hide()
+void Client::info_hide(bool even_modal)
 {
+    if (not even_modal and m_info.style == InfoStyle::Modal)
+        return;
+
     m_info = Info{};
     m_ui_pending |= InfoHide;
     m_ui_pending &= ~InfoShow;

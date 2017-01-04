@@ -893,6 +893,9 @@ void NCursesUI::info_show(StringView title, StringView content,
         anchor = DisplayCoord{m_status_on_top ? 0 : m_dimensions.line,
                            m_dimensions.column-1};
     }
+    else if (style == InfoStyle::Modal)
+        info_box = make_info_box(m_info.title, m_info.content,
+                                 m_dimensions.column, {});
     else
     {
         if (m_status_on_top)
@@ -913,6 +916,11 @@ void NCursesUI::info_show(StringView title, StringView content,
     const Rect rect = {m_status_on_top ? 1_line : 0_line, m_dimensions};
     if (style == InfoStyle::MenuDoc and m_menu)
         pos = m_menu.pos + DisplayCoord{0_line, m_menu.size.column};
+    else if (style == InfoStyle::Modal)
+    {
+        auto half = [](const DisplayCoord& c) { return DisplayCoord{c.line / 2, c.column / 2}; };
+        pos = rect.pos + half(rect.size) - half(size);
+    }
     else
         pos = compute_pos(anchor, size, rect, m_menu, style == InfoStyle::InlineAbove);
 

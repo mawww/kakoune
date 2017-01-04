@@ -137,6 +137,7 @@ String to_json(InfoStyle style)
         case InfoStyle::InlineAbove: return R"("inlineAbove")";
         case InfoStyle::InlineBelow: return R"("inlineBelow")";
         case InfoStyle::MenuDoc: return R"("menuDoc")";
+        case InfoStyle::Modal: return R"("modal")";
     }
     return "";
 }
