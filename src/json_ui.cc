@@ -73,7 +73,7 @@ String to_json(Color color)
 
 String to_json(Attribute attributes)
 {
-    struct { Attribute attr; StringView name; }
+    struct Attr { Attribute attr; StringView name; }
     attrs[] { 
         { Attribute::Exclusive, "exclusive" },
         { Attribute::Underline, "underline" },
@@ -84,17 +84,10 @@ String to_json(Attribute attributes)
         { Attribute::Italic, "italic" },
     };
 
-    String res;
-    for (auto& attr : attrs)
-    {
-        if (not (attributes & attr.attr))
-            continue;
-
-        if (not res.empty())
-            res += ", ";
-        res += to_json(attr.name);
-    }
-    return "[" + res + "]";
+    return "[" + join(attrs |
+                      filter([=](const Attr& a) { return attributes & a.attr; }) |
+                      transform([](const Attr& a) { return to_json(a.name); }),
+                      ',', false) + "]";
 }
 
 String to_json(Face face)
