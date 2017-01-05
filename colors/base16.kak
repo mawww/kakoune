@@ -23,7 +23,7 @@
         face identifier ${magenta_dark}
         face string ${green_dark}
         face keyword ${purple_dark}+b
-        face operator ${grey_light}
+        face operator ${cyan_light}
         face attribute ${orange_dark}
         face comment ${grey_dark}
         face meta ${orange_light}
