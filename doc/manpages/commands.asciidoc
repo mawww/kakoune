@@ -55,10 +55,6 @@ command *q!* has to be used).
 *source* <filename>::
 	execute commands in <filename>
 
-*runtime* <filename>::
-	execute commands in <filename>, <filename> is relative to kak
-	executable path
-
 *colorscheme* <name>::
 	load named colorscheme
 
