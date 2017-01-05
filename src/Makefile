@@ -38,9 +38,8 @@ os := $(shell uname)
 
 ifeq ($(os),Darwin)
     LIBS += -lncurses -lboost_regex-mt
-    brewdir := $(shell brew --prefix)
-    CPPFLAGS += -I$(brewdir)/opt/ncurses/include -I$(brewdir)/opt/boost/include
-    LDFLAGS += -L$(brewdir)/opt/ncurses/lib -L$(brewdir)/opt/boost/lib
+    CPPFLAGS += -I$(PREFIX)/opt/ncurses/include -I$(PREFIX)/opt/boost/include
+    LDFLAGS += -L$(PREFIX)/opt/ncurses/lib -L$(PREFIX)/opt/boost/lib
 else ifeq ($(os),FreeBSD)
     LIBS += -ltinfow -lncursesw -lboost_regex
     CPPFLAGS += -I/usr/local/include
