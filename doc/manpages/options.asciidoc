@@ -110,7 +110,7 @@ Builtin options
 		provides completion based on local filesystem
 
 	*option=<opt-name>*:::
-		where *opt-name* is a 'completions' option.
+		where *opt-name* is a 'completions' option
 
 *static_words* 'str-list'::
 	list of words that are always added to completion candidates
@@ -118,7 +118,7 @@ Builtin options
 
 *completions_extra_word_chars* 'str'::
 	a string containing all additional character that should be considered
-	as word character for the purpose of insert mode completion.
+	as word character for the purpose of insert mode completion
 
 *autoreload* 'enum(yes|no|ask)'::
 	auto reload the buffers when an external modification is detected
@@ -128,16 +128,20 @@ Builtin options
 
 *idle_timeout* 'int'::
 	timeout, in milliseconds, with no user input that will trigger the
-	*InsertIdle* and *NormalIdle* hooks. 
+	*InsertIdle* and *NormalIdle* hooks
 
 *fs_checkout_timeout* 'int'::
 	timeout, in milliseconds, between checks in normal mode of modifications
-	of the file associated with the current buffer on the filesystem.
+	of the file associated with the current buffer on the filesystem
 
 *modelinefmt* 'string'::
 	A format string used to generate the mode line, that string is first
 	expanded as a command line would be (expanding '%...{...}' strings),
 	then markup tags are applied (c.f. the 'Expansions' documentation page)
+
+*colorscheme* 'string'::
+	Name of the colorscheme that was passed to the 'colorscheme' command,
+	without any '.kak' extension
 
 *ui_options*::
 	colon separated list of key=value pairs that are forwarded to the user

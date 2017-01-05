@@ -938,6 +938,9 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
  * `modelinefmt` _string_: A format string used to generate the mode line, that
    string is first expanded as a command line would be (expanding `%...{...}`
    strings), then markup tags are applied (see <<Markup strings>>).
+ * `colorscheme` _string_:
+   Name of the colorscheme that was passed to the 'colorscheme' command,
+   without any '.kak' extension
  * `ui_options`: colon separated list of key=value pairs that are forwarded to
    the user interface implementation. The NCurses UI support the following options:
    - `ncurses_set_title`: if `yes` or `true`, the terminal emulator title will
