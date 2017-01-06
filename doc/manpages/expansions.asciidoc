@@ -84,6 +84,9 @@ informations about Kakoune's state:
 	name of the current session
 *kak_client*::
 	name of current client
+*kak_source*::
+	path of the file currently getting executed (through the source
+	command)
 *kak_cursor_line*::
 	line of the end of the main selection
 *kak_cursor_column*::

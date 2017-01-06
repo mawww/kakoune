@@ -1180,10 +1180,12 @@ const CommandDesc source_cmd = {
     filename_completer,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        String file_content = read_file(parse_filename(parser[0]), true);
+        String path = real_path(parse_filename(parser[0]));
+        String file_content = read_file(path, true);
         try
         {
-            CommandManager::instance().execute(file_content, context);
+            CommandManager::instance().execute(file_content, context,
+                                               {{}, {{"source", path}}});
         }
         catch (Kakoune::runtime_error& err)
         {
