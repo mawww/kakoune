@@ -11,6 +11,7 @@ hook global BufCreate .*[.](js) %{
 addhl -group / regions -default code javascript \
     double_string '"'  (?<!\\)(\\\\)*"        '' \
     single_string "'"  (?<!\\)(\\\\)*'        '' \
+    literal       "`"  (?<!\\)(\\\\)*`        '' \
     comment       //   '$'                    '' \
     comment       /\*  \*/                    ''
 
@@ -20,6 +21,8 @@ addhl -group / regions -default code javascript \
 addhl -group /javascript/double_string fill string
 addhl -group /javascript/single_string fill string
 addhl -group /javascript/comment       fill comment
+addhl -group /javascript/literal       fill string
+addhl -group /javascript/literal       regex \${.*?} 0:value
 
 addhl -group /javascript/code regex \$\w* 0:identifier
 addhl -group /javascript/code regex \b(document|false|null|parent|self|this|true|undefined|window)\b 0:value
