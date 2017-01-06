@@ -93,6 +93,8 @@ hook global WinSetOption filetype=go %{
     hook window InsertChar \n -group go-indent _go-indent-on-new-line
     hook window InsertChar \{ -group go-indent _go-indent-on-opening-curly-brace
     hook window InsertChar \} -group go-indent _go-indent-on-closing-curly-brace
+
+    set buffer indentwidth 0
 }
 
 hook -group go-highlight global WinSetOption filetype=(?!go).* %{ rmhl go }
