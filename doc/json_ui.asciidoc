@@ -9,11 +9,11 @@ json-rpc requests on stdin.  Errors will be reported on stderr (not in
 json format).
 
 Kakoune requests are always using positional parameters, never named, and
-Kakoune wont be able to parse named parameters in requests.
+Kakoune won't be able to parse named parameters in requests.
 
 Here are the data structures used:
 
-* Color: a string, either a named color, or #rrggbb
+* Color: a string, either a named color, or #rrggbb, or 'default'
 * Attribute: one of {exclusive, underline, reverse, blink, bold, dim, italic}
 * Face { Color fg; Color bg; Array<Attribute> attributes; }
 * Atom { Face face; String contents; }
@@ -23,9 +23,11 @@ Here are the data structures used:
 Here are the requests that can be written by the json ui on stdout:
 
 * draw(Array<Line> lines, Face default_face, Face padding_face)
+  padding_face is the face of the padding characters '~' in the
+  terminal UI.
 * draw_status(Line status_line, Line mode_line,
               Face default_face)
-* menu_show(Array<Line> items, Coord anchor, Face fg, Face bg,
+* menu_show(Array<Line> items, Coord anchor, Face selected_item_face, Face menu_face,
             String style)
   style can be:
   - prompt: display the menu as a prompt menu (anchor is ignored)
