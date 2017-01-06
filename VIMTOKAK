@@ -66,3 +66,7 @@ alphabetic chars had to change.
 to emulate :g or :v, use % to select the whole buffer, alt-s to get
 one selection by line, and then alt-k or alt-K in order to keep only the
 selections matching (or not matching) the entered regex.
+
+repeat last find/til:
+ * vim: ;
+ * kak: <alt-.>
