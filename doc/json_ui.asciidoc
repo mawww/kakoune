@@ -41,6 +41,8 @@ Here are the requests that can be written by the json ui on stdout:
   - inlineAbove: display the info next to (above) the anchor coordinate
   - inlineBelow: display the info next to (below) the anchor coordinate
   - menuDoc: display the info next to the menu, as a documentation for it
+  - modal: display the info in a way that shows Kakoune is waiting for a
+    special action related to it.
 * info_hide()
 
 The requests that the json ui can interpret on stdin are:
