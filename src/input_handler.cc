@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "input_handler.hh"
 
 #include "buffer_manager.hh"
@@ -21,7 +23,7 @@ class InputMode : public RefCountable
 {
 public:
     InputMode(InputHandler& input_handler) : m_input_handler(input_handler) {}
-    virtual ~InputMode() {}
+    ~InputMode() override = default;
     InputMode(const InputMode&) = delete;
     InputMode& operator=(const InputMode&) = delete;
 
@@ -282,13 +284,13 @@ public:
         AtomList atoms = { { to_string(context().selections().size()) + " sel", get_face("StatusLineInfo") } };
         if (m_params.count != 0)
         {
-            atoms.push_back({ " param=", get_face("StatusLineInfo") });
-            atoms.push_back({ to_string(m_params.count), get_face("StatusLineValue") });
+            atoms.emplace_back(" param=", get_face("StatusLineInfo"));
+            atoms.emplace_back(to_string(m_params.count), get_face("StatusLineValue"));
         }
         if (m_params.reg)
         {
-            atoms.push_back({ " reg=", get_face("StatusLineInfo") });
-            atoms.push_back({ StringView(m_params.reg).str(), get_face("StatusLineValue") });
+            atoms.emplace_back(" reg=", get_face("StatusLineInfo"));
+            atoms.emplace_back(StringView(m_params.reg).str(), get_face("StatusLineValue"));
         }
         return atoms;
     }
@@ -513,7 +515,7 @@ public:
     Menu(InputHandler& input_handler, Vector<DisplayLine> choices,
          MenuCallback callback)
         : InputMode(input_handler),
-          m_callback(callback), m_choices(choices.begin(), choices.end()),
+          m_callback(std::move(callback)), m_choices(choices.begin(), choices.end()),
           m_selected(m_choices.begin())
     {
         if (not context().has_client())
@@ -677,7 +679,7 @@ public:
            String initstr, Face face, PromptFlags flags,
            Completer completer, PromptCallback callback)
         : InputMode(input_handler), m_prompt(prompt.str()), m_prompt_face(face),
-          m_flags(flags), m_completer(completer), m_callback(callback),
+          m_flags(flags), m_completer(std::move(completer)), m_callback(std::move(callback)),
           m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()}
     {
         m_history_it = ms_history[m_prompt].end();
@@ -1009,7 +1011,7 @@ public:
                                      get_face("Error") });
     }
 
-    ~Insert()
+    ~Insert() override
     {
         auto& selections = context().selections();
         for (auto& sel : selections)
@@ -1057,7 +1059,7 @@ public:
                 if (sel.cursor() == BufferCoord{0,0})
                     continue;
                 auto pos = sel.cursor();
-                sels.push_back({ buffer.char_prev(pos) });
+                sels.emplace_back(buffer.char_prev(pos));
             }
             if (not sels.empty())
                 SelectionList{buffer, std::move(sels)}.erase();
@@ -1066,7 +1068,7 @@ public:
         {
             Vector<Selection> sels;
             for (auto& sel : context().selections())
-                sels.push_back({ sel.cursor() });
+                sels.emplace_back(sel.cursor());
             SelectionList{buffer, std::move(sels)}.erase();
         }
         else if (key == Key::Left)
@@ -1315,8 +1317,7 @@ InputHandler::InputHandler(SelectionList selections, Context::Flags flags, Strin
     current_mode().on_enabled();
 }
 
-InputHandler::~InputHandler()
-{}
+InputHandler::~InputHandler() = default;
 
 void InputHandler::push_mode(InputMode* new_mode)
 {

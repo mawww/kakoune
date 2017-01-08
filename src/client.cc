@@ -12,8 +12,10 @@
 #include "user_interface.hh"
 #include "window.hh"
 
-#include <signal.h>
+#include <csignal>
 #include <unistd.h>
+
+#include <utility>
 
 namespace Kakoune
 {
@@ -26,7 +28,7 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
     : m_ui{std::move(ui)}, m_window{std::move(window)},
       m_input_handler{std::move(selections), Context::Flags::None,
                       std::move(name)},
-      m_env_vars(env_vars)
+      m_env_vars(std::move(env_vars))
 {
     m_window->set_client(this);
 

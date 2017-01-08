@@ -1,8 +1,8 @@
 #ifndef unicode_hh_INCLUDED
 #define unicode_hh_INCLUDED
 
-#include <wctype.h>
-#include <wchar.h>
+#include <cwctype>
+#include <cwchar>
 #include <locale>
 
 #include "units.hh"

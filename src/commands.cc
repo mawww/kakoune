@@ -28,6 +28,7 @@
 #include "window.hh"
 
 #include <functional>
+#include <utility>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -121,8 +122,8 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
 {
     struct RankedMatchAndBuffer : RankedMatch
     {
-        RankedMatchAndBuffer(const RankedMatch& m, const Buffer* b)
-            : RankedMatch{m}, buffer{b} {}
+        RankedMatchAndBuffer(RankedMatch  m, const Buffer* b)
+            : RankedMatch{std::move(m)}, buffer{b} {}
 
         using RankedMatch::operator==;
         using RankedMatch::operator<;
@@ -976,7 +977,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
                                                               shell_context).first;
                 candidates.clear();
                 for (auto c : output | split<StringView>('\n'))
-                    candidates.push_back({c.str(), used_letters(c)});
+                    candidates.emplace_back(c.str(), used_letters(c));
                 token = token_to_complete;
             }
 
@@ -1330,7 +1331,7 @@ const CommandDesc declare_option_cmd = {
         if (parser[0] == "int")
             opt = &reg.declare_option<int>(parser[1], docstring, 0, flags);
         else if (parser[0] == "bool")
-            opt = &reg.declare_option<bool>(parser[1], docstring, 0, flags);
+            opt = &reg.declare_option<bool>(parser[1], docstring, false, flags);
         else if (parser[0] == "str")
             opt = &reg.declare_option<String>(parser[1], docstring, "", flags);
         else if (parser[0] == "regex")

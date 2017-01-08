@@ -71,7 +71,7 @@ protected:
 class OptionManagerWatcher
 {
 public:
-    virtual ~OptionManagerWatcher() {}
+    virtual ~OptionManagerWatcher() = default;
 
     virtual void on_option_changed(const Option& option) = 0;
 };
@@ -80,7 +80,7 @@ class OptionManager : private OptionManagerWatcher
 {
 public:
     OptionManager(OptionManager& parent);
-    ~OptionManager();
+    ~OptionManager() override;
 
     Option& operator[] (StringView name);
     const Option& operator[] (StringView name) const;

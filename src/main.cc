@@ -384,7 +384,7 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
            });
         }
 
-        ~LocalUI()
+        ~LocalUI() override
         {
             set_signal_handler(SIGHUP, m_old_sighup);
             set_signal_handler(SIGTSTP, m_old_sigtstp);
@@ -733,7 +733,7 @@ int main(int argc, char* argv[])
 
     Vector<String> params;
     for (size_t i = 1; i < argc; ++i)
-        params.push_back(argv[i]);
+        params.emplace_back(argv[i]);
 
     const ParameterDesc param_desc{
         SwitchMap{ { "c", { true,  "connect to given session" } },

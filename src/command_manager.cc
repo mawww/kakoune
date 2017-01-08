@@ -635,7 +635,7 @@ Completions CommandManager::complete(const Context& context,
         for (auto it = tokens.begin() + cmd_idx + 1; it != tokens.end(); ++it)
             params.push_back(it->content());
         if (tok_idx == tokens.size())
-            params.push_back("");
+            params.emplace_back("");
         Completions completions = offset_pos(command_it->second.completer(
             context, flags, params, tok_idx - cmd_idx - 1,
             cursor_pos_in_token), start);

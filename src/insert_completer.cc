@@ -14,6 +14,7 @@
 #include "user_interface.hh"
 
 #include <numeric>
+#include <utility>
 
 namespace Kakoune
 {
@@ -113,8 +114,8 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
 
     struct RankedMatchAndBuffer : RankedMatch
     {
-        RankedMatchAndBuffer(const RankedMatch& m, const Buffer* b)
-            : RankedMatch{m}, buffer{b} {}
+        RankedMatchAndBuffer(RankedMatch  m, const Buffer* b)
+            : RankedMatch{std::move(m)}, buffer{b} {}
 
         using RankedMatch::operator==;
         using RankedMatch::operator<;
@@ -400,11 +401,11 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
     }
 
     for (auto i = 0_byte; i < prefix_len; ++i)
-        keystrokes.push_back(Key::Backspace);
+        keystrokes.emplace_back(Key::Backspace);
     for (auto i = 0_byte; i < suffix_len; ++i)
-        keystrokes.push_back(Key::Delete);
+        keystrokes.emplace_back(Key::Delete);
     for (auto& c : candidate.completion)
-        keystrokes.push_back(c);
+        keystrokes.emplace_back(c);
 }
 
 void InsertCompleter::update()

@@ -44,7 +44,7 @@ Vector<StringView> AliasRegistry::aliases_for(StringView command) const
     for (auto& alias : m_aliases)
     {
         if (alias.value == command)
-            res.push_back(alias.key);
+            res.emplace_back(alias.key);
     }
 
     return res;

@@ -277,9 +277,9 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
             for (; change_it != forward_end; ++change_it)
             {
                 if (change_it->type == Buffer::Change::Insert)
-                    ranges.push_back({ change_it->begin, change_it->end });
+                    ranges.emplace_back(change_it->begin, change_it->end);
                 else
-                    ranges.push_back({ change_it->begin });
+                    ranges.emplace_back(change_it->begin);
                 changes_tracker.update(*change_it);
             }
         }
@@ -298,9 +298,9 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
                 change.end = changes_tracker.get_new_coord(change.end);
 
                 if (change.type == Buffer::Change::Insert)
-                    ranges.push_back({ change.begin, change.end });
+                    ranges.emplace_back(change.begin, change.end);
                 else
-                    ranges.push_back({ change.begin });
+                    ranges.emplace_back(change.begin);
                 changes_tracker.update(change);
             }
             change_it = backward_end;

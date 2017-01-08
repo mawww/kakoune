@@ -8,7 +8,7 @@ namespace Kakoune
 
 struct exception
 {
-    virtual ~exception() {}
+    virtual ~exception() = default;
     virtual StringView what() const;
 };
 

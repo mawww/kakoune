@@ -34,7 +34,7 @@ using HighlighterAndId = std::pair<String, std::unique_ptr<Highlighter>>;
 
 struct Highlighter
 {
-    virtual ~Highlighter() {}
+    virtual ~Highlighter() = default;
     virtual void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) = 0;
 
     virtual bool has_children() const { return false; }
@@ -48,7 +48,7 @@ template<typename Func>
 struct SimpleHighlighter : public Highlighter
 {
     SimpleHighlighter(Func func) : m_func(std::move(func)) {}
-    virtual void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) override
+    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) override
     {
         m_func(context, flags, display_buffer, range);
     }

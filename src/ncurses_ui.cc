@@ -13,7 +13,7 @@
 #include <ncurses.h>
 
 #include <fcntl.h>
-#include <signal.h>
+#include <csignal>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>

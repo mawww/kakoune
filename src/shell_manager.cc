@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 extern char **environ;
 
@@ -24,7 +24,7 @@ ShellManager::ShellManager()
 {
     // Get a guaranteed to be POSIX shell binary
     {
-        auto size = confstr(_CS_PATH, 0, 0);
+        auto size = confstr(_CS_PATH, nullptr, 0);
         String path; path.resize(size-1, 0);
         confstr(_CS_PATH, path.data(), size);
         for (auto dir : StringView{path} | split<StringView>(':'))

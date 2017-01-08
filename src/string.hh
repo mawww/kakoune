@@ -8,7 +8,7 @@
 #include "utf8.hh"
 #include "vector.hh"
 
-#include <string.h>
+#include <cstring>
 #include <climits>
 
 namespace Kakoune

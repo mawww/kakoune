@@ -8,12 +8,12 @@
 #include "string.hh"
 #include "unicode.hh"
 
-#include <errno.h>
+#include <cerrno>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <sys/select.h>
 
 #if defined(__FreeBSD__)
@@ -470,7 +470,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
         return candidates(matches, dirname);
     }
 
-    typedef decltype(stat::st_mtim) TimeSpec;
+    using TimeSpec = decltype(stat::st_mtim);
 
     struct CommandCache
     {

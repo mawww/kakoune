@@ -78,7 +78,7 @@ public:
     InsertCompleter(Context& context);
     InsertCompleter(const InsertCompleter&) = delete;
     InsertCompleter& operator=(const InsertCompleter&) = delete;
-    ~InsertCompleter();
+    ~InsertCompleter() override;
 
     void select(int offset, Vector<Key>& keystrokes);
     void update();

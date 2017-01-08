@@ -3,6 +3,8 @@
 
 #include "assert.hh"
 
+#include <utility>
+
 namespace Kakoune
 {
 

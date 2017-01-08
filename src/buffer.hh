@@ -10,7 +10,7 @@
 #include "value.hh"
 #include "vector.hh"
 
-#include <time.h>
+#include <ctime>
 
 namespace Kakoune
 {
@@ -118,7 +118,7 @@ public:
            timespec fs_timestamp = InvalidTime);
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
-    ~Buffer();
+    ~Buffer() override;
 
     Flags flags() const { return m_flags; }
     Flags& flags() { return m_flags; }

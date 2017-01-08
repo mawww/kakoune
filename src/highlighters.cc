@@ -397,7 +397,7 @@ public:
           m_face_getter(std::move(face_getter)),
           m_highlighter(Regex{}, FacesSpec{}) {}
 
-    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range)
+    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) override
     {
         if (flags != HighlightFlags::Highlight)
             return;

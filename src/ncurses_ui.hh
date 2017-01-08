@@ -17,7 +17,7 @@ class NCursesUI : public UserInterface
 {
 public:
     NCursesUI();
-    ~NCursesUI();
+    ~NCursesUI() override;
 
     NCursesUI(const NCursesUI&) = delete;
     NCursesUI& operator=(const NCursesUI&) = delete;

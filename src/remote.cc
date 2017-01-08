@@ -186,7 +186,7 @@ public:
         {
             T object;
             alignas(T) char data[sizeof(T)];
-            U() {}
+            U() {};
             ~U() { object.~T(); }
         } u;
         read(u.data, sizeof(T));
@@ -297,7 +297,7 @@ class RemoteUI : public UserInterface
 {
 public:
     RemoteUI(int socket, DisplayCoord dimensions);
-    ~RemoteUI();
+    ~RemoteUI() override;
 
     void menu_show(ConstArrayView<DisplayLine> choices,
                    DisplayCoord anchor, Face fg, Face bg,
@@ -654,7 +654,7 @@ private:
                 auto init_cmds = m_reader.read<String>();
                 auto dimensions = m_reader.read<DisplayCoord>();
                 auto env_vars = m_reader.read_idmap<String, MemoryDomain::EnvVars>();
-                RemoteUI* ui = new RemoteUI{sock, dimensions};
+                auto* ui = new RemoteUI{sock, dimensions};
                 if (auto* client = ClientManager::instance().create_client(
                                        std::unique_ptr<UserInterface>(ui),
                                        std::move(env_vars), init_cmds, {}))

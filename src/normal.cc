@@ -609,8 +609,8 @@ void paste_all(Context& context, NormalParams params)
         ByteCount pos = 0;
         for (auto offset : offsets)
         {
-            result.push_back({ buffer.advance(ins_pos, pos),
-                               buffer.advance(ins_pos, offset-1) });
+            result.emplace_back(buffer.advance(ins_pos, pos),
+                                buffer.advance(ins_pos, offset-1));
             pos = offset;
         }
     }
@@ -819,7 +819,7 @@ void join_lines_select_spaces(Context& context, NormalParams)
         {
             auto begin = buffer.iterator_at({line, buffer[line].length()-1});
             auto end = std::find_if_not(begin+1, buffer.end(), is_horizontal_blank);
-            selections.push_back({begin.coord(), (end-1).coord()});
+            selections.emplace_back(begin.coord(), (end-1).coord());
         }
     }
     if (selections.empty())
@@ -905,7 +905,7 @@ void indent(Context& context, NormalParams)
         for (auto line = std::max(last_line, sel.min().line); line < sel.max().line+1; ++line)
         {
             if (indent_empty or buffer[line].length() > 1)
-                sels.push_back({line, line});
+                sels.emplace_back(line, line);
         }
         // avoid reindenting the same line if multiple selections are on it
         last_line = sel.max().line+1;
@@ -946,12 +946,12 @@ void deindent(Context& context, NormalParams)
                 else
                 {
                     if (deindent_incomplete and width != 0)
-                        sels.push_back({ line, BufferCoord{line, column-1} });
+                        sels.emplace_back(line, BufferCoord{line, column-1});
                     break;
                 }
                 if (width == indent_width)
                 {
-                    sels.push_back({ line, BufferCoord{line, column} });
+                    sels.emplace_back(line, BufferCoord{line, column});
                     break;
                 }
             }
@@ -1367,8 +1367,8 @@ void tabs_to_spaces(Context& context, NormalParams params)
             {
                 ColumnCount col = get_column(buffer, opt_tabstop, it.coord());
                 ColumnCount end_col = (col / tabstop + 1) * tabstop;
-                tabs.push_back({ it.coord() });
-                spaces.push_back(String{ ' ', end_col - col });
+                tabs.emplace_back(it.coord());
+                spaces.emplace_back(' ', end_col - col);
             }
         }
     }
@@ -1399,9 +1399,9 @@ void spaces_to_tabs(Context& context, NormalParams params)
                     ++col;
                 }
                 if ((col % tabstop) == 0)
-                    spaces.push_back({spaces_beg.coord(), (spaces_end-1).coord()});
+                    spaces.emplace_back(spaces_beg.coord(), (spaces_end-1).coord());
                 else if (spaces_end != end and *spaces_end == '\t')
-                    spaces.push_back({spaces_beg.coord(), spaces_end.coord()});
+                    spaces.emplace_back(spaces_beg.coord(), spaces_end.coord());
                 it = spaces_end;
             }
             else

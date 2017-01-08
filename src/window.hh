@@ -16,7 +16,7 @@ class Window : public SafeCountable, public OptionManagerWatcher, public Scope
 {
 public:
     Window(Buffer& buffer);
-    ~Window();
+    ~Window() override;
 
     const DisplayCoord& position() const { return m_position; }
     void set_position(DisplayCoord position);

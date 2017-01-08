@@ -52,7 +52,7 @@ struct Value
 private:
     struct Concept
     {
-        virtual ~Concept() {}
+        virtual ~Concept() = default;
         virtual const std::type_info& type() const = 0;
     };
 

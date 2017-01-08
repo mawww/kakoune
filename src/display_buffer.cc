@@ -164,7 +164,7 @@ void DisplayLine::push_back(DisplayAtom atom)
 
 DisplayLine::iterator DisplayLine::erase(iterator beg, iterator end)
 {
-    iterator res = m_atoms.erase(beg, end);
+    auto res = m_atoms.erase(beg, end);
     compute_range();
     return res;
 }

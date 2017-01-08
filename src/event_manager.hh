@@ -9,7 +9,7 @@
 #include <functional>
 
 #include <sys/select.h>
-#include <signal.h>
+#include <csignal>
 
 namespace Kakoune
 {

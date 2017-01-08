@@ -185,7 +185,7 @@ Selection select_matching(const Buffer& buffer, const Selection& selection)
 {
     Vector<Codepoint> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
     Utf8Iterator it{buffer.iterator_at(selection.cursor()), buffer};
-    Vector<Codepoint>::iterator match = matching_pairs.end();
+    auto match = matching_pairs.end();
     while (not is_eol(*it))
     {
         match = std::find(matching_pairs.begin(), matching_pairs.end(), *it);

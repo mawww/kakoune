@@ -11,7 +11,7 @@
 #endif
 
 #if defined(__linux__) || defined(__APPLE__)
-# include <stdlib.h>
+# include <cstdlib>
 #endif
 
 namespace Kakoune
