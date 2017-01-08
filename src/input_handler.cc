@@ -936,7 +936,6 @@ private:
     LineEditor     m_line_editor;
     bool           m_autoshowcompl;
     PromptFlags    m_flags;
-    bool           m_history_drop_blank_prefix;
 
     using History = Vector<String, MemoryDomain::History>;
     static UnorderedMap<String, History, MemoryDomain::History> ms_history;
