@@ -8,6 +8,10 @@ hook global BufCreate .*\.html %{
     set buffer filetype html
 }
 
+hook global BufCreate .*\.html\..* %{
+    set buffer filetype html
+}
+
 hook global BufCreate .*\.xml %{
     set buffer filetype xml
 }
@@ -16,6 +20,7 @@ hook global BufCreate .*\.xml %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 addhl -group / regions html                  \
+    ruby    <%        (?=%>)              '' \
     comment <!--     -->                  '' \
     tag     <          >                  '' \
     style   <style\b.*?>\K  (?=</style>)  '' \
@@ -25,6 +30,7 @@ addhl -group /html/comment fill comment
 
 addhl -group /html/style  ref css
 addhl -group /html/script ref javascript
+addhl -group /html/ruby   ref ruby
 
 addhl -group /html/tag regex </?(\w+) 1:keyword
 
