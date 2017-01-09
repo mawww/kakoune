@@ -16,6 +16,7 @@ addhl -group / regions -default html hbs  \
     comment          {{!   }}   '' \
     block-expression {{    }}   '' 
 
+addhl -group /hbs/html ref html
 addhl -group /hbs/comment fill comment
 addhl -group /hbs/block-expression regex {{((#|/|)(\w|-)+) 1:meta
 
@@ -54,9 +55,8 @@ def -hidden _hbs_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group hbs-highlight global WinSetOption filetype=hbs %{ 
-    addhl ref hbs 
-    addhl ref html
+hook -group hbs-highlight global WinSetOption filetype=hbs %{
+    addhl ref hbs
 }
 
 hook global WinSetOption filetype=hbs %{
@@ -64,9 +64,8 @@ hook global WinSetOption filetype=hbs %{
     hook window InsertChar \n -group hbs-indent _hbs_indent_on_new_line
 }
 
-hook -group hbs-highlight global WinSetOption filetype=(?!hbs).* %{ 
-    rmhl hbs 
-    rmhl html
+hook -group hbs-highlight global WinSetOption filetype=(?!hbs).* %{
+    rmhl hbs
 }
 
 hook global WinSetOption filetype=(?!hbs).* %{
