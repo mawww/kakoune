@@ -142,7 +142,8 @@ constexpr StringView register_doc =
     "    * \": default yank/paste register\n"
     "    * @: default macro register\n"
     "    * /: default search register\n"
-    "    * ^: default mark register\n";
+    "    * ^: default mark register\n"
+    "    * |: default shell command register\n";
 
 class Normal : public InputMode
 {
