@@ -11,12 +11,12 @@ hook global BufCreate .*[.](json) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code json \
+add-highlighter -group / regions -default code json \
     string '"' (?<!\\)(\\\\)*" ''
 
-addhl -group /json/string fill string
+add-highlighter -group /json/string fill string
 
-addhl -group /json/code regex \b(true|false|null|\d+(?:\.\d+)?(?:[eE][+-]?\d*)?)\b 0:value
+add-highlighter -group /json/code regex \b(true|false|null|\d+(?:\.\d+)?(?:[eE][+-]?\d*)?)\b 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -47,7 +47,7 @@ def -hidden _json_indent_on_new_line %<
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group json-highlight global WinSetOption filetype=json %{ addhl ref json }
+hook -group json-highlight global WinSetOption filetype=json %{ add-highlighter ref json }
 
 hook global WinSetOption filetype=json %{
     hook window InsertEnd  .* -group json-hooks  _json_filter_around_selections
@@ -55,9 +55,9 @@ hook global WinSetOption filetype=json %{
     hook window InsertChar \n -group json-indent _json_indent_on_new_line
 }
 
-hook -group json-highlight global WinSetOption filetype=(?!json).* %{ rmhl json }
+hook -group json-highlight global WinSetOption filetype=(?!json).* %{ remove-highlighter json }
 
 hook global WinSetOption filetype=(?!json).* %{
-    rmhooks window json-indent
-    rmhooks window json-hooks
+    remove-hooks window json-indent
+    remove-hooks window json-hooks
 }

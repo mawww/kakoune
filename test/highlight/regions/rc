@@ -1,7 +1,7 @@
-addhl regions -default code regions_test \
+add-highlighter regions -default code regions_test \
     string %{"} %{(?<!\\)(\\\\)*"} '' \
     shell '\$\{' '\}' '\{'
 
-addhl -group regions_test/code fill yellow
-addhl -group regions_test/string fill green
-addhl -group regions_test/shell fill red
+add-highlighter -group regions_test/code fill yellow
+add-highlighter -group regions_test/string fill green
+add-highlighter -group regions_test/shell fill red

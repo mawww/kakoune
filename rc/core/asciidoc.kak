@@ -11,18 +11,18 @@ hook global BufCreate .+\.(a(scii)?doc|asc) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / group asciidoc
+add-highlighter -group / group asciidoc
 
-addhl -group /asciidoc regex (\A|\n\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
-addhl -group /asciidoc regex (\A|\n\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
-addhl -group /asciidoc regex (\A|\n\n)[^\n]+\n~{2,}\h*\n\h*$ 0:header
-addhl -group /asciidoc regex (\A|\n\n)[^\n]+\n\^{2,}\h*\n\h*$ 0:header
-addhl -group /asciidoc regex ^\h+([-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*)*$ 0:list 1:bullet
-addhl -group /asciidoc regex ^([-=~]+)\n[^\n\h].*?\n\1$ 0:block
-addhl -group /asciidoc regex (?<!\w)(?:\+[^\n]+?\+|`[^\n]+?`)(?!\w) 0:mono
-addhl -group /asciidoc regex (?<!\w)_[^\n]+?_(?!\w) 0:italic
-addhl -group /asciidoc regex (?<!\w)\*[^\n]+?\*(?!\w) 0:bold
-addhl -group /asciidoc regex ^:[-\w]+: 0:meta
+add-highlighter -group /asciidoc regex (\A|\n\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
+add-highlighter -group /asciidoc regex (\A|\n\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
+add-highlighter -group /asciidoc regex (\A|\n\n)[^\n]+\n~{2,}\h*\n\h*$ 0:header
+add-highlighter -group /asciidoc regex (\A|\n\n)[^\n]+\n\^{2,}\h*\n\h*$ 0:header
+add-highlighter -group /asciidoc regex ^\h+([-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*)*$ 0:list 1:bullet
+add-highlighter -group /asciidoc regex ^([-=~]+)\n[^\n\h].*?\n\1$ 0:block
+add-highlighter -group /asciidoc regex (?<!\w)(?:\+[^\n]+?\+|`[^\n]+?`)(?!\w) 0:mono
+add-highlighter -group /asciidoc regex (?<!\w)_[^\n]+?_(?!\w) 0:italic
+add-highlighter -group /asciidoc regex (?<!\w)\*[^\n]+?\*(?!\w) 0:bold
+add-highlighter -group /asciidoc regex ^:[-\w]+: 0:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -30,5 +30,5 @@ addhl -group /asciidoc regex ^:[-\w]+: 0:meta
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 #
-hook -group asciidoc-highlight global WinSetOption filetype=asciidoc %{ addhl ref asciidoc }
-hook -group asciidoc-highlight global WinSetOption filetype=(?!asciidoc).* %{ rmhl asciidoc }
+hook -group asciidoc-highlight global WinSetOption filetype=asciidoc %{ add-highlighter ref asciidoc }
+hook -group asciidoc-highlight global WinSetOption filetype=(?!asciidoc).* %{ remove-highlighter asciidoc }

@@ -11,17 +11,17 @@ hook global BufCreate .*[.](lisp) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code lisp \
+add-highlighter -group / regions -default code lisp \
     string  '"' (?<!\\)(\\\\)*"        '' \
     comment ';' '$'                    ''
 
-addhl -group /lisp/string  fill string
-addhl -group /lisp/comment fill comment
+add-highlighter -group /lisp/string  fill string
+add-highlighter -group /lisp/comment fill comment
 
-addhl -group /lisp/code regex \b(nil|true|false)\b 0:value
-addhl -group /lisp/code regex (((\Q***\E)|(///)|(\Q+++\E)){1,3})|(1[+-])|(<|>|<=|=|>=|) 0:operator
-addhl -group /lisp/code regex \b(([':]\w+)|([*]\H+[*]))\b 0:identifier
-addhl -group /lisp/code regex \b(def[a-z]+|if|do|let|lambda|catch|and|assert|while|def|do|fn|finally|let|loop|new|quote|recur|set!|throw|try|var|case|if-let|if-not|when|when-first|when-let|when-not|(cond(->|->>)?))\b 0:keyword
+add-highlighter -group /lisp/code regex \b(nil|true|false)\b 0:value
+add-highlighter -group /lisp/code regex (((\Q***\E)|(///)|(\Q+++\E)){1,3})|(1[+-])|(<|>|<=|=|>=|) 0:operator
+add-highlighter -group /lisp/code regex \b(([':]\w+)|([*]\H+[*]))\b 0:identifier
+add-highlighter -group /lisp/code regex \b(def[a-z]+|if|do|let|lambda|catch|and|assert|while|def|do|fn|finally|let|loop|new|quote|recur|set!|throw|try|var|case|if-let|if-not|when|when-first|when-let|when-not|(cond(->|->>)?))\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -43,16 +43,16 @@ def -hidden _lisp_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group lisp-highlight global WinSetOption filetype=lisp %{ addhl ref lisp }
+hook -group lisp-highlight global WinSetOption filetype=lisp %{ add-highlighter ref lisp }
 
 hook global WinSetOption filetype=lisp %{
     hook window InsertEnd  .* -group lisp-hooks  _lisp_filter_around_selections
     hook window InsertChar \n -group lisp-indent _lisp_indent_on_new_line
 }
 
-hook -group lisp-highlight global WinSetOption filetype=(?!lisp).* %{ rmhl lisp }
+hook -group lisp-highlight global WinSetOption filetype=(?!lisp).* %{ remove-highlighter lisp }
 
 hook global WinSetOption filetype=(?!lisp).* %{
-    rmhooks window lisp-indent
-    rmhooks window lisp-hooks
+    remove-hooks window lisp-indent
+    remove-hooks window lisp-hooks
 }

@@ -11,15 +11,15 @@ hook global BufCreate .*[.](cabal) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code cabal \
+add-highlighter -group / regions -default code cabal \
     comment  (--) $                     '' \
     comment \{-   -\}                  \{-
 
-addhl -group /cabal/comment fill comment
+add-highlighter -group /cabal/comment fill comment
 
-addhl -group /cabal/code regex \b(true|false)\b|(([<>]?=?)?\d+(\.\d+)+) 0:value
-addhl -group /cabal/code regex \b(if|else)\b 0:keyword
-addhl -group /cabal/code regex ^\h*([A-Za-z][A-Za-z0-9_-]*)\h*: 1:identifier
+add-highlighter -group /cabal/code regex \b(true|false)\b|(([<>]?=?)?\d+(\.\d+)+) 0:value
+add-highlighter -group /cabal/code regex \b(if|else)\b 0:keyword
+add-highlighter -group /cabal/code regex ^\h*([A-Za-z][A-Za-z0-9_-]*)\h*: 1:identifier
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -59,7 +59,7 @@ def -hidden _cabal_indent_on_closing_curly_brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group cabal-highlight global WinSetOption filetype=cabal %{ addhl ref cabal }
+hook -group cabal-highlight global WinSetOption filetype=cabal %{ add-highlighter ref cabal }
 
 hook global WinSetOption filetype=cabal %[
     hook window InsertEnd  .* -group cabal-hooks  _cabal_filter_around_selections
@@ -68,9 +68,9 @@ hook global WinSetOption filetype=cabal %[
     hook window InsertChar \} -group cabal-indent _cabal_indent_on_closing_curly_brace
 ]
 
-hook -group cabal-highlight global WinSetOption filetype=(?!cabal).* %{ rmhl cabal }
+hook -group cabal-highlight global WinSetOption filetype=(?!cabal).* %{ remove-highlighter cabal }
 
 hook global WinSetOption filetype=(?!cabal).* %{
-    rmhooks window cabal-indent
-    rmhooks window cabal-hooks
+    remove-hooks window cabal-indent
+    remove-hooks window cabal-hooks
 }

@@ -11,7 +11,7 @@ hook global BufCreate .*\.di? %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code d \
+add-highlighter -group / regions -default code d \
     string '"' (?<!\\)(\\\\)*" '' \
     verbatim_string ` ` '' \
     verbatim_string_prefixed 'r"' '"' '' \
@@ -20,17 +20,17 @@ addhl -group / regions -default code d \
     comment /\* \*/ '' \
     comment '//' $ ''
 
-addhl -group /d/string fill string
-addhl -group /d/verbatim_string fill magenta
-addhl -group /d/verbatim_string_prefixed fill magenta
-addhl -group /d/token fill meta
-addhl -group /d/disabled fill rgb:777777
-addhl -group /d/comment fill comment
+add-highlighter -group /d/string fill string
+add-highlighter -group /d/verbatim_string fill magenta
+add-highlighter -group /d/verbatim_string_prefixed fill magenta
+add-highlighter -group /d/token fill meta
+add-highlighter -group /d/disabled fill rgb:777777
+add-highlighter -group /d/comment fill comment
 
-addhl -group /d/string regex %{\\(x[0-9a-fA-F]{2}|[0-7]{1,3}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})\b} 0:value
-addhl -group /d/code regex %{'((\\.)?|[^'\\])'} 0:value
-addhl -group /d/code regex "-?([0-9_]*\.(?!0[xXbB]))?\b([0-9_]+|0[xX][0-9a-fA-F_]*\.?[0-9a-fA-F_]+|0[bb][01_]+)([ep]-?[0-9_]+)?[fFlLuUi]*\b" 0:value
-addhl -group /d/code regex "\b(this)\b\s*[^(]" 1:value
+add-highlighter -group /d/string regex %{\\(x[0-9a-fA-F]{2}|[0-7]{1,3}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})\b} 0:value
+add-highlighter -group /d/code regex %{'((\\.)?|[^'\\])'} 0:value
+add-highlighter -group /d/code regex "-?([0-9_]*\.(?!0[xXbB]))?\b([0-9_]+|0[xX][0-9a-fA-F_]*\.?[0-9a-fA-F_]+|0[bb][01_]+)([ep]-?[0-9_]+)?[fFlLuUi]*\b" 0:value
+add-highlighter -group /d/code regex "\b(this)\b\s*[^(]" 1:value
 
 %sh{
     # Grammar
@@ -68,13 +68,13 @@ addhl -group /d/code regex "\b(this)\b\s*[^(]" 1:value
 
     # Highlight keywords
     printf %s "
-        addhl -group /d/code regex \b(${keywords})\b 0:keyword
-        addhl -group /d/code regex \b(${attributes})\b 0:attribute
-        addhl -group /d/code regex \b(${types})\b 0:type
-        addhl -group /d/code regex \b(${values})\b 0:value
-        addhl -group /d/code regex @(${decorators})\b 0:attribute
-        addhl -group /d/code regex \b(${tokens})\b 0:builtin
-        addhl -group /d/code regex \.(${properties})\b 1:builtin
+        add-highlighter -group /d/code regex \b(${keywords})\b 0:keyword
+        add-highlighter -group /d/code regex \b(${attributes})\b 0:attribute
+        add-highlighter -group /d/code regex \b(${types})\b 0:type
+        add-highlighter -group /d/code regex \b(${values})\b 0:value
+        add-highlighter -group /d/code regex @(${decorators})\b 0:attribute
+        add-highlighter -group /d/code regex \b(${tokens})\b 0:builtin
+        add-highlighter -group /d/code regex \.(${properties})\b 1:builtin
     "
 }
 
@@ -113,7 +113,7 @@ def -hidden _d-indent-on-closing-curly-brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group d-highlight global WinSetOption filetype=d %{ addhl ref d }
+hook -group d-highlight global WinSetOption filetype=d %{ add-highlighter ref d }
 
 hook global WinSetOption filetype=d %{
     # cleanup trailing whitespaces when exiting insert mode
@@ -123,9 +123,9 @@ hook global WinSetOption filetype=d %{
     hook window InsertChar \} -group d-indent _d-indent-on-closing-curly-brace
 }
 
-hook -group d-highlight global WinSetOption filetype=(?!d).* %{ rmhl d }
+hook -group d-highlight global WinSetOption filetype=(?!d).* %{ remove-highlighter d }
 
 hook global WinSetOption filetype=(?!d).* %{
-    rmhooks window d-hooks
-    rmhooks window d-indent
+    remove-hooks window d-hooks
+    remove-hooks window d-indent
 }

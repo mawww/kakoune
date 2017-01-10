@@ -1,20 +1,20 @@
 decl str docsclient
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
-    addhl group git-log-highlight
-    addhl -group git-log-highlight regex '^(commit) ([0-9a-f]+)$' 1:yellow 2:red
-    addhl -group git-log-highlight regex '^([a-zA-Z_-]+:) (.*?)$' 1:green 2:magenta
-    addhl -group git-log-highlight ref diff # highlight potential diffs from the -p option
+    add-highlighter group git-log-highlight
+    add-highlighter -group git-log-highlight regex '^(commit) ([0-9a-f]+)$' 1:yellow 2:red
+    add-highlighter -group git-log-highlight regex '^([a-zA-Z_-]+:) (.*?)$' 1:green 2:magenta
+    add-highlighter -group git-log-highlight ref diff # highlight potential diffs from the -p option
 }
 
-hook -group git-log-highlight global WinSetOption filetype=(?!git-log).* %{ rmhl git-log-highlight }
+hook -group git-log-highlight global WinSetOption filetype=(?!git-log).* %{ remove-highlighter git-log-highlight }
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
-    addhl group git-status-highlight
-    addhl -group git-status-highlight regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
+    add-highlighter group git-status-highlight
+    add-highlighter -group git-status-highlight regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
 }
 
-hook -group git-status-highlight global WinSetOption filetype=(?!git-status).* %{ rmhl git-status-highlight }
+hook -group git-status-highlight global WinSetOption filetype=(?!git-status).* %{ remove-highlighter git-status-highlight }
 
 decl line-flags git_blame_flags
 decl line-flags git_diff_flags
@@ -47,7 +47,7 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
                   set buffer filetype '${filetype}'
                   hook -group fifo buffer BufCloseFifo .* %{
                       nop %sh{ rm -r $(dirname ${output}) }
-                      rmhooks buffer fifo
+                      remove-hooks buffer fifo
                   }
               }"
     }
@@ -55,7 +55,7 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
     run_git_blame() {
         (
             printf %s "eval -client '$kak_client' %{
-                      try %{ addhl flag_lines GitBlame git_blame_flags }
+                      try %{ add-highlighter flag_lines GitBlame git_blame_flags }
                       set buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
                   git blame "$@" --incremental ${kak_buffile} | awk '
@@ -142,11 +142,11 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
        hide-blame)
             printf %s "try %{
                 set buffer=$kak_bufname git_blame_flags ''
-                rmhl hlflags_git_blame_flags
+                remove-highlighter hlflags_git_blame_flags
             }"
             ;;
        show-diff)
-           echo 'try %{ addhl flag_lines GitDiffFlags git_diff_flags }'
+           echo 'try %{ add-highlighter flag_lines GitDiffFlags git_diff_flags }'
            update_diff
            ;;
        update-diff) update_diff ;;

@@ -42,6 +42,6 @@ def jedi-enable-autocomplete -docstring "Add jedi completion candidates to the c
 
 def jedi-disable-autocomplete -docstring "Disable jedi completion" %{
     set window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed -e 's/option=jedi_completions://g' }
-    rmhooks window jedi-autocomplete
+    remove-hooks window jedi-autocomplete
     unalias window complete jedi-complete
 }

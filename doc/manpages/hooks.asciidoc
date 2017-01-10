@@ -25,14 +25,14 @@ For example to automatically use line numbering with .cc files, use the
 following command:
 
 ----------------------------------------------------
-hook global WinCreate .*\.cc %{ addhl number_lines }
+hook global WinCreate .*\.cc %{ add-highlighter number_lines }
 ----------------------------------------------------
 
 if *group* is given, make this hook part of the named group. Groups are used
 for removing hooks with the following command:
 
 -----------------------
-rmhooks <scope> <group>
+remove-hooks <scope> <group>
 -----------------------
 
 A call to the command above will remove every hooks in *scope* that are part

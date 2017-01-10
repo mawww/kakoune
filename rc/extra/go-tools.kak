@@ -44,7 +44,7 @@ def go-enable-autocomplete -docstring "Add gocode completion candidates to the c
 
 def go-disable-autocomplete -docstring "Disable gocode completion" %{
     set window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed 's/option=gocode_completions://g' }
-    rmhooks window go-autocomplete
+    remove-hooks window go-autocomplete
     unalias window complete go-complete
 }
 

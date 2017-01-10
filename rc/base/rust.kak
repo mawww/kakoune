@@ -11,25 +11,25 @@ hook global BufCreate .*[.](rust|rs) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code rust \
+add-highlighter -group / regions -default code rust \
     string  '"' (?<!\\)(\\\\)*"        '' \
     comment //   $                     '' \
     comment /\* \*/                   /\*
 
-addhl -group /rust/string  fill string
-addhl -group /rust/comment fill comment
+add-highlighter -group /rust/string  fill string
+add-highlighter -group /rust/comment fill comment
 
-addhl -group /rust/code regex \b[A-z0-9_]+! 0:meta
+add-highlighter -group /rust/code regex \b[A-z0-9_]+! 0:meta
 # the number literals syntax is defined here:
 # https://doc.rust-lang.org/reference.html#number-literals
-addhl -group /rust/code regex \b(?:self|true|false|[0-9][_0-9]*(?:\.[0-9][_0-9]*|(?:\.[0-9][_0-9]*)?E[\+\-][_0-9]+)(?:f(?:32|64))?|(?:0x[_0-9a-fA-F]+|0o[_0-7]+|0b[_01]+|[0-9][_0-9]*)(?:(?:i|u)(?:8|16|32|64|size))?)\b 0:value
-addhl -group /rust/code regex \b(?:&&|\|\|)\b 0:operator
+add-highlighter -group /rust/code regex \b(?:self|true|false|[0-9][_0-9]*(?:\.[0-9][_0-9]*|(?:\.[0-9][_0-9]*)?E[\+\-][_0-9]+)(?:f(?:32|64))?|(?:0x[_0-9a-fA-F]+|0o[_0-7]+|0b[_01]+|[0-9][_0-9]*)(?:(?:i|u)(?:8|16|32|64|size))?)\b 0:value
+add-highlighter -group /rust/code regex \b(?:&&|\|\|)\b 0:operator
 # the language keywords are defined here, but many of them are reserved and unused yet:
 # https://doc.rust-lang.org/grammar.html#keywords
-addhl -group /rust/code regex \b(?:crate|use|extern)\b 0:meta
-addhl -group /rust/code regex \b(?:let|as|fn|return|match|if|else|loop|for|in|while|break|continue|move|box|where|impl|pub|unsafe)\b 0:keyword
-addhl -group /rust/code regex \b(?:mod|trait|struct|enum|type|mut|ref|static|const)\b 0:attribute
-addhl -group /rust/code regex \b(?:u8|u16|u32|u64|usize|i8|i16|i32|i64|isize|f32|f64|bool|char|str|Self)\b 0:type
+add-highlighter -group /rust/code regex \b(?:crate|use|extern)\b 0:meta
+add-highlighter -group /rust/code regex \b(?:let|as|fn|return|match|if|else|loop|for|in|while|break|continue|move|box|where|impl|pub|unsafe)\b 0:keyword
+add-highlighter -group /rust/code regex \b(?:mod|trait|struct|enum|type|mut|ref|static|const)\b 0:attribute
+add-highlighter -group /rust/code regex \b(?:u8|u16|u32|u64|usize|i8|i16|i32|i64|isize|f32|f64|bool|char|str|Self)\b 0:type
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -71,7 +71,7 @@ def -hidden _rust_indent_on_closing_curly_brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group rust-highlight global WinSetOption filetype=rust %{ addhl ref rust }
+hook -group rust-highlight global WinSetOption filetype=rust %{ add-highlighter ref rust }
 
 hook global WinSetOption filetype=rust %[
     hook window InsertEnd  .* -group rust-hooks  _rust_filter_around_selections
@@ -80,9 +80,9 @@ hook global WinSetOption filetype=rust %[
     hook window InsertChar \} -group rust-indent _rust_indent_on_closing_curly_brace
 ]
 
-hook -group rust-highlight global WinSetOption filetype=(?!rust).* %{ rmhl rust }
+hook -group rust-highlight global WinSetOption filetype=(?!rust).* %{ remove-highlighter rust }
 
 hook global WinSetOption filetype=(?!rust).* %{
-    rmhooks window rust-indent
-    rmhooks window rust-hooks
+    remove-hooks window rust-indent
+    remove-hooks window rust-hooks
 }

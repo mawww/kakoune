@@ -8,15 +8,15 @@ hook global BufCreate .*/?[mM]akefile %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default content makefile \
+add-highlighter -group / regions -default content makefile \
    comment '#' '$' '' \
    eval '\$\(' '\)' '\('
 
-addhl -group /makefile/comment fill comment
-addhl -group /makefile/eval fill value
+add-highlighter -group /makefile/comment fill comment
+add-highlighter -group /makefile/eval fill value
 
-addhl -group /makefile/content regex ^[\w.%-]+\h*:\s 0:identifier
-addhl -group /makefile/content regex [+?:]= 0:operator
+add-highlighter -group /makefile/content regex ^[\w.%-]+\h*:\s 0:identifier
+add-highlighter -group /makefile/content regex [+?:]= 0:operator
 
 %sh{
     # Grammar
@@ -28,7 +28,7 @@ addhl -group /makefile/content regex [+?:]= 0:operator
     }" | sed 's,|,:,g'
 
     # Highlight keywords
-    printf %s "addhl -group /makefile/content regex \b(${keywords})\b 0:keyword"
+    printf %s "add-highlighter -group /makefile/content regex \b(${keywords})\b 0:keyword"
 }
 
 # Commands
@@ -50,14 +50,14 @@ def -hidden _makefile-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group makefile-highlight global WinSetOption filetype=makefile %{ addhl ref makefile }
+hook -group makefile-highlight global WinSetOption filetype=makefile %{ add-highlighter ref makefile }
 
 hook global WinSetOption filetype=makefile %{
     hook window InsertChar \n -group makefile-indent _makefile-indent-on-new-line
 }
 
-hook -group makefile-highlight global WinSetOption filetype=(?!makefile).* %{ rmhl makefile }
+hook -group makefile-highlight global WinSetOption filetype=(?!makefile).* %{ remove-highlighter makefile }
 
 hook global WinSetOption filetype=(?!makefile).* %{
-    rmhooks window makefile-indent
+    remove-hooks window makefile-indent
 }

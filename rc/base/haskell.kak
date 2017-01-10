@@ -11,20 +11,20 @@ hook global BufCreate .*[.](hs) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code haskell \
+add-highlighter -group / regions -default code haskell \
     string   '"'     (?<!\\)(\\\\)*"      '' \
     comment  (--) $                       '' \
     comment \{-   -\}                    \{- \
     macro   ^\h*?\K# (?<!\\)\n            ''
 
-addhl -group /haskell/string  fill string
-addhl -group /haskell/comment fill comment
-addhl -group /haskell/macro   fill meta
+add-highlighter -group /haskell/string  fill string
+add-highlighter -group /haskell/comment fill comment
+add-highlighter -group /haskell/macro   fill meta
 
-addhl -group /haskell/code regex \b(import)\b 0:meta
-addhl -group /haskell/code regex \b(True|False)\b 0:value
-addhl -group /haskell/code regex \b(as|case|class|data|default|deriving|do|else|hiding|if|in|infix|infixl|infixr|instance|let|module|newtype|of|qualified|then|type|where)\b 0:keyword
-addhl -group /haskell/code regex \b(Int|Integer|Char|Bool|Float|Double|IO|Void|Addr|Array|String)\b 0:type
+add-highlighter -group /haskell/code regex \b(import)\b 0:meta
+add-highlighter -group /haskell/code regex \b(True|False)\b 0:value
+add-highlighter -group /haskell/code regex \b(as|case|class|data|default|deriving|do|else|hiding|if|in|infix|infixl|infixr|instance|let|module|newtype|of|qualified|then|type|where)\b 0:keyword
+add-highlighter -group /haskell/code regex \b(Int|Integer|Char|Bool|Float|Double|IO|Void|Addr|Array|String)\b 0:type
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -54,16 +54,16 @@ def -hidden _haskell_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group haskell-highlight global WinSetOption filetype=haskell %{ addhl ref haskell }
+hook -group haskell-highlight global WinSetOption filetype=haskell %{ add-highlighter ref haskell }
 
 hook global WinSetOption filetype=haskell %{
     hook window InsertEnd  .* -group haskell-hooks  _haskell_filter_around_selections
     hook window InsertChar \n -group haskell-indent _haskell_indent_on_new_line
 }
 
-hook -group haskell-highlight global WinSetOption filetype=(?!haskell).* %{ rmhl haskell }
+hook -group haskell-highlight global WinSetOption filetype=(?!haskell).* %{ remove-highlighter haskell }
 
 hook global WinSetOption filetype=(?!haskell).* %{
-    rmhooks window haskell-indent
-    rmhooks window haskell-hooks
+    remove-hooks window haskell-indent
+    remove-hooks window haskell-hooks
 }

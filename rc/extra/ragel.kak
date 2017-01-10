@@ -13,18 +13,18 @@ hook global BufCreate .*[.](ragel|rl) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code ragel \
+add-highlighter -group / regions -default code ragel \
     string  '"' (?<!\\)(\\\\)*"         '' \
     string  "'" "'"                     '' \
     comment '#' '$'                     ''
 
-addhl -group /ragel/string  fill string
-addhl -group /ragel/comment fill comment
+add-highlighter -group /ragel/string  fill string
+add-highlighter -group /ragel/comment fill comment
 
-addhl -group /ragel/code regex \b(true|false)\b 0:value
-addhl -group /ragel/code regex '%%\{|\}%%|<\w+>' 0:identifier
-addhl -group /ragel/code regex :=|=>|->|:>|:>>|<: 0:operator
-addhl -group /ragel/code regex \b(action|alnum|alpha|any|ascii|case|cntrl|contained|context|data|digit|empty|eof|err|error|exec|export|exports|extend|fblen|fbreak|fbuf|fc|fcall|fcurs|fentry|fexec|fgoto|fhold|first_final|fnext|fpc|fret|from|fstack|ftargs|graph|import|include|init|inwhen|lerr|lower|machine|nocs|noend|noerror|nofinal|noprefix|outwhen|postpop|prepush|print|punct|range|space|start|to|upper|when|write|xdigit|zlen)\b 0:keyword
+add-highlighter -group /ragel/code regex \b(true|false)\b 0:value
+add-highlighter -group /ragel/code regex '%%\{|\}%%|<\w+>' 0:identifier
+add-highlighter -group /ragel/code regex :=|=>|->|:>|:>>|<: 0:operator
+add-highlighter -group /ragel/code regex \b(action|alnum|alpha|any|ascii|case|cntrl|contained|context|data|digit|empty|eof|err|error|exec|export|exports|extend|fblen|fbreak|fbuf|fc|fcall|fcurs|fentry|fexec|fgoto|fhold|first_final|fnext|fpc|fret|from|fstack|ftargs|graph|import|include|init|inwhen|lerr|lower|machine|nocs|noend|noerror|nofinal|noprefix|outwhen|postpop|prepush|print|punct|range|space|start|to|upper|when|write|xdigit|zlen)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -58,7 +58,7 @@ def -hidden _ragel_indent_on_new_line %<
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group ragel-highlight global WinSetOption filetype=ragel %{ addhl ref ragel }
+hook -group ragel-highlight global WinSetOption filetype=ragel %{ add-highlighter ref ragel }
 
 hook global WinSetOption filetype=ragel %{
     hook window InsertEnd  .* -group ragel-hooks  _ragel_filter_around_selections
@@ -66,9 +66,9 @@ hook global WinSetOption filetype=ragel %{
     hook window InsertChar \n -group ragel-indent _ragel_indent_on_new_line
 }
 
-hook -group ragel-highlight global WinSetOption filetype=(?!ragel).* %{ rmhl ragel }
+hook -group ragel-highlight global WinSetOption filetype=(?!ragel).* %{ remove-highlighter ragel }
 
 hook global WinSetOption filetype=(?!ragel).* %{
-    rmhooks window ragel-indent
-    rmhooks window ragel-hooks
+    remove-hooks window ragel-indent
+    remove-hooks window ragel-hooks
 }
