@@ -27,6 +27,7 @@ add-highlighter -group / regions -default code kakrc \
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=kak %{
         set window static_words '${keywords}:${values}'
+        set -- window completion_extra_word_char '-'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
