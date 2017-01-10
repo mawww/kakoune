@@ -537,6 +537,8 @@ Optional<Key> NCursesUI::get_next_key()
             return {Key::Return};
         if (c == control('i'))
             return {Key::Tab};
+        if (c == control('h'))
+            return {Key::Backspace};
         if (c == control('z'))
         {
             raise(SIGTSTP);
