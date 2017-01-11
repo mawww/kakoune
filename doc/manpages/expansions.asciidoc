@@ -93,6 +93,8 @@ informations about Kakoune's state:
 	column of the end of the main selection (in byte)
 *kak_cursor_char_column*::
 	column of the end of the main selection (in character)
+*kak_cursor_byte_offset*:: 
+	Offset of the main selection from the beginning of the buffer (in bytes).
 *kak_window_width*::
 	width of the current kakoune window
 *kak_window_height*::
