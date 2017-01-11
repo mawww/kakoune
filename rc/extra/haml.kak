@@ -40,12 +40,12 @@ def -hidden _haml_filter_around_selections %{
 
 def -hidden _haml_indent_on_new_line %{
     eval -draft -itersel %{
+        # copy '/' comment prefix and following white spaces
+        try %{ exec -draft k x s ^\h*\K/\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
         # filter previous line
         try %{ exec -draft k : _haml_filter_around_selections <ret> }
-        # copy '/' comment prefix and following white spaces
-        try %{ exec -draft k x s ^\h*\K/\h* <ret> y gh j P }
         # indent after lines beginning with : or -
         try %{ exec -draft k x <a-k> ^\h*[:-] <ret> j <a-gt> }
     }

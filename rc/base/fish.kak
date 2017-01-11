@@ -75,8 +75,8 @@ hook -group fish-highlight global WinSetOption filetype=fish %{ add-highlighter 
 
 hook global WinSetOption filetype=fish %{
     hook window InsertChar .* -group fish-indent _fish_indent_on_char
-    hook window InsertChar \n -group fish-indent _fish_indent_on_new_line
     hook window InsertChar \n -group fish-insert _fish_insert_on_new_line
+    hook window InsertChar \n -group fish-indent _fish_indent_on_new_line
 }
 
 hook -group fish-highlight global WinSetOption filetype=(?!fish).* %{ remove-highlighter fish }

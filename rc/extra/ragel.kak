@@ -44,12 +44,12 @@ def -hidden _ragel_indent_on_char %<
 
 def -hidden _ragel_indent_on_new_line %<
     eval -draft -itersel %<
+        # copy _#_ comment prefix and following white spaces
+        try %{ exec -draft k x s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
         # filter previous line
         try %{ exec -draft k : _ragel_filter_around_selections <ret> }
-        # copy _#_ comment prefix and following white spaces
-        try %{ exec -draft k x s ^\h*\K#\h* <ret> y gh j P }
         # indent after lines ending with opener token
         try %< exec -draft k x <a-k> [[{(*]$ <ret> j <a-gt> >
     >

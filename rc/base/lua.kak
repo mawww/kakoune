@@ -96,8 +96,8 @@ hook -group lua-highlight global WinSetOption filetype=lua %{ add-highlighter re
 
 hook global WinSetOption filetype=lua %{
     hook window InsertChar .* -group lua-indent _lua_indent_on_char
-    hook window InsertChar \n -group lua-indent _lua_indent_on_new_line
     hook window InsertChar \n -group lua-insert _lua_insert_on_new_line
+    hook window InsertChar \n -group lua-indent _lua_indent_on_new_line
 
     alias window alt lua-alternative-file
 }
