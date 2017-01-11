@@ -1436,6 +1436,9 @@ SelectionList read_selections_from_register(char reg, Context& context)
     for (auto sel_desc : StringView{desc.begin(), arobase} | split<StringView>(':'))
         sels.push_back(selection_from_string(sel_desc));
 
+    if (sels.empty())
+        throw runtime_error(format("Register {} contains an empty selection list", reg));
+
     return {buffer, std::move(sels), timestamp};
 }
 
