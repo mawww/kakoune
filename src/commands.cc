@@ -882,15 +882,16 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
             min = max = (size_t)str_to_int(counts);
 
         desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, min, max };
-        cmd = [=](const ParametersParser& parser, Context& context, const ShellContext&) {
-            CommandManager::instance().execute(commands, context, { params_to_shell(parser) });
+        cmd = [=](const ParametersParser& parser, Context& context, const ShellContext& sc) {
+            CommandManager::instance().execute(commands, context,
+                                               { params_to_shell(parser), sc.env_vars });
         };
     }
     else
     {
         desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 0 };
-        cmd = [=](const ParametersParser& parser, Context& context, const ShellContext&) {
-            CommandManager::instance().execute(commands, context);
+        cmd = [=](const ParametersParser& parser, Context& context, const ShellContext& sc) {
+            CommandManager::instance().execute(commands, context, { {}, sc.env_vars });
         };
     }
 
