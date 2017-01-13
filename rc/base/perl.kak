@@ -8,6 +8,10 @@ hook global BufCreate .*\.pl %{
     set buffer filetype perl
 }
 
+hook global BufCreate .*\.pm %{
+    set buffer filetype perl
+}
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
