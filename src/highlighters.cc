@@ -2,6 +2,7 @@
 
 #include "assert.hh"
 #include "buffer_utils.hh"
+#include "changes.hh"
 #include "context.hh"
 #include "containers.hh"
 #include "command_manager.hh"
@@ -992,6 +993,9 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
     return {"hlflags_" + params[1], make_simple_highlighter(func) };
 }
 
+BufferCoord& get_first(RangeAndFace& r) { return std::get<0>(r).begin; }
+BufferCoord& get_last(RangeAndFace& r) { return std::get<0>(r).end; }
+
 HighlighterAndId create_ranges_highlighter(HighlighterParameters params)
 {
     if (params.size() != 1)
@@ -1011,8 +1015,25 @@ HighlighterAndId create_ranges_highlighter(HighlighterParameters params)
         auto& buffer = context.buffer();
         if (range_and_faces.prefix != buffer.timestamp())
         {
-            // TODO: update ranges to current timestamp
-            return;
+            auto changes = buffer.changes_since(range_and_faces.prefix);
+            auto change_it = changes.begin();
+            while (change_it != changes.end())
+            {
+                auto forward_end = forward_sorted_until(change_it, changes.end());
+                auto backward_end = backward_sorted_until(change_it, changes.end());
+
+                if (forward_end >= backward_end)
+                {
+                    update_forward({ change_it, forward_end }, ranges);
+                    change_it = forward_end;
+                }
+                else
+                {
+                    update_backward({ change_it, backward_end }, ranges);
+                    change_it = backward_end;
+                }
+            }
+            range_and_faces.prefix = buffer.timestamp();
         }
 
         for (auto& range : ranges)
