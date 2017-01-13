@@ -39,15 +39,15 @@ def -hidden _haskell_filter_around_selections %{
 def -hidden _haskell_indent_on_new_line %{
     eval -draft -itersel %{
         # copy -- comments prefix and following white spaces
-        try %{ exec -draft k x s ^\h*\K--\h* <ret> y gh j P }
+        try %{ exec -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ exec -draft <space> K <a-&> }
+        try %{ exec -draft \; K <a-&> }
         # align to first clause
-        try %{ exec -draft <space> k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|do|let|where)\h+\K.* <ret> s \`|.\' <ret> & }
+        try %{ exec -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|do|let|where)\h+\K.* <ret> s \`|.\' <ret> & }
         # filter previous line
         try %{ exec -draft k : _haskell_filter_around_selections <ret> }
         # indent after lines beginning with condition or ending with expression or =(
-        try %{ exec -draft <space> k x <a-k> ^\h*(if)|(case\h+[\w']+\h+of|do|let|where|[=(])$ <ret> j <a-gt> }
+        try %{ exec -draft \; k x <a-k> ^\h*(if)|(case\h+[\w']+\h+of|do|let|where|[=(])$ <ret> j <a-gt> }
     }
 }
 

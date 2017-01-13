@@ -66,9 +66,9 @@ add-highlighter -group /python/comment       fill comment
 def -hidden python-indent-on-new-line %{
     eval -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k x s ^\h*#\h* <ret> y jgh P }
+        try %{ exec -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
-        try %{ exec -draft <space> K <a-&> }
+        try %{ exec -draft \; K <a-&> }
         # cleanup trailing whitespaces from previous line
         try %{ exec -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with :

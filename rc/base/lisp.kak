@@ -34,7 +34,7 @@ def -hidden _lisp_filter_around_selections %{
 def -hidden _lisp_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft <space> K <a-&> }
+        try %{ exec -draft \; K <a-&> }
         # indent when matches opening paren
         try %{ exec -draft [( <a-k> \`\([^\n]+\n[^\n]*\n?\' <ret> <a-\;> \; <a-gt> }
     }

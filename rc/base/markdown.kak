@@ -127,9 +127,9 @@ add-highlighter -group /markdown/content regex \H\K\h\h$ 0:PrimarySelection
 def -hidden _markdown_indent_on_new_line %{
     eval -draft -itersel %{
         # copy block quote(s), list item prefix and following white spaces
-        try %{ exec -draft k x s ^\h*\K((>\h*)|[*+-])+\h* <ret> y gh j P }
+        try %{ exec -draft k <a-x> s ^\h*\K((>\h*)|[*+-])+\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ exec -draft <space> K <a-&> }
+        try %{ exec -draft \; K <a-&> }
         # remove trailing white spaces
         try %{ exec -draft -itersel %{ k<a-x> s \h+$ <ret> d } }
     }

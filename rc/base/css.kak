@@ -44,11 +44,11 @@ def -hidden _css_filter_around_selections %{
 def -hidden _css_indent_on_new_line %[
     eval -draft -itersel %[
         # preserve previous line indent
-        try %[ exec -draft <space> K <a-&> ]
+        try %[ exec -draft \; K <a-&> ]
         # filter previous line
         try %[ exec -draft k : _css_filter_around_selections <ret> ]
         # indent after lines ending with with {
-        try %[ exec -draft k x <a-k> \{$ <ret> j <a-gt> ]
+        try %[ exec -draft k <a-x> <a-k> \{$ <ret> j <a-gt> ]
     ]
 ]
 

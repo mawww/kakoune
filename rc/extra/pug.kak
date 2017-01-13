@@ -52,11 +52,11 @@ def -hidden _pug_filter_around_selections %{
 def -hidden _pug_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft <space> K <a-&> }
+        try %{ exec -draft \; K <a-&> }
         # filter previous line
         try %{ exec -draft k : _pug_filter_around_selections <ret> }
         # copy '//', '|', '-' or '(!)=' prefix and following whitespace
-        try %{ exec -draft k x s ^\h*\K[/|!=-]{1,2}\h* <ret> y gh j P }
+        try %{ exec -draft k <a-x> s ^\h*\K[/|!=-]{1,2}\h* <ret> y gh j P }
         # indent unless we copied something above
         try %{ exec -draft <a-gt> <space> b s \S <ret> g l <a-lt> }
     }

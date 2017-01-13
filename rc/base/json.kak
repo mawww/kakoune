@@ -36,11 +36,11 @@ def -hidden _json_indent_on_char %<
 def -hidden _json_indent_on_new_line %<
     eval -draft -itersel %<
         # preserve previous line indent
-        try %{ exec -draft <space> K <a-&> }
+        try %{ exec -draft \; K <a-&> }
         # filter previous line
         try %{ exec -draft k : _json_filter_around_selections <ret> }
         # indent after lines beginning with opener token
-        try %< exec -draft k x <a-k> ^\h*[[{] <ret> j <a-gt> >
+        try %< exec -draft k <a-x> <a-k> ^\h*[[{] <ret> j <a-gt> >
     >
 >
 
