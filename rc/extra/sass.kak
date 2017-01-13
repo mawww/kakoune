@@ -29,19 +29,19 @@ add-highlighter -group /sass/code regex !important 0:keyword
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _sass_filter_around_selections %{
+def -hidden sass-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden _sass_indent_on_new_line %{
+def -hidden sass-indent-on-new-line %{
     eval -draft -itersel %{
         # copy '/' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K/\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : _sass_filter_around_selections <ret> }
+        try %{ exec -draft k : sass-filter-around-selections <ret> }
         # avoid indent after properties and comments
         try %{ exec -draft k <a-x> <a-K> [:/] <ret> j <a-gt> }
     }
@@ -53,8 +53,8 @@ def -hidden _sass_indent_on_new_line %{
 hook -group sass-highlight global WinSetOption filetype=sass %{ add-highlighter ref sass }
 
 hook global WinSetOption filetype=sass %{
-    hook window InsertEnd  .* -group sass-hooks  _sass_filter_around_selections
-    hook window InsertChar \n -group sass-indent _sass_indent_on_new_line
+    hook window InsertEnd  .* -group sass-hooks  sass-filter-around-selections
+    hook window InsertChar \n -group sass-indent sass-indent-on-new-line
 }
 
 hook -group sass-highlight global WinSetOption filetype=(?!sass).* %{ remove-highlighter sass }

@@ -81,7 +81,7 @@ add-highlighter -group /d/code regex "\b(this)\b\s*[^(]" 1:value
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _d-indent-on-new-line %~
+def -hidden d-indent-on-new-line %~
     eval -draft -itersel %=
         # preserve previous line indent
         try %{ exec -draft \;K<a-&> }
@@ -100,12 +100,12 @@ def -hidden _d-indent-on-new-line %~
     =
 ~
 
-def -hidden _d-indent-on-opening-curly-brace %[
+def -hidden d-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ exec -draft -itersel h<a-F>)M <a-k> \`\(.*\)\h*\n\h*\{\' <ret> s \`|.\' <ret> 1<a-&> ]
 ]
 
-def -hidden _d-indent-on-closing-curly-brace %[
+def -hidden d-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
@@ -118,9 +118,9 @@ hook -group d-highlight global WinSetOption filetype=d %{ add-highlighter ref d 
 hook global WinSetOption filetype=d %{
     # cleanup trailing whitespaces when exiting insert mode
     hook window InsertEnd .* -group d-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
-    hook window InsertChar \n -group d-indent _d-indent-on-new-line
-    hook window InsertChar \{ -group d-indent _d-indent-on-opening-curly-brace
-    hook window InsertChar \} -group d-indent _d-indent-on-closing-curly-brace
+    hook window InsertChar \n -group d-indent d-indent-on-new-line
+    hook window InsertChar \{ -group d-indent d-indent-on-opening-curly-brace
+    hook window InsertChar \} -group d-indent d-indent-on-closing-curly-brace
 }
 
 hook -group d-highlight global WinSetOption filetype=(?!d).* %{ remove-highlighter d }

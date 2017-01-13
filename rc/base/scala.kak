@@ -34,25 +34,25 @@ add-highlighter -group /scala/code regex "'[_A-Za-z0-9$]+" 0:identifier
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _scala_filter_around_selections %{
+def -hidden scala-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden _scala_indent_on_new_line %[
+def -hidden scala-indent-on-new-line %[
     eval -draft -itersel %[
         # copy // comments prefix and following white spaces
         try %[ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P ]
         # preserve previous line indent
         try %[ exec -draft \; K <a-&> ]
         # filter previous line
-        try %[ exec -draft k : _scala_filter_around_selections <ret> ]
+        try %[ exec -draft k : scala-filter-around-selections <ret> ]
         # indent after lines ending with {
         try %[ exec -draft k <a-x> <a-k> \{$ <ret> j <a-gt> ]
     ]
 ]
 
-def -hidden _scala_indent_on_closing_curly_brace %[
+def -hidden scala-indent-on-closing-curly-brace %[
     eval -draft -itersel %[
         # align to opening curly brace when alone on a line
         try %[ exec -draft <a-h> <a-k> ^\h+\}$ <ret> m s \`|.\' <ret> 1<a-&> ]
@@ -65,9 +65,9 @@ def -hidden _scala_indent_on_closing_curly_brace %[
 hook -group scala-highlight global WinSetOption filetype=scala %{ add-highlighter ref scala }
 
 hook global WinSetOption filetype=scala %[
-    hook window InsertEnd  .* -group scala-hooks  _scala_filter_around_selections
-    hook window InsertChar \n -group scala-indent _scala_indent_on_new_line
-    hook window InsertChar \} -group scala-indent _scala_indent_on_closing_curly_brace
+    hook window InsertEnd  .* -group scala-hooks  scala-filter-around-selections
+    hook window InsertChar \n -group scala-indent scala-indent-on-new-line
+    hook window InsertChar \} -group scala-indent scala-indent-on-closing-curly-brace
 ]
 
 hook -group scala-highlight global WinSetOption filetype=(?!scala).* %{ remove-highlighter scala }

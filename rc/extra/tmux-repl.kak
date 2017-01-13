@@ -10,12 +10,12 @@ hook global KakBegin .* %{
             if [ "${VERSION_TMUX}" -gt 1 ]; then
                 echo "
                     alias global repl tmux-repl-horizontal
-                    alias global send-text _tmux-send-text
+                    alias global send-text tmux-send-text
                 "
             else
                 echo "
-                    alias global repl _tmux-repl-disabled
-                    alias global send-text _tmux-repl-disabled
+                    alias global repl tmux-repl-disabled
+                    alias global send-text tmux-repl-disabled
                 "
             fi
         fi
@@ -49,7 +49,7 @@ def tmux-repl-window -params 0..1 -command-completion -docstring "Create a new w
     tmux-repl-impl 'new-window' %arg{@}
 }
 
-def -hidden _tmux-send-text -docstring "Send the selected text to the repl pane" %{
+def -hidden tmux-send-text -docstring "Send the selected text to the repl pane" %{
     nop %sh{
         tmux set-buffer -b kak_selection "${kak_selection}"
         kak_orig_window=$(tmux display-message -p '#I')
@@ -62,7 +62,7 @@ def -hidden _tmux-send-text -docstring "Send the selected text to the repl pane"
     }
 }
 
-def -hidden _tmux-repl-disabled %{ %sh{
+def -hidden tmux-repl-disabled %{ %sh{
     VERSION_TMUX=$(tmux -V)
     printf %s "echo -color Error %{The version of tmux is too old: got ${VERSION_TMUX}, expected >= 2.x}"
 } }

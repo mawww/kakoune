@@ -100,7 +100,7 @@ def ruby-alternative-file -docstring 'Jump to the alternate file (implementation
     echo "edit $altfile"
 }}
 
-def -hidden _ruby_filter_around_selections %{
+def -hidden ruby-filter-around-selections %{
     eval -no-hooks -draft -itersel %{
         exec <a-x>
         # remove trailing white spaces
@@ -108,7 +108,7 @@ def -hidden _ruby_filter_around_selections %{
     }
 }
 
-def -hidden _ruby_indent_on_char %{
+def -hidden ruby-indent-on-char %{
     eval -no-hooks -draft -itersel %{
         # align middle and end structures to start
         try %{ exec -draft <a-x> <a-k> ^ \h * (else|elsif) $ <ret> <a-\;> <a-?> ^ \h * (if)                                                       <ret> s \A | \Z <ret> \' <a-&> }
@@ -118,18 +118,18 @@ def -hidden _ruby_indent_on_char %{
     }
 }
 
-def -hidden _ruby_indent_on_new_line %{
+def -hidden ruby-indent-on-new-line %{
     eval -no-hooks -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft K <a-&> }
         # filter previous line
-        try %{ exec -draft k : _ruby_filter_around_selections <ret> }
+        try %{ exec -draft k : ruby-filter-around-selections <ret> }
         # indent after start structure
         try %{ exec -draft k <a-x> <a-k> ^ \h * (begin|case|class|def|do|else|elsif|ensure|for|if|module|rescue|unless|until|when|while) \b <ret> j <a-gt> }
     }
 }
 
-def -hidden _ruby_insert_on_new_line %{
+def -hidden ruby-insert-on-new-line %{
     eval -no-hooks -draft -itersel %{
         # copy _#_ comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^ \h * \K \# \h * <ret> y gh j P }
@@ -147,9 +147,9 @@ def -hidden _ruby_insert_on_new_line %{
 hook -group ruby-highlight global WinSetOption filetype=ruby %{ add-highlighter ref ruby }
 
 hook global WinSetOption filetype=ruby %{
-    hook window InsertChar .* -group ruby-indent _ruby_indent_on_char
-    hook window InsertChar \n -group ruby-insert _ruby_insert_on_new_line
-    hook window InsertChar \n -group ruby-indent _ruby_indent_on_new_line
+    hook window InsertChar .* -group ruby-indent ruby-indent-on-char
+    hook window InsertChar \n -group ruby-insert ruby-insert-on-new-line
+    hook window InsertChar \n -group ruby-indent ruby-indent-on-new-line
 
     alias window alt ruby-alternative-file
 }

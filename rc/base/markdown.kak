@@ -124,7 +124,7 @@ add-highlighter -group /markdown/content regex \H\K\h\h$ 0:PrimarySelection
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _markdown_indent_on_new_line %{
+def -hidden markdown-indent-on-new-line %{
     eval -draft -itersel %{
         # copy block quote(s), list item prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K((>\h*)|[*+-])+\h* <ret> y gh j P }
@@ -141,7 +141,7 @@ def -hidden _markdown_indent_on_new_line %{
 hook -group markdown-highlight global WinSetOption filetype=markdown %{ add-highlighter ref markdown }
 
 hook global WinSetOption filetype=markdown %{
-    hook window InsertChar \n -group markdown-indent _markdown_indent_on_new_line
+    hook window InsertChar \n -group markdown-indent markdown-indent-on-new-line
 }
 
 hook -group markdown-highlight global WinSetOption filetype=(?!markdown).* %{ remove-highlighter markdown }

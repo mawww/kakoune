@@ -37,24 +37,24 @@ add-highlighter -group /html/tag/content/string fill string
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _html_filter_around_selections %{
+def -hidden html-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden _html_indent_on_char %{
+def -hidden html-indent-on-char %{
     eval -draft -itersel %{
         # align closing tag to opening when alone on a line
         try %{ exec -draft <space> <a-h> s ^\h+</(\w+)>$ <ret> <a-\;> <a-?> <lt><c-r>1 <ret> s \`|.\' <ret> <a-r> 1<a-&> }
     }
 }
 
-def -hidden _html_indent_on_new_line %{
+def -hidden html-indent-on-new-line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : _html_filter_around_selections <ret> }
+        try %{ exec -draft k : html-filter-around-selections <ret> }
         # indent after lines ending with opening tag
         try %{ exec -draft k <a-x> <a-k> <[^/][^>]+>$ <ret> j <a-gt> }
     }
@@ -66,9 +66,9 @@ def -hidden _html_indent_on_new_line %{
 hook -group html-highlight global WinSetOption filetype=(?:html|xml) %{ add-highlighter ref html }
 
 hook global WinSetOption filetype=(?:html|xml) %{
-    hook window InsertEnd  .* -group html-hooks  _html_filter_around_selections
-    hook window InsertChar .* -group html-indent _html_indent_on_char
-    hook window InsertChar \n -group html-indent _html_indent_on_new_line
+    hook window InsertEnd  .* -group html-hooks  html-filter-around-selections
+    hook window InsertChar .* -group html-indent html-indent-on-char
+    hook window InsertChar \n -group html-indent html-indent-on-new-line
 }
 
 hook -group html-highlight global WinSetOption filetype=(?!html|xml).* %{ remove-highlighter html }

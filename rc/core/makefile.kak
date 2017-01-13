@@ -34,7 +34,7 @@ add-highlighter -group /makefile/content regex [+?:]= 0:operator
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _makefile-indent-on-new-line %{
+def -hidden makefile-indent-on-new-line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft \;K<a-&> }
@@ -53,7 +53,7 @@ def -hidden _makefile-indent-on-new-line %{
 hook -group makefile-highlight global WinSetOption filetype=makefile %{ add-highlighter ref makefile }
 
 hook global WinSetOption filetype=makefile %{
-    hook window InsertChar \n -group makefile-indent _makefile-indent-on-new-line
+    hook window InsertChar \n -group makefile-indent makefile-indent-on-new-line
 }
 
 hook -group makefile-highlight global WinSetOption filetype=(?!makefile).* %{ remove-highlighter makefile }

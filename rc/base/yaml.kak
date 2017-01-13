@@ -27,19 +27,19 @@ add-highlighter -group /yaml/code regex \b(true|false|null)\b 0:value
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _yaml_filter_around_selections %{
+def -hidden yaml-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden _yaml_indent_on_new_line %{
+def -hidden yaml-indent-on-new-line %{
     eval -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : _yaml_filter_around_selections <ret> }
+        try %{ exec -draft k : yaml-filter-around-selections <ret> }
         # indent after :
         try %{ exec -draft <space> k x <a-k> :$ <ret> j <a-gt> }
     }
@@ -51,8 +51,8 @@ def -hidden _yaml_indent_on_new_line %{
 hook -group yaml-highlight global WinSetOption filetype=yaml %{ add-highlighter ref yaml }
 
 hook global WinSetOption filetype=yaml %{
-    hook window InsertEnd  .* -group yaml-hooks  _yaml_filter_around_selections
-    hook window InsertChar \n -group yaml-indent _yaml_indent_on_new_line
+    hook window InsertEnd  .* -group yaml-hooks  yaml-filter-around-selections
+    hook window InsertChar \n -group yaml-indent yaml-indent-on-new-line
 }
 
 hook -group yaml-highlight global WinSetOption filetype=(?!yaml).* %{ remove-highlighter yaml }

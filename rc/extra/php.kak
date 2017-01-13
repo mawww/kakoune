@@ -31,26 +31,26 @@ add-highlighter -group /php/code regex \b(__halt_compiler|abstract|and|array|as|
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _php_filter_around_selections %{
+def -hidden php-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden _php_indent_on_char %<
+def -hidden php-indent-on-char %<
     eval -draft -itersel %<
         # align closer token to its opener when alone on a line
         try %/ exec -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \`|.\' <ret> 1<a-&> /
     >
 >
 
-def -hidden _php_indent_on_new_line %<
+def -hidden php-indent-on-new-line %<
     eval -draft -itersel %<
         # copy // comments prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : _php_filter_around_selections <ret> }
+        try %{ exec -draft k : php-filter-around-selections <ret> }
         # indent after lines beginning / ending with opener token
         try %_ exec -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
     >
@@ -62,9 +62,9 @@ def -hidden _php_indent_on_new_line %<
 hook -group php-highlight global WinSetOption filetype=php %{ add-highlighter ref php }
 
 hook global WinSetOption filetype=php %{
-    hook window InsertEnd  .* -group php-hooks  _php_filter_around_selections
-    hook window InsertChar .* -group php-indent _php_indent_on_char
-    hook window InsertChar \n -group php-indent _php_indent_on_new_line
+    hook window InsertEnd  .* -group php-hooks  php-filter-around-selections
+    hook window InsertChar .* -group php-indent php-indent-on-char
+    hook window InsertChar \n -group php-indent php-indent-on-new-line
 }
 
 hook -group php-highlight global WinSetOption filetype=(?!php).* %{ remove-highlighter php }

@@ -45,7 +45,7 @@ add-highlighter -group /coffee/code regex \b(break|case|catch|class|const|contin
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _coffee_filter_around_selections %{
+def -hidden coffee-filter-around-selections %{
     eval -draft -itersel %{
         exec <a-x>
         # remove trailing white spaces
@@ -53,14 +53,14 @@ def -hidden _coffee_filter_around_selections %{
     }
 }
 
-def -hidden _coffee_indent_on_new_line %{
+def -hidden coffee-indent-on-new-line %{
     eval -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^ \h * \K \# \h * <ret> y gh j P }
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : _coffee_filter_around_selections <ret> }
+        try %{ exec -draft k : coffee-filter-around-selections <ret> }
         # indent after start structure
         try %{ exec -draft k <a-x> <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) \b | (=|->) $ <ret> j <a-gt> }
     }
@@ -72,8 +72,8 @@ def -hidden _coffee_indent_on_new_line %{
 hook -group coffee-highlight global WinSetOption filetype=coffee %{ add-highlighter ref coffee }
 
 hook global WinSetOption filetype=coffee %{
-    hook window InsertEnd  .* -group coffee-hooks  _coffee_filter_around_selections
-    hook window InsertChar \n -group coffee-indent _coffee_indent_on_new_line
+    hook window InsertEnd  .* -group coffee-hooks  coffee-filter-around-selections
+    hook window InsertChar \n -group coffee-indent coffee-indent-on-new-line
 }
 
 hook -group coffee-highlight global WinSetOption filetype=(?!coffee).* %{ remove-highlighter coffee }

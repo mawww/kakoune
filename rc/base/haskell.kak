@@ -31,12 +31,12 @@ add-highlighter -group /haskell/code regex \b(Int|Integer|Char|Bool|Float|Double
 
 # http://en.wikibooks.org/wiki/Haskell/Indentation
 
-def -hidden _haskell_filter_around_selections %{
+def -hidden haskell-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden _haskell_indent_on_new_line %{
+def -hidden haskell-indent-on-new-line %{
     eval -draft -itersel %{
         # copy -- comments prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
@@ -45,7 +45,7 @@ def -hidden _haskell_indent_on_new_line %{
         # align to first clause
         try %{ exec -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|do|let|where)\h+\K.* <ret> s \`|.\' <ret> & }
         # filter previous line
-        try %{ exec -draft k : _haskell_filter_around_selections <ret> }
+        try %{ exec -draft k : haskell-filter-around-selections <ret> }
         # indent after lines beginning with condition or ending with expression or =(
         try %{ exec -draft \; k x <a-k> ^\h*(if)|(case\h+[\w']+\h+of|do|let|where|[=(])$ <ret> j <a-gt> }
     }
@@ -57,8 +57,8 @@ def -hidden _haskell_indent_on_new_line %{
 hook -group haskell-highlight global WinSetOption filetype=haskell %{ add-highlighter ref haskell }
 
 hook global WinSetOption filetype=haskell %{
-    hook window InsertEnd  .* -group haskell-hooks  _haskell_filter_around_selections
-    hook window InsertChar \n -group haskell-indent _haskell_indent_on_new_line
+    hook window InsertEnd  .* -group haskell-hooks  haskell-filter-around-selections
+    hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
 }
 
 hook -group haskell-highlight global WinSetOption filetype=(?!haskell).* %{ remove-highlighter haskell }

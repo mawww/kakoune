@@ -33,19 +33,19 @@ add-highlighter -group /haml/code regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _haml_filter_around_selections %{
+def -hidden haml-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden _haml_indent_on_new_line %{
+def -hidden haml-indent-on-new-line %{
     eval -draft -itersel %{
         # copy '/' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K/\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : _haml_filter_around_selections <ret> }
+        try %{ exec -draft k : haml-filter-around-selections <ret> }
         # indent after lines beginning with : or -
         try %{ exec -draft k <a-x> <a-k> ^\h*[:-] <ret> j <a-gt> }
     }
@@ -57,8 +57,8 @@ def -hidden _haml_indent_on_new_line %{
 hook -group haml-highlight global WinSetOption filetype=haml %{ add-highlighter ref haml }
 
 hook global WinSetOption filetype=haml %{
-    hook window InsertEnd  .* -group haml-hooks  _haml_filter_around_selections
-    hook window InsertChar \n -group haml-indent _haml_indent_on_new_line
+    hook window InsertEnd  .* -group haml-hooks  haml-filter-around-selections
+    hook window InsertChar \n -group haml-indent haml-indent-on-new-line
 }
 
 hook -group haml-highlight global WinSetOption filetype=(?!haml).* %{ remove-highlighter haml }

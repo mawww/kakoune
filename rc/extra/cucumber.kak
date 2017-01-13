@@ -56,19 +56,19 @@ add-highlighter -group /cucumber/code regex \b(Feature|Business\h+Need|Ability|B
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _cucumber_filter_around_selections %{
+def -hidden cucumber-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden _cucumber_indent_on_new_line %{
+def -hidden cucumber-indent-on-new-line %{
     eval -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : _cucumber_filter_around_selections <ret> }
+        try %{ exec -draft k : cucumber-filter-around-selections <ret> }
         # indent after lines containing :
         try %{ exec -draft <space> k x <a-k> : <ret> j <a-gt> }
     }
@@ -80,8 +80,8 @@ def -hidden _cucumber_indent_on_new_line %{
 hook -group cucumber-highlight global WinSetOption filetype=cucumber %{ add-highlighter ref cucumber }
 
 hook global WinSetOption filetype=cucumber %{
-    hook window InsertEnd  .* -group cucumber-hooks  _cucumber_filter_around_selections
-    hook window InsertChar \n -group cucumber-indent _cucumber_indent_on_new_line
+    hook window InsertEnd  .* -group cucumber-hooks  cucumber-filter-around-selections
+    hook window InsertChar \n -group cucumber-indent cucumber-indent-on-new-line
 }
 
 hook -group cucumber-highlight global WinSetOption filetype=(?!cucumber).* %{ remove-highlighter cucumber }

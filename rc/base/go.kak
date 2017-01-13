@@ -53,7 +53,7 @@ add-highlighter -group /go/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _go-indent-on-new-line %~
+def -hidden go-indent-on-new-line %~
     eval -draft -itersel %=
         # preserve previous line indent
         try %{ exec -draft \;K<a-&> }
@@ -72,12 +72,12 @@ def -hidden _go-indent-on-new-line %~
     =
 ~
 
-def -hidden _go-indent-on-opening-curly-brace %[
+def -hidden go-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ exec -draft -itersel h<a-F>)M <a-k> \`\(.*\)\h*\n\h*\{\' <ret> s \`|.\' <ret> 1<a-&> ]
 ]
 
-def -hidden _go-indent-on-closing-curly-brace %[
+def -hidden go-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
@@ -90,9 +90,9 @@ hook -group go-highlight global WinSetOption filetype=go %{ add-highlighter ref 
 hook global WinSetOption filetype=go %{
     # cleanup trailing whitespaces when exiting insert mode
     hook window InsertEnd .* -group go-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
-    hook window InsertChar \n -group go-indent _go-indent-on-new-line
-    hook window InsertChar \{ -group go-indent _go-indent-on-opening-curly-brace
-    hook window InsertChar \} -group go-indent _go-indent-on-closing-curly-brace
+    hook window InsertChar \n -group go-indent go-indent-on-new-line
+    hook window InsertChar \{ -group go-indent go-indent-on-opening-curly-brace
+    hook window InsertChar \} -group go-indent go-indent-on-closing-curly-brace
 }
 
 hook -group go-highlight global WinSetOption filetype=(?!go).* %{ remove-highlighter go }

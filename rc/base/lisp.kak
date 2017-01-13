@@ -26,12 +26,12 @@ add-highlighter -group /lisp/code regex \b(def[a-z]+|if|do|let|lambda|catch|and|
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _lisp_filter_around_selections %{
+def -hidden lisp-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden _lisp_indent_on_new_line %{
+def -hidden lisp-indent-on-new-line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
@@ -46,8 +46,8 @@ def -hidden _lisp_indent_on_new_line %{
 hook -group lisp-highlight global WinSetOption filetype=lisp %{ add-highlighter ref lisp }
 
 hook global WinSetOption filetype=lisp %{
-    hook window InsertEnd  .* -group lisp-hooks  _lisp_filter_around_selections
-    hook window InsertChar \n -group lisp-indent _lisp_indent_on_new_line
+    hook window InsertEnd  .* -group lisp-hooks  lisp-filter-around-selections
+    hook window InsertChar \n -group lisp-indent lisp-indent-on-new-line
 }
 
 hook -group lisp-highlight global WinSetOption filetype=(?!lisp).* %{ remove-highlighter lisp }

@@ -22,7 +22,7 @@ add-highlighter -group /taskpaper regex (([a-z]+://\S+)|((mailto:)[\w+-]+@\S+)) 
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _taskpaper-indent-on-new-line %{
+def -hidden taskpaper-indent-on-new-line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft \;K<a-&> }
@@ -38,7 +38,7 @@ def -hidden _taskpaper-indent-on-new-line %{
 
 hook -group taskpaper-highlight global WinSetOption filetype=taskpaper %{
     add-highlighter ref taskpaper
-    hook window InsertChar \n -group taskpaper-indent _taskpaper-indent-on-new-line
+    hook window InsertChar \n -group taskpaper-indent taskpaper-indent-on-new-line
 }
 hook -group taskpaper-highlight global WinSetOption filetype=(?!taskpaper).* %{
     remove-highlighter taskpaper

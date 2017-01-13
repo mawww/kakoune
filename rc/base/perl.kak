@@ -73,7 +73,7 @@ add-highlighter -group /perl/code regex \$(LAST_REGEXP_CODE_RESULT|LIST_SEPARATO
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _perl-indent-on-new-line %~
+def -hidden perl-indent-on-new-line %~
     eval -draft -itersel %=
         # preserve previous line indent
         try %{ exec -draft \;K<a-&> }
@@ -92,12 +92,12 @@ def -hidden _perl-indent-on-new-line %~
     =
 ~
 
-def -hidden _perl-indent-on-opening-curly-brace %[
+def -hidden perl-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ exec -draft -itersel h<a-F>)M <a-k> \`\(.*\)\h*\n\h*\{\' <ret> s \`|.\' <ret> 1<a-&> ]
 ]
 
-def -hidden _perl-indent-on-closing-curly-brace %[
+def -hidden perl-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
@@ -110,9 +110,9 @@ hook -group perl-highlight global WinSetOption filetype=perl %{ add-highlighter 
 hook global WinSetOption filetype=perl %{
     # cleanup trailing whitespaces when exiting insert mode
     hook window InsertEnd .* -group perl-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
-    hook window InsertChar \n -group perl-indent _perl-indent-on-new-line
-    hook window InsertChar \{ -group perl-indent _perl-indent-on-opening-curly-brace
-    hook window InsertChar \} -group perl-indent _perl-indent-on-closing-curly-brace
+    hook window InsertChar \n -group perl-indent perl-indent-on-new-line
+    hook window InsertChar \{ -group perl-indent perl-indent-on-opening-curly-brace
+    hook window InsertChar \} -group perl-indent perl-indent-on-closing-curly-brace
 }
 
 hook -group perl-highlight global WinSetOption filetype=(?!perl).* %{ remove-highlighter perl }

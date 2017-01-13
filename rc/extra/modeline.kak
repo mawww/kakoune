@@ -11,7 +11,7 @@
 # and the end of the buffer
 decl int modelines 5
 
-def -hidden _modeline-parse %{
+def -hidden modeline-parse %{
     %sh{
         # Translate a vim option into the corresponding kakoune one
         function translate_opt_vim {
@@ -103,6 +103,6 @@ def modeline-parse -docstring "Read and interpret vi-format modelines at the beg
     try %{ eval -draft %{
         exec \%s\`|.\'<ret> %opt{modelines}k <a-x> %opt{modelines}X \
              s^[^\s]+?\s(vim?|kak(oune)?):\s?[^\n]+<ret>
-        eval -draft -itersel _modeline-parse
+        eval -draft -itersel modeline-parse
     } }
 }

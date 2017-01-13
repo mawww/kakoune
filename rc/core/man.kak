@@ -16,7 +16,7 @@ hook -group man-highlight global WinSetOption filetype=man %{
 
 hook global WinSetOption filetype=man %{
     hook -group man-hooks window WinResize .* %{
-        _man %opt{_manpage}
+        man-impl %opt{_manpage}
     }
 }
 
@@ -26,7 +26,7 @@ hook global WinSetOption filetype=(?!man).* %{
     remove-hooks window man-hooks
 }
 
-def -hidden -params 1..2 _man %{ %sh{
+def -hidden -params 1..2 man-impl %{ %sh{
     manout=$(mktemp /tmp/kak-man-XXXXXX)
     colout=$(mktemp /tmp/kak-man-XXXXXX)
     MANWIDTH=${kak_window_width} man "$@" > $manout
@@ -71,5 +71,5 @@ The page can be a word, or a word directly followed by a section number between 
         subject=${subject%%\(*}
     fi
 
-    printf %s\\n "eval -collapse-jumps -try-client %opt{docsclient} _man $pagenum $subject"
+    printf %s\\n "eval -collapse-jumps -try-client %opt{docsclient} man-impl $pagenum $subject"
 } }

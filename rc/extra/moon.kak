@@ -55,7 +55,7 @@ def moon-alternative-file -docstring 'Jump to the alternate file (implementation
     printf %s\\n "edit $altfile"
 }}
 
-def -hidden _moon_filter_around_selections %{
+def -hidden moon-filter-around-selections %{
     eval -draft -itersel %{
         exec <a-x>
         # remove trailing white spaces
@@ -63,7 +63,7 @@ def -hidden _moon_filter_around_selections %{
     }
 }
 
-def -hidden _moon_indent_on_char %{
+def -hidden moon-indent-on-char %{
     eval -draft -itersel %{
         # align _else_ statements to start
         try %{ exec -draft <a-x> <a-k> ^ \h * (else(if)?) $ <ret> <a-\;> <a-?> ^ \h * (if|unless|when) <ret> s \A | \Z <ret> \' <a-&> }
@@ -74,14 +74,14 @@ def -hidden _moon_indent_on_char %{
     }
 }
 
-def -hidden _moon_indent_on_new_line %{
+def -hidden moon-indent-on-new-line %{
     eval -draft -itersel %{
         # copy -- comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^ \h * \K -- \h * <ret> y gh j P }
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : _moon_filter_around_selections <ret> }
+        try %{ exec -draft k : moon-filter-around-selections <ret> }
         # indent after start structure
         try %{ exec -draft k <a-x> <a-k> ^ \h * (class|else(if)?|for|if|switch|unless|when|while|with) \b | ([:=]|[-=]>) $ <ret> j <a-gt> }
         # deindent after return statements
@@ -95,9 +95,9 @@ def -hidden _moon_indent_on_new_line %{
 hook -group moon-highlight global WinSetOption filetype=moon %{ add-highlighter ref moon }
 
 hook global WinSetOption filetype=moon %{
-    hook window InsertEnd  .* -group moon-hooks  _moon_filter_around_selections
-    hook window InsertChar .* -group moon-indent _moon_indent_on_char
-    hook window InsertChar \n -group moon-indent _moon_indent_on_new_line
+    hook window InsertEnd  .* -group moon-hooks  moon-filter-around-selections
+    hook window InsertChar .* -group moon-indent moon-indent-on-char
+    hook window InsertChar \n -group moon-indent moon-indent-on-new-line
 
     alias window alt moon-alternative-file
 }

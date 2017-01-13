@@ -66,7 +66,7 @@ add-highlighter -group /gas/code regex \
 ^\h*(cvttp[ds]2dq|cvttp[ds]2pi|cvtts[ds]2si)\b|\
 ^\h*(vxorp[sd]|vandp[sd]|ucomis[sd])\b 0:keyword
 
-def -hidden _gas_filter_around_selections %{
+def -hidden gas-filter-around-selections %{
     eval -draft -itersel %{
         exec <a-x>
         # remove trailing white spaces
@@ -74,12 +74,12 @@ def -hidden _gas_filter_around_selections %{
     }
 }
 
-def -hidden _gas_indent_on_new_line %~
+def -hidden gas-indent-on-new-line %~
     eval -draft -itersel %<
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : _gas_filter_around_selections <ret> }
+        try %{ exec -draft k : gas-filter-around-selections <ret> }
         # indent after label
         try %[ exec -draft k <a-x> <a-k> :$ <ret> j <a-gt> ]
     >
@@ -88,7 +88,7 @@ def -hidden _gas_indent_on_new_line %~
 hook -group gas-highlight global WinSetOption filetype=gas %{ add-highlighter ref gas }
 
 hook global WinSetOption filetype=gas %{
-    hook window InsertChar \n -group gas-indent _gas_indent_on_new_line
+    hook window InsertChar \n -group gas-indent gas-indent-on-new-line
 }
 
 hook -group gas-highlight global WinSetOption filetype=(?!gas).* %{ remove-highlighter gas }

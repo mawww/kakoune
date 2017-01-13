@@ -1,6 +1,6 @@
 decl str docsclient
 
-def -hidden -params 1..2 _doc-open %{
+def -hidden -params 1..2 doc-open %{
     %sh{
         manout=$(mktemp /tmp/kak-man-XXXXXX)
 
@@ -46,7 +46,7 @@ An optional keyword argument can be passed to the function, which will be automa
             exit
         fi
 
-        printf %s\\n "eval -try-client %opt{docsclient} _doc-open ${PATH_DOC} $@"
+        printf %s\\n "eval -try-client %opt{docsclient} doc-open ${PATH_DOC} $@"
     }
 }
 

@@ -37,26 +37,26 @@ add-highlighter -group /javascript/code regex \b(break|case|catch|class|const|co
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _javascript_filter_around_selections %{
+def -hidden javascript-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden _javascript_indent_on_char %<
+def -hidden javascript-indent-on-char %<
     eval -draft -itersel %<
         # align closer token to its opener when alone on a line
         try %/ exec -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \`|.\' <ret> 1<a-&> /
     >
 >
 
-def -hidden _javascript_indent_on_new_line %<
+def -hidden javascript-indent-on-new-line %<
     eval -draft -itersel %<
         # copy // comments prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : _javascript_filter_around_selections <ret> }
+        try %{ exec -draft k : javascript-filter-around-selections <ret> }
         # indent after lines beginning / ending with opener token
         try %_ exec -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
     >
@@ -68,9 +68,9 @@ def -hidden _javascript_indent_on_new_line %<
 hook -group javascript-highlight global WinSetOption filetype=javascript %{ add-highlighter ref javascript }
 
 hook global WinSetOption filetype=javascript %{
-    hook window InsertEnd  .* -group javascript-hooks  _javascript_filter_around_selections
-    hook window InsertChar .* -group javascript-indent _javascript_indent_on_char
-    hook window InsertChar \n -group javascript-indent _javascript_indent_on_new_line
+    hook window InsertEnd  .* -group javascript-hooks  javascript-filter-around-selections
+    hook window InsertChar .* -group javascript-indent javascript-indent-on-char
+    hook window InsertChar \n -group javascript-indent javascript-indent-on-new-line
 }
 
 hook -group javascript-highlight global WinSetOption filetype=(?!javascript).* %{ remove-highlighter javascript }
