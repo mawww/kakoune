@@ -1240,7 +1240,7 @@ private:
         {
         case InsertMode::Insert:
             for (auto& sel : selections)
-                sel = Selection{sel.max(), sel.min()};
+                sel.set(sel.max(), sel.min());
             break;
         case InsertMode::Replace:
             selections.erase();
@@ -1248,7 +1248,7 @@ private:
         case InsertMode::Append:
             for (auto& sel : selections)
             {
-                sel = Selection{sel.min(), sel.max()};
+                sel.set(sel.min(), sel.max());
                 auto& cursor = sel.cursor();
                 // special case for end of lines, append to current line instead
                 if (cursor.column != buffer[cursor.line].length() - 1)
@@ -1257,23 +1257,23 @@ private:
             break;
         case InsertMode::AppendAtLineEnd:
             for (auto& sel : selections)
-                sel = BufferCoord{sel.max().line, buffer[sel.max().line].length() - 1};
+                sel.set({sel.max().line, buffer[sel.max().line].length() - 1});
             break;
         case InsertMode::OpenLineBelow:
             for (auto& sel : selections)
-                sel = BufferCoord{sel.max().line, buffer[sel.max().line].length() - 1};
+                sel.set({sel.max().line, buffer[sel.max().line].length() - 1});
             duplicate_selections(selections, count);
             insert('\n');
             break;
         case InsertMode::OpenLineAbove:
             for (auto& sel : selections)
-                sel = BufferCoord{sel.min().line};
+                sel.set({sel.min().line});
             duplicate_selections(selections, count);
             // Do not use insert method here as we need to fixup selection
             // before running the InsertChar hook.
             selections.insert("\n"_str, InsertMode::InsertCursor);
             for (auto& sel : selections) // fixup selection positions
-                sel = BufferCoord{sel.cursor().line - 1};
+                sel.set({sel.cursor().line - 1});
             context().hooks().run_hook("InsertChar", "\n", context());
             break;
         case InsertMode::InsertAtLineBegin:
@@ -1285,7 +1285,7 @@ private:
                     ++pos_non_blank;
                 if (*pos_non_blank != '\n')
                     pos = pos_non_blank.coord();
-                sel = pos;
+                sel.set(pos);
             }
             break;
         case InsertMode::InsertAtNextLineBegin:

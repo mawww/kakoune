@@ -28,6 +28,14 @@ struct Selection
     const BufferCoord& anchor() const { return m_anchor; }
     const BufferCoordAndTarget& cursor() const { return m_cursor; }
 
+    void set(BufferCoord anchor, BufferCoord cursor)
+    {
+        m_anchor = anchor;
+        m_cursor = cursor;
+    }
+
+    void set(BufferCoord coord) { set(coord, coord); }
+
     CaptureList& captures() { return m_captures; }
     const CaptureList& captures() const { return m_captures; }
 
