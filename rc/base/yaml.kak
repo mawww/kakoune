@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](yaml) %{
+hook global BufCreate .*[.](ya?ml) %{
     set buffer filetype yaml
 }
 
