@@ -12,12 +12,11 @@
 
 debug    = yes
 static   = no
-pedantic = yes
 
 suffix   = .opt
 
 CXX      = g++
-CXXFLAGS = -std=gnu++11 -Wall -Wno-reorder -Wno-sign-compare -Wno-address
+CXXFLAGS = -pedantic -std=gnu++11 -Wall -Wno-reorder -Wno-sign-compare -Wno-address
 CPPFLAGS =
 LDFLAGS  =
 LIBS     =
@@ -33,10 +32,6 @@ endif
 ifeq ($(static),yes)
 	LIBS += -ltinfo -lgpm
 	LDFLAGS += -static -pthread
-endif
-
-ifeq ($(pedantic),yes)
-	CXXFLAGS += -pedantic
 endif
 
 ifeq (@(TUP_PLATFORM),macosx)

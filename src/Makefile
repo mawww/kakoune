@@ -1,6 +1,5 @@
 debug ?= yes
 static ?= no
-pedantic ?= yes
 
 ifeq ($(debug),yes)
     CPPFLAGS += -DKAK_DEBUG
@@ -12,10 +11,6 @@ else
     else
         $(error debug should be either yes or no)
     endif
-endif
-
-ifeq ($(pedantic),yes)
-    CXXFLAGS += -pedantic
 endif
 
 sources := $(wildcard *.cc)
@@ -64,7 +59,7 @@ ifeq ($(static),yes)
     LDFLAGS += -static -pthread
 endif
 
-CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -Wno-address
+CXXFLAGS += -pedantic -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -Wno-address
 
 all : kak
 kak : $(objects)
