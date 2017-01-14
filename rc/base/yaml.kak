@@ -25,7 +25,7 @@ add-highlighter -group /yaml/code regex ^(\h*:\w*) 0:keyword
 add-highlighter -group /yaml/code regex \b(true|false|null)\b 0:value
 
 # Commands
-# ‾‾‾‾‾‾‾‾ 
+# ‾‾‾‾‾‾‾‾
 
 def -hidden yaml-filter-around-selections %{
     # remove trailing white spaces
