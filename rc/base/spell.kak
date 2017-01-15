@@ -26,7 +26,7 @@ Formats of language supported:
         fi
 
         {
-            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell -a $options" 2>&1 | {
+            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell --byte-offsets -a $options" 2>&1 | {
                 line_num=1
                 regions=$kak_timestamp
                 read line # drop the identification message
@@ -39,7 +39,8 @@ Formats of language supported:
                                pos=$(printf %s\\n "$line" | cut -d ' ' -f 3)
                             fi
                             word=$(printf %s\\n "$line" | cut -d ' ' -f 2)
-                            regions="$regions:$line_num.$pos+${#word}|Error"
+                            len=$(printf %s "$word" | wc -c)
+                            regions="$regions:$line_num.$pos+${len}|Error"
                             ;;
                         '') line_num=$((line_num + 1));;
                         \*) ;;
