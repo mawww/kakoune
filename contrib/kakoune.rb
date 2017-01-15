@@ -13,7 +13,7 @@ class Kakoune < Formula
     ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
 
     cd 'src' do
-      system "make", "install", "PREFIX=#{prefix}"
+      system "make", "install", "PREFIX=#{prefix}", "debug=no"
     end
   end
 end
