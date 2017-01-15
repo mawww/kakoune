@@ -5,7 +5,6 @@ def -hidden -params 1..2 doc-open %{
         manout=$(mktemp /tmp/kak-man-XXXXXX)
 
         # Those options are handled by the `man-db` implementation
-        export MAN_KEEP_FORMATTING=y
         export MANWIDTH=${kak_window_width}
 
         if man "$1" > "${manout}"; then
