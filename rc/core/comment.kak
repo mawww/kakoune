@@ -2,7 +2,7 @@
 decl str comment_line "#"
 
 ## Block comments
-decl str-list comment_block ""
+decl str-list comment_block
 
 ## Default comments for all languages
 hook global BufSetOption filetype=asciidoc %{
