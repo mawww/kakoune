@@ -123,7 +123,7 @@ def comment-selection -docstring "Comment/uncomment the current selection" %{
     }
 }
 
-def comment-line -docstring "Comment/uncomment the current line" %{
+def comment-line -docstring "(un)comment selected lines using line comments" %{
     %sh{
         readonly opening="${kak_opt_comment_line_chars}"
         readonly opening_escaped="\\Q${opening}\\E"
@@ -134,8 +134,8 @@ def comment-line -docstring "Comment/uncomment the current line" %{
         fi
 
         printf %s\\n "eval -draft %{
-            ## Select the content of the line, without indentation
-            exec I<esc><a-l>
+            ## Select the content of the lines, without indentation
+            exec <a-s>I<esc><a-l>
 
             try %{
                 ## There's no text on the line
