@@ -138,7 +138,7 @@ def comment-line -docstring "(un)comment selected lines using line comments" %{
             exec <a-s>I<esc><a-l>
 
             try %{
-                ## There's no text on the line
+                ## There’s no text on the line
                 exec <a-K>\\A[\\h\\v\\n]*\\z<ret>
 
                 try %{
