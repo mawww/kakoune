@@ -1,5 +1,5 @@
 ## Line comments
-decl str comment_line "#"
+decl str comment_line '#'
 
 ## Block comments
 decl str-list comment_block
@@ -90,7 +90,7 @@ hook global BufSetOption filetype=ruby %{
     set buffer comment_block '^begin=:^=end'
 }
 
-def comment-block -docstring "(un)comment selected lines using block comments" %{
+def comment-block -docstring '(un)comment selected lines using block comments' %{
     %sh{
         exec_proof() {
             ## Replace the '<' sign that is interpreted differently in `exec`
@@ -123,7 +123,7 @@ def comment-block -docstring "(un)comment selected lines using block comments" %
     }
 }
 
-def comment-line -docstring "(un)comment selected lines using line comments" %{
+def comment-line -docstring '(un)comment selected lines using line comments' %{
     %sh{
         readonly opening="${kak_opt_comment_line}"
         readonly opening_escaped="\\Q${opening}\\E"
