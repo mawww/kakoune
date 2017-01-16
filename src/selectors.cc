@@ -841,10 +841,10 @@ template Selection find_next_match<Backward>(const Buffer&, const Selection&, co
 
 using RegexIt = RegexIterator<BufferIterator>;
 
-void select_all_matches(SelectionList& selections, const Regex& regex, unsigned capture)
+void select_all_matches(SelectionList& selections, const Regex& regex, int capture)
 {
-    const unsigned mark_count = regex.mark_count();
-    if (capture > mark_count)
+    const int mark_count = (int)regex.mark_count();
+    if (capture < 0 or capture > mark_count)
         throw runtime_error("invalid capture number");
 
     Vector<Selection> result;
@@ -887,9 +887,9 @@ void select_all_matches(SelectionList& selections, const Regex& regex, unsigned 
     selections = SelectionList{buffer, std::move(result)};
 }
 
-void split_selections(SelectionList& selections, const Regex& regex, unsigned capture)
+void split_selections(SelectionList& selections, const Regex& regex, int capture)
 {
-    if (capture > regex.mark_count())
+    if (capture < 0 or capture > (int)regex.mark_count())
         throw runtime_error("invalid capture number");
 
     Vector<Selection> result;

@@ -759,8 +759,8 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
 void select_regex(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
-    const unsigned capture = (unsigned)params.count;
-    auto prompt = capture ? format("select (capture {}):", (int)capture) :  "select:"_str;
+    const int capture = params.count;
+    auto prompt = capture ? format("select (capture {}):", capture) :  "select:"_str;
 
     auto reg_content = RegisterManager::instance()[reg].values(context);
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
@@ -786,7 +786,7 @@ void select_regex(Context& context, NormalParams params)
 void split_regex(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
-    unsigned capture = (unsigned)params.count;
+    const int capture = params.count;
     auto prompt = capture ? format("split (on capture {}):", (int)capture) :  "split:"_str;
 
     auto reg_content = RegisterManager::instance()[reg].values(context);
