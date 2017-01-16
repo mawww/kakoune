@@ -676,19 +676,24 @@ void search(Context& context, NormalParams params)
       : (direction == Forward ? "search:"          : "reverse search:");
 
     const char reg = to_lower(params.reg ? params.reg : '/');
+    const int count = params.count;
+
     auto reg_content = RegisterManager::instance()[reg].values(context);
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
-    int main_index = context.selections().main_index();
-    int count = params.count;
+    const int main_index = context.selections().main_index();
+
     regex_prompt(context, prompt.str(),
                  [reg, count, saved_reg, main_index]
                  (Regex ex, PromptEvent event, Context& context) {
+                     if (event == PromptEvent::Abort)
+                     {
+                         RegisterManager::instance()[reg] = saved_reg;
+                         return;
+                     }
+
                      if (ex.empty())
                          ex = Regex{saved_reg[main_index]};
-                     if (event == PromptEvent::Abort)
-                         RegisterManager::instance()[reg] = saved_reg;
-                     else
-                         RegisterManager::instance()[reg] = ex.str();
+                     RegisterManager::instance()[reg] = ex.str();
 
                      if (not ex.empty() and not ex.str().empty())
                      {
@@ -754,14 +759,25 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
 void select_regex(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
-    unsigned capture = (unsigned)params.count;
+    const unsigned capture = (unsigned)params.count;
     auto prompt = capture ? format("select (capture {}):", (int)capture) :  "select:"_str;
+
+    auto reg_content = RegisterManager::instance()[reg].values(context);
+    Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
+    const int main_index = context.selections().main_index();
+
     regex_prompt(context, std::move(prompt),
-                 [reg, capture](Regex ex, PromptEvent event, Context& context) {
+                 [reg, capture, saved_reg, main_index](Regex ex, PromptEvent event, Context& context) {
+         if (event == PromptEvent::Abort)
+         {
+             RegisterManager::instance()[reg] = saved_reg;
+             return;
+         }
+
         if (ex.empty())
-            ex = Regex{context.main_sel_register_value(reg)};
-        else if (event == PromptEvent::Validate)
-            RegisterManager::instance()[reg] = ex.str();
+            ex = Regex{saved_reg[main_index]};
+        RegisterManager::instance()[reg] = ex.str();
+
         if (not ex.empty() and not ex.str().empty())
             select_all_matches(context.selections(), ex, capture);
     });
@@ -772,12 +788,23 @@ void split_regex(Context& context, NormalParams params)
     const char reg = to_lower(params.reg ? params.reg : '/');
     unsigned capture = (unsigned)params.count;
     auto prompt = capture ? format("split (on capture {}):", (int)capture) :  "split:"_str;
+
+    auto reg_content = RegisterManager::instance()[reg].values(context);
+    Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
+    const int main_index = context.selections().main_index();
+
     regex_prompt(context, std::move(prompt),
-                 [reg, capture](Regex ex, PromptEvent event, Context& context) {
+                 [reg, capture, saved_reg, main_index](Regex ex, PromptEvent event, Context& context) {
+         if (event == PromptEvent::Abort)
+         {
+             RegisterManager::instance()[reg] = saved_reg;
+             return;
+         }
+
         if (ex.empty())
-            ex = Regex{context.main_sel_register_value(reg)};
-        else if (event == PromptEvent::Validate)
-            RegisterManager::instance()[reg] = ex.str();
+            ex = Regex{saved_reg[main_index]};
+        RegisterManager::instance()[reg] = ex.str();
+
         if (not ex.empty() and not ex.str().empty())
             split_selections(context.selections(), ex, capture);
     });
@@ -844,8 +871,8 @@ template<bool matching>
 void keep(Context& context, NormalParams)
 {
     constexpr const char* prompt = matching ? "keep matching:" : "keep not matching:";
-    regex_prompt(context, prompt, [](const Regex& ex, PromptEvent, Context& context) {
-        if (ex.empty())
+    regex_prompt(context, prompt, [](const Regex& ex, PromptEvent event, Context& context) {
+        if (ex.empty() or event == PromptEvent::Abort)
             return;
         const Buffer& buffer = context.buffer();
 
