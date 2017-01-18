@@ -51,7 +51,7 @@ OPTIONS
 	connect to the given session
 
 -s <session_id>::
-	rename the current session name to *session_id*
+	set the current session name to *session_id*
 
 -ui <type>::
 	select the user interface, can be one of 'ncurses', 'dummy' or 'json'
