@@ -55,6 +55,8 @@ Client::~Client()
 {
     m_window->options().unregister_watcher(*this);
     m_window->set_client(nullptr);
+    ClientManager::instance().add_free_window(std::move(m_window),
+                                              std::move(context().selections()));
 }
 
 bool Client::process_pending_inputs()

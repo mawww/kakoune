@@ -22,7 +22,7 @@ public:
 
     Client* create_client(std::unique_ptr<UserInterface>&& ui,
                           EnvVarMap env_vars, StringView init_cmds,
-                          BufferCoord init_coord);
+                          Optional<BufferCoord> init_coord);
 
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
