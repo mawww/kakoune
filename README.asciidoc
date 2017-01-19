@@ -244,6 +244,7 @@ Just running *kak* launch a new kak session with a client on local terminal.
  * `-l`: list existing sessions, and check the dead ones
  * `-clear`: clear dead sessions socket files
  * `-ro`: prevent modifications to all buffers from being saved to disk
+ * `+line[:column]`: specify a target line and column for the first file
 
 Configuration
 ^^^^^^^^^^^^^
