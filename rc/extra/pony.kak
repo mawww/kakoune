@@ -10,7 +10,6 @@ hook global BufCreate .*[.](pony) %{
 
 hook global BufOpen .*[.](pony) %{
     set buffer filetype pony
-	echo -debug "BufOpen"
 }
 
 hook global BufNew .*[.](pony) %{
@@ -40,13 +39,12 @@ addhl -group /pony/comment       fill comment
     keywords="${keywords}|recover|consume|error|do|then|if|while"
     func_decl="new|fun|be|lambda"
     capabilities="iso|ref|box|tag|val|trn"
-    type_decl="class|actor|interface|trait|primitive|type"
-    struct="${type_decl}|var|let|embed"
+    struct="class|actor|interface|trait|primitive|type|var|let|embed"
 
 
     # Add the language's grammar to the static completion list
     static_words="${values}:${meta}:${keywords}:${types_decl}:${capabilities}"
-    static_words="${static_words}:${type_decl}:${struct}"
+    static_words="${static_words}::${struct}"
     printf %s\\n "hook global WinSetOption filetype=pony %{
         set window static_words '${static_words}'
     }" | sed 's,|,:,g'
@@ -61,7 +59,6 @@ addhl -group /pony/comment       fill comment
         addhl -group /pony/code regex '\b(${keywords})\b' 0:keyword
         addhl -group /pony/code regex ';' 0:keyword
         addhl -group /pony/code regex '^\s*|' 0:keyword
-        addhl -group /pony/code regex '\b(${type_decl})\b' 0:identifier
         addhl -group /pony/code regex '\b(${struct})\b' 0:identifier
         addhl -group /pony/code regex '\b(${capabilities})\b(!|^)?' 1:builtin 2:builtin
     "
@@ -84,7 +81,7 @@ def -hidden pony-indent-on-new-line %{
         # copy '//' comment prefix and following white spaces
         # try %{ exec -draft k x s ^\h*//\h* <ret> y jgh P }
         # indent after line ending with :
-        try %{ exec -draft <space> k x <a-k> (do|try|then|else|=>)$ <ret> j <a-gt> }
+        try %{ exec -draft <space> k x <a-k> (do|try|then|else|:|=>)$ <ret> j <a-gt> }
         # else, end are always de-indented
         try %{ exec -draft <space> k x <a-k> (else|end):$ <ret> k x s ^\h* <ret> y j x <a-k> ^<c-r>" <ret> J <a-lt> }
     }
