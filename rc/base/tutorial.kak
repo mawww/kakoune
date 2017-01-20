@@ -1,11 +1,11 @@
 decl str tutorial_source %val{source}
 decl str tutorial_dir
-decl str tutorial_lesson "000-introduction.md"
+decl str tutorial_lesson "000-introduction.asciidoc"
 
 def tutorial -params .. -docstring %{ Run the kakoune tutorial } -allow-override %{
     %sh{
         [ $# -gt 0 ] && tutlang="$1" || tutlang="en"
-        echo "set global tutorial_dir $(dirname ${kak_opt_tutorial_source})/$tutlang"
+        echo "set global tutorial_dir $(dirname ${kak_opt_tutorial_source})/../../doc/tutorial/$tutlang"
         echo tutorial-load
     }
 }
@@ -59,8 +59,8 @@ def tutorial-prev -allow-override %{
 }
 
 def help -allow-override -docstring %{ Show help... or not } %{
-    set global tutorial_lesson "meta-help.md"
+    set global tutorial_lesson "meta-help.asciidoc"
     tutorial
     tutorial-reload -no-nav
-    set global tutorial_lesson "000-introduction.md"
+    set global tutorial_lesson "000-introduction.asciidoc"
 }
