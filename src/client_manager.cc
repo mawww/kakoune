@@ -22,8 +22,10 @@ void ClientManager::clear()
     // So that clients destructor find the client manager empty
     // so that local UI does not fork.
     ClientList clients = std::move(m_clients);
+    clients.clear();
     m_client_trash.clear();
     m_free_windows.clear();
+    m_window_trash.clear();
 }
 
 String ClientManager::generate_name() const

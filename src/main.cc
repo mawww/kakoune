@@ -454,12 +454,13 @@ void signal_handler(int signal)
         abort();
 }
 
-int run_client(StringView session, StringView init_cmds, UIType ui_type)
+int run_client(StringView session, StringView init_cmds,
+               Optional<BufferCoord> init_coord, UIType ui_type)
 {
     try
     {
         EventManager event_manager;
-        RemoteClient client{session, make_ui(ui_type), get_env_vars(), init_cmds};
+        RemoteClient client{session, make_ui(ui_type), get_env_vars(), init_cmds, init_coord};
         while (true)
             event_manager.handle_next_events(EventMode::Normal);
     }
@@ -473,7 +474,7 @@ int run_client(StringView session, StringView init_cmds, UIType ui_type)
 }
 
 int run_server(StringView session,
-               StringView init_cmds, BufferCoord init_coord,
+               StringView init_cmds, Optional<BufferCoord> init_coord,
                bool ignore_kakrc, bool daemon, bool readonly, UIType ui_type,
                ConstArrayView<StringView> files)
 {
@@ -812,6 +813,28 @@ int main(int argc, char* argv[])
                               (bool)parser.get_switch("q"));
         }
 
+        Vector<StringView> files;
+        Optional<BufferCoord> init_coord;
+        for (auto& name : parser)
+        {
+            if (not name.empty() and name[0_byte] == '+')
+            {
+                auto colon = find(name, ':');
+                if (auto line = str_to_int_ifp({name.begin()+1, colon}))
+                {
+                    init_coord = BufferCoord{
+                        *line - 1,
+                        colon != name.end() ?
+                            str_to_int_ifp({colon+1, name.end()}).value_or(1) - 1
+                          : 0
+                    };
+                    continue;
+                }
+            }
+
+            files.emplace_back(name);
+        }
+
         if (auto server_session = parser.get_switch("c"))
         {
             for (auto opt : { "n", "s", "d", "ro" })
@@ -823,32 +846,13 @@ int main(int argc, char* argv[])
                 }
             }
             String new_files;
-            for (auto name : parser)
+            for (auto name : files)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
-            return run_client(*server_session, new_files + init_cmds, ui_type);
+            return run_client(*server_session, new_files + init_cmds, init_coord, ui_type);
         }
         else
         {
-            BufferCoord init_coord;
-            Vector<StringView> files;
-            for (auto& name : parser)
-            {
-                if (not name.empty() and name[0_byte] == '+')
-                {
-                    auto colon = find(name, ':');
-                    if (auto line = str_to_int_ifp({name.begin()+1, colon}))
-                    {
-                        init_coord.line = *line - 1;
-                        if (colon != name.end())
-                            init_coord.column = str_to_int_ifp({colon+1, name.end()}).value_or(1) - 1;
-
-                        continue;
-                    }
-                }
-
-                files.emplace_back(name);
-            }
 
             StringView session = parser.get_switch("s").value_or(StringView{});
             try
@@ -864,7 +868,7 @@ int main(int argc, char* argv[])
                 raise(SIGTSTP);
                 return run_client(convert.session,
                                   format("try %^buffer '{}'; select '{}'^; echo converted to client only mode",
-                                         escape(convert.buffer_name, "'^", '\\'), convert.selections), ui_type);
+                                         escape(convert.buffer_name, "'^", '\\'), convert.selections), {}, ui_type);
             }
         }
     }

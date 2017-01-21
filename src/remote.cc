@@ -8,6 +8,7 @@
 #include "event_manager.hh"
 #include "file.hh"
 #include "id_map.hh"
+#include "optional.hh"
 #include "user_interface.hh"
 
 #include <sys/types.h>
@@ -100,6 +101,14 @@ public:
             write(val.key);
             write(val.value);
         }
+    }
+
+    template<typename T>
+    void write(const Optional<T>& val)
+    {
+        write((bool)val);
+        if (val)
+            write(*val);
     }
 
     void write(Color color)
@@ -217,6 +226,14 @@ public:
             res.append({std::move(key), std::move(val)});
         }
         return res;
+    }
+
+    template<typename T>
+    Optional<T> read_optional()
+    {
+        if (not read<bool>())
+            return {};
+        return read<T>();
     }
 
     void reset()
@@ -511,7 +528,8 @@ bool check_session(StringView session)
 }
 
 RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& ui,
-                           const EnvVarMap& env_vars, StringView init_command)
+                           const EnvVarMap& env_vars, StringView init_command,
+                           Optional<BufferCoord> init_coord)
     : m_ui(std::move(ui))
 {
     int sock = connect_to(session);
@@ -519,6 +537,7 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
     {
         MsgWriter msg{m_send_buffer, MessageType::Connect};
         msg.write(init_command);
+        msg.write(init_coord);
         msg.write(m_ui->dimensions());
         msg.write(env_vars);
     }
@@ -652,12 +671,13 @@ private:
             case MessageType::Connect:
             {
                 auto init_cmds = m_reader.read<String>();
+                auto init_coord = m_reader.read_optional<BufferCoord>();
                 auto dimensions = m_reader.read<DisplayCoord>();
                 auto env_vars = m_reader.read_idmap<String, MemoryDomain::EnvVars>();
                 auto* ui = new RemoteUI{sock, dimensions};
                 if (auto* client = ClientManager::instance().create_client(
                                        std::unique_ptr<UserInterface>(ui),
-                                       std::move(env_vars), init_cmds, {}))
+                                       std::move(env_vars), init_cmds, init_coord))
                     ui->set_client(client);
 
                 Server::instance().remove_accepter(this);

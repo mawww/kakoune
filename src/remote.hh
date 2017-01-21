@@ -22,6 +22,9 @@ struct disconnected : runtime_error
 class FDWatcher;
 class UserInterface;
 
+template<typename T> struct Optional;
+struct BufferCoord;
+
 using RemoteBuffer = Vector<char, MemoryDomain::Remote>;
 
 // A remote client handle communication between a client running on the server
@@ -30,7 +33,8 @@ class RemoteClient
 {
 public:
     RemoteClient(StringView session, std::unique_ptr<UserInterface>&& ui,
-                 const EnvVarMap& env_vars, StringView init_command);
+                 const EnvVarMap& env_vars, StringView init_command,
+                 Optional<BufferCoord> init_coord);
 
 private:
     std::unique_ptr<UserInterface> m_ui;
