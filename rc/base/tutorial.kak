@@ -30,7 +30,7 @@ def tutorial-reload -params 0..1 -docstring %{ Reload current tutorial page } %{
         fi
         echo "exec -draft -client ${kak_client} \%d"
         if $nav ; then
-            echo "exec -draft -client ${kak_client} |cat<space>${kak_opt_tutorial_dir}/meta-nav.md<ret>\;"
+            echo "exec -draft -client ${kak_client} |cat<space>${kak_opt_tutorial_dir}/meta-nav.asciidoc<ret>\;"
         fi
         echo "exec -draft -client ${kak_client} ge|cat<space>${kak_opt_tutorial_dir}/${kak_opt_tutorial_lesson}<ret>\;"
         echo "exec -client ${kak_client} gg"
