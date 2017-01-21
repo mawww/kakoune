@@ -66,7 +66,7 @@ struct SafeCountablePolicy
         kak_assert(sc->m_count >= 0);
         #ifdef SAFE_PTR_TRACK_CALLSTACKS
         auto it = std::find_if(sc->m_callstacks.begin(), sc->m_callstacks.end(),
-                               [=](const Callstack& cs) { return cs.ptr == ptr; });
+                               [=](const SafeCountable::Callstack& cs) { return cs.ptr == ptr; });
         kak_assert(it != sc->m_callstacks.end());
         sc->m_callstacks.erase(it);
         #endif
@@ -76,7 +76,7 @@ struct SafeCountablePolicy
     {
         #ifdef SAFE_PTR_TRACK_CALLSTACKS
         auto it = std::find_if(sc->m_callstacks.begin(), sc->m_callstacks.end(),
-                               [=](const Callstack& cs) { return cs.ptr == from; });
+                               [=](const SafeCountable::Callstack& cs) { return cs.ptr == from; });
         kak_assert(it != sc->m_callstacks.end());
         it->ptr = to;
         #endif
