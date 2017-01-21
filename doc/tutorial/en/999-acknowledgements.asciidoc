@@ -1,0 +1,18 @@
+Have fun with Kakoune !
+=======================
+
+This concludes the tutorial.  It was intended to give a brief overview of
+Kakoune, enough to allow you to use the editor fairly easily.
+
+You are now encouraged to write your own scripts and mappings, to make kak
+the editor YOU need.
+
+This tutorial was written by @lisael and is inspired by Vim's builtin
+vimtutor by Michael C. Pierce and Robert K. Ware, modified by Bram Moolenaar.
+for Vim. Some lessons are verbatim copies of vimtutor lesson, so I guess they
+are subject of Vim's terms of use, as I couldn't find the original tutorial's
+license.
+
+Finally, remember that editing code or text could be a boring task. Kak make
+it fun again, either by providing powerful movements and edit commands and by
+allowing easy integration with your Unix tools!

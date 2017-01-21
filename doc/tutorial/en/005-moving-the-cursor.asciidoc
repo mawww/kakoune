@@ -1,5 +1,5 @@
 Moving the cursor
------------------
+=================
 
 To move the cursor, press the h,j,k,l keys as indicated.
  
@@ -13,7 +13,7 @@ To move the cursor, press the h,j,k,l keys as indicated.
 
   2. type `<esc>,l` to see the next lesson
 
-NOTE: If you are ever unsure about something you typed, press <ESC> to place
+NOTE: If you are ever unsure about something you typed, press <esc> to place
       you in Normal mode.  Then retype the command you wanted.
 
 NOTE: The cursor keys should also work.  But using hjkl you will be able to
