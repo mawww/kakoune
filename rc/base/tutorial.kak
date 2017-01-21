@@ -5,19 +5,19 @@ decl str tutorial_lesson "000-introduction.asciidoc"
 def tutorial -params .. -docstring %{ Run the kakoune tutorial } -allow-override %{
     %sh{
         [ $# -gt 0 ] && tutlang="$1" || tutlang="en"
-        echo "set global tutorial_dir $(dirname ${kak_opt_tutorial_source})/../../doc/tutorial/$tutlang"
-        echo tutorial-load
+        printf %s\\n "set global tutorial_dir $(dirname ${kak_opt_tutorial_source})/../../doc/tutorial/$tutlang"
+        printf %s\\n tutorial-load
     }
 }
 
 def -hidden tutorial-load -params 0..1 -allow-override %{
     %sh{
         bufname="*${kak_opt_tutorial_lesson}*"
-        if [ $(echo "${kak_buflist}" | grep "${bufname}") ]; then
-            echo "buffer ${bufname}"
+        if [ $(printf %s\\n "${kak_buflist}" | grep "${bufname}") ]; then
+            printf %s\\n "buffer ${bufname}"
         else
-            echo "edit -scratch ${bufname}"
-            echo "tutorial-reload $@"
+            printf %s\\n "edit -scratch ${bufname}"
+            printf %s\\n "tutorial-reload $@"
         fi
     }
 }
@@ -28,24 +28,23 @@ def tutorial-reload -params 0..1 -docstring %{ Reload current tutorial page } %{
         if [ "$1" = "-no-nav" ]; then
             nav=false
         fi
-        echo "exec -draft -client ${kak_client} \%d"
+        printf %s\\n "exec -draft -client ${kak_client} \%d"
         if $nav ; then
-            echo "exec -draft -client ${kak_client} |cat<space>${kak_opt_tutorial_dir}/meta-nav.asciidoc<ret>\;"
+            printf %s\\n "exec -draft -client ${kak_client} |cat<space>${kak_opt_tutorial_dir}/meta-nav.asciidoc<ret>\;"
         fi
-        echo "exec -draft -client ${kak_client} ge|cat<space>${kak_opt_tutorial_dir}/${kak_opt_tutorial_lesson}<ret>\;"
-        echo "exec -client ${kak_client} gg"
-        # echo "exec -draft -client ${kak_client} ggO\`<lt>esc<gt>,h\`<space>previous<space>page<esc> Qa<space><esc><esc>35q anext<space>page<space>\`<lt>esc<gt>,l\`<esc> o<esc>"
-        echo "set buffer filetype markdown"
-        echo "map buffer user l :tutorial-next<ret>"
-        echo "map buffer user h :tutorial-prev<ret>"
-        echo "map buffer user r :tutorial-reload<ret>"
+        printf %s\\n "exec -draft -client ${kak_client} ge|cat<space>${kak_opt_tutorial_dir}/${kak_opt_tutorial_lesson}<ret>\;"
+        printf %s\\n "exec -client ${kak_client} gg"
+        printf %s\\n "set buffer filetype markdown"
+        printf %s\\n "map buffer user l :tutorial-next<ret>"
+        printf %s\\n "map buffer user h :tutorial-prev<ret>"
+        printf %s\\n "map buffer user r :tutorial-reload<ret>"
     }
 }
 
 def tutorial-next -allow-override %{
     %sh{
         next=$(ls "${kak_opt_tutorial_dir}" | grep -v "meta-" | grep -A 1 "${kak_opt_tutorial_lesson}" | tail -1)
-        echo "set global tutorial_lesson $next"
+        printf %s\\n  "set global tutorial_lesson $next"
     }
     tutorial-load
 }
@@ -53,7 +52,7 @@ def tutorial-next -allow-override %{
 def tutorial-prev -allow-override %{
     %sh{
         next=$(ls "${kak_opt_tutorial_dir}" | grep -v "meta-" | grep -B 1 "${kak_opt_tutorial_lesson}" | head -1)
-        echo "set global tutorial_lesson $next"
+        printf %s\\n  "set global tutorial_lesson $next"
     }
     tutorial-load
 }
