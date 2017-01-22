@@ -57,6 +57,7 @@ def -hidden haskell-indent-on-new-line %{
 hook -group haskell-highlight global WinSetOption filetype=haskell %{ add-highlighter ref haskell }
 
 hook global WinSetOption filetype=haskell %{
+    set buffer completion_extra_word_chars "'"
     hook window InsertEnd  .* -group haskell-hooks  haskell-filter-around-selections
     hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
 }
