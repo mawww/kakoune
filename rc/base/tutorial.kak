@@ -43,7 +43,7 @@ def tutorial-reload -params 0..1 -docstring %{ Reload current tutorial page } %{
 
 def tutorial-next -allow-override %{
     %sh{
-        next=$(ls "${kak_opt_tutorial_dir}" | grep -v "meta-" | grep -A 1 "${kak_opt_tutorial_lesson}" | tail -1)
+        next=$(ls -1 "${kak_opt_tutorial_dir}" | grep -v "meta-" | awk  "/${kak_opt_tutorial_lesson}/ {getline; print}")
         printf %s\\n  "set global tutorial_lesson $next"
     }
     tutorial-load
@@ -51,7 +51,7 @@ def tutorial-next -allow-override %{
 
 def tutorial-prev -allow-override %{
     %sh{
-        next=$(ls "${kak_opt_tutorial_dir}" | grep -v "meta-" | grep -B 1 "${kak_opt_tutorial_lesson}" | head -1)
+        next=$( ls -1 "${kak_opt_tutorial_dir}" | grep -v "meta-" | awk -v lesson="${kak_opt_tutorial_lesson}" '$0 == lesson { print last } { last = $0 }')
         printf %s\\n  "set global tutorial_lesson $next"
     }
     tutorial-load
