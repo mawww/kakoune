@@ -55,8 +55,10 @@ Client::~Client()
 {
     m_window->options().unregister_watcher(*this);
     m_window->set_client(nullptr);
+    // Do not move the selections here, as we need them to be valid
+    // in order to correctly destroy the input handler
     ClientManager::instance().add_free_window(std::move(m_window),
-                                              std::move(context().selections()));
+                                              context().selections());
 }
 
 bool Client::process_pending_inputs()
