@@ -40,6 +40,8 @@ Selection select_to_line_end(const Buffer& buffer, const Selection& selection);
 template<bool only_move>
 Selection select_to_line_begin(const Buffer& buffer, const Selection& selection);
 
+Selection select_to_first_non_blank(const Buffer& buffer, const Selection& selection);
+
 enum class ObjectFlags
 {
     ToBegin = 1,

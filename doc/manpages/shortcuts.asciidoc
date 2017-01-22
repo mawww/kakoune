@@ -306,6 +306,7 @@ Changes
 
 Goto Commands
 -------------
+
 If a count is given prior to hitting *g*, *g* will jump to the given line
 
 *gh*::
@@ -313,6 +314,9 @@ If a count is given prior to hitting *g*, *g* will jump to the given line
 
 *gl*::
 	select to line end
+
+*gi*::
+	select to non blank line start
 
 *gg*, *gk*::
 	go to the first line

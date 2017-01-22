@@ -181,6 +181,14 @@ Selection select_to_line_begin(const Buffer& buffer, const Selection& selection)
 template Selection select_to_line_begin<false>(const Buffer&, const Selection&);
 template Selection select_to_line_begin<true>(const Buffer&, const Selection&);
 
+Selection select_to_first_non_blank(const Buffer& buffer, const Selection& selection)
+{
+    auto it = buffer.iterator_at(selection.cursor().line);
+    skip_while(it, buffer.iterator_at(selection.cursor().line+1),
+               is_horizontal_blank);
+    return {it.coord()};
+}
+
 Selection select_matching(const Buffer& buffer, const Selection& selection)
 {
     Vector<Codepoint> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };

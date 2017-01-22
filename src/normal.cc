@@ -141,6 +141,9 @@ void goto_commands(Context& context, NormalParams params)
             case 'h':
                 select<mode, select_to_line_begin<true>>(context, {});
                 break;
+            case 'i':
+                select<mode, select_to_first_non_blank>(context, {});
+                break;
             case 'j':
                 context.push_jump();
                 select_coord<mode>(buffer, buffer.line_count() - 1, context.selections());
@@ -230,17 +233,18 @@ void goto_commands(Context& context, NormalParams params)
             }
             }
         }, "goto",
-        "g,k:  buffer top        \n"
-        "l:    line end          \n"
-        "h:    line begin        \n"
-        "j:    buffer bottom     \n"
-        "e:    buffer end        \n"
-        "t:    window top        \n"
-        "b:    window bottom     \n"
-        "c:    window center     \n"
-        "a:    last buffer       \n"
-        "f:    file              \n"
-        ".:    last buffer change\n");
+        "g,k:  buffer top          \n"
+        "l:    line end            \n"
+        "h:    line begin          \n"
+        "i:    line non blank start\n"
+        "j:    buffer bottom       \n"
+        "e:    buffer end          \n"
+        "t:    window top          \n"
+        "b:    window bottom       \n"
+        "c:    window center       \n"
+        "a:    last buffer         \n"
+        "f:    file                \n"
+        ".:    last buffer change  \n");
     }
 }
 

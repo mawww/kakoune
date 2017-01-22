@@ -472,6 +472,7 @@ Commands beginning with g are used to goto certain position and or buffer:
 
  * `gh`: select to line begin
  * `gl`: select to line end
+ * `gi`: select to line begin (non blank)
 
  * `gg`, `gk`: go to the first line
  * `gj`: go to the last line
