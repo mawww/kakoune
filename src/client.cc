@@ -85,6 +85,8 @@ bool Client::process_pending_inputs()
             }
             else
                 m_input_handler.handle_key(key);
+
+            context().hooks().run_hook("RawKey", key_to_str(key), context());
         }
         catch (Kakoune::runtime_error& error)
         {

@@ -1442,6 +1442,8 @@ existing hooks are:
        displayed.
  * `InsertCompletionHide`: Triggered when the insert completion menu gets
        hidden.
+ * `RawKey`: Triggered whenever an key is pressed by the user, the key is
+       used for filtering.
 
 When not specified, the filtering text is an empty string.
 
