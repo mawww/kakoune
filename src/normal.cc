@@ -684,7 +684,7 @@ void search(Context& context, NormalParams params)
 
     auto reg_content = RegisterManager::instance()[reg].values(context);
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
-    const int main_index = context.selections().main_index();
+    const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
     regex_prompt(context, prompt.str(),
                  [reg, count, saved_reg, main_index]
@@ -768,7 +768,7 @@ void select_regex(Context& context, NormalParams params)
 
     auto reg_content = RegisterManager::instance()[reg].values(context);
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
-    const int main_index = context.selections().main_index();
+    const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
     regex_prompt(context, std::move(prompt),
                  [reg, capture, saved_reg, main_index](Regex ex, PromptEvent event, Context& context) {
@@ -795,7 +795,7 @@ void split_regex(Context& context, NormalParams params)
 
     auto reg_content = RegisterManager::instance()[reg].values(context);
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
-    const int main_index = context.selections().main_index();
+    const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
     regex_prompt(context, std::move(prompt),
                  [reg, capture, saved_reg, main_index](Regex ex, PromptEvent event, Context& context) {
