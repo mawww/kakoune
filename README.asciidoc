@@ -565,6 +565,9 @@ not containing a match.
 `C` copies the current selection to the next line (or lines if a count is given)
 `<a-C>` does the same to previous lines.
 
+`^` copies the current selections to preceding and following lines if the copied
+selection contains the same substring as the source one.
+
 `$` allows you to enter a shell command and pipe each selections to it.
 Selections whose shell command returns 0 will be kept, other will be dropped.
 

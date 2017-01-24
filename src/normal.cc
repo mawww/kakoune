@@ -1171,6 +1171,68 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
     selections.sort_and_merge_overlapping();
 }
 
+void copy_selections_on_same_substring(Context& context, NormalParams params)
+{
+    auto& selections = context.selections();
+    auto& buffer = context.buffer();
+    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
+    Vector<Selection> result;
+    size_t main_index = 0;
+    for (auto& sel : selections)
+    {
+        const bool is_main = (&sel == &selections.main());
+        auto anchor = sel.anchor();
+        auto cursor = sel.cursor();
+        ColumnCount cursor_col = get_column(buffer, tabstop, cursor);
+        ColumnCount anchor_col = get_column(buffer, tabstop, anchor);
+
+        const auto beg = sel.min(), end = buffer.char_next(sel.max());
+        const auto orig_str = buffer.string(beg, end);
+
+        if (is_main)
+            main_index = result.size();
+        result.push_back(std::move(sel));
+        for (Direction direction : {Backward, Forward}) {
+            for (int i = 1;; ++i)
+            {
+                if (params.count && i > params.count)
+                    break;
+
+                LineCount offset = (direction == Forward ? 1 : -1) * i;
+
+                const LineCount anchor_line = anchor.line + offset;
+                const LineCount cursor_line = cursor.line + offset;
+
+                if (anchor_line < 0 or cursor_line < 0 or
+                    anchor_line >= buffer.line_count() or cursor_line >= buffer.line_count())
+                    break;
+
+                ByteCount anchor_byte = get_byte_to_column(buffer, tabstop, {anchor_line, anchor_col});
+                ByteCount cursor_byte = get_byte_to_column(buffer, tabstop, {cursor_line, cursor_col});
+
+                if (anchor_byte == buffer[anchor_line].length() or
+                    cursor_byte == buffer[cursor_line].length())
+                    break;
+
+                const auto anchor_coord = BufferCoord{anchor_line, anchor_byte};
+                const auto cursor_coord = BufferCoordAndTarget{cursor_line, cursor_byte, cursor.target};
+                const auto new_sel = Selection(anchor_coord, cursor_coord);
+                const auto beg = new_sel.min(), end = buffer.char_next(new_sel.max());
+                const auto str = buffer.string(beg, end);
+
+                if (str != orig_str)
+                    break;
+
+                if (is_main)
+                    main_index = result.size();
+                result.push_back(new_sel);
+            }
+        }
+    }
+    selections.set(std::move(result), main_index);
+    selections.sort_and_merge_overlapping();
+}
+
 void rotate_selections(Context& context, NormalParams params)
 {
     context.selections().rotate_main(params.count != 0 ? params.count : 1);
@@ -1878,6 +1940,8 @@ static NormalCmdDesc cmds[] =
 
     { 'C', "copy selection on next lines", copy_selections_on_next_lines<Forward> },
     { alt('C'), "copy selection on previous lines", copy_selections_on_next_lines<Backward> },
+
+    { '^', "copy selection on same substring", copy_selections_on_same_substring },
 
     { ',', "user mappings", exec_user_mappings },
 

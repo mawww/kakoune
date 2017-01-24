@@ -441,6 +441,10 @@ Multiple selections
 *<a-C>*::
 	copy the current selection to the previous line
 
+*^*::
+	copy the current selection to the following and preceding lines 
+	while contents of the copies match the contents of the source
+
 *<space>*::
 	clear a multiple selection
 
