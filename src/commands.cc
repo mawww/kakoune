@@ -1686,6 +1686,17 @@ const CommandDesc eval_string_cmd = {
     }
 };
 
+struct CapturedShellContext
+{
+    explicit CapturedShellContext(const ShellContext& sc)
+      : params{sc.params.begin(), sc.params.end()}, env_vars{sc.env_vars} {}
+
+    Vector<String> params;
+    EnvVarMap env_vars;
+
+    operator ShellContext() const { return { params, env_vars }; }
+};
+
 const CommandDesc prompt_cmd = {
     "prompt",
     nullptr,
@@ -1735,8 +1746,7 @@ const CommandDesc prompt_cmd = {
         const auto flags = parser.get_switch("password") ?
             PromptFlags::Password : PromptFlags::None;
 
-        // const cast so that lambda capute is mutable
-        ShellContext& sc = const_cast<ShellContext&>(shell_context);
+        CapturedShellContext sc{shell_context};
         context.input_handler().prompt(
             parser[0], initstr.str(), get_face("Prompt"),
             flags, std::move(completer),
@@ -1803,14 +1813,15 @@ const CommandDesc menu_cmd = {
                 select_cmds.push_back(parser[i+2]);
         }
 
+        CapturedShellContext sc{shell_context};
         context.input_handler().menu(std::move(choices),
             [=](int choice, MenuEvent event, Context& context) {
                 ScopedSetBool disable_history{context.history_disabled()};
 
                 if (event == MenuEvent::Validate and choice >= 0 and choice < commands.size())
-                  CommandManager::instance().execute(commands[choice], context, shell_context);
+                  CommandManager::instance().execute(commands[choice], context, sc);
                 if (event == MenuEvent::Select and choice >= 0 and choice < select_cmds.size())
-                  CommandManager::instance().execute(select_cmds[choice], context, shell_context);
+                  CommandManager::instance().execute(select_cmds[choice], context, sc);
             });
     }
 };
@@ -1828,8 +1839,7 @@ const CommandDesc on_key_cmd = {
     {
         String command = parser[0];
 
-        // const cast so that the lambda capute is mutable
-        ShellContext& sc = const_cast<ShellContext&>(shell_context);
+        CapturedShellContext sc{shell_context};
         context.input_handler().on_next_key(
             KeymapMode::None, [=](Key key, Context& context) mutable {
             sc.env_vars["key"] = key_to_str(key);
