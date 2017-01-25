@@ -5,6 +5,15 @@ NAME
 ----
 keys - a
 
+Key Syntax
+----------
+Usual keys are written using their ascii character, including capital
+keys. Non printable keys use an alternate name, written between *<*
+and *>*, such as *<esc>* or *<del>*. Modified keys are written between
+*<* and *>* as well, with the modifier specified as either *c* for
+Control, or *a* for Alt, followed by a *-* and the key (either its
+name or ascii character), for example *<c-x>*, *<a-space>*.
+
 Insert mode
 -----------
 *<esc>*::
