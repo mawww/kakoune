@@ -988,7 +988,7 @@ class Insert : public InputMode
 public:
     Insert(InputHandler& input_handler, InsertMode mode, int count)
         : InputMode(input_handler),
-          m_insert_mode(mode),
+          m_restore_cursor(mode == InsertMode::Append),
           m_edition(context()),
           m_completer(context()),
           m_autoshowcompl(true),
@@ -1003,7 +1003,7 @@ public:
         last_insert().keys.clear();
         last_insert().disable_hooks = context().hooks_disabled();
         context().hooks().run_hook("InsertBegin", "", context());
-        prepare(m_insert_mode, count);
+        prepare(mode, count);
 
         if (context().has_client() and
             context().options()["readonly"].get<bool>())
@@ -1014,10 +1014,13 @@ public:
     ~Insert() override
     {
         auto& selections = context().selections();
-        for (auto& sel : selections)
+        if (m_restore_cursor)
         {
-            if (m_insert_mode == InsertMode::Append and sel.cursor().column > 0)
-                sel.cursor() = context().buffer().char_prev(sel.cursor());
+            for (auto& sel : selections)
+            {
+                if (sel.cursor() > sel.anchor() and sel.cursor().column > 0)
+                    sel.cursor() = context().buffer().char_prev(sel.cursor());
+            }
         }
         selections.avoid_eol();
     }
@@ -1299,13 +1302,13 @@ private:
         buffer.check_invariant();
     }
 
-    InsertMode       m_insert_mode;
-    ScopedEdition    m_edition;
-    InsertCompleter  m_completer;
-    bool             m_autoshowcompl;
-    Timer            m_idle_timer;
-    bool             m_in_end = false;
-    MouseHandler     m_mouse_handler;
+    ScopedEdition   m_edition;
+    InsertCompleter m_completer;
+    bool            m_restore_cursor;
+    bool            m_autoshowcompl;
+    Timer           m_idle_timer;
+    bool            m_in_end = false;
+    MouseHandler    m_mouse_handler;
 };
 
 }
