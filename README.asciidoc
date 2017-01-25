@@ -5,6 +5,7 @@
 :travis-url: https://travis-ci.org/mawww/kakoune
 :icons: font
 :toc: right
+:pp: ++
 
 TL;DR
 -----
@@ -99,8 +100,8 @@ Building
 
 Kakoune dependencies are:
 
- * A C\+\+11 compliant compiler (GCC >= 5 or clang >= 3.4) along with its
-   associated C\+\+ standard library (libstdc\+\+ or libc\+\+)
+ * A {cpp}11 compliant compiler (GCC >= 5 or clang >= 3.4) along with its
+   associated {cpp} standard library (libstdc{pp} or libc{pp})
  * boost (>= 1.50)
  * ncurses with wide-characters support (>= 5.3, generally referred to as libncursesw)
  * asciidoc (for the `a2k` tool), to generate man pages
@@ -243,6 +244,7 @@ Just running *kak* launch a new kak session with a client on local terminal.
  * `-l`: list existing sessions, and check the dead ones
  * `-clear`: clear dead sessions socket files
  * `-ro`: prevent modifications to all buffers from being saved to disk
+ * `+line[:column]`: specify a target line and column for the first file
 
 Configuration
 ^^^^^^^^^^^^^

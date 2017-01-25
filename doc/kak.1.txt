@@ -7,7 +7,7 @@ kak - a vim inspired, selection oriented code editor
 
 SYNOPSIS
 --------
-*kak* [-q] [-n] [-l] [-ro] [-clear] [-ui ui_type] [-e command] [-f keys] [-p session_id] [-c session_id|[[-d] -s session_id] file ...
+*kak* [-q] [-n] [-l] [-ro] [-clear] [-ui ui_type] [-e command] [-f keys] [-p session_id] [-c session_id|[[-d] -s session_id] [+line[:column]] file ...
 
 DESCRIPTION
 -----------
@@ -51,7 +51,7 @@ OPTIONS
 	connect to the given session
 
 -s <session_id>::
-	rename the current session name to *session_id*
+	set the current session name to *session_id*
 
 -ui <type>::
 	select the user interface, can be one of 'ncurses', 'dummy' or 'json'
@@ -61,6 +61,9 @@ OPTIONS
 
 -ro::
 	enter in 'readonly mode', all the buffers opened will not be written to disk
+
++line[:column]::
+	specify a target line and column for the first file
 
 file::
 	one or more files to edit
