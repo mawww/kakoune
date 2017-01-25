@@ -128,19 +128,23 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
         size_t loops = 16;
         char data[buffer_size];
         const int fifo = watcher.fd();
-        ssize_t count = 0;
         do
         {
-            count = ::read(fifo, data, buffer_size);
-            auto pos = buffer->back_coord();
+            const ssize_t count = ::read(fifo, data, buffer_size);
+            if (count <= 0)
+            {
+                buffer->values().erase(fifo_watcher_id); // will delete this
+                return;
+            }
 
+            auto pos = buffer->back_coord();
             const bool prevent_scrolling = pos == BufferCoord{0,0} and not scroll;
             if (prevent_scrolling)
                 pos = buffer->next(pos);
 
             buffer->insert(pos, StringView(data, data+count));
 
-            if (count > 0 and prevent_scrolling)
+            if (prevent_scrolling)
             {
                 buffer->erase({0,0}, buffer->next({0,0}));
                 // in the other case, the buffer will have automatically
@@ -149,12 +153,9 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
                     buffer->insert(buffer->end_coord(), "\n");
             }
         }
-        while (--loops and count > 0 and fd_readable(fifo));
+        while (--loops and fd_readable(fifo));
 
         buffer->run_hook_in_own_context("BufReadFifo", buffer->name());
-
-        if (count <= 0)
-            buffer->values().erase(fifo_watcher_id); // will delete this
     }), std::move(watcher_deleter));
 
     buffer->values()[fifo_watcher_id] = Value(std::move(watcher));
