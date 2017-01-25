@@ -3,7 +3,7 @@ KAKOUNE(1)
 
 NAME
 ----
-shortcuts - a
+keys - a
 
 Insert mode
 -----------
