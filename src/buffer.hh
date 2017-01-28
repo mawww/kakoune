@@ -55,7 +55,9 @@ public:
     using difference_type = ssize_t;
     using pointer = const value_type*;
     using reference = const value_type&;
-    using iterator_category = std::random_access_iterator_tag;
+    // computing the distance between two iterator can be
+    // costly, so this is not strictly random access
+    using iterator_category = std::bidirectional_iterator_tag;
 
     BufferIterator() : m_buffer(nullptr) {}
     BufferIterator(const Buffer& buffer, BufferCoord coord);
