@@ -249,7 +249,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
         auto diff = find_diff(m_lines.begin(), m_lines.size(),
                               parsed_lines.lines.begin(), (int)parsed_lines.lines.size(),
                               [](const StringDataPtr& lhs, const StringDataPtr& rhs)
-                              { return lhs->hash == rhs->hash and lhs->strview() == rhs->strview(); });
+                              { return lhs->strview() == rhs->strview(); });
 
         auto it = m_lines.begin();
         for (auto& d : diff)
@@ -476,7 +476,7 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
 
     auto line_it = m_lines.begin() + (int)pos.line;
     auto new_lines_it = new_lines.begin();
-    if (not append_lines)
+    if (not append_lines) // replace first line with new first line
         *line_it++ = std::move(*new_lines_it++);
 
     m_lines.insert(line_it,

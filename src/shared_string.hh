@@ -13,7 +13,6 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
 {
     int refcount;
     int length;
-    uint32_t hash;
 
     StringData(int ref, int len) : refcount(ref), length(len) {}
 
@@ -26,8 +25,8 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
 
     struct PtrPolicy
     {
-        static void inc_ref(StringData* r, void*) { ++r->refcount; }
-        static void dec_ref(StringData* r, void*) { if (--r->refcount == 0) delete r; }
+        static void inc_ref(StringData* r, void*) noexcept { ++r->refcount; }
+        static void dec_ref(StringData* r, void*) noexcept { if (--r->refcount == 0) destroy(r); }
         static void ptr_moved(StringData*, void*, void*) noexcept {}
     };
 
@@ -40,24 +39,12 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
         if (back != 0)
             res->data()[len-1] = back;
         res->data()[len] = 0;
-        res->hash = hash_data(res->data(), res->length);
         return RefPtr<StringData, PtrPolicy>{res};
     }
 
     static void destroy(StringData* s)
     {
         StringData::operator delete(s, sizeof(StringData) + s->length + 1);
-    }
-
-    friend void inc_ref_count(StringData* s, void*)
-    {
-        ++s->refcount;
-    }
-
-    friend void dec_ref_count(StringData* s, void*)
-    {
-        if (--s->refcount == 0)
-            StringData::destroy(s);
     }
 };
 
