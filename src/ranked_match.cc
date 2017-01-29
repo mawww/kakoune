@@ -57,7 +57,7 @@ static int count_word_boundaries_match(StringView candidate, StringView query)
         for (auto qit = query_it; qit != query.end(); ++qit)
         {
             const Codepoint qc = *qit;
-            if (qc == (islower(qc) ? lc  : c))
+            if (qc == (iswlower((wchar_t)qc) ? lc  : c))
             {
                 ++count;
                 query_it = qit+1;
@@ -72,7 +72,7 @@ static int count_word_boundaries_match(StringView candidate, StringView query)
 
 static bool smartcase_eq(Codepoint query, Codepoint candidate)
 {
-    return query == (islower(query) ? to_lower(candidate) : candidate);
+    return query == (iswlower((wchar_t)query) ? to_lower(candidate) : candidate);
 }
 
 struct SubseqRes
@@ -199,10 +199,11 @@ bool RankedMatch::operator<(const RankedMatch& other) const
         it1 = utf8::character_start(it1, m_candidate.begin());
         it2 = utf8::character_start(it2, other.m_candidate.begin());
         const auto cp1 = utf8::read_codepoint(it1, end1);
-        const auto cp2 = utf8::read_codepoint(it2, end2);;
+        const auto cp2 = utf8::read_codepoint(it2, end2);
         if (cp1 != cp2)
         {
-            const bool low1 = islower(cp1), low2 = islower(cp2);
+            const bool low1 = iswlower((wchar_t)cp1);
+            const bool low2 = iswlower((wchar_t)cp2);
             return low1 == low2 ? cp1 < cp2 : low1;
         }
     }
