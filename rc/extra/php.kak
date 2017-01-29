@@ -12,7 +12,8 @@ add-highlighter -group / regions -default code php  \
     double_string '"'  (?<!\\)(\\\\)*" '' \
     single_string "'"  (?<!\\)(\\\\)*' '' \
     comment       //   '$'             '' \
-    comment       /\*  \*/             ''
+    comment       /\*  \*/             '' \
+    comment       '#'  '$'             ''
 
 add-highlighter -group /php/double_string fill string
 add-highlighter -group /php/single_string fill string

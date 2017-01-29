@@ -9,7 +9,7 @@ hook global BufSetOption filetype=asciidoc %{
     set buffer comment_block '///:///'
 }
 
-hook global BufSetOption filetype=(c|cpp|go|java|javascript|objc|sass|scala|scss|swift) %{
+hook global BufSetOption filetype=(c|cpp|go|java|javascript|objc|php|sass|scala|scss|swift) %{
     set buffer comment_line '//'
     set buffer comment_block '/*:*/'
 }
