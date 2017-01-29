@@ -106,7 +106,7 @@ private:
         DisplayCoord ui_anchor;
         MenuStyle style;
         int selected;
-    } m_menu;
+    } m_menu{};
 
     struct Info
     {
@@ -115,7 +115,7 @@ private:
         BufferCoord anchor;
         DisplayCoord ui_anchor;
         InfoStyle style;
-    } m_info;
+    } m_info{};
 
     Vector<Key, MemoryDomain::Client> m_pending_keys;
 
