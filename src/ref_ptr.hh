@@ -99,7 +99,6 @@ private:
     {
         if (m_ptr)
             Policy::dec_ref(m_ptr, this);
-        m_ptr = nullptr;
     }
 
     [[gnu::always_inline]]
