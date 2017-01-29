@@ -11,7 +11,6 @@ struct WindowAndSelections
 {
     std::unique_ptr<Window> window;
     SelectionList selections;
-    size_t timestamp;
 };
 
 class ClientManager : public Singleton<ClientManager>
