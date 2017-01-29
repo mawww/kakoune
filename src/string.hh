@@ -211,7 +211,7 @@ private:
 class StringView : public StringOps<StringView, const char>
 {
 public:
-    constexpr StringView() = default;
+    StringView() = default;
     constexpr StringView(const char* data, ByteCount length)
         : m_data{data}, m_length{length} {}
     constexpr StringView(const char* data) : m_data{data}, m_length{data ? strlen(data) : 0} {}
@@ -248,9 +248,11 @@ public:
     ZeroTerminatedString zstr() const { return {begin(), end()}; }
 
 private:
-    const char* m_data = nullptr;
-    ByteCount m_length = 0;
+    const char* m_data;
+    ByteCount m_length;
 };
+
+static_assert(std::is_trivial<StringView>::value, "");
 
 template<typename Type, typename CharType>
 inline StringView StringOps<Type, CharType>::substr(ByteCount from, ByteCount length) const

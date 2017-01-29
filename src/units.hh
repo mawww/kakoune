@@ -13,6 +13,8 @@ template<typename RealType, typename ValueType = int>
 class StronglyTypedNumber
 {
 public:
+    StronglyTypedNumber() = default;
+
     [[gnu::always_inline]]
     explicit constexpr StronglyTypedNumber(ValueType value)
         : m_value(value)
@@ -124,8 +126,10 @@ protected:
 
 struct LineCount : public StronglyTypedNumber<LineCount, int>
 {
+    LineCount() = default;
+
     [[gnu::always_inline]]
-    constexpr LineCount(int value = 0) : StronglyTypedNumber<LineCount>(value) {}
+    constexpr LineCount(int value) : StronglyTypedNumber<LineCount>(value) {}
 };
 
 [[gnu::always_inline]]
@@ -136,8 +140,10 @@ inline constexpr LineCount operator"" _line(unsigned long long int value)
 
 struct ByteCount : public StronglyTypedNumber<ByteCount, int>
 {
+    ByteCount() = default;
+
     [[gnu::always_inline]]
-    constexpr ByteCount(int value = 0) : StronglyTypedNumber<ByteCount>(value) {}
+    constexpr ByteCount(int value) : StronglyTypedNumber<ByteCount>(value) {}
 };
 
 [[gnu::always_inline]]
@@ -148,8 +154,10 @@ inline constexpr ByteCount operator"" _byte(unsigned long long int value)
 
 struct CharCount : public StronglyTypedNumber<CharCount, int>
 {
+    CharCount() = default;
+
     [[gnu::always_inline]]
-    constexpr CharCount(int value = 0) : StronglyTypedNumber<CharCount>(value) {}
+    constexpr CharCount(int value) : StronglyTypedNumber<CharCount>(value) {}
 };
 
 [[gnu::always_inline]]
@@ -160,8 +168,10 @@ inline constexpr CharCount operator"" _char(unsigned long long int value)
 
 struct ColumnCount : public StronglyTypedNumber<ColumnCount, int>
 {
+    ColumnCount() = default;
+
     [[gnu::always_inline]]
-    constexpr ColumnCount(int value = 0) : StronglyTypedNumber<ColumnCount>(value) {}
+    constexpr ColumnCount(int value) : StronglyTypedNumber<ColumnCount>(value) {}
 };
 
 [[gnu::always_inline]]

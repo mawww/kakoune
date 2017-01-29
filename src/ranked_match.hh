@@ -44,7 +44,7 @@ private:
         FullMatch        = 1 << 5,
     };
 
-    StringView m_candidate;
+    StringView m_candidate{};
     Flags m_flags = Flags::None;
     int m_word_boundary_match_count = 0;
     int m_max_index = 0;

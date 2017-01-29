@@ -249,7 +249,7 @@ void register_options()
                    Vector<String, MemoryDomain::Options>({ "./", "/usr/include" }));
     reg.declare_option("completers", "insert mode completers to execute.",
                        InsertCompleterDescList({
-                           InsertCompleterDesc{ InsertCompleterDesc::Filename },
+                           InsertCompleterDesc{ InsertCompleterDesc::Filename, {} },
                            InsertCompleterDesc{ InsertCompleterDesc::Word, "all"_str }
                        }), OptionFlags::None);
     reg.declare_option("static_words", "list of words to always consider for insert word completion",

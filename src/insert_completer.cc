@@ -516,7 +516,7 @@ bool InsertCompleter::try_complete(Func complete_func)
     kak_assert(m_completions.begin <= sels.main().cursor());
     m_current_candidate = m_completions.candidates.size();
     menu_show();
-    m_completions.candidates.push_back({sels.buffer().string(m_completions.begin, m_completions.end), ""});
+    m_completions.candidates.push_back({sels.buffer().string(m_completions.begin, m_completions.end), "", {}});
     return true;
 }
 

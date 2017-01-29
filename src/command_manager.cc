@@ -47,6 +47,8 @@ namespace
 struct Reader
 {
 public:
+    Reader(StringView s) : str{s}, pos{}, coord{} {}
+
     [[gnu::always_inline]]
     char operator*() const { return str[pos]; }
 

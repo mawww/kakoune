@@ -86,7 +86,7 @@ String real_path(StringView filename)
     char buffer[PATH_MAX+1];
 
     StringView existing = filename;
-    StringView non_existing;
+    StringView non_existing{};
 
     while (true)
     {
