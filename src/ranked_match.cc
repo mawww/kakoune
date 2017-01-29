@@ -186,6 +186,7 @@ bool RankedMatch::operator<(const RankedMatch& other) const
 
     auto it1 = m_candidate.begin(), it2 = other.m_candidate.begin();
     const auto end1 = m_candidate.end(), end2 = other.m_candidate.end();
+    auto last1 = it1, last2 = it2;
     while (true)
     {
         // find next mismatch
@@ -196,8 +197,8 @@ bool RankedMatch::operator<(const RankedMatch& other) const
             return it1 == end1 and it2 != end2;
 
         // compare codepoints
-        it1 = utf8::character_start(it1, m_candidate.begin());
-        it2 = utf8::character_start(it2, other.m_candidate.begin());
+        it1 = utf8::character_start(it1, last1);
+        it2 = utf8::character_start(it2, last2);
         const auto cp1 = utf8::read_codepoint(it1, end1);
         const auto cp2 = utf8::read_codepoint(it2, end2);
         if (cp1 != cp2)
@@ -206,6 +207,7 @@ bool RankedMatch::operator<(const RankedMatch& other) const
             const bool low2 = iswlower((wchar_t)cp2);
             return low1 == low2 ? cp1 < cp2 : low1;
         }
+        last1 = it1; last2 = it2;
     }
 }
 
