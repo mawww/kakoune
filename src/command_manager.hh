@@ -112,7 +112,7 @@ private:
     void execute_single_command(CommandParameters params,
                                 Context& context,
                                 const ShellContext& shell_context,
-                                DisplayCoord pos) const;
+                                DisplayCoord pos);
 
     struct CommandDescriptor
     {
@@ -126,6 +126,7 @@ private:
     using CommandMap = UnorderedMap<String, CommandDescriptor, MemoryDomain::Commands>;
     CommandMap m_commands;
     String m_last_complete_command;
+    int m_command_depth = 0;
 
     CommandMap::const_iterator find_command(const Context& context,
                                             const String& name) const;

@@ -417,10 +417,17 @@ CommandManager::find_command(const Context& context, const String& name) const
 void CommandManager::execute_single_command(CommandParameters params,
                                             Context& context,
                                             const ShellContext& shell_context,
-                                            DisplayCoord pos) const
+                                            DisplayCoord pos)
 {
     if (params.empty())
         return;
+
+    constexpr int max_command_depth = 100;
+    if (m_command_depth > max_command_depth)
+        throw runtime_error("maximum nested command depth hit");
+
+    ++m_command_depth;
+    auto pop_cmd = on_scope_end([this] { --m_command_depth; });
 
     ParameterList param_view(params.begin()+1, params.end());
     auto command_it = find_command(context, params[0]);
