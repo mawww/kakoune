@@ -117,7 +117,6 @@ struct Diff
     enum { Keep, Add, Remove } mode;
     int len;
     int posB;
-    int posA;
 };
 
 inline void append_diff(Vector<Diff>& diffs, Diff diff)
