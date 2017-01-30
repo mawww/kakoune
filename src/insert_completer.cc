@@ -419,9 +419,9 @@ void InsertCompleter::update()
 
 void InsertCompleter::reset()
 {
-    m_explicit_completer = nullptr;
-    if (m_completions.is_valid())
+    if (m_explicit_completer or m_completions.is_valid())
     {
+        m_explicit_completer = nullptr;
         m_completions = InsertCompletion{};
         if (m_context.has_client())
         {
