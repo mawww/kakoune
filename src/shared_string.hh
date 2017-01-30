@@ -6,6 +6,8 @@
 #include "utils.hh"
 #include "unordered_map.hh"
 
+#include <numeric>
+
 namespace Kakoune
 {
 
@@ -30,14 +32,19 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
         static void ptr_moved(StringData*, void*, void*) noexcept {}
     };
 
-    static RefPtr<StringData, PtrPolicy> create(StringView str, char back = 0)
+    static RefPtr<StringData, PtrPolicy> create(ArrayView<const StringView> strs)
     {
-        const int len = (int)str.length() + (back != 0 ? 1 : 0);
+        const int len = std::accumulate(strs.begin(), strs.end(), 0,
+                                        [](int l, StringView s)
+                                        { return l + (int)s.length(); });
         void* ptr = StringData::operator new(sizeof(StringData) + len + 1);
         auto* res = new (ptr) StringData(0, len);
-        std::copy(str.begin(), str.end(), res->data());
-        if (back != 0)
-            res->data()[len-1] = back;
+        auto* data = res->data();
+        for (auto& str : strs)
+        {
+            memcpy(data, str.begin(), (size_t)str.length());
+            data += (int)str.length();
+        }
         res->data()[len] = 0;
         return RefPtr<StringData, PtrPolicy>{res};
     }

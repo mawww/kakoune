@@ -46,7 +46,7 @@ static ParsedLines parse_lines(StringView data)
     while (pos < data.end())
     {
         const char* eol = std::find(pos, data.end(), '\n');
-        res.lines.emplace_back(StringData::create({pos, eol - (crlf and eol != data.end() ? 1 : 0)}, '\n'));
+        res.lines.emplace_back(StringData::create({{pos, eol - (crlf and eol != data.end() ? 1 : 0)}, "\n"}));
         pos = eol + 1;
     }
 
@@ -76,7 +76,7 @@ Buffer::Buffer(String name, Flags flags, StringView data,
     ParsedLines parsed_lines = parse_lines(data);
 
     if (parsed_lines.lines.empty())
-        parsed_lines.lines.emplace_back(StringData::create("\n"));
+        parsed_lines.lines.emplace_back(StringData::create({"\n"}));
 
     #ifdef KAK_DEBUG
     for (auto& line : parsed_lines.lines)
@@ -230,7 +230,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
     ParsedLines parsed_lines = parse_lines(data);
 
     if (parsed_lines.lines.empty())
-        parsed_lines.lines.emplace_back(StringData::create("\n"));
+        parsed_lines.lines.emplace_back(StringData::create({"\n"}));
 
     const bool record_undo = not (m_flags & Flags::NoUndo);
 
@@ -470,9 +470,9 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
         }
     }
     if (start == 0)
-        new_lines.push_back(StringData::create(prefix + content + suffix));
+        new_lines.push_back(StringData::create({prefix, content, suffix}));
     else if (start != content.length() or not suffix.empty())
-        new_lines.push_back(StringData::create(content.substr(start) + suffix));
+        new_lines.push_back(StringData::create({content.substr(start), suffix}));
 
     auto line_it = m_lines.begin() + (int)pos.line;
     auto new_lines_it = new_lines.begin();
@@ -497,13 +497,13 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
     kak_assert(is_valid(end));
     StringView prefix = m_lines[begin.line].substr(0, begin.column);
     StringView suffix = m_lines[end.line].substr(end.column);
-    String new_line = prefix + suffix;
 
     BufferCoord next;
-    if (new_line.length() != 0)
+    if (not prefix.empty() or not suffix.empty())
     {
+        auto new_line = StringData::create({prefix, suffix});
         m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
-        m_lines.get_storage(begin.line) = StringData::create(new_line);
+        m_lines.get_storage(begin.line) = std::move(new_line);
         next = begin;
     }
     else
