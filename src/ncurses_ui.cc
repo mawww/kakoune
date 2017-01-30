@@ -499,9 +499,6 @@ Optional<Key> NCursesUI::get_next_key()
     const int c = wgetch(m_window);
     wtimeout(m_window, -1);
 
-    if (c == ERR)
-        return {};
-
     if (c == KEY_MOUSE)
     {
         MEVENT ev;
@@ -531,25 +528,70 @@ Optional<Key> NCursesUI::get_next_key()
         }
     }
 
-    if (c > 0 and c < 27)
-    {
-        if (c == control('m') or c == control('j'))
-            return {Key::Return};
-        if (c == control('i'))
-            return {Key::Tab};
-        if (c == control('h'))
-            return {Key::Backspace};
-        if (c == control('z'))
-        {
-            raise(SIGTSTP);
+    auto parse_key = [this](int c) -> Optional<Key> {
+        if (c == ERR)
             return {};
+
+        switch (c)
+        {
+        case KEY_BACKSPACE: case 127: return {Key::Backspace};
+        case KEY_DC: return {Key::Delete};
+        case KEY_UP: return {Key::Up};
+        case KEY_DOWN: return {Key::Down};
+        case KEY_LEFT: return {Key::Left};
+        case KEY_RIGHT: return {Key::Right};
+        case KEY_PPAGE: return {Key::PageUp};
+        case KEY_NPAGE: return {Key::PageDown};
+        case KEY_HOME: return {Key::Home};
+        case KEY_END: return {Key::End};
+        case KEY_BTAB: return {Key::BackTab};
+        case KEY_RESIZE: return resize(m_dimensions);
         }
-        return ctrl(Codepoint(c) - 1 + 'a');
-    }
-    else if (c == 27)
+
+        if (c > 0 and c < 27)
+        {
+            if (c == control('m') or c == control('j'))
+                return {Key::Return};
+            if (c == control('i'))
+                return {Key::Tab};
+            if (c == control('h'))
+                return {Key::Backspace};
+            if (c == control('z'))
+            {
+                raise(SIGTSTP);
+                return {};
+            }
+            return ctrl(Codepoint(c) - 1 + 'a');
+        }
+
+        for (int i = 0; i < 12; ++i)
+        {
+            if (c == KEY_F(i+1))
+                return {Key::F1 + i};
+        }
+
+        if (c >= 0 and c < 256)
+        {
+           ungetch(c);
+           struct getch_iterator
+           {
+               getch_iterator(WINDOW* win) : window(win) {}
+               int operator*() { return wgetch(window); }
+               getch_iterator& operator++() { return *this; }
+               getch_iterator& operator++(int) { return *this; }
+               bool operator== (const getch_iterator&) const { return false; }
+
+                WINDOW* window;
+           };
+           return Key{utf8::codepoint(getch_iterator{m_window},
+                                      getch_iterator{m_window})};
+        }
+    };
+
+    if (c == 27)
     {
         wtimeout(m_window, 0);
-        const Codepoint new_c = wgetch(m_window);
+        const int new_c = wgetch(m_window);
         if (new_c == '[') // potential CSI
         {
             const Codepoint csi_val = wgetch(m_window);
@@ -561,54 +603,13 @@ Optional<Key> NCursesUI::get_next_key()
             }
         }
         wtimeout(m_window, -1);
-        if (new_c != ERR)
-        {
-            if (new_c > 0 and new_c < 27)
-                return ctrlalt(Codepoint(new_c) - 1 + 'a');
-            return alt(new_c);
-        }
+
+        if (auto key = parse_key(new_c))
+            return alt(*key);
         else
             return {Key::Escape};
     }
-    else switch (c)
-    {
-    case KEY_BACKSPACE: case 127: return {Key::Backspace};
-    case KEY_DC: return {Key::Delete};
-    case KEY_UP: return {Key::Up};
-    case KEY_DOWN: return {Key::Down};
-    case KEY_LEFT: return {Key::Left};
-    case KEY_RIGHT: return {Key::Right};
-    case KEY_PPAGE: return {Key::PageUp};
-    case KEY_NPAGE: return {Key::PageDown};
-    case KEY_HOME: return {Key::Home};
-    case KEY_END: return {Key::End};
-    case KEY_BTAB: return {Key::BackTab};
-    case KEY_RESIZE: return resize(m_dimensions);
-    }
-
-    for (int i = 0; i < 12; ++i)
-    {
-        if (c == KEY_F(i+1))
-            return {Key::F1 + i};
-    }
-
-    if (c >= 0 and c < 256)
-    {
-       ungetch(c);
-       struct getch_iterator
-       {
-           getch_iterator(WINDOW* win) : window(win) {}
-           int operator*() { return wgetch(window); }
-           getch_iterator& operator++() { return *this; }
-           getch_iterator& operator++(int) { return *this; }
-           bool operator== (const getch_iterator&) const { return false; }
-
-            WINDOW* window;
-       };
-       return Key{utf8::codepoint(getch_iterator{m_window},
-                                  getch_iterator{m_window})};
-    }
-    return {};
+    return parse_key(c);
 }
 
 template<typename T>
