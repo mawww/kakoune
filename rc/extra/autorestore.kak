@@ -19,10 +19,13 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
             exit
         fi
 
+        # Only get the most recent one
+        backup_path=$(ls -t $backup_path | head -n1)
+
         printf %s\\n "
             ## Replace the content of the buffer with the content of the backup file
             exec -draft %{ %d!cat<space>${backup_path}<ret>d }
-            echo -color Information 'Backup restored'
+            eval -client %val{client} echo -color Information 'Backup restored'
 
             ## If the backup file has to be removed, issue the command once
             ## the current buffer has been saved
