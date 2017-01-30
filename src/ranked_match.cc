@@ -77,12 +77,11 @@ static bool smartcase_eq(Codepoint query, Codepoint candidate)
 
 struct SubseqRes
 {
-    bool matches;
     int max_index;
     bool single_word;
 };
 
-static SubseqRes subsequence_match_smart_case(StringView str, StringView subseq)
+static Optional<SubseqRes> subsequence_match_smart_case(StringView str, StringView subseq)
 {
     bool single_word = true;
     int max_index = -1;
@@ -91,7 +90,7 @@ static SubseqRes subsequence_match_smart_case(StringView str, StringView subseq)
     for (auto subseq_it = subseq.begin(); subseq_it != subseq.end();)
     {
         if (it == str.end())
-            return { false };
+            return {};
         const Codepoint c = utf8::read_codepoint(subseq_it, subseq.end());
         while (true)
         {
@@ -104,11 +103,11 @@ static SubseqRes subsequence_match_smart_case(StringView str, StringView subseq)
 
             ++index;
             if (it == str.end())
-                return { false };
+                return {};
         }
         max_index = index++;
     }
-    return { true, max_index, single_word };
+    return SubseqRes{max_index, single_word};
 }
 
 template<typename TestFunc>
@@ -127,13 +126,13 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
         return;
 
     auto res = subsequence_match_smart_case(candidate, query);
-    if (not res.matches)
+    if (not res)
         return;
 
     m_candidate = candidate;
-    m_max_index = res.max_index;
+    m_max_index = res->max_index;
 
-    if (res.single_word)
+    if (res->single_word)
         m_flags |= Flags::SingleWord;
     if (smartcase_eq(query[0], candidate[0]))
         m_flags |= Flags::FirstCharMatch;
