@@ -177,7 +177,8 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     if (diff != Flags::None)
         return (int)(m_flags & diff) > (int)(other.m_flags & diff);
 
-    if (m_word_boundary_match_count != other.m_word_boundary_match_count)
+    if (not (m_flags & Flags::Prefix) and
+        m_word_boundary_match_count != other.m_word_boundary_match_count)
         return m_word_boundary_match_count > other.m_word_boundary_match_count;
 
     if (m_max_index != other.m_max_index)
@@ -223,6 +224,7 @@ UnitTest test_ranked_match{[] {
     kak_assert(RankedMatch{"foo/bar/foobar", "foobar"} < RankedMatch{"foo/bar/baz", "foobar"});
     kak_assert(RankedMatch{"delete-buffer", "db"} < RankedMatch{"debug", "db"});
     kak_assert(RankedMatch{"create_task", "ct"} < RankedMatch{"constructor", "ct"});
+    kak_assert(RankedMatch{"class", "cla"} < RankedMatch{"class::attr", "cla"});
 }};
 
 UnitTest test_used_letters{[]()
