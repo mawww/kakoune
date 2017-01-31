@@ -1191,7 +1191,7 @@ command. This provides a few advantages:
    left (if possible).
 
  * The modes are nested: that means the normal mode can enter prompt (with `:`),
-   or any other modes (using `:onkey` or `:menu` for example), and these modes
+   or any other modes (using `:on-key` or `:menu` for example), and these modes
    will get back to the insert mode afterwards.
 
 This feature is tailored for scripting/macros, as it provides a more predictable
@@ -1516,7 +1516,7 @@ Some helper commands can be used to define composite commands:
  * `prompt <prompt> <command>`: prompt the user for a string, when the user validates,
      executes <command>. The entered text is available in the `text` value
      accessible through `$kak_text` in shells or `%val{text}` in commands.
- * `onkey <command>`: wait for next key from user, then execute <command>,
+ * `on-key <command>`: wait for next key from user, then execute <command>,
      the key is available through the `key` value, accessible through `$kak_key`.
  * `menu <label1> <commands1> <label2> <commands2>...`: display a menu using
      labels, the selected label's commands are executed.
