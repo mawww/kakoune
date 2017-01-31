@@ -14,7 +14,7 @@ struct RefCountable
 
 struct RefCountablePolicy
 {
-    static void inc_ref(RefCountable* r, void*) { ++r->refcount; }
+    static void inc_ref(RefCountable* r, void*) noexcept { ++r->refcount; }
     static void dec_ref(RefCountable* r, void*) { if (--r->refcount == 0) delete r; }
     static void ptr_moved(RefCountable*, void*, void*) noexcept {}
 };
