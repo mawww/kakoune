@@ -61,7 +61,7 @@ def lint -docstring 'Parse the current buffer with a linter' %{
 }
 
 def -hidden lint-show %{ %sh{
-    desc=$(printf '%s\n' "$kak_opt_lint_errors" | sed -ne "/^$kak_cursor_line,.*/ { s/^[[:digit:]]\+,[[:digit:]]\+,//g; s/'/\\\\'/g; p; }")
+    desc=$(printf '%s\n' "$kak_opt_lint_errors" | sed -ne "/^$kak_cursor_line,.*/ { s/^[[:digit:]]*,[[:digit:]]*,//g; s/'/\\\\'/g; p; }")
     if [ -n "$desc" ]; then
         printf '%s\n' "info -anchor $kak_cursor_line.$kak_cursor_column '$desc'"
     fi
