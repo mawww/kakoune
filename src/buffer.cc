@@ -212,7 +212,7 @@ struct Buffer::Modification
 {
     enum Type { Insert, Erase };
 
-    Type      type;
+    Type type;
     BufferCoord coord;
     StringDataPtr content;
 
