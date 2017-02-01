@@ -493,43 +493,6 @@ void insert_output(Context& context, NormalParams)
         });
 }
 
-template<Direction direction, SelectMode mode>
-void select_next_match(const Buffer& buffer, SelectionList& selections,
-                       const Regex& regex, bool& main_wrapped)
-{
-    const int main_index = selections.main_index();
-    bool wrapped = false;
-    if (mode == SelectMode::Replace)
-    {
-        for (int i = 0; i < selections.size(); ++i)
-        {
-            auto& sel = selections[i];
-            sel = keep_direction(find_next_match<direction>(buffer, sel, regex, wrapped), sel);
-            if (i == main_index)
-                main_wrapped = wrapped;
-        }
-    }
-    if (mode == SelectMode::Extend)
-    {
-        for (int i = 0; i < selections.size(); ++i)
-        {
-            auto& sel = selections[i];
-            sel.merge_with(find_next_match<direction>(buffer, sel, regex, wrapped));
-            if (i == main_index)
-                main_wrapped = wrapped;
-        }
-    }
-    else if (mode == SelectMode::Append)
-    {
-        auto sel = keep_direction(
-            find_next_match<direction>(buffer, selections.main(), regex, main_wrapped),
-            selections.main());
-        selections.push_back(std::move(sel));
-        selections.set_main_index(selections.size() - 1);
-    }
-    selections.sort_and_merge_overlapping();
-}
-
 void yank(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
@@ -688,23 +651,33 @@ void search(Context& context, NormalParams params)
 
     regex_prompt(context, prompt.str(),
                  [reg, count, saved_reg, main_index]
-                 (Regex ex, PromptEvent event, Context& context) {
+                 (Regex regex, PromptEvent event, Context& context) {
                      if (event == PromptEvent::Abort)
                      {
                          RegisterManager::instance()[reg] = saved_reg;
                          return;
                      }
 
-                     if (ex.empty())
-                         ex = Regex{saved_reg[main_index]};
-                     RegisterManager::instance()[reg] = ex.str();
+                     if (regex.empty())
+                         regex = Regex{saved_reg[main_index]};
+                     RegisterManager::instance()[reg] = regex.str();
 
-                     if (not ex.empty() and not ex.str().empty())
+                     if (not regex.empty() and not regex.str().empty())
                      {
-                         bool main_wrapped = false;
                          int c = count;
+                         auto& selections = context.selections();
+                         auto& buffer = context.buffer();
                          do {
-                             select_next_match<direction, mode>(context.buffer(), context.selections(), ex, main_wrapped);
+                            bool wrapped = false;
+                            for (int i = 0; i < selections.size(); ++i)
+                            {
+                                auto& sel = selections[i];
+                                if (mode == SelectMode::Replace)
+                                    sel = keep_direction(find_next_match<direction>(buffer, sel, regex, wrapped), sel);
+                                if (mode == SelectMode::Extend)
+                                    sel.merge_with(find_next_match<direction>(buffer, sel, regex, wrapped));
+                            }
+                            selections.sort_and_merge_overlapping();
                          } while (--c > 0);
                      }
                  });
@@ -717,11 +690,26 @@ void search_next(Context& context, NormalParams params)
     StringView str = context.main_sel_register_value(reg);
     if (not str.empty())
     {
-        Regex ex{str};
+        Regex regex{str};
+        auto& selections = context.selections();
+        auto& buffer = context.buffer();
         bool main_wrapped = false;
         do {
             bool wrapped = false;
-            select_next_match<direction, mode>(context.buffer(), context.selections(), ex, wrapped);
+            if (mode == SelectMode::Replace)
+            {
+                auto& sel = selections.main();
+                sel = keep_direction(find_next_match<direction>(buffer, sel, regex, wrapped), sel);
+            }
+            else if (mode == SelectMode::Append)
+            {
+                auto sel = keep_direction(
+                    find_next_match<direction>(buffer, selections.main(), regex, wrapped),
+                    selections.main());
+                selections.push_back(std::move(sel));
+                selections.set_main_index(selections.size() - 1);
+            }
+            selections.sort_and_merge_overlapping();
             main_wrapped = main_wrapped or wrapped;
         } while (--params.count > 0);
 
