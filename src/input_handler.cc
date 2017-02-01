@@ -923,7 +923,12 @@ private:
         context().print_status(display_line);
     }
 
-    void on_enabled() override { display(); }
+    void on_enabled() override
+    {
+        display();
+        m_callback(m_line_editor.line(), PromptEvent::Change, context());
+    }
+
     void on_disabled() override { context().print_status({}); }
 
     PromptCallback m_callback;
