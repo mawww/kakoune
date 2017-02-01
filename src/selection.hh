@@ -97,8 +97,6 @@ struct SelectionList
     size_t main_index() const { return m_main; }
     void set_main_index(size_t main) { kak_assert(main < size()); m_main = main; }
 
-    void rotate_main(int count) { m_main = (m_main + count) % size(); }
-
     void avoid_eol();
 
     void push_back(const Selection& sel) { m_selections.push_back(sel); }

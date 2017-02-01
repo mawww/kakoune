@@ -164,6 +164,9 @@ is a sequence of non whitespace characters
 *'*::
 	rotate selections (the main selection becomes the next one)
 
+*<a-'>*::
+	rotate selections backwards
+
 *;*::
 	reduce selections to their cursor
 
@@ -303,7 +306,7 @@ Changes
 	convert spaces to tabs in current selections, uses the buffer tabstop
 	option or the count parameter for tabstop
 
-*<a-'>*::
+*<a-">*::
 	rotate selections content, if specified, the count groups selections,
 	so the following command
 

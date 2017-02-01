@@ -1159,9 +1159,16 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
     selections.sort_and_merge_overlapping();
 }
 
+template<Direction direction>
 void rotate_selections(Context& context, NormalParams params)
 {
-    context.selections().rotate_main(params.count != 0 ? params.count : 1);
+    const int count = params.count ? params.count : 1;
+    auto& selections = context.selections();
+    const int index = selections.main_index();
+    const int num = selections.size();
+    selections.set_main_index((direction == Forward) ?
+                                (index + count) % num
+                              : (index + (num - count % num)) % num);
 }
 
 void rotate_selections_content(Context& context, NormalParams params)
@@ -1178,8 +1185,10 @@ void rotate_selections_content(Context& context, NormalParams params)
         std::rotate(it, end-count, end);
         it = end;
     }
-    context.selections().insert(strings, InsertMode::Replace);
-    context.selections().rotate_main(count);
+    auto& selections = context.selections();
+    selections.insert(strings, InsertMode::Replace);
+    selections.set_main_index((selections.main_index() + count) %
+                              selections.size());
 }
 
 enum class SelectFlags
@@ -1846,8 +1855,9 @@ static NormalCmdDesc cmds[] =
     { ctrl('o'), "jump backward in jump list", jump<Backward> },
     { ctrl('s'), "push current selections in jump list", push_selections },
 
-    { '\'', "rotate main selection", rotate_selections },
-    { alt('\''), "rotate selections content", rotate_selections_content },
+    { '\'', "rotate main selection", rotate_selections<Forward> },
+    { alt('\''), "rotate main selection", rotate_selections<Backward> },
+    { alt('"'), "rotate selections content", rotate_selections_content },
 
     { 'q', "replay recorded macro", replay_macro },
     { 'Q', "start or end macro recording", start_or_end_macro_recording },

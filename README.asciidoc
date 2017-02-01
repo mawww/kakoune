@@ -371,6 +371,7 @@ Movement
  * `pagedown`: scroll down
 
  * `'`: rotate selections (the main selection becomes the next one)
+ * `<a-'>`: rotate selections backwards
 
  * `;`: reduce selections to their cursor
  * `<a-;>`: flip the selections direction
@@ -463,8 +464,8 @@ Changes
  * `<a-@>`: convert spaces to tabs in current selections, uses the buffer
             tabstop option or the count parameter for tabstop.
 
- * `<a-'>`: rotate selections content, if specified, the count groups
-            selections, so `3<a-'>` rotate (1, 2, 3) and (3, 4, 6)
+ * `<a-">`: rotate selections content, if specified, the count groups
+            selections, so `3<a-">` rotate (1, 2, 3) and (3, 4, 6)
             independently.
 
 Goto Commands
