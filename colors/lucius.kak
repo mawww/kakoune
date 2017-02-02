@@ -33,6 +33,8 @@
         face attribute ${lucius_light_blue}
         face comment ${lucius_grey}
         face meta ${lucius_purple}
+        face include default
+        face included default
         face builtin default+b
 
         # and markup
