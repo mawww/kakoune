@@ -13,6 +13,8 @@ face operator yellow
 face attribute rgb:A71D5D
 face comment rgb:AAAAAA
 face meta rgb:183691
+face include default
+face included default
 face builtin default+b
 
 ## markup

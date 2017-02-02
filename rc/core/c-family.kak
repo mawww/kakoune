@@ -194,10 +194,14 @@ add-highlighter -group /cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)
 # c and c++ compiler macros
 %sh{
     builtin_macros="__cplusplus|__STDC_HOSTED__|__FILE__|__LINE__|__DATE__|__TIME__|__STDCPP_DEFAULT_NEW_ALIGNMENT__"
+    builtin_macros="${builtin_macros}|EXIT_SUCCESS|EXIT_FAILURE"
+    includes="\h*(#include)\h+(\"[^\"]+?\"|<[^>]+?>)"
 
     printf %s "
         add-highlighter -group /c/code regex \b(${builtin_macros})\b 0:builtin
         add-highlighter -group /cpp/code regex \b(${builtin_macros})\b 0:builtin
+        add-highlighter -group /c/macro regex ${includes} 1:include 2:included
+        add-highlighter -group /cpp/macro regex ${includes} 1:include 2:included
     "
 }
 

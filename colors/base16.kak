@@ -27,6 +27,8 @@
         face attribute ${orange_dark}
         face comment ${grey_dark}
         face meta ${orange_light}
+        face include default
+        face included default
         face builtin default+b
     "
 

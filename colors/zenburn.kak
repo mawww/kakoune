@@ -38,6 +38,8 @@
         face attribute ${zenstatement}
         face comment ${zencomment}
         face meta ${zenspecial}
+        face include default
+        face included default
         face builtin default+b
 
         # and markup
