@@ -819,6 +819,11 @@ int main(int argc, char* argv[])
         {
             if (not name.empty() and name[0_byte] == '+')
             {
+                if (name == "+" or name  == "+:")
+                {
+                    init_cmds = init_cmds + "; exec gj";
+                    continue;
+                }
                 auto colon = find(name, ':');
                 if (auto line = str_to_int_ifp({name.begin()+1, colon}))
                 {
