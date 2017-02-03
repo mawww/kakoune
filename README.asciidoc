@@ -1043,6 +1043,7 @@ There are some builtins faces used by internal Kakoune functionalities:
  * `MatchingChar`: face used by the show_matching highlighter
  * `Search`: face used to highlight search results
  * `BufferPadding`: face applied on the characters that follow the last line of a buffer
+ * `Whitespace`: face used by the show_whitespaces highlighter
 
 Advanced topics
 ---------------
@@ -1233,6 +1234,8 @@ general highlighters are:
        <option_name>.
  * `show_matching`: highlight matching char of the character under the selections
        cursor using `MatchingChar` face.
+ * `show_whitespaces`: display symbols on top of whitespaces to make them more explicit
+       using the Whitespace face.
  * `number_lines \<-relative> \<-hlcursor> \<-separator <separator text> >`: show line numbers.
        The -relative switch will show line numbers relative to the main cursor line, the
        -hlcursor switch will highlight the cursor line with a separate face. With the
