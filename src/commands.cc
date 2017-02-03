@@ -958,7 +958,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     else if (auto shell_cmd_opt = parser.get_switch("shell-candidates"))
     {
         String shell_cmd = shell_cmd_opt->str();
-        Vector<std::pair<String, UsedLetters>> candidates;
+        Vector<std::pair<String, UsedLetters>, MemoryDomain::Completion> candidates;
         int token = -1;
         completer = [shell_cmd, candidates, token](
             const Context& context, CompletionFlags flags, CommandParameters params,
