@@ -13,11 +13,14 @@ hook global BufCreate .*[.](scss) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / group scss
+add-highlighter -group / regions -default core scss \
+    comment // $ ''
 
-add-highlighter -group /scss ref css
+add-highlighter -group /scss/comment fill comment
 
-add-highlighter -group /scss regex @[A-Za-z][A-Za-z0-9_-]* 0:meta
+add-highlighter -group /scss/core ref css
+
+add-highlighter -group /scss/core regex @[A-Za-z][A-Za-z0-9_-]* 0:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
