@@ -133,7 +133,9 @@ def -hidden c-family-insert-on-newline %[ eval -draft %[
             add-highlighter -group /FT/string fill string
             add-highlighter -group /FT/comment fill comment
             add-highlighter -group /FT/disabled fill rgb:666666
-            add-highlighter -group /FT/macro fill meta' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g; s/MAYBEAT/${maybe_at}/;"
+            add-highlighter -group /FT/macro fill meta
+            add-highlighter -group /FT/macro regex ^\h*#include\h+(\S*) 1:identifier
+            ' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g; s/MAYBEAT/${maybe_at}/;"
     done
 }
 
