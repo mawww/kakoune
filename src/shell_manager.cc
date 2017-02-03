@@ -215,12 +215,13 @@ std::pair<String, int> ShellManager::eval(
                                                        (size_t)contents.length());
                                 if (size > 0)
                                     contents = contents.substr(ByteCount{(int)size});
-                                if (size == -1 and (errno = EAGAIN or errno == EWOULDBLOCK))
+                                if (size == -1 and (errno == EAGAIN or errno == EWOULDBLOCK))
                                     return;
                                 if (size < 0 or contents.empty())
                                 {
                                     pipe.close_write_fd();
                                     watcher.disable();
+                                    return;
                                 }
                             }
                         })
