@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <cstdlib>
 
 extern char **environ;
@@ -180,9 +181,6 @@ std::pair<String, int> ShellManager::eval(
     child_stdout.close_write_fd();
     child_stderr.close_write_fd();
 
-    write(child_stdin.write_fd(), input);
-    child_stdin.close_write_fd();
-
     auto wait_time = Clock::now();
 
     struct PipeReader : FDWatcher
@@ -206,9 +204,36 @@ std::pair<String, int> ShellManager::eval(
         {}
     };
 
+    struct PipeWriter : FDWatcher
+    {
+        PipeWriter(Pipe& pipe, StringView contents)
+            : FDWatcher(pipe.write_fd(), FdEvents::Write,
+                        [contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) mutable {
+                            while (fd_writable(pipe.write_fd()))
+                            {
+                                ssize_t size = ::write(pipe.write_fd(), contents.begin(),
+                                                       (size_t)contents.length());
+                                if (size > 0)
+                                    contents = contents.substr(ByteCount{(int)size});
+                                if (size == -1 and (errno = EAGAIN or errno == EWOULDBLOCK))
+                                    return;
+                                if (size < 0 or contents.empty())
+                                {
+                                    pipe.close_write_fd();
+                                    watcher.disable();
+                                }
+                            }
+                        })
+        {
+            int flags = fcntl(pipe.write_fd(), F_GETFL, 0);
+            fcntl(pipe.write_fd(), F_SETFL, flags | O_NONBLOCK);
+        }
+    };
+
     String stdout_contents, stderr_contents;
     PipeReader stdout_reader{child_stdout, stdout_contents};
     PipeReader stderr_reader{child_stderr, stderr_contents};
+    PipeWriter stdin_writer{child_stdin, input};
 
     // block SIGCHLD to make sure we wont receive it before
     // our call to pselect, that will end up blocking indefinitly.
@@ -235,7 +260,7 @@ std::pair<String, int> ShellManager::eval(
         wait_notified = true;
     }, EventMode::Urgent};
 
-    while (not terminated or
+    while (not terminated or child_stdin.write_fd() != -1 or
            ((flags & Flags::WaitForStdout) and
             (child_stdout.read_fd() != -1 or child_stderr.read_fd() != -1)))
     {
