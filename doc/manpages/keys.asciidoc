@@ -620,7 +620,7 @@ map <scope> <mode> <key> <keys>
 	can be one of *global*, *window* or *buffer*
 
 *mode*::
-	can be one of *insert*, *normal*, *prompt*, *menu*, *user* or a one
+	can be one of *insert*, *normal*, *prompt*, *menu*, *goto*, *view*, *object*, *user* or a one
 	character long arbitrary prefix (the *user* mode uses the *,* prefix)
 
 *key*::
