@@ -681,7 +681,8 @@ void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuf
     }
 }
 
-void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
+void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange,
+                      const String& character_tab, const String& character_tabpad, const String& character_spc, const String& character_lf, const String& character_nbsp)
 {
     const int tabstop = context.options()["tabstop"].get<int>();
     auto whitespaceface = get_face("Whitespace");
@@ -710,14 +711,14 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
                     {
                         int column = (int)get_column(buffer, tabstop, it.coord());
                         int count = tabstop - (column % tabstop);
-                        atom_it->replace("→" + String(' ', CharCount{count-1}));
+                        atom_it->replace(character_tab + String(character_tabpad[(CharCount)0], CharCount{count-1}));
                     }
                     else if (cp == ' ')
-                        atom_it->replace("·");
+                        atom_it->replace(character_spc);
                     else if (cp == '\n')
-                        atom_it->replace("¬");
+                        atom_it->replace(character_lf);
                     else if (cp == 0xA0)
-                        atom_it->replace("⍽");
+                        atom_it->replace(character_nbsp);
                     atom_it->face = whitespaceface;
                     break;
                 }
@@ -726,9 +727,46 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
     }
 }
 
-HighlighterAndId create_show_whitespaces_highlighter(HighlighterParameters params)
+HighlighterAndId show_whitespaces_factory(HighlighterParameters params)
 {
-    return {"show_whitespaces", make_simple_highlighter(show_whitespaces)};
+    static const ParameterDesc param_desc{
+        { { "tab", { true, "" } },
+          { "tabpad", { true, "" } },
+          { "spc", { true, "" } },
+          { "lf", { true, "" } },
+          { "nbsp", { true, "" } } },
+        ParameterDesc::Flags::None, 0, 0
+    };
+    ParametersParser parser(params, param_desc);
+
+    StringView character_tab = parser.get_switch("tab").value_or("→");
+    if (character_tab.char_length() != 1)
+        throw runtime_error("Tabulation character length is limited to 1");
+
+    StringView character_tabpad = parser.get_switch("tabpad").value_or(" ");
+    if (character_tabpad.char_length() != 1)
+        throw runtime_error("Tabulation padding character length is limited to 1");
+
+    StringView character_spc = parser.get_switch("spc").value_or("·");
+    if (character_spc.char_length() > 1)
+        throw runtime_error("Space character length is limited to 1");
+
+    StringView character_lf = parser.get_switch("lf").value_or("¬");
+    if (character_lf.char_length() > 1)
+        throw runtime_error("Line feed character length is limited to 1");
+
+    StringView character_nbsp = parser.get_switch("nbsp").value_or("⍽");
+    if (character_nbsp.char_length() > 1)
+        throw runtime_error("Non breakable space character length is limited to 1");
+
+    using namespace std::placeholders;
+    auto func = std::bind(show_whitespaces, _1, _2, _3, _4,
+                          character_tab.str(), character_tabpad.str(),
+                          character_spc.str(),
+                          character_lf.str(),
+                          character_nbsp.str());
+
+    return {"show_whitespaces", make_simple_highlighter(std::move(func))};
 }
 
 void show_line_numbers(const Context& context, HighlightFlags flags,
@@ -1489,8 +1527,9 @@ void register_highlighters()
           "Apply the MatchingChar face to the char matching the one under the cursor" } });
     registry.append({
         "show_whitespaces",
-        { create_show_whitespaces_highlighter,
-          "Display whitespaces using symbols" } });
+        { show_whitespaces_factory,
+          "Display whitespaces using symbols \n"
+          "Parameters: -tab <separator> -tabpad <separator> -lf <separator> -spc <separator> -nbsp <separator>\n" } });
     registry.append({
         "fill",
         { create_fill_highlighter,
