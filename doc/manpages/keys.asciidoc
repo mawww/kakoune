@@ -629,4 +629,14 @@ map <scope> <mode> <key> <keys>
 *keys*::
 	string that lists the keys that will be executed when *key* is hit
 
-Keys are always executed within the *normal* mode.
+All mappings, except those bound to the `insert` mode, will be executed in
+normal mode.
+
+Mappings can be removed with the unmap command.
+
+----------------------------------------
+:unmap <scope> <mode> <key> [<expected>]
+----------------------------------------
+
+If `<expected>` is specified, unmapping will only proceed if the current
+mapping matches the expected keys.
