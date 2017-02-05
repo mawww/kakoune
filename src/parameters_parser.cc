@@ -32,7 +32,12 @@ ParametersParser::ParametersParser(ParameterList params,
             if (it->value.takes_arg)
             {
                 ++i;
-                if (i == params.size() or params[i][0_byte] == '-')
+
+                auto it_val = params[i][0_byte] == '-' and params[i].length() > 1 ?
+                        m_desc.switches.find(params[i].substr(1_byte))
+                        : m_desc.switches.end();
+
+                if (i == params.size() or it_val != m_desc.switches.end())
                    throw missing_option_value(it->key);
             }
         }
