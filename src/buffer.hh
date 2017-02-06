@@ -249,17 +249,17 @@ private:
     String m_display_name;
     Flags  m_flags;
 
-    using  UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
+    using UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
 
     struct HistoryNode : SafeCountable, UseMemoryDomain<MemoryDomain::BufferMeta>
     {
         HistoryNode(size_t id, HistoryNode* parent);
 
-        size_t id;
-        SafePtr<HistoryNode> parent;
         UndoGroup undo_group;
         Vector<std::unique_ptr<HistoryNode>, MemoryDomain::BufferMeta> childs;
+        SafePtr<HistoryNode> parent;
         SafePtr<HistoryNode> redo_child;
+        size_t id;
         TimePoint timepoint;
     };
 
