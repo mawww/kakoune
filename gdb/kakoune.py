@@ -18,6 +18,9 @@ class ArrayIterator:
         self.index = self.index + 1
         return ('[%d]' % index, (self.data + index).dereference())
 
+    def __next__(self):
+        return self.next()
+
 
 class ArrayView:
     """Print a ArrayView"""
