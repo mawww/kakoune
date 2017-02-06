@@ -2,14 +2,16 @@ hook global BufCreate .*\.(z|ba|c|k)?sh(rc|_profile)? %{
     set buffer filetype sh
 }
 
-add-highlighter -group / regions -default code sh \
-    double_string  %{(?<!\\)(\\\\)*\K"} %{(?<!\\)(\\\\)*"} '' \
-    single_string %{(?<!\\)(\\\\)*\K'} %{'} '' \
-    comment '(?<!\$)#' '$' ''
+add-highlighter -group / regions -default code -match-capture sh \
+    double_string  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)(?:\\\\)*"} '' \
+    single_string %{(?<!\\)(?:\\\\)*\K'} %{'} '' \
+    comment '(?<!\$)#' '$' '' \
+    heredoc '<<-?(\w+)' '^\t*(\w+)$' ''
 
 add-highlighter -group /sh/double_string fill string
 add-highlighter -group /sh/single_string fill string
 add-highlighter -group /sh/comment fill comment
+add-highlighter -group /sh/heredoc fill string
 
 %sh{
     # Grammar
