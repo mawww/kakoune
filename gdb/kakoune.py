@@ -197,6 +197,15 @@ class Color:
         else:
             return self.val["color"]
 
+class Regex:
+    """Print a Regex"""
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        return "regex%s" % (self.val["m_str"])
+
 
 def build_pretty_printer():
     pp = gdb.printing.RegexpCollectionPrettyPrinter("kakoune")
@@ -215,4 +224,5 @@ def build_pretty_printer():
     pp.add_printer('ColumnCount', '^Kakoune::ColumnCount$', ColumnCount)
     pp.add_printer('ByteCount', '^Kakoune::ByteCount$', ByteCount)
     pp.add_printer('Color', '^Kakoune::Color$', Color)
+    pp.add_printer('Regex', '^Kakoune::Regex$', Regex)
     return pp
