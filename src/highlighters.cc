@@ -1092,28 +1092,32 @@ struct RegexMatch
     LineCount line;
     ByteCount begin;
     ByteCount end;
+    StringView capture;
 
     BufferCoord begin_coord() const { return { line, begin }; }
     BufferCoord end_coord() const { return { line, end }; }
 };
 using RegexMatchList = Vector<RegexMatch, MemoryDomain::Highlight>;
 
-void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex)
+void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex, bool capture)
 {
+    capture = capture and regex.mark_count() > 0;
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
     {
         auto l = buffer[line];
         for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
         {
-            ByteCount b = (int)((*it)[0].first - l.begin());
-            ByteCount e = (int)((*it)[0].second - l.begin());
-            matches.push_back({ line, b, e });
+            auto& m = *it;
+            ByteCount b = (int)(m[0].first - l.begin());
+            ByteCount e = (int)(m[0].second - l.begin());
+            auto cap = (capture and m[1].matched) ? StringView{m[1].first, m[1].second} : StringView{};
+            matches.push_back({ line, b, e, cap });
         }
     }
 }
 
 void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modifs,
-                    RegexMatchList& matches, const Regex& regex)
+                    RegexMatchList& matches, const Regex& regex, bool capture)
 {
     // remove out of date matches and update line for others
     auto ins_pos = matches.begin();
@@ -1145,6 +1149,7 @@ void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modif
     size_t pivot = matches.size();
 
     // try to find new matches in each updated lines
+    capture = capture and regex.mark_count() > 0;
     for (auto& modif : modifs)
     {
         for (auto line = modif.new_line; line < modif.new_line + modif.num_added; ++line)
@@ -1152,9 +1157,11 @@ void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modif
             auto l = buffer[line];
             for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
             {
-                ByteCount b = (int)((*it)[0].first - l.begin());
-                ByteCount e = (int)((*it)[0].second - l.begin());
-                matches.push_back({ line, b, e });
+                auto& m = *it;
+                ByteCount b = (int)(m[0].first - l.begin());
+                ByteCount e = (int)(m[0].second - l.begin());
+                auto cap = (capture and m[1].matched) ? StringView{m[1].first, m[1].second} : StringView{};
+                matches.push_back({ line, b, e, cap });
             }
         }
     }
@@ -1181,17 +1188,17 @@ struct RegionMatches
                                 pos, compare_to_begin);
     }
 
-    RegexMatchList::const_iterator find_matching_end(BufferCoord beg_pos) const
+    RegexMatchList::const_iterator find_matching_end(BufferCoord beg_pos, Optional<StringView> capture) const
     {
         auto end_it = end_matches.begin();
         auto rec_it = recurse_matches.begin();
         int recurse_level = 0;
         while (true)
         {
-            end_it = std::lower_bound(end_it, end_matches.end(),
-                                      beg_pos, compare_to_begin);
-            rec_it = std::lower_bound(rec_it, recurse_matches.end(),
-                                      beg_pos, compare_to_begin);
+            end_it = std::lower_bound(end_it, end_matches.end(), beg_pos,
+                                      compare_to_begin);
+            rec_it = std::lower_bound(rec_it, recurse_matches.end(), beg_pos,
+                                      compare_to_begin);
 
             if (end_it == end_matches.end())
                 return end_it;
@@ -1199,14 +1206,18 @@ struct RegionMatches
             while (rec_it != recurse_matches.end() and
                    rec_it->end_coord() <= end_it->begin_coord())
             {
-                ++recurse_level;
+                if (not capture or rec_it->capture == *capture)
+                    ++recurse_level;
                 ++rec_it;
             }
 
-            if (recurse_level == 0)
-                return end_it;
+            if (not capture or *capture == end_it->capture)
+            {
+                if (recurse_level == 0)
+                    return end_it;
+                --recurse_level;
+            }
 
-            --recurse_level;
             beg_pos = end_it->end_coord();
         }
     }
@@ -1218,14 +1229,15 @@ struct RegionDesc
     Regex m_begin;
     Regex m_end;
     Regex m_recurse;
+    bool  m_match_capture;
 
     RegionMatches find_matches(const Buffer& buffer) const
     {
         RegionMatches res;
-        Kakoune::find_matches(buffer, res.begin_matches, m_begin);
-        Kakoune::find_matches(buffer, res.end_matches, m_end);
+        Kakoune::find_matches(buffer, res.begin_matches, m_begin, m_match_capture);
+        Kakoune::find_matches(buffer, res.end_matches, m_end, m_match_capture);
         if (not m_recurse.empty())
-            Kakoune::find_matches(buffer, res.recurse_matches, m_recurse);
+            Kakoune::find_matches(buffer, res.recurse_matches, m_recurse, m_match_capture);
         return res;
     }
 
@@ -1233,10 +1245,10 @@ struct RegionDesc
                         ConstArrayView<LineModification> modifs,
                         RegionMatches& matches) const
     {
-        Kakoune::update_matches(buffer, modifs, matches.begin_matches, m_begin);
-        Kakoune::update_matches(buffer, modifs, matches.end_matches, m_end);
+        Kakoune::update_matches(buffer, modifs, matches.begin_matches, m_begin, m_match_capture);
+        Kakoune::update_matches(buffer, modifs, matches.end_matches, m_end, m_match_capture);
         if (not m_recurse.empty())
-            Kakoune::update_matches(buffer, modifs, matches.recurse_matches, m_recurse);
+            Kakoune::update_matches(buffer, modifs, matches.recurse_matches, m_recurse, m_match_capture);
     }
 };
 
@@ -1340,7 +1352,7 @@ public:
     static HighlighterAndId create(HighlighterParameters params)
     {
         static const ParameterDesc param_desc{
-            { { "default", { true, "" } } },
+            { { "default", { true, "" } }, { "match-capture", { false, "" } } },
             ParameterDesc::Flags::SwitchesOnlyAtStart, 5
         };
 
@@ -1348,19 +1360,22 @@ public:
         if ((parser.positional_count() % 4) != 1)
             throw runtime_error("wrong parameter count, expect <id> (<group name> <begin> <end> <recurse>)+");
 
+        const bool match_capture = (bool)parser.get_switch("match-capture");
         RegionsHighlighter::RegionDescList regions;
         for (size_t i = 1; i < parser.positional_count(); i += 4)
         {
             if (parser[i].empty() or parser[i+1].empty() or parser[i+2].empty())
                 throw runtime_error("group id, begin and end must not be empty");
 
-            Regex begin{parser[i+1], Regex::nosubs | Regex::optimize };
-            Regex end{parser[i+2], Regex::nosubs | Regex::optimize };
+            const Regex::flag_type flags = match_capture ?
+                Regex::optimize : Regex::nosubs | Regex::optimize;
+            Regex begin{parser[i+1], flags };
+            Regex end{parser[i+2], flags };
             Regex recurse;
             if (not parser[i+3].empty())
-                recurse = Regex{parser[i+3], Regex::nosubs | Regex::optimize };
+                recurse = Regex{parser[i+3], flags };
 
-            regions.push_back({ parser[i], std::move(begin), std::move(end), std::move(recurse) });
+            regions.push_back({ parser[i], std::move(begin), std::move(end), std::move(recurse), match_capture });
         }
 
         auto default_group = parser.get_switch("default").value_or(StringView{}).str();
@@ -1441,7 +1456,9 @@ private:
             const RegionMatches& matches = cache.matches[begin.first];
             auto& region = m_regions[begin.first];
             auto beg_it = begin.second;
-            auto end_it = matches.find_matching_end(beg_it->end_coord());
+            auto end_it = matches.find_matching_end(beg_it->end_coord(),
+                                                    region.m_match_capture ? beg_it->capture
+                                                                           : Optional<StringView>{});
 
             if (end_it == matches.end_matches.end() or end_it->end_coord() >= range.end)
             {
@@ -1539,11 +1556,13 @@ void register_highlighters()
     registry.append({
         "regions",
         { RegionsHighlighter::create,
-          "Parameters: [-default <default group>] <name> {<region name> <begin> <end> <recurse>}..."
+          "Parameters: [-default <default group>] [-match-capture] <name> {<region name> <begin> <end> <recurse>}..."
           "Split the highlighting into regions defined by the <begin>, <end> and <recurse> regex\n"
           "The region <region name> starts at <begin> match, end at <end> match that does not\n"
           "close a <recurse> match. In between region is the <default group>.\n"
-          "Highlighting a region is done by adding highlighters into the different <region name> subgroups." } });
+          "Highlighting a region is done by adding highlighters into the different <region name> subgroups.\n"
+          "If -match-capture is specified, then regions end/recurse matches are must have the same \1\n"
+          "capture content as the begin to be considered"} });
 }
 
 }

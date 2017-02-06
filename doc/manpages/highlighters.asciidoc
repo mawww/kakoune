@@ -160,6 +160,10 @@ That matches the rule governing most programming language parsing.
 Regions also supports a *-default <default_region>* switch to define the
 default region, when no other region matches the current buffer range.
 
+If the *-match-capture* switch is passed, then region closing and recurse
+matches are considered valid for a given region opening match only if they
+matched the same content for the capture 1.
+
 Most programming languages can then be properly highlighted using a regions
 highlighter as root:
 
