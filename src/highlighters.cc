@@ -744,14 +744,14 @@ void show_line_numbers(const Context& context, HighlightFlags flags,
         ++digit_count;
 
     char format[16];
-    format_to(format, "%{}d{}", digit_count + (relative ? 1 : 0), separator);
-    int main_selection = (int)context.selections().main().cursor().line + 1;
+    format_to(format, "%{}d{}", digit_count, separator);
+    const int main_line = (int)context.selections().main().cursor().line + 1;
     for (auto& line : display_buffer.lines())
     {
         const int current_line = (int)line.range().begin.line + 1;
-        const bool is_cursor_line = main_selection == current_line;
+        const bool is_cursor_line = main_line == current_line;
         const int line_to_format = (relative and not is_cursor_line) ?
-                                   current_line - main_selection : current_line;
+                                   current_line - main_line : current_line;
         char buffer[16];
         snprintf(buffer, 16, format, std::abs(line_to_format));
         DisplayAtom atom{buffer};
