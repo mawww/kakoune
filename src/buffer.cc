@@ -187,8 +187,8 @@ BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount 
     auto line = Kakoune::clamp(coord.line + offset, 0_line, line_count()-1);
     StringView content = m_lines[line];
 
-    column = std::max(0_col, std::min(column, content.column_length() - 2));
-    return {line, content.byte_count_to(column), column};
+    auto final_column = std::max(0_col, std::min(column, content.column_length() - 2));
+    return {line, content.byte_count_to(final_column), column};
 }
 
 String Buffer::string(BufferCoord begin, BufferCoord end) const
