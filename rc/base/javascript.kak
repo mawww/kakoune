@@ -13,7 +13,8 @@ add-highlighter -group / regions -default code javascript \
     single_string "'"  (?<!\\)(\\\\)*'        '' \
     literal       "`"  (?<!\\)(\\\\)*`        '' \
     comment       //   '$'                    '' \
-    comment       /\*  \*/                    ''
+    comment       /\*  \*/                    '' \
+    tag          <       >                    ''
 
 # Regular expression flags are: g → global match, i → ignore case, m → multi-lines, y → sticky
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
@@ -29,6 +30,8 @@ add-highlighter -group /javascript/code regex \b(document|false|null|parent|self
 add-highlighter -group /javascript/code regex "-?[0-9]*\.?[0-9]+" 0:value
 add-highlighter -group /javascript/code regex \b(Array|Boolean|Date|Function|Number|Object|RegExp|String)\b 0:type
 add-highlighter -group /javascript/code regex (?<=\W)/[^\n/]+/[gimy]* 0:meta
+
+addhl -group /javascript/tag ref html
 
 # Keywords are collected at
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
