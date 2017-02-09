@@ -1307,7 +1307,7 @@ const CommandDesc declare_option_cmd = {
     "    regex: regular expression\n"
     "    int-list: list of integers\n"
     "    str-list: list of character strings\n"
-    "    completions: list of completion candidates"
+    "    completions: list of completion candidates\n"
     "    line-flags: list of line flags\n"
     "    range-faces: list of range faces\n",
     ParameterDesc{
