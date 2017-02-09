@@ -51,9 +51,25 @@ General highlighters
 	highlight matching char of the character under the selections cursor
 	using MatchingChar face
 
-*show_whitespaces*::
+*show_whitespaces* [options]::
 	display symbols on top of whitespaces to make them more explicit
-	using the Whitespace face.
+	using the Whitespace face, with the following *options*:
+
+	*-lf* <separator>:::
+		a one character long separator that will replace line feeds
+
+	*-spc* <separator>:::
+		a one character long separator that will replace spaces
+
+	*-nbsp* <separator>:::
+		a one character long separator that will replace non breakable spaces
+
+	*-tab* <separator>:::
+		a one character long separator that will replace tabulations
+
+	*-tabpad* <separator>:::
+		a one character long separator that will be appended to tabulations to honor the *tabstop* option
+
 
 *number_lines* [options]::
 	show line numbers, with the following *options*:
