@@ -1317,7 +1317,12 @@ const CommandDesc declare_option_cmd = {
     },
     CommandFlags::None,
     CommandHelper{},
-    CommandCompleter{},
+    make_completer(
+        [](const Context& context, CompletionFlags flags,
+           const String& prefix, ByteCount cursor_pos) -> Completions {
+               auto c = {"int", "bool", "str", "regex", "int-list", "str-list", "completions", "line-flags", "range-faces"};
+               return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
+    }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         Option* opt = nullptr;
