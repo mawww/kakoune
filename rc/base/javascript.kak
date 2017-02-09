@@ -9,17 +9,20 @@ hook global BufCreate .*[.](js) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter -group / regions -default code javascript \
-    double_string '"'  (?<!\\)(\\\\)*"        '' \
-    single_string "'"  (?<!\\)(\\\\)*'        '' \
-    literal       "`"  (?<!\\)(\\\\)*`        '' \
-    comment       //   '$'                    '' \
-    comment       /\*  \*/                    ''
+    double_string '"'  (?<!\\)(\\\\)*"         '' \
+    single_string "'"  (?<!\\)(\\\\)*'         '' \
+    literal       "`"  (?<!\\)(\\\\)*`         '' \
+    comment       //   '$'                     '' \
+    comment       /\*  \*/                     '' \
+    regex         /    (?<!\\)(\\\\)*/[gimuy]* '' \
+    division '[\w\)\]](/|(\h+/\h+))' '\w' '' # Help Kakoune to better detect /…/ literals
 
-# Regular expression flags are: g → global match, i → ignore case, m → multi-lines, y → sticky
+# Regular expression flags are: g → global match, i → ignore case, m → multi-lines, u → unicode, y → sticky
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
 
 add-highlighter -group /javascript/double_string fill string
 add-highlighter -group /javascript/single_string fill string
+add-highlighter -group /javascript/regex         fill meta
 add-highlighter -group /javascript/comment       fill comment
 add-highlighter -group /javascript/literal       fill string
 add-highlighter -group /javascript/literal       regex \${.*?} 0:value
@@ -28,7 +31,6 @@ add-highlighter -group /javascript/code regex \$\w* 0:identifier
 add-highlighter -group /javascript/code regex \b(document|false|null|parent|self|this|true|undefined|window)\b 0:value
 add-highlighter -group /javascript/code regex "-?[0-9]*\.?[0-9]+" 0:value
 add-highlighter -group /javascript/code regex \b(Array|Boolean|Date|Function|Number|Object|RegExp|String)\b 0:type
-add-highlighter -group /javascript/code regex (?<=\W)/[^\n/]+/[gimy]* 0:meta
 
 # Keywords are collected at
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
