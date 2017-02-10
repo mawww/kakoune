@@ -26,7 +26,9 @@
         # then we map them to code
         face value ${lucius_light_green}
         face type ${lucius_blue}
-        face identifier ${lucius_green}
+        face variable ${lucius_green}
+        face module ${lucius_green}
+        face function ${lucius_light_blue}
         face string ${lucius_light_green}
         face keyword ${lucius_light_blue}
         face operator ${lucius_green}

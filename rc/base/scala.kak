@@ -18,7 +18,7 @@ add-highlighter -group / regions -default code scala \
     comment /[*] [*]/                 /[*]
 
 add-highlighter -group /scala/string  fill string
-add-highlighter -group /scala/literal fill identifier
+add-highlighter -group /scala/literal fill variable
 add-highlighter -group /scala/comment fill comment
 
 # Keywords are collected at
@@ -29,7 +29,7 @@ add-highlighter -group /scala/code regex \b(this|true|false|null)\b 0:value
 add-highlighter -group /scala/code regex \b(become|case|catch|class|def|do|else|extends|final|finally|for|forSome|goto|if|initialize|macro|match|new|object|onTransition|return|startWith|stay|throw|trait|try|unbecome|using|val|var|when|while|with|yield)\b 0:keyword
 add-highlighter -group /scala/code regex \b(abstract|final|implicit|implicitly|lazy|override|private|protected|require|sealed|super)\b 0:attribute
 add-highlighter -group /scala/code regex \b(⇒|=>|<:|:>|=:=|::|&&|\|\|)\b 0:operator
-add-highlighter -group /scala/code regex "'[_A-Za-z0-9$]+" 0:identifier
+add-highlighter -group /scala/code regex "'[_A-Za-z0-9$]+" 0:variable
 
 # Commands
 # ‾‾‾‾‾‾‾‾

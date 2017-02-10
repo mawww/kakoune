@@ -19,7 +19,7 @@ add-highlighter -group / regions -default code sass \
 add-highlighter -group /sass/string  fill string
 add-highlighter -group /sass/comment fill comment
 
-add-highlighter -group /sass/code regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:identifier
+add-highlighter -group /sass/code regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:variable
 add-highlighter -group /sass/code regex &|@[A-Za-z][A-Za-z0-9_-]* 0:meta
 add-highlighter -group /sass/code regex (#[0-9A-Fa-f]+)|((\d*\.)?\d+(em|px)) 0:value
 add-highlighter -group /sass/code regex ([A-Za-z][A-Za-z0-9_-]*)\h*: 1:keyword

@@ -24,7 +24,7 @@ add-highlighter -group /moon/single_string fill string
 
 add-highlighter -group /moon/comment fill comment
 
-add-highlighter -group /moon/code regex ([.\\](?=[A-Za-z]\w*))|(\b[A-Za-z]\w*:)|(\b[A-Za-z]\w*\K!+)|(\W\K[@:][A-Za-z]\w*) 0:identifier
+add-highlighter -group /moon/code regex ([.\\](?=[A-Za-z]\w*))|(\b[A-Za-z]\w*:)|(\b[A-Za-z]\w*\K!+)|(\W\K[@:][A-Za-z]\w*) 0:variable
 add-highlighter -group /moon/code regex \b(and|break|catch|class|continue|do|else(if)?|export|extends|false|finally|for|from|if|import|in|local|nil|not|or|return|super|switch|then|true|try|unless|using|when|while|with)\b 0:keyword
 
 # Commands

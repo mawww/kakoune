@@ -59,7 +59,7 @@ addhl -group /pony/comment       fill comment
         addhl -group /pony/code regex '\b(${keywords})\b' 0:keyword
         addhl -group /pony/code regex ';' 0:keyword
         addhl -group /pony/code regex '^\s*|' 0:keyword
-        addhl -group /pony/code regex '\b(${struct})\b' 0:identifier
+        addhl -group /pony/code regex '\b(${struct})\b' 0:variable
         addhl -group /pony/code regex '\b(${capabilities})\b(!|^)?' 1:builtin 2:builtin
     "
 

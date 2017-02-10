@@ -38,9 +38,9 @@ add-highlighter -group / regions -default code kakrc \
 }
 
 add-highlighter -group /kakrc/code regex \brgb:[0-9a-fA-F]{6}\b 0:value
-add-highlighter -group /kakrc/code regex (?:\bhook)\h+(?:-group\h+\S+\h+)?(?:(global|buffer|window)|(\S+))\h+(\S+) 1:attribute 2:Error 3:identifier
-add-highlighter -group /kakrc/code regex (?:\bset)\h+(?:-add)?\h+(?:(global|buffer|window)|(\S+))\h+(\S+) 1:attribute 2:Error 3:identifier
-add-highlighter -group /kakrc/code regex (?:\bmap)\h+(?:(global|buffer|window)|(\S+))\h+(?:(normal|insert|menu|prompt|goto|view|user|object)|(\S+))\h+(\S+) 1:attribute 2:Error 3:attribute 4:Error 5:identifier
+add-highlighter -group /kakrc/code regex (?:\bhook)\h+(?:-group\h+\S+\h+)?(?:(global|buffer|window)|(\S+))\h+(\S+) 1:attribute 2:Error 3:variable
+add-highlighter -group /kakrc/code regex (?:\bset)\h+(?:-add)?\h+(?:(global|buffer|window)|(\S+))\h+(\S+) 1:attribute 2:Error 3:variable
+add-highlighter -group /kakrc/code regex (?:\bmap)\h+(?:(global|buffer|window)|(\S+))\h+(?:(normal|insert|menu|prompt|goto|view|user|object)|(\S+))\h+(\S+) 1:attribute 2:Error 3:attribute 4:Error 5:variable
 
 add-highlighter -group /kakrc/double_string fill string
 add-highlighter -group /kakrc/single_string fill string
