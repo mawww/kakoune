@@ -1713,7 +1713,9 @@ const CommandDesc prompt_cmd = {
           { "file-completion", { false, "use file completion for prompt" } },
           { "client-completion", { false, "use client completion for prompt" } },
           { "buffer-completion", { false, "use buffer completion for prompt" } },
-          { "command-completion", { false, "use command completion for prompt" } } },
+          { "command-completion", { false, "use command completion for prompt" } },
+          { "on-change", { true, "command to execute whenever the prompt changes" } },
+          { "on-abort", { true, "command to execute whenever the prompt is canceled" } } },
         ParameterDesc::Flags::None, 2, 2
     },
     CommandFlags::None,
@@ -1751,26 +1753,35 @@ const CommandDesc prompt_cmd = {
         const auto flags = parser.get_switch("password") ?
             PromptFlags::Password : PromptFlags::None;
 
+        String on_change = parser.get_switch("on-change").value_or("").str();
+        String on_abort = parser.get_switch("on-abort").value_or("").str();
+
         CapturedShellContext sc{shell_context};
         context.input_handler().prompt(
             parser[0], initstr.str(), get_face("Prompt"),
             flags, std::move(completer),
             [=](StringView str, PromptEvent event, Context& context) mutable
             {
-                if (event != PromptEvent::Validate)
+                if ((event == PromptEvent::Abort and on_abort.empty()) or
+                    (event == PromptEvent::Change and on_change.empty()))
                     return;
-                sc.env_vars["text"] = str.str();
+
+                auto& text = sc.env_vars["text"] = str.str();
+                auto clear_password = on_scope_end([&] {
+                    if (flags & PromptFlags::Password)
+                        memset(text.data(), 0, (int)text.length());
+                });
 
                 ScopedSetBool disable_history{context.history_disabled()};
 
-                CommandManager::instance().execute(command, context, sc);
-
-                if (flags & PromptFlags::Password)
+                StringView cmd;
+                switch (event)
                 {
-                    String& str = sc.env_vars["text"];;
-                    memset(str.data(), 0, (int)str.length());
-                    str = "";
+                    case PromptEvent::Validate: cmd = command; break;
+                    case PromptEvent::Change: cmd = on_change; break;
+                    case PromptEvent::Abort: cmd = on_abort; break;
                 }
+                CommandManager::instance().execute(cmd, context, sc);
             });
     }
 };

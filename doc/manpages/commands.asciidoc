@@ -160,6 +160,10 @@ commands:
 	*-password* switch hides the entered text and clears the register
 	after command execution.
 
+        The *-on-change* and *-on-abort* switches, followed by a command
+        will have this command executed whenever the prompt content changes
+        or the prompt is aborted, respectively.
+
 *on-key* <command>::
 	wait for next key from user, then execute <command>, the key is
 	available through the `key` value, accessible through `$kak_key`
