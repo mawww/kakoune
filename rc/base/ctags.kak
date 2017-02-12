@@ -39,10 +39,13 @@ If no symbol is passed then the current selection is used as symbol name} \
             re=$0;
             sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
             keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
-            out = out " %{" $2 " {MenuInfo}" re "} %{evaluate-commands %{ try %{ edit %{" tagroot $2 "}; execute-keys %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
+            out = out " %{" $2 " {MenuInfo}" re "} %{evaluate-commands %{ try %{ edit %{" path($2) "}; execute-keys %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
         }
-        /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{evaluate-commands %{ edit %{" tagroot $2 "} %{" $3 "}}}" }
-        END { print ( length(out) == 0 ? "echo -markup %{{Error}no such tag " ENVIRON["tagname"] "}" : "menu -markup -auto-single " out ) }'
+        /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{evaluate-commands %{ edit %{" path($2) "} %{" $3 "}}}" }
+        END { print ( length(out) == 0 ? "echo -markup %{{Error}no such tag " ENVIRON["tagname"] "}" : "menu -markup -auto-single " out ) }
+
+        # Ensure x is an absolute file path, by prepending with tagroot
+        function path(x) { return x ~/^\// ? x : tagroot x }'
     }}
 
 define-command ctags-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ evaluate-commands -draft %{
@@ -76,7 +79,7 @@ define-command ctags-enable-autoinfo -docstring "Automatically display ctags inf
 define-command ctags-disable-autoinfo -docstring "Disable automatic ctags information displaying" %{ remove-hooks window ctags-autoinfo }
 
 declare-option -docstring "shell command to run" \
-    str ctagscmd "ctags -R"
+    str ctagscmd "ctags -R --fields=+S"
 declare-option -docstring "path to the directory in which the tags file will be generated" str ctagspaths "."
 
 define-command ctags-generate -docstring 'Generate tag file asynchronously' %{
