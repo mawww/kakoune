@@ -20,9 +20,10 @@
     zenspecial="rgb:cfbfaf"
     zenfunction="rgb:efef8f"
     zenstatement="rgb:e3ceab"
-    zenidentifier="rgb:efdcbc"
+    zenvariable="rgb:efdcbc"
     zentype="rgb:dfdfbf"
     zenstring="rgb:cc9393"
+    zenmodule="${zenstring}"
     zenexception="rgb:c3bf9f+b"
     zenmatching="rgb:3f3f3f,rgb:8cd0d3"
     zenpadding="rgb:f0dfaf,rgb:343434+b"
@@ -31,7 +32,9 @@
         # then we map them to code
         face value ${zenconstant}
         face type ${zentype}
-        face identifier ${zenidentifier}
+        face variable ${zenvariable}
+        face module ${zenstring}
+        face function ${zenfunction}
         face string ${zenstring}
         face keyword ${zenkeyword}
         face operator ${zenfunction}
@@ -48,7 +51,7 @@
         face mono ${zennumber}
         face block ${zenstatement}
         face link ${zenstring}
-        face bullet ${zenidentifier}
+        face bullet ${zenvariable}
         face list ${zentype}
 
         # and built in faces

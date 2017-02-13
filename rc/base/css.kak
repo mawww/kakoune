@@ -31,7 +31,7 @@ add-highlighter -group /css/declaration regex !important 0:keyword
 # element#id element.class
 # universal selector
 add-highlighter -group /css/selector regex         [A-Za-z][A-Za-z0-9_-]* 0:keyword
-add-highlighter -group /css/selector regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:identifier
+add-highlighter -group /css/selector regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:variable
 
 # Commands
 # ‾‾‾‾‾‾‾‾

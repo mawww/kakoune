@@ -28,7 +28,7 @@ add-highlighter -group /haml/coffee ref coffee
 add-highlighter -group /haml/sass   ref sass
 
 add-highlighter -group /haml/code regex ^\h*(:[a-z]+|-|=)|^(!!!)$ 0:meta
-add-highlighter -group /haml/code regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)? 1:keyword 2:identifier
+add-highlighter -group /haml/code regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)? 1:keyword 2:variable
 
 # Commands
 # ‾‾‾‾‾‾‾‾

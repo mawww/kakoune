@@ -36,7 +36,7 @@ add-highlighter -group /coffee/comment fill comment
 # Keywords are collected at
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
 # http://coffeescript.org/documentation/docs/lexer.html#section-63
-add-highlighter -group /coffee/code regex [$@]\w* 0:identifier
+add-highlighter -group /coffee/code regex [$@]\w* 0:variable
 add-highlighter -group /coffee/code regex \b(Array|Boolean|Date|Function|Number|Object|RegExp|String)\b 0:type
 add-highlighter -group /coffee/code regex \b(document|false|no|null|off|on|parent|self|this|true|undefined|window|yes)\b 0:value
 add-highlighter -group /coffee/code regex \b(and|is|isnt|not|or)\b 0:operator

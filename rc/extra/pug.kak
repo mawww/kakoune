@@ -38,7 +38,7 @@ add-highlighter -group /pug/puglang          regex   \b(\block|extends|include|a
 add-highlighter -group /pug/attribute        regex   [()=]                             0:operator
 add-highlighter -group /pug/text             regex   \h*(\|)                           1:meta
 add-highlighter -group /pug/code             regex   ^\h*([A-Za-z][A-Za-z0-9_-]*)      1:type
-add-highlighter -group /pug/code             regex   (\#[A-Za-z][A-Za-z0-9_-]*)        1:identifier
+add-highlighter -group /pug/code             regex   (\#[A-Za-z][A-Za-z0-9_-]*)        1:variable
 add-highlighter -group /pug/code             regex   ((?:\.[A-Za-z][A-Za-z0-9_-]*)*)   1:value
 
 # Commands

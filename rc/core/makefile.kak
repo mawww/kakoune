@@ -15,7 +15,7 @@ add-highlighter -group / regions -default content makefile \
 add-highlighter -group /makefile/comment fill comment
 add-highlighter -group /makefile/eval fill value
 
-add-highlighter -group /makefile/content regex ^[\w.%-]+\h*:\s 0:identifier
+add-highlighter -group /makefile/content regex ^[\w.%-]+\h*:\s 0:variable
 add-highlighter -group /makefile/content regex [+?:]= 0:operator
 
 %sh{

@@ -19,7 +19,7 @@ add-highlighter -group /php/double_string fill string
 add-highlighter -group /php/single_string fill string
 add-highlighter -group /php/comment       fill comment
 
-add-highlighter -group /php/code regex \$\w* 0:identifier
+add-highlighter -group /php/code regex \$\w* 0:variable
 add-highlighter -group /php/code regex \b(false|null|parent|self|this|true)\b 0:value
 add-highlighter -group /php/code regex "-?[0-9]*\.?[0-9]+" 0:value
 add-highlighter -group /php/code regex \b((string|int|bool)|[A-Z][a-z].*?)\b 0:type

@@ -24,7 +24,9 @@
         # then we map them to code
         face value      ${cyan}
         face type       ${yellow}
-        face identifier ${blue}
+        face variable   ${blue}
+        face module     ${cyan}
+        face function   default
         face string     ${cyan}
         face keyword    ${green}
         face operator   default

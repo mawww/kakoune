@@ -3,29 +3,31 @@
 ##
 
 %sh{
-    foreground='rgb:c5c8c6'
-    background='rgb:272727'
-    selection='rgb:373b41'
-    window='rgb:383838'
-    text='rgb:D8D8D8'
-    text_light='rgb:4E4E4E'
-    line='rgb:282a2e'
-    comment='rgb:969896'
-    red='rgb:cc6666'
-    orange='rgb:d88860'
-    yellow='rgb:f0c674'
-    green='rgb:b5bd68'
-    green_dark='rgb:a1b56c'
-    blue='rgb:81a2be'
-    aqua='rgb:87afaf'
-    magenta='rgb:ab4642'
-    purple='rgb:b294bb'
+    foreground="rgb:c5c8c6"
+    background="rgb:272727"
+    selection="rgb:373b41"
+    window="rgb:383838"
+    text="rgb:D8D8D8"
+    text_light="rgb:4E4E4E"
+    line="rgb:282a2e"
+    comment="rgb:969896"
+    red="rgb:cc6666"
+    orange="rgb:d88860"
+    yellow="rgb:f0c674"
+    green="rgb:b5bd68"
+    green_dark="rgb:a1b56c"
+    blue="rgb:81a2be"
+    aqua="rgb:87afaf"
+    magenta="rgb:ab4642"
+    purple="rgb:b294bb"
 
     ## code
     echo "
         face value ${orange}
         face type ${yellow}
-        face identifier ${magenta}
+        face variable ${magenta}
+        face module ${green}
+        face function ${aqua}
         face string ${green_dark}
         face keyword ${purple}
         face operator ${aqua}

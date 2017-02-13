@@ -3,7 +3,9 @@
 # For Code
 face value red
 face type yellow
-face identifier green
+face variable green
+face module green
+face function cyan
 face string magenta
 face keyword blue
 face operator yellow

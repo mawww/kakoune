@@ -45,7 +45,7 @@ add-highlighter -group /ruby/comment fill comment
 
 add-highlighter -group /ruby/literal fill meta
 
-add-highlighter -group /ruby/code regex \b([A-Za-z]\w*:(?=[^:]))|([$@][A-Za-z]\w*)|((?<=[^:]):[A-Za-z]\w*[=?!]?)|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:identifier
+add-highlighter -group /ruby/code regex \b([A-Za-z]\w*:(?=[^:]))|([$@][A-Za-z]\w*)|((?<=[^:]):[A-Za-z]\w*[=?!]?)|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:variable
 
 %sh{
     # Grammar

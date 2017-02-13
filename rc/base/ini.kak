@@ -6,7 +6,7 @@ add-highlighter -group / regions -default code ini \
     comment (^|\h)\K\# $ ''
 
 add-highlighter -group /ini/code regex "^\h*\[[^\]]*\]" 0:title
-add-highlighter -group /ini/code regex "^\h*([^\[][^=\n]*=)([^\n]*)" 1:identifier 2:value
+add-highlighter -group /ini/code regex "^\h*([^\[][^=\n]*=)([^\n]*)" 1:variable 2:value
 
 add-highlighter -group /ini/comment fill comment
 

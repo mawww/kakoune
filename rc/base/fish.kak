@@ -17,11 +17,11 @@ add-highlighter -group / regions -default code fish \
     comment       '#' '$'              ''
 
 add-highlighter -group /fish/double_string fill string
-add-highlighter -group /fish/double_string regex (\$\w+)|(\{\$\w+\}) 0:identifier
+add-highlighter -group /fish/double_string regex (\$\w+)|(\{\$\w+\}) 0:variable
 add-highlighter -group /fish/single_string fill string
 add-highlighter -group /fish/comment       fill comment
 
-add-highlighter -group /fish/code regex (\$\w+)|(\{\$\w+\}) 0:identifier
+add-highlighter -group /fish/code regex (\$\w+)|(\{\$\w+\}) 0:variable
 
 # Command names are collected using `builtin --names` and 'eval' from `functions --names`
 add-highlighter -group /fish/code regex \b(and|begin|bg|bind|block|break|breakpoint|builtin|case|cd|command|commandline|complete|contains|continue|count|echo|else|emit|end|eval|exec|exit|fg|for|function|functions|history|if|jobs|not|or|printf|pwd|random|read|return|set|set_color|source|status|switch|test|ulimit|while)\b 0:keyword

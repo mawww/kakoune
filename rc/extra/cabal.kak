@@ -19,7 +19,7 @@ add-highlighter -group /cabal/comment fill comment
 
 add-highlighter -group /cabal/code regex \b(true|false)\b|(([<>]?=?)?\d+(\.\d+)+) 0:value
 add-highlighter -group /cabal/code regex \b(if|else)\b 0:keyword
-add-highlighter -group /cabal/code regex ^\h*([A-Za-z][A-Za-z0-9_-]*)\h*: 1:identifier
+add-highlighter -group /cabal/code regex ^\h*([A-Za-z][A-Za-z0-9_-]*)\h*: 1:variable
 
 # Commands
 # ‾‾‾‾‾‾‾‾

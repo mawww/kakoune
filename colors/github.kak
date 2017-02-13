@@ -6,7 +6,9 @@
 ## code
 face value rgb:0086B3+b
 face type rgb:795DA3
-face identifier rgb:0086B3
+face variable rgb:0086B3
+face module rgb:0086B3
+face function rgb:A71D5D
 face string rgb:183691
 face keyword rgb:A71D5D+b
 face operator yellow

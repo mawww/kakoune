@@ -31,11 +31,11 @@ add-highlighter -group /sh/heredoc fill string
 }
 
 add-highlighter -group /sh/code regex [\[\]\(\)&|]{1,2} 0:operator
-add-highlighter -group /sh/code regex (\w+)= 1:identifier
-add-highlighter -group /sh/code regex ^\h*(\w+)\h*\(\) 1:identifier
+add-highlighter -group /sh/code regex (\w+)= 1:variable
+add-highlighter -group /sh/code regex ^\h*(\w+)\h*\(\) 1:variable
 
 add-highlighter -group /sh/code regex \$(\w+|\{.+?\}|#|@|\?|\$|!|-|\*) 0:value
-add-highlighter -group /sh/double_string regex \$(\w+|\{.+?\}) 0:identifier
+add-highlighter -group /sh/double_string regex \$(\w+|\{.+?\}) 0:variable
 
 hook -group sh-highlight global WinSetOption filetype=sh %{ add-highlighter ref sh }
 hook -group sh-highlight global WinSetOption filetype=(?!sh).* %{ remove-highlighter sh }

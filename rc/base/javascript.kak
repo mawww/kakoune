@@ -27,7 +27,7 @@ add-highlighter -group /javascript/comment       fill comment
 add-highlighter -group /javascript/literal       fill string
 add-highlighter -group /javascript/literal       regex \${.*?} 0:value
 
-add-highlighter -group /javascript/code regex \$\w* 0:identifier
+add-highlighter -group /javascript/code regex \$\w* 0:variable
 add-highlighter -group /javascript/code regex \b(document|false|null|parent|self|this|true|undefined|window)\b 0:value
 add-highlighter -group /javascript/code regex "-?[0-9]*\.?[0-9]+" 0:value
 add-highlighter -group /javascript/code regex \b(Array|Boolean|Date|Function|Number|Object|RegExp|String)\b 0:type

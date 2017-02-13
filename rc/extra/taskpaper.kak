@@ -14,7 +14,7 @@ hook global BufCreate .*\.taskpaper %{
 add-highlighter -group / group taskpaper
 
 add-highlighter -group /taskpaper regex ^\h*([^:\n]+):\h*\n 1:header
-add-highlighter -group /taskpaper regex \h@\w+(?:\(([^)]*)\))? 0:identifier 1:value
+add-highlighter -group /taskpaper regex \h@\w+(?:\(([^)]*)\))? 0:variable 1:value
 add-highlighter -group /taskpaper regex ^\h*([^-:\n]+)\n 1:+i
 add-highlighter -group /taskpaper regex ^\h*-\h+[^\n]*@done[^\n]* 0:+d
 add-highlighter -group /taskpaper regex (([a-z]+://\S+)|((mailto:)[\w+-]+@\S+)) 0:link
