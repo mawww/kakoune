@@ -45,8 +45,9 @@ decl str jumpclient
 def -hidden make-jump %{
     eval -collapse-jumps %{
         try %{
-            exec gl<a-?> "Entering directory" <ret>
-            exec s "Entering directory '([^']+)'.*\n([^:]+):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
+            exec gl<a-?> "Entering directory" <ret><a-:>
+            # Try to parse the error into capture groups, failing on absolute paths
+            exec s "Entering directory '([^']+)'.*\n([^:/][^:]*):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
             set buffer make_current_error_line %val{cursor_line}
             eval -try-client %opt{jumpclient} "edit -existing %reg{1}/%reg{2} %reg{3} %reg{4}; echo -color Information %{%reg{5}}; try %{ focus }"
         } catch %{
