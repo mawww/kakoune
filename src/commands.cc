@@ -1510,8 +1510,15 @@ public:
 
     ~RegisterRestorer()
     {
-        if (m_name != 0)
+        if (m_name != 0) try
+        {
             RegisterManager::instance()[m_name] = m_save;
+        }
+        catch (runtime_error& e)
+        {
+            write_to_debug_buffer(format("Could not restore register '{}': {}",
+                                         m_name, e.what()));
+        }
     }
 
 private:
