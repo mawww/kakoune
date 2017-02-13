@@ -586,6 +586,7 @@ Optional<Key> NCursesUI::get_next_key()
            return Key{utf8::codepoint(getch_iterator{m_window},
                                       getch_iterator{m_window})};
         }
+        return {};
     };
 
     if (c == 27)
