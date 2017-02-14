@@ -1487,32 +1487,24 @@ private:
 class RegisterRestorer
 {
 public:
-    RegisterRestorer(char name, const Context& context)
-      : m_name(name)
+    RegisterRestorer(char name, Context& context)
+      : m_context{context}, m_name{name}
     {
-        ConstArrayView<String> save = RegisterManager::instance()[name].values(context);
+        ConstArrayView<String> save = RegisterManager::instance()[name].get(context);
         m_save = Vector<String>(save.begin(), save.end());
     }
 
     RegisterRestorer(RegisterRestorer&& other) noexcept
-        : m_save(std::move(other.m_save)), m_name(other.m_name)
+        : m_context{other.m_context}, m_save{std::move(other.m_save)}, m_name{other.m_name}
     {
         other.m_name = 0;
-    }
-
-    RegisterRestorer& operator=(RegisterRestorer&& other) noexcept
-    {
-        m_save = std::move(other.m_save);
-        m_name = other.m_name;
-        other.m_name = 0;
-        return *this;
     }
 
     ~RegisterRestorer()
     {
         if (m_name != 0) try
         {
-            RegisterManager::instance()[m_name] = m_save;
+            RegisterManager::instance()[m_name].set(m_context, m_save);
         }
         catch (runtime_error& e)
         {
@@ -1523,6 +1515,7 @@ public:
 
 private:
     Vector<String> m_save;
+    Context&       m_context;
     char           m_name;
 };
 
@@ -2012,7 +2005,7 @@ const CommandDesc set_register_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        RegisterManager::instance()[parser[0]] = ConstArrayView<String>(parser[1]);
+        RegisterManager::instance()[parser[0]].set(context, {parser[1]});
     }
 };
 

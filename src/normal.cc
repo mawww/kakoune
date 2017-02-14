@@ -417,7 +417,7 @@ void pipe(Context& context, NormalParams)
                 real_cmd = context.main_sel_register_value("|");
             else
             {
-                RegisterManager::instance()['|'] = cmdline.str();
+                RegisterManager::instance()['|'].set(context, cmdline.str());
                 real_cmd = cmdline;
             }
 
@@ -479,7 +479,7 @@ void insert_output(Context& context, NormalParams)
                 real_cmd = context.main_sel_register_value("|");
             else
             {
-                RegisterManager::instance()['|'] = cmdline.str();
+                RegisterManager::instance()['|'].set(context, cmdline.str());
                 real_cmd = cmdline;
             }
 
@@ -496,7 +496,7 @@ void insert_output(Context& context, NormalParams)
 void yank(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
-    RegisterManager::instance()[reg] = context.selections_content();
+    RegisterManager::instance()[reg].set(context, context.selections_content());
     context.print_status({ format("yanked {} selections to register {}",
                                   context.selections().size(), reg),
                            get_face("Information") });
@@ -505,7 +505,7 @@ void yank(Context& context, NormalParams params)
 void erase_selections(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
-    RegisterManager::instance()[reg] = context.selections_content();
+    RegisterManager::instance()[reg].set(context, context.selections_content());
     ScopedEdition edition(context);
     context.selections().erase();
     context.selections().avoid_eol();
@@ -514,7 +514,7 @@ void erase_selections(Context& context, NormalParams params)
 void change(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
-    RegisterManager::instance()[reg] = context.selections_content();
+    RegisterManager::instance()[reg].set(context, context.selections_content());
     enter_insert_mode<InsertMode::Replace>(context, params);
 }
 
@@ -533,7 +533,7 @@ template<InsertMode mode>
 void paste(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
-    auto strings = RegisterManager::instance()[reg].values(context);
+    auto strings = RegisterManager::instance()[reg].get(context);
     const bool linewise = contains_that(strings, [](StringView str) {
         return not str.empty() and str.back() == '\n';
     });
@@ -547,7 +547,7 @@ template<InsertMode mode>
 void paste_all(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
-    auto strings = RegisterManager::instance()[reg].values(context);
+    auto strings = RegisterManager::instance()[reg].get(context);
     InsertMode effective_mode = mode;
     String all;
     Vector<ByteCount> offsets;
@@ -645,7 +645,7 @@ void search(Context& context, NormalParams params)
     const char reg = to_lower(params.reg ? params.reg : '/');
     const int count = params.count;
 
-    auto reg_content = RegisterManager::instance()[reg].values(context);
+    auto reg_content = RegisterManager::instance()[reg].get(context);
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
     const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
@@ -654,13 +654,13 @@ void search(Context& context, NormalParams params)
                  (Regex regex, PromptEvent event, Context& context) {
                      if (event == PromptEvent::Abort)
                      {
-                         RegisterManager::instance()[reg] = saved_reg;
+                         RegisterManager::instance()[reg].set(context, saved_reg);
                          return;
                      }
 
                      if (regex.empty())
                          regex = Regex{saved_reg[main_index]};
-                     RegisterManager::instance()[reg] = regex.str();
+                     RegisterManager::instance()[reg].set(context, regex.str());
 
                      if (not regex.empty() and not regex.str().empty())
                      {
@@ -741,7 +741,7 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
         format("register '{}' set to '{}'", reg, patterns[sels.main_index()]),
         get_face("Information") });
 
-    RegisterManager::instance()[reg] = patterns;
+    RegisterManager::instance()[reg].set(context, patterns);
 
     // Hack, as Window do not take register state into account
     if (context.has_window())
@@ -754,7 +754,7 @@ void select_regex(Context& context, NormalParams params)
     const int capture = params.count;
     auto prompt = capture ? format("select (capture {}):", capture) :  "select:"_str;
 
-    auto reg_content = RegisterManager::instance()[reg].values(context);
+    auto reg_content = RegisterManager::instance()[reg].get(context);
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
     const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
@@ -762,13 +762,13 @@ void select_regex(Context& context, NormalParams params)
                  [reg, capture, saved_reg, main_index](Regex ex, PromptEvent event, Context& context) {
          if (event == PromptEvent::Abort)
          {
-             RegisterManager::instance()[reg] = saved_reg;
+             RegisterManager::instance()[reg].set(context, saved_reg);
              return;
          }
 
         if (ex.empty())
             ex = Regex{saved_reg[main_index]};
-        RegisterManager::instance()[reg] = ex.str();
+        RegisterManager::instance()[reg].set(context, ex.str());
 
         if (not ex.empty() and not ex.str().empty())
             select_all_matches(context.selections(), ex, capture);
@@ -781,7 +781,7 @@ void split_regex(Context& context, NormalParams params)
     const int capture = params.count;
     auto prompt = capture ? format("split (on capture {}):", (int)capture) :  "split:"_str;
 
-    auto reg_content = RegisterManager::instance()[reg].values(context);
+    auto reg_content = RegisterManager::instance()[reg].get(context);
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
     const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
@@ -789,13 +789,13 @@ void split_regex(Context& context, NormalParams params)
                  [reg, capture, saved_reg, main_index](Regex ex, PromptEvent event, Context& context) {
          if (event == PromptEvent::Abort)
          {
-             RegisterManager::instance()[reg] = saved_reg;
+             RegisterManager::instance()[reg].set(context, saved_reg);
              return;
          }
 
         if (ex.empty())
             ex = Regex{saved_reg[main_index]};
-        RegisterManager::instance()[reg] = ex.str();
+        RegisterManager::instance()[reg].set(context, ex.str());
 
         if (not ex.empty() and not ex.str().empty())
             split_selections(context.selections(), ex, capture);
@@ -1254,7 +1254,7 @@ void replay_macro(Context& context, NormalParams params)
     if (running_macros[idx])
         throw runtime_error("recursive macros call detected");
 
-    ConstArrayView<String> reg_val = RegisterManager::instance()[reg].values(context);
+    ConstArrayView<String> reg_val = RegisterManager::instance()[reg].get(context);
     if (reg_val.empty() or reg_val[0].empty())
         throw runtime_error(format("Register '{}' is empty", reg));
 
@@ -1445,7 +1445,7 @@ SelectionList read_selections_from_register(char reg, Context& context)
     if (not is_basic_alpha(reg) and reg != '^')
         throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
 
-    auto content = RegisterManager::instance()[reg].values(context);
+    auto content = RegisterManager::instance()[reg].get(context);
 
     if (content.size() != 1)
         throw runtime_error(format("Register {} does not contain a selections desc", reg));
@@ -1496,7 +1496,7 @@ void save_selections(Context& context, NormalParams params)
                          context.buffer().name(),
                          context.buffer().timestamp());
 
-    RegisterManager::instance()[reg] = desc;
+    RegisterManager::instance()[reg].set(context, desc);
 
     context.print_status({format("{} selections to register '{}'", add ? "Added" : "Saved", reg), get_face("Information")});
 }

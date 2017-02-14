@@ -17,9 +17,9 @@ class Register
 {
 public:
     virtual ~Register() = default;
-    virtual Register& operator=(ConstArrayView<String> values) = 0;
 
-    virtual ConstArrayView<String> values(const Context& context) = 0;
+    virtual void set(Context& context, ConstArrayView<String> values) = 0;
+    virtual ConstArrayView<String> get(const Context& context) = 0;
 };
 
 // static value register, which can be modified
@@ -27,13 +27,12 @@ public:
 class StaticRegister : public Register
 {
 public:
-    Register& operator=(ConstArrayView<String> values) override
+    void set(Context&, ConstArrayView<String> values) override
     {
         m_content = Vector<String, MemoryDomain::Registers>(values.begin(), values.end());
-        return *this;
     }
 
-    ConstArrayView<String> values(const Context&) override
+    ConstArrayView<String> get(const Context&) override
     {
         if (m_content.empty())
             return ConstArrayView<String>(String::ms_empty);
@@ -46,43 +45,51 @@ protected:
 
 // Dynamic value register, use it's RegisterRetriever
 // to get it's value when needed.
-template<typename Func>
+template<typename Getter, typename Setter>
 class DynamicRegister : public StaticRegister
 {
 public:
-    DynamicRegister(Func function)
-        : m_function(std::move(function)) {}
+    DynamicRegister(Getter getter, Setter setter)
+        : m_getter{std::move(getter)}, m_setter{std::move(setter)} {}
 
-    Register& operator=(ConstArrayView<String> values) override
+    void set(Context& context, ConstArrayView<String> values) override
     {
-        throw runtime_error("this register is not assignable");
+        m_setter(context, values);
     }
 
-    ConstArrayView<String> values(const Context& context) override
+    ConstArrayView<String> get(const Context& context) override
     {
-        m_content = m_function(context);
-        return StaticRegister::values(context);
+        m_content = m_getter(context);
+        return StaticRegister::get(context);
     }
 
 private:
-    Func m_function;
+    Getter m_getter;
+    Setter m_setter;
 };
 
 template<typename Func>
 std::unique_ptr<Register> make_dyn_reg(Func func)
 {
-    return make_unique<DynamicRegister<Func>>(std::move(func));
+    auto setter = [](Context&, ConstArrayView<String>)
+    {
+        throw runtime_error("this register is not assignable");
+    };
+    return make_unique<DynamicRegister<Func, decltype(setter)>>(std::move(func), setter);
+}
+
+template<typename Getter, typename Setter>
+std::unique_ptr<Register> make_dyn_reg(Getter getter, Setter setter)
+{
+    return make_unique<DynamicRegister<Getter, Setter>>(std::move(getter), std::move(setter));
 }
 
 class NullRegister : public Register
 {
 public:
-    Register& operator=(ConstArrayView<String> values) override
-    {
-        return *this;
-    }
+    void set(Context&, ConstArrayView<String>) override {}
 
-    ConstArrayView<String> values(const Context& context) override
+    ConstArrayView<String> get(const Context&) override
     {
         return ConstArrayView<String>(String::ms_empty);
     }

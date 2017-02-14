@@ -1124,7 +1124,7 @@ public:
             on_next_key_with_autoinfo(context(), KeymapMode::None,
                 [this](Key key, Context&) {
                     if (auto cp = key.codepoint())
-                        insert(RegisterManager::instance()[*cp].values(context()));
+                        insert(RegisterManager::instance()[*cp].get(context()));
                 }, "Enter register name", register_doc);
             update_completions = false;
         }
@@ -1491,7 +1491,8 @@ void InputHandler::stop_recording()
     kak_assert(m_recording_reg != 0);
 
     if (not m_recorded_keys.empty())
-        RegisterManager::instance()[m_recording_reg] = {m_recorded_keys};
+        RegisterManager::instance()[m_recording_reg].set(
+            context(), {m_recorded_keys});
 
     m_recording_reg = 0;
     m_recording_level = -1;

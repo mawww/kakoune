@@ -186,6 +186,19 @@ void register_registers()
                 for (auto& sel : context.selections())
                     result.emplace_back(i < sel.captures().size() ? sel.captures()[i] : "");
                 return result;
+            },
+            [i](Context& context, ConstArrayView<String> values) {
+                if (values.empty())
+                    return;
+
+                auto& sels = context.selections();
+                for (size_t sel_index = 0; sel_index < sels.size(); ++sel_index)
+                {
+                    auto& sel = sels[sel_index];
+                    if (sel.captures().size() < i+1)
+                        sel.captures().resize(i+1);
+                    sel.captures()[i] = values[std::min(sel_index, values.size()-1)];
+                }
             }));
     }
 

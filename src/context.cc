@@ -211,7 +211,7 @@ void Context::end_edition()
 
 StringView Context::main_sel_register_value(StringView reg) const
 {
-    auto strings = RegisterManager::instance()[reg].values(*this);
+    auto strings = RegisterManager::instance()[reg].get(*this);
     size_t index = m_selections ? (*m_selections).main_index() : 0;
     if (strings.size() <= index)
         index = strings.size() - 1;
