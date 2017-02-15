@@ -1522,6 +1522,11 @@ private:
 template<typename Func>
 void context_wrap(const ParametersParser& parser, Context& context, Func func)
 {
+    if ((int)(bool)parser.get_switch("buffer") +
+        (int)(bool)parser.get_switch("client") +
+        (int)(bool)parser.get_switch("try-client") > 1)
+        throw runtime_error{"Only one of -buffer, -client or -try-client can be specified"};
+
     // Disable these options to avoid costly code paths (and potential screen
     // redraws) That are useful only in interactive contexts.
     DisableOption<AutoInfo> disable_autoinfo(context, "autoinfo");
