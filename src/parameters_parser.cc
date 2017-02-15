@@ -19,6 +19,7 @@ ParametersParser::ParametersParser(ParameterList params,
       m_desc(desc)
 {
     bool only_pos = desc.flags & ParameterDesc::Flags::SwitchesAsPositional;
+    Vector<bool> switch_seen(desc.switches.size(), false);
     for (size_t i = 0; i < params.size(); ++i)
     {
         if (not only_pos and params[i] == "--")
@@ -28,6 +29,11 @@ ParametersParser::ParametersParser(ParameterList params,
             auto it = m_desc.switches.find(params[i].substr(1_byte));
             if (it == m_desc.switches.end())
                 throw unknown_option(params[i]);
+
+            auto switch_index = it - m_desc.switches.begin();
+            if (switch_seen[switch_index])
+                throw runtime_error{format("switch '-{}' specified more than once", it->key)};
+            switch_seen[switch_index] = true;
 
             if (it->value.takes_arg)
             {
