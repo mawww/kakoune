@@ -8,14 +8,6 @@ hook global BufCreate .*[.](pony) %{
     set buffer filetype pony
 }
 
-hook global BufOpen .*[.](pony) %{
-    set buffer filetype pony
-}
-
-hook global BufNew .*[.](pony) %{
-    set buffer filetype pony
-}
-
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
