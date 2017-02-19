@@ -758,8 +758,8 @@ const CommandDesc remove_highlighter_cmd = {
 };
 
 static constexpr auto hooks = {
-    "BufCreate", "BufNew", "BufOpen", "BufClose", "BufWritePost", "BufWritePre",
-    "BufOpenFifo", "BufCloseFifo", "BufReadFifo", "BufSetOption",
+    "BufCreate", "BufNewFile", "BufOpenFile", "BufClose", "BufWritePost",
+    "BufWritePre", "BufOpenFifo", "BufCloseFifo", "BufReadFifo", "BufSetOption",
     "InsertBegin", "InsertChar", "InsertEnd", "InsertIdle", "InsertKey",
     "InsertMove", "InsertCompletionHide", "InsertCompletionShow",
     "KakBegin", "KakEnd", "FocusIn", "FocusOut", "RuntimeError",
