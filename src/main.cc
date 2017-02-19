@@ -36,6 +36,15 @@
 namespace Kakoune
 {
 
+static const char* startup_info =
+"Kakoune recent breaking changes:\n"
+" * <a-'> (rotate selection contents) is now <a-\">,\n"
+"   <a-'> is rotate selections backwards.\n"
+" * The `identifier` face has been replaced with `variable`,\n"
+"   `function` and `module`, update your custom colorschemes\n"
+" * BufNew and BufOpen hooks have been renamed to BufNewFile\n"
+"   and BufOpenFile.\n";
+
 struct startup_error : runtime_error
 {
     using runtime_error::runtime_error;
@@ -467,10 +476,11 @@ struct convert_to_client_mode
 
 enum class ServerFlags
 {
-    None = 0,
+    None        = 0,
     IgnoreKakrc = 1 << 0,
-    Daemon = 1 << 1,
-    ReadOnly = 1 << 2,
+    Daemon      = 1 << 1,
+    ReadOnly    = 1 << 2,
+    StartupInfo = 1 << 3,
 };
 template<> struct WithBitOps<ServerFlags> : std::true_type {};
 
@@ -570,14 +580,19 @@ int run_server(StringView session,
     try
     {
         if (not (flags & ServerFlags::Daemon))
+        {
             local_client = client_manager.create_client(
                  create_local_ui(ui_type), get_env_vars(), init_cmds, init_coord);
 
-        if (local_client and startup_error)
-            local_client->print_status({
-                "error during startup, see *debug* buffer for details",
-                get_face("Error")
-            });
+            if (startup_error)
+                local_client->print_status({
+                    "error during startup, see *debug* buffer for details",
+                    get_face("Error")
+                });
+
+            if (flags & ServerFlags::StartupInfo)
+                local_client->info_show("Welcome to Kakoune", startup_info, {}, InfoStyle::Prompt);
+        }
 
         while (not terminate and (not client_manager.empty() or (flags & ServerFlags::Daemon)))
         {
@@ -891,7 +906,8 @@ int main(int argc, char* argv[])
             {
                 auto flags = (parser.get_switch("n") ? ServerFlags::IgnoreKakrc : ServerFlags::None) |
                              (parser.get_switch("d") ? ServerFlags::Daemon : ServerFlags::None) |
-                             (parser.get_switch("ro") ? ServerFlags::ReadOnly : ServerFlags::None);
+                             (parser.get_switch("ro") ? ServerFlags::ReadOnly : ServerFlags::None) |
+                             (argc == 1 ? ServerFlags::StartupInfo : ServerFlags::None);
                 return run_server(session, init_cmds, init_coord, flags, ui_type, files);
             }
             catch (convert_to_client_mode& convert)
