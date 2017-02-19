@@ -68,25 +68,28 @@ void HookManager::run_hook(StringView hook_name,
     auto start_time = profile ? Clock::now() : TimePoint{};
 
     auto& disabled_hooks = context.options()["disabled_hooks"].get<Regex>();
-    bool hook_error = false;
+    Vector<std::pair<String, HookFunc>> hooks_to_run;
     for (auto& hook : hook_list_it->value)
     {
-        if (not hook.key.empty() and not disabled_hooks.empty() and
+        if (hook.key.empty() or disabled_hooks.empty() or
             regex_match(hook.key.begin(), hook.key.end(), disabled_hooks))
-            continue;
+            hooks_to_run.push_back({hook.key, hook.value});
+    }
 
+    bool hook_error = false;
+    for (auto& hook : hooks_to_run)
+    {
         try
         {
             if (debug_flags & DebugFlags::Hooks)
-                write_to_debug_buffer(format("hook {}/{}", hook_name, hook.key));
-
-            hook.value(param, context);
+                write_to_debug_buffer(format("hook {}/{}", hook_name, hook.first));
+            hook.second(param, context);
         }
         catch (runtime_error& err)
         {
             hook_error = true;
             write_to_debug_buffer(format("error running hook {}({})/{}: {}",
-                               hook_name, param, hook.key, err.what()));
+                               hook_name, param, hook.first, err.what()));
         }
     }
 
