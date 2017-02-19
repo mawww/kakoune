@@ -13,7 +13,7 @@ namespace Kakoune
 
 void HookManager::add_hook(StringView hook_name, String group, HookFunc hook)
 {
-    auto& hooks = m_hook[hook_name];
+    auto& hooks = m_hooks[hook_name];
     hooks.append({std::move(group), std::move(hook)});
 }
 
@@ -21,14 +21,14 @@ void HookManager::remove_hooks(StringView group)
 {
     if (group.empty())
         throw runtime_error("invalid id");
-    for (auto& hooks : m_hook)
+    for (auto& hooks : m_hooks)
         hooks.value.remove_all(group);
 }
 
 CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_in_token)
 {
     CandidateList res;
-    for (auto& list : m_hook)
+    for (auto& list : m_hooks)
     {
         auto container = list.value | transform(decltype(list.value)::get_id);
         for (auto& c : complete(prefix, pos_in_token, container))
@@ -49,8 +49,8 @@ void HookManager::run_hook(StringView hook_name,
     if (m_parent)
         m_parent->run_hook(hook_name, param, context);
 
-    auto hook_list_it = m_hook.find(hook_name);
-    if (hook_list_it == m_hook.end())
+    auto hook_list_it = m_hooks.find(hook_name);
+    if (hook_list_it == m_hooks.end())
         return;
 
     if (contains(m_running_hooks, std::make_pair(hook_name, param)))

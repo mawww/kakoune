@@ -29,7 +29,7 @@ private:
     friend class Scope;
 
     SafePtr<HookManager> m_parent;
-    IdMap<IdMap<HookFunc, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hook;
+    IdMap<IdMap<HookFunc, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hooks;
     mutable Vector<std::pair<StringView, StringView>, MemoryDomain::Hooks> m_running_hooks;
 };
 
