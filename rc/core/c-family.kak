@@ -281,7 +281,7 @@ def -hidden c-family-insert-include-guards %{
     }
 }
 
-hook global BufNew .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
+hook global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
 
 decl str-list alt_dirs ".;.."
 

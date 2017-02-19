@@ -107,11 +107,11 @@ void Buffer::on_registered()
     if (m_flags & Flags::File)
     {
         if (m_flags & Buffer::Flags::New)
-            run_hook_in_own_context("BufNew", m_name);
+            run_hook_in_own_context("BufNewFile", m_name);
         else
         {
             kak_assert(m_fs_timestamp != InvalidTime);
-            run_hook_in_own_context("BufOpen", m_name);
+            run_hook_in_own_context("BufOpenFile", m_name);
         }
     }
 

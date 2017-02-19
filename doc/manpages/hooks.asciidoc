@@ -92,11 +92,11 @@ Default hooks
 	an option was set in a buffer context, the filtering text is
 	*<option_name>=<new_value>*
 
-*BufNew*::
+*BufNewFile*::
 	a buffer for a new file has been created, filename is used for
 	filtering
 
-*BufOpen*::
+*BufOpenFile*::
 	a buffer for an existing file has been created, filename is used
 	for filtering
 

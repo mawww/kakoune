@@ -60,4 +60,4 @@ def autorestore-disable -docstring "Disable automatic backup recovering" %{
     remove-hooks global autorestore
 }
 
-hook -group autorestore global BufOpen .* %{ autorestore-restore-buffer }
+hook -group autorestore global BufOpenFile .* %{ autorestore-restore-buffer }
