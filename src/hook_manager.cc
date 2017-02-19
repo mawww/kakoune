@@ -72,7 +72,7 @@ void HookManager::run_hook(StringView hook_name,
     for (auto& hook : hook_list_it->value)
     {
         if (hook.key.empty() or disabled_hooks.empty() or
-            regex_match(hook.key.begin(), hook.key.end(), disabled_hooks))
+            not regex_match(hook.key.begin(), hook.key.end(), disabled_hooks))
             hooks_to_run.push_back({hook.key, hook.value});
     }
 
