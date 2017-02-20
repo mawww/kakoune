@@ -1,0 +1,19 @@
+:modeline-parse<ret>
+>h@
+:eval %sh{
+    if [ "${kak_opt_indentwidth}" != "0" ]; then
+        printf 'echo -debug Invalid variable value: indentwidth = "%s"\n' "${kak_opt_indentwidth}";
+    fi;
+
+    if [ "${kak_opt_tabstop}" != "8" ]; then
+        printf 'echo -debug Invalid variable value: tabstop = "%s"\n' "${kak_opt_tabstop}";
+    fi;
+
+    if [ "${kak_opt_mimetype}" != "text/plain" ]; then
+        printf 'echo -debug Invalid variable value: mimetype = "%s"\n' "${kak_opt_mimetype}";
+    fi;
+
+    if [ "${kak_opt_filetype}" != "ini" ]; then
+        printf 'echo -debug Invalid variable value: filetype = "%s"\n' "${kak_opt_filetype}";
+    fi;
+}<ret>

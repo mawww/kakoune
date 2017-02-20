@@ -1,0 +1,2 @@
+source "%val{runtime}/colors/default.kak"
+source "%val{runtime}/rc/core/man.kak"
