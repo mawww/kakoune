@@ -1,0 +1,10 @@
+decl str _
+
+hook global BufCreate \*test\* %{
+    hook buffer BufSetOption _=.+ 'exec "i%opt{_}"'
+}
+
+def test %{
+    edit -scratch *test*
+    set buffer=*test* _ "k"
+}

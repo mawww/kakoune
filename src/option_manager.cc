@@ -108,8 +108,13 @@ void OptionManager::on_option_changed(const Option& option)
         find_option(m_options, option.name()) != m_options.end())
         return;
 
-    for (auto watcher : m_watchers)
-        watcher->on_option_changed(option);
+    // The watcher list might get mutated during calls to on_option_changed
+    auto watchers = m_watchers;
+    for (auto* watcher : watchers)
+    {
+        if (contains(m_watchers, watcher)) // make sure this watcher is still alive
+            watcher->on_option_changed(option);
+    }
 }
 
 CandidateList OptionsRegistry::complete_option_name(StringView prefix,
