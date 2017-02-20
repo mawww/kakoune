@@ -86,7 +86,7 @@ const Buffer::Change* backward_sorted_until(const Buffer::Change* first, const B
     if (first != last) {
         const Buffer::Change* next = first;
         while (++next != last) {
-            if (first->begin <= next->end)
+            if (first->begin < next->end)
                 return next;
             first = next;
         }
