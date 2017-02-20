@@ -143,6 +143,7 @@ public:
     size_t         current_history_id() const noexcept;
 
     String         string(BufferCoord begin, BufferCoord end) const;
+    StringView     substr(BufferCoord begin, BufferCoord end) const;
 
     const char&    byte_at(BufferCoord c) const;
     ByteCount      distance(BufferCoord begin, BufferCoord end) const;

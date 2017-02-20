@@ -89,6 +89,12 @@ inline size_t Buffer::timestamp() const
     return m_changes.size();
 }
 
+inline StringView Buffer::substr(BufferCoord begin, BufferCoord end) const
+{
+    kak_assert(begin.line == end.line);
+    return m_lines[begin.line].substr(begin.column, end.column - begin.column);
+}
+
 inline ConstArrayView<Buffer::Change> Buffer::changes_since(size_t timestamp) const
 {
     if (timestamp < m_changes.size())
