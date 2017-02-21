@@ -12,10 +12,10 @@ hook global BufCreate .*[.](hs) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter -group / regions -default code haskell \
-    string   '"'     (?<!\\)(\\\\)*"      '' \
-    comment  (--) $                       '' \
-    comment \{-   -\}                    \{- \
-    macro   ^\h*?\K# (?<!\\)\n            ''
+    string   '"'      (?<!\\)(\\\\)*"      ''  \
+    comment  (--[^>]) $                    ''  \
+    comment \{-       -\}                  \{- \
+    macro   ^\h*?\K#  (?<!\\)\n            ''
 
 add-highlighter -group /haskell/string  fill string
 add-highlighter -group /haskell/comment fill comment
