@@ -454,8 +454,11 @@ void pipe(Context& context, NormalParams)
                 for (int i = 0; i < selections.size(); ++i)
                 {
                     selections.set_main_index(i);
+                    String in = content(buffer, selections.main());
+                    if (in.back()!='\n')
+                        in += '\n';
                     ShellManager::instance().eval(real_cmd, context,
-                                                  content(buffer, selections.main()),
+                                                  in,
                                                   ShellManager::Flags::None);
                 }
             }
