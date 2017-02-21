@@ -1,163 +1,136 @@
 #!/bin/sh
 
+# Color codes ├──────────────────────────────────────────────────────────────────
+none="00"; red="31"; green="32"; yellow="33"; magenta="35"; bold="01"
+
 # Main ├────────────────────────────────────────────────────────────────────────
 
 main() {
-  number_tests=0
-  number_failures=0
-  dirs="${@:-.}"
-  test=$(pwd)
-  tmpdir="${TMPDIR:-/tmp}"
-  work=$(mktemp -d ${tmpdir}/kak-tests.XXXXXXXX)
-  trap "rm -R $work" EXIT
-  for dir in $(find $dirs -type d | sort); do
-    cd $test/$dir;
-    test_files=$(ls out selections state display 2>/dev/null)
-    mkdir -p $work/$dir
-    for file in $(ls in cmd rc 2>/dev/null); do
-        cp $file $work/$dir/
-    done
-    cd $work/$dir;
-    indent="$(echo "${dir}/" | sed -e 's|[^/]*/\+|  |g')"
-    name=$(basename $PWD)
-    should_fail=$(test ! -e error; echo $?)
-    if ! test -e cmd; then
-      echo "$indent$name"
-    elif test -x enabled && ! ./enabled; then
-      echo "$indent$name (disabled)" | colorize yellow normal
-    else
-      number_tests=$(($number_tests + 1))
-      touch in; cp in out
-      kak_commands="
+  kak_commands='
         set global autoreload yes
-        set global autoinfo ''
+        set global autoinfo ""
         set global autoshowcompl false
         try %{ source rc }
         try %{
-            exec -save-regs '/' '%s%\(\K[^)]+<ret><c-s>ld<a-t>(hHdi<c-u><esc><c-o>'
+            exec -save-regs / %{%s%\(\K[^)]+<ret><c-s>ld<a-t>(hHdi<c-u><esc><c-o>}
         } catch %{ exec gg }
         hook global RuntimeError .+ %{
             echo -debug -- error: %val{hook_param}
             eval -buffer *debug* write debug
             quit!
         }
-        exec '$(cat cmd | sed -e s/\'/\\\\\'/g)'
+        exec "%sh{cat cmd}"
         exec <c-l>
         eval -buffer *debug* write debug
         nop %sh{
-          IFS==
-          printf '%s\\n' \"\$kak_selections\"      > selections
-          printf '%s\\n' \"\$kak_selections_desc\" > state
+          printf %s\\n "$kak_selections"      > selections
+          printf %s\\n "$kak_selections_desc" > state
         }
         write out
         quit!
-      "
-      session="kak-tests"
-      rm -f ${tmpdir}/kakoune/$USER/$session
-      ${test}/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > display
-      retval=$?
-      if [ $should_fail -eq 0 ]; then
-        if [ $retval -ne 0 ]; then
-          echo "Kakoune returned error $retval"
-          number_failures=$(($number_failures + 1))
-          echo "$indent$name" | colorize red normal
-        else
-          failed=no
-          for expect in $test_files; do
-            if ! cmp -s $test/$dir/$expect $expect; then
-              if [ "$failed" = no ]; then
-                echo "$indent$name" | colorize red normal
-                failed=yes
-              fi
-              echo
-              show_diff $test/$dir/$expect $expect
-            fi
-          done
-          if [ "$failed" = no ]; then
-            echo "$indent$name" | colorize green normal
-          else
-            number_failures=$(($number_failures + 1))
-            echo
-            if test -e debug; then
-              echo "debug buffer:" | colorize yellow normal
-              cat debug
-              echo
-            fi
-          fi
-        fi
-      else
-        failed=no
-        if [ ! -e stderr ]; then
-          if [ $retval -eq 0 ]; then
-            echo "$indent$name" | colorize red normal
-            number_failures=$(($number_failures + 1))
-            failed=yes
-          fi
-        else
-            sed -i -e 's/^[0-9]*:[0-9]*: //g' stderr
-            if [ -s error ] && ! cmp -s error stderr; then
-              echo "$indent$name" | colorize yellow normal
-              show_diff error stderr
-              failed=yes
-            fi
-        fi
+      '
 
-        if [ "$failed" = no ]; then
-          echo "$indent$name" | colorize green normal
+  root=$PWD
+  tmpdir="${TMPDIR:-/tmp}"
+  work=$(mktemp -d $tmpdir/kak-tests.XXXXXXXX)
+  trap "rm -R $work" EXIT
+
+  number_tests=0
+  number_failures=0
+  for dir in $(find "${@:-.}" -type d | sort); do
+    cd $root/$dir;
+    mkdir -p $work/$dir
+    for file in in cmd rc; do
+      [ -e $file ] && cp $file $work/$dir/
+    done
+    cd $work/$dir;
+    indent="$(echo "$dir/" | sed -e 's|[^/]*/\+|  |g')"
+    name=${PWD##*/}
+    if [ ! -e cmd ]; then
+      echo "$indent$name"
+      continue
+    elif [ -x enabled ] && ! ./enabled; then
+      echo "$indent$name (disabled)" | colorize $yellow $none
+      continue
+    fi
+
+    number_tests=$(($number_tests + 1))
+    touch in; cp in out
+    session="kak-tests"
+    rm -f $tmpdir/kakoune/$USER/$session
+    $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > display
+    retval=$?
+    failed=0
+    if [ ! -e error ]; then # failure not expected
+      if [ $retval -ne 0 ]; then
+        echo "$indent$name" | colorize $red $none
+        echo "$indent  Kakoune returned error $retval"
+        failed=1
+      else
+        for file in out selections state display; do
+          if [ -e $root/$dir/$file ] && ! cmp -s $root/$dir/$file $file; then
+            if [ $failed -eq 0 ]; then
+              echo "$indent$name" | colorize $red $none
+              failed=1
+            fi
+            show_diff $root/$dir/$file $file
+          fi
+        done
+        if [ $failed -ne 0 ] && [ -e debug ]; then
+          printf "\ndebug buffer:\n" | colorize $yellow $none
+          cat debug
         fi
       fi
+    else # failure expected
+      if [ -e stderr ]; then
+        sed -i -e 's/^[0-9]*:[0-9]*: //g' stderr
+        if [ -s error ] && ! cmp -s error stderr; then
+          echo "$indent$name" | colorize $yellow $none
+          show_diff error stderr
+          failed=1
+        fi
+      elif [ $retval -eq 0 ]; then
+        echo "$indent$name" | colorize $red $none
+        echo "$indent  Expected failure, but Kakoune returned 0"
+        failed=1
+      fi
+    fi
+
+    if [ $failed -eq 0 ]; then
+      echo "$indent$name" | colorize $green $none
+    else
+      number_failures=$(($number_failures + 1))
     fi
   done
-  if expr $number_failures > 0; then
-    color=red
+
+  if [ $number_failures -gt 0 ]; then
+    color=$red
   else
-    color=green
+    color=$green
   fi
-  echo
-  echo Resume:
-  echo $number_tests tests, $number_failures failures | colorize $color normal
+  printf "\nResume: %s tests, %s failures\n" $number_tests $number_failures | colorize $color $none
   exit $number_failures
 }
 
 # Utility ├─────────────────────────────────────────────────────────────────────
 
-get_ansi_code() {
-  color_name=${1:-none}
-  style_name=${2:-none}
-  case "$color_name" in
-    none)    color_nr=00 ;;
-    red)     color_nr=31 ;;
-    green)   color_nr=32 ;;
-    yellow)  color_nr=33 ;;
-    magenta) color_nr=35 ;;
-    *)       color_nr=00 ;;
-  esac
-  case "$style_name" in
-    none) style_nr=00 ;;
-    bold) style_nr=01 ;;
-    *)    style_nr=00 ;;
-  esac
-  printf '\033[%s;%sm' $style_nr $color_nr
-}
-
 colorize() {
-  text=$(cat)
-  color_name=${1:-none}
-  style_name=${2:-none}
-  printf '%s\n' "$(get_ansi_code $color_name $style_name)$text$(get_ansi_code none none)"
+  color=${1:-$none}
+  style=${2:-$none}
+  printf '\033[%s;%sm%s\033[00;00m\n' $style $color "$(cat)"
 }
 
 show_diff() {
   diff -u $1 $2 | while IFS='' read -r line; do
     first_character=$(printf '%s\n' "$line" | cut -b 1)
     case $first_character in
-      +) color=green ;;
-      -) color=red ;;
-      @) color=magenta ;;
-      *) color=none ;;
+      +) color=$green ;;
+      -) color=$red ;;
+      @) color=$magenta ;;
+      *) color=$none ;;
     esac
-    printf '%s\n' "$line" | colorize $color normal
+    printf '%s\n' "$line" | colorize $color $none
   done
 }
 
-main $@
+main "$@"
