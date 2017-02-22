@@ -21,9 +21,9 @@ void on_assert_failed(const char* message);
         if (not (__VA_ARGS__)) \
             on_assert_failed("assert failed \"" #__VA_ARGS__ \
                              "\" at " __FILE__ ":" TOSTRING(__LINE__)); \
-    } while (0)
+    } while (false)
 #else
-    #define kak_assert(...) do {} while (0)
+    #define kak_assert(...) do {} while(false)
 #endif
 
 
