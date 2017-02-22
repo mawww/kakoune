@@ -609,7 +609,6 @@ int run_server(StringView session,
             client_manager.clear_client_trash();
             client_manager.clear_window_trash();
             buffer_manager.clear_buffer_trash();
-            string_registry.purge_unused();
 
             if (convert_to_client_pending)
             {
