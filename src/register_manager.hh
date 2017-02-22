@@ -50,7 +50,7 @@ class DynamicRegister : public StaticRegister
 {
 public:
     DynamicRegister(Getter getter, Setter setter)
-        : m_getter{std::move(getter)}, m_setter{std::move(setter)} {}
+        : m_getter(std::move(getter)), m_setter(std::move(setter)) {}
 
     void set(Context& context, ConstArrayView<String> values) override
     {
