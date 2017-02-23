@@ -10,13 +10,13 @@ namespace Kakoune
 
 using WordList = Vector<StringView>;
 
-static WordList get_words(StringView content, StringView extra_word_chars)
+static WordList get_words(StringView content, ConstArrayView<Codepoint> extra_word_chars)
 {
     WordList res;
     using Utf8It = utf8::iterator<const char*>;
     const char* word_start = content.begin();
     bool in_word = false;
-    for (Utf8It it{word_start, content}, end{content.end(), content}; it != end; ++it)
+    for (Utf8It it{word_start, content}; it != content.end(); ++it)
     {
         Codepoint c = *it;
         const bool word = is_word(c) or contains(extra_word_chars, c);
@@ -36,9 +36,13 @@ static WordList get_words(StringView content, StringView extra_word_chars)
     return res;
 }
 
-static StringView get_extra_word_chars(const Buffer& buffer)
+static Vector<Codepoint> get_extra_word_chars(const Buffer& buffer)
 {
-    return buffer.options()["completion_extra_word_char"].get<String>();
+    auto& str = buffer.options()["completion_extra_word_char"].get<String>();
+    Vector<Codepoint> res;
+    for (utf8::iterator<const char*> it{str.begin(), str}; it != str.end(); ++it)
+        res.push_back(*it);
+    return res;
 }
 
 void WordDB::add_words(StringView line)
@@ -77,9 +81,9 @@ WordDB::WordDB(const Buffer& buffer)
 
 WordDB::WordDB(WordDB&& other)
     : m_buffer{std::move(other.m_buffer)},
-      m_lines{std::move(other.m_lines)},
+      m_timestamp{other.m_timestamp},
       m_words{std::move(other.m_words)},
-      m_timestamp{other.m_timestamp}
+      m_lines{std::move(other.m_lines)}
 {
     kak_assert(m_buffer);
     m_buffer->options().unregister_watcher(other);
