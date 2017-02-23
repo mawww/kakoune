@@ -13,24 +13,18 @@ using WordList = Vector<StringView>;
 static WordList get_words(StringView content, ConstArrayView<Codepoint> extra_word_chars)
 {
     WordList res;
-    using Utf8It = utf8::iterator<const char*>;
-    const char* word_start = content.begin();
-    bool in_word = false;
-    for (Utf8It it{word_start, content}; it != content.end(); ++it)
+    auto is_word = [&](Codepoint c) {
+        return Kakoune::is_word(c) or contains(extra_word_chars, c);
+    };
+    for (utf8::iterator<const char*> it{content.begin(), content};
+         it != content.end(); ++it)
     {
-        Codepoint c = *it;
-        const bool word = is_word(c) or contains(extra_word_chars, c);
-        if (not in_word and word)
+        if (is_word(*it))
         {
-            word_start = it.base();
-            in_word = true;
-        }
-        else if (in_word and not word)
-        {
-            const ByteCount start = word_start - content.begin();
-            const ByteCount length = it.base() - word_start;
-            res.push_back(content.substr(start, length));
-            in_word = false;
+            const char* word = it.base(); 
+            while (++it != content.end() and is_word(*it))
+            {}
+            res.emplace_back(word, it.base());
         }
     }
     return res;
