@@ -46,16 +46,14 @@ void WordDB::add_words(StringView line)
     for (auto& w : get_words(line, get_extra_word_chars(*m_buffer)))
     {
         auto it = m_words.find(w);
-        if (it == m_words.end())
+        if (it != m_words.end())
+            ++it->second.refcount;
+        else
         {
             auto word = intern(w);
-            WordDB::WordInfo& info = m_words[word->strview()];
-            info.word = word;
-            info.letters = used_letters(w);
-            ++info.refcount;
+            auto view = word->strview();
+            m_words.insert({view, {std::move(word), used_letters(view), 1}});
         }
-        else
-            ++ it->second.refcount;
     }
 }
 
