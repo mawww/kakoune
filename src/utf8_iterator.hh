@@ -13,7 +13,7 @@ namespace utf8
 
 // adapter for an iterator on bytes which permits to iterate
 // on unicode codepoints instead.
-template<typename Iterator,
+template<typename BaseIt,
          typename CodepointType = Codepoint,
          typename DifferenceType = CharCount,
          typename InvalidPolicy = utf8::InvalidPolicy::Pass>
@@ -23,12 +23,12 @@ class iterator : public std::iterator<std::bidirectional_iterator_tag,
 public:
     iterator() = default;
 
-    iterator(Iterator it, Iterator begin, Iterator end)
+    iterator(BaseIt it, BaseIt begin, BaseIt end)
         : m_it{std::move(it)}, m_begin{std::move(begin)}, m_end{std::move(end)}
     {}
 
     template<typename Container>
-    iterator(Iterator it, const Container& c)
+    iterator(BaseIt it, const Container& c)
         : m_it{std::move(it)}, m_begin{std::begin(c)}, m_end{std::end(c)}
     {}
 
@@ -91,14 +91,14 @@ public:
     bool operator> (const iterator& other) const { return m_it > other.m_it; }
     bool operator>= (const iterator& other) const { return m_it >= other.m_it; }
 
-    bool operator==(const Iterator& other) { return m_it == other; }
-    bool operator!=(const Iterator& other) { return m_it != other; }
+    bool operator==(const BaseIt& other) { return m_it == other; }
+    bool operator!=(const BaseIt& other) { return m_it != other; }
 
-    bool operator< (const Iterator& other) const { return m_it < other; }
-    bool operator<= (const Iterator& other) const { return m_it <= other; }
+    bool operator< (const BaseIt& other) const { return m_it < other; }
+    bool operator<= (const BaseIt& other) const { return m_it <= other; }
 
-    bool operator> (const Iterator& other) const { return m_it > other; }
-    bool operator>= (const Iterator& other) const { return m_it >= other; }
+    bool operator> (const BaseIt& other) const { return m_it > other; }
+    bool operator>= (const BaseIt& other) const { return m_it >= other; }
 
     DifferenceType operator-(const iterator& other) const
     {
@@ -110,8 +110,7 @@ public:
         return get_value();
     }
 
-    const Iterator& base() const { return m_it; }
-    Iterator& base() { return m_it; }
+    const BaseIt& base() const { return m_it; }
 
 private:
     void invalidate_value() { m_value = -1; }
@@ -122,9 +121,9 @@ private:
         return m_value;
     }
 
-    Iterator m_it;
-    Iterator m_begin;
-    Iterator m_end;
+    BaseIt m_it;
+    BaseIt m_begin;
+    BaseIt m_end;
     mutable CodepointType m_value = -1;
 };
 
