@@ -38,12 +38,12 @@ inline bool is_word(Codepoint c)
 template<>
 inline bool is_word<WORD>(Codepoint c)
 {
-    return not is_horizontal_blank(c) and not is_eol(c);
+    return not is_blank(c);
 }
 
 inline bool is_punctuation(Codepoint c)
 {
-    return not (is_word(c) or is_horizontal_blank(c) or is_eol(c));
+    return not (is_word(c) or is_blank(c));
 }
 
 inline bool is_basic_alpha(Codepoint c)
