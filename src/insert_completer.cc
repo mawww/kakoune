@@ -87,7 +87,7 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
     using Utf8It = utf8::iterator<BufferIterator>;
     Utf8It pos{buffer.iterator_at(cursor_pos), buffer};
     if (pos == buffer.begin() or not is_word_pred(*(pos-1)))
-        return {};
+        return {{}, {}, {}, 0};
 
     BufferCoord word_begin;
     StringView prefix;
@@ -191,6 +191,7 @@ InsertCompletion complete_filename(const SelectionList& sels,
     const Buffer& buffer = sels.buffer();
     auto pos = buffer.iterator_at(sels.main().cursor());
     auto begin = pos;
+    InsertCompletion empty = {{}, {}, {}, 0};
 
     auto is_filename = [](char c)
     {
@@ -203,16 +204,16 @@ InsertCompletion complete_filename(const SelectionList& sels,
         --begin;
 
     if (begin == pos)
-        return {};
+        return empty;
 
     StringView prefix = buffer.substr(begin.coord(), pos.coord());
     if (require_slash and not contains(prefix, '/'))
-        return {};
+        return empty;
 
     // Do not try to complete in that case as its unlikely to be a filename,
     // and triggers network host search of cygwin.
     if (prefix.substr(0_byte, 2_byte) == "//")
-        return {};
+        return empty;
 
     InsertCompletion::CandidateList candidates;
     if (prefix.front() == '/' or prefix.front() == '~')
@@ -234,7 +235,7 @@ InsertCompletion complete_filename(const SelectionList& sels,
         }
     }
     if (candidates.empty())
-        return {};
+        return empty;
     return { begin.coord(), pos.coord(), std::move(candidates), buffer.timestamp() };
 }
 
