@@ -102,32 +102,32 @@ distclean: clean
 	rm -f kak
 
 installdirs:
-	install	-d $(bindir) \
-		$(sharedir)/rc/base	\
-		$(sharedir)/rc/core	\
+	install -d $(bindir) \
+		$(sharedir)/rc/base \
+		$(sharedir)/rc/core \
 		$(sharedir)/rc/extra \
 		$(sharedir)/colors \
 		$(docdir)/manpages \
 		$(mandir)
 
 install: kak man doc installdirs
-	install	-m 0755	kak	$(bindir)
-	install	-m 0644	../share/kak/kakrc $(sharedir)
-	install	-m 0644	../rc/base/* $(sharedir)/rc/base
-	install	-m 0644	../rc/core/* $(sharedir)/rc/core
-	install	-m 0644	../rc/extra/* $(sharedir)/rc/extra
-	[ -e $(sharedir)/autoload ]	|| ln -s rc	$(sharedir)/autoload
-	install	-m 0644	../colors/*	$(sharedir)/colors
-	install	-m 0644	../README.asciidoc $(docdir)
-	install	-m 0644	../doc/manpages/*.gz $(docdir)/manpages
-	install	-m 0644	../doc/kak.1.gz	$(mandir)
+	install -m 0755 kak $(bindir)
+	install -m 0644 ../share/kak/kakrc $(sharedir)
+	install -m 0644 ../rc/base/* $(sharedir)/rc/base
+	install -m 0644 ../rc/core/* $(sharedir)/rc/core
+	install -m 0644 ../rc/extra/* $(sharedir)/rc/extra
+	[ -e $(sharedir)/autoload ] || ln -s rc $(sharedir)/autoload
+	install -m 0644 ../colors/* $(sharedir)/colors
+	install -m 0644 ../README.asciidoc $(docdir)
+	install -m 0644 ../doc/manpages/*.gz $(docdir)/manpages
+	install -m 0644 ../doc/kak.1.gz $(mandir)
 
 install-strip: install
 	strip -s $(bindir)/kak
 
 uninstall:
 	rm -rf $(bindir)/kak \
-		$(sharedir)	\
+		$(sharedir) \
 		$(docdir) \
 		$(mandir)/kak.1.gz
 
