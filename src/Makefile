@@ -62,7 +62,11 @@ endif
 CXXFLAGS += -pedantic -std=gnu++11 -g -Wall -Wextra -Wno-unused-parameter -Wno-reorder -Wno-sign-compare -Wno-address
 
 all : kak
-kak : $(objects)
+
+kak : kak$(suffix)
+	ln -sf $< $@
+
+kak$(suffix) : $(objects)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) $(LIBS) -o $@
 
 -include $(deps)
@@ -132,4 +136,4 @@ uninstall:
 		$(mandir)/kak.1.gz
 
 .PHONY: check TAGS clean distclean installdirs install install-strip uninstall
-.PHONY: tags test man doc
+.PHONY: tags test man doc kak
