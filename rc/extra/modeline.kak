@@ -14,10 +14,10 @@ decl int modelines 5
 def -hidden modeline-parse-impl %{
     %sh{
         # Translate a vim option into the corresponding kakoune one
-        function translate_opt_vim {
+        translate_opt_vim() {
             readonly key="$1"
             readonly value="$2"
-            local tr=""
+            tr=""
 
             case "${key}" in
                 so|scrolloff) tr="scrolloff ${value},${kak_opt_scrolloff##*,}";;
@@ -42,39 +42,18 @@ def -hidden modeline-parse-impl %{
         }
 
         # Pass a few whitelisted options to kakoune directly
-        function translate_opt_kakoune {
+        translate_opt_kakoune() {
             readonly key="$1"
             readonly value="$2"
-            readonly OPTS_ALLOWED=(
-                scrolloff
-                tabstop
-                indentwidth
-                autowrap_column
-                eolformat
-                filetype
-                BOM
-            )
 
-            printf %s\\n "${OPTS_ALLOWED[@]}" | grep -qw "${key}" || {
-                printf %s\\n "echo -debug 'Unsupported kakoune variable: ${key}'";
-                return;
-            }
+            case "${key}" in
+                scrolloff|tabstop|indentwidth|autowrap_column|eolformat|filetype|BOM);;
+                *) printf %s\\n "echo -debug 'Unsupported kakoune variable: ${key}'"
+                   return;;
+            esac
 
             printf %s\\n "set buffer ${key} ${value}"
         }
-
-        # The following subshell will keep the actual options of the modeline, and strip:
-        # - the text that leads the first option, according to the official vim modeline format
-        # - the trailing text after the last option, and an optional ':' sign before it
-        # It will also convert the ':' seperators beween the option=value pairs
-        # More info: http://vimdoc.sourceforge.net/htmldoc/options.html#modeline
-        options=(
-            $(printf %s\\n "${kak_selection}" | sed \
-                -e 's/^[^:]\{1,\}://'               \
-                -e 's/[ \t]*set\{0,1\}[ \t]//'      \
-                -e 's/:[^a-zA-Z0-9_=-]*$//'         \
-                -e 's/:/ /g')
-        )
 
         case "${kak_selection}" in
             *vi:*|*vim:*) type_selection="vim";;
@@ -83,9 +62,22 @@ def -hidden modeline-parse-impl %{
         esac
         [ -n "${type_selection}" ] || exit 1
 
-        for option in "${options[@]}"; do
+        # The following subshell will keep the actual options of the modeline, and strip:
+        # - the text that leads the first option, according to the official vim modeline format
+        # - the trailing text after the last option, and an optional ':' sign before it
+        # It will also convert the ':' seperators beween the option=value pairs
+        # More info: http://vimdoc.sourceforge.net/htmldoc/options.html#modeline
+        printf %s "${kak_selection}" | sed          \
+                -e 's/^[^:]\{1,\}://'               \
+                -e 's/[ \t]*set\{0,1\}[ \t]//'      \
+                -e 's/:[^a-zA-Z0-9_=-]*$//'         \
+                -e 's/:/ /g'                        \
+                | tr ' ' '\n'                       \
+                | while read -r option; do
             name_option="${option%%=*}"
             value_option="${option#*=}"
+
+            [ -z "${option}" ] && continue
 
             case "${type_selection}" in
                 vim) tr=$(translate_opt_vim "${name_option}" "${value_option}");;
@@ -102,7 +94,7 @@ def -hidden modeline-parse-impl %{
 def modeline-parse -docstring "Read and interpret vi-format modelines at the beginning/end of the buffer" %{
     try %{ eval -draft %{
         exec \%s\`|.\'<ret> %opt{modelines}k <a-x> %opt{modelines}X \
-             s^[^\s]+?\s(vim?|kak(oune)?):\s?[^\n]+<ret>
+             s^[^\s]+?\s(vim?|kak(oune)?):\s?[^\n]+<ret> <a-x>
         eval -draft -itersel modeline-parse-impl
     } }
 }
