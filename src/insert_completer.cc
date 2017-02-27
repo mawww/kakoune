@@ -181,7 +181,7 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
         candidates.push_back({m.candidate().str(), "", std::move(menu_entry)});
     }
 
-    return { word_begin, cursor_pos, std::move(candidates), buffer.timestamp() };
+    return { std::move(candidates), word_begin, cursor_pos, buffer.timestamp() };
 }
 
 template<bool require_slash>
@@ -235,7 +235,7 @@ InsertCompletion complete_filename(const SelectionList& sels,
     }
     if (candidates.empty())
         return {};
-    return { begin.coord(), pos.coord(), std::move(candidates), buffer.timestamp() };
+    return { std::move(candidates), begin.coord(), pos.coord(), buffer.timestamp() };
 }
 
 InsertCompletion complete_option(const SelectionList& sels,
@@ -309,7 +309,7 @@ InsertCompletion complete_option(const SelectionList& sels,
                 candidates.push_back({ match.candidate().str(), match.docstring.str(),
                                        std::move(match.menu_entry) });
 
-            return { coord, end, std::move(candidates), timestamp };
+            return { std::move(candidates), coord, end, timestamp };
         }
     }
     return {};
@@ -341,7 +341,7 @@ InsertCompletion complete_line(const SelectionList& sels, const OptionManager& o
         return {};
     std::sort(candidates.begin(), candidates.end());
     candidates.erase(std::unique(candidates.begin(), candidates.end()), candidates.end());
-    return { cursor_pos.line, cursor_pos, std::move(candidates), buffer.timestamp() };
+    return { std::move(candidates), cursor_pos.line, cursor_pos, buffer.timestamp() };
 }
 
 }
