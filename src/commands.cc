@@ -163,8 +163,8 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
 auto buffer_completer = make_completer(complete_buffer_name);
 
 const ParameterDesc no_params{ {}, ParameterDesc::Flags::None, 0, 0 };
-const ParameterDesc single_name_param{ {}, ParameterDesc::Flags::None, 1, 1 };
-const ParameterDesc single_optional_name_param{ {}, ParameterDesc::Flags::None, 0, 1 };
+const ParameterDesc single_param{ {}, ParameterDesc::Flags::None, 1, 1 };
+const ParameterDesc single_optional_param{ {}, ParameterDesc::Flags::None, 0, 1 };
 
 static constexpr auto scopes = { "global", "buffer", "window" };
 
@@ -334,7 +334,7 @@ const CommandDesc write_cmd = {
     "w",
     "write [filename]: write the current buffer to its file "
     "or to [filename] if specified",
-    single_optional_name_param,
+    single_optional_param,
     CommandFlags::None,
     CommandHelper{},
     filename_completer,
@@ -502,7 +502,7 @@ const CommandDesc buffer_cmd = {
     "buffer",
     "b",
     "buffer <name>: set buffer to edit in current client",
-    single_name_param,
+    single_param,
     CommandFlags::None,
     CommandHelper{},
     buffer_completer,
@@ -589,7 +589,7 @@ const CommandDesc delete_buffer_cmd = {
     "delete-buffer",
     "db",
     "delete-buffer [name]: delete current buffer or the buffer named <name> if given",
-    single_optional_name_param,
+    single_optional_param,
     CommandFlags::None,
     CommandHelper{},
     buffer_completer,
@@ -601,7 +601,7 @@ const CommandDesc force_delete_buffer_cmd = {
     "db!",
     "delete-buffer! [name]: delete current buffer or the buffer named <name> if "
     "given, even if the buffer is unsaved",
-    single_optional_name_param,
+    single_optional_param,
     CommandFlags::None,
     CommandHelper{},
     buffer_completer,
@@ -612,7 +612,7 @@ const CommandDesc rename_buffer_cmd = {
     "rename-buffer",
     nullptr,
     "rename-buffer <name>: change current buffer name",
-    single_name_param,
+    single_param,
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -1176,7 +1176,7 @@ const CommandDesc source_cmd = {
     "source",
     nullptr,
     "source <filename>: execute commands contained in <filename>",
-    single_name_param,
+    single_param,
     CommandFlags::None,
     CommandHelper{},
     filename_completer,
@@ -1987,7 +1987,7 @@ const CommandDesc rename_client_cmd = {
     "rename-client",
     "nc",
     "rename-client <name>: set current client name to <name>",
-    single_name_param,
+    single_param,
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -2032,7 +2032,7 @@ const CommandDesc change_directory_cmd = {
     "change-directory",
     "cd",
     "change-directory [<directory>]: change the server's working directory to <directory>, or the home directory if unspecified",
-    single_optional_name_param,
+    single_optional_param,
     CommandFlags::None,
     CommandHelper{},
     make_completer(
