@@ -55,6 +55,50 @@ Formats of language supported:
     }
 }
 
+def spell-next %{ %sh{
+    anchor_line="${kak_selection_desc%%.*}"
+    anchor_col="${kak_selection_desc%%,*}"
+    anchor_col="${anchor_col##*.}"
+
+    start_first="${kak_opt_spell_regions#*:}"
+    start_first="${start_first%%|*}"
+
+    find_next_word_desc() {
+        ## XXX: the `spell` command adds sorted selection descriptions to the range
+        printf %s\\n "${1}" \
+            | sed -e 's/^[0-9]*://' -e 's/|[^:]*//g' -e 's/,/ /g' \
+            | tr ':' '\n' \
+            | while read -r start end; do
+                start_line="${start%.*}"
+                start_col="${start#*.}"
+                end_line="${end%.*}"
+                end_col="${end#*.}"
+
+                if [ "${start_line}" -lt "${anchor_line}" ]; then
+                    continue
+                elif [ "${start_line}" -eq "${anchor_line}" ] \
+                    && [ "${start_col}" -le "${anchor_col}" ]; then
+                    continue
+                fi
+
+                printf 'select %s,%s\n' "${start}" "${end}"
+                break
+            done
+    }
+
+    # no selection descriptions are in `spell_regions`
+    if ! expr "${start_first}" : '[0-9][0-9]*\.[0-9][0-9]*,[0-9][0-9]*\.[0-9]' >/dev/null; then
+        exit
+    fi
+
+    next_word_desc=$(find_next_word_desc "${kak_opt_spell_regions}")
+    if [ -n "${next_word_desc}" ]; then
+        printf %s\\n "${next_word_desc}"
+    else
+        printf 'select %s\n' "${start_first}"
+    fi
+} }
+
 def spell-replace %{ %sh{
     suggestions=$(printf %s "$kak_selection" | aspell -a | grep '^&' | cut -d: -f2)
     menu=$(printf %s "${suggestions#?}" | awk -F', ' '
