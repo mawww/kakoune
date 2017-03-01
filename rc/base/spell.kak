@@ -16,9 +16,9 @@ Formats of language supported:
     }
     %sh{
         if [ $# -ge 1 ]; then
-            if [ ${#1} -ne 2 -a ${#1} -ne 5 ]; then
+            if [ ${#1} -ne 2 ] && [ ${#1} -ne 5 ]; then
                 echo 'echo -color Error Invalid language code (examples of expected format: en, en_US, en-US)'
-                rm -r "$(dirname "$kak_opt_spell_tmp_file")"
+                rm -rf "$(dirname "$kak_opt_spell_tmp_file")"
                 exit 1
             else
                 options="-l '$1'"
@@ -50,18 +50,18 @@ Formats of language supported:
                 printf 'set "buffer=%s" spell_regions %%{%s}' "${kak_bufname}" "${regions}" \
                     | kak -p "${kak_session}"
             }
-            rm -r $(dirname "$kak_opt_spell_tmp_file")
+            rm -rf $(dirname "$kak_opt_spell_tmp_file")
         } </dev/null >/dev/null 2>&1 &
     }
 }
 
-def spell-replace %{%sh{
-    suggestions=$(echo "$kak_selection" | aspell -a | grep '^&' | cut -d: -f2)
-    menu=$(echo "${suggestions#?}" | awk -F', ' '
-    {
-        for (i=1; i<=NF; i++)
-            printf "%s", "%{"$i"}" "%{exec -itersel c"$i"<esc>be}"
-    }
+def spell-replace %{ %sh{
+    suggestions=$(printf %s "$kak_selection" | aspell -a | grep '^&' | cut -d: -f2)
+    menu=$(printf %s "${suggestions#?}" | awk -F', ' '
+        {
+            for (i=1; i<=NF; i++)
+                printf "%s", "%{"$i"}" "%{exec -itersel c"$i"<esc>be}"
+        }
     ')
-    printf '%s\n' "try %{ menu -auto-single $menu }"
-}}
+    printf 'try %%{ menu -auto-single %s }' "${menu}"
+} }
