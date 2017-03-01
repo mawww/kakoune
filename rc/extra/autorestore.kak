@@ -8,7 +8,7 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
         buffer_dirname=$(dirname "${kak_buffile}")
 
         ## Find the name of the latest backup created for the buffer that was open
-        backup_path=$(ls -1t ."${kak_bufname}".kak.* | head -n 1)
+        backup_path=$(ls -1t ."${kak_bufname}".kak.* 2>/dev/null | head -n 1)
 
         if [ -z "${backup_path}" ]; then
             exit
@@ -25,7 +25,7 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
             hook -group autorestore buffer BufWritePost '${kak_buffile}' %{
                 nop %sh{
                     if [ \"\${kak_opt_autorestore_purge_restored}\" = true ]; then
-                        ls -1 '${buffer_dirname}'/.'${buffer_basename}'.kak.* | while read -r f; do
+                        ls -1 '${buffer_dirname}'/.'${buffer_basename}'.kak.* 2>/dev/null | while read -r f; do
                             rm -f \"\${f}\"
                         done
                     fi
@@ -45,7 +45,7 @@ def autorestore-purge-backups -docstring "Remove all the backups of the current 
         buffer_basename="${kak_bufname##*/}"
         buffer_dirname=$(dirname "${kak_bufname}")
 
-        ls -1 "${buffer_dirname}"/."${buffer_basename}".kak.* | while read -r f; do
+        ls -1 "${buffer_dirname}"/."${buffer_basename}".kak.* 2>/dev/null | while read -r f; do
             rm -f "${f}"
         done
     }
