@@ -1654,8 +1654,9 @@ void keep_selection(Context& context, NormalParams p)
 {
     auto& selections = context.selections();
     const int index = p.count ? p.count-1 : selections.main_index();
-    if (index < selections.size())
-        selections = SelectionList{ selections.buffer(), std::move(selections[index]) };
+    if (index >= selections.size())
+        throw runtime_error("invalid selection index");
+    selections = SelectionList{ selections.buffer(), std::move(selections[index]) };
     selections.check_invariant();
 }
 
@@ -1663,13 +1664,14 @@ void remove_selection(Context& context, NormalParams p)
 {
     auto& selections = context.selections();
     const int index = p.count ? p.count-1 : selections.main_index();
-    if (selections.size() > 1 and index < selections.size())
-    {
-        selections.remove(index);
-        size_t main_index = selections.main_index();
-        if (index < main_index or main_index == selections.size())
-            selections.set_main_index(main_index - 1);
-    }
+    if (index >= selections.size())
+        throw runtime_error("invalid selection index");
+    if (selections.size() == 1)
+        throw runtime_error("no selections remaining");
+    selections.remove(index);
+    size_t main_index = selections.main_index();
+    if (index < main_index or main_index == selections.size())
+        selections.set_main_index(main_index - 1);
     selections.check_invariant();
 }
 
