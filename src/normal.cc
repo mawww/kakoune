@@ -40,33 +40,49 @@ void select(Context& context, T func)
     if (mode == SelectMode::Append)
     {
         auto& sel = selections.main();
-        auto res = func(buffer, sel);
-        if (res.captures().empty())
-            res.captures() = sel.captures();
-        selections.push_back(res);
-        selections.set_main_index(selections.size() - 1);
+        if (auto res = func(buffer, sel))
+        {
+            if (res->captures().empty())
+                res->captures() = sel.captures();
+            selections.push_back(std::move(*res));
+            selections.set_main_index(selections.size() - 1);
+        }
     }
     else
     {
-        for (auto& sel : selections)
+        Vector<int> to_remove;
+        for (int i = 0; i < (int)selections.size(); ++i)
         {
+            auto& sel = selections[i];
             auto res = func(buffer, sel);
+            if (not res)
+            {
+                to_remove.push_back(i);
+                continue;
+            }
+
             if (mode == SelectMode::Extend)
-                sel.merge_with(res);
+                sel.merge_with(*res);
             else
             {
-                sel.anchor() = res.anchor();
-                sel.cursor() = res.cursor();
+                sel.anchor() = res->anchor();
+                sel.cursor() = res->cursor();
             }
-            if (not res.captures().empty())
-                sel.captures() = std::move(res.captures());
+            if (not res->captures().empty())
+                sel.captures() = std::move(res->captures());
         }
+
+        if (to_remove.size() == selections.size())
+            throw runtime_error{"no selections remaining"};
+        for (auto& i : to_remove | reverse())
+            selections.remove(i);
     }
+
     selections.sort_and_merge_overlapping();
     selections.check_invariant();
 }
 
-template<SelectMode mode, Selection (*func)(const Buffer&, const Selection&)>
+template<SelectMode mode, Optional<Selection> (*func)(const Buffer&, const Selection&)>
 void select(Context& context, NormalParams)
 {
     select<mode>(context, func);
@@ -1053,7 +1069,7 @@ void select_object(Context& context, NormalParams params)
         static constexpr struct ObjectType
         {
             Codepoint key;
-            Selection (*func)(const Buffer&, const Selection&, int, ObjectFlags);
+            Optional<Selection> (*func)(const Buffer&, const Selection&, int, ObjectFlags);
         } selectors[] = {
             { 'w', select_word<Word> },
             { 'W', select_word<WORD> },
