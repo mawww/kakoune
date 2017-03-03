@@ -110,6 +110,49 @@ void repeat_last_select(Context& context, NormalParams)
     context.repeat_last_select();
 }
 
+struct KeyInfo
+{
+    ConstArrayView<Key> keys;
+    StringView docstring;
+};
+
+String build_autoinfo_for_mapping(Context& context, KeymapMode mode,
+                                  ConstArrayView<KeyInfo> built_ins)
+{
+    auto& keymaps = context.keymaps();
+
+    Vector<std::pair<String, StringView>> descs;
+    for (auto& built_in : built_ins)
+    {
+        String keys = join(built_in.keys |
+                           filter([&](Key k){ return not keymaps.is_mapped(k, mode); }) |
+                           transform([](Key k) { return key_to_str(k); }),
+                           ',', false);
+        if (not keys.empty())
+            descs.emplace_back(std::move(keys), built_in.docstring);
+    }
+
+    for (auto& key : keymaps.get_mapped_keys(mode))
+        descs.emplace_back(key_to_str(key),
+                           keymaps.get_mapping(key, mode).docstring);
+
+    auto max_len = 0_col;
+    for (auto& desc : descs)
+    {
+        auto len = desc.first.column_length();
+        if (len > max_len)
+            max_len = len;
+    }
+
+    String res;
+    for (auto& desc : descs)
+        res += format("{}:{}{}\n",
+                      desc.first,
+                      String{' ', max_len - desc.first.column_length() + 1},
+                      desc.second);
+    return res;
+}
+
 template<SelectMode mode>
 void goto_commands(Context& context, NormalParams params)
 {
@@ -233,18 +276,19 @@ void goto_commands(Context& context, NormalParams params)
             }
             }
         }, "goto",
-        "g,k:  buffer top          \n"
-        "l:    line end            \n"
-        "h:    line begin          \n"
-        "i:    line non blank start\n"
-        "j:    buffer bottom       \n"
-        "e:    buffer end          \n"
-        "t:    window top          \n"
-        "b:    window bottom       \n"
-        "c:    window center       \n"
-        "a:    last buffer         \n"
-        "f:    file                \n"
-        ".:    last buffer change  \n");
+        build_autoinfo_for_mapping(context, KeymapMode::Goto,
+            {{{'g','k'},"buffer top"},
+             {{'l'},    "line end"},
+             {{'h'},    "line begin"},
+             {{'i'},    "line non blank start"},
+             {{'j'},    "buffer bottom"},
+             {{'e'},    "buffer end"},
+             {{'t'},    "window top"},
+             {{'b'},    "window bottom"},
+             {{'c'},    "window center"},
+             {{'a'},    "last buffer"},
+             {{'f'},    "file"},
+             {{'.'},    "last buffer change"}}));
     }
 }
 
@@ -296,14 +340,15 @@ void view_commands(Context& context, NormalParams params)
             break;
         }
     }, "view",
-    "v,c:  center cursor (vertically)\n"
-    "m:    center cursor (horizontally)\n"
-    "t:    cursor on top   \n"
-    "b:    cursor on bottom\n"
-    "h:    scroll left     \n"
-    "j:    scroll down     \n"
-    "k:    scroll up       \n"
-    "l:    scroll right    \n");
+    build_autoinfo_for_mapping(context, KeymapMode::View,
+        {{{'v','c'}, "center cursor (vertically)"},
+         {{'m'},     "center cursor (horizontally)"},
+         {{'t'},     "cursor on top"},
+         {{'b'},     "cursor on bottom"},
+         {{'h'},     "scroll left"},
+         {{'j'},     "scroll down"},
+         {{'k'},     "scroll up"},
+         {{'l'},     "scroll right"}}));
 }
 
 void replace_with_char(Context& context, NormalParams)
@@ -1085,22 +1130,23 @@ void select_object(Context& context, NormalParams params)
                                    utf8cp, utf8cp, count, flags));
         }
     }, get_title(),
-    "b,(,):  parenthesis block\n"
-    "B,{,}:  braces block     \n"
-    "r,[,]:  brackets block   \n"
-    "a,<,>:  angle block      \n"
-    "\",Q:  double quote string\n"
-    "',q:  single quote string\n"
-    "`,g:  grave quote string \n"
-    "w:    word               \n"
-    "W:    WORD               \n"
-    "s:    sentence           \n"
-    "p:    paragraph          \n"
-    "␣:    whitespaces        \n"
-    "i:    indent             \n"
-    "u:    argument           \n"
-    "n:    number             \n"
-    "::    custom object desc \n");
+    build_autoinfo_for_mapping(context, KeymapMode::Object,
+        {{{'b','(',')'}, "parenthesis block"},
+         {{'B','{','}'}, "braces block"},
+         {{'r','[',']'}, "brackets block"},
+         {{'a','<','>'}, "angle block"},
+         {{'"','Q'},     "double quote string"},
+         {{'\'','q'},    "single quote string"},
+         {{'`','g'},     "grave quote string"},
+         {{'w'},         "word"},
+         {{'W'},         "WORD"},
+         {{'s'},         "sentence"},
+         {{'p'},         "paragraph"},
+         {{' '},         "whitespaces"},
+         {{'i'},         "indent"},
+         {{'u'},         "argument"},
+         {{'n'},         "number"},
+         {{':'},         "custom object desc"}}));
 }
 
 template<Direction direction, bool half = false>
@@ -1588,15 +1634,16 @@ void exec_user_mappings(Context& context, NormalParams params)
         if (not context.keymaps().is_mapped(key, KeymapMode::User))
             return;
 
-        auto mapping = context.keymaps().get_mapping(key, KeymapMode::User);
+        auto& mapping = context.keymaps().get_mapping(key, KeymapMode::User);
         ScopedSetBool disable_keymaps(context.keymaps_disabled());
 
         InputHandler::ScopedForceNormal force_normal{context.input_handler(), params};
 
         ScopedEdition edition(context);
-        for (auto& key : mapping)
+        for (auto& key : mapping.keys)
             context.input_handler().handle_key(key);
-    }, "user mapping", "enter user key");
+    }, "user mapping",
+    build_autoinfo_for_mapping(context, KeymapMode::User, {}));
 }
 
 template<typename T>

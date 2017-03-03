@@ -1453,7 +1453,7 @@ void InputHandler::handle_key(Key key)
             not m_context.keymaps_disabled())
         {
             ScopedSetBool disable_history{context().history_disabled()};
-            for (auto& k : keymaps.get_mapping(key, keymap_mode))
+            for (auto& k : keymaps.get_mapping(key, keymap_mode).keys)
                 current_mode().handle_key(k);
         }
         else

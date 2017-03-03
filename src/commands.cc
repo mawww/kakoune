@@ -1404,7 +1404,10 @@ const CommandDesc map_key_cmd = {
     "    view\n"
     "    user\n"
     "    object\n",
-    ParameterDesc{{}, ParameterDesc::Flags::None, 4, 4},
+    ParameterDesc{
+        { { "docstring", { true,  "specify mapping description" } } },
+        ParameterDesc::Flags::None, 4, 4
+    },
     CommandFlags::None,
     CommandHelper{},
     map_key_completer,
@@ -1418,7 +1421,8 @@ const CommandDesc map_key_cmd = {
             throw runtime_error("only a single key can be mapped");
 
         KeyList mapping = parse_keys(parser[3]);
-        keymaps.map_key(key[0], keymap_mode, std::move(mapping));
+        keymaps.map_key(key[0], keymap_mode, std::move(mapping),
+                        parser.get_switch("docstring").value_or("").str());
     }
 };
 
@@ -1451,8 +1455,8 @@ const CommandDesc unmap_key_cmd = {
 
         if (keymaps.is_mapped(key[0], keymap_mode) and
             (parser.positional_count() < 4 or
-             (keymaps.get_mapping(key[0], keymap_mode) ==
-              ConstArrayView<Key>{parse_keys(parser[3])})))
+             (keymaps.get_mapping(key[0], keymap_mode).keys ==
+              parse_keys(parser[3]))))
             keymaps.unmap_key(key[0], keymap_mode);
     }
 };

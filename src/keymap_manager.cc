@@ -3,12 +3,15 @@
 #include "array_view.hh"
 #include "assert.hh"
 
+#include <algorithm>
+
 namespace Kakoune
 {
 
-void KeymapManager::map_key(Key key, KeymapMode mode, KeyList mapping)
+void KeymapManager::map_key(Key key, KeymapMode mode,
+                            KeyList mapping, String docstring)
 {
-    m_mapping[{key, mode}] = std::move(mapping);
+    m_mapping[{key, mode}] = {std::move(mapping), std::move(docstring)};
 }
 
 void KeymapManager::unmap_key(Key key, KeymapMode mode)
@@ -23,13 +26,29 @@ bool KeymapManager::is_mapped(Key key, KeymapMode mode) const
            (m_parent and m_parent->is_mapped(key, mode));
 }
 
-ConstArrayView<Key> KeymapManager::get_mapping(Key key, KeymapMode mode) const
+const KeymapManager::KeyMapInfo&
+KeymapManager::get_mapping(Key key, KeymapMode mode) const
 {
     auto it = m_mapping.find({key, mode});
     if (it != m_mapping.end())
-        return { it->second };
+        return it->second;
     kak_assert(m_parent);
     return m_parent->get_mapping(key, mode);
+}
+
+KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
+{
+    KeyList res;
+    if (m_parent)
+        res = m_parent->get_mapped_keys(mode);
+    for (auto& map : m_mapping)
+    {
+        if (map.first.second == mode)
+            res.emplace_back(map.first.first);
+    }
+    std::sort(res.begin(), res.end());
+    res.erase(std::unique(res.begin(), res.end()), res.end());
+    return res;
 }
 
 }
