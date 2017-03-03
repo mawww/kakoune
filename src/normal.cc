@@ -1717,8 +1717,10 @@ void keep_selection(Context& context, NormalParams p)
 {
     auto& selections = context.selections();
     const int index = p.count ? p.count-1 : selections.main_index();
-    if (index < selections.size())
-        selections = SelectionList{ selections.buffer(), std::move(selections[index]) };
+    if (index >= selections.size())
+        throw runtime_error{format("invalid selection index: {}", index)};
+
+    selections = SelectionList{ selections.buffer(), std::move(selections[index]) };
     selections.check_invariant();
 }
 
@@ -1726,9 +1728,8 @@ void remove_selection(Context& context, NormalParams p)
 {
     auto& selections = context.selections();
     const int index = p.count ? p.count-1 : selections.main_index();
-
     if (index >= selections.size())
-        throw runtime_error{format("There is not {}th selection", index)};
+        throw runtime_error{format("invalid selection index: {}", index)};
     if (selections.size() == 1)
         throw runtime_error{"Cannot remove the last selection"};
 
