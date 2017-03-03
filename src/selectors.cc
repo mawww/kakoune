@@ -808,73 +808,70 @@ void select_buffer(SelectionList& selections)
     selections = SelectionList{ buffer, target_eol({{0,0}, buffer.back_coord()}) };
 }
 
-template<Direction direction>
-static bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
-                                 MatchResults<BufferIterator>& matches,
-                                 const Regex& ex, bool& wrapped)
+static RegexConstant::match_flag_type
+match_flags(const Buffer& buf, BufferIterator begin, BufferIterator end)
 {
-    wrapped = false;
-    if (direction == Forward)
-    {
-        if (pos != buffer.end() and
-            regex_search(pos, buffer.end(), matches, ex,
-                         match_flags(is_bol(pos.coord()), true,
-                                     is_bow(buffer, pos.coord()), true)))
-            return true;
-        wrapped = true;
-        return regex_search(buffer.begin(), buffer.end(), matches, ex);
-    }
-    else
-    {
-        auto find_last_match = [&](const BufferIterator& pos) {
-            MatchResults<BufferIterator> m;
-            const bool is_pos_eol = is_eol(buffer, pos.coord());
-            const bool is_pos_eow = is_eow(buffer, pos.coord());
-            auto begin = buffer.begin();
-            while (begin != pos and
-                   regex_search(begin, pos, m, ex,
-                                match_flags(is_bol(begin.coord()), is_pos_eol,
-                                            is_bow(buffer, begin.coord()), is_pos_eow)))
-            {
-                begin = utf8::next(m[0].first, pos);
-                if (matches.empty() or m[0].second > matches[0].second)
-                    matches.swap(m);
-            }
-            return not matches.empty();
-        };
-
-        if (find_last_match(pos))
-            return true;
-        wrapped = true;
-        return find_last_match(buffer.end());
-    }
+    return match_flags(is_bol(begin.coord()), is_eol(buf, end.coord()),
+                       is_bow(buf, begin.coord()), is_eow(buf, end.coord()));
 }
-template bool find_match_in_buffer<Forward>(const Buffer&, const BufferIterator,
-                          MatchResults<BufferIterator>&, const Regex&, bool&);
-template bool find_match_in_buffer<Backward>(const Buffer&, const BufferIterator,
-                          MatchResults<BufferIterator>&, const Regex&, bool&);
+
+static bool find_next(const Buffer& buffer, BufferIterator pos,
+                      MatchResults<BufferIterator>& matches,
+                      const Regex& ex, bool& wrapped)
+{
+    if (pos != buffer.end() and
+        regex_search(pos, buffer.end(), matches, ex,
+                     match_flags(buffer, pos, buffer.end())))
+        return true;
+    wrapped = true;
+    return regex_search(buffer.begin(), buffer.end(), matches, ex,
+                        match_flags(buffer, buffer.begin(), buffer.end()));
+}
+
+static bool find_prev(const Buffer& buffer, BufferIterator pos,
+                      MatchResults<BufferIterator>& matches,
+                      const Regex& ex, bool& wrapped)
+{
+    auto find_last_match = [&](const BufferIterator& pos) {
+        MatchResults<BufferIterator> m;
+        const bool is_pos_eol = is_eol(buffer, pos.coord());
+        const bool is_pos_eow = is_eow(buffer, pos.coord());
+        auto begin = buffer.begin();
+        while (begin != pos and
+               regex_search(begin, pos, m, ex,
+                            match_flags(is_bol(begin.coord()), is_pos_eol,
+                                        is_bow(buffer, begin.coord()), is_pos_eow)))
+        {
+            begin = utf8::next(m[0].first, pos);
+            if (matches.empty() or m[0].second > matches[0].second)
+                matches.swap(m);
+        }
+        return not matches.empty();
+    };
+    if (find_last_match(pos))
+        return true;
+    wrapped = true;
+    return find_last_match(buffer.end());
+}
 
 template<Direction direction>
 Selection find_next_match(const Buffer& buffer, const Selection& sel, const Regex& regex, bool& wrapped)
 {
-    auto begin = buffer.iterator_at(direction == Backward ? sel.min() : sel.max());
-    auto end = begin;
-
-    CaptureList captures;
     MatchResults<BufferIterator> matches;
-    bool found = false;
-    auto pos = direction == Forward ? utf8::next(begin, buffer.end()) : begin;
-    if ((found = find_match_in_buffer<direction>(buffer, pos, matches, regex, wrapped)))
-    {
-        begin = matches[0].first;
-        end = matches[0].second;
-        for (const auto& match : matches)
-            captures.push_back(buffer.string(match.first.coord(),
-                                             match.second.coord()));
-    }
-    if (not found or begin == buffer.end())
+    auto pos = buffer.iterator_at(direction == Backward ? sel.min() : sel.max());
+    wrapped = false;
+    const bool found = (direction == Forward) ?
+        find_next(buffer, utf8::next(pos, buffer.end()), matches, regex, wrapped)
+      : find_prev(buffer, pos, matches, regex, wrapped);
+
+    if (not found or matches[0].first == buffer.end())
         throw runtime_error(format("'{}': no matches found", regex.str()));
 
+    CaptureList captures;
+    for (const auto& match : matches)
+        captures.push_back(buffer.string(match.first.coord(), match.second.coord()));
+
+    auto begin = matches[0].first, end = matches[0].second;
     end = (begin == end) ? end : utf8::previous(end, begin);
     if (direction == Backward)
         std::swap(begin, end);
@@ -898,11 +895,8 @@ void select_all_matches(SelectionList& selections, const Regex& regex, int captu
     {
         auto sel_beg = buffer.iterator_at(sel.min());
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
-        const auto flags = match_flags(is_bol(sel_beg.coord()),
-                                       is_eol(buffer, sel_end.coord()),
-                                       is_bow(buffer, sel_beg.coord()),
-                                       is_eow(buffer, sel_end.coord()));
-        RegexIt re_it(sel_beg, sel_end, regex, flags);
+        RegexIt re_it(sel_beg, sel_end, regex,
+                      match_flags(buffer, sel_beg, sel_end));
         RegexIt re_end;
 
         for (; re_it != re_end; ++re_it)
@@ -945,12 +939,9 @@ void split_selections(SelectionList& selections, const Regex& regex, int capture
     {
         auto begin = buffer.iterator_at(sel.min());
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
-        const auto flags = match_flags(is_bol(begin.coord()),
-                                       is_eol(buffer, sel_end.coord()),
-                                       is_bow(buffer, begin.coord()),
-                                       is_eow(buffer, sel_end.coord()));
 
-        RegexIt re_it(begin, sel_end, regex, flags);
+        RegexIt re_it(begin, sel_end, regex,
+                      match_flags(buffer, begin, sel_end));
         RegexIt re_end;
 
         for (; re_it != re_end; ++re_it)
