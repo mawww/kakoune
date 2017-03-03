@@ -14,7 +14,7 @@ String option_to_string(BufferRange range)
 {
     return format("{}.{},{}.{}",
                   range.begin.line+1, range.begin.column+1,
-                  range.end.line, range.end.column);
+                  range.end.line+1, range.end.column);
 }
 
 void option_from_string(StringView str, BufferRange& opt)

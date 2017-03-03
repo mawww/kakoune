@@ -16,9 +16,9 @@ Formats of language supported:
     }
     %sh{
         if [ $# -ge 1 ]; then
-            if [ ${#1} -ne 2 -a ${#1} -ne 5 ]; then
+            if [ ${#1} -ne 2 ] && [ ${#1} -ne 5 ]; then
                 echo 'echo -color Error Invalid language code (examples of expected format: en, en_US, en-US)'
-                rm -r "$(dirname "$kak_opt_spell_tmp_file")"
+                rm -rf "$(dirname "$kak_opt_spell_tmp_file")"
                 exit 1
             else
                 options="-l '$1'"
@@ -50,18 +50,62 @@ Formats of language supported:
                 printf 'set "buffer=%s" spell_regions %%{%s}' "${kak_bufname}" "${regions}" \
                     | kak -p "${kak_session}"
             }
-            rm -r $(dirname "$kak_opt_spell_tmp_file")
+            rm -rf $(dirname "$kak_opt_spell_tmp_file")
         } </dev/null >/dev/null 2>&1 &
     }
 }
 
-def spell-replace %{%sh{
-    suggestions=$(echo "$kak_selection" | aspell -a | grep '^&' | cut -d: -f2)
-    menu=$(echo "${suggestions#?}" | awk -F', ' '
-    {
-        for (i=1; i<=NF; i++)
-            printf "%s", "%{"$i"}" "%{exec -itersel c"$i"<esc>be}"
+def spell-next %{ %sh{
+    anchor_line="${kak_selection_desc%%.*}"
+    anchor_col="${kak_selection_desc%%,*}"
+    anchor_col="${anchor_col##*.}"
+
+    start_first="${kak_opt_spell_regions#*:}"
+    start_first="${start_first%%|*}"
+
+    find_next_word_desc() {
+        ## XXX: the `spell` command adds sorted selection descriptions to the range
+        printf %s\\n "${1}" \
+            | sed -e 's/^[0-9]*://' -e 's/|[^:]*//g' -e 's/,/ /g' \
+            | tr ':' '\n' \
+            | while read -r start end; do
+                start_line="${start%.*}"
+                start_col="${start#*.}"
+                end_line="${end%.*}"
+                end_col="${end#*.}"
+
+                if [ "${start_line}" -lt "${anchor_line}" ]; then
+                    continue
+                elif [ "${start_line}" -eq "${anchor_line}" ] \
+                    && [ "${start_col}" -le "${anchor_col}" ]; then
+                    continue
+                fi
+
+                printf 'select %s,%s\n' "${start}" "${end}"
+                break
+            done
     }
+
+    # no selection descriptions are in `spell_regions`
+    if ! expr "${start_first}" : '[0-9][0-9]*\.[0-9][0-9]*,[0-9][0-9]*\.[0-9]' >/dev/null; then
+        exit
+    fi
+
+    next_word_desc=$(find_next_word_desc "${kak_opt_spell_regions}")
+    if [ -n "${next_word_desc}" ]; then
+        printf %s\\n "${next_word_desc}"
+    else
+        printf 'select %s\n' "${start_first}"
+    fi
+} }
+
+def spell-replace %{ %sh{
+    suggestions=$(printf %s "$kak_selection" | aspell -a | grep '^&' | cut -d: -f2)
+    menu=$(printf %s "${suggestions#?}" | awk -F', ' '
+        {
+            for (i=1; i<=NF; i++)
+                printf "%s", "%{"$i"}" "%{exec -itersel c"$i"<esc>be}"
+        }
     ')
-    printf '%s\n' "try %{ menu -auto-single $menu }"
-}}
+    printf 'try %%{ menu -auto-single %s }' "${menu}"
+} }
