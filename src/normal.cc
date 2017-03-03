@@ -1717,9 +1717,6 @@ void remove_selection(Context& context, NormalParams p)
         throw runtime_error{"Cannot remove the last selection"};
 
     selections.remove(index);
-    size_t main_index = selections.main_index();
-    if (index < main_index or main_index == selections.size())
-        selections.set_main_index(main_index - 1);
     selections.check_invariant();
 }
 

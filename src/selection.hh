@@ -130,7 +130,7 @@ struct SelectionList
     const_iterator begin() const { return m_selections.begin(); }
     const_iterator end() const { return m_selections.end(); }
 
-    void remove(size_t index) { m_selections.erase(begin() + index); }
+    void remove(size_t index);
 
     size_t size() const { return m_selections.size(); }
 

@@ -36,6 +36,13 @@ SelectionList::SelectionList(Buffer& buffer, Vector<Selection> s, size_t timesta
 SelectionList::SelectionList(Buffer& buffer, Vector<Selection> s)
     : SelectionList(buffer, std::move(s), buffer.timestamp()) {}
 
+void SelectionList::remove(size_t index)
+{
+    m_selections.erase(begin() + index);
+    if (index < m_main or m_main == m_selections.size())
+        --m_main;
+}
+
 namespace
 {
 
