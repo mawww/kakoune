@@ -64,7 +64,8 @@ template Optional<Selection> select_to_next_word<WordType::Word>(const Buffer&, 
 template Optional<Selection> select_to_next_word<WordType::WORD>(const Buffer&, const Selection&);
 
 template<WordType word_type>
-Optional<Selection> select_to_next_word_end(const Buffer& buffer, const Selection& selection)
+Optional<Selection>
+select_to_next_word_end(const Buffer& buffer, const Selection& selection)
 {
     Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     if (begin+1 == buffer.end())
@@ -632,12 +633,16 @@ select_indent(const Buffer& buffer, const Selection& selection,
         return it == str.end();
     };
 
+    const bool to_begin = flags & ObjectFlags::ToBegin;
+    const bool to_end   = flags & ObjectFlags::ToEnd;
+
     int tabstop = buffer.options()["tabstop"].get<int>();
-    LineCount line = selection.cursor().line;
+    auto pos = selection.cursor();
+    LineCount line = pos.line;
     auto indent = get_indent(buffer[line], tabstop);
 
     LineCount begin_line = line - 1;
-    if (flags & ObjectFlags::ToBegin)
+    if (to_begin)
     {
         while (begin_line >= 0 and (buffer[begin_line] == StringView{"\n"} or
                                     get_indent(buffer[begin_line], tabstop) >= indent))
@@ -645,7 +650,7 @@ select_indent(const Buffer& buffer, const Selection& selection,
     }
     ++begin_line;
     LineCount end_line = line + 1;
-    if (flags & ObjectFlags::ToEnd)
+    if (to_end)
     {
         const LineCount end = buffer.line_count();
         while (end_line < end and (buffer[end_line] == StringView{"\n"} or
@@ -663,7 +668,10 @@ select_indent(const Buffer& buffer, const Selection& selection,
                is_only_whitespaces(buffer[end_line]))
             --end_line;
     }
-    return Selection{begin_line, {end_line, buffer[end_line].length() - 1}};
+
+    auto first = to_begin ? begin_line : pos;
+    auto last = to_end ? BufferCoord{end_line, buffer[end_line].length() - 1} : pos;
+    return to_end ? Selection{first, last} : Selection{last, first};
 }
 
 Optional<Selection>
