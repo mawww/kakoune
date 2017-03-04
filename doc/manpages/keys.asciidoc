@@ -639,7 +639,7 @@ map <scope> <mode> <key> <keys>
 	can be one of *global*, *window* or *buffer*
 
 *mode*::
-	can be one of *insert*, *normal*, *prompt*, *menu*, *user* or a one
+	can be one of *insert*, *normal*, *prompt*, *menu*, *goto*, *view*, *object*, *user* or a one
 	character long arbitrary prefix (the *user* mode uses the *,* prefix)
 
 *key*::
@@ -648,4 +648,14 @@ map <scope> <mode> <key> <keys>
 *keys*::
 	string that lists the keys that will be executed when *key* is hit
 
-Keys are always executed within the *normal* mode.
+All mappings, except those bound to the `insert` mode, will be executed in
+normal mode.
+
+Mappings can be removed with the unmap command.
+
+----------------------------------------
+:unmap <scope> <mode> <key> [<expected>]
+----------------------------------------
+
+If `<expected>` is specified, unmapping will only proceed if the current
+mapping matches the expected keys.

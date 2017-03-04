@@ -1464,14 +1464,16 @@ You can redefine a key's meaning using the map command
 :map <scope> <mode> <key> <keys>
 --------------------------------
 
-with `scope` being one of `global`, `buffer` or `window` (or any prefix),
-mode being `insert`, `normal`, `prompt`, `menu` or `user` (or any prefix), `key` being
-a single key name and `keys` a list of keys.
+with `scope` being one of `global`, `buffer` or `window`, mode being `insert`,
+`normal`, `prompt`, `menu`, `goto`, `view`, `object`, `user` or a one character
+long arbitrary prefix, `key` being a single key name and `keys` a list of keys.
 
-`user` mode allows for user mapping behind the `,` key. Keys will be executed in
+`user` mode allows for user mappings behind the `,` key.
+
+All mappings, except those bound to the `insert` mode, will be executed in
 normal mode.
 
-Mappings can be removed with the unmap command
+Mappings can be removed with the unmap command.
 
 ----------------------------------------
 :unmap <scope> <mode> <key> [<expected>]
