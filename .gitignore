@@ -3,6 +3,8 @@
 *.pyc
 *.1-r
 src/kak
+src/kak.debug
+src/kak.opt
 doc/kak.1.gz
 doc/manpages/*.gz
 tags
