@@ -120,10 +120,7 @@ select_word(const Buffer& buffer, const Selection& selection,
             int count, ObjectFlags flags)
 {
     Utf8Iterator first{buffer.iterator_at(selection.cursor()), buffer};
-    if (not is_word<word_type>(*first) and
-        ((flags & ObjectFlags::Inner) or
-         not skip_while(first, buffer.end(), [](Codepoint c)
-                        { return not is_word<word_type>(c); })))
+    if (not is_word<word_type>(*first))
         return {};
 
     Utf8Iterator last = first;
