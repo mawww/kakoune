@@ -12,9 +12,6 @@ namespace Kakoune
 template<typename Factory>
 struct ContainerView { Factory factory; };
 
-template<typename Factory>
-ContainerView<Factory> make_view(Factory factory) { return {factory}; }
-
 template<typename Container, typename Factory>
 decltype(auto) operator| (Container&& container, ContainerView<Factory> view)
 {
