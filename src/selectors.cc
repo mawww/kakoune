@@ -969,56 +969,30 @@ void split_selections(SelectionList& selections, const Regex& regex, int capture
 UnitTest test_find_surrounding{[]()
 {
     StringView s("[salut { toi[] }]");
-    {
-        auto res = find_surrounding(s, s.begin() + 10, '{', '}',
-                                    ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
-        kak_assert(res and StringView{res->first, res->second+1} == "{ toi[] }");
-    }
-    {
-        auto res = find_surrounding(s, s.begin() + 10, '[', ']',
-                                    ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0);
-        kak_assert(res and StringView{res->first, res->second+1} == "salut { toi[] }");
-    }
-    {
-        auto res = find_surrounding(s, s.begin(), '[', ']',
-                                    ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
-        kak_assert(res and StringView{res->first, res->second+1} == "[salut { toi[] }]");
-    }
-    {
-        auto res = find_surrounding(s, s.begin()+7, '{', '}',
-                                    ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
-        kak_assert(res and StringView{res->first, res->second+1} == "{ toi[] }");
-    }
-    {
-        auto res = find_surrounding(s, s.begin() + 12, '[', ']',
-                                    ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0);
-        kak_assert(res and StringView{res->first, res->second+1} == "]");
-    }
-    {
-        auto res = find_surrounding(s, s.begin() + 14, '[', ']',
-                                    ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
-        kak_assert(res and StringView{res->first, res->second+1} == "[salut { toi[] }]");
-    }
-    {
-        auto res = find_surrounding(s, s.begin() + 1, '[', ']', ObjectFlags::ToBegin, 0);
-        kak_assert(res and StringView{res->second, res->first+1} == "[s");
-    }
+    auto check_equal = [&](const char* pos, StringView opening, StringView closing,
+                           ObjectFlags flags, int init_level, StringView expected) {
+        auto res = find_surrounding(s, pos, opening, closing, flags, init_level);
+        auto min = std::min(res->first, res->second),
+             max = std::max(res->first, res->second);
+        kak_assert(res and StringView{min, max+1} == expected);
+    };
+
+    check_equal(s.begin() + 10, '{', '}', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "{ toi[] }");
+    check_equal(s.begin() + 10, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0, "salut { toi[] }");
+    check_equal(s.begin(), '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "[salut { toi[] }]");
+    check_equal(s.begin()+7, '{', '}', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "{ toi[] }");
+    check_equal(s.begin() + 12, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0, "]");
+    check_equal(s.begin() + 14, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "[salut { toi[] }]");
+    check_equal(s.begin() + 1, '[', ']', ObjectFlags::ToBegin, 0, "[s");
+
     s = "[]";
-    {
-        auto res = find_surrounding(s, s.begin() + 1, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
-        kak_assert(res and StringView{res->first, res->second+1} == "[]");
-    }
+    check_equal(s.begin() + 1, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "[]");
+
     s = "[*][] hehe";
-    {
-        auto res = find_surrounding(s, s.begin() + 6, '[', ']', ObjectFlags::ToBegin, 0);
-        kak_assert(not res);
-    }
+    kak_assert(not find_surrounding(s, s.begin() + 6, '[', ']', ObjectFlags::ToBegin, 0));
+
     s = "begin tchou begin tchaa end end";
-    {
-        auto res = find_surrounding(s, s.begin() + 6, "begin", "end",
-                                    ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
-        kak_assert(res and StringView{res->first, res->second+1} == s);
-    }
+    check_equal(s.begin() + 6, "begin", "end", ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, s);
 }};
 
 }
