@@ -50,17 +50,4 @@ Vector<StringView> AliasRegistry::aliases_for(StringView command) const
     return res;
 }
 
-Vector<std::pair<StringView, StringView>> AliasRegistry::flatten_aliases() const
-{
-    Vector<std::pair<StringView, StringView>> res;
-    if (m_parent)
-        res = m_parent->flatten_aliases();
-    for (auto& alias : m_aliases)
-    {
-        if (not contains(res | transform(std::mem_fn(&AliasDesc::first)), alias.key))
-            res.emplace_back(alias.key, alias.value);
-    }
-    return res;
-}
-
 }

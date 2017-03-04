@@ -20,8 +20,6 @@ public:
     using iterator = AliasMap::const_iterator;
 
     Vector<StringView> aliases_for(StringView command) const;
-    using AliasDesc = std::pair<StringView, StringView>;
-    Vector<AliasDesc> flatten_aliases() const;
 
 private:
     friend class Scope;
