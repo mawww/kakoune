@@ -30,11 +30,11 @@ add-highlighter -group /javascript/literal       regex \${.*?} 0:value
 add-highlighter -group /javascript/code regex \$\w* 0:variable
 add-highlighter -group /javascript/code regex \b(document|false|null|parent|self|this|true|undefined|window)\b 0:value
 add-highlighter -group /javascript/code regex "-?[0-9]*\.?[0-9]+" 0:value
-add-highlighter -group /javascript/code regex \b(Array|Boolean|Date|Function|Number|Object|RegExp|String)\b 0:type
+add-highlighter -group /javascript/code regex \b(Array|Boolean|Date|Function|Number|Object|RegExp|String|Symbol)\b 0:type
 
 # Keywords are collected at
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
-add-highlighter -group /javascript/code regex \b(break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|let|new|of|return|super|switch|throw|try|typeof|var|void|while|with|yield)\b 0:keyword
+add-highlighter -group /javascript/code regex \b(async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|let|new|of|return|super|switch|throw|try|typeof|var|void|while|with|yield)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
