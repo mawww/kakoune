@@ -1465,11 +1465,15 @@ You can redefine a key's meaning using the map command
 --------------------------------
 
 with `scope` being one of `global`, `buffer` or `window` (or any prefix),
-mode being `insert`, `normal`, `prompt`, `menu` or `user` (or any prefix), `key` being
-a single key name and `keys` a list of keys.
+mode being `insert`, `normal`, `prompt`, `menu` or `user` (or any prefix),
+`key` being a single key name and `keys` a list of keys.
 
-`user` mode allows for user mapping behind the `,` key. Keys will be executed in
-normal mode.
+`user` mode allows for user mapping behind the `,` key. Keys will be
+executed in normal mode.
+
+An optional *-docstring* switch followed by a string can be used to
+describe what the mapping does. This docstring will be used in autoinfo
+boxes.
 
 Mappings can be removed with the unmap command
 

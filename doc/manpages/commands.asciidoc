@@ -125,6 +125,10 @@ command *q!* has to be used).
 	*user* mode allows for user mapping behind the *,* key. Keys
 	will be executed in normal mode.
 
+	An optional *-docstring* switch followed by a string can be used
+	to describe what the mapping does. This docstring will be used
+	in autoinfo boxes.
+
 *unmap* <scope> <mode> <key> [<expected>]::
 	remove the mapping of *key* in given *scope* and *mode*, if
 	expected is specified, only remove the mapping it if matches
