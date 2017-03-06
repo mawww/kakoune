@@ -12,6 +12,7 @@
 #include "event_manager.hh"
 #include "face_registry.hh"
 #include "file.hh"
+#include "hash_map.hh"
 #include "highlighter.hh"
 #include "highlighters.hh"
 #include "option_manager.hh"
@@ -1126,7 +1127,7 @@ const CommandDesc debug_cmd = {
     make_completer(
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
-               auto c = {"info", "buffers", "options", "memory", "shared-strings"};
+               auto c = {"info", "buffers", "options", "memory", "shared-strings", "profile-hash-maps"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
@@ -1166,6 +1167,10 @@ const CommandDesc debug_cmd = {
         else if (parser[0] == "shared-strings")
         {
             StringRegistry::instance().debug_stats();
+        }
+        else if (parser[0] == "profile-hash-maps")
+        {
+            profile_hash_maps();
         }
         else
             throw runtime_error(format("unknown debug command '{}'", parser[0]));

@@ -58,6 +58,13 @@ struct Hash
     }
 };
 
+// Traits specifying if two types have compatible hashing, that is,
+// if lhs == rhs => hash_value(lhs) == hash_value(rhs)
+template<typename Lhs, typename Rhs>
+struct HashCompatible : std::false_type {};
+
+template<typename T> struct HashCompatible<T, T> : std::true_type {};
+
 }
 
 #endif // hash_hh_INCLUDED

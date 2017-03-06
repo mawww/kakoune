@@ -121,6 +121,8 @@ public:
     }
     String(const char* begin, const char* end) : m_data(begin, end-begin) {}
 
+    explicit String(StringView str);
+
     [[gnu::always_inline]]
     char* data() { return m_data.data(); }
 
@@ -254,6 +256,10 @@ private:
 
 static_assert(std::is_trivial<StringView>::value, "");
 
+template<> struct HashCompatible<String, StringView> : std::true_type {};
+
+inline String::String(StringView str) : String{str.begin(), str.length()} {}
+
 template<typename Type, typename CharType>
 inline StringView StringOps<Type, CharType>::substr(ByteCount from, ByteCount length) const
 {
@@ -317,6 +323,11 @@ inline bool operator<(const StringView& lhs, const StringView& rhs)
 inline String operator"" _str(const char* str, size_t)
 {
     return String(str);
+}
+
+inline StringView operator"" _sv(const char* str, size_t)
+{
+    return StringView{str};
 }
 
 Vector<String> split(StringView str, char separator, char escape);
