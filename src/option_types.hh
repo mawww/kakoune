@@ -7,6 +7,7 @@
 #include "coord.hh"
 #include "array_view.hh"
 #include "id_map.hh"
+#include "hash_map.hh"
 #include "flags.hh"
 #include "enum.hh"
 
@@ -142,6 +143,46 @@ template<typename T, MemoryDomain D>
 struct option_type_name<IdMap<T, D>>
 {
     static String name() { return format("str-to-{}-map", option_type_name<T>::name()); }
+};
+
+template<typename Key, typename Value, MemoryDomain domain>
+String option_to_string(const HashMap<Key, Value, domain>& opt)
+{
+    String res;
+    for (auto it = begin(opt); it != end(opt); ++it)
+    {
+        if (it != begin(opt))
+            res += list_separator;
+        String elem = escape(option_to_string(it->key), '=', '\\') + "=" +
+                      escape(option_to_string(it->value), '=', '\\');
+        res += escape(elem, list_separator, '\\');
+    }
+    return res;
+}
+
+template<typename Key, typename Value, MemoryDomain domain>
+void option_from_string(StringView str, HashMap<Key, Value, domain>& opt)
+{
+    opt.clear();
+    for (auto& elem : split(str, list_separator, '\\'))
+    {
+        Vector<String> pair_str = split(elem, '=', '\\');
+        if (pair_str.size() != 2)
+            throw runtime_error("map option expects key=value");
+        Key key;
+        Value value;
+        option_from_string(pair_str[0], key);
+        option_from_string(pair_str[1], value);
+        opt.insert({ std::move(key), std::move(value) });
+    }
+}
+
+template<typename K, typename V, MemoryDomain D>
+struct option_type_name<HashMap<K, V, D>>
+{
+    static String name() { return format("{}-to-{}-map",
+                                         option_type_name<K>::name(),
+                                         option_type_name<V>::name()); }
 };
 
 constexpr char tuple_separator = '|';
