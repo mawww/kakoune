@@ -19,9 +19,7 @@ void AliasRegistry::add_alias(String alias, String command)
 
 void AliasRegistry::remove_alias(StringView alias)
 {
-    auto it = m_aliases.find(alias);
-    if (it != m_aliases.end())
-        m_aliases.erase(it);
+    m_aliases.remove(alias);
 }
 
 StringView AliasRegistry::operator[](StringView alias) const
