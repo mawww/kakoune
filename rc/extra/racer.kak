@@ -22,6 +22,7 @@ def racer-complete -docstring "Complete the current selection with racer" %{
                     word = $2
                     type = $7
                     desc = substr($9, 2, length($9) - 2)
+                    gsub(/\|/, "\\|", desc)
                     gsub(/\\n/, "\n", desc)
                     menu = $8
                     sub(/^pub /, "", menu)
