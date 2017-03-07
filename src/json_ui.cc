@@ -348,16 +348,16 @@ void JsonUI::eval_json(const Value& json)
         throw runtime_error("json request is not an object");
 
     const JsonObject& object = json.as<JsonObject>();
-    auto json_it = object.find("jsonrpc");
+    auto json_it = object.find("jsonrpc"_sv);
     if (json_it == object.end() or json_it->value.as<String>() != "2.0")
         throw runtime_error("invalid json rpc request");
 
-    auto method_it = object.find("method");
+    auto method_it = object.find("method"_sv);
     if (method_it == object.end())
         throw runtime_error("invalid json rpc request (method missing)");
     StringView method = method_it->value.as<String>();
 
-    auto params_it = object.find("params");
+    auto params_it = object.find("params"_sv);
     if (params_it == object.end())
         throw runtime_error("invalid json rpc request (params missing)");
     const JsonArray& params = params_it->value.as<JsonArray>();

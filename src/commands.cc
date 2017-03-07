@@ -1780,7 +1780,7 @@ const CommandDesc prompt_cmd = {
                     (event == PromptEvent::Change and on_change.empty()))
                     return;
 
-                auto& text = sc.env_vars["text"] = str.str();
+                auto& text = sc.env_vars["text"_sv] = str.str();
                 auto clear_password = on_scope_end([&] {
                     if (flags & PromptFlags::Password)
                         memset(text.data(), 0, (int)text.length());
@@ -1872,7 +1872,7 @@ const CommandDesc on_key_cmd = {
         CapturedShellContext sc{shell_context};
         context.input_handler().on_next_key(
             KeymapMode::None, [=](Key key, Context& context) mutable {
-            sc.env_vars["key"] = key_to_str(key);
+            sc.env_vars["key"_sv] = key_to_str(key);
             ScopedSetBool disable_history{context.history_disabled()};
 
             CommandManager::instance().execute(command, context, sc);

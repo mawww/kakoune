@@ -91,7 +91,7 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
 
     BufferCoord word_begin;
     StringView prefix;
-    UnorderedMap<StringView, int> sel_word_counts;
+    HashMap<StringView, int> sel_word_counts;
     for (int i = 0; i < sels.size(); ++i)
     {
         Utf8It end{buffer.iterator_at(sels[i].cursor()), buffer};
@@ -136,8 +136,8 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
     // Remove words that are being edited
     for (auto& word_count : sel_word_counts)
     {
-        if (get_word_db(buffer).get_word_occurences(word_count.first) <= word_count.second)
-            unordered_erase(matches, word_count.first);
+        if (get_word_db(buffer).get_word_occurences(word_count.key) <= word_count.value)
+            unordered_erase(matches, word_count.key);
     }
 
     if (other_buffers)

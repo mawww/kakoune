@@ -35,10 +35,10 @@ Register& RegisterManager::operator[](Codepoint c) const
     if (it == m_registers.end())
         throw runtime_error(format("no such register: '{}'", c));
 
-    return *(it->second);
+    return *(it->value);
 }
 
-void RegisterManager::add_register(char c, std::unique_ptr<Register> reg)
+void RegisterManager::add_register(Codepoint c, std::unique_ptr<Register> reg)
 {
     auto& reg_ptr = m_registers[c];
     kak_assert(not reg_ptr);

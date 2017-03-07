@@ -4,7 +4,7 @@
 #include "face.hh"
 #include "utils.hh"
 #include "completion.hh"
-#include "unordered_map.hh"
+#include "hash_map.hh"
 
 namespace Kakoune
 {
@@ -29,7 +29,7 @@ private:
         FaceOrAlias(Face face = Face{}) : face(face) {}
     };
 
-    using AliasMap = UnorderedMap<String, FaceOrAlias, MemoryDomain::Faces>;
+    using AliasMap = HashMap<String, FaceOrAlias, MemoryDomain::Faces>;
     AliasMap m_aliases;
 };
 

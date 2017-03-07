@@ -25,19 +25,18 @@ StringDataPtr StringData::Registry::intern(StringView str)
 {
     auto it = m_strings.find(str);
     if (it != m_strings.end())
-        return StringDataPtr{it->second};
+        return StringDataPtr{it->value};
 
     auto data = StringData::create(str);
     data->refcount |= interned_flag;
-    m_strings.emplace(data->strview(), data.get());
+    m_strings.insert({data->strview(), data.get()});
     return data;
 }
 
 void StringData::Registry::remove(StringView str)
 {
-    auto it = m_strings.find(str);
-    kak_assert(it != m_strings.end());
-    m_strings.erase(it);
+    kak_assert(m_strings.contains(str));
+    m_strings.unordered_remove(str);
 }
 
 void StringData::Registry::debug_stats() const
@@ -48,8 +47,8 @@ void StringData::Registry::debug_stats() const
     size_t count = m_strings.size();
     for (auto& st : m_strings)
     {
-        total_refcount += st.second->refcount - 1;
-        total_size += (int)st.second->length;
+        total_refcount += st.value->refcount - 1;
+        total_size += (int)st.value->length;
     }
     write_to_debug_buffer(format("  data size: {}, mean: {}", total_size, (float)total_size/count));
     write_to_debug_buffer(format("  refcounts: {}, mean: {}", total_refcount, (float)total_refcount/count));

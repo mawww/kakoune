@@ -4,7 +4,7 @@
 #include "string.hh"
 #include "ref_ptr.hh"
 #include "utils.hh"
-#include "unordered_map.hh"
+#include "hash_map.hh"
 
 #include <numeric>
 
@@ -53,7 +53,7 @@ public:
         void remove(StringView str);
 
     private:
-        UnorderedMap<StringView, StringData*, MemoryDomain::SharedString> m_strings;
+        HashMap<StringView, StringData*, MemoryDomain::SharedString> m_strings;
     };
 
     static Ptr create(ArrayView<const StringView> strs);

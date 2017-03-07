@@ -1425,7 +1425,7 @@ private:
     {
         size_t timestamp = 0;
         Vector<RegionMatches, MemoryDomain::Highlight> matches;
-        UnorderedMap<BufferRange, RegionList, MemoryDomain::Highlight> regions;
+        HashMap<BufferRange, RegionList, MemoryDomain::Highlight> regions;
     };
     BufferSideCache<Cache> m_cache;
 
@@ -1471,7 +1471,7 @@ private:
 
         auto it = cache.regions.find(range);
         if (it != cache.regions.end())
-            return it->second;
+            return it->value;
 
         RegionList& regions = cache.regions[range];
 

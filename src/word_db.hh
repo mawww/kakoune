@@ -3,7 +3,7 @@
 
 #include "buffer.hh"
 #include "shared_string.hh"
-#include "unordered_map.hh"
+#include "hash_map.hh"
 #include "vector.hh"
 #include "ranked_match.hh"
 
@@ -39,7 +39,7 @@ private:
         UsedLetters letters;
         int refcount;
     };
-    using WordToInfo = UnorderedMap<StringView, WordInfo, MemoryDomain::WordDB>;
+    using WordToInfo = HashMap<StringView, WordInfo, MemoryDomain::WordDB>;
     using Lines = Vector<StringDataPtr, MemoryDomain::WordDB>;
 
     SafePtr<const Buffer> m_buffer;

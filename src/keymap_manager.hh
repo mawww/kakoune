@@ -5,7 +5,7 @@
 #include "keys.hh"
 #include "hash.hh"
 #include "string.hh"
-#include "unordered_map.hh"
+#include "hash_map.hh"
 #include "vector.hh"
 
 namespace Kakoune
@@ -51,7 +51,7 @@ private:
 
     KeymapManager* m_parent;
     using KeyAndMode = std::pair<Key, KeymapMode>;
-    UnorderedMap<KeyAndMode, KeyMapInfo, MemoryDomain::Mapping> m_mapping;
+    HashMap<KeyAndMode, KeyMapInfo, MemoryDomain::Mapping> m_mapping;
 };
 
 }

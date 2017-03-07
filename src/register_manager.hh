@@ -4,7 +4,7 @@
 #include "array_view.hh"
 #include "exception.hh"
 #include "utils.hh"
-#include "unordered_map.hh"
+#include "hash_map.hh"
 #include "string.hh"
 #include "vector.hh"
 
@@ -100,10 +100,10 @@ class RegisterManager : public Singleton<RegisterManager>
 public:
     Register& operator[](StringView reg) const;
     Register& operator[](Codepoint c) const;
-    void add_register(char c, std::unique_ptr<Register> reg);
+    void add_register(Codepoint c, std::unique_ptr<Register> reg);
 
 protected:
-    UnorderedMap<char, std::unique_ptr<Register>, MemoryDomain::Registers> m_registers;
+    HashMap<Codepoint, std::unique_ptr<Register>, MemoryDomain::Registers> m_registers;
 };
 
 }

@@ -10,7 +10,7 @@
 #include "string.hh"
 #include "optional.hh"
 #include "utils.hh"
-#include "unordered_map.hh"
+#include "hash_map.hh"
 
 #include <functional>
 #include <initializer_list>
@@ -123,7 +123,7 @@ private:
         CommandHelper helper;
         CommandCompleter completer;
     };
-    using CommandMap = UnorderedMap<String, CommandDescriptor, MemoryDomain::Commands>;
+    using CommandMap = HashMap<String, CommandDescriptor, MemoryDomain::Commands>;
     CommandMap m_commands;
     String m_last_complete_command;
     int m_command_depth = 0;

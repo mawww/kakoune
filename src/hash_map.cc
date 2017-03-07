@@ -6,6 +6,7 @@
 #include "unit_tests.hh"
 
 #include <random>
+#include <unordered_map>
 
 namespace Kakoune
 {
@@ -148,7 +149,7 @@ void profile_hash_maps()
 {
     for (auto i : { 1000, 10000, 100000, 1000000, 10000000 })
     {
-        do_profile<UnorderedMap<size_t, size_t>>(i, "UnorderedMap");
+        do_profile<std::unordered_map<size_t, size_t>>(i, "UnorderedMap");
         do_profile<HashMap<size_t, size_t>>(i, "   HashMap  ");
     }
 }

@@ -437,13 +437,13 @@ void CommandManager::execute_single_command(CommandParameters params,
     try
     {
         ParametersParser parameter_parser(param_view,
-                                          command_it->second.param_desc);
-        command_it->second.command(parameter_parser, context, shell_context);
+                                          command_it->value.param_desc);
+        command_it->value.command(parameter_parser, context, shell_context);
     }
     catch (runtime_error& error)
     {
         throw runtime_error(format("{}:{}: '{}' {}", pos.line+1, pos.column+1,
-                                   command_it->first, error.what()));
+                                   command_it->key, error.what()));
     }
 }
 
@@ -507,11 +507,11 @@ Optional<CommandInfo> CommandManager::command_info(const Context& context, Strin
         return {};
 
     CommandInfo res;
-    res.name = cmd->first;
-    if (not cmd->second.docstring.empty())
-        res.info += cmd->second.docstring + "\n";
+    res.name = cmd->key;
+    if (not cmd->value.docstring.empty())
+        res.info += cmd->value.docstring + "\n";
 
-    if (cmd->second.helper)
+    if (cmd->value.helper)
     {
         Vector<String> params;
         for (auto it = tokens.begin() + cmd_idx + 1;
@@ -523,7 +523,7 @@ Optional<CommandInfo> CommandManager::command_info(const Context& context, Strin
                 it->type() == Token::Type::RawEval)
                 params.push_back(it->content());
         }
-        String helpstr = cmd->second.helper(context, params);
+        String helpstr = cmd->value.helper(context, params);
         if (not helpstr.empty())
         {
             if (helpstr.back() != '\n')
@@ -533,13 +533,13 @@ Optional<CommandInfo> CommandManager::command_info(const Context& context, Strin
     }
 
     String aliases;
-    for (auto& alias : context.aliases().aliases_for(cmd->first))
+    for (auto& alias : context.aliases().aliases_for(cmd->key))
         aliases += " " + alias;
     if (not aliases.empty())
         res.info += "Aliases:" + aliases + "\n";
 
 
-    auto& switches = cmd->second.param_desc.switches;
+    auto& switches = cmd->value.param_desc.switches;
     if (not switches.empty())
     {
         res.info += "Switches:\n";
@@ -553,8 +553,8 @@ Completions CommandManager::complete_command_name(const Context& context,
                                                   StringView query, bool with_aliases) const
 {
     auto commands = m_commands
-            | filter([](const CommandMap::value_type& cmd) { return not (cmd.second.flags & CommandFlags::Hidden); })
-            | transform(std::mem_fn(&CommandMap::value_type::first));
+            | filter([](const CommandMap::Item& cmd) { return not (cmd.value.flags & CommandFlags::Hidden); })
+            | transform(std::mem_fn(&CommandMap::Item::key));
 
     if (not with_aliases)
         return {0, query.length(), Kakoune::complete(query, query.length(), commands)};
@@ -636,7 +636,7 @@ Completions CommandManager::complete(const Context& context,
 
         auto command_it = find_command(context, command_name);
         if (command_it == m_commands.end() or
-            not command_it->second.completer)
+            not command_it->value.completer)
             return Completions();
 
         Vector<String> params;
@@ -644,7 +644,7 @@ Completions CommandManager::complete(const Context& context,
             params.push_back(it->content());
         if (tok_idx == tokens.size())
             params.emplace_back("");
-        Completions completions = offset_pos(command_it->second.completer(
+        Completions completions = offset_pos(command_it->value.completer(
             context, flags, params, tok_idx - cmd_idx - 1,
             cursor_pos_in_token), start);
 
@@ -683,8 +683,8 @@ Completions CommandManager::complete(const Context& context,
         }
 
         auto command_it = find_command(context, command_name);
-        if (command_it != m_commands.end() and command_it->second.completer)
-            return command_it->second.completer(
+        if (command_it != m_commands.end() and command_it->value.completer)
+            return command_it->value.completer(
                 context, flags, params.subrange(1),
                 token_to_complete-1, pos_in_token);
     }

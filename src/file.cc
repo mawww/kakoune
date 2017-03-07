@@ -477,7 +477,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
         TimeSpec mtim = {};
         Vector<String> commands;
     };
-    static UnorderedMap<String, CommandCache, MemoryDomain::Commands> command_cache;
+    static HashMap<String, CommandCache, MemoryDomain::Commands> command_cache;
 
     Vector<RankedMatch> matches;
     for (auto dir : StringView{getenv("PATH")} | split<StringView>(':'))

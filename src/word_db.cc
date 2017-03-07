@@ -45,7 +45,7 @@ void WordDB::add_words(StringView line)
     {
         auto it = m_words.find(w);
         if (it != m_words.end())
-            ++it->second.refcount;
+            ++it->value.refcount;
         else
         {
             auto word = intern(w);
@@ -60,9 +60,9 @@ void WordDB::remove_words(StringView line)
     for (auto& w : get_words(line, get_extra_word_chars(*m_buffer)))
     {
         auto it = m_words.find(w);
-        kak_assert(it != m_words.end() and it->second.refcount > 0);
-        if (--it->second.refcount == 0)
-            m_words.erase(it);
+        kak_assert(it != m_words.end() and it->value.refcount > 0);
+        if (--it->value.refcount == 0)
+            m_words.unordered_remove(it->key);
     }
 }
 
@@ -159,7 +159,7 @@ int WordDB::get_word_occurences(StringView word) const
 {
     auto it = m_words.find(word);
     if (it != m_words.end())
-        return it->second.refcount;
+        return it->value.refcount;
     return 0;
 }
 
@@ -170,7 +170,7 @@ RankedMatchList WordDB::find_matching(StringView query)
     RankedMatchList res;
     for (auto&& word : m_words)
     {
-        if (RankedMatch match{word.first, word.second.letters, query, letters})
+        if (RankedMatch match{word.key, word.value.letters, query, letters})
             res.push_back(match);
     }
 

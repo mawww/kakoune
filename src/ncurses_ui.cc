@@ -132,7 +132,7 @@ int NCursesUI::get_color(Color color)
 {
     auto it = m_colors.find(color);
     if (it != m_colors.end())
-        return it->second;
+        return it->value;
     else if (m_change_colors and can_change_color() and COLORS > 16)
     {
         kak_assert(color.color == Color::RGB);
@@ -171,7 +171,7 @@ int NCursesUI::get_color_pair(const Face& face)
     ColorPair colors{face.fg, face.bg};
     auto it = m_colorpairs.find(colors);
     if (it != m_colorpairs.end())
-        return it->second;
+        return it->value;
     else
     {
         init_pair(m_next_pair, get_color(face.fg), get_color(face.bg));
@@ -214,7 +214,7 @@ void on_term_resize(int)
     EventManager::instance().force_signal(0);
 }
 
-static const std::initializer_list<std::pair<const Kakoune::Color, int>>
+static const std::initializer_list<HashMap<Kakoune::Color, int>::Item>
 default_colors = {
     { Color::Default, -1 },
     { Color::Black,   COLOR_BLACK },
@@ -1005,7 +1005,7 @@ void NCursesUI::enable_mouse(bool enabled)
 void NCursesUI::set_ui_options(const Options& options)
 {
     {
-        auto it = options.find("ncurses_assistant");
+        auto it = options.find("ncurses_assistant"_sv);
         if (it == options.end() or it->value == "clippy")
             m_assistant = assistant_clippy;
         else if (it->value == "cat")
@@ -1015,19 +1015,19 @@ void NCursesUI::set_ui_options(const Options& options)
     }
 
     {
-        auto it = options.find("ncurses_status_on_top");
+        auto it = options.find("ncurses_status_on_top"_sv);
         m_status_on_top = it != options.end() and
             (it->value == "yes" or it->value == "true");
     }
 
     {
-        auto it = options.find("ncurses_set_title");
+        auto it = options.find("ncurses_set_title"_sv);
         m_set_title = it == options.end() or
             (it->value == "yes" or it->value == "true");
     }
 
     {
-        auto it = options.find("ncurses_change_colors");
+        auto it = options.find("ncurses_change_colors"_sv);
         auto value = it == options.end() or
             (it->value == "yes" or it->value == "true");
 
@@ -1045,16 +1045,16 @@ void NCursesUI::set_ui_options(const Options& options)
     }
 
     {
-        auto enable_mouse_it = options.find("ncurses_enable_mouse");
+        auto enable_mouse_it = options.find("ncurses_enable_mouse"_sv);
         enable_mouse(enable_mouse_it == options.end() or
                      enable_mouse_it->value == "yes" or
                      enable_mouse_it->value == "true");
 
-        auto wheel_up_it = options.find("ncurses_wheel_up_button");
+        auto wheel_up_it = options.find("ncurses_wheel_up_button"_sv);
         m_wheel_up_button = wheel_up_it != options.end() ?
             str_to_int_ifp(wheel_up_it->value).value_or(4) : 4;
 
-        auto wheel_down_it = options.find("ncurses_wheel_down_button");
+        auto wheel_down_it = options.find("ncurses_wheel_down_button"_sv);
         m_wheel_down_button = wheel_down_it != options.end() ?
             str_to_int_ifp(wheel_down_it->value).value_or(5) : 5;
     }

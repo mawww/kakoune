@@ -128,14 +128,17 @@ private:
     Vector<Entry, domain> m_entries;
 };
 
+template<typename Key, typename Value>
+struct HashItem
+{
+    Key key;
+    Value value;
+};
+
 template<typename Key, typename Value, MemoryDomain domain = MemoryDomain::Undefined>
 struct HashMap
 {
-    struct Item
-    {
-        Key key;
-        Value value;
-    };
+    using Item = HashItem<Key, Value>;
 
     HashMap() = default;
 

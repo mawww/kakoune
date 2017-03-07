@@ -11,7 +11,7 @@
 #include "normal.hh"
 #include "regex.hh"
 #include "register_manager.hh"
-#include "unordered_map.hh"
+#include "hash_map.hh"
 #include "user_interface.hh"
 #include "utf8.hh"
 #include "window.hh"
@@ -944,7 +944,7 @@ private:
     PromptFlags    m_flags;
 
     using History = Vector<String, MemoryDomain::History>;
-    static UnorderedMap<String, History, MemoryDomain::History> ms_history;
+    static HashMap<String, History, MemoryDomain::History> ms_history;
     History::iterator m_history_it;
 
     void history_push(History& history, StringView entry)
@@ -959,7 +959,7 @@ private:
         history.push_back(entry.str());
     }
 };
-UnorderedMap<String, Prompt::History, MemoryDomain::History> Prompt::ms_history;
+HashMap<String, Prompt::History, MemoryDomain::History> Prompt::ms_history;
 
 class NextKey : public InputMode
 {
