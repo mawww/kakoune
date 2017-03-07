@@ -17,11 +17,11 @@ struct HashIndex
         int index;
     };
 
-    void grow()
+    void resize(size_t new_size)
     {
+        kak_assert(new_size > m_entries.size());
         Vector<Entry, domain> old_entries = std::move(m_entries);
-        constexpr size_t init_size = 4;
-        m_entries.resize(old_entries.empty() ? init_size : old_entries.size() * 2, {0,-1});
+        m_entries.resize(new_size, {0,-1});
         for (auto& entry : old_entries)
         {
             if (entry.index >= 0)
@@ -29,12 +29,19 @@ struct HashIndex
         }
     }
 
+    void reserve(size_t count)
+    {
+        constexpr float max_fill_rate = 0.5f;
+        const size_t min_size = (size_t)(count / max_fill_rate) + 1;
+        size_t new_size = m_entries.empty() ? 4 : m_entries.size();
+        while (new_size < min_size)
+            new_size *= 2;
+        if (new_size > m_entries.size())
+            resize(new_size);
+    }
+
     void add(size_t hash, int index)
     {
-        ++m_count;
-        if ((float)m_count / m_entries.size() > m_max_fill_rate)
-            grow();
-
         Entry entry{hash, index};
         while (true)
         {
@@ -55,14 +62,13 @@ struct HashIndex
                     target_slot = candidate_slot;
                 }
             }
-            // no free entries found, grow, try again
-            grow();
+            // no free entries found, resize, try again
+            resize(m_entries.size() * 2);
         }
     }
 
     void remove(size_t hash, int index)
     {
-        --m_count;
         for (auto slot = compute_slot(hash); slot < m_entries.size(); ++slot)
         {
             kak_assert(m_entries[slot].index >= 0);
@@ -110,14 +116,12 @@ struct HashIndex
     size_t compute_slot(size_t hash) const
     {
         // We assume entries.size() is power of 2
-        return m_entries.empty() ? 0 : hash & (m_entries.size()-1);
+        return hash & (m_entries.size()-1);
     }
 
     void clear() { m_entries.clear(); }
 
 private:
-    size_t m_count = 0;
-    static constexpr float m_max_fill_rate = 0.9f;
     Vector<Entry, domain> m_entries;
 };
 
@@ -137,12 +141,14 @@ struct HashMap
 
     HashMap(std::initializer_list<Item> val) : m_items{val}
     {
+        m_index.reserve(val.size());
         for (int i = 0; i < m_items.size(); ++i)
             m_index.add(hash_value(m_items[i].key), i);
     }
 
     Value& insert(Item item)
     {
+        m_index.reserve(m_items.size()+1);
         m_index.add(hash_value(item.key), (int)m_items.size());
         m_items.push_back(std::move(item));
         return m_items.back().value;
@@ -181,6 +187,7 @@ struct HashMap
         if (index >= 0)
             return m_items[index].value;
 
+        m_index.reserve(m_items.size()+1);
         m_index.add(hash, (int)m_items.size());
         m_items.push_back({Key{std::forward<KeyType>(key)}, {}});
         return m_items.back().value;
@@ -257,7 +264,7 @@ struct HashMap
     void reserve(size_t size)
     {
         m_items.reserve(size); 
-        // TODO: Reserve in the index as well
+        m_index.reserve(size);
     }
 
     // Equality is taking the order of insertion into account
