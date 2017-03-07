@@ -106,10 +106,21 @@ void do_profile(size_t count, StringView type)
         map.erase(dist(re));
     auto after_remove = Clock::now();
 
-    write_to_debug_buffer(format("{} ({}) -- inserts: {}ms, reads: {}ms, remove: {}ms", type, count,
+    int c = 0;
+    for (auto v : vec)
+    {
+        auto it = map.find(v);
+        if (it != map.end())
+            ++c;
+    }
+    auto after_find = Clock::now();
+
+    write_to_debug_buffer(format("{} ({}) -- inserts: {}ms, reads: {}ms, remove: {}ms, find: {}ms ({})", type, count,
                                  std::chrono::duration_cast<std::chrono::milliseconds>(after_insert - start).count(),
                                  std::chrono::duration_cast<std::chrono::milliseconds>(after_read - after_insert).count(),
-                                 std::chrono::duration_cast<std::chrono::milliseconds>(after_remove - after_read).count()));
+                                 std::chrono::duration_cast<std::chrono::milliseconds>(after_remove - after_read).count(),
+                                 std::chrono::duration_cast<std::chrono::milliseconds>(after_find - after_remove).count(),
+                                 c));
 }
 
 void profile_hash_maps()
@@ -117,7 +128,7 @@ void profile_hash_maps()
     for (auto i : { 1000, 10000, 100000, 1000000, 10000000 })
     {
         do_profile<std::unordered_map<size_t, size_t>>(i, "UnorderedMap");
-        do_profile<HashMap<size_t, size_t>>(i, "   HashMap  ");
+        do_profile<HashMap<size_t, size_t>>(i, "     HashMap");
     }
 }
 

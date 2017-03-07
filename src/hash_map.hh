@@ -85,7 +85,6 @@ struct HashIndex
 
     void ordered_fix_entries(int index)
     {
-        // Fix entries index
         for (auto& entry : m_entries)
         {
             if (entry.index >= index)
@@ -118,7 +117,7 @@ struct HashIndex
 
 private:
     size_t m_count = 0;
-    float m_max_fill_rate = 0.5f;
+    static constexpr float m_max_fill_rate = 0.9f;
     Vector<Entry, domain> m_entries;
 };
 
