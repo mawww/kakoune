@@ -22,6 +22,7 @@ def racer-complete -docstring "Complete the current selection with racer" %{
                     word = $2
                     type = $7
                     desc = substr($9, 2, length($9) - 2)
+                    gsub(/\|/, "\\|", desc)
                     gsub(/\\n/, "\n", desc)
                     menu = $8
                     sub(/^pub /, "", menu)
@@ -30,6 +31,11 @@ def racer-complete -docstring "Complete the current selection with racer" %{
                         sub(word, "{default+e}" word "{default+d}", menu)
                         menu = "{default+d}" menu
                         word = word "("
+                    } else if (type == "Enum") {
+                        menu = substr(menu, 0, length(menu) - 2)
+                        sub(word, "{default+e}" word "{default+d}", menu)
+                        menu = "{default+d}" menu
+                        word = word "::"
                     } else {
                         menu = "{default+e}" word "{default+d} " menu
                     }
