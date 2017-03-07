@@ -8,10 +8,6 @@
 namespace Kakoune
 {
 
-class String;
-
-struct HashStats;
-
 template<MemoryDomain domain>
 struct HashIndex
 {
@@ -119,8 +115,6 @@ struct HashIndex
     }
 
     void clear() { m_entries.clear(); }
-
-    HashStats compute_stats() const;
 
 private:
     size_t m_count = 0;
@@ -284,7 +278,6 @@ struct HashMap
         return not (*this == other);
     }
 
-    HashStats compute_stats() const;
 private:
     Vector<Item, domain> m_items;
     HashIndex<domain> m_index;

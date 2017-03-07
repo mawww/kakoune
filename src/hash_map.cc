@@ -79,39 +79,6 @@ UnitTest test_hash_map{[] {
     }
 }};
 
-struct HashStats
-{
-    size_t max_dist;
-    float mean_dist; 
-    float fill_rate;
-};
-
-template<MemoryDomain domain>
-HashStats HashIndex<domain>::compute_stats() const
-{
-    size_t count = 0;
-    size_t max_dist = 0;
-    size_t sum_dist = 0;
-    for (size_t slot = 0; slot < m_entries.size(); ++slot)
-    {
-        auto& entry = m_entries[slot];
-        if (entry.index == -1)
-            continue;
-        ++count;
-        auto dist = slot - compute_slot(entry.hash);
-        max_dist = std::max(max_dist, dist);
-        sum_dist += dist;
-    }
-
-    return { max_dist, (float)sum_dist / count, (float)count / m_entries.size() };
-}
-
-template<typename Key, typename Value, MemoryDomain domain>
-HashStats HashMap<Key, Value, domain>::compute_stats() const
-{
-    return m_index.compute_stats();
-}
-
 template<typename Map>
 void do_profile(size_t count, StringView type)
 {
