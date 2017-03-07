@@ -189,7 +189,7 @@ struct HashMap
 
         m_index.reserve(m_items.size()+1);
         m_index.add(hash, (int)m_items.size());
-        m_items.push_back({Key{std::forward<KeyType>(key)}, {}});
+        m_items.push_back({Key(std::forward<KeyType>(key)), {}});
         return m_items.back().value;
     }
 
