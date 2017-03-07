@@ -40,7 +40,7 @@ private:
     OptionFlags  m_flags;
 };
 
-class Option
+class Option : public UseMemoryDomain<MemoryDomain::Options>
 {
 public:
     virtual ~Option() = default;
@@ -142,18 +142,6 @@ public:
     {
         if (option_add(m_value, str))
             m_manager.on_option_changed(*this);
-    }
-
-    using Alloc = Allocator<TypedOption, MemoryDomain::Options>;
-    static void* operator new (std::size_t sz)
-    {
-        kak_assert(sz == sizeof(TypedOption));
-        return Alloc{}.allocate(1);
-    }
-
-    static void operator delete (void* ptr)
-    {
-        return Alloc{}.deallocate(reinterpret_cast<TypedOption*>(ptr), 1);
     }
 private:
     virtual void validate(const T& value) const {}
