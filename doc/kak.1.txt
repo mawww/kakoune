@@ -7,7 +7,7 @@ kak - a vim inspired, selection oriented code editor
 
 SYNOPSIS
 --------
-*kak* [-q] [-n] [-l] [-ro] [-clear] [-ui ui_type] [-e command] [-f keys] [-p session_id] [-c session_id|[[-d] -s session_id] [+line[:column]] file ...
+*kak* [-help] [-q] [-n] [-l] [-ro] [-clear] [-ui ui_type] [-e command] [-f keys] [-p session_id] [-c session_id|[[-d] -s session_id] [+line[:column]|+:] file ...
 
 DESCRIPTION
 -----------
@@ -26,6 +26,9 @@ stays fixed and the cursor one moves around.
 
 OPTIONS
 -------
+-help::
+	display a help message and quit
+
 -n::
 	do not load resource files on startup ('kakrc', 'autoload', 'rc' etc)
 
@@ -63,7 +66,8 @@ OPTIONS
 	enter in 'readonly mode', all the buffers opened will not be written to disk
 
 +line[:column]::
-	specify a target line and column for the first file
+	specify a target line and column for the first file; when the plus sign is followed by only a colon,
+	then the cursor is sent to the last line of the file
 
 file::
 	one or more files to edit
