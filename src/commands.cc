@@ -1700,6 +1700,7 @@ const CommandDesc eval_string_cmd = {
     {
         context_wrap(parser, context, [&](const ParametersParser& parser, Context& context) {
             String command = join(parser, ' ', false);
+            ScopedEdition edition(context);
             CommandManager::instance().execute(command, context, shell_context);
         });
     }
