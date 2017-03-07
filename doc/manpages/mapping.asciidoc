@@ -1,0 +1,52 @@
+KAKOUNE(1)
+==========
+
+NAME
+----
+mapping - a
+
+Description
+-----------
+Creating and removing shortcuts boils down to the following commands,
+respectively:
+
+---------------------------------------
+map [flags] <scope> <mode> <key> <keys>
+unmap <scope> <mode> <key> [<expected>]
+---------------------------------------
+
+The *map* command makes *key* behave as if the *keys* sequence was typed.
+
+*mode* dictates in what context the mapping will be available:
+
+	*insert*::
+		insert mode
+	*normal*::
+		normal mode
+	*prompt*::
+		prompts, such as when entering a command through *:*, or a regex through */*
+	*menu*::
+		mode entered when a menu is displayed with the 'menu' command
+	*user*::
+		mode entered when the user prefix is hit (default: ',')
+	*goto*::
+		mode entered when the goto key is hit (default: 'g')
+	*view*::
+		mode entered when the view key is hit (default: 'v')
+	*object*::
+		mode entered when an object selection is triggered (e.g. '<a-i>')
+
+The context of execution of the above modes is always the current one at the
+time of execution of the mapping, except for *user* mode (always executed
+in a 'normal' context).
+
+An optional *-docstring* switch followed by a string can be used
+to describe what the mapping does. This docstring will be used
+in autoinfo boxes.
+
+The *unmap* command removes a mapping of *key* in the given *scope* and
+*mode*. If *expected* is specified, the mapping is removed only if it is
+set to the same sequence of keys passed using the *expected* argument.
+
+For more information about the values of the *scope* parameter, refer to
+the 'scopes' documentation page.

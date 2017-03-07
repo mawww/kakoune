@@ -14,6 +14,9 @@ and *>*, such as *<esc>* or *<del>*. Modified keys are written between
 Control, or *a* for Alt, followed by a *-* and the key (either its
 name or ascii character), for example *<c-x>*, *<a-space>*.
 
+In order to bind some keys to arbitrary ones, refer to the 'mapping'
+documentation page.
+
 Insert mode
 -----------
 *<esc>*::
@@ -625,27 +628,3 @@ Prompt Commands
 
 *<c-o>*::
 	disable auto completion for this prompt
-
-Key mapping
------------
-Mapping a combination of keys to another one (a.k.a. key mapping or binding)
-can be done with the following command:
-
--------------------------------
-map <scope> <mode> <key> <keys>
--------------------------------
-
-*scope*::
-	can be one of *global*, *window* or *buffer*
-
-*mode*::
-	can be one of *insert*, *normal*, *prompt*, *menu*, *user* or a one
-	character long arbitrary prefix (the *user* mode uses the *,* prefix)
-
-*key*::
-	the key to which the combination will be bound
-
-*keys*::
-	string that lists the keys that will be executed when *key* is hit
-
-Keys are always executed within the *normal* mode.
