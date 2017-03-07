@@ -50,8 +50,8 @@ UnitTest test_hash_map{[] {
     {
         HashMap<String, int> map;
         map.insert({"test", 10});
-        kak_assert(map["test"_sv] == 10);
-        map.remove("test"_sv);
+        kak_assert(map[StringView{"test"}] == 10);
+        map.remove(StringView{"test"});
     }
 
     // make sure we get what we expect from the hash map

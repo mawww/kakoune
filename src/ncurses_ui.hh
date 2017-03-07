@@ -1,12 +1,14 @@
 #ifndef ncurses_hh_INCLUDED
 #define ncurses_hh_INCLUDED
 
+#include "array_view.hh"
 #include "coord.hh"
 #include "event_manager.hh"
 #include "face.hh"
-#include "user_interface.hh"
-#include "array_view.hh"
 #include "hash_map.hh"
+#include "optional.hh"
+#include "string.hh"
+#include "user_interface.hh"
 
 namespace Kakoune
 {

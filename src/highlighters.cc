@@ -1291,12 +1291,12 @@ public:
 
         for (auto& region : m_regions)
         {
-            m_groups.append({region.m_name, HighlighterGroup{}});
+            m_groups.insert({region.m_name, HighlighterGroup{}});
             if (region.m_begin.empty() or region.m_end.empty())
                 throw runtime_error("invalid regex for region highlighter");
         }
         if (not m_default_group.empty())
-            m_groups.append({m_default_group, HighlighterGroup{}});
+            m_groups.insert({m_default_group, HighlighterGroup{}});
     }
 
     void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) override
@@ -1371,7 +1371,7 @@ public:
             return offset_pos(hl.complete_child(path.substr(offset), cursor_pos - offset, group), offset);
         }
 
-        auto container = m_groups | transform(decltype(m_groups)::get_id);
+        auto container = m_groups | transform(std::mem_fn(&decltype(m_groups)::Item::key));
         return { 0, 0, complete(path, cursor_pos, container) };
     }
 
@@ -1411,7 +1411,7 @@ public:
 private:
     const RegionDescList m_regions;
     const String m_default_group;
-    IdMap<HighlighterGroup, MemoryDomain::Highlight> m_groups;
+    HashMap<String, HighlighterGroup, MemoryDomain::Highlight> m_groups;
 
     struct Region
     {
@@ -1521,66 +1521,66 @@ void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    registry.append({
+    registry.insert({
         "number_lines",
         { number_lines_factory,
           "Display line numbers \n"
           "Parameters: -relative, -hlcursor, -separator <separator text>\n" } });
-    registry.append({
+    registry.insert({
         "show_matching",
         { create_matching_char_highlighter,
           "Apply the MatchingChar face to the char matching the one under the cursor" } });
-    registry.append({
+    registry.insert({
         "show_whitespaces",
         { show_whitespaces_factory,
           "Display whitespaces using symbols \n"
           "Parameters: -tab <separator> -tabpad <separator> -lf <separator> -spc <separator> -nbsp <separator>\n" } });
-    registry.append({
+    registry.insert({
         "fill",
         { create_fill_highlighter,
           "Fill the whole highlighted range with the given face" } });
-    registry.append({
+    registry.insert({
         "regex",
         { RegexHighlighter::create,
           "Parameters: <regex> <capture num>:<face> <capture num>:<face>...\n"
           "Highlights the matches for captures from the regex with the given faces" } });
-    registry.append({
+    registry.insert({
         "dynregex",
         { create_dynamic_regex_highlighter,
           "Parameters: <expr> <capture num>:<face> <capture num>:<face>...\n"
           "Evaluate expression at every redraw to gather a regex" } });
-    registry.append({
+    registry.insert({
         "group",
         { create_highlighter_group,
           "Parameters: <group name>\n"
           "Creates a named group that can contain other highlighters" } });
-    registry.append({
+    registry.insert({
         "flag_lines",
         { create_flag_lines_highlighter,
           "Parameters: <option name> <bg color>\n"
           "Display flags specified in the line-flag-list option <option name>\n"
           "A line-flag is written: <line>|<fg color>|<text>, the list is : separated" } });
-    registry.append({
+    registry.insert({
         "ranges",
         { create_ranges_highlighter,
           "Parameters: <option name>\n"
           "Use the range-faces option given as parameter to highlight buffer\n" } });
-    registry.append({
+    registry.insert({
         "line",
         { create_line_highlighter,
           "Parameters: <value string> <face>\n"
           "Highlight the line given by evaluating <value string> with <face>" } });
-    registry.append({
+    registry.insert({
         "column",
         { create_column_highlighter,
           "Parameters: <value string> <face>\n"
           "Highlight the column given by evaluating <value string> with <face>" } });
-    registry.append({
+    registry.insert({
         "ref",
         { create_reference_highlighter,
           "Parameters: <path>\n"
           "Reference the highlighter at <path> in shared highglighters" } });
-    registry.append({
+    registry.insert({
         "regions",
         { RegionsHighlighter::create,
           "Parameters: [-default <default group>] [-match-capture] <name> {<region name> <begin> <end> <recurse>}..."

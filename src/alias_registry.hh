@@ -3,7 +3,7 @@
 
 #include "safe_ptr.hh"
 #include "string.hh"
-#include "id_map.hh"
+#include "hash_map.hh"
 
 namespace Kakoune
 {
@@ -16,7 +16,7 @@ public:
     void remove_alias(StringView alias);
     StringView operator[](StringView name) const;
 
-    using AliasMap = IdMap<String, MemoryDomain::Aliases>;
+    using AliasMap = HashMap<String, String, MemoryDomain::Aliases>;
     using iterator = AliasMap::const_iterator;
 
     Vector<StringView> aliases_for(StringView command) const;

@@ -230,7 +230,7 @@ void JsonUI::set_on_key(OnKeyCallback callback)
 }
 
 using JsonArray = Vector<Value>;
-using JsonObject = IdMap<Value>;
+using JsonObject = HashMap<String, Value>;
 
 static bool is_digit(char c) { return c >= '0' and c <= '9'; }
 
@@ -324,7 +324,7 @@ parse_json(const char* pos, const char* end)
             std::tie(element, pos) = parse_json(pos, end);
             if (not element)
                 return {};
-            object.append({ std::move(name), std::move(element) });
+            object.insert({ std::move(name), std::move(element) });
             if (not skip_while(pos, end, is_blank))
                 return {};
 

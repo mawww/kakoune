@@ -2,7 +2,7 @@
 #define parameters_parser_hh_INCLUDED
 
 #include "exception.hh"
-#include "id_map.hh"
+#include "hash_map.hh"
 #include "array_view.hh"
 #include "flags.hh"
 #include "optional.hh"
@@ -41,7 +41,7 @@ struct SwitchDesc
     String description;
 };
 
-using SwitchMap = IdMap<SwitchDesc, MemoryDomain::Commands>;
+using SwitchMap = HashMap<String, SwitchDesc, MemoryDomain::Commands>;
 
 String generate_switches_doc(const SwitchMap& opts);
 

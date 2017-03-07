@@ -663,7 +663,7 @@ Completions add_highlighter_completer(
     if (token_to_complete == 1 and params[0] == "-group")
         return complete_highlighter(context, params[1], pos_in_token, true);
     else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
-        return { 0_byte, arg.length(), complete(arg, pos_in_token, HighlighterRegistry::instance() | transform(HighlighterRegistry::get_id)) };
+        return { 0_byte, arg.length(), complete(arg, pos_in_token, HighlighterRegistry::instance() | transform(std::mem_fn(&HighlighterRegistry::Item::key))) };
     return Completions{};
 }
 

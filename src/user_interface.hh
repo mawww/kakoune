@@ -2,7 +2,7 @@
 #define user_interface_hh_INCLUDED
 
 #include "array_view.hh"
-#include "id_map.hh"
+#include "hash_map.hh"
 
 #include <functional>
 
@@ -66,7 +66,7 @@ public:
 
     virtual void set_on_key(OnKeyCallback callback) = 0;
 
-    using Options = IdMap<String, MemoryDomain::Options>;
+    using Options = HashMap<String, String, MemoryDomain::Options>;
     virtual void set_ui_options(const Options& options) = 0;
 };
 

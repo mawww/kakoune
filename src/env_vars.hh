@@ -1,13 +1,13 @@
 #ifndef env_vars_hh_INCLUDED
 #define env_vars_hh_INCLUDED
 
-#include "id_map.hh"
+#include "hash_map.hh"
 
 namespace Kakoune
 {
 
 class String;
-using EnvVarMap = IdMap<String, MemoryDomain::EnvVars>;
+using EnvVarMap = HashMap<String, String, MemoryDomain::EnvVars>;
 
 EnvVarMap get_env_vars();
 

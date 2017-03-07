@@ -19,7 +19,7 @@ void HighlighterGroup::add_child(HighlighterAndId&& hl)
     if (m_highlighters.contains(hl.first))
         throw runtime_error(format("duplicate id: '{}'", hl.first));
 
-    m_highlighters.append({ std::move(hl.first), std::move(hl.second) });
+    m_highlighters.insert({std::move(hl.first), std::move(hl.second)});
 }
 
 void HighlighterGroup::remove_child(StringView id)
@@ -52,9 +52,9 @@ Completions HighlighterGroup::complete_child(StringView path, ByteCount cursor_p
 
     auto candidates = complete(
         path, cursor_pos,
-        m_highlighters | filter([=](const HighlighterMap::Element& hl)
+        m_highlighters | filter([=](const HighlighterMap::Item& hl)
                                 { return not group or hl.value->has_children(); })
-                       | transform(HighlighterMap::get_id));
+                       | transform(std::mem_fn(&HighlighterMap::Item::key)));
 
     return { 0, 0, std::move(candidates) };
 }

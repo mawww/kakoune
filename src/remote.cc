@@ -7,7 +7,7 @@
 #include "display_buffer.hh"
 #include "event_manager.hh"
 #include "file.hh"
-#include "id_map.hh"
+#include "hash_map.hh"
 #include "optional.hh"
 #include "user_interface.hh"
 
@@ -92,8 +92,8 @@ public:
         write(ConstArrayView<T>(vec));
     }
 
-    template<typename Val, MemoryDomain domain>
-    void write(const IdMap<Val, domain>& map)
+    template<typename Key, typename Val, MemoryDomain domain>
+    void write(const HashMap<Key, Val, domain>& map)
     {
         write<uint32_t>(map.size());
         for (auto& val : map)
@@ -213,17 +213,17 @@ public:
         return res;
     }
 
-    template<typename Val, MemoryDomain domain>
-    IdMap<Val, domain> read_idmap()
+    template<typename Key, typename Val, MemoryDomain domain>
+    HashMap<Key, Val, domain> read_hash_map()
     {
         uint32_t size = read<uint32_t>();
-        IdMap<Val, domain> res;
+        HashMap<Key, Val, domain> res;
         res.reserve(size);
         while (size--)
         {
-            auto key = read<String>();
+            auto key = read<Key>();
             auto val = read<Val>();
-            res.append({std::move(key), std::move(val)});
+            res.insert({std::move(key), std::move(val)});
         }
         return res;
     }
@@ -615,7 +615,7 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
                 m_ui->refresh(reader.read<bool>());
                 break;
             case MessageType::SetOptions:
-                m_ui->set_ui_options(reader.read_idmap<String, MemoryDomain::Options>());
+                m_ui->set_ui_options(reader.read_hash_map<String, String, MemoryDomain::Options>());
                 break;
             default:
                 kak_assert(false);
@@ -673,7 +673,7 @@ private:
                 auto init_cmds = m_reader.read<String>();
                 auto init_coord = m_reader.read_optional<BufferCoord>();
                 auto dimensions = m_reader.read<DisplayCoord>();
-                auto env_vars = m_reader.read_idmap<String, MemoryDomain::EnvVars>();
+                auto env_vars = m_reader.read_hash_map<String, String, MemoryDomain::EnvVars>();
                 auto* ui = new RemoteUI{sock, dimensions};
                 if (auto* client = ClientManager::instance().create_client(
                                        std::unique_ptr<UserInterface>(ui),

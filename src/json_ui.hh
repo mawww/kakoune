@@ -4,6 +4,7 @@
 #include "user_interface.hh"
 #include "event_manager.hh"
 #include "coord.hh"
+#include "string.hh"
 
 namespace Kakoune
 {

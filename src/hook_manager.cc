@@ -14,7 +14,7 @@ namespace Kakoune
 void HookManager::add_hook(StringView hook_name, String group, HookFunc hook)
 {
     auto& hooks = m_hooks[hook_name];
-    hooks.append({std::move(group), std::move(hook)});
+    hooks.insert({std::move(group), std::move(hook)});
 }
 
 void HookManager::remove_hooks(StringView group)
@@ -30,7 +30,7 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
     CandidateList res;
     for (auto& list : m_hooks)
     {
-        auto container = list.value | transform(decltype(list.value)::get_id);
+        auto container = list.value | transform(std::mem_fn(&decltype(list.value)::Item::key));
         for (auto& c : complete(prefix, pos_in_token, container))
         {
             if (!contains(res, c))

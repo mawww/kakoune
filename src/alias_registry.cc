@@ -12,7 +12,7 @@ void AliasRegistry::add_alias(String alias, String command)
     kak_assert(CommandManager::instance().command_defined(command));
     auto it = m_aliases.find(alias);
     if (it == m_aliases.end())
-        m_aliases.append({std::move(alias), std::move(command) });
+        m_aliases.insert({std::move(alias), std::move(command) });
     else
         it->value = std::move(command);
 }

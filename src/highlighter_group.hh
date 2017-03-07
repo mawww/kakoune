@@ -2,7 +2,7 @@
 #define highlighter_group_hh_INCLUDED
 
 #include "exception.hh"
-#include "id_map.hh"
+#include "hash_map.hh"
 #include "highlighter.hh"
 #include "utils.hh"
 
@@ -28,7 +28,7 @@ public:
     Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override;
 
 private:
-    using HighlighterMap = IdMap<std::unique_ptr<Highlighter>, MemoryDomain::Highlight>;
+    using HighlighterMap = HashMap<String, std::unique_ptr<Highlighter>, MemoryDomain::Highlight>;
     HighlighterMap m_highlighters;
 };
 

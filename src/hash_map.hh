@@ -160,11 +160,6 @@ struct HashMap
         HashCompatible<Key, typename std::decay<KeyType>::type>::value
     >::type;
 
-    // For IdMap inteface compatibility, to remove
-    using Element = Item;
-    Value& append(Item item) { return insert(std::move(item)); }
-    static const String& get_id(const Element& e) { return e.key; }
-
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
     int find_index(const KeyType& key, size_t hash) const
     {

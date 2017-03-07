@@ -5,7 +5,7 @@
 #include "completion.hh"
 #include "display_buffer.hh"
 #include "exception.hh"
-#include "id_map.hh"
+#include "hash_map.hh"
 #include "array_view.hh"
 #include "string.hh"
 #include "utils.hh"
@@ -71,7 +71,7 @@ struct HighlighterFactoryAndDocstring
     String docstring;
 };
 
-struct HighlighterRegistry : IdMap<HighlighterFactoryAndDocstring, MemoryDomain::Highlight>,
+struct HighlighterRegistry : HashMap<String, HighlighterFactoryAndDocstring, MemoryDomain::Highlight>,
                              Singleton<HighlighterRegistry>
 {};
 

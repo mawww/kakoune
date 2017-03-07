@@ -1,7 +1,7 @@
 #ifndef hook_manager_hh_INCLUDED
 #define hook_manager_hh_INCLUDED
 
-#include "id_map.hh"
+#include "hash_map.hh"
 #include "completion.hh"
 #include "safe_ptr.hh"
 
@@ -29,7 +29,7 @@ private:
     friend class Scope;
 
     SafePtr<HookManager> m_parent;
-    IdMap<IdMap<HookFunc, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hooks;
+    HashMap<String, HashMap<String, HookFunc, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hooks;
     mutable Vector<std::pair<StringView, StringView>, MemoryDomain::Hooks> m_running_hooks;
 };
 
