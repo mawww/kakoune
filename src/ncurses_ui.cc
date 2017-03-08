@@ -51,6 +51,18 @@ static constexpr StringView assistant_clippy[] =
       " ╰───╯  ",
       "        " };
 
+static constexpr StringView assistant_dilbert[] =
+    { R"(  დოოოოოდ   )",
+      R"(  |     |   )",
+      R"(  |     |  ╭)",
+      R"(  |-ᱛ ᱛ-|  │)",
+      R"( Ͼ   ∪   Ͽ │)",
+      R"(  |     |  ╯)",
+      R"( ˏ`-.ŏ.-´ˎ  )",
+      R"(     @      )",
+      R"(      @     )",
+      R"(            )"};
+
 static void set_attribute(WINDOW* window, int attribute, bool on)
 {
     if (on)
@@ -1010,6 +1022,8 @@ void NCursesUI::set_ui_options(const Options& options)
             m_assistant = assistant_clippy;
         else if (it->value == "cat")
             m_assistant = assistant_cat;
+        else if (it->value == "dilbert")
+            m_assistant = assistant_dilbert;
         else if (it->value == "none" or it->value == "off")
             m_assistant = ConstArrayView<StringView>{};
     }

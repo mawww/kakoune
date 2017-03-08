@@ -976,7 +976,7 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    - `ncurses_status_on_top`: if `yes`, or `true` the status line will be placed
      at the top of the terminal rather than at the bottom.
    - `ncurses_assistant`: specify the nice assistant you get in info boxes, can
-      be 'clippy' (the default), 'cat' or 'none'
+      be 'clippy' (the default), 'cat', 'dilbert' or 'none'
    - `ncurses_enable_mouse`: boolean option that enables mouse support
    - `ncurses_change_colors`: boolean option that can disable color palette
      changing if the terminfo enables it but the terminal does not support it.
