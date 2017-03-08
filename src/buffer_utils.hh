@@ -75,7 +75,7 @@ ColumnCount get_column(const Buffer& buffer,
 ByteCount get_byte_to_column(const Buffer& buffer, ColumnCount tabstop,
                              DisplayCoord coord);
 
-Buffer* create_fifo_buffer(String name, int fd, bool scroll = false);
+Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll = false);
 Buffer* open_file_buffer(StringView filename,
                          Buffer::Flags flags = Buffer::Flags::None);
 Buffer* open_or_create_file_buffer(StringView filename,

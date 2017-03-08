@@ -20,7 +20,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
     %sh{
         dir=${kak_opt_clang_tmp_dir}
         printf %s\\n "eval -draft %{
-                  edit! -fifo ${dir}/fifo *clang-output*
+                  edit! -fifo ${dir}/fifo -debug *clang-output*
                   set buffer filetype make
                   set buffer make_current_error_line 0
                   hook -group fifo buffer BufCloseFifo .* %{

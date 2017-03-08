@@ -12,7 +12,7 @@ def lint -docstring 'Parse the current buffer with a linter' %{
         printf '%s\n' "eval -no-hooks write $dir/buf"
 
         printf '%s\n' "eval -draft %{
-                  edit! -fifo $dir/fifo *lint-output*
+                  edit! -fifo $dir/fifo -debug *lint-output*
                   set buffer filetype make
                   set buffer make_current_error_line 0
                   hook -group fifo buffer BufCloseFifo .* %{

@@ -58,14 +58,14 @@ struct option_type_name<TimestampedList<RangeAndFace>>
 namespace
 {
 
-Buffer* open_fifo(StringView name, StringView filename, bool scroll)
+Buffer* open_fifo(StringView name, StringView filename, Buffer::Flags flags, bool scroll)
 {
     int fd = open(parse_filename(filename).c_str(), O_RDONLY | O_NONBLOCK);
     fcntl(fd, F_SETFD, FD_CLOEXEC);
     if (fd < 0)
        throw runtime_error(format("unable to open '{}'", filename));
 
-    return create_fifo_buffer(name.str(), fd, scroll);
+    return create_fifo_buffer(name.str(), fd, flags, scroll);
 }
 
 template<typename... Completers> struct PerArgumentCommandCompleter;
@@ -228,7 +228,8 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
 
     Buffer* buffer = buffer_manager.get_buffer_ifp(name);
     const bool no_hooks = context.hooks_disabled();
-    const auto flags = no_hooks ? Buffer::Flags::NoHooks : Buffer::Flags::None;
+    const auto flags = (no_hooks ? Buffer::Flags::NoHooks : Buffer::Flags::None) |
+       (parser.get_switch("debug") ? Buffer::Flags::Debug : Buffer::Flags::None);
 
     if (force_reload and buffer and buffer->flags() & Buffer::Flags::File)
         reload_file_buffer(*buffer);
@@ -246,7 +247,7 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
                 buffer = buffer_manager.create_buffer(name, flags);
         }
         else if (auto fifo = parser.get_switch("fifo"))
-            buffer = open_fifo(name, *fifo, (bool)parser.get_switch("scroll"));
+            buffer = open_fifo(name, *fifo, flags, (bool)parser.get_switch("scroll"));
         else if (not buffer)
         {
             buffer = parser.get_switch("existing") ? open_file_buffer(name, flags)
@@ -282,6 +283,7 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
 ParameterDesc edit_params{
     { { "existing", { false, "fail if the file does not exists, do not open a new file" } },
       { "scratch",  { false, "create a scratch buffer, not linked to a file" } },
+      { "debug",    { false, "treate buffer as debug output" } },
       { "fifo",     { true,  "create a buffer reading its content from a named fifo" } },
       { "scroll",   { false, "place the initial cursor so that the fifo will scroll to show new data" } } },
       ParameterDesc::Flags::None, 0, 3
@@ -543,7 +545,7 @@ void cycle_buffer(const ParametersParser& parser, Context& context, const ShellC
         newbuf = it->get();
     };
     cycle();
-    if (newbuf->flags() & Buffer::Flags::Debug)
+    while (newbuf != oldbuf and newbuf->flags() & Buffer::Flags::Debug)
         cycle();
 
     if (newbuf != oldbuf)

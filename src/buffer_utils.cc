@@ -87,7 +87,7 @@ void reload_file_buffer(Buffer& buffer)
     buffer.reload(file_data, file_data.st.st_mtim);
 }
 
-Buffer* create_fifo_buffer(String name, int fd, bool scroll)
+Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll)
 {
     static ValueId s_fifo_watcher_id = get_free_value_id();
 
@@ -95,12 +95,12 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
     Buffer* buffer = buffer_manager.get_buffer_ifp(name);
     if (buffer)
     {
-        buffer->flags() |= Buffer::Flags::NoUndo;
+        buffer->flags() |= Buffer::Flags::NoUndo | flags;
         buffer->reload({}, InvalidTime);
     }
     else
         buffer = buffer_manager.create_buffer(
-            std::move(name), Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
+            std::move(name), flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
 
     auto watcher_deleter = [buffer](FDWatcher* watcher) {
         kak_assert(buffer->flags() & Buffer::Flags::Fifo);
@@ -159,7 +159,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
     }), std::move(watcher_deleter));
 
     buffer->values()[fifo_watcher_id] = Value(std::move(watcher));
-    buffer->flags() = Buffer::Flags::Fifo | Buffer::Flags::NoUndo;
+    buffer->flags() = flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo;
     buffer->run_hook_in_own_context("BufOpenFifo", buffer->name());
 
     return buffer;

@@ -449,7 +449,7 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
         int tty = open("/dev/tty", O_RDONLY);
         dup2(tty, 0);
         close(tty);
-        create_fifo_buffer("*stdin*", fd);
+        create_fifo_buffer("*stdin*", fd, Buffer::Flags::None);
     }
 
     return make_unique<LocalUI>();
