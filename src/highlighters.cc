@@ -30,7 +30,8 @@ void highlight_range(DisplayBuffer& display_buffer,
                      BufferCoord begin, BufferCoord end,
                      bool skip_replaced, T func)
 {
-    if (begin == end or end <= display_buffer.range().begin
+    // tolerate begin > end as that can be triggered by wrong encodngs
+    if (begin >= end or end <= display_buffer.range().begin
                      or begin >= display_buffer.range().end)
         return;
 
