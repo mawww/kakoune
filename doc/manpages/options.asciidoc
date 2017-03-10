@@ -153,7 +153,7 @@ Builtin options
 
 		*ncurses_assistant*:::
 			specify the nice assistant you get in info boxes,
-			can be *clippy* (the default), *cat* or *none*
+			can be *clippy* (the default), *cat*, *dilbert* or *none*
 
 		*ncurses_enable_mouse*:::
 			boolean option that enables mouse support
