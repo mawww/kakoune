@@ -1,8 +1,10 @@
-= image:{logo}[K,30,30,link="{website}"] Kakoune image:{travis-img}[link="{travis-url}"]
+= image:{logo}[K,30,30,link="{website}"] Kakoune image:{travis-img}[link="{travis-url}"] image:{irc-img}[link="{irc-url}"]
 :logo: https://rawgit.com/mawww/kakoune/master/doc/kakoune_logo.svg
 :website: http://kakoune.org
 :travis-img: https://travis-ci.org/mawww/kakoune.svg?branch=master
 :travis-url: https://travis-ci.org/mawww/kakoune
+:irc-img: https://img.shields.io/badge/IRC-%23kakoune-blue.svg
+:irc-url: https://webchat.freenode.net/?channels=kakoune
 :icons: font
 :toc: right
 :pp: ++
