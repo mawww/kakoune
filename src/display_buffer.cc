@@ -286,7 +286,7 @@ void DisplayBuffer::optimize()
         line.optimize();
 }
 
-DisplayLine parse_display_line(StringView line)
+DisplayLine parse_display_line(StringView line, const HashMap<String, DisplayLine>& builtins)
 {
     DisplayLine res;
     bool was_antislash = false;
@@ -312,7 +312,18 @@ DisplayLine parse_display_line(StringView line)
                 auto closing = std::find(it+1, end, '}');
                 if (closing == end)
                     throw runtime_error("unclosed face definition");
-                face = get_face({it+1, closing});
+                if (*(it+1) == '{' and closing+1 != end and *(closing+1) == '}')
+                {
+                    auto builtin_it = builtins.find(StringView{it+2, closing});
+                    if (builtin_it == builtins.end())
+                        throw runtime_error(format("undefined atom {}", StringView{it+2, closing}));
+                    for (auto& atom : builtin_it->value)
+                        res.push_back(atom);
+                    // closing is now at the first char of "}}", advance it to the second
+                    ++closing;
+                }
+                else
+                    face = get_face({it+1, closing});
                 it = closing;
                 pos = closing + 1;
             }

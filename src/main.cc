@@ -43,7 +43,9 @@ static const char* startup_info =
 " * The `identifier` face has been replaced with `variable`,\n"
 "   `function` and `module`, update your custom colorschemes\n"
 " * BufNew and BufOpen hooks have been renamed to BufNewFile\n"
-"   and BufOpenFile.\n";
+"   and BufOpenFile.\n"
+" * The status line can be further customized.\n"
+"   See `help options modelinefmt`.\n";
 
 struct startup_error : runtime_error
 {
@@ -154,7 +156,8 @@ void register_env_vars()
             "window_height", false,
             [](StringView name, const Context& context) -> String
             { return to_string(context.window().dimensions().line); }
-    } };
+        }
+    };
 
     ShellManager& shell_manager = ShellManager::instance();
     for (auto& env_var : env_vars)
@@ -306,7 +309,8 @@ void register_options()
                        "    ncurses_wheel_down_button     int\n",
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
-                       "%val{bufname} %val{cursor_line}:%val{cursor_char_column} "_str);
+                       "%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]"_str);
+
     reg.declare_option("debug", "various debug flags", DebugFlags::None);
     reg.declare_option("readonly", "prevent buffers from being modified", false);
     reg.declare_option<String, check_extra_word_char>(

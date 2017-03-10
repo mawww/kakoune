@@ -11,6 +11,7 @@
 #include "event_manager.hh"
 #include "user_interface.hh"
 #include "window.hh"
+#include "hash_map.hh"
 
 #include <csignal>
 #include <unistd.h>
@@ -117,38 +118,39 @@ DisplayCoord Client::dimensions() const
     return m_ui->dimensions();
 }
 
+String generate_context_info(const Context& context)
+{
+    String s = "";
+    if (context.buffer().is_modified())
+        s += "[+]";
+    if (context.client().input_handler().is_recording())
+        s += format("[recording ({})]", context.client().input_handler().recording_reg());
+    if (context.buffer().flags() & Buffer::Flags::New)
+        s += "[new file]";
+    if (context.hooks_disabled())
+        s += "[no-hooks]";
+    if (context.buffer().flags() & Buffer::Flags::Fifo)
+        s += "[fifo]";
+    return s;
+}
+
 DisplayLine Client::generate_mode_line() const
 {
     DisplayLine modeline;
     try
     {
         const String& modelinefmt = context().options()["modelinefmt"].get<String>();
-
-        modeline = parse_display_line(expand(modelinefmt, context(), ShellContext{},
-                                             [](String s) { return escape(s, '{', '\\'); }));
+        HashMap<String, DisplayLine> atoms{{ "mode_info", context().client().input_handler().mode_line() },
+                                           { "context_info", {generate_context_info(context()), get_face("Information")}}};
+        auto expanded = expand(modelinefmt, context(), ShellContext{},
+                               [](String s) { return escape(s, '{', '\\'); });
+        modeline = parse_display_line(expanded, atoms);
     }
     catch (runtime_error& err)
     {
         write_to_debug_buffer(format("Error while parsing modelinefmt: {}", err.what()));
         modeline.push_back({ "modelinefmt error, see *debug* buffer", get_face("Error") });
     }
-
-    Face info_face = get_face("Information");
-
-    if (context().buffer().is_modified())
-        modeline.push_back({ "[+]", info_face });
-    if (m_input_handler.is_recording())
-        modeline.push_back({ format("[recording ({})]", m_input_handler.recording_reg()), info_face });
-    if (context().buffer().flags() & Buffer::Flags::New)
-        modeline.push_back({ "[new file]", info_face });
-    if (context().hooks_disabled())
-        modeline.push_back({ "[no-hooks]", info_face });
-    if (context().buffer().flags() & Buffer::Flags::Fifo)
-        modeline.push_back({ "[fifo]", info_face });
-    modeline.push_back({ " " });
-    for (auto& atom : m_input_handler.mode_line())
-        modeline.push_back(std::move(atom));
-    modeline.push_back({ format(" - {}@[{}]", context().name(), Server::instance().session()) });
 
     return modeline;
 }

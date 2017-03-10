@@ -6,6 +6,7 @@
 #include "coord.hh"
 #include "string.hh"
 #include "vector.hh"
+#include "hash_map.hh"
 
 namespace Kakoune
 {
@@ -143,7 +144,7 @@ private:
     AtomList  m_atoms;
 };
 
-DisplayLine parse_display_line(StringView line);
+DisplayLine parse_display_line(StringView line, const HashMap<String, DisplayLine>& builtins = {});
 
 class DisplayBuffer : public UseMemoryDomain<MemoryDomain::Display>
 {

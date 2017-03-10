@@ -137,7 +137,19 @@ Builtin options
 *modelinefmt* 'string'::
 	A format string used to generate the mode line, that string is first
 	expanded as a command line would be (expanding '%...{...}' strings),
-	then markup tags are applied (c.f. the 'Expansions' documentation page)
+	then markup tags are applied (c.f. the 'Expansions' documentation page.)
+	Two special atoms are available as markup:
+
+		*`{{mode_info}}`*:::
+			Information about the current mode, such as  `insert 3 sel` or
+			`prompt`. The faces used are StatusLineMode, StatusLineInfo,
+			and StatusLineValue.
+
+		*`{{context_info}}`*:::
+			Information such as `[+][recording (@)][no-hooks][new file][fifo]`,
+			in face Information.
+
+	The default value is '%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]'
 
 *ui_options*::
 	colon separated list of key=value pairs that are forwarded to the user

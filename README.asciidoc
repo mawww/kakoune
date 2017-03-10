@@ -970,7 +970,10 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    on the filesystem.
  * `modelinefmt` _string_: A format string used to generate the mode line, that
    string is first expanded as a command line would be (expanding `%...{...}`
-   strings), then markup tags are applied (see <<Markup strings>>).
+   strings), then markup tags are applied (see <<Markup strings>>). Two special
+   atom are available as markup: `{{mode_info}}` with information about the current
+   mode (example `insert 3 sel`), and `{{context_info}}` with information such as 
+   if the file has been modified (with `[+]`), or if it is new (with `[new file]`).
  * `ui_options`: colon separated list of key=value pairs that are forwarded to
    the user interface implementation. The NCurses UI support the following options:
    - `ncurses_set_title`: if `yes` or `true`, the terminal emulator title will
