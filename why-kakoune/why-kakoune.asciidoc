@@ -154,7 +154,7 @@ are not just one additional feature, it is the central way of interacting
 with your text. For example there is no such thing as a "global replace" in
 Kakoune. What you would do is select the whole buffer with the `%` command,
 then select all matches for a regex in the current selections (that is the
-whole buffer herer) with the `s` command, which prompts for a regex. You would
+whole buffer here) with the `s` command, which prompts for a regex. You would
 end up with one selection for each match of your regex and use the insert
 mode to do your change. Globally replacing foo with bar would be done with
 `%sfoo<ret>cbar<esc>` which is just the combination of basic building blocks.
