@@ -1462,7 +1462,11 @@ void InputHandler::handle_key(Key key)
         // do not record the key that made us enter or leave recording mode,
         // and the ones that are triggered recursively by previous keys.
         if (was_recording and is_recording() and m_handle_key_level == m_recording_level)
+        {
             m_recorded_keys += key_to_str(key);
+            RegisterManager::instance()[m_recording_reg].set(
+                context(), {m_recorded_keys});
+        }
 
         if (m_handle_key_level < m_recording_level)
         {
@@ -1489,10 +1493,6 @@ bool InputHandler::is_recording() const
 void InputHandler::stop_recording()
 {
     kak_assert(m_recording_reg != 0);
-
-    if (not m_recorded_keys.empty())
-        RegisterManager::instance()[m_recording_reg].set(
-            context(), {m_recorded_keys});
 
     m_recording_reg = 0;
     m_recording_level = -1;
