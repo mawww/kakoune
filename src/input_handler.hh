@@ -134,7 +134,7 @@ enum class AutoInfo
 template<>
 struct WithBitOps<AutoInfo> : std::true_type {};
 
-constexpr Array<EnumDesc<AutoInfo>, 3> enum_desc(AutoInfo)
+constexpr Array<EnumDesc<AutoInfo>, 3> enum_desc(Meta::Type<AutoInfo>)
 {
     return { {
         { AutoInfo::Command, "command"},

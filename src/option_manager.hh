@@ -221,8 +221,8 @@ public:
                 return **it;
             throw runtime_error{format("option '{}' already declared with different type or flags", name)};
         }
-        String doc =  docstring.empty() ? format("[{}]", option_type_name<T>::name())
-                                        : format("[{}] - {}", option_type_name<T>::name(), docstring);
+        String doc =  docstring.empty() ? format("[{}]", option_type_name(Meta::Type<T>{}))
+                                        : format("[{}] - {}", option_type_name(Meta::Type<T>{}), docstring);
         m_descs.emplace_back(new OptionDesc{name.str(), std::move(doc), flags});
         opts.emplace_back(new TypedCheckedOption<T, validator>{m_global_manager, *m_descs.back(), value});
         return *opts.back();

@@ -21,7 +21,7 @@ enum class EolFormat
     Crlf
 };
 
-constexpr Array<EnumDesc<EolFormat>, 2> enum_desc(EolFormat)
+constexpr Array<EnumDesc<EolFormat>, 2> enum_desc(Meta::Type<EolFormat>)
 {
     return { {
         { EolFormat::Lf, "lf" },
@@ -35,7 +35,7 @@ enum class ByteOrderMark
     Utf8
 };
 
-constexpr Array<EnumDesc<ByteOrderMark>, 2> enum_desc(ByteOrderMark)
+constexpr Array<EnumDesc<ByteOrderMark>, 2> enum_desc(Meta::Type<ByteOrderMark>)
 {
     return { {
         { ByteOrderMark::None, "none" },

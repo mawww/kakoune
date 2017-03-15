@@ -37,18 +37,18 @@ using InsertCompleterDescList = Vector<InsertCompleterDesc, MemoryDomain::Option
 String option_to_string(const InsertCompleterDesc& opt);
 void option_from_string(StringView str, InsertCompleterDesc& opt);
 
-template<> struct option_type_name<InsertCompleterDesc>
+inline StringView option_type_name(Meta::Type<InsertCompleterDesc>)
 {
-    static constexpr StringView name() { return "completer"; }
-};
+    return "completer";
+}
 
 using CompletionCandidate = std::tuple<String, String, String>;
 using CompletionList = PrefixedList<String, CompletionCandidate>;
 
-template<> struct option_type_name<CompletionList>
+inline StringView option_type_name(Meta::Type<CompletionList>)
 {
-    static constexpr StringView name() { return "completions"; }
-};
+    return "completions";
+}
 
 struct InsertCompletion
 {

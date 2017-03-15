@@ -5,6 +5,7 @@
 #include "string.hh"
 #include "exception.hh"
 #include "containers.hh"
+#include "meta.hh"
 
 namespace Kakoune
 {
@@ -22,10 +23,10 @@ struct Array
 
 template<typename T> struct EnumDesc { T value; StringView name; };
 
-template<typename Flags, typename = decltype(enum_desc(Flags{}))>
+template<typename Flags, typename = decltype(enum_desc(Meta::Type<Flags>{}))>
 EnableIfWithBitOps<Flags, String> option_to_string(Flags flags)
 {
-    constexpr auto desc = enum_desc(Flags{});
+    constexpr auto desc = enum_desc(Meta::Type<Flags>{});
     String res;
     for (int i = 0; i < desc.size(); ++i)
     {
@@ -38,10 +39,10 @@ EnableIfWithBitOps<Flags, String> option_to_string(Flags flags)
     return res;
 }
 
-template<typename Enum, typename = decltype(enum_desc(Enum{}))>
+template<typename Enum, typename = decltype(enum_desc(Meta::Type<Enum>{}))>
 EnableIfWithoutBitOps<Enum, String> option_to_string(Enum e)
 {
-    constexpr auto desc = enum_desc(Enum{});
+    constexpr auto desc = enum_desc(Meta::Type<Enum>{});
     auto it = find_if(desc, [e](const EnumDesc<Enum>& d) { return d.value == e; });
     if (it != desc.end())
         return it->name.str();
@@ -49,10 +50,10 @@ EnableIfWithoutBitOps<Enum, String> option_to_string(Enum e)
     return {};
 }
 
-template<typename Flags, typename = decltype(enum_desc(Flags{}))>
+template<typename Flags, typename = decltype(enum_desc(Meta::Type<Flags>{}))>
 EnableIfWithBitOps<Flags> option_from_string(StringView str, Flags& flags)
 {
-    constexpr auto desc = enum_desc(Flags{});
+    constexpr auto desc = enum_desc(Meta::Type<Flags>{});
     flags = Flags{};
     for (auto s : str | split<StringView>('|'))
     {
@@ -63,17 +64,17 @@ EnableIfWithBitOps<Flags> option_from_string(StringView str, Flags& flags)
     }
 }
 
-template<typename Enum, typename = decltype(enum_desc(Enum{}))>
+template<typename Enum, typename = decltype(enum_desc(Meta::Type<Enum>{}))>
 EnableIfWithoutBitOps<Enum> option_from_string(StringView str, Enum& e)
 {
-    constexpr auto desc = enum_desc(Enum{});
+    constexpr auto desc = enum_desc(Meta::Type<Enum>{});
     auto it = find_if(desc, [str](const EnumDesc<Enum>& d) { return d.name == str; });
     if (it == desc.end())
         throw runtime_error(format("invalid enum value '{}'", str));
     e = it->value;
 }
 
-template<typename Flags, typename = decltype(enum_desc(Flags{}))>
+template<typename Flags, typename = decltype(enum_desc(Meta::Type<Flags>{}))>
 EnableIfWithBitOps<Flags, bool> option_add(Flags& opt, StringView str)
 {
     Flags res = Flags{};

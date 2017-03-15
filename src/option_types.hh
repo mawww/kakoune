@@ -16,25 +16,22 @@
 namespace Kakoune
 {
 
-template<typename T, typename = void> struct option_type_name;
-template<typename T> using void_t = void;
+template<typename T> using valid = std::true_type;
 
 template<typename T>
-struct option_type_name<T, void_t<decltype(T::option_type_name)>>
+constexpr decltype(T::option_type_name) option_type_name(Meta::Type<T>)
 {
-    static decltype(T::option_type_name) name() { return T::option_type_name; }
-};
+    return T::option_type_name;
+}
 
 template<typename Enum>
-struct option_type_name<Enum, typename std::enable_if<std::is_enum<Enum>::value>::type>
+typename std::enable_if<std::is_enum<Enum>::value, String>::type
+option_type_name(Meta::Type<Enum>)
 {
-    static String name()
-    {
-        constexpr StringView type = WithBitOps<Enum>::value ? "flags" : "enum";
-        auto name = enum_desc(Enum{});
-        return type + "(" + join(name | transform(std::mem_fn(&EnumDesc<Enum>::name)), '|') + ")";
-    }
-};
+    constexpr StringView type = WithBitOps<Enum>::value ? "flags" : "enum";
+    auto name = enum_desc(Meta::Type<Enum>{});
+    return type + "(" + join(name | transform(std::mem_fn(&EnumDesc<Enum>::name)), '|') + ")";
+}
 
 inline String option_to_string(int opt) { return to_string(opt); }
 inline void option_from_string(StringView str, int& opt) { opt = str_to_int(str); }
@@ -44,7 +41,7 @@ inline bool option_add(int& opt, StringView str)
     opt += val;
     return val != 0;
 }
-template<> struct option_type_name<int> { static StringView name() { return "int"; } };
+inline StringView option_type_name(Meta::Type<int>) { return "int"; }
 
 inline String option_to_string(size_t opt) { return to_string(opt); }
 inline void option_from_string(StringView str, size_t& opt) { opt = str_to_int(str); }
@@ -59,7 +56,7 @@ inline void option_from_string(StringView str, bool& opt)
     else
         throw runtime_error("boolean values are either true, yes, false or no");
 }
-template<> struct option_type_name<bool> { static StringView name() { return "bool"; } };
+inline StringView option_type_name(Meta::Type<bool>) { return "bool"; }
 
 constexpr char list_separator = ':';
 
@@ -101,10 +98,10 @@ bool option_add(Vector<T, domain>& opt, StringView str)
 }
 
 template<typename T, MemoryDomain D>
-struct option_type_name<Vector<T, D>>
+String option_type_name(Meta::Type<Vector<T, D>>)
 {
-    static String name() { return option_type_name<T>::name() + StringView{"-list"}; }
-};
+    return option_type_name(Meta::Type<T>{}) + StringView{"-list"};
+}
 
 template<typename Key, typename Value, MemoryDomain domain>
 String option_to_string(const HashMap<Key, Value, domain>& opt)
@@ -139,12 +136,11 @@ void option_from_string(StringView str, HashMap<Key, Value, domain>& opt)
 }
 
 template<typename K, typename V, MemoryDomain D>
-struct option_type_name<HashMap<K, V, D>>
+String option_type_name(Meta::Type<HashMap<K, V, D>>)
 {
-    static String name() { return format("{}-to-{}-map",
-                                         option_type_name<K>::name(),
-                                         option_type_name<V>::name()); }
-};
+    return format("{}-to-{}-map", option_type_name(Meta::Type<K>{}),
+                  option_type_name(Meta::Type<V>{}));
+}
 
 constexpr char tuple_separator = '|';
 
@@ -251,7 +247,7 @@ enum class DebugFlags
 template<>
 struct WithBitOps<DebugFlags> : std::true_type {};
 
-constexpr Array<EnumDesc<DebugFlags>, 4> enum_desc(DebugFlags)
+constexpr Array<EnumDesc<DebugFlags>, 4> enum_desc(Meta::Type<DebugFlags>)
 {
     return { {
         { DebugFlags::Hooks, "hooks" },
