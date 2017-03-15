@@ -295,7 +295,7 @@ find_surrounding(Iterator begin, Iterator end,
     const bool nestable = opening != closing;
 
     auto first = pos;
-    if (to_begin)
+    if (to_begin and opening != *pos)
     {
         using RevIt = std::reverse_iterator<Iterator>;
         auto res = find_closing(RevIt{pos+1}, RevIt{begin},
