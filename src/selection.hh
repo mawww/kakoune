@@ -105,21 +105,12 @@ struct SelectionList
     Selection& operator[](size_t i) { return m_selections[i]; }
     const Selection& operator[](size_t i) const { return m_selections[i]; }
 
+    void set(Vector<Selection> list, size_t main);
     SelectionList& operator=(Vector<Selection> list)
     {
         const size_t main_index = list.size()-1;
         set(std::move(list), main_index);
         return *this;
-    }
-
-    void set(Vector<Selection> list, size_t main)
-    {
-        kak_assert(main < list.size());
-        m_selections = std::move(list);
-        m_main = main;
-        sort_and_merge_overlapping();
-        update_timestamp();
-        check_invariant();
     }
 
     using iterator = Vector<Selection>::iterator;

@@ -42,6 +42,16 @@ void SelectionList::remove(size_t index)
     if (index < m_main or m_main == m_selections.size())
         --m_main;
 }
+void SelectionList::set(Vector<Selection> list, size_t main)
+{
+    kak_assert(main < list.size());
+    m_selections = std::move(list);
+    m_main = main;
+    sort_and_merge_overlapping();
+    update_timestamp();
+    check_invariant();
+}
+
 
 namespace
 {
