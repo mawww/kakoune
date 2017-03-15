@@ -58,6 +58,8 @@ endif
 
 !cxx = |> $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c %f -o %o |>
 !ld = |> $(CXX) $(LDFLAGS) $(LIBS) %f -o %o |>
+!ln = |> ln -sf %f %o |>
 
-:foreach *.cc |> !cxx |> obj/%B$(suffix).o {objects}
-:{objects} |> !ld |> kak
+:foreach *.cc |> !cxx |> %B$(suffix).o {objects}
+:{objects} |> !ld |> kak$(suffix)
+:kak$(suffix) |> !ln |> kak
