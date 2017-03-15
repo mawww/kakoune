@@ -16,8 +16,6 @@
 namespace Kakoune
 {
 
-template<typename T> using valid = std::true_type;
-
 template<typename T>
 constexpr decltype(T::option_type_name) option_type_name(Meta::Type<T>)
 {
