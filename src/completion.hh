@@ -40,7 +40,7 @@ enum class CompletionFlags
     Start = 1 << 2,
 };
 
-template<> struct WithBitOps<CompletionFlags> : std::true_type {};
+constexpr bool with_bit_ops(Meta::Type<CompletionFlags>) { return true; }
 
 using Completer = std::function<Completions (const Context&, CompletionFlags,
                                              StringView, ByteCount)>;

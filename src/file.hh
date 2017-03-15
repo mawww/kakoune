@@ -79,7 +79,7 @@ enum class FilenameFlags
     Expand = 1 << 1
 };
 
-template<> struct WithBitOps<FilenameFlags> : std::true_type {};
+constexpr bool with_bit_ops(Meta::Type<FilenameFlags>) { return true; }
 
 CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,
                                 ByteCount cursor_pos = -1,

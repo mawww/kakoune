@@ -60,7 +60,7 @@ enum class ObjectFlags
     Inner   = 4
 };
 
-template<> struct WithBitOps<ObjectFlags> : std::true_type {};
+constexpr bool with_bit_ops(Meta::Type<ObjectFlags>) { return true; }
 
 template<WordType word_type>
 Optional<Selection>

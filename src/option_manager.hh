@@ -4,7 +4,6 @@
 #include "completion.hh"
 #include "containers.hh"
 #include "exception.hh"
-#include "flags.hh"
 #include "option_types.hh"
 #include "vector.hh"
 
@@ -22,7 +21,7 @@ enum class OptionFlags
     Hidden = 1,
 };
 
-template<> struct WithBitOps<OptionFlags> : std::true_type {};
+constexpr bool with_bit_ops(Meta::Type<OptionFlags>) { return true; }
 
 class OptionDesc
 {

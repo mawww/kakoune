@@ -53,6 +53,7 @@ struct ParameterDesc
         SwitchesOnlyAtStart = 1,
         SwitchesAsPositional = 2,
     };
+    friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
     ParameterDesc() = default;
     ParameterDesc(SwitchMap switches, Flags flags = Flags::None,
@@ -65,8 +66,6 @@ struct ParameterDesc
     size_t min_positionals = 0;
     size_t max_positionals = -1;
 };
-
-template<> struct WithBitOps<ParameterDesc::Flags> : std::true_type {};
 
 // ParametersParser provides tools to parse command parameters.
 // There are 3 types of parameters:

@@ -183,8 +183,7 @@ private:
     NestedBool m_history_disabled;
 };
 
-template<>
-struct WithBitOps<Context::Flags> : std::true_type {};
+constexpr bool with_bit_ops(Meta::Type<Context::Flags>) { return true; }
 
 struct ScopedEdition
 {

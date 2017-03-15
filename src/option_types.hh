@@ -28,7 +28,7 @@ template<typename Enum>
 typename std::enable_if<std::is_enum<Enum>::value, String>::type
 option_type_name(Meta::Type<Enum>)
 {
-    constexpr StringView type = WithBitOps<Enum>::value ? "flags" : "enum";
+    constexpr StringView type = with_bit_ops(Meta::Type<Enum>{}) ? "flags" : "enum";
     auto name = enum_desc(Meta::Type<Enum>{});
     return type + "(" + join(name | transform(std::mem_fn(&EnumDesc<Enum>::name)), '|') + ")";
 }
@@ -244,8 +244,7 @@ enum class DebugFlags
     Keys = 1 << 3,
 };
 
-template<>
-struct WithBitOps<DebugFlags> : std::true_type {};
+constexpr bool with_bit_ops(Meta::Type<DebugFlags>) { return true; }
 
 constexpr Array<EnumDesc<DebugFlags>, 4> enum_desc(Meta::Type<DebugFlags>)
 {

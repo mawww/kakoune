@@ -493,7 +493,7 @@ enum class ServerFlags
     ReadOnly    = 1 << 2,
     StartupInfo = 1 << 3,
 };
-template<> struct WithBitOps<ServerFlags> : std::true_type {};
+constexpr bool with_bit_ops(Meta::Type<ServerFlags>) { return true; }
 
 int run_server(StringView session,
                StringView init_cmds, Optional<BufferCoord> init_coord,

@@ -37,7 +37,7 @@ enum class CommandFlags
     Hidden = 1,
 };
 
-template<> struct WithBitOps<CommandFlags> : std::true_type {};
+constexpr bool with_bit_ops(Meta::Type<CommandFlags>) { return true; }
 
 struct CommandInfo { String name, info; };
 

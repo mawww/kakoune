@@ -3,20 +3,22 @@
 
 #include <type_traits>
 
+#include "meta.hh"
+
 namespace Kakoune
 {
 
 template<typename Flags>
-struct WithBitOps : std::false_type {};
+constexpr bool with_bit_ops(Meta::Type<Flags>) { return false; }
 
 template<typename Flags>
 using UnderlyingType = typename std::underlying_type<Flags>::type;
 
 template<typename Flags, typename T = void>
-using EnableIfWithBitOps = typename std::enable_if<WithBitOps<Flags>::value, T>::type;
+using EnableIfWithBitOps = typename std::enable_if<with_bit_ops(Meta::Type<Flags>{}), T>::type;
 
 template<typename Flags, typename T = void>
-using EnableIfWithoutBitOps = typename std::enable_if<not WithBitOps<Flags>::value, T>::type;
+using EnableIfWithoutBitOps = typename std::enable_if<not with_bit_ops(Meta::Type<Flags>{}), T>::type;
 
 template<typename Flags, typename = EnableIfWithBitOps<Flags>>
 constexpr Flags operator|(Flags lhs, Flags rhs)

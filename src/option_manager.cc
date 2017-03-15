@@ -1,6 +1,7 @@
 #include "option_manager.hh"
 
 #include "assert.hh"
+#include "flags.hh"
 
 namespace Kakoune
 {

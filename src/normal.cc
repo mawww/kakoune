@@ -1261,7 +1261,7 @@ enum class SelectFlags
     Extend = 4
 };
 
-template<> struct WithBitOps<SelectFlags> : std::true_type {};
+constexpr bool with_bit_ops(Meta::Type<SelectFlags>) { return true; }
 
 template<SelectFlags flags>
 void select_to_next_char(Context& context, NormalParams params)

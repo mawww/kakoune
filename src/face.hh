@@ -19,7 +19,7 @@ enum class Attribute : int
     Italic    = 1 << 7,
 };
 
-template<> struct WithBitOps<Attribute> : std::true_type {};
+constexpr bool with_bit_ops(Meta::Type<Attribute>) { return true; }
 
 struct Face
 {

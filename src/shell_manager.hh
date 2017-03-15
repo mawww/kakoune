@@ -3,7 +3,6 @@
 
 #include "array_view.hh"
 #include "env_vars.hh"
-#include "flags.hh"
 #include "string.hh"
 #include "utils.hh"
 #include "completion.hh"
@@ -31,6 +30,7 @@ public:
         None = 0,
         WaitForStdout = 1
     };
+    friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
     std::pair<String, int> eval(StringView cmdline, const Context& context,
                                 StringView input = {},
@@ -48,8 +48,6 @@ private:
     struct EnvVarDesc { String str; bool prefix; EnvVarRetriever func; };
     Vector<EnvVarDesc, MemoryDomain::EnvVars> m_env_vars;
 };
-
-template<> struct WithBitOps<ShellManager::Flags> : std::true_type {};
 
 }
 

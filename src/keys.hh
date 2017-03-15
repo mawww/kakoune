@@ -84,7 +84,7 @@ struct Key
     Optional<Codepoint> codepoint() const;
 };
 
-template<> struct WithBitOps<Key::Modifiers> : std::true_type {};
+constexpr bool with_bit_ops(Meta::Type<Key::Modifiers>) { return true; }
 
 using KeyList = Vector<Key, MemoryDomain::Mapping>;
 

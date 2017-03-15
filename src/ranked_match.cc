@@ -9,8 +9,6 @@
 namespace Kakoune
 {
 
-template<> struct WithBitOps<RankedMatch::Flags> : std::true_type {};
-
 UsedLetters used_letters(StringView str)
 {
     UsedLetters res = 0;

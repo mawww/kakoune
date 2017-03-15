@@ -2,6 +2,7 @@
 #define ranked_match_hh_INCLUDED
 
 #include "string.hh"
+#include "meta.hh"
 
 namespace Kakoune
 {
@@ -43,6 +44,7 @@ private:
         Prefix           = 1 << 4,
         FullMatch        = 1 << 5,
     };
+    friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
     StringView m_candidate{};
     Flags m_flags = Flags::None;

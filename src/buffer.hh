@@ -115,6 +115,7 @@ public:
         Debug    = 1 << 5,
         ReadOnly = 1 << 6,
     };
+    friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
     Buffer(String name, Flags flags, StringView data = {},
            timespec fs_timestamp = InvalidTime);
@@ -282,8 +283,6 @@ private:
     // observable state
     mutable ValueMap m_values;
 };
-
-template<> struct WithBitOps<Buffer::Flags> : std::true_type {};
 
 }
 

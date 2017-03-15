@@ -1,6 +1,7 @@
 #include "event_manager.hh"
 
 #include "containers.hh"
+#include "flags.hh"
 
 #include <unistd.h>
 
