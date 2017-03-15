@@ -3,8 +3,8 @@
 
 #include "exception.hh"
 #include "hash_map.hh"
+#include "meta.hh"
 #include "array_view.hh"
-#include "flags.hh"
 #include "optional.hh"
 #include "string.hh"
 

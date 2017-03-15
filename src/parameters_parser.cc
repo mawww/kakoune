@@ -1,5 +1,7 @@
 #include "parameters_parser.hh"
 
+#include "flags.hh"
+
 namespace Kakoune
 {
 

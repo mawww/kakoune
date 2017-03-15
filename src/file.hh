@@ -2,7 +2,7 @@
 #define file_hh_INCLUDED
 
 #include "array_view.hh"
-#include "flags.hh"
+#include "meta.hh"
 #include "units.hh"
 #include "vector.hh"
 
@@ -78,7 +78,6 @@ enum class FilenameFlags
     OnlyDirectories = 1 << 0,
     Expand = 1 << 1
 };
-
 constexpr bool with_bit_ops(Meta::Type<FilenameFlags>) { return true; }
 
 CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,

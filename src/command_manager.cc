@@ -3,6 +3,7 @@
 #include "alias_registry.hh"
 #include "assert.hh"
 #include "context.hh"
+#include "flags.hh"
 #include "register_manager.hh"
 #include "shell_manager.hh"
 #include "utils.hh"

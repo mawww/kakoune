@@ -1,6 +1,7 @@
 #include "selectors.hh"
 
 #include "buffer_utils.hh"
+#include "flags.hh"
 #include "optional.hh"
 #include "regex.hh"
 #include "string.hh"

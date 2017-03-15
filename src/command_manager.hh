@@ -3,7 +3,6 @@
 
 #include "coord.hh"
 #include "completion.hh"
-#include "flags.hh"
 #include "array_view.hh"
 #include "shell_manager.hh"
 #include "parameters_parser.hh"
@@ -36,7 +35,6 @@ enum class CommandFlags
     None   = 0,
     Hidden = 1,
 };
-
 constexpr bool with_bit_ops(Meta::Type<CommandFlags>) { return true; }
 
 struct CommandInfo { String name, info; };

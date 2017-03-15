@@ -3,6 +3,7 @@
 #include "assert.hh"
 #include "buffer.hh"
 #include "exception.hh"
+#include "flags.hh"
 #include "ranked_match.hh"
 #include "regex.hh"
 #include "string.hh"

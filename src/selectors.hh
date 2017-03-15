@@ -1,7 +1,6 @@
 #ifndef selectors_hh_INCLUDED
 #define selectors_hh_INCLUDED
 
-#include "flags.hh"
 #include "selection.hh"
 
 namespace Kakoune

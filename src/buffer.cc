@@ -7,6 +7,7 @@
 #include "context.hh"
 #include "diff.hh"
 #include "file.hh"
+#include "flags.hh"
 #include "shared_string.hh"
 #include "unit_tests.hh"
 #include "utils.hh"
