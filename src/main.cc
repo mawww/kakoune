@@ -45,7 +45,7 @@ static const char* startup_info =
 " * BufNew and BufOpen hooks have been renamed to BufNewFile\n"
 "   and BufOpenFile.\n"
 " * The status line can be further customized.\n"
-"   See `help options modelinefmt`.\n";
+"   See `:doc options modelinefmt`.\n";
 
 struct startup_error : runtime_error
 {
