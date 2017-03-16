@@ -1339,6 +1339,7 @@ const CommandDesc declare_option_cmd = {
         auto docstring = parser.get_switch("docstring").value_or(StringView{}).str();
         OptionsRegistry& reg = GlobalScope::instance().option_registry();
 
+
         if (parser[0] == "int")
             opt = &reg.declare_option<int>(parser[1], docstring, 0, flags);
         else if (parser[0] == "bool")

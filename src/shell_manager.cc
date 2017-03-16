@@ -8,6 +8,7 @@
 #include "face_registry.hh"
 #include "file.hh"
 #include "flags.hh"
+#include "option.hh"
 #include "regex.hh"
 
 #include <cstring>

@@ -3,6 +3,7 @@
 
 #include "clock.hh"
 #include "coord.hh"
+#include "enum.hh"
 #include "safe_ptr.hh"
 #include "scope.hh"
 #include "shared_string.hh"

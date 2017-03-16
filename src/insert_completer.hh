@@ -2,6 +2,7 @@
 #define insert_completer_hh_INCLUDED
 
 #include "option_manager.hh"
+#include "option.hh"
 #include "display_buffer.hh"
 #include "vector.hh"
 

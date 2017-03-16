@@ -10,7 +10,7 @@
 #include "face_registry.hh"
 #include "highlighter_group.hh"
 #include "line_modification.hh"
-#include "option_types.hh"
+#include "option.hh"
 #include "parameters_parser.hh"
 #include "register_manager.hh"
 #include "regex.hh"

@@ -1,14 +1,13 @@
 #ifndef option_types_hh_INCLUDED
 #define option_types_hh_INCLUDED
 
+#include "option.hh"
 #include "exception.hh"
 #include "string.hh"
 #include "units.hh"
 #include "coord.hh"
 #include "array_view.hh"
 #include "hash_map.hh"
-#include "flags.hh"
-#include "enum.hh"
 
 #include <tuple>
 #include <vector>
@@ -39,7 +38,7 @@ inline bool option_add(int& opt, StringView str)
     opt += val;
     return val != 0;
 }
-inline StringView option_type_name(Meta::Type<int>) { return "int"; }
+constexpr StringView option_type_name(Meta::Type<int>) { return "int"; }
 
 inline String option_to_string(size_t opt) { return to_string(opt); }
 inline void option_from_string(StringView str, size_t& opt) { opt = str_to_int(str); }
@@ -54,7 +53,7 @@ inline void option_from_string(StringView str, bool& opt)
     else
         throw runtime_error("boolean values are either true, yes, false or no");
 }
-inline StringView option_type_name(Meta::Type<bool>) { return "bool"; }
+constexpr StringView option_type_name(Meta::Type<bool>) { return "bool"; }
 
 constexpr char list_separator = ':';
 
@@ -233,27 +232,6 @@ inline String option_to_string(const LineAndColumn<EffectiveType, LineType, Colu
     return format("{},{}", opt.line, opt.column);
 }
 
-enum class DebugFlags
-{
-    None  = 0,
-    Hooks = 1 << 0,
-    Shell = 1 << 1,
-    Profile = 1 << 2,
-    Keys = 1 << 3,
-};
-
-constexpr bool with_bit_ops(Meta::Type<DebugFlags>) { return true; }
-
-constexpr Array<EnumDesc<DebugFlags>, 4> enum_desc(Meta::Type<DebugFlags>)
-{
-    return { {
-        { DebugFlags::Hooks, "hooks" },
-        { DebugFlags::Shell, "shell" },
-        { DebugFlags::Profile, "profile" },
-        { DebugFlags::Keys, "keys" }
-    } };
-}
-
 template<typename Flags, typename = decltype(enum_desc(Meta::Type<Flags>{}))>
 EnableIfWithBitOps<Flags, String> option_to_string(Flags flags)
 {
@@ -315,25 +293,6 @@ EnableIfWithBitOps<Flags, bool> option_add(Flags& opt, StringView str)
 }
 
 template<typename P, typename T>
-struct PrefixedList
-{
-    P prefix;
-    Vector<T, MemoryDomain::Options> list;
-};
-
-template<typename P, typename T>
-inline bool operator==(const PrefixedList<P, T>& lhs, const PrefixedList<P, T>& rhs)
-{
-    return lhs.prefix == rhs.prefix and lhs.list == rhs.list;
-}
-
-template<typename P, typename T>
-inline bool operator!=(const PrefixedList<P, T>& lhs, const PrefixedList<P, T>& rhs)
-{
-    return not (lhs == rhs);
-}
-
-template<typename P, typename T>
 inline String option_to_string(const PrefixedList<P, T>& opt)
 {
     return format("{}:{}", opt.prefix, option_to_string(opt.list));
@@ -353,9 +312,6 @@ inline bool option_add(PrefixedList<P, T>& opt, StringView str)
 {
     return option_add(opt.list, str);
 }
-
-template<typename T>
-using TimestampedList = PrefixedList<size_t, T>;
 
 }
 

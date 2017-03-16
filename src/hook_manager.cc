@@ -7,6 +7,7 @@
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "regex.hh"
+#include "option.hh"
 
 namespace Kakoune
 {

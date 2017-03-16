@@ -8,6 +8,7 @@
 #include "input_handler.hh"
 #include "client.hh"
 #include "buffer_utils.hh"
+#include "option.hh"
 
 #include <algorithm>
 #include <sstream>

@@ -3,7 +3,7 @@
 
 namespace Kakoune
 {
-namespace Meta
+inline namespace Meta
 {
 
 template<typename T> struct Type {};
