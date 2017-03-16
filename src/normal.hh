@@ -1,7 +1,7 @@
 #ifndef normal_hh_INCLUDED
 #define normal_hh_INCLUDED
 
-#include "array_view.hh"
+#include "hash_map.hh"
 #include "keys.hh"
 #include "string.hh"
 
@@ -16,15 +16,13 @@ struct NormalParams
     char reg;
 };
 
-struct NormalCmdDesc
+struct NormalCmd
 {
-    Key key;
     StringView docstring;
     void (*func)(Context& context, NormalParams params);
 };
 
-using KeyMap = const ArrayView<NormalCmdDesc>;
-extern KeyMap keymap;
+extern const HashMap<Key, NormalCmd> keymap;
 
 }
 

@@ -258,21 +258,19 @@ public:
                 context().client().info_hide();
 
             do_restore_hooks = true;
-            auto it = std::lower_bound(keymap.begin(), keymap.end(), key,
-                                       [](const NormalCmdDesc& lhs, const Key& rhs)
-                                       { return lhs.key < rhs; });
+            auto it = keymap.find(key);
             if (it != keymap.end() and it->key == key)
             {
                 auto autoinfo = context().options()["autoinfo"].get<AutoInfo>();
                 if (autoinfo & AutoInfo::Normal and context().has_client())
-                    context().client().info_show(key_to_str(key), it->docstring.str(),
+                    context().client().info_show(key_to_str(key), it->value.docstring.str(),
                                                  {}, InfoStyle::Prompt);
 
                 // reset m_params now to be reentrant
                 NormalParams params = m_params;
                 m_params = { 0, 0 };
 
-                it->func(context(), params);
+                it->value.func(context(), params);
             }
         }
 
