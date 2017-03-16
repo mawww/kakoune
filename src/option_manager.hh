@@ -4,8 +4,8 @@
 #include "completion.hh"
 #include "containers.hh"
 #include "exception.hh"
-#include "vector.hh"
 #include "option.hh"
+#include "vector.hh"
 
 #include <memory>
 #include <type_traits>

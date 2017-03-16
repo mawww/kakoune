@@ -29,7 +29,7 @@ struct Completions
         : start(start), end(end) {}
 
     Completions(ByteCount start, ByteCount end, CandidateList candidates)
-        : start(start), end(end), candidates(std::move(candidates)) {}
+        : candidates(std::move(candidates)), start(start), end(end) {}
 };
 
 enum class CompletionFlags
@@ -44,7 +44,7 @@ constexpr bool with_bit_ops(Meta::Type<CompletionFlags>) { return true; }
 using Completer = std::function<Completions (const Context&, CompletionFlags,
                                              StringView, ByteCount)>;
 
-inline Completions complete_nothing(const Context& context, CompletionFlags,
+inline Completions complete_nothing(const Context&, CompletionFlags,
                                     StringView, ByteCount cursor_pos)
 {
     return {cursor_pos, cursor_pos};

@@ -4,6 +4,7 @@
 #include "coord.hh"
 #include "flags.hh"
 #include "hash.hh"
+#include "meta.hh"
 #include "optional.hh"
 #include "unicode.hh"
 #include "vector.hh"

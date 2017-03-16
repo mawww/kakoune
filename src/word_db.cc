@@ -73,7 +73,7 @@ WordDB::WordDB(const Buffer& buffer)
     rebuild_db();
 }
 
-WordDB::WordDB(WordDB&& other)
+WordDB::WordDB(WordDB&& other) noexcept
     : m_buffer{std::move(other.m_buffer)},
       m_timestamp{other.m_timestamp},
       m_words{std::move(other.m_words)},

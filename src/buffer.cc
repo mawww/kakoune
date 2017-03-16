@@ -317,7 +317,7 @@ bool Buffer::undo(size_t count) noexcept
     if (not m_history_cursor->parent)
         return false;
 
-    while (count-- and m_history_cursor->parent)
+    while (count-- != 0 and m_history_cursor->parent)
     {
         for (const Modification& modification : m_history_cursor->undo_group | reverse())
             apply_modification(modification.inverse());
@@ -335,7 +335,7 @@ bool Buffer::redo(size_t count) noexcept
 
     kak_assert(m_current_undo_group.empty());
 
-    while (count-- and m_history_cursor->redo_child)
+    while (count-- != 0 and m_history_cursor->redo_child)
     {
         m_history_cursor = m_history_cursor->redo_child.get();
 
@@ -671,7 +671,7 @@ BufferCoord Buffer::char_prev(BufferCoord coord) const
 {
     kak_assert(is_valid(coord));
     if (is_end(coord))
-        return coord = {(int)m_lines.size()-1, m_lines.back().length() - 1};
+        return {(int)m_lines.size()-1, m_lines.back().length() - 1};
     else if (coord.column == 0)
     {
         if (coord.line > 0)

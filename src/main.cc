@@ -466,7 +466,7 @@ int run_client(StringView session, StringView init_cmds,
     try
     {
         EventManager event_manager;
-        RemoteClient client{session, make_ui(ui_type), get_env_vars(), init_cmds, init_coord};
+        RemoteClient client{session, make_ui(ui_type), get_env_vars(), init_cmds, std::move(init_coord)};
         while (true)
             event_manager.handle_next_events(EventMode::Normal);
     }
@@ -594,7 +594,7 @@ int run_server(StringView session,
         if (not (flags & ServerFlags::Daemon))
         {
             local_client = client_manager.create_client(
-                 create_local_ui(ui_type), get_env_vars(), init_cmds, init_coord);
+                 create_local_ui(ui_type), get_env_vars(), init_cmds, std::move(init_coord));
 
             if (startup_error)
                 local_client->print_status({

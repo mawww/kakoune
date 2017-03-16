@@ -1381,8 +1381,8 @@ void InputHandler::prompt(StringView prompt, String initstr,
                           Face prompt_face, PromptFlags flags,
                           Completer completer, PromptCallback callback)
 {
-    push_mode(new InputModes::Prompt(*this, prompt, initstr, prompt_face,
-                                     flags, completer, callback));
+    push_mode(new InputModes::Prompt(*this, prompt, std::move(initstr), prompt_face,
+                                     flags, std::move(completer), std::move(callback)));
 }
 
 void InputHandler::set_prompt_face(Face prompt_face)
@@ -1394,12 +1394,12 @@ void InputHandler::set_prompt_face(Face prompt_face)
 
 void InputHandler::menu(Vector<DisplayLine> choices, MenuCallback callback)
 {
-    push_mode(new InputModes::Menu(*this, std::move(choices), callback));
+    push_mode(new InputModes::Menu(*this, std::move(choices), std::move(callback)));
 }
 
 void InputHandler::on_next_key(KeymapMode keymap_mode, KeyCallback callback)
 {
-    push_mode(new InputModes::NextKey(*this, keymap_mode, callback));
+    push_mode(new InputModes::NextKey(*this, keymap_mode, std::move(callback)));
 }
 
 InputHandler::ScopedForceNormal::ScopedForceNormal(InputHandler& handler, NormalParams params)

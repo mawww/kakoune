@@ -14,7 +14,7 @@ public:
     AliasRegistry(AliasRegistry& parent) : m_parent(&parent) {}
     void add_alias(String alias, String command);
     void remove_alias(StringView alias);
-    StringView operator[](StringView name) const;
+    StringView operator[](StringView alias) const;
 
     using AliasMap = HashMap<String, String, MemoryDomain::Aliases>;
     using iterator = AliasMap::const_iterator;

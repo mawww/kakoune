@@ -195,7 +195,7 @@ public:
         {
             T object;
             alignas(T) char data[sizeof(T)];
-            U() {};
+            U() {}
             ~U() { object.~T(); }
         } u;
         read(u.data, sizeof(T));
@@ -359,7 +359,7 @@ private:
 
 static bool send_data(int fd, RemoteBuffer& buffer)
 {
-    while (buffer.size() > 0 and fd_writable(fd))
+    while (not buffer.empty() and fd_writable(fd))
     {
       int res = ::write(fd, buffer.data(), buffer.size());
       if (res <= 0)

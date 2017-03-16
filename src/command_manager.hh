@@ -135,7 +135,7 @@ String expand(StringView str, const Context& context,
 
 String expand(StringView str, const Context& context,
               const ShellContext& shell_context,
-              std::function<String (String)> postprocess);
+              const std::function<String (String)>& postprocess);
 
 }
 

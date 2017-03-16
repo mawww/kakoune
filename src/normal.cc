@@ -730,9 +730,8 @@ void search(Context& context, NormalParams params)
                          auto& buffer = context.buffer();
                          do {
                             bool wrapped = false;
-                            for (int i = 0; i < selections.size(); ++i)
+                            for (auto& sel : selections)
                             {
-                                auto& sel = selections[i];
                                 if (mode == SelectMode::Replace)
                                     sel = keep_direction(find_next_match<direction>(buffer, sel, regex, wrapped), sel);
                                 if (mode == SelectMode::Extend)
@@ -1398,7 +1397,7 @@ void align(Context& context, NormalParams)
                 CharCount spaces = (int)(targetcol - (tabs ? (tabcol + (int)tabs * tabstop) : inscol));
                 padstr = String{ '\t', tabs } + String{ ' ', spaces };
             }
-            buffer.insert(insert_coord, std::move(padstr));
+            buffer.insert(insert_coord, padstr);
         }
         selections.update();
     }

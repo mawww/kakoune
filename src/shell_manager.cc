@@ -248,7 +248,7 @@ std::pair<String, int> ShellManager::eval(
 
     int status = 0;
     // check for termination now that SIGCHLD is blocked
-    bool terminated = waitpid(pid, &status, WNOHANG);
+    bool terminated = waitpid(pid, &status, WNOHANG) != 0;
 
     using namespace std::chrono;
     static constexpr seconds wait_timeout{1};
@@ -269,7 +269,7 @@ std::pair<String, int> ShellManager::eval(
     {
         EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
         if (not terminated)
-            terminated = waitpid(pid, &status, WNOHANG);
+            terminated = waitpid(pid, &status, WNOHANG) != 0;
     }
 
     if (not stderr_contents.empty())

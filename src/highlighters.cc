@@ -314,9 +314,9 @@ private:
         RegexIt re_end;
         for (; re_it != re_end; ++re_it)
         {
-            for (size_t i = 0; i < m_faces.size(); ++i)
+            for (auto& face : m_faces)
             {
-                const auto& sub = (*re_it)[m_faces[i].first];
+                const auto& sub = (*re_it)[face.first];
                 matches.push_back({sub.first.coord(), sub.second.coord()});
             }
         }
@@ -516,14 +516,14 @@ HighlighterAndId create_line_highlighter(HighlighterParameters params)
 
         auto face = get_face(facespec);
         ColumnCount column = 0;
-        for (auto atom_it = it->begin(); atom_it != it->end(); ++atom_it)
+        for (auto& atom : *it)
         {
-            column += atom_it->length();
-            if (!atom_it->has_buffer_range())
+            column += atom.length();
+            if (!atom.has_buffer_range())
                 continue;
 
-            kak_assert(atom_it->begin().line == line);
-            apply_face(face)(*atom_it);
+            kak_assert(atom.begin().line == line);
+            apply_face(face)(atom);
         }
         const ColumnCount remaining = context.window().dimensions().column - column;
         if (remaining > 0)

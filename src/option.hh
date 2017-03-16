@@ -2,6 +2,7 @@
 #define option_hh_INCLUDED
 
 #include "enum.hh"
+#include "meta.hh"
 
 namespace Kakoune
 {

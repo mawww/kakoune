@@ -807,13 +807,13 @@ void select_buffer(SelectionList& selections)
 }
 
 static RegexConstant::match_flag_type
-match_flags(const Buffer& buf, BufferIterator begin, BufferIterator end)
+match_flags(const Buffer& buf, const BufferIterator& begin, const BufferIterator& end)
 {
     return match_flags(is_bol(begin.coord()), is_eol(buf, end.coord()),
                        is_bow(buf, begin.coord()), is_eow(buf, end.coord()));
 }
 
-static bool find_next(const Buffer& buffer, BufferIterator pos,
+static bool find_next(const Buffer& buffer, const BufferIterator& pos,
                       MatchResults<BufferIterator>& matches,
                       const Regex& ex, bool& wrapped)
 {
@@ -826,7 +826,7 @@ static bool find_next(const Buffer& buffer, BufferIterator pos,
                         match_flags(buffer, buffer.begin(), buffer.end()));
 }
 
-static bool find_prev(const Buffer& buffer, BufferIterator pos,
+static bool find_prev(const Buffer& buffer, const BufferIterator& pos,
                       MatchResults<BufferIterator>& matches,
                       const Regex& ex, bool& wrapped)
 {

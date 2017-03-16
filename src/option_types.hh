@@ -1,13 +1,15 @@
 #ifndef option_types_hh_INCLUDED
 #define option_types_hh_INCLUDED
 
-#include "option.hh"
+#include "array_view.hh"
+#include "coord.hh"
+#include "containers.hh"
 #include "exception.hh"
+#include "flags.hh"
+#include "hash_map.hh"
+#include "option.hh"
 #include "string.hh"
 #include "units.hh"
-#include "coord.hh"
-#include "array_view.hh"
-#include "hash_map.hh"
 
 #include <tuple>
 #include <vector>
@@ -211,7 +213,7 @@ inline bool option_add(StronglyTypedNumber<RealType, ValueType>& opt,
 
 struct WorstMatch { template<typename T> WorstMatch(T&&) {} };
 
-inline bool option_add(WorstMatch, StringView str)
+inline bool option_add(WorstMatch, StringView)
 {
     throw runtime_error("no add operation supported for this option type");
 }

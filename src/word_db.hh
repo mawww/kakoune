@@ -19,7 +19,7 @@ public:
     WordDB(const Buffer& buffer);
     ~WordDB() override;
     WordDB(const WordDB&) = delete;
-    WordDB(WordDB&&);
+    WordDB(WordDB&&) noexcept;
 
     RankedMatchList find_matching(StringView str);
 
