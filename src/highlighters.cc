@@ -721,7 +721,7 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
                         atom_it->replace(lf.str());
                     else if (cp == 0xA0)
                         atom_it->replace(nbsp.str());
-                    atom_it->face = whitespaceface;
+                    atom_it->face = merge_faces(atom_it->face, whitespaceface);
                     break;
                 }
             }
