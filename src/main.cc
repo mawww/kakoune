@@ -642,7 +642,7 @@ int run_server(StringView session,
     return 0;
 }
 
-int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView> files, bool quiet)
+int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView> files, bool quiet, StringView suffix_backup)
 {
     StringRegistry  string_registry;
     GlobalScope     global_scope;
@@ -689,7 +689,8 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
         for (auto& file : files)
         {
             Buffer* buffer = open_file_buffer(file);
-            write_buffer_to_file(*buffer, file + ".kak-bak");
+            if (not suffix_backup.empty())
+                write_buffer_to_file(*buffer, file + suffix_backup);
             apply_to_buffer(*buffer);
             write_buffer_to_file(*buffer, file);
             buffer_manager.delete_buffer(*buffer);
@@ -796,6 +797,7 @@ int main(int argc, char* argv[])
                    { "d", { false, "run as a headless session (requires -s)" } },
                    { "p", { true,  "just send stdin as commands to the given session" } },
                    { "f", { true,  "act as a filter, executing given keys on given files" } },
+                   { "i", { true, "backup the files on which a filter is applied using the given suffix" } },
                    { "q", { false, "in filter mode, be quiet about errors applying keys" } },
                    { "ui", { true, "set the type of user interface to use (ncurses, dummy, or json)" } },
                    { "l", { false, "list existing sessions" } },
@@ -862,7 +864,8 @@ int main(int argc, char* argv[])
                 files.emplace_back(parser[i]);
 
             return run_filter(*keys, init_cmds, files,
-                              (bool)parser.get_switch("q"));
+                              (bool)parser.get_switch("q"),
+                              parser.get_switch("i").value_or(StringView{}));
         }
 
         Vector<StringView> files;
