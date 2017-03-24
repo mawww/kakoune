@@ -16,9 +16,6 @@ public:
     void remove_alias(StringView alias);
     StringView operator[](StringView alias) const;
 
-    using AliasMap = HashMap<String, String, MemoryDomain::Aliases>;
-    using iterator = AliasMap::const_iterator;
-
     Vector<StringView> aliases_for(StringView command) const;
 
 private:
@@ -26,7 +23,7 @@ private:
     AliasRegistry() {}
 
     SafePtr<AliasRegistry> m_parent;
-    AliasMap m_aliases;
+    HashMap<String, String, MemoryDomain::Aliases> m_aliases;
 };
 
 }
