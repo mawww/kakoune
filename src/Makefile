@@ -103,7 +103,8 @@ clean:
 	rm -f .*.o .*.d
 
 distclean: clean
-	rm -f kak
+	rm -f kak kak$(suffix)
+	find ../doc -type f -name \*\\.gz -exec rm -f '{}' +
 
 installdirs:
 	install -d $(bindir) \
