@@ -1,4 +1,5 @@
 decl -hidden range-faces spell_regions
+decl -hidden str spell_lang
 decl -hidden str spell_tmp_file
 
 def -params ..1 \
@@ -22,6 +23,7 @@ Formats of language supported:
                 exit 1
             else
                 options="-l '$1'"
+                printf 'set buffer spell_lang %s\n' "$1"
             fi
         fi
 
@@ -100,7 +102,10 @@ def spell-next %{ %sh{
 } }
 
 def spell-replace %{ %sh{
-    suggestions=$(printf %s "$kak_selection" | aspell -a | grep '^&' | cut -d: -f2)
+    if [ -n "$kak_opt_spell_lang" ]; then
+        options="-l '$kak_opt_spell_lang'"
+    fi
+    suggestions=$(printf %s "$kak_selection" | eval "aspell -a $options" | grep '^&' | cut -d: -f2)
     menu=$(printf %s "${suggestions#?}" | awk -F', ' '
         {
             for (i=1; i<=NF; i++)
