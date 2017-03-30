@@ -8,7 +8,7 @@ decl str-list ctagsfiles 'tags'
 def -params ..1 \
     -shell-candidates '
         realpath() {
-            echo $(cd -P -- "$(dirname -- "$1")" && echo "$(pwd -P)/$(basename -- "$1")")
+            printf %s\\n "$(cd -P -- "$(dirname -- "$1")" && printf %s\\n "$PWD/${1##*/}")"
         }
         printf %s\\n "$kak_opt_ctagsfiles" | tr \':\' \'\n\' |
         while read -r candidate; do
@@ -26,7 +26,7 @@ If no symbol is passed then the current selection is used as symbol name} \
     tag \
     %{ %sh{
         realpath() {
-            echo $(cd -P -- "$(dirname -- "$1")" && echo "$(pwd -P)/$(basename -- "$1")")
+            printf %s\\n "$(cd -P -- "$(dirname -- "$1")" && printf %s\\n "$PWD/${1##*/}")"
         }
         export tagname=${1:-${kak_selection}}
         printf %s\\n "$kak_opt_ctagsfiles" | tr ':' '\n' |
