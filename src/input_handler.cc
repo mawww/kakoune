@@ -1067,8 +1067,14 @@ public:
                 auto pos = sel.cursor();
                 sels.emplace_back(buffer.char_prev(pos));
             }
+            auto& main = context().selections().main();
+            String main_char = buffer.string(buffer.char_prev(main.cursor()),
+                                             main.cursor());
             if (not sels.empty())
                 SelectionList{buffer, std::move(sels)}.erase();
+
+            if (not main_char.empty())
+                context().hooks().run_hook("InsertDelete", main_char, context());
         }
         else if (key == Key::Delete)
         {

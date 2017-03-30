@@ -68,6 +68,10 @@ Default hooks
 	a character is received in insert mode, the character is used for
 	filtering
 
+*InsertDelete*::
+	a character is deleted in insert mode, the character deleted by
+	the main selection is used for filtering
+
 *InsertMove*::
 	the cursor moved (without inserting) in insert mode, the key that
 	triggered the move is used for filtering

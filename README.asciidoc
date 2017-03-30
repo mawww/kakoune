@@ -1415,6 +1415,8 @@ existing hooks are:
  * `InsertKey`: A key is received in insert mode, the key is used for filtering
  * `InsertChar`: A character is inserted in insert mode, the character is used
        for filtering
+ * `InsertDelete`: A character is deleted in insert mode, the character deleted
+       by the main selection is used for filtering
  * `InsertMove`: The cursor moved (without inserting) in insert mode, the key
        that triggered the move is used for filtering
  * `WinCreate`: A window was created, the filtering text is the buffer name
