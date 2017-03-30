@@ -101,6 +101,8 @@ informations about Kakoune's state:
 	height of the current kakoune window
 *kak_hook_param*::
 	filtering text passed to the currently executing hook
+*kak_hook_param_capture_N*::
+	text captured by the hook filter regex capture N
 *kak_client_env_<name>*::
 	value of the *name* variable in the client environment
 	(e.g. *$kak_client_env_SHELL* is the SHELL variable)

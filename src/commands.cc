@@ -800,15 +800,23 @@ const CommandDesc add_hook_cmd = {
         if (not contains(hooks, parser[1]))
             throw runtime_error{format("Unknown hook '{}'", parser[1])};
 
-        Regex regex(parser[2], Regex::optimize | Regex::nosubs | Regex::ECMAScript);
+        Regex regex{parser[2], Regex::optimize | Regex::ECMAScript};
         const String& command = parser[3];
 
         auto hook_func = [=](StringView param, Context& context) {
             ScopedSetBool disable_history{context.history_disabled()};
 
-            if (regex_match(param.begin(), param.end(), regex))
+            MatchResults<const char*> res;
+            if (regex_match(param.begin(), param.end(), res, regex))
+            {
+                EnvVarMap env_vars{ {"hook_param", param.str()} };
+                for (size_t i = 0; i < res.size(); ++i)
+                    env_vars.insert({format("hook_param_capture_{}", i),
+                                     {res[i].first, res[i].second}});
+
                 CommandManager::instance().execute(command, context,
-                                                   { {}, { { "hook_param", param.str() } } });
+                                                   { {}, std::move(env_vars) });
+            }
         };
         auto group = parser.get_switch("group").value_or(StringView{});
         get_scope(parser[0], context).hooks().add_hook(parser[1], group.str(), hook_func);
