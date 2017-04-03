@@ -679,11 +679,15 @@ public:
            Completer completer, PromptCallback callback)
         : InputMode(input_handler), m_prompt(prompt.str()), m_prompt_face(face),
           m_flags(flags), m_completer(std::move(completer)), m_callback(std::move(callback)),
-          m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()}
+          m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()},
+          m_idle_timer{TimePoint::max(),
+                       [this](Timer& timer) {
+                           if (m_autoshowcompl and m_refresh_completion_pending)
+                               refresh_completions(CompletionFlags::Fast);
+                           context().hooks().run_hook("PromptIdle", "", context());
+                       }}
     {
         m_history_it = ms_history[m_prompt].end();
-        if (m_autoshowcompl)
-            refresh_completions(CompletionFlags::Fast);
         m_line_editor.reset(std::move(initstr));
     }
 
@@ -691,7 +695,6 @@ public:
     {
         History& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
-        bool showcompl = false;
 
         if (key == Key::Return)
         {
@@ -775,7 +778,7 @@ public:
                 } while (it != history.begin());
 
                 clear_completions();
-                showcompl = true;
+                m_refresh_completion_pending = true;
             }
         }
         else if (key == Key::Down or key == ctrl('n')) // next
@@ -794,7 +797,7 @@ public:
                     m_line_editor.reset(m_prefix);
 
                 clear_completions();
-                showcompl = true;
+                m_refresh_completion_pending = true;
             }
         }
         else if (key == Key::Tab or key == Key::BackTab) // tab completion
@@ -832,26 +835,26 @@ public:
             {
                 m_current_completion = -1;
                 candidates.clear();
-                showcompl = true;
+                m_refresh_completion_pending = true;
             }
         }
         else if (key == ctrl('o'))
         {
             m_autoshowcompl = false;
             clear_completions();
+            if (context().has_client())
+                context().client().menu_hide();
         }
         else
         {
             m_line_editor.handle_key(key);
             clear_completions();
-            showcompl = true;
+            m_refresh_completion_pending = true;
         }
-
-        if (showcompl and m_autoshowcompl)
-            refresh_completions(CompletionFlags::Fast);
 
         display();
         m_callback(line, PromptEvent::Change, context());
+        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
     void set_prompt_face(Face face)
@@ -875,14 +878,18 @@ private:
     {
         try
         {
+            m_refresh_completion_pending = false;
             if (not m_completer)
                 return;
             m_current_completion = -1;
             const String& line = m_line_editor.line();
             m_completions = m_completer(context(), flags, line,
                                         line.byte_count_to(m_line_editor.cursor_pos()));
-            if (context().has_client() and not m_completions.candidates.empty())
+            if (context().has_client())
             {
+                if (m_completions.candidates.empty())
+                    return context().client().menu_hide();
+
                 Vector<DisplayLine> items;
                 for (auto& candidate : m_completions.candidates)
                     items.push_back({ candidate, {} });
@@ -904,8 +911,6 @@ private:
     {
         m_current_completion = -1;
         m_completions.candidates.clear();
-        if (context().has_client())
-            context().client().menu_hide();
     }
 
     void display()
@@ -925,9 +930,16 @@ private:
     {
         display();
         m_callback(m_line_editor.line(), PromptEvent::Change, context());
+        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
-    void on_disabled() override { context().print_status({}); }
+    void on_disabled() override
+    {
+        context().print_status({});
+        m_idle_timer.set_next_date(TimePoint::max());
+        if (context().has_client())
+            context().client().menu_hide();
+    }
 
     PromptCallback m_callback;
     Completer      m_completer;
@@ -938,8 +950,10 @@ private:
     bool           m_prefix_in_completions = false;
     String         m_prefix;
     LineEditor     m_line_editor;
-    bool           m_autoshowcompl;
     PromptFlags    m_flags;
+    bool           m_autoshowcompl;
+    bool           m_refresh_completion_pending = true;
+    Timer          m_idle_timer;
 
     using History = Vector<String, MemoryDomain::History>;
     static HashMap<String, History, MemoryDomain::History> ms_history;
