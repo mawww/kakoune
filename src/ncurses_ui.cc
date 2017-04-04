@@ -769,6 +769,10 @@ void NCursesUI::menu_hide()
     mark_dirty(m_menu);
     m_menu.destroy();
     m_dirty = true;
+
+    // Recompute info as it does not have to avoid the menu anymore
+    if (m_info)
+        info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
 }
 
 static DisplayCoord compute_needed_size(StringView str)
