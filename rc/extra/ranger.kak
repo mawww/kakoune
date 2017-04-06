@@ -4,7 +4,7 @@
 def ranger-open-on-edit-directory \
     -docstring 'Start the ranger file system explorer when trying to edit a directory' %{
         hook global RuntimeError "\d+:\d+: '\w+' (.*): is a directory" %{ %sh{
-          directory=$(expr $kak_hook_param : "[0-9]*:[0-9]*: '[a-z]*' \\(.*\\): is a directory")
+          directory=$kak_hook_param_capture_1
           echo ranger $directory
     }}
 }
