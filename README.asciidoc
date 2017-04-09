@@ -1040,7 +1040,7 @@ There are some builtins faces used by internal Kakoune functionalities:
  * `PrimaryCursor`: cursor of the primary selection
  * `SecondaryCursor`: cursor of the secondary selection
  * `LineNumbers`: face used by the number_lines highlighter
- * `LineNumberAbsolute`: face used to highlight the line number of the main
+ * `LineNumberCursor`: face used to highlight the line number of the main
      selection
  * `MenuForeground`: face for the selected element in menus
  * `MenuBackground`: face for the not selected elements in menus
