@@ -24,7 +24,7 @@ def -hidden -params 1.. tmux-new-impl %{
         tmux_args="$1"
         shift
         if [ $# -ne 0 ]; then kakoune_params="-e '$@'"; fi
-        TMUX=$tmux tmux $tmux_args "kak -c ${kak_session} ${kakoune_params}" < /dev/null > /dev/null 2>&1 &
+        TMUX=$tmux tmux $tmux_args "TMPDIR='${TMPDIR}' kak -c ${kak_session} ${kakoune_params}" < /dev/null > /dev/null 2>&1 &
     }
 }
 
