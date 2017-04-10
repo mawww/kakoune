@@ -93,7 +93,7 @@ public:
     Optional<CommandInfo> command_info(const Context& context,
                                        StringView command_line) const;
 
-    bool command_defined(const String& command_name) const;
+    bool command_defined(StringView command_name) const;
 
     void register_command(String command_name, Command command,
                           String docstring,
@@ -127,7 +127,7 @@ private:
     int m_command_depth = 0;
 
     CommandMap::const_iterator find_command(const Context& context,
-                                            const String& name) const;
+                                            StringView name) const;
 };
 
 String expand(StringView str, const Context& context,

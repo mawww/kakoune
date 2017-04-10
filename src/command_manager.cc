@@ -15,7 +15,7 @@
 namespace Kakoune
 {
 
-bool CommandManager::command_defined(const String& command_name) const
+bool CommandManager::command_defined(StringView command_name) const
 {
     return m_commands.find(command_name) != m_commands.end();
 }
@@ -407,10 +407,10 @@ struct command_not_found : runtime_error
 };
 
 CommandManager::CommandMap::const_iterator
-CommandManager::find_command(const Context& context, const String& name) const
+CommandManager::find_command(const Context& context, StringView name) const
 {
     auto alias = context.aliases()[name];
-    const String& cmd_name = alias.empty() ? name : alias.str();
+    StringView cmd_name = alias.empty() ? name : alias;
 
     return m_commands.find(cmd_name);
 }
@@ -628,10 +628,10 @@ Completions CommandManager::complete(const Context& context,
         if (tokens[cmd_idx].type() != Token::Type::Raw)
             return Completions{};
 
-        const String& command_name = tokens[cmd_idx].content();
+        StringView command_name = tokens[cmd_idx].content();
         if (command_name != m_last_complete_command)
         {
-            m_last_complete_command = command_name;
+            m_last_complete_command = command_name.str();
             flags |= CompletionFlags::Start;
         }
 
@@ -676,10 +676,10 @@ Completions CommandManager::complete(const Context& context,
         return complete_command_name(context, prefix, true);
     else
     {
-        const String& command_name = params[0];
+        StringView command_name = params[0];
         if (command_name != m_last_complete_command)
         {
-            m_last_complete_command = command_name;
+            m_last_complete_command = command_name.str();
             flags |= CompletionFlags::Start;
         }
 
