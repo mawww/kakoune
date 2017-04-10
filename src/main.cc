@@ -801,11 +801,32 @@ int main(int argc, char* argv[])
                    { "ui", { true, "set the type of user interface to use (ncurses, dummy, or json)" } },
                    { "l", { false, "list existing sessions" } },
                    { "clear", { false, "clear dead sessions" } },
-                   { "ro", { false, "readonly mode" } } }
+                   { "ro", { false, "readonly mode" } },
+                   { "help", { false, "display a help message and quit" } } }
     };
+
     try
     {
+        auto show_usage = [&]()
+        {
+            write_stdout(format("Usage: {} [options] [file]... [+<line>[:<col>]|+:]\n\n"
+                    "Options:\n"
+                    "{}\n"
+                    "Prefixing a positional argument with a plus (`+`) sign will place the\n"
+                    "cursor at a given set of coordinates, or the end of the buffer if the plus\n"
+                    "sign is followed only by a colon (`:`)\n",
+                    argv[0], generate_switches_doc(param_desc.switches)));
+            return 0;
+        };
+
+        if (contains(ConstArrayView<char*>{argv+1, (size_t)argc-1}, StringView{"--help"}))
+            return show_usage();
+
         ParametersParser parser(params, param_desc);
+
+        const bool show_help_message = (bool)parser.get_switch("help");
+        if (show_help_message)
+            return show_usage();
 
         const bool list_sessions = (bool)parser.get_switch("l");
         const bool clear_sessions = (bool)parser.get_switch("clear");
