@@ -20,14 +20,14 @@ def -hidden -params 1.. iterm-new-split-impl %{
         shift
         if [ $# -gt 0 ]; then kakoune_params="-e '$@'"; fi
         sh_cmd="kak -c ${kak_session} ${kakoune_params}"
-        osascript                                                \
-        -e "tell application \"iTerm\""                          \
-        -e "    tell current session of current window"          \
-        -e "        tell (split ${direction} with same profile)" \
-        -e "            select"                                  \
-        -e "            write text \"${sh_cmd}\""                \
-        -e "        end tell"                                    \
-        -e "    end tell"                                        \
+        osascript                                                     \
+        -e "tell application \"iTerm\""                               \
+        -e "    tell current session of current window"               \
+        -e "        tell (split ${direction} with same profile)"      \
+        -e "            select"                                       \
+        -e "            write text \"TMPDIR='${TMPDIR}' ${sh_cmd}\"" \
+        -e "        end tell"                                         \
+        -e "    end tell"                                             \
         -e "end tell"
     }
 }
@@ -51,7 +51,7 @@ All optional arguments are forwarded to the new kak client} \
         -e "tell application \"iTerm\""                                        \
         -e "    tell current window"                                           \
         -e "        tell current session of (create tab with default profile)" \
-        -e "            write text \"${sh_cmd}\""                              \
+        -e "            write text \"TMPDIR='${TMPDIR}' ${sh_cmd}\""          \
         -e "        end tell"                                                  \
         -e "    end tell"                                                      \
         -e "end tell"
@@ -65,12 +65,12 @@ All optional arguments are forwarded to the new kak client} \
     %sh{
         if [ $# -gt 0 ]; then kakoune_params="-e '$@'"; fi
         sh_cmd="kak -c ${kak_session} ${kakoune_params}"
-        osascript                                              \
-        -e "tell application \"iTerm\""                        \
-        -e "    set w to (create window with default profile)" \
-        -e "    tell current session of w"                     \
-        -e "        write text \"${sh_cmd}\""                  \
-        -e "    end tell"                                      \
+        osascript                                                 \
+        -e "tell application \"iTerm\""                           \
+        -e "    set w to (create window with default profile)"    \
+        -e "    tell current session of w"                        \
+        -e "        write text \"TMPDIR='${TMPDIR}' ${sh_cmd}\"" \
+        -e "    end tell"                                         \
         -e "end tell"
     }
 }
