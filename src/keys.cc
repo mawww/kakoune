@@ -78,18 +78,27 @@ KeyList parse_keys(StringView str)
         Key::Modifiers modifier = Key::Modifiers::None;
 
         StringView desc{it.base()+1, end_it.base()};
-        if (desc.length() > 2 and desc[1_byte] == '-')
+        auto dash = find(desc, '-');
+        if (dash != desc.end())
         {
-            switch(to_lower(desc[0_byte]))
+            if (dash == desc.begin())
+                throw runtime_error("unable to parse modifier in " +
+                                    StringView{it.base(), end_it.base()+1});
+
+            for (auto c : StringView{desc.begin(), dash})
             {
-                case 'c': modifier = Key::Modifiers::Control; break;
-                case 'a': modifier = Key::Modifiers::Alt; break;
-                default:
-                    throw runtime_error("unable to parse modifier in " +
-                                        StringView{it.base(), end_it.base()+1});
+                switch(to_lower(c))
+                {
+                    case 'c': modifier |= Key::Modifiers::Control; break;
+                    case 'a': modifier |= Key::Modifiers::Alt; break;
+                    default:
+                        throw runtime_error("unable to parse modifier in " +
+                                            StringView{it.base(), end_it.base()+1});
+                }
             }
-            desc = desc.substr(2_byte);
+            desc = StringView{dash+1, desc.end()};
         }
+
         auto name_it = find_if(keynamemap, [&desc](const KeyAndName& item)
                                            { return item.name == desc; });
         if (name_it != end(keynamemap))
@@ -158,8 +167,9 @@ String key_to_str(Key key)
 
     switch (key.modifiers)
     {
-    case Key::Modifiers::Control: res = "c-" + res; named = true; break;
-    case Key::Modifiers::Alt:     res = "a-" + res; named = true; break;
+    case Key::Modifiers::Control:    res = "c-" + res; named = true; break;
+    case Key::Modifiers::Alt:        res = "a-" + res; named = true; break;
+    case Key::Modifiers::ControlAlt: res = "ca-" + res; named = true; break;
     default: break;
     }
     if (named)
