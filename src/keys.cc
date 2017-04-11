@@ -77,24 +77,21 @@ KeyList parse_keys(StringView str)
 
         Key::Modifiers modifier = Key::Modifiers::None;
 
+        StringView full_desc{it.base(), end_it.base()+1};
         StringView desc{it.base()+1, end_it.base()};
-        auto dash = find(desc, '-');
-        if (dash != desc.end())
+        for (auto dash = find(desc, '-'); dash != desc.end(); dash = find(desc, '-'))
         {
-            if (dash == desc.begin())
-                throw runtime_error("unable to parse modifier in " +
-                                    StringView{it.base(), end_it.base()+1});
+            if (dash != desc.begin() + 1)
+                throw runtime_error(format("unable to parse modifier in '{}'",
+                                           full_desc));
 
-            for (auto c : StringView{desc.begin(), dash})
+            switch(to_lower(desc[0_byte]))
             {
-                switch(to_lower(c))
-                {
-                    case 'c': modifier |= Key::Modifiers::Control; break;
-                    case 'a': modifier |= Key::Modifiers::Alt; break;
-                    default:
-                        throw runtime_error("unable to parse modifier in " +
-                                            StringView{it.base(), end_it.base()+1});
-                }
+                case 'c': modifier |= Key::Modifiers::Control; break;
+                case 'a': modifier |= Key::Modifiers::Alt; break;
+                default:
+                    throw runtime_error(format("unable to parse modifier in '{}'",
+                                               full_desc));
             }
             desc = StringView{dash+1, desc.end()};
         }
@@ -169,7 +166,7 @@ String key_to_str(Key key)
     {
     case Key::Modifiers::Control:    res = "c-" + res; named = true; break;
     case Key::Modifiers::Alt:        res = "a-" + res; named = true; break;
-    case Key::Modifiers::ControlAlt: res = "ca-" + res; named = true; break;
+    case Key::Modifiers::ControlAlt: res = "c-a-" + res; named = true; break;
     default: break;
     }
     if (named)
@@ -190,6 +187,8 @@ UnitTest test_keys{[]()
         keys_as_str += key_to_str(key);
     auto parsed_keys = parse_keys(keys_as_str);
     kak_assert(keys == parsed_keys);
+    kak_assert(ConstArrayView<Key>{parse_keys("a<c-a-b>c")} ==
+               ConstArrayView<Key>{'a', {Key::Modifiers::ControlAlt, 'b'}, 'c'});
 }};
 
 }
