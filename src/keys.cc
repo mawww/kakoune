@@ -54,6 +54,8 @@ static constexpr KeyAndName keynamemap[] = {
     { "end", Key::End },
     { "backtab", Key::BackTab },
     { "del", Key::Delete },
+    { "plus", '+' },
+    { "minus", '-' },
 };
 
 KeyList parse_keys(StringView str)
