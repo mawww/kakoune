@@ -44,6 +44,11 @@ Here are the requests that can be written by the json ui on stdout:
   - modal: display the info in a way that shows Kakoune is waiting for a
     special action related to it.
 * info_hide()
+* set_cursor(String mode, Coord coord)
+  set the main cursor position
+  mode can be:
+  - prompt: the coordinate line should be 0, and the cursor is in the prompt area
+  - buffer: the cursor is in the buffer display area
 
 The requests that the json ui can interpret on stdin are:
 
