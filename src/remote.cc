@@ -35,6 +35,7 @@ enum class MessageType : char
     InfoHide,
     Draw,
     DrawStatus,
+    SetCursor,
     Refresh,
     SetOptions,
     Key
@@ -335,6 +336,8 @@ public:
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
 
+    void set_cursor(CursorMode mode, DisplayCoord coord) override;
+
     void refresh(bool force) override;
 
     DisplayCoord dimensions() override { return m_dimensions; }
@@ -483,6 +486,14 @@ void RemoteUI::draw_status(const DisplayLine& status_line,
     m_socket_watcher.events() |= FdEvents::Write;
 }
 
+void RemoteUI::set_cursor(CursorMode mode, DisplayCoord coord)
+{
+    MsgWriter msg{m_send_buffer, MessageType::SetCursor};
+    msg.write(mode);
+    msg.write(coord);
+    m_socket_watcher.events() |= FdEvents::Write;
+}
+
 void RemoteUI::refresh(bool force)
 {
     MsgWriter msg{m_send_buffer, MessageType::Refresh};
@@ -609,6 +620,13 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
                 auto mode_line = reader.read<DisplayLine>();
                 auto default_face = reader.read<Face>();
                 m_ui->draw_status(status_line, mode_line, default_face);
+                break;
+            }
+            case MessageType::SetCursor:
+            {
+                auto mode = reader.read<CursorMode>();
+                auto coord = reader.read<DisplayCoord>();
+                m_ui->set_cursor(mode, coord);
                 break;
             }
             case MessageType::Refresh:

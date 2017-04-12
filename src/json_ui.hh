@@ -38,6 +38,8 @@ public:
                    InfoStyle style) override;
     void info_hide() override;
 
+    void set_cursor(CursorMode mode, DisplayCoord coord) override;
+
     void refresh(bool force) override;
 
     DisplayCoord dimensions() override;

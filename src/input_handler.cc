@@ -37,6 +37,12 @@ public:
 
     virtual KeymapMode keymap_mode() const = 0;
 
+    virtual std::pair<CursorMode, DisplayCoord> get_cursor_info() const
+    {
+        DisplayCoord coord = context().window().display_position(context().selections().main().cursor());
+        return {CursorMode::Buffer, coord};
+    }
+
     using Insertion = InputHandler::Insertion;
     Insertion& last_insert() { return m_input_handler.m_last_insert; }
 
@@ -467,6 +473,11 @@ public:
     const String& line() const { return m_line; }
     CharCount cursor_pos() const { return m_cursor_pos; }
 
+    ColumnCount cursor_display_column() const
+    {
+        return m_line.substr(m_display_pos, m_cursor_pos).column_length();
+    }
+
     DisplayLine build_display_line(ColumnCount in_width)
     {
         auto cleanup = [](StringView str) {
@@ -872,6 +883,12 @@ public:
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Prompt; }
+
+    std::pair<CursorMode, DisplayCoord> get_cursor_info() const override
+    {
+        DisplayCoord coord{0_line, m_prompt.column_length() + m_line_editor.cursor_display_column()};
+        return { CursorMode::Prompt, coord };
+    }
 
 private:
     void refresh_completions(CompletionFlags flags)
@@ -1519,6 +1536,11 @@ void InputHandler::stop_recording()
 DisplayLine InputHandler::mode_line() const
 {
     return current_mode().mode_line();
+}
+
+std::pair<CursorMode, DisplayCoord> InputHandler::get_cursor_info() const
+{
+    return current_mode().get_cursor_info();
 }
 
 bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context)

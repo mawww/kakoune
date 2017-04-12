@@ -135,6 +135,16 @@ String to_json(InfoStyle style)
     return "";
 }
 
+String to_json(CursorMode mode)
+{
+    switch (mode)
+    {
+        case CursorMode::Prompt: return R"("prompt")";
+        case CursorMode::Buffer: return R"("buffer")";
+    }
+    return "";
+}
+
 String concat()
 {
     return "";
@@ -207,6 +217,11 @@ void JsonUI::info_show(StringView title, StringView content,
 void JsonUI::info_hide()
 {
     rpc_call("info_hide");
+}
+
+void JsonUI::set_cursor(CursorMode mode, DisplayCoord coord)
+{
+    rpc_call("set_cursor", mode, coord);
 }
 
 void JsonUI::refresh(bool force)

@@ -34,6 +34,12 @@ enum class InfoStyle
 
 enum class EventMode;
 
+enum class CursorMode
+{
+    Prompt,
+    Buffer,
+};
+
 using OnKeyCallback = std::function<void(Key key)>;
 
 class UserInterface
@@ -61,6 +67,8 @@ public:
                              const Face& default_face) = 0;
 
     virtual DisplayCoord dimensions() = 0;
+
+    virtual void set_cursor(CursorMode mode, DisplayCoord coord) = 0;
 
     virtual void refresh(bool force) = 0;
 

@@ -246,6 +246,9 @@ void Client::redraw_ifn()
     if (m_ui_pending & StatusLine)
         m_ui->draw_status(m_status_line, m_mode_line, get_face("StatusLine"));
 
+    auto cursor = m_input_handler.get_cursor_info();
+    m_ui->set_cursor(cursor.first, cursor.second);
+
     m_ui->refresh(m_ui_pending | Refresh);
     m_ui_pending = 0;
 }

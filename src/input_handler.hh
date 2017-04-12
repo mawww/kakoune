@@ -43,6 +43,7 @@ using KeyCallback = std::function<void (Key, Context&)>;
 class InputMode;
 enum class InsertMode : unsigned;
 enum class KeymapMode : char;
+enum class CursorMode;
 
 class InputHandler : public SafeCountable
 {
@@ -90,6 +91,8 @@ public:
     const Context& context() const { return m_context; }
 
     DisplayLine mode_line() const;
+
+    std::pair<CursorMode, DisplayCoord> get_cursor_info() const;
 
     // Force an input handler into normal mode temporarily
     struct ScopedForceNormal

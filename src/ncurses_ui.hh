@@ -43,8 +43,9 @@ public:
                    InfoStyle style) override;
     void info_hide() override;
 
-    void refresh(bool force) override;
+    void set_cursor(CursorMode mode, DisplayCoord coord) override;
 
+    void refresh(bool force) override;
 
     DisplayCoord dimensions() override;
     void set_on_key(OnKeyCallback callback) override;
@@ -120,6 +121,12 @@ private:
         DisplayCoord anchor;
         InfoStyle style;
     } m_info;
+
+    struct Cursor
+    {
+        CursorMode mode;
+        DisplayCoord coord;
+    } m_cursor;
 
     FDWatcher m_stdin_watcher;
     OnKeyCallback m_on_key;
