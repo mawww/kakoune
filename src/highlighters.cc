@@ -810,6 +810,72 @@ HighlighterAndId number_lines_factory(HighlighterParameters params)
     return {"number_lines", make_simple_highlighter(std::move(func))};
 }
 
+void show_long_line_hints(const Context& context, HighlightFlags,
+                          DisplayBuffer& display_buffer, BufferRange,
+                          StringView hint)
+{
+    const Face face = get_face("LongLineHint");
+    auto& buffer = context.buffer();
+    auto& window = context.window();
+    const ColumnCount max_column = window.dimensions().column;
+    const ColumnCount win_column = window.position().column;
+    for (auto& line : display_buffer.lines())
+    {
+        bool max_reached = false;
+        for (auto atom_it = line.begin(); atom_it != line.end() and not max_reached; ++atom_it)
+        {
+            if (atom_it->type() == DisplayAtom::Range)
+            {
+                for (auto it  = buffer.iterator_at(atom_it->begin()),
+                          end = buffer.iterator_at(atom_it->end()); it < end;)
+                {
+                    auto coord = it.coord();
+                    const ColumnCount cur_column = window.display_position(coord).column - win_column;
+
+                    if (cur_column < max_column-1)
+                    {
+                        ++it;
+                        continue;
+                    }
+
+                    Codepoint cp = utf8::read_codepoint<utf8::InvalidPolicy::Pass>(it, end);
+                    if (not is_eol(cp))
+                    {
+                        if (coord != atom_it->begin())
+                            atom_it = ++line.split(atom_it, coord);
+                        if (it.coord() < atom_it->end())
+                            atom_it = line.split(atom_it, it.coord());
+
+                        atom_it->replace(hint.str());
+                        atom_it->face = face;
+
+                        max_reached = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+HighlighterAndId long_line_hints_factory(HighlighterParameters params)
+{
+    static const ParameterDesc param_desc{
+        { { "hint", { true, "" } } },
+        ParameterDesc::Flags::None, 0, 0
+    };
+    ParametersParser parser(params, param_desc);
+
+    StringView separator = parser.get_switch("hint").value_or("$");
+    if (separator.column_length() > 1)
+        throw runtime_error("Separator width is limited to 1 column");
+
+    using namespace std::placeholders;
+    auto func = std::bind(show_long_line_hints, _1, _2, _3, _4, separator.str());
+
+    return {"long_line_hints", make_simple_highlighter(std::move(func))};
+}
+
 void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
 {
     const Face face = get_face("MatchingChar");
@@ -1536,6 +1602,11 @@ void register_highlighters()
         { show_whitespaces_factory,
           "Display whitespaces using symbols \n"
           "Parameters: -tab <separator> -tabpad <separator> -lf <separator> -spc <separator> -nbsp <separator>\n" } });
+    registry.insert({
+        "show_long_line_hints",
+        { long_line_hints_factory,
+          "Display a hint at the end of long lines \n"
+          "Parameters: -hint <hint character>\n" } });
     registry.insert({
         "fill",
         { create_fill_highlighter,

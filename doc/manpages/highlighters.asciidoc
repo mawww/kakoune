@@ -70,6 +70,13 @@ General highlighters
 	*-tabpad* <separator>:::
 		a one character long separator that will be appended to tabulations to honor the *tabstop* option
 
+*show_long_line_hints* [options]::
+	display a dollar sign at the end of lines that are longer than the
+	window's width, with the following *options*:
+
+	*-hint* <character>:::
+		a one column wide character that will be displayed instead of the
+		default dollar sign
 
 *number_lines* [options]::
 	show line numbers, with the following *options*:

@@ -109,3 +109,6 @@ areas of the user interface:
 
 *Whitespace*::
 	face used by the show_whitespaces highlighter
+
+*LongLineHint*::
+	face used by the show_long_line_hints highlighter
