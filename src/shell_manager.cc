@@ -171,6 +171,8 @@ std::pair<String, int> ShellManager::eval(
             close(child_stdin.write_fd());
             move(child_stdin.read_fd(), 0);
         }
+        else
+            close(0);
 
         close(child_stdout.read_fd());
         move(child_stdout.write_fd(), 1);
