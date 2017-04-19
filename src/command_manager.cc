@@ -51,10 +51,15 @@ public:
     Reader(StringView s) : str{s}, pos{}, coord{} {}
 
     [[gnu::always_inline]]
-    char operator*() const { return str[pos]; }
+    char operator*() const
+    {
+        kak_assert(pos < str.length());
+        return str[pos];
+    }
 
     Reader& operator++()
     {
+        kak_assert(pos < str.length());
         if (str[pos++] == '\n')
         {
             ++coord.line;
@@ -71,6 +76,7 @@ public:
     [[gnu::always_inline]]
     StringView substr_from(ByteCount start) const
     {
+        kak_assert(start <= pos);
         return str.substr(start, pos - start);
     }
 
@@ -207,6 +213,8 @@ Token parse_percent_token(Reader& reader)
     if (throw_on_unterminated and not reader)
         throw parse_error{format("expected a string delimiter after '%{}'",
                                  type_name)};
+    else if (not reader)
+        return {};
 
     Token::Type type = token_type<throw_on_unterminated>(type_name);
 
@@ -310,9 +318,11 @@ TokenList parse(StringView line)
     TokenList result;
 
     Reader reader{line};
-    while (reader)
+    while (true)
     {
         skip_blanks_and_comments(reader);
+        if (not reader)
+            break;
 
         ByteCount start = reader.pos;
         auto coord = reader.coord;
@@ -340,12 +350,14 @@ TokenList parse(StringView line)
             if (not str.empty())
                 result.emplace_back(Token::Type::Raw, start, reader.pos,
                                     coord, unescape(str, "%", '\\'));
+
+            if (not reader or is_command_separator(*reader))
+                result.emplace_back(Token::Type::CommandSeparator,
+                                    reader.pos, reader.pos+1, coord);
         }
 
-        if (is_command_separator(*reader))
-            result.emplace_back(Token::Type::CommandSeparator,
-                                reader.pos, reader.pos+1, coord);
-
+        if (not reader)
+            break;
         ++reader;
     }
     return result;
