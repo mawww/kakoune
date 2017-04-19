@@ -249,7 +249,8 @@ NCursesUI::NCursesUI()
             m_on_key(*key);
       }},
       m_assistant(assistant_clippy),
-      m_colors{default_colors}
+      m_colors{default_colors},
+      m_cursor{CursorMode::Buffer, {}}
 {
     initscr();
     raw();
