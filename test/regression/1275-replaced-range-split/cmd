@@ -1,0 +1,1 @@
+:addhl show_whitespaces<ret>i<space><esc>:addhl column 1 red<ret>A<backspace><esc>

@@ -573,7 +573,7 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
             {
                 for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
                 {
-                    if (!atom_it->has_buffer_range())
+                    if (atom_it->type() != DisplayAtom::Range)
                         continue;
 
                     kak_assert(atom_it->begin().line == buf_line);
