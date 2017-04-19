@@ -309,6 +309,7 @@ const CommandDesc force_edit_cmd = {
     edit<true>
 };
 
+template<bool force = false>
 void write_buffer(const ParametersParser& parser, Context& context, const ShellContext&)
 {
     Buffer& buffer = context.buffer();
@@ -326,7 +327,7 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
                     buffer.name() : parse_filename(parser[0]);
 
     context.hooks().run_hook("BufWritePre", filename, context);
-    write_buffer_to_file(buffer, filename);
+    write_buffer_to_file(buffer, filename, force);
     context.hooks().run_hook("BufWritePost", filename, context);
 }
 
@@ -340,6 +341,18 @@ const CommandDesc write_cmd = {
     CommandHelper{},
     filename_completer,
     write_buffer,
+};
+
+const CommandDesc force_write_cmd = {
+    "write!",
+    "w!",
+    "write [filename]: write the current buffer to its file "
+    "or to [filename] if specified, even when the file is write protected",
+    single_optional_param,
+    CommandFlags::None,
+    CommandHelper{},
+    filename_completer,
+    write_buffer<true>,
 };
 
 void write_all_buffers(Context& context)
@@ -2102,6 +2115,7 @@ void register_commands()
     register_command(edit_cmd);
     register_command(force_edit_cmd);
     register_command(write_cmd);
+    register_command(force_write_cmd);
     register_command(write_all_cmd);
     register_command(write_all_quit_cmd);
     register_command(kill_cmd);

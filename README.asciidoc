@@ -676,8 +676,10 @@ command `q!` has to be used).
  * `e[dit][!] <filename> [<line> [<column>]]`: open buffer on file, go to given
      line and column. If file is already opened, just switch to this file.
      use edit! to force reloading.
- * `w[rite] [<filename>]`: write buffer to <filename> or use it's name if
-     filename is not given.
+ * `w[rite][!] [<filename>]`: write buffer to <filename> or use it's name if
+     filename is not given. If the file is write-protected, its
+     permissions are temporarily changed to allow saving the buffer and
+     restored afterwards when the write! command is used.
  * `w[rite]a[ll]`: write all buffers that are associated to a file.
  * `q[uit][!]`: exit Kakoune, use quit! to force quitting even if there is some
      unsaved buffers remaining.
