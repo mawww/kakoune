@@ -280,8 +280,7 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
 
 void write_buffer_to_file(Buffer& buffer, StringView filename)
 {
-    int fd = open(parse_filename(filename).c_str(),
-                  O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    int fd = open(filename.zstr(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
 

@@ -692,9 +692,9 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
         {
             Buffer* buffer = open_file_buffer(file);
             if (not suffix_backup.empty())
-                write_buffer_to_file(*buffer, file + suffix_backup);
+                write_buffer_to_file(*buffer, buffer->name() + suffix_backup);
             apply_to_buffer(*buffer);
-            write_buffer_to_file(*buffer, file);
+            write_buffer_to_file(*buffer, buffer->name());
             buffer_manager.delete_buffer(*buffer);
         }
         if (not isatty(0))

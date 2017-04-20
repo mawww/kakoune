@@ -323,7 +323,7 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
         throw runtime_error("cannot overwrite the buffer when in readonly mode");
 
     auto filename = parser.positional_count() == 0 ?
-                        buffer.name() : parse_filename(parser[0]);
+                    buffer.name() : parse_filename(parser[0]);
 
     context.hooks().run_hook("BufWritePre", filename, context);
     write_buffer_to_file(buffer, filename);
