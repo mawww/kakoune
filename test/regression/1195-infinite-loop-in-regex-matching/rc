@@ -1,0 +1,2 @@
+add-highlighter regions -default code -match-capture sh \
+    heredoc '<<-?(\w+)' '^\t*(\w+)$' ''

@@ -51,7 +51,7 @@ Codepoint read_codepoint(Iterator& it, const Iterator& end)
     // According to rfc3629, UTF-8 allows only up to 4 bytes.
     // (21 bits codepoint)
     unsigned char byte = read(it);
-    if (not (byte & 0x80)) // 0xxxxxxx
+    if ((byte & 0x80) == 0) // 0xxxxxxx
         return byte;
 
     if (it == end)
@@ -91,7 +91,7 @@ Codepoint codepoint(Iterator it, const Iterator& end)
 template<typename InvalidPolicy = utf8::InvalidPolicy::Pass>
 ByteCount codepoint_size(char byte)
 {
-    if (not (byte & 0x80)) // 0xxxxxxx
+    if ((byte & 0x80) == 0) // 0xxxxxxx
         return 1;
     else if ((byte & 0xE0) == 0xC0) // 110xxxxx
         return 2;
@@ -125,9 +125,10 @@ inline ByteCount codepoint_size(Codepoint cp)
 template<typename Iterator>
 void to_next(Iterator& it, const Iterator& end)
 {
-    if (it != end and read(it) & 0x80)
-        while (it != end and (*(it) & 0xC0) == 0x80)
-            ++it;
+    if (it != end)
+        ++it;
+    while (it != end and not is_character_start(*it))
+        ++it;
 }
 
 // returns an iterator to next character first byte
@@ -151,8 +152,10 @@ Iterator finish(Iterator it, const Iterator& end)
 template<typename Iterator>
 void to_previous(Iterator& it, const Iterator& begin)
 {
-    while (it != begin and (*(--it) & 0xC0) == 0x80)
-           ;
+    if (it != begin)
+        --it;
+    while (not is_character_start(*it))
+        --it;
 }
 // returns an iterator to the previous character first byte
 template<typename Iterator>
@@ -173,19 +176,13 @@ Iterator advance(Iterator it, const Iterator& end, CharCount d)
 
     if (d < 0)
     {
-        while (it != end and d != 0)
-        {
-            if (is_character_start(*--it))
-                ++d;
-        }
+        while (it != end and d++ != 0)
+            to_previous(it, end);
     }
     else if (d > 0)
     {
-        while (it != end and d != 0)
-        {
-            if (is_character_start(*++it))
-                --d;
-        }
+        while (it != end and d-- != 0)
+            to_next(it, end);
     }
     return it;
 }
