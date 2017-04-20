@@ -49,7 +49,7 @@ struct MappedFile
     struct stat st {};
 };
 
-void write_buffer_to_file(Buffer& buffer, StringView filename);
+void write_buffer_to_file(Buffer& buffer, StringView filename, bool force = false);
 void write_buffer_to_fd(Buffer& buffer, int fd);
 void write_buffer_to_backup_file(Buffer& buffer);
 

@@ -278,9 +278,27 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
     }
 }
 
-void write_buffer_to_file(Buffer& buffer, StringView filename)
+void write_buffer_to_file(Buffer& buffer, StringView filename, bool force)
 {
-    int fd = open(filename.zstr(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    struct stat st;
+    auto zfilename = filename.zstr();
+
+    if (force)
+    {
+        if (::stat(zfilename, &st) == 0)
+        {
+            if (::chmod(zfilename, st.st_mode | S_IWUSR) < 0)
+                throw runtime_error("couldn't change file permissions");
+        }
+        else
+            force = false;
+    }
+    auto restore_mode = on_scope_end([&]{
+        if (force and ::chmod(zfilename, st.st_mode) < 0)
+            throw runtime_error("couldn't restore file permissions");
+    });
+
+    int fd = open(zfilename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
 
