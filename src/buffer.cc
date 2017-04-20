@@ -495,6 +495,9 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
 
 BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
 {
+    if (begin == end)
+        return begin;
+
     kak_assert(is_valid(begin));
     kak_assert(is_valid(end));
     StringView prefix = m_lines[begin.line].substr(0, begin.column);
