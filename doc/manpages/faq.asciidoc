@@ -10,7 +10,7 @@ How to pronounce the name of the project and what does it mean ?
 
 The name of the project is pronounced "Kak-oon", and is a word taken from a
 New Caledonian dialect based on french. It means a hard blow, usually a punch,
-but generally refers to a blow into which which all of one's strength went.
+but generally refers to a blow into which all of one's strength went.
 
 Is there going to be a Windows port of Kakoune ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -127,7 +127,7 @@ Why aren't there other scopes similar to `%sh{}` e.g. python ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Supporting custom scopes would add hard dependencies to the project, which
-is too much of an drawback when balanced against the low cost of using
+is too much of a drawback when balanced against the low cost of using
 an interpreter in a regular shell scope (e.g. `%sh{ python -c "..." }`).
 The shell scope allows users to spawn any interpreter they want, for a minimal
 cost in terms of performance, it is therefore the reason why it's the only

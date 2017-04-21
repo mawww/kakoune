@@ -23,7 +23,7 @@ Interacting
 Alternate names
 ---------------
 
-non alphanumeric registers have an alternative name that can be used
+Non alphanumeric registers have an alternative name that can be used
 in contexts where only alphanumeric identifiers are possible.
 
 Default registers

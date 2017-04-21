@@ -48,7 +48,7 @@ For example, we can echo a message in Kakoune in 10 seconds with:
 Interactive output
 ------------------
 
-It is a frequent interaction mode to run a program and display it's output
+It is a frequent interaction mode to run a program and display its output
 in a Kakoune buffer.
 
 The common pattern to do that is to use a fifo buffer:
@@ -81,19 +81,19 @@ Completion candidates
 
 Filetype specific completion should be provided by external programs.
 
-external completions are provided using an option to store completion, which
+External completions are provided using an option to store completion, which
 have the following format.
 
 ----
 line.column[+len]@timestamp:candidate1|desc1|menu1:candidate2|desc2|menu2:...
 ----
 
-the first element of this string list specify where and when this completions
+the first element of this string list specify where and when this completion
 applies, the others are a triplet `<completion text>|<docstring>|<menu text>`
 
-The menu text is a a markup string, so it can contain `{face}` directives.
+The menu text is a markup string, so it can contain `{face}` directives.
 
-to effectively use that completion option, it should get added to the completers
+To effectively use that completion option, it should get added to the completers
 option.
 
 ---

@@ -28,7 +28,7 @@ following command:
 hook global WinCreate .*\.cc %{ add-highlighter number_lines }
 ----------------------------------------------------
 
-if *group* is given, make this hook part of the named group. Groups are used
+If *group* is given, make this hook part of the named group. Groups are used
 for removing hooks with the following command:
 
 -----------------------
@@ -130,7 +130,7 @@ Default hooks
 	or because the writing end has been closed
 
 *RuntimeError*::
-	an error was encountered while executing an user command the error
+	an error was encountered while executing a user command the error
 	message is used for filtering
 
 *KakBegin*::
@@ -141,11 +141,11 @@ Default hooks
 	kakoune is quitting
 
 *FocusIn*::
-	on supported clients, triggered when the client gets focused. the
+	on supported clients, triggered when the client gets focused. The
 	filtering text is the client name
 
 *FocusOut*::
-	on supported clients, triggered when the client gets unfocused. the
+	on supported clients, triggered when the client gets unfocused. The
 	filtering text is the client name
 
 *InsertCompletionShow*::
@@ -155,7 +155,7 @@ Default hooks
 	Triggered when the insert completion menu gets hidden
 
 *RawKey*::
-	Triggered whenever an key is pressed by the user, the key is
+	Triggered whenever a key is pressed by the user, the key is
 	used for filtering.
 
 When not specified, the filtering text is an empty string. Note that

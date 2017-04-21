@@ -22,8 +22,8 @@ and should, as a side effect, be very efficient at editing text in general.
 Composability
 -------------
 
-Being limited in scope to code edition should not isolate Kakoune from it's
-environment. On the contrary, Kakoune is expected to run on an Unix-like
+Being limited in scope to code edition should not isolate Kakoune from its
+environment. On the contrary, Kakoune is expected to run on a Unix-like
 system, along with a lot of text-based tools, and should make it easy to
 interact with these tools.
 
@@ -35,14 +35,14 @@ The modern Unix environment is not limited to text filters, most people use
 a graphical interface nowadays, and Kakoune should be able to take advantage
 of that, without hindering text mode support. For example Kakoune supports
 multiple clients on the same editing session, so that multiple windows can
-be used, letting the system window manager handle it's responsibilities such
+be used, letting the system window manager handle its responsibilities such
 as tiling or tabbing.
 
 Orthogonality
 -------------
 
 Kakoune features should be as orthogonal as possible, for example, in Vim,
-there is multiple ways for modifying the buffer: Through normal/insert
+there are multiple ways for modifying the buffer: Through normal/insert
 mode, command mode, and Vim scripts. In Kakoune, modifying the buffer is the
 normal/insert mode job.
 
@@ -74,7 +74,7 @@ keystrokes, and fast to execute.
    or the same number of keys.
 
  * Kakoune be designed with asynchronicity in mind, launching a background
-   process and using it's result when available should not block the editor.
+   process and using its result when available should not block the editor.
 
  * Kakoune should be implemented with speed in mind, a slow editor is a
    useless one.
@@ -131,6 +131,6 @@ possible be integrated with the code so that it stays up to date.
 Vim compatibility
 -----------------
 
-Kakoune is inspired by Vim, and should try to keep it's commands close to Vim
-ones if there is no compelling reasons to change. However self consistency
+Kakoune is inspired by Vim, and should try to keep its commands close to
+Vim's if there are no compelling reasons to change. However self-consistency
 is more important than Vim compatibility.
