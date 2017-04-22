@@ -24,6 +24,7 @@ install:
       fi;
     elif [ $TRAVIS_OS_NAME = osx ]; then
        brew outdated boost || brew upgrade boost;
+       brew install homebrew/dupes/ncurses;
     fi;
 env:
   global:
