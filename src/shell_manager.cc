@@ -172,7 +172,7 @@ std::pair<String, int> ShellManager::eval(
             move(child_stdin.read_fd(), 0);
         }
         else
-            close(0);
+            move(open("/dev/null", O_RDONLY), 0);
 
         close(child_stdout.read_fd());
         move(child_stdout.write_fd(), 1);
