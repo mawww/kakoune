@@ -15,12 +15,12 @@ namespace utf8
 
 template<typename Iterator>
 [[gnu::always_inline]]
-inline char read(Iterator& it) { char c = *it; ++it; return c; }
+inline char read(Iterator& it) noexcept { char c = *it; ++it; return c; }
 
 // return true if it points to the first byte of a (either single or
 // multibyte) character
 [[gnu::always_inline]]
-inline bool is_character_start(char c)
+inline bool is_character_start(char c) noexcept
 {
     return (c & 0xC0) != 0x80;
 }
@@ -35,7 +35,7 @@ struct Assert
 
 struct Pass
 {
-    Codepoint operator()(Codepoint cp) const { return cp; }
+    Codepoint operator()(Codepoint cp) const noexcept { return cp; }
 };
 
 }
@@ -45,6 +45,7 @@ struct Pass
 template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
          typename Iterator>
 Codepoint read_codepoint(Iterator& it, const Iterator& end)
+    noexcept(noexcept(InvalidPolicy{}(0)))
 {
     if (it == end)
         return InvalidPolicy{}(-1);
@@ -84,12 +85,14 @@ Codepoint read_codepoint(Iterator& it, const Iterator& end)
 template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
          typename Iterator>
 Codepoint codepoint(Iterator it, const Iterator& end)
+    noexcept(noexcept(read_codepoint<InvalidPolicy>(it, end)))
 {
-    return read_codepoint(it, end);
+    return read_codepoint<InvalidPolicy>(it, end);
 }
 
 template<typename InvalidPolicy = utf8::InvalidPolicy::Pass>
 ByteCount codepoint_size(char byte)
+    noexcept(noexcept(InvalidPolicy{}(0)))
 {
     if ((byte & 0x80) == 0) // 0xxxxxxx
         return 1;
@@ -123,7 +126,7 @@ inline ByteCount codepoint_size(Codepoint cp)
 }
 
 template<typename Iterator>
-void to_next(Iterator& it, const Iterator& end)
+void to_next(Iterator& it, const Iterator& end) noexcept
 {
     if (it != end)
         ++it;
@@ -133,7 +136,7 @@ void to_next(Iterator& it, const Iterator& end)
 
 // returns an iterator to next character first byte
 template<typename Iterator>
-Iterator next(Iterator it, const Iterator& end)
+Iterator next(Iterator it, const Iterator& end) noexcept
 {
     to_next(it, end);
     return it;
@@ -142,7 +145,7 @@ Iterator next(Iterator it, const Iterator& end)
 // returns it's parameter if it points to a character first byte,
 // or else returns next character first byte
 template<typename Iterator>
-Iterator finish(Iterator it, const Iterator& end)
+Iterator finish(Iterator it, const Iterator& end) noexcept
 {
     while (it != end and (*(it) & 0xC0) == 0x80)
         ++it;
@@ -150,7 +153,7 @@ Iterator finish(Iterator it, const Iterator& end)
 }
 
 template<typename Iterator>
-void to_previous(Iterator& it, const Iterator& begin)
+void to_previous(Iterator& it, const Iterator& begin) noexcept
 {
     if (it != begin)
         --it;
@@ -159,7 +162,7 @@ void to_previous(Iterator& it, const Iterator& begin)
 }
 // returns an iterator to the previous character first byte
 template<typename Iterator>
-Iterator previous(Iterator it, const Iterator& begin)
+Iterator previous(Iterator it, const Iterator& begin) noexcept
 {
     to_previous(it, begin);
     return it;
@@ -169,7 +172,7 @@ Iterator previous(Iterator it, const Iterator& begin)
 // dth character after (or before if d < 0) the character
 // pointed by it
 template<typename Iterator>
-Iterator advance(Iterator it, const Iterator& end, CharCount d)
+Iterator advance(Iterator it, const Iterator& end, CharCount d) noexcept
 {
     if (it == end)
         return it;
@@ -191,7 +194,7 @@ Iterator advance(Iterator it, const Iterator& end, CharCount d)
 // character at the dth column after (or before if d < 0)
 // the character pointed by it
 template<typename Iterator>
-Iterator advance(Iterator it, const Iterator& end, ColumnCount d)
+Iterator advance(Iterator it, const Iterator& end, ColumnCount d) noexcept
 {
     if (it == end)
         return it;
@@ -220,7 +223,7 @@ Iterator advance(Iterator it, const Iterator& end, ColumnCount d)
 
 // returns the character count between begin and end
 template<typename Iterator>
-CharCount distance(Iterator begin, const Iterator& end)
+CharCount distance(Iterator begin, const Iterator& end) noexcept
 {
     CharCount dist = 0;
 
@@ -234,7 +237,7 @@ CharCount distance(Iterator begin, const Iterator& end)
 
 // returns the column count between begin and end
 template<typename Iterator>
-ColumnCount column_distance(Iterator begin, const Iterator& end)
+ColumnCount column_distance(Iterator begin, const Iterator& end) noexcept
 {
     ColumnCount dist = 0;
 
@@ -245,7 +248,7 @@ ColumnCount column_distance(Iterator begin, const Iterator& end)
 
 // returns an iterator to the first byte of the character it is into
 template<typename Iterator>
-Iterator character_start(Iterator it, const Iterator& begin)
+Iterator character_start(Iterator it, const Iterator& begin) noexcept
 {
     while (it != begin and not is_character_start(*it))
         --it;
