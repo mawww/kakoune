@@ -1385,7 +1385,7 @@ public:
 
         ParametersParser parser{params, param_desc};
         if ((parser.positional_count() % 4) != 1)
-            throw runtime_error("wrong parameter count, expect <id> (<group name> <begin> <end> <recurse>)+");
+            throw runtime_error("wrong parameter count, expected <id> (<group name> <begin> <end> <recurse>)+");
 
         const bool match_capture = (bool)parser.get_switch("match-capture");
         RegionsHighlighter::RegionDescList regions;
@@ -1396,13 +1396,11 @@ public:
 
             const Regex::flag_type flags = match_capture ?
                 Regex::optimize : Regex::nosubs | Regex::optimize;
-            Regex begin{parser[i+1], flags };
-            Regex end{parser[i+2], flags };
-            Regex recurse;
-            if (not parser[i+3].empty())
-                recurse = Regex{parser[i+3], flags };
 
-            regions.push_back({ parser[i], std::move(begin), std::move(end), std::move(recurse), match_capture });
+            regions.push_back({ parser[i],
+                                Regex{parser[i+1], flags}, Regex{parser[i+2], flags},
+                                parser[i+3].empty() ? Regex{} : Regex{parser[i+3], flags},
+                                match_capture });
         }
 
         auto default_group = parser.get_switch("default").value_or(StringView{}).str();
