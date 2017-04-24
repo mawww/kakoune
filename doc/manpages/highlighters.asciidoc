@@ -48,7 +48,7 @@ General highlighters
 	every line contained in the int-list option named <option_name>
 
 *show_matching*::
-	highlight matching char of the character under the selections cursor
+	highlight matching char of the character under the selections' cursor
 	using MatchingChar face
 
 *show_whitespaces* [options]::
@@ -62,7 +62,7 @@ General highlighters
 		a one character long separator that will replace spaces
 
 	*-nbsp* <separator>:::
-		a one character long separator that will replace non breakable spaces
+		a one character long separator that will replace non-breakable spaces
 
 	*-tab* <separator>:::
 		a one character long separator that will replace tabulations
@@ -151,7 +151,7 @@ This region can be defined with:
 shell_expand %sh\{ \} \{
 ------------------------
 
-Regions are used in the regions highlighter which can take any number
+Regions are used in the region highlighters which can take any number
 of regions.
 
 The following command:
@@ -180,7 +180,7 @@ If the *-match-capture* switch is passed, then region closing and recurse
 matches are considered valid for a given region opening match only if they
 matched the same content for the capture 1.
 
-Most programming languages can then be properly highlighted using a regions
+Most programming languages can then be properly highlighted using a region
 highlighter as root:
 
 -----------------------------------------------------------------

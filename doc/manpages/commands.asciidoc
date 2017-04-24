@@ -25,7 +25,7 @@ command *q!* has to be used).
 	opened, just switch to this file. Use edit! to force reloading
 
 *w[rite][!]* [<filename>]::
-	write buffer to <filename> or use it's name if filename is not
+	write buffer to <filename> or use its name if filename is not
 	given. If the file is write-protected, its permissions are temporarily
 	changed to allow saving the buffer and restored afterwards when
 	the write! command is used.
@@ -168,7 +168,7 @@ commands:
 
 *menu* <label1> <commands1> <label2> <commands2> ...::
 	display a menu using labels, the selected label’s commands are
-	executed. menu can take an *-auto-single* argument, to automatically
+	executed. The *menu* command can take an *-auto-single* argument, to automatically
 	run commands when only one choice is provided, and a *-select-cmds*
 	argument, in which case menu takes three argument per item, the
 	last one being a command to execute when the item is selected (but
@@ -187,7 +187,7 @@ commands:
 		set the title of the message box
 
 *try* <commands> catch <on_error_commands>::
-	prevent an error in *commands* from aborting the whole commands
+	prevent an error in *commands* from aborting the whole command
 	execution, execute *on_error_commands* instead. If nothing is to be
 	done on error, the catch part can be omitted
 
@@ -243,8 +243,8 @@ New commands can be defined using the *define-command* command:
 *-docstring*:::
 	define the documentation string for the command
 
-Using shell expansion allows to define complex commands or to access Kakoune
-state:
+Using shell expansion allows defining complex commands or accessing
+Kakoune's state:
 
 --------------------------------------------------------
 def " print_selection %{ echo %sh{ ${kak_selection} } }"

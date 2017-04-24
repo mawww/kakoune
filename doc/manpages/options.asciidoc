@@ -23,7 +23,7 @@ Types
 	to contain a colon, it can be escaped
 	with a backslash
 *range-faces*::
-	a `:` separated list of a pairs of a buffer range
+	a `:` separated list of a pair of a buffer range
 	(`<begin line>.<begin column>,<end line>.<end column>` or
 	`<begin line>.<begin column>+<length>`) and  a face (separated by `|`),
 	except for the first element which is just the timestamp of the buffer.
@@ -60,7 +60,7 @@ Builtin options
 	ignored
 
 *BOM* 'enum(none|utf8)'::
-	define if the file should be written with an unicode byte order mark;
+	define if the file should be written with a unicode byte order mark;
 	values of this option assigned to the `window` scope are ignored
 
 *readonly* 'bool'::
@@ -82,12 +82,12 @@ Builtin options
 	automatically display possible completions when editing a prompt
 
 *ignored_files* 'regex'::
-	filenames matching this regex wont be considered as candidates on
+	filenames matching this regex won't be considered as candidates on
 	filename completion (except if the text being completed already
 	matches it)
 
 *disabled_hooks* 'regex'::
-	hooks whose group matches this regex wont be executed. For example
+	hooks whose group matches this regex won't be executed. For example
 	indentation hooks can be disabled with '.*-indent'
 
 *filetype* 'str'::

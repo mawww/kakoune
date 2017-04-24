@@ -40,7 +40,7 @@ Optional flags
 
 *-itersel* (requires -draft)::
 	execute once per selection, in a context with only the considered
-	selection. This permits to avoid cases where the selections may
+	selection. This permits avoiding cases where the selections may
 	get merged
 
 *-buffer* <names>::

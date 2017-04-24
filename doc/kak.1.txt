@@ -100,7 +100,7 @@ which will source additional files:
 
 	* if the *$XDG_CONFIG_HOME*'/kak/autoload' directory exists, load every '*.kak' files in it, and load
 		recursively any subdirectory
-	* if it does not exists, fall back to the system wide autoload directory in '../share/kak/autoload'
+	* if it does not exist, fall back to the system wide autoload directory in '../share/kak/autoload'
 
 After that, if it exists, source the *$XDG_CONFIG_HOME*'/kak/kakrc' file which should be used for user
 configuration. In order to continue autoloading site-wide files with a local autoload directory, just add a symbolic

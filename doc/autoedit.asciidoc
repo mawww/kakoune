@@ -41,7 +41,7 @@ allowing for clearer separation. either use <space> or quote the argument to
 use a space key)
 
 That works, however if the phase *2.* raises an error, the +:exec+ will stop
-and the user will get it's selections on the previous line. the solution
+and the user will get its selections on the previous line. The solution
 is to use a *draft* context, instead of the one the user is interacting with.
 
 ---------------------------------------------------------------

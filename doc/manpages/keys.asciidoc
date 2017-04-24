@@ -76,7 +76,7 @@ Using Counts
 In normal mode, commands can be prefixed with a numeric count, which can control
 the command behaviour.
 
-for example, *3W* selects 3 consecutive words and *3w* select the third word on
+For example, *3W* selects 3 consecutive words and *3w* select the third word on
 the right of selection end.
 
 Disabling Hooks
@@ -227,11 +227,11 @@ Changes
 	enter insert mode at current selection end line end
 
 *o*::
-	enter insert mode in one (or given count) new lines below
+	enter insert mode in a new line (or in a given count of new lines) below
 	current selection end
 
 *O*::
-	enter insert mode in a on (or given count) lines above
+	enter insert mode in a new line (or in a given count of new lines) above
 	current selection begin
 
 *y*::
@@ -498,7 +498,7 @@ Object Selection
 	selects the whole object
 
 *<a-i>*::
-	selects the inner object, that is the object excluding it's surrounder
+	selects the inner object, that is the object excluding its surrounder
 
 *[*::
 	selects to object start
@@ -582,7 +582,7 @@ Prompt Commands
 	move cursor to first character
 
 *<end>*::
-	move cursor to passed last character
+	move cursor past the last character
 
 *<backspace>*, *<a-x>*::
 	erase character before cursor
