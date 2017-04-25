@@ -1696,9 +1696,7 @@ void move(Context& context, NormalParams params)
     auto& selections = context.selections();
     for (auto& sel : selections)
     {
-        auto cursor = context.has_window() ? context.window().offset_coord(sel.cursor(), offset)
-                                           : context.buffer().offset_coord(sel.cursor(), offset);
-
+        auto cursor = context.buffer().offset_coord(sel.cursor(), offset);
         sel.anchor() = mode == SelectMode::Extend ? sel.anchor() : cursor;
         sel.cursor() = cursor;
     }

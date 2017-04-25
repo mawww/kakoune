@@ -44,9 +44,6 @@ public:
     bool needs_redraw(const Context& context) const;
     void force_redraw() { m_last_setup = Setup{}; }
 
-    BufferCoord offset_coord(BufferCoord coord, CharCount offset);
-    BufferCoordAndTarget offset_coord(BufferCoordAndTarget coord, LineCount offset);
-
     void set_client(Client* client) { m_client = client; }
 
     void clear_display_buffer();

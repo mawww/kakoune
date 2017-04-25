@@ -322,36 +322,11 @@ BufferCoord Window::buffer_coord(DisplayCoord coord) const
         return {0,0};
     if (coord <= 0_line)
         coord = {0,0};
-    if ((int)coord.line >= m_display_buffer.lines().size())
+    if ((size_t)coord.line >= m_display_buffer.lines().size())
         coord = DisplayCoord{(int)m_display_buffer.lines().size()-1, INT_MAX};
 
     return find_buffer_coord(m_display_buffer.lines()[(int)coord.line],
                              buffer(), coord.column);
-}
-
-BufferCoord Window::offset_coord(BufferCoord coord, CharCount offset)
-{
-    return buffer().offset_coord(coord, offset);
-}
-
-BufferCoordAndTarget Window::offset_coord(BufferCoordAndTarget coord, LineCount offset)
-{
-    auto line = clamp(coord.line + offset, 0_line, buffer().line_count()-1);
-    DisplayBuffer display_buffer;
-    DisplayBuffer::LineList& lines = display_buffer.lines();
-    lines.emplace_back(AtomList{ {buffer(), coord.line, coord.line+1} });
-    lines.emplace_back(AtomList{ {buffer(), line, line+1} });
-    display_buffer.compute_range();
-
-    BufferRange range{ std::min(line, coord.line), std::max(line,coord.line)+1};
-
-    InputHandler input_handler{{ *m_buffer, Selection{} }, Context::Flags::Transient};
-    input_handler.context().set_window(*this);
-    m_highlighters.highlight(input_handler.context(), HighlightFlags::MoveOnly, display_buffer, range);
-    m_builtin_highlighters.highlight(input_handler.context(), HighlightFlags::MoveOnly, display_buffer, range);
-
-    ColumnCount column = coord.target == -1 ? find_display_column(lines[0], buffer(), coord) : coord.target;
-    return { find_buffer_coord(lines[1], buffer(), column), column };
 }
 
 void Window::clear_display_buffer()

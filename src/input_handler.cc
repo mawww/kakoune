@@ -1242,8 +1242,7 @@ private:
         auto& selections = context().selections();
         for (auto& sel : selections)
         {
-            auto cursor = context().has_window() ? context().window().offset_coord(sel.cursor(), offset)
-                                                 : context().buffer().offset_coord(sel.cursor(), offset);
+            auto cursor = context().buffer().offset_coord(sel.cursor(), offset);
             sel.anchor() = sel.cursor() = cursor;
         }
         selections.sort_and_merge_overlapping();
