@@ -1539,7 +1539,10 @@ void save_selections(Context& context, NormalParams params)
         throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
 
     auto gen_desc = [&] {
-        if (not add)
+        auto content = RegisterManager::instance()[reg].get(context);
+        const bool empty = content.size() == 1 and content[0].empty();
+
+        if (not add or empty)
             return selection_list_to_string(context.selections());
 
         auto selections = read_selections_from_register(reg, context);
