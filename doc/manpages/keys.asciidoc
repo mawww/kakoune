@@ -137,6 +137,8 @@ is a sequence of non whitespace characters
 	select line on which selection end lies (or next line when end lies
 	on an end-of-line)
 
+*X*:: similar to *x*, except the current selection is extended
+
 *<a-x>*::
 	expand selections to contain full lines (including end-of-lines)
 
