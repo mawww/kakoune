@@ -17,7 +17,10 @@ struct child_not_found : public runtime_error
 class HighlighterGroup : public Highlighter
 {
 public:
-    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) override;
+    void highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override;
+
+    void compute_display_setup(const Context& context, HighlightPass pass,
+                               DisplayCoord scroll_offset, DisplaySetup& setup) override;
 
     bool has_children() const override { return true; }
     void add_child(HighlighterAndId&& hl) override;

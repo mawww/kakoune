@@ -17,10 +17,11 @@ namespace Kakoune
 
 class Context;
 
-enum class HighlightFlags
+enum class HighlightPass
 {
-    Highlight,
-    MoveOnly
+    Wrap,
+    Move,
+    Colorize,
 };
 
 // An Highlighter is a function which mutates a DisplayBuffer in order to
@@ -32,10 +33,24 @@ struct Highlighter;
 
 using HighlighterAndId = std::pair<String, std::unique_ptr<Highlighter>>;
 
+struct DisplaySetup
+{
+    // Window position relative to the buffer origin
+    DisplayCoord window_pos;
+    // Range of lines and columns from the buffer that will get displayed
+    DisplayCoord window_range;
+
+    // Position of the cursor in the window
+    DisplayCoord cursor_pos;
+};
+
 struct Highlighter
 {
     virtual ~Highlighter() = default;
-    virtual void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) = 0;
+    virtual void highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) = 0;
+
+    virtual void compute_display_setup(const Context& context, HighlightPass pass,
+                                       DisplayCoord scroll_offset, DisplaySetup& setup) {}
 
     virtual bool has_children() const { return false; }
     virtual Highlighter& get_child(StringView path) { throw runtime_error("this highlighter do not hold children"); }
@@ -48,9 +63,9 @@ template<typename Func>
 struct SimpleHighlighter : public Highlighter
 {
     SimpleHighlighter(Func func) : m_func(std::move(func)) {}
-    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) override
+    void highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override
     {
-        m_func(context, flags, display_buffer, range);
+        m_func(context, pass, display_buffer, range);
     }
 private:
     Func m_func;
