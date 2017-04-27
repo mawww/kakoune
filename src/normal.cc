@@ -1693,10 +1693,11 @@ void move(Context& context, NormalParams params)
     Type offset(std::max(params.count,1));
     if (direction == Backward)
         offset = -offset;
+    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
     auto& selections = context.selections();
     for (auto& sel : selections)
     {
-        auto cursor = context.buffer().offset_coord(sel.cursor(), offset);
+        auto cursor = context.buffer().offset_coord(sel.cursor(), offset, tabstop);
         sel.anchor() = mode == SelectMode::Extend ? sel.anchor() : cursor;
         sel.cursor() = cursor;
     }

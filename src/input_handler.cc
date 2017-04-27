@@ -1240,9 +1240,10 @@ private:
     void move(Type offset)
     {
         auto& selections = context().selections();
+        const ColumnCount tabstop = context().options()["tabstop"].get<int>();
         for (auto& sel : selections)
         {
-            auto cursor = context().buffer().offset_coord(sel.cursor(), offset);
+            auto cursor = context().buffer().offset_coord(sel.cursor(), offset, tabstop);
             sel.anchor() = sel.cursor() = cursor;
         }
         selections.sort_and_merge_overlapping();

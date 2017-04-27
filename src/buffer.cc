@@ -2,6 +2,7 @@
 
 #include "assert.hh"
 #include "buffer_manager.hh"
+#include "buffer_utils.hh"
 #include "client.hh"
 #include "containers.hh"
 #include "context.hh"
@@ -176,21 +177,21 @@ BufferCoord Buffer::clamp(BufferCoord coord) const
     return coord;
 }
 
-BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset)
+BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset, ColumnCount)
 {
     StringView line = m_lines[coord.line];
     auto target = utf8::advance(&line[coord.column], offset < 0 ? line.begin() : line.end()-1, offset);
     return {coord.line, (int)(target - line.begin())};
 }
 
-BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset)
+BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop)
 {
-    auto column = coord.target == -1 ? m_lines[coord.line].column_count_to(coord.column) : coord.target;
+    auto column = coord.target == -1 ? get_column(*this, tabstop, coord) : coord.target;
     auto line = Kakoune::clamp(coord.line + offset, 0_line, line_count()-1);
     StringView content = m_lines[line];
 
     auto final_column = std::max(0_col, std::min(column, content.column_length() - 2));
-    return {line, content.byte_count_to(final_column), column};
+    return {line, get_byte_to_column(*this, tabstop, {line, final_column}), column};
 }
 
 String Buffer::string(BufferCoord begin, BufferCoord end) const
