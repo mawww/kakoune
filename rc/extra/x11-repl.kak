@@ -8,7 +8,7 @@ All optional parameters are forwarded to the new window} \
            echo "echo -color Error 'termcmd option is not set'"
            exit
         fi
-        if [ $# -eq 0 ]; then cmd="bash"; else cmd="$@"; fi
+        if [ $# -eq 0 ]; then cmd="${SHELL:-sh}"; else cmd="$@"; fi
         setsid ${kak_opt_termcmd} ${cmd} -t kak_repl_window < /dev/null > /dev/null 2>&1 &
 }}
 
