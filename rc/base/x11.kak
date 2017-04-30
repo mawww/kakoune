@@ -28,7 +28,9 @@ The optional arguments will be passed as arguments to the new client} \
            exit
         fi
         if [ $# -ne 0 ]; then kakoune_params="-e '$@'"; fi
-        setsid ${kak_opt_termcmd} "kak -c ${kak_session} ${kakoune_params}" < /dev/null > /dev/null 2>&1 &
+        {
+            exec ${kak_opt_termcmd} "kak -c ${kak_session} ${kakoune_params}"
+        } </dev/null >/dev/null 2>&1 &
 }}
 
 def -docstring %{x11-focus [<client>]: focus a given client's window
