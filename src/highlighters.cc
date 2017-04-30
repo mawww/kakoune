@@ -656,15 +656,13 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
 
 struct WrapHighlighter : Highlighter
 {
-    WrapHighlighter(String col_expr) : m_col_expr{std::move(col_expr)} {}
-
     void highlight(const Context& context, HighlightPass pass,
                    DisplayBuffer& display_buffer, BufferRange) override
     {
         if (pass != HighlightPass::Wrap)
             return;
 
-        ColumnCount column = get_wrap_column(context);
+        ColumnCount column = context.window().display_setup().window_range.column;
         if (column < 0)
             return;
 
@@ -726,7 +724,7 @@ struct WrapHighlighter : Highlighter
         if (pass != HighlightPass::Wrap)
             return;
 
-        ColumnCount column = get_wrap_column(context);
+        ColumnCount column = context.window().display_setup().window_range.column;
         if (column < 0)
             return;
 
@@ -784,28 +782,11 @@ struct WrapHighlighter : Highlighter
 
     static  HighlighterAndId create(HighlighterParameters params)
     {
-        if (params.size() != 1)
+        if (params.size() != 0)
             throw runtime_error("wrong parameter count");
 
-        return {"wrap_" + params[0], make_unique<WrapHighlighter>(params[0])};
+        return {"wrap", make_unique<WrapHighlighter>()};
     }
-
-private:
-    ColumnCount get_wrap_column(const Context& context)
-    {
-        try
-        {
-            return {str_to_int_ifp(expand(m_col_expr, context)).value_or(0) - 1};
-        }
-        catch (runtime_error& err)
-        {
-            write_to_debug_buffer(
-                format("Error evaluating highlight column expression: {}", err.what()));
-            return {-1};
-        }
-    }
-
-    String m_col_expr;
 };
 
 void expand_tabulations(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange)

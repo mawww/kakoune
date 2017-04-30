@@ -122,10 +122,10 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
         return m_display_buffer;
 
     kak_assert(&buffer() == &context.buffer());
-    auto setup = compute_display_setup(context);
-    m_position = setup.window_pos;
+    m_display_setup = compute_display_setup(context);
+    m_position = m_display_setup.window_pos;
 
-    for (LineCount line = 0; line < setup.window_range.line; ++line)
+    for (LineCount line = 0; line < m_display_setup.window_range.line; ++line)
     {
         LineCount buffer_line = m_position.line + line;
         if (buffer_line >= buffer().line_count())
@@ -206,9 +206,9 @@ DisplaySetup Window::compute_display_setup(const Context& context)
         m_dimensions,
         DisplayCoord{cursor.line - m_position.line, cursor_col - m_position.column}
     };
-    for (auto pass : { HighlightPass::Wrap, HighlightPass::Move })
+    for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
         m_highlighters.compute_display_setup(context, pass, offset, setup);
-    for (auto pass : { HighlightPass::Wrap, HighlightPass::Move })
+    for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
         m_builtin_highlighters.compute_display_setup(context, pass, offset, setup);
 
     return setup;

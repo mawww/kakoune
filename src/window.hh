@@ -46,6 +46,8 @@ public:
 
     void set_client(Client* client) { m_client = client; }
 
+    const DisplaySetup& display_setup() const { return m_display_setup; }
+
     void clear_display_buffer();
 private:
     Window(const Window&) = delete;
@@ -62,6 +64,7 @@ private:
     DisplayCoord m_position;
     DisplayCoord m_dimensions;
     DisplayBuffer m_display_buffer;
+    DisplaySetup m_display_setup;
 
     HighlighterGroup m_highlighters;
     HighlighterGroup m_builtin_highlighters;
