@@ -46,8 +46,9 @@ void send_command(StringView session, StringView command);
 
 struct Server : public Singleton<Server>
 {
-    Server(String session_name);
+    Server(pid_t pid, String session_name);
     ~Server();
+    const pid_t &pid() const { return m_pid; }
     const String& session() const { return m_session; }
 
     bool rename_session(StringView name);
@@ -57,6 +58,7 @@ private:
     class Accepter;
     void remove_accepter(Accepter* accepter);
 
+    pid_t m_pid;
     String m_session;
     std::unique_ptr<FDWatcher> m_listener;
     Vector<std::unique_ptr<Accepter>, MemoryDomain::Remote> m_accepters;

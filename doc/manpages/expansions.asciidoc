@@ -99,6 +99,8 @@ informations about Kakoune's state:
 	width of the current kakoune window
 *kak_window_height*::
 	height of the current kakoune window
+*kak_server_pid*::
+	process ID of the kakoune server
 *kak_hook_param*::
 	filtering text passed to the currently executing hook
 *kak_hook_param_capture_N*::

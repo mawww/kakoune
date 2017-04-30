@@ -736,8 +736,8 @@ private:
     MsgReader m_reader;
 };
 
-Server::Server(String session_name)
-    : m_session{std::move(session_name)}
+Server::Server(pid_t pid, String session_name)
+    : m_pid(pid), m_session{std::move(session_name)}
 {
     int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
