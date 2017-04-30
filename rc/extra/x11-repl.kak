@@ -9,7 +9,9 @@ All optional parameters are forwarded to the new window} \
            exit
         fi
         if [ $# -eq 0 ]; then cmd="bash"; else cmd="$@"; fi
-        setsid ${kak_opt_termcmd} ${cmd} -t kak_repl_window < /dev/null > /dev/null 2>&1 &
+        {
+            exec ${kak_opt_termcmd} ${cmd} -t kak_repl_window
+        } </dev/null >/dev/null 2>&1 &
 }}
 
 def x11-send-text -docstring "send the selected text to the repl window" %{
