@@ -20,7 +20,7 @@ public:
     void highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override;
 
     void compute_display_setup(const Context& context, HighlightPass pass,
-                               DisplayCoord scroll_offset, DisplaySetup& setup) override;
+                               DisplaySetup& setup) override;
 
     bool has_children() const override { return true; }
     void add_child(HighlighterAndId&& hl) override;

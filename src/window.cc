@@ -122,8 +122,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
         return m_display_buffer;
 
     kak_assert(&buffer() == &context.buffer());
-    m_display_setup = compute_display_setup(context);
-    m_position = m_display_setup.window_pos;
+    compute_display_setup(context);
 
     for (LineCount line = 0; line < m_display_setup.window_range.line; ++line)
     {
@@ -174,18 +173,7 @@ void Window::set_dimensions(DisplayCoord dimensions)
     }
 }
 
-template<typename Unit>
-static Unit adapt_view_pos(Unit pos, Unit offset,
-                           Unit view_pos, Unit view_size)
-{
-    if (pos - offset < view_pos)
-        return std::max(Unit{0}, pos - offset);
-    else if (pos + offset >= view_pos + view_size)
-        return std::max(Unit{0}, pos + offset - view_size + 1);
-    return view_pos;
-}
-
-DisplaySetup Window::compute_display_setup(const Context& context)
+void Window::compute_display_setup(const Context& context)
 {
     DisplayCoord offset = options()["scrolloff"].get<DisplayCoord>();
     offset.line = std::min(offset.line, (m_dimensions.line + 1) / 2);
@@ -193,25 +181,42 @@ DisplaySetup Window::compute_display_setup(const Context& context)
 
     const auto& cursor = context.selections().main().cursor();
 
-    m_position.line = adapt_view_pos(cursor.line, offset.line,
-                                     m_position.line, m_dimensions.line);
+    // Ensure cursor line is visible
+    if (cursor.line - offset.line < m_position.line)
+        m_position.line = cursor.line - offset.line;
+    if (cursor.line + offset.line >= m_position.line + m_dimensions.line)
+        m_position.line = cursor.line + offset.line - m_dimensions.line + 1;
 
     const int tabstop = context.options()["tabstop"].get<int>();
     auto cursor_col = get_column(buffer(), tabstop, cursor);
-    m_position.column = adapt_view_pos(cursor_col, offset.column,
-                                       m_position.column, m_dimensions.column);
 
-    DisplaySetup setup{
+    m_display_setup = DisplaySetup{
         m_position,
         m_dimensions,
+        offset,
         DisplayCoord{cursor.line - m_position.line, cursor_col - m_position.column}
     };
     for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
-        m_highlighters.compute_display_setup(context, pass, offset, setup);
+        m_highlighters.compute_display_setup(context, pass, m_display_setup);
     for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
-        m_builtin_highlighters.compute_display_setup(context, pass, offset, setup);
+        m_builtin_highlighters.compute_display_setup(context, pass, m_display_setup);
 
-    return setup;
+    // now ensure the cursor column is visible
+    {
+        auto underflow = m_display_setup.cursor_pos.column - m_display_setup.scroll_offset.column;
+        if (underflow < 0)
+        {
+            m_display_setup.window_pos.column += underflow;
+            m_display_setup.cursor_pos.column -= underflow;
+        }
+        auto overflow = m_display_setup.cursor_pos.column + m_display_setup.scroll_offset.column - m_display_setup.window_range.column + 1;
+        if (overflow > 0)
+        {
+            m_display_setup.window_pos.column += overflow;
+            m_display_setup.cursor_pos.column -= overflow;
+        }
+    }
+    m_position = m_display_setup.window_pos;
 }
 
 namespace

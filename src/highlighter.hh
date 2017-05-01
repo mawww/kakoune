@@ -39,7 +39,8 @@ struct DisplaySetup
     DisplayCoord window_pos;
     // Range of lines and columns from the buffer that will get displayed
     DisplayCoord window_range;
-
+    // Offset of line and columns that must remain visible around cursor
+    DisplayCoord scroll_offset;
     // Position of the cursor in the window
     DisplayCoord cursor_pos;
 };
@@ -50,7 +51,7 @@ struct Highlighter
     virtual void highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) = 0;
 
     virtual void compute_display_setup(const Context& context, HighlightPass pass,
-                                       DisplayCoord scroll_offset, DisplaySetup& setup) {}
+                                       DisplaySetup& setup) {}
 
     virtual bool has_children() const { return false; }
     virtual Highlighter& get_child(StringView path) { throw runtime_error("this highlighter do not hold children"); }

@@ -53,7 +53,7 @@ private:
     Window(const Window&) = delete;
 
     void on_option_changed(const Option& option) override;
-    DisplaySetup compute_display_setup(const Context& context);
+    void compute_display_setup(const Context& context);
 
     void run_hook_in_own_context(StringView hook_name, StringView param,
                                  String client_name = "");
@@ -63,8 +63,8 @@ private:
 
     DisplayCoord m_position;
     DisplayCoord m_dimensions;
-    DisplayBuffer m_display_buffer;
     DisplaySetup m_display_setup;
+    DisplayBuffer m_display_buffer;
 
     HighlighterGroup m_highlighters;
     HighlighterGroup m_builtin_highlighters;

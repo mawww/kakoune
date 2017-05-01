@@ -719,12 +719,12 @@ struct WrapHighlighter : Highlighter
     }
 
     void compute_display_setup(const Context& context, HighlightPass pass,
-                               DisplayCoord scroll_offset, DisplaySetup& setup) override
+                               DisplaySetup& setup) override
     {
         if (pass != HighlightPass::Wrap)
             return;
 
-        ColumnCount column = context.window().display_setup().window_range.column;
+        ColumnCount column = setup.window_range.column;
         if (column < 0)
             return;
 
@@ -752,9 +752,11 @@ struct WrapHighlighter : Highlighter
                 setup.cursor_pos.line += (int)(cursor_buffer_column / column);
                 auto new_cursor_buffer_column = (cursor_buffer_column % column);
 
-                if (new_cursor_buffer_column < setup.window_pos.column + scroll_offset.column)
-                    setup.window_pos.column = new_cursor_buffer_column - scroll_offset.column;
+                if (new_cursor_buffer_column < setup.window_pos.column + setup.scroll_offset.column)
+                    setup.window_pos.column = new_cursor_buffer_column - setup.scroll_offset.column;
                 setup.cursor_pos.column = new_cursor_buffer_column - setup.window_pos.column;
+
+                kak_assert(setup.cursor_pos.column >= 0 and setup.cursor_pos.column < setup.window_range.column);
             }
 
             const auto wrap_count = line_wrap_count(buf_line);
@@ -775,8 +777,10 @@ struct WrapHighlighter : Highlighter
                 setup.window_range.line += removed_lines - 1;
             }
 
-            if (setup.window_range.line < buf_line - setup.window_pos.line + 1)
+            if (setup.window_range.line <= buf_line - setup.window_pos.line)
                 setup.window_range.line = buf_line - setup.window_pos.line + 1;
+
+            kak_assert(setup.cursor_pos.line >= 0 and setup.cursor_pos.line < win_height);
         }
     }
 
@@ -941,18 +945,13 @@ struct LineNumbersHighlighter : Highlighter
     }
 
     void compute_display_setup(const Context& context, HighlightPass pass,
-                               DisplayCoord scroll_offset, DisplaySetup& setup) override
+                               DisplaySetup& setup) override
     {
         if (pass != HighlightPass::Move)
             return;
 
         ColumnCount width = compute_digit_count(context) + m_separator.column_length();
         setup.window_range.column -= width;
-
-        auto cursor_overflow = setup.cursor_pos.column + scroll_offset.column -
-                               setup.window_range.column + 1;
-        if (cursor_overflow > 0)
-            setup.window_pos.column += cursor_overflow;
     }
 
     static HighlighterAndId create(HighlighterParameters params)
@@ -1171,7 +1170,7 @@ struct FlagLinesHighlighter : Highlighter
     }
 
     void compute_display_setup(const Context& context, HighlightPass pass,
-                               DisplayCoord scroll_offset, DisplaySetup& setup) override
+                               DisplaySetup& setup) override
     {
         if (pass != HighlightPass::Move)
             return;
@@ -1185,11 +1184,6 @@ struct FlagLinesHighlighter : Highlighter
             width = std::max(parse_display_line(std::get<1>(line)).length(), width);
 
         setup.window_range.column -= width;
-
-        auto cursor_overflow = setup.cursor_pos.column + scroll_offset.column -
-                               setup.window_range.column + 1;
-        if (cursor_overflow > 0)
-            setup.window_pos.column += cursor_overflow;
     }
 
     static HighlighterAndId create(HighlighterParameters params)

@@ -13,10 +13,10 @@ void HighlighterGroup::highlight(const Context& context, HighlightPass pass,
 }
 
 void HighlighterGroup::compute_display_setup(const Context& context, HighlightPass pass,
-                                             DisplayCoord scroll_offset, DisplaySetup& setup)
+                                             DisplaySetup& setup)
 {
     for (auto& hl : m_highlighters)
-       hl.value->compute_display_setup(context, pass, scroll_offset, setup);
+       hl.value->compute_display_setup(context, pass, setup);
 }
 
 void HighlighterGroup::add_child(HighlighterAndId&& hl)
