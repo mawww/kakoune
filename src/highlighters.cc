@@ -924,12 +924,14 @@ struct LineNumbersHighlighter : Highlighter
             return;
 
         const Face face = get_face("LineNumbers");
+        const Face face_wrapped = get_face("LineNumbersWrapped");
         const Face face_absolute = get_face("LineNumberCursor");
         int digit_count = compute_digit_count(context);
 
         char format[16];
         format_to(format, "%{}d{}", digit_count, m_separator);
         const int main_line = (int)context.selections().main().cursor().line + 1;
+        int last_line = -1;
         for (auto& line : display_buffer.lines())
         {
             const int current_line = (int)line.range().begin.line + 1;
@@ -939,8 +941,10 @@ struct LineNumbersHighlighter : Highlighter
             char buffer[16];
             snprintf(buffer, 16, format, std::abs(line_to_format));
             DisplayAtom atom{buffer};
-            atom.face = (m_hl_cursor_line and is_cursor_line) ? face_absolute : face;
+            atom.face = last_line == current_line ? face_wrapped :
+                ((m_hl_cursor_line and is_cursor_line) ? face_absolute : face);
             line.insert(line.begin(), std::move(atom));
+            last_line = current_line;
         }
     }
 

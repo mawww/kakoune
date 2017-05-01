@@ -107,6 +107,7 @@ FaceRegistry::FaceRegistry()
         { "SecondaryCursor", Face{ Color::Black, Color::White } },
         { "LineNumbers", Face{ Color::Default, Color::Default } },
         { "LineNumberCursor", Face{ Color::Default, Color::Default, Attribute::Reverse } },
+        { "LineNumbersWrapped", Face{ Color::Default, Color::Default, Attribute::Italic } },
         { "MenuForeground", Face{ Color::White, Color::Blue } },
         { "MenuBackground", Face{ Color::Blue, Color::White } },
         { "MenuInfo", Face{ Color::Cyan, Color::Default } },
