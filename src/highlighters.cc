@@ -475,7 +475,7 @@ HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
         }
         catch (runtime_error& err)
         {
-            write_to_debug_buffer(format("Error while evaluating dynamic regex expression", err.what()));
+            write_to_debug_buffer(format("Error while evaluating dynamic regex expression: {}", err.what()));
             return Regex{};
         }
     };
@@ -1144,11 +1144,19 @@ struct FlagLinesHighlighter : Highlighter
         auto def_face = get_face(m_default_face);
         Vector<DisplayLine> display_lines;
         auto& lines = line_flags.list;
-        for (auto& line : lines)
+        try
         {
-            display_lines.push_back(parse_display_line(std::get<1>(line)));
-            for (auto& atom : display_lines.back())
-                atom.face = merge_faces(def_face, atom.face);
+            for (auto& line : lines)
+            {
+                display_lines.push_back(parse_display_line(std::get<1>(line)));
+                for (auto& atom : display_lines.back())
+                    atom.face = merge_faces(def_face, atom.face);
+            }
+        }
+        catch (runtime_error& err)
+        {
+            write_to_debug_buffer(format("Error while evaluating line flag: {}", err.what()));
+            return;
         }
 
         ColumnCount width = 0;
@@ -1188,8 +1196,16 @@ struct FlagLinesHighlighter : Highlighter
         update_line_flags_ifn(buffer, line_flags);
 
         ColumnCount width = 0;
-        for (auto& line : line_flags.list)
-            width = std::max(parse_display_line(std::get<1>(line)).length(), width);
+        try 
+        {
+            for (auto& line : line_flags.list)
+                width = std::max(parse_display_line(std::get<1>(line)).length(), width);
+        }
+        catch (runtime_error& err)
+        {
+            write_to_debug_buffer(format("Error while evaluating line flag: {}", err.what()));
+            return;
+        }
 
         setup.window_range.column -= width;
     }
