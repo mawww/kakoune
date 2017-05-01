@@ -736,6 +736,10 @@ struct WrapHighlighter : Highlighter
             return LineCount{(int)(len / column)};
         };
 
+        // Disable vertical scrolling when using a WrapHighlighter
+        setup.cursor_pos.column += setup.window_pos.column;
+        setup.window_pos.column = 0;
+
         const LineCount win_height = context.window().dimensions().line; 
         LineCount win_line = 0;
         for (auto buf_line = setup.window_pos.line;
@@ -784,7 +788,7 @@ struct WrapHighlighter : Highlighter
         }
     }
 
-    static  HighlighterAndId create(HighlighterParameters params)
+    static HighlighterAndId create(HighlighterParameters params)
     {
         if (params.size() != 0)
             throw runtime_error("wrong parameter count");
