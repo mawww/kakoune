@@ -23,7 +23,9 @@ void expand_unprintable(const Context& context, HighlightPass pass, DisplayBuffe
 
 Window::Window(Buffer& buffer)
     : Scope(buffer),
-      m_buffer(&buffer)
+      m_buffer(&buffer),
+      m_highlighters{HighlightPass::All},
+      m_builtin_highlighters{HighlightPass::All}
 {
     run_hook_in_own_context("WinCreate", buffer.name());
 

@@ -68,8 +68,8 @@ void highlight_range(DisplayBuffer& display_buffer,
 }
 
 void apply_highlighter(const Context& context,
-                       HighlightPass pass,
                        DisplayBuffer& display_buffer,
+                       HighlightPass pass,
                        BufferCoord begin, BufferCoord end,
                        Highlighter& highlighter)
 {
@@ -202,20 +202,21 @@ class RegexHighlighter : public Highlighter
 {
 public:
     RegexHighlighter(Regex regex, FacesSpec faces)
-        : m_regex{std::move(regex)}, m_faces{std::move(faces)}
+        : Highlighter{HighlightPass::Colorize},
+          m_regex{std::move(regex)},
+          m_faces{std::move(faces)}
     {
         ensure_first_face_is_capture_0();
     }
 
-    void highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override
+    void do_highlight(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange range) override
     {
         auto overlaps = [](const BufferRange& lhs, const BufferRange& rhs) {
             return lhs.begin < rhs.begin ? lhs.end > rhs.begin
                                          : rhs.end > lhs.begin;
         };
 
-        if (pass != HighlightPass::Colorize or
-            not overlaps(display_buffer.range(), range))
+        if (not overlaps(display_buffer.range(), range))
             return;
 
         Vector<Face> faces(m_faces.size());
@@ -396,15 +397,13 @@ class DynamicRegexHighlighter : public Highlighter
 {
 public:
     DynamicRegexHighlighter(RegexGetter regex_getter, FaceGetter face_getter)
-        : m_regex_getter(std::move(regex_getter)),
-          m_face_getter(std::move(face_getter)),
-          m_highlighter(Regex{}, FacesSpec{}) {}
+      : Highlighter{HighlightPass::Colorize},
+        m_regex_getter(std::move(regex_getter)),
+        m_face_getter(std::move(face_getter)),
+        m_highlighter(Regex{}, FacesSpec{}) {}
 
-    void highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override
+    void do_highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override
     {
-        if (pass != HighlightPass::Colorize)
-            return;
-
         Regex regex = m_regex_getter(context);
         FacesSpec face = m_face_getter(context);
         if (regex != m_last_regex or face != m_last_face)
@@ -492,12 +491,8 @@ HighlighterAndId create_line_highlighter(HighlighterParameters params)
 
     get_face(facespec); // validate facespec
 
-    auto func = [=](const Context& context, HighlightPass pass,
-                    DisplayBuffer& display_buffer, BufferRange)
+    auto func = [=](const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
     {
-        if (pass != HighlightPass::Colorize)
-            return;
-
         LineCount line = -1;
         try
         {
@@ -547,12 +542,8 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
 
     get_face(facespec); // validate facespec
 
-    auto func = [=](const Context& context, HighlightPass pass,
-                    DisplayBuffer& display_buffer, BufferRange)
+    auto func = [=](const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
     {
-        if (pass != HighlightPass::Colorize)
-            return;
-
         ColumnCount column = -1;
         try
         {
@@ -656,12 +647,11 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
 
 struct WrapHighlighter : Highlighter
 {
-    void highlight(const Context& context, HighlightPass pass,
-                   DisplayBuffer& display_buffer, BufferRange) override
-    {
-        if (pass != HighlightPass::Wrap)
-            return;
+    WrapHighlighter() : Highlighter{HighlightPass::Wrap} {}
 
+    void do_highlight(const Context& context, HighlightPass pass,
+                      DisplayBuffer& display_buffer, BufferRange) override
+    {
         ColumnCount column = context.window().display_setup().window_range.column;
         if (column < 0)
             return;
@@ -718,12 +708,8 @@ struct WrapHighlighter : Highlighter
         }
     }
 
-    void compute_display_setup(const Context& context, HighlightPass pass,
-                               DisplaySetup& setup) override
+    void do_compute_display_setup(const Context& context, HighlightPass, DisplaySetup& setup) override
     {
-        if (pass != HighlightPass::Wrap)
-            return;
-
         ColumnCount column = setup.window_range.column;
         if (column < 0)
             return;
@@ -797,11 +783,8 @@ struct WrapHighlighter : Highlighter
     }
 };
 
-void expand_tabulations(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange)
+void expand_tabulations(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
 {
-    if (pass != HighlightPass::Move)
-        return;
-
     const ColumnCount tabstop = context.options()["tabstop"].get<int>();
     auto& buffer = context.buffer();
     for (auto& line : display_buffer.lines())
@@ -835,13 +818,10 @@ void expand_tabulations(const Context& context, HighlightPass pass, DisplayBuffe
     }
 }
 
-void show_whitespaces(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange,
+void show_whitespaces(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange,
                       StringView tab, StringView tabpad,
                       StringView spc, StringView lf, StringView nbsp)
 {
-    if (pass != HighlightPass::Colorize)
-        return;
-
     const int tabstop = context.options()["tabstop"].get<int>();
     auto whitespaceface = get_face("Whitespace");
     auto& buffer = context.buffer();
@@ -917,16 +897,31 @@ HighlighterAndId show_whitespaces_factory(HighlighterParameters params)
 struct LineNumbersHighlighter : Highlighter
 {
     LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator)
-      : m_relative{relative},
+      : Highlighter{HighlightPass::Move},
+        m_relative{relative},
         m_hl_cursor_line{hl_cursor_line},
         m_separator{std::move(separator)} {}
 
-    void highlight(const Context& context, HighlightPass pass,
-                   DisplayBuffer& display_buffer, BufferRange)
+    static HighlighterAndId create(HighlighterParameters params)
     {
-        if (pass != HighlightPass::Move)
-            return;
+        static const ParameterDesc param_desc{
+            { { "relative", { false, "" } },
+              { "separator", { true, "" } },
+              { "hlcursor", { false, "" } } },
+            ParameterDesc::Flags::None, 0, 0
+        };
+        ParametersParser parser(params, param_desc);
 
+        StringView separator = parser.get_switch("separator").value_or("│");
+        if (separator.length() > 10)
+            throw runtime_error("Separator length is limited to 10 bytes");
+
+        return {"number_lines", make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str())};
+    }
+
+private:
+    void do_highlight(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
+    {
         const Face face = get_face("LineNumbers");
         const Face face_wrapped = get_face("LineNumbersWrapped");
         const Face face_absolute = get_face("LineNumberCursor");
@@ -952,34 +947,12 @@ struct LineNumbersHighlighter : Highlighter
         }
     }
 
-    void compute_display_setup(const Context& context, HighlightPass pass,
-                               DisplaySetup& setup) override
+    void do_compute_display_setup(const Context& context, HighlightPass, DisplaySetup& setup) override
     {
-        if (pass != HighlightPass::Move)
-            return;
-
         ColumnCount width = compute_digit_count(context) + m_separator.column_length();
         setup.window_range.column -= width;
     }
 
-    static HighlighterAndId create(HighlighterParameters params)
-    {
-        static const ParameterDesc param_desc{
-            { { "relative", { false, "" } },
-              { "separator", { true, "" } },
-              { "hlcursor", { false, "" } } },
-            ParameterDesc::Flags::None, 0, 0
-        };
-        ParametersParser parser(params, param_desc);
-
-        StringView separator = parser.get_switch("separator").value_or("│");
-        if (separator.length() > 10)
-            throw runtime_error("Separator length is limited to 10 bytes");
-
-        return {"number_lines", make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str())};
-    }
-
-private:
     int compute_digit_count(const Context& context)
     {
         int digit_count = 0;
@@ -995,11 +968,8 @@ private:
 };
 
 
-void show_matching_char(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange)
+void show_matching_char(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
 {
-    if (pass != HighlightPass::Colorize)
-        return;
-
     const Face face = get_face("MatchingChar");
     using CodepointPair = std::pair<Codepoint, Codepoint>;
     static const CodepointPair matching_chars[] = { { '(', ')' }, { '{', '}' }, { '[', ']' }, { '<', '>' } };
@@ -1057,11 +1027,8 @@ HighlighterAndId create_matching_char_highlighter(HighlighterParameters params)
     return {"show_matching", make_simple_highlighter(show_matching_char)};
 }
 
-void highlight_selections(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange)
+void highlight_selections(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
 {
-    if (pass != HighlightPass::Colorize)
-        return;
-
     const auto& buffer = context.buffer();
     const Face primary_face = get_face("PrimarySelection");
     const Face secondary_face = get_face("SecondarySelection");
@@ -1089,11 +1056,8 @@ void highlight_selections(const Context& context, HighlightPass pass, DisplayBuf
     }
 }
 
-void expand_unprintable(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange)
+void expand_unprintable(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
 {
-    if (pass != HighlightPass::Move)
-        return;
-
     auto& buffer = context.buffer();
     for (auto& line : display_buffer.lines())
     {
@@ -1126,17 +1090,31 @@ void expand_unprintable(const Context& context, HighlightPass pass, DisplayBuffe
 struct FlagLinesHighlighter : Highlighter
 {
     FlagLinesHighlighter(String option_name, String default_face)
-        : m_option_name{std::move(option_name)},
+        : Highlighter{HighlightPass::Move},
+          m_option_name{std::move(option_name)},
           m_default_face{std::move(default_face)} {}
 
     using LineAndFlagList = TimestampedList<LineAndFlag>;
 
-    void highlight(const Context& context, HighlightPass pass,
-                   DisplayBuffer& display_buffer, BufferRange) override
+    static HighlighterAndId create(HighlighterParameters params)
     {
-        if (pass != HighlightPass::Move)
-            return;
+        if (params.size() != 2)
+            throw runtime_error("wrong parameter count");
 
+        const String& option_name = params[1];
+        const String& default_face = params[0];
+        get_face(default_face); // validate param
+
+        // throw if wrong option type
+        GlobalScope::instance().options()[option_name].get<LineAndFlagList>();
+
+        return {"hlflags_" + params[1], make_unique<FlagLinesHighlighter>(option_name, default_face) };
+    }
+
+private:
+    void do_highlight(const Context& context, HighlightPass,
+                      DisplayBuffer& display_buffer, BufferRange) override
+    {
         auto& line_flags = context.options()[m_option_name].get_mutable<LineAndFlagList>();
         auto& buffer = context.buffer();
         update_line_flags_ifn(buffer, line_flags);
@@ -1185,12 +1163,8 @@ struct FlagLinesHighlighter : Highlighter
         }
     }
 
-    void compute_display_setup(const Context& context, HighlightPass pass,
-                               DisplaySetup& setup) override
+    void do_compute_display_setup(const Context& context, HighlightPass, DisplaySetup& setup) override
     {
-        if (pass != HighlightPass::Move)
-            return;
-
         auto& line_flags = context.options()[m_option_name].get_mutable<LineAndFlagList>();
         auto& buffer = context.buffer();
         update_line_flags_ifn(buffer, line_flags);
@@ -1210,22 +1184,6 @@ struct FlagLinesHighlighter : Highlighter
         setup.window_range.column -= width;
     }
 
-    static HighlighterAndId create(HighlighterParameters params)
-    {
-        if (params.size() != 2)
-            throw runtime_error("wrong parameter count");
-
-        const String& option_name = params[1];
-        const String& default_face = params[0];
-        get_face(default_face); // validate param
-
-        // throw if wrong option type
-        GlobalScope::instance().options()[option_name].get<LineAndFlagList>();
-
-        return {"hlflags_" + params[1], make_unique<FlagLinesHighlighter>(option_name, default_face) };
-    }
-
-private:
     void update_line_flags_ifn(const Buffer& buffer, LineAndFlagList& line_flags)
     {
         if (line_flags.prefix == buffer.timestamp())
@@ -1280,12 +1238,8 @@ HighlighterAndId create_ranges_highlighter(HighlighterParameters params)
     // throw if wrong option type
     GlobalScope::instance().options()[option_name].get<TimestampedList<RangeAndFace>>();
 
-    auto func = [=](const Context& context, HighlightPass pass,
-                    DisplayBuffer& display_buffer, BufferRange)
+    auto func = [=](const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
     {
-        if (pass != HighlightPass::Colorize)
-            return;
-
         auto& range_and_faces = context.options()[option_name].get_mutable<TimestampedList<RangeAndFace>>();
         auto& ranges = range_and_faces.list;
 
@@ -1337,7 +1291,7 @@ HighlighterAndId create_highlighter_group(HighlighterParameters params)
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
 
-    return HighlighterAndId(params[0], make_unique<HighlighterGroup>());
+    return HighlighterAndId(params[0], make_unique<HighlighterGroup>(HighlightPass::Colorize));
 }
 
 HighlighterAndId create_reference_highlighter(HighlighterParameters params)
@@ -1350,8 +1304,7 @@ HighlighterAndId create_reference_highlighter(HighlighterParameters params)
     // throw if not found
     //DefinedHighlighters::instance().get_group(name, '/');
 
-    auto func = [=](const Context& context, HighlightPass pass,
-                    DisplayBuffer& display_buffer, BufferRange range)
+    auto func = [=](const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range)
     {
         try
         {
@@ -1535,26 +1488,25 @@ public:
     using RegionDescList = Vector<RegionDesc, MemoryDomain::Highlight>;
 
     RegionsHighlighter(RegionDescList regions, String default_group)
-        : m_regions{std::move(regions)}, m_default_group{std::move(default_group)}
+        : Highlighter{HighlightPass::Colorize},
+          m_regions{std::move(regions)},
+          m_default_group{std::move(default_group)}
     {
         if (m_regions.empty())
             throw runtime_error("at least one region must be defined");
 
         for (auto& region : m_regions)
         {
-            m_groups.insert({region.m_name, HighlighterGroup{}});
+            m_groups.insert({region.m_name, HighlighterGroup{HighlightPass::Colorize}});
             if (region.m_begin.empty() or region.m_end.empty())
                 throw runtime_error("invalid regex for region highlighter");
         }
         if (not m_default_group.empty())
-            m_groups.insert({m_default_group, HighlighterGroup{}});
+            m_groups.insert({m_default_group, HighlighterGroup{HighlightPass::Colorize}});
     }
 
-    void highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override
+    void do_highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override
     {
-        if (pass != HighlightPass::Colorize)
-            return;
-
         auto display_range = display_buffer.range();
         const auto& buffer = context.buffer();
         auto& regions = get_regions_for_range(buffer, range);
@@ -1578,20 +1530,20 @@ public:
         for (; begin != end; ++begin)
         {
             if (apply_default and last_begin < begin->begin)
-                apply_highlighter(context, pass, display_buffer,
+                apply_highlighter(context, display_buffer, pass,
                                   correct(last_begin), correct(begin->begin),
                                   default_group_it->value);
 
             auto it = m_groups.find(begin->group);
             if (it == m_groups.end())
                 continue;
-            apply_highlighter(context, pass, display_buffer,
+            apply_highlighter(context, display_buffer, pass,
                               correct(begin->begin), correct(begin->end),
                               it->value);
             last_begin = begin->end;
         }
         if (apply_default and last_begin < display_range.end)
-            apply_highlighter(context, pass, display_buffer,
+            apply_highlighter(context, display_buffer, pass,
                               correct(last_begin), range.end,
                               default_group_it->value);
     }

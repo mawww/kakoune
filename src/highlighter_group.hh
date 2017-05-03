@@ -17,10 +17,7 @@ struct child_not_found : public runtime_error
 class HighlighterGroup : public Highlighter
 {
 public:
-    void highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override;
-
-    void compute_display_setup(const Context& context, HighlightPass pass,
-                               DisplaySetup& setup) override;
+    HighlighterGroup(HighlightPass passes) : Highlighter{passes} {}
 
     bool has_children() const override { return true; }
     void add_child(HighlighterAndId&& hl) override;
@@ -31,6 +28,9 @@ public:
     Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override;
 
 private:
+    void do_highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override;
+    void do_compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup) override;
+
     using HighlighterMap = HashMap<String, std::unique_ptr<Highlighter>, MemoryDomain::Highlight>;
     HighlighterMap m_highlighters;
 };
@@ -38,6 +38,7 @@ private:
 struct DefinedHighlighters : public HighlighterGroup,
                              public Singleton<DefinedHighlighters>
 {
+    DefinedHighlighters() : HighlighterGroup{HighlightPass::All} {}
 };
 
 }

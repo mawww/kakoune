@@ -5,15 +5,14 @@
 namespace Kakoune
 {
 
-void HighlighterGroup::highlight(const Context& context, HighlightPass pass,
-                                 DisplayBuffer& display_buffer, BufferRange range)
+void HighlighterGroup::do_highlight(const Context& context, HighlightPass pass,
+                                    DisplayBuffer& display_buffer, BufferRange range)
 {
     for (auto& hl : m_highlighters)
        hl.value->highlight(context, pass, display_buffer, range);
 }
 
-void HighlighterGroup::compute_display_setup(const Context& context, HighlightPass pass,
-                                             DisplaySetup& setup)
+void HighlighterGroup::do_compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup)
 {
     for (auto& hl : m_highlighters)
        hl.value->compute_display_setup(context, pass, setup);
@@ -21,6 +20,9 @@ void HighlighterGroup::compute_display_setup(const Context& context, HighlightPa
 
 void HighlighterGroup::add_child(HighlighterAndId&& hl)
 {
+    if ((hl.second->passes() & passes()) != hl.second->passes())
+        throw runtime_error{"Cannot add that highlighter to this group, passes dont match"};
+
     hl.first = replace(hl.first, "/", "<slash>");
 
     if (m_highlighters.contains(hl.first))
