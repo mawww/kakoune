@@ -1288,10 +1288,33 @@ HighlighterAndId create_ranges_highlighter(HighlighterParameters params)
 
 HighlighterAndId create_highlighter_group(HighlighterParameters params)
 {
-    if (params.size() != 1)
-        throw runtime_error("wrong parameter count");
+    static const ParameterDesc param_desc{
+        { { "passes", { true, "" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
+    };
+    ParametersParser parser{params, param_desc};
 
-    return HighlighterAndId(params[0], make_unique<HighlighterGroup>(HighlightPass::Colorize));
+    auto parse_passes = [](StringView str) {
+        HighlightPass passes{};
+        for (auto pass : str | split<StringView>('|'))
+        {
+            if (pass == "colorize")
+                passes |= HighlightPass::Colorize;
+            else if (pass == "move")
+                passes |= HighlightPass::Move;
+            else if (pass == "wrap")
+                passes |= HighlightPass::Wrap;
+            else
+                throw runtime_error{format("invalid highlight pass: {}", pass)};
+        }
+        if (passes == HighlightPass{})
+            throw runtime_error{"no passes specified"};
+
+        return passes;
+    };
+    HighlightPass passes = parse_passes(parser.get_switch("passes").value_or("colorize"));
+
+    return HighlighterAndId(parser[0], make_unique<HighlighterGroup>(passes));
 }
 
 HighlighterAndId create_reference_highlighter(HighlighterParameters params)
