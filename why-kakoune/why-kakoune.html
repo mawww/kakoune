@@ -642,7 +642,7 @@ by selecting the word (with <code>w</code> for example) then subselecting unders
 in the word with <code>s_&lt;ret&gt;</code>, deleting these with <code>d</code>, then upper casing the
 selected characters with <code>~</code>. The inverse operation could be done by selecting
 the word, then subselecting the upper case characters with <code>s[A-Z]&lt;ret&gt;</code>
-lower casing them with ``` and then inserting an underscode before them with
+lower casing them with ` and then inserting an underscode before them with
 <code>i_&lt;esc&gt;</code> This operation could be put in a macro, and would be reusable
 easily to convert any identifier.</p>
 </div>
@@ -657,7 +657,7 @@ Your browser does not support the video tag.
 <div class="paragraph">
 <p>Another example would be parameter swapping, if you had <code>func(arg2, arg1);</code>
 you could select the contents of the parenthesis with <code>&lt;a-i&gt;(</code>, split the
-selection on comma with <code>S, &lt;ret&gt;</code>, and swap selection contents with <code>&lt;a-'&gt;</code>.</p>
+selection on comma with <code>S, &lt;ret&gt;</code>, and swap selection contents with <code>&lt;a-"&gt;</code>.</p>
 </div>
 <div class="videoblock">
 <div class="title">Swapping arguments</div>
@@ -837,12 +837,12 @@ Your browser does not support the video tag.
 </div>
 </div>
 <div class="paragraph">
-<p>This is only the tip of the iceberg, Kakoune is very easily controllable from
+<p>This is only the tip of the iceberg. Kakoune is very easily controllable from
 the shell, just pipe whatever commands you like to <code>kak -p &lt;session&gt;</code>, and the
 target Kakoune session will execute these.</p>
 </div>
 <div class="paragraph">
-<p>Kakoune command line also support shell expansion, similar to what <code>$(...)</code>
+<p>Kakoune command line also supports shell expansion, similar to what <code>$(...)</code>
 does in a shell. If you type <code>echo %sh{ echo hello }</code> in the command prompt,
 "hello" will get displayed in the status line. Various values from Kakoune
 can be accessed in these expand through environment variables, which, along
@@ -916,7 +916,7 @@ you to use it so that it can be made even better.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-12-14 01:10:35 GMT
+Last updated 2017-05-05 07:33:01 IST
 </div>
 </div>
 </body>
