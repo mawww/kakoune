@@ -1,0 +1,151 @@
+Writing kak scripts
+===================
+
+Interaction with external tools from a Kakoune session is supported
+through the use of scripts. Once loaded by the editor (either
+automatically or manually), they allow extending the functionalities
+provided by default through commands and hooks.
+
+Their implementation should be kept as simple as possible, as they are
+not meant to be generic tools themselves but a mere API to actual
+software.
+
+---------------------------------------------------
+	                                       +------+
+	                                  +--> | tmux |
+	                                  |    +------+
+	                                  |
+	+---------+                       |    +------+
+	| Kakoune | <------->  scripts  +-+--> | X11  |
+	+---------+                       |    +------+
+	                                  |
+	                                  |    +------+
+	                                  +--> | ...  |
+	                                       +------+
+---------------------------------------------------
+
+Dependencies
+------------
+
+The amount of dependencies of a given script should be kept to a minimum
+for practicality reasons, and have to be reasonable and expected
+considering the purpose of the script itself.
+
+Examples:
+
+* the `clang.kak` script provides with code completion using the `clang`
+  compiler
+
+* the `tmux.kak` script provides with terminal splitting using the
+  `tmux` multiplexer
+
+* the `ctags.kak` script provides with symbol lookups using the
+  `readtags` utility provided by some `ctags` implementations
+
+Naming convention
+-----------------
+
+All options and commands declared in a Kakoune script have to be
+prefixed with the name of the script, or a one word description of the
+purpose of the script.
+
+Examples:
+
+* in `tmux.kak`: command `tmux-new-window`
+
+* in `comment.kak`: option `comment_line`
+
+The following conventions apply as well:
+
+* *options*: if a separator is needed to separate a multiple word option
+  name, an underscore should be used to allow shell scopes to use them
+
+* *commands*: if a separator is needed, a hyphen is usually used to
+  differentiate a command name from an option's; this doesn't apply to
+  the leading underscore sign in case of a hidden command
+
+Documentation
+-------------
+
+Non-hidden commands and options should always be declared with a documentation
+string, so that their purpose is clearly described whenever completed upon
+interactively from the prompt.
+
+POSIX shell
+-----------
+
+Shell expansions are a useful tool to interact with an external utility,
+and the shell code that they contain should be as portable as possible. As
+such, scripts that rely on those expansions have to be implemented with
+POSIX in mind, most shells follow this standard nowadays which somewhat
+guarantees that the script will be portable across the most common systems.
+
+Common shell patterns
+---------------------
+
+Printing variables
+~~~~~~~~~~~~~~~~~~
+
+In order to print a string that contains a variable expansion, prefer
+`printf` to `echo`, as the latter is implementation defined and may
+interpret some characters differently depending on the shell (e.g.
+flags, backslashes).
+
+----------------------------------
+	printf %s\\n "${var}"
+	printf "value: %s\\n" "${var}"
+----------------------------------
+
+The following won't cause any issues, as the string to print doesn't
+contain ambiguous characters:
+
+-------------------------------------
+	echo "set global scrolloff 999,0"
+-------------------------------------
+
+Variable base name
+~~~~~~~~~~~~~~~~~~
+
+Replace `$(basename "${var}")` with `"${var##*/}"`.
+
+Testing
+~~~~~~~
+
+The `[[` keyword is provided by `bash`, and should be replaced with `[`.
+
+Standard error redirection
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Redirecting both standard and error streams is simplified in the `bash`
+shell with the `&>` operator, however this syntax is not portable and
+has to be replaced with the following: `>/dev/null 2>&1`.
+
+Regular expression
+~~~~~~~~~~~~~~~~~~
+
+The `bash` shell provides with a `[[` keyword that supports the `=~`
+operator to match a regular expression against a variable. This
+functionality can be implemented with the `expr` utility:
+
+* `expr "${var}" : '[a-z]*' >/dev/null` returns successfully when the
+  variable is empty or only contains lowercase characters, otherwise a
+  non-zero exit code is returned
+
+* `expr "${var}" : '\([a-z]*\)'` prints the variable when empty or
+  only contains lowercase characters
+
+Note that the regular expression matches the whole string, using the `^`
+and `$` anchors is an undefined behavior.
+
+Running a process in the background
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to get a process running in the background without having it
+quit when the shell scope that spawns it terminates, use the following
+syntax:
+
+--------------------------------
+	{
+	    command
+	} </dev/null >/dev/null 2>&1
+--------------------------------

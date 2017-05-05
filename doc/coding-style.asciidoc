@@ -49,25 +49,3 @@ if (condition1 ||
    (struct with every field public) where these prefixes can be dropped.
 
  * use const and constexpr liberally
-
-Kakrc coding style
-==================
-
- * kak scripts can depend on tools that can be reasonable expected for
-   their use context:
-
-   - mime.kak which handles file type detection uses the +file+ command
-     which is deemed ubiquitous enough.
-
-   - clang.kak provides c++ completion using clang,
-
- * It is better to keep kak scripts POSIX. Consider %sh{...} blocks
-   as executed by a POSIX shell. Avoid non posix extensions to common
-   tools.
-
- * Avoid too much complexity/logic in kak scripts. They are not meant
-   to implement generic tools, only to transform a general tool output
-   to Kakoune commands.
-
-   - Write generic, editor independent tools as a separate project,
-     Add kakoune support as a kak script.
