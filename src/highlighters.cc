@@ -647,13 +647,13 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
 
 struct WrapHighlighter : Highlighter
 {
-    WrapHighlighter() : Highlighter{HighlightPass::Wrap} {}
+    WrapHighlighter(bool word_wrap) : Highlighter{HighlightPass::Wrap}, m_word_wrap{word_wrap} {}
 
     void do_highlight(const Context& context, HighlightPass pass,
                       DisplayBuffer& display_buffer, BufferRange) override
     {
-        ColumnCount column = context.window().display_setup().window_range.column;
-        if (column < 0)
+        ColumnCount wrap_column = context.window().display_setup().window_range.column;
+        if (wrap_column < 0)
             return;
 
         const Buffer& buffer = context.buffer();
@@ -663,15 +663,9 @@ struct WrapHighlighter : Highlighter
              it != display_buffer.lines().end(); ++it)
         {
             const LineCount buf_line = it->range().begin.line;
-            int line_split_count = 1;
             const ByteCount line_length = buffer[buf_line].length();
-            auto get_coord = [&](ColumnCount c) {
-                auto col = get_byte_to_column(
-                    buffer, tabstop, {buf_line, c});
-                return BufferCoord{buf_line, col};
-            };
 
-            auto coord = get_coord(column * line_split_count++);
+            auto coord = next_split_coord(buffer, wrap_column, tabstop, buf_line);
             if (buffer.is_valid(coord) and not buffer.is_end(coord))
             {
                 for (auto atom_it = it->begin();
@@ -701,7 +695,7 @@ struct WrapHighlighter : Highlighter
                     }
                     it = display_buffer.lines().insert(it+1, new_line);
 
-                    coord = get_coord(column * line_split_count++);
+                    coord = next_split_coord(buffer, wrap_column, tabstop, coord);
                     atom_it = it->begin();
                 }
             }
@@ -710,16 +704,25 @@ struct WrapHighlighter : Highlighter
 
     void do_compute_display_setup(const Context& context, HighlightPass, DisplaySetup& setup) override
     {
-        ColumnCount column = setup.window_range.column;
-        if (column < 0)
+        ColumnCount wrap_column = setup.window_range.column;
+        if (wrap_column < 0)
             return;
 
         const Buffer& buffer = context.buffer();
         const int tabstop = context.options()["tabstop"].get<int>();
 
         auto line_wrap_count = [&](LineCount line) {
-            auto len = get_column(buffer, tabstop, {line, buffer[line].length()-1});
-            return LineCount{(int)(len / column)};
+            LineCount count = 0;
+            BufferCoord coord{line};
+            const ByteCount line_length = buffer[line].length();
+            while (true)
+            {
+                coord = next_split_coord(buffer, wrap_column, tabstop, coord);
+                if (coord.column == line_length)
+                    break;
+                ++count;
+            }
+            return count;
         };
 
         // Disable vertical scrolling when using a WrapHighlighter
@@ -735,26 +738,29 @@ struct WrapHighlighter : Highlighter
             if (buf_line >= buffer.line_count())
                 break;
 
-            // Place the cursor correctly after its line gets wrapped
-            if (win_line == setup.cursor_pos.line)
-            {
-                auto cursor_buffer_column = setup.window_pos.column + setup.cursor_pos.column;
-                setup.cursor_pos.line += (int)(cursor_buffer_column / column);
-                auto new_cursor_buffer_column = (cursor_buffer_column % column);
-
-                if (new_cursor_buffer_column < setup.window_pos.column + setup.scroll_offset.column)
-                    setup.window_pos.column = new_cursor_buffer_column - setup.scroll_offset.column;
-                setup.cursor_pos.column = new_cursor_buffer_column - setup.window_pos.column;
-
-                kak_assert(setup.cursor_pos.column >= 0 and setup.cursor_pos.column < setup.window_range.column);
-            }
-
             const auto wrap_count = line_wrap_count(buf_line);
-
             setup.window_range.line -= wrap_count;
 
-            if (setup.cursor_pos.line > win_line)
+            if (win_line < setup.cursor_pos.line)
                 setup.cursor_pos.line += wrap_count;
+            // Place the cursor correctly after its line gets wrapped
+            else if (win_line == setup.cursor_pos.line)
+            {
+                auto cursor = context.selections().main().cursor();
+                BufferCoord coord{buf_line};
+                while (true)
+                {
+                    auto split_coord = next_split_coord(buffer, wrap_column, tabstop, coord);
+                    if (split_coord.column > cursor.column)
+                    {
+                        setup.cursor_pos.column = get_column(buffer, tabstop, cursor) - get_column(buffer, tabstop, coord);
+                        break;
+                    }
+                    ++setup.cursor_pos.line;
+                    coord = split_coord;
+                }
+                kak_assert(setup.cursor_pos.column >= 0 and setup.cursor_pos.column < setup.window_range.column);
+            }
             win_line += wrap_count + 1;
 
             // scroll window to keep cursor visible, and update range as lines gets removed
@@ -774,13 +780,38 @@ struct WrapHighlighter : Highlighter
         }
     }
 
+    BufferCoord next_split_coord(const Buffer& buffer,  ColumnCount wrap_column, int tabstop, BufferCoord coord)
+    {
+        auto column = get_column(buffer, tabstop, coord);
+        auto col = get_byte_to_column(
+            buffer, tabstop, {coord.line, column + wrap_column});
+        BufferCoord split_coord{coord.line, col};
+
+        if (m_word_wrap)
+        {
+            StringView line = buffer[coord.line];
+            utf8::iterator<const char*> it{line.data() + (size_t)col, line};
+            while (it != line.end() and it != line.begin() and is_word(*it))
+                --it;
+
+            if (it != line.begin() and it != line.data() + (size_t)col)
+                split_coord.column = (it+1).base() - line.begin();
+        }
+        return split_coord;
+    };
+
     static HighlighterAndId create(HighlighterParameters params)
     {
-        if (params.size() != 0)
-            throw runtime_error("wrong parameter count");
+        static const ParameterDesc param_desc{
+            { { "word", { false, "" } } },
+            ParameterDesc::Flags::None, 0, 0
+        };
+        ParametersParser parser(params, param_desc);
 
-        return {"wrap", make_unique<WrapHighlighter>()};
+        return {"wrap", make_unique<WrapHighlighter>((bool)parser.get_switch("word"))};
     }
+
+    const bool m_word_wrap;
 };
 
 void expand_tabulations(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
