@@ -185,9 +185,9 @@ void Window::compute_display_setup(const Context& context)
 
     // Ensure cursor line is visible
     if (cursor.line - offset.line < m_position.line)
-        m_position.line = cursor.line - offset.line;
+        m_position.line = std::max(0_line, cursor.line - offset.line);
     if (cursor.line + offset.line >= m_position.line + m_dimensions.line)
-        m_position.line = cursor.line + offset.line - m_dimensions.line + 1;
+        m_position.line = std::min(buffer().line_count()-1, cursor.line + offset.line - m_dimensions.line + 1);
 
     const int tabstop = context.options()["tabstop"].get<int>();
     auto cursor_col = get_column(buffer(), tabstop, cursor);
