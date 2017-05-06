@@ -653,7 +653,7 @@ struct WrapHighlighter : Highlighter
                       DisplayBuffer& display_buffer, BufferRange) override
     {
         ColumnCount wrap_column = context.window().display_setup().window_range.column;
-        if (wrap_column < 0)
+        if (wrap_column <= 0)
             return;
 
         const Buffer& buffer = context.buffer();
@@ -705,7 +705,7 @@ struct WrapHighlighter : Highlighter
     void do_compute_display_setup(const Context& context, HighlightPass, DisplaySetup& setup) override
     {
         ColumnCount wrap_column = setup.window_range.column;
-        if (wrap_column < 0)
+        if (wrap_column <= 0)
             return;
 
         const Buffer& buffer = context.buffer();
