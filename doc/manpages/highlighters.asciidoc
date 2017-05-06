@@ -84,6 +84,12 @@ General highlighters
 		specify a string to separate the line numbers column with
 		the rest of the buffer (default is '|')
 
+*wrap* [options]::
+	soft wrap buffer text at window width, with the following *options*:
+
+	*-word*:::
+		wrap at word boundaries instead of codepoint boundaries.
+
 *ranges* <option_name>::
 	use the data in the range-faces option of the given name to highlight
 	the buffer.
