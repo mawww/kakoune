@@ -1043,6 +1043,7 @@ There are some builtins faces used by internal Kakoune functionalities:
  * `Search`: face used to highlight search results
  * `BufferPadding`: face applied on the characters that follow the last line of a buffer
  * `Whitespace`: face used by the show_whitespaces highlighter
+ * `LongLineHint`: face used by the show_long_line_hints highlighter
 
 Advanced topics
 ---------------
