@@ -682,8 +682,6 @@ struct WrapHighlighter : Highlighter
 
                     if (coord > atom_it->begin())
                         atom_it = ++line.split(atom_it, coord);
-                    if (buffer.next(coord) < atom_it->end())
-                        atom_it = line.split(atom_it, buffer.next(coord));
 
                     DisplayLine new_line{ AtomList{ atom_it, line.end() } };
                     line.erase(atom_it, line.end());
