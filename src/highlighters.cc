@@ -709,6 +709,7 @@ struct WrapHighlighter : Highlighter
             return;
 
         const Buffer& buffer = context.buffer();
+        auto cursor = context.selections().main().cursor();
         const int tabstop = context.options()["tabstop"].get<int>();
 
         auto line_wrap_count = [&](LineCount line) {
@@ -746,7 +747,6 @@ struct WrapHighlighter : Highlighter
             // Place the cursor correctly after its line gets wrapped
             else if (win_line == setup.cursor_pos.line)
             {
-                auto cursor = context.selections().main().cursor();
                 BufferCoord coord{buf_line};
                 while (true)
                 {
@@ -764,19 +764,21 @@ struct WrapHighlighter : Highlighter
             win_line += wrap_count + 1;
 
             // scroll window to keep cursor visible, and update range as lines gets removed
-            while (setup.cursor_pos.line >= win_height)
+            while (buf_line < cursor.line and setup.cursor_pos.line >= win_height)
             {
                 auto removed_lines = 1 + line_wrap_count(setup.window_pos.line++);
                 setup.cursor_pos.line -= removed_lines;
                 win_line -= removed_lines;
                 // removed one line from the range, added removed_lines potential ones
                 setup.window_range.line += removed_lines - 1;
+                kak_assert(setup.cursor_pos.line >= 0);
             }
 
             if (setup.window_range.line <= buf_line - setup.window_pos.line)
                 setup.window_range.line = buf_line - setup.window_pos.line + 1;
-
-            kak_assert(setup.cursor_pos.line >= 0 and setup.cursor_pos.line < win_height);
+            // Todo: support displaying partial lines, so that we can ensure the cursor is
+            // visible even if a line takes more than the full screen height once wrapped.
+            // kak_assert(setup.cursor_pos.line >= 0 and setup.cursor_pos.line < win_height);
         }
     }
 
