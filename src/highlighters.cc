@@ -792,11 +792,12 @@ struct WrapHighlighter : Highlighter
         if (m_word_wrap)
         {
             StringView line = buffer[coord.line];
-            utf8::iterator<const char*> it{line.data() + (size_t)col, line};
+            utf8::iterator<const char*> it{&line[col], line};
             while (it != line.end() and it != line.begin() and is_word(*it))
                 --it;
 
-            if (it != line.begin() and it != line.data() + (size_t)col)
+            if (it != line.begin() and it != &line[col] and
+                (it+1) > &line[coord.column])
                 split_coord.column = (it+1).base() - line.begin();
         }
         return split_coord;
