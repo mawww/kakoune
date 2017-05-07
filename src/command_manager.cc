@@ -456,7 +456,7 @@ void CommandManager::execute_single_command(CommandParameters params,
     catch (runtime_error& error)
     {
         throw runtime_error(format("{}:{}: '{}' {}", pos.line+1, pos.column+1,
-                                   command_it->key, error.what()));
+                                   params[0], error.what()));
     }
 }
 
