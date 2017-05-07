@@ -43,10 +43,10 @@ struct DisplaySetup
     DisplayCoord window_pos;
     // Range of lines and columns from the buffer that will get displayed
     DisplayCoord window_range;
-    // Offset of line and columns that must remain visible around cursor
-    DisplayCoord scroll_offset;
     // Position of the cursor in the window
     DisplayCoord cursor_pos;
+    // Offset of line and columns that must remain visible around cursor
+    const DisplayCoord scroll_offset;
 };
 
 struct Highlighter

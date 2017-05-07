@@ -652,7 +652,7 @@ struct WrapHighlighter : Highlighter
     void do_highlight(const Context& context, HighlightPass pass,
                       DisplayBuffer& display_buffer, BufferRange) override
     {
-        ColumnCount wrap_column = context.window().display_setup().window_range.column;
+        const ColumnCount wrap_column = context.window().range().column;
         if (wrap_column <= 0)
             return;
 
@@ -704,12 +704,12 @@ struct WrapHighlighter : Highlighter
 
     void do_compute_display_setup(const Context& context, HighlightPass, DisplaySetup& setup) override
     {
-        ColumnCount wrap_column = setup.window_range.column;
+        const ColumnCount wrap_column = setup.window_range.column;
         if (wrap_column <= 0)
             return;
 
         const Buffer& buffer = context.buffer();
-        auto cursor = context.selections().main().cursor();
+        const auto& cursor = context.selections().main().cursor();
         const int tabstop = context.options()["tabstop"].get<int>();
 
         auto line_wrap_count = [&](LineCount line) {

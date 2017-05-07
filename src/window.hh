@@ -21,6 +21,8 @@ public:
     const DisplayCoord& position() const { return m_position; }
     void set_position(DisplayCoord position);
 
+    const DisplayCoord& range() const { return m_range; }
+
     const DisplayCoord& dimensions() const { return m_dimensions; }
     void set_dimensions(DisplayCoord dimensions);
 
@@ -46,8 +48,6 @@ public:
 
     void set_client(Client* client) { m_client = client; }
 
-    const DisplaySetup& display_setup() const { return m_display_setup; }
-
     void clear_display_buffer();
 private:
     Window(const Window&) = delete;
@@ -62,8 +62,8 @@ private:
     SafePtr<Client> m_client;
 
     DisplayCoord m_position;
+    DisplayCoord m_range;
     DisplayCoord m_dimensions;
-    DisplaySetup m_display_setup;
     DisplayBuffer m_display_buffer;
 
     HighlighterGroup m_highlighters;
