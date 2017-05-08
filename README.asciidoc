@@ -1036,7 +1036,7 @@ There are some builtins faces used by internal Kakoune functionalities:
      lines
  * `MenuForeground`: face for the selected element in menus
  * `MenuBackground`: face for the not selected elements in menus
- * `Information`: face for the informations windows and information messages
+ * `Information`: face for the information windows and information messages
  * `Error`: face of error messages
  * `StatusLine`: face used for the status line
  * `StatusCursor`: face used for the status line cursor
@@ -1132,7 +1132,7 @@ Exec and Eval
 
 The `:exec` and `:eval` commands can be used for running Kakoune commands.
 `:exec` runs keys as if they were pressed, whereas `:eval` executes its given
-paremeters as if they were entered in the command prompt. By default,
+parameters as if they were entered in the command prompt. By default,
 they do their execution in the context of the current client.
 
 These two commands also save the following registers, who are then restored
@@ -1590,7 +1590,7 @@ This is very useful for running some commands asynchronously while displaying
 their result in a buffer. See `rc/make.kak` and `rc/grep.kak` for examples.
 
 When the buffer is deleted, the fifo will be closed, so any program writing
-to it will receive `SIGPIPE`. This is usefull as it permits to stop the writing
+to it will receive `SIGPIPE`. This is useful as it permits to stop the writing
 program when the buffer is deleted.
 
 Menus
