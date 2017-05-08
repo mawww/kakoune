@@ -351,7 +351,7 @@ TokenList parse(StringView line)
                 result.emplace_back(Token::Type::Raw, start, reader.pos,
                                     coord, unescape(str, "%", '\\'));
 
-            if (not reader or is_command_separator(*reader))
+            if (reader and is_command_separator(*reader))
                 result.emplace_back(Token::Type::CommandSeparator,
                                     reader.pos, reader.pos+1, coord);
         }
