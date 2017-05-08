@@ -1858,8 +1858,9 @@ void register_highlighters()
     registry.insert({
         "wrap",
         { WrapHighlighter::create,
-          "Parameters: <value string>\n"
-          "Wrap lines to given column" } });
+          "Parameters: [-word]\n"
+          "Wrap lines to given column,\n"
+          "wrap at word boundaries instead of codepoint boundaries if -word is given" } });
     registry.insert({
         "ref",
         { create_reference_highlighter,
