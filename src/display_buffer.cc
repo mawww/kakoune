@@ -10,37 +10,6 @@
 namespace Kakoune
 {
 
-String option_to_string(BufferRange range)
-{
-    return format("{}.{},{}.{}",
-                  range.begin.line+1, range.begin.column+1,
-                  range.end.line+1, range.end.column);
-}
-
-void option_from_string(StringView str, BufferRange& opt)
-{
-    auto sep = find_if(str, [](char c){ return c == ',' or c == '+'; });
-    auto dot_beg = find(StringView{str.begin(), sep}, '.');
-    auto dot_end = find(StringView{sep, str.end()}, '.');
-
-    if (sep == str.end() or dot_beg == sep or
-        (*sep == ',' and dot_end == str.end()))
-        throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> or <line>.<column>+<len> format", str));
-
-    const BufferCoord beg{str_to_int({str.begin(), dot_beg}) - 1,
-                          str_to_int({dot_beg+1, sep}) - 1};
-
-    const bool len = (*sep == '+');
-    const BufferCoord end{len ? beg.line : str_to_int({sep+1, dot_end}) - 1,
-                          len ? beg.column + str_to_int({sep+1, str.end()})
-                              : str_to_int({dot_end+1, str.end()}) };
-
-    if (beg.line < 0 or beg.column < 0 or end.line < 0 or end.column < 0)
-        throw runtime_error("coordinates elements should be >= 1");
-
-    opt = { beg, end };
-}
-
 StringView DisplayAtom::content() const
 {
     switch (m_type)

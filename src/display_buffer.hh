@@ -14,9 +14,6 @@ namespace Kakoune
 class Buffer;
 struct BufferRange{ BufferCoord begin, end; };
 
-String option_to_string(BufferRange range);
-void option_from_string(StringView str, BufferRange& opt);
-
 inline bool operator==(const BufferRange& lhs, const BufferRange& rhs)
 {
     return lhs.begin == rhs.begin and lhs.end == rhs.end;

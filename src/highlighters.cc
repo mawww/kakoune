@@ -1274,9 +1274,39 @@ private:
     String m_default_face;
 };
 
+String option_to_string(InclusiveBufferRange range)
+{
+    return format("{}.{},{}.{}",
+                  range.first.line+1, range.first.column+1,
+                  range.last.line+1, range.last.column+1);
+}
 
-BufferCoord& get_first(RangeAndFace& r) { return std::get<0>(r).begin; }
-BufferCoord& get_last(RangeAndFace& r) { return std::get<0>(r).end; }
+void option_from_string(StringView str, InclusiveBufferRange& opt)
+{
+    auto sep = find_if(str, [](char c){ return c == ',' or c == '+'; });
+    auto dot_beg = find(StringView{str.begin(), sep}, '.');
+    auto dot_end = find(StringView{sep, str.end()}, '.');
+
+    if (sep == str.end() or dot_beg == sep or
+        (*sep == ',' and dot_end == str.end()))
+        throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> or <line>.<column>+<len> format", str));
+
+    const BufferCoord first{str_to_int({str.begin(), dot_beg}) - 1,
+                            str_to_int({dot_beg+1, sep}) - 1};
+
+    const bool len = (*sep == '+');
+    const BufferCoord last{len ? first.line : str_to_int({sep+1, dot_end}) - 1,
+                           len ? first.column + str_to_int({sep+1, str.end()}) - 1
+                               : str_to_int({dot_end+1, str.end()}) - 1 };
+
+    if (first.line < 0 or first.column < 0 or last.line < 0 or last.column < 0)
+        throw runtime_error("coordinates elements should be >= 1");
+
+    opt = { first, last };
+}
+
+BufferCoord& get_first(RangeAndFace& r) { return std::get<0>(r).first; }
+BufferCoord& get_last(RangeAndFace& r) { return std::get<0>(r).last; }
 
 struct RangesHighlighter : Highlighter
 {
@@ -1308,8 +1338,8 @@ private:
             try
             {
                 auto& r = std::get<0>(range);
-                if (buffer.is_valid(r.begin) and buffer.is_valid(r.end))
-                    highlight_range(display_buffer, r.begin, r.end, true,
+                if (buffer.is_valid(r.first) and buffer.is_valid(r.last))
+                    highlight_range(display_buffer, r.first, buffer.char_next(r.last), true,
                                     apply_face(get_face(std::get<1>(range))));
             }
             catch (runtime_error&)
