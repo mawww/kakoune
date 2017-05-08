@@ -25,6 +25,24 @@
 namespace Kakoune
 {
 
+template<typename Func>
+std::unique_ptr<Highlighter> make_highlighter(Func func, HighlightPass pass = HighlightPass::Colorize)
+{
+    struct SimpleHighlighter : public Highlighter
+    {
+        SimpleHighlighter(Func func, HighlightPass pass)
+          : Highlighter{pass}, m_func{std::move(func)} {}
+
+    private:
+        void do_highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override
+        {
+            m_func(context, pass, display_buffer, range);
+        }
+        Func m_func;
+    };
+    return make_unique<SimpleHighlighter>(std::move(func), pass);
+}
+
 template<typename T>
 void highlight_range(DisplayBuffer& display_buffer,
                      BufferCoord begin, BufferCoord end,
@@ -177,7 +195,7 @@ static HighlighterAndId create_fill_highlighter(HighlighterParameters params)
         highlight_range(display_buffer, range.begin, range.end, true,
                         apply_face(get_face(facespec)));
     };
-    return {"fill_" + facespec, make_simple_highlighter(std::move(func))};
+    return {"fill_" + facespec, make_highlighter(std::move(func))};
 }
 
 template<typename T>
@@ -529,7 +547,7 @@ HighlighterAndId create_line_highlighter(HighlighterParameters params)
             it->push_back({ String{' ', remaining}, face });
     };
 
-    return {"hlline_" + params[0], make_simple_highlighter(std::move(func))};
+    return {"hlline_" + params[0], make_highlighter(std::move(func))};
 }
 
 HighlighterAndId create_column_highlighter(HighlighterParameters params)
@@ -642,7 +660,7 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
         }
     };
 
-    return {"hlcol_" + params[0], make_simple_highlighter(std::move(func))};
+    return {"hlcol_" + params[0], make_highlighter(std::move(func))};
 }
 
 struct WrapHighlighter : Highlighter
@@ -923,7 +941,7 @@ HighlighterAndId show_whitespaces_factory(HighlighterParameters params)
                           get_param("lf", "¬"),
                           get_param("nbsp", "⍽"));
 
-    return {"show_whitespaces", make_simple_highlighter(std::move(func))};
+    return {"show_whitespaces", make_highlighter(std::move(func))};
 }
 
 struct LineNumbersHighlighter : Highlighter
@@ -1056,7 +1074,7 @@ void show_matching_char(const Context& context, HighlightPass, DisplayBuffer& di
 
 HighlighterAndId create_matching_char_highlighter(HighlighterParameters params)
 {
-    return {"show_matching", make_simple_highlighter(show_matching_char)};
+    return {"show_matching", make_highlighter(show_matching_char)};
 }
 
 void highlight_selections(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
@@ -1315,7 +1333,7 @@ HighlighterAndId create_ranges_highlighter(HighlighterParameters params)
         }
     };
 
-    return {"hlranges_" + params[0], make_simple_highlighter(func) };
+    return {"hlranges_" + params[0], make_highlighter(func) };
 }
 
 HighlighterAndId create_highlighter_group(HighlighterParameters params)
@@ -1369,7 +1387,7 @@ HighlighterAndId create_reference_highlighter(HighlighterParameters params)
         {}
     };
 
-    return {name, make_simple_highlighter(func)};
+    return {name, make_highlighter(func)};
 }
 
 struct RegexMatch
@@ -1771,6 +1789,13 @@ private:
         return regions;
     }
 };
+
+void setup_builtin_highlighters(HighlighterGroup& group)
+{
+    group.add_child({"tabulations"_str, make_highlighter(expand_tabulations)});
+    group.add_child({"unprintable"_str, make_highlighter(expand_unprintable)});
+    group.add_child({"selections"_str,  make_highlighter(highlight_selections)});
+}
 
 void register_highlighters()
 {

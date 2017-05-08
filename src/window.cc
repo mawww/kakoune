@@ -17,9 +17,7 @@ namespace Kakoune
 {
 
 // Implementation in highlighters.cc
-void highlight_selections(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range);
-void expand_tabulations(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range);
-void expand_unprintable(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range);
+void setup_builtin_highlighters(HighlighterGroup& group);
 
 Window::Window(Buffer& buffer)
     : Scope(buffer),
@@ -31,9 +29,7 @@ Window::Window(Buffer& buffer)
 
     options().register_watcher(*this);
 
-    m_builtin_highlighters.add_child({"tabulations"_str, make_simple_highlighter(expand_tabulations)});
-    m_builtin_highlighters.add_child({"unprintable"_str, make_simple_highlighter(expand_unprintable)});
-    m_builtin_highlighters.add_child({"selections"_str,  make_simple_highlighter(highlight_selections)});
+    setup_builtin_highlighters(m_builtin_highlighters);
 
     for (auto& option : options().flatten_options())
         on_option_changed(*option);

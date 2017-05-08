@@ -81,26 +81,6 @@ private:
     const HighlightPass m_passes;
 };
 
-template<typename Func>
-struct SimpleHighlighter : public Highlighter
-{
-    SimpleHighlighter(Func func, HighlightPass pass)
-      : Highlighter{pass}, m_func{std::move(func)} {}
-
-private:
-    void do_highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override
-    {
-        m_func(context, pass, display_buffer, range);
-    }
-    Func m_func;
-};
-
-template<typename T>
-std::unique_ptr<SimpleHighlighter<T>> make_simple_highlighter(T func, HighlightPass pass = HighlightPass::Colorize)
-{
-    return make_unique<SimpleHighlighter<T>>(std::move(func), pass);
-}
-
 using HighlighterParameters = ConstArrayView<String>;
 using HighlighterFactory = std::function<HighlighterAndId (HighlighterParameters params)>;
 
