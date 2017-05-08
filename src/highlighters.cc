@@ -1278,63 +1278,72 @@ private:
 BufferCoord& get_first(RangeAndFace& r) { return std::get<0>(r).begin; }
 BufferCoord& get_last(RangeAndFace& r) { return std::get<0>(r).end; }
 
-HighlighterAndId create_ranges_highlighter(HighlighterParameters params)
+struct RangesHighlighter : Highlighter
 {
-    if (params.size() != 1)
-        throw runtime_error("wrong parameter count");
+    RangesHighlighter(String option_name)
+        : Highlighter{HighlightPass::Colorize}
+        , m_option_name{std::move(option_name)} {}
 
-    const String& option_name = params[0];
-
-    // throw if wrong option type
-    GlobalScope::instance().options()[option_name].get<TimestampedList<RangeAndFace>>();
-
-    auto func = [=](const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
+    static HighlighterAndId create(HighlighterParameters params)
     {
-        auto& range_and_faces = context.options()[option_name].get_mutable<TimestampedList<RangeAndFace>>();
-        auto& ranges = range_and_faces.list;
+        if (params.size() != 1)
+            throw runtime_error("wrong parameter count");
 
+        const String& option_name = params[0];
+        // throw if wrong option type
+        GlobalScope::instance().options()[option_name].get<TimestampedList<RangeAndFace>>();
+
+        return {"hlranges_" + params[0], make_unique<RangesHighlighter>(option_name)};
+    }
+
+private:
+    void do_highlight(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange) override
+    {
         auto& buffer = context.buffer();
-        if (range_and_faces.prefix != buffer.timestamp())
-        {
-            auto changes = buffer.changes_since(range_and_faces.prefix);
-            auto change_it = changes.begin();
-            while (change_it != changes.end())
-            {
-                auto forward_end = forward_sorted_until(change_it, changes.end());
-                auto backward_end = backward_sorted_until(change_it, changes.end());
+        auto& range_and_faces = context.options()[m_option_name].get_mutable<TimestampedList<RangeAndFace>>();
+        update_ranges_ifn(buffer, range_and_faces);
 
-                if (forward_end >= backward_end)
-                {
-                    update_forward({ change_it, forward_end }, ranges);
-                    change_it = forward_end;
-                }
-                else
-                {
-                    update_backward({ change_it, backward_end }, ranges);
-                    change_it = backward_end;
-                }
-            }
-            range_and_faces.prefix = buffer.timestamp();
-        }
-
-        for (auto& range : ranges)
+        for (auto& range : range_and_faces.list)
         {
             try
             {
                 auto& r = std::get<0>(range);
-                if (not buffer.is_valid(r.begin) or not buffer.is_valid(r.end))
-                    continue;
-
-                highlight_range(display_buffer, r.begin, r.end, true,
-                                apply_face(get_face(std::get<1>(range))));
+                if (buffer.is_valid(r.begin) and buffer.is_valid(r.end))
+                    highlight_range(display_buffer, r.begin, r.end, true,
+                                    apply_face(get_face(std::get<1>(range))));
             }
             catch (runtime_error&)
             {}
         }
-    };
+    }
 
-    return {"hlranges_" + params[0], make_highlighter(func) };
-}
+    void update_ranges_ifn(const Buffer& buffer, TimestampedList<RangeAndFace>& range_and_faces)
+    {
+        if (range_and_faces.prefix == buffer.timestamp())
+            return;
+
+        auto changes = buffer.changes_since(range_and_faces.prefix);
+        for (auto change_it = changes.begin(); change_it != changes.end(); )
+        {
+            auto forward_end = forward_sorted_until(change_it, changes.end());
+            auto backward_end = backward_sorted_until(change_it, changes.end());
+
+            if (forward_end >= backward_end)
+            {
+                update_forward({ change_it, forward_end }, range_and_faces.list);
+                change_it = forward_end;
+            }
+            else
+            {
+                update_backward({ change_it, backward_end }, range_and_faces.list);
+                change_it = backward_end;
+            }
+        }
+        range_and_faces.prefix = buffer.timestamp();
+    }
+
+    const String m_option_name;
+};
 
 HighlighterAndId create_highlighter_group(HighlighterParameters params)
 {
@@ -1842,7 +1851,7 @@ void register_highlighters()
           "A line-flag is written: <line>|<fg color>|<text>, the list is : separated" } });
     registry.insert({
         "ranges",
-        { create_ranges_highlighter,
+        { RangesHighlighter::create,
           "Parameters: <option name>\n"
           "Use the range-faces option given as parameter to highlight buffer\n" } });
     registry.insert({
