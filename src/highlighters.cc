@@ -64,10 +64,8 @@ void highlight_range(DisplayBuffer& display_buffer,
             bool is_replaced = atom_it->type() == DisplayAtom::ReplacedRange;
 
             if (not atom_it->has_buffer_range() or
-                (skip_replaced and is_replaced))
-                continue;
-
-            if (end <= atom_it->begin() or begin >= atom_it->end())
+                (skip_replaced and is_replaced) or
+                end <= atom_it->begin() or begin >= atom_it->end())
                 continue;
 
             if (not is_replaced and begin > atom_it->begin())
@@ -82,6 +80,47 @@ void highlight_range(DisplayBuffer& display_buffer,
             else
                 func(*atom_it);
         }
+    }
+}
+
+template<typename T>
+void replace_range(DisplayBuffer& display_buffer,
+                   BufferCoord begin, BufferCoord end, T func)
+{
+    // tolerate begin > end as that can be triggered by wrong encodngs
+    if (begin >= end or end <= display_buffer.range().begin
+                     or begin >= display_buffer.range().end)
+        return;
+
+    for (auto& line : display_buffer.lines())
+    {
+        auto& range = line.range();
+        if (range.end <= begin or  end < range.begin)
+            continue;
+
+        int beg_idx = -1, end_idx = -1;
+        for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
+        {
+            if (not atom_it->has_buffer_range() or
+                end <= atom_it->begin() or begin >= atom_it->end())
+                continue;
+
+            if (begin >= atom_it->begin())
+            {
+                if (begin > atom_it->begin())
+                    atom_it = ++line.split(atom_it, begin);
+                beg_idx = atom_it - line.begin();
+            }
+            if (end <= atom_it->end())
+            {
+                if (end < atom_it->end())
+                    atom_it = line.split(atom_it, end);
+                end_idx = (atom_it - line.begin()) + 1;
+            }
+        }
+
+        if (beg_idx != -1 and end_idx != -1)
+            func(line, beg_idx, end_idx);
     }
 }
 
@@ -1309,6 +1348,31 @@ void option_from_string(StringView str, InclusiveBufferRange& opt)
 BufferCoord& get_first(RangeAndFace& r) { return std::get<0>(r).first; }
 BufferCoord& get_last(RangeAndFace& r) { return std::get<0>(r).last; }
 
+static void update_ranges_ifn(const Buffer& buffer, TimestampedList<RangeAndFace>& range_and_faces)
+{
+    if (range_and_faces.prefix == buffer.timestamp())
+        return;
+
+    auto changes = buffer.changes_since(range_and_faces.prefix);
+    for (auto change_it = changes.begin(); change_it != changes.end(); )
+    {
+        auto forward_end = forward_sorted_until(change_it, changes.end());
+        auto backward_end = backward_sorted_until(change_it, changes.end());
+
+        if (forward_end >= backward_end)
+        {
+            update_forward({ change_it, forward_end }, range_and_faces.list);
+            change_it = forward_end;
+        }
+        else
+        {
+            update_backward({ change_it, backward_end }, range_and_faces.list);
+            change_it = backward_end;
+        }
+    }
+    range_and_faces.prefix = buffer.timestamp();
+}
+
 struct RangesHighlighter : Highlighter
 {
     RangesHighlighter(String option_name)
@@ -1348,29 +1412,53 @@ private:
         }
     }
 
-    void update_ranges_ifn(const Buffer& buffer, TimestampedList<RangeAndFace>& range_and_faces)
+    const String m_option_name;
+};
+
+struct ReplaceRangesHighlighter : Highlighter
+{
+    ReplaceRangesHighlighter(String option_name)
+        : Highlighter{HighlightPass::Colorize}
+        , m_option_name{std::move(option_name)} {}
+
+    static HighlighterAndId create(HighlighterParameters params)
     {
-        if (range_and_faces.prefix == buffer.timestamp())
-            return;
+        if (params.size() != 1)
+            throw runtime_error("wrong parameter count");
 
-        auto changes = buffer.changes_since(range_and_faces.prefix);
-        for (auto change_it = changes.begin(); change_it != changes.end(); )
+        const String& option_name = params[0];
+        // throw if wrong option type
+        GlobalScope::instance().options()[option_name].get<TimestampedList<RangeAndFace>>();
+
+        return {"replace_ranges_" + params[0], make_unique<ReplaceRangesHighlighter>(option_name)};
+    }
+
+private:
+    void do_highlight(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange) override
+    {
+        auto& buffer = context.buffer();
+        auto& range_and_faces = context.options()[m_option_name].get_mutable<TimestampedList<RangeAndFace>>();
+        update_ranges_ifn(buffer, range_and_faces);
+
+        for (auto& range : range_and_faces.list)
         {
-            auto forward_end = forward_sorted_until(change_it, changes.end());
-            auto backward_end = backward_sorted_until(change_it, changes.end());
-
-            if (forward_end >= backward_end)
+            try
             {
-                update_forward({ change_it, forward_end }, range_and_faces.list);
-                change_it = forward_end;
+                auto& r = std::get<0>(range);
+                if (buffer.is_valid(r.first) and buffer.is_valid(r.last))
+                {
+                    auto replacement = parse_display_line(std::get<1>(range));
+                    replace_range(display_buffer, r.first, buffer.char_next(r.last),
+                                  [&](DisplayLine& line, int beg_idx, int end_idx){
+                                      auto it = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
+                                      for (auto& atom : replacement)
+                                          it = ++line.insert(it, std::move(atom));
+                                  });
+                }
             }
-            else
-            {
-                update_backward({ change_it, backward_end }, range_and_faces.list);
-                change_it = backward_end;
-            }
+            catch (runtime_error&)
+            {}
         }
-        range_and_faces.prefix = buffer.timestamp();
     }
 
     const String m_option_name;
@@ -1884,6 +1972,11 @@ void register_highlighters()
     registry.insert({
         "ranges",
         { RangesHighlighter::create,
+          "Parameters: <option name>\n"
+          "Use the range-faces option given as parameter to highlight buffer\n" } });
+    registry.insert({
+        "replace-ranges",
+        { ReplaceRangesHighlighter::create,
           "Parameters: <option name>\n"
           "Use the range-faces option given as parameter to highlight buffer\n" } });
     registry.insert({
