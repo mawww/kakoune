@@ -1871,8 +1871,10 @@ void register_highlighters()
     registry.insert({
         "group",
         { create_highlighter_group,
-          "Parameters: <group name>\n"
-          "Creates a named group that can contain other highlighters" } });
+          "Parameters: [-passes <passes>] <group name>\n"
+          "Creates a named group that can contain other highlighters,\n"
+          "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
+          "which specify what kind of highlighters can be put in the group" } });
     registry.insert({
         "flag_lines",
         { FlagLinesHighlighter::create,
