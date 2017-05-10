@@ -65,6 +65,9 @@ struct HashCompatible : std::false_type {};
 
 template<typename T> struct HashCompatible<T, T> : std::true_type {};
 
+template<typename Lhs, typename Rhs>
+constexpr bool IsHashCompatible = HashCompatible<Lhs, Rhs>::value;
+
 }
 
 #endif // hash_hh_INCLUDED

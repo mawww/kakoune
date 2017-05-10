@@ -155,9 +155,9 @@ struct HashMap
     }
 
     template<typename KeyType>
-    using EnableIfHashCompatible = typename std::enable_if<
-        HashCompatible<Key, typename std::decay<KeyType>::type>::value
-    >::type;
+    using EnableIfHashCompatible = std::enable_if_t<
+        IsHashCompatible<Key, std::decay_t<KeyType>>
+    >;
 
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
     int find_index(const KeyType& key, size_t hash) const

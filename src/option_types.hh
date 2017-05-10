@@ -24,7 +24,7 @@ constexpr decltype(T::option_type_name) option_type_name(Meta::Type<T>)
 }
 
 template<typename Enum>
-typename std::enable_if<std::is_enum<Enum>::value, String>::type
+std::enable_if_t<std::is_enum<Enum>::value, String>
 option_type_name(Meta::Type<Enum>)
 {
     return format("{}({})", with_bit_ops(Meta::Type<Enum>{}) ? "flags" : "enum",
