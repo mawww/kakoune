@@ -23,7 +23,7 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
 }}
 
 %sh{
-    autoload() {
+    autoload_directory() {
         dir=$1
         for rcfile in ${dir}/*.kak; do
             if [ -f "$rcfile" ]; then
@@ -32,7 +32,7 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
         done
         for subdir in ${dir}/*; do
             if [ -d "$subdir" ]; then
-                autoload $subdir
+                autoload_directory $subdir
             fi
         done
     }
@@ -42,9 +42,9 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     echo "colorscheme default"
 
     if [ -d "${localconfdir}/autoload" ]; then
-        autoload ${localconfdir}/autoload
+        autoload_directory ${localconfdir}/autoload
     elif [ -d "${kak_runtime}/autoload" ]; then
-        autoload ${kak_runtime}/autoload
+        autoload_directory ${kak_runtime}/autoload
     fi
 
     if [ -f "${kak_runtime}/kakrc.local" ]; then
