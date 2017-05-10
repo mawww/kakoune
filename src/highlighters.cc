@@ -1426,7 +1426,7 @@ HighlighterAndId create_reference_highlighter(HighlighterParameters params)
         {}
     };
 
-    return {name, make_highlighter(func)};
+    return {name, make_highlighter(func, HighlightPass::All)};
 }
 
 struct RegexMatch
