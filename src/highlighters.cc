@@ -1375,6 +1375,26 @@ private:
     const String m_option_name;
 };
 
+HighlightPass parse_passes(StringView str)
+{
+    HighlightPass passes{};
+    for (auto pass : str | split<StringView>('|'))
+    {
+        if (pass == "colorize")
+            passes |= HighlightPass::Colorize;
+        else if (pass == "move")
+            passes |= HighlightPass::Move;
+        else if (pass == "wrap")
+            passes |= HighlightPass::Wrap;
+        else
+            throw runtime_error{format("invalid highlight pass: {}", pass)};
+    }
+    if (passes == HighlightPass{})
+        throw runtime_error{"no passes specified"};
+
+    return passes;
+}
+
 HighlighterAndId create_highlighter_group(HighlighterParameters params)
 {
     static const ParameterDesc param_desc{
@@ -1382,25 +1402,6 @@ HighlighterAndId create_highlighter_group(HighlighterParameters params)
         ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
     };
     ParametersParser parser{params, param_desc};
-
-    auto parse_passes = [](StringView str) {
-        HighlightPass passes{};
-        for (auto pass : str | split<StringView>('|'))
-        {
-            if (pass == "colorize")
-                passes |= HighlightPass::Colorize;
-            else if (pass == "move")
-                passes |= HighlightPass::Move;
-            else if (pass == "wrap")
-                passes |= HighlightPass::Wrap;
-            else
-                throw runtime_error{format("invalid highlight pass: {}", pass)};
-        }
-        if (passes == HighlightPass{})
-            throw runtime_error{"no passes specified"};
-
-        return passes;
-    };
     HighlightPass passes = parse_passes(parser.get_switch("passes").value_or("colorize"));
 
     return HighlighterAndId(parser[0], make_unique<HighlighterGroup>(passes));
@@ -1408,14 +1409,14 @@ HighlighterAndId create_highlighter_group(HighlighterParameters params)
 
 HighlighterAndId create_reference_highlighter(HighlighterParameters params)
 {
-    if (params.size() != 1)
-        throw runtime_error("wrong parameter count");
+    static const ParameterDesc param_desc{
+        { { "passes", { true, "" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
+    };
+    ParametersParser parser{params, param_desc};
+    HighlightPass passes = parse_passes(parser.get_switch("passes").value_or("colorize"));
 
-    const String& name = params[0];
-
-    // throw if not found
-    //DefinedHighlighters::instance().get_group(name, '/');
-
+    const String& name = parser[0];
     auto func = [=](const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range)
     {
         try
@@ -1425,8 +1426,7 @@ HighlighterAndId create_reference_highlighter(HighlighterParameters params)
         catch (child_not_found&)
         {}
     };
-
-    return {name, make_highlighter(func, HighlightPass::All)};
+    return {name, make_highlighter(func, passes)};
 }
 
 struct RegexMatch
@@ -1905,8 +1905,10 @@ void register_highlighters()
     registry.insert({
         "ref",
         { create_reference_highlighter,
-          "Parameters: <path>\n"
-          "Reference the highlighter at <path> in shared highglighters" } });
+          "Parameters: [-passes <passes>] <path>\n"
+          "Reference the highlighter at <path> in shared highglighters\n"
+          "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
+          "which specify what kind of highlighters can be referenced" } });
     registry.insert({
         "regions",
         { RegionsHighlighter::create,
