@@ -878,14 +878,14 @@ String make_info_box(StringView title, StringView message, ColumnCount max_width
 
     auto line_count = max(assistant_size.line-1,
                           LineCount{(int)lines.size()} + 2);
-    const int assistant_top_margin = ((int)line_count - (int)assistant_size.line+1) / 2;
+    const auto assistant_top_margin = (line_count - assistant_size.line+1) / 2;
     for (LineCount i = 0; i < line_count; ++i)
     {
         constexpr Codepoint dash{L'─'};
         if (not assistant.empty())
         {
             if (i >= assistant_top_margin)
-                result += assistant[min((int)i - assistant_top_margin, (int)assistant_size.line-1)];
+                result += assistant[(int)min(i - assistant_top_margin, assistant_size.line-1)];
             else
                 result += assistant[(int)assistant_size.line-1];
         }
