@@ -8,16 +8,6 @@ hook global BufCreate .*[.](ex|exs) %{
     set buffer filetype elixir
 }
 
-# Faces
-# -----
-
-face ElixirAtom yellow
-face ElixirUnderscore white+d
-face ElixirAttribute green+d
-face ElixirSpecialKeyword blue+b
-face ElixirEnv red+b
-face ElixirOperator rgb:a8a8a8
-face ElixirInterpolation rgb:00d7ff
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -31,21 +21,22 @@ add-highlighter -group / regions -default code elixir \
 add-highlighter -group /elixir/comment fill comment
 add-highlighter -group /elixir/double_string  fill string
 add-highlighter -group /elixir/double_string regions regions interpolation \Q#{ \} \{
-add-highlighter -group /elixir/double_string/regions/interpolation fill ElixirInterpolation
+add-highlighter -group /elixir/double_string/regions/interpolation fill builtin
 add-highlighter -group /elixir/single_string  fill string
-add-highlighter -group /elixir/code regex ':[\w_]+\b' 0:ElixirAtom
-add-highlighter -group /elixir/code regex '[\w_]+:' 0:ElixirAtom
+add-highlighter -group /elixir/code regex ':[\w_]+\b' 0:type
+add-highlighter -group /elixir/code regex '[\w_]+:' 0:type
 add-highlighter -group /elixir/code regex '[A-Z][\w_]+\b' 0:module
 add-highlighter -group /elixir/code regex '(:[\w_]+)(\.)' 1:module
-add-highlighter -group /elixir/code regex '\b_\b' 0:ElixirUnderscore
-add-highlighter -group /elixir/code regex '\b_[\w_]+\b' 0:ElixirUnderscore
+add-highlighter -group /elixir/code regex '\b_\b' 0:default
+add-highlighter -group /elixir/code regex '\b_[\w_]+\b' 0:default
+add-highlighter -group /elixir/code regex '~[a-zA-Z]\(.*\)' 0:string
 add-highlighter -group /elixir/code regex \b(true|false|nil)\b 0:value
-add-highlighter -group /elixir/code regex (->|<-|<<|>>|=>) 0:ElixirOperator
-add-highlighter -group /elixir/code regex \b(require|alias|use|import)\b 0:ElixirSpecialKeyword
-add-highlighter -group /elixir/code regex \b(__MODULE__|__DIR__|__ENV__|__CALLER__)\b 0:ElixirEnv
+add-highlighter -group /elixir/code regex (->|<-|<<|>>|=>) 0:builtin
+add-highlighter -group /elixir/code regex \b(require|alias|use|import)\b 0:keyword
+add-highlighter -group /elixir/code regex \b(__MODULE__|__DIR__|__ENV__|__CALLER__)\b 0:value
 add-highlighter -group /elixir/code regex \b(def|defp|defmacro|defmacrop|defstruct|defmodule|defimpl|defprotocol|defoverridable)\b 0:keyword
-add-highlighter -group /elixir/code regex \b(fn|do|end|case|if|else|unless|var!|for|cond|quote|unquote|receive|with|raise|reraise|try|catch)\b 0:keyword
-add-highlighter -group /elixir/code regex '@[\w_]+\b' 0:ElixirAttribute
+add-highlighter -group /elixir/code regex \b(fn|do|end|when|case|if|else|unless|var!|for|cond|quote|unquote|receive|with|raise|reraise|try|catch)\b 0:keyword
+add-highlighter -group /elixir/code regex '@[\w_]+\b' 0:attribute
 add-highlighter -group /elixir/code regex '\b\d+[\d_]*\b' 0:value
 
 # Commands
