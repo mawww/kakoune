@@ -867,6 +867,9 @@ Options are typed, their type can be
    (`<begin line>.<begin column>,<end line>.<end column>` or
    `<begin line>.<end line>+<length>`) and  a face (separated by `|`),
    except for the first element which is just the timestamp of the buffer.
+ * `line-flags`: a `:` separated list of a line number and a corresponding
+    flag (`<line>|<flag text>`), except for the first element which is just
+    the timestamp of the buffer.
  * `completions`: a `:` separated list of `<text>|<docstring>|<menu text>`
    candidates, except for the first element which follows the
    `<line>.<column>[+<length>]@<timestamp>` format to define where the
@@ -1230,9 +1233,8 @@ General highlighters are:
        yellow on red background.
  * `dynregex`: Similar to regex, but expand (like a command parameter would) the
        given expression before building a regex from the result.
- * `flag_lines <flag> <option_name>`: add a column in front of text, and display the
-       given flag in it for everly line contained in the int-list option named
-       <option_name>.
+ * `flag_lines <face> <option_name>`: add a column in front of the buffer,
+       and display the flags specified in <option_name>, using <face>
  * `show_matching`: highlight matching char of the character under the selections'
        cursor using `MatchingChar` face.
  * `show_whitespaces \<-tab <separator> \<-tabpad <separator> \<-lf <separator> \<-spc <separator> \<-nbsp <separator>`: display symbols on top of whitespaces to make them more explicit using the Whitespace face.

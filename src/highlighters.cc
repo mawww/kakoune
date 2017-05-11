@@ -1879,9 +1879,8 @@ void register_highlighters()
     registry.insert({
         "flag_lines",
         { FlagLinesHighlighter::create,
-          "Parameters: <option name> <bg color>\n"
-          "Display flags specified in the line-flag-list option <option name>\n"
-          "A line-flag is written: <line>|<fg color>|<text>, the list is : separated" } });
+          "Parameters: <face> <option name>\n"
+          "Display flags specified in the line-flags option <option name> with <face>"} });
     registry.insert({
         "ranges",
         { RangesHighlighter::create,
