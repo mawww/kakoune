@@ -46,7 +46,7 @@ struct DisplaySetup
     // Position of the cursor in the window
     DisplayCoord cursor_pos;
     // Offset of line and columns that must remain visible around cursor
-    const DisplayCoord scroll_offset;
+    DisplayCoord scroll_offset;
 };
 
 struct Highlighter
