@@ -113,7 +113,7 @@ variable has to be spelled out within the body of the expansion
 Markup strings
 --------------
 In certain contexts, Kakoune can take a markup string, which is a string
-containing formatting informations.  In these strings, the {facename}
+containing formatting informations. In these strings, the {facename}
 syntax will enable the face facename until another face gets activated,
 or the end of the string is reached.
 
