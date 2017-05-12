@@ -29,7 +29,7 @@ hook global WinSetOption filetype=(?!man).* %{
 def -hidden -params 1..2 man-impl %{ %sh{
     manout=$(mktemp /tmp/kak-man-XXXXXX)
     colout=$(mktemp /tmp/kak-man-XXXXXX)
-    MANWIDTH=${kak_window_width} man "$@" > $manout
+    MANWIDTH=${kak_window_width} man "$@" | sed -r 's/\x1B\[([0-9]*?)?[m|K]//g' > $manout
     retval=$?
     col -b -x > ${colout} < ${manout}
     rm ${manout}
