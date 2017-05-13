@@ -148,18 +148,19 @@ void Context::change_buffer(Buffer& buffer)
     if (m_edition_level > 0)
        this->buffer().commit_undo_group();
 
-    m_window.reset();
-    if (has_client())
-    {
-        client().change_buffer(buffer);
-        client().info_hide();
-        client().menu_hide();
-    }
-    else
-        m_selections = SelectionList{buffer, Selection{}};
 
     if (has_input_handler())
         input_handler().reset_normal_mode();
+
+    m_window.reset();
+    if (has_client())
+    {
+        client().info_hide();
+        client().menu_hide();
+        client().change_buffer(buffer);
+    }
+    else
+        m_selections = SelectionList{buffer, Selection{}};
 }
 
 SelectionList& Context::selections()

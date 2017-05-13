@@ -179,9 +179,9 @@ void Client::change_buffer(Buffer& buffer)
     context().selections_write_only() = std::move(ws.selections);
     context().set_window(*m_window);
     m_window->set_dimensions(m_ui->dimensions());
-    force_redraw();
 
     m_window->hooks().run_hook("WinDisplay", buffer.name(), context());
+    force_redraw();
 }
 
 static bool is_inline(InfoStyle style)
