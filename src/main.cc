@@ -461,13 +461,13 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
     return make_unique<LocalUI>();
 }
 
-int run_client(StringView session, StringView init_cmds,
+int run_client(StringView session, StringView client_init,
                Optional<BufferCoord> init_coord, UIType ui_type)
 {
     try
     {
         EventManager event_manager;
-        RemoteClient client{session, make_ui(ui_type), get_env_vars(), init_cmds, std::move(init_coord)};
+        RemoteClient client{session, make_ui(ui_type), get_env_vars(), client_init, std::move(init_coord)};
         while (true)
             event_manager.handle_next_events(EventMode::Normal);
     }
@@ -497,8 +497,8 @@ enum class ServerFlags
 };
 constexpr bool with_bit_ops(Meta::Type<ServerFlags>) { return true; }
 
-int run_server(StringView session,
-               StringView init_cmds, Optional<BufferCoord> init_coord,
+int run_server(StringView session, StringView server_init,
+               StringView client_init, Optional<BufferCoord> init_coord,
                ServerFlags flags, UIType ui_type,
                ConstArrayView<StringView> files)
 {
@@ -549,14 +549,26 @@ int run_server(StringView session,
     bool startup_error = false;
     if (not (flags & ServerFlags::IgnoreKakrc)) try
     {
-        Context initialisation_context{Context::EmptyContextFlag{}};
+        Context init_context{Context::EmptyContextFlag{}};
         command_manager.execute(format("source {}/kakrc", runtime_directory()),
-                                initialisation_context);
+                                init_context);
     }
     catch (runtime_error& error)
     {
         startup_error = true;
         write_to_debug_buffer(format("error while parsing kakrc:\n"
+                                     "    {}", error.what()));
+    }
+
+    if (not server_init.empty()) try
+    {
+        Context init_context{Context::EmptyContextFlag{}};
+        command_manager.execute(server_init, init_context);
+    }
+    catch (runtime_error& error)
+    {
+        startup_error = true;
+        write_to_debug_buffer(format("error while running server init commands:\n"
                                      "    {}", error.what()));
     }
 
@@ -595,7 +607,7 @@ int run_server(StringView session,
         if (not (flags & ServerFlags::Daemon))
         {
             local_client = client_manager.create_client(
-                 create_local_ui(ui_type), get_env_vars(), init_cmds, std::move(init_coord));
+                 create_local_ui(ui_type), get_env_vars(), client_init, std::move(init_coord));
 
             if (startup_error)
                 local_client->print_status({
@@ -793,7 +805,8 @@ int main(int argc, char* argv[])
 
     const ParameterDesc param_desc{
         SwitchMap{ { "c", { true,  "connect to given session" } },
-                   { "e", { true,  "execute argument on initialisation" } },
+                   { "e", { true,  "execute argument on client initialisation" } },
+                   { "E", { true,  "execute argument on server initialisation" } },
                    { "n", { false, "do not source kakrc files on startup" } },
                    { "s", { true,  "set session name" } },
                    { "d", { false, "run as a headless session (requires -s)" } },
@@ -856,7 +869,7 @@ int main(int argc, char* argv[])
 
         if (auto session = parser.get_switch("p"))
         {
-            for (auto opt : { "c", "n", "s", "d", "e", "ro" })
+            for (auto opt : { "c", "n", "s", "d", "e", "E", "ro" })
             {
                 if (parser.get_switch(opt))
                 {
@@ -867,7 +880,8 @@ int main(int argc, char* argv[])
             return run_pipe(*session);
         }
 
-        auto init_cmds = parser.get_switch("e").value_or(StringView{});
+        auto client_init = parser.get_switch("e").value_or(StringView{});
+        auto server_init = parser.get_switch("E").value_or(StringView{});
         const UIType ui_type = parse_ui_type(parser.get_switch("ui").value_or("ncurses"));
 
         if (auto keys = parser.get_switch("f"))
@@ -882,7 +896,7 @@ int main(int argc, char* argv[])
             for (size_t i = 0; i < parser.positional_count(); ++i)
                 files.emplace_back(parser[i]);
 
-            return run_filter(*keys, init_cmds, files,
+            return run_filter(*keys, client_init, files,
                               (bool)parser.get_switch("q"),
                               parser.get_switch("i").value_or(StringView{}));
         }
@@ -895,7 +909,7 @@ int main(int argc, char* argv[])
             {
                 if (name == "+" or name  == "+:")
                 {
-                    init_cmds = init_cmds + "; exec gj";
+                    client_init = client_init + "; exec gj";
                     continue;
                 }
                 auto colon = find(name, ':');
@@ -916,7 +930,7 @@ int main(int argc, char* argv[])
 
         if (auto server_session = parser.get_switch("c"))
         {
-            for (auto opt : { "n", "s", "d", "ro" })
+            for (auto opt : { "n", "s", "d", "E", "ro" })
             {
                 if (parser.get_switch(opt))
                 {
@@ -928,7 +942,7 @@ int main(int argc, char* argv[])
             for (auto name : files)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
-            return run_client(*server_session, new_files + init_cmds, init_coord, ui_type);
+            return run_client(*server_session, new_files + client_init, init_coord, ui_type);
         }
         else
         {
@@ -940,7 +954,7 @@ int main(int argc, char* argv[])
                              (parser.get_switch("d") ? ServerFlags::Daemon : ServerFlags::None) |
                              (parser.get_switch("ro") ? ServerFlags::ReadOnly : ServerFlags::None) |
                              (argc == 1 ? ServerFlags::StartupInfo : ServerFlags::None);
-                return run_server(session, init_cmds, init_coord, flags, ui_type, files);
+                return run_server(session, server_init, client_init, init_coord, flags, ui_type, files);
             }
             catch (convert_to_client_mode& convert)
             {
