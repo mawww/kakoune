@@ -30,21 +30,29 @@ hook global WinCreate .* %{
 }
 
 define-command -params .. -file-completion gdb-session-new %{
-    gdb-session-connect
+    gdb-session-connect-internal
     %sh{
         # can't connect until socat has created the pty thing
         while [ ! -e "${kak_opt_gdb_dir}/pty" ]; do
             sleep 1
         done
-        {
+        if [ -n "$TMUX" ]; then
+            tmux split-window -h " \
+                gdb $@ --init-eval-command=\"new-ui mi3 ${kak_opt_gdb_dir}/pty\""
+        elif [ -n "$WINDOWID" ]; then
             setsid -w $kak_opt_termcmd " \
-              gdb $@ --init-eval-command=\"new-ui mi3 ${kak_opt_gdb_dir}/pty\""
-            printf gdb-session-stop\\n | kak -p "$kak_session"
-        } 2>/dev/null >/dev/null &
+                gdb $@ --init-eval-command=\"new-ui mi3 ${kak_opt_gdb_dir}/pty\"" 2>/dev/null >/dev/null &
+        fi
     }
 }
 
 define-command gdb-session-connect %{
+    gdb-session-connect-internal
+    info "Please instruct gdb to \"new-ui mi3 ${kak_opt_gdb_dir}/pty\""
+}
+
+
+define-command -hidden gdb-session-connect-internal %{
     gdb-session-stop
     %sh{
         tmpdir=$(mktemp --tmpdir -d gdb_kak_XXX)
@@ -135,7 +143,6 @@ define-command gdb-session-connect %{
         } 2>/dev/null >/dev/null &
         printf "$!" > "${tmpdir}/pid"
         printf "set-option global gdb_dir %s\n" "$tmpdir"
-        printf "info \"%s\"\n" "Please instruct gdb to \\\"new-ui mi3 ${tmpdir}/pty\\\""
     }
     hook -group gdb global BufOpenFile .* %{
         gdb-refresh-location-flag %val{buffile}
