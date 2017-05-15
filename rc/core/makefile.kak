@@ -39,7 +39,7 @@ def -hidden makefile-indent-on-new-line %{
         # preserve previous line indent
         try %{ exec -draft \;K<a-&> }
         ## If the line above is a target indent with a tab
-        try %{ exec -draft Z k<a-x> <a-k>^[^:]+:\s<ret> z i<tab> }
+        try %{ exec -no-hooks -draft Z k<a-x> <a-k>^[^:]+:\s<ret> z i<tab> }
         # cleanup trailing white space son previous line
         try %{ exec -draft k<a-x> s \h+$ <ret>d }
         # indent after some keywords
