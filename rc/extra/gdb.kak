@@ -220,11 +220,22 @@ define-command gdb-toggle-breakpoint %{
 }
 define-command gdb-print %{ gdb-cmd "print %val{selection}" }
 
+decl -hidden str gdb_jump_client
+
+define-command gdb-enable-autojump %{
+    set global gdb_jump_client %val{client}
+}
+
+define-command gdb-disable-autojump %{
+    set global gdb_jump_client ""
+}
+
 # implementation details commands
 
 define-command -hidden -params 2 gdb-handle-stopped %{
     set-option global gdb_location_info "%arg{1}|%arg{2}"
     gdb-refresh-location-flag %arg{2}
+    try %{ eval -client %opt{gdb_jump_client} gdb-jump-to-location }
 }
 
 define-command -hidden -params 1 gdb-refresh-location-flag %{
@@ -308,7 +319,7 @@ define-command -hidden -params 1 gdb-refresh-breakpoints-flags %{
                     printf "set-option -add \"buffer=%s\" gdb_breakpoints_flags %s|%s\n" "$buffer" "$line" "$flag"
                 fi
             done
-       }
+        }
     }
 }
 
