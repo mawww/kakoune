@@ -283,30 +283,35 @@ def -hidden c-family-insert-include-guards %{
 
 hook global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
 
-decl str-list alt_dirs ".;.."
+decl str-list alt_dirs ".:.."
 
 def c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
-    alt_dirs=$(printf %s\\n "${kak_opt_alt_dirs}" | sed -e 's/;/ /g')
-    file=$(basename "${kak_buffile}")
+    alt_dirs=$(printf %s\\n "${kak_opt_alt_dirs}" | tr ':' '\n')
+    file="${kak_buffile##*/}"
+    file_noext="${file%.*}"
     dir=$(dirname "${kak_buffile}")
 
     case ${file} in
         *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
             for alt_dir in ${alt_dirs}; do
                 for ext in h hh hpp hxx H; do
-                    altname="${dir}/${alt_dir}/${file%.*}.${ext}"
-                    [ -f ${altname} ] && break
+                    altname="${dir}/${alt_dir}/${file_noext}.${ext}"
+                    if [ -f ${altname} ]; then
+                        printf 'edit %%{%s}\n' "${altname}"
+                        exit
+                    fi
                 done
-                [ -f ${altname} ] && break
             done
         ;;
         *.h|*.hh|*.hpp|*.hxx|*.H)
             for alt_dir in ${alt_dirs}; do
                 for ext in c cc cpp cxx C m; do
-                    altname="${dir}/${alt_dir}/${file%.*}.${ext}"
-                    [ -f ${altname} ] && break
+                    altname="${dir}/${alt_dir}/${file_noext}.${ext}"
+                    if [ -f ${altname} ]; then
+                        printf 'edit %%{%s}\n' "${altname}"
+                        exit
+                    fi
                 done
-                [ -f ${altname} ] && break
             done
         ;;
         *)
@@ -314,9 +319,5 @@ def c-family-alternative-file -docstring "Jump to the alternate file (header/imp
             exit
         ;;
     esac
-    if [ -f ${altname} ]; then
-       printf %s\\n "edit '${altname}'"
-    else
-       echo "echo -color Error 'alternative file not found'"
-    fi
+    echo "echo -color Error 'alternative file not found'"
 }}
