@@ -1,7 +1,10 @@
-decl str makecmd make
-decl str make_error_pattern " (?:fatal )?error:"
+decl -docstring "shell command run to build the project" \
+    str makecmd make
+decl -docstring "pattern that describes lines containing information about errors in the output of the `makecmd` command" \
+    str make_error_pattern " (?:fatal )?error:"
 
-decl str toolsclient
+decl -docstring "name of the client in which utilities display information" \
+    str toolsclient
 decl -hidden int make_current_error_line
 
 def -params .. \
@@ -40,7 +43,8 @@ hook global WinSetOption filetype=(?!make).* %{
     remove-hooks buffer make-hooks
 }
 
-decl str jumpclient
+decl -docstring "name of the client in which all source code jumps will be executed" \
+    str jumpclient
 
 def -hidden make-jump %{
     eval -collapse-jumps %{

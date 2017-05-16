@@ -1,6 +1,8 @@
 # termcmd should be set such as the next argument is the whole
 # command line to execute
-decl str termcmd %sh{
+decl -docstring %{shell command run to spawn a new terminal
+A shell command is appended to the one set in this option at runtime} \
+    str termcmd %sh{
     for termcmd in 'termite        -e      ' \
                    'urxvt          -e sh -c' \
                    'rxvt           -e sh -c' \

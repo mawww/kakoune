@@ -266,7 +266,12 @@ hook -group cpp-highlight global WinSetOption filetype=(?!cpp$).* %[ remove-high
 hook -group objc-highlight global WinSetOption filetype=objc %[ add-highlighter ref objc ]
 hook -group objc-highlight global WinSetOption filetype=(?!objc$).* %[ remove-highlighter objc ]
 
-decl str c_include_guard_style "ifdef"
+decl -docstring %{control the type of include guard to be inserted in empty headers
+Can be one of the following:
+ ifdef: old style ifndef/define guard
+ pragma: newer type of guard using "pragma once"} \
+    str c_include_guard_style "ifdef"
+
 def -hidden c-family-insert-include-guards %{
     %sh{
         case "${kak_opt_c_include_guard_style}" in
@@ -283,7 +288,8 @@ def -hidden c-family-insert-include-guards %{
 
 hook global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
 
-decl str-list alt_dirs ".;.."
+decl -docstring "semi-colon separated list of path in which header files will be looked for" \
+    str-list alt_dirs ".;.."
 
 def c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
     alt_dirs=$(printf %s\\n "${kak_opt_alt_dirs}" | sed -e 's/;/ /g')

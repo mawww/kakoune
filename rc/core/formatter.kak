@@ -1,4 +1,6 @@
-decl str formatcmd ""
+decl -docstring "shell command to which the contents of the current buffer is piped" \
+    str formatcmd
+
 def format -docstring "Format the contents of the current buffer" %{
     %sh{
         if [ ! -z "${kak_opt_formatcmd}" ]; then

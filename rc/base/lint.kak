@@ -1,6 +1,7 @@
-# your linter should output in this format:
-# {filename}:{line}:{column}: {kind}: {message}
-decl str lintcmd
+decl -docstring %{shell command to which the path of a copy of the current buffer will be passed
+The output returned by this command is expected to comply with the following format:
+ {filename}:{line}:{column}: {kind}: {message}} \
+    str lintcmd
 
 decl -hidden line-flags lint_flags
 decl -hidden str        lint_errors

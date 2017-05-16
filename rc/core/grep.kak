@@ -1,5 +1,7 @@
-decl str grepcmd 'grep -RHn'
-decl str toolsclient
+decl -docstring "shell command run to search for subtext in a file/directory" \
+    str grepcmd 'grep -RHn'
+decl -docstring "name of the client in which utilities display information" \
+    str toolsclient
 decl -hidden int _grep_current_line 0
 
 def -params .. -file-completion \
@@ -41,7 +43,8 @@ hook global WinSetOption filetype=(?!grep).* %{
     remove-hooks buffer grep-hooks
 }
 
-decl str jumpclient
+decl -docstring "name of the client in which all source code jumps will be executed" \
+    str jumpclient
 
 def -hidden grep-jump %{
     eval -collapse-jumps %{

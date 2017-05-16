@@ -1,6 +1,7 @@
 decl -hidden str jedi_tmp_dir
 decl -hidden completions jedi_completions
-decl str-list jedi_python_path ''
+decl -docstring "colon separated list of path added to `python`'s $PYTHONPATH environment variable" \
+    str-list jedi_python_path
 
 def jedi-complete -docstring "Complete the current selection" %{
     %sh{

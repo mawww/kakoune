@@ -1,4 +1,5 @@
-decl str clang_options
+decl -docstring "options to pass to the `clang` shell command" \
+    str clang_options
 
 decl -hidden str clang_tmp_dir
 decl -hidden completions clang_completions

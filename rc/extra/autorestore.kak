@@ -1,5 +1,5 @@
-## If set to true, backups will be removed as soon as they have been restored
-decl bool autorestore_purge_restored true
+decl -docstring "remove backups once they've been restored" \
+    bool autorestore_purge_restored true
 
 ## Insert the content of the backup file into the current buffer, if a suitable one is found
 def autorestore-restore-buffer -docstring "Restore the backup for the current file if it exists" %{
