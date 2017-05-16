@@ -11,6 +11,9 @@ hook global BufCreate .*[.](py) %{
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+declare-option -docstring "when enable more builtin symbols are highlighted for python" \
+    bool python_use_extended_syntax yes
+
 add-highlighter -group / regions -default code python \
     double_string '"""' '"""'            '' \
     single_string "'''" "'''"            '' \
@@ -62,7 +65,7 @@ add-highlighter -group /python/comment       fill comment
 
 # extended syntax
 
-%sh{
+%sh{ if [ "$kak_opt_python_use_extended_syntax" = "true" ]; then
     values="self"
     # attributes and methods list based on https://docs.python.org/3/reference/datamodel.html
     attributes="__annotations__|__closure__|__code__|__defaults__|__dict__|__doc__"
@@ -90,7 +93,7 @@ add-highlighter -group /python/comment       fill comment
         add-highlighter -group /python/code regex '\.(${attributes})[^(]' 1:attribute
         add-highlighter -group /python/code regex '(def\s+|\.)(${methods})\(' 2:function
     "
-}
+fi }
 
 # Integer formats
 add-highlighter -group /python/code regex '\b0[bB][01]+[lL]?\b' 0:value
