@@ -11,7 +11,7 @@ decl str termcmd %sh{
                    'gnome-terminal -e      ' \
                    'xfce4-terminal -e      ' ; do
         terminal=${termcmd%% *}
-        if which $terminal > /dev/null 2>&1; then
+        if command -v $terminal >/dev/null 2>&1; then
             printf %s\\n "'$termcmd'"
             exit
         fi
