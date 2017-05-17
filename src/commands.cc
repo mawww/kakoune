@@ -1907,7 +1907,7 @@ const CommandDesc info_cmd = {
     "info <switches> <params>...: display an info box with the params as content",
     ParameterDesc{
         { { "anchor",    { true, "set info anchoring <line>.<column>" } },
-          { "placement", { true, "set placement relative to anchor (above, below)" } },
+          { "placement", { true, "set placement relative to anchor (above, below, center)" } },
           { "title",     { true, "set info title" } } },
         ParameterDesc::Flags::None, 0, 1
     },
@@ -1924,6 +1924,7 @@ const CommandDesc info_cmd = {
         {
             InfoStyle style = InfoStyle::Prompt;
             BufferCoord pos;
+            auto placement = parser.get_switch("placement");
             if (auto anchor = parser.get_switch("anchor"))
             {
                 auto dot = find(*anchor, '.');
@@ -1934,7 +1935,7 @@ const CommandDesc info_cmd = {
                                 str_to_int({dot+1, anchor->end()})-1};
                 style = InfoStyle::Inline;
 
-                if (auto placement = parser.get_switch("placement"))
+                if (placement)
                 {
                     if (*placement == "above")
                         style = InfoStyle::InlineAbove;
@@ -1943,6 +1944,11 @@ const CommandDesc info_cmd = {
                     else
                         throw runtime_error(format("invalid placement '{}'", *placement));
                 }
+            }
+            else
+            {
+                if (placement and *placement == "center")
+                    style = InfoStyle::Center;
             }
             auto title = parser.get_switch("title").value_or(StringView{});
             context.client().info_show(title.str(), parser[0], pos, style);
