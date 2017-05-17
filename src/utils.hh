@@ -76,7 +76,7 @@ private:
 template<typename T>
 OnScopeEnd<T> on_scope_end(T t)
 {
-    return OnScopeEnd<T>(t);
+    return OnScopeEnd<T>{std::move(t)};
 }
 
 // *** Misc helper functions ***
