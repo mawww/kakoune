@@ -394,7 +394,7 @@ Vector<String> list_files(StringView dirname, Filter filter)
     if (not dir)
         return {};
 
-    auto closeDir = on_scope_end([=]{ closedir(dir); });
+    auto close_dir = on_scope_end([dir]{ closedir(dir); });
 
     Vector<String> result;
     while (dirent* entry = readdir(dir))

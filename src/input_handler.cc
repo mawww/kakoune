@@ -1480,7 +1480,7 @@ void InputHandler::handle_key(Key key)
     {
         const bool was_recording = is_recording();
         ++m_handle_key_level;
-        auto dec = on_scope_end([&]{ --m_handle_key_level; });
+        auto dec = on_scope_end([this]{ --m_handle_key_level; });
 
         auto keymap_mode = current_mode().keymap_mode();
         KeymapManager& keymaps = m_context.keymaps();
