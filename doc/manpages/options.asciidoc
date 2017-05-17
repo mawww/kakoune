@@ -21,10 +21,10 @@ Types
 *int-list*, *str-list*::
 	a list, elements are separated by a colon (:) if an element needs
 	to contain a colon, it can be escaped with a backslash
-*range-faces*::
+*range-specs*::
 	a `:` separated list of a pair of a buffer range
 	(`<begin line>.<begin column>,<end line>.<end column>` or
-	`<begin line>.<begin column>+<length>`) and a face (separated by `|`),
+	`<begin line>.<begin column>+<length>`) and a string (separated by `|`),
 	except for the first element which is just the timestamp of the buffer.
 *line-flags*::
 	a `:` separated list of a line number and a corresponding flag

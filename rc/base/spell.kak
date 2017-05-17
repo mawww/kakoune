@@ -1,4 +1,4 @@
-decl -hidden range-faces spell_regions
+decl -hidden range-specs spell_regions
 decl -hidden str spell_lang
 decl -hidden str spell_tmp_file
 

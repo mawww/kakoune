@@ -48,9 +48,9 @@ StringView option_type_name(Meta::Type<TimestampedList<LineAndFlag>>)
     return "line-flags";
 }
 
-StringView option_type_name(Meta::Type<TimestampedList<RangeAndFace>>)
+StringView option_type_name(Meta::Type<TimestampedList<RangeAndString>>)
 {
-    return "range-faces";
+    return "range-specs";
 }
 
 namespace
@@ -1335,7 +1335,7 @@ const CommandDesc declare_option_cmd = {
     "    str-list: list of character strings\n"
     "    completions: list of completion candidates\n"
     "    line-flags: list of line flags\n"
-    "    range-faces: list of range faces\n",
+    "    range-specs: list of range specs\n",
     ParameterDesc{
         { { "hidden",    { false, "do not display option name when completing" } },
           { "docstring", { true,  "specify option description" } } },
@@ -1346,7 +1346,7 @@ const CommandDesc declare_option_cmd = {
     make_completer(
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
-               auto c = {"int", "bool", "str", "regex", "int-list", "str-list", "completions", "line-flags", "range-faces"};
+               auto c = {"int", "bool", "str", "regex", "int-list", "str-list", "completions", "line-flags", "range-specs"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
@@ -1377,8 +1377,8 @@ const CommandDesc declare_option_cmd = {
             opt = &reg.declare_option<CompletionList>(parser[1], docstring, {}, flags);
         else if (parser[0] == "line-flags")
             opt = &reg.declare_option<TimestampedList<LineAndFlag>>(parser[1], docstring, {}, flags);
-        else if (parser[0] == "range-faces")
-            opt = &reg.declare_option<TimestampedList<RangeAndFace>>(parser[1], docstring, {}, flags);
+        else if (parser[0] == "range-specs")
+            opt = &reg.declare_option<TimestampedList<RangeAndString>>(parser[1], docstring, {}, flags);
         else
             throw runtime_error(format("unknown type {}", parser[0]));
 

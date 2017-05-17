@@ -19,7 +19,7 @@ String option_to_string(InclusiveBufferRange range);
 void option_from_string(StringView str, InclusiveBufferRange& opt);
 
 using LineAndFlag = std::tuple<LineCount, String>;
-using RangeAndFace = std::tuple<InclusiveBufferRange, String>;
+using RangeAndString = std::tuple<InclusiveBufferRange, String>;
 
 }
 

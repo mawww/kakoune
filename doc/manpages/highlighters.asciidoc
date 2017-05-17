@@ -91,8 +91,14 @@ General highlighters
 		wrap at word boundaries instead of codepoint boundaries.
 
 *ranges* <option_name>::
-	use the data in the range-faces option of the given name to highlight
-	the buffer.
+	use the data in the range-specs option of the given name to highlight
+	the buffer. The string part of the is interpretted as a face to apply
+	to the range.
+
+*replace-ranges* <option_name>::
+	use the data in the range-specs option of the given name to highlight
+	the buffer. The string part of the is interpretted as a display line to
+	display in place of the range.
 
 *fill* <face>::
 	fill using the given *face*, mostly useful with regions highlighters

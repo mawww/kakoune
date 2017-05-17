@@ -1345,10 +1345,10 @@ void option_from_string(StringView str, InclusiveBufferRange& opt)
     opt = { first, last };
 }
 
-BufferCoord& get_first(RangeAndFace& r) { return std::get<0>(r).first; }
-BufferCoord& get_last(RangeAndFace& r) { return std::get<0>(r).last; }
+BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).first; }
+BufferCoord& get_last(RangeAndString& r) { return std::get<0>(r).last; }
 
-static void update_ranges_ifn(const Buffer& buffer, TimestampedList<RangeAndFace>& range_and_faces)
+static void update_ranges_ifn(const Buffer& buffer, TimestampedList<RangeAndString>& range_and_faces)
 {
     if (range_and_faces.prefix == buffer.timestamp())
         return;
@@ -1386,7 +1386,7 @@ struct RangesHighlighter : Highlighter
 
         const String& option_name = params[0];
         // throw if wrong option type
-        GlobalScope::instance().options()[option_name].get<TimestampedList<RangeAndFace>>();
+        GlobalScope::instance().options()[option_name].get<TimestampedList<RangeAndString>>();
 
         return {"hlranges_" + params[0], make_unique<RangesHighlighter>(option_name)};
     }
@@ -1395,7 +1395,7 @@ private:
     void do_highlight(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange) override
     {
         auto& buffer = context.buffer();
-        auto& range_and_faces = context.options()[m_option_name].get_mutable<TimestampedList<RangeAndFace>>();
+        auto& range_and_faces = context.options()[m_option_name].get_mutable<TimestampedList<RangeAndString>>();
         update_ranges_ifn(buffer, range_and_faces);
 
         for (auto& range : range_and_faces.list)
@@ -1428,7 +1428,7 @@ struct ReplaceRangesHighlighter : Highlighter
 
         const String& option_name = params[0];
         // throw if wrong option type
-        GlobalScope::instance().options()[option_name].get<TimestampedList<RangeAndFace>>();
+        GlobalScope::instance().options()[option_name].get<TimestampedList<RangeAndString>>();
 
         return {"replace_ranges_" + params[0], make_unique<ReplaceRangesHighlighter>(option_name)};
     }
@@ -1437,7 +1437,7 @@ private:
     void do_highlight(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange) override
     {
         auto& buffer = context.buffer();
-        auto& range_and_faces = context.options()[m_option_name].get_mutable<TimestampedList<RangeAndFace>>();
+        auto& range_and_faces = context.options()[m_option_name].get_mutable<TimestampedList<RangeAndString>>();
         update_ranges_ifn(buffer, range_and_faces);
 
         for (auto& range : range_and_faces.list)
@@ -1973,12 +1973,14 @@ void register_highlighters()
         "ranges",
         { RangesHighlighter::create,
           "Parameters: <option name>\n"
-          "Use the range-faces option given as parameter to highlight buffer\n" } });
+          "Use the range-specs option given as parameter to highlight buffer\n"
+          "each spec is interpreted as a face to apply to the range\n" } });
     registry.insert({
         "replace-ranges",
         { ReplaceRangesHighlighter::create,
           "Parameters: <option name>\n"
-          "Use the range-faces option given as parameter to highlight buffer\n" } });
+          "Use the range-specs option given as parameter to highlight buffer\n"
+          "each spec is interpreted as a display line to display in place of the range\n" } });
     registry.insert({
         "line",
         { create_line_highlighter,

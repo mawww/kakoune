@@ -863,9 +863,9 @@ Options are typed, their type can be
  * `{int,str}-list`: a list, elements are separated by a colon (:)
   if an element needs to contain a colon, it can be escaped with a
   backslash.
- * `range-faces`: a `:` separated list of a pair of a buffer range
+ * `range-specs`: a `:` separated list of a pair of a buffer range
    (`<begin line>.<begin column>,<end line>.<end column>` or
-   `<begin line>.<end line>+<length>`) and  a face (separated by `|`),
+   `<begin line>.<end line>+<length>`) and  a string (separated by `|`),
    except for the first element which is just the timestamp of the buffer.
  * `line-flags`: a `:` separated list of a line number and a corresponding
     flag (`<line>|<flag text>`), except for the first element which is just
@@ -1245,7 +1245,10 @@ General highlighters are:
        the rest of the buffer, default is `|`.
  * `wrap \<-word>`: Soft wrap buffer content to window width, wrap at word boundaries if `-word` is specified.
  * `fill <face>`: fill using given face, mostly useful with <<regions-highlighters,Regions highlighters>>
- * `ranges <option_name>`: use the data in the range-faces option of the given name to highlight the buffer.
+ * `ranges <option_name>`: use the data in the range-specs option of the given name to highlight the buffer.
+        The string part of the is interpretted as a face to apply to the range.
+ * `replace-ranges <option_name>`: use the data in the range-specs option of the given name to highlight the buffer.
+        The string part of the is interpretted as a display line to display in place of the range.
 
 Highlighting Groups
 ^^^^^^^^^^^^^^^^^^^
