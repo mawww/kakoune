@@ -46,7 +46,9 @@ static const char* startup_info =
 " * BufNew and BufOpen hooks have been renamed to BufNewFile\n"
 "   and BufOpenFile.\n"
 " * The status line can be further customized.\n"
-"   See `:doc options modelinefmt`.\n";
+"   See `:doc options modelinefmt`.\n"
+" * The range-faces option type is now named range-specs\n"
+"   and can be used by the new replace-range highlighter.\n";
 
 struct startup_error : runtime_error
 {
