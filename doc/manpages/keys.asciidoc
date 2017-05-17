@@ -429,8 +429,11 @@ Macros
 ------
 Macros use the *@* register by default
 
+*<esc>*::
+	end macro recording
+
 *Q*::
-	record a macro
+	start or end macro recording
 
 *q*::
 	play a recorded macro
