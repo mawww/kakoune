@@ -256,7 +256,7 @@ NCursesUI::NCursesUI()
     raw();
     noecho();
     nonl();
-    curs_set(0);
+    curs_set(2);
     start_color();
     use_default_colors();
     set_escdelay(25);
