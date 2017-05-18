@@ -1787,6 +1787,11 @@ const HashMap<Key, NormalCmd> keymap{
     { {'k'}, {"move up",  move<LineCount, Backward>} },
     { {'l'}, {"move right", move<CharCount, Forward>} },
 
+    { {Key::Left}, { "move left", move<CharCount, Backward>} },
+    { {Key::Down}, { "move down", move<LineCount, Forward>} },
+    { {Key::Up}, {   "move up", move<LineCount, Backward>} },
+    { {Key::Right}, {"move right", move<CharCount, Forward>} },
+
     { {'H'}, {"extend left", move<CharCount, Backward, SelectMode::Extend>} },
     { {'J'}, {"extend down", move<LineCount, Forward, SelectMode::Extend>} },
     { {'K'}, {"extend up", move<LineCount, Backward, SelectMode::Extend>} },
@@ -1816,6 +1821,9 @@ const HashMap<Key, NormalCmd> keymap{
 
     { {'v'}, {"move view", view_commands<false>} },
     { {'V'}, {"move view (locked)", view_commands<true>} },
+
+    { {Key::PageUp}, {  "scroll one page up", scroll<Backward>} },
+    { {Key::PageDown}, {"scroll one page down", scroll<Forward>} },
 
     { {'y'}, {"yank selected text", yank} },
     { {'p'}, {"paste after selected text", repeated<paste<InsertMode::Append>>} },
@@ -1943,18 +1951,10 @@ const HashMap<Key, NormalCmd> keymap{
 
     { {','}, {"user mappings", exec_user_mappings} },
 
-    { {Key::Left}, { "move left", move<CharCount, Backward>} },
-    { {Key::Down}, { "move down", move<LineCount, Forward>} },
-    { {Key::Up}, {   "move up", move<LineCount, Backward>} },
-    { {Key::Right}, {"move right", move<CharCount, Forward>} },
-
     { {ctrl('b')}, {"scroll one page up", scroll<Backward >} },
     { {ctrl('f')}, {"scroll one page down", scroll<Forward>} },
     { {ctrl('u')}, {"scroll half a page up", scroll<Backward, true>} },
     { {ctrl('d')}, {"scroll half a page down", scroll<Forward, true>} },
-
-    { {Key::PageUp}, {  "scroll one page up", scroll<Backward>} },
-    { {Key::PageDown}, {"scroll one page down", scroll<Forward>} },
 
     { {'z'}, {"restore selections from register", restore_selections<false>} },
     { {alt('z')}, {"append selections from register", restore_selections<true>} },
