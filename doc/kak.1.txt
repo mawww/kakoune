@@ -7,7 +7,7 @@ kak - a vim inspired, selection oriented code editor
 
 SYNOPSIS
 --------
-*kak* [-help] [-q] [-n] [-l] [-ro] [-clear] [-ui ui_type] [-e command] [-f keys] [-p session_id] [-c session_id|[[-d] -s session_id] [+line[:column]|+:] file ...
+*kak* [-help] [-q] [-n] [-l] [-ro] [-clear] [-ui ui_type] [-e command] [-E command] [-f keys] [-p session_id] [-c session_id|[[-d] -s session_id] [+line[:column]|+:] file ...
 
 DESCRIPTION
 -----------
@@ -39,7 +39,10 @@ OPTIONS
 	run as a headless session (requires -s)
 
 -e <command>::
-	execute the *command* after the initialization phase
+	execute *command* after the client initialization phase
+
+-E <command>::
+	execute *command* after the server initialization phase
 
 -f <keys>::
 	enter in 'filter mode' and execute *keys* on the files passed as arguments
