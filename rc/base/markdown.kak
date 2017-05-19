@@ -81,7 +81,7 @@ add-highlighter -group /markdown/java       ref java
 add-highlighter -group /markdown/javascript ref javascript
 add-highlighter -group /markdown/json       ref json
 add-highlighter -group /markdown/julia      ref julia
-add-highlighter -group /markdown/kak        ref kak
+add-highlighter -group /markdown/kak        ref kakrc
 add-highlighter -group /markdown/kickstart  ref kickstart
 add-highlighter -group /markdown/latex      ref latex
 add-highlighter -group /markdown/lisp       ref lisp
