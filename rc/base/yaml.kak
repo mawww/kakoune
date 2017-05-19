@@ -23,6 +23,7 @@ add-highlighter -group /yaml/comment       fill comment
 add-highlighter -group /yaml/code regex ^(---|\.\.\.)$ 0:meta
 add-highlighter -group /yaml/code regex ^(\h*:\w*) 0:keyword
 add-highlighter -group /yaml/code regex \b(true|false|null)\b 0:value
+add-highlighter -group /yaml/code regex ^\h*-?\h*(\S+): 1:attribute
 
 # Commands
 # ‾‾‾‾‾‾‾‾
