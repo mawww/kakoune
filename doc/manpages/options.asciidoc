@@ -34,7 +34,7 @@ Types
 	a `:` separated list of `<text>|<docstring>|<menu text>`
 	candidates, except for the first element which follows the
 	`<line>.<column>[+<length>]@<timestamp>` format to define where the
-	completion apply in the buffer.
+	completion apply in the buffer. Markup can be used in the menu text.
 *enum(value1|value2|...)*::
 	an enum, taking one of the given values
 *flags(value1|value2|...)*::
