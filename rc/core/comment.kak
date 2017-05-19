@@ -16,6 +16,7 @@ hook global BufSetOption filetype=(c|cpp|go|java|javascript|objc|php|sass|scala|
 
 hook global BufSetOption filetype=(cabal|haskell|moon) %{
     set buffer comment_line '--'
+    set buffer comment_block '{-:-}'
 }
 
 hook global BufSetOption filetype=clojure %{
@@ -78,7 +79,7 @@ hook global BufSetOption filetype=(pug|rust) %{
 }
 
 hook global BufSetOption filetype=python %{
-    set buffer comment_block '\'\'\':\'\'\''
+    set buffer comment_block "''':'''"
 }
 
 hook global BufSetOption filetype=ragel %{
