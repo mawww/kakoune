@@ -28,26 +28,27 @@ def -hidden c-family-trim-autoindent %[ eval -draft -itersel %[
     try %[ exec <a-x> 1s^(\h+)$<ret> d ]
 ] ]
 
-def -hidden c-family-indent-on-newline %[ eval -draft -itersel %[
+def -hidden c-family-indent-on-newline %< eval -draft -itersel %<
     exec \;
-    try %[
+    try %<
         # if previous line closed a paren, copy indent of the opening paren line
         exec -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?$<ret> m<a-\;>J s\`|.\'<ret> 1<a-&>
-    ] catch %[
+    > catch %<
         # else indent new lines with the same level as the previous one
         exec -draft K <a-&>
-    ]
+    >
     # remove previous empty lines resulting from the automatic indent
-    try %[ exec -draft k <a-x> <a-k>^\h+$<ret> Hd ]
+    try %< exec -draft k <a-x> <a-k>^\h+$<ret> Hd >
     # indent after an opening brace
-    try %[ exec -draft k <a-x> s\{\h*$<ret> j <a-gt> ]
+    try %< exec -draft k <a-x> s\{\h*$<ret> j <a-gt> >
     # indent after a label
-    try %[ exec -draft k <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> ]
+    try %< exec -draft k <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> >
     # indent after a statement not followed by an opening brace
-    try %[ exec -draft k <a-x> <a-k>\b(if|else|for|while)\h*\(.+?\)\h*$<ret> j <a-gt> ]
-    # align to the opening parenthesis on a previous line if its followed by text on the same line
-    try %[ exec -draft {b <a-k>\`\([^\n]+\n[^\n]*\n?\'<ret> L s\`|.\'<ret> & ]
-] ]
+    try %< exec -draft k <a-x> <a-k>\b(if|else|for|while)\h*\(.+?\)\h*$<ret> j <a-gt> >
+    # align to the opening parenthesis or opening bracket (whichever is first)
+    # on a previous line if its followed by text on the same line
+    try %< exec -draft [b Z<a-\;>[B<a-z><gt> <a-k>\`[{(][^\n]+\n[^\n]*\n?\'<ret> L s\`|.\'<ret> & >
+> >
 
 def -hidden c-family-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
