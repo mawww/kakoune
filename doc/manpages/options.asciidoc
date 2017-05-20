@@ -113,7 +113,8 @@ Builtin options
 		provides completion based on local filesystem
 
 	*option=<opt-name>*:::
-		where *opt-name* is a 'completions' option.
+		where *opt-name* is an option of type 'completions' whose
+		contents will be used
 
 *static_words* 'str-list'::
 	list of words that are always added to completion candidates
