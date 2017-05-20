@@ -13,7 +13,7 @@ else
     endif
 endif
 
-sources := $(wildcard *.cc)
+sources := $(sort $(wildcard *.cc))
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
 deps := $(addprefix ., $(sources:.cc=$(suffix).d))
 docs := $(wildcard ../doc/manpages/*.asciidoc)
