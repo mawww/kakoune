@@ -48,7 +48,9 @@ static const char* startup_info =
 " * The status line can be further customized.\n"
 "   See `:doc options modelinefmt`.\n"
 " * The range-faces option type is now named range-specs\n"
-"   and can be used by the new replace-range highlighter.\n";
+"   and can be used by the new replace-range highlighter.\n"
+" * <a-z> and <a-Z> are not append to/from register anymore but\n"
+"   combine from/to register.\n";
 
 struct startup_error : runtime_error
 {

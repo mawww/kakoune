@@ -1531,67 +1531,111 @@ SelectionList read_selections_from_register(char reg, Context& context)
     return {buffer, std::move(sels), timestamp};
 }
 
-template<bool add>
+enum class CombineOp
+{
+    Append,
+    SelectLeftmostCursor,
+    SelectRightmostCursor,
+};
+
+CombineOp key_to_combine_op(Key key)
+{
+    switch (key.key)
+    {
+        case '+': return CombineOp::Append;
+        case '<': return CombineOp::SelectLeftmostCursor;
+        case '>': return CombineOp::SelectRightmostCursor;
+    }
+    throw runtime_error{format("unknown combine operator '{}'", key.key)};
+}
+
+const Selection& select_selection(const Selection& lhs, const Selection& rhs, CombineOp op)
+{
+    switch (op)
+    {
+        case CombineOp::SelectLeftmostCursor:  return lhs.cursor() < rhs.cursor() ? lhs : rhs;
+        case CombineOp::SelectRightmostCursor: return lhs.cursor() < rhs.cursor() ? rhs : lhs;
+        default: kak_assert(false); return lhs;
+    }
+}
+
+template<typename Func>
+void combine_selections(Context& context, SelectionList list, Func func)
+{
+    if (&context.buffer() != &list.buffer())
+        throw runtime_error{"cannot combine selections from different buffers"};
+
+    on_next_key_with_autoinfo(context, KeymapMode::None,
+                             [func, list](Key key, Context& context) mutable {
+                                 const auto op = key_to_combine_op(key);
+                                 auto& sels = context.selections();
+                                 list.update();
+                                 if (op == CombineOp::Append)
+                                 {
+                                     const auto main_index = list.size() + sels.main_index();
+                                     for (auto& sel : sels)
+                                         list.push_back(sel);
+                                     list.set_main_index(main_index);
+                                     list.sort_and_merge_overlapping();
+                                 }
+                                 else
+                                 {
+                                     if (list.size() != sels.size())
+                                         throw runtime_error{"The two selection lists dont have the same number of elements"};
+                                     for (int i = 0; i < list.size(); ++i)
+                                         list[i] = select_selection(list[i], sels[i], op);
+                                     list.set_main_index(sels.main_index());
+                                 }
+                                 func(context, std::move(list));
+                             }, "enter combining operator",
+                             "'+': append lists\n"
+                             "'<': select leftmost cursor\n"
+                             "'>': select rightmost cursor\n");
+}
+
+template<bool combine>
 void save_selections(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '^');
     if (not is_basic_alpha(reg) and reg != '^')
         throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
 
-    auto gen_desc = [&] {
-        auto content = RegisterManager::instance()[reg].get(context);
-        const bool empty = content.size() == 1 and content[0].empty();
+    auto content = RegisterManager::instance()[reg].get(context);
+    const bool empty = content.size() == 1 and content[0].empty();
 
-        if (not add or empty)
-            return selection_list_to_string(context.selections());
-
-        auto selections = read_selections_from_register(reg, context);
-        if (&selections.buffer() != &context.buffer())
-            throw runtime_error("cannot save selections from different buffers in the same register");
-        selections.update();
-
-        for (auto& sel : context.selections())
-            selections.push_back(sel);
-        selections.sort_and_merge_overlapping();
-        return selection_list_to_string(selections);
+    auto save_to_reg = [reg](Context& context, const SelectionList& sels) {
+        String desc = format("{}@{}%{}", selection_list_to_string(sels),
+                             context.buffer().name(),
+                             context.buffer().timestamp());
+        RegisterManager::instance()[reg].set(context, desc);
+        context.print_status({format("{} selections to register '{}'", combine ? "Combined" : "Saved", reg), get_face("Information")});
     };
 
-    String desc = format("{}@{}%{}", gen_desc(),
-                         context.buffer().name(),
-                         context.buffer().timestamp());
-
-    RegisterManager::instance()[reg].set(context, desc);
-
-    context.print_status({format("{} selections to register '{}'", add ? "Added" : "Saved", reg), get_face("Information")});
+    if (combine and not empty)
+        combine_selections(context, read_selections_from_register(reg, context), save_to_reg);
+    else
+        save_to_reg(context, context.selections());
 }
 
-template<bool add>
+template<bool combine>
 void restore_selections(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '^');
-    auto selections = read_selections_from_register(reg, context); 
+    auto selections = read_selections_from_register(reg, context);
 
-    if (not add)
+    auto set_selections = [reg](Context& context, SelectionList sels) {
+        context.selections_write_only() = std::move(sels);
+        context.print_status({format("{} selections from register '{}'", combine ? "Combined" : "Restored", reg), get_face("Information")});
+    };
+
+    if (not combine)
     {
         if (&selections.buffer() != &context.buffer())
             context.change_buffer(selections.buffer());
+        set_selections(context, std::move(selections));
     }
     else
-    {
-        if (&selections.buffer() != &context.buffer())
-            throw runtime_error("Cannot add selections from another buffer");
-
-        selections.update();
-        int main_index = selections.size() + context.selections_write_only().main_index();
-        for (auto& sel : context.selections())
-            selections.push_back(std::move(sel));
-
-        selections.set_main_index(main_index);
-        selections.sort_and_merge_overlapping();
-    }
-
-    context.selections_write_only() = std::move(selections);
-    context.print_status({format("{} selections from register '{}'", add ? "Added" : "Restored", reg), get_face("Information")});
+        combine_selections(context, std::move(selections), set_selections);
 }
 
 void undo(Context& context, NormalParams params)
@@ -1957,9 +2001,9 @@ const HashMap<Key, NormalCmd> keymap{
     { {ctrl('d')}, {"scroll half a page down", scroll<Forward, true>} },
 
     { {'z'}, {"restore selections from register", restore_selections<false>} },
-    { {alt('z')}, {"append selections from register", restore_selections<true>} },
+    { {alt('z')}, {"combine selections from register", restore_selections<true>} },
     { {'Z'}, {"save selections to register", save_selections<false>} },
-    { {alt('Z')}, {"append selections to register", save_selections<true>} },
+    { {alt('Z')}, {"combine selections to register", save_selections<true>} },
 
     { {ctrl('l')}, {"force redraw", force_redraw} },
 };

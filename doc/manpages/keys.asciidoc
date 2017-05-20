@@ -417,13 +417,22 @@ Marks use the *^* register by default.
 	will save the current selections to the register
 
 *<a-Z>*::
-	will append the current selections to the register
+	will combine the current selections to the register
 
 *z*::
 	will restore the selections from the register
 
 *<a-z>*::
-	will append the selections from the register to the existing ones
+	will combine the selections from the register to the existing ones
+
+When combining selections, kakoune will prompt for a combining mode:
+
+*+*::
+	will append selections from both lists into a single list
+*<*::
+	will select the selection with the leftmost cursor for each pair
+*>*::
+	will select the selection with the rightmost cursor for each pair
 
 Macros
 ------
