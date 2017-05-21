@@ -45,11 +45,17 @@ def -hidden c-family-indent-on-newline %< eval -draft -itersel %<
     try %< exec -draft k <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> >
     # indent after a statement not followed by an opening brace
     try %< exec -draft k <a-x> <a-k>\b(if|else|for|while)\h*\(.+?\)\h*$<ret> j <a-gt> >
-    # align to the opening parenthesis or opening bracket (whichever is first)
+    # align to the opening parenthesis or opening brace (whichever is first)
     # on a previous line if its followed by text on the same line
     try %< eval -draft %<
+        # Go to opening parenthesis and opening brace, then select the most nested one
         try %< exec [bZ<a-\;>[B<a-z><gt> > catch %< exec [B >
-        exec <a-k>\`[{(][^\n]+\n[^\n]*\n?\'<ret> L s\`|.\'<ret> &
+        # Validate selection and get first and last char
+        exec <a-k>\`[{(](\h*\S+)+\n<ret> L s\`|.\'<ret>
+        # Remove eventual indent from new line
+        try %< exec -draft <space> <a-h> s\h+<ret> d >
+        # Now align that new line with the opening parenthesis/brace
+        exec &
      > >
 > >
 
