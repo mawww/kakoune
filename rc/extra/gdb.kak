@@ -80,7 +80,10 @@ define-command -hidden gdb-session-connect-internal %{
                 line = get(frame, "line=\"", "[0-9]+", "\"")
                 return line " \"" file "\""
             }
-            BEGIN { connected = 0 }
+            BEGIN {
+                connected = 0
+                printing = 0
+            }
             // {
                 if (!connected) {
                     connected = 1
@@ -131,7 +134,7 @@ define-command -hidden gdb-session-connect-internal %{
             /\^done/ {
                 if (printing) {
                     # trim trailing \n
-                    print_value = substr(print_value, 0, length(print_value) - 3)
+                    print_value = substr(print_value, 0, match(print_value, "(\n|\\\\n)*$") - 1)
                     # QUOTE => \\QUOTE
                     gsub("'\''", "\\\\'\''", print_value)
                     # eval -client $client QUOTE info  -- \QUOTE $string \QUOTE QUOTE
