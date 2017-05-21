@@ -47,7 +47,10 @@ def -hidden c-family-indent-on-newline %< eval -draft -itersel %<
     try %< exec -draft k <a-x> <a-k>\b(if|else|for|while)\h*\(.+?\)\h*$<ret> j <a-gt> >
     # align to the opening parenthesis or opening bracket (whichever is first)
     # on a previous line if its followed by text on the same line
-    try %< exec -draft [b Z<a-\;>[B<a-z><gt> <a-k>\`[{(][^\n]+\n[^\n]*\n?\'<ret> L s\`|.\'<ret> & >
+    try %< eval -draft %<
+        try %< exec [bZ<a-\;>[B<a-z><gt> > catch %< exec [B >
+        exec <a-k>\`[{(][^\n]+\n[^\n]*\n?\'<ret> L s\`|.\'<ret> &
+     > >
 > >
 
 def -hidden c-family-indent-on-opening-curly-brace %[
