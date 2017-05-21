@@ -13,7 +13,7 @@ else
     endif
 endif
 
-sources := $(wildcard *.cc)
+sources := $(sort $(wildcard *.cc))
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
 deps := $(addprefix ., $(sources:.cc=$(suffix).d))
 docs := $(wildcard ../doc/manpages/*.asciidoc)
@@ -77,7 +77,7 @@ kak$(suffix) : $(objects)
 # Generate the man page
 ../doc/kak.1.gz: ../doc/kak.1.txt
 	a2x --no-xmllint -f manpage $<
-	gzip -f $(basename $<)
+	gzip -n -9 -f $(basename $<)
 
 # Generate the editor's documentation pages
 # Since `a2x` won't generate man pages if some sections are missing (which we don't need),
@@ -86,7 +86,7 @@ kak$(suffix) : $(objects)
 	a2x --no-xmllint -f manpage $<
 	sed -i -r -e "s,^\.TH .+,.TH KAKOUNE 1 \"\" \"\" \"$(basename $(notdir $<))\"," \
 	-e "/^\.SH \"NAME\"/{N;d;}" $(@:.gz=.1)
-	gzip -f $(@:.gz=.1)
+	gzip -n -9 -f $(@:.gz=.1)
 	mv -f $(@:.gz=.1.gz) $@
 
 check: test
