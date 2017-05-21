@@ -128,6 +128,10 @@ void register_env_vars()
             [](StringView name, const Context& context) -> String
             { return context.name(); }
         }, {
+            "modified", false,
+            [](StringView name, const Context& context) -> String
+            { return context.buffer().is_modified() ? "true" : "false"; }
+        }, {
             "cursor_line", false,
             [](StringView name, const Context& context) -> String
             { return to_string(context.selections().main().cursor().line + 1); }
