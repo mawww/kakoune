@@ -1,4 +1,5 @@
-decl str docsclient
+decl -docstring "name of the client in which documentation is to be displayed" \
+    str docsclient
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
     add-highlighter group git-log-highlight
@@ -16,8 +17,8 @@ hook -group git-status-highlight global WinSetOption filetype=git-status %{
 
 hook -group git-status-highlight global WinSetOption filetype=(?!git-status).* %{ remove-highlighter git-status-highlight }
 
-decl line-flags git_blame_flags
-decl line-flags git_diff_flags
+decl -hidden line-flags git_blame_flags
+decl -hidden line-flags git_diff_flags
 
 face GitBlame default,magenta
 face GitDiffFlags default,black

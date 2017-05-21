@@ -3,7 +3,8 @@
 # This script requires the readtags command available in ctags source but
 # not installed by default
 
-decl str-list ctagsfiles 'tags'
+decl -docstring "colon separated list of paths to tag files to parse when looking up a symbol" \
+    str-list ctagsfiles 'tags'
 
 def -params ..1 \
     -shell-candidates '
@@ -72,8 +73,9 @@ def ctags-enable-autoinfo -docstring "Automatically display ctags information ab
 
 def ctags-disable-autoinfo -docstring "Disable automatic ctags information displaying" %{ remove-hooks window ctags-autoinfo }
 
-decl str ctagsopts "-R"
-decl str ctagspaths "."
+decl -docstring "options to pass to the `ctags` shell command" \
+    str ctagsopts "-R"
+decl -docstring "path to the directory in which the tags file will be generated" str ctagspaths "."
 
 def ctags-generate -docstring 'Generate tag file asynchronously' %{
     echo -color Information "launching tag generation in the background"

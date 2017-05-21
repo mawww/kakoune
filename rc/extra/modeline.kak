@@ -7,9 +7,8 @@
 ## Only a few options are supported, in order to prevent the
 ## buffers from poking around the configuration too much
 
-# Amount of additional lines that will be checked at the beginning
-# and the end of the buffer
-decl int modelines 5
+decl -docstring "amount of lines that will be checked at the beginning and the end of the buffer" \
+    int modelines 5
 
 def -hidden modeline-parse-impl %{
     %sh{

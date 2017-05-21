@@ -1,8 +1,10 @@
 ## Line comments
-decl str comment_line '#'
+decl -docstring "characters inserted at the beginning of a commented line" \
+    str comment_line '#'
 
 ## Block comments
-decl str-list comment_block
+decl -docstring "colon separated tuple containing the characters inserted before/after a commented line" \
+    str-list comment_block
 
 ## Default comments for all languages
 hook global BufSetOption filetype=asciidoc %{

@@ -1,4 +1,5 @@
-decl str docsclient
+decl -docstring "name of the client in which documentation is to be displayed" \
+    str docsclient
 
 decl -hidden str _manpage
 
