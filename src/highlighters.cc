@@ -820,7 +820,7 @@ struct WrapHighlighter : Highlighter
             win_line += wrap_count + 1;
 
             // scroll window to keep cursor visible, and update range as lines gets removed
-            while (buf_line < cursor.line and setup.cursor_pos.line >= win_height)
+            while (setup.window_pos.line < cursor.line and setup.cursor_pos.line >= win_height)
             {
                 auto removed_lines = 1 + line_wrap_count(setup.window_pos.line++);
                 setup.cursor_pos.line -= removed_lines;
