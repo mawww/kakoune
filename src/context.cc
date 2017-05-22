@@ -148,10 +148,6 @@ void Context::change_buffer(Buffer& buffer)
     if (m_edition_level > 0)
        this->buffer().commit_undo_group();
 
-
-    if (has_input_handler())
-        input_handler().reset_normal_mode();
-
     m_window.reset();
     if (has_client())
     {
@@ -161,6 +157,9 @@ void Context::change_buffer(Buffer& buffer)
     }
     else
         m_selections = SelectionList{buffer, Selection{}};
+
+    if (has_input_handler())
+        input_handler().reset_normal_mode();
 }
 
 SelectionList& Context::selections()

@@ -31,6 +31,8 @@ public:
 
     virtual void on_enabled() {}
     virtual void on_disabled() {}
+
+    bool enabled() const { return &m_input_handler.current_mode() == this; }
     Context& context() const { return m_input_handler.context(); }
 
     virtual DisplayLine mode_line() const = 0;
@@ -173,13 +175,8 @@ public:
 
     void on_enabled() override
     {
-        m_enabled = true;
-
         if (context().has_client())
-        {
-            context().client().info_hide();
             context().client().check_if_buffer_needs_reloading();
-        }
 
         m_fs_check_timer.set_next_date(Clock::now() + get_fs_check_timeout(context()));
         m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
@@ -195,8 +192,6 @@ public:
 
     void on_disabled() override
     {
-        m_enabled = false;
-
         m_idle_timer.set_next_date(TimePoint::max());
         m_fs_check_timer.set_next_date(TimePoint::max());
 
@@ -210,7 +205,7 @@ public:
 
         bool do_restore_hooks = false;
         auto restore_hooks = on_scope_end([&, this]{
-            if (m_hooks_disabled and m_enabled and do_restore_hooks)
+            if (m_hooks_disabled and enabled() and do_restore_hooks)
             {
                 context().hooks_disabled().unset();
                 m_hooks_disabled = false;
@@ -281,7 +276,8 @@ public:
         }
 
         context().hooks().run_hook("NormalKey", key_to_str(key), context());
-        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        if (enabled()) // The hook might have changed mode
+            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
     DisplayLine mode_line() const override
@@ -307,7 +303,6 @@ private:
 
     NormalParams m_params = { 0, 0 };
     bool m_hooks_disabled = false;
-    bool m_enabled = false;
     NestedBool m_in_on_key;
     Timer m_idle_timer;
     Timer m_fs_check_timer;
@@ -865,7 +860,8 @@ public:
 
         display();
         m_callback(line, PromptEvent::Change, context());
-        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        if (enabled()) // The callback might have disabled us
+            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
     void set_prompt_face(Face face)
@@ -1207,7 +1203,8 @@ public:
                     {
                         insert(*cp);
                         context().hooks().run_hook("InsertKey", key_to_str(key), context());
-                        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+                        if (enabled())
+                            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
                     }
                 }, "raw insert", "enter key to insert");
             update_completions = false;
@@ -1219,11 +1216,11 @@ public:
         }
 
         context().hooks().run_hook("InsertKey", key_to_str(key), context());
-
-        if (update_completions)
-            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
         if (moved)
             context().hooks().run_hook("InsertMove", key_to_str(key), context());
+
+        if (update_completions and enabled()) // Hooks might have disabled us
+            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
     DisplayLine mode_line() const override
