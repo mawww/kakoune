@@ -1240,7 +1240,7 @@ private:
         const ColumnCount tabstop = context().options()["tabstop"].get<int>();
         for (auto& sel : selections)
         {
-            auto cursor = context().buffer().offset_coord(sel.cursor(), offset, tabstop);
+            auto cursor = context().buffer().offset_coord(sel.cursor(), offset, tabstop, false);
             sel.anchor() = sel.cursor() = cursor;
         }
         selections.sort_and_merge_overlapping();

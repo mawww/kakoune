@@ -177,19 +177,19 @@ BufferCoord Buffer::clamp(BufferCoord coord) const
     return coord;
 }
 
-BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset, ColumnCount)
+BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool)
 {
     StringView line = m_lines[coord.line];
     auto target = utf8::advance(&line[coord.column], offset < 0 ? line.begin() : line.end()-1, offset);
     return {coord.line, (int)(target - line.begin())};
 }
 
-BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop)
+BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol)
 {
     const auto column = coord.target == -1 ? get_column(*this, tabstop, coord) : coord.target;
     const auto line = Kakoune::clamp(coord.line + offset, 0_line, line_count()-1);
     const auto max_column = get_column(*this, tabstop, {line, m_lines[line].length()-1});
-    const auto final_column = std::max(0_col, std::min(column, max_column - 1));
+    const auto final_column = std::max(0_col, std::min(column, max_column - (avoid_eol ? 1 : 0)));
     return {line, get_byte_to_column(*this, tabstop, {line, final_column}), column};
 }
 
