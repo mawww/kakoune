@@ -17,7 +17,7 @@ class WordDB : public OptionManagerWatcher
 {
 public:
     WordDB(const Buffer& buffer);
-    ~WordDB() override;
+    ~WordDB();
     WordDB(const WordDB&) = delete;
     WordDB(WordDB&&) noexcept;
 

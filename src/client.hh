@@ -30,7 +30,7 @@ public:
            SelectionList selections,
            EnvVarMap env_vars,
            String name);
-    ~Client() override;
+    ~Client();
 
     Client(Client&&) = delete;
 
