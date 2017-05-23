@@ -12,7 +12,6 @@ class Buffer;
 class Client;
 class Scope;
 class InputHandler;
-class UserInterface;
 class DisplayLine;
 class KeymapManager;
 class AliasRegistry;
