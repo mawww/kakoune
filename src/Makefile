@@ -16,8 +16,8 @@ endif
 sources := $(sort $(wildcard *.cc))
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
 deps := $(addprefix ., $(sources:.cc=$(suffix).d))
-docs := $(wildcard ../doc/manpages/*.asciidoc)
-mandocs := $(docs:.asciidoc=.gz)
+docs := $(wildcard ../doc/manpages/kak-*.asciidoc)
+mandocs := $(docs:.asciidoc=.7.gz)
 
 PREFIX ?= /usr/local
 DESTDIR ?= # root dir
@@ -27,7 +27,8 @@ NCURSESW_INCLUDE ?= /usr/include/ncursesw
 bindir := $(DESTDIR)$(PREFIX)/bin
 sharedir := $(DESTDIR)$(PREFIX)/share/kak
 docdir := $(DESTDIR)$(PREFIX)/share/doc/kak
-mandir := $(DESTDIR)$(PREFIX)/share/man/man1
+mandir1 := $(DESTDIR)$(PREFIX)/share/man/man1
+mandir7 := $(DESTDIR)$(PREFIX)/share/man/man7
 
 os := $(shell uname)
 
@@ -82,12 +83,12 @@ kak$(suffix) : $(objects)
 # Generate the editor's documentation pages
 # Since `a2x` won't generate man pages if some sections are missing (which we don't need),
 # we generate the pages, patch them and then compress them
-../doc/manpages/%.gz: ../doc/manpages/%.asciidoc
+../doc/manpages/%.7.gz: ../doc/manpages/%.asciidoc
 	a2x --no-xmllint -f manpage $<
-	sed -i -r -e "s,^\.TH .+,.TH kakoune k \"\" \"\" \"$(basename $(notdir $<))\"," \
-	-e "/^\.SH \"NAME\"/{N;d;}" $(@:.gz=.k)
-	gzip -n -9 -f $(@:.gz=.k)
-	mv -f $(@:.gz=.k.gz) $@
+	mv -f $(<D)/$(subst kak-,,$(*F)).k $(@:.gz=)
+	sed -i -r -e "s,^\.TH .+,.TH KAKOUNE 7 \"\" \"\" \"$(subst kak-,,$(*F))\"," \
+	-e "/^\.SH \"NAME\"/{N;d;}" $(@:.gz=)
+	gzip -n -9 -f $(@:.gz=)
 
 check: test
 test:
@@ -113,7 +114,8 @@ installdirs:
 		$(sharedir)/rc/extra \
 		$(sharedir)/colors \
 		$(docdir)/manpages \
-		$(mandir)
+		$(mandir1) \
+		$(mandir7)
 
 install: kak man doc installdirs
 	install -m 0755 kak $(bindir)
@@ -124,8 +126,8 @@ install: kak man doc installdirs
 	[ -e $(sharedir)/autoload ] || ln -s rc $(sharedir)/autoload
 	install -m 0644 ../colors/* $(sharedir)/colors
 	install -m 0644 ../README.asciidoc $(docdir)
-	install -m 0644 ../doc/manpages/*.gz $(docdir)/manpages
-	install -m 0644 ../doc/kak.1.gz $(mandir)
+	install -m 0644 $(mandocs) $(mandir7)
+	install -m 0644 ../doc/kak.1.gz $(mandir1)
 
 install-strip: install
 	strip -s $(bindir)/kak
@@ -134,7 +136,8 @@ uninstall:
 	rm -rf $(bindir)/kak \
 		$(sharedir) \
 		$(docdir) \
-		$(mandir)/kak.1.gz
+		$(mandir1)/kak.1.gz \
+		$(mandir7)/kak-*.7.gz
 
 .PHONY: check TAGS clean distclean installdirs install install-strip uninstall
 .PHONY: tags test man doc kak

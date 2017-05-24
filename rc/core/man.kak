@@ -17,7 +17,7 @@ hook -group man-highlight global WinSetOption filetype=man %{
 
 hook global WinSetOption filetype=man %{
     hook -group man-hooks window WinResize .* %{
-        man-impl %opt{manpage}
+        man-impl "" %opt{manpage}
     }
 }
 
@@ -27,50 +27,54 @@ hook global WinSetOption filetype=(?!man).* %{
     remove-hooks window man-hooks
 }
 
-def -hidden -params 1..2 man-impl %{ %sh{
+def -hidden -params 1..3 man-impl %{ %sh{
+    keyword="${1}"
+    shift
+
     manout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
-    colout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
-    MANWIDTH=${kak_window_width} man "$@" > $manout
-    retval=$?
-    col -b -x > ${colout} < ${manout}
-    rm ${manout}
-    if [ "${retval}" -eq 0 ]; then
-        printf %s\\n "
-                edit -scratch '*man*'
-                exec '%|cat<space>${colout}<ret>gk'
-                nop %sh{rm ${colout}}
-                set buffer filetype man
-                set window manpage '$@'
-        "
+
+    export MANWIDTH=${kak_window_width}
+    if man $* > "${manout}"; then
+        sed -i "" -e $(printf 's/.\x8//g') -e 's,\x1B\[[0-9;]*[a-zA-Z],,g' "${manout}"
+
+        printf '
+            edit -scratch *man*
+            exec -no-hooks "\%%|cat<space>%s<ret> gg"
+            nop %%sh{rm -f "%s"}
+            set buffer filetype man
+            set window manpage "%s"
+        ' "${manout}" "${manout}" "${*}"
+
+        if [ -n "${keyword}" ]; then
+            printf 'exec -no-hooks "\%%s\Q%s<ret>gi<a-l>%s"\n' "${keyword}" "'"
+        fi
     else
-       printf %s\\n "echo -color Error %{man '$@' failed: see *debug* buffer for details }"
-       rm ${colout}
+       printf 'echo -color Error %%{man "%s" failed: see *debug* buffer for details }\n' "$@"
+       rm -f "${manout}"
     fi
 } }
 
-def -params ..1 \
+def -params 1..2 \
   -shell-completion %{
     prefix=$(printf %s\\n "$1" | cut -c1-${kak_pos_in_token} 2>/dev/null)
     for page in /usr/share/man/*/${prefix}*.[1-8]*; do
-        candidate=$(basename ${page%%.[1-8]*})
-        pagenum=$(printf %s\\n "$page" | sed 's,^.*\.\([1-8][^.]*\).*$,\1,')
-        case $candidate in
-            *\*) ;;
-            *) printf %s\\n "$candidate($pagenum)";;
-        esac
+        printf %s\\n "${page}" | sed -e 's/\(\.gz\)*$/)/' -e 's/^.*\///g' -e 's/\.\([^.]*\)$/(\1/'
     done
   } \
-  -docstring %{man [<page>]: manpage viewer wrapper
-If no argument is passed to the command, the selection will be used as page
+  -docstring %{man <page> [<keyword>]: manpage viewer wrapper
+An optional keyword argument can be passed to the command, which will be automatically selected in the documentation
 The page can be a word, or a word directly followed by a section number between parenthesis, e.g. kak(1)} \
     man %{ %sh{
-    subject=${@-$kak_selection}
+    subject="${1}"
+    keyword="${2}"
 
     ## The completion suggestions display the page number, strip them if present
-    pagenum=$(expr "$subject" : '.*(\([1-8].*\))')
-    if [ -n "$pagenum" ]; then
+    pagenum=$(expr "${subject}" : '.*(\([1-8].*\))')
+    if [ -n "${pagenum}" ]; then
         subject=${subject%%\(*}
     fi
 
-    printf %s\\n "eval -collapse-jumps -try-client %opt{docsclient} man-impl $pagenum $subject"
+    printf 'eval -collapse-jumps -try-client %%opt{docsclient} %%{
+        man-impl "%s" "%s" "%s"
+    }\n' "${keyword}" "${pagenum}" "${subject}"
 } }
