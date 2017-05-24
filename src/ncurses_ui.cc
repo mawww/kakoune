@@ -318,7 +318,7 @@ void NCursesUI::redraw()
     m_info.refresh();
 
     if (m_cursor.mode == CursorMode::Prompt)
-        wmove(newscr, m_status_on_top ? 0 : (int)m_dimensions.line + 1,
+        wmove(newscr, m_status_on_top ? 0 : (int)m_dimensions.line,
               (int)m_cursor.coord.column);
     else
         wmove(newscr, (int)m_cursor.coord.line + (m_status_on_top ? 1 : 0),
