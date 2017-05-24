@@ -1184,7 +1184,7 @@ struct FlagLinesHighlighter : Highlighter
           m_option_name{std::move(option_name)},
           m_default_face{std::move(default_face)} {}
 
-    using LineAndFlagList = TimestampedList<LineAndFlag>;
+    using LineAndSpecList = TimestampedList<LineAndSpec>;
 
     static HighlighterAndId create(HighlighterParameters params)
     {
@@ -1196,7 +1196,7 @@ struct FlagLinesHighlighter : Highlighter
         get_face(default_face); // validate param
 
         // throw if wrong option type
-        GlobalScope::instance().options()[option_name].get<LineAndFlagList>();
+        GlobalScope::instance().options()[option_name].get<LineAndSpecList>();
 
         return {"hlflags_" + params[1], make_unique<FlagLinesHighlighter>(option_name, default_face) };
     }
@@ -1205,7 +1205,7 @@ private:
     void do_highlight(const Context& context, HighlightPass,
                       DisplayBuffer& display_buffer, BufferRange) override
     {
-        auto& line_flags = context.options()[m_option_name].get_mutable<LineAndFlagList>();
+        auto& line_flags = context.options()[m_option_name].get_mutable<LineAndSpecList>();
         auto& buffer = context.buffer();
         update_line_flags_ifn(buffer, line_flags);
 
@@ -1235,7 +1235,7 @@ private:
         {
             int line_num = (int)line.range().begin.line + 1;
             auto it = find_if(lines,
-                              [&](const LineAndFlag& l)
+                              [&](const LineAndSpec& l)
                               { return std::get<0>(l) == line_num; });
             if (it == lines.end())
                 line.insert(line.begin(), empty);
@@ -1255,7 +1255,7 @@ private:
 
     void do_compute_display_setup(const Context& context, HighlightPass, DisplaySetup& setup) override
     {
-        auto& line_flags = context.options()[m_option_name].get_mutable<LineAndFlagList>();
+        auto& line_flags = context.options()[m_option_name].get_mutable<LineAndSpecList>();
         auto& buffer = context.buffer();
         update_line_flags_ifn(buffer, line_flags);
 
@@ -1274,7 +1274,7 @@ private:
         setup.window_range.column -= width;
     }
 
-    void update_line_flags_ifn(const Buffer& buffer, LineAndFlagList& line_flags)
+    void update_line_flags_ifn(const Buffer& buffer, LineAndSpecList& line_flags)
     {
         if (line_flags.prefix == buffer.timestamp())
             return;
@@ -1282,7 +1282,7 @@ private:
         auto& lines = line_flags.list;
 
         std::sort(lines.begin(), lines.end(),
-                  [](const LineAndFlag& lhs, const LineAndFlag& rhs)
+                  [](const LineAndSpec& lhs, const LineAndSpec& rhs)
                   { return std::get<0>(lhs) < std::get<0>(rhs); });
 
         auto modifs = compute_line_modifications(buffer, line_flags.prefix);
@@ -1968,7 +1968,7 @@ void register_highlighters()
         "flag_lines",
         { FlagLinesHighlighter::create,
           "Parameters: <face> <option name>\n"
-          "Display flags specified in the line-flags option <option name> with <face>"} });
+          "Display flags specified in the line-spec option <option name> with <face>"} });
     registry.insert({
         "ranges",
         { RangesHighlighter::create,

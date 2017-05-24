@@ -3,7 +3,7 @@ The output returned by this command is expected to comply with the following for
  {filename}:{line}:{column}: {kind}: {message}} \
     str lintcmd
 
-decl -hidden line-flags lint_flags
+decl -hidden line-specs lint_flags
 decl -hidden str        lint_errors
 
 def lint -docstring 'Parse the current buffer with a linter' %{

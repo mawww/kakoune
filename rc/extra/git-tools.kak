@@ -17,8 +17,8 @@ hook -group git-status-highlight global WinSetOption filetype=git-status %{
 
 hook -group git-status-highlight global WinSetOption filetype=(?!git-status).* %{ remove-highlighter git-status-highlight }
 
-decl -hidden line-flags git_blame_flags
-decl -hidden line-flags git_diff_flags
+decl -hidden line-specs git_blame_flags
+decl -hidden line-specs git_diff_flags
 
 face GitBlame default,magenta
 face GitDiffFlags default,black

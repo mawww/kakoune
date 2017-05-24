@@ -18,7 +18,7 @@ inline bool operator==(const InclusiveBufferRange& lhs, const InclusiveBufferRan
 String option_to_string(InclusiveBufferRange range);
 void option_from_string(StringView str, InclusiveBufferRange& opt);
 
-using LineAndFlag = std::tuple<LineCount, String>;
+using LineAndSpec = std::tuple<LineCount, String>;
 using RangeAndString = std::tuple<InclusiveBufferRange, String>;
 
 }

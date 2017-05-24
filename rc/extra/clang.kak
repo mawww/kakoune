@@ -3,7 +3,7 @@ decl -docstring "options to pass to the `clang` shell command" \
 
 decl -hidden str clang_tmp_dir
 decl -hidden completions clang_completions
-decl -hidden line-flags clang_flags
+decl -hidden line-specs clang_flags
 decl -hidden str clang_errors
 
 def -params ..1 \

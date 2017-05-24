@@ -43,9 +43,9 @@
 namespace Kakoune
 {
 
-StringView option_type_name(Meta::Type<TimestampedList<LineAndFlag>>)
+StringView option_type_name(Meta::Type<TimestampedList<LineAndSpec>>)
 {
-    return "line-flags";
+    return "line-specs";
 }
 
 StringView option_type_name(Meta::Type<TimestampedList<RangeAndString>>)
@@ -1334,7 +1334,7 @@ const CommandDesc declare_option_cmd = {
     "    int-list: list of integers\n"
     "    str-list: list of character strings\n"
     "    completions: list of completion candidates\n"
-    "    line-flags: list of line flags\n"
+    "    line-specs: list of line specs\n"
     "    range-specs: list of range specs\n",
     ParameterDesc{
         { { "hidden",    { false, "do not display option name when completing" } },
@@ -1346,7 +1346,7 @@ const CommandDesc declare_option_cmd = {
     make_completer(
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
-               auto c = {"int", "bool", "str", "regex", "int-list", "str-list", "completions", "line-flags", "range-specs"};
+               auto c = {"int", "bool", "str", "regex", "int-list", "str-list", "completions", "line-specs", "range-specs"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
@@ -1375,8 +1375,8 @@ const CommandDesc declare_option_cmd = {
             opt = &reg.declare_option<Vector<String, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "completions")
             opt = &reg.declare_option<CompletionList>(parser[1], docstring, {}, flags);
-        else if (parser[0] == "line-flags")
-            opt = &reg.declare_option<TimestampedList<LineAndFlag>>(parser[1], docstring, {}, flags);
+        else if (parser[0] == "line-specs")
+            opt = &reg.declare_option<TimestampedList<LineAndSpec>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "range-specs")
             opt = &reg.declare_option<TimestampedList<RangeAndString>>(parser[1], docstring, {}, flags);
         else
