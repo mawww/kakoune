@@ -27,9 +27,9 @@ template<typename Enum>
 typename std::enable_if<std::is_enum<Enum>::value, String>::type
 option_type_name(Meta::Type<Enum>)
 {
-    constexpr StringView type = with_bit_ops(Meta::Type<Enum>{}) ? "flags" : "enum";
-    auto name = enum_desc(Meta::Type<Enum>{});
-    return type + "(" + join(name | transform(std::mem_fn(&EnumDesc<Enum>::name)), '|') + ")";
+    return format("{}({})", with_bit_ops(Meta::Type<Enum>{}) ? "flags" : "enum",
+                  join(enum_desc(Meta::Type<Enum>{}) |
+                       transform(std::mem_fn(&EnumDesc<Enum>::name)), '|'));
 }
 
 inline String option_to_string(int opt) { return to_string(opt); }
