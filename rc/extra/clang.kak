@@ -4,7 +4,7 @@ decl -docstring "options to pass to the `clang` shell command" \
 decl -hidden str clang_tmp_dir
 decl -hidden completions clang_completions
 decl -hidden line-specs clang_flags
-decl -hidden str clang_errors
+decl -hidden line-specs clang_errors
 
 def -params ..1 \
     -docstring %{Parse the contents of the current buffer
@@ -88,13 +88,15 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                     " | paste -s -d ':' -)
 
             errors=$(cat ${dir}/stderr | sed -rne "
-                        /^<stdin>:[0-9]+:([0-9]+:)? ((fatal )?error|warning)/ { s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/\1,\3/; s/'/\\\\'/g; p }
-                     " | sort -n)
+                        /^<stdin>:[0-9]+:([0-9]+:)? ((fatal )?error|warning)/ {
+                            s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/\1|\3/
+                            s/'/\\\\'/g; s/:/\\\\:/g; p
+                        }" | sort -n | paste -s -d ':' -)
 
             sed -e "s|<stdin>|${kak_bufname}|g" < ${dir}/stderr > ${dir}/fifo
 
             printf %s\\n "set 'buffer=${kak_buffile}' clang_flags %{${kak_timestamp}:${flags}}
-                  set 'buffer=${kak_buffile}' clang_errors '${errors}'" | kak -p ${kak_session}
+                  set 'buffer=${kak_buffile}' clang_errors '${kak_timestamp}:${errors}'" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
@@ -131,12 +133,16 @@ def clang-disable-autocomplete -docstring "Disable automatic clang completion" %
     unalias window complete clang-complete
 }
 
-def -hidden clang-show-error-info %{ %sh{
-    desc=$(printf %s\\n "${kak_opt_clang_errors}" | sed -ne "/^${kak_cursor_line},.*/ { s/^[[:digit:]]\+,//g; s/'/\\\\'/g; p }")
-    if [ -n "$desc" ]; then
-        printf %s\\n "info -anchor ${kak_cursor_line}.${kak_cursor_column} '${desc}'"
-    fi
-} }
+def -hidden clang-show-error-info %{
+    update-option buffer clang_errors # Ensure we are up to date with buffer changes
+    %sh{
+        desc=$(printf %s\\n "${kak_opt_clang_errors}" |
+               sed -e "s/\([^\\]\):/\1\n/g" |
+               sed -ne "/^${kak_cursor_line}|.*/ { s/^[[:digit:]]\+|//g; s/'/\\\\'/g; s/\\\\:/:/g; p }")
+        if [ -n "$desc" ]; then
+            printf %s\\n "info -anchor ${kak_cursor_line}.${kak_cursor_column} '${desc}'"
+        fi
+    } }
 
 def clang-enable-diagnostics -docstring %{Activate automatic error reporting and diagnostics
 Information about the analysis are showned after the buffer has been parsed with the clang-parse function} \
@@ -151,22 +157,22 @@ def clang-disable-diagnostics -docstring "Disable automatic error reporting and 
     remove-hooks window clang-diagnostics
 }
 
-def clang-diagnostics-next -docstring "Jump to the next line that contains an error" %{ %sh{
-    printf "%s\n" "${kak_opt_clang_errors}" | (
-        line=-1
-        first_line=-1
-        while read line_content; do
-            candidate=${line_content%%,*}
-            if [ -n "$candidate" ]; then
-                first_line=$(( first_line == -1 ? candidate : first_line ))
-                line=$((candidate > kak_cursor_line && (candidate < line || line == -1) ? candidate : line ))
+def clang-diagnostics-next -docstring "Jump to the next line that contains an error" %{
+    update-option buffer clang_errors # Ensure we are up to date with buffer changes
+    %sh{
+        printf "%s\n" "${kak_opt_clang_errors}" | sed -e 's/\([^\\]\):/\1\n/g' | tail -n +2 | (
+            while IFS='|' read candidate rest; do
+                first_line=${first_line-$candidate}
+                if [ $candidate -gt $kak_cursor_line ]; then
+                    line=$candidate
+                    break
+                fi
+            done
+            line=${line-$first_line}
+            if [ -n "$line" ]; then
+                printf %s\\n "exec ${line} g"
+            else
+                echo 'echo -color Error no next clang diagnostic'
             fi
-        done
-        line=$((line == -1 ? first_line : line))
-        if [ ${line} -ne -1 ]; then
-            printf %s\\n "exec ${line} g"
-        else
-            echo 'echo -color Error no next clang diagnostic'
-        fi
-    )
-} }
+        )
+    } }
