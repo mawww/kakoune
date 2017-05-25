@@ -14,6 +14,7 @@ namespace Kakoune
 {
 
 class OptionManager;
+class Context;
 
 enum class OptionFlags
 {
@@ -52,6 +53,7 @@ public:
     virtual String get_as_string() const = 0;
     virtual void   set_from_string(StringView str) = 0;
     virtual void   add_from_string(StringView str) = 0;
+    virtual void   update(const Context& context) = 0;
 
     virtual Option* clone(OptionManager& manager) const = 0;
     OptionManager& manager() const { return m_manager; }
@@ -139,6 +141,10 @@ public:
     {
         if (option_add(m_value, str))
             m_manager.on_option_changed(*this);
+    }
+    void update(const Context& context) override
+    {
+        option_update(m_value, context);
     }
 private:
     virtual void validate(const T& value) const {}

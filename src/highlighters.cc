@@ -1177,14 +1177,53 @@ void expand_unprintable(const Context& context, HighlightPass, DisplayBuffer& di
     }
 }
 
+static void update_line_specs_ifn(const Buffer& buffer, LineAndSpecList& line_flags)
+{
+    if (line_flags.prefix == buffer.timestamp())
+        return;
+
+    auto& lines = line_flags.list;
+
+    std::sort(lines.begin(), lines.end(),
+              [](const LineAndSpec& lhs, const LineAndSpec& rhs)
+              { return std::get<0>(lhs) < std::get<0>(rhs); });
+
+    auto modifs = compute_line_modifications(buffer, line_flags.prefix);
+    auto ins_pos = lines.begin();
+    for (auto it = lines.begin(); it != lines.end(); ++it)
+    {
+        auto& line = std::get<0>(*it); // that line is 1 based as it comes from user side
+        auto modif_it = std::upper_bound(modifs.begin(), modifs.end(), line-1,
+                                         [](const LineCount& l, const LineModification& c)
+                                         { return l < c.old_line; });
+        if (modif_it != modifs.begin())
+        {
+            auto& prev = *(modif_it-1);
+            if (line-1 < prev.old_line + prev.num_removed)
+                continue; // line removed
+
+            line += prev.diff();
+        }
+
+        if (ins_pos != it)
+            *ins_pos = std::move(*it);
+        ++ins_pos;
+    }
+    lines.erase(ins_pos, lines.end());
+    line_flags.prefix = buffer.timestamp();
+}
+
+void option_update(LineAndSpecList& opt, const Context& context)
+{
+    update_line_specs_ifn(context.buffer(), opt);
+}
+
 struct FlagLinesHighlighter : Highlighter
 {
     FlagLinesHighlighter(String option_name, String default_face)
         : Highlighter{HighlightPass::Move},
           m_option_name{std::move(option_name)},
           m_default_face{std::move(default_face)} {}
-
-    using LineAndSpecList = TimestampedList<LineAndSpec>;
 
     static HighlighterAndId create(HighlighterParameters params)
     {
@@ -1207,7 +1246,7 @@ private:
     {
         auto& line_flags = context.options()[m_option_name].get_mutable<LineAndSpecList>();
         auto& buffer = context.buffer();
-        update_line_flags_ifn(buffer, line_flags);
+        update_line_specs_ifn(buffer, line_flags);
 
         auto def_face = get_face(m_default_face);
         Vector<DisplayLine> display_lines;
@@ -1257,7 +1296,7 @@ private:
     {
         auto& line_flags = context.options()[m_option_name].get_mutable<LineAndSpecList>();
         auto& buffer = context.buffer();
-        update_line_flags_ifn(buffer, line_flags);
+        update_line_specs_ifn(buffer, line_flags);
 
         ColumnCount width = 0;
         try 
@@ -1272,42 +1311,6 @@ private:
         }
 
         setup.window_range.column -= width;
-    }
-
-    void update_line_flags_ifn(const Buffer& buffer, LineAndSpecList& line_flags)
-    {
-        if (line_flags.prefix == buffer.timestamp())
-            return;
-
-        auto& lines = line_flags.list;
-
-        std::sort(lines.begin(), lines.end(),
-                  [](const LineAndSpec& lhs, const LineAndSpec& rhs)
-                  { return std::get<0>(lhs) < std::get<0>(rhs); });
-
-        auto modifs = compute_line_modifications(buffer, line_flags.prefix);
-        auto ins_pos = lines.begin();
-        for (auto it = lines.begin(); it != lines.end(); ++it)
-        {
-            auto& line = std::get<0>(*it); // that line is 1 based as it comes from user side
-            auto modif_it = std::upper_bound(modifs.begin(), modifs.end(), line-1,
-                                             [](const LineCount& l, const LineModification& c)
-                                             { return l < c.old_line; });
-            if (modif_it != modifs.begin())
-            {
-                auto& prev = *(modif_it-1);
-                if (line-1 < prev.old_line + prev.num_removed)
-                    continue; // line removed
-
-                line += prev.diff();
-            }
-
-            if (ins_pos != it)
-                *ins_pos = std::move(*it);
-            ++ins_pos;
-        }
-        lines.erase(ins_pos, lines.end());
-        line_flags.prefix = buffer.timestamp();
     }
 
     String m_option_name;
@@ -1348,7 +1351,7 @@ void option_from_string(StringView str, InclusiveBufferRange& opt)
 BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).first; }
 BufferCoord& get_last(RangeAndString& r) { return std::get<0>(r).last; }
 
-static void update_ranges_ifn(const Buffer& buffer, TimestampedList<RangeAndString>& range_and_faces)
+static void update_ranges_ifn(const Buffer& buffer, RangeAndStringList& range_and_faces)
 {
     if (range_and_faces.prefix == buffer.timestamp())
         return;
@@ -1373,6 +1376,11 @@ static void update_ranges_ifn(const Buffer& buffer, TimestampedList<RangeAndStri
     range_and_faces.prefix = buffer.timestamp();
 }
 
+void option_update(RangeAndStringList& opt, const Context& context)
+{
+    update_ranges_ifn(context.buffer(), opt);
+}
+
 struct RangesHighlighter : Highlighter
 {
     RangesHighlighter(String option_name)
@@ -1386,7 +1394,7 @@ struct RangesHighlighter : Highlighter
 
         const String& option_name = params[0];
         // throw if wrong option type
-        GlobalScope::instance().options()[option_name].get<TimestampedList<RangeAndString>>();
+        GlobalScope::instance().options()[option_name].get<RangeAndStringList>();
 
         return {"hlranges_" + params[0], make_unique<RangesHighlighter>(option_name)};
     }
@@ -1395,7 +1403,7 @@ private:
     void do_highlight(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange) override
     {
         auto& buffer = context.buffer();
-        auto& range_and_faces = context.options()[m_option_name].get_mutable<TimestampedList<RangeAndString>>();
+        auto& range_and_faces = context.options()[m_option_name].get_mutable<RangeAndStringList>();
         update_ranges_ifn(buffer, range_and_faces);
 
         for (auto& range : range_and_faces.list)
@@ -1428,7 +1436,7 @@ struct ReplaceRangesHighlighter : Highlighter
 
         const String& option_name = params[0];
         // throw if wrong option type
-        GlobalScope::instance().options()[option_name].get<TimestampedList<RangeAndString>>();
+        GlobalScope::instance().options()[option_name].get<RangeAndStringList>();
 
         return {"replace_ranges_" + params[0], make_unique<ReplaceRangesHighlighter>(option_name)};
     }
@@ -1437,7 +1445,7 @@ private:
     void do_highlight(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange) override
     {
         auto& buffer = context.buffer();
-        auto& range_and_faces = context.options()[m_option_name].get_mutable<TimestampedList<RangeAndString>>();
+        auto& range_and_faces = context.options()[m_option_name].get_mutable<RangeAndStringList>();
         update_ranges_ifn(buffer, range_and_faces);
 
         for (auto& range : range_and_faces.list)

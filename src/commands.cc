@@ -43,16 +43,6 @@
 namespace Kakoune
 {
 
-StringView option_type_name(Meta::Type<TimestampedList<LineAndSpec>>)
-{
-    return "line-specs";
-}
-
-StringView option_type_name(Meta::Type<TimestampedList<RangeAndString>>)
-{
-    return "range-specs";
-}
-
 namespace
 {
 
@@ -1289,6 +1279,21 @@ const CommandDesc set_option_cmd = {
     }
 };
 
+Completions complete_option(const Context& context, CompletionFlags,
+                            CommandParameters params, size_t token_to_complete,
+                            ByteCount pos_in_token)
+{
+    if (token_to_complete == 0)
+    {
+        static constexpr auto scopes = { "buffer", "window", "current" };
+        return { 0_byte, params[0].length(), complete(params[0], pos_in_token, scopes) };
+    }
+    else if (token_to_complete == 1)
+        return { 0_byte, params[1].length(),
+                 GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
+    return Completions{};
+}
+
 const CommandDesc unset_option_cmd = {
     "unset-option",
     "unset",
@@ -1298,26 +1303,31 @@ const CommandDesc unset_option_cmd = {
     ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
     option_doc_helper,
-    [](const Context& context, CompletionFlags,
-       CommandParameters params, size_t token_to_complete,
-       ByteCount pos_in_token) -> Completions
-    {
-        if (token_to_complete == 0)
-        {
-            static constexpr auto scopes = { "buffer", "window", "current" };
-            return { 0_byte, params[0].length(), complete(params[0], pos_in_token, scopes) };
-        }
-        else if (token_to_complete == 1)
-            return { 0_byte, params[1].length(),
-                     GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
-        return Completions{};
-    },
+    complete_option,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         auto& options = get_options(parser[0], context, parser[1]);
         if (&options == &GlobalScope::instance().options())
             throw runtime_error("Cannot unset options in global scope");
         options.unset_option(parser[1]);
+    }
+};
+
+const CommandDesc update_option_cmd = {
+    "update-option",
+    nullptr,
+    "update-option <scope> <name>: update <name> option from scope\n"
+    "some option types, such as line-descs or range-descs can be updated to latest buffer timestamp\n"
+    "<scope> can be buffer, window, or current which refers to the narrowest\n"
+    "scope the option is set in",
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    CommandFlags::None,
+    option_doc_helper,
+    complete_option,
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        Option& opt = get_options(parser[0], context, parser[1]).get_local_option(parser[1]);
+        opt.update(context);
     }
 };
 
@@ -2142,6 +2152,7 @@ void register_commands()
     register_command(source_cmd);
     register_command(set_option_cmd);
     register_command(unset_option_cmd);
+    register_command(update_option_cmd);
     register_command(declare_option_cmd);
     register_command(map_key_cmd);
     register_command(unmap_key_cmd);

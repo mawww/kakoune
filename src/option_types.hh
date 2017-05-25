@@ -218,6 +218,11 @@ inline bool option_add(WorstMatch, StringView)
     throw runtime_error("no add operation supported for this option type");
 }
 
+inline void option_update(WorstMatch, const Context&)
+{
+    throw runtime_error("no update operation supported for this option type");
+}
+
 template<typename EffectiveType, typename LineType, typename ColumnType>
 inline void option_from_string(StringView str, LineAndColumn<EffectiveType, LineType, ColumnType>& opt)
 {
