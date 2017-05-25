@@ -133,11 +133,12 @@ def -hidden c-family-insert-on-newline %[ eval -draft %[
         fi
 
         printf %s\\n '
-            add-highlighter -group / regions -default code FT \
-                string %{MAYBEAT(?<!QUOTE)"} %{(?<!\\)(\\\\)*"} "" \
+            add-highlighter -group / regions -default code -match-capture FT \
+                string %{MAYBEAT(?<!QUOTE)"} %{(?<!\\)(?:\\\\)*"} "" \
+                string %{R"([^(]*)\(} %{\)([^)]*)"} "" \
                 comment /\* \*/ "" \
                 comment // $ "" \
-                disabled ^\h*?#\h*if\h+(0|FALSE)\b "#\h*(else|elif|endif)" "#\h*if(def)?" \
+                disabled ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" "#\h*if(?:def)?" \
                 macro %{^\h*?\K#} %{(?<!\\)\n} ""
 
             add-highlighter -group /FT/string fill string
