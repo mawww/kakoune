@@ -193,8 +193,8 @@ void skip_blanks_and_comments(Reader& reader)
             ++(++reader);
         else if (c == '#')
         {
-            for (bool eol = false; reader and not eol; ++reader)
-                eol = *reader == '\n';
+            while (reader and *reader != '\n')
+                ++reader;
         }
         else
             break;
