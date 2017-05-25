@@ -35,7 +35,7 @@ add-highlighter -group /sh/code regex (\w+)= 1:variable
 add-highlighter -group /sh/code regex ^\h*(\w+)\h*\(\) 1:variable
 
 add-highlighter -group /sh/code regex \$(\w+|\{.+?\}|#|@|\?|\$|!|-|\*) 0:value
-add-highlighter -group /sh/double_string regex \$(\w+|\{.+?\}) 0:variable
+add-highlighter -group /sh/double_string regex \$(\w+|\{.+?\}) 0:value
 
 hook -group sh-highlight global WinSetOption filetype=sh %{ add-highlighter ref sh }
 hook -group sh-highlight global WinSetOption filetype=(?!sh).* %{ remove-highlighter sh }
