@@ -19,7 +19,7 @@ add-highlighter -group /sh/heredoc fill string
     keywords="${keywords}|echo|elif|else|enable|esac|exit|fi|for|function|help"
     keywords="${keywords}|if|in|let|local|logout|mapfile|printf|read|readarray"
     keywords="${keywords}|readonly|return|select|set|shift|source|test|then"
-    keywords="${keywords}|time|type|typeset|ulimit|unalias|until|while"
+    keywords="${keywords}|time|type|typeset|ulimit|unalias|until|while|break|continue"
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=sh %{
