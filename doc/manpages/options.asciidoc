@@ -22,14 +22,19 @@ Types
 	a list, elements are separated by a colon (:) if an element needs
 	to contain a colon, it can be escaped with a backslash
 *range-specs*::
-	a `:` separated list of a pair of a buffer range
-	(`<begin line>.<begin column>,<end line>.<end column>` or
-	`<begin line>.<begin column>+<length>`) and a string (separated by `|`),
-	except for the first element which is just the timestamp of the buffer.
-*line-flags*::
+	a `:` separated list of a pair of a buffer range (`<begin
+	line>.<begin column>,<end line>.<end column>` or `<begin
+	line>.<begin column>+<length>`) and a string (separated by `|`),
+	except for the first element which is just the timestamp of
+	the buffer.  When the `update-option` is used on an option of
+	this type, its ranges gets updated according to all the buffer
+	modifications that happened since its timestamp.
+*line-specs*::
 	a `:` separated list of a line number and a corresponding flag
-	(`<line>|<flag text>`), except for the first element which is just the
-	timestamp of the buffer.
+	(`<line>|<flag text>`), except for the first element which is
+	just the timestamp of the buffer. When the `update-option` is
+	used on an option of this type, its lines gets updated according
+	to all the buffer modifications that happened since its timestamp.
 *completions*::
 	a `:` separated list of `<text>|<docstring>|<menu text>`
 	candidates, except for the first element which follows the
