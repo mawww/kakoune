@@ -171,7 +171,7 @@ void register_registers()
 {
     RegisterManager& register_manager = RegisterManager::instance();
 
-    for (auto c : "abcdefghijklmnopqrstuvwxyz/\"|^@")
+    for (auto c : "abcdefghijklmnopqrstuvwxyz/\"|^@:")
         register_manager.add_register(c, make_unique<StaticRegister>());
 
     using StringList = Vector<String, MemoryDomain::Registers>;
