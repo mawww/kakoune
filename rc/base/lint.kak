@@ -4,7 +4,7 @@ The output returned by this command is expected to comply with the following for
     str lintcmd
 
 decl -hidden line-specs lint_flags
-decl -hidden str        lint_errors
+decl -hidden range-specs lint_errors
 
 def lint -docstring 'Parse the current buffer with a linter' %{
     %sh{
@@ -42,16 +42,16 @@ def lint -docstring 'Parse the current buffer with a linter' %{
                 }
             }
             /:[0-9]+:[0-9]+:/ {
-                errors = errors $2 "," $3 "," substr($4,2) ":"
+                errors = errors ":" $2 "." $3 "," $2 "." $3 "|" substr($4,2)
                 # fix case where $5 is not the last field because of extra :s in the message
-                for (i=5; i<=NF; i++) errors = errors $i ":"
-                errors = substr(errors, 1, length(errors)-1) " (col " $3 ")\n"
+                for (i=5; i<=NF; i++) errors = errors "\\:" $i
+                errors = substr(errors, 1, length(errors)-1) " (col " $3 ")"
             }
             END {
                 print "set \"buffer=" file "\" lint_flags  %{" stamp ":" substr(flags,  1, length(flags)-1)  "}"
                 errors = substr(errors, 1, length(errors)-1)
                 gsub("~", "\\~", errors)
-                print "set \"buffer=" file "\" lint_errors %~" errors "~"
+                print "set \"buffer=" file "\" lint_errors %~" stamp errors "~"
             }
         ' "$dir"/stderr | kak -p "$kak_session"
 
@@ -61,12 +61,15 @@ def lint -docstring 'Parse the current buffer with a linter' %{
     }
 }
 
-def -hidden lint-show %{ %sh{
-    desc=$(printf '%s\n' "$kak_opt_lint_errors" | sed -ne "/^$kak_cursor_line,.*/ { s/^[[:digit:]]*,[[:digit:]]*,//g; s/'/\\\\'/g; p; }")
-    if [ -n "$desc" ]; then
-        printf '%s\n' "info -anchor $kak_cursor_line.$kak_cursor_column '$desc'"
-    fi
-}}
+def -hidden lint-show %{
+    update-option buffer lint_errors
+    %sh{
+        desc=$(printf '%s\n' "$kak_opt_lint_errors" | sed -e 's/\([^\\]\):/\1\n/g' | tail -n +2 |
+               sed -ne "/^$kak_cursor_line\.[^|]\+|.*/ { s/^[^|]\+|//g; s/'/\\\\'/g; s/\\\\:/:/g; p; }")
+        if [ -n "$desc" ]; then
+            printf '%s\n' "info -anchor $kak_cursor_line.$kak_cursor_column '$desc'"
+        fi
+    } }
 
 def lint-enable -docstring "Activate automatic diagnostics of the code" %{
     add-highlighter flag_lines default lint_flags
@@ -78,48 +81,44 @@ def lint-disable -docstring "Disable automatic diagnostics of the code" %{
     remove-hooks window lint-diagnostics
 }
 
-def lint-next -docstring "Jump to the next line that contains an error" %{ %sh{
-    printf '%s\n' "$kak_opt_lint_errors" | {
-        while read -r line
-        do
-            # get line,column pair
-            coords=$(printf %s "$line" | cut -d, -f1,2)
-            candidate="${coords%,*}"
-            if [ "$candidate" -gt "$kak_cursor_line" ]
-            then
-                break
+def lint-next -docstring "Jump to the next line that contains an error" %{
+    update-option buffer lint_errors
+    %sh{
+        printf '%s\n' "$kak_opt_lint_errors" | sed -e 's/\([^\\]\):/\1\n/g' | tail -n +2 | {
+            while IFS='|' read -r candidate rest
+            do
+                first_range=${first_range-$candidate}
+                if [ "${candidate%%.*}" -gt "$kak_cursor_line" ]; then
+                    range=$candidate
+                    break
+                fi
+            done
+            range=${range-$first_range}
+            if [ -n "$range" ]; then
+                printf '%s\n' "select $range"
+            else
+                printf 'echo -color Error no lint diagnostics\n'
             fi
-        done
-        if [ "$candidate" -gt "$kak_cursor_line" ]
-        then
-            col="${coords#*,}"
-        else
-            candidate="${kak_opt_lint_errors%%,*}"
-            col=$(printf '%s\n' "$kak_opt_lint_errors" | head -n1 | cut -d, -f2)
-        fi
-        printf '%s\n' "select $candidate.$col,$candidate.$col"
-    }
-}}
+        }
+    }}
 
-def lint-prev -docstring "Jump to the previous line that contains an error" %{ %sh{
-    printf '%s\n' "$kak_opt_lint_errors" | sort -t, -k1,1 -rn | {
-        while read -r line
-        do
-            coords=$(printf %s "$line" | cut -d, -f1,2)
-            candidate="${coords%,*}"
-            if [ "$candidate" -lt "$kak_cursor_line" ]
-            then
-                break
+def lint-prev -docstring "Jump to the previous line that contains an error" %{
+    update-option buffer lint_errors
+    %sh{
+        printf '%s\n' "$kak_opt_lint_errors" | sed -e 's/\([^\\]\):/\1\n/g' | tail -n +2 | sort -t. -k1,1 -rn | {
+            while IFS='|' read -r candidate rest
+            do
+                first_range=${first_range-$candidate}
+                if [ "${candidate%%.*}" -lt "$kak_cursor_line" ]; then
+                    range=$candidate
+                    break
+                fi
+            done
+            range=${range-$first_range}
+            if [ -n "$range" ]; then
+                printf '%s\n' "select $range"
+            else
+                printf 'echo -color Error no lint diagnostics\n'
             fi
-        done
-        if [ "$candidate" -lt "$kak_cursor_line" ]
-        then
-            col="${coords#*,}"
-        else
-            last=$(printf '%s\n' "$kak_opt_lint_errors" | tail -n1)
-            candidate=$(printf '%s\n' "$last" | cut -d, -f1)
-            col=$(printf '%s\n' "$last" | cut -d, -f2)
-        fi
-        printf '%s\n' "select $candidate.$col,$candidate.$col"
-    }
-}}
+        }
+    }}
