@@ -31,11 +31,8 @@ public:
     template<size_t N>
     constexpr ArrayView(T(&array)[N]) : m_pointer(array), m_size(N) {}
 
-    template<typename Iterator>
-    constexpr ArrayView(const Iterator& begin, const Iterator& end)
-        : m_pointer(&(*begin)), m_size(end - begin) {}
-
-    template<typename Alloc, typename U>
+    template<typename Alloc, typename U,
+             typename = typename std::enable_if<sizeof(U) == sizeof(T)>::type>
     constexpr ArrayView(const std::vector<U, Alloc>& v)
         : m_pointer(&v[0]), m_size(v.size()) {}
 
