@@ -932,7 +932,7 @@ void NCursesUI::info_show(StringView title, StringView content,
         info_box = make_info_box(m_info.title, m_info.content,
                                  m_dimensions.column, m_assistant);
         anchor = DisplayCoord{m_status_on_top ? 0 : m_dimensions.line,
-                           m_dimensions.column-1};
+                              m_dimensions.column-1};
     }
     else if (style == InfoStyle::Modal)
         info_box = make_info_box(m_info.title, m_info.content,
