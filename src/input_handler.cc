@@ -200,8 +200,7 @@ public:
 
     void on_key(Key key) override
     {
-        m_in_on_key.set();
-        auto unset_in_on_key = on_scope_end([this]{ m_in_on_key.unset(); });
+        ScopedSetBool set_in_on_key{m_in_on_key};
 
         bool do_restore_hooks = false;
         auto restore_hooks = on_scope_end([&, this]{
