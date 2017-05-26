@@ -385,7 +385,7 @@ struct InplaceString
 };
 
 struct Hex { size_t val; };
-inline Hex hex(size_t val) { return {val}; }
+constexpr Hex hex(size_t val) { return {val}; }
 
 InplaceString<15> to_string(int val);
 InplaceString<23> to_string(long int val);
@@ -407,7 +407,7 @@ namespace detail
 
 template<typename T> using IsString = std::is_convertible<T, StringView>;
 
-template<typename T, class = typename std::enable_if<!IsString<T>::value>::type>
+template<typename T, class = typename std::enable_if<not IsString<T>::value>::type>
 auto format_param(const T& val) -> decltype(to_string(val)) { return to_string(val); }
 
 template<typename T, class = typename std::enable_if<IsString<T>::value>::type>
