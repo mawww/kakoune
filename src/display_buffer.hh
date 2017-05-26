@@ -134,6 +134,7 @@ public:
     // the line is less that col_count character
     void trim(ColumnCount first_col, ColumnCount col_count, bool only_buffer);
 
+    // Merge together consecutive atoms sharing the same display attributes
     void     optimize();
 private:
     void compute_range();
@@ -146,7 +147,7 @@ DisplayLine parse_display_line(StringView line, const HashMap<String, DisplayLin
 class DisplayBuffer : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:
-    using LineList = Vector<DisplayLine, MemoryDomain::Display>;
+    using LineList = Vector<DisplayLine>;
     DisplayBuffer() {}
 
     LineList& lines() { return m_lines; }
@@ -154,8 +155,10 @@ public:
 
     // returns the smallest BufferRange which contains every DisplayAtoms
     const BufferRange& range() const { return m_range; }
-    void optimize();
     void compute_range();
+
+    // Optimize all lines, set DisplayLine::optimize
+    void optimize();
 
 private:
     LineList m_lines;
