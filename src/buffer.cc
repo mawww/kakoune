@@ -249,7 +249,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
     else
     {
         auto diff = find_diff(m_lines.begin(), m_lines.size(),
-                              parsed_lines.lines.begin(), (int)parsed_lines.lines.size(),
+                              parsed_lines.lines.begin(), parsed_lines.lines.size(),
                               [](const StringDataPtr& lhs, const StringDataPtr& rhs)
                               { return lhs->strview() == rhs->strview(); });
 
