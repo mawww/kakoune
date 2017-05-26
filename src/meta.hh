@@ -6,7 +6,8 @@ namespace Kakoune
 inline namespace Meta
 {
 
-template<typename T> struct Type {};
+struct AnyType{};
+template<typename T> struct Type : AnyType {};
 
 }
 

@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "assert.hh"
+#include "meta.hh"
 
 namespace Kakoune
 {
@@ -141,14 +142,11 @@ bool operator!=(const Allocator<T1, d1>& lhs, const Allocator<T2, d2>& rhs)
     return d1 != d2;
 }
 
+
+constexpr MemoryDomain memory_domain(Meta::AnyType) { return MemoryDomain::Undefined; }
+
 template<typename T>
-struct TypeDomain
-{
-    static constexpr MemoryDomain domain() { return TypeDomain<T>::helper((T*)nullptr); }
-private:
-    template<typename U> static decltype(U::Domain) constexpr helper(U*) { return U::Domain; }
-    static constexpr MemoryDomain helper(...) { return MemoryDomain::Undefined; }
-};
+constexpr decltype(T::Domain) memory_domain(Meta::Type<T>) { return T::Domain; }
 
 template<MemoryDomain d>
 struct UseMemoryDomain
