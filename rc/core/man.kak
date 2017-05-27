@@ -12,7 +12,7 @@ hook -group man-highlight global WinSetOption filetype=man %{
     # Command line options
     add-highlighter -group man-highlight regex '^ {7}-[^\s,]+(,\s+-[^\s,]+)*' 0:yellow
     # References to other manpages
-    add-highlighter -group man-highlight regex [-a-zA-Z0-9_.]+\(\d\) 0:green
+    add-highlighter -group man-highlight regex [-a-zA-Z0-9_.]+\([a-z0-9]+\) 0:green
 }
 
 hook global WinSetOption filetype=man %{
