@@ -1,7 +1,7 @@
 decl -docstring "name of the client in which documentation is to be displayed" \
     str docsclient
 
-decl -hidden str _manpage
+decl -hidden str manpage
 
 hook -group man-highlight global WinSetOption filetype=man %{
     add-highlighter group man-highlight
@@ -17,7 +17,7 @@ hook -group man-highlight global WinSetOption filetype=man %{
 
 hook global WinSetOption filetype=man %{
     hook -group man-hooks window WinResize .* %{
-        man-impl %opt{_manpage}
+        man-impl %opt{manpage}
     }
 }
 
@@ -40,7 +40,7 @@ def -hidden -params 1..2 man-impl %{ %sh{
                 exec '%|cat<space>${colout}<ret>gk'
                 nop %sh{rm ${colout}}
                 set buffer filetype man
-                set window _manpage '$@'
+                set window manpage '$@'
         "
     else
        printf %s\\n "echo -color Error %{man '$@' failed: see *debug* buffer for details }"
