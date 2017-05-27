@@ -1881,7 +1881,7 @@ const CommandDesc on_key_cmd = {
     "on-key",
     nullptr,
     "on-key <command>: wait for next user key then and execute <command>, "
-    "with key availabe in the `key` value",
+    "with key available in the `key` value",
     ParameterDesc{ {}, ParameterDesc::Flags::None, 1, 1 },
     CommandFlags::None,
     CommandHelper{},
