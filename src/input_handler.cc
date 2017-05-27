@@ -202,6 +202,15 @@ public:
     {
         ScopedSetBool set_in_on_key{m_in_on_key};
 
+        // Hack to parse keys sent by terminals using the 8th bit to mark the
+        // meta key. In normal mode, give priority to a potential alt-key than
+        // the accentuated character.
+        if (key.key >= 127 and key.key < 256)
+        {
+            key.modifiers |= Key::Modifiers::Alt;
+            key.key &= 0x7f;
+        }
+
         bool do_restore_hooks = false;
         auto restore_hooks = on_scope_end([&, this]{
             if (m_hooks_disabled and enabled() and do_restore_hooks)

@@ -485,6 +485,7 @@ void NCursesUI::check_resize(bool force)
         m_window = (NCursesWin*)newpad(ws.ws_row, ws.ws_col);
         intrflush(m_window, false);
         keypad(m_window, true);
+        meta(m_window, true);
 
         m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
 
