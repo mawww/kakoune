@@ -1052,7 +1052,8 @@ void select_object(Context& context, NormalParams params)
     auto get_title = [] {
         const auto whole_flags = (ObjectFlags::ToBegin | ObjectFlags::ToEnd);
         const bool whole = (flags & whole_flags) == whole_flags;
-        return format("select {}{}object{}",
+        return format("{} {}{}surrounding object{}",
+                      mode == SelectMode::Extend ? "extend" : "select",
                       whole ? "" : "to ",
                       flags & ObjectFlags::Inner ? "inner " : "",
                       whole ? "" : (flags & ObjectFlags::ToBegin ? " begin" : " end"));
