@@ -122,7 +122,7 @@ WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
 void ClientManager::add_free_window(std::unique_ptr<Window>&& window, SelectionList selections)
 {
     window->clear_display_buffer();
-    m_free_windows.push_back({ std::move(window), SelectionList{ std::move(selections) } });
+    m_free_windows.push_back({std::move(window), std::move(selections)});
 }
 
 void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
