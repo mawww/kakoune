@@ -84,10 +84,10 @@ kak$(suffix) : $(objects)
 # we generate the pages, patch them and then compress them
 ../doc/manpages/%.gz: ../doc/manpages/%.asciidoc
 	a2x --no-xmllint -f manpage $<
-	sed -i -r -e "s,^\.TH .+,.TH KAKOUNE 1 \"\" \"\" \"$(basename $(notdir $<))\"," \
-	-e "/^\.SH \"NAME\"/{N;d;}" $(@:.gz=.1)
-	gzip -n -9 -f $(@:.gz=.1)
-	mv -f $(@:.gz=.1.gz) $@
+	sed -i -r -e "s,^\.TH .+,.TH kakoune k \"\" \"\" \"$(basename $(notdir $<))\"," \
+	-e "/^\.SH \"NAME\"/{N;d;}" $(@:.gz=.k)
+	gzip -n -9 -f $(@:.gz=.k)
+	mv -f $(@:.gz=.k.gz) $@
 
 check: test
 test:
