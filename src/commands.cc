@@ -1591,7 +1591,8 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
                 transform(std::mem_fn(&std::unique_ptr<Buffer>::get));
             Vector<SafePtr<Buffer>> buffers{ptrs.begin(), ptrs.end()};
             for (auto buffer : buffers)
-                context_wrap_for_buffer(*buffer);
+                if (not (buffer->flags() & Buffer::Flags::Debug))
+                    context_wrap_for_buffer(*buffer);
         }
         else
             for (auto& name : split(*bufnames, ','))
