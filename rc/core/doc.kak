@@ -41,12 +41,11 @@ An optional keyword argument can be passed to the function, which will be automa
         readonly PATH_DOC="${kak_runtime}/../doc/kak/manpages/${1}.gz"
 
         shift
-        if [ ! -f "${PATH_DOC}" ]; then
+        if [ -f "${PATH_DOC}" ]; then
+            printf %s\\n "eval -try-client %opt{docsclient} doc-open ${PATH_DOC} $@"
+        else
             printf %s\\n "echo -color Error No such doc file: ${PATH_DOC}"
-            exit
         fi
-
-        printf %s\\n "eval -try-client %opt{docsclient} doc-open ${PATH_DOC} $@"
     }
 }
 
