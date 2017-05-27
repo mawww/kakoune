@@ -47,8 +47,10 @@ static const char* startup_info =
 "   and BufOpenFile.\n"
 " * The status line can be further customized.\n"
 "   See `:doc options modelinefmt`.\n"
-" * The range-faces option type is now named range-specs\n"
-"   and can be used by the new replace-range highlighter.\n"
+" * Renamed range-faces/line-flags option types to range-specs/line-specs\n"
+"   range-specs can be used by the new replace-range highlighter.\n"
+"   A new update-option command can be used to update the line/ranges\n"
+"   according to buffer modification\n"
 " * <a-z> and <a-Z> are not append to/from register anymore but\n"
 "   combine from/to register.\n";
 
