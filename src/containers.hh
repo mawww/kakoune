@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <utility>
 #include <iterator>
+#include <numeric>
 
 namespace Kakoune
 {
@@ -345,6 +346,12 @@ void unordered_erase(Container&& vec, U&& value)
         swap(vec.back(), *it);
         vec.pop_back();
     }
+}
+
+template<typename Container, typename Init, typename BinOp>
+Init accumulate(Container&& c, Init&& init, BinOp&& op)
+{
+    return std::accumulate(begin(c), end(c), init, op);
 }
 
 }

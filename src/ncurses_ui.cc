@@ -791,32 +791,6 @@ void NCursesUI::menu_hide()
         info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
 }
 
-static DisplayCoord compute_needed_size(StringView str)
-{
-    DisplayCoord res{1,0};
-    ColumnCount line_len = 0;
-    for (auto it = str.begin(), end = str.end();
-         it != end; it = utf8::next(it, end))
-    {
-        if (*it == '\n')
-        {
-            // ignore last '\n', no need to show an empty line
-            if (it+1 == end)
-                break;
-
-            res.column = max(res.column, line_len);
-            line_len = 0;
-            ++res.line;
-        }
-        else
-        {
-            ++line_len;
-            res.column = max(res.column, line_len);
-        }
-    }
-    return res;
-}
-
 static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
                              NCursesUI::Rect rect, NCursesUI::Rect to_avoid,
                              bool prefer_above)
@@ -858,14 +832,14 @@ static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
     return pos;
 }
 
-String make_info_box(StringView title, StringView message, ColumnCount max_width,
-                     ConstArrayView<StringView> assistant)
+Vector<String> make_info_box(StringView title, StringView message, ColumnCount max_width,
+                             ConstArrayView<StringView> assistant)
 {
     DisplayCoord assistant_size;
     if (not assistant.empty())
         assistant_size = { (int)assistant.size(), assistant[0].column_length() };
 
-    String result;
+    Vector<String> result;
 
     const ColumnCount max_bubble_width = max_width - assistant_size.column - 6;
     if (max_bubble_width < 4)
@@ -882,36 +856,37 @@ String make_info_box(StringView title, StringView message, ColumnCount max_width
     const auto assistant_top_margin = (line_count - assistant_size.line+1) / 2;
     for (LineCount i = 0; i < line_count; ++i)
     {
+        String line;
         constexpr Codepoint dash{L'─'};
         if (not assistant.empty())
         {
             if (i >= assistant_top_margin)
-                result += assistant[(int)min(i - assistant_top_margin, assistant_size.line-1)];
+                line += assistant[(int)min(i - assistant_top_margin, assistant_size.line-1)];
             else
-                result += assistant[(int)assistant_size.line-1];
+                line += assistant[(int)assistant_size.line-1];
         }
         if (i == 0)
         {
             if (title.empty())
-                result += "╭─" + String{dash, bubble_width} + "─╮";
+                line += "╭─" + String{dash, bubble_width} + "─╮";
             else
             {
                 auto dash_count = bubble_width - title.column_length() - 2;
                 String left{dash, dash_count / 2};
                 String right{dash, dash_count - dash_count / 2};
-                result += "╭─" + left + "┤" + title +"├" + right +"─╮";
+                line += "╭─" + left + "┤" + title +"├" + right +"─╮";
             }
         }
         else if (i < lines.size() + 1)
         {
-            auto& line = lines[(int)i - 1];
-            const ColumnCount padding = bubble_width - line.column_length();
-            result += "│ " + line + String{' ', padding} + " │";
+            auto& info_line = lines[(int)i - 1];
+            const ColumnCount padding = bubble_width - info_line.column_length();
+            line += "│ " + info_line + String{' ', padding} + " │";
         }
         else if (i == lines.size() + 1)
-            result += "╰─" + String(dash, bubble_width) + "─╯";
+            line += "╰─" + String(dash, bubble_width) + "─╯";
 
-        result += "\n";
+        result.push_back(std::move(line));
     }
     return result;
 }
@@ -927,7 +902,7 @@ void NCursesUI::info_show(StringView title, StringView content,
     m_info.face = face;
     m_info.style = style;
 
-    String info_box;
+    Vector<String> info_box;
     if (style == InfoStyle::Prompt)
     {
         info_box = make_info_box(m_info.title, m_info.content,
@@ -951,11 +926,14 @@ void NCursesUI::info_show(StringView title, StringView content,
             return;
 
         for (auto& line : wrap_lines(m_info.content, max_width))
-            info_box += line + "\n";
+            info_box.push_back(line.str());
     }
 
-    DisplayCoord size = compute_needed_size(info_box), pos;
+    const DisplayCoord size{(int)info_box.size(),
+                            accumulate(info_box | transform(std::mem_fn(&String::column_length)), 0_col,
+                                       [](ColumnCount lhs, ColumnCount rhs){ return lhs < rhs ? rhs : lhs; })};
     const Rect rect = {m_status_on_top ? 1_line : 0_line, m_dimensions};
+    DisplayCoord pos;
     if (style == InfoStyle::MenuDoc and m_menu)
         pos = m_menu.pos + DisplayCoord{0_line, m_menu.size.column};
     else if (style == InfoStyle::Modal)
@@ -973,16 +951,10 @@ void NCursesUI::info_show(StringView title, StringView content,
     m_info.create(pos, size);
 
     wbkgd(m_info.win, COLOR_PAIR(get_color_pair(face)));
-    int line = 0;
-    auto it = info_box.begin(), end = info_box.end();
-    while (true)
+    for (size_t line = 0; line < info_box.size(); ++line)
     {
-        wmove(m_info.win, line++, 0);
-        auto eol = std::find_if(it, end, [](char c) { return c == '\n'; });
-        add_str(m_info.win, {it, eol});
-        if (eol == end)
-           break;
-        it = eol + 1;
+        wmove(m_info.win, line, 0);
+        add_str(m_info.win, info_box[line]);
     }
     m_dirty = true;
 }
