@@ -1064,7 +1064,7 @@ const CommandDesc define_command_cmd = {
 const CommandDesc alias_cmd = {
     "alias",
     nullptr,
-    "alias <scope> <alias> <command>: alias <alias> to <command> in <scope>\n",
+    "alias <scope> <alias> <command>: alias <alias> to <command> in <scope>",
     ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     CommandHelper{},
