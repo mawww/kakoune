@@ -48,7 +48,7 @@ void highlight_range(DisplayBuffer& display_buffer,
                      BufferCoord begin, BufferCoord end,
                      bool skip_replaced, T func)
 {
-    // tolerate begin > end as that can be triggered by wrong encodngs
+    // tolerate begin > end as that can be triggered by wrong encodings
     if (begin >= end or end <= display_buffer.range().begin
                      or begin >= display_buffer.range().end)
         return;
@@ -87,7 +87,7 @@ template<typename T>
 void replace_range(DisplayBuffer& display_buffer,
                    BufferCoord begin, BufferCoord end, T func)
 {
-    // tolerate begin > end as that can be triggered by wrong encodngs
+    // tolerate begin > end as that can be triggered by wrong encodings
     if (begin >= end or end <= display_buffer.range().begin
                      or begin >= display_buffer.range().end)
         return;
@@ -715,7 +715,7 @@ struct WrapHighlighter : Highlighter
 
         const Buffer& buffer = context.buffer();
         const int tabstop = context.options()["tabstop"].get<int>();
-        const LineCount win_height = context.window().dimensions().line; 
+        const LineCount win_height = context.window().dimensions().line;
         for (auto it = display_buffer.lines().begin();
              it != display_buffer.lines().end(); ++it)
         {
@@ -786,7 +786,7 @@ struct WrapHighlighter : Highlighter
         setup.window_pos.column = 0;
         setup.scroll_offset.column = 0;
 
-        const LineCount win_height = context.window().dimensions().line; 
+        const LineCount win_height = context.window().dimensions().line;
         LineCount win_line = 0;
         for (auto buf_line = setup.window_pos.line;
              buf_line < setup.window_pos.line + setup.window_range.line;
@@ -2009,7 +2009,7 @@ void register_highlighters()
         "ref",
         { create_reference_highlighter,
           "Parameters: [-passes <passes>] <path>\n"
-          "Reference the highlighter at <path> in shared highglighters\n"
+          "Reference the highlighter at <path> in shared highlighters\n"
           "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
           "which specify what kind of highlighters can be referenced" } });
     registry.insert({
