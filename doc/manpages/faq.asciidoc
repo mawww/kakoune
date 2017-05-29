@@ -140,6 +140,26 @@ All the indentation hooks are conventionally named `<lang>-indent`, which
 allows us to use the `disabled_hooks` variable to disable indentation
 globally with the following command: `set global disabled_hooks '.+-indent'`
 
+How to enable syntax highlighting ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The mimetype of the files opened in new buffers is detected using the
+`file` command, and syntax highlighting enabled automatically when
+possible.
+
+My file seems to be highlighted with the wrong colors, I thought syntax highlighting was detected automatically ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `file` utility has several short comings, such as detecting the
+wrong mimetype for a file containing data with different syntax, e.g.
+a Python script containing hardcoded HTML templates detected as an HTML
+file.
+
+Kakoune does its best at detecting file types (using known extensions
+for a given format for instance), but not much can be done about those
+ambiguous cases. You might consider writing a custom `$HOME/.magic` file
+if needed.
+
 Can I disable syntax highlighting completely ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -147,3 +167,27 @@ Similarly to the indentation hooks, the name format followed by the
 highlighting hooks is `<lang>-highlight`. You can thus disable syntax
 highlighting using the following command: `set global disabled_hooks
 '.+-highlight'`
+
+Why does a dot `.` in a regex select newline characters ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Data in buffers is a stream of characters, and newlines do not receive special
+treatment compared to other characters, with regards to regex matching. In
+order to select data in a line without any trailing newline characters, one could
+use the `[^\n]+` pattern, which is arguably a good compromise when
+balanced against the ability to select data over several lines.
+
+Can I split the window to display different buffers in them ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As a fairly compliant follower of the UNIX philosophy, Kakoune does not
+try to implement features that are best handled by separate, dedicated
+tools. Windows splitting in terminals is a prime example of that
+concept, where the editor provides commands to interact with several
+terminal multiplexers (e.g. `tmux`), as opposed to emulating their
+functionalities.
+
+In order to open buffers in the same window simultaneously using `tmux`
+(or one of the supported multiplexers), run Kakoune in a `tmux` session,
+and simply use the `:new` command to spawn new clients as you would
+have otherwise in an X11 environment.
