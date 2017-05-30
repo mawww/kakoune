@@ -2,7 +2,6 @@
 
 #include "containers.hh"
 #include "exception.hh"
-#include "containers.hh"
 
 namespace Kakoune
 {
