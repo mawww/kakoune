@@ -291,7 +291,7 @@ void goto_commands(Context& context, NormalParams params)
                 break;
             }
             }
-        }, "goto",
+        }, (mode == SelectMode::Extend ? "goto (extend to)" : "goto"),
         build_autoinfo_for_mapping(context, KeymapMode::Goto,
             {{{'g','k'},"buffer top"},
              {{'l'},    "line end"},
@@ -355,7 +355,7 @@ void view_commands(Context& context, NormalParams params)
             context.window().scroll( std::max<ColumnCount>(1, count));
             break;
         }
-    }, "view",
+    }, lock ? "view (lock)" : "view",
     build_autoinfo_for_mapping(context, KeymapMode::View,
         {{{'v','c'}, "center cursor (vertically)"},
          {{'m'},     "center cursor (horizontally)"},
