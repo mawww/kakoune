@@ -20,6 +20,9 @@ Here are the data structures used:
 * Line : Array of Atom
 * Coord { int line; int column }
 
+The newline is implicit after every Line and a Line containing no atoms
+should be displayed as an emtpy line.
+
 Here are the requests that can be written by the json ui on stdout:
 
 * draw(Array<Line> lines, Face default_face, Face padding_face)

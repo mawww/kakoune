@@ -49,11 +49,14 @@ String to_json(StringView str)
         if (next == end)
             break;
 
-        char buf[7] = {'\\', *next, 0};
-        if (*next >= 0 and *next <= 0x1F)
-            sprintf(buf, "\\u%04x", *next);
+        if (*next != '\n')
+        {
+            char buf[7] = {'\\', *next, 0};
+            if (*next >= 0 and *next <= 0x1F)
+                sprintf(buf, "\\u%04x", *next);
 
-        res += buf;
+            res += buf;
+        }
         it = next+1;
     }
     res += '"';
