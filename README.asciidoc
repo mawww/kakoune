@@ -21,6 +21,7 @@ TL;DR
 git clone http://github.com/mawww/kakoune.git
 cd kakoune/src
 make
+sudo make install
 ./kak
 ---------------------------------------------
 
