@@ -30,7 +30,7 @@ ShellManager::ShellManager()
         auto size = confstr(_CS_PATH, nullptr, 0);
         String path; path.resize(size-1, 0);
         confstr(_CS_PATH, path.data(), size);
-        for (auto dir : StringView{path} | split<StringView>(':'))
+        for (auto dir : StringView{path.data(), (ByteCount)size} | split<StringView>(':'))
         {
             String candidate = format("{}/sh", dir);
             struct stat st;
