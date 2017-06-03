@@ -91,7 +91,7 @@ The following environment variables can be used to set default values for some c
 
 KAK_SESSION::
 	the session whose name is stored in this variable will be connected to automatically;
-	the `-c` flag overrides this variable if both are set
+	the '-c' and '-p' flags override this variable if they are set
 
 EXAMPLES
 --------
