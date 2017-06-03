@@ -938,7 +938,8 @@ int main(int argc, char* argv[])
             files.emplace_back(name);
         }
 
-        if (auto server_session = parser.get_switch("c"))
+        StringView server_session = parser.get_switch("c").value_or(std::getenv("KAK_SESSION"));
+        if (not server_session.empty())
         {
             for (auto opt : { "n", "s", "d", "E", "ro" })
             {
@@ -952,7 +953,7 @@ int main(int argc, char* argv[])
             for (auto name : files)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
-            return run_client(*server_session, new_files + client_init, init_coord, ui_type);
+            return run_client(server_session, new_files + client_init, init_coord, ui_type);
         }
         else
         {
