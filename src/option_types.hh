@@ -118,9 +118,9 @@ String option_to_string(const HashMap<Key, Value, domain>& opt)
 }
 
 template<typename Key, typename Value, MemoryDomain domain>
-void option_from_string(StringView str, HashMap<Key, Value, domain>& opt)
+bool option_add(HashMap<Key, Value, domain>& opt, StringView str)
 {
-    opt.clear();
+    bool changed = false;
     for (auto& elem : split(str, list_separator, '\\'))
     {
         Vector<String> pair_str = split(elem, '=', '\\');
@@ -131,7 +131,16 @@ void option_from_string(StringView str, HashMap<Key, Value, domain>& opt)
         option_from_string(pair_str[0], key);
         option_from_string(pair_str[1], value);
         opt.insert({ std::move(key), std::move(value) });
+        changed = true;
     }
+    return changed;
+}
+
+template<typename Key, typename Value, MemoryDomain domain>
+void option_from_string(StringView str, HashMap<Key, Value, domain>& opt)
+{
+    opt.clear();
+    option_add(opt, str);
 }
 
 template<typename K, typename V, MemoryDomain D>
