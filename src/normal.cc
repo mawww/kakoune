@@ -788,7 +788,15 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
     const auto& buffer = context.buffer();
     for (auto& sel : sels)
     {
-        const auto beg = sel.min(), end = buffer.char_next(sel.max());
+        auto beg = sel.min(), end = sel.max();
+        if (smart) // skip whitespaces
+        {
+            while (is_blank(buffer.byte_at(beg)) and beg != end)
+                beg = buffer.char_next(beg);
+            while (is_blank(buffer.byte_at(end)) and beg != end)
+                end = buffer.char_prev(end);
+        }
+        end = buffer.char_next(end);
         patterns.push_back(format("{}\\Q{}\\E{}",
                                   smart and is_bow(buffer, beg) ? "\\b" : "",
                                   buffer.string(beg, end),
