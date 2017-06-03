@@ -2,7 +2,7 @@ decl -docstring "shell command run to search for subtext in a file/directory" \
     str grepcmd 'grep -RHn'
 decl -docstring "name of the client in which utilities display information" \
     str toolsclient
-decl -hidden int _grep_current_line 0
+decl -hidden int grep_current_line 0
 
 def -params .. -file-completion \
     -docstring %{grep [<arguments>]: grep utility wrapper
@@ -19,7 +19,7 @@ All the optional arguments are forwarded to the grep utility} \
      printf %s\\n "eval -try-client '$kak_opt_toolsclient' %{
                edit! -fifo ${output} -scroll *grep*
                set buffer filetype grep
-               set buffer _grep_current_line 0
+               set buffer grep_current_line 0
                hook -group fifo buffer BufCloseFifo .* %{
                    nop %sh{ rm -r $(dirname ${output}) }
                    remove-hooks buffer fifo
@@ -30,7 +30,7 @@ All the optional arguments are forwarded to the grep utility} \
 hook -group grep-highlight global WinSetOption filetype=grep %{
     add-highlighter group grep
     add-highlighter -group grep regex "^((?:\w:)?[^:]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
-    add-highlighter -group grep line %{%opt{_grep_current_line}} default+b
+    add-highlighter -group grep line %{%opt{grep_current_line}} default+b
 }
 
 hook global WinSetOption filetype=grep %{
@@ -50,7 +50,7 @@ def -hidden grep-jump %{
     eval -collapse-jumps %{
         try %{
             exec 'xs^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
-            set buffer _grep_current_line %val{cursor_line}
+            set buffer grep_current_line %val{cursor_line}
             eval -try-client %opt{jumpclient} edit -existing %reg{1} %reg{2} %reg{3}
             try %{ focus %opt{jumpclient} }
         }
@@ -60,17 +60,17 @@ def -hidden grep-jump %{
 def grep-next -docstring 'Jump to the next grep match' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
-        exec "%opt{_grep_current_line}g<a-l>/^[^:]+:\d+:<ret>"
+        exec "%opt{grep_current_line}g<a-l>/^[^:]+:\d+:<ret>"
         grep-jump
     }
-    try %{ eval -client %opt{toolsclient} %{ exec %opt{_grep_current_line}g } }
+    try %{ eval -client %opt{toolsclient} %{ exec %opt{grep_current_line}g } }
 }
 
 def grep-prev -docstring 'Jump to the previous grep match' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
-        exec "%opt{_grep_current_line}g<a-/>^[^:]+:\d+:<ret>"
+        exec "%opt{grep_current_line}g<a-/>^[^:]+:\d+:<ret>"
         grep-jump
     }
-    try %{ eval -client %opt{toolsclient} %{ exec %opt{_grep_current_line}g } }
+    try %{ eval -client %opt{toolsclient} %{ exec %opt{grep_current_line}g } }
 }
