@@ -956,7 +956,6 @@ int main(int argc, char* argv[])
         }
         else
         {
-
             StringView session = parser.get_switch("s").value_or(StringView{});
             try
             {
