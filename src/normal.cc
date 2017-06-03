@@ -1535,28 +1535,58 @@ SelectionList read_selections_from_register(char reg, Context& context)
 enum class CombineOp
 {
     Append,
+    Union,
+    Intersect,
     SelectLeftmostCursor,
     SelectRightmostCursor,
+    SelectLongest,
+    SelectShortest,
 };
 
 CombineOp key_to_combine_op(Key key)
 {
     switch (key.key)
     {
-        case '+': return CombineOp::Append;
+        case 'a': return CombineOp::Append;
+        case 'u': return CombineOp::Union;
+        case 'i': return CombineOp::Intersect;
         case '<': return CombineOp::SelectLeftmostCursor;
         case '>': return CombineOp::SelectRightmostCursor;
+        case '+': return CombineOp::SelectLongest;
+        case '-': return CombineOp::SelectShortest;
     }
     throw runtime_error{format("unknown combine operator '{}'", key.key)};
 }
 
-const Selection& select_selection(const Selection& lhs, const Selection& rhs, CombineOp op)
+void combine_selection(const Buffer& buffer, Selection& sel, const Selection& other, CombineOp op)
 {
     switch (op)
     {
-        case CombineOp::SelectLeftmostCursor:  return lhs.cursor() < rhs.cursor() ? lhs : rhs;
-        case CombineOp::SelectRightmostCursor: return lhs.cursor() < rhs.cursor() ? rhs : lhs;
-        default: kak_assert(false); return lhs;
+        case CombineOp::Union:
+            sel.set(std::min(sel.min(), other.min()),
+                    std::max(sel.max(), other.max()));
+            break;
+        case CombineOp::Intersect:
+            sel.set(std::max(sel.min(), other.min()),
+                    std::min(sel.max(), other.max()));
+            break;
+        case CombineOp::SelectLeftmostCursor:
+            if (sel.cursor() > other.cursor())
+                sel = other;
+            break;
+        case CombineOp::SelectRightmostCursor:
+            if (sel.cursor() < other.cursor())
+                sel = other;
+            break;
+        case CombineOp::SelectLongest:
+            if (char_length(buffer, sel) < char_length(buffer, other))
+                sel = other;
+            break;
+        case CombineOp::SelectShortest:
+            if (char_length(buffer, sel) > char_length(buffer, other))
+                sel = other;
+            break;
+        default: kak_assert(false);
     }
 }
 
@@ -1584,14 +1614,18 @@ void combine_selections(Context& context, SelectionList list, Func func)
                                      if (list.size() != sels.size())
                                          throw runtime_error{"The two selection lists dont have the same number of elements"};
                                      for (int i = 0; i < list.size(); ++i)
-                                         list[i] = select_selection(list[i], sels[i], op);
+                                         combine_selection(sels.buffer(), list[i], sels[i], op);
                                      list.set_main_index(sels.main_index());
                                  }
                                  func(context, std::move(list));
                              }, "enter combining operator",
-                             "'+': append lists\n"
+                             "'a': append lists\n"
+                             "'u': union\n"
+                             "'i': intersection\n"
                              "'<': select leftmost cursor\n"
-                             "'>': select rightmost cursor\n");
+                             "'>': select rightmost cursor\n"
+                             "'+': select longest\n"
+                             "'-': select shortest\n");
 }
 
 template<bool combine>
