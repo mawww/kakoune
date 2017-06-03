@@ -52,7 +52,8 @@ static const char* startup_info =
 "   A new update-option command can be used to update the line/ranges\n"
 "   according to buffer modification\n"
 " * <a-z> and <a-Z> are not append to/from register anymore but\n"
-"   combine from/to register.\n";
+"   combine from/to register.\n"
+" * `*` will now strip surrounding whitespaces from the selection\n";
 
 struct startup_error : runtime_error
 {
