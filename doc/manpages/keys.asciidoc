@@ -290,7 +290,7 @@ Changes
 *!*::
 	insert command output before selection
 
-*a-!*::
+*<a-!>*::
 	append command output after selection
 
 *u*::

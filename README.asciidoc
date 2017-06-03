@@ -441,12 +441,12 @@ Changes
         and ignore its output
 
  * `!`: insert command output before selection
- * `a-!`: append command output after selection
+ * `<a-!>`: append command output after selection
 
  * `u`: undo last change
- * `a-u`: move backward in history
+ * `<a-u>`: move backward in history
  * `U`: redo last change
- * `a-U`: move forward in history
+ * `<a-U>`: move forward in history
 
  * `&`: align selection, align the cursor of selections by inserting
         spaces before the first character of the selection
