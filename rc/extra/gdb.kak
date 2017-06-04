@@ -94,7 +94,7 @@ define-command -hidden gdb-session-connect-internal %{
             /\*running/ {
                 send("gdb-clear-location")
             }
-            /\*stopped/ { 
+            /\*stopped/ {
                 send("gdb-handle-stopped " frame_info($0))
             }
             /\^done,frame=/ {
@@ -174,7 +174,7 @@ define-command gdb-session-stop %{
                 rm "${kak_opt_gdb_dir}/pid" "${kak_opt_gdb_dir}/pipe"
                 rmdir "$kak_opt_gdb_dir"
             else
-                printf %s\\n raise
+                echo raise
             fi
         }
         set-option global gdb_dir ""
@@ -249,12 +249,12 @@ define-command gdb-backtrace %{
                 mkfifo "$kak_opt_gdb_dir"/backtrace
                 echo "-stack-list-frames" > "$kak_opt_gdb_dir"/pipe
             else
-                raise
+                echo raise
             fi
         }
         edit! -fifo "%opt{gdb_dir}/backtrace" *gdb-backtrace*
         hook -group fifo buffer BufCloseFifo .* %{
-            %sh{ rm "${kak_opt_gdb_dir}/backtrace" }
+            nop %sh{ rm -f "${kak_opt_gdb_dir}/backtrace" }
             remove-hooks buffer fifo
         }
     }
