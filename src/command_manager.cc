@@ -538,26 +538,19 @@ Optional<CommandInfo> CommandManager::command_info(const Context& context, Strin
         }
         String helpstr = cmd->value.helper(context, params);
         if (not helpstr.empty())
-        {
-            if (helpstr.back() != '\n')
-                helpstr += '\n';
-            res.info += helpstr;
-        }
+            res.info += format("{}\n", helpstr);
     }
 
     String aliases;
     for (auto& alias : context.aliases().aliases_for(cmd->key))
         aliases += " " + alias;
     if (not aliases.empty())
-        res.info += "Aliases:" + aliases + "\n";
+        res.info += format("Aliases:{}\n", aliases);
 
 
     auto& switches = cmd->value.param_desc.switches;
     if (not switches.empty())
-    {
-        res.info += "Switches:\n";
-        res.info += generate_switches_doc(switches);
-    }
+        res.info += format("Switches:\n{}", indent(generate_switches_doc(switches)));
 
     return res;
 }

@@ -9,7 +9,7 @@ String generate_switches_doc(const SwitchMap& switches)
 {
     String res;
     for (auto& sw : switches)
-        res += format(" -{} {}: {}\n", sw.key,
+        res += format("-{} {}: {}\n", sw.key,
                       sw.value.takes_arg ? "<arg>" : "",
                       sw.value.description);
     return res;

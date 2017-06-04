@@ -1222,7 +1222,7 @@ static String option_doc_helper(const Context& context, CommandParameters params
     if (not desc or desc->docstring().empty())
         return "";
 
-    return format("{}: {}", desc->name(), desc->docstring());
+    return format("{}:\n{}", desc->name(), indent(desc->docstring()));
 }
 
 static OptionManager& get_options(StringView scope, const Context& context, StringView option_name)
