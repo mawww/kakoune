@@ -15,8 +15,8 @@ declare-option -hidden str-list gdb_location_info
 
 # corresponding flags generated from the previous variables
 # these are only set on buffer scope
-declare-option -hidden line-flags gdb_breakpoints_flags
-declare-option -hidden line-flags gdb_location_flag
+declare-option -hidden line-specs gdb_breakpoints_flags
+declare-option -hidden line-specs gdb_location_flag
 
 set-face GdbBreakpoint red,default
 set-face GdbLocation blue,default
@@ -34,7 +34,7 @@ define-command -params .. -file-completion gdb-session-new %{
     %sh{
         # can't connect until socat has created the pty thing
         while [ ! -e "${kak_opt_gdb_dir}/pty" ]; do
-            sleep 1
+            sleep 0.5
         done
         if [ -n "$TMUX" ]; then
             tmux split-window -h " \
