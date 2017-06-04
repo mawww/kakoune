@@ -51,7 +51,6 @@ define-command gdb-session-connect %{
     info "Please instruct gdb to \"new-ui mi3 ${kak_opt_gdb_dir}/pty\""
 }
 
-
 define-command -hidden gdb-session-connect-internal %{
     gdb-session-stop
     %sh{
@@ -100,6 +99,17 @@ define-command -hidden gdb-session-connect-internal %{
             }
             /\^done,frame=/ {
                 send("gdb-clear-location; gdb-handle-stopped " frame_info($0))
+            }
+            /\^done,stack=/ {
+                frames_number = split($0, frames, "frame=")
+                for (i = 2; i <= frames_number; i++) {
+                    frame = frames[i]
+                    file = get(frame, "fullname=\"", "[^\"]*", "\"")
+                    line = get(frame, "line=\"", "[0-9]+", "\"")
+                    "awk \"NR==" line "\" \"" file "\"" | getline call
+                    print(file ":" line ":" call) > "'"$tmpdir/backtrace"'"
+                }
+                close("'"$tmpdir/backtrace"'")
             }
             /=breakpoint-created/ {
                 send("gdb-handle-breakpoint-created " breakpoint_info($0))
@@ -228,12 +238,29 @@ decl -hidden str gdb_jump_client
 define-command gdb-enable-autojump %{
     set global gdb_jump_client %val{client}
 }
-
 define-command gdb-disable-autojump %{
     set global gdb_jump_client ""
 }
 
-# implementation details commands
+define-command gdb-backtrace %{
+    try %{
+        %sh{
+            if [ -n "$kak_opt_gdb_dir" ]; then
+                mkfifo "$kak_opt_gdb_dir"/backtrace
+                echo "-stack-list-frames" > "$kak_opt_gdb_dir"/pipe
+            else
+                raise
+            fi
+        }
+        edit! -fifo "%opt{gdb_dir}/backtrace" *gdb-backtrace*
+        hook -group fifo buffer BufCloseFifo .* %{
+            %sh{ rm "${kak_opt_gdb_dir}/backtrace" }
+            remove-hooks buffer fifo
+        }
+    }
+}
+
+# implementation details
 
 define-command -hidden -params 2 gdb-handle-stopped %{
     set-option global gdb_location_info "%arg{1}|%arg{2}"
