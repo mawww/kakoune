@@ -299,7 +299,7 @@ def -hidden c-family-insert-include-guards %{
 
 hook global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
 
-decl -docstring "semi-colon separated list of path in which header files will be looked for" \
+decl -docstring "colon separated list of path in which header files will be looked for" \
     str-list alt_dirs ".:.."
 
 def c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
