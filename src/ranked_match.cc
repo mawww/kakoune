@@ -182,6 +182,9 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     if (m_max_index != other.m_max_index)
         return m_max_index < other.m_max_index;
 
+    // Reorder codepoints to improve matching behaviour
+    auto order = [](Codepoint cp) { return cp == '/' ? 0 : cp; };
+
     auto it1 = m_candidate.begin(), it2 = other.m_candidate.begin();
     const auto end1 = m_candidate.end(), end2 = other.m_candidate.end();
     auto last1 = it1, last2 = it2;
@@ -203,7 +206,7 @@ bool RankedMatch::operator<(const RankedMatch& other) const
         {
             const bool low1 = iswlower((wchar_t)cp1);
             const bool low2 = iswlower((wchar_t)cp2);
-            return low1 == low2 ? cp1 < cp2 : low1;
+            return low1 == low2 ? order(cp1) < order(cp2) : low1;
         }
         last1 = it1; last2 = it2;
     }
@@ -223,6 +226,7 @@ UnitTest test_ranked_match{[] {
     kak_assert(RankedMatch{"delete-buffer", "db"} < RankedMatch{"debug", "db"});
     kak_assert(RankedMatch{"create_task", "ct"} < RankedMatch{"constructor", "ct"});
     kak_assert(RankedMatch{"class", "cla"} < RankedMatch{"class::attr", "cla"});
+    kak_assert(RankedMatch{"meta/", "meta"} < RankedMatch{"meta-a/", "meta"});
 }};
 
 UnitTest test_used_letters{[]()
