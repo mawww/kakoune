@@ -242,6 +242,8 @@ define-command gdb-disable-autojump %{
     set global gdb_jump_client ""
 }
 
+declare-option int backtrace_current_line
+
 define-command gdb-backtrace %{
     try %{
         %sh{
@@ -252,12 +254,55 @@ define-command gdb-backtrace %{
                 echo raise
             fi
         }
-        edit! -fifo "%opt{gdb_dir}/backtrace" *gdb-backtrace*
-        hook -group fifo buffer BufCloseFifo .* %{
-            nop %sh{ rm -f "${kak_opt_gdb_dir}/backtrace" }
-            remove-hooks buffer fifo
+        eval -try-client %opt{toolsclient} %{
+            edit! -fifo "%opt{gdb_dir}/backtrace" *gdb-backtrace*
+            set buffer filetype backtrace
+            set buffer backtrace_current_line 0
+            hook -group fifo buffer BufCloseFifo .* %{
+                nop %sh{ rm -f "${kak_opt_gdb_dir}/backtrace" }
+                remove-hooks buffer fifo
+            }
         }
     }
+}
+
+hook -group backtrace-highlight global WinSetOption filetype=backtrace %{
+    add-highlighter group backtrace
+    add-highlighter -group backtrace regex "^([^\n]*?):(\d+)" 1:cyan 2:green
+    add-highlighter -group backtrace line '%opt{backtrace_current_line}' default+b
+}
+
+hook global WinSetOption filetype=backtrace %{
+    hook buffer -group backtrace-hooks NormalKey <ret> gdb-backtrace-jump
+}
+
+def -hidden gdb-backtrace-jump %{
+    eval -collapse-jumps %{
+        try %{
+            exec -save-regs '' 'xs^([^\n]*?):(\d+)<ret>'
+            set buffer backtrace_current_line %val{cursor_line}
+            eval -try-client %opt{jumpclient} "edit -existing %reg{1} %reg{2}"
+            try %{ focus %opt{jumpclient} }
+        }
+    }
+}
+
+def gdb-backtrace-next %{
+    eval -collapse-jumps -try-client %opt{jumpclient} %{
+        buffer *backtrace*
+        exec "%opt{find_current_line}ggl/^[^:]+:\d+:<ret>"
+        gdb-backtrace-jump
+    }
+    try %{ eval -client %opt{toolsclient} %{ exec %opt{find_current_line}g } }
+}
+
+def gdb-backtrace-prev %{
+    eval -collapse-jumps -try-client %opt{jumpclient} %{
+        buffer *backtrace*
+        exec "%opt{find_current_line}g<a-/>^[^:]+:\d+:<ret>"
+        gdb-backtrace-jump
+    }
+    try %{ eval -client %opt{toolsclient} %{ exec %opt{find_current_line}g } }
 }
 
 # implementation details
