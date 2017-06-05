@@ -796,6 +796,7 @@ Some of Kakoune state is available through environment variables:
  * `kak_cursor_byte_offset`: offset of the main selection from the beginning of the buffer (in byte).
  * `kak_window_width`: width of the current kakoune window
  * `kak_window_height`: height of the current kakoune window
+ * `kak_server_pid`: process ID of the kakoune server
  * `kak_hook_param`: filtering text passed to the currently executing hook
  * `kak_hook_param_capture_N`: text captured by the hook filter regex capture N
  * `kak_client_env_<name>`: value of the <name> variable in the client environment.
