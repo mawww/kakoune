@@ -1,0 +1,3 @@
+[submodule "rc-extra"]
+	path = rc-extra
+	url = https://github.com/mawww/kakoune-extra.git

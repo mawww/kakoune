@@ -854,6 +854,28 @@ the builtin command `colorscheme` will offer completion for those
 color schemes. If a scheme is duplicated in userspace, it will take
 precedence.
 
+Extra scripts
+~~~~~~~~~~~~~
+
+Some additional scripts that support various languages and file formats
+or implement experimental features can be downloaded by initializing the
+`rc-extra` submodule:
+
+----------------------------
+:git submodule init rc-extra
+----------------------------
+
+The modules can then be loaded automatically by either copying them (or
+creating a symbolic link) to the `rc` directory to be made available to
+everyone, or to the `$XDG_CONFIG_HOME/kak/autoload` directory for a single
+user.
+
+Updating this submodule is as easy as directly updating the submodule:
+
+------------------------------
+:git submodule update rc-extra
+------------------------------
+
 Options
 -------
 
