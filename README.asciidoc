@@ -780,6 +780,7 @@ Some of Kakoune state is available through environment variables:
  * `kak_buffile`: full path of the file or same as `kak_bufname` when
        there's no associated file
  * `kak_buflist`: the current buffer list, each buffer separated by a colon
+ * `kak_buf_line_count`: the current buffer line count
  * `kak_timestamp`: timestamp of the current buffer, the timestamp is an
        integer value which is incremented each time the buffer is modified.
  * `kak_runtime`: directory containing the kak binary
