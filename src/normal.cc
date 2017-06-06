@@ -230,7 +230,7 @@ void goto_commands(Context& context, NormalParams params)
                 if (context.has_window())
                 {
                     auto& window = context.window();
-                    auto line = window.position().line + window.dimensions().line / 2;
+                    auto line = window.position().line - 1 + std::min(buffer.line_count(), window.dimensions().line) / 2;
                     select_coord<mode>(buffer, line, context.selections());
                 }
                 break;
