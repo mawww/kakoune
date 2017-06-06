@@ -418,17 +418,17 @@ StringView format_param(const T& val) { return val; }
 String format(StringView fmt, ArrayView<const StringView> params);
 
 template<typename... Types>
-String format(StringView fmt, Types... params)
+String format(StringView fmt, Types&&... params)
 {
-    return format(fmt, ArrayView<const StringView>{detail::format_param(params)...});
+    return format(fmt, ArrayView<const StringView>{detail::format_param(std::forward<Types>(params))...});
 }
 
 StringView format_to(ArrayView<char> buffer, StringView fmt, ArrayView<const StringView> params);
 
 template<typename... Types>
-StringView format_to(ArrayView<char> buffer, StringView fmt, Types... params)
+StringView format_to(ArrayView<char> buffer, StringView fmt, Types&&... params)
 {
-    return format_to(buffer, fmt, ArrayView<const StringView>{detail::format_param(params)...});
+    return format_to(buffer, fmt, ArrayView<const StringView>{detail::format_param(std::forward<Types>(params))...});
 }
 
 }
