@@ -4,19 +4,19 @@
 #include "hash_map.hh"
 #include "completion.hh"
 #include "safe_ptr.hh"
+#include "regex.hh"
 
 namespace Kakoune
 {
 
 class Context;
-using HookFunc = std::function<void (StringView, Context&)>;
 
 class HookManager : public SafeCountable
 {
 public:
     HookManager(HookManager& parent) : m_parent(&parent) {}
 
-    void add_hook(StringView hook_name, String group, HookFunc func);
+    void add_hook(StringView hook_name, String group, Regex filter, String commands);
     void remove_hooks(StringView group);
     CandidateList complete_hook_group(StringView prefix, ByteCount pos_in_token);
     void run_hook(StringView hook_name, StringView param,
@@ -31,7 +31,9 @@ private:
     struct Hook
     {
         String group;
-        HookFunc func;
+        Regex filter;
+        MatchResults<const char*> captures;
+        String commands;
     };
 
     SafePtr<HookManager> m_parent;

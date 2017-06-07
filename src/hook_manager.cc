@@ -6,16 +6,17 @@
 #include "buffer_utils.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
+#include "command_manager.hh"
 #include "regex.hh"
 #include "option.hh"
 
 namespace Kakoune
 {
 
-void HookManager::add_hook(StringView hook_name, String group, HookFunc func)
+void HookManager::add_hook(StringView hook_name, String group, Regex filter, String commands)
 {
     auto& hooks = m_hooks[hook_name];
-    hooks.emplace_back(new Hook{std::move(group), std::move(func)});
+    hooks.emplace_back(new Hook{std::move(group), std::move(filter), {}, std::move(commands)});
 }
 
 void HookManager::remove_hooks(StringView group)
@@ -84,8 +85,9 @@ void HookManager::run_hook(StringView hook_name,
     Vector<Hook*> hooks_to_run; // The m_hooks_trash vector ensure hooks wont die during this method
     for (auto& hook : hook_list->value)
     {
-        if (hook->group.empty() or disabled_hooks.empty() or
-            not regex_match(hook->group.begin(), hook->group.end(), disabled_hooks))
+        if ((hook->group.empty() or disabled_hooks.empty() or
+             not regex_match(hook->group.begin(), hook->group.end(), disabled_hooks))
+            and regex_match(param.begin(), param.end(), hook->captures, hook->filter))
             hooks_to_run.push_back(hook.get());
     }
 
@@ -96,7 +98,16 @@ void HookManager::run_hook(StringView hook_name,
         {
             if (debug_flags & DebugFlags::Hooks)
                 write_to_debug_buffer(format("hook {}({})/{}", hook_name, param, hook->group));
-            hook->func(param, context);
+
+            ScopedSetBool disable_history{context.history_disabled()};
+
+            EnvVarMap env_vars{ {"hook_param", param.str()} };
+            for (size_t i = 0; i < hook->captures.size(); ++i)
+                env_vars.insert({format("hook_param_capture_{}", i),
+                                 {hook->captures[i].first, hook->captures[i].second}});
+
+            CommandManager::instance().execute(hook->commands, context,
+                                               { {}, std::move(env_vars) });
         }
         catch (runtime_error& err)
         {
