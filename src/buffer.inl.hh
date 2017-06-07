@@ -114,55 +114,52 @@ inline BufferCoord Buffer::end_coord() const
         BufferCoord{0,0} : BufferCoord{ line_count() - 1, m_lines.back().length() };
 }
 
-inline BufferIterator::BufferIterator(const Buffer& buffer, BufferCoord coord)
+inline BufferIterator::BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept
     : m_buffer(&buffer), m_coord(coord),
       m_line((*m_buffer)[coord.line]),
-      m_last_line(buffer.line_count()-1)
-{
-    kak_assert(m_buffer and m_buffer->is_valid(m_coord));
-}
+      m_last_line(buffer.line_count()-1) {}
 
-inline bool BufferIterator::operator==(const BufferIterator& iterator) const
+inline bool BufferIterator::operator==(const BufferIterator& iterator) const noexcept
 {
     return m_buffer == iterator.m_buffer and m_coord == iterator.m_coord;
 }
 
-inline bool BufferIterator::operator!=(const BufferIterator& iterator) const
+inline bool BufferIterator::operator!=(const BufferIterator& iterator) const noexcept
 {
     return m_buffer != iterator.m_buffer or m_coord != iterator.m_coord;
 }
 
-inline bool BufferIterator::operator<(const BufferIterator& iterator) const
+inline bool BufferIterator::operator<(const BufferIterator& iterator) const noexcept
 {
     kak_assert(m_buffer == iterator.m_buffer);
     return (m_coord < iterator.m_coord);
 }
 
-inline bool BufferIterator::operator<=(const BufferIterator& iterator) const
+inline bool BufferIterator::operator<=(const BufferIterator& iterator) const noexcept
 {
     kak_assert(m_buffer == iterator.m_buffer);
     return (m_coord <= iterator.m_coord);
 }
 
-inline bool BufferIterator::operator>(const BufferIterator& iterator) const
+inline bool BufferIterator::operator>(const BufferIterator& iterator) const noexcept
 {
     kak_assert(m_buffer == iterator.m_buffer);
     return (m_coord > iterator.m_coord);
 }
 
-inline bool BufferIterator::operator>=(const BufferIterator& iterator) const
+inline bool BufferIterator::operator>=(const BufferIterator& iterator) const noexcept
 {
     kak_assert(m_buffer == iterator.m_buffer);
     return (m_coord >= iterator.m_coord);
 }
 
 [[gnu::always_inline]]
-inline const char& BufferIterator::operator*() const
+inline const char& BufferIterator::operator*() const noexcept
 {
     return m_line[m_coord.column];
 }
 
-inline const char& BufferIterator::operator[](size_t n) const
+inline const char& BufferIterator::operator[](size_t n) const noexcept
 {
     return m_buffer->byte_at(m_buffer->advance(m_coord, n));
 }

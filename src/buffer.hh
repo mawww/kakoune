@@ -59,18 +59,18 @@ public:
     // costly, so this is not strictly random access
     using iterator_category = std::bidirectional_iterator_tag;
 
-    BufferIterator() : m_buffer(nullptr) {}
-    BufferIterator(const Buffer& buffer, BufferCoord coord);
+    BufferIterator() noexcept : m_buffer(nullptr) {}
+    BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept;
 
-    bool operator== (const BufferIterator& iterator) const;
-    bool operator!= (const BufferIterator& iterator) const;
-    bool operator<  (const BufferIterator& iterator) const;
-    bool operator<= (const BufferIterator& iterator) const;
-    bool operator>  (const BufferIterator& iterator) const;
-    bool operator>= (const BufferIterator& iterator) const;
+    bool operator== (const BufferIterator& iterator) const noexcept;
+    bool operator!= (const BufferIterator& iterator) const noexcept;
+    bool operator<  (const BufferIterator& iterator) const noexcept;
+    bool operator<= (const BufferIterator& iterator) const noexcept;
+    bool operator>  (const BufferIterator& iterator) const noexcept;
+    bool operator>= (const BufferIterator& iterator) const noexcept;
 
-    const char& operator* () const;
-    const char& operator[](size_t n) const;
+    const char& operator* () const noexcept;
+    const char& operator[](size_t n) const noexcept;
     size_t operator- (const BufferIterator& iterator) const;
 
     BufferIterator operator+ (ByteCount size) const;
@@ -85,7 +85,7 @@ public:
     BufferIterator operator++ (int);
     BufferIterator operator-- (int);
 
-    const BufferCoord& coord() const { return m_coord; }
+    const BufferCoord& coord() const noexcept { return m_coord; }
 
 private:
     SafePtr<const Buffer> m_buffer;
