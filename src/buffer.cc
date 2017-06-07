@@ -196,7 +196,8 @@ BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount 
 String Buffer::string(BufferCoord begin, BufferCoord end) const
 {
     String res;
-    for (auto line = begin.line; line <= end.line and line < line_count(); ++line)
+    const auto last_line = std::min(end.line, line_count()-1);
+    for (auto line = begin.line; line <= last_line; ++line)
     {
         ByteCount start = 0;
         if (line == begin.line)
