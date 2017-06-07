@@ -7,13 +7,13 @@
 namespace Kakoune
 {
 
-void Selection::merge_with(const Selection& range)
+void Selection::merge_with(const Selection& other)
 {
-    m_cursor = range.m_cursor;
+    m_cursor = other.m_cursor;
     if (m_anchor < m_cursor)
-        m_anchor = std::min(m_anchor, range.m_anchor);
+        m_anchor = std::min(m_anchor, other.m_anchor);
     if (m_anchor > m_cursor)
-        m_anchor = std::max(m_anchor, range.m_anchor);
+        m_anchor = std::max(m_anchor, other.m_anchor);
 }
 
 SelectionList::SelectionList(Buffer& buffer, Selection s, size_t timestamp)
@@ -100,7 +100,8 @@ Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsF
     {
         if (overlaps(begin[i], begin[j]))
         {
-            begin[i].merge_with(begin[j]);
+            begin[i].min() = std::min(begin[i].min(), begin[j].min());
+            begin[i].max() = std::max(begin[i].max(), begin[j].max());
             if (i < main)
                 --main;
         }
