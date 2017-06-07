@@ -22,45 +22,46 @@ class iterator : public std::iterator<std::bidirectional_iterator_tag,
 {
 public:
     iterator() = default;
+    constexpr static bool noexcept_policy = noexcept(InvalidPolicy{}(0));
 
-    iterator(BaseIt it, BaseIt begin, BaseIt end)
+    iterator(BaseIt it, BaseIt begin, BaseIt end) noexcept
         : m_it{std::move(it)}, m_begin{std::move(begin)}, m_end{std::move(end)}
     {}
 
     template<typename Container>
-    iterator(BaseIt it, const Container& c)
+    iterator(BaseIt it, const Container& c) noexcept
         : m_it{std::move(it)}, m_begin{std::begin(c)}, m_end{std::end(c)}
     {}
 
-    iterator& operator++()
+    iterator& operator++() noexcept
     {
         utf8::to_next(m_it, m_end);
         invalidate_value();
         return *this;
     }
 
-    iterator operator++(int)
+    iterator operator++(int) noexcept
     {
         iterator save = *this;
         ++*this;
         return save;
     }
 
-    iterator& operator--()
+    iterator& operator--() noexcept
     {
         utf8::to_previous(m_it, m_begin);
         invalidate_value();
         return *this;
     }
 
-    iterator operator--(int)
+    iterator operator--(int) noexcept
     {
         iterator save = *this;
         --*this;
         return save;
     }
 
-    iterator operator+(DifferenceType count) const
+    iterator operator+(DifferenceType count) const noexcept
     {
         if (count < 0)
             return operator-(-count);
@@ -71,7 +72,7 @@ public:
         return res;
     }
 
-    iterator operator-(DifferenceType count) const
+    iterator operator-(DifferenceType count) const noexcept
     {
         if (count < 0)
             return operator+(-count);
@@ -82,39 +83,39 @@ public:
         return res;
     }
 
-    bool operator==(const iterator& other) const { return m_it == other.m_it; }
-    bool operator!=(const iterator& other) const { return m_it != other.m_it; }
+    bool operator==(const iterator& other) const noexcept { return m_it == other.m_it; }
+    bool operator!=(const iterator& other) const noexcept { return m_it != other.m_it; }
 
-    bool operator< (const iterator& other) const { return m_it < other.m_it; }
-    bool operator<= (const iterator& other) const { return m_it <= other.m_it; }
+    bool operator< (const iterator& other) const noexcept { return m_it < other.m_it; }
+    bool operator<= (const iterator& other) const noexcept { return m_it <= other.m_it; }
 
-    bool operator> (const iterator& other) const { return m_it > other.m_it; }
-    bool operator>= (const iterator& other) const { return m_it >= other.m_it; }
+    bool operator> (const iterator& other) const noexcept { return m_it > other.m_it; }
+    bool operator>= (const iterator& other) const noexcept { return m_it >= other.m_it; }
 
-    bool operator==(const BaseIt& other) { return m_it == other; }
-    bool operator!=(const BaseIt& other) { return m_it != other; }
+    bool operator==(const BaseIt& other) noexcept { return m_it == other; }
+    bool operator!=(const BaseIt& other) noexcept { return m_it != other; }
 
-    bool operator< (const BaseIt& other) const { return m_it < other; }
-    bool operator<= (const BaseIt& other) const { return m_it <= other; }
+    bool operator< (const BaseIt& other) const noexcept { return m_it < other; }
+    bool operator<= (const BaseIt& other) const noexcept { return m_it <= other; }
 
-    bool operator> (const BaseIt& other) const { return m_it > other; }
-    bool operator>= (const BaseIt& other) const { return m_it >= other; }
+    bool operator> (const BaseIt& other) const noexcept { return m_it > other; }
+    bool operator>= (const BaseIt& other) const noexcept { return m_it >= other; }
 
-    DifferenceType operator-(const iterator& other) const
+    DifferenceType operator-(const iterator& other) const noexcept(noexcept_policy)
     {
-        return (DifferenceType)utf8::distance(other.m_it, m_it);
+        return (DifferenceType)utf8::distance<InvalidPolicy>(other.m_it, m_it);
     }
 
-    CodepointType operator*() const
+    CodepointType operator*() const noexcept(noexcept_policy)
     {
         return get_value();
     }
 
-    const BaseIt& base() const { return m_it; }
+    const BaseIt& base() const noexcept(noexcept_policy) { return m_it; }
 
 private:
-    void invalidate_value() { m_value = -1; }
-    CodepointType get_value() const
+    void invalidate_value() noexcept { m_value = -1; }
+    CodepointType get_value() const noexcept(noexcept_policy)
     {
         if (m_value == (CodepointType)-1)
             m_value = (CodepointType)utf8::codepoint<InvalidPolicy>(m_it, m_end);
