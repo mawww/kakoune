@@ -1495,20 +1495,6 @@ const ParameterDesc context_wrap_params = {
     ParameterDesc::Flags::SwitchesOnlyAtStart, 1
 };
 
-template<typename T>
-struct DisableOption {
-    DisableOption(Context& context, const char* name)
-        : m_option(context.options()[name]),
-          m_prev_value(m_option.get<T>())
-    { m_option.set(T{}, false); }
-
-    ~DisableOption() { m_option.set(m_prev_value, false); }
-
-private:
-    Option& m_option;
-    T m_prev_value;
-};
-
 class RegisterRestorer
 {
 public:
@@ -1551,10 +1537,6 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         (int)(bool)parser.get_switch("client") +
         (int)(bool)parser.get_switch("try-client") > 1)
         throw runtime_error{"Only one of -buffer, -client or -try-client can be specified"};
-
-    // Disable these options to avoid costly code paths (and potential screen
-    // redraws) That are useful only in interactive contexts.
-    DisableOption<bool> disable_incsearch(context, "incsearch");
 
     const bool no_hooks = parser.get_switch("no-hooks") or context.hooks_disabled();
     const bool no_keymaps = not parser.get_switch("with-maps");
