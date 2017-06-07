@@ -248,6 +248,7 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
     try %{ # we might be switching from one c-family language to another
         remove-hooks window c-family-hooks
         remove-hooks window c-family-indent
+        remove-hooks window c-family-insert
     }
 
     hook -group c-family-indent window InsertEnd .* c-family-trim-autoindent
