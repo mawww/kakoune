@@ -107,6 +107,8 @@ void Buffer::on_registered()
 
     options().register_watcher(*this);
 
+    run_hook_in_own_context("BufCreate", m_name);
+
     if (m_flags & Flags::File)
     {
         if (m_flags & Buffer::Flags::New)
@@ -117,8 +119,6 @@ void Buffer::on_registered()
             run_hook_in_own_context("BufOpenFile", m_name);
         }
     }
-
-    run_hook_in_own_context("BufCreate", m_name);
 
     for (auto& option : options().flatten_options())
         on_option_changed(*option);
