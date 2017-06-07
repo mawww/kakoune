@@ -2014,8 +2014,8 @@ const HashMap<Key, NormalCmd> keymap{
     { {ctrl('o')}, {"jump backward in jump list", jump<Backward>} },
     { {ctrl('s')}, {"push current selections in jump list", push_selections} },
 
-    { {'\''}, {"rotate main selection", rotate_selections<Forward>} },
-    { {alt('\'')}, {"rotate main selection", rotate_selections<Backward>} },
+    { {'\''}, {"rotate main selection forward", rotate_selections<Forward>} },
+    { {alt('\'')}, {"rotate main selection backward", rotate_selections<Backward>} },
     { {alt('"')}, {"rotate selections content", rotate_selections_content} },
 
     { {'q'}, {"replay recorded macro", replay_macro} },
