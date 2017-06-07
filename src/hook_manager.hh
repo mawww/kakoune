@@ -16,7 +16,7 @@ class HookManager : public SafeCountable
 public:
     HookManager(HookManager& parent) : m_parent(&parent) {}
 
-    void add_hook(StringView hook_name, String group, HookFunc hook);
+    void add_hook(StringView hook_name, String group, HookFunc func);
     void remove_hooks(StringView group);
     CandidateList complete_hook_group(StringView prefix, ByteCount pos_in_token);
     void run_hook(StringView hook_name, StringView param,
@@ -28,8 +28,14 @@ private:
     // the only one allowed to construct a root hook manager
     friend class Scope;
 
+    struct Hook
+    {
+        String group;
+        HookFunc func;
+    };
+
     SafePtr<HookManager> m_parent;
-    HashMap<String, HashMap<String, HookFunc, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hooks;
+    HashMap<String, Vector<Hook, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hooks;
     mutable Vector<std::pair<StringView, StringView>, MemoryDomain::Hooks> m_running_hooks;
 };
 

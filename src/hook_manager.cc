@@ -12,18 +12,20 @@
 namespace Kakoune
 {
 
-void HookManager::add_hook(StringView hook_name, String group, HookFunc hook)
+void HookManager::add_hook(StringView hook_name, String group, HookFunc func)
 {
     auto& hooks = m_hooks[hook_name];
-    hooks.insert({std::move(group), std::move(hook)});
+    hooks.push_back({std::move(group), std::move(func)});
 }
 
 void HookManager::remove_hooks(StringView group)
 {
     if (group.empty())
         throw runtime_error("invalid id");
-    for (auto& hooks : m_hooks)
-        hooks.value.remove_all(group);
+    for (auto& list : m_hooks)
+        list.value.erase(std::remove_if(list.value.begin(), list.value.end(),
+                                        [&](const Hook& h) { return h.group == group; }),
+                         list.value.end());
 }
 
 CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_in_token)
@@ -31,7 +33,7 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
     CandidateList res;
     for (auto& list : m_hooks)
     {
-        auto container = list.value | transform(std::mem_fn(&decltype(list.value)::Item::key));
+        auto container = list.value | transform(std::mem_fn(&decltype(list.value)::value_type::group));
         for (auto& c : complete(prefix, pos_in_token, container))
         {
             if (!contains(res, c))
@@ -69,12 +71,12 @@ void HookManager::run_hook(StringView hook_name,
     auto start_time = profile ? Clock::now() : TimePoint{};
 
     auto& disabled_hooks = context.options()["disabled_hooks"].get<Regex>();
-    Vector<std::pair<String, HookFunc>> hooks_to_run;
+    Vector<Hook> hooks_to_run;
     for (auto& hook : hook_list_it->value)
     {
-        if (hook.key.empty() or disabled_hooks.empty() or
-            not regex_match(hook.key.begin(), hook.key.end(), disabled_hooks))
-            hooks_to_run.push_back({hook.key, hook.value});
+        if (hook.group.empty() or disabled_hooks.empty() or
+            not regex_match(hook.group.begin(), hook.group.end(), disabled_hooks))
+            hooks_to_run.push_back(hook);
     }
 
     bool hook_error = false;
@@ -83,14 +85,14 @@ void HookManager::run_hook(StringView hook_name,
         try
         {
             if (debug_flags & DebugFlags::Hooks)
-                write_to_debug_buffer(format("hook {}/{}", hook_name, hook.first));
-            hook.second(param, context);
+                write_to_debug_buffer(format("hook {}({})/{}", hook_name, param, hook.group));
+            hook.func(param, context);
         }
         catch (runtime_error& err)
         {
             hook_error = true;
             write_to_debug_buffer(format("error running hook {}({})/{}: {}",
-                               hook_name, param, hook.first, err.what()));
+                               hook_name, param, hook.group, err.what()));
         }
     }
 
