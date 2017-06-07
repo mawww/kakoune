@@ -1564,11 +1564,11 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             // copy buffer list as we might be mutating the buffer list
             // in the loop.
             auto ptrs = BufferManager::instance() |
-                transform(std::mem_fn(&std::unique_ptr<Buffer>::get));
+                transform(std::mem_fn(&std::unique_ptr<Buffer>::get)) |
+                filter([](Buffer* buf) { return not (buf->flags() & Buffer::Flags::Debug); });
             Vector<SafePtr<Buffer>> buffers{ptrs.begin(), ptrs.end()};
             for (auto buffer : buffers)
-                if (not (buffer->flags() & Buffer::Flags::Debug))
-                    context_wrap_for_buffer(*buffer);
+                context_wrap_for_buffer(*buffer);
         }
         else
             for (auto& name : split(*bufnames, ','))
