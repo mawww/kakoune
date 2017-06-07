@@ -32,7 +32,6 @@ private:
     {
         String group;
         Regex filter;
-        MatchResults<const char*> captures;
         String commands;
     };
 
