@@ -214,21 +214,18 @@ define-command gdb-advance          %{ gdb-cmd "advance %val{buffile}:%val{curso
 define-command gdb-set-breakpoint   %{ gdb-cmd "break %val{buffile}:%val{cursor_line}" }
 define-command gdb-clear-breakpoint %{ gdb-cmd "clear %val{buffile}:%val{cursor_line}" }
 define-command gdb-toggle-breakpoint %{
-    try %{
-        %sh{
-            printf %s\\n "$kak_opt_gdb_breakpoints_info" | tr ':' '\n' |
-            while read -r current; do
-                buffer="${current#*|*|*|}"
-                line=$(printf %s "$current" | cut -d \| -f 3)
-                if [ "$buffer" = "$kak_buffile" ] && [ "$line" = "$kak_cursor_line" ]; then
-                    printf %s\\n raise
-                    exit
-                fi
-            done
+    %sh{
+        printf %s\\n "$kak_opt_gdb_breakpoints_info" | tr ':' '\n' | {
+        while read -r current; do
+            buffer="${current#*|*|*|}"
+            line=$(printf %s "$current" | cut -d \| -f 3)
+            if [ "$buffer" = "$kak_buffile" ] && [ "$line" = "$kak_cursor_line" ]; then
+                echo gdb-clear-breakpoint
+                exit
+            fi
+        done
+        echo gdb-set-breakpoint
         }
-        gdb-set-breakpoint
-    } catch %{
-        gdb-clear-breakpoint
     }
 }
 define-command gdb-print %{ gdb-cmd "print %val{selection}" }
@@ -245,24 +242,20 @@ define-command gdb-disable-autojump %{
 declare-option int backtrace_current_line
 
 define-command gdb-backtrace %{
-    try %{
-        %sh{
-            if [ -n "$kak_opt_gdb_dir" ]; then
-                mkfifo "$kak_opt_gdb_dir"/backtrace
-                echo "-stack-list-frames" > "$kak_opt_gdb_dir"/pipe
-            else
-                echo raise
-            fi
-        }
-        eval -try-client %opt{toolsclient} %{
-            edit! -fifo "%opt{gdb_dir}/backtrace" *gdb-backtrace*
-            set buffer filetype backtrace
-            set buffer backtrace_current_line 0
-            hook -group fifo buffer BufCloseFifo .* %{
-                nop %sh{ rm -f "${kak_opt_gdb_dir}/backtrace" }
-                remove-hooks buffer fifo
-            }
-        }
+    %sh{
+        if [ -n "$kak_opt_gdb_dir" ]; then
+            mkfifo "$kak_opt_gdb_dir"/backtrace
+            echo -stack-list-frames > "$kak_opt_gdb_dir"/pipe
+            echo "eval -try-client %opt{toolsclient} %{
+                edit! -fifo \"%opt{gdb_dir}/backtrace\" *gdb-backtrace*
+                set buffer filetype backtrace
+                set buffer backtrace_current_line 0
+                hook -group fifo buffer BufCloseFifo .* %{
+                    nop %sh{ rm -f \"${kak_opt_gdb_dir}/backtrace\" }
+                    remove-hooks buffer fifo
+                }
+            }"
+        fi
     }
 }
 
@@ -345,6 +338,7 @@ define-command -hidden -params 4 gdb-handle-breakpoint-created %{
 define-command -hidden -params 1 gdb-handle-breakpoint-deleted %{
     %sh{
         printf "set-option global gdb_breakpoints_info \"\"\n"
+        printf %s\\n "$kak_opt_gdb_breakpoints_info" | tr ':' '\n' | {
         while read -r current; do
             id="${current%%|*}"
             if [ "$id" != "$1" ]; then
@@ -352,10 +346,9 @@ define-command -hidden -params 1 gdb-handle-breakpoint-deleted %{
             else
                 buffer="${current#*|*|*|}"
             fi
-        done <<-EOF
-			$(printf %s "$kak_opt_gdb_breakpoints_info" | tr ':' '\n')
-		EOF
+        done
         printf "gdb-refresh-breakpoints-flags \"%s\"\n" "$buffer"
+        }
     }
 }
 
