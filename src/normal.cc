@@ -1146,7 +1146,7 @@ void select_object(Context& context, NormalParams params)
                                    pair_it->opening, pair_it->closing,
                                    count, flags));
 
-        if (is_punctuation(cp))
+        if (is_punctuation(cp) or cp == '_')
         {
             auto utf8cp = to_string(cp);
             return select_and_set_last<mode>(
