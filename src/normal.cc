@@ -318,7 +318,7 @@ void view_commands(Context& context, NormalParams params)
             return;
 
         if (lock)
-            view_commands<true>(context, {});
+            view_commands<true>(context, { count, 0 });
 
         auto cp = key.codepoint();
         if (not cp or not context.has_window())
