@@ -810,16 +810,16 @@ const CommandDesc add_hook_cmd = {
             ScopedSetBool disable_history{context.history_disabled()};
 
             MatchResults<const char*> res;
-            if (regex_match(param.begin(), param.end(), res, regex))
-            {
-                EnvVarMap env_vars{ {"hook_param", param.str()} };
-                for (size_t i = 0; i < res.size(); ++i)
-                    env_vars.insert({format("hook_param_capture_{}", i),
-                                     {res[i].first, res[i].second}});
+            if (not regex_match(param.begin(), param.end(), res, regex))
+                return;
 
-                CommandManager::instance().execute(command, context,
-                                                   { {}, std::move(env_vars) });
-            }
+            EnvVarMap env_vars{ {"hook_param", param.str()} };
+            for (size_t i = 0; i < res.size(); ++i)
+                env_vars.insert({format("hook_param_capture_{}", i),
+                                 {res[i].first, res[i].second}});
+
+            CommandManager::instance().execute(command, context,
+                                               { {}, std::move(env_vars) });
         };
         auto group = parser.get_switch("group").value_or(StringView{});
         get_scope(parser[0], context).hooks().add_hook(parser[1], group.str(), std::move(hook_func));

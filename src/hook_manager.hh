@@ -35,8 +35,10 @@ private:
     };
 
     SafePtr<HookManager> m_parent;
-    HashMap<String, Vector<Hook, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hooks;
+    HashMap<String, Vector<std::unique_ptr<Hook>, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hooks;
+
     mutable Vector<std::pair<StringView, StringView>, MemoryDomain::Hooks> m_running_hooks;
+    mutable Vector<std::unique_ptr<Hook>, MemoryDomain::Hooks> m_hooks_trash;
 };
 
 }
