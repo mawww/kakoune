@@ -155,12 +155,6 @@ StringView get_until_closing_delimiter(Reader& reader, char opening_delimiter,
     return reader.substr_from(start);
 }
 
-struct unknown_expand : parse_error
-{
-    unknown_expand(StringView name)
-        : parse_error{format("unknown expand '{}'", name)} {}
-};
-
 template<bool throw_on_invalid>
 Token::Type token_type(StringView type_name)
 {
@@ -177,7 +171,7 @@ Token::Type token_type(StringView type_name)
     else if (type_name == "arg")
         return Token::Type::ArgExpand;
     else if (throw_on_invalid)
-        throw unknown_expand{type_name};
+        throw parse_error{format("unknown expand '{}'", type_name)};
     else
         return Token::Type::RawQuoted;
 }
