@@ -822,7 +822,7 @@ const CommandDesc add_hook_cmd = {
             }
         };
         auto group = parser.get_switch("group").value_or(StringView{});
-        get_scope(parser[0], context).hooks().add_hook(parser[1], group.str(), hook_func);
+        get_scope(parser[0], context).hooks().add_hook(parser[1], group.str(), std::move(hook_func));
     }
 };
 
