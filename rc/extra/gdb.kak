@@ -106,7 +106,9 @@ define-command -hidden gdb-session-connect-internal %{
                     frame = frames[i]
                     file = get(frame, "fullname=\"", "[^\"]*", "\"")
                     line = get(frame, "line=\"", "[0-9]+", "\"")
-                    "awk \"NR==" line "\" \"" file "\"" | getline call
+                    cmd = "awk \"NR==" line "\" \"" file "\""
+                    cmd | getline call
+                    close(cmd)
                     print(file ":" line ":" call) > "'"$tmpdir/backtrace"'"
                 }
                 close("'"$tmpdir/backtrace"'")
@@ -247,7 +249,7 @@ define-command gdb-backtrace %{
             mkfifo "$kak_opt_gdb_dir"/backtrace
             echo -stack-list-frames > "$kak_opt_gdb_dir"/pipe
             echo "eval -try-client %opt{toolsclient} %{
-                edit! -fifo \"%opt{gdb_dir}/backtrace\" *gdb-backtrace*
+                edit! -fifo \"%opt{gdb_dir}/backtrace\" *backtrace*
                 set buffer filetype backtrace
                 set buffer backtrace_current_line 0
                 hook -group fifo buffer BufCloseFifo .* %{
@@ -272,7 +274,7 @@ hook global WinSetOption filetype=backtrace %{
 def -hidden gdb-backtrace-jump %{
     eval -collapse-jumps %{
         try %{
-            exec -save-regs '' 'xs^([^\n]*?):(\d+)<ret>'
+            exec -save-regs '' 'xs^([^:]+):(\d+)<ret>'
             set buffer backtrace_current_line %val{cursor_line}
             eval -try-client %opt{jumpclient} "edit -existing %reg{1} %reg{2}"
             try %{ focus %opt{jumpclient} }
@@ -280,22 +282,22 @@ def -hidden gdb-backtrace-jump %{
     }
 }
 
-def gdb-backtrace-next %{
+def gdb-backtrace-up %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer *backtrace*
-        exec "%opt{find_current_line}ggl/^[^:]+:\d+:<ret>"
+        exec "%opt{backtrace_current_line}gk<ret>"
         gdb-backtrace-jump
     }
-    try %{ eval -client %opt{toolsclient} %{ exec %opt{find_current_line}g } }
+    try %{ eval -client %opt{toolsclient} %{ exec %opt{backtrace_current_line}g } }
 }
 
-def gdb-backtrace-prev %{
+def gdb-backtrace-down %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer *backtrace*
-        exec "%opt{find_current_line}g<a-/>^[^:]+:\d+:<ret>"
+        exec "%opt{backtrace_current_line}gj<ret>"
         gdb-backtrace-jump
     }
-    try %{ eval -client %opt{toolsclient} %{ exec %opt{find_current_line}g } }
+    try %{ eval -client %opt{toolsclient} %{ exec %opt{backtrace_current_line}g } }
 }
 
 # implementation details
