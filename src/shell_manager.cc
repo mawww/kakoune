@@ -301,11 +301,9 @@ void ShellManager::register_env_var(StringView str, bool prefix,
 
 String ShellManager::get_val(StringView name, const Context& context) const
 {
-    auto env_var = std::find_if(
-        m_env_vars.begin(), m_env_vars.end(),
-        [name](const EnvVarDesc& desc) {
-            return desc.prefix ? prefix_match(name, desc.str) : name == desc.str;
-        });
+    auto env_var = find_if(m_env_vars, [name](const EnvVarDesc& desc) {
+        return desc.prefix ? prefix_match(name, desc.str) : name == desc.str;
+    });
 
     if (env_var == m_env_vars.end())
         throw runtime_error("no such env var: " + name);
