@@ -79,6 +79,38 @@ OnScopeEnd<T> on_scope_end(T t)
     return OnScopeEnd<T>{std::move(t)};
 }
 
+// bool that can be set (to true) multiple times, and will
+// be false only when unset the same time;
+struct NestedBool
+{
+    void set() { m_count++; }
+    void unset() { kak_assert(m_count > 0); m_count--; }
+
+    operator bool() const { return m_count > 0; }
+private:
+    int m_count = 0;
+};
+
+struct ScopedSetBool
+{
+    ScopedSetBool(NestedBool& nested_bool, bool condition = true)
+        : m_nested_bool(nested_bool), m_condition(condition)
+    {
+        if (m_condition)
+            m_nested_bool.set();
+    }
+
+    ~ScopedSetBool()
+    {
+        if (m_condition)
+            m_nested_bool.unset();
+    }
+
+private:
+    NestedBool& m_nested_bool;
+    bool m_condition;
+};
+
 // *** Misc helper functions ***
 
 template<typename T, typename... Args>
