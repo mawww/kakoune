@@ -94,6 +94,10 @@ void register_env_vars()
             { return join(BufferManager::instance() |
                           transform(std::mem_fn(&Buffer::display_name)), ':'); }
         }, {
+            "buf_line_count", false,
+            [](StringView name, const Context& context) -> String
+            { return to_string(context.buffer().line_count()); }
+        }, {
             "timestamp", false,
             [](StringView name, const Context& context) -> String
             { return to_string(context.buffer().timestamp()); }
