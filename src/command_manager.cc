@@ -210,11 +210,13 @@ Token parse_percent_token(Reader& reader)
         ++reader;
     StringView type_name = reader.substr_from(type_start);
 
-    if (throw_on_unterminated and not reader)
-        throw parse_error{format("expected a string delimiter after '%{}'",
-                                 type_name)};
-    else if (not reader)
+    if (not reader or is_blank(*reader))
+    {
+        if (throw_on_unterminated)
+            throw parse_error{format("expected a string delimiter after '%{}'",
+                                     type_name)};
         return {};
+    }
 
     Token::Type type = token_type<throw_on_unterminated>(type_name);
 
