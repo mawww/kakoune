@@ -6,9 +6,9 @@ namespace Kakoune
 
 StringDataPtr StringData::create(ArrayView<const StringView> strs)
 {
-    const int len = std::accumulate(strs.begin(), strs.end(), 0,
-                                    [](int l, StringView s)
-                                    { return l + (int)s.length(); });
+    const int len = accumulate(strs, 0, [](int l, StringView s) {
+                        return l + (int)s.length();
+                    });
     void* ptr = StringData::operator new(sizeof(StringData) + len + 1);
     auto* res = new (ptr) StringData(len);
     auto* data = reinterpret_cast<char*>(res + 1);

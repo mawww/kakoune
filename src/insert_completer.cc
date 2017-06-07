@@ -159,9 +159,9 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
     std::sort(matches.begin(), matches.end());
     matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
 
-    const auto longest = std::accumulate(matches.begin(), matches.end(), 0_char,
-                                         [](const CharCount& lhs, const RankedMatchAndBuffer& rhs)
-                                         { return std::max(lhs, rhs.candidate().char_length()); });
+    const auto longest = accumulate(matches, 0_char,
+                                    [](const CharCount& lhs, const RankedMatchAndBuffer& rhs)
+                                    { return std::max(lhs, rhs.candidate().char_length()); });
 
     InsertCompletion::CandidateList candidates;
     candidates.reserve(matches.size());
