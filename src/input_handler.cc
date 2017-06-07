@@ -698,6 +698,11 @@ public:
                        [this](Timer& timer) {
                            if (m_autoshowcompl and m_refresh_completion_pending)
                                refresh_completions(CompletionFlags::Fast);
+                           if (m_line_changed)
+                           {
+                               m_callback(m_line_editor.line(), PromptEvent::Change, context());
+                               m_line_changed = false;
+                           }
                            context().hooks().run_hook("PromptIdle", "", context());
                        }}
     {
@@ -752,7 +757,7 @@ public:
                         m_line_editor.insert(reg);
 
                         display();
-                        m_callback(m_line_editor.line(), PromptEvent::Change, context());
+                        m_line_changed = true;
                     }
                 }, "Enter register name", register_doc);
             display();
@@ -766,7 +771,7 @@ public:
                     {
                         m_line_editor.insert(*cp);
                         display();
-                        m_callback(m_line_editor.line(), PromptEvent::Change, context());
+                        m_line_changed = true;
                     }
                 }, "raw insert", "enter key to insert");
             display();
@@ -867,7 +872,7 @@ public:
         }
 
         display();
-        m_callback(line, PromptEvent::Change, context());
+        m_line_changed = true;
         if (enabled()) // The callback might have disabled us
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
@@ -950,6 +955,7 @@ private:
     void on_enabled() override
     {
         display();
+        m_line_changed = false;
         m_callback(m_line_editor.line(), PromptEvent::Change, context());
         m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
@@ -971,6 +977,7 @@ private:
     bool           m_prefix_in_completions = false;
     String         m_prefix;
     LineEditor     m_line_editor;
+    bool           m_line_changed = false;
     PromptFlags    m_flags;
     bool           m_autoshowcompl;
     bool           m_refresh_completion_pending = true;
