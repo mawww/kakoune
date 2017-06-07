@@ -1545,7 +1545,6 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     for (auto& r : parser.get_switch("save-regs").value_or("/\"|^@"))
         saved_registers.emplace_back(r, context);
 
-    ClientManager& cm = ClientManager::instance();
     if (auto bufnames = parser.get_switch("buffer"))
     {
         auto context_wrap_for_buffer = [&](Buffer& buffer) {
@@ -1576,6 +1575,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         return;
     }
 
+    ClientManager& cm = ClientManager::instance();
     Context* base_context = &context;
     if (auto client_name = parser.get_switch("client"))
         base_context = &cm.get_client(*client_name).context();
