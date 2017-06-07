@@ -280,10 +280,10 @@ std::pair<String, int> ShellManager::eval(
     if (profile)
     {
         auto end_time = Clock::now();
-        auto full = duration_cast<milliseconds>(end_time - start_time);
-        auto spawn = duration_cast<milliseconds>(wait_time - spawn_time);
-        auto wait = duration_cast<milliseconds>(end_time - wait_time);
-        write_to_debug_buffer(format("shell execution took {} ms (spawn: {}, wait: {})",
+        auto full = duration_cast<microseconds>(end_time - start_time);
+        auto spawn = duration_cast<microseconds>(wait_time - spawn_time);
+        auto wait = duration_cast<microseconds>(end_time - wait_time);
+        write_to_debug_buffer(format("shell execution took {} us (spawn: {}, wait: {})",
                                      (size_t)full.count(), (size_t)spawn.count(), (size_t)wait.count()));
     }
 

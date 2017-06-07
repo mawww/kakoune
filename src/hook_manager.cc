@@ -128,8 +128,8 @@ void HookManager::run_hook(StringView hook_name,
     if (profile)
     {
         auto end_time = Clock::now();
-        auto full = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-        write_to_debug_buffer(format("hook '{}({})' took {} ms", hook_name, param, (size_t)full.count()));
+        auto full = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+        write_to_debug_buffer(format("hook '{}({})' took {} us", hook_name, param, (size_t)full.count()));
     }
 }
 

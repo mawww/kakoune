@@ -147,8 +147,8 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     if (profile and not (buffer().flags() & Buffer::Flags::Debug))
     {
         using namespace std::chrono;
-        auto duration = duration_cast<milliseconds>(Clock::now() - start_time);
-        write_to_debug_buffer(format("window display update for '{}' took {} ms",
+        auto duration = duration_cast<microseconds>(Clock::now() - start_time);
+        write_to_debug_buffer(format("window display update for '{}' took {} us",
                                      buffer().display_name(), (size_t)duration.count()));
     }
 

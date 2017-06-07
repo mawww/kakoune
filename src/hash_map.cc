@@ -115,11 +115,12 @@ void do_profile(size_t count, StringView type)
     }
     auto after_find = Clock::now();
 
-    write_to_debug_buffer(format("{} ({}) -- inserts: {}ms, reads: {}ms, remove: {}ms, find: {}ms ({})", type, count,
-                                 std::chrono::duration_cast<std::chrono::milliseconds>(after_insert - start).count(),
-                                 std::chrono::duration_cast<std::chrono::milliseconds>(after_read - after_insert).count(),
-                                 std::chrono::duration_cast<std::chrono::milliseconds>(after_remove - after_read).count(),
-                                 std::chrono::duration_cast<std::chrono::milliseconds>(after_find - after_remove).count(),
+    using namespace std::chrono;
+    write_to_debug_buffer(format("{} ({}) -- inserts: {}us, reads: {}us, remove: {}us, find: {}us ({})", type, count,
+                                 duration_cast<microseconds>(after_insert - start).count(),
+                                 duration_cast<microseconds>(after_read - after_insert).count(),
+                                 duration_cast<microseconds>(after_remove - after_read).count(),
+                                 duration_cast<microseconds>(after_find - after_remove).count(),
                                  c));
 }
 
