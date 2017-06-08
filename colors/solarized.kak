@@ -1,24 +1,70 @@
 # solarized theme
 
+# Solarized colorscheme will start in light or dark background,
+# depending on the following option.
+# 
+decl -hidden str solarized_initially light
+
+# Map the following toggle function to an alias or a key sequence
+# for easy toggling between light and dark, eg,
+# map global user t :solarized-toggle-background<ret>
+# 
+def -docstring 'toggle solarized background between light and dark' -allow-override \
+solarized-toggle-background %{
+    %sh{
+        set_bg() printf %s\\n "set global solarized_background $1"
+        case "$kak_opt_solarized_background" in
+        ( dark) set_bg 'light';;
+        (light) set_bg  'dark';;
+        esac
+    }
+    colorscheme solarized
+}
+
 %sh{
     # Base color definitions
-    base03="rgb:002b36"
-    base02="rgb:073642"
-    base01="rgb:586e75"
-    base00="rgb:657b83"
-    base0="rgb:839496"
-    base1="rgb:93a1a1"
-    base2="rgb:eee8d5"
-    base3="rgb:fdf6e3"
+    dark() {
+        base03="rgb:002b36"
+        base02="rgb:073642"
+        base01="rgb:586e75"
+        base00="rgb:657b83"
+         base0="rgb:839496"
+         base1="rgb:93a1a1"
+         base2="rgb:eee8d5"
+         base3="rgb:fdf6e3"
+    }
+    light() {
+         base3="rgb:002b36"
+         base2="rgb:073642"
+         base1="rgb:586e75"
+         base0="rgb:657b83"
+        base00="rgb:839496"
+        base01="rgb:93a1a1"
+        base02="rgb:eee8d5"
+        base03="rgb:fdf6e3"
+    }
+
+    if test ! "$kak_opt_solarized_background"; then
+        decl_bg() printf %s\\n "decl -hidden str solarized_background $1"
+        case "$kak_opt_solarized_initially" in
+        ( dark)  dark; decl_bg  'dark';;
+        (light) light; decl_bg 'light';;
+        esac
+    else
+        case "$kak_opt_solarized_background" in
+        ( dark)  dark;;
+        (light) light;;
+        esac
+    fi
 
     yellow="rgb:b58900"
     orange="rgb:cb4b16"
-    red="rgb:dc322f"
-    magenta="rgb:d33682"
+       red="rgb:dc322f"
+   magenta="rgb:d33682"
     violet="rgb:6c71c4"
-    blue="rgb:268bd2"
-    cyan="rgb:2aa198"
-    green="rgb:859900"
+      blue="rgb:268bd2"
+      cyan="rgb:2aa198"
+     green="rgb:859900"
 
     echo "
         # then we map them to code
@@ -33,7 +79,7 @@
         face attribute  ${violet}
         face comment    ${base01}
         face meta       ${orange}
-        face builtin   default+b
+        face builtin    default+b
 
         # and markup
         face title      ${yellow}
