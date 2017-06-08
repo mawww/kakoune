@@ -85,6 +85,14 @@ directory is used, once the user wants control on autoloading, they can create a
 symlink individual scripts, or the whole system wide autoload directory. They can as well add any new scripts not
 provided with Kakoune.
 
+ENVIRONMENT VARIABLES
+---------------------
+The following environment variables can be used to set default values for some command line flags, when they are omitted:
+
+KAK_SESSION::
+	the session whose name is stored in this variable will be connected to automatically;
+	the '-c' and '-p' flags override this variable if they are set
+
 EXAMPLES
 --------
 kak /path/to/file::

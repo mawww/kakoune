@@ -882,7 +882,8 @@ int main(int argc, char* argv[])
             return 0;
         }
 
-        if (auto session = parser.get_switch("p"))
+        StringView server_session = parser.get_switch("p").value_or(std::getenv("KAK_SESSION"));
+        if (fd_readable(0) and not server_session.empty())
         {
             for (auto opt : { "c", "n", "s", "d", "e", "E", "ro" })
             {
@@ -892,7 +893,7 @@ int main(int argc, char* argv[])
                     return -1;
                 }
             }
-            return run_pipe(*session);
+            return run_pipe(server_session);
         }
 
         auto client_init = parser.get_switch("e").value_or(StringView{});
@@ -943,7 +944,8 @@ int main(int argc, char* argv[])
             files.emplace_back(name);
         }
 
-        if (auto server_session = parser.get_switch("c"))
+        server_session = parser.get_switch("c").value_or(std::getenv("KAK_SESSION"));
+        if (not server_session.empty())
         {
             for (auto opt : { "n", "s", "d", "E", "ro" })
             {
@@ -957,7 +959,7 @@ int main(int argc, char* argv[])
             for (auto name : files)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
-            return run_client(*server_session, new_files + client_init, init_coord, ui_type);
+            return run_client(server_session, new_files + client_init, init_coord, ui_type);
         }
         else
         {
