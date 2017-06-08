@@ -160,16 +160,16 @@ public:
         : InputMode(input_handler),
           m_idle_timer{TimePoint::max(),
                        context().flags() & Context::Flags::Transient ?
-                           Timer::Callback() : Timer::Callback([this](Timer& timer) {
+                           Timer::Callback{} : [this](Timer&) {
               context().hooks().run_hook("NormalIdle", "", context());
-          })},
+          }},
           m_fs_check_timer{TimePoint::max(),
                            context().flags() & Context::Flags::Transient ?
-                            Timer::Callback() : Timer::Callback([this](Timer& timer) {
+                            Timer::Callback{} : Timer::Callback{[this](Timer& timer) {
               if (context().has_client())
                   context().client().check_if_buffer_needs_reloading();
               timer.set_next_date(Clock::now() + get_fs_check_timeout(context()));
-          })},
+          }}},
           m_single_command(single_command)
     {}
 
@@ -694,8 +694,8 @@ public:
         : InputMode(input_handler), m_prompt(prompt.str()), m_prompt_face(face),
           m_flags(flags), m_completer(std::move(completer)), m_callback(std::move(callback)),
           m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()},
-          m_idle_timer{TimePoint::max(),
-                       [this](Timer& timer) {
+          m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Transient ?
+                           Timer::Callback{} : [this](Timer&) {
                            if (m_autoshowcompl and m_refresh_completion_pending)
                                refresh_completions(CompletionFlags::Fast);
                            if (m_line_changed)
@@ -1037,8 +1037,8 @@ public:
           m_edition(context()),
           m_completer(context()),
           m_autoshowcompl(true),
-          m_idle_timer{TimePoint::max(),
-                       [this](Timer& timer) {
+          m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Transient ?
+                       Timer::Callback{} : [this](Timer&) {
                            if (m_autoshowcompl)
                                m_completer.update();
                            context().hooks().run_hook("InsertIdle", "", context());
