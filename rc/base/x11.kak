@@ -3,7 +3,8 @@
 decl -docstring %{shell command run to spawn a new terminal
 A shell command is appended to the one set in this option at runtime} \
     str termcmd %sh{
-    for termcmd in 'termite        -e      ' \
+    for termcmd in 'alacritty      -e sh -c' \
+                   'termite        -e      ' \
                    'urxvt          -e sh -c' \
                    'rxvt           -e sh -c' \
                    'xterm          -e sh -c' \
