@@ -705,12 +705,12 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
 struct WrapHighlighter : Highlighter
 {
     WrapHighlighter(ColumnCount max_width, bool word_wrap)
-        : Highlighter{HighlightPass::Wrap}, m__max_width{max_width}, m_word_wrap{word_wrap} {}
+        : Highlighter{HighlightPass::Wrap}, m_max_width{max_width}, m_word_wrap{word_wrap} {}
 
     void do_highlight(const Context& context, HighlightPass pass,
                       DisplayBuffer& display_buffer, BufferRange) override
     {
-        const ColumnCount wrap_column = std::min(m__max_width, context.window().range().column);
+        const ColumnCount wrap_column = std::min(m_max_width, context.window().range().column);
         if (wrap_column <= 0)
             return;
 
@@ -760,7 +760,7 @@ struct WrapHighlighter : Highlighter
 
     void do_compute_display_setup(const Context& context, HighlightPass, DisplaySetup& setup) override
     {
-        const ColumnCount wrap_column = std::min(setup.window_range.column, m__max_width);
+        const ColumnCount wrap_column = std::min(setup.window_range.column, m_max_width);
         if (wrap_column <= 0)
             return;
 
@@ -877,7 +877,7 @@ struct WrapHighlighter : Highlighter
     }
 
     const bool m_word_wrap;
-    const ColumnCount m__max_width;
+    const ColumnCount m_max_width;
 };
 
 void expand_tabulations(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
