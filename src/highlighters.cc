@@ -704,12 +704,13 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
 
 struct WrapHighlighter : Highlighter
 {
-    WrapHighlighter(bool word_wrap) : Highlighter{HighlightPass::Wrap}, m_word_wrap{word_wrap} {}
+    WrapHighlighter(ColumnCount max_width, bool word_wrap)
+        : Highlighter{HighlightPass::Wrap}, m__max_width{max_width}, m_word_wrap{word_wrap} {}
 
     void do_highlight(const Context& context, HighlightPass pass,
                       DisplayBuffer& display_buffer, BufferRange) override
     {
-        const ColumnCount wrap_column = context.window().range().column;
+        const ColumnCount wrap_column = std::min(m__max_width, context.window().range().column);
         if (wrap_column <= 0)
             return;
 
@@ -759,7 +760,7 @@ struct WrapHighlighter : Highlighter
 
     void do_compute_display_setup(const Context& context, HighlightPass, DisplaySetup& setup) override
     {
-        const ColumnCount wrap_column = setup.window_range.column;
+        const ColumnCount wrap_column = std::min(setup.window_range.column, m__max_width);
         if (wrap_column <= 0)
             return;
 
@@ -862,15 +863,21 @@ struct WrapHighlighter : Highlighter
     static HighlighterAndId create(HighlighterParameters params)
     {
         static const ParameterDesc param_desc{
-            { { "word", { false, "" } } },
+            { { "word", { false, "" } },
+              { "width", { true, "" } } },
             ParameterDesc::Flags::None, 0, 0
         };
         ParametersParser parser(params, param_desc);
 
-        return {"wrap", make_unique<WrapHighlighter>((bool)parser.get_switch("word"))};
+        ColumnCount max_width{std::numeric_limits<int>::max()};
+        if (auto width = parser.get_switch("width"))
+            max_width = str_to_int(*width);
+
+        return {"wrap", make_unique<WrapHighlighter>(max_width, (bool)parser.get_switch("word"))};
     }
 
     const bool m_word_wrap;
+    const ColumnCount m__max_width;
 };
 
 void expand_tabulations(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
@@ -2002,8 +2009,8 @@ void register_highlighters()
     registry.insert({
         "wrap",
         { WrapHighlighter::create,
-          "Parameters: [-word]\n"
-          "Wrap lines to given column,\n"
+          "Parameters: [-word] [-width <max_width>]\n"
+          "Wrap lines to window width, or max_width if given and window is wider,\n"
           "wrap at word boundaries instead of codepoint boundaries if -word is given" } });
     registry.insert({
         "ref",

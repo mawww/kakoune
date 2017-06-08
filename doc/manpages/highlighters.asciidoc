@@ -90,6 +90,9 @@ General highlighters
 	*-word*:::
 		wrap at word boundaries instead of codepoint boundaries.
 
+	*-width <max_width>*:::
+		wrap text at *max_width* if the window is wider.
+
 *ranges* <option_name>::
 	use the data in the range-specs option of the given name to highlight
 	the buffer. The string part of the is interpretted as a face to apply

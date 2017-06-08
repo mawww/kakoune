@@ -1251,7 +1251,8 @@ General highlighters are:
        -hlcursor switch will highlight the cursor line with a separate face. With the
        -separator switch one can specify a string to separate the line numbers column with
        the rest of the buffer, default is `|`.
- * `wrap \<-word>`: Soft wrap buffer content to window width, wrap at word boundaries if `-word` is specified.
+ * `wrap \<-word> \<-width <max_width>`: Soft wrap buffer content to the smallest of window width and
+      max_width. Wrap at word boundaries if `-word` is specified.
  * `fill <face>`: fill using given face, mostly useful with <<regions-highlighters,Regions highlighters>>
  * `ranges <option_name>`: use the data in the range-specs option of the given name to highlight the buffer.
         The string part of the is interpretted as a face to apply to the range.
