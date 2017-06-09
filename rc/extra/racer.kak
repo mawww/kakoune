@@ -3,6 +3,9 @@ decl -hidden completions racer_completions
 
 def racer-complete -docstring "Complete the current selection with racer" %{
     %sh{
+        # fallback implementation: mktemp
+        export PATH="${PATH}:${kak_runtime}/sh"
+
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-racer.XXXXXXXX)
         printf %s\\n "set buffer racer_tmp_dir ${dir}"
         printf %s\\n "eval -no-hooks %{ write ${dir}/buf }"

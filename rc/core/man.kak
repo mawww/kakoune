@@ -28,6 +28,9 @@ hook global WinSetOption filetype=(?!man).* %{
 }
 
 def -hidden -params 1..2 man-impl %{ %sh{
+    # fallback implementation: mktemp
+    export PATH="${PATH}:${kak_runtime}/sh"
+
     manout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
     colout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
     MANWIDTH=${kak_window_width} man "$@" > $manout

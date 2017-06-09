@@ -11,6 +11,9 @@ def -params ..1 \
 The syntaxic errors detected during parsing are shown when auto-diagnostics are enabled} \
     clang-parse %{
     %sh{
+        # fallback implementation: mktemp
+        export PATH="${PATH}:${kak_runtime}/sh"
+
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
         printf %s\\n "set buffer clang_tmp_dir ${dir}"

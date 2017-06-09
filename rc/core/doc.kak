@@ -3,6 +3,9 @@ decl -docstring "name of the client in which documentation is to be displayed" \
 
 def -hidden -params 1..2 doc-open %{
     %sh{
+        # fallback implementation: mktemp
+        export PATH="${PATH}:${kak_runtime}/sh"
+
         manout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
 
         # Those options are handled by the `man-db` implementation

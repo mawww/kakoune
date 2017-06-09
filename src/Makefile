@@ -108,6 +108,7 @@ distclean: clean
 
 installdirs:
 	install -d $(bindir) \
+		$(sharedir)/sh \
 		$(sharedir)/rc/base \
 		$(sharedir)/rc/core \
 		$(sharedir)/rc/extra \
@@ -117,6 +118,7 @@ installdirs:
 
 install: kak man doc installdirs
 	install -m 0755 kak $(bindir)
+	install -m 0755 ../share/kak/sh/* $(sharedir)/sh
 	install -m 0644 ../share/kak/kakrc $(sharedir)
 	install -m 0644 ../rc/base/* $(sharedir)/rc/base
 	install -m 0644 ../rc/core/* $(sharedir)/rc/core

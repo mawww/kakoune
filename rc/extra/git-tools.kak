@@ -33,6 +33,9 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
   } \
   git %{ %sh{
     show_git_cmd_output() {
+        # fallback implementation: mktemp
+        export PATH="${PATH}:${kak_runtime}/sh"
+
         local filetype
         case "$1" in
            show|diff) filetype=diff ;;

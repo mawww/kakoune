@@ -1,0 +1,55 @@
+#!/bin/sh
+## mktemp fallback implementation
+## Usage: mktemp [options] <template>
+## The <template> argument is the path to the target file,
+## it must end with at least 6 'X' characters
+## Options supported:
+##  -d: create a directory
+
+error() {
+    printf 'mktemp: %s\n' "$*" >&2
+    exit 1
+}
+
+main() {
+    flag_directory=0
+
+    for arg in "$@"; do
+        case "${arg}" in
+            -d) flag_directory=1;;
+            -*) error "Unsupported flag ${arg}";;
+            *) break;;
+        esac
+
+        shift
+    done
+
+    if [ $# -eq 0 ]; then
+        error "Template of the target file missing"
+    fi
+
+    template="${1}"
+    if ! printf %s\\n "${template}" | grep -q 'XXXXXX$'; then
+        error "The template must end with at least 6 consecutive 'X's"
+    fi
+
+    template=$(printf %s\\n "${template}" | awk '{
+        idx = match($0, /X+$/) - 1
+        printf "%." idx "s", $0
+        system("cat /dev/urandom | tr -dc a-zA-Z0-9 | fold -w " RLENGTH " | head -n 1")
+    }')
+
+    set -e
+    if [ ${flag_directory} -ne 0 ]; then
+        mkdir -p "${template}"
+        chmod u+rwx "${template}"
+    else
+        mkdir -p "$(dirname "${template}")"
+        touch "${template}"
+        chmod u+rw "${template}"
+    fi
+
+    printf %s\\n "${template}"
+}
+
+main "$@"
