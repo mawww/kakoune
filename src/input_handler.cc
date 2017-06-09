@@ -492,7 +492,7 @@ public:
                 if (c == '\n' or c == '\r')
                 {
                     res += StringView{pos, it};
-                    utf8::dump(std::back_inserter(res), c == '\n' ? 0x2424 : 0x240D);
+                    res += c == '\n' ? "␤" : "␍";
                     pos = it+1;
                 }
             }
