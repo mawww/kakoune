@@ -97,7 +97,8 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
     {
         Utf8It end{buffer.iterator_at(sels[i].cursor()), buffer};
         Utf8It begin = end-1;
-        if (not skip_while_reverse(begin, buffer.begin(), is_word_pred))
+        if (not skip_while_reverse(begin, buffer.begin(), is_word_pred) and
+            begin < end) // (begin might == end if end == buffer.begin())
             ++begin;
 
         if (i == sels.main_index())
