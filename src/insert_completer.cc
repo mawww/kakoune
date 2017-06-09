@@ -3,6 +3,7 @@
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
 #include "client.hh"
+#include "changes.hh"
 #include "context.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
@@ -373,19 +374,29 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
     const auto suffix_len = std::max(0_byte, buffer.distance(cursor_pos, m_completions.end));
 
     auto ref = buffer.string(m_completions.begin, m_completions.end);
-    Vector<Selection> ranges;
+    ForwardChangesTracker changes_tracker;
+    size_t timestamp = buffer.timestamp();
+    Vector<BufferCoord> positions;
     for (auto& sel : selections)
     {
-        const auto& cursor = sel.cursor();
-        auto pos = buffer.iterator_at(cursor);
-        if (cursor.column >= prefix_len and (pos + suffix_len) != buffer.end() and
+        auto pos = buffer.iterator_at(changes_tracker.get_new_coord_tolerant(sel.cursor()));
+        if (pos.coord().column >= prefix_len and (pos + suffix_len) != buffer.end() and
             std::equal(ref.begin(), ref.end(), pos - prefix_len))
-            ranges.push_back({(pos - prefix_len).coord(), (pos + suffix_len - 1).coord()});
+        {
+            positions.push_back(buffer.erase((pos - prefix_len).coord(),
+                                             (pos + suffix_len).coord()));
+            changes_tracker.update(buffer, timestamp);
+        }
     }
-    if (not ranges.empty())
-        SelectionList{buffer, std::move(ranges)}.insert(candidate.completion, InsertMode::Replace);
-    selections.update();
 
+    changes_tracker = ForwardChangesTracker{};
+    for (auto pos : positions)
+    {
+        buffer.insert(changes_tracker.get_new_coord_tolerant(pos), candidate.completion);
+        changes_tracker.update(buffer, timestamp);
+    }
+
+    selections.update();
     m_completions.end = cursor_pos;
     m_completions.begin = buffer.advance(cursor_pos, -candidate.completion.length());
     m_completions.timestamp = buffer.timestamp();
