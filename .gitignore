@@ -2,6 +2,7 @@
 .*.d
 *.pyc
 *.1-r
+.*.kak.*
 src/kak
 src/kak.debug
 src/kak.opt
