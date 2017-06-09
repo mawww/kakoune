@@ -8,7 +8,7 @@ def -params .. -file-completion \
     -docstring %{grep [<arguments>]: grep utility wrapper
 All the optional arguments are forwarded to the grep utility} \
     grep %{ %sh{
-     output=$(mktemp -d -t kak-grep.XXXXXXXX)/fifo
+     output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
      if [ $# -gt 0 ]; then
          ( ${kak_opt_grepcmd} "$@" | tr -d '\r' > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &

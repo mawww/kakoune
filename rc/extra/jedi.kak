@@ -5,7 +5,7 @@ decl -docstring "colon separated list of path added to `python`'s $PYTHONPATH en
 
 def jedi-complete -docstring "Complete the current selection" %{
     %sh{
-        dir=$(mktemp --tmpdir -d kak-jedi.XXXXXXXX)
+        dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-jedi.XXXXXXXX)
         mkfifo ${dir}/fifo
         printf %s\\n "set buffer jedi_tmp_dir ${dir}"
         printf %s\\n "eval -no-hooks write ${dir}/buf"
