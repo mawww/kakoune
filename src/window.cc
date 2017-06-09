@@ -120,7 +120,10 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
         return m_display_buffer;
 
     kak_assert(&buffer() == &context.buffer());
-    compute_display_setup(context);
+    const DisplaySetup setup = compute_display_setup(context);
+
+    m_position = setup.window_pos;
+    m_range = setup.window_range;
 
     const int tabstop = context.options()["tabstop"].get<int>();
     for (LineCount line = 0; line < m_range.line; ++line)
@@ -129,7 +132,10 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
         if (buffer_line >= buffer().line_count())
             break;
         auto beg_byte = get_byte_to_column(buffer(), tabstop, {buffer_line, m_position.column});
-        auto end_byte = get_byte_to_column(buffer(), tabstop, {buffer_line, m_position.column + m_range.column});
+        auto end_byte = setup.full_lines ?
+            buffer()[buffer_line].length() :
+            get_byte_to_column(buffer(), tabstop, {buffer_line, m_position.column + m_range.column});
+
         lines.emplace_back(AtomList{ {buffer(), {buffer_line, beg_byte}, {buffer_line, end_byte}} });
     }
 
@@ -171,7 +177,7 @@ void Window::set_dimensions(DisplayCoord dimensions)
     }
 }
 
-void Window::compute_display_setup(const Context& context)
+DisplaySetup Window::compute_display_setup(const Context& context)
 {
     DisplayCoord offset = options()["scrolloff"].get<DisplayCoord>();
     offset.line = std::min(offset.line, (m_dimensions.line + 1) / 2);
@@ -191,7 +197,8 @@ void Window::compute_display_setup(const Context& context)
         m_dimensions,
         {cursor.line - m_position.line,
          get_column(buffer(), tabstop, cursor) - m_position.column},
-        offset
+        offset,
+        false
     };
     for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
         m_highlighters.compute_display_setup(context, pass, setup);
@@ -214,8 +221,7 @@ void Window::compute_display_setup(const Context& context)
         }
     }
 
-    m_position = setup.window_pos;
-    m_range = setup.window_range;
+    return setup;
 }
 
 namespace

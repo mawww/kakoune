@@ -47,6 +47,8 @@ struct DisplaySetup
     DisplayCoord cursor_pos;
     // Offset of line and columns that must remain visible around cursor
     DisplayCoord scroll_offset;
+    // Put full lines in the initial display buffer
+    bool full_lines;
 };
 
 struct Highlighter

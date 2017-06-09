@@ -752,6 +752,7 @@ struct WrapHighlighter : Highlighter
         setup.cursor_pos.column += setup.window_pos.column;
         setup.window_pos.column = 0;
         setup.scroll_offset.column = 0;
+        setup.full_lines = true;
 
         const LineCount win_height = context.window().dimensions().line;
         LineCount win_line = 0;
