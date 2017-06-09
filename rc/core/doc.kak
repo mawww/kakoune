@@ -3,7 +3,7 @@ decl -docstring "name of the client in which documentation is to be displayed" \
 
 def -hidden -params 1..2 doc-open %{
     %sh{
-        manout=$(mktemp /tmp/kak-man-XXXXXX)
+        manout=$(mktemp --tmpdir kak-man-XXXXXX)
 
         # Those options are handled by the `man-db` implementation
         export MANWIDTH=${kak_window_width}

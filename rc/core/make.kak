@@ -11,7 +11,7 @@ def -params .. \
     -docstring %{make [<arguments>]: make utility wrapper
 All the optional arguments are forwarded to the make utility} \
     make %{ %sh{
-     output=$(mktemp -d -t kak-make.XXXXXXXX)/fifo
+     output=$(mktemp --tmpdir -d kak-make.XXXXXXXX)/fifo
      mkfifo ${output}
      ( eval ${kak_opt_makecmd} "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
 
