@@ -31,12 +31,10 @@ public:
     enum Type { Range, ReplacedRange, Text };
 
     DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end)
-        : m_type(Range), m_buffer(&buffer), m_range{begin, end}
-     { check_invariant(); }
+        : m_type(Range), m_buffer(&buffer), m_range{begin, end} {}
 
     DisplayAtom(String str, Face face = Face{})
-        : m_type(Text), m_text(std::move(str)), face(face)
-     { check_invariant(); }
+        : m_type(Text), m_text(std::move(str)), face(face) {}
 
     StringView content() const;
     ColumnCount length() const;
@@ -71,8 +69,6 @@ public:
 
     void trim_begin(ColumnCount count);
     void trim_end(ColumnCount count);
-
-    void check_invariant() const;
 
     bool operator==(const DisplayAtom& other) const
     {

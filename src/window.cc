@@ -122,12 +122,15 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     kak_assert(&buffer() == &context.buffer());
     compute_display_setup(context);
 
+    const int tabstop = context.options()["tabstop"].get<int>();
     for (LineCount line = 0; line < m_range.line; ++line)
     {
         LineCount buffer_line = m_position.line + line;
         if (buffer_line >= buffer().line_count())
             break;
-        lines.emplace_back(AtomList{ {buffer(), buffer_line, buffer_line+1} });
+        auto beg_byte = get_byte_to_column(buffer(), tabstop, {buffer_line, m_position.column});
+        auto end_byte = get_byte_to_column(buffer(), tabstop, {buffer_line, m_position.column + m_range.column});
+        lines.emplace_back(AtomList{ {buffer(), {buffer_line, beg_byte}, {buffer_line, end_byte}} });
     }
 
     m_display_buffer.compute_range();
@@ -137,9 +140,6 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     for (auto pass : { HighlightPass::Wrap, HighlightPass::Move, HighlightPass::Colorize })
         m_builtin_highlighters.highlight(context, pass, m_display_buffer, range);
 
-    // cut the start of the line before m_position.column
-    for (auto& line : lines)
-        line.trim(m_position.column, m_dimensions.column, true);
     m_display_buffer.optimize();
 
     m_last_setup = build_setup(context);

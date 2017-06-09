@@ -880,40 +880,63 @@ struct WrapHighlighter : Highlighter
     const ColumnCount m_max_width;
 };
 
-void expand_tabulations(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
+struct TabulationHighlighter : Highlighter
 {
-    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
-    auto& buffer = context.buffer();
-    for (auto& line : display_buffer.lines())
+    TabulationHighlighter() : Highlighter{HighlightPass::Move} {}
+
+    void do_highlight(const Context& context, HighlightPass,
+                      DisplayBuffer& display_buffer, BufferRange) override
     {
-        for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
+        const ColumnCount tabstop = context.options()["tabstop"].get<int>();
+        auto& buffer = context.buffer();
+        auto win_column = context.window().position().column;
+        for (auto& line : display_buffer.lines())
         {
-            if (atom_it->type() != DisplayAtom::Range)
-                continue;
-
-            auto begin = buffer.iterator_at(atom_it->begin());
-            auto end = buffer.iterator_at(atom_it->end());
-            for (BufferIterator it = begin; it != end; ++it)
+            for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
             {
-                if (*it == '\t')
-                {
-                    if (it != begin)
-                        atom_it = ++line.split(atom_it, it.coord());
-                    if (it+1 != end)
-                        atom_it = line.split(atom_it, (it+1).coord());
+                if (atom_it->type() != DisplayAtom::Range)
+                    continue;
 
-                    ColumnCount column = get_column(buffer, tabstop, it.coord());
-                    ColumnCount count = tabstop - (column % tabstop);
-                    String padding;
-                    for (int i = 0; i < count; ++i)
-                        padding += ' ';
-                    atom_it->replace(padding);
-                    break;
+                auto begin = buffer.iterator_at(atom_it->begin());
+                auto end = buffer.iterator_at(atom_it->end());
+                for (BufferIterator it = begin; it != end; ++it)
+                {
+                    if (*it == '\t')
+                    {
+                        if (it != begin)
+                            atom_it = ++line.split(atom_it, it.coord());
+                        if (it+1 != end)
+                            atom_it = line.split(atom_it, (it+1).coord());
+
+                        const ColumnCount column = get_column(buffer, tabstop, it.coord());
+                        const ColumnCount count = tabstop - (column % tabstop) -
+                                                  std::max(win_column - column, 0_col);
+                        atom_it->replace(String{' ', count});
+                        break;
+                    }
                 }
             }
         }
     }
-}
+
+    void do_compute_display_setup(const Context& context, HighlightPass, DisplaySetup& setup) override
+    {
+        auto& buffer = context.buffer();
+        // Ensure that a cursor on a tab character makes the full tab character visible
+        auto cursor = context.selections().main().cursor();
+        if (buffer.byte_at(cursor) != '\t')
+            return;
+
+        const ColumnCount tabstop = context.options()["tabstop"].get<int>();
+        const ColumnCount column = get_column(buffer, tabstop, cursor);
+        const ColumnCount width = tabstop - (column % tabstop);
+        const ColumnCount win_end = setup.window_pos.column + setup.window_range.column;
+        const ColumnCount offset = std::max(column + width - win_end, 0_col);
+
+        setup.window_pos.column += offset;
+        setup.cursor_pos.column -= offset;
+    }
+};
 
 void show_whitespaces(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange,
                       StringView tab, StringView tabpad,
@@ -1935,7 +1958,7 @@ private:
 
 void setup_builtin_highlighters(HighlighterGroup& group)
 {
-    group.add_child({"tabulations"_str, make_highlighter(expand_tabulations)});
+    group.add_child({"tabulations"_str, make_unique<TabulationHighlighter>()});
     group.add_child({"unprintable"_str, make_highlighter(expand_unprintable)});
     group.add_child({"selections"_str,  make_highlighter(highlight_selections)});
 }
