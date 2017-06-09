@@ -430,7 +430,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     else if (remaining > 2)
     {
         DisplayLine trimmed_mode_line = mode_line;
-        trimmed_mode_line.trim(mode_len + 2 - remaining, remaining - 2, false);
+        trimmed_mode_line.trim(mode_len + 2 - remaining, remaining - 2);
         trimmed_mode_line.insert(trimmed_mode_line.begin(), { "…" });
         kak_assert(trimmed_mode_line.length() == remaining - 1);
 
@@ -733,7 +733,7 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     for (auto& item : items)
     {
         m_menu.items.push_back(item);
-        m_menu.items.back().trim(0, maxlen, false);
+        m_menu.items.back().trim(0, maxlen);
         kak_assert(m_menu.items.back().length() <= maxlen);
     }
 

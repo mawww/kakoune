@@ -168,16 +168,10 @@ ColumnCount DisplayLine::length() const
     return len;
 }
 
-void DisplayLine::trim(ColumnCount first_col, ColumnCount col_count, bool only_buffer)
+void DisplayLine::trim(ColumnCount first_col, ColumnCount col_count)
 {
     for (auto it = begin(); first_col > 0 and it != end(); )
     {
-        if (only_buffer and not it->has_buffer_range())
-        {
-            ++it;
-            continue;
-        }
-
         auto len = it->length();
         if (len <= first_col)
         {

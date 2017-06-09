@@ -128,7 +128,7 @@ public:
 
     // remove first_col from the begining of the line, and make sure
     // the line is less that col_count character
-    void trim(ColumnCount first_col, ColumnCount col_count, bool only_buffer);
+    void trim(ColumnCount first_col, ColumnCount col_count);
 
     // Merge together consecutive atoms sharing the same display attributes
     void     optimize();
