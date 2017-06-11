@@ -183,7 +183,7 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
     }
 
     auto touches = [&](const Selection& lhs, const Selection& rhs) {
-        return buffer.char_next(lhs.max()) >= rhs.min();
+        return lhs.max() == end_coord or buffer.char_next(lhs.max()) >= rhs.min();
     };
     size_t dummy = 0;
     ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy, touches), ranges.end());
