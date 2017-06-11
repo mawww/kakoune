@@ -10,22 +10,11 @@ static LineModification make_line_modif(const Buffer::Change& change)
 {
     LineCount num_added = 0, num_removed = 0;
     if (change.type == Buffer::Change::Insert)
-    {
         num_added = change.end.line - change.begin.line;
-         // inserted a new line at buffer end but end coord is on same line
-        if (change.at_end and change.end.column != 0)
-            ++num_added;
-    }
     else
-    {
         num_removed = change.end.line - change.begin.line;
-        // removed last line, but end coord is on same line
-        if (change.at_end and change.end.column != 0)
-            ++num_removed;
-    }
     // modified a line
-    if (not change.at_end and
-        (change.begin.column != 0 or change.end.column != 0))
+    if ((change.begin.column != 0 or change.end.column != 0))
     {
         ++num_removed;
         ++num_added;
@@ -116,7 +105,7 @@ UnitTest test_line_modifications{[]()
     {
         Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\n");
         auto ts = buffer.timestamp();
-        buffer.insert({1, 7}, "line 3");
+        buffer.insert({2, 0}, "line 3");
 
         auto modifs = compute_line_modifications(buffer, ts);
         kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 2, 2, 0, 1 });

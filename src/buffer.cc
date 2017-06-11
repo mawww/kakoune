@@ -88,7 +88,7 @@ Buffer::Buffer(String name, Flags flags, StringView data,
     #endif
     static_cast<BufferLines&>(m_lines) = std::move(parsed_lines.lines);
 
-    m_changes.push_back({ Change::Insert, true, {0,0}, line_count() });
+    m_changes.push_back({ Change::Insert, {0,0}, line_count() });
 
     apply_options(options(), parsed_lines);
 
@@ -241,11 +241,11 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
 
     if (not record_undo)
     {
-        m_changes.push_back({ Change::Erase, true, {0,0}, line_count() });
+        m_changes.push_back({ Change::Erase, {0,0}, line_count() });
 
         static_cast<BufferLines&>(m_lines) = std::move(parsed_lines.lines);
 
-        m_changes.push_back({ Change::Insert, true, {0,0}, line_count() });
+        m_changes.push_back({ Change::Insert, {0,0}, line_count() });
     }
     else
     {
@@ -268,7 +268,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
                         Modification::Insert, cur_line + line,
                         parsed_lines.lines[(int)(d.posB + line)]);
 
-                m_changes.push_back({ Change::Insert, it == m_lines.end(), cur_line, cur_line + d.len });
+                m_changes.push_back({ Change::Insert, cur_line, cur_line + d.len });
                 m_lines.insert(it, &parsed_lines.lines[d.posB], &parsed_lines.lines[d.posB + d.len]);
                 it = m_lines.begin() + (int)(cur_line + d.len);
             }
@@ -282,7 +282,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
                         m_lines.get_storage(cur_line + line));
 
                 it = m_lines.erase(it, it + d.len);
-                m_changes.push_back({ Change::Erase, it == m_lines.end(), cur_line, cur_line + d.len });
+                m_changes.push_back({ Change::Erase, cur_line, cur_line + d.len });
             }
         }
     }
@@ -453,8 +453,6 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
 
     const bool at_end = is_end(pos);
     const bool append_lines = at_end and (m_lines.empty() or byte_at(back_coord()) == '\n');
-    if (at_end)
-        pos = append_lines ? line_count() : end_coord();
 
     const StringView prefix = append_lines ?
         StringView{} : m_lines[pos.line].substr(0, pos.column);
@@ -490,7 +488,7 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
     const auto end = at_end ? line_count()
                             : BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
 
-    m_changes.push_back({ Change::Insert, at_end, pos, end });
+    m_changes.push_back({ Change::Insert, pos, end });
     return pos;
 }
 
@@ -502,7 +500,7 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
     kak_assert(is_valid(begin));
     kak_assert(is_valid(end));
     StringView prefix = m_lines[begin.line].substr(0, begin.column);
-    StringView suffix = m_lines[end.line].substr(end.column);
+    StringView suffix = end.line == line_count() ? StringView{} : m_lines[end.line].substr(end.column);
 
     BufferCoord next;
     if (not prefix.empty() or not suffix.empty())
@@ -514,11 +512,11 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
     }
     else
     {
-        m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line + 1);
-        next = is_end(begin) ? end_coord() : BufferCoord{begin.line, 0};
+        m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
+        next = begin.line;
     }
 
-    m_changes.push_back({ Change::Erase, is_end(begin), begin, end });
+    m_changes.push_back({ Change::Erase, begin, end });
     return next;
 }
 
@@ -584,24 +582,11 @@ BufferCoord Buffer::erase(BufferCoord begin, BufferCoord end)
 
 BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end, StringView content)
 {
-    if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Erase, begin,
-                                          intern(string(begin, end)));
-    auto pos = do_erase(begin, end);
+    if (is_end(end) and not content.empty() and content.back() == '\n')
+        content = content.substr(0, content.length() - 1);
 
-    StringDataPtr real_content;
-    if (is_end(pos) and content.back() != '\n')
-        real_content = intern(content + "\n");
-    else
-        real_content = intern(content);
-
-    bool last_char_is_eol = not (m_lines.empty() or
-                                 m_lines.back().empty() or
-                                 m_lines.back().back() != '\n');
-    auto coord = is_end(pos) and last_char_is_eol ? line_count() : pos;
-    if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Insert, coord, real_content);
-    return do_insert(pos, real_content->strview());
+    auto pos = erase(begin, end);
+    return insert(pos, content);
 }
 
 bool Buffer::is_modified() const
@@ -662,8 +647,6 @@ BufferCoord Buffer::char_next(BufferCoord coord) const
             coord.column = 0;
         }
     }
-    else if (coord.line == m_lines.size() - 1)
-        coord.column = m_lines.back().length();
     else
     {
         ++coord.line;
@@ -675,9 +658,7 @@ BufferCoord Buffer::char_next(BufferCoord coord) const
 BufferCoord Buffer::char_prev(BufferCoord coord) const
 {
     kak_assert(is_valid(coord));
-    if (is_end(coord))
-        return {(int)m_lines.size()-1, m_lines.back().length() - 1};
-    else if (coord.column == 0)
+    if (coord.column == 0)
     {
         if (coord.line > 0)
             coord.column = m_lines[--coord.line].length() - 1;

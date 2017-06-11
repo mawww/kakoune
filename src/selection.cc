@@ -448,17 +448,15 @@ void SelectionList::erase()
         kak_assert(m_buffer->is_valid(sel.cursor()));
 
         auto pos = Kakoune::erase(*m_buffer, sel);
-        sel.anchor() = sel.cursor() = m_buffer->clamp(pos);
+        sel.anchor() = sel.cursor() = pos;
         changes_tracker.update(*m_buffer, m_timestamp);
     }
 
     BufferCoord back_coord = m_buffer->back_coord();
     for (auto& sel : m_selections)
     {
-        if (sel.anchor() > back_coord)
-            sel.anchor() = back_coord;
-        if (sel.cursor() > back_coord)
-            sel.cursor() = back_coord;
+        auto pos = m_buffer->clamp(sel.cursor());
+        sel.anchor() = sel.cursor() = std::min(pos, back_coord);
     }
 
     m_buffer->check_invariant();

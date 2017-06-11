@@ -89,9 +89,9 @@ public:
 
 private:
     SafePtr<const Buffer> m_buffer;
-    StringView m_line;
     BufferCoord m_coord;
-    LineCount m_last_line;
+    LineCount m_line_count;
+    StringView m_line;
 };
 
 using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;
@@ -205,7 +205,6 @@ public:
     {
         enum Type : char { Insert, Erase };
         Type type;
-        bool at_end;
         BufferCoord begin;
         BufferCoord end;
     };

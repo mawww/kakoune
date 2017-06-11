@@ -17,8 +17,6 @@ inline BufferCoord Buffer::next(BufferCoord coord) const
 {
     if (coord.column < m_lines[coord.line].length() - 1)
         ++coord.column;
-    else if (coord.line == m_lines.size() - 1)
-        coord.column = m_lines.back().length();
     else
     {
         ++coord.line;
@@ -59,7 +57,6 @@ inline bool Buffer::is_valid(BufferCoord c) const
         return false;
 
     return (c.line < line_count() and c.column < m_lines[c.line].length()) or
-           (c.line == line_count() - 1 and c.column == m_lines.back().length()) or
            (c.line == line_count() and c.column == 0);
 }
 
@@ -110,14 +107,13 @@ inline BufferCoord Buffer::back_coord() const
 
 inline BufferCoord Buffer::end_coord() const
 {
-    return m_lines.empty() ?
-        BufferCoord{0,0} : BufferCoord{ line_count() - 1, m_lines.back().length() };
+    return line_count();
 }
 
 inline BufferIterator::BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept
-    : m_buffer(&buffer), m_coord(coord),
-      m_line((*m_buffer)[coord.line]),
-      m_last_line(buffer.line_count()-1) {}
+    : m_buffer{&buffer}, m_coord{coord},
+      m_line_count{buffer.line_count()},
+      m_line{coord.line < buffer.line_count() ? (*m_buffer)[coord.line] : StringView{}} {}
 
 inline bool BufferIterator::operator==(const BufferIterator& iterator) const noexcept
 {
@@ -197,9 +193,10 @@ inline BufferIterator& BufferIterator::operator-=(ByteCount size)
 
 inline BufferIterator& BufferIterator::operator++()
 {
-    if (++m_coord.column == m_line.length() and m_coord.line != m_last_line)
+    if (++m_coord.column == m_line.length())
     {
-        m_line = (*m_buffer)[++m_coord.line];
+        m_line = (++m_coord.line < m_line_count) ?
+            (*m_buffer)[m_coord.line] : StringView{};
         m_coord.column = 0;
     }
     return *this;
@@ -207,7 +204,7 @@ inline BufferIterator& BufferIterator::operator++()
 
 inline BufferIterator& BufferIterator::operator--()
 {
-    if (m_coord.column == 0 and m_coord.line > 0)
+    if (m_coord.column == 0)
     {
         m_line = (*m_buffer)[--m_coord.line];
         m_coord.column = m_line.length() - 1;
