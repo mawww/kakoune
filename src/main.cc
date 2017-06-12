@@ -744,20 +744,9 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
 
 int run_pipe(StringView session)
 {
-    char buf[512];
-    String command;
-    while (ssize_t count = read(0, buf, 512))
-    {
-        if (count < 0)
-        {
-            write_stderr("error while reading stdin\n");
-            return -1;
-        }
-        command += StringView{buf, buf + count};
-    }
     try
     {
-        send_command(session, command);
+        send_command(session, read_fd(0));
     }
     catch (disconnected& e)
     {

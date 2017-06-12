@@ -41,6 +41,9 @@ public:
     file_access_error(StringView filename,
                       StringView error_desc)
         : runtime_error(format("{}: {}", filename, error_desc)) {}
+
+    file_access_error(int fd, StringView error_desc)
+        : runtime_error(format("fd {}: {}", fd, error_desc)) {}
 };
 
 String parse_filename(StringView filename)
@@ -168,11 +171,10 @@ String read_fd(int fd, bool text)
     String content;
     constexpr size_t bufsize = 256;
     char buf[bufsize];
-    while (true)
+    while (ssize_t size = read(fd, buf, bufsize))
     {
-        ssize_t size = read(fd, buf, bufsize);
-        if (size == -1 or size == 0)
-            break;
+        if (size == -1)
+            throw file_access_error{fd, strerror(errno)};
 
         if  (text)
         {
