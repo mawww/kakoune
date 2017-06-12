@@ -842,7 +842,7 @@ int main(int argc, char* argv[])
         if (contains(ConstArrayView<char*>{argv+1, (size_t)argc-1}, StringView{"--help"}))
             return show_usage();
 
-        ParametersParser parser(params, param_desc);
+        ParametersParser parser{params, param_desc};
 
         const bool show_help_message = (bool)parser.get_switch("help");
         if (show_help_message)
