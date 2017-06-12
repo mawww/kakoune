@@ -1408,6 +1408,8 @@ private:
             try
             {
                 auto& r = std::get<0>(range);
+                if (r.first > r.last)
+                    std::swap(r.first, r.last);
                 if (buffer.is_valid(r.first) and buffer.is_valid(r.last))
                     highlight_range(display_buffer, r.first, buffer.char_next(r.last), true,
                                     apply_face(get_face(std::get<1>(range))));
