@@ -16,25 +16,15 @@ inline const char& Buffer::byte_at(BufferCoord c) const
 inline BufferCoord Buffer::next(BufferCoord coord) const
 {
     if (coord.column < m_lines[coord.line].length() - 1)
-        ++coord.column;
-    else
-    {
-        ++coord.line;
-        coord.column = 0;
-    }
-    return coord;
+        return {coord.line, coord.column + 1};
+    return { coord.line + 1, 0 };
 }
 
 inline BufferCoord Buffer::prev(BufferCoord coord) const
 {
     if (coord.column == 0)
-    {
-        if (coord.line > 0)
-            coord.column = m_lines[--coord.line].length() - 1;
-    }
-    else
-       --coord.column;
-    return coord;
+        return { coord.line - 1, m_lines[coord.line - 1].length() - 1 };
+    return { coord.line, coord.column - 1 };
 }
 
 inline ByteCount Buffer::distance(BufferCoord begin, BufferCoord end) const
@@ -53,11 +43,9 @@ inline ByteCount Buffer::distance(BufferCoord begin, BufferCoord end) const
 
 inline bool Buffer::is_valid(BufferCoord c) const
 {
-    if (c.line < 0 or c.column < 0)
-        return false;
-
-    return (c.line < line_count() and c.column < m_lines[c.line].length()) or
-           (c.line == line_count() and c.column == 0);
+    return (c.line >= 0 and c.column >= 0) and
+           ((c.line < line_count() and c.column < m_lines[c.line].length()) or
+            (c.line == line_count() and c.column == 0));
 }
 
 inline bool Buffer::is_end(BufferCoord c) const
@@ -67,7 +55,7 @@ inline bool Buffer::is_end(BufferCoord c) const
 
 inline BufferIterator Buffer::begin() const
 {
-    return {*this, { 0_line, 0 }};
+    return {*this, { 0, 0 }};
 }
 
 inline BufferIterator Buffer::end() const
@@ -78,7 +66,7 @@ inline BufferIterator Buffer::end() const
 [[gnu::always_inline]]
 inline LineCount Buffer::line_count() const
 {
-    return LineCount(m_lines.size());
+    return LineCount{(int)m_lines.size()};
 }
 
 inline size_t Buffer::timestamp() const

@@ -639,36 +639,23 @@ BufferCoord Buffer::char_next(BufferCoord coord) const
     if (coord.column < m_lines[coord.line].length() - 1)
     {
         auto line = m_lines[coord.line];
-        coord.column += utf8::codepoint_size(line[coord.column]);
-        // Handle invalid utf-8
-        if (coord.column >= line.length())
-        {
-            ++coord.line;
-            coord.column = 0;
-        }
+        auto column = coord.column + utf8::codepoint_size(line[coord.column]);
+        if (column >= line.length()) // Handle invalid utf-8
+            return { coord.line + 1, 0 };
+        return { coord.line, column };
     }
-    else
-    {
-        ++coord.line;
-        coord.column = 0;
-    }
-    return coord;
+    return { coord.line + 1, 0 };
 }
 
 BufferCoord Buffer::char_prev(BufferCoord coord) const
 {
     kak_assert(is_valid(coord));
     if (coord.column == 0)
-    {
-        if (coord.line > 0)
-            coord.column = m_lines[--coord.line].length() - 1;
-    }
-    else
-    {
-        auto line = m_lines[coord.line];
-        coord.column = (int)(utf8::character_start(line.begin() + (int)coord.column - 1, line.begin()) - line.begin());
-    }
-    return coord;
+        return { coord.line - 1, m_lines[coord.line - 1].length() - 1 };
+
+    auto line = m_lines[coord.line];
+    auto column = (int)(utf8::character_start(line.begin() + (int)coord.column - 1, line.begin()) - line.begin());
+    return { coord.line, column };
 }
 
 timespec Buffer::fs_timestamp() const
