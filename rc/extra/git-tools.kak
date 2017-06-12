@@ -39,7 +39,7 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
            log)  filetype=git-log ;;
            status)  filetype=git-status ;;
         esac
-        output=$(mktemp -d -t kak-git.XXXXXXXX)/fifo
+        output=$(mktemp --tmpdir -d kak-git.XXXXXXXX)/fifo
         mkfifo ${output}
         ( git "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
 

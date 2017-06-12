@@ -3,7 +3,7 @@ decl -hidden completions racer_completions
 
 def racer-complete -docstring "Complete the current selection with racer" %{
     %sh{
-        dir=$(mktemp -d -t kak-racer.XXXXXXXX)
+        dir=$(mktemp --tmpdir -d kak-racer.XXXXXXXX)
         printf %s\\n "set buffer racer_tmp_dir ${dir}"
         printf %s\\n "eval -no-hooks %{ write ${dir}/buf }"
     }
