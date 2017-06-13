@@ -6,6 +6,9 @@
 decl -docstring "colon separated list of paths to tag files to parse when looking up a symbol" \
     str-list ctagsfiles 'tags'
 
+decl -docstring "name of the client in which all source code jumps will be executed" \
+    str jumpclient
+
 def -params ..1 \
     -shell-candidates '
         printf %s\\n "$kak_opt_ctagsfiles" | tr \':\' \'\n\' |
@@ -37,9 +40,9 @@ If no symbol is passed then the current selection is used as symbol name} \
             re=$0;
             sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
             keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
-            out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps %{ try %{ edit %{" tagroot $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
+            out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps -try-client %opt{jumpclient} %{ try %{ edit %{" tagroot $2 "}; try %{focus %opt{jumpclient}}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
         }
-        /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps %{ edit %{" tagroot $2 "} %{" $3 "}}}" }
+        /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps -try-client %opt{jumpclient} %{ edit %{" tagroot $2 "} %{" $3 "}; try %{focus %opt{jumpclient}}}}" }
         END { print ( length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out ) }'
     }}
 
