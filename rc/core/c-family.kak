@@ -49,9 +49,9 @@ def -hidden c-family-indent-on-newline %< eval -draft -itersel %<
     # on a previous line if its followed by text on the same line
     try %< eval -draft %<
         # Go to opening parenthesis and opening brace, then select the most nested one
-        try %< exec [bZ<a-\;>[B<a-z><gt> > catch %< exec [B >
+        try %< try %< exec [bZ<a-\;>[B<a-z><gt> > catch %< exec [B > >
         # Validate selection and get first and last char
-        exec <a-k>\`[{(](\h*\S+)+\n<ret> L s\`|.\'<ret>
+        exec <a-k>\`[{(](\h*\S+)+\n<ret> <a-:><a-\;>L s\`|.\'<ret>
         # Remove eventual indent from new line
         try %< exec -draft <space> <a-h> s\h+<ret> d >
         # Now align that new line with the opening parenthesis/brace
