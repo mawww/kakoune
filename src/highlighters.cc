@@ -1342,7 +1342,7 @@ void option_from_string(StringView str, InclusiveBufferRange& opt)
     if (first.line < 0 or first.column < 0 or last.line < 0 or last.column < 0)
         throw runtime_error("coordinates elements should be >= 1");
 
-    opt = { first, last };
+    opt = { std::min(first, last), std::max(first, last) };
 }
 
 BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).first; }
