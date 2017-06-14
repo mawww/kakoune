@@ -1093,7 +1093,7 @@ void select_object(Context& context, NormalParams params)
             return select_and_set_last<mode>(
                 context, std::bind(obj_it->func, _1, _2, count, flags));
 
-        if (cp == ':')
+        if (cp == 'c')
         {
             const bool info = show_auto_info_ifn(
                 "Enter object desc", "format: <open text>,<close text>",
@@ -1170,7 +1170,7 @@ void select_object(Context& context, NormalParams params)
          {{'i'},         "indent"},
          {{'u'},         "argument"},
          {{'n'},         "number"},
-         {{':'},         "custom object desc"}}));
+         {{'c'},         "custom object desc"}}));
 }
 
 template<Direction direction, bool half = false>
