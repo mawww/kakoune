@@ -166,10 +166,6 @@ void Buffer::update_display_name()
 
 BufferIterator Buffer::iterator_at(BufferCoord coord) const
 {
-    // Tolerate one past the end of line
-    if (not is_end(coord) and coord.column == m_lines[coord.line].length())
-        coord = coord.line+1;
-
     kak_assert(is_valid(coord));
     return {*this, coord};
 }

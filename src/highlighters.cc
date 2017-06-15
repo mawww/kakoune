@@ -25,6 +25,15 @@
 namespace Kakoune
 {
 
+BufferIterator get_iterator(const Buffer& buffer, BufferCoord coord)
+{
+    // Correct one past the end of line as next line
+    if (not buffer.is_end(coord) and coord.column == buffer[coord.line].length())
+        coord = coord.line+1;
+    return buffer.iterator_at(coord);
+}
+
+
 template<typename Func>
 std::unique_ptr<Highlighter> make_highlighter(Func func, HighlightPass pass = HighlightPass::Colorize)
 {
@@ -364,8 +373,8 @@ private:
     {
         kak_assert(matches.size() % m_faces.size() == 0);
         using RegexIt = RegexIterator<BufferIterator>;
-        RegexIt re_it{buffer.iterator_at(range.begin),
-                      buffer.iterator_at(range.end), m_regex,
+        RegexIt re_it{get_iterator(buffer, range.begin),
+                      get_iterator(buffer, range.end), m_regex,
                       match_flags(is_bol(range.begin),
                                   is_eol(buffer, range.end),
                                   is_bow(buffer, range.begin),
@@ -871,8 +880,8 @@ struct TabulationHighlighter : Highlighter
                 if (atom_it->type() != DisplayAtom::Range)
                     continue;
 
-                auto begin = buffer.iterator_at(atom_it->begin());
-                auto end = buffer.iterator_at(atom_it->end());
+                auto begin = get_iterator(buffer, atom_it->begin());
+                auto end = get_iterator(buffer, atom_it->end());
                 for (BufferIterator it = begin; it != end; ++it)
                 {
                     if (*it == '\t')
@@ -926,8 +935,8 @@ void show_whitespaces(const Context& context, HighlightPass, DisplayBuffer& disp
             if (atom_it->type() != DisplayAtom::Range)
                 continue;
 
-            auto begin = buffer.iterator_at(atom_it->begin());
-            auto end = buffer.iterator_at(atom_it->end());
+            auto begin = get_iterator(buffer, atom_it->begin());
+            auto end = get_iterator(buffer, atom_it->end());
             for (BufferIterator it = begin; it != end; )
             {
                 auto coord = it.coord();
@@ -1080,8 +1089,8 @@ void show_matching_char(const Context& context, HighlightPass, DisplayBuffer& di
             int level = 1;
             if (c == pair.first)
             {
-                for (auto it = buffer.iterator_at(pos)+1,
-                         end = buffer.iterator_at(range.end); it != end; ++it)
+                for (auto it = get_iterator(buffer, pos)+1,
+                         end = get_iterator(buffer, range.end); it != end; ++it)
                 {
                     char c = *it;
                     if (c == pair.first)
@@ -1096,8 +1105,8 @@ void show_matching_char(const Context& context, HighlightPass, DisplayBuffer& di
             }
             else if (c == pair.second and pos > range.begin)
             {
-                for (auto it = buffer.iterator_at(pos)-1,
-                         end = buffer.iterator_at(range.begin); true; --it)
+                for (auto it = get_iterator(buffer, pos)-1,
+                         end = get_iterator(buffer, range.begin); true; --it)
                 {
                     char c = *it;
                     if (c == pair.second)
@@ -1159,8 +1168,8 @@ void expand_unprintable(const Context& context, HighlightPass, DisplayBuffer& di
         {
             if (atom_it->type() == DisplayAtom::Range)
             {
-                for (auto it  = buffer.iterator_at(atom_it->begin()),
-                          end = buffer.iterator_at(atom_it->end()); it < end;)
+                for (auto it  = get_iterator(buffer, atom_it->begin()),
+                          end = get_iterator(buffer, atom_it->end()); it < end;)
                 {
                     auto coord = it.coord();
                     Codepoint cp = utf8::read_codepoint<utf8::InvalidPolicy::Pass>(it, end);
