@@ -343,70 +343,75 @@ Changes
 Goto Commands
 -------------
 
-If a count is given prior to hitting *g*, *g* will jump to the given line
+*g*, *G*::
+	When a count is specified, *G* only extends the current selection to the given line,
+	*g* sends the anchor to the given line and a menu is then displayed which waits
+	for one of the following additional keys:
 
-*gh*::
-	select to line begin
+	*h*:::
+		select to line begin
 
-*gl*::
-	select to line end
+	*l*:::
+		select to line end
 
-*gi*::
-	select to non blank line start
+	*i*:::
+		select to non blank line start
 
-*gg*, *gk*::
-	go to the first line
+	*g*, *k*:::
+		go to the first line
 
-*gj*::
-	go to the last line
+	*j*:::
+		go to the last line
 
-*ge*::
-	go to last char of last line
+	*e*:::
+		go to last char of last line
 
-*gt*::
-	go to the first displayed line
+	*t*:::
+		go to the first displayed line
 
-*gc*::
-	go to the middle displayed line
+	*c*:::
+		go to the middle displayed line
 
-*gb*::
-	go to the last displayed line
+	*b*:::
+		go to the last displayed line
 
-*ga*::
-	go to the previous (alternate) buffer
+	*a*:::
+		go to the previous (alternate) buffer
 
-*gf*::
-	open the file whose name is selected
+	*f*:::
+		open the file whose name is selected
 
-*g.*::
-	go to last buffer modification position
+	*.*:::
+		go to last buffer modification position
 
 View commands
 -------------
 
-*V*::
-	lock view mode until <esc> is hit
+*v*, *V*::
+	*V* enters lock view mode (which will be left when the <esc> is hit),
+	and *v* modifies the current view; a menu is then displayed which waits
+	for one of the following additional keys:
 
-*vv*, *vc*::
-	center the main selection in the window
+	*v*, *c*:::
+		center the main selection in the window
 
-*vt*::
-	scroll to put the main selection on the top line of the window
+	*t*:::
+		scroll to put the main selection on the top line of the window
 
-*vb*::
-	scroll to put the main selection on the bottom line of the window
+	*b*:::
+		scroll to put the main selection on the bottom line of the window
 
-*vh*::
-	scroll the window count columns left
+	*h*:::
+		scroll the window count columns left
 
-*vj*::
-	scroll the window count line downward
+	*j*:::
+		scroll the window count line downward
 
-*vk*::
-	scroll the window count line upward
+	*k*:::
+		scroll the window count line upward
 
-*vl*::
-	scroll the window count columns right
+	*l*:::
+		scroll the window count columns right
 
 
 Marks
@@ -414,25 +419,36 @@ Marks
 Marks use the *^* register by default.
 
 *Z*::
-	will save the current selections to the register
-
-*<a-Z>*::
-	will combine the current selections to the register
+	save the current selections to the register
 
 *z*::
-	will restore the selections from the register
+	restore the selections from the register
 
-*<a-z>*::
-	will combine the selections from the register to the existing ones
+*<a-z>*, *<a-Z>*::
+	*<a-z>* combines the selections from the register with the current ones, whereas
+	*<a-Z>* combines the current selections with the register; a menu is then
+	displayed which waits for one of the following additional keys:
 
-When combining selections, kakoune will prompt for a combining mode:
+	*a*:::
+		append the selections
 
-*+*::
-	will append selections from both lists into a single list
-*<*::
-	will select the selection with the leftmost cursor for each pair
-*>*::
-	will select the selection with the rightmost cursor for each pair
+	*u*:::
+		keep a union of the selections
+
+	*i*:::
+		keep an intersection of the selections
+
+	*<*:::
+		select the selection with the leftmost cursor for each pair
+
+	*>*:::
+		select the selection with the rightmost cursor for each pair
+
+	*+*:::
+		select the longest selection
+
+	*-*:::
+		select the shortest selection
 
 Macros
 ------
