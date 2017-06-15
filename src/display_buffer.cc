@@ -10,6 +10,14 @@
 namespace Kakoune
 {
 
+BufferIterator get_iterator(const Buffer& buffer, BufferCoord coord)
+{
+    // Correct one past the end of line as next line
+    if (not buffer.is_end(coord) and coord.column == buffer[coord.line].length())
+        coord = coord.line+1;
+    return buffer.iterator_at(coord);
+}
+
 StringView DisplayAtom::content() const
 {
     switch (m_type)
@@ -36,7 +44,8 @@ ColumnCount DisplayAtom::length() const
     switch (m_type)
     {
         case Range:
-            return column_length(*m_buffer, m_range.begin, m_range.end);
+            return utf8::column_distance(get_iterator(*m_buffer, m_range.begin),
+                                         get_iterator(*m_buffer, m_range.end));
         case Text:
         case ReplacedRange:
             return m_text.column_length();
@@ -48,8 +57,8 @@ ColumnCount DisplayAtom::length() const
 void DisplayAtom::trim_begin(ColumnCount count)
 {
     if (m_type == Range)
-        m_range.begin = utf8::advance(m_buffer->iterator_at(m_range.begin),
-                                      m_buffer->iterator_at(m_range.end),
+        m_range.begin = utf8::advance(get_iterator(*m_buffer, m_range.begin),
+                                      get_iterator(*m_buffer, m_range.end),
                                       count).coord();
     else
         m_text = m_text.substr(count).str();
@@ -58,8 +67,8 @@ void DisplayAtom::trim_begin(ColumnCount count)
 void DisplayAtom::trim_end(ColumnCount count)
 {
     if (m_type == Range)
-        m_range.end = utf8::advance(m_buffer->iterator_at(m_range.end),
-                                    m_buffer->iterator_at(m_range.begin),
+        m_range.end = utf8::advance(get_iterator(*m_buffer, m_range.end),
+                                    get_iterator(*m_buffer, m_range.begin),
                                     -count).coord();
     else
         m_text = m_text.substr(0, m_text.column_length() - count).str();

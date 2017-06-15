@@ -25,6 +25,10 @@ size_t hash_value(const BufferRange& range)
     return hash_values(range.begin, range.end);
 }
 
+class BufferIterator;
+// Return a buffer iterator to the coord, tolerating one past end of line coords
+BufferIterator get_iterator(const Buffer& buffer, BufferCoord coord);
+
 struct DisplayAtom : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:

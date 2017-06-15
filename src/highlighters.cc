@@ -25,15 +25,6 @@
 namespace Kakoune
 {
 
-BufferIterator get_iterator(const Buffer& buffer, BufferCoord coord)
-{
-    // Correct one past the end of line as next line
-    if (not buffer.is_end(coord) and coord.column == buffer[coord.line].length())
-        coord = coord.line+1;
-    return buffer.iterator_at(coord);
-}
-
-
 template<typename Func>
 std::unique_ptr<Highlighter> make_highlighter(Func func, HighlightPass pass = HighlightPass::Colorize)
 {
