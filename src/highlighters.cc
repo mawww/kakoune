@@ -650,8 +650,14 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
                 ColumnCount last_buffer_col = context.window().position().column;
                 for (auto& atom : line)
                 {
-                    if (atom.has_buffer_range() and atom.begin() != atom.end())
-                        last_buffer_col = get_column(buffer, tabstop, atom.end());
+                    if (atom.has_buffer_range())
+                    {
+                        auto pos = atom.end();
+                        if (pos.column == 0)
+                            pos = {pos.line-1, buffer[pos.line-1].length()};
+                        if (pos != atom.begin())
+                            last_buffer_col = get_column(buffer, tabstop, pos);
+                    }
                 }
 
                 ColumnCount count = column - last_buffer_col;
