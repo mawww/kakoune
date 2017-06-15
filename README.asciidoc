@@ -1467,6 +1467,8 @@ Existing hooks are:
        hidden.
  * `RawKey`: Triggered whenever a key is pressed by the user, the key is
        used for filtering.
+ * `Source`: Triggered when a file is sourced. The filtering text is
+       the file path
 
 When not specified, the filtering text is an empty string.
 
