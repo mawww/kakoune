@@ -41,12 +41,12 @@ main() {
     cd $root/$dir;
     mkdir -p $work/$dir
     for file in in cmd rc; do
-      [ -e $file ] && cp $file $work/$dir/
+      [ -f $file ] && cp $file $work/$dir/
     done
     cd $work/$dir;
     indent="$(echo "$dir/" | sed -e 's|[^/]*/\+|  |g')"
     name=${PWD##*/}
-    if [ ! -e cmd ]; then
+    if [ ! -f cmd ]; then
       echo "$indent$name"
       continue
     elif [ -x enabled ] && ! ./enabled; then
@@ -68,7 +68,7 @@ main() {
         failed=1
       else
         for file in out selections state display; do
-          if [ -e $root/$dir/$file ] && ! cmp -s $root/$dir/$file $file; then
+          if [ -f $root/$dir/$file ] && ! cmp -s $root/$dir/$file $file; then
             if [ $failed -eq 0 ]; then
               echo "$indent$name" | colorize $red $none
               failed=1
@@ -76,13 +76,13 @@ main() {
             show_diff $root/$dir/$file $file
           fi
         done
-        if [ $failed -ne 0 ] && [ -e debug ]; then
+        if [ $failed -ne 0 ] && [ -f debug ]; then
           printf "\ndebug buffer:\n" | colorize $yellow $none
           cat debug
         fi
       fi
     else # failure expected
-      if [ -e stderr ]; then
+      if [ -f stderr ]; then
         sed -i -e 's/^[0-9]*:[0-9]*: //g' stderr
         if [ -s error ] && ! cmp -s error stderr; then
           echo "$indent$name" | colorize $yellow $none
