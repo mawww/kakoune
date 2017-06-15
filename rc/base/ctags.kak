@@ -19,9 +19,9 @@ def -params ..1 \
             fi
             cat "$namecache"
         done' \
-    -docstring %{tag [<symbol>]: jump to a symbol's definition
+    -docstring %{ctags-search [<symbol>]: jump to a symbol's definition
 If no symbol is passed then the current selection is used as symbol name} \
-    tag \
+    ctags-search \
     %{ %sh{
         export tagname=${1:-${kak_selection}}
         printf %s\\n "$kak_opt_ctagsfiles" | tr ':' '\n' |
@@ -43,7 +43,7 @@ If no symbol is passed then the current selection is used as symbol name} \
         END { print ( length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out ) }'
     }}
 
-def tag-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ eval -draft %{
+def ctags-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ eval -draft %{
     exec <space>hb<a-k>^\w+$<ret>
     %sh{ {
         compl=$(readtags -p "$kak_selection" | cut -f 1 | sort | uniq | sed -e 's/:/\\:/g' | sed -e 's/\n/:/g' )
@@ -94,7 +94,7 @@ def ctags-generate -docstring 'Generate tag file asynchronously' %{
     } > /dev/null 2>&1 < /dev/null & }
 }
 
-def update-tags -docstring 'Update tags for the given file' %{
+def ctags-update-tags -docstring 'Update tags for the given file' %{
     %sh{ {
         while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
             trap 'rmdir .tags.kaklock' EXIT
