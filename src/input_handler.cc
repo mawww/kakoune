@@ -1110,8 +1110,10 @@ public:
                 sels.emplace_back(buffer.char_prev(pos));
             }
             auto& main = context().selections().main();
-            String main_char = buffer.string(buffer.char_prev(main.cursor()),
-                                             main.cursor());
+            String main_char;
+            if (main.cursor() != BufferCoord{0, 0})
+                main_char = buffer.string(buffer.char_prev(main.cursor()),
+                                          main.cursor());
             if (not sels.empty())
                 SelectionList{buffer, std::move(sels)}.erase();
 
