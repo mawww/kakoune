@@ -132,11 +132,11 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
         if (buffer_line >= buffer().line_count())
             break;
         auto beg_byte = get_byte_to_column(buffer(), tabstop, {buffer_line, m_position.column});
-        auto end_byte = get_byte_to_column(buffer(), tabstop, {buffer_line, m_position.column + m_range.column});
-        auto end_coord = setup.full_lines or end_byte == buffer()[buffer_line].length()  ?
-            buffer_line+1 : BufferCoord{buffer_line, end_byte};
+        auto end_byte = setup.full_lines ?
+            buffer()[buffer_line].length()
+          : get_byte_to_column(buffer(), tabstop, {buffer_line, m_position.column + m_range.column});
 
-        lines.emplace_back(AtomList{ {buffer(), {buffer_line, beg_byte}, end_coord} });
+        lines.emplace_back(AtomList{ {buffer(), {buffer_line, beg_byte}, {buffer_line, end_byte}} });
     }
 
     m_display_buffer.compute_range();
