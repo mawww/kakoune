@@ -236,7 +236,8 @@ ColumnCount find_display_column(const DisplayLine& line, const Buffer& buffer,
             coord >= atom.begin() and coord < atom.end())
         {
             if (atom.type() == DisplayAtom::Range)
-                column += column_length(buffer, atom.begin(), coord);
+                column += utf8::column_distance(get_iterator(buffer, atom.begin()),
+                                                get_iterator(buffer, coord));
             return column;
         }
         column += atom.length();
@@ -255,8 +256,8 @@ BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
         {
             if (atom.type() == DisplayAtom::Range)
                 return buffer.clamp(
-                    utf8::advance(buffer.iterator_at(atom.begin()),
-                                  buffer.iterator_at(range.end),
+                    utf8::advance(get_iterator(buffer, atom.begin()),
+                                  get_iterator(buffer, range.end),
                                   std::max(0_col, column)).coord());
              return buffer.clamp(atom.begin());
         }
