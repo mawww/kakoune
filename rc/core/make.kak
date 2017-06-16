@@ -62,7 +62,7 @@ def -hidden make-jump %{
     }
 }
 
-def make-next -docstring 'Jump to the next make error' %{
+def make-next-error -docstring 'Jump to the next make error' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*make*'
         exec "%opt{make_current_error_line}ggl" "/^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
@@ -71,7 +71,7 @@ def make-next -docstring 'Jump to the next make error' %{
     try %{ eval -client %opt{toolsclient} %{ exec %opt{make_current_error_line}g } }
 }
 
-def make-prev -docstring 'Jump to the previous make error' %{
+def make-previous-error -docstring 'Jump to the previous make error' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*make*'
         exec "%opt{make_current_error_line}g" "<a-/>^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"

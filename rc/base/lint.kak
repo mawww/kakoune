@@ -81,7 +81,7 @@ def lint-disable -docstring "Disable automatic diagnostics of the code" %{
     remove-hooks window lint-diagnostics
 }
 
-def lint-next -docstring "Jump to the next line that contains an error" %{
+def lint-next-error -docstring "Jump to the next line that contains an error" %{
     update-option buffer lint_errors
     %sh{
         printf '%s\n' "$kak_opt_lint_errors" | sed -e 's/\([^\\]\):/\1\n/g' | tail -n +2 | {
@@ -102,7 +102,7 @@ def lint-next -docstring "Jump to the next line that contains an error" %{
         }
     }}
 
-def lint-prev -docstring "Jump to the previous line that contains an error" %{
+def lint-previous-error -docstring "Jump to the previous line that contains an error" %{
     update-option buffer lint_errors
     %sh{
         printf '%s\n' "$kak_opt_lint_errors" | sed -e 's/\([^\\]\):/\1\n/g' | tail -n +2 | sort -t. -k1,1 -rn | {
