@@ -8,7 +8,7 @@ decl -hidden range-specs lint_errors
 
 def lint -docstring 'Parse the current buffer with a linter' %{
     %sh{
-        dir=$(mktemp --tmpdir -d kak-lint.XXXXXXXX)
+        dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-lint.XXXXXXXX)
         mkfifo "$dir"/fifo
         printf '%s\n' "eval -no-hooks write $dir/buf"
 
