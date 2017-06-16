@@ -1015,9 +1015,28 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
         };
     }
 
-    auto docstring = parser.get_switch("docstring").value_or(StringView{});
+    auto docstring = parser.get_switch("docstring").value_or(StringView{}).str();
+    {
+        const CharCount length_docstring = docstring.char_length();
+        CharCount first;
+        for (first = 0; first < length_docstring; first++)
+            if (not is_blank(docstring[first]))
+                break;
 
-    cm.register_command(cmd_name, cmd, docstring.str(), desc, flags, CommandHelper{}, completer);
+        if (first < length_docstring)
+        {
+            CharCount last;
+            for (last = length_docstring-1; last >= 0; last--)
+                if (not is_blank(docstring[last]))
+                    break;
+
+            docstring = docstring.substr(first, last-first+1).str();
+        }
+        else
+            docstring = "";
+    }
+
+    cm.register_command(cmd_name, cmd, docstring, desc, flags, CommandHelper{}, completer);
 }
 
 const CommandDesc define_command_cmd = {
