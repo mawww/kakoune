@@ -1015,7 +1015,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
         };
     }
 
-    auto docstring = parser.get_switch("docstring").value_or(StringView{});
+    auto docstring = trim_whitespaces(parser.get_switch("docstring").value_or(StringView{}));
 
     cm.register_command(cmd_name, cmd, docstring.str(), desc, flags, CommandHelper{}, completer);
 }
@@ -1351,7 +1351,7 @@ const CommandDesc declare_option_cmd = {
         if (parser.get_switch("hidden"))
             flags = OptionFlags::Hidden;
 
-        auto docstring = parser.get_switch("docstring").value_or(StringView{}).str();
+        auto docstring = trim_whitespaces(parser.get_switch("docstring").value_or(StringView{})).str();
         OptionsRegistry& reg = GlobalScope::instance().option_registry();
 
 
@@ -1443,7 +1443,7 @@ const CommandDesc map_key_cmd = {
 
         KeyList mapping = parse_keys(parser[3]);
         keymaps.map_key(key[0], keymap_mode, std::move(mapping),
-                        parser.get_switch("docstring").value_or("").str());
+                        trim_whitespaces(parser.get_switch("docstring").value_or("")).str());
     }
 };
 

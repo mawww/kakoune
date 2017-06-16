@@ -207,6 +207,17 @@ Vector<StringView> split(StringView str, char separator)
     return res;
 }
 
+StringView trim_whitespaces(StringView str)
+{
+    auto beg = str.begin(), end = str.end();
+    while (beg != end and is_blank(*beg))
+        ++beg;
+    while (beg != end and is_blank(*(end-1)))
+        --end;
+    return {beg, end};
+}
+
+
 String escape(StringView str, StringView characters, char escape)
 {
     String res;
