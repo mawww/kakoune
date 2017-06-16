@@ -1606,6 +1606,9 @@ void combine_selections(Context& context, SelectionList list, Func func)
 
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [func, list](Key key, Context& context) mutable {
+                                 if (key == Key::Escape)
+                                     return;
+
                                  const auto op = key_to_combine_op(key);
                                  auto& sels = context.selections();
                                  list.update();
