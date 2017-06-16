@@ -12,19 +12,53 @@ hook global BufCreate .*[.](hs) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter -group / regions -default code haskell \
-    string   '"'      (?<!\\)(\\\\)*"      ''  \
-    comment  (--[^>]) $                    ''  \
-    comment \{-       -\}                  \{- \
-    macro   ^\h*?\K#  (?<!\\)\n            ''
+    string   '(?<!\'\\)(?<!\')"'         (?<!\\)(\\\\)*" ''   \
+    macro   ^\h*?\K#                     (?<!\\)\n       ''   \
+    pragma  \{-#                         \#-\}           \{-  \
+    comment \{-                            -\}           \{-  \
+    comment --(?![!#$%&*+./<>?@\\\^|~=]) $               ''
 
 add-highlighter -group /haskell/string  fill string
 add-highlighter -group /haskell/comment fill comment
+add-highlighter -group /haskell/pragma  fill meta
 add-highlighter -group /haskell/macro   fill meta
 
-add-highlighter -group /haskell/code regex \b(import)\b 0:meta
-add-highlighter -group /haskell/code regex \b(True|False)\b 0:value
-add-highlighter -group /haskell/code regex \b(as|case|class|data|default|deriving|do|else|hiding|if|in|infix|infixl|infixr|instance|let|module|newtype|of|qualified|then|type|where)\b 0:keyword
-add-highlighter -group /haskell/code regex \b(Int|Integer|Char|Bool|Float|Double|IO|Void|Addr|Array|String)\b 0:type
+add-highlighter -group /haskell/code regex (?<=\W)0x+[A-Fa-f0-9]+ 0:value
+add-highlighter -group /haskell/code regex (?<=\W)\d+([.]\d+)? 0:value
+add-highlighter -group /haskell/code regex \b(import|hiding|qualified)\b 0:keyword
+add-highlighter -group /haskell/code regex \b(import|module)\b[^\n]+\b(as)\b 1:keyword 2:keyword
+add-highlighter -group /haskell/code regex \b(class|data|default|deriving|infix|infixl|infixr|instance|module|newtype|pattern|type|where)\b 0:keyword
+add-highlighter -group /haskell/code regex \b(case|do|else|if|in|let|mdo|of|proc|rec|then)\b 0:attribute
+
+                                 # matches uppercase identifiers:  Monad Control.Monad
+                                 # not non-space separated dot:    Just.const
+add-highlighter -group /haskell/code regex \b([[:upper:]]['\w_]*\.)*[[:upper:]]['\w_]*(?!['\w_])(?![.[[:lower:]]) 0:variable
+
+                                 # matches infix identifier: `mod` `Apa._T'M`
+add-highlighter -group /haskell/code regex `\b([[:upper:]]['\w_]+\.)*[\w_]['\w_]*` 0:operator
+                                 # matches imported operators: M.! M.. Control.Monad.>>
+                                 # not operator keywords:      M... M.->
+add-highlighter -group /haskell/code regex \b[[:upper:]]['\w_]*\.(?!([~=|:@\\]|<-|->|=>|\.\.|::)[^~<=>|:!?/.@$*&#%+\^\-\\])[~<=>|:!?/.@$*&#%+\^\-\\]+ 0:operator
+                                 # matches dot: .
+                                 # not possibly incomplete import:  a.
+                                 # not other operators:             !. .!
+add-highlighter -group /haskell/code regex (?<![\w~<=>|:!?/.@$*&#%+\^\-\\])\.(?![~<=>|:!?/.@$*&#%+\^\-\\]) 0:operator
+                                 # matches other operators: ... > < <= ^ <*> <$> etc
+                                 # not dot: .
+                                 # not operator keywords:  @ .. -> :: ~
+add-highlighter -group /haskell/code regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])(?!([~=|:.@\\]|<-|->|=>|\.\.|::)[^~<=>|:!?/.@$*&#%+\^\-\\])[~<=>|:!?/.@$*&#%+\^\-\\]+ 0:operator
+
+                                 # matches operator keywords: @ ->
+add-highlighter -group /haskell/code regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])(@|~|<-|->|=>|::|=|:|[|])(?![~<=>|:!?/.@$*&#%+\^\-\\]) 1:keyword
+                                 # matches: forall [..prenex..] .
+                                 # not the prenex
+add-highlighter -group /haskell/code regex \b(forall)\b[^.\n]*?(\.) 1:keyword 2:keyword
+
+                                 # matches 'x' '\\' '\'' '\n' '\0'
+                                 # not incomplete literals: '\'
+                                 # not valid identifiers:   w' _'
+add-highlighter -group /haskell/code regex (?<!\w)'([^\\]|[\\]['"\w\d\\])' 0:string
+    # this has to come after operators so '-' etc is correct
 
 # Commands
 # ‾‾‾‾‾‾‾‾
