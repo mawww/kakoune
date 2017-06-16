@@ -5,6 +5,7 @@
 #include "display_buffer.hh"
 #include "highlighter_group.hh"
 #include "option_manager.hh"
+#include "optional.hh"
 #include "safe_ptr.hh"
 #include "scope.hh"
 
@@ -36,7 +37,7 @@ public:
 
     const DisplayBuffer& update_display_buffer(const Context& context);
 
-    DisplayCoord display_position(BufferCoord coord) const;
+    Optional<DisplayCoord> display_position(BufferCoord coord) const;
     BufferCoord buffer_coord(DisplayCoord coord) const;
 
     Highlighter& highlighters() { return m_highlighters; }

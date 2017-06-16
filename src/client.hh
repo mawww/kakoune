@@ -103,7 +103,7 @@ private:
     {
         Vector<DisplayLine> items;
         BufferCoord anchor;
-        DisplayCoord ui_anchor;
+        Optional<DisplayCoord> ui_anchor;
         MenuStyle style;
         int selected;
     } m_menu{};
@@ -113,7 +113,7 @@ private:
         String title;
         String content;
         BufferCoord anchor;
-        DisplayCoord ui_anchor;
+        Optional<DisplayCoord> ui_anchor;
         InfoStyle style;
     } m_info{};
 

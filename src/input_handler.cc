@@ -41,7 +41,7 @@ public:
 
     virtual std::pair<CursorMode, DisplayCoord> get_cursor_info() const
     {
-        DisplayCoord coord = context().window().display_position(context().selections().main().cursor());
+        DisplayCoord coord = *context().window().display_position(context().selections().main().cursor());
         return {CursorMode::Buffer, coord};
     }
 

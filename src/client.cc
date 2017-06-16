@@ -209,38 +209,43 @@ void Client::redraw_ifn()
         return;
 
     if (m_ui_pending & Draw)
-    {
         m_ui->draw(window.update_display_buffer(context()),
                    get_face("Default"), get_face("BufferPadding"));
 
-        if (not m_menu.items.empty() and m_menu.style == MenuStyle::Inline and
-            m_menu.ui_anchor != window.display_position(m_menu.anchor))
-            m_ui_pending |= (MenuShow | MenuSelect);
-        if (not m_info.content.empty() and is_inline(m_info.style) and
-            m_info.ui_anchor != window.display_position(m_info.anchor))
-            m_ui_pending |= InfoShow;
+    const bool update_menu_anchor = (m_ui_pending & Draw) and not (m_ui_pending & MenuHide) and
+                                    not m_menu.items.empty() and m_menu.style == MenuStyle::Inline;
+    if ((m_ui_pending & MenuShow) or update_menu_anchor)
+    {
+        auto anchor = m_menu.style == MenuStyle::Inline ?
+            window.display_position(m_menu.anchor) : DisplayCoord{};
+        if (not (m_ui_pending & MenuShow) and m_menu.ui_anchor != anchor)
+            m_ui_pending |= anchor ? (MenuShow | MenuSelect) : MenuHide;
+        m_menu.ui_anchor = anchor;
     }
 
-    if (m_ui_pending & MenuShow)
-    {
-        m_menu.ui_anchor = m_menu.style == MenuStyle::Inline ?
-            window.display_position(m_menu.anchor) : DisplayCoord{};
-        m_ui->menu_show(m_menu.items, m_menu.ui_anchor,
+    if (m_ui_pending & MenuShow and m_menu.ui_anchor)
+        m_ui->menu_show(m_menu.items, *m_menu.ui_anchor,
                         get_face("MenuForeground"), get_face("MenuBackground"),
                         m_menu.style);
-    }
-    if (m_ui_pending & MenuSelect)
+    if (m_ui_pending & MenuSelect and m_menu.ui_anchor)
         m_ui->menu_select(m_menu.selected);
     if (m_ui_pending & MenuHide)
         m_ui->menu_hide();
 
-    if (m_ui_pending & InfoShow)
+    const bool update_info_anchor = (m_ui_pending & Draw) and not (m_ui_pending & InfoHide) and
+                                    not m_info.content.empty() and is_inline(m_info.style);
+    if ((m_ui_pending & InfoShow) or update_info_anchor)
     {
-        m_info.ui_anchor = is_inline(m_info.style) ?
-            window.display_position(m_info.anchor) : DisplayCoord{};
-        m_ui->info_show(m_info.title, m_info.content, m_info.ui_anchor,
-                        get_face("Information"), m_info.style);
+        auto anchor = is_inline(m_info.style) ?
+             window.display_position(m_info.anchor) : DisplayCoord{};
+        if (not (m_ui_pending & MenuShow) and m_info.ui_anchor != anchor)
+            m_ui_pending |= anchor ? InfoShow : InfoHide;
+        m_info.ui_anchor = anchor;
     }
+
+    if (m_ui_pending & InfoShow and m_info.ui_anchor)
+        m_ui->info_show(m_info.title, m_info.content, *m_info.ui_anchor,
+                        get_face("Information"), m_info.style);
     if (m_ui_pending & InfoHide)
         m_ui->info_hide();
 

@@ -267,17 +267,17 @@ BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
 }
 }
 
-DisplayCoord Window::display_position(BufferCoord coord) const
+Optional<DisplayCoord> Window::display_position(BufferCoord coord) const
 {
     LineCount l = 0;
     for (auto& line : m_display_buffer.lines())
     {
         auto& range = line.range();
         if (range.begin <= coord and coord < range.end)
-            return {l, find_display_column(line, buffer(), coord)};
+            return DisplayCoord{l, find_display_column(line, buffer(), coord)};
         ++l;
     }
-    return { 0, 0 };
+    return {};
 }
 
 BufferCoord Window::buffer_coord(DisplayCoord coord) const
