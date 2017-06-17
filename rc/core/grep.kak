@@ -57,7 +57,7 @@ def -hidden grep-jump %{
     }
 }
 
-def grep-next -docstring 'Jump to the next grep match' %{
+def grep-next-match -docstring 'Jump to the next grep match' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
         exec "%opt{grep_current_line}g<a-l>/^[^:]+:\d+:<ret>"
@@ -66,7 +66,7 @@ def grep-next -docstring 'Jump to the next grep match' %{
     try %{ eval -client %opt{toolsclient} %{ exec %opt{grep_current_line}g } }
 }
 
-def grep-prev -docstring 'Jump to the previous grep match' %{
+def grep-previous-match -docstring 'Jump to the previous grep match' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
         exec "%opt{grep_current_line}g<a-/>^[^:]+:\d+:<ret>"
