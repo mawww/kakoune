@@ -941,7 +941,7 @@ void show_whitespaces(const Context& context, HighlightPass, DisplayBuffer& disp
 
                     if (cp == '\t')
                     {
-                        int column = (int)get_column(buffer, tabstop, it.coord());
+                        int column = (int)get_column(buffer, tabstop, (it - 1).coord());
                         int count = tabstop - (column % tabstop);
                         atom_it->replace(tab + String(tabpad[(CharCount)0], CharCount{count-1}));
                     }
