@@ -39,21 +39,15 @@ namespace Kakoune
 
 static const char* startup_info =
 "Kakoune recent breaking changes:\n"
-" * <a-'> (rotate selection contents) is now <a-\">,\n"
-"   <a-'> is rotate selections backwards.\n"
-" * The `identifier` face has been replaced with `variable`,\n"
-"   `function` and `module`, update your custom colorschemes\n"
-" * BufNew and BufOpen hooks have been renamed to BufNewFile\n"
-"   and BufOpenFile.\n"
-" * The status line can be further customized.\n"
-"   See `:doc options modelinefmt`.\n"
 " * Renamed range-faces/line-flags option types to range-specs/line-specs\n"
 "   range-specs can be used by the new replace-range highlighter.\n"
 "   A new update-option command can be used to update the line/ranges\n"
 "   according to buffer modification\n"
 " * <a-z> and <a-Z> are not append to/from register anymore but\n"
 "   combine from/to register.\n"
-" * `*` will now strip surrounding whitespaces from the selection\n";
+" * `*` will now strip surrounding whitespaces from the selection\n"
+" * lint/grep/make next/prev commands have been renamed to more\n"
+"   explicit names (lint-next-error, grep-previous-match, ...)\n";
 
 struct startup_error : runtime_error
 {
