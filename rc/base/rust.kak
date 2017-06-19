@@ -12,9 +12,9 @@ hook global BufCreate .*[.](rust|rs) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter -group / regions -default code rust \
-    string  '"' (?<!\\)(\\\\)*"        '' \
-    comment //   $                     '' \
-    comment /\* \*/                   /\*
+    string  %{(?<!')"} (?<!\\)(\\\\)*"        '' \
+    comment //          $                     '' \
+    comment /\*        \*/                   /\*
 
 add-highlighter -group /rust/string  fill string
 add-highlighter -group /rust/comment fill comment
