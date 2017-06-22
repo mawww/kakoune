@@ -46,7 +46,7 @@ report the issue on the bug tracker).
 Can I use Kakoune as a pager ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Kakoune can be used as a pager, either by setting the `EDITOR` environment
+Kakoune can be used as a pager, either by setting the `PAGER` environment
 variable to `kak`, or by writing data directly to its standard input using a
 shell pipeline. However, since the program relies on several heavy dynamic
 libraries (`boost` being one of them), it will be slightly less practical
