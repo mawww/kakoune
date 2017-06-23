@@ -175,11 +175,14 @@ public:
 
     void on_enabled() override
     {
-        if (context().has_client())
-            context().client().check_if_buffer_needs_reloading();
+        if (not (context().flags() & Context::Flags::Transient))
+        {
+            if (context().has_client())
+                context().client().check_if_buffer_needs_reloading();
 
-        m_fs_check_timer.set_next_date(Clock::now() + get_fs_check_timeout(context()));
-        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+            m_fs_check_timer.set_next_date(Clock::now() + get_fs_check_timeout(context()));
+            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        }
 
         if (m_hooks_disabled and not m_in_on_key)
         {
@@ -220,10 +223,15 @@ public:
             }
         });
 
+        const bool transient = context().flags() & Context::Flags::Transient;
+
         auto cp = key.codepoint();
 
         if (m_mouse_handler.handle_key(key, context()))
-            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        {
+            if (not transient)
+                m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        }
         else if (cp and isdigit(*cp))
         {
             int new_val = m_params.count * 10 + *cp - '0';
@@ -284,7 +292,7 @@ public:
         }
 
         context().hooks().run_hook("NormalKey", key_to_str(key), context());
-        if (enabled()) // The hook might have changed mode
+        if (enabled() and not transient) // The hook might have changed mode
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
@@ -873,7 +881,7 @@ public:
 
         display();
         m_line_changed = true;
-        if (enabled()) // The callback might have disabled us
+        if (enabled() and not (context().flags() & Context::Flags::Transient)) // The callback might have disabled us
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
@@ -957,7 +965,9 @@ private:
         display();
         m_line_changed = false;
         m_callback(m_line_editor.line(), PromptEvent::Change, context());
-        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+
+        if (not (context().flags() & Context::Flags::Transient))
+            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
     void on_disabled() override
@@ -1072,7 +1082,8 @@ public:
 
     void on_enabled() override
     {
-        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        if (not (context().flags() & Context::Flags::Transient))
+            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
     void on_disabled() override
@@ -1085,10 +1096,14 @@ public:
         auto& buffer = context().buffer();
         last_insert().keys.push_back(key);
 
+        const bool transient = context().flags() & Context::Flags::Transient;
         bool update_completions = true;
         bool moved = false;
         if (m_mouse_handler.handle_key(key, context()))
-            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        {
+            if (not transient)
+                m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        }
         else if (key == Key::Escape or key == ctrl('c'))
         {
             if (m_in_end)
@@ -1215,12 +1230,12 @@ public:
         else if (key == ctrl('v'))
         {
             on_next_key_with_autoinfo(context(), KeymapMode::None,
-                [this](Key key, Context&) {
+                [this, transient](Key key, Context&) {
                     if (auto cp = get_raw_codepoint(key))
                     {
                         insert(*cp);
                         context().hooks().run_hook("InsertKey", key_to_str(key), context());
-                        if (enabled())
+                        if (enabled() and not transient)
                             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
                     }
                 }, "raw insert", "enter key to insert");
@@ -1236,7 +1251,7 @@ public:
         if (moved)
             context().hooks().run_hook("InsertMove", key_to_str(key), context());
 
-        if (update_completions and enabled()) // Hooks might have disabled us
+        if (update_completions and enabled() and not transient) // Hooks might have disabled us
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
