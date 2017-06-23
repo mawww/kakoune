@@ -1046,7 +1046,7 @@ public:
           m_restore_cursor(mode == InsertMode::Append),
           m_edition(context()),
           m_completer(context()),
-          m_autoshowcompl(true),
+          m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Transient ?
                        Timer::Callback{} : [this](Timer&) {
                            if (m_autoshowcompl)
