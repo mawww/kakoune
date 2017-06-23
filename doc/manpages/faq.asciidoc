@@ -46,7 +46,7 @@ report the issue on the bug tracker).
 Can I use Kakoune as a pager ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Kakoune can be used as a pager, either by setting the `EDITOR` environment
+Kakoune can be used as a pager, either by setting the `PAGER` environment
 variable to `kak`, or by writing data directly to its standard input using a
 shell pipeline. However, since the program relies on several heavy dynamic
 libraries (`boost` being one of them), it will be slightly less practical
@@ -191,3 +191,16 @@ In order to open buffers in the same window simultaneously using `tmux`
 (or one of the supported multiplexers), run Kakoune in a `tmux` session,
 and simply use the `:new` command to spawn new clients as you would
 have otherwise in an X11 environment.
+
+Why does `a` extend the current selection, but `i` leaves it untouched ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Selections are ranges of characters whose delimiters are an "anchor" and
+a "cursor", and inserting characters is always done before the cursor in
+insert mode.
+
+Consequently, using the append primitive (`a`) nudges the cursor forward to
+make room for characters, effectively extending the current selection since
+the anchor remains immobile, even when the anchor and the cursor are at the
+same location. By opposition, using the insert primitive (`i`) merely adds
+characters before the cursor, which never modifies the current selection.
