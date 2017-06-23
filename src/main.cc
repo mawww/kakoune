@@ -47,7 +47,8 @@ static const char* startup_info =
 "   combine from/to register.\n"
 " * `*` will now strip surrounding whitespaces from the selection\n"
 " * lint/grep/make next/prev commands have been renamed to more\n"
-"   explicit names (lint-next-error, grep-previous-match, ...)\n";
+"   explicit names (lint-next-error, grep-previous-match, ...)\n"
+" * ctags commands have been renamed to use the ctags- prefix\n";
 
 struct startup_error : runtime_error
 {
