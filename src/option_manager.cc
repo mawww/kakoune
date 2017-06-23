@@ -48,13 +48,13 @@ struct option_not_found : public runtime_error
 
 Option& OptionManager::get_local_option(StringView name)
 {
-    auto it = find_option(m_options, name);
+    auto it = m_options.find(name);
     if (it != m_options.end())
-        return **it;
+        return *(it->value);
     else if (m_parent)
     {
-        m_options.emplace_back((*m_parent)[name].clone(*this));
-        return *m_options.back();
+        auto* clone = (*m_parent)[name].clone(*this);
+        return *m_options.insert({clone->name(), std::unique_ptr<Option>{clone}});
     }
     else
         throw option_not_found(name);
@@ -63,9 +63,9 @@ Option& OptionManager::get_local_option(StringView name)
 
 Option& OptionManager::operator[](StringView name)
 {
-    auto it = find_option(m_options, name);
+    auto it = m_options.find(name);
     if (it != m_options.end())
-        return **it;
+        return *it->value;
     else if (m_parent)
         return (*m_parent)[name];
     else
@@ -80,10 +80,9 @@ const Option& OptionManager::operator[](StringView name) const
 void OptionManager::unset_option(StringView name)
 {
     kak_assert(m_parent); // cannot unset option on global manager
-    auto it = find_option(m_options, name);
-    if (it != m_options.end())
+    if (m_options.contains(name))
     {
-        m_options.erase(it);
+        m_options.erase(name);
         on_option_changed((*m_parent)[name]);
     }
 }
@@ -93,11 +92,11 @@ OptionManager::OptionList OptionManager::flatten_options() const
     OptionList res = m_parent ? m_parent->flatten_options() : OptionList{};
     for (auto& option : m_options)
     {
-        auto it = find_option(res, option->name());
+        auto it = find_if(res, [&](const Option* opt) { return opt->name() == option.key; });
         if (it != res.end())
-            *it = option.get();
+            *it = option.value.get();
         else
-            res.emplace_back(option.get());
+            res.emplace_back(option.value.get());
     }
     return res;
 }
@@ -105,8 +104,7 @@ OptionManager::OptionList OptionManager::flatten_options() const
 void OptionManager::on_option_changed(const Option& option)
 {
     // if parent option changed, but we overrided it, it's like nothing happened
-    if (&option.manager() != this and
-        find_option(m_options, option.name()) != m_options.end())
+    if (&option.manager() != this and m_options.contains(option.name()))
         return;
 
     // The watcher list might get mutated during calls to on_option_changed

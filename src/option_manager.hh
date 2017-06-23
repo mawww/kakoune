@@ -6,6 +6,8 @@
 #include "exception.hh"
 #include "option.hh"
 #include "vector.hh"
+#include "hash_map.hh"
+#include "utils.hh"
 
 #include <memory>
 #include <type_traits>
@@ -101,7 +103,7 @@ private:
     friend class Scope;
     friend class OptionsRegistry;
 
-    Vector<std::unique_ptr<Option>, MemoryDomain::Options> m_options;
+    HashMap<StringView, std::unique_ptr<Option>, MemoryDomain::Options> m_options;
     OptionManager* m_parent;
 
     mutable Vector<OptionManagerWatcher*, MemoryDomain::Options> m_watchers;
@@ -190,13 +192,6 @@ template<typename T> bool Option::is_of_type() const
     return dynamic_cast<const TypedOption<T>*>(this) != nullptr;
 }
 
-template<typename T>
-auto find_option(T& container, StringView name) -> decltype(container.begin())
-{
-    using ptr_type = decltype(*container.begin());
-    return find_if(container, [&name](const ptr_type& opt) { return opt->name() == name; });
-}
-
 class OptionsRegistry
 {
 public:
@@ -217,18 +212,18 @@ public:
             throw runtime_error{format("name '{}' contains char out of [a-zA-Z0-9_]", name)};
 
         auto& opts = m_global_manager.m_options;
-        auto it = find_option(opts, name);
+        auto it = opts.find(name);
         if (it != opts.end())
         {
-            if ((*it)->is_of_type<T>() and (*it)->flags() == flags)
-                return **it;
+            if (it->value->is_of_type<T>() and it->value->flags() == flags)
+                return *it->value;
             throw runtime_error{format("option '{}' already declared with different type or flags", name)};
         }
         String doc =  docstring.empty() ? format("[{}]", option_type_name(Meta::Type<T>{}))
                                         : format("[{}] - {}", option_type_name(Meta::Type<T>{}), docstring);
         m_descs.emplace_back(new OptionDesc{name.str(), std::move(doc), flags});
-        opts.emplace_back(new TypedCheckedOption<T, validator>{m_global_manager, *m_descs.back(), value});
-        return *opts.back();
+        return *opts.insert({m_descs.back()->name(),
+                             make_unique<TypedCheckedOption<T, validator>>(m_global_manager, *m_descs.back(), value)});
     }
 
     const OptionDesc* option_desc(StringView name) const
