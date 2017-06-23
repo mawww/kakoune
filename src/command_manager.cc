@@ -9,6 +9,7 @@
 #include "utils.hh"
 #include "optional.hh"
 #include "containers.hh"
+#include "buffer_utils.hh"
 
 #include <algorithm>
 
@@ -442,6 +443,16 @@ void CommandManager::execute_single_command(CommandParameters params,
     auto command_it = find_command(context, params[0]);
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);
+
+    const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
+    if (debug_flags & DebugFlags::Commands)
+    {
+        String repr_parameters;
+
+        for (auto repr_param : param_view)
+            repr_parameters += " " + repr_param;
+        write_to_debug_buffer(format("command {}{}", params[0], repr_parameters));
+    }
 
     try
     {

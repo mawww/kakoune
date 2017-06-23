@@ -1115,7 +1115,7 @@ const CommandDesc debug_cmd = {
     "debug",
     nullptr,
     "debug <command>: write some debug informations in the debug buffer\n"
-    "existing commands: info, buffers, options, memory, shared-strings",
+    "existing commands: info, buffers, options, memory, shared-strings, profile-hash-maps",
     ParameterDesc{{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1},
     CommandFlags::None,
     CommandHelper{},
