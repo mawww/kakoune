@@ -1,0 +1,1 @@
+source "%val{runtime}/rc/base/auto-pairs.kak"
