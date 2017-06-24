@@ -62,22 +62,15 @@ constexpr char list_separator = ':';
 template<typename T, MemoryDomain domain>
 String option_to_string(const Vector<T, domain>& opt)
 {
-    String res;
-    for (size_t i = 0; i < opt.size(); ++i)
-    {
-        res += escape(option_to_string(opt[i]), list_separator, '\\');
-        if (i != opt.size() - 1)
-            res += list_separator;
-    }
-    return res;
+    return join(opt | transform([](const T& t) { return option_to_string(t); }),
+                list_separator);
 }
 
 template<typename T, MemoryDomain domain>
 void option_from_string(StringView str, Vector<T, domain>& opt)
 {
     opt.clear();
-    Vector<String> elems = split(str, list_separator, '\\');
-    for (auto& elem: elems)
+    for (auto& elem : split(str, list_separator, '\\'))
     {
         T opt_elem;
         option_from_string(elem, opt_elem);
@@ -90,9 +83,9 @@ bool option_add(Vector<T, domain>& opt, StringView str)
 {
     Vector<T, domain> vec;
     option_from_string(str, vec);
-    std::copy(std::make_move_iterator(vec.begin()),
-              std::make_move_iterator(vec.end()),
-              back_inserter(opt));
+    opt.insert(opt.end(),
+               std::make_move_iterator(vec.begin()),
+               std::make_move_iterator(vec.end()));
     return not vec.empty();
 }
 

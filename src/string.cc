@@ -222,9 +222,10 @@ String escape(StringView str, StringView characters, char escape)
 {
     String res;
     res.reserve(str.length());
+    auto cbeg = characters.begin(), cend = characters.end();
     for (auto it = str.begin(), end = str.end(); it != end; )
     {
-        auto next = std::find_if(it, end, [&characters](char c) { return contains(characters, c); });
+        auto next = std::find_first_of(it, end, cbeg, cend);
         if (next != end)
         {
             res += StringView{it, next+1};
