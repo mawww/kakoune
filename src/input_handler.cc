@@ -1057,6 +1057,7 @@ public:
         last_insert().mode = mode;
         last_insert().keys.clear();
         last_insert().disable_hooks = context().hooks_disabled();
+        last_insert().count = count;
         context().hooks().run_hook("InsertBegin", "", context());
         prepare(mode, count);
 
@@ -1435,7 +1436,7 @@ void InputHandler::repeat_last_insert()
                                 m_last_insert.disable_hooks);
     // context.last_insert will be refilled by the new Insert
     // this is very inefficient.
-    push_mode(new InputModes::Insert(*this, m_last_insert.mode, 1));
+    push_mode(new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count));
     for (auto& key : keys)
         current_mode().handle_key(key);
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
