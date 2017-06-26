@@ -59,7 +59,7 @@ ifeq ($(static),yes)
     LDFLAGS += -static -pthread
 endif
 
-CXXFLAGS += -pedantic -std=gnu++11 -g -Wall -Wextra -Wno-unused-parameter -Wno-reorder -Wno-sign-compare -Wno-address -Wno-noexcept-type -Wno-unknown-warning-option
+CXXFLAGS += -pedantic -std=gnu++11 -g -Wall -Wextra -Wno-unused-parameter -Wno-reorder -Wno-sign-compare -Wno-address -Wno-noexcept-type -Wno-unknown-attributes -Wno-unknown-warning-option
 
 all : kak
 
