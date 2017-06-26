@@ -1022,7 +1022,7 @@ private:
         int digit_count = compute_digit_count(context);
 
         char format[16];
-        format_to(format, "%{}d{}", digit_count, m_separator);
+        format_to(format, "%{}d", digit_count);
         const int main_line = (int)context.selections().main().cursor().line + 1;
         int last_line = -1;
         for (auto& line : display_buffer.lines())
@@ -1033,10 +1033,11 @@ private:
                                        current_line - main_line : current_line;
             char buffer[16];
             snprintf(buffer, 16, format, std::abs(line_to_format));
-            DisplayAtom atom{buffer};
-            atom.face = last_line == current_line ? face_wrapped :
+            const auto atom_face = last_line == current_line ? face_wrapped :
                 ((m_hl_cursor_line and is_cursor_line) ? face_absolute : face);
-            line.insert(line.begin(), std::move(atom));
+            line.insert(line.begin(), {buffer, atom_face});
+            line.insert(line.begin() + 1, {m_separator, face});
+
             last_line = current_line;
         }
     }
