@@ -1509,27 +1509,46 @@ HighlighterAndId create_highlighter_group(HighlighterParameters params)
     return HighlighterAndId(parser[0], make_unique<HighlighterGroup>(passes));
 }
 
-HighlighterAndId create_reference_highlighter(HighlighterParameters params)
+struct ReferenceHighlighter : Highlighter
 {
-    static const ParameterDesc param_desc{
-        { { "passes", { true, "" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
-    };
-    ParametersParser parser{params, param_desc};
-    HighlightPass passes = parse_passes(parser.get_switch("passes").value_or("colorize"));
+    ReferenceHighlighter(HighlightPass passes, String name)
+        : Highlighter{passes}, m_name{std::move(name)} {}
 
-    const String& name = parser[0];
-    auto func = [=](const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range)
+    static HighlighterAndId create(HighlighterParameters params)
+    {
+        static const ParameterDesc param_desc{
+            { { "passes", { true, "" } } },
+            ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
+        };
+        ParametersParser parser{params, param_desc};
+        HighlightPass passes = parse_passes(parser.get_switch("passes").value_or("colorize"));
+        return {parser[0], make_unique<ReferenceHighlighter>(passes, parser[0])};
+    }
+
+private:
+    void do_highlight(const Context& context, HighlightPass pass,
+                      DisplayBuffer& display_buffer, BufferRange range) override
     {
         try
         {
-            DefinedHighlighters::instance().get_child(name).highlight(context, pass, display_buffer, range);
+            DefinedHighlighters::instance().get_child(m_name).highlight(context, pass, display_buffer, range);
         }
         catch (child_not_found&)
         {}
-    };
-    return {name, make_highlighter(func, passes)};
-}
+    }
+
+    void do_compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup) override
+    {
+        try
+        {
+            DefinedHighlighters::instance().get_child(m_name).compute_display_setup(context, pass, setup);
+        }
+        catch (child_not_found&)
+        {}
+    }
+
+    const String m_name;
+};
 
 struct RegexMatch
 {
@@ -2012,7 +2031,7 @@ void register_highlighters()
           "wrap at word boundaries instead of codepoint boundaries if -word is given" } });
     registry.insert({
         "ref",
-        { create_reference_highlighter,
+        { ReferenceHighlighter::create,
           "Parameters: [-passes <passes>] <path>\n"
           "Reference the highlighter at <path> in shared highlighters\n"
           "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
