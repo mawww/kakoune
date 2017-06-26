@@ -198,7 +198,7 @@ select_to_first_non_blank(const Buffer& buffer, const Selection& selection)
 Optional<Selection>
 select_matching(const Buffer& buffer, const Selection& selection)
 {
-    Vector<Codepoint> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
+    ConstArrayView<Codepoint> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
     Utf8Iterator it{buffer.iterator_at(selection.cursor()), buffer};
     auto match = matching_pairs.end();
     while (not is_eol(*it))
