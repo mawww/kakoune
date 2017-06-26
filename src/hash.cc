@@ -1,6 +1,7 @@
 #include "hash.hh"
 
 #include <cstdint>
+#include <cstring>
 
 namespace Kakoune
 {
@@ -32,11 +33,12 @@ size_t hash_data(const char* input, size_t len)
     constexpr uint32_t c2 = 0x1b873593;
 
     const int nblocks = len / 4;
-    const uint32_t* blocks = reinterpret_cast<const uint32_t*>(data + nblocks*4);
+    const uint8_t* blocks = data + nblocks*4;
 
     for (int i = -nblocks; i; ++i)
     {
-        uint32_t key = blocks[i];
+        uint32_t key;
+        memcpy(&key, blocks + 4*i, 4);
         key *= c1;
         key = rotl(key, 15);
         key *= c2;

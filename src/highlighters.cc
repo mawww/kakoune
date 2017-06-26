@@ -1014,7 +1014,7 @@ struct LineNumbersHighlighter : Highlighter
     }
 
 private:
-    void do_highlight(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
+    void do_highlight(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange) override
     {
         const Face face = get_face("LineNumbers");
         const Face face_wrapped = get_face("LineNumbersWrapped");

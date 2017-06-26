@@ -23,7 +23,7 @@
 namespace Kakoune
 {
 
-enum class MessageType : char
+enum class MessageType : uint8_t
 {
     Unknown,
     Connect,
@@ -54,7 +54,7 @@ public:
     ~MsgWriter() noexcept(false)
     {
         uint32_t count = (uint32_t)m_buffer.size() - m_start;
-        *reinterpret_cast<uint32_t*>(m_buffer.data() + m_start + 1) = count;
+        memcpy(m_buffer.data() + m_start + sizeof(MessageType), &count, sizeof(uint32_t));
     }
 
     void write(const char* val, size_t size)
@@ -172,7 +172,9 @@ public:
     uint32_t size() const
     {
         kak_assert(m_write_pos >= header_size); 
-        return *reinterpret_cast<const uint32_t*>(m_stream.data()+1);
+        uint32_t res;
+        memcpy(&res, m_stream.data() + sizeof(MessageType), sizeof(uint32_t));
+        return res;
     }
 
     MessageType type() const

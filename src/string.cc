@@ -22,7 +22,8 @@ String::Data::Data(const char* data, size_t size, size_t capacity)
         l.size = size;
         l.capacity = capacity;
 
-        memcpy(l.ptr, data, size);
+        if (data != nullptr)
+            memcpy(l.ptr, data, size);
         l.ptr[size] = 0;
     }
     else
@@ -101,6 +102,9 @@ void String::Data::force_size(size_t new_size)
 
 void String::Data::append(const char* str, size_t len)
 {
+    if (len == 0)
+        return;
+
     const size_t new_size = size() + len;
     reserve(new_size);
 
@@ -147,7 +151,8 @@ void String::Data::set_size(size_t size)
 void String::Data::set_short(const char* data, size_t size)
 {
     s.size = (size << 1) | 1;
-    memcpy(s.string, data, size);
+    if (data != nullptr)
+        memcpy(s.string, data, size);
     s.string[size] = 0;
 }
 
@@ -308,7 +313,7 @@ Optional<int> str_to_int_ifp(StringView str)
             return {};
         res = res * 10 + c - '0';
     }
-    return negative ? -(int)res : (int)res;
+    return negative ? -res : res;
 }
 
 int str_to_int(StringView str)

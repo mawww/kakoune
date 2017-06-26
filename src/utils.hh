@@ -21,8 +21,8 @@ public:
 
     static T& instance()
     {
-        kak_assert (ms_instance);
-        return *ms_instance;
+        kak_assert(ms_instance);
+        return *static_cast<T*>(ms_instance);
     }
 
     static bool has_instance()
@@ -33,8 +33,8 @@ public:
 protected:
     Singleton()
     {
-        kak_assert(not ms_instance);
-        ms_instance = static_cast<T*>(this);
+        kak_assert(ms_instance == nullptr);
+        ms_instance = this;
     }
 
     ~Singleton()
@@ -44,11 +44,11 @@ protected:
     }
 
 private:
-    static T* ms_instance;
+    static Singleton* ms_instance;
 };
 
 template<typename T>
-T* Singleton<T>::ms_instance = nullptr;
+Singleton<T>* Singleton<T>::ms_instance = nullptr;
 
 // *** On scope end ***
 //

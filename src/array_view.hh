@@ -34,7 +34,7 @@ public:
     template<typename Alloc, typename U,
              typename = typename std::enable_if<sizeof(U) == sizeof(T)>::type>
     constexpr ArrayView(const std::vector<U, Alloc>& v)
-        : m_pointer(&v[0]), m_size(v.size()) {}
+        : m_pointer(v.data()), m_size(v.size()) {}
 
     constexpr ArrayView(const std::initializer_list<T>& v)
         : m_pointer(v.begin()), m_size(v.size()) {}
