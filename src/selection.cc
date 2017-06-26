@@ -404,6 +404,7 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
             replace(*m_buffer, sel, str)
           : m_buffer->insert(changes_tracker.get_new_coord(insert_pos[index]), str);
 
+        size_t old_timestamp = m_timestamp;
         changes_tracker.update(*m_buffer, m_timestamp);
 
         if (out_insert_pos)
@@ -411,16 +412,16 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
 
         if (mode == InsertMode::Replace)
         {
-            if (str.empty())
+            auto changes = m_buffer->changes_since(old_timestamp);
+            if (changes.size() < 2) // Nothing got inserted, either str was empty, or just \n at end of buffer
                 sel.anchor() = sel.cursor() = m_buffer->clamp(pos);
             else
             {
                 // we want min and max from *before* we do any change
                 auto& min = sel.min();
                 auto& max = sel.max();
-                auto& change = m_buffer->changes_since(0).back();
-                min = change.begin;
-                max = m_buffer->char_prev(change.end);
+                min = changes.back().begin;
+                max = m_buffer->char_prev(changes.back().end);
             }
         }
         else if (not str.empty())

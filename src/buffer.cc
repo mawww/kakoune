@@ -584,7 +584,10 @@ BufferCoord Buffer::erase(BufferCoord begin, BufferCoord end)
 BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end, StringView content)
 {
     if (is_end(end) and not content.empty() and content.back() == '\n')
+    {
+        end = back_coord();
         content = content.substr(0, content.length() - 1);
+    }
 
     auto pos = erase(begin, end);
     return insert(pos, content);
