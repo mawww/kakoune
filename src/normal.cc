@@ -35,12 +35,11 @@ enum class SelectMode
 template<SelectMode mode, typename T>
 void select(Context& context, T func)
 {
-    auto& buffer = context.buffer();
     auto& selections = context.selections();
     if (mode == SelectMode::Append)
     {
         auto& sel = selections.main();
-        if (auto res = func(buffer, sel))
+        if (auto res = func(context, sel))
         {
             if (res->captures().empty())
                 res->captures() = sel.captures();
@@ -54,7 +53,7 @@ void select(Context& context, T func)
         for (int i = 0; i < (int)selections.size(); ++i)
         {
             auto& sel = selections[i];
-            auto res = func(buffer, sel);
+            auto res = func(context, sel);
             if (not res)
             {
                 to_remove.push_back(i);
@@ -82,7 +81,7 @@ void select(Context& context, T func)
     selections.check_invariant();
 }
 
-template<SelectMode mode, Optional<Selection> (*func)(const Buffer&, const Selection&)>
+template<SelectMode mode, Optional<Selection> (*func)(const Context&, const Selection&)>
 void select(Context& context, NormalParams)
 {
     select<mode>(context, func);
@@ -727,15 +726,14 @@ void search(Context& context, NormalParams params)
                      {
                          int c = count;
                          auto& selections = context.selections();
-                         auto& buffer = context.buffer();
                          do {
                             bool wrapped = false;
                             for (auto& sel : selections)
                             {
                                 if (mode == SelectMode::Replace)
-                                    sel = keep_direction(find_next_match<direction>(buffer, sel, regex, wrapped), sel);
+                                    sel = keep_direction(find_next_match<direction>(context, sel, regex, wrapped), sel);
                                 if (mode == SelectMode::Extend)
-                                    sel.merge_with(find_next_match<direction>(buffer, sel, regex, wrapped));
+                                    sel.merge_with(find_next_match<direction>(context, sel, regex, wrapped));
                             }
                             selections.sort_and_merge_overlapping();
                          } while (--c > 0);
@@ -752,19 +750,18 @@ void search_next(Context& context, NormalParams params)
     {
         Regex regex{str};
         auto& selections = context.selections();
-        auto& buffer = context.buffer();
         bool main_wrapped = false;
         do {
             bool wrapped = false;
             if (mode == SelectMode::Replace)
             {
                 auto& sel = selections.main();
-                sel = keep_direction(find_next_match<direction>(buffer, sel, regex, wrapped), sel);
+                sel = keep_direction(find_next_match<direction>(context, sel, regex, wrapped), sel);
             }
             else if (mode == SelectMode::Append)
             {
                 auto sel = keep_direction(
-                    find_next_match<direction>(buffer, selections.main(), regex, wrapped),
+                    find_next_match<direction>(context, selections.main(), regex, wrapped),
                     selections.main());
                 selections.push_back(std::move(sel));
                 selections.set_main_index(selections.size() - 1);
@@ -1077,7 +1074,7 @@ void select_object(Context& context, NormalParams params)
         static constexpr struct ObjectType
         {
             Codepoint key;
-            Optional<Selection> (*func)(const Buffer&, const Selection&, int, ObjectFlags);
+            Optional<Selection> (*func)(const Context&, const Selection&, int, ObjectFlags);
         } selectors[] = {
             { 'w', select_word<Word> },
             { 'W', select_word<WORD> },

@@ -1,6 +1,7 @@
 #include "selectors.hh"
 
 #include "buffer_utils.hh"
+#include "context.hh"
 #include "flags.hh"
 #include "optional.hh"
 #include "regex.hh"
@@ -39,8 +40,9 @@ Selection utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
 
 template<WordType word_type>
 Optional<Selection>
-select_to_next_word(const Buffer& buffer, const Selection& selection)
+select_to_next_word(const Context& context, const Selection& selection)
 {
+    auto& buffer = context.buffer();
     Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     if (begin+1 == buffer.end())
         return {};
@@ -61,13 +63,14 @@ select_to_next_word(const Buffer& buffer, const Selection& selection)
 
     return utf8_range(begin, end-1);
 }
-template Optional<Selection> select_to_next_word<WordType::Word>(const Buffer&, const Selection&);
-template Optional<Selection> select_to_next_word<WordType::WORD>(const Buffer&, const Selection&);
+template Optional<Selection> select_to_next_word<WordType::Word>(const Context&, const Selection&);
+template Optional<Selection> select_to_next_word<WordType::WORD>(const Context&, const Selection&);
 
 template<WordType word_type>
 Optional<Selection>
-select_to_next_word_end(const Buffer& buffer, const Selection& selection)
+select_to_next_word_end(const Context& context, const Selection& selection)
 {
+    auto& buffer = context.buffer();
     Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     if (begin+1 == buffer.end())
         return {};
@@ -87,13 +90,14 @@ select_to_next_word_end(const Buffer& buffer, const Selection& selection)
 
     return utf8_range(begin, end-1);
 }
-template Optional<Selection> select_to_next_word_end<WordType::Word>(const Buffer&, const Selection&);
-template Optional<Selection> select_to_next_word_end<WordType::WORD>(const Buffer&, const Selection&);
+template Optional<Selection> select_to_next_word_end<WordType::Word>(const Context&, const Selection&);
+template Optional<Selection> select_to_next_word_end<WordType::WORD>(const Context&, const Selection&);
 
 template<WordType word_type>
 Optional<Selection>
-select_to_previous_word(const Buffer& buffer, const Selection& selection)
+select_to_previous_word(const Context& context, const Selection& selection)
 {
+    auto& buffer = context.buffer();
     Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     if (begin == buffer.begin())
         return {};
@@ -112,14 +116,15 @@ select_to_previous_word(const Buffer& buffer, const Selection& selection)
 
     return utf8_range(begin, with_end ? end : end+1);
 }
-template Optional<Selection> select_to_previous_word<WordType::Word>(const Buffer&, const Selection&);
-template Optional<Selection> select_to_previous_word<WordType::WORD>(const Buffer&, const Selection&);
+template Optional<Selection> select_to_previous_word<WordType::Word>(const Context&, const Selection&);
+template Optional<Selection> select_to_previous_word<WordType::WORD>(const Context&, const Selection&);
 
 template<WordType word_type>
 Optional<Selection>
-select_word(const Buffer& buffer, const Selection& selection,
+select_word(const Context& context, const Selection& selection,
             int count, ObjectFlags flags)
 {
+    auto& buffer = context.buffer();
     Utf8Iterator first{buffer.iterator_at(selection.cursor()), buffer};
     if (not is_word<word_type>(*first))
         return {};
@@ -141,12 +146,13 @@ select_word(const Buffer& buffer, const Selection& selection,
     return (flags & ObjectFlags::ToEnd) ? utf8_range(first, last)
                                         : utf8_range(last, first);
 }
-template Optional<Selection> select_word<WordType::Word>(const Buffer&, const Selection&, int, ObjectFlags);
-template Optional<Selection> select_word<WordType::WORD>(const Buffer&, const Selection&, int, ObjectFlags);
+template Optional<Selection> select_word<WordType::Word>(const Context&, const Selection&, int, ObjectFlags);
+template Optional<Selection> select_word<WordType::WORD>(const Context&, const Selection&, int, ObjectFlags);
 
 Optional<Selection>
-select_line(const Buffer& buffer, const Selection& selection)
+select_line(const Context& context, const Selection& selection)
 {
+    auto& buffer = context.buffer();
     Utf8Iterator first{buffer.iterator_at(selection.cursor()), buffer};
     if (*first == '\n' and first + 1 != buffer.end())
         ++first;
@@ -162,33 +168,35 @@ select_line(const Buffer& buffer, const Selection& selection)
 
 template<bool only_move>
 Optional<Selection>
-select_to_line_end(const Buffer& buffer, const Selection& selection)
+select_to_line_end(const Context& context, const Selection& selection)
 {
+    auto& buffer = context.buffer();
     BufferCoord begin = selection.cursor();
     LineCount line = begin.line;
     BufferCoord end = utf8::previous(buffer.iterator_at({line, buffer[line].length() - 1}),
-                                   buffer.iterator_at(line)).coord();
+                                     buffer.iterator_at(line)).coord();
     if (end < begin) // Do not go backward when cursor is on eol
         end = begin;
     return target_eol({only_move ? end : begin, end});
 }
-template Optional<Selection> select_to_line_end<false>(const Buffer&, const Selection&);
-template Optional<Selection> select_to_line_end<true>(const Buffer&, const Selection&);
+template Optional<Selection> select_to_line_end<false>(const Context&, const Selection&);
+template Optional<Selection> select_to_line_end<true>(const Context&, const Selection&);
 
 template<bool only_move>
 Optional<Selection>
-select_to_line_begin(const Buffer& buffer, const Selection& selection)
+select_to_line_begin(const Context&, const Selection& selection)
 {
     BufferCoord begin = selection.cursor();
     BufferCoord end = begin.line;
     return Selection{only_move ? end : begin, end};
 }
-template Optional<Selection> select_to_line_begin<false>(const Buffer&, const Selection&);
-template Optional<Selection> select_to_line_begin<true>(const Buffer&, const Selection&);
+template Optional<Selection> select_to_line_begin<false>(const Context&, const Selection&);
+template Optional<Selection> select_to_line_begin<true>(const Context&, const Selection&);
 
 Optional<Selection>
-select_to_first_non_blank(const Buffer& buffer, const Selection& selection)
+select_to_first_non_blank(const Context& context, const Selection& selection)
 {
+    auto& buffer = context.buffer();
     auto it = buffer.iterator_at(selection.cursor().line);
     skip_while(it, buffer.iterator_at(selection.cursor().line+1),
                is_horizontal_blank);
@@ -196,8 +204,9 @@ select_to_first_non_blank(const Buffer& buffer, const Selection& selection)
 }
 
 Optional<Selection>
-select_matching(const Buffer& buffer, const Selection& selection)
+select_matching(const Context& context, const Selection& selection)
 {
+    auto& buffer = context.buffer();
     ConstArrayView<Codepoint> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
     Utf8Iterator it{buffer.iterator_at(selection.cursor()), buffer};
     auto match = matching_pairs.end();
@@ -341,10 +350,11 @@ find_surrounding(const Container& container, Iterator pos,
 }
 
 Optional<Selection>
-select_surrounding(const Buffer& buffer, const Selection& selection,
+select_surrounding(const Context& context, const Selection& selection,
                    StringView opening, StringView closing, int level,
                    ObjectFlags flags)
 {
+    auto& buffer = context.buffer();
     const bool nestable = opening != closing;
     auto pos = selection.cursor();
     if (not nestable or flags & ObjectFlags::Inner)
@@ -378,9 +388,10 @@ select_surrounding(const Buffer& buffer, const Selection& selection,
 }
 
 Optional<Selection>
-select_to(const Buffer& buffer, const Selection& selection,
+select_to(const Context& context, const Selection& selection,
           Codepoint c, int count, bool inclusive)
 {
+    auto& buffer = context.buffer();
     Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     Utf8Iterator end = begin;
     do
@@ -396,9 +407,10 @@ select_to(const Buffer& buffer, const Selection& selection,
 }
 
 Optional<Selection>
-select_to_reverse(const Buffer& buffer, const Selection& selection,
+select_to_reverse(const Context& context, const Selection& selection,
                   Codepoint c, int count, bool inclusive)
 {
+    auto& buffer = context.buffer();
     Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     Utf8Iterator end = begin;
     do
@@ -414,7 +426,7 @@ select_to_reverse(const Buffer& buffer, const Selection& selection,
 }
 
 Optional<Selection>
-select_number(const Buffer& buffer, const Selection& selection,
+select_number(const Context& context, const Selection& selection,
               int count, ObjectFlags flags)
 {
     auto is_number = [&](char c) {
@@ -422,6 +434,7 @@ select_number(const Buffer& buffer, const Selection& selection,
                (not (flags & ObjectFlags::Inner) and c == '.');
     };
 
+    auto& buffer = context.buffer();
     BufferIterator first = buffer.iterator_at(selection.cursor());
     BufferIterator last = first;
 
@@ -450,13 +463,14 @@ select_number(const Buffer& buffer, const Selection& selection,
 }
 
 Optional<Selection>
-select_sentence(const Buffer& buffer, const Selection& selection,
+select_sentence(const Context& context, const Selection& selection,
                 int count, ObjectFlags flags)
 {
     auto is_end_of_sentence = [](char c) {
         return c == '.' or c == ';' or c == '!' or c == '?';
     };
 
+    auto& buffer = context.buffer();
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
     if (not (flags & ObjectFlags::ToEnd))
@@ -517,9 +531,10 @@ select_sentence(const Buffer& buffer, const Selection& selection,
 }
 
 Optional<Selection>
-select_paragraph(const Buffer& buffer, const Selection& selection,
+select_paragraph(const Context& context, const Selection& selection,
                  int count, ObjectFlags flags)
 {
+    auto& buffer = context.buffer();
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
     if (not (flags & ObjectFlags::ToEnd) and first.coord() > BufferCoord{0,1} and
@@ -572,13 +587,14 @@ select_paragraph(const Buffer& buffer, const Selection& selection,
 }
 
 Optional<Selection>
-select_whitespaces(const Buffer& buffer, const Selection& selection,
+select_whitespaces(const Context& context, const Selection& selection,
                    int count, ObjectFlags flags)
 {
     auto is_whitespace = [&](char c) {
         return c == ' ' or c == '\t' or
             (not (flags & ObjectFlags::Inner) and c == '\n');
     };
+    auto& buffer = context.buffer();
     BufferIterator first = buffer.iterator_at(selection.cursor());
     BufferIterator last  = first;
 
@@ -607,7 +623,7 @@ select_whitespaces(const Buffer& buffer, const Selection& selection,
 }
 
 Optional<Selection>
-select_indent(const Buffer& buffer, const Selection& selection,
+select_indent(const Context& context, const Selection& selection,
               int count, ObjectFlags flags)
 {
     auto get_indent = [](StringView str, int tabstop) {
@@ -634,7 +650,8 @@ select_indent(const Buffer& buffer, const Selection& selection,
     const bool to_begin = flags & ObjectFlags::ToBegin;
     const bool to_end   = flags & ObjectFlags::ToEnd;
 
-    int tabstop = buffer.options()["tabstop"].get<int>();
+    auto& buffer = context.buffer();
+    int tabstop = context.options()["tabstop"].get<int>();
     auto pos = selection.cursor();
     LineCount line = pos.line;
     auto indent = get_indent(buffer[line], tabstop);
@@ -673,7 +690,7 @@ select_indent(const Buffer& buffer, const Selection& selection,
 }
 
 Optional<Selection>
-select_argument(const Buffer& buffer, const Selection& selection,
+select_argument(const Context& context, const Selection& selection,
                 int level, ObjectFlags flags)
 {
     enum Class { None, Opening, Closing, Delimiter };
@@ -687,6 +704,7 @@ select_argument(const Buffer& buffer, const Selection& selection,
         }
     };
 
+    auto& buffer = context.buffer();
     BufferIterator pos = buffer.iterator_at(selection.cursor());
     switch (classify(*pos))
     {
@@ -762,8 +780,9 @@ select_argument(const Buffer& buffer, const Selection& selection,
 }
 
 Optional<Selection>
-select_lines(const Buffer& buffer, const Selection& selection)
+select_lines(const Context& context, const Selection& selection)
 {
+    auto& buffer = context.buffer();
     BufferCoord anchor = selection.anchor();
     BufferCoord cursor  = selection.cursor();
     BufferCoord& to_line_start = anchor <= cursor ? anchor : cursor;
@@ -776,8 +795,9 @@ select_lines(const Buffer& buffer, const Selection& selection)
 }
 
 Optional<Selection>
-trim_partial_lines(const Buffer& buffer, const Selection& selection)
+trim_partial_lines(const Context& context, const Selection& selection)
 {
+    auto& buffer = context.buffer();
     BufferCoord anchor = selection.anchor();
     BufferCoord cursor  = selection.cursor();
     BufferCoord& to_line_start = anchor <= cursor ? anchor : cursor;
@@ -853,8 +873,9 @@ static bool find_prev(const Buffer& buffer, const BufferIterator& pos,
 }
 
 template<Direction direction>
-Selection find_next_match(const Buffer& buffer, const Selection& sel, const Regex& regex, bool& wrapped)
+Selection find_next_match(const Context& context, const Selection& sel, const Regex& regex, bool& wrapped)
 {
+    auto& buffer = context.buffer();
     MatchResults<BufferIterator> matches;
     auto pos = buffer.iterator_at(direction == Backward ? sel.min() : sel.max());
     wrapped = false;
@@ -876,8 +897,8 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
 
     return {begin.coord(), end.coord(), std::move(captures)};
 }
-template Selection find_next_match<Forward>(const Buffer&, const Selection&, const Regex&, bool&);
-template Selection find_next_match<Backward>(const Buffer&, const Selection&, const Regex&, bool&);
+template Selection find_next_match<Forward>(const Context&, const Selection&, const Regex&, bool&);
+template Selection find_next_match<Backward>(const Context&, const Selection&, const Regex&, bool&);
 
 using RegexIt = RegexIterator<BufferIterator>;
 

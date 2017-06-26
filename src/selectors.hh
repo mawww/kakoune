@@ -7,6 +7,7 @@ namespace Kakoune
 {
 
 class Regex;
+class Context;
 template<typename Iterator> struct MatchResults;
 
 inline Selection keep_direction(Selection res, const Selection& ref)
@@ -18,39 +19,39 @@ inline Selection keep_direction(Selection res, const Selection& ref)
 
 template<WordType word_type>
 Optional<Selection>
-select_to_next_word(const Buffer& buffer, const Selection& selection);
+select_to_next_word(const Context& context, const Selection& selection);
 
 template<WordType word_type>
 Optional<Selection>
-select_to_next_word_end(const Buffer& buffer, const Selection& selection);
+select_to_next_word_end(const Context& context, const Selection& selection);
 
 template<WordType word_type>
 Optional<Selection>
-select_to_previous_word(const Buffer& buffer, const Selection& selection);
+select_to_previous_word(const Context& context, const Selection& selection);
 
 Optional<Selection>
-select_line(const Buffer& buffer, const Selection& selection);
+select_line(const Context& context, const Selection& selection);
 
 Optional<Selection>
-select_matching(const Buffer& buffer, const Selection& selection);
+select_matching(const Context& context, const Selection& selection);
 
 Optional<Selection>
-select_to(const Buffer& buffer, const Selection& selection,
+select_to(const Context& context, const Selection& selection,
                     Codepoint c, int count, bool inclusive);
 Optional<Selection>
-select_to_reverse(const Buffer& buffer, const Selection& selection,
+select_to_reverse(const Context& context, const Selection& selection,
                   Codepoint c, int count, bool inclusive);
 
 template<bool only_move>
 Optional<Selection>
-select_to_line_end(const Buffer& buffer, const Selection& selection);
+select_to_line_end(const Context& context, const Selection& selection);
 
 template<bool only_move>
 Optional<Selection>
-select_to_line_begin(const Buffer& buffer, const Selection& selection);
+select_to_line_begin(const Context& context, const Selection& selection);
 
 Optional<Selection>
-select_to_first_non_blank(const Buffer& buffer, const Selection& selection);
+select_to_first_non_blank(const Context& context, const Selection& selection);
 
 enum class ObjectFlags
 {
@@ -63,52 +64,52 @@ constexpr bool with_bit_ops(Meta::Type<ObjectFlags>) { return true; }
 
 template<WordType word_type>
 Optional<Selection>
-select_word(const Buffer& buffer, const Selection& selection,
+select_word(const Context& context, const Selection& selection,
             int count, ObjectFlags flags);
 
 Optional<Selection>
-select_number(const Buffer& buffer, const Selection& selection,
+select_number(const Context& context, const Selection& selection,
               int count, ObjectFlags flags);
 
 Optional<Selection>
-select_sentence(const Buffer& buffer, const Selection& selection,
+select_sentence(const Context& context, const Selection& selection,
                 int count, ObjectFlags flags);
 
 Optional<Selection>
-select_paragraph(const Buffer& buffer, const Selection& selection,
+select_paragraph(const Context& context, const Selection& selection,
                  int count, ObjectFlags flags);
 
 Optional<Selection>
-select_whitespaces(const Buffer& buffer, const Selection& selection,
+select_whitespaces(const Context& context, const Selection& selection,
                    int count, ObjectFlags flags);
 
 Optional<Selection>
-select_indent(const Buffer& buffer, const Selection& selection,
+select_indent(const Context& context, const Selection& selection,
               int count, ObjectFlags flags);
 
 Optional<Selection>
-select_argument(const Buffer& buffer, const Selection& selection,
+select_argument(const Context& context, const Selection& selection,
                 int level, ObjectFlags flags);
 
 Optional<Selection>
-select_lines(const Buffer& buffer, const Selection& selection);
+select_lines(const Context& context, const Selection& selection);
 
 Optional<Selection>
-trim_partial_lines(const Buffer& buffer, const Selection& selection);
+trim_partial_lines(const Context& context, const Selection& selection);
 
 void select_buffer(SelectionList& selections);
 
 enum Direction { Forward, Backward };
 
 template<Direction direction>
-Selection find_next_match(const Buffer& buffer, const Selection& sel,
+Selection find_next_match(const Context& context, const Selection& sel,
                           const Regex& regex, bool& wrapped);
 
 void select_all_matches(SelectionList& selections, const Regex& regex, int capture = 0);
 void split_selections(SelectionList& selections, const Regex& regex, int capture = 0);
 
 Optional<Selection>
-select_surrounding(const Buffer& buffer, const Selection& selection,
+select_surrounding(const Context& context, const Selection& selection,
                              StringView opening, StringView closing, int level,
                              ObjectFlags flags);
 
