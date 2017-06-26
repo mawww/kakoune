@@ -245,7 +245,6 @@ public:
     private:
         String::Data owned;
         const char* unowned = nullptr;
-
     };
     ZeroTerminatedString zstr() const { return {begin(), end()}; }
 
