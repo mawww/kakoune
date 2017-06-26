@@ -30,6 +30,8 @@ def format -docstring "Format the contents of the current buffer" %{ eval -draft
                     rm -f \"${path_file_tmp}\"
                 }
             "
+        else
+            printf '%s\n' "eval -client '${kak_client}' echo -color Error formatcmd option not specified"
         fi
     }
 } }
