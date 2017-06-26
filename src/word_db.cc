@@ -30,13 +30,9 @@ static WordList get_words(StringView content, ConstArrayView<Codepoint> extra_wo
     return res;
 }
 
-static Vector<Codepoint> get_extra_word_chars(const Buffer& buffer)
+static ConstArrayView<Codepoint> get_extra_word_chars(const Buffer& buffer)
 {
-    auto& str = buffer.options()["completion_extra_word_char"].get<String>();
-    Vector<Codepoint> res;
-    for (utf8::iterator<const char*> it{str.begin(), str}; it != str.end(); ++it)
-        res.push_back(*it);
-    return res;
+    return buffer.options()["completion_extra_word_char"].get<Vector<Codepoint, MemoryDomain::Options>>();
 }
 
 void WordDB::add_words(StringView line)

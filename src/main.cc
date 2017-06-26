@@ -251,7 +251,7 @@ static void check_timeout(const int& timeout)
         throw runtime_error{"the minimum acceptable timeout is 50 milliseconds"};
 }
 
-static void check_extra_word_char(const String& extra_chars)
+static void check_extra_word_char(const Vector<Codepoint, MemoryDomain::Options>& extra_chars)
 {
     if (contains_that(extra_chars, is_blank))
         throw runtime_error{"blanks are not accepted for extra completion characters"};
@@ -324,10 +324,10 @@ void register_options()
 
     reg.declare_option("debug", "various debug flags", DebugFlags::None);
     reg.declare_option("readonly", "prevent buffers from being modified", false);
-    reg.declare_option<String, check_extra_word_char>(
+    reg.declare_option<Vector<Codepoint, MemoryDomain::Options>, check_extra_word_char>(
         "completion_extra_word_char",
         "Additional characters to be considered as words for insert completion",
-        ""_str);
+        {});
 }
 
 static Client* local_client = nullptr;

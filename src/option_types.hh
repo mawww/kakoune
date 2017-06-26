@@ -57,6 +57,15 @@ inline void option_from_string(StringView str, bool& opt)
 }
 constexpr StringView option_type_name(Meta::Type<bool>) { return "bool"; }
 
+inline String option_to_string(Codepoint opt) { return to_string(opt); }
+inline void option_from_string(StringView str, Codepoint& opt)
+{
+    if (str.char_length() != 1)
+        throw runtime_error{format("'{}' is not a single codepoint", str)};
+    opt = str[0_char];
+}
+constexpr StringView option_type_name(Meta::Type<Codepoint>) { return "codepoint"; }
+
 constexpr char list_separator = ':';
 
 template<typename T, MemoryDomain domain>
