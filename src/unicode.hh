@@ -6,6 +6,8 @@
 #include <locale>
 
 #include "units.hh"
+#include "array_view.hh"
+#include "containers.hh"
 
 namespace Kakoune
 {
@@ -30,13 +32,13 @@ inline bool is_blank(Codepoint c) noexcept
 enum WordType { Word, WORD };
 
 template<WordType word_type = Word>
-inline bool is_word(Codepoint c) noexcept
+inline bool is_word(Codepoint c, ConstArrayView<Codepoint> extra_word_chars = {}) noexcept
 {
-    return c == '_' or iswalnum((wchar_t)c);
+    return c == '_' or iswalnum((wchar_t)c) or contains(extra_word_chars, c);
 }
 
 template<>
-inline bool is_word<WORD>(Codepoint c) noexcept
+inline bool is_word<WORD>(Codepoint c, ConstArrayView<Codepoint>) noexcept
 {
     return not is_blank(c);
 }
@@ -65,13 +67,13 @@ enum class CharCategories
 };
 
 template<WordType word_type = Word>
-inline CharCategories categorize(Codepoint c) noexcept
+inline CharCategories categorize(Codepoint c, ConstArrayView<Codepoint> extra_word_chars) noexcept
 {
     if (is_eol(c))
         return CharCategories::EndOfLine;
     if (is_horizontal_blank(c))
         return CharCategories::Blank;
-    if (word_type == WORD or is_word(c))
+    if (word_type == WORD or is_word(c, extra_word_chars))
         return CharCategories::Word;
     return CharCategories::Punctuation;
 }

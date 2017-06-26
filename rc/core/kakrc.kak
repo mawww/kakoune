@@ -38,7 +38,7 @@ add-highlighter -group / regions -default code kakrc \
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=kak %{
         set window static_words '${keywords}:${attributes}:${types}:${values}'
-        set -- window completion_extra_word_char '-'
+        set -- window extra_word_chars '-'
     }" | sed 's,|,:,g'
 
     # Highlight keywords. Teach \b that - does not create a word boundary

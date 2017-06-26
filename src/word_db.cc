@@ -32,7 +32,7 @@ static WordList get_words(StringView content, ConstArrayView<Codepoint> extra_wo
 
 static ConstArrayView<Codepoint> get_extra_word_chars(const Buffer& buffer)
 {
-    return buffer.options()["completion_extra_word_char"].get<Vector<Codepoint, MemoryDomain::Options>>();
+    return buffer.options()["extra_word_chars"].get<Vector<Codepoint, MemoryDomain::Options>>();
 }
 
 void WordDB::add_words(StringView line)
@@ -147,7 +147,7 @@ void WordDB::update_db()
 
 void WordDB::on_option_changed(const Option& option)
 {
-    if (option.name() == "completion_extra_word_char")
+    if (option.name() == "extra_word_chars")
         rebuild_db();
 }
 

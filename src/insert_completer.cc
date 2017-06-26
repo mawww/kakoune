@@ -79,8 +79,8 @@ WordDB& get_word_db(const Buffer& buffer)
 template<bool other_buffers>
 InsertCompletion complete_word(const SelectionList& sels, const OptionManager& options)
 {
-    auto& extra_word_char = options["completion_extra_word_char"].get<Vector<Codepoint, MemoryDomain::Options>>();
-    auto is_word_pred = [extra_word_char](Codepoint c) { return is_word(c) or contains(extra_word_char, c); };
+    ConstArrayView<Codepoint> extra_word_chars = options["extra_word_chars"].get<Vector<Codepoint, MemoryDomain::Options>>();
+    auto is_word_pred = [extra_word_chars](Codepoint c) { return is_word(c, extra_word_chars); };
 
     const Buffer& buffer = sels.buffer();
     BufferCoord cursor_pos = sels.main().cursor();

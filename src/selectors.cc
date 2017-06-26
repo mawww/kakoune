@@ -36,17 +36,24 @@ Selection utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
     return {first.base().coord(), last.base().coord()};
 }
 
+ConstArrayView<Codepoint> get_extra_word_chars(const Context& context)
+{
+    return context.options()["extra_word_chars"].get<Vector<Codepoint, MemoryDomain::Options>>();
+}
+
 }
 
 template<WordType word_type>
 Optional<Selection>
 select_to_next_word(const Context& context, const Selection& selection)
 {
+    auto extra_word_chars = get_extra_word_chars(context);
     auto& buffer = context.buffer();
     Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     if (begin+1 == buffer.end())
         return {};
-    if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
+    if (categorize<word_type>(*begin, extra_word_chars) !=
+        categorize<word_type>(*(begin+1), extra_word_chars))
         ++begin;
 
     if (not skip_while(begin, buffer.end(),
@@ -54,10 +61,12 @@ select_to_next_word(const Context& context, const Selection& selection)
         return {};
     Utf8Iterator end = begin+1;
 
-    if (word_type == Word and is_punctuation(*begin))
+    auto is_word = [&](Codepoint c) { return Kakoune::is_word<word_type>(c, extra_word_chars); };
+
+    if (is_word(*begin))
+        skip_while(end, buffer.end(), is_word);
+    else if (is_punctuation(*begin))
         skip_while(end, buffer.end(), is_punctuation);
-    else if (is_word<word_type>(*begin))
-        skip_while(end, buffer.end(), is_word<word_type>);
 
     skip_while(end, buffer.end(), is_horizontal_blank);
 
@@ -70,11 +79,13 @@ template<WordType word_type>
 Optional<Selection>
 select_to_next_word_end(const Context& context, const Selection& selection)
 {
+    auto extra_word_chars = get_extra_word_chars(context);
     auto& buffer = context.buffer();
     Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     if (begin+1 == buffer.end())
         return {};
-    if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
+    if (categorize<word_type>(*begin, extra_word_chars) !=
+        categorize<word_type>(*(begin+1), extra_word_chars))
         ++begin;
 
     if (not skip_while(begin, buffer.end(),
@@ -83,10 +94,12 @@ select_to_next_word_end(const Context& context, const Selection& selection)
     Utf8Iterator end = begin;
     skip_while(end, buffer.end(), is_horizontal_blank);
 
-    if (word_type == Word and is_punctuation(*end))
+    auto is_word = [&](Codepoint c) { return Kakoune::is_word<word_type>(c, extra_word_chars); };
+
+    if (is_word(*end))
+        skip_while(end, buffer.end(), is_word);
+    else if (is_punctuation(*end))
         skip_while(end, buffer.end(), is_punctuation);
-    else if (is_word<word_type>(*end))
-        skip_while(end, buffer.end(), is_word<word_type>);
 
     return utf8_range(begin, end-1);
 }
@@ -97,22 +110,25 @@ template<WordType word_type>
 Optional<Selection>
 select_to_previous_word(const Context& context, const Selection& selection)
 {
+    auto extra_word_chars = get_extra_word_chars(context);
     auto& buffer = context.buffer();
     Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     if (begin == buffer.begin())
         return {};
-    if (categorize<word_type>(*begin) != categorize<word_type>(*(begin-1)))
+    if (categorize<word_type>(*begin, extra_word_chars) !=
+        categorize<word_type>(*(begin-1), extra_word_chars))
         --begin;
 
     skip_while_reverse(begin, buffer.begin(), [](Codepoint c){ return is_eol(c); });
     Utf8Iterator end = begin;
 
-    bool with_end = skip_while_reverse(end, buffer.begin(), is_horizontal_blank);
-    if (word_type == Word and is_punctuation(*end))
-        with_end = skip_while_reverse(end, buffer.begin(), is_punctuation);
+    auto is_word = [&](Codepoint c) { return Kakoune::is_word<word_type>(c, extra_word_chars); };
 
-    else if (is_word<word_type>(*end))
-        with_end = skip_while_reverse(end, buffer.begin(), is_word<word_type>);
+    bool with_end = skip_while_reverse(end, buffer.begin(), is_horizontal_blank);
+    if (is_word(*end))
+        with_end = skip_while_reverse(end, buffer.begin(), is_word);
+    else if (is_punctuation(*end))
+        with_end = skip_while_reverse(end, buffer.begin(), is_punctuation);
 
     return utf8_range(begin, with_end ? end : end+1);
 }
@@ -124,21 +140,25 @@ Optional<Selection>
 select_word(const Context& context, const Selection& selection,
             int count, ObjectFlags flags)
 {
+    auto extra_word_chars = get_extra_word_chars(context);
     auto& buffer = context.buffer();
+
+    auto is_word = [&](Codepoint c) { return Kakoune::is_word<word_type>(c, extra_word_chars); };
+
     Utf8Iterator first{buffer.iterator_at(selection.cursor()), buffer};
-    if (not is_word<word_type>(*first))
+    if (not is_word(*first))
         return {};
 
     Utf8Iterator last = first;
     if (flags & ObjectFlags::ToBegin)
     {
-        skip_while_reverse(first, buffer.begin(), is_word<word_type>);
-        if (not is_word<word_type>(*first))
+        skip_while_reverse(first, buffer.begin(), is_word);
+        if (not is_word(*first))
             ++first;
     }
     if (flags & ObjectFlags::ToEnd)
     {
-        skip_while(last, buffer.end(), is_word<word_type>);
+        skip_while(last, buffer.end(), is_word);
         if (not (flags & ObjectFlags::Inner))
             skip_while(last, buffer.end(), is_horizontal_blank);
         --last;

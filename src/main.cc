@@ -48,7 +48,9 @@ static const char* startup_info =
 " * `*` will now strip surrounding whitespaces from the selection\n"
 " * lint/grep/make next/prev commands have been renamed to more\n"
 "   explicit names (lint-next-error, grep-previous-match, ...)\n"
-" * ctags commands have been renamed to use the ctags- prefix\n";
+" * ctags commands have been renamed to use the ctags- prefix\n"
+" * completion_extra_word_char option is now extra_word_chars (note the plural form)\n"
+"   and is used for word selection commands\n";
 
 struct startup_error : runtime_error
 {
@@ -251,7 +253,7 @@ static void check_timeout(const int& timeout)
         throw runtime_error{"the minimum acceptable timeout is 50 milliseconds"};
 }
 
-static void check_extra_word_char(const Vector<Codepoint, MemoryDomain::Options>& extra_chars)
+static void check_extra_word_chars(const Vector<Codepoint, MemoryDomain::Options>& extra_chars)
 {
     if (contains_that(extra_chars, is_blank))
         throw runtime_error{"blanks are not accepted for extra completion characters"};
@@ -324,8 +326,8 @@ void register_options()
 
     reg.declare_option("debug", "various debug flags", DebugFlags::None);
     reg.declare_option("readonly", "prevent buffers from being modified", false);
-    reg.declare_option<Vector<Codepoint, MemoryDomain::Options>, check_extra_word_char>(
-        "completion_extra_word_char",
+    reg.declare_option<Vector<Codepoint, MemoryDomain::Options>, check_extra_word_chars>(
+        "extra_word_chars",
         "Additional characters to be considered as words for insert completion",
         {});
 }
