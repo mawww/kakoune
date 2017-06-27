@@ -19,7 +19,7 @@ main() {
             eval -buffer *debug* write debug
             quit!
         }
-        exec "%sh{cat cmd}"
+        try %{ exec "%sh{cat cmd}" }
         exec <c-l>
         eval -buffer *debug* write debug
         nop %sh{

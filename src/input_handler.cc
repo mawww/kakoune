@@ -1430,6 +1430,9 @@ void InputHandler::repeat_last_insert()
     if (m_last_insert.keys.empty())
         return;
 
+    if (dynamic_cast<InputModes::Normal*>(&current_mode()) == nullptr)
+        throw runtime_error{"repeating last insert not available in this context"};
+
     Vector<Key> keys;
     swap(keys, m_last_insert.keys);
     ScopedSetBool disable_hooks(context().hooks_disabled(),
