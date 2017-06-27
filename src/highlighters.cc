@@ -687,6 +687,7 @@ struct WrapHighlighter : Highlighter
             return;
 
         const Buffer& buffer = context.buffer();
+        const auto& cursor = context.selections().main().cursor();
         const int tabstop = context.options()["tabstop"].get<int>();
         const LineCount win_height = context.window().dimensions().line;
         for (auto it = display_buffer.lines().begin();
@@ -718,8 +719,16 @@ struct WrapHighlighter : Highlighter
 
                     if (it+1 - display_buffer.lines().begin() == win_height)
                     {
-                        display_buffer.lines().erase(it+1, display_buffer.lines().end());
-                        return;
+                        if (cursor >= new_line.begin()->begin()) // strip first lines if cursor is not visible
+                        {
+                            display_buffer.lines().erase(display_buffer.lines().begin(), display_buffer.lines().begin()+1);
+                            --it;
+                        }
+                        else
+                        {
+                            display_buffer.lines().erase(it+1, display_buffer.lines().end());
+                            return;
+                        }
                     }
                     it = display_buffer.lines().insert(it+1, new_line);
 
@@ -790,6 +799,8 @@ struct WrapHighlighter : Highlighter
                     coord = split_coord;
                 }
                 kak_assert(setup.cursor_pos.column >= 0 and setup.cursor_pos.column < setup.window_range.column);
+                if (setup.cursor_pos.line >= win_height) // In that case we will remove some lines from the top
+                    setup.cursor_pos.line = win_height - 1;
             }
             win_line += wrap_count + 1;
 
