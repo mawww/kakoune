@@ -595,8 +595,9 @@ BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end, StringView conte
 
 bool Buffer::is_modified() const
 {
-    return m_history_cursor != m_last_save_history_cursor
-           or not m_current_undo_group.empty();
+    return m_flags & Flags::File and
+           (m_history_cursor != m_last_save_history_cursor or
+            not m_current_undo_group.empty());
 }
 
 void Buffer::notify_saved()
