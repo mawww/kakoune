@@ -298,7 +298,7 @@ def -hidden c-family-insert-include-guards %{
     }
 }
 
-hook global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
+hook -group c-family-insert global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
 
 decl -docstring "colon separated list of path in which header files will be looked for" \
     str-list alt_dirs ".:.."
