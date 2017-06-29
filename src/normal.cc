@@ -477,16 +477,12 @@ void pipe(Context& context, NormalParams)
             if (event != PromptEvent::Validate)
                 return;
 
-            StringView real_cmd;
             if (cmdline.empty())
-                real_cmd = context.main_sel_register_value("|");
+                cmdline = context.main_sel_register_value("|");
             else
-            {
                 RegisterManager::instance()['|'].set(context, cmdline.str());
-                real_cmd = cmdline;
-            }
 
-            if (real_cmd.empty())
+            if (cmdline.empty())
                 return;
 
             Buffer& buffer = context.buffer();
@@ -504,7 +500,7 @@ void pipe(Context& context, NormalParams)
                     if (insert_eol)
                         in += '\n';
                     String out = ShellManager::instance().eval(
-                        real_cmd, context, in,
+                        cmdline, context, in,
                         ShellManager::Flags::WaitForStdout).first;
 
                     if (insert_eol and out.back() == '\n')
@@ -519,7 +515,7 @@ void pipe(Context& context, NormalParams)
                 for (int i = 0; i < selections.size(); ++i)
                 {
                     selections.set_main_index(i);
-                    ShellManager::instance().eval(real_cmd, context,
+                    ShellManager::instance().eval(cmdline, context,
                                                   content(buffer, selections.main()),
                                                   ShellManager::Flags::None);
                 }
@@ -539,20 +535,16 @@ void insert_output(Context& context, NormalParams)
             if (event != PromptEvent::Validate)
                 return;
 
-            StringView real_cmd;
             if (cmdline.empty())
-                real_cmd = context.main_sel_register_value("|");
+                cmdline = context.main_sel_register_value("|");
             else
-            {
                 RegisterManager::instance()['|'].set(context, cmdline.str());
-                real_cmd = cmdline;
-            }
 
-            if (real_cmd.empty())
+            if (cmdline.empty())
                 return;
 
             auto str = ShellManager::instance().eval(
-                real_cmd, context, {}, ShellManager::Flags::WaitForStdout).first;
+                cmdline, context, {}, ShellManager::Flags::WaitForStdout).first;
             ScopedEdition edition(context);
             context.selections().insert(str, mode);
         });
