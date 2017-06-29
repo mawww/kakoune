@@ -766,7 +766,7 @@ static constexpr auto hooks = {
     "BufWritePre", "BufOpenFifo", "BufCloseFifo", "BufReadFifo", "BufSetOption",
     "InsertBegin", "InsertChar", "InsertDelete", "InsertEnd", "InsertIdle", "InsertKey",
     "InsertMove", "InsertCompletionHide", "InsertCompletionShow",
-    "KakBegin", "KakEnd", "FocusIn", "FocusOut", "RuntimeError",
+    "KakBegin", "KakEnd", "FocusIn", "FocusOut", "RuntimeError", "Source",
     "NormalBegin", "NormalEnd", "NormalIdle", "NormalKey", "RawKey",
     "WinClose", "WinCreate", "WinDisplay", "WinResize", "WinSetOption",
 };
@@ -1188,6 +1188,8 @@ const CommandDesc source_cmd = {
         {
             CommandManager::instance().execute(file_content, context,
                                                {{}, {{"source", path}}});
+
+            context.hooks().run_hook("Source", path, context);
         }
         catch (Kakoune::runtime_error& err)
         {
