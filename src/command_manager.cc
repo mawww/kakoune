@@ -562,18 +562,13 @@ Optional<CommandInfo> CommandManager::command_info(const Context& context, Strin
     return res;
 }
 
-Completions CommandManager::complete_command_name(const Context& context,
-                                                  StringView query, bool with_aliases) const
+Completions CommandManager::complete_command_name(const Context& context, StringView query) const
 {
     auto commands = m_commands
             | filter([](const CommandMap::Item& cmd) { return not (cmd.value.flags & CommandFlags::Hidden); })
             | transform(std::mem_fn(&CommandMap::Item::key));
 
-    if (not with_aliases)
-        return {0, query.length(), Kakoune::complete(query, query.length(), commands)};
-
-    auto candidates = Kakoune::complete(query, query.length(), commands);
-    return {0, query.length(), std::move(candidates)};
+    return {0, query.length(), Kakoune::complete(query, query.length(), commands)};
 }
 
 Completions CommandManager::complete(const Context& context,
@@ -606,7 +601,7 @@ Completions CommandManager::complete(const Context& context,
     {
         auto cmd_start = is_last_token ? cursor_pos : tokens[tok_idx].begin();
         StringView query = command_line.substr(cmd_start, cursor_pos - cmd_start);
-        return offset_pos(complete_command_name(context, query, true), cmd_start);
+        return offset_pos(complete_command_name(context, query), cmd_start);
     }
 
     kak_assert(not tokens.empty());
@@ -685,7 +680,7 @@ Completions CommandManager::complete(const Context& context,
     StringView prefix = params[token_to_complete].substr(0, pos_in_token);
 
     if (token_to_complete == 0)
-        return complete_command_name(context, prefix, true);
+        return complete_command_name(context, prefix);
     else
     {
         StringView command_name = params[0];

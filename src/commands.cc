@@ -168,7 +168,7 @@ static Completions complete_command_name(const Context& context, CompletionFlags
                                          const String& prefix, ByteCount cursor_pos)
 {
    return CommandManager::instance().complete_command_name(
-       context, prefix.substr(0, cursor_pos), false);
+       context, prefix.substr(0, cursor_pos));
 }
 
 

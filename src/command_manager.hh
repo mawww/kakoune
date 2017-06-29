@@ -102,7 +102,7 @@ public:
                           CommandHelper helper = CommandHelper(),
                           CommandCompleter completer = CommandCompleter());
 
-    Completions complete_command_name(const Context& context, StringView query, bool with_aliases) const;
+    Completions complete_command_name(const Context& context, StringView query) const;
 
     void clear_last_complete_command() { m_last_complete_command = String{}; }
 
