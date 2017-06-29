@@ -450,7 +450,11 @@ void command(Context& context, NormalParams params)
             }
             if (event == PromptEvent::Validate)
             {
-                RegisterManager::instance()[':'].set(context, cmdline.str());
+                if (cmdline.empty())
+                    cmdline = context.main_sel_register_value(':');
+                else
+                    RegisterManager::instance()[':'].set(context, cmdline.str());
+
                 EnvVarMap env_vars = {
                     { "count", to_string(params.count) },
                     { "register", String{&params.reg, 1} }
