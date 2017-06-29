@@ -151,7 +151,8 @@ constexpr StringView register_doc =
     "    * @: default macro register\n"
     "    * /: default search register\n"
     "    * ^: default mark register\n"
-    "    * |: default shell command register\n";
+    "    * |: default shell command register\n"
+    "    * :: last entered command\n";
 
 class Normal : public InputMode
 {
