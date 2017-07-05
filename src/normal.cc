@@ -1269,8 +1269,9 @@ template<SelectFlags flags>
 void select_to_next_char(Context& context, NormalParams params)
 {
     auto get_title = [] {
-        return format("{}select {} next char",
+        return format("{}{} {} next char",
                       flags & SelectFlags::Reverse ? "reverse " : "",
+                      flags & SelectFlags::Extend ? "extend" : "select",
                       flags & SelectFlags::Inclusive ? "onto" : "to");
     };
 
