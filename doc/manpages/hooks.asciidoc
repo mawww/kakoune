@@ -76,6 +76,9 @@ Default hooks
 	the cursor moved (without inserting) in insert mode, the key that
 	triggered the move is used for filtering
 
+*PromptIdle*::
+	a certain duration has passed since last key was pressed in prompt mode
+
 *WinCreate*::
 	a window was created, the filtering text is the buffer name
 

@@ -137,7 +137,7 @@ Builtin options
 
 *idle_timeout* 'int'::
 	timeout, in milliseconds, with no user input that will trigger the
-	*InsertIdle* and *NormalIdle* hooks. 
+	*PromptIdle*, *InsertIdle* and *NormalIdle* hooks. 
 
 *fs_checkout_timeout* 'int'::
 	timeout, in milliseconds, between checks in normal mode of modifications

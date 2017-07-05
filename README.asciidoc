@@ -966,7 +966,7 @@ Some options are built in Kakoune, and can be used to control its behaviour:
  * `debug` _flags(hooks|shell|profile)_: dump various debug information in
    the `*debug*` buffer.
  * `idle_timeout` _int_: timeout, in milliseconds, with no user input that will
-   trigger the `InsertIdle` and `NormalIdle` hooks. 
+   trigger the `PromptIdle`, `InsertIdle` and `NormalIdle` hooks. 
  * `fs_checkout_timeout` _int_: timeout, in milliseconds, between checks in
    normal mode of modifications of the file associated with the current buffer
    on the filesystem.
@@ -1427,6 +1427,8 @@ Existing hooks are:
        by the main selection is used for filtering
  * `InsertMove`: The cursor moved (without inserting) in insert mode, the key
        that triggered the move is used for filtering
+ * `PromptIdle`: A certain duration has passed since last key was pressed in
+       prompt mode.
  * `WinCreate`: A window was created, the filtering text is the buffer name
  * `WinClose`: A window was destroyed, the filtering text is the buffer name
  * `WinDisplay`: A window was bound a client, the filtering text is the buffer
