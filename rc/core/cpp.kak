@@ -1,34 +1,20 @@
-hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H)$ %{
+hook global BufCreate .*\.(cc|cpp|cxx|hh|hpp|hxx)$ %{
     set buffer filetype cpp
 }
 
-hook global BufSetOption filetype=c\+\+ %{
-    set buffer filetype cpp
-}
-
-hook global BufCreate .*\.c$ %{
-    set buffer filetype c
-}
-
-hook global BufCreate .*\.h$ %{
+hook global BufCreate .*\.(h|inl)$ %{
     try %{
         exec -draft %{%s\b::\b|\btemplate\h*<lt>|\bclass\h+\w+|\b(typename|namespace)\b|\b(public|private|protected)\h*:<ret>}
         set buffer filetype cpp
-    } catch %{
-        set buffer filetype c
     }
 }
 
-hook global BufCreate .*\.m %{
-    set buffer filetype objc
-}
-
-def -hidden c-family-trim-autoindent %[ eval -draft -itersel %[
+def -hidden cpp-trim-autoindent %[ eval -draft -itersel %[
     # remove the line if it's empty when leaving the insert mode
     try %[ exec <a-x> 1s^(\h+)$<ret> d ]
 ] ]
 
-def -hidden c-family-indent-on-newline %< eval -draft -itersel %<
+def -hidden cpp-indent-on-newline %< eval -draft -itersel %<
     exec \;
     try %<
         # if previous line closed a paren, copy indent of the opening paren line
@@ -59,22 +45,22 @@ def -hidden c-family-indent-on-newline %< eval -draft -itersel %<
      > >
 > >
 
-def -hidden c-family-indent-on-opening-curly-brace %[
+def -hidden cpp-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ exec -draft -itersel h<a-F>)M <a-k> \`\(.*\)\h*\n\h*\{\' <ret> s \`|.\' <ret> 1<a-&> ]
 ]
 
-def -hidden c-family-indent-on-closing-curly-brace %[
+def -hidden cpp-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-:><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
 
-def -hidden c-family-insert-on-closing-curly-brace %[
+def -hidden cpp-insert-on-closing-curly-brace %[
     # add a semicolon after a closing brace if part of a class, union or struct definition
     try %[ exec -itersel -draft hm<a-x>B<a-x><a-k>\`\h*(class|struct|union)<ret> a\;<esc> ]
 ]
 
-def -hidden c-family-insert-on-newline %[ eval -draft %[
+def -hidden cpp-insert-on-newline %[ eval -draft %[
     exec \;
     try %[
         eval -draft %[
@@ -123,57 +109,19 @@ def -hidden c-family-insert-on-newline %[ eval -draft %[
     ]
 ] ]
 
-# Regions definition are the same between c++ and objective-c
-%sh{
-    for ft in c cpp objc; do
-        if [ "${ft}" = "objc" ]; then
-            maybe_at='@?'
-        else
-            maybe_at=''
-        fi
+add-highlighter -group / regions -default code -match-capture cpp \
+    string %{(?<!')"} %{(?<!\\)(?:\\\\)*"} "" \
+    string %{R"([^(]*)\(} %{\)([^)]*)"} "" \
+    comment /\* \*/ "" \
+    comment // $ "" \
+    disabled ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" "#\h*if(?:def)?" \
+    macro %{^\h*?\K#} %{(?<!\\)\n} ""
 
-        printf %s\\n '
-            add-highlighter -group / regions -default code -match-capture FT \
-                string %{MAYBEAT(?<!QUOTE)"} %{(?<!\\)(?:\\\\)*"} "" \
-                string %{R"([^(]*)\(} %{\)([^)]*)"} "" \
-                comment /\* \*/ "" \
-                comment // $ "" \
-                disabled ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" "#\h*if(?:def)?" \
-                macro %{^\h*?\K#} %{(?<!\\)\n} ""
-
-            add-highlighter -group /FT/string fill string
-            add-highlighter -group /FT/comment fill comment
-            add-highlighter -group /FT/disabled fill rgb:666666
-            add-highlighter -group /FT/macro fill meta
-            add-highlighter -group /FT/macro regex ^\h*#include\h+(\S*) 1:module
-            ' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g; s/MAYBEAT/${maybe_at}/;"
-    done
-}
-
-# c specific
-add-highlighter -group /c/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
-%sh{
-    # Grammar
-    keywords="while|for|if|else|do|switch|case|default|goto|asm|break|continue|return|sizeof"
-    attributes="const|auto|register|inline|static|volatile|struct|enum|union|typedef|extern|restrict"
-    types="void|char|short|int|long|signed|unsigned|float|double|size_t"
-    values="NULL"
-
-    # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=c %{
-        set window static_words '${keywords}:${attributes}:${types}:${values}'
-    }" | sed 's,|,:,g'
-
-    # Highlight keywords
-    printf %s "
-        add-highlighter -group /c/code regex \b(${keywords})\b 0:keyword
-        add-highlighter -group /c/code regex \b(${attributes})\b 0:attribute
-        add-highlighter -group /c/code regex \b(${types})\b 0:type
-        add-highlighter -group /c/code regex \b(${values})\b 0:value
-    "
-}
-
-# c++ specific
+add-highlighter -group /cpp/string fill string
+add-highlighter -group /cpp/comment fill comment
+add-highlighter -group /cpp/disabled fill rgb:666666
+add-highlighter -group /cpp/macro fill meta
+add-highlighter -group /cpp/macro regex ^\h*#include\h+(\S*) 1:module
 add-highlighter -group /cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 
 %sh{
@@ -205,78 +153,29 @@ add-highlighter -group /cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)
 }
 
 # c and c++ compiler macros
-%sh{
-    builtin_macros="__cplusplus|__STDC_HOSTED__|__FILE__|__LINE__|__DATE__|__TIME__|__STDCPP_DEFAULT_NEW_ALIGNMENT__"
+add-highlighter -group /cpp/code regex \b(__cplusplus|__STDC_HOSTED__|__FILE__|__LINE__|__DATE__|__TIME__|__STDCPP_DEFAULT_NEW_ALIGNMENT__)\b 0:builtin
 
-    printf %s "
-        add-highlighter -group /c/code regex \b(${builtin_macros})\b 0:builtin
-        add-highlighter -group /cpp/code regex \b(${builtin_macros})\b 0:builtin
-    "
-}
+hook global WinSetOption filetype=cpp %[
+    hook -group cpp-indent window InsertEnd .* cpp-trim-autoindent
+    hook -group cpp-insert window InsertChar \n cpp-insert-on-newline
+    hook -group cpp-indent window InsertChar \n cpp-indent-on-newline
+    hook -group cpp-indent window InsertChar \{ cpp-indent-on-opening-curly-brace
+    hook -group cpp-indent window InsertChar \} cpp-indent-on-closing-curly-brace
+    hook -group cpp-insert window InsertChar \} cpp-insert-on-closing-curly-brace
 
-# objective-c specific
-add-highlighter -group /objc/code regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
-
-%sh{
-    # Grammar
-    keywords="while|for|if|else|do|switch|case|default|goto|break|continue|return"
-    attributes="const|auto|inline|static|volatile|struct|enum|union|typedef"
-    attributes="${attributes}|extern|__block|nonatomic|assign|copy|strong"
-    attributes="${attributes}|retain|weak|readonly|IBAction|IBOutlet"
-    types="void|char|short|int|long|signed|unsigned|float|bool|size_t"
-    types="${types}|instancetype|BOOL|NSInteger|NSUInteger|CGFloat|NSString"
-    values="self|nil|id|super|TRUE|FALSE|YES|NO|NULL"
-    decorators="property|synthesize|interface|implementation|protocol|end"
-    decorators="${decorators}|selector|autoreleasepool|try|catch|class|synchronized"
-
-    # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=objc %{
-        set window static_words '${keywords}:${attributes}:${types}:${values}:${decorators}'
-    }" | sed 's,|,:,g'
-
-    # Highlight keywords
-    printf %s "
-        add-highlighter -group /objc/code regex \b(${keywords})\b 0:keyword
-        add-highlighter -group /objc/code regex \b(${attributes})\b 0:attribute
-        add-highlighter -group /objc/code regex \b(${types})\b 0:type
-        add-highlighter -group /objc/code regex \b(${values})\b 0:value
-        add-highlighter -group /objc/code regex @(${decorators})\b 0:attribute
-    "
-}
-
-hook global WinSetOption filetype=(c|cpp|objc) %[
-    try %{ # we might be switching from one c-family language to another
-        remove-hooks window c-family-hooks
-        remove-hooks window c-family-indent
-        remove-hooks window c-family-insert
-    }
-
-    hook -group c-family-indent window InsertEnd .* c-family-trim-autoindent
-    hook -group c-family-insert window InsertChar \n c-family-insert-on-newline
-    hook -group c-family-indent window InsertChar \n c-family-indent-on-newline
-    hook -group c-family-indent window InsertChar \{ c-family-indent-on-opening-curly-brace
-    hook -group c-family-indent window InsertChar \} c-family-indent-on-closing-curly-brace
-    hook -group c-family-insert window InsertChar \} c-family-insert-on-closing-curly-brace
-
-    alias window alt c-family-alternative-file
+    alias window alt cpp-alternative-file
 ]
 
-hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[
-    remove-hooks window c-family-hooks
-    remove-hooks window c-family-indent
-    remove-hooks window c-family-insert
+hook global WinSetOption filetype=(?!cpp$).* %[
+    remove-hooks window cpp-hooks
+    remove-hooks window cpp-indent
+    remove-hooks window cpp-insert
 
-    unalias window alt c-family-alternative-file
+    unalias window alt cpp-alternative-file
 ]
-
-hook -group c-highlight global WinSetOption filetype=c %[ add-highlighter ref c ]
-hook -group c-highlight global WinSetOption filetype=(?!c$).* %[ remove-highlighter c ]
 
 hook -group cpp-highlight global WinSetOption filetype=cpp %[ add-highlighter ref cpp ]
 hook -group cpp-highlight global WinSetOption filetype=(?!cpp$).* %[ remove-highlighter cpp ]
-
-hook -group objc-highlight global WinSetOption filetype=objc %[ add-highlighter ref objc ]
-hook -group objc-highlight global WinSetOption filetype=(?!objc$).* %[ remove-highlighter objc ]
 
 decl -docstring %{control the type of include guard to be inserted in empty headers
 Can be one of the following:
@@ -284,7 +183,7 @@ Can be one of the following:
  pragma: newer type of guard using "pragma once"} \
     str c_include_guard_style "ifdef"
 
-def -hidden c-family-insert-include-guards %{
+def -hidden cpp-insert-include-guards %{
     %sh{
         case "${kak_opt_c_include_guard_style}" in
             ifdef)
@@ -298,34 +197,34 @@ def -hidden c-family-insert-include-guards %{
     }
 }
 
-hook -group c-family-insert global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
+hook -group c-family-insert global BufNewFile .*\.(h|hh|hpp|hxx) cpp-insert-include-guards
 
 decl -docstring "colon separated list of path in which header files will be looked for" \
     str-list alt_dirs ".:.."
 
-def c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
+def cpp-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
     alt_dirs=$(printf %s\\n "${kak_opt_alt_dirs}" | tr ':' '\n')
     file="${kak_buffile##*/}"
     file_noext="${file%.*}"
     dir=$(dirname "${kak_buffile}")
 
     case ${file} in
-        *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
+        *.cc|*.cpp|*.cxx)
             for alt_dir in ${alt_dirs}; do
-                for ext in h hh hpp hxx H; do
+                for ext in h hh hpp hxx inl; do
                     altname="${dir}/${alt_dir}/${file_noext}.${ext}"
-                    if [ -f ${altname} ]; then
+                    if [ -f "${altname}" ]; then
                         printf 'edit %%{%s}\n' "${altname}"
                         exit
                     fi
                 done
             done
         ;;
-        *.h|*.hh|*.hpp|*.hxx|*.H)
+        *.h|*.hh|*.hpp|*.hxx|*.inl)
             for alt_dir in ${alt_dirs}; do
-                for ext in c cc cpp cxx C m; do
+                for ext in cc cpp cxx; do
                     altname="${dir}/${alt_dir}/${file_noext}.${ext}"
-                    if [ -f ${altname} ]; then
+                    if [ -f "${altname}" ]; then
                         printf 'edit %%{%s}\n' "${altname}"
                         exit
                     fi
