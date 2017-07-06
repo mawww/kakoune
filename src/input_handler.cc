@@ -142,17 +142,17 @@ private:
 
 constexpr StringView register_doc =
     "Special registers:\n"
-    "    * %: buffer name\n"
-    "    * .: selection contents\n"
-    "    * #: selection index\n"
-    "    * [0-9]: selections capture group\n"
-    "    * _: null register\n"
-    "    * \": default yank/paste register\n"
-    "    * @: default macro register\n"
-    "    * /: default search register\n"
-    "    * ^: default mark register\n"
-    "    * |: default shell command register\n"
-    "    * :: last entered command\n";
+    "[0-9]: selections capture group\n"
+    "%:     buffer name\n"
+    ".:     selection contents\n"
+    "#:     selection index\n"
+    "_:     null register\n"
+    "\":     default yank/paste register\n"
+    "@:     default macro register\n"
+    "/:     default search register\n"
+    "^:     default mark register\n"
+    "|:     default shell command register\n"
+    "::     last entered command\n";
 
 class Normal : public InputMode
 {
@@ -264,7 +264,7 @@ public:
                                 { format("invalid register '{}'", *cp),
                                   get_face("Error") });
                     }
-                }, "Enter target register", register_doc);
+                }, "enter target register", register_doc);
         }
         else
         {
@@ -768,7 +768,7 @@ public:
                         display();
                         m_line_changed = true;
                     }
-                }, "Enter register name", register_doc);
+                }, "enter register name", register_doc);
             display();
             return;
         }
@@ -1190,7 +1190,7 @@ public:
                 [this](Key key, Context&) {
                     if (auto cp = key.codepoint())
                         insert(RegisterManager::instance()[*cp].get(context()));
-                }, "Enter register name", register_doc);
+                }, "enter register name", register_doc);
             update_completions = false;
         }
         else if (key == ctrl('n'))
@@ -1215,11 +1215,10 @@ public:
                         m_completer.explicit_word_complete();
                     if (key.key == 'l')
                         m_completer.explicit_line_complete();
-            }, "Complete",
-            " Enter completion type:\n"
-            "    * f: filename completion\n"
-            "    * w: word completion\n"
-            "    * l: line completion\n");
+            }, "enter completion type",
+            "f: filename\n"
+            "w: word\n"
+            "l: line\n");
             update_completions = false;
         }
         else if (key == ctrl('o'))
