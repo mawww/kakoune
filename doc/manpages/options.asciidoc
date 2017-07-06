@@ -5,6 +5,37 @@ NAME
 ----
 options - a
 
+Description
+-----------
+
+Options are used for user configuration.
+You can set the builtin ones or declare your owns.
+
+The following commands are available to interact with them:
+
+----------------------------------------------
+declare-option [-hidden] <type> <name> [value]
+set-option [-add] <scope> <name> <value>
+update-option <scope> <name>
+unset-option <scope> <name>
+----------------------------------------------
+
+Refer to the 'scopes' documentation page for more information about
+scopes.
+
+To get the current value of an option:
+
+--------------------------------
+echo %opt{name}
+echo %sh{ echo "$kak_opt_name" }
+--------------------------------
+
+To display the current values of all options in the debug buffer:
+
+-------------
+debug options
+-------------
+
 Types
 -----
 *int*::
@@ -45,9 +76,6 @@ Types
 *flags(value1|value2|...)*::
 	a set of flags, taking a combination of the given values joined by a
 	'|' character
-
-Refer to the 'scopes' documentation page for more information about
-scopes.
 
 Builtin options
 ---------------
