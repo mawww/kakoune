@@ -55,7 +55,10 @@ inline bool is_basic_alpha(Codepoint c) noexcept
 
 inline ColumnCount codepoint_width(Codepoint c) noexcept
 {
-    return c == '\n' ? 1 : wcwidth((wchar_t)c);
+    if (c == '\n')
+        return 1;
+    const auto width = wcwidth((wchar_t)c);
+    return width > 0 ? width : 0;
 }
 
 enum class CharCategories
