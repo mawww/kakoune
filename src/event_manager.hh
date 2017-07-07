@@ -47,8 +47,8 @@ public:
 
     void close_fd();
     void disable() { m_fd = -1; }
-private:
 
+private:
     int      m_fd;
     FdEvents m_events;
     Callback m_callback;

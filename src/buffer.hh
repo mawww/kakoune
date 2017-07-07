@@ -215,8 +215,8 @@ public:
     // Methods called by the buffer manager
     void on_registered();
     void on_unregistered();
-private:
 
+private:
     void on_option_changed(const Option& option) override;
 
     BufferCoord do_insert(BufferCoord pos, StringView content);

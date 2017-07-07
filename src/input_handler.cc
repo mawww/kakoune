@@ -135,7 +135,6 @@ struct MouseHandler
     }
 
 private:
-
     bool m_dragging = false;
     BufferCoord m_anchor;
 };
