@@ -1,4 +1,4 @@
-hook global BufCreate .*COMMIT_EDITMSG %{
+hook global BufCreate .*(COMMIT_EDITMSG|MERGE_MSG) %{
     set buffer filetype git-commit
 }
 
