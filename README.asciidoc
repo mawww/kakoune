@@ -774,7 +774,7 @@ Some of Kakoune state is available through environment variables:
  * `kak_selections`: content of the selection separated by colons, colons and backslashes in
         the selection contents are escaped with a backslash.
  * `kak_selection_desc`: range of the main selection, represented as `anchor,cursor`;
-        anchor and cursor are in this format: `line.column` 
+        anchor and cursor are in this format: `line.column`
  * `kak_selections_desc`: range of the selecations separated by colons
  * `kak_bufname`: name of the current buffer
  * `kak_buffile`: full path of the file or same as `kak_bufname` when
@@ -966,7 +966,7 @@ Some options are built in Kakoune, and can be used to control its behaviour:
  * `debug` _flags(hooks|shell|profile)_: dump various debug information in
    the `*debug*` buffer.
  * `idle_timeout` _int_: timeout, in milliseconds, with no user input that will
-   trigger the `PromptIdle`, `InsertIdle` and `NormalIdle` hooks. 
+   trigger the `PromptIdle`, `InsertIdle` and `NormalIdle` hooks.
  * `fs_checkout_timeout` _int_: timeout, in milliseconds, between checks in
    normal mode of modifications of the file associated with the current buffer
    on the filesystem.
@@ -974,7 +974,7 @@ Some options are built in Kakoune, and can be used to control its behaviour:
    string is first expanded as a command line would be (expanding `%...{...}`
    strings), then markup tags are applied (see <<Markup strings>>). Two special
    atom are available as markup: `{{mode_info}}` with information about the current
-   mode (example `insert 3 sel`), and `{{context_info}}` with information such as 
+   mode (example `insert 3 sel`), and `{{context_info}}` with information such as
    if the file has been modified (with `[+]`), or if it is new (with `[new file]`).
  * `ui_options`: colon separated list of key=value pairs that are forwarded to
    the user interface implementation. The NCurses UI support the following options:
@@ -1134,7 +1134,7 @@ Kakoune trying to be smart.
 Regex syntax
 ~~~~~~~~~~~~
 
-The regex syntax supported by Kakoune is the Perl syntax currently provided 
+The regex syntax supported by Kakoune is the Perl syntax currently provided
 by Boost :
 http://www.boost.org/doc/libs/release/libs/regex/doc/html/boost_regex/syntax/perl_syntax.html[Perl Regular Expression Syntax].
 
