@@ -766,7 +766,7 @@ static constexpr auto hooks = {
     "BufWritePre", "BufOpenFifo", "BufCloseFifo", "BufReadFifo", "BufSetOption",
     "InsertBegin", "InsertChar", "InsertDelete", "InsertEnd", "InsertIdle", "InsertKey",
     "InsertMove", "InsertCompletionHide", "InsertCompletionShow",
-    "KakBegin", "KakEnd", "FocusIn", "FocusOut", "RuntimeError",
+    "KakBegin", "KakEnd", "FocusIn", "FocusOut", "RuntimeError", "PromptIdle",
     "NormalBegin", "NormalEnd", "NormalIdle", "NormalKey", "RawKey",
     "WinClose", "WinCreate", "WinDisplay", "WinResize", "WinSetOption",
 };
