@@ -254,6 +254,9 @@ Changes
 *R*::
 	replace current selection with yanked text
 
+*<a-R>*::
+	replace current selection with every yanked text
+
 *r*::
 	replace each character with the next entered one
 

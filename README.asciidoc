@@ -421,6 +421,7 @@ Changes
  * `<a-P>`: paste all before current selection begin, and
             select each pasted string.
  * `R`: replace current selection with yanked text
+ * `<a-R>`: replace current selection with every yanked text
 
  * `r`: replace each character with the next entered one
 
