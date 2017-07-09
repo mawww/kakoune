@@ -113,7 +113,6 @@ public:
     }
     explicit String(Codepoint cp, ColumnCount count)
     {
-        kak_assert(count % codepoint_width(cp) == 0);
         int cp_count = (int)(count / std::max(codepoint_width(cp), 1_col));
         reserve(utf8::codepoint_size(cp) * cp_count);
         while (cp_count-- > 0)
