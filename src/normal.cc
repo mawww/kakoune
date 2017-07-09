@@ -1916,7 +1916,7 @@ const HashMap<Key, NormalCmd> keymap{
     { {alt('p')}, {"paste every yanked selection after selected text", paste_all<InsertMode::Append>} },
     { {alt('P')}, {"paste every yanked selection before selected text", paste_all<InsertMode::Insert>} },
     { {'R'}, {"replace selected text with yanked text", paste<InsertMode::Replace>} },
-    { {alt('R')}, {"replace selected text with yanked text", paste_all<InsertMode::Replace>} },
+    { {alt('R')}, {"replace selected text with every yanked text", paste_all<InsertMode::Replace>} },
 
     { {'s'}, {"select regex matches in selected text", select_regex} },
     { {'S'}, {"split selected text on regex matches", split_regex} },
