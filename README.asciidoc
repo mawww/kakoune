@@ -413,6 +413,9 @@ Changes
  * `O`: enter insert mode in one (or given count)  new lines above
         current selection begin
 
+ * `<a-o>`: add an empty line below cursor
+ * `<a-O>`: add an empty line above cursor
+
  * `y`: yank selections
  * `p`: paste after current selection end
  * `P`: paste before current selection begin

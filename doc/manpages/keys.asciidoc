@@ -236,6 +236,12 @@ Changes
 	enter insert mode in a new line (or in a given count of new lines) above
 	current selection begin
 
+*<a-o>*::
+	add an empty line below cursor
+
+*<a-O>*::
+	add an empty line above cursor
+
 *y*::
 	yank selections
 

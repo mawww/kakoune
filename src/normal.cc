@@ -1749,6 +1749,16 @@ void exec_user_mappings(Context& context, NormalParams params)
     build_autoinfo_for_mapping(context, KeymapMode::User, {}));
 }
 
+template<bool above>
+void add_empty_line(Context& context, NormalParams params)
+{
+    String new_lines{'\n', CharCount{std::max(params.count, 1)}};
+    SelectionList sels = context.selections();
+    for (auto& sel : sels)
+        sel.set(above ? sel.min().line : sel.max().line+1);
+    sels.insert(new_lines, InsertMode::InsertCursor);
+}
+
 template<typename T>
 class Repeated
 {
@@ -1900,6 +1910,9 @@ const HashMap<Key, NormalCmd> keymap{
     { {'o'}, {"insert on new line below", enter_insert_mode<InsertMode::OpenLineBelow>} },
     { {'O'}, {"insert on new line above", enter_insert_mode<InsertMode::OpenLineAbove>} },
     { {'r'}, {"replace with character", replace_with_char} },
+
+    { {alt('o')}, {"add a new empty line below", add_empty_line<false>} },
+    { {alt('O')}, {"add a new empty line above", add_empty_line<true>} },
 
     { {'g'}, {"go to location", goto_commands<SelectMode::Replace>} },
     { {'G'}, {"extend to location", goto_commands<SelectMode::Extend>} },
