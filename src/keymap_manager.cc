@@ -16,7 +16,7 @@ void KeymapManager::map_key(Key key, KeymapMode mode,
 
 void KeymapManager::unmap_key(Key key, KeymapMode mode)
 {
-    m_mapping.unordered_remove(KeyAndMode{key, mode});
+    m_mapping.remove(KeyAndMode{key, mode});
 }
 
 
@@ -43,11 +43,9 @@ KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
         res = m_parent->get_mapped_keys(mode);
     for (auto& map : m_mapping)
     {
-        if (map.key.second == mode)
+        if (map.key.second == mode and not contains(res, map.key.first))
             res.emplace_back(map.key.first);
     }
-    std::sort(res.begin(), res.end());
-    res.erase(std::unique(res.begin(), res.end()), res.end());
     return res;
 }
 
