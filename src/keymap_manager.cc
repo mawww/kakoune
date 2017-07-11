@@ -46,7 +46,6 @@ KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
         if (map.key.second == mode)
             res.emplace_back(map.key.first);
     }
-    std::sort(res.begin(), res.end());
     res.erase(std::unique(res.begin(), res.end()), res.end());
     return res;
 }
