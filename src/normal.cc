@@ -1760,11 +1760,15 @@ void exec_user_mappings(Context& context, NormalParams params)
 template<bool above>
 void add_empty_line(Context& context, NormalParams params)
 {
-    String new_lines{'\n', CharCount{std::max(params.count, 1)}};
-    SelectionList sels = context.selections();
-    for (auto& sel : sels)
-        sel.set(above ? sel.min().line : sel.max().line+1);
-    sels.insert(new_lines, InsertMode::InsertCursor);
+    int count = std::max(params.count, 1);
+    String new_lines{'\n', CharCount{count}};
+    auto& buffer = context.buffer();
+    auto& sels = context.selections();
+    for (int i = 0; i < sels.size(); ++i)
+    {
+        auto line = (above ? sels[i].min().line : sels[i].max().line + 1) + (i * count);
+        buffer.insert(line, new_lines);
+    }
 }
 
 template<typename T>
