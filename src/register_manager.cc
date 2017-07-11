@@ -20,7 +20,8 @@ Register& RegisterManager::operator[](StringView reg) const
         { "percent", '%' },
         { "dot", '.' },
         { "hash", '#' },
-        { "underscore", '_' }
+        { "underscore", '_' },
+        { "colon", ':' }
     };
     auto it = reg_names.find(reg);
     if (it == reg_names.end())

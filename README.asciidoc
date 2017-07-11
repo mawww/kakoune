@@ -1102,6 +1102,7 @@ contain some special data:
  * `.` (`dot`): current selection contents
  * `#` (`hash`): selection indices (first selection has 1, second has 2, ...)
  * `_` (`underscore`): null register, always empty
+ * `:` (`colon`): last entered command
 
 Default registers
 ^^^^^^^^^^^^^^^^^
