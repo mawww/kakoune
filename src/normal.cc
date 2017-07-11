@@ -559,19 +559,27 @@ void yank(Context& context, NormalParams params)
                            get_face("Information") });
 }
 
+template<bool yank>
 void erase_selections(Context& context, NormalParams params)
 {
-    const char reg = params.reg ? params.reg : '"';
-    RegisterManager::instance()[reg].set(context, context.selections_content());
+    if (yank)
+    {
+        const char reg = params.reg ? params.reg : '"';
+        RegisterManager::instance()[reg].set(context, context.selections_content());
+    }
     ScopedEdition edition(context);
     context.selections().erase();
     context.selections().avoid_eol();
 }
 
+template<bool yank>
 void change(Context& context, NormalParams params)
 {
-    const char reg = params.reg ? params.reg : '"';
-    RegisterManager::instance()[reg].set(context, context.selections_content());
+    if (yank)
+    {
+        const char reg = params.reg ? params.reg : '"';
+        RegisterManager::instance()[reg].set(context, context.selections_content());
+    }
     enter_insert_mode<InsertMode::Replace>(context, params);
 }
 
@@ -1901,8 +1909,10 @@ const HashMap<Key, NormalCmd> keymap{
     { {alt('T')}, {"extend to previous character", select_to_next_char<SelectFlags::Extend | SelectFlags::Reverse>} },
     { {alt('F')}, {"extend to previous character included", select_to_next_char<SelectFlags::Inclusive | SelectFlags::Extend | SelectFlags::Reverse>} },
 
-    { {'d'}, {"erase selected text", erase_selections} },
-    { {'c'}, {"change selected text", change} },
+    { {'d'}, {"erase selected text", erase_selections<true>} },
+    { {alt('d')}, {"erase selected text, without yanking", erase_selections<false>} },
+    { {'c'}, {"change selected text", change<true>} },
+    { {alt('c')}, {"change selected text, without yanking", change<false>} },
     { {'i'}, {"insert before selected text", enter_insert_mode<InsertMode::Insert>} },
     { {'I'}, {"insert at line begin", enter_insert_mode<InsertMode::InsertAtLineBegin>} },
     { {'a'}, {"insert after selected text", enter_insert_mode<InsertMode::Append>} },

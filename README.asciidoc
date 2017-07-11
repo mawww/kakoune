@@ -406,6 +406,9 @@ Changes
  * `.`: repeat last insert mode change (`i`, `a`, or `c`, including
         the inserted text)
 
+ * `<a-d>`: delete current selection
+ * `<a-c>`: delete current selection and enter insert mode
+
  * `I`: enter insert mode at current selection begin line start
  * `A`: enter insert mode at current selection end line end
  * `o`: enter insert mode in one (or given count) new lines below
