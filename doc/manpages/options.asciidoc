@@ -18,7 +18,7 @@ Types
 *regex*::
 	as a string but the set commands will complain if the entered text
 	is not a valid regex
-*int-list*, *str-list*::
+*int-list*, *str-list*, *codepoint-list*::
 	a list, elements are separated by a colon (:) if an element needs
 	to contain a colon, it can be escaped with a backslash
 *range-specs*::
@@ -125,8 +125,8 @@ Builtin options
 	list of words that are always added to completion candidates
 	when completing words in insert mode
 
-*completions_extra_word_chars* 'str'::
-	a string containing all additional character that should be considered
+*extra_word_chars* 'codepoint-list'::
+	a list of all additional codepoints that should be considered
 	as word character for the purpose of insert mode completion.
 
 *autoreload* 'enum(yes|no|ask)'::
