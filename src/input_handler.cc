@@ -298,7 +298,14 @@ public:
 
     DisplayLine mode_line() const override
     {
-        AtomList atoms = { { to_string(context().selections().size()) + " sel", get_face("StatusLineInfo") } };
+        AtomList atoms;
+        auto num_sel = context().selections().size();
+        auto main_index = context().selections().main_index();
+        if (num_sel == 1)
+            atoms.emplace_back(format("{} sel", num_sel), get_face("StatusLineInfo"));
+        else
+            atoms.emplace_back(format("{} sels ({})", num_sel, main_index + 1), get_face("StatusLineInfo"));
+
         if (m_params.count != 0)
         {
             atoms.emplace_back(" param=", get_face("StatusLineInfo"));
