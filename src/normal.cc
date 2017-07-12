@@ -1764,6 +1764,7 @@ void add_empty_line(Context& context, NormalParams params)
     String new_lines{'\n', CharCount{count}};
     auto& buffer = context.buffer();
     auto& sels = context.selections();
+    ScopedEdition edition{context};
     for (int i = 0; i < sels.size(); ++i)
     {
         auto line = (above ? sels[i].min().line : sels[i].max().line + 1) + (i * count);
