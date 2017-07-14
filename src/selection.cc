@@ -379,8 +379,8 @@ static void fix_overflowing_selections(Vector<Selection>& selections,
     const BufferCoord back_coord = buffer.back_coord();
     for (auto& sel : selections)
     {
-        auto pos = buffer.clamp(sel.cursor());
-        sel.anchor() = sel.cursor() = std::min(pos, back_coord);
+        sel.cursor() = std::min(buffer.clamp(sel.cursor()), back_coord);
+        sel.anchor() = std::min(buffer.clamp(sel.anchor()), back_coord);
     }
 }
 
