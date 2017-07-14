@@ -44,11 +44,12 @@ struct Selection
         return m_anchor == other.m_anchor and m_cursor == other.m_cursor;
     }
 
-    const BufferCoord& min() const { return m_anchor < m_cursor ? m_anchor : m_cursor; }
-    const BufferCoord& max() const { return m_anchor < m_cursor ? m_cursor : m_anchor; }
+    // When selections are single char, we want the anchor to be considered min, and cursor max
+    const BufferCoord& min() const { return m_anchor <= m_cursor ? m_anchor : m_cursor; }
+    const BufferCoord& max() const { return m_anchor <= m_cursor ? m_cursor : m_anchor; }
 
-    BufferCoord& min() { return m_anchor < m_cursor ? m_anchor : m_cursor; }
-    BufferCoord& max() { return m_anchor < m_cursor ? m_cursor : m_anchor; }
+    BufferCoord& min() { return m_anchor <= m_cursor ? m_anchor : m_cursor; }
+    BufferCoord& max() { return m_anchor <= m_cursor ? m_cursor : m_anchor; }
 
 private:
     BufferCoord m_anchor;
