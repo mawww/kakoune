@@ -373,6 +373,17 @@ BufferCoord get_insert_pos(const Buffer& buffer, const Selection& sel,
     }
 }
 
+static void fix_overflowing_selections(Vector<Selection>& selections,
+                                       const Buffer& buffer)
+{
+    const BufferCoord back_coord = buffer.back_coord();
+    for (auto& sel : selections)
+    {
+        auto pos = buffer.clamp(sel.cursor());
+        sel.anchor() = sel.cursor() = std::min(pos, back_coord);
+    }
+}
+
 void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
                            Vector<BufferCoord>* out_insert_pos)
 {
@@ -431,6 +442,12 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
             sel.cursor() = m_buffer->clamp(update_insert(sel.cursor(), change.begin, change.end));
         }
     }
+
+    // We might just have been deleting text if strings were empty,
+    // in which case we could have some selections pushed out of the buffer
+    if (mode == InsertMode::Replace)
+        fix_overflowing_selections(m_selections, *m_buffer);
+
     check_invariant();
     m_buffer->check_invariant();
 }
@@ -453,13 +470,7 @@ void SelectionList::erase()
         changes_tracker.update(*m_buffer, m_timestamp);
     }
 
-    BufferCoord back_coord = m_buffer->back_coord();
-    for (auto& sel : m_selections)
-    {
-        auto pos = m_buffer->clamp(sel.cursor());
-        sel.anchor() = sel.cursor() = std::min(pos, back_coord);
-    }
-
+    fix_overflowing_selections(m_selections, *m_buffer);
     m_buffer->check_invariant();
 }
 
