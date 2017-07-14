@@ -4,10 +4,12 @@
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
 #include "client_manager.hh"
+#include "changes.hh"
 #include "command_manager.hh"
 #include "commands.hh"
 #include "containers.hh"
 #include "context.hh"
+#include "diff.hh"
 #include "face_registry.hh"
 #include "file.hh"
 #include "flags.hh"
@@ -465,6 +467,28 @@ void command(Context& context, NormalParams params)
         });
 }
 
+void apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView after)
+{
+    auto diffs = find_diff(before.begin(), (int)before.length(), after.begin(), (int)after.length());
+
+    for (auto& diff : diffs)
+    {
+        switch (diff.mode)
+        {
+        case Diff::Keep:
+            pos = buffer.advance(pos, diff.len);
+            break;
+        case Diff::Add:
+            buffer.insert(pos, after.substr(ByteCount{diff.posB}, ByteCount{diff.len}));
+            pos = buffer.advance(pos, diff.len);
+            break;
+        case Diff::Remove:
+            buffer.erase(pos, buffer.advance(pos, diff.len));
+            break;
+        }
+    }
+}
+
 template<bool replace>
 void pipe(Context& context, NormalParams)
 {
@@ -491,11 +515,17 @@ void pipe(Context& context, NormalParams)
             auto restore_main = on_scope_end([&] { selections.set_main_index(old_main); });
             if (replace)
             {
-                Vector<String> strings;
+                ScopedEdition edition(context);
+                ForwardChangesTracker changes_tracker;
+                size_t timestamp = buffer.timestamp();
                 for (int i = 0; i < selections.size(); ++i)
                 {
                     selections.set_main_index(i);
-                    String in = content(buffer, selections.main());
+                    auto& sel = selections.main();
+                    const auto beg = changes_tracker.get_new_coord_tolerant(sel.min());
+                    const auto end = changes_tracker.get_new_coord_tolerant(sel.max());
+
+                    String in = buffer.string(beg, buffer.char_next(end));
                     const bool insert_eol = in.back() != '\n';
                     if (insert_eol)
                         in += '\n';
@@ -503,12 +533,16 @@ void pipe(Context& context, NormalParams)
                         cmdline, context, in,
                         ShellManager::Flags::WaitForStdout).first;
 
-                    if (insert_eol and out.back() == '\n')
-                        out = out.substr(0, out.length()-1).str();
-                    strings.push_back(std::move(out));
+                    if (insert_eol)
+                    {
+                        in.resize(in.length()-1, 0);
+                        if (not out.empty() and out.back() == '\n')
+                            out.resize(out.length()-1, 0);
+                    }
+                    apply_diff(buffer, beg, in, out);
+
+                    changes_tracker.update(buffer, timestamp);
                 }
-                ScopedEdition edition(context);
-                selections.insert(strings, InsertMode::Replace);
             }
             else
             {
