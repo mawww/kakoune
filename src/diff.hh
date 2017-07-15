@@ -39,20 +39,14 @@ Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, in
                                                const MirroredArray<int>& V,
                                                const int D, const int k, Equal eq)
 {
-    int x; // our position along a
-
     const bool add = k == -D or (k != D and V[k-1] < V[k+1]);
 
     // if diagonal on the right goes further along x than diagonal on the left,
     // then we take a vertical edge from it to this diagonal, hence x = V[k+1]
-    if (add)
-        x = V[k+1];
     // else, we take an horizontal edge from our left diagonal,x = V[k-1]+1
-    else
-        x = V[k-1]+1;
-
-    int y = x - k; // we are by construction on diagonal k, so our position along
-                   // b (y) is x - k.
+    const int x = add ? V[k+1] : V[k-1]+1;
+    // we are by construction on diagonal k, so our position along b (y) is x - k.
+    const int y = x - k;
 
     int u = x, v = y;
     // follow end snake along diagonal k
