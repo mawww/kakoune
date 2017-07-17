@@ -32,7 +32,8 @@ bool notify_fatal_error(StringView msg)
                       MB_OKCANCEL | MB_ICONERROR) == IDOK;
 #elif defined(__linux__)
     auto cmd = format("xmessage -buttons 'quit:0,ignore:1' '{}'", msg);
-    return system(cmd.c_str()) == 1;
+    int status = system(cmd.c_str());
+    return (WIFEXITED(status)) ? (WEXITSTATUS(status)) == 1 : false;
 #endif
 }
 
