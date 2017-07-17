@@ -14,29 +14,11 @@
 namespace Kakoune
 {
 
-template<typename T>
-struct MirroredArray : public ArrayView<T>
-{
-    MirroredArray(ArrayView<T> data, int size)
-        : ArrayView<T>(data), size(size)
-    {
-        kak_assert(2 * size + 1 <= data.size());
-        (*this)[1] = 0;
-    }
-
-    [[gnu::always_inline]]
-    T& operator[](int n) { return ArrayView<T>::operator[](n + size); }
-    [[gnu::always_inline]]
-    const T& operator[](int n) const { return ArrayView<T>::operator[](n + size); }
-private:
-    int size;
-};
-
 struct Snake{ int x, y, u, v; bool add; };
 
 template<typename Iterator, typename Equal>
 Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, int M,
-                                               const MirroredArray<int>& V,
+                                               const int* V,
                                                const int D, const int k, Equal eq)
 {
     const bool add = k == -D or (k != D and V[k-1] < V[k+1]);
@@ -64,12 +46,11 @@ struct SnakeLen : Snake
 
 template<typename Iterator, typename Equal>
 SnakeLen find_middle_snake(Iterator a, int N, Iterator b, int M,
-                           ArrayView<int> data1, ArrayView<int> data2,
-                           Equal eq)
+                           int* V1, int* V2, Equal eq)
 {
     const int delta = N - M;
-    MirroredArray<int> V1{data1, N + M};
-    MirroredArray<int> V2{data2, N + M};
+    V1[1] = 0;
+    V2[1] = 0;
 
     std::reverse_iterator<Iterator> ra{a + N}, rb{b + M};
 
@@ -126,25 +107,24 @@ inline void append_diff(Vector<Diff>& diffs, Diff diff)
 template<typename Iterator, typename Equal>
 void find_diff_rec(Iterator a, int offA, int lenA,
                    Iterator b, int offB, int lenB,
-                   ArrayView<int> data1, ArrayView<int> data2,
-                   Equal eq, Vector<Diff>& diffs)
+                   int* V1, int* V2, Equal eq, Vector<Diff>& diffs)
 {
     if (lenA > 0 and lenB > 0)
     {
-        auto middle_snake = find_middle_snake(a + offA, lenA, b + offB, lenB, data1, data2, eq);
+        auto middle_snake = find_middle_snake(a + offA, lenA, b + offB, lenB, V1, V2, eq);
         kak_assert(middle_snake.u <= lenA and middle_snake.v <= lenB);
         if (middle_snake.d > 1)
         {
             find_diff_rec(a, offA, middle_snake.x,
                           b, offB, middle_snake.y,
-                          data1, data2, eq, diffs);
+                          V1, V2, eq, diffs);
 
             if (int len = middle_snake.u - middle_snake.x)
                 append_diff(diffs, {Diff::Keep, len, 0});
 
             find_diff_rec(a, offA + middle_snake.u, lenA - middle_snake.u,
                           b, offB + middle_snake.v, lenB - middle_snake.v,
-                          data1, data2, eq, diffs);
+                          V1, V2, eq, diffs);
         }
         else
         {
@@ -176,7 +156,7 @@ Vector<Diff> find_diff(Iterator a, int N, Iterator b, int M, Equal eq = Equal{})
     Vector<int> data(2*max);
     Vector<Diff> diffs;
     find_diff_rec(a, 0, N, b, 0, M,
-                  {data.data(), (size_t)max}, {data.data() + max, (size_t)max},
+                  data.data() + (N+M), data.data() + max + (N+M),
                   eq, diffs);
 
     return diffs;
