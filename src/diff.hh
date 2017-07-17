@@ -167,9 +167,7 @@ Vector<Diff> find_diff(Iterator a, int N, Iterator b, int M, Equal eq = Equal{})
     const int max = 2 * (N + M) + 1;
     Vector<int> data(2*max);
     Vector<Diff> diffs;
-    find_diff_rec(a, 0, N, b, 0, M,
-                  data.data() + (N+M), data.data() + max + (N+M),
-                  eq, diffs);
+    find_diff_rec(a, 0, N, b, 0, M, &data[N+M], &data[max + N+M], eq, diffs);
 
     return diffs;
 }
