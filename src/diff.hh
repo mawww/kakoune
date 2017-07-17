@@ -96,6 +96,9 @@ struct Diff
 
 inline void append_diff(Vector<Diff>& diffs, Diff diff)
 {
+    if (diff.len == 0)
+        return;
+
     if (not diffs.empty() and diffs.back().mode == diff.mode
         and (diff.mode != Diff::Add or
              diffs.back().posB + diffs.back().len == diff.posB))
@@ -109,7 +112,21 @@ void find_diff_rec(Iterator a, int offA, int lenA,
                    Iterator b, int offB, int lenB,
                    int* V1, int* V2, Equal eq, Vector<Diff>& diffs)
 {
-    if (lenA > 0 and lenB > 0)
+    int prefix_len = 0;
+    while (lenA > 0 and lenB > 0 and a[offA] == b[offB])
+         ++offA, ++offB, --lenA, --lenB, ++prefix_len;
+
+    int suffix_len = 0;
+    while (lenA != 0 and lenB != 0 and a[offA + lenA - 1] == b[offB + lenB - 1])
+        --lenA, --lenB, ++suffix_len;
+
+    append_diff(diffs, {Diff::Keep, prefix_len, 0});
+
+    if (lenA == 0)
+        append_diff(diffs, {Diff::Add, lenB, offB});
+    else if (lenB == 0)
+        append_diff(diffs, {Diff::Remove, lenA, 0});
+    else
     {
         auto middle_snake = find_middle_snake(a + offA, lenA, b + offB, lenB, V1, V2, eq);
         kak_assert(middle_snake.u <= lenA and middle_snake.v <= lenB);
@@ -119,8 +136,7 @@ void find_diff_rec(Iterator a, int offA, int lenA,
                           b, offB, middle_snake.y,
                           V1, V2, eq, diffs);
 
-            if (int len = middle_snake.u - middle_snake.x)
-                append_diff(diffs, {Diff::Keep, len, 0});
+            append_diff(diffs, {Diff::Keep, middle_snake.u - middle_snake.x, 0});
 
             find_diff_rec(a, offA + middle_snake.u, lenA - middle_snake.u,
                           b, offB + middle_snake.v, lenB - middle_snake.v,
@@ -131,22 +147,18 @@ void find_diff_rec(Iterator a, int offA, int lenA,
             if (middle_snake.d == 1)
             {
                 const int diag = middle_snake.x - (middle_snake.add ? 0 : 1);
-                if (diag != 0)
-                    append_diff(diffs, {Diff::Keep, diag, 0});
+                append_diff(diffs, {Diff::Keep, diag, 0});
 
                 if (middle_snake.add)
                     append_diff(diffs, {Diff::Add, 1, offB + diag});
                 else
                     append_diff(diffs, {Diff::Remove, 1, 0});
             }
-            if (int len = middle_snake.u - middle_snake.x)
-                append_diff(diffs, {Diff::Keep, len, 0});
+            append_diff(diffs, {Diff::Keep, middle_snake.u - middle_snake.x, 0});
         }
     }
-    else if (lenB > 0)
-        append_diff(diffs, {Diff::Add, lenB, offB});
-    else if (lenA > 0)
-        append_diff(diffs, {Diff::Remove, lenA, 0});
+
+    append_diff(diffs, {Diff::Keep, suffix_len, 0});
 }
 
 template<typename Iterator, typename Equal = std::equal_to<typename std::iterator_traits<Iterator>::value_type>>
