@@ -67,10 +67,13 @@ The page can be a word, or a word directly followed by a section number between 
     subject=${@-$kak_selection}
 
     ## The completion suggestions display the page number, strip them if present
-    pagenum=$(expr "$subject" : '.*(\([1-8].*\))')
-    if [ -n "$pagenum" ]; then
-        subject=${subject%%\(*}
-    fi
+    case "${subject}" in
+        *\([1-8]*\))
+            pagenum="${subject##*(}"
+            pagenum="${pagenum%)}"
+            subject="${subject%%(*}"
+            ;;
+    esac
 
     printf %s\\n "eval -collapse-jumps -try-client %opt{docsclient} man-impl $pagenum $subject"
 } }
