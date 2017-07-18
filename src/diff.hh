@@ -113,11 +113,11 @@ void find_diff_rec(Iterator a, int begA, int endA,
                    int* V1, int* V2, Equal eq, Vector<Diff>& diffs)
 {
     int prefix_len = 0;
-    while (begA != endA and begB != endB and a[begA] == b[begB])
+    while (begA != endA and begB != endB and eq(a[begA], b[begB]))
          ++begA, ++begB, ++prefix_len;
 
     int suffix_len = 0;
-    while (begA != endA and begB != endB and a[endA-1] == b[endB-1])
+    while (begA != endA and begB != endB and eq(a[endA-1], b[endB-1]))
         --endA, --endB, ++suffix_len;
 
     append_diff(diffs, {Diff::Keep, prefix_len, 0});
