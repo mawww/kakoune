@@ -30,15 +30,27 @@ UnitTest test_diff{[]()
     }
 
     {
-        StringView s1 = "a?";
-        StringView s2 = "!";
-
-        auto diff = find_diff(s1.begin(), (int)s1.length(), s2.begin(), (int)s2.length());
-
+        auto diff = find_diff("a?", 2, "!", 1);
         kak_assert(diff.size() == 3 and
                    eq(diff[0], {Diff::Remove, 1, 0}) and
                    eq(diff[1], {Diff::Add, 1, 0}) and
                    eq(diff[2], {Diff::Remove, 1, 0}));
+    }
+
+    {
+        auto diff = find_diff("abcd", 4, "c", 1);
+        kak_assert(diff.size() == 3 and
+                   eq(diff[0], {Diff::Remove, 2, 0}) and
+                   eq(diff[1], {Diff::Keep, 1, 0}) and
+                   eq(diff[2], {Diff::Remove, 1, 0}));
+    }
+
+    {
+        auto diff = find_diff("abcd", 4, "cdef", 4);
+        kak_assert(diff.size() == 3 and
+                   eq(diff[0], {Diff::Remove, 2, 0}) and
+                   eq(diff[1], {Diff::Keep, 2, 0}) and
+                   eq(diff[2], {Diff::Add, 2, 2}));
     }
 }};
 

@@ -108,53 +108,55 @@ inline void append_diff(Vector<Diff>& diffs, Diff diff)
 }
 
 template<typename Iterator, typename Equal>
-void find_diff_rec(Iterator a, int offA, int lenA,
-                   Iterator b, int offB, int lenB,
+void find_diff_rec(Iterator a, int begA, int endA,
+                   Iterator b, int begB, int endB,
                    int* V1, int* V2, Equal eq, Vector<Diff>& diffs)
 {
     int prefix_len = 0;
-    while (lenA > 0 and lenB > 0 and a[offA] == b[offB])
-         ++offA, ++offB, --lenA, --lenB, ++prefix_len;
+    while (begA != endA and begB != endB and a[begA] == b[begB])
+         ++begA, ++begB, ++prefix_len;
 
     int suffix_len = 0;
-    while (lenA != 0 and lenB != 0 and a[offA + lenA - 1] == b[offB + lenB - 1])
-        --lenA, --lenB, ++suffix_len;
+    while (begA != endA and begB != endB and a[endA-1] == b[endB-1])
+        --endA, --endB, ++suffix_len;
 
     append_diff(diffs, {Diff::Keep, prefix_len, 0});
 
+    const auto lenA = endA - begA, lenB = endB - begB;
+
     if (lenA == 0)
-        append_diff(diffs, {Diff::Add, lenB, offB});
+        append_diff(diffs, {Diff::Add, lenB, begB});
     else if (lenB == 0)
         append_diff(diffs, {Diff::Remove, lenA, 0});
     else
     {
-        auto middle_snake = find_middle_snake(a + offA, lenA, b + offB, lenB, V1, V2, eq);
-        kak_assert(middle_snake.u <= lenA and middle_snake.v <= lenB);
-        if (middle_snake.d > 1)
+        auto snake = find_middle_snake(a + begA, lenA, b + begB, lenB, V1, V2, eq);
+        kak_assert(snake.u <= lenA and snake.v <= lenB);
+        if (snake.d > 1)
         {
-            find_diff_rec(a, offA, middle_snake.x,
-                          b, offB, middle_snake.y,
+            find_diff_rec(a, begA, begA + snake.x,
+                          b, begB, begB + snake.y,
                           V1, V2, eq, diffs);
 
-            append_diff(diffs, {Diff::Keep, middle_snake.u - middle_snake.x, 0});
+            append_diff(diffs, {Diff::Keep, snake.u - snake.x, 0});
 
-            find_diff_rec(a, offA + middle_snake.u, lenA - middle_snake.u,
-                          b, offB + middle_snake.v, lenB - middle_snake.v,
+            find_diff_rec(a, begA + snake.u, endA,
+                          b, begB + snake.v, endB,
                           V1, V2, eq, diffs);
         }
         else
         {
-            if (middle_snake.d == 1)
+            if (snake.d == 1)
             {
-                const int diag = middle_snake.x - (middle_snake.add ? 0 : 1);
+                const int diag = snake.x - (snake.add ? 0 : 1);
                 append_diff(diffs, {Diff::Keep, diag, 0});
 
-                if (middle_snake.add)
-                    append_diff(diffs, {Diff::Add, 1, offB + diag});
+                if (snake.add)
+                    append_diff(diffs, {Diff::Add, 1, begB + diag});
                 else
                     append_diff(diffs, {Diff::Remove, 1, 0});
             }
-            append_diff(diffs, {Diff::Keep, middle_snake.u - middle_snake.x, 0});
+            append_diff(diffs, {Diff::Keep, snake.u - snake.x, 0});
         }
     }
 
