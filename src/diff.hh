@@ -18,8 +18,7 @@ struct Snake{ int x, y, u, v; bool add; };
 
 template<typename Iterator, typename Equal>
 Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, int M,
-                                               const int* V,
-                                               const int D, const int k, Equal eq)
+                                               const int* V, const int D, const int k, Equal eq)
 {
     const bool add = k == -D or (k != D and V[k-1] < V[k+1]);
 
@@ -40,8 +39,9 @@ Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, in
 
 struct SnakeLen : Snake
 {
-    SnakeLen(Snake s, int d) : Snake(s), d(d) {}
-    int d;
+    SnakeLen(Snake s, bool reverse, int d) : Snake(s), reverse(reverse), d(d) {}
+    const bool reverse;
+    const int d;
 };
 
 template<typename Iterator, typename Equal>
@@ -65,7 +65,7 @@ SnakeLen find_middle_snake(Iterator a, int N, Iterator b, int M,
             if ((delta % 2 != 0) and -(D-1) <= k2 and k2 <= (D-1))
             {
                 if (V1[k1] + V2[k2] >= N)
-                    return { p, 2 * D - 1 };// return last snake on forward path
+                    return { p, false, 2 * D - 1 };// return last snake on forward path
             }
         }
 
@@ -78,13 +78,13 @@ SnakeLen find_middle_snake(Iterator a, int N, Iterator b, int M,
             if ((delta % 2 == 0) and -D <= k1 and k1 <= D)
             {
                 if (V1[k1] + V2[k2] >= N)
-                    return { { N - p.u, M - p.v, N - p.x , M - p.y, p.add } , 2 * D };// return last snake on reverse path
+                    return { { N - p.u, M - p.v, N - p.x , M - p.y, p.add } , true, 2 * D };// return last snake on reverse path
             }
         }
     }
 
     kak_assert(false);
-    return { {}, 0 };
+    return { {}, false, 0 };
 }
 
 struct Diff
@@ -131,33 +131,28 @@ void find_diff_rec(Iterator a, int begA, int endA,
     else
     {
         auto snake = find_middle_snake(a + begA, lenA, b + begB, lenB, V1, V2, eq);
-        kak_assert(snake.u <= lenA and snake.v <= lenB);
-        if (snake.d > 1)
-        {
-            find_diff_rec(a, begA, begA + snake.x,
-                          b, begB, begB + snake.y,
+        kak_assert(snake.d > 0 and snake.u <= lenA and snake.v <= lenB);
+        const bool recurse = snake.d > 1;
+
+        if (recurse)
+            find_diff_rec(a, begA, begA + snake.x - (snake.reverse ? 0 : (snake.add ? 0 : 1)),
+                          b, begB, begB + snake.y - (snake.reverse ? 0 : (snake.add ? 1 : 0)),
                           V1, V2, eq, diffs);
 
-            append_diff(diffs, {Diff::Keep, snake.u - snake.x, 0});
+        if (not snake.reverse)
+            append_diff(diffs, snake.add ? Diff{Diff::Add, 1, begB + snake.y - 1}
+                                         : Diff{Diff::Remove, 1, 0});
 
-            find_diff_rec(a, begA + snake.u, endA,
-                          b, begB + snake.v, endB,
+        append_diff(diffs, {Diff::Keep, snake.u - snake.x, 0});
+
+        if (snake.reverse)
+            append_diff(diffs, snake.add ? Diff{Diff::Add, 1, begB + snake.v}
+                                         : Diff{Diff::Remove, 1, 0});
+
+        if (recurse)
+            find_diff_rec(a, begA + snake.u + (snake.reverse ? (snake.add ? 0 : 1) : 0), endA,
+                          b, begB + snake.v + (snake.reverse ? (snake.add ? 1 : 0) : 0), endB,
                           V1, V2, eq, diffs);
-        }
-        else
-        {
-            if (snake.d == 1)
-            {
-                const int diag = snake.x - (snake.add ? 0 : 1);
-                append_diff(diffs, {Diff::Keep, diag, 0});
-
-                if (snake.add)
-                    append_diff(diffs, {Diff::Add, 1, begB + diag});
-                else
-                    append_diff(diffs, {Diff::Remove, 1, 0});
-            }
-            append_diff(diffs, {Diff::Keep, snake.u - snake.x, 0});
-        }
     }
 
     append_diff(diffs, {Diff::Keep, suffix_len, 0});
