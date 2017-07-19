@@ -144,7 +144,11 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
         {
             m_flags |= Flags::Prefix;
             if (query.length() == candidate.length())
-                m_flags |= Flags::FullMatch;
+            {
+                m_flags |= Flags::SmartFullMatch;
+                if (candidate == query)
+                    m_flags |= Flags::FullMatch;
+            }
         }
     }
 

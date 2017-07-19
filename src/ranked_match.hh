@@ -42,7 +42,8 @@ private:
         Contiguous       = 1 << 2,
         OnlyWordBoundary = 1 << 3,
         Prefix           = 1 << 4,
-        FullMatch        = 1 << 5,
+        SmartFullMatch   = 1 << 5,
+        FullMatch        = 1 << 6,
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
