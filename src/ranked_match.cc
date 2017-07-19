@@ -68,7 +68,7 @@ static int count_word_boundaries_match(StringView candidate, StringView query)
     return count;
 }
 
-static bool smartcase_eq(Codepoint query, Codepoint candidate)
+static bool smartcase_eq(Codepoint candidate, Codepoint query)
 {
     return query == (iswlower((wchar_t)query) ? to_lower(candidate) : candidate);
 }
@@ -93,7 +93,7 @@ static Optional<SubseqRes> subsequence_match_smart_case(StringView str, StringVi
         while (true)
         {
             auto str_c = utf8::read_codepoint(it, str.end());
-            if (smartcase_eq(c, str_c))
+            if (smartcase_eq(str_c, c))
                 break;
 
             if (max_index != -1 and single_word and  not is_word(str_c))
@@ -132,11 +132,11 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
 
     if (res->single_word)
         m_flags |= Flags::SingleWord;
-    if (smartcase_eq(query[0], candidate[0]))
+    if (smartcase_eq(candidate[0], query[0]))
         m_flags |= Flags::FirstCharMatch;
 
     auto it = std::search(candidate.begin(), candidate.end(),
-                          query.begin(), query.end());
+                          query.begin(), query.end(), smartcase_eq);
     if (it != candidate.end())
     {
         m_flags |= Flags::Contiguous;
