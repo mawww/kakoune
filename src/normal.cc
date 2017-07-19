@@ -1003,15 +1003,27 @@ void keep_pipe(Context& context, NormalParams)
             const Buffer& buffer = context.buffer();
             auto& shell_manager = ShellManager::instance();
             Vector<Selection> keep;
-            for (auto& sel : context.selections())
+
+            auto& selections = context.selections();
+            const size_t old_main = selections.main_index();
+            size_t new_main = -1;
+            for (int i = 0; i < selections.size(); ++i)
             {
+                auto& sel = selections[i];
+                selections.set_main_index(i);
                 if (shell_manager.eval(cmdline, context, content(buffer, sel),
                                        ShellManager::Flags::None).second == 0)
+                {
                     keep.push_back(sel);
+                    if (i >= old_main and new_main == (size_t)-1)
+                        new_main = keep.size() - 1;
+                }
             }
             if (keep.empty())
                 throw runtime_error("no selections remaining");
-            context.selections_write_only() = std::move(keep);
+            if (new_main == -1)
+                new_main = keep.size() - 1;
+            context.selections_write_only().set(std::move(keep), new_main);
     });
 }
 template<bool indent_empty = false>
