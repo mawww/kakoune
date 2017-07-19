@@ -235,7 +235,16 @@ public:
         }
         else if (cp and isdigit(*cp))
         {
-            int new_val = m_params.count * 10 + *cp - '0';
+            const int n_cp = *cp - '0';
+            int new_val = -1;
+            if (m_params.count < std::numeric_limits<int>::max() / 10)
+            {
+                new_val = m_params.count * 10;
+                if (new_val < std::numeric_limits<int>::max() - n_cp)
+                    new_val += n_cp;
+                else
+                    new_val = -1;
+            }
             if (new_val < 0)
                 context().print_status({ "parameter overflowed", get_face("Error") });
             else
