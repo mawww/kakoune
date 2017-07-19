@@ -16,7 +16,7 @@ def format -docstring "Format the contents of the current buffer" %{ eval -draft
                         printf '%s\\n' \"%sh{ rm -f '\${path_file_out}' }\"
                     else
                         printf '%s\\n' \"
-                            eval -client '${kak_client}' echo -color Error formatter returned an error (\$?)
+                            eval -client '${kak_client}' echo -markup '{Error}formatter returned an error (\$?)'
                         \"
                         rm -f \"\${path_file_out}\"
                     fi
@@ -25,7 +25,7 @@ def format -docstring "Format the contents of the current buffer" %{ eval -draft
                 }
             "
         else
-            printf '%s\n' "eval -client '${kak_client}' echo -color Error formatcmd option not specified"
+            printf '%s\n' "eval -client '${kak_client}' echo -markup '{Error}formatcmd option not specified'"
         fi
     }
 } }

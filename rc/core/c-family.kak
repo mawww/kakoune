@@ -333,9 +333,9 @@ def c-family-alternative-file -docstring "Jump to the alternate file (header/imp
             done
         ;;
         *)
-            echo "echo -color Error 'extension not recognized'"
+            echo "echo -markup '{Error}extension not recognized'"
             exit
         ;;
     esac
-    echo "echo -color Error 'alternative file not found'"
+    echo "echo -markup '{Error}alternative file not found'"
 }}

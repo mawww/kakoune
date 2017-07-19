@@ -18,7 +18,7 @@ Formats of language supported:
     %sh{
         if [ $# -ge 1 ]; then
             if [ ${#1} -ne 2 ] && [ ${#1} -ne 5 ]; then
-                echo 'echo -color Error Invalid language code (examples of expected format: en, en_US, en-US)'
+                echo "echo -markup '{Error}Invalid language code (examples of expected format: en, en_US, en-US)'"
                 rm -rf "$(dirname "$kak_opt_spell_tmp_file")"
                 exit 1
             else
@@ -46,7 +46,7 @@ Formats of language supported:
                             ;;
                         '') line_num=$((line_num + 1));;
                         \*) ;;
-                        *) printf 'echo -color Error %%{%s}\n' "${line}" | kak -p "${kak_session}";;
+                        *) printf 'echo -markup %%{{Error}%s}\n' "${line}" | kak -p "${kak_session}";;
                     esac
                 done
                 printf 'set "buffer=%s" spell_regions %%{%s}' "${kak_bufname}" "${regions}" \

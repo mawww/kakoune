@@ -43,7 +43,7 @@ def -hidden -params 1..2 man-impl %{ %sh{
                 set window manpage '$@'
         "
     else
-       printf %s\\n "echo -color Error %{man '$@' failed: see *debug* buffer for details }"
+       printf %s\\n "echo -markup %{{Error}man '$@' failed: see *debug* buffer for details}"
        rm ${colout}
     fi
 } }

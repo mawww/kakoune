@@ -27,7 +27,7 @@ The optional arguments will be passed as arguments to the new client} \
     -command-completion \
     x11-new %{ %sh{
         if [ -z "${kak_opt_termcmd}" ]; then
-           echo "echo -color Error 'termcmd option is not set'"
+           echo "echo -markup '{Error}termcmd option is not set'"
            exit
         fi
         if [ $# -ne 0 ]; then kakoune_params="-e '$@'"; fi

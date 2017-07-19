@@ -172,7 +172,7 @@ def clang-diagnostics-next -docstring "Jump to the next line that contains an er
             if [ -n "$line" ]; then
                 printf %s\\n "exec ${line} g"
             else
-                echo 'echo -color Error no next clang diagnostic'
+                echo "echo -markup '{Error}no next clang diagnostic'"
             fi
         )
     } }

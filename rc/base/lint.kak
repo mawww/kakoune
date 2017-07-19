@@ -97,7 +97,7 @@ def lint-next-error -docstring "Jump to the next line that contains an error" %{
             if [ -n "$range" ]; then
                 printf '%s\n' "select $range"
             else
-                printf 'echo -color Error no lint diagnostics\n'
+                printf 'echo -markup "{Error}no lint diagnostics"\n'
             fi
         }
     }}
@@ -118,7 +118,7 @@ def lint-previous-error -docstring "Jump to the previous line that contains an e
             if [ -n "$range" ]; then
                 printf '%s\n' "select $range"
             else
-                printf 'echo -color Error no lint diagnostics\n'
+                printf 'echo -markup "{Error}no lint diagnostics"\n'
             fi
         }
     }}

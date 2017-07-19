@@ -30,7 +30,7 @@ def lua-alternative-file -docstring 'Jump to the alternate file (implementation 
     case $kak_buffile in
         *spec/*_spec.lua)
             altfile=$(eval printf %s\\n $(printf %s\\n $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
-            [ ! -f $altfile ] && echo "echo -color Error 'implementation file not found'" && exit
+            [ ! -f $altfile ] && echo "echo -markup '{Error}implementation file not found'" && exit
         ;;
         *.lua)
             path=$kak_buffile
@@ -42,10 +42,10 @@ def lua-alternative-file -docstring 'Jump to the alternate file (implementation 
                     break
                 fi
             done
-            [ ! -d $altdir ] && echo "echo -color Error 'spec/ not found'" && exit
+            [ ! -d $altdir ] && echo "echo -markup '{Error}spec/ not found'" && exit
         ;;
         *)
-            echo "echo -color Error 'alternative file not found'" && exit
+            echo "echo -markup '{Error}alternative file not found'" && exit
         ;;
     esac
     printf %s\\n "edit $altfile"

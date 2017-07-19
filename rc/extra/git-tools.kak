@@ -115,9 +115,9 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
         # Handle case where message needs not to be edited
         if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit"; then
             if git commit "$@" > /dev/null 2>&1; then
-                echo 'echo -color Information Commit succeeded'
+                echo 'echo -markup "{Information}Commit succeeded"'
             else
-                echo 'echo -color Error Commit failed'
+                echo 'echo -markup "{Error}Commit failed"'
             fi
             exit
         fi <<-EOF
@@ -130,9 +130,9 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
         printf %s "edit '$msgfile'
               hook buffer BufWritePost '.*\Q$msgfile\E' %{ %sh{
                   if git commit -F '$msgfile' --cleanup=strip $@ > /dev/null; then
-                     printf %s 'eval -client $kak_client echo -color Information Commit succeeded; delete-buffer'
+                     printf %s 'eval -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
                   else
-                     printf %s 'eval -client $kak_client echo -color Error Commit failed'
+                     printf %s 'eval -client $kak_client echo -markup %{{Error}Commit failed}'
                   fi
               } }"
     }
@@ -159,19 +159,19 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
        add)
            name="${2:-${kak_buffile}}"
            if git add -- "${name}" > /dev/null 2>&1; then
-              printf %s "echo -color Information 'git: added ${name}'"
+              printf %s "echo -markup '{Information}git: added ${name}'"
            else
-              printf %s "echo -color Error 'git: unable to add ${name}'"
+              printf %s "echo -markup '{Error}git: unable to add ${name}'"
            fi
            ;;
        rm)
            name="${2:-${kak_buffile}}"
            if git rm -- "${name}" > /dev/null 2>&1; then
-              printf %s "echo -color Information 'git: removed ${name}'"
+              printf %s "echo -markup '{Information}git: removed ${name}'"
            else
-              printf %s "echo -color Error 'git: unable to remove ${name}'"
+              printf %s "echo -markup '{Error}git: unable to remove ${name}'"
            fi
            ;;
-       *) printf %s "echo -color Error %{unknown git command '$1'}"; exit ;;
+       *) printf %s "echo -markup %{{Error}unknown git command '$1'}"; exit ;;
     esac
 }}

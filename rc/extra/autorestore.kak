@@ -49,7 +49,7 @@ def autorestore-purge-backups -docstring "Remove all the backups of the current 
             rm -f "${f}"
         done
     }
-    echo -color Information 'Backup files removed'
+    echo -markup '{Information}Backup files removed'
 }
 
 ## If for some reason, backup files need to be ignored

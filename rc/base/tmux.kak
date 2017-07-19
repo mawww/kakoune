@@ -18,7 +18,7 @@ def -hidden -params 1.. tmux-new-impl %{
     %sh{
         tmux=${kak_client_env_TMUX:-$TMUX}
         if [ -z "$tmux" ]; then
-            echo "echo -color Error 'This command is only available in a tmux session'"
+            echo "echo -markup '{Error}This command is only available in a tmux session'"
             exit
         fi
         tmux_args="$1"

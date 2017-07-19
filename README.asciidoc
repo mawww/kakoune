@@ -697,7 +697,6 @@ command `q!` has to be used).
  * `rename-buffer <name>`: set current buffer name
  * `rename-session <name>`: set current session name
  * `echo [options] <text>`: show <text> in status line, with the following options:
-   ** `-color` <face>: print the given text with <face>, most commonly `Error` or `Information`
    ** `-markup`: expand the markup strings in <text>
    ** `-debug`: print the given text to the `\*debug*` buffer
  * `nop`: does nothing, but as with every other commands, arguments may be

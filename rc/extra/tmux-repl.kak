@@ -25,7 +25,7 @@ hook global KakBegin .* %{
 def -hidden -params 1..2 tmux-repl-impl %{
     %sh{
         if [ -z "$TMUX" ]; then
-            echo "echo -color Error This command is only available in a tmux session"
+            echo "echo -markup '{Error}This command is only available in a tmux session'"
             exit
         fi
         tmux_args="$1"
@@ -64,5 +64,5 @@ def -hidden tmux-send-text -docstring "Send the selected text to the repl pane" 
 
 def -hidden tmux-repl-disabled %{ %sh{
     VERSION_TMUX=$(tmux -V)
-    printf %s "echo -color Error %{The version of tmux is too old: got ${VERSION_TMUX}, expected >= 2.x}"
+    printf %s "echo -markup %{{Error}The version of tmux is too old: got ${VERSION_TMUX}, expected >= 2.x}"
 } }

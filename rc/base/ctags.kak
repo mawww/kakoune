@@ -40,7 +40,7 @@ If no symbol is passed then the current selection is used as symbol name} \
             out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps %{ try %{ edit %{" tagroot $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
         }
         /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps %{ edit %{" tagroot $2 "} %{" $3 "}}}" }
-        END { print ( length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out ) }'
+        END { print ( length(out) == 0 ? "echo -markup %{{Error}no such tag " ENVIRON["tagname"] "}" : "menu -markup -auto-single " out ) }'
     }}
 
 def ctags-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ eval -draft %{
@@ -78,7 +78,7 @@ decl -docstring "options to pass to the `ctags` shell command" \
 decl -docstring "path to the directory in which the tags file will be generated" str ctagspaths "."
 
 def ctags-generate -docstring 'Generate tag file asynchronously' %{
-    echo -color Information "launching tag generation in the background"
+    echo -markup "{Information}launching tag generation in the background"
     %sh{ {
         while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
         trap 'rmdir .tags.kaklock' EXIT
@@ -90,7 +90,7 @@ def ctags-generate -docstring 'Generate tag file asynchronously' %{
             msg="tags generation failed"
         fi
 
-        printf %s\\n "eval -client $kak_client echo -color Information '${msg}'" | kak -p ${kak_session}
+        printf %s\\n "eval -client $kak_client echo -markup '{Information}${msg}'" | kak -p ${kak_session}
     } > /dev/null 2>&1 < /dev/null & }
 }
 
@@ -110,6 +110,6 @@ def ctags-update-tags -docstring 'Update tags for the given file' %{
             msg="tags update failed for $kak_bufname"
         fi
 
-        printf %s\\n "eval -client $kak_client echo -color Information '${msg}'" | kak -p ${kak_session}
+        printf %s\\n "eval -client $kak_client echo -markup '{Information}${msg}'" | kak -p ${kak_session}
     } > /dev/null 2>&1 < /dev/null & }
 }

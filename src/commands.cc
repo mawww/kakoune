@@ -1087,8 +1087,7 @@ const CommandDesc echo_cmd = {
     nullptr,
     "echo <params>...: display given parameters in the status line",
     ParameterDesc{
-        { { "color", { true,  "set message color" } },
-          { "markup", { false, "parse markup" } },
+        { { "markup", { false, "parse markup" } },
           { "debug", { false, "write to debug buffer instead of status line" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart
     },
@@ -1103,10 +1102,7 @@ const CommandDesc echo_cmd = {
         else if (parser.get_switch("markup"))
             context.print_status(parse_display_line(message));
         else
-        {
-            auto face = get_face(parser.get_switch("color").value_or("StatusLine").str());
-            context.print_status({ std::move(message), face } );
-        }
+            context.print_status({ std::move(message), get_face("StatusLine") });
     }
 };
 

@@ -73,9 +73,6 @@ command *q!* has to be used).
 *echo* [options] <text>::
 	show *text* in status line, with the following *options*:
 
-	*-color* <face>:::
-		print the given text with *face*, most commonly *Error* or *Information*
-
 	*-markup*:::
 		expand the markup strings in *text* (c.f. the 'expansions' documentation page)
 

@@ -80,5 +80,5 @@ def -params ..1 -client-completion \
 If no client is passed then the current one is used} \
     iterm-focus %{
     # Should be possible using ${kak_client_env_ITERM_SESSION_ID}.
-     %sh{echo "echo -color Error 'Not implemented yet for iTerm'"}
+     %sh{echo "echo -markup '{Error}Not implemented yet for iTerm'"}
 }
