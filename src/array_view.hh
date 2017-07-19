@@ -32,7 +32,7 @@ public:
     constexpr ArrayView(T(&array)[N]) : m_pointer(array), m_size(N) {}
 
     template<typename Alloc, typename U,
-             typename = typename std::enable_if<sizeof(U) == sizeof(T)>::type>
+             typename = std::enable_if_t<sizeof(U) == sizeof(T)>>
     constexpr ArrayView(const std::vector<U, Alloc>& v)
         : m_pointer(v.data()), m_size(v.size()) {}
 
