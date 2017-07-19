@@ -235,8 +235,8 @@ public:
         }
         else if (cp and isdigit(*cp))
         {
-            int new_val = m_params.count * 10 + *cp - '0';
-            if (new_val < 0)
+            long long new_val = (long long)m_params.count * 10 + *cp - '0';
+            if (new_val > std::numeric_limits<int>::max())
                 context().print_status({ "parameter overflowed", get_face("Error") });
             else
                 m_params.count = new_val;
