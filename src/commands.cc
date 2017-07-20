@@ -741,7 +741,7 @@ const CommandDesc add_highlighter_cmd = {
 const CommandDesc remove_highlighter_cmd = {
     "remove-highlighter",
     "rmhl",
-    "add-highlighter <path>: remove highlighter <name>",
+    "remove-highlighter <name>: remove highlighter <name>",
     ParameterDesc{ {}, ParameterDesc::Flags::None, 1, 1 },
     CommandFlags::None,
     CommandHelper{},
