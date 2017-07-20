@@ -14,7 +14,11 @@
 namespace Kakoune
 {
 
-struct Snake{ int x, y, u, v; bool add; };
+struct Snake
+{
+    int x, y, u, v;
+    enum Op { Add, Del, RevAdd, RevDel } op;
+};
 
 template<typename Iterator, typename Equal>
 Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, int M,
@@ -34,19 +38,12 @@ Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, in
     while (u < N and v < M and eq(a[u], b[v]))
         ++u, ++v;
 
-    return { x, y, u, v, add };
+    return { x, y, u, v, add ? Snake::Add : Snake::Del };
 }
 
-struct SnakeLen : Snake
-{
-    SnakeLen(Snake s, bool reverse, int d) : Snake(s), reverse(reverse), d(d) {}
-    const bool reverse;
-    const int d;
-};
-
 template<typename Iterator, typename Equal>
-SnakeLen find_middle_snake(Iterator a, int N, Iterator b, int M,
-                           int* V1, int* V2, Equal eq)
+Snake find_middle_snake(Iterator a, int N, Iterator b, int M,
+                        int* V1, int* V2, Equal eq)
 {
     const int delta = N - M;
     V1[1] = 0;
@@ -65,7 +62,7 @@ SnakeLen find_middle_snake(Iterator a, int N, Iterator b, int M,
             if ((delta % 2 != 0) and -(D-1) <= k2 and k2 <= (D-1))
             {
                 if (V1[k1] + V2[k2] >= N)
-                    return { p, false, 2 * D - 1 };// return last snake on forward path
+                    return p;// return last snake on forward path, len = (2 * D - 1)
             }
         }
 
@@ -78,13 +75,14 @@ SnakeLen find_middle_snake(Iterator a, int N, Iterator b, int M,
             if ((delta % 2 == 0) and -D <= k1 and k1 <= D)
             {
                 if (V1[k1] + V2[k2] >= N)
-                    return { { N - p.u, M - p.v, N - p.x , M - p.y, p.add } , true, 2 * D };// return last snake on reverse path
+                    return { N - p.u, M - p.v, N - p.x , M - p.y,
+                             (Snake::Op)(p.op + Snake::RevAdd) };// return last snake on reverse path, len = 2 * D
             }
         }
     }
 
     kak_assert(false);
-    return { {}, false, 0 };
+    return {};
 }
 
 struct Diff
@@ -131,28 +129,27 @@ void find_diff_rec(Iterator a, int begA, int endA,
     else
     {
         auto snake = find_middle_snake(a + begA, lenA, b + begB, lenB, V1, V2, eq);
-        kak_assert(snake.d > 0 and snake.u <= lenA and snake.v <= lenB);
-        const bool recurse = snake.d > 1;
+        kak_assert(snake.u <= lenA and snake.v <= lenB);
 
-        if (recurse)
-            find_diff_rec(a, begA, begA + snake.x - (snake.reverse ? 0 : (snake.add ? 0 : 1)),
-                          b, begB, begB + snake.y - (snake.reverse ? 0 : (snake.add ? 1 : 0)),
-                          V1, V2, eq, diffs);
+        find_diff_rec(a, begA, begA + snake.x - (int)(snake.op == Snake::Del),
+                      b, begB, begB + snake.y - (int)(snake.op == Snake::Add),
+                      V1, V2, eq, diffs);
 
-        if (not snake.reverse)
-            append_diff(diffs, snake.add ? Diff{Diff::Add, 1, begB + snake.y - 1}
-                                         : Diff{Diff::Remove, 1, 0});
+        if (snake.op == Snake::Add)
+            append_diff(diffs, {Diff::Add, 1, begB + snake.y - 1});
+        if (snake.op == Snake::Del)
+            append_diff(diffs, {Diff::Remove, 1, 0});
 
         append_diff(diffs, {Diff::Keep, snake.u - snake.x, 0});
 
-        if (snake.reverse)
-            append_diff(diffs, snake.add ? Diff{Diff::Add, 1, begB + snake.v}
-                                         : Diff{Diff::Remove, 1, 0});
+        if (snake.op == Snake::RevAdd)
+            append_diff(diffs, {Diff::Add, 1, begB + snake.v});
+        if (snake.op == Snake::RevDel)
+            append_diff(diffs, {Diff::Remove, 1, 0});
 
-        if (recurse)
-            find_diff_rec(a, begA + snake.u + (snake.reverse ? (snake.add ? 0 : 1) : 0), endA,
-                          b, begB + snake.v + (snake.reverse ? (snake.add ? 1 : 0) : 0), endB,
-                          V1, V2, eq, diffs);
+        find_diff_rec(a, begA + snake.u + (int)(snake.op == Snake::RevDel), endA,
+                      b, begB + snake.v + (int)(snake.op == Snake::RevAdd), endB,
+                      V1, V2, eq, diffs);
     }
 
     append_diff(diffs, {Diff::Keep, suffix_len, 0});
