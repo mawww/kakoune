@@ -37,12 +37,8 @@ ParametersParser::ParametersParser(ParameterList params,
                 throw runtime_error{format("switch '-{}' specified more than once", it->key)};
             switch_seen[switch_index] = true;
 
-            if (it->value.takes_arg)
-            {
-                ++i;
-                if (i == params.size() or params[i][0_byte] == '-')
-                   throw missing_option_value(it->key);
-            }
+            if (it->value.takes_arg and ++i == params.size())
+               throw missing_option_value(it->key);
         }
         else // positional
         {
