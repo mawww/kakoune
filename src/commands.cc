@@ -2007,7 +2007,7 @@ const CommandDesc set_register_cmd = {
     "set-register",
     "reg",
     "set-register <name> <value>: set register <name> to <value>",
-    ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
+    ParameterDesc{{}, ParameterDesc::Flags::SwitchesAsPositional, 2, 2},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
