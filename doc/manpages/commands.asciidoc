@@ -144,6 +144,9 @@ command *q!* has to be used).
 	remove the highlighter whose id is *highlighter_id* (c.f. the
 	'highlighters' documentation page)
 
+*history-move* <change_id>::
+	move to change <change_id> in undo history
+
 Helpers
 -------
 Kakoune provides some helper commands that can be used to define composite
