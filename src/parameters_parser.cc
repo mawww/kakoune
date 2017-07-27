@@ -49,7 +49,7 @@ ParametersParser::ParametersParser(ParameterList params,
     }
     size_t count = m_positional_indices.size();
     if (count > desc.max_positionals or count < desc.min_positionals)
-        throw wrong_argument_count();
+        throw wrong_argument_count(count, desc.min_positionals, desc.max_positionals);
 }
 
 Optional<StringView> ParametersParser::get_switch(StringView name) const

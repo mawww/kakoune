@@ -208,7 +208,7 @@ template<bool force_reload>
 void edit(const ParametersParser& parser, Context& context, const ShellContext&)
 {
     if (parser.positional_count() == 0 and not force_reload)
-        throw wrong_argument_count();
+        throw wrong_argument_count(0, 1, 3);
 
     auto& name = parser.positional_count() > 0 ? parser[0]
                                                : context.buffer().name();
@@ -1815,7 +1815,7 @@ const CommandDesc menu_cmd = {
 
         const size_t count = parser.positional_count();
         if (count == 0 or (count % modulo) != 0)
-            throw wrong_argument_count();
+            throw wrong_argument_count(count, 0, -1);
 
         if (count == modulo and parser.get_switch("auto-single"))
         {
@@ -1936,7 +1936,7 @@ const CommandDesc try_catch_cmd = {
     [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
         if (parser.positional_count() == 2)
-            throw wrong_argument_count();
+            throw wrong_argument_count(2, 1, 3);
 
         const bool do_catch = parser.positional_count() == 3;
         if (do_catch and parser[1] != "catch")
