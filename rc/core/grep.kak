@@ -49,7 +49,7 @@ decl -docstring "name of the client in which all source code jumps will be execu
 def -hidden grep-jump %{
     eval -collapse-jumps %{
         try %{
-            exec 'xs^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
+            exec '<a-x>s^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
             set buffer grep_current_line %val{cursor_line}
             eval -try-client %opt{jumpclient} edit -existing %reg{1} %reg{2} %reg{3}
             try %{ focus %opt{jumpclient} }
