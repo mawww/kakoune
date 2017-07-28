@@ -60,17 +60,21 @@ def -hidden grep-jump %{
 def grep-next-match -docstring 'Jump to the next grep match' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
-        exec "%opt{grep_current_line}g<a-l>/^[^:]+:\d+:<ret>"
+        # First jump to enf of buffer so that if grep_current_line == 0
+        # 0g<a-l> will be a no-op and we'll jump to the first result.
+        # Yeah, thats ugly...
+        exec "ge %opt{grep_current_line}g<a-l> /^[^:]+:\d+:<ret>"
         grep-jump
     }
-    try %{ eval -client %opt{toolsclient} %{ exec %opt{grep_current_line}g } }
+    try %{ eval -client %opt{toolsclient} %{ exec gg %opt{grep_current_line}g } }
 }
 
 def grep-previous-match -docstring 'Jump to the previous grep match' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
-        exec "%opt{grep_current_line}g<a-/>^[^:]+:\d+:<ret>"
+        # See comment in grep-next-match
+        exec "ge %opt{grep_current_line}g<a-h> <a-/>^[^:]+:\d+:<ret>"
         grep-jump
     }
-    try %{ eval -client %opt{toolsclient} %{ exec %opt{grep_current_line}g } }
+    try %{ eval -client %opt{toolsclient} %{ exec gg %opt{grep_current_line}g } }
 }
