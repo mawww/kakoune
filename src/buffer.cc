@@ -419,8 +419,8 @@ Buffer::HistoryNode* Buffer::find_history_node(HistoryNode* node, const Func& fu
 
 bool Buffer::move_to(size_t history_id) noexcept
 {
-    HistoryNode* target_node = find_history_node(&m_history, [history_id](HistoryNode* node) { return node->id == history_id; });
-
+    auto* target_node = find_history_node(&m_history, [history_id](auto* node)
+                                          { return node->id == history_id; });
     if (not target_node)
         return false;
 
