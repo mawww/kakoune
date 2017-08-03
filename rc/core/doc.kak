@@ -31,14 +31,14 @@ def -hidden -params 1..2 doc-open %{
 
 def -params 1..2 \
     -shell-candidates %{
-        find "${kak_runtime}/../doc/kak/manpages/" -type f -iname "*.gz" | while read l; do
+        find "${kak_runtime}/doc/" -type f -iname "*.gz" | while read l; do
             basename "${l%.*}"
         done
     } \
     doc -docstring %{doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
 An optional keyword argument can be passed to the function, which will be automatically selected in the documentation} %{
     %sh{
-        readonly PATH_DOC="${kak_runtime}/../doc/kak/manpages/${1}.gz"
+        readonly PATH_DOC="${kak_runtime}/doc/${1}.gz"
 
         shift
         if [ -f "${PATH_DOC}" ]; then
