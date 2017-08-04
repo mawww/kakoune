@@ -252,14 +252,14 @@ private:
 
     using UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
 
-    struct HistoryNode : SafeCountable, UseMemoryDomain<MemoryDomain::BufferMeta>
+   struct HistoryNode : SafeCountable, UseMemoryDomain<MemoryDomain::BufferMeta>
     {
         HistoryNode(size_t id, HistoryNode* parent);
 
         UndoGroup undo_group;
         Vector<std::unique_ptr<HistoryNode>, MemoryDomain::BufferMeta> childs;
         SafePtr<HistoryNode> parent;
-        SafePtr<HistoryNode> redo_child;
+        HistoryNode* redo_child = nullptr; // not a SafePtr to avoid lifetime issues between this and childs
         size_t id;
         TimePoint timepoint;
     };

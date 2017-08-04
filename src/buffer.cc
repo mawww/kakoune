@@ -242,10 +242,13 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
 
     if (not record_undo)
     {
+        // Erase history about to be invalidated history
+        m_history_cursor = &m_history;
+        m_last_save_history_cursor = &m_history;
+        m_history = HistoryNode{m_next_history_id++, nullptr};
+
         m_changes.push_back({ Change::Erase, {0,0}, line_count() });
-
         static_cast<BufferLines&>(m_lines) = std::move(parsed_lines.lines);
-
         m_changes.push_back({ Change::Insert, {0,0}, line_count() });
     }
     else
@@ -340,7 +343,7 @@ bool Buffer::redo(size_t count) noexcept
 
     while (count-- != 0 and m_history_cursor->redo_child)
     {
-        m_history_cursor = m_history_cursor->redo_child.get();
+        m_history_cursor = m_history_cursor->redo_child;
 
         for (const Modification& modification : m_history_cursor->undo_group)
             apply_modification(modification);
