@@ -11,7 +11,7 @@ namespace Kakoune
 class AliasRegistry : public SafeCountable
 {
 public:
-    AliasRegistry(AliasRegistry& parent) : m_parent(&parent) {}
+    AliasRegistry(AliasRegistry& parent) : SafeCountable{}, m_parent(&parent) {}
     void add_alias(String alias, String command);
     void remove_alias(StringView alias);
     StringView operator[](StringView alias) const;

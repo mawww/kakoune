@@ -24,7 +24,7 @@ class SafeCountable
 {
 public:
 #ifdef KAK_DEBUG
-    SafeCountable() : m_count(0) {}
+    SafeCountable() {}
     ~SafeCountable()
     {
         kak_assert(m_count == 0);
@@ -32,6 +32,12 @@ public:
         kak_assert(m_callstacks.empty());
         #endif
     }
+
+    SafeCountable(const SafeCountable&) {}
+    SafeCountable(SafeCountable&&) {}
+
+    SafeCountable& operator=(const SafeCountable& other) { return *this; }
+    SafeCountable& operator=(SafeCountable&& other) { return *this; }
 
 private:
     friend struct SafeCountablePolicy;
@@ -45,7 +51,7 @@ private:
 
     mutable Vector<Callstack> m_callstacks;
     #endif
-    mutable int m_count;
+    mutable int m_count = 0;
 #endif
 };
 

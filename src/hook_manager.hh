@@ -14,7 +14,7 @@ class Context;
 class HookManager : public SafeCountable
 {
 public:
-    HookManager(HookManager& parent) : m_parent(&parent) {}
+    HookManager(HookManager& parent) : SafeCountable{}, m_parent(&parent) {}
 
     void add_hook(StringView hook_name, String group, Regex filter, String commands);
     void remove_hooks(StringView group);

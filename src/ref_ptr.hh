@@ -8,8 +8,15 @@ namespace Kakoune
 
 struct RefCountable
 {
-    int refcount = 0;
+    RefCountable() = default;
+    RefCountable(const RefCountable&) {}
+    RefCountable(RefCountable&&) {}
     virtual ~RefCountable() = default;
+
+    RefCountable& operator=(const RefCountable&) { return *this; }
+    RefCountable& operator=(RefCountable&&) { return *this; }
+
+    int refcount = 0;
 };
 
 struct RefCountablePolicy
