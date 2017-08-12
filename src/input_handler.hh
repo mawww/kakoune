@@ -136,13 +136,13 @@ enum class AutoInfo
 
 constexpr bool with_bit_ops(Meta::Type<AutoInfo>) { return true; }
 
-constexpr Array<EnumDesc<AutoInfo>, 3> enum_desc(Meta::Type<AutoInfo>)
+constexpr auto enum_desc(Meta::Type<AutoInfo>)
 {
-    return { {
+    return make_array<EnumDesc<AutoInfo>>({
         { AutoInfo::Command, "command"},
         { AutoInfo::OnKey, "onkey"},
         { AutoInfo::Normal, "normal" }
-    } };
+    });
 }
 
 bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context);

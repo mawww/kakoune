@@ -21,12 +21,12 @@ enum class EolFormat
     Crlf
 };
 
-constexpr Array<EnumDesc<EolFormat>, 2> enum_desc(Meta::Type<EolFormat>)
+constexpr auto enum_desc(Meta::Type<EolFormat>)
 {
-    return { {
+    return make_array<EnumDesc<EolFormat>>({
         { EolFormat::Lf, "lf" },
         { EolFormat::Crlf, "crlf" },
-    } };
+    });
 }
 
 enum class ByteOrderMark
@@ -35,12 +35,12 @@ enum class ByteOrderMark
     Utf8
 };
 
-constexpr Array<EnumDesc<ByteOrderMark>, 2> enum_desc(Meta::Type<ByteOrderMark>)
+constexpr auto enum_desc(Meta::Type<ByteOrderMark>)
 {
-    return { {
+    return make_array<EnumDesc<ByteOrderMark>>({
         { ByteOrderMark::None, "none" },
         { ByteOrderMark::Utf8, "utf8" },
-    } };
+    });
 }
 
 class Buffer;

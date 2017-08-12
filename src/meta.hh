@@ -1,6 +1,8 @@
 #ifndef meta_hh_INCLUDED
 #define meta_hh_INCLUDED
 
+#include <utility>
+
 namespace Kakoune
 {
 inline namespace Meta
@@ -21,6 +23,20 @@ struct Array
 
     T m_data[N];
 };
+
+template<typename T, size_t N, size_t... Indices>
+constexpr Array<T, N> make_array(T (&&data)[N], std::index_sequence<Indices...>)
+{
+    static_assert(sizeof...(Indices) == N, "size mismatch");
+    return {{data[Indices]...}};
+}
+
+template<typename T, size_t N>
+constexpr Array<T, N> make_array(T (&&data)[N])
+{
+    return make_array(std::forward<decltype(data)>(data),
+                      std::make_index_sequence<N>());
+}
 
 }
 

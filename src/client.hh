@@ -131,15 +131,15 @@ enum class Autoreload
     Ask
 };
 
-constexpr Array<EnumDesc<Autoreload>, 5> enum_desc(Meta::Type<Autoreload>)
+constexpr auto enum_desc(Meta::Type<Autoreload>)
 {
-    return { {
+    return make_array<EnumDesc<Autoreload>>({
         { Autoreload::Yes, "yes" },
         { Autoreload::No, "no" },
         { Autoreload::Ask, "ask" },
         { Autoreload::Yes, "true" },
         { Autoreload::No, "false" }
-    } };
+    });
 }
 
 }
