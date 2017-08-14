@@ -156,7 +156,7 @@ struct HashMap
 
     template<typename KeyType>
     using EnableIfHashCompatible = std::enable_if_t<
-        IsHashCompatible<Key, std::decay_t<KeyType>>
+        HashCompatible<Key, std::decay_t<KeyType>>
     >;
 
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>

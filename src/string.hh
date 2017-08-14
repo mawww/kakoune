@@ -256,8 +256,8 @@ private:
 
 static_assert(std::is_trivial<StringView>::value, "");
 
-template<> struct HashCompatible<String, StringView> : std::true_type {};
-template<> struct HashCompatible<StringView, String> : std::true_type {};
+template<> constexpr bool HashCompatible<String, StringView> = true;
+template<> constexpr bool HashCompatible<StringView, String> = true;
 
 inline String::String(StringView str) : String{str.begin(), str.length()} {}
 
