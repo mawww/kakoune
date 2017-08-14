@@ -104,10 +104,9 @@ inline RegexConstant::match_flag_type match_flags(bool bol, bool eol, bool bow, 
 template<typename It>
 bool regex_match(It begin, It end, const Regex& re)
 {
-    using Utf8It = RegexUtf8It<It>;
     try
     {
-        return boost::regex_match(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re);
+        return boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, re);
     }
     catch (std::runtime_error& err)
     {
@@ -118,10 +117,9 @@ bool regex_match(It begin, It end, const Regex& re)
 template<typename It>
 bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
 {
-    using Utf8It = RegexUtf8It<It>;
     try
     {
-        return boost::regex_match(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, res, re);
+        return boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, res, re);
     }
     catch (std::runtime_error& err)
     {
@@ -133,10 +131,9 @@ template<typename It>
 bool regex_search(It begin, It end, const Regex& re,
                   RegexConstant::match_flag_type flags = RegexConstant::match_default)
 {
-    using Utf8It = RegexUtf8It<It>;
     try
     {
-        return boost::regex_search(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re, flags);
+        return boost::regex_search<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, re, flags);
     }
     catch (std::runtime_error& err)
     {
@@ -148,10 +145,9 @@ template<typename It>
 bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
                   RegexConstant::match_flag_type flags = RegexConstant::match_default)
 {
-    using Utf8It = RegexUtf8It<It>;
     try
     {
-        return boost::regex_search(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, res, re, flags);
+        return boost::regex_search<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, res, re, flags);
     }
     catch (std::runtime_error& err)
     {
