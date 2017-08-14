@@ -399,8 +399,7 @@ InplaceString<23> to_string(float val);
 InplaceString<7>  to_string(Codepoint c);
 
 template<typename RealType, typename ValueType>
-decltype(to_string(std::declval<ValueType>()))
-to_string(const StronglyTypedNumber<RealType, ValueType>& val)
+decltype(auto) to_string(const StronglyTypedNumber<RealType, ValueType>& val)
 {
     return to_string((ValueType)val);
 }
@@ -411,7 +410,7 @@ namespace detail
 template<typename T> constexpr bool is_string = std::is_convertible<T, StringView>::value;
 
 template<typename T, class = std::enable_if_t<not is_string<T>>>
-auto format_param(const T& val) -> decltype(to_string(val)) { return to_string(val); }
+decltype(auto) format_param(const T& val) { return to_string(val); }
 
 template<typename T, class = std::enable_if_t<is_string<T>>>
 StringView format_param(const T& val) { return val; }
