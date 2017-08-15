@@ -209,7 +209,8 @@ public:
         // Hack to parse keys sent by terminals using the 8th bit to mark the
         // meta key. In normal mode, give priority to a potential alt-key than
         // the accentuated character.
-        if (key.key >= 127 and key.key < 256)
+        if (not (key.modifiers & Key::Modifiers::MouseEvent) and
+            key.key >= 127 and key.key < 256)
         {
             key.modifiers |= Key::Modifiers::Alt;
             key.key &= 0x7f;
