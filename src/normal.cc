@@ -63,7 +63,7 @@ void select(Context& context, T func)
             }
 
             if (mode == SelectMode::Extend)
-                sel.merge_with(*res);
+                sel.cursor() = res->cursor();
             else
             {
                 sel.anchor() = res->anchor();
@@ -772,7 +772,7 @@ void search(Context& context, NormalParams params)
                                 if (mode == SelectMode::Replace)
                                     sel = keep_direction(find_next_match<direction>(context, sel, regex, wrapped), sel);
                                 if (mode == SelectMode::Extend)
-                                    sel.merge_with(find_next_match<direction>(context, sel, regex, wrapped));
+                                    sel.cursor() = find_next_match<direction>(context, sel, regex, wrapped).cursor();
                             }
                             selections.sort_and_merge_overlapping();
                          } while (--c > 0);

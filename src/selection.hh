@@ -20,8 +20,6 @@ struct Selection
         : m_anchor{anchor}, m_cursor{cursor},
           m_captures(std::move(captures)) {}
 
-    void merge_with(const Selection& range);
-
     BufferCoord& anchor() { return m_anchor; }
     BufferCoordAndTarget& cursor() { return m_cursor; }
 

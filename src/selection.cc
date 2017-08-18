@@ -7,11 +7,6 @@
 namespace Kakoune
 {
 
-void Selection::merge_with(const Selection& other)
-{
-    m_cursor = other.m_cursor;
-}
-
 SelectionList::SelectionList(Buffer& buffer, Selection s, size_t timestamp)
     : m_buffer(&buffer), m_selections({ std::move(s) }), m_timestamp(timestamp)
 {
