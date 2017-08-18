@@ -25,17 +25,16 @@ struct Array
 };
 
 template<typename T, size_t N, size_t... Indices>
-constexpr Array<T, N> make_array(T (&&data)[N], std::index_sequence<Indices...>)
+constexpr Array<T, N> make_array(const T (&data)[N], std::index_sequence<Indices...>)
 {
     static_assert(sizeof...(Indices) == N, "size mismatch");
     return {{data[Indices]...}};
 }
 
 template<typename T, size_t N>
-constexpr Array<T, N> make_array(T (&&data)[N])
+constexpr Array<T, N> make_array(const T (&data)[N])
 {
-    return make_array(std::forward<decltype(data)>(data),
-                      std::make_index_sequence<N>());
+    return make_array(data, std::make_index_sequence<N>());
 }
 
 }
