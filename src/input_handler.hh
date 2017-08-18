@@ -138,7 +138,7 @@ constexpr bool with_bit_ops(Meta::Type<AutoInfo>) { return true; }
 
 constexpr auto enum_desc(Meta::Type<AutoInfo>)
 {
-    return make_array<EnumDesc<AutoInfo>>({
+    return make_array<EnumDesc<AutoInfo>, 3>({
         { AutoInfo::Command, "command"},
         { AutoInfo::OnKey, "onkey"},
         { AutoInfo::Normal, "normal" }
