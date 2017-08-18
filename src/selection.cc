@@ -10,10 +10,6 @@ namespace Kakoune
 void Selection::merge_with(const Selection& other)
 {
     m_cursor = other.m_cursor;
-    if (m_anchor < m_cursor)
-        m_anchor = std::min(m_anchor, other.m_anchor);
-    if (m_anchor > m_cursor)
-        m_anchor = std::max(m_anchor, other.m_anchor);
 }
 
 SelectionList::SelectionList(Buffer& buffer, Selection s, size_t timestamp)
