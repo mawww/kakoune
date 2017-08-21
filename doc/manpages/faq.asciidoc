@@ -133,6 +133,16 @@ The shell scope allows users to spawn any interpreter they want, for a minimal
 cost in terms of performance, it is therefore the reason why it's the only
 one available by default.
 
+What shell is used to expand `%sh{}` scopes ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The server expands shell scopes using the `sh` binary, stored in one of the
+directories where all the POSIX standard utilities can be found -this list
+of directories is stored in a system configuration variable, and queried
+by Kakoune at startup.
+
+In most distributions, `/bin/sh` will end up being used.
+
 Can I disable auto-indentation completely ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
