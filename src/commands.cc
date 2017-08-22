@@ -1127,6 +1127,11 @@ const CommandDesc debug_cmd = {
         {
             write_to_debug_buffer(format("pid: {}", getpid()));
             write_to_debug_buffer(format("session: {}", Server::instance().session()));
+            #ifdef KAK_DEBUG
+            write_to_debug_buffer("build: debug");
+            #else
+            write_to_debug_buffer("build: release");
+            #endif
         }
         else if (parser[0] == "buffers")
         {
