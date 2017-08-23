@@ -43,6 +43,9 @@ String::Data::Data(Data&& other) noexcept
 
 String::Data& String::Data::operator=(const Data& other)
 {
+    if (&other == this)
+        return *this;
+
     const size_t new_size = other.size();
     reserve<false>(new_size);
     memcpy(data(), other.data(), new_size+1);
@@ -53,6 +56,9 @@ String::Data& String::Data::operator=(const Data& other)
 
 String::Data& String::Data::operator=(Data&& other) noexcept
 {
+    if (&other == this)
+        return *this;
+
     release();
 
     if (other.is_long())
