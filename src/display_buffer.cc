@@ -136,37 +136,31 @@ void DisplayLine::optimize()
         return;
 
     auto atom_it = m_atoms.begin();
-    auto next_atom_it = atom_it + 1;
-    while (next_atom_it != m_atoms.end())
+    for (auto next_it = atom_it + 1; next_it != m_atoms.end(); ++next_it)
     {
         auto& atom = *atom_it;
-        auto& next_atom = *next_atom_it;
-        bool merged = false;
+        auto& next = *next_it;
 
-        if (atom.face == next_atom.face and
-            atom.type() ==  next_atom.type())
+        const auto type = atom.type();
+        if (type == next.type() and atom.face == next.face)
         {
-            auto type = atom.type();
-            if ((type == DisplayAtom::Range or
-                 type == DisplayAtom::ReplacedRange) and
-                next_atom.begin() == atom.end())
-            {
-                atom.m_range.end = next_atom.end();
-                if (type == DisplayAtom::ReplacedRange)
-                    atom.m_text += next_atom.m_text;
-                merged = true;
-            }
             if (type == DisplayAtom::Text)
+                atom.m_text += next.m_text;
+            else if ((type == DisplayAtom::Range or
+                      type == DisplayAtom::ReplacedRange) and
+                     next.begin() == atom.end())
             {
-                atom.m_text += next_atom.m_text;
-                merged = true;
+                atom.m_range.end = next.end();
+                if (type == DisplayAtom::ReplacedRange)
+                    atom.m_text += next.m_text;
             }
+            else
+                *++atom_it = std::move(*next_it);
         }
-        if (merged)
-            next_atom_it = m_atoms.erase(next_atom_it);
         else
-            atom_it = next_atom_it++;
+            *++atom_it = std::move(*next_it);
     }
+    m_atoms.erase(atom_it+1, m_atoms.end());
 }
 
 ColumnCount DisplayLine::length() const
