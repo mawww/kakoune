@@ -39,18 +39,13 @@ namespace Kakoune
 
 static const char* startup_info =
 "Kakoune recent breaking changes:\n"
-" * Renamed range-faces/line-flags option types to range-specs/line-specs\n"
-"   range-specs can be used by the new replace-range highlighter.\n"
-"   A new update-option command can be used to update the line/ranges\n"
-"   according to buffer modification\n"
-" * <a-z> and <a-Z> are not append to/from register anymore but\n"
-"   combine from/to register.\n"
-" * `*` will now strip surrounding whitespaces from the selection\n"
 " * lint/grep/make next/prev commands have been renamed to more\n"
 "   explicit names (lint-next-error, grep-previous-match, ...)\n"
 " * ctags commands have been renamed to use the ctags- prefix\n"
 " * completion_extra_word_char option is now extra_word_chars (note the\n"
-"   plural form) and is used for word selection commands\n";
+"   plural form) and is used for word selection commands\n"
+" * selection extending behaviour has been simplified, it now just\n"
+"   maintain the current anchor and moves the cursor,\n";
 
 struct startup_error : runtime_error
 {
