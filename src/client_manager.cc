@@ -40,13 +40,14 @@ String ClientManager::generate_name() const
 
 Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
                                      EnvVarMap env_vars, StringView init_cmds,
-                                     Optional<BufferCoord> init_coord)
+                                     Optional<BufferCoord> init_coord,
+                                     Client::OnExitCallback on_exit)
 {
     Buffer& buffer = BufferManager::instance().get_first_buffer();
     WindowAndSelections ws = get_free_window(buffer);
     Client* client = new Client{std::move(ui), std::move(ws.window),
                                 std::move(ws.selections), std::move(env_vars),
-                                generate_name()};
+                                generate_name(), std::move(on_exit)};
     m_clients.emplace_back(client);
 
     if (init_coord)
@@ -88,7 +89,7 @@ void ClientManager::process_pending_inputs() const
     }
 }
 
-void ClientManager::remove_client(Client& client, bool graceful)
+void ClientManager::remove_client(Client& client, bool graceful, int status)
 {
     auto it = find(m_clients, &client);
     if (it == m_clients.end())
@@ -96,6 +97,7 @@ void ClientManager::remove_client(Client& client, bool graceful)
         kak_assert(contains(m_client_trash, &client));
         return;
     }
+    client.exit(status);
     m_client_trash.push_back(std::move(*it));
     m_clients.erase(it);
 

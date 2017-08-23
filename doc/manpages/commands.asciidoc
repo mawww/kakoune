@@ -33,15 +33,17 @@ command *q!* has to be used).
 *w[rite]a[ll]*::
 	write all buffers that are associated to a file
 
-*q[uit][!]*::
+*q[uit][!]* [<exit status>]::
 	exit Kakoune, use quit! to force quitting even if there is some
-	unsaved buffers remaining
+	unsaved buffers remaining. If specified, the client exit status
+	will be set to <exit status>
+
+*w[a]q[!]* [<exit status>]::
+	write the current buffer (or all buffers when *waq* is used) and quit.
+	If specified, the client exit status will be set to <exit status>
 
 *kill*::
 	terminate the current session, all the clients as well as the server
-
-*w[a]q[!]*::
-	write the current buffer (or all buffers when *waq* is used) and quit
 
 *b[uffer]* <name>::
 	switch to buffer <name>

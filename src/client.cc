@@ -26,8 +26,10 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
                std::unique_ptr<Window>&& window,
                SelectionList selections,
                EnvVarMap env_vars,
-               String name)
+               String name,
+               OnExitCallback on_exit)
     : m_ui{std::move(ui)}, m_window{std::move(window)},
+      m_on_exit{std::move(on_exit)},
       m_input_handler{std::move(selections), Context::Flags::None,
                       std::move(name)},
       m_env_vars(std::move(env_vars))

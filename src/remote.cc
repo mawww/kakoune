@@ -38,7 +38,8 @@ enum class MessageType : uint8_t
     SetCursor,
     Refresh,
     SetOptions,
-    Key
+    Exit,
+    Key,
 };
 
 class MsgWriter
@@ -252,8 +253,7 @@ private:
         kak_assert(m_write_pos + size <= m_stream.size());
         int res = ::read(sock, m_stream.data() + m_write_pos, size);
         if (res <= 0)
-            throw disconnected{res ? format("socket read failed: {}", strerror(errno))
-                                   : "peer disconnected", res == 0};
+            throw disconnected{format("socket read failed: {}", strerror(errno))};
         m_write_pos += res;
     }
 
@@ -352,6 +352,8 @@ public:
     void set_client(Client* client) { m_client = client; }
     Client* client() const { return m_client.get(); }
 
+    void exit(int status);
+
 private:
     FDWatcher     m_socket_watcher;
     MsgReader     m_reader;
@@ -368,8 +370,7 @@ static bool send_data(int fd, RemoteBuffer& buffer)
     {
       int res = ::write(fd, buffer.data(), buffer.size());
       if (res <= 0)
-          throw disconnected{res ? format("socket write failed: {}", strerror(errno))
-                                 : "peer disconnected", res == 0};
+          throw disconnected{format("socket write failed: {}", strerror(errno))};
       buffer.erase(buffer.begin(), buffer.begin() + res);
     }
     return buffer.empty();
@@ -393,7 +394,7 @@ RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
 
                    if (m_reader.type() != MessageType::Key)
                    {
-                      ClientManager::instance().remove_client(*m_client, false);
+                      ClientManager::instance().remove_client(*m_client, false, -1);
                       return;
                    }
 
@@ -407,7 +408,7 @@ RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
           catch (const disconnected& err)
           {
               write_to_debug_buffer(format("Error while transfering remote messages: {}", err.what()));
-              ClientManager::instance().remove_client(*m_client, false);
+              ClientManager::instance().remove_client(*m_client, false, -1);
           }
       }),
       m_dimensions(dimensions)
@@ -417,6 +418,9 @@ RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
 
 RemoteUI::~RemoteUI()
 {
+    // Try to send the remaining data if possible, as it might contain the desired exit status
+    send_data(m_socket_watcher.fd(), m_send_buffer);
+
     write_to_debug_buffer(format("remote client disconnected: {}", m_socket_watcher.fd()));
     m_socket_watcher.close_fd();
 }
@@ -507,6 +511,13 @@ void RemoteUI::set_ui_options(const Options& options)
 {
     MsgWriter msg{m_send_buffer, MessageType::SetOptions};
     msg.write(options);
+    m_socket_watcher.events() |= FdEvents::Write;
+}
+
+void RemoteUI::exit(int status)
+{
+    MsgWriter msg{m_send_buffer, MessageType::Exit};
+    msg.write(status);
     m_socket_watcher.events() |= FdEvents::Write;
 }
 
@@ -637,6 +648,11 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
             case MessageType::SetOptions:
                 m_ui->set_ui_options(reader.read_hash_map<String, String, MemoryDomain::Options>());
                 break;
+            case MessageType::Exit:
+                m_exit_status = reader.read<int>();
+                m_socket_watcher->close_fd();
+                m_socket_watcher.reset();
+                return; // This lambda is now dead
             default:
                 kak_assert(false);
             }
@@ -697,7 +713,8 @@ private:
                 auto* ui = new RemoteUI{sock, dimensions};
                 if (auto* client = ClientManager::instance().create_client(
                                        std::unique_ptr<UserInterface>(ui),
-                                       std::move(env_vars), init_cmds, init_coord))
+                                       std::move(env_vars), init_cmds, init_coord,
+                                       [ui](int status) { ui->exit(status); }))
                     ui->set_client(client);
 
                 Server::instance().remove_accepter(this);

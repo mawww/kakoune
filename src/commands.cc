@@ -423,24 +423,26 @@ const CommandDesc force_kill_cmd = {
 };
 
 template<bool force>
-void quit(Context& context)
+void quit(const ParametersParser& parser, Context& context, const ShellContext&)
 {
     if (not force and ClientManager::instance().count() == 1)
         ensure_all_buffers_are_saved();
 
-    ClientManager::instance().remove_client(context.client(), true);
+    const int status = parser.positional_count() > 0 ? str_to_int(parser[0]) : 0;
+    ClientManager::instance().remove_client(context.client(), true, status);
 }
 
 const CommandDesc quit_cmd = {
     "quit",
     "q",
     "quit current client, and the kakoune session if the client is the last "
-    "(if not running in daemon mode)",
-    no_params,
+    "(if not running in daemon mode). An optional integer parameter can set "
+    "the client exit status",
+    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser&, Context& context, const ShellContext&){ quit<false>(context); }
+    quit<false>
 };
 
 const CommandDesc force_quit_cmd = {
@@ -448,27 +450,29 @@ const CommandDesc force_quit_cmd = {
     "q!",
     "quit current client, and the kakoune session if the client is the last "
     "(if not running in daemon mode). force quit even if the client is the "
-    "last and some buffers are not saved.",
-    no_params,
+    "last and some buffers are not saved. An optional integer parameter can "
+    "set the client exit status",
+    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser&, Context& context, const ShellContext&){ quit<true>(context); }
+    quit<true>
 };
 
 template<bool force>
 void write_quit(const ParametersParser& parser, Context& context,
                 const ShellContext& shell_context)
 {
-    write_buffer(parser, context, shell_context);
-    quit<force>(context);
+    write_buffer({{}, {}}, context, shell_context);
+    quit<force>(parser, context, shell_context);
 }
 
 const CommandDesc write_quit_cmd = {
     "write-quit",
     "wq",
-    "write current buffer and quit current client",
-    no_params,
+    "write current buffer and quit current client. An optional integer"
+    "parameter can set the client exit status",
+    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -479,8 +483,8 @@ const CommandDesc force_write_quit_cmd = {
     "write-quit!",
     "wq!",
     "write current buffer and quit current client, even if other buffers are "
-    "not saved",
-    no_params,
+    "not saved. An optional integer parameter can set the client exit status",
+    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -490,15 +494,16 @@ const CommandDesc force_write_quit_cmd = {
 const CommandDesc write_all_quit_cmd = {
     "write-all-quit",
     "waq",
-    "write all buffers associated to a file and quit current client",
-    no_params,
+    "write all buffers associated to a file and quit current client. An "
+    "optional integer parameter can set the client exit status",
+    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
         write_all_buffers(context);
-        quit<false>(context);
+        quit<false>(parser, context, shell_context);
     }
 };
 

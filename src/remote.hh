@@ -13,10 +13,7 @@ namespace Kakoune
 
 struct disconnected : runtime_error
 {
-    disconnected(String what, bool graceful = false)
-      : runtime_error{std::move(what)}, m_graceful{graceful} {}
-
-    const bool m_graceful;
+    using runtime_error::runtime_error;
 };
 
 class FDWatcher;
@@ -36,10 +33,12 @@ public:
                  const EnvVarMap& env_vars, StringView init_command,
                  Optional<BufferCoord> init_coord);
 
+    const Optional<int>& exit_status() const { return m_exit_status; }
 private:
     std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<FDWatcher>     m_socket_watcher;
     RemoteBuffer                   m_send_buffer;
+    Optional<int>                  m_exit_status;
 };
 
 void send_command(StringView session, StringView command);

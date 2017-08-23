@@ -21,7 +21,8 @@ public:
 
     Client* create_client(std::unique_ptr<UserInterface>&& ui,
                           EnvVarMap env_vars, StringView init_cmds,
-                          Optional<BufferCoord> init_coord);
+                          Optional<BufferCoord> init_coord,
+                          Client::OnExitCallback on_exit);
 
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
@@ -39,7 +40,7 @@ public:
     Client*  get_client_ifp(StringView name);
     Client&  get_client(StringView name);
     bool validate_client_name(StringView name) const;
-    void remove_client(Client& client, bool graceful);
+    void remove_client(Client& client, bool graceful, int status);
 
     using ClientList = Vector<std::unique_ptr<Client>, MemoryDomain::Client>;
     using iterator = ClientList::const_iterator;

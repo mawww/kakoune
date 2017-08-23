@@ -328,6 +328,7 @@ void register_options()
 }
 
 static Client* local_client = nullptr;
+static int local_client_exit = 0;
 static UserInterface* local_ui = nullptr;
 static bool convert_to_client_pending = false;
 
@@ -403,7 +404,7 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
             kak_assert(not local_ui);
             local_ui = this;
             m_old_sighup = set_signal_handler(SIGHUP, [](int) {
-                ClientManager::instance().remove_client(*local_client, false);
+                ClientManager::instance().remove_client(*local_client, false, -1);
                 static_cast<LocalUI*>(local_ui)->on_sighup();
             });
 
@@ -441,7 +442,7 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
                 if (fork_server_to_background())
                 {
                     this->NCursesUI::~NCursesUI();
-                    exit(0);
+                    exit(local_client_exit);
                 }
             }
         }
@@ -475,16 +476,15 @@ int run_client(StringView session, StringView client_init,
     {
         EventManager event_manager;
         RemoteClient client{session, make_ui(ui_type), get_env_vars(), client_init, std::move(init_coord)};
-        while (true)
+        while (not client.exit_status())
             event_manager.handle_next_events(EventMode::Normal);
+        return *client.exit_status();
     }
     catch (disconnected& e)
     {
-        if (!e.m_graceful)
-            write_stderr(format("{}\ndisconnecting\n", e.what()));
-        return e.m_graceful ? 0 : -1;
+        write_stderr(format("{}\ndisconnecting\n", e.what()));
+        return -1;
     }
-    return 0;
 }
 
 struct convert_to_client_mode
@@ -614,7 +614,8 @@ int run_server(StringView session, StringView server_init,
         if (not (flags & ServerFlags::Daemon))
         {
             local_client = client_manager.create_client(
-                 create_local_ui(ui_type), get_env_vars(), client_init, std::move(init_coord));
+                 create_local_ui(ui_type), get_env_vars(), client_init, std::move(init_coord),
+                 [](int status) { local_client_exit = status; });
 
             if (startup_error)
                 local_client->print_status({
@@ -640,7 +641,7 @@ int run_server(StringView session, StringView server_init,
                 String buffer_name = local_client->context().buffer().name();
                 String selections = selection_list_to_string(local_client->context().selections());
 
-                ClientManager::instance().remove_client(*local_client, true);
+                ClientManager::instance().remove_client(*local_client, true, 0);
                 client_manager.clear_client_trash();
                 convert_to_client_pending = false;
 
@@ -660,7 +661,7 @@ int run_server(StringView session, StringView server_init,
         global_scope.hooks().run_hook("KakEnd", "", empty_context);
     }
 
-    return 0;
+    return local_client_exit;
 }
 
 int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView> files, bool quiet, StringView suffix_backup)
@@ -743,7 +744,7 @@ int run_pipe(StringView session)
     catch (disconnected& e)
     {
         write_stderr(format("{}\ndisconnecting\n", e.what()));
-        return e.m_graceful ? 0 : -1;
+        return -1;
     }
     return 0;
 }

@@ -21,15 +21,17 @@ enum class EventMode;
 enum class InfoStyle;
 enum class MenuStyle;
 
-
 class Client : public SafeCountable, public OptionManagerWatcher
 {
 public:
+    using OnExitCallback = std::function<void (int status)>;
+
     Client(std::unique_ptr<UserInterface>&& ui,
            std::unique_ptr<Window>&& window,
            SelectionList selections,
            EnvVarMap env_vars,
-           String name);
+           String name,
+           OnExitCallback on_exit);
     ~Client();
 
     Client(Client&&) = delete;
@@ -65,6 +67,8 @@ public:
     Buffer* last_buffer() const { return m_last_buffer.get(); }
     void set_last_buffer(Buffer* last_buffer) { m_last_buffer = last_buffer; }
 
+    void exit(int status) { m_on_exit(status); }
+
 private:
     void on_option_changed(const Option& option) override;
 
@@ -78,6 +82,8 @@ private:
 
     std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<Window> m_window;
+
+    OnExitCallback m_on_exit;
 
     EnvVarMap m_env_vars;
 
