@@ -13,7 +13,7 @@ def editorconfig-load -params ..1 -docstring "editorconfig-load [file]: set form
             /tab_width=/               { tab_width = $2 }
             /end_of_line=/             { end_of_line = $2 }
             /charset=/                 { charset = $2 }
-            /trim_trailing_whitespace/ { trim_trailing_whitespace = $2 }
+            /trim_trailing_whitespace=/ { trim_trailing_whitespace = $2 }
 
             END {
                 if (indent_style == "tab") {
