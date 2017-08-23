@@ -51,3 +51,9 @@ addons:
     branch_pattern: coverity-scan
 
 script: cd src && make && make test
+script:
+    - cd src
+    - echo $(pwd)
+    - ./kak -n -e "buffer *debug*; write clean_debug_buffer; quit"
+    - ./kak -e "buffer *debug*; write debug_buffer; quit"
+    - cmp debug_buffer clean_debug_buffer
