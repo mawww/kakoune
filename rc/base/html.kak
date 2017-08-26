@@ -27,6 +27,8 @@ add-highlighter -group /html/style  ref css
 add-highlighter -group /html/script ref javascript
 
 add-highlighter -group /html/tag regex </?(\w+) 1:keyword
+add-highlighter -group /html/tag regex \b([a-zA-Z0-9_-]+)= 1:attribute
+add-highlighter -group /html/tag regex <(!DOCTYPE(\h+\w+)+) 1:meta
 
 add-highlighter -group /html/tag regions content \
     string '"' (?<!\\)(\\\\)*"      '' \
