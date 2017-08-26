@@ -5,6 +5,12 @@
 # Needs the following tools in the path:
 # - jq for json deserializaton
 
+%sh{
+    if ! jq --version > /dev/null 2>&1; then
+        echo 'echo -debug %{Dependency unmet: jq, please install it to use go-tools}'
+    fi
+}
+
 # Auto-completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
