@@ -364,13 +364,13 @@ Goto Commands
 	for one of the following additional keys:
 
 	*h*:::
-		select to line begin
+		go to line begin
 
 	*l*:::
-		select to line end
+		go to line end
 
 	*i*:::
-		select to non blank line start
+		go to non blank line start
 
 	*g*, *k*:::
 		go to the first line
