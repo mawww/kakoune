@@ -132,7 +132,7 @@ Builtin options
 *autoreload* 'enum(yes|no|ask)'::
 	auto reload the buffers when an external modification is detected
 
-*debug* 'flags(hooks|shell|profile)'::
+*debug* 'flags(hooks|shell|profile|keys|commands)'::
 	dump various debug information in the '\*debug*' buffer
 
 *idle_timeout* 'int'::
