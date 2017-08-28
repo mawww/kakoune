@@ -973,7 +973,7 @@ Some options are built in Kakoune, and can be used to control its behaviour:
      completion.
  * `autoreload` _enum(yes|no|ask)_: auto reload the buffers when an external
    modification is detected.
- * `debug` _flags(hooks|shell|profile)_: dump various debug information in
+ * `debug` _flags(hooks|shell|profile|keys|commands)_: dump various debug information in
    the `*debug*` buffer.
  * `idle_timeout` _int_: timeout, in milliseconds, with no user input that will
    trigger the `PromptIdle`, `InsertIdle` and `NormalIdle` hooks.
