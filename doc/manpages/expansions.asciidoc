@@ -86,6 +86,8 @@ informations about Kakoune's state:
 	name of the current session
 *kak_client*::
 	name of current client
+*kak_client_pid*::
+	process id of current client
 *kak_source*::
 	path of the file currently getting executed (through the source
 	command)

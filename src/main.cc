@@ -127,6 +127,10 @@ void register_env_vars()
             [](StringView name, const Context& context) -> String
             { return context.name(); }
         }, {
+            "client_pid", false,
+            [](StringView name, const Context& context) -> String
+            { return to_string(context.client().pid()); }
+        }, {
             "modified", false,
             [](StringView name, const Context& context) -> String
             { return context.buffer().is_modified() ? "true" : "false"; }
@@ -475,7 +479,8 @@ int run_client(StringView session, StringView client_init,
     try
     {
         EventManager event_manager;
-        RemoteClient client{session, make_ui(ui_type), get_env_vars(), client_init, std::move(init_coord)};
+        RemoteClient client{session, make_ui(ui_type), getpid(), get_env_vars(),
+                            client_init, std::move(init_coord)};
         while (not client.exit_status())
             event_manager.handle_next_events(EventMode::Normal);
         return *client.exit_status();
@@ -614,7 +619,7 @@ int run_server(StringView session, StringView server_init,
         if (not (flags & ServerFlags::Daemon))
         {
             local_client = client_manager.create_client(
-                 create_local_ui(ui_type), get_env_vars(), client_init, std::move(init_coord),
+                 create_local_ui(ui_type), getpid(), get_env_vars(), client_init, std::move(init_coord),
                  [](int status) { local_client_exit = status; });
 
             if (startup_error)

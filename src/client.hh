@@ -29,7 +29,7 @@ public:
     Client(std::unique_ptr<UserInterface>&& ui,
            std::unique_ptr<Window>&& window,
            SelectionList selections,
-           EnvVarMap env_vars,
+           int pid, EnvVarMap env_vars,
            String name,
            OnExitCallback on_exit);
     ~Client();
@@ -69,6 +69,8 @@ public:
 
     void exit(int status) { m_on_exit(status); }
 
+    int pid() const { return m_pid; }
+
 private:
     void on_option_changed(const Option& option) override;
 
@@ -82,6 +84,8 @@ private:
 
     std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<Window> m_window;
+
+    const int m_pid;
 
     OnExitCallback m_on_exit;
 
