@@ -24,11 +24,12 @@ namespace Kakoune
 
 Client::Client(std::unique_ptr<UserInterface>&& ui,
                std::unique_ptr<Window>&& window,
-               SelectionList selections,
+               SelectionList selections, int pid,
                EnvVarMap env_vars,
                String name,
                OnExitCallback on_exit)
     : m_ui{std::move(ui)}, m_window{std::move(window)},
+      m_pid{pid},
       m_on_exit{std::move(on_exit)},
       m_input_handler{std::move(selections), Context::Flags::None,
                       std::move(name)},

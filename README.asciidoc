@@ -798,6 +798,7 @@ Some of Kakoune state is available through environment variables:
  * `kak_reg_<r>`: value of register <r>
  * `kak_session`: name of the current session
  * `kak_client`: name of current client
+ * `kak_client_pid`: pid of the current client
  * `kak_modified`: buffer has modifications not saved
  * `kak_source`: path of the file currently getting executed (through the source command)
  * `kak_cursor_line`: line of the end of the main selection

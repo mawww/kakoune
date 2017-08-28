@@ -19,7 +19,7 @@ public:
     ClientManager();
     ~ClientManager();
 
-    Client* create_client(std::unique_ptr<UserInterface>&& ui,
+    Client* create_client(std::unique_ptr<UserInterface>&& ui, int pid,
                           EnvVarMap env_vars, StringView init_cmds,
                           Optional<BufferCoord> init_coord,
                           Client::OnExitCallback on_exit);

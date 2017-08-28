@@ -552,7 +552,7 @@ bool check_session(StringView session)
 }
 
 RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& ui,
-                           const EnvVarMap& env_vars, StringView init_command,
+                           int pid, const EnvVarMap& env_vars, StringView init_command,
                            Optional<BufferCoord> init_coord)
     : m_ui(std::move(ui))
 {
@@ -560,6 +560,7 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
 
     {
         MsgWriter msg{m_send_buffer, MessageType::Connect};
+        msg.write(pid);
         msg.write(init_command);
         msg.write(init_coord);
         msg.write(m_ui->dimensions());
@@ -706,13 +707,14 @@ private:
             {
             case MessageType::Connect:
             {
+                auto pid = m_reader.read<int>();
                 auto init_cmds = m_reader.read<String>();
                 auto init_coord = m_reader.read_optional<BufferCoord>();
                 auto dimensions = m_reader.read<DisplayCoord>();
                 auto env_vars = m_reader.read_hash_map<String, String, MemoryDomain::EnvVars>();
                 auto* ui = new RemoteUI{sock, dimensions};
                 if (auto* client = ClientManager::instance().create_client(
-                                       std::unique_ptr<UserInterface>(ui),
+                                       std::unique_ptr<UserInterface>(ui), pid,
                                        std::move(env_vars), init_cmds, init_coord,
                                        [ui](int status) { ui->exit(status); }))
                     ui->set_client(client);
