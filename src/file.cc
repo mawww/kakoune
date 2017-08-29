@@ -175,7 +175,7 @@ String read_fd(int fd, bool text)
 
 String read_file(StringView filename, bool text)
 {
-    int fd = open(parse_filename(filename).c_str(), O_RDONLY);
+    int fd = open(filename.zstr(), O_RDONLY);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
 
@@ -185,15 +185,13 @@ String read_file(StringView filename, bool text)
 
 MappedFile::MappedFile(StringView filename)
 {
-    String real_filename = real_path(parse_filename(filename));
-
-    fd = open(real_filename.c_str(), O_RDONLY | O_NONBLOCK);
+    fd = open(filename.zstr(), O_RDONLY | O_NONBLOCK);
     if (fd == -1)
-        throw file_access_error(real_filename, strerror(errno));
+        throw file_access_error(filename, strerror(errno));
 
     fstat(fd, &st);
     if (S_ISDIR(st.st_mode))
-        throw file_access_error(real_filename, "is a directory");
+        throw file_access_error(filename, "is a directory");
 
     data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 }
@@ -214,9 +212,8 @@ MappedFile::operator StringView() const
 
 bool file_exists(StringView filename)
 {
-    String real_filename = real_path(parse_filename(filename));
     struct stat st;
-    return stat(real_filename.c_str(), &st) == 0;
+    return stat(filename.zstr(), &st) == 0;
 }
 
 void write(int fd, StringView data)
@@ -315,22 +312,21 @@ void write_buffer_to_backup_file(Buffer& buffer)
 String find_file(StringView filename, ConstArrayView<String> paths)
 {
     struct stat buf;
-    if (filename.length() > 1 and filename[0_byte] == '/')
+    if (filename.substr(0_byte, 1_byte) == "/")
     {
         if (stat(filename.zstr(), &buf) == 0 and S_ISREG(buf.st_mode))
             return filename.str();
          return "";
     }
-    if (filename.length() > 2 and
-             filename[0_byte] == '~' and filename[1_byte] == '/')
+    if (filename.substr(0_byte, 2_byte) == "~/")
     {
-        String candidate = getenv("HOME") + filename.substr(1_byte).str();
+        String candidate = getenv("HOME") + filename.substr(1_byte);
         if (stat(candidate.c_str(), &buf) == 0 and S_ISREG(buf.st_mode))
             return candidate;
         return "";
     }
 
-    for (auto candidate : paths)
+    for (auto candidate : paths | transform(parse_filename))
     {
         if (not candidate.empty() and candidate.back() != '/')
             candidate += '/';

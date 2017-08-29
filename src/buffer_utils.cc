@@ -61,7 +61,7 @@ ByteCount get_byte_to_column(const Buffer& buffer, ColumnCount tabstop, DisplayC
 
 Buffer* open_file_buffer(StringView filename, Buffer::Flags flags)
 {
-    MappedFile file_data{filename};
+    MappedFile file_data{parse_filename(filename)};
     return BufferManager::instance().create_buffer(
         filename.str(), Buffer::Flags::File | flags, file_data, file_data.st.st_mtim);
 }
@@ -69,9 +69,10 @@ Buffer* open_file_buffer(StringView filename, Buffer::Flags flags)
 Buffer* open_or_create_file_buffer(StringView filename, Buffer::Flags flags)
 {
     auto& buffer_manager = BufferManager::instance();
-    if (file_exists(filename))
+    auto path = parse_filename(filename);
+    if (file_exists(path))
     {
-        MappedFile file_data{filename};
+        MappedFile file_data{path};
         return buffer_manager.create_buffer(filename.str(), Buffer::Flags::File | flags,
                                             file_data, file_data.st.st_mtim);
     }
