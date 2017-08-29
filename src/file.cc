@@ -48,32 +48,10 @@ public:
 
 String parse_filename(StringView filename)
 {
-    if (filename.length() >= 1 and filename[0_byte] == '~' and
-        (filename.length() == 1 or filename[1_byte] == '/'))
-        return parse_filename("$HOME" + filename.substr(1_byte));
-
-    ByteCount pos = 0;
-    String result;
-    for (ByteCount i = 0; i < filename.length(); ++i)
-    {
-        if (filename[i] == '$' and (i == 0 or filename[i-1] != '\\'))
-        {
-            result += filename.substr(pos, i - pos);
-            ByteCount end = i+1;
-            while (end != filename.length() and is_word(filename[end]))
-                ++end;
-            StringView var_name = filename.substr(i+1, end - i - 1);
-            const char* var_value = getenv(var_name.zstr());
-            if (var_value)
-                result += var_value;
-
-            pos = end;
-        }
-    }
-    if (pos != filename.length())
-        result += filename.substr(pos);
-
-    return result;
+    auto prefix = filename.substr(0_byte, 2_byte);
+    if (prefix == "~" or prefix == "~/")
+        return getenv("HOME") + filename.substr(1_byte);
+    return filename.str();
 }
 
 std::pair<StringView, StringView> split_path(StringView path)
