@@ -96,7 +96,7 @@ bool Client::process_pending_inputs()
         catch (Kakoune::runtime_error& error)
         {
             write_to_debug_buffer(format("Error: {}", error.what()));
-            context().print_status({ error.what().str(), get_face("Error") });
+            context().print_status({ fix_atom_text(error.what().str()), get_face("Error") });
             context().hooks().run_hook("RuntimeError", error.what(), context());
         }
     }

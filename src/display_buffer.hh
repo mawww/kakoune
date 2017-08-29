@@ -142,6 +142,7 @@ private:
     AtomList  m_atoms;
 };
 
+String fix_atom_text(StringView str);
 DisplayLine parse_display_line(StringView line, const HashMap<String, DisplayLine>& builtins = {});
 
 class DisplayBuffer : public UseMemoryDomain<MemoryDomain::Display>

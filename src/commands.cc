@@ -1101,7 +1101,7 @@ const CommandDesc echo_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        String message = join(parser, ' ', false);
+        String message = fix_atom_text(join(parser, ' ', false));
         if (parser.get_switch("debug"))
             write_to_debug_buffer(message);
         else if (parser.get_switch("markup"))

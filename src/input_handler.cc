@@ -500,23 +500,6 @@ public:
 
     DisplayLine build_display_line(ColumnCount in_width)
     {
-        auto cleanup = [](StringView str) {
-            String res;
-            auto pos = str.begin();
-            for (auto it = str.begin(), end = str.end(); it != end; ++it)
-            {
-                char c = *it;
-                if (c == '\n' or c == '\r')
-                {
-                    res += StringView{pos, it};
-                    res += c == '\n' ? "␤" : "␍";
-                    pos = it+1;
-                }
-            }
-            res += StringView{pos, str.end()};
-            return res;
-        };
-
         CharCount width = (int)in_width; // Todo: proper handling of char/column
         kak_assert(m_cursor_pos <= m_line.char_length());
         if (m_cursor_pos < m_display_pos)
@@ -525,12 +508,12 @@ public:
             m_display_pos = m_cursor_pos + 1 - width;
 
         if (m_cursor_pos == m_line.char_length())
-            return DisplayLine{{ { cleanup(m_line.substr(m_display_pos, width-1)), get_face("StatusLine") },
+            return DisplayLine{{ { fix_atom_text(m_line.substr(m_display_pos, width-1)), get_face("StatusLine") },
                                  { " "_str, get_face("StatusCursor")} } };
         else
-            return DisplayLine({ { cleanup(m_line.substr(m_display_pos, m_cursor_pos - m_display_pos)), get_face("StatusLine") },
-                                 { cleanup(m_line.substr(m_cursor_pos,1)), get_face("StatusCursor") },
-                                 { cleanup(m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1)), get_face("StatusLine") } });
+            return DisplayLine({ { fix_atom_text(m_line.substr(m_display_pos, m_cursor_pos - m_display_pos)), get_face("StatusLine") },
+                                 { fix_atom_text(m_line.substr(m_cursor_pos,1)), get_face("StatusCursor") },
+                                 { fix_atom_text(m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1)), get_face("StatusLine") } });
     }
 private:
     CharCount m_cursor_pos = 0;

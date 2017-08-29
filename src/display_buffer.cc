@@ -303,4 +303,22 @@ DisplayLine parse_display_line(StringView line, const HashMap<String, DisplayLin
     return res;
 }
 
+String fix_atom_text(StringView str)
+{
+    String res;
+    auto pos = str.begin();
+    for (auto it = str.begin(), end = str.end(); it != end; ++it)
+    {
+        char c = *it;
+        if (c == '\n' or c == '\r')
+        {
+            res += StringView{pos, it};
+            res += c == '\n' ? "␤" : "␍";
+            pos = it+1;
+        }
+    }
+    res += StringView{pos, str.end()};
+    return res;
+}
+
 }

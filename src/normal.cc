@@ -842,7 +842,7 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
     const char reg = to_lower(params.reg ? params.reg : '/');
 
     context.print_status({
-        format("register '{}' set to '{}'", reg, patterns[sels.main_index()]),
+        format("register '{}' set to '{}'", reg, fix_atom_text(patterns[sels.main_index()])),
         get_face("Information") });
 
     RegisterManager::instance()[reg].set(context, patterns);
