@@ -6,9 +6,11 @@
 # - jq for json deserializaton
 
 %sh{
-    if ! jq --version > /dev/null 2>&1; then
-        echo 'echo -debug %{Dependency unmet: jq, please install it to use go-tools}'
-    fi
+    for dep in gocode goimports gogetdoc jq; do
+        if ! command -v $dep > /dev/null 2>&1; then
+            echo "echo -debug %{Dependency unmet: $dep, please install it to use go-tools}"
+        fi
+    done
 }
 
 # Auto-completion
