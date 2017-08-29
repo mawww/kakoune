@@ -9,42 +9,43 @@
 namespace Kakoune
 {
 
-template<typename Factory>
-struct ContainerView { Factory factory; };
+template<typename Func> struct ViewFactory { Func func; };
 
-template<typename Container, typename Factory>
-decltype(auto) operator| (Container&& container, ContainerView<Factory> view)
+template<typename Func>
+ViewFactory<std::decay_t<Func>>
+make_view_factory(Func&& func) { return {std::forward<Func>(func)}; }
+
+template<typename Container, typename Func>
+decltype(auto) operator| (Container&& container, ViewFactory<Func> factory)
 {
-    return view.factory(std::forward<Container>(container));
+    return factory.func(std::forward<Container>(container));
 }
+
+template<typename Container>
+struct decay_container_impl { using type = std::decay_t<Container>; };
+
+template<typename Container>
+struct decay_container_impl<Container&> { using type = Container&; };
+
+template<typename Container>
+using decay_container = typename decay_container_impl<Container>::type;
 
 template<typename Container>
 struct ReverseView
 {
-    using iterator = decltype(std::declval<Container>().rbegin());
-
-    iterator begin() { return m_container.rbegin(); }
-    iterator end()   { return m_container.rend(); }
+    decltype(auto) begin() { return m_container.rbegin(); }
+    decltype(auto) end()   { return m_container.rend(); }
 
     Container m_container;
 };
 
-struct ReverseFactory
+inline auto reverse()
 {
-    template<typename Container>
-    ReverseView<std::remove_reference_t<Container>> operator()(Container&& container) const
-    {
-        return {std::move(container)};
-    }
-
-    template<typename Container>
-    ReverseView<Container&> operator()(Container& container) const
-    {
-        return {container};
-    }
-};
-
-inline ContainerView<ReverseFactory> reverse() { return {}; }
+    return make_view_factory([](auto&& container) {
+        using Container = decltype(container);
+        return ReverseView<decay_container<Container>>{std::forward<Container>(container)};
+    });
+}
 
 template<typename Container>
 using IteratorOf = decltype(std::begin(std::declval<Container>()));
@@ -102,19 +103,13 @@ struct FilterView
 };
 
 template<typename Filter>
-struct FilterFactory
+inline auto filter(Filter f)
 {
-    template<typename Container>
-    FilterView<Container&, Filter> operator()(Container& container) const { return {container, std::move(m_filter)}; }
-
-    template<typename Container>
-    FilterView<std::remove_reference_t<Container>, Filter> operator()(Container&& container) const { return {std::move(container), std::move(m_filter)}; }
-
-    Filter m_filter;
-};
-
-template<typename Filter>
-inline ContainerView<FilterFactory<Filter>> filter(Filter f) { return {{std::move(f)}}; }
+    return make_view_factory([f = std::move(f)](auto&& container) {
+        using Container = decltype(container);
+        return FilterView<decay_container<Container>, Filter>{std::forward<Container>(container), std::move(f)};
+    });
+}
 
 template<typename Container, typename Transform>
 struct TransformView
@@ -156,19 +151,13 @@ struct TransformView
 };
 
 template<typename Transform>
-struct TransformFactory
+inline auto transform(Transform t)
 {
-    template<typename Container>
-    TransformView<Container&, Transform> operator()(Container& container) const { return {container, std::move(m_transform)}; }
-
-    template<typename Container>
-    TransformView<std::remove_reference_t<Container>, Transform> operator()(Container&& container) const { return {std::move(container), std::move(m_transform)}; }
-
-    Transform m_transform;
-};
-
-template<typename Transform>
-inline ContainerView<TransformFactory<Transform>> transform(Transform t) { return {{std::move(t)}}; }
+    return make_view_factory([t = std::move(t)](auto&& container) {
+        using Container = decltype(container);
+        return TransformView<decay_container<Container>, Transform>{std::forward<Container>(container), std::move(t)};
+    });
+}
 
 template<typename Container, typename Separator = ValueOf<Container>,
          typename ValueTypeParam = void>
@@ -226,22 +215,14 @@ struct SplitView
     Separator m_separator;
 };
 
-template<typename ValueType, typename Separator>
-struct SplitViewFactory
-{
-    template<typename Container>
-    SplitView<std::remove_reference_t<Container>, Separator, ValueType>
-    operator()(Container&& container) const { return {std::move(container), std::move(separator)}; }
-
-    template<typename Container>
-    SplitView<Container&, Separator, ValueType>
-    operator()(Container& container) const { return {container, std::move(separator)}; }
-
-    Separator separator;
-};
-
 template<typename ValueType = void, typename Separator>
-ContainerView<SplitViewFactory<ValueType, Separator>> split(Separator separator) { return {{std::move(separator)}}; }
+auto split(Separator separator)
+{
+    return make_view_factory([s = std::move(separator)](auto&& container) {
+        using Container = decltype(container);
+        return SplitView<decay_container<Container>, Separator, ValueType>{std::forward<Container>(container), std::move(s)};
+    });
+}
 
 template<typename Container1, typename Container2>
 struct ConcatView
