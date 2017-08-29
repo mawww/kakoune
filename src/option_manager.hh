@@ -2,12 +2,12 @@
 #define option_manager_hh_INCLUDED
 
 #include "completion.hh"
-#include "containers.hh"
 #include "exception.hh"
-#include "option.hh"
-#include "vector.hh"
 #include "hash_map.hh"
+#include "option.hh"
+#include "ranges.hh"
 #include "utils.hh"
+#include "vector.hh"
 
 #include <memory>
 #include <type_traits>

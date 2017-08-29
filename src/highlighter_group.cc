@@ -1,6 +1,6 @@
 #include "highlighter_group.hh"
 
-#include "containers.hh"
+#include "ranges.hh"
 
 namespace Kakoune
 {

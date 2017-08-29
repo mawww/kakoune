@@ -5,9 +5,9 @@
 #include <cwchar>
 #include <locale>
 
-#include "units.hh"
 #include "array_view.hh"
-#include "containers.hh"
+#include "ranges.hh"
+#include "units.hh"
 
 namespace Kakoune
 {

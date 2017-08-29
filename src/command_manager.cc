@@ -2,14 +2,14 @@
 
 #include "alias_registry.hh"
 #include "assert.hh"
+#include "buffer_utils.hh"
 #include "context.hh"
 #include "flags.hh"
+#include "optional.hh"
+#include "ranges.hh"
 #include "register_manager.hh"
 #include "shell_manager.hh"
 #include "utils.hh"
-#include "optional.hh"
-#include "containers.hh"
-#include "buffer_utils.hh"
 
 #include <algorithm>
 

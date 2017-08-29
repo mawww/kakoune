@@ -1,7 +1,7 @@
 #include "face_registry.hh"
 
-#include "containers.hh"
 #include "exception.hh"
+#include "ranges.hh"
 
 namespace Kakoune
 {

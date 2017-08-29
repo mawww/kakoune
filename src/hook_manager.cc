@@ -1,14 +1,14 @@
 #include "hook_manager.hh"
 
-#include "clock.hh"
-#include "containers.hh"
-#include "context.hh"
 #include "buffer_utils.hh"
+#include "clock.hh"
+#include "command_manager.hh"
+#include "context.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
-#include "command_manager.hh"
-#include "regex.hh"
 #include "option.hh"
+#include "ranges.hh"
+#include "regex.hh"
 
 namespace Kakoune
 {
