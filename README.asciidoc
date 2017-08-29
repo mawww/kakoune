@@ -820,9 +820,9 @@ variable will not work.
 For example, you can print informations on the current file in the status
 line using:
 
--------------------------------
-:echo %sh{ ls -l $kak_bufname }
--------------------------------
+------------------------------------
+:echo -- "%sh{ ls -l $kak_bufname }"
+------------------------------------
 
 Markup strings
 ^^^^^^^^^^^^^^
