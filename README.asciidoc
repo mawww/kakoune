@@ -1247,7 +1247,7 @@ General highlighters are:
 
  * `regex <ex> <capture_id>:<face>...`: highlight a regex, takes the regex as
        first parameter, followed by any number of face parameters.
-       For example: `:add-highlighter regex (\hTODO:)?[^\n] 0:cyan 1:yellow,red`
+       For example: `:add-highlighter regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red`
        will highlight C++ style comments in cyan, with an eventual 'TODO:' in
        yellow on red background.
  * `dynregex`: Similar to regex, but expand (like a command parameter would) the
@@ -1269,6 +1269,8 @@ General highlighters are:
         The string part of the is interpretted as a face to apply to the range.
  * `replace-ranges <option_name>`: use the data in the range-specs option of the given name to highlight the buffer.
         The string part of the is interpretted as a display line to display in place of the range.
+ * `column <number> <face>`: highlight column 'number' with the given face
+ * `line <number> <face>`: highlight line 'number' with the given face
 
 Highlighting Groups
 ^^^^^^^^^^^^^^^^^^^
