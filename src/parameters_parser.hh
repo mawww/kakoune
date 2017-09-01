@@ -55,12 +55,6 @@ struct ParameterDesc
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
-    ParameterDesc() = default;
-    ParameterDesc(SwitchMap switches, Flags flags = Flags::None,
-                  size_t min_positionals = 0, size_t max_positionals = -1)
-        : switches(std::move(switches)), flags(flags),
-          min_positionals(min_positionals), max_positionals(max_positionals) {}
-
     SwitchMap switches;
     Flags flags = Flags::None;
     size_t min_positionals = 0;
