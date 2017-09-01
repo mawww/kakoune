@@ -10,12 +10,8 @@ namespace Kakoune
 template<typename EffectiveType, typename LineType, typename ColumnType>
 struct LineAndColumn
 {
-    LineType   line;
-    ColumnType column;
-
-    [[gnu::always_inline]]
-    constexpr LineAndColumn(LineType line = 0, ColumnType column = 0)
-        : line(line), column(column) {}
+    LineType   line = 0;
+    ColumnType column = 0;
 
     [[gnu::always_inline]]
     constexpr EffectiveType operator+(EffectiveType other) const
@@ -95,14 +91,14 @@ struct BufferCoord : LineAndColumn<BufferCoord, LineCount, ByteCount>
 {
     [[gnu::always_inline]]
     constexpr BufferCoord(LineCount line = 0, ByteCount column = 0)
-        : LineAndColumn(line, column) {}
+        : LineAndColumn{line, column} {}
 };
 
 struct DisplayCoord : LineAndColumn<DisplayCoord, LineCount, ColumnCount>
 {
     [[gnu::always_inline]]
     constexpr DisplayCoord(LineCount line = 0, ColumnCount column = 0)
-        : LineAndColumn(line, column) {}
+        : LineAndColumn{line, column} {}
 
     static constexpr const char* option_type_name = "coord";
 };
@@ -111,11 +107,11 @@ struct BufferCoordAndTarget : BufferCoord
 {
     [[gnu::always_inline]]
     constexpr BufferCoordAndTarget(LineCount line = 0, ByteCount column = 0, ColumnCount target = -1)
-        : BufferCoord(line, column), target(target) {}
+        : BufferCoord{line, column}, target{target} {}
 
     [[gnu::always_inline]]
     constexpr BufferCoordAndTarget(BufferCoord coord, ColumnCount target = -1)
-        : BufferCoord(coord), target(target) {}
+        : BufferCoord{coord}, target{target} {}
 
     ColumnCount target;
 };
