@@ -62,21 +62,12 @@ struct InsertCompletion
         bool operator==(const Candidate& other) const { return completion == other.completion; }
         bool operator<(const Candidate& other) const { return completion < other.completion; }
     };
-
     using CandidateList = Vector<Candidate, MemoryDomain::Completion>;
 
     CandidateList candidates;
     BufferCoord begin;
     BufferCoord end;
-    size_t timestamp;
-
-    InsertCompletion() : timestamp{0} {}
-
-    InsertCompletion(CandidateList candidates,
-                     BufferCoord begin, BufferCoord end,
-                     size_t timestamp)
-      : candidates{std::move(candidates)}, begin{begin}, end{end},
-        timestamp{timestamp} {}
+    size_t timestamp = 0;
 
     bool is_valid() const { return not candidates.empty(); }
 };
