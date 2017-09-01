@@ -23,12 +23,9 @@ public:
 private:
     struct FaceOrAlias
     {
-        Face face;
-        String alias;
-
-        FaceOrAlias(Face face = Face{}) : face(face) {}
+        Face face = {};
+        String alias = {};
     };
-
     using AliasMap = HashMap<String, FaceOrAlias, MemoryDomain::Faces>;
     AliasMap m_aliases;
 };
