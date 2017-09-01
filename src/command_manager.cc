@@ -255,8 +255,8 @@ Token parse_percent_token(Reader& reader)
 String expand_token(const Token& token, const Context& context,
                     const ShellContext& shell_context)
 {
-    auto& content = token.content();
-    switch (token.type())
+    auto& content = token.content;
+    switch (token.type)
     {
     case Token::Type::ShellExpand:
     {
@@ -331,9 +331,9 @@ TokenList parse(StringView line)
             String token = get_until_delimiter(reader, c);
             if (throw_on_unterminated and not reader)
                 throw parse_error{format("unterminated string {0}...{0}", c)};
-            result.emplace_back(c == '"' ? Token::Type::RawEval
+            result.push_back({c == '"' ? Token::Type::RawEval
                                          : Token::Type::RawQuoted,
-                                start, reader.pos, coord, std::move(token));
+                              start, reader.pos, coord, std::move(token)});
         }
         else if (c == '%')
             result.push_back(
@@ -345,12 +345,12 @@ TokenList parse(StringView line)
             });
 
             if (not str.empty())
-                result.emplace_back(Token::Type::Raw, start, reader.pos,
-                                    coord, unescape(str, "%", '\\'));
+                result.push_back({Token::Type::Raw, start, reader.pos,
+                                  coord, unescape(str, "%", '\\')});
 
             if (reader and is_command_separator(*reader))
-                result.emplace_back(Token::Type::CommandSeparator,
-                                    reader.pos, reader.pos+1, coord);
+                result.push_back({Token::Type::CommandSeparator,
+                                  reader.pos, reader.pos+1, coord, {}});
         }
 
         if (not reader)
@@ -479,15 +479,15 @@ void CommandManager::execute(StringView command_line,
     for (auto it = tokens.begin(); it != tokens.end(); )
     {
         if (params.empty())
-            command_coord = it->coord();
+            command_coord = it->coord;
 
-        if (it->type() == Token::Type::CommandSeparator)
+        if (it->type == Token::Type::CommandSeparator)
         {
             execute_single_command(params, context, shell_context, command_coord);
             params.clear();
         }
         // Shell expand are retokenized
-        else if (it->type() == Token::Type::ShellExpand)
+        else if (it->type == Token::Type::ShellExpand)
         {
             auto new_tokens = parse<true>(expand_token(*it, context,
                                                        shell_context));
@@ -496,7 +496,7 @@ void CommandManager::execute(StringView command_line,
                                std::make_move_iterator(new_tokens.end()));
             continue; // skip incrementing, we already point to next token
         }
-        else if (it->type() == Token::Type::ArgExpand and it->content() == '@')
+        else if (it->type == Token::Type::ArgExpand and it->content == '@')
             params.insert(params.end(), shell_context.params.begin(),
                           shell_context.params.end());
         else
@@ -513,16 +513,16 @@ Optional<CommandInfo> CommandManager::command_info(const Context& context, Strin
     size_t cmd_idx = 0;
     for (size_t i = 0; i < tokens.size(); ++i)
     {
-        if (tokens[i].type() == Token::Type::CommandSeparator)
+        if (tokens[i].type == Token::Type::CommandSeparator)
             cmd_idx = i+1;
     }
 
     if (cmd_idx == tokens.size() or
-        (tokens[cmd_idx].type() != Token::Type::Raw and
-         tokens[cmd_idx].type() != Token::Type::RawQuoted))
+        (tokens[cmd_idx].type != Token::Type::Raw and
+         tokens[cmd_idx].type != Token::Type::RawQuoted))
         return {};
 
-    auto cmd = find_command(context, tokens[cmd_idx].content());
+    auto cmd = find_command(context, tokens[cmd_idx].content);
     if (cmd == m_commands.end())
         return {};
 
@@ -535,13 +535,13 @@ Optional<CommandInfo> CommandManager::command_info(const Context& context, Strin
     {
         Vector<String> params;
         for (auto it = tokens.begin() + cmd_idx + 1;
-             it != tokens.end() and it->type() != Token::Type::CommandSeparator;
+             it != tokens.end() and it->type != Token::Type::CommandSeparator;
              ++it)
         {
-            if (it->type() == Token::Type::Raw or
-                it->type() == Token::Type::RawQuoted or
-                it->type() == Token::Type::RawEval)
-                params.push_back(it->content());
+            if (it->type == Token::Type::Raw or
+                it->type == Token::Type::RawQuoted or
+                it->type == Token::Type::RawEval)
+                params.push_back(it->content);
         }
         String helpstr = cmd->value.helper(context, params);
         if (not helpstr.empty())
@@ -582,10 +582,10 @@ Completions CommandManager::complete(const Context& context,
     size_t tok_idx = tokens.size();
     for (size_t i = 0; i < tokens.size(); ++i)
     {
-        if (tokens[i].type() == Token::Type::CommandSeparator)
+        if (tokens[i].type == Token::Type::CommandSeparator)
             cmd_idx = i+1;
 
-        if (tokens[i].begin() <= cursor_pos and tokens[i].end() >= cursor_pos)
+        if (tokens[i].begin <= cursor_pos and tokens[i].end >= cursor_pos)
         {
             tok_idx = i;
             break;
@@ -596,10 +596,10 @@ Completions CommandManager::complete(const Context& context,
     // command name completion
     if (tokens.empty() or
         (tok_idx == cmd_idx and (is_last_token or
-                                 tokens[tok_idx].type() == Token::Type::Raw or
-                                 tokens[tok_idx].type() == Token::Type::RawQuoted)))
+                                 tokens[tok_idx].type == Token::Type::Raw or
+                                 tokens[tok_idx].type == Token::Type::RawQuoted)))
     {
-        auto cmd_start = is_last_token ? cursor_pos : tokens[tok_idx].begin();
+        auto cmd_start = is_last_token ? cursor_pos : tokens[tok_idx].begin;
         StringView query = command_line.substr(cmd_start, cursor_pos - cmd_start);
         return offset_pos(complete_command_name(context, query), cmd_start);
     }
@@ -607,35 +607,35 @@ Completions CommandManager::complete(const Context& context,
     kak_assert(not tokens.empty());
 
     ByteCount start = tok_idx < tokens.size() ?
-                      tokens[tok_idx].begin() : cursor_pos;
+                      tokens[tok_idx].begin : cursor_pos;
     ByteCount cursor_pos_in_token = cursor_pos - start;
 
     const Token::Type type = tok_idx < tokens.size() ?
-                             tokens[tok_idx].type() : Token::Type::Raw;
+                             tokens[tok_idx].type : Token::Type::Raw;
     switch (type)
     {
     case Token::Type::OptionExpand:
         return {start , cursor_pos,
                 GlobalScope::instance().option_registry().complete_option_name(
-                    tokens[tok_idx].content(), cursor_pos_in_token) };
+                    tokens[tok_idx].content, cursor_pos_in_token) };
 
     case Token::Type::ShellExpand:
-        return offset_pos(shell_complete(context, flags, tokens[tok_idx].content(),
+        return offset_pos(shell_complete(context, flags, tokens[tok_idx].content,
                                          cursor_pos_in_token), start);
 
     case Token::Type::ValExpand:
         return {start , cursor_pos,
                 ShellManager::instance().complete_env_var(
-                    tokens[tok_idx].content(), cursor_pos_in_token) };
+                    tokens[tok_idx].content, cursor_pos_in_token) };
 
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
     case Token::Type::RawEval:
     {
-        if (tokens[cmd_idx].type() != Token::Type::Raw)
+        if (tokens[cmd_idx].type != Token::Type::Raw)
             return Completions{};
 
-        StringView command_name = tokens[cmd_idx].content();
+        StringView command_name = tokens[cmd_idx].content;
         if (command_name != m_last_complete_command)
         {
             m_last_complete_command = command_name.str();
@@ -649,7 +649,7 @@ Completions CommandManager::complete(const Context& context,
 
         Vector<String> params;
         for (auto it = tokens.begin() + cmd_idx + 1; it != tokens.end(); ++it)
-            params.push_back(it->content());
+            params.push_back(it->content);
         if (tok_idx == tokens.size())
             params.emplace_back("");
         Completions completions = offset_pos(command_it->value.completer(

@@ -53,23 +53,12 @@ struct Token
         ArgExpand,
         CommandSeparator
     };
-    Token() : m_type(Type::Raw) {}
 
-    Token(Type type, ByteCount b, ByteCount e, DisplayCoord coord, String str = "")
-        : m_type(type), m_begin(b), m_end(e), m_coord(coord), m_content(std::move(str)) {}
-
-    Type type() const { return m_type; }
-    ByteCount begin() const { return m_begin; }
-    ByteCount end() const { return m_end; }
-    DisplayCoord coord() const { return m_coord; }
-    const String& content() const { return m_content; }
-
-private:
-    Type   m_type;
-    ByteCount m_begin;
-    ByteCount m_end;
-    DisplayCoord m_coord;
-    String m_content;
+    Type type;
+    ByteCount begin;
+    ByteCount end;
+    DisplayCoord coord;
+    String content;
 };
 
 using TokenList = Vector<Token>;
