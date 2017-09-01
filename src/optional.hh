@@ -12,12 +12,12 @@ template<typename T>
 struct Optional
 {
 public:
-    constexpr Optional() : m_valid(false) {}
-    Optional(const T& other) : m_valid(true) { new (&m_value) T(other); }
-    Optional(T&& other) : m_valid(true) { new (&m_value) T(std::move(other)); }
+    constexpr Optional() : m_valid{false} {}
+    Optional(const T& other) : m_valid{true} { new (&m_value) T(other); }
+    Optional(T&& other) : m_valid{true} { new (&m_value) T(std::move(other)); }
 
     Optional(const Optional& other)
-        : m_valid(other.m_valid)
+        : m_valid{other.m_valid}
     {
         if (m_valid)
             new (&m_value) T(other.m_value);
@@ -25,7 +25,7 @@ public:
 
     Optional(Optional&& other)
         noexcept(noexcept(new (nullptr) T(std::move(other.m_value))))
-        : m_valid(other.m_valid)
+        : m_valid{other.m_valid}
     {
         if (m_valid)
             new (&m_value) T(std::move(other.m_value));
@@ -82,7 +82,7 @@ public:
     const T* operator->() const { return const_cast<Optional&>(*this).operator->(); }
 
     template<typename U>
-    T value_or(U&& fallback) const { return m_valid ? m_value : T{fallback}; }
+    T value_or(U&& fallback) const { return m_valid ? m_value : T{std::forward<U>(fallback)}; }
 
     void reset() { destruct_ifn(); m_valid = false; }
 
