@@ -220,9 +220,6 @@ struct Buffer::Modification
     BufferCoord coord;
     StringDataPtr content;
 
-    Modification(Type type, BufferCoord coord, StringDataPtr content)
-        : type(type), coord(coord), content(std::move(content)) {}
-
     Modification inverse() const
     {
         return {type == Insert ? Erase : Insert, coord, content};
@@ -268,9 +265,9 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
                 const LineCount cur_line = (int)(it - m_lines.begin());
 
                 for (LineCount line = 0; line < d.len; ++line)
-                    m_current_undo_group.emplace_back(
+                    m_current_undo_group.push_back({
                         Modification::Insert, cur_line + line,
-                        parsed_lines.lines[(int)(d.posB + line)]);
+                        parsed_lines.lines[(int)(d.posB + line)]});
 
                 m_changes.push_back({ Change::Insert, cur_line, cur_line + d.len });
                 m_lines.insert(it, &parsed_lines.lines[d.posB], &parsed_lines.lines[d.posB + d.len]);
@@ -281,9 +278,9 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
                 const LineCount cur_line = (int)(it - m_lines.begin());
 
                 for (LineCount line = d.len-1; line >= 0; --line)
-                    m_current_undo_group.emplace_back(
+                    m_current_undo_group.push_back({
                         Modification::Erase, cur_line + line,
-                        m_lines.get_storage(cur_line + line));
+                        m_lines.get_storage(cur_line + line)});
 
                 it = m_lines.erase(it, it + d.len);
                 m_changes.push_back({ Change::Erase, cur_line, cur_line + d.len });
@@ -563,7 +560,7 @@ BufferCoord Buffer::insert(BufferCoord pos, StringView content)
     // than one past last char coord.
     auto coord = is_end(pos) ? line_count() : pos;
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Insert, coord, real_content);
+        m_current_undo_group.push_back({Modification::Insert, coord, real_content});
     return do_insert(pos, real_content->strview());
 }
 
@@ -579,8 +576,8 @@ BufferCoord Buffer::erase(BufferCoord begin, BufferCoord end)
         return begin;
 
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Erase, begin,
-                                          intern(string(begin, end)));
+        m_current_undo_group.push_back({Modification::Erase, begin,
+                                        intern(string(begin, end))});
     return do_erase(begin, end);
 }
 
