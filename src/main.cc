@@ -94,6 +94,10 @@ void register_env_vars()
             [](StringView name, const Context& context) -> String
             { return to_string(context.buffer().timestamp()); }
         }, {
+            "curr_history_id", false,
+            [](StringView name, const Context& context) -> String
+            { return to_string(context.buffer().current_history_id()); }
+        }, {
             "selection", false,
             [](StringView name, const Context& context)
             { const Selection& sel = context.selections().main();
