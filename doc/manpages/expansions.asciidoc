@@ -74,6 +74,9 @@ informations about Kakoune's state:
 *kak_timestamp*::
 	timestamp of the current buffer, the timestamp is an integer value
 	which is incremented each time the buffer is modified
+*kak_history_id*::
+	history id of the current buffer, the history id is an integer value
+	which is used to reference a specific buffer version in the undo tree
 *kak_runtime*::
 	directory containing the kak binary
 *kak_count*::
