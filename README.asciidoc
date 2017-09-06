@@ -708,6 +708,7 @@ command `q!` has to be used).
      `:%sh{ echo echo tchou }` will echo tchou in Kakoune, whereas
      `:nop %sh{ echo echo tchou }` will not, but both will execute the
      shell command.
+ * `history-move <change_id>`: move to change <change_id> in undo history
 
 Multiple commands
 ~~~~~~~~~~~~~~~~~

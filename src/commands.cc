@@ -2081,6 +2081,21 @@ const CommandDesc rename_session_cmd = {
     }
 };
 
+const CommandDesc history_move_cmd = {
+    "history-move",
+    nullptr,
+    "history-move <id>: move to change <id> in undo history",
+    ParameterDesc{{}, ParameterDesc::Flags::None, 1, 1},
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        if (not context.buffer().move_to(str_to_int(parser[0])))
+            throw runtime_error(format("unknown change id '{}'", parser[0]));
+    }
+};
+
 }
 
 void register_commands()
@@ -2142,6 +2157,7 @@ void register_commands()
     register_command(select_cmd);
     register_command(change_directory_cmd);
     register_command(rename_session_cmd);
+    register_command(history_move_cmd);
 }
 
 }
