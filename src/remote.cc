@@ -419,7 +419,13 @@ RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
 RemoteUI::~RemoteUI()
 {
     // Try to send the remaining data if possible, as it might contain the desired exit status
-    send_data(m_socket_watcher.fd(), m_send_buffer);
+    try
+    {
+        send_data(m_socket_watcher.fd(), m_send_buffer);
+    }
+    catch (disconnected&)
+    {
+    }
 
     write_to_debug_buffer(format("remote client disconnected: {}", m_socket_watcher.fd()));
     m_socket_watcher.close_fd();
