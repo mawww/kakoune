@@ -19,7 +19,7 @@ struct Value
     template<typename T,
              typename = std::enable_if_t<not std::is_same<Value, T>::value>>
     Value(T&& val)
-        : m_value{new Model<std::remove_reference_t<T>>{std::forward<T>(val)}} {}
+        : m_value{new Model<std::decay_t<T>>{std::forward<T>(val)}} {}
 
     Value(const Value& val) = delete;
     Value(Value&&) = default;
