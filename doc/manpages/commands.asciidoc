@@ -10,51 +10,62 @@ Primitives
 
 Some commands take an exclamation mark (*!*), which can be used to force
 the execution of the command (i.e. to quit a modified buffer, the
-command *q!* has to be used).
+command *q!* has to be used). Aliases are mentionned below each commands.
 
-*cd* [<directory>]::
+*change-directory* [<directory>]::
+	*alias* cd +
 	change the current directory to *directory*, or the home directory if
 	unspecified
 
 *doc* <topic>::
+	*alias* help +
 	display documentation about a topic. The completion list displays the
 	available topics
 
-*e[dit][!]* <filename> [<line> [<column>]]::
+*edit[!]* <filename> [<line> [<column>]]::
+	*alias* e +
 	open buffer on file, go to given line and column. If file is already
 	opened, just switch to this file. Use edit! to force reloading
 
-*w[rite][!]* [<filename>]::
+*write[!]* [<filename>]::
+	*alias* w +
 	write buffer to <filename> or use its name if filename is not
 	given. If the file is write-protected, its permissions are temporarily
 	changed to allow saving the buffer and restored afterwards when
 	the write! command is used.
 
-*w[rite]a[ll]*::
+*write-all*::
+	*alias* wa +
 	write all buffers that are associated to a file
 
-*q[uit][!]* [<exit status>]::
+*quit!* [<exit status>]::
+	*alias* q +
 	exit Kakoune, use quit! to force quitting even if there is some
 	unsaved buffers remaining. If specified, the client exit status
 	will be set to <exit status>
 
-*w[a]q[!]* [<exit status>]::
-	write the current buffer (or all buffers when *waq* is used) and quit.
-	If specified, the client exit status will be set to <exit status>
+*write-all-quit* [<exit status>]::
+	*alias* waq +
+	write all buffers and quit. If specified, the client exit status
+	will be set to <exit status>
 
-*kill*::
+*kill[!]*::
 	terminate the current session, all the clients as well as the server
 
-*b[uffer]* <name>::
+*buffer* <name>::
+	*alias* b +
 	switch to buffer <name>
 
-*b[uffer]n[ext]*::
+*buffer-next*::
+	*alias* bn +
 	switch to the next buffer
 
-*b[uffer]p[rev]*::
+*buffer-prev*::
+	*alias* bp +
 	switch to the previous buffer
 
-*d[el]b[uf][!]* [<name>]::
+*delete-buffer[!]* [<name>]::
+	*alias* db +
 	delete the buffer <name>
 
 *source* <filename>::
@@ -64,6 +75,7 @@ command *q!* has to be used).
 	load named colorscheme
 
 *rename-client* <name>::
+	*alias* nc +
 	set current client name
 
 *rename-buffer* <name>::
@@ -85,10 +97,12 @@ command *q!* has to be used).
 	does nothing, but arguments will be evaluated (e.g. shell expansion)
 
 *declare-option* [-hidden] <type> <name> [<value>]::
+	*alias* decl +
 	declare a new option, the -hidden hides the option in completion
 	suggestions (c.f. the 'options' documentation page)
 
 *set-option* <scope> <name> <value>::
+	*alias* set +
 	change the value of an option (c.f. the 'options' documentation page),
 	note that the name of a particular buffer can be specified when the
 	target *scope* is 'buffer', e.g. set buffer=/path/to/buffer foo "bar";
@@ -96,6 +110,7 @@ command *q!* has to be used).
 	point to the narrowest scope available in the current context
 
 *unset-option* <scope> <name>::
+	*alias* unset +
 	unset the value of an option (c.f. the 'options' documentation page)
 
 *update-option* <scope> <name>::
@@ -109,7 +124,8 @@ command *q!* has to be used).
 	remove an alias if its current value is the same as the one passed
 	as an optional parameter, remove it unconditionally otherwise
 
-*face* <name> <facespec>::
+*set-face* <name> <facespec>::
+	*alias* face +
 	define a face (c.f. the 'faces' documentation page)
 
 *exec* [<flags>] <key> ...::
@@ -121,6 +137,7 @@ command *q!* has to be used).
 	(c.f. the 'execeval' documentation page)
 
 *define-command* [<flags>] <name> <command>::
+	*alias* def +
 	define a new command (c.f. the 'Declaring new commands' section below)
 
 *map* <scope> <mode> <key> <keys>::
@@ -135,14 +152,17 @@ command *q!* has to be used).
 	documentation page)
 
 *remove-hooks* <scope> <group>::
+	*alias* rmhooks +
 	remove every hooks in *scope* that are part of the given *group*
 	(c.f. the 'hooks' documentation page)
 
 *add-highlighter* [<flags>] <highlighter_name> <highlighter_parameters> ...::
+	*alias* addhl +
 	add a highlighter to the current window (c.f. the 'highlighters'
 	documentation page)
 
 *remove-highlighter* <highlighter_id>::
+	*alias* rmhl +
 	remove the highlighter whose id is *highlighter_id* (c.f. the
 	'highlighters' documentation page)
 
@@ -194,7 +214,8 @@ commands:
 	execution, execute *on_error_commands* instead. If nothing is to be
 	done on error, the catch part can be omitted
 
-*reg* <name> <content>::
+*set-register* <name> <content>::
+	*alias* reg +
 	set register *name* to *content*
 
 *select* <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>:...::
