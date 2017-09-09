@@ -1116,14 +1116,15 @@ const CommandDesc debug_cmd = {
     "debug",
     nullptr,
     "debug <command>: write some debug informations in the debug buffer\n"
-    "existing commands: info, buffers, options, memory, shared-strings, profile-hash-maps",
+    "existing commands: info, buffers, options, memory, shared-strings, profile-hash-maps, faces",
     ParameterDesc{{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1},
     CommandFlags::None,
     CommandHelper{},
     make_completer(
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
-               auto c = {"info", "buffers", "options", "memory", "shared-strings", "profile-hash-maps"};
+               auto c = {"info", "buffers", "options", "memory", "shared-strings",
+                         "profile-hash-maps", "faces"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
@@ -1172,6 +1173,12 @@ const CommandDesc debug_cmd = {
         else if (parser[0] == "profile-hash-maps")
         {
             profile_hash_maps();
+        }
+        else if (parser[0] == "faces")
+        {
+            write_to_debug_buffer("Faces:");
+            for (auto& face : FaceRegistry::instance().aliases())
+                write_to_debug_buffer(format(" * {}: {}", face.key, face.value.face));
         }
         else
             throw runtime_error(format("unknown debug command '{}'", parser[0]));

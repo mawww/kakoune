@@ -20,13 +20,17 @@ public:
 
     CandidateList complete_alias_name(StringView prefix,
                                       ByteCount cursor_pos) const;
-private:
+
     struct FaceOrAlias
     {
         Face face = {};
         String alias = {};
     };
+
     using AliasMap = HashMap<String, FaceOrAlias, MemoryDomain::Faces>;
+    const AliasMap &aliases() const { return m_aliases; }
+
+private:
     AliasMap m_aliases;
 };
 
@@ -36,6 +40,8 @@ inline Face get_face(const String& facedesc)
         return FaceRegistry::instance()[facedesc];
     return Face{};
 }
+
+String to_string(Face face);
 
 }
 

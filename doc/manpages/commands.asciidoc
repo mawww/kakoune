@@ -200,7 +200,7 @@ commands:
 *select* <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>:...::
 	replace the current selections with the one described in the argument
 
-*debug* {info,buffers,options,memory,shared-strings}::
+*debug* {info,buffers,options,memory,shared-strings,profile-hash-maps,faces}::
 	print some debug information in the *\*debug** buffer
 
 Note that those commands are also available in the interactive mode, but
