@@ -72,6 +72,14 @@ Note that if you're using `tmux`, the proper -official- way to get Kakoune to
 work is to add the following line to your `tmux` configuration file:
 `set -sg default-terminal screen-256color`
 
+Why does leaving insert mode take more than half a second in `tmux` ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Upon hitting the escape key, `tmux` waits for a short period of time to
+determine whether it's part of a function or a meta key sequence. In order
+to fix this "lag", set the waiting period in your `tmux` configuration file
+to a short time, e.g. 25ms: `set -sg escape-time 25`
+
 How do I automatically indent code, as Vim does with `=` ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
