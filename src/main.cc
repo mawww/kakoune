@@ -53,7 +53,7 @@ struct startup_error : runtime_error
 };
 
 inline void write_stdout(StringView str) { write(1, str); }
-inline void write_stderr(StringView str) { write(2, str); }
+inline void write_stderr(StringView str) { try { write(2, str); } catch (runtime_error&) {} }
 
 String runtime_directory()
 {
@@ -337,6 +337,7 @@ void register_options()
 
 static Client* local_client = nullptr;
 static int local_client_exit = 0;
+static sig_atomic_t sighup_raised = 0;
 static UserInterface* local_ui = nullptr;
 static bool convert_to_client_pending = false;
 
@@ -412,8 +413,8 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
             kak_assert(not local_ui);
             local_ui = this;
             m_old_sighup = set_signal_handler(SIGHUP, [](int) {
-                ClientManager::instance().remove_client(*local_client, false, -1);
                 static_cast<LocalUI*>(local_ui)->on_sighup();
+                sighup_raised = 1;
             });
 
             m_old_sigtstp = set_signal_handler(SIGTSTP, [](int) {
@@ -645,7 +646,14 @@ int run_server(StringView session, StringView server_init,
             client_manager.clear_window_trash();
             buffer_manager.clear_buffer_trash();
 
-            if (convert_to_client_pending)
+            if (sighup_raised)
+            {
+                ClientManager::instance().remove_client(*local_client, true, 0);
+                if (not client_manager.empty() and fork_server_to_background())
+                    return 0;
+                sighup_raised = 0;
+            }
+            else if (convert_to_client_pending)
             {
                 String buffer_name = local_client->context().buffer().name();
                 String selections = selection_list_to_string(local_client->context().selections());
