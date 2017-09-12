@@ -75,6 +75,11 @@ void Context::print_status(DisplayLine status, bool immediate) const
         client().print_status(std::move(status), immediate);
 }
 
+void Context::clear_status() const
+{
+    print_status(DisplayLine{});
+}
+
 void JumpList::push(SelectionList jump)
 {
     if (m_current != m_jumps.size())
