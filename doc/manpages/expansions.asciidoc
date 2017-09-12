@@ -110,6 +110,14 @@ informations about Kakoune's state:
 	width of the current kakoune window
 *kak_window_height*::
 	height of the current kakoune window
+*kak_window_top*::
+	top offset of the current kakoune window
+*kak_window_left*::
+	left offset of the current kakoune window
+*kak_window_range_column*::
+	width (without line numbers) of the current kakoune window
+*kak_window_range_line*::
+	height (without line numbers) of the current kakoune window
 *kak_hook_param*::
 	filtering text passed to the currently executing hook
 *kak_hook_param_capture_N*::
