@@ -231,6 +231,10 @@ public:
 
         if (m_mouse_handler.handle_key(key, context()))
         {
+            context().print_status({});
+            if (context().has_client())
+                context().client().info_hide();
+
             if (not transient)
                 m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
         }
