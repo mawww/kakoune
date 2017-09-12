@@ -100,6 +100,8 @@ informations about Kakoune's state:
 	line of the end of the main selection
 *kak_cursor_column*::
 	column of the end of the main selection (in byte)
+*kak_cursor_char_value*::
+	unicode value of the codepoint under the cursor
 *kak_cursor_char_column*::
 	column of the end of the main selection (in character)
 *kak_cursor_byte_offset*::

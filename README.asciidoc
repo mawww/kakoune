@@ -805,6 +805,7 @@ Some of Kakoune state is available through environment variables:
  * `kak_source`: path of the file currently getting executed (through the source command)
  * `kak_cursor_line`: line of the end of the main selection
  * `kak_cursor_column`: column of the end of the main selection (in byte)
+ * `kak_cursor_char_value`: unicode value of the codepoint under the cursor
  * `kak_cursor_char_column`: column of the end of the main selection (in character)
  * `kak_cursor_byte_offset`: offset of the main selection from the beginning of the buffer (in byte).
  * `kak_window_width`: width of the current kakoune window

@@ -147,6 +147,12 @@ void register_env_vars()
             [](StringView name, const Context& context) -> String
             { return to_string(context.selections().main().cursor().column + 1); }
         }, {
+            "cursor_char_value", false,
+            [](StringView name, const Context& context) -> String
+            { auto coord = context.selections().main().cursor();
+              auto& buffer = context.buffer();
+              return to_string((size_t)utf8::codepoint(buffer.iterator_at(coord), buffer.end())); }
+        }, {
             "cursor_char_column", false,
             [](StringView name, const Context& context) -> String
             { auto coord = context.selections().main().cursor();
