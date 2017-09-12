@@ -1165,6 +1165,7 @@ void highlight_selections(const Context& context, HighlightPass, DisplayBuffer& 
 void expand_unprintable(const Context& context, HighlightPass, DisplayBuffer& display_buffer, BufferRange)
 {
     auto& buffer = context.buffer();
+    auto error = get_face("Error");
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -1183,8 +1184,8 @@ void expand_unprintable(const Context& context, HighlightPass, DisplayBuffer& di
                         if (it.coord() < atom_it->end())
                             atom_it = line.split(atom_it, it.coord());
 
-                        atom_it->replace(format("U+{}", hex(cp)));
-                        atom_it->face = { Color::Red, Color::Black };
+                        atom_it->replace("�");
+                        atom_it->face = error;
                         break;
                     }
                 }
