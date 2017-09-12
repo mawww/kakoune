@@ -42,7 +42,7 @@ static Face parse_face(StringView facedesc)
     return res;
 }
 
-String attributes_to_str(Attribute attributes)
+String to_string(Attribute attributes)
 {
     if (attributes == Attribute::Normal)
         return "";
@@ -67,10 +67,7 @@ String attributes_to_str(Attribute attributes)
 
 String to_string(Face face)
 {
-    return format("{},{}{}",
-                  color_to_str(face.fg),
-                  color_to_str(face.bg),
-                  attributes_to_str(face.attributes));
+    return format("{},{}{}", face.fg, face.bg, face.attributes);
 }
 
 Face FaceRegistry::operator[](const String& facedesc)

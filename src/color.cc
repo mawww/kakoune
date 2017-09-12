@@ -52,7 +52,7 @@ Color str_to_color(StringView color)
     return Color::Default;
 }
 
-String color_to_str(Color color)
+String to_string(Color color)
 {
     if (color.color == Color::RGB)
     {
@@ -70,7 +70,7 @@ String color_to_str(Color color)
 
 String option_to_string(Color color)
 {
-    return color_to_str(color);
+    return to_string(color);
 }
 
 void option_from_string(StringView str, Color& color)

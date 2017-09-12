@@ -48,7 +48,7 @@ constexpr bool operator!=(Color lhs, Color rhs)
 }
 
 Color str_to_color(StringView color);
-String color_to_str(Color color);
+String to_string(Color color);
 
 String option_to_string(Color color);
 void option_from_string(StringView str, Color& color);

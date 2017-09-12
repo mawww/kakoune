@@ -68,7 +68,7 @@ String to_json(Color color)
         sprintf(buffer, R"("#%02x%02x%02x")", color.r, color.g, color.b);
         return buffer;
     }
-    return to_json(color_to_str(color));
+    return to_json(to_string(color));
 }
 
 String to_json(Attribute attributes)
