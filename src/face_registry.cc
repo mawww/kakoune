@@ -42,6 +42,37 @@ static Face parse_face(StringView facedesc)
     return res;
 }
 
+String attributes_to_str(Attribute attributes)
+{
+    if (attributes == Attribute::Normal)
+        return "";
+
+    struct Attr { Attribute attr; StringView name; }
+    attrs[] {
+        { Attribute::Exclusive, "e" },
+        { Attribute::Underline, "u" },
+        { Attribute::Reverse, "r" },
+        { Attribute::Blink, "B" },
+        { Attribute::Bold, "b" },
+        { Attribute::Dim, "d" },
+        { Attribute::Italic, "i" },
+    };
+
+    auto filteredAttrs = attrs |
+                         filter([=](const Attr& a) { return attributes & a.attr; }) |
+                         transform([](const Attr& a) { return a.name; });
+
+    return accumulate(filteredAttrs, String{"+"}, std::plus<>{});
+}
+
+String to_string(Face face)
+{
+    return format("{},{}{}",
+                  color_to_str(face.fg),
+                  color_to_str(face.bg),
+                  attributes_to_str(face.attributes));
+}
+
 Face FaceRegistry::operator[](const String& facedesc)
 {
     auto it = m_aliases.find(facedesc);
