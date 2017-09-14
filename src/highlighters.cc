@@ -985,7 +985,7 @@ HighlighterAndId show_whitespaces_factory(HighlighterParameters params)
     auto get_param = [&](StringView param,  StringView fallback) {
         StringView value = parser.get_switch(param).value_or(fallback);
         if (value.char_length() != 1)
-            throw runtime_error{format("-{} expects a single character parmeter", param)};
+            throw runtime_error{format("-{} expects a single character parameter", param)};
         return value.str();
     };
 
