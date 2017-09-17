@@ -77,8 +77,7 @@ private:
 
         AstNodePtr res = make_ast_node(Op::Alternation);
         res->children.push_back(std::move(node));
-        while (pos != end and *pos == '|')
-            res->children.push_back(disjunction(++pos, end));
+        res->children.push_back(disjunction(++pos, end));
         return res;
     }
 
@@ -162,24 +161,21 @@ RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node)
                quantifier == Quantifier::RepeatOneOrMore;
     };
 
-    auto alloc_offsets = [](Vector<char>& instructions, int count) {
+    auto alloc_offset = [](Vector<char>& instructions) {
         auto pos = instructions.size();
-        instructions.resize(instructions.size() + count * sizeof(RegexProgram::Offset));
+        instructions.resize(instructions.size() + sizeof(RegexProgram::Offset));
         return pos;
     };
 
-    auto get_offset = [](Vector<char>& instructions, RegexProgram::Offset base, int index = 0) {
-        return reinterpret_cast<RegexProgram::Offset*>(&instructions[base]) + index;
+    auto get_offset = [](Vector<char>& instructions, RegexProgram::Offset base) -> RegexProgram::Offset& {
+        return *reinterpret_cast<RegexProgram::Offset*>(&instructions[base]);
     };
 
     RegexProgram::Offset optional_offset = -1;
     if (allow_none(node->quantifier))
     {
         program.push_back(RegexProgram::Split);
-        program.push_back(2);
-        auto offsets = alloc_offsets(program, 2);
-        *get_offset(program, offsets) = program.size();
-        optional_offset = offsets;
+        optional_offset = alloc_offset(program);
     }
 
     Vector<RegexProgram::Offset> goto_end_offsets;
@@ -199,22 +195,19 @@ RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node)
             break;
         case Op::Alternation:
         {
-            const auto count = node->children.size();
-            if (count > 255)
-                throw runtime_error{"More than 255 elements in an alternation is not supported"};
+            auto& children = node->children;
+            kak_assert(children.size() == 2);
 
             program.push_back(RegexProgram::Split);
-            program.push_back(count);
-            auto offsets = alloc_offsets(program, count);
-            auto& children = node->children;
-            for (int i = 0; i < children.size(); ++i)
-            {
-                auto child_pos = compile_node(program, children[i]);
-                *get_offset(program, offsets, i) = child_pos;
-                // Jump to end after executing that children
-                program.push_back(RegexProgram::Jump);
-                goto_end_offsets.push_back(alloc_offsets(program, 1));
-            }
+            auto offset = alloc_offset(program);
+
+            compile_node(program, children[0]);
+            program.push_back(RegexProgram::Jump);
+            goto_end_offsets.push_back(alloc_offset(program));
+
+            auto right_pos = compile_node(program, children[1]);
+            get_offset(program, offset) = right_pos;
+
             break;
         }
         case Op::LineStart:
@@ -226,19 +219,16 @@ RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node)
     }
 
     for (auto& offset : goto_end_offsets)
-        *get_offset(program, offset) =  program.size();
+        get_offset(program, offset) =  program.size();
 
     if (is_repeat(node->quantifier))
     {
         program.push_back(RegexProgram::Split);
-        program.push_back(2);
-        auto offsets = alloc_offsets(program, 2);
-        *get_offset(program, offsets, 0) = content_pos;
-        *get_offset(program, offsets, 1) = program.size();
+        get_offset(program, alloc_offset(program)) = content_pos;
     }
 
     if (optional_offset != -1)
-        *get_offset(program, optional_offset, 1) = program.size();
+        get_offset(program, optional_offset) = program.size();
 
     return pos;
 }
@@ -279,12 +269,8 @@ void dump(ConstArrayView<char> program)
                 break;
             case RegexProgram::Split:
             {
-                int count = program[pos++];
-                printf("split [");
-                for (int i = 0; i < count; ++i)
-                    printf("%zd%s", reinterpret_cast<const RegexProgram::Offset*>(&program[pos])[i],
-                           (i == count - 1) ? "]\n" : ", ");
-                pos += count * sizeof(RegexProgram::Offset);
+                printf("split %zd\n", *reinterpret_cast<const RegexProgram::Offset*>(&program[pos]));
+                pos += sizeof(RegexProgram::Offset);
                 break;
             }
             case RegexProgram::LineStart:
@@ -328,11 +314,8 @@ struct ThreadedExecutor
                     break;
                 case RegexProgram::Split:
                 {
-                    const int count = *inst++;
-                    auto* offsets = reinterpret_cast<const RegexProgram::Offset*>(inst);
-                    for (int o = 1; o < count; ++o)
-                        m_threads.push_back(m_program.begin() + offsets[o]);
-                    inst = m_program.begin() + offsets[0];
+                    m_threads.push_back(m_program.begin() + *reinterpret_cast<const RegexProgram::Offset*>(inst));
+                    inst += sizeof(RegexProgram::Offset);
                     break;
                 }
                 case RegexProgram::LineStart:
@@ -410,14 +393,15 @@ auto test_regex = UnitTest{[]{
         kak_assert(not exec.match(program, ""));
     }
     {
-        StringView re = "^(foo|qux)+(bar)?baz$";
+        StringView re = "^(foo|qux|baz)+(bar)?baz$";
         auto program = RegexCompiler::compile(re.begin(), re.end());
         RegexProgram::dump(program);
         Exec exec{program};
         kak_assert(exec.match(program, "fooquxbarbaz"));
+        kak_assert(not exec.match(program, "fooquxbarbaze"));
         kak_assert(not exec.match(program, "quxbar"));
         kak_assert(not exec.match(program, "blahblah"));
-        kak_assert(exec.match(program, "foobaz"));
+        kak_assert(exec.match(program, "bazbaz"));
         kak_assert(exec.match(program, "quxbaz"));
     }
 }};
