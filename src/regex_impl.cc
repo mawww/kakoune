@@ -299,99 +299,126 @@ void dump(ConstArrayView<char> program)
     }
 }
 
-struct StepResult
+struct ThreadedExecutor
 {
-    enum Result { Consumed, Matched, Failed } result;
-    const char* next = nullptr;
-};
+    ThreadedExecutor(ConstArrayView<char> program) : m_program{program} {}
 
-StepResult step_thread(const char* inst, char c, const char* start, Vector<const char*>& threads)
-{
-    while (true)
+    struct StepResult
     {
-        const RegexProgram::Op op = (RegexProgram::Op)*inst++;
-        switch (op)
+        enum Result { Consumed, Matched, Failed } result;
+        const char* next = nullptr;
+    };
+
+    StepResult step(const char* inst)
+    {
+        while (true)
         {
-            case RegexProgram::Literal:
-                if (*inst++ == c)
-                    return { StepResult::Consumed, inst };
-                return { StepResult::Failed };
-            case RegexProgram::AnyChar:
-                return { StepResult::Consumed, inst };
-            case RegexProgram::Jump:
-                inst = start + *reinterpret_cast<const RegexProgram::Offset*>(inst);
-                break;
-            case RegexProgram::Split:
+            auto c = m_pos == m_subject.end() ? 0 : *m_pos;
+            const RegexProgram::Op op = (RegexProgram::Op)*inst++;
+            switch (op)
             {
-                const int count = *inst++;
-                auto* offsets = reinterpret_cast<const RegexProgram::Offset*>(inst);
-                for (int o = 1; o < count; ++o)
-                    threads.push_back(start + offsets[o]);
-                inst = start + offsets[0];
-                break;
+                case RegexProgram::Literal:
+                    if (*inst++ == c)
+                        return { StepResult::Consumed, inst };
+                    return { StepResult::Failed };
+                case RegexProgram::AnyChar:
+                    return { StepResult::Consumed, inst };
+                case RegexProgram::Jump:
+                    inst = m_program.begin() + *reinterpret_cast<const RegexProgram::Offset*>(inst);
+                    break;
+                case RegexProgram::Split:
+                {
+                    const int count = *inst++;
+                    auto* offsets = reinterpret_cast<const RegexProgram::Offset*>(inst);
+                    for (int o = 1; o < count; ++o)
+                        m_threads.push_back(m_program.begin() + offsets[o]);
+                    inst = m_program.begin() + offsets[0];
+                    break;
+                }
+                case RegexProgram::LineStart:
+                    if (not is_line_start())
+                        return { StepResult::Failed };
+                    break;
+                case RegexProgram::LineEnd:
+                    if (not is_line_end())
+                        return { StepResult::Failed };
+                    break;
+                case RegexProgram::Match:
+                    return { StepResult::Matched };
             }
-            case RegexProgram::LineStart:
-                // TODO
-                break;
-            case RegexProgram::LineEnd:
-                // TODO
-                break;
-            case RegexProgram::Match:
-                return { StepResult::Matched };
         }
+        return { StepResult::Failed };
     }
-    return { StepResult::Failed };
-}
 
-bool match(ConstArrayView<char> program, StringView data)
-{
-    const char* start = program.begin();
-    Vector<const char*> threads = { start };
-
-    for (auto c : data)
+    bool match(ConstArrayView<char> program, StringView data)
     {
-        for (int i = 0; i < threads.size(); ++i)
+        m_threads = Vector<const char*>{program.begin()};
+        m_subject = data;
+        m_pos = data.begin();
+
+        for (m_pos = m_subject.begin(); m_pos != m_subject.end(); ++m_pos)
         {
-            auto res = step_thread(threads[i], c, start, threads);
-            threads[i] = res.next;
-            if (res.result == StepResult::Matched)
+            for (int i = 0; i < m_threads.size(); ++i)
+            {
+                auto res = step(m_threads[i]);
+                m_threads[i] = res.next;
+                if (res.result == StepResult::Matched)
+                    return true;
+            }
+            m_threads.erase(std::remove(m_threads.begin(), m_threads.end(), nullptr), m_threads.end());
+            if (m_threads.empty())
+                break;
+        }
+
+        // Step remaining threads to see if they match without consuming anything else
+        for (int i = 0; i < m_threads.size(); ++i)
+        {
+            if (step(m_threads[i]).result == StepResult::Matched)
                 return true;
         }
-        threads.erase(std::remove(threads.begin(), threads.end(), nullptr), threads.end());
-        if (threads.empty())
-            break;
+        return false;
     }
 
-    // Step remaining threads to see if they match without consuming anything else
-    for (int i = 0; i < threads.size(); ++i)
+    bool is_line_start() const
     {
-        if (step_thread(threads[i], 0, start, threads).result == StepResult::Matched)
-            return true;
+        return m_pos == m_subject.begin() or *(m_pos-1) == '\n';
     }
-    return false;
-}
+
+    bool is_line_end() const
+    {
+        return m_pos == m_subject.end() or *m_pos == '\n';
+    }
+
+    ConstArrayView<char> m_program;
+    Vector<const char*> m_threads;
+    StringView m_subject;
+    const char* m_pos;
+};
 }
 
 auto test_regex = UnitTest{[]{
+    using Exec = RegexProgram::ThreadedExecutor;
     {
         StringView re = "a*b";
         auto program = RegexCompiler::compile(re.begin(), re.end());
         RegexProgram::dump(program);
-        kak_assert(RegexProgram::match(program, "b"));
-        kak_assert(RegexProgram::match(program, "ab"));
-        kak_assert(RegexProgram::match(program, "aaab"));
-        kak_assert(not RegexProgram::match(program, "acb"));
-        kak_assert(not RegexProgram::match(program, ""));
+        Exec exec{program};
+        kak_assert(exec.match(program, "b"));
+        kak_assert(exec.match(program, "ab"));
+        kak_assert(exec.match(program, "aaab"));
+        kak_assert(not exec.match(program, "acb"));
+        kak_assert(not exec.match(program, ""));
     }
     {
         StringView re = "^(foo|qux)+(bar)?baz$";
         auto program = RegexCompiler::compile(re.begin(), re.end());
         RegexProgram::dump(program);
-        kak_assert(RegexProgram::match(program, "fooquxbarbaz"));
-        kak_assert(not RegexProgram::match(program, "quxbar"));
-        kak_assert(not RegexProgram::match(program, "blahblah"));
-        kak_assert(RegexProgram::match(program, "foobaz"));
-        kak_assert(RegexProgram::match(program, "quxbaz"));
+        Exec exec{program};
+        kak_assert(exec.match(program, "fooquxbarbaz"));
+        kak_assert(not exec.match(program, "quxbar"));
+        kak_assert(not exec.match(program, "blahblah"));
+        kak_assert(exec.match(program, "foobaz"));
+        kak_assert(exec.match(program, "quxbaz"));
     }
 }};
 
