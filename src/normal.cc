@@ -1222,10 +1222,11 @@ void select_object(Context& context, NormalParams params)
 }
 
 template<Direction direction, bool half = false>
-void scroll(Context& context, NormalParams)
+void scroll(Context& context, NormalParams params)
 {
     Window& window = context.window();
-    const LineCount offset = (window.dimensions().line - 2) / (half ? 2 : 1);
+    const int count = params.count ? params.count : 1;
+    const LineCount offset = (window.dimensions().line - 2) / (half ? 2 : 1) * count;
 
     scroll_window(context, direction == Direction::Forward ? offset : -offset);
 }
