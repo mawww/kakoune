@@ -392,6 +392,18 @@ auto test_regex = UnitTest{[]{
         kak_assert(not exec.match(program, "acb"));
         kak_assert(not exec.match(program, ""));
     }
+
+    {
+        StringView re = "^a.*b$";
+        auto program = RegexCompiler::compile(re.begin(), re.end());
+        RegexProgram::dump(program);
+        Exec exec{program};
+        kak_assert(exec.match(program, "afoob"));
+        kak_assert(exec.match(program, "ab"));
+        kak_assert(not exec.match(program, "bab"));
+        kak_assert(not exec.match(program, ""));
+    }
+
     {
         StringView re = "^(foo|qux|baz)+(bar)?baz$";
         auto program = RegexCompiler::compile(re.begin(), re.end());
