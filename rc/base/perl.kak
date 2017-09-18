@@ -12,10 +12,10 @@ hook global BufCreate .*\.p[lm] %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter -group / regions -default code perl \
-    command '(?<!\$)`' (?<!\\)(\\\\)*` '' \
-    double_string '(?<!\$)"' (?<!\\)(\\\\)*" '' \
-    single_string "(?<!\$)'" (?<!\\)(\\\\)*' '' \
-    comment '(?<!\$)#' $ ''
+    command '(?<!\$|\\)`' (?<!\\)(\\\\)*` '' \
+    double_string '(?<!\$|\\)"' (?<!\\)(\\\\)*" '' \
+    single_string "(?<!\\$|\\\\)'" (?<!\\)(\\\\)*' '' \
+    comment '(?<!\$|\\)#' $ ''
 
 add-highlighter -group /perl/command fill magenta
 add-highlighter -group /perl/double_string fill string
@@ -61,9 +61,6 @@ add-highlighter -group /perl/code regex \$\^(RE_TRIE_MAXBUF|TAINT|UNICODE|UTF8LO
 
 add-highlighter -group /perl/code regex \$[0-9]+ 0:attribute
 add-highlighter -group /perl/code regex \b-(B|b|C|c|d|e|f|g|k|l|M|O|o|p|r|R|S|s|T|t|u|w|W|X|x|z)\b 0:attribute
-
-add-highlighter -group /perl/code regex %{(?:\b[stqrmwy]+)?/[^\n/]*/([msixpodualngecr]+\b)?} 0:magenta
-add-highlighter -group /perl/code regex %{(?:\b[stqrmwy]+)?/[^\n/]+/[^\n/]*/([msixpeodualngcr]+\b)?} 0:magenta
 
 add-highlighter -group /perl/code regex \$[a-zA-Z_][a-zA-Z0-9_]* 0:variable
 
