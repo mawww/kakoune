@@ -231,7 +231,7 @@ public:
 
         if (m_mouse_handler.handle_key(key, context()))
         {
-            context().print_status({});
+            context().clear_status();
             if (context().has_client())
                 context().client().info_hide();
 
@@ -276,7 +276,7 @@ public:
             if (m_single_command)
                 pop_mode();
 
-            context().print_status({});
+            context().clear_status();
             if (context().has_client())
                 context().client().info_hide();
 
@@ -557,7 +557,7 @@ public:
         {
             if (context().has_client())
                 context().client().menu_hide();
-            context().print_status(DisplayLine{});
+            context().clear_status();
 
             // Maintain hooks disabled in callback if they were before pop_mode
             ScopedSetBool disable_hooks(context().hooks_disabled(),
@@ -574,7 +574,7 @@ public:
                 m_edit_filter = false;
                 m_filter = Regex{".*"};
                 m_filter_editor.reset("");
-                context().print_status(DisplayLine{});
+                context().clear_status();
             }
             else
             {
@@ -723,7 +723,7 @@ public:
         {
             if (not context().history_disabled())
                 history_push(history, line);
-            context().print_status(DisplayLine{});
+            context().clear_status();
             if (context().has_client())
                 context().client().menu_hide();
 
@@ -740,7 +740,7 @@ public:
         {
             if (not context().history_disabled())
                 history_push(history, line);
-            context().print_status(DisplayLine{});
+            context().clear_status();
             if (context().has_client())
                 context().client().menu_hide();
 
@@ -968,7 +968,7 @@ private:
 
     void on_disabled() override
     {
-        context().print_status({});
+        context().clear_status();
         m_idle_timer.set_next_date(TimePoint::max());
         if (context().has_client())
             context().client().menu_hide();

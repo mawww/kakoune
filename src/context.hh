@@ -97,6 +97,7 @@ public:
     AliasRegistry& aliases() const { return scope().aliases(); }
 
     void print_status(DisplayLine status, bool immediate = false) const;
+    void clear_status() const;
 
     StringView main_sel_register_value(StringView reg) const;
 
