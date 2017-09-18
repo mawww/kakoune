@@ -71,7 +71,7 @@ def -hidden c-family-indent-on-closing-curly-brace %[
 
 def -hidden c-family-insert-on-closing-curly-brace %[
     # add a semicolon after a closing brace if part of a class, union or struct definition
-    try %[ exec -itersel -draft hm<a-x>B<a-x><a-k>\`\h*(class|struct|union)<ret> a\;<esc> ]
+    try %[ exec -itersel -draft hm<a-x>B<a-x><a-k>\`\h*(class|struct|union|enum)<ret> a\;<esc> ]
 ]
 
 def -hidden c-family-insert-on-newline %[ eval -draft %[
