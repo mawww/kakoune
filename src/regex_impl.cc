@@ -31,12 +31,32 @@ using Offset = size_t;
 
 namespace RegexCompiler
 {
-enum class Quantifier
+struct Quantifier
 {
-    One,
-    Optional,
-    RepeatZeroOrMore,
-    RepeatOneOrMore
+    enum Type
+    {
+        One,
+        Optional,
+        RepeatZeroOrMore,
+        RepeatOneOrMore,
+        RepeatMinMax,
+    };
+    Type type = One;
+    int min = -1, max = -1;
+
+    bool allows_none() const
+    {
+        return type == Quantifier::Optional or
+               type == Quantifier::RepeatZeroOrMore or
+              (type == Quantifier::RepeatMinMax and min <= 0);
+    }
+
+    bool allows_infinite_repeat() const
+    {
+        return type == Quantifier::RepeatZeroOrMore or
+               type == Quantifier::RepeatOneOrMore or
+              (type == Quantifier::RepeatMinMax and max == -1);
+    };
 };
 
 enum class Op
@@ -64,7 +84,7 @@ struct AstNode
 using AstNodePtr = std::unique_ptr<AstNode>;
 
 AstNodePtr make_ast_node(Op op, char value = 0,
-                         Quantifier quantifier = Quantifier::One)
+                         Quantifier quantifier = {Quantifier::One})
 {
     return AstNodePtr{new AstNode{op, value, quantifier, {}}};
 }
@@ -157,49 +177,62 @@ private:
 
     static Quantifier quantifier(Iterator& pos, Iterator end)
     {
+        auto read_int = [](Iterator& pos, Iterator begin, Iterator end) {
+            int res = 0;
+            for (; pos != end; ++pos)
+            {
+                const auto c = *pos;
+                if (c < '0' or c > '9')
+                    return pos == begin ? -1 : res;
+                res = res * 10 + c - '0';
+            }
+            return res;
+        };
+
         switch (*pos)
         {
-            case '*': ++pos; return Quantifier::RepeatZeroOrMore;
-            case '+': ++pos; return Quantifier::RepeatOneOrMore;
-            case '?': ++pos; return Quantifier::Optional;
-            default: return Quantifier::One;
+            case '*': ++pos; return {Quantifier::RepeatZeroOrMore};
+            case '+': ++pos; return {Quantifier::RepeatOneOrMore};
+            case '?': ++pos; return {Quantifier::Optional};
+            case '{':
+            {
+                auto it = pos+1;
+                int min = read_int(it, it, end);
+                int max = -1;
+                if (*it == ',')
+                {
+                    ++it;
+                    max = read_int(it, it, end);
+                }
+                if (*it++ != '}')
+                   throw runtime_error{"expected closing bracket"};
+                pos = it;
+                return {Quantifier::RepeatMinMax, min, max};
+            }
+            default: return {Quantifier::One};
         }
     }
 };
 
-RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node)
+RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node);
+
+RegexProgram::Offset alloc_offset(Vector<char>& instructions)
 {
-    RegexProgram::Offset pos = program.size();
+    auto pos = instructions.size();
+    instructions.resize(instructions.size() + sizeof(RegexProgram::Offset));
+    return pos;
+}
 
-    auto allow_none = [](Quantifier quantifier) {
-        return quantifier == Quantifier::Optional or
-               quantifier == Quantifier::RepeatZeroOrMore;
-    };
+RegexProgram::Offset& get_offset(Vector<char>& instructions, RegexProgram::Offset base)
+{
+    return *reinterpret_cast<RegexProgram::Offset*>(&instructions[base]);
+}
 
-    auto is_repeat = [](Quantifier quantifier) {
-        return quantifier == Quantifier::RepeatZeroOrMore or
-               quantifier == Quantifier::RepeatOneOrMore;
-    };
+RegexProgram::Offset compile_node_inner(Vector<char>& program, const AstNodePtr& node)
+{
+    const auto start_pos = program.size();
 
-    auto alloc_offset = [](Vector<char>& instructions) {
-        auto pos = instructions.size();
-        instructions.resize(instructions.size() + sizeof(RegexProgram::Offset));
-        return pos;
-    };
-
-    auto get_offset = [](Vector<char>& instructions, RegexProgram::Offset base) -> RegexProgram::Offset& {
-        return *reinterpret_cast<RegexProgram::Offset*>(&instructions[base]);
-    };
-
-    RegexProgram::Offset optional_offset = -1;
-    if (allow_none(node->quantifier))
-    {
-        program.push_back(RegexProgram::Split);
-        optional_offset = alloc_offset(program);
-    }
-
-    Vector<RegexProgram::Offset> goto_end_offsets;
-    auto content_pos = program.size();
+    Vector<RegexProgram::Offset> goto_inner_end_offsets;
     switch (node->op)
     {
         case Op::Literal:
@@ -223,7 +256,7 @@ RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node)
 
             compile_node(program, children[0]);
             program.push_back(RegexProgram::Jump);
-            goto_end_offsets.push_back(alloc_offset(program));
+            goto_inner_end_offsets.push_back(alloc_offset(program));
 
             auto right_pos = compile_node(program, children[1]);
             get_offset(program, offset) = right_pos;
@@ -250,17 +283,44 @@ RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node)
             break;
     }
 
-    for (auto& offset : goto_end_offsets)
+    for (auto& offset : goto_inner_end_offsets)
         get_offset(program, offset) =  program.size();
 
-    if (is_repeat(node->quantifier))
+    return start_pos;
+}
+
+RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node)
+{
+    RegexProgram::Offset pos = program.size();
+    Vector<RegexProgram::Offset> goto_end_offsets;
+
+    if (node->quantifier.allows_none())
     {
         program.push_back(RegexProgram::Split);
-        get_offset(program, alloc_offset(program)) = content_pos;
+        goto_end_offsets.push_back(alloc_offset(program));
     }
 
-    if (optional_offset != -1)
-        get_offset(program, optional_offset) = program.size();
+    auto inner_pos = compile_node_inner(program, node);
+    // Write the node multiple times when we have a min count quantifier
+    for (int i = 1; i < node->quantifier.min; ++i)
+        inner_pos = compile_node_inner(program, node);
+
+    if (node->quantifier.allows_infinite_repeat())
+    {
+        program.push_back(RegexProgram::Split);
+        get_offset(program, alloc_offset(program)) = inner_pos;
+    }
+    // Write the node as an optional match for the min -> max counts
+    else for (int i = std::max(1, node->quantifier.min); // STILL UGLY !
+              i < node->quantifier.max; ++i)
+    {
+        program.push_back(RegexProgram::Split);
+        goto_end_offsets.push_back(alloc_offset(program));
+        compile_node_inner(program, node);
+    }
+
+    for (auto offset : goto_end_offsets)
+        get_offset(program, offset) = program.size();
 
     return pos;
 }
@@ -512,6 +572,38 @@ auto test_regex = UnitTest{[]{
         kak_assert(exec.match(program, "foo"));
         kak_assert(exec.match(program, "bar"));
         kak_assert(not exec.match(program, "foobar"));
+    }
+
+    {
+        StringView re = R"(\`a{3,5}b\')";
+        auto program = RegexCompiler::compile(re.begin(), re.end());
+        RegexProgram::dump(program);
+        Exec exec{program};
+        kak_assert(not exec.match(program, "aab"));
+        kak_assert(exec.match(program, "aaab"));
+        kak_assert(not exec.match(program, "aaaaaab"));
+        kak_assert(exec.match(program, "aaaaab"));
+    }
+
+    {
+        StringView re = R"(\`a{3,}b\')";
+        auto program = RegexCompiler::compile(re.begin(), re.end());
+        RegexProgram::dump(program);
+        Exec exec{program};
+        kak_assert(not exec.match(program, "aab"));
+        kak_assert(exec.match(program, "aaab"));
+        kak_assert(exec.match(program, "aaaaab"));
+    }
+
+    {
+        StringView re = R"(\`a{,3}b\')";
+        auto program = RegexCompiler::compile(re.begin(), re.end());
+        RegexProgram::dump(program);
+        Exec exec{program};
+        kak_assert(exec.match(program, "b"));
+        kak_assert(exec.match(program, "ab"));
+        kak_assert(exec.match(program, "aaab"));
+        kak_assert(not exec.match(program, "aaaab"));
     }
 }};
 
