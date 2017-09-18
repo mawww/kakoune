@@ -835,7 +835,7 @@ struct WrapHighlighter : Highlighter
         {
             StringView line = buffer[coord.line];
             utf8::iterator<const char*> it{&line[col], line};
-            while (it != line.end() and it != line.begin() and is_word(*it))
+            while (it != line.end() and it != line.begin() and is_word<WORD>(*it))
                 --it;
 
             if (it != line.begin() and it != &line[col] and
