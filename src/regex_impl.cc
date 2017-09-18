@@ -22,6 +22,8 @@ enum Op : char
     LineEnd,
     WordBoundary,
     NotWordBoundary,
+    SubjectBegin,
+    SubjectEnd,
 };
 
 using Offset = size_t;
@@ -47,6 +49,8 @@ enum class Op
     LineEnd,
     WordBoundary,
     NotWordBoundary,
+    SubjectBegin,
+    SubjectEnd,
 };
 
 struct AstNode
@@ -119,6 +123,8 @@ private:
                 {
                     case 'b': pos += 2; return make_ast_node(Op::WordBoundary);
                     case 'B': pos += 2; return make_ast_node(Op::NotWordBoundary);
+                    case '`': pos += 2; return make_ast_node(Op::SubjectBegin);
+                    case '\'': pos += 2; return make_ast_node(Op::SubjectEnd);
                 }
                 break;
             /* TODO: \`, \', look ahead, look behind */
@@ -236,6 +242,12 @@ RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node)
         case Op::NotWordBoundary:
             program.push_back(RegexProgram::NotWordBoundary);
             break;
+        case Op::SubjectBegin:
+            program.push_back(RegexProgram::SubjectBegin);
+            break;
+        case Op::SubjectEnd:
+            program.push_back(RegexProgram::SubjectEnd);
+            break;
     }
 
     for (auto& offset : goto_end_offsets)
@@ -305,6 +317,12 @@ void dump(ConstArrayView<char> program)
             case RegexProgram::NotWordBoundary:
                 printf("not word boundary\n");
                 break;
+            case RegexProgram::SubjectBegin:
+                printf("subject begin\n");
+                break;
+            case RegexProgram::SubjectEnd:
+                printf("subject end\n");
+                break;
             case RegexProgram::Match:
                 printf("match\n");
         }
@@ -361,6 +379,14 @@ struct ThreadedExecutor
                     break;
                 case RegexProgram::NotWordBoundary:
                     if (is_word_boundary())
+                        return { StepResult::Failed };
+                    break;
+                case RegexProgram::SubjectBegin:
+                    if (m_pos != m_subject.begin())
+                        return { StepResult::Failed };
+                    break;
+                case RegexProgram::SubjectEnd:
+                    if (m_pos != m_subject.end())
                         return { StepResult::Failed };
                     break;
                 case RegexProgram::Match:
@@ -475,6 +501,15 @@ auto test_regex = UnitTest{[]{
         Exec exec{program};
         kak_assert(exec.match(program, "tchou foo baz"));
         kak_assert(not exec.match(program, "tchoufoobaz"));
+        kak_assert(exec.match(program, "bar"));
+        kak_assert(not exec.match(program, "foobar"));
+    }
+    {
+        StringView re = R"(\`(foo|bar)\')";
+        auto program = RegexCompiler::compile(re.begin(), re.end());
+        RegexProgram::dump(program);
+        Exec exec{program};
+        kak_assert(exec.match(program, "foo"));
         kak_assert(exec.match(program, "bar"));
         kak_assert(not exec.match(program, "foobar"));
     }
