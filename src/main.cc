@@ -45,7 +45,8 @@ static const char* startup_info =
 " * completion_extra_word_char option is now extra_word_chars (note the\n"
 "   plural form) and is used for word selection commands\n"
 " * selection extending behaviour has been simplified, it now just\n"
-"   maintain the current anchor and moves the cursor,\n";
+"   maintain the current anchor and moves the cursor,\n"
+" * Custom text objects are bound to 'c' instead of ':'\n"
 
 struct startup_error : runtime_error
 {
