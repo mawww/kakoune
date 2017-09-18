@@ -50,3 +50,57 @@ set to the same sequence of keys passed using the *expected* argument.
 
 For more information about the values of the *scope* parameter, refer to
 the 'scopes' documentation page.
+
+Mappable keys
+-------------
+
+For *key* and *keys* in the *map* command, the following key names can
+be used:
+
+*x*, *<x>*::
+	Most keys, especially alphabetic keys, represent themselves.
+	Keys can also be wrapped in angle-brackets for consistency
+	with the non-alphabetic keys below.
+
+*X*, *<X>*::
+	Holding down Shift while pressing the *x* key.
+
+*<c-x>*::
+	Holding down Control while pressing the *x* key.
+
+*<a-x>*::
+	Holding down Alt while pressing the *x* key.
+
+*<lt>*, *<gt>*::
+	The *<* and *>* characters.
+
+*<plus>*, *<minus>*::
+	The *+* and *-* characters..
+
+*<ret>*::
+	The Return or Enter key.
+
+*<space>*::
+	The space bar.
+
+*<tab>*::
+	The Tab key.
+
+*<backtab>*::
+	The reverse-tab key. This is Shift-Tab on most keyboards.
+
+*<backspace>*::
+	The Backspace (delete to the left) key.
+
+*<del>*::
+	The Delete (to the right) key.
+
+*<esc>*::
+	The Escape key.
+
+*<up>*, *<down>*, *<left>*, *<right>*, *<pageup>*, *<pagedown>*, *<home>*::
+*<end>*::
+	The usual cursor-movement keys.
+
+*<f1>*, *<f2>*, ...*<f12>*::
+	Function keys.
