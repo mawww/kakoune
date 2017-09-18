@@ -23,7 +23,9 @@ add-highlighter -group /css/declaration regions content \
 
 add-highlighter -group /css/declaration/content/string fill string
 
-add-highlighter -group /css/declaration regex (#[0-9A-Fa-f]+)|((\d*\.)?\d+(em|px)) 0:value
+# https://developer.mozilla.org/en-US/docs/Web/CSS/length
+add-highlighter -group /css/declaration regex (#[0-9A-Fa-f]+)|((\d*\.)?\d+(ch|cm|em|ex|mm|pc|pt|px|rem|vh|vmax|vmin|vw)) 0:value
+
 add-highlighter -group /css/declaration regex ([A-Za-z][A-Za-z0-9_-]*)\h*: 1:keyword
 add-highlighter -group /css/declaration regex :(before|after) 0:attribute
 add-highlighter -group /css/declaration regex !important 0:keyword
