@@ -311,10 +311,13 @@ struct ThreadedExecutor
                     return { StepResult::Consumed, inst };
                 case RegexProgram::Jump:
                     inst = m_program.begin() + *reinterpret_cast<const RegexProgram::Offset*>(inst);
+                    // if instruction is already going to be executed, drop this thread
+                    if (std::find(m_threads.begin(), m_threads.end(), inst) != m_threads.end())
+                        return { StepResult::Failed };
                     break;
                 case RegexProgram::Split:
                 {
-                    m_threads.push_back(m_program.begin() + *reinterpret_cast<const RegexProgram::Offset*>(inst));
+                    add_thread(*reinterpret_cast<const RegexProgram::Offset*>(inst));
                     inst += sizeof(RegexProgram::Offset);
                     break;
                 }
@@ -360,6 +363,13 @@ struct ThreadedExecutor
                 return true;
         }
         return false;
+    }
+
+    void add_thread(RegexProgram::Offset pos)
+    {
+        const char* inst = m_program.begin() + pos;
+        if (std::find(m_threads.begin(), m_threads.end(), inst) == m_threads.end())
+            m_threads.push_back(inst);
     }
 
     bool is_line_start() const
