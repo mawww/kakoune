@@ -32,9 +32,9 @@ General highlighters
 	highlight a regex, takes the regex as first parameter, followed by
 	any number of face parameters. For example:
 
----------------------------------------------------------------
-    add-highlighter regex //(\hTODO:)?[^\n] 0:cyan 1:yellow,red
----------------------------------------------------------------
+----------------------------------------------------------------
+    add-highlighter regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
+----------------------------------------------------------------
 
 	will highlight C++ style comments in cyan, with an eventual 'TODO:'
 	in yellow on red background
@@ -93,6 +93,9 @@ General highlighters
 	*-width <max_width>*:::
 		wrap text at *max_width* if the window is wider.
 
+*fill* <face>::
+	fill using the given *face*, mostly useful with regions highlighters
+
 *ranges* <option_name>::
 	use the data in the range-specs option of the given name to highlight
 	the buffer. The string part of the is interpretted as a face to apply
@@ -103,13 +106,16 @@ General highlighters
 	the buffer. The string part of the is interpretted as a display line to
 	display in place of the range.
 
-*fill* <face>::
-	fill using the given *face*, mostly useful with regions highlighters
+*column* <number> <face>::
+	highlight column *number* with face *face*
+
+*line* <number> <face>::
+	highlight line *number* with face *face*
 
 Highlighting Groups
 -------------------
 
-The group highlighter is a container for other highlighters. You can add a
+The *group* highlighter is a container for other highlighters. You can add a
 group to the current window using
 
 ----------------------------
@@ -130,6 +136,14 @@ a path as follows:
 add-highlighter -group <name> group <subname>
 add-highlighter -group <name>/<subname> <type> <params>...
 ----------------------------------------------------------
+
+In order to specify which kinds of highlighters can be added to a given group, the *-passes*
+flag set can be passed along with the group name. Possible values for this option can be one
+or several (separated with a pipe sign) of *colorize*, *move* or *wrap* (default: *colorize*):
+
+-------------------------------------------------------
+add-highlighter group -passes colorize|move|wrap <name>
+-------------------------------------------------------
 
 Regions highlighters
 --------------------
