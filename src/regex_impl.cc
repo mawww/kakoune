@@ -2,6 +2,7 @@
 #include "vector.hh"
 #include "unit_tests.hh"
 #include "string.hh"
+#include "unicode.hh"
 #include "exception.hh"
 #include "array_view.hh"
 
@@ -19,6 +20,8 @@ enum Op : char
     Split,
     LineStart,
     LineEnd,
+    WordBoundary,
+    NotWordBoundary,
 };
 
 using Offset = size_t;
@@ -42,6 +45,8 @@ enum class Op
     Alternation,
     LineStart,
     LineEnd,
+    WordBoundary,
+    NotWordBoundary,
 };
 
 struct AstNode
@@ -107,7 +112,16 @@ private:
         {
             case '^': ++pos; return make_ast_node(Op::LineStart);
             case '$': ++pos; return make_ast_node(Op::LineEnd);
-            /* TODO: \`, \', \b, \B, look ahead, look behind */
+            case '\\':
+                if (pos+1 == end)
+                    return nullptr;
+                switch (*(pos+1))
+                {
+                    case 'b': pos += 2; return make_ast_node(Op::WordBoundary);
+                    case 'B': pos += 2; return make_ast_node(Op::NotWordBoundary);
+                }
+                break;
+            /* TODO: \`, \', look ahead, look behind */
         }
         return nullptr;
     }
@@ -216,6 +230,12 @@ RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node)
         case Op::LineEnd:
             program.push_back(RegexProgram::LineEnd);
             break;
+        case Op::WordBoundary:
+            program.push_back(RegexProgram::WordBoundary);
+            break;
+        case Op::NotWordBoundary:
+            program.push_back(RegexProgram::NotWordBoundary);
+            break;
     }
 
     for (auto& offset : goto_end_offsets)
@@ -279,6 +299,12 @@ void dump(ConstArrayView<char> program)
             case RegexProgram::LineEnd:
                 printf("line end\n");
                 break;
+            case RegexProgram::WordBoundary:
+                printf("word boundary\n");
+                break;
+            case RegexProgram::NotWordBoundary:
+                printf("not word boundary\n");
+                break;
             case RegexProgram::Match:
                 printf("match\n");
         }
@@ -299,7 +325,7 @@ struct ThreadedExecutor
     {
         while (true)
         {
-            auto c = m_pos == m_subject.end() ? 0 : *m_pos;
+            char c = m_pos == m_subject.end() ? 0 : *m_pos;
             const RegexProgram::Op op = (RegexProgram::Op)*inst++;
             switch (op)
             {
@@ -327,6 +353,14 @@ struct ThreadedExecutor
                     break;
                 case RegexProgram::LineEnd:
                     if (not is_line_end())
+                        return { StepResult::Failed };
+                    break;
+                case RegexProgram::WordBoundary:
+                    if (not is_word_boundary())
+                        return { StepResult::Failed };
+                    break;
+                case RegexProgram::NotWordBoundary:
+                    if (is_word_boundary())
                         return { StepResult::Failed };
                     break;
                 case RegexProgram::Match:
@@ -382,6 +416,13 @@ struct ThreadedExecutor
         return m_pos == m_subject.end() or *m_pos == '\n';
     }
 
+    bool is_word_boundary() const
+    {
+        return m_pos == m_subject.begin() or
+               m_pos == m_subject.end() or
+               is_word(*(m_pos-1)) != is_word(*m_pos);
+    }
+
     ConstArrayView<char> m_program;
     Vector<const char*> m_threads;
     StringView m_subject;
@@ -392,7 +433,7 @@ struct ThreadedExecutor
 auto test_regex = UnitTest{[]{
     using Exec = RegexProgram::ThreadedExecutor;
     {
-        StringView re = "a*b";
+        StringView re = R"(a*b)";
         auto program = RegexCompiler::compile(re.begin(), re.end());
         RegexProgram::dump(program);
         Exec exec{program};
@@ -404,7 +445,7 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        StringView re = "^a.*b$";
+        StringView re = R"(^a.*b$)";
         auto program = RegexCompiler::compile(re.begin(), re.end());
         RegexProgram::dump(program);
         Exec exec{program};
@@ -415,7 +456,7 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        StringView re = "^(foo|qux|baz)+(bar)?baz$";
+        StringView re = R"(^(foo|qux|baz)+(bar)?baz$)";
         auto program = RegexCompiler::compile(re.begin(), re.end());
         RegexProgram::dump(program);
         Exec exec{program};
@@ -425,6 +466,17 @@ auto test_regex = UnitTest{[]{
         kak_assert(not exec.match(program, "blahblah"));
         kak_assert(exec.match(program, "bazbaz"));
         kak_assert(exec.match(program, "quxbaz"));
+    }
+
+    {
+        StringView re = R"(.*\b(foo|bar)\b.*)";
+        auto program = RegexCompiler::compile(re.begin(), re.end());
+        RegexProgram::dump(program);
+        Exec exec{program};
+        kak_assert(exec.match(program, "tchou foo baz"));
+        kak_assert(not exec.match(program, "tchoufoobaz"));
+        kak_assert(exec.match(program, "bar"));
+        kak_assert(not exec.match(program, "foobar"));
     }
 }};
 
