@@ -9,26 +9,29 @@
 namespace Kakoune
 {
 
-namespace RegexProgram
+struct CompiledRegex
 {
-enum Op : char
-{
-    Match,
-    Literal,
-    AnyChar,
-    Jump,
-    Split,
-    Save,
-    LineStart,
-    LineEnd,
-    WordBoundary,
-    NotWordBoundary,
-    SubjectBegin,
-    SubjectEnd,
-};
+    enum Op : char
+    {
+        Match,
+        Literal,
+        AnyChar,
+        Jump,
+        Split,
+        Save,
+        LineStart,
+        LineEnd,
+        WordBoundary,
+        NotWordBoundary,
+        SubjectBegin,
+        SubjectEnd,
+    };
 
-using Offset = size_t;
-}
+    using Offset = size_t;
+
+    Vector<char> bytecode;
+    size_t save_count;
+};
 
 namespace RegexCompiler
 {
@@ -99,6 +102,8 @@ struct Parser
     {
         return disjunction(pos, end, 0);
     }
+
+    size_t capture_count() const { return m_next_capture; }
 
 private:
     AstNodePtr disjunction(Iterator& pos, Iterator end, char capture = -1)
@@ -224,40 +229,40 @@ private:
     char m_next_capture = 1;
 };
 
-RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node);
+CompiledRegex::Offset compile_node(CompiledRegex& program, const AstNodePtr& node);
 
-RegexProgram::Offset alloc_offset(Vector<char>& instructions)
+CompiledRegex::Offset alloc_offset(CompiledRegex& program)
 {
-    auto pos = instructions.size();
-    instructions.resize(instructions.size() + sizeof(RegexProgram::Offset));
+    auto pos = program.bytecode.size();
+    program.bytecode.resize(pos + sizeof(CompiledRegex::Offset));
     return pos;
 }
 
-RegexProgram::Offset& get_offset(Vector<char>& instructions, RegexProgram::Offset base)
+CompiledRegex::Offset& get_offset(CompiledRegex& program, CompiledRegex::Offset pos)
 {
-    return *reinterpret_cast<RegexProgram::Offset*>(&instructions[base]);
+    return *reinterpret_cast<CompiledRegex::Offset*>(&program.bytecode[pos]);
 }
 
-RegexProgram::Offset compile_node_inner(Vector<char>& program, const AstNodePtr& node)
+CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const AstNodePtr& node)
 {
-    const auto start_pos = program.size();
+    const auto start_pos = program.bytecode.size();
 
     const char capture = (node->op == Op::Alternation or node->op == Op::Sequence) ? node->value : -1;
     if (capture >= 0)
     {
-        program.push_back(RegexProgram::Save);
-        program.push_back(capture * 2);
+        program.bytecode.push_back(CompiledRegex::Save);
+        program.bytecode.push_back(capture * 2);
     }
 
-    Vector<RegexProgram::Offset> goto_inner_end_offsets;
+    Vector<CompiledRegex::Offset> goto_inner_end_offsets;
     switch (node->op)
     {
         case Op::Literal:
-            program.push_back(RegexProgram::Literal);
-            program.push_back(node->value);
+            program.bytecode.push_back(CompiledRegex::Literal);
+            program.bytecode.push_back(node->value);
             break;
         case Op::AnyChar:
-            program.push_back(RegexProgram::AnyChar);
+            program.bytecode.push_back(CompiledRegex::AnyChar);
             break;
         case Op::Sequence:
             for (auto& child : node->children)
@@ -268,11 +273,11 @@ RegexProgram::Offset compile_node_inner(Vector<char>& program, const AstNodePtr&
             auto& children = node->children;
             kak_assert(children.size() == 2);
 
-            program.push_back(RegexProgram::Split);
+            program.bytecode.push_back(CompiledRegex::Split);
             auto offset = alloc_offset(program);
 
             compile_node(program, children[0]);
-            program.push_back(RegexProgram::Jump);
+            program.bytecode.push_back(CompiledRegex::Jump);
             goto_inner_end_offsets.push_back(alloc_offset(program));
 
             auto right_pos = compile_node(program, children[1]);
@@ -281,45 +286,45 @@ RegexProgram::Offset compile_node_inner(Vector<char>& program, const AstNodePtr&
             break;
         }
         case Op::LineStart:
-            program.push_back(RegexProgram::LineStart);
+            program.bytecode.push_back(CompiledRegex::LineStart);
             break;
         case Op::LineEnd:
-            program.push_back(RegexProgram::LineEnd);
+            program.bytecode.push_back(CompiledRegex::LineEnd);
             break;
         case Op::WordBoundary:
-            program.push_back(RegexProgram::WordBoundary);
+            program.bytecode.push_back(CompiledRegex::WordBoundary);
             break;
         case Op::NotWordBoundary:
-            program.push_back(RegexProgram::NotWordBoundary);
+            program.bytecode.push_back(CompiledRegex::NotWordBoundary);
             break;
         case Op::SubjectBegin:
-            program.push_back(RegexProgram::SubjectBegin);
+            program.bytecode.push_back(CompiledRegex::SubjectBegin);
             break;
         case Op::SubjectEnd:
-            program.push_back(RegexProgram::SubjectEnd);
+            program.bytecode.push_back(CompiledRegex::SubjectEnd);
             break;
     }
 
     for (auto& offset : goto_inner_end_offsets)
-        get_offset(program, offset) =  program.size();
+        get_offset(program, offset) =  program.bytecode.size();
 
     if (capture >= 0)
     {
-        program.push_back(RegexProgram::Save);
-        program.push_back(capture * 2 + 1);
+        program.bytecode.push_back(CompiledRegex::Save);
+        program.bytecode.push_back(capture * 2 + 1);
     }
 
     return start_pos;
 }
 
-RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node)
+CompiledRegex::Offset compile_node(CompiledRegex& program, const AstNodePtr& node)
 {
-    RegexProgram::Offset pos = program.size();
-    Vector<RegexProgram::Offset> goto_end_offsets;
+    CompiledRegex::Offset pos = program.bytecode.size();
+    Vector<CompiledRegex::Offset> goto_end_offsets;
 
     if (node->quantifier.allows_none())
     {
-        program.push_back(RegexProgram::Split);
+        program.bytecode.push_back(CompiledRegex::Split);
         goto_end_offsets.push_back(alloc_offset(program));
     }
 
@@ -330,94 +335,96 @@ RegexProgram::Offset compile_node(Vector<char>& program, const AstNodePtr& node)
 
     if (node->quantifier.allows_infinite_repeat())
     {
-        program.push_back(RegexProgram::Split);
+        program.bytecode.push_back(CompiledRegex::Split);
         get_offset(program, alloc_offset(program)) = inner_pos;
     }
     // Write the node as an optional match for the min -> max counts
     else for (int i = std::max(1, node->quantifier.min); // STILL UGLY !
               i < node->quantifier.max; ++i)
     {
-        program.push_back(RegexProgram::Split);
+        program.bytecode.push_back(CompiledRegex::Split);
         goto_end_offsets.push_back(alloc_offset(program));
         compile_node_inner(program, node);
     }
 
     for (auto offset : goto_end_offsets)
-        get_offset(program, offset) = program.size();
+        get_offset(program, offset) = program.bytecode.size();
 
     return pos;
 }
 
-Vector<char> compile(const AstNodePtr& node)
+CompiledRegex compile(const AstNodePtr& node, size_t capture_count)
 {
-    Vector<char> res;
+    CompiledRegex res;
     compile_node(res, node);
-    res.push_back(RegexProgram::Match);
+    res.bytecode.push_back(CompiledRegex::Match);
+    res.save_count = capture_count * 2;
     return res;
 }
 
 template<typename Iterator>
-Vector<char> compile(Iterator begin, Iterator end)
+CompiledRegex compile(Iterator begin, Iterator end)
 {
-    return compile(Parser<Iterator>{}.parse(begin, end));
-}
+    Parser<Iterator> parser;
+    auto node = parser.parse(begin, end);
+    return compile(node, parser.capture_count());
 }
 
-namespace RegexProgram
+}
+
+void dump(const CompiledRegex& program)
 {
-void dump(ConstArrayView<char> program)
-{
-    for (size_t pos = 0; pos < program.size(); )
+    for (auto pos = program.bytecode.begin(); pos < program.bytecode.end(); )
     {
-        printf("%4zd    ", pos);
-        switch ((RegexProgram::Op)program[pos++])
+        printf("%4zd    ", pos - program.bytecode.begin());
+        switch ((CompiledRegex::Op)*pos++)
         {
-            case RegexProgram::Literal:
-                printf("literal %c\n", program[pos++]);
+            case CompiledRegex::Literal:
+                printf("literal %c\n", *pos++);
                 break;
-            case RegexProgram::AnyChar:
+            case CompiledRegex::AnyChar:
                 printf("any char\n");
                 break;
-            case RegexProgram::Jump:
-                printf("jump %zd\n", *reinterpret_cast<const RegexProgram::Offset*>(&program[pos]));
-                pos += sizeof(RegexProgram::Offset);
+            case CompiledRegex::Jump:
+                printf("jump %zd\n", *reinterpret_cast<const CompiledRegex::Offset*>(&*pos));
+                pos += sizeof(CompiledRegex::Offset);
                 break;
-            case RegexProgram::Split:
+            case CompiledRegex::Split:
             {
-                printf("split %zd\n", *reinterpret_cast<const RegexProgram::Offset*>(&program[pos]));
-                pos += sizeof(RegexProgram::Offset);
+                printf("split %zd\n", *reinterpret_cast<const CompiledRegex::Offset*>(&*pos));
+                pos += sizeof(CompiledRegex::Offset);
                 break;
             }
-            case RegexProgram::Save:
-                printf("save %d\n", program[pos++]);
+            case CompiledRegex::Save:
+                printf("save %d\n", *pos++);
                 break;
-            case RegexProgram::LineStart:
+            case CompiledRegex::LineStart:
                 printf("line start\n");
                 break;
-            case RegexProgram::LineEnd:
+            case CompiledRegex::LineEnd:
                 printf("line end\n");
                 break;
-            case RegexProgram::WordBoundary:
+            case CompiledRegex::WordBoundary:
                 printf("word boundary\n");
                 break;
-            case RegexProgram::NotWordBoundary:
+            case CompiledRegex::NotWordBoundary:
                 printf("not word boundary\n");
                 break;
-            case RegexProgram::SubjectBegin:
+            case CompiledRegex::SubjectBegin:
                 printf("subject begin\n");
                 break;
-            case RegexProgram::SubjectEnd:
+            case CompiledRegex::SubjectEnd:
                 printf("subject end\n");
                 break;
-            case RegexProgram::Match:
+            case CompiledRegex::Match:
                 printf("match\n");
         }
     }
 }
 
-struct ThreadedExecutor
+struct ThreadedRegexVM
 {
-    ThreadedExecutor(ConstArrayView<char> program) : m_program{program} {}
+    ThreadedRegexVM(const CompiledRegex& program) : m_program{program} {}
 
     struct Thread
     {
@@ -432,18 +439,18 @@ struct ThreadedExecutor
         {
             auto& thread = m_threads[thread_index];
             char c = m_pos == m_subject.end() ? 0 : *m_pos;
-            const RegexProgram::Op op = (RegexProgram::Op)*thread.inst++;
+            const CompiledRegex::Op op = (CompiledRegex::Op)*thread.inst++;
             switch (op)
             {
-                case RegexProgram::Literal:
+                case CompiledRegex::Literal:
                     if (*thread.inst++ == c)
                         return StepResult::Consumed;
                     return StepResult::Failed;
-                case RegexProgram::AnyChar:
+                case CompiledRegex::AnyChar:
                     return StepResult::Consumed;
-                case RegexProgram::Jump:
+                case CompiledRegex::Jump:
                 {
-                    auto inst = m_program.begin() + *reinterpret_cast<const RegexProgram::Offset*>(thread.inst);
+                    auto inst = m_program.bytecode.data() + *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst);
                     // if instruction is already going to be executed, drop this thread
                     if (std::find_if(m_threads.begin(), m_threads.end(),
                                      [inst](const Thread& t) { return t.inst == inst; }) != m_threads.end())
@@ -451,54 +458,54 @@ struct ThreadedExecutor
                     thread.inst = inst;
                     break;
                 }
-                case RegexProgram::Split:
+                case CompiledRegex::Split:
                 {
-                    add_thread(*reinterpret_cast<const RegexProgram::Offset*>(thread.inst), thread.saves);
+                    add_thread(*reinterpret_cast<const CompiledRegex::Offset*>(thread.inst), thread.saves);
                     // thread is invalidated now, as we mutated the m_thread vector
-                    m_threads[thread_index].inst += sizeof(RegexProgram::Offset);
+                    m_threads[thread_index].inst += sizeof(CompiledRegex::Offset);
                     break;
                 }
-                case RegexProgram::Save:
+                case CompiledRegex::Save:
                 {
                     const char index = *thread.inst++;
                     thread.saves[index] = m_pos;
                     break;
                 }
-                case RegexProgram::LineStart:
+                case CompiledRegex::LineStart:
                     if (not is_line_start())
                         return StepResult::Failed;
                     break;
-                case RegexProgram::LineEnd:
+                case CompiledRegex::LineEnd:
                     if (not is_line_end())
                         return StepResult::Failed;
                     break;
-                case RegexProgram::WordBoundary:
+                case CompiledRegex::WordBoundary:
                     if (not is_word_boundary())
                         return StepResult::Failed;
                     break;
-                case RegexProgram::NotWordBoundary:
+                case CompiledRegex::NotWordBoundary:
                     if (is_word_boundary())
                         return StepResult::Failed;
                     break;
-                case RegexProgram::SubjectBegin:
+                case CompiledRegex::SubjectBegin:
                     if (m_pos != m_subject.begin())
                         return StepResult::Failed;
                     break;
-                case RegexProgram::SubjectEnd:
+                case CompiledRegex::SubjectEnd:
                     if (m_pos != m_subject.end())
                         return StepResult::Failed;
                     break;
-                case RegexProgram::Match:
+                case CompiledRegex::Match:
                     return StepResult::Matched;
             }
         }
         return StepResult::Failed;
     }
 
-    bool match(ConstArrayView<char> program, StringView data)
+    bool match(StringView data)
     {
         m_threads.clear();
-        add_thread(0, Vector<const char*>(10, nullptr));
+        add_thread(0, Vector<const char*>(m_program.save_count, nullptr));
 
         m_subject = data;
         m_pos = data.begin();
@@ -534,9 +541,9 @@ struct ThreadedExecutor
         return false;
     }
 
-    void add_thread(RegexProgram::Offset pos, Vector<const char*> saves)
+    void add_thread(CompiledRegex::Offset pos, Vector<const char*> saves)
     {
-        const char* inst = m_program.begin() + pos;
+        const char* inst = m_program.bytecode.data() + pos;
         if (std::find_if(m_threads.begin(), m_threads.end(),
                          [inst](const Thread& t) { return t.inst == inst; }) == m_threads.end())
             m_threads.push_back({inst, std::move(saves)});
@@ -559,104 +566,102 @@ struct ThreadedExecutor
                is_word(*(m_pos-1)) != is_word(*m_pos);
     }
 
-    ConstArrayView<char> m_program;
+    const CompiledRegex& m_program;
     Vector<Thread> m_threads;
     Vector<const char*> m_captures;
     StringView m_subject;
     const char* m_pos;
 };
-}
 
 auto test_regex = UnitTest{[]{
-    using Exec = RegexProgram::ThreadedExecutor;
     {
         StringView re = R"(a*b)";
         auto program = RegexCompiler::compile(re.begin(), re.end());
-        RegexProgram::dump(program);
-        Exec exec{program};
-        kak_assert(exec.match(program, "b"));
-        kak_assert(exec.match(program, "ab"));
-        kak_assert(exec.match(program, "aaab"));
-        kak_assert(not exec.match(program, "acb"));
-        kak_assert(not exec.match(program, ""));
+        dump(program);
+        ThreadedRegexVM vm{program};
+        kak_assert(vm.match("b"));
+        kak_assert(vm.match("ab"));
+        kak_assert(vm.match("aaab"));
+        kak_assert(not vm.match("acb"));
+        kak_assert(not vm.match(""));
     }
 
     {
         StringView re = R"(^a.*b$)";
         auto program = RegexCompiler::compile(re.begin(), re.end());
-        RegexProgram::dump(program);
-        Exec exec{program};
-        kak_assert(exec.match(program, "afoob"));
-        kak_assert(exec.match(program, "ab"));
-        kak_assert(not exec.match(program, "bab"));
-        kak_assert(not exec.match(program, ""));
+        dump(program);
+        ThreadedRegexVM vm{program};
+        kak_assert(vm.match("afoob"));
+        kak_assert(vm.match("ab"));
+        kak_assert(not vm.match("bab"));
+        kak_assert(not vm.match(""));
     }
 
     {
         StringView re = R"(^(foo|qux|baz)+(bar)?baz$)";
         auto program = RegexCompiler::compile(re.begin(), re.end());
-        RegexProgram::dump(program);
-        Exec exec{program};
-        kak_assert(exec.match(program, "fooquxbarbaz"));
-        kak_assert(StringView{exec.m_captures[2], exec.m_captures[3]} == "qux");
-        kak_assert(not exec.match(program, "fooquxbarbaze"));
-        kak_assert(not exec.match(program, "quxbar"));
-        kak_assert(not exec.match(program, "blahblah"));
-        kak_assert(exec.match(program, "bazbaz"));
-        kak_assert(exec.match(program, "quxbaz"));
+        dump(program);
+        ThreadedRegexVM vm{program};
+        kak_assert(vm.match("fooquxbarbaz"));
+        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "qux");
+        kak_assert(not vm.match("fooquxbarbaze"));
+        kak_assert(not vm.match("quxbar"));
+        kak_assert(not vm.match("blahblah"));
+        kak_assert(vm.match("bazbaz"));
+        kak_assert(vm.match("quxbaz"));
     }
 
     {
         StringView re = R"(.*\b(foo|bar)\b.*)";
         auto program = RegexCompiler::compile(re.begin(), re.end());
-        RegexProgram::dump(program);
-        Exec exec{program};
-        kak_assert(exec.match(program, "qux foo baz"));
-        kak_assert(StringView{exec.m_captures[2], exec.m_captures[3]} == "foo");
-        kak_assert(not exec.match(program, "quxfoobaz"));
-        kak_assert(exec.match(program, "bar"));
-        kak_assert(not exec.match(program, "foobar"));
+        dump(program);
+        ThreadedRegexVM vm{program};
+        kak_assert(vm.match("qux foo baz"));
+        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "foo");
+        kak_assert(not vm.match("quxfoobaz"));
+        kak_assert(vm.match("bar"));
+        kak_assert(not vm.match("foobar"));
     }
     {
         StringView re = R"(\`(foo|bar)\')";
         auto program = RegexCompiler::compile(re.begin(), re.end());
-        RegexProgram::dump(program);
-        Exec exec{program};
-        kak_assert(exec.match(program, "foo"));
-        kak_assert(exec.match(program, "bar"));
-        kak_assert(not exec.match(program, "foobar"));
+        dump(program);
+        ThreadedRegexVM vm{program};
+        kak_assert(vm.match("foo"));
+        kak_assert(vm.match("bar"));
+        kak_assert(not vm.match("foobar"));
     }
 
     {
         StringView re = R"(\`a{3,5}b\')";
         auto program = RegexCompiler::compile(re.begin(), re.end());
-        RegexProgram::dump(program);
-        Exec exec{program};
-        kak_assert(not exec.match(program, "aab"));
-        kak_assert(exec.match(program, "aaab"));
-        kak_assert(not exec.match(program, "aaaaaab"));
-        kak_assert(exec.match(program, "aaaaab"));
+        dump(program);
+        ThreadedRegexVM vm{program};
+        kak_assert(not vm.match("aab"));
+        kak_assert(vm.match("aaab"));
+        kak_assert(not vm.match("aaaaaab"));
+        kak_assert(vm.match("aaaaab"));
     }
 
     {
         StringView re = R"(\`a{3,}b\')";
         auto program = RegexCompiler::compile(re.begin(), re.end());
-        RegexProgram::dump(program);
-        Exec exec{program};
-        kak_assert(not exec.match(program, "aab"));
-        kak_assert(exec.match(program, "aaab"));
-        kak_assert(exec.match(program, "aaaaab"));
+        dump(program);
+        ThreadedRegexVM vm{program};
+        kak_assert(not vm.match("aab"));
+        kak_assert(vm.match("aaab"));
+        kak_assert(vm.match("aaaaab"));
     }
 
     {
         StringView re = R"(\`a{,3}b\')";
         auto program = RegexCompiler::compile(re.begin(), re.end());
-        RegexProgram::dump(program);
-        Exec exec{program};
-        kak_assert(exec.match(program, "b"));
-        kak_assert(exec.match(program, "ab"));
-        kak_assert(exec.match(program, "aaab"));
-        kak_assert(not exec.match(program, "aaaab"));
+        dump(program);
+        ThreadedRegexVM vm{program};
+        kak_assert(vm.match("b"));
+        kak_assert(vm.match("ab"));
+        kak_assert(vm.match("aaab"));
+        kak_assert(not vm.match("aaaab"));
     }
 }};
 
