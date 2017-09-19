@@ -142,6 +142,7 @@ public:
     bool           redo(size_t count = 1) noexcept;
     bool           move_to(size_t history_id) noexcept;
     size_t         current_history_id() const noexcept;
+    size_t         next_history_id() const noexcept { return m_next_history_id; }
 
     String         string(BufferCoord begin, BufferCoord end) const;
     StringView     substr(BufferCoord begin, BufferCoord end) const;
