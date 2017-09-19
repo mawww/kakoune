@@ -89,6 +89,8 @@ AstNodePtr make_ast_node(Op op, char value = 0,
     return AstNodePtr{new AstNode{op, value, quantifier, {}}};
 }
 
+// Recursive descent parser based on naming using in the ECMAScript
+// standard, although the syntax is not fully compatible.
 template<typename Iterator>
 struct Parser
 {
@@ -147,7 +149,7 @@ private:
                     case '\'': pos += 2; return make_ast_node(Op::SubjectEnd);
                 }
                 break;
-            /* TODO: \`, \', look ahead, look behind */
+            /* TODO: look ahead, look behind */
         }
         return nullptr;
     }
@@ -559,8 +561,8 @@ auto test_regex = UnitTest{[]{
         auto program = RegexCompiler::compile(re.begin(), re.end());
         RegexProgram::dump(program);
         Exec exec{program};
-        kak_assert(exec.match(program, "tchou foo baz"));
-        kak_assert(not exec.match(program, "tchoufoobaz"));
+        kak_assert(exec.match(program, "qux foo baz"));
+        kak_assert(not exec.match(program, "quxfoobaz"));
         kak_assert(exec.match(program, "bar"));
         kak_assert(not exec.match(program, "foobar"));
     }
