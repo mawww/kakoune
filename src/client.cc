@@ -136,6 +136,8 @@ String generate_context_info(const Context& context)
         s += "[no-hooks]";
     if (context.buffer().flags() & Buffer::Flags::Fifo)
         s += "[fifo]";
+    if (context.buffer().flags() & Buffer::Flags::Debug)
+        s += "[debug]";
     return s;
 }
 
