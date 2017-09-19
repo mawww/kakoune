@@ -27,7 +27,7 @@ struct CompiledRegex
         SubjectEnd,
     };
 
-    using Offset = size_t;
+    using Offset = unsigned;
 
     Vector<char> bytecode;
     size_t save_count;
@@ -35,6 +35,7 @@ struct CompiledRegex
 
 namespace RegexCompiler
 {
+
 struct Quantifier
 {
     enum Type
@@ -353,9 +354,23 @@ CompiledRegex::Offset compile_node(CompiledRegex& program, const AstNodePtr& nod
     return pos;
 }
 
+constexpr CompiledRegex::Offset prefix_size = 3 + 2 * sizeof(CompiledRegex::Offset);
+
+// Add a '.*' as the first instructions for the search use case
+void write_search_prefix(CompiledRegex& program)
+{
+    kak_assert(program.bytecode.empty());
+    program.bytecode.push_back(CompiledRegex::Split);
+    get_offset(program, alloc_offset(program)) = prefix_size;
+    program.bytecode.push_back(CompiledRegex::AnyChar);
+    program.bytecode.push_back(CompiledRegex::Split);
+    get_offset(program, alloc_offset(program)) = 1 + sizeof(CompiledRegex::Offset);
+}
+
 CompiledRegex compile(const AstNodePtr& node, size_t capture_count)
 {
     CompiledRegex res;
+    write_search_prefix(res);
     compile_node(res, node);
     res.bytecode.push_back(CompiledRegex::Match);
     res.save_count = capture_count * 2;
@@ -386,12 +401,12 @@ void dump(const CompiledRegex& program)
                 printf("any char\n");
                 break;
             case CompiledRegex::Jump:
-                printf("jump %zd\n", *reinterpret_cast<const CompiledRegex::Offset*>(&*pos));
+                printf("jump %u\n", *reinterpret_cast<const CompiledRegex::Offset*>(&*pos));
                 pos += sizeof(CompiledRegex::Offset);
                 break;
             case CompiledRegex::Split:
             {
-                printf("split %zd\n", *reinterpret_cast<const CompiledRegex::Offset*>(&*pos));
+                printf("split %u\n", *reinterpret_cast<const CompiledRegex::Offset*>(&*pos));
                 pos += sizeof(CompiledRegex::Offset);
                 break;
             }
@@ -451,7 +466,7 @@ struct ThreadedRegexVM
                 case CompiledRegex::Jump:
                 {
                     auto inst = m_program.bytecode.data() + *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst);
-                    // if instruction is already going to be executed, drop this thread
+                    // if instruction is already going to be executed by another thread, drop this thread
                     if (std::find_if(m_threads.begin(), m_threads.end(),
                                      [inst](const Thread& t) { return t.inst == inst; }) != m_threads.end())
                         return StepResult::Failed;
@@ -502,10 +517,11 @@ struct ThreadedRegexVM
         return StepResult::Failed;
     }
 
-    bool match(StringView data)
+    bool exec(StringView data, bool match = true)
     {
         m_threads.clear();
-        add_thread(0, Vector<const char*>(m_program.save_count, nullptr));
+        add_thread(match ? RegexCompiler::prefix_size : 0,
+                   Vector<const char*>(m_program.save_count, nullptr));
 
         m_subject = data;
         m_pos = data.begin();
@@ -579,11 +595,11 @@ auto test_regex = UnitTest{[]{
         auto program = RegexCompiler::compile(re.begin(), re.end());
         dump(program);
         ThreadedRegexVM vm{program};
-        kak_assert(vm.match("b"));
-        kak_assert(vm.match("ab"));
-        kak_assert(vm.match("aaab"));
-        kak_assert(not vm.match("acb"));
-        kak_assert(not vm.match(""));
+        kak_assert(vm.exec("b"));
+        kak_assert(vm.exec("ab"));
+        kak_assert(vm.exec("aaab"));
+        kak_assert(not vm.exec("acb"));
+        kak_assert(not vm.exec(""));
     }
 
     {
@@ -591,10 +607,10 @@ auto test_regex = UnitTest{[]{
         auto program = RegexCompiler::compile(re.begin(), re.end());
         dump(program);
         ThreadedRegexVM vm{program};
-        kak_assert(vm.match("afoob"));
-        kak_assert(vm.match("ab"));
-        kak_assert(not vm.match("bab"));
-        kak_assert(not vm.match(""));
+        kak_assert(vm.exec("afoob"));
+        kak_assert(vm.exec("ab"));
+        kak_assert(not vm.exec("bab"));
+        kak_assert(not vm.exec(""));
     }
 
     {
@@ -602,13 +618,13 @@ auto test_regex = UnitTest{[]{
         auto program = RegexCompiler::compile(re.begin(), re.end());
         dump(program);
         ThreadedRegexVM vm{program};
-        kak_assert(vm.match("fooquxbarbaz"));
+        kak_assert(vm.exec("fooquxbarbaz"));
         kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "qux");
-        kak_assert(not vm.match("fooquxbarbaze"));
-        kak_assert(not vm.match("quxbar"));
-        kak_assert(not vm.match("blahblah"));
-        kak_assert(vm.match("bazbaz"));
-        kak_assert(vm.match("quxbaz"));
+        kak_assert(not vm.exec("fooquxbarbaze"));
+        kak_assert(not vm.exec("quxbar"));
+        kak_assert(not vm.exec("blahblah"));
+        kak_assert(vm.exec("bazbaz"));
+        kak_assert(vm.exec("quxbaz"));
     }
 
     {
@@ -616,20 +632,20 @@ auto test_regex = UnitTest{[]{
         auto program = RegexCompiler::compile(re.begin(), re.end());
         dump(program);
         ThreadedRegexVM vm{program};
-        kak_assert(vm.match("qux foo baz"));
+        kak_assert(vm.exec("qux foo baz"));
         kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "foo");
-        kak_assert(not vm.match("quxfoobaz"));
-        kak_assert(vm.match("bar"));
-        kak_assert(not vm.match("foobar"));
+        kak_assert(not vm.exec("quxfoobaz"));
+        kak_assert(vm.exec("bar"));
+        kak_assert(not vm.exec("foobar"));
     }
     {
         StringView re = R"(\`(foo|bar)\')";
         auto program = RegexCompiler::compile(re.begin(), re.end());
         dump(program);
         ThreadedRegexVM vm{program};
-        kak_assert(vm.match("foo"));
-        kak_assert(vm.match("bar"));
-        kak_assert(not vm.match("foobar"));
+        kak_assert(vm.exec("foo"));
+        kak_assert(vm.exec("bar"));
+        kak_assert(not vm.exec("foobar"));
     }
 
     {
@@ -637,10 +653,10 @@ auto test_regex = UnitTest{[]{
         auto program = RegexCompiler::compile(re.begin(), re.end());
         dump(program);
         ThreadedRegexVM vm{program};
-        kak_assert(not vm.match("aab"));
-        kak_assert(vm.match("aaab"));
-        kak_assert(not vm.match("aaaaaab"));
-        kak_assert(vm.match("aaaaab"));
+        kak_assert(not vm.exec("aab"));
+        kak_assert(vm.exec("aaab"));
+        kak_assert(not vm.exec("aaaaaab"));
+        kak_assert(vm.exec("aaaaab"));
     }
 
     {
@@ -648,9 +664,9 @@ auto test_regex = UnitTest{[]{
         auto program = RegexCompiler::compile(re.begin(), re.end());
         dump(program);
         ThreadedRegexVM vm{program};
-        kak_assert(not vm.match("aab"));
-        kak_assert(vm.match("aaab"));
-        kak_assert(vm.match("aaaaab"));
+        kak_assert(not vm.exec("aab"));
+        kak_assert(vm.exec("aaab"));
+        kak_assert(vm.exec("aaaaab"));
     }
 
     {
@@ -658,10 +674,21 @@ auto test_regex = UnitTest{[]{
         auto program = RegexCompiler::compile(re.begin(), re.end());
         dump(program);
         ThreadedRegexVM vm{program};
-        kak_assert(vm.match("b"));
-        kak_assert(vm.match("ab"));
-        kak_assert(vm.match("aaab"));
-        kak_assert(not vm.match("aaaab"));
+        kak_assert(vm.exec("b"));
+        kak_assert(vm.exec("ab"));
+        kak_assert(vm.exec("aaab"));
+        kak_assert(not vm.exec("aaaab"));
+    }
+
+    {
+        StringView re = R"(f.*a)";
+        auto program = RegexCompiler::compile(re.begin(), re.end());
+        dump(program);
+        ThreadedRegexVM vm{program};
+        kak_assert(vm.exec("blahfoobarfoobaz", false));
+        kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "fooba"); // TODO: leftmost, longest
+        kak_assert(vm.exec("mais que fais la police", false));
+        kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "fa");
     }
 }};
 
