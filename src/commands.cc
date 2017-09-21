@@ -470,7 +470,7 @@ void write_quit(const ParametersParser& parser, Context& context,
 const CommandDesc write_quit_cmd = {
     "write-quit",
     "wq",
-    "write current buffer and quit current client. An optional integer"
+    "write current buffer and quit current client. An optional integer "
     "parameter can set the client exit status",
     { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
     CommandFlags::None,
@@ -787,7 +787,7 @@ const CommandDesc add_hook_cmd = {
     nullptr,
     "hook <switches> <scope> <hook_name> <filter> <command>: add <command> in <scope> "
     "to be executed on hook <hook_name> when its parameter matches the <filter> regex\n"
-    "scope can be: \n"
+    "<scope> can be:\n"
     "  * global: hook is executed for any buffer or window\n"
     "  * buffer: hook is executed only for the current buffer\n"
     "            (and any window for that buffer)\n"
@@ -1039,7 +1039,7 @@ const CommandDesc define_command_cmd = {
           { "client-completion",  { false, "complete parameters using client name completion" } },
           { "buffer-completion",  { false, "complete parameters using buffer name completion" } },
           { "command-completion", { false, "complete parameters using kakoune command completion" } },
-          { "shell-completion",   { true,  "complete the parameters using the given shell-script" } },
+          { "shell-completion",   { true,  "complete parameters using the given shell-script" } },
           { "shell-candidates",   { true,  "get the parameter candidates using the given shell-script" } } },
         ParameterDesc::Flags::None,
         2, 2
@@ -1233,7 +1233,7 @@ const CommandDesc set_option_cmd = {
     "set-option",
     "set",
     "set-option <switches> <scope> <name> <value>: set option <name> in <scope> to <value>\n"
-    "<scope> can be global, buffer, window, or current which refers to the narrowest\n"
+    "<scope> can be global, buffer, window, or current which refers to the narrowest "
     "scope the option is set in",
     ParameterDesc{
         { { "add", { false, "add to option rather than replacing it" } } },
@@ -1294,8 +1294,8 @@ Completions complete_option(const Context& context, CompletionFlags,
 const CommandDesc unset_option_cmd = {
     "unset-option",
     "unset",
-    "unset-option <scope> <name>: remove <name> option from scope, falling back on parent scope value"
-    "<scope> can be buffer, window, or current which refers to the narrowest\n"
+    "unset-option <scope> <name>: remove <name> option from scope, falling back on parent scope value\n"
+    "<scope> can be buffer, window, or current which refers to the narrowest "
     "scope the option is set in",
     ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
@@ -1315,7 +1315,7 @@ const CommandDesc update_option_cmd = {
     nullptr,
     "update-option <scope> <name>: update <name> option from scope\n"
     "some option types, such as line-descs or range-descs can be updated to latest buffer timestamp\n"
-    "<scope> can be buffer, window, or current which refers to the narrowest\n"
+    "<scope> can be buffer, window, or current which refers to the narrowest "
     "scope the option is set in",
     ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
