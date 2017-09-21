@@ -185,7 +185,7 @@ void goto_commands(Context& context, NormalParams params)
         on_next_key_with_autoinfo(context, KeymapMode::Goto,
                                  [](Key key, Context& context) {
             auto cp = key.codepoint();
-            if (not cp)
+            if (not cp or key == Key::Escape)
                 return;
             auto& buffer = context.buffer();
             switch (to_lower(*cp))
@@ -1119,7 +1119,7 @@ void select_object(Context& context, NormalParams params)
     on_next_key_with_autoinfo(context, KeymapMode::Object,
                              [count](Key key, Context& context) {
         auto cp = key.codepoint().value_or((Codepoint)-1);
-        if (cp == -1)
+        if (cp == -1 or key == Key::Escape)
             return;
 
         static constexpr struct ObjectType
@@ -1332,15 +1332,17 @@ void select_to_next_char(Context& context, NormalParams params)
 
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [params](Key key, Context& context) {
+        auto cp = key.codepoint();
+        if (not cp or key == Key::Escape)
+            return;
         constexpr auto new_flags = flags & SelectFlags::Extend ? SelectMode::Extend
                                                                : SelectMode::Replace;
-        if (auto cp = key.codepoint())
-            select_and_set_last<new_flags>(
-                context,
-                std::bind(flags & SelectFlags::Reverse ? select_to_reverse
-                                                       : select_to,
-                          _1, _2, *cp, params.count,
-                          flags & SelectFlags::Inclusive));
+        select_and_set_last<new_flags>(
+            context,
+            std::bind(flags & SelectFlags::Reverse ? select_to_reverse
+                                                   : select_to,
+                      _1, _2, *cp, params.count,
+                      flags & SelectFlags::Inclusive));
     }, get_title(),"enter char to select to");
 }
 

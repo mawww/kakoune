@@ -260,15 +260,15 @@ public:
         {
             on_next_key_with_autoinfo(context(), KeymapMode::None,
                 [this](Key key, Context& context) {
-                    if (auto cp = key.codepoint())
-                    {
-                        if (*cp <= 127)
-                            m_params.reg = *cp;
-                        else
-                            context.print_status(
-                                { format("invalid register '{}'", *cp),
-                                  get_face("Error") });
-                    }
+                    auto cp = key.codepoint();
+                    if (not cp or key == Key::Escape)
+                        return;
+                    if (*cp <= 127)
+                        m_params.reg = *cp;
+                    else
+                        context.print_status(
+                            { format("invalid register '{}'", *cp),
+                              get_face("Error") });
                 }, "enter target register", register_doc);
         }
         else
@@ -755,14 +755,14 @@ public:
         {
             on_next_key_with_autoinfo(context(), KeymapMode::None,
                 [this](Key key, Context&) {
-                    if (auto cp = key.codepoint())
-                    {
-                        StringView reg = context().main_sel_register_value(String{*cp});
-                        m_line_editor.insert(reg);
+                    auto cp = key.codepoint();
+                    if (not cp or key == Key::Escape)
+                        return;
+                    StringView reg = context().main_sel_register_value(String{*cp});
+                    m_line_editor.insert(reg);
 
-                        display();
-                        m_line_changed = true;
-                    }
+                    display();
+                    m_line_changed = true;
                 }, "enter register name", register_doc);
             display();
             return;
@@ -1183,8 +1183,10 @@ public:
         {
             on_next_key_with_autoinfo(context(), KeymapMode::None,
                 [this](Key key, Context&) {
-                    if (auto cp = key.codepoint())
-                        insert(RegisterManager::instance()[*cp].get(context()));
+                    auto cp = key.codepoint();
+                    if (not cp or key == Key::Escape)
+                        return;
+                    insert(RegisterManager::instance()[*cp].get(context()));
                 }, "enter register name", register_doc);
             update_completions = false;
         }
