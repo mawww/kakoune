@@ -80,7 +80,7 @@ def -hidden lua-indent-on-new-line %{
 def -hidden lua-insert-on-new-line %{
     eval -no-hooks -draft -itersel %{
         # copy -- comment prefix and following white spaces
-        try %{ exec -draft k<a-x>s^\h*\K--\h*<ret>yjp }
+        try %{ exec -draft k<a-x>s^\h*\K--\h*<ret>yghjP }
         # wisely add end structure
         eval -save-regs x %{
             try %{ exec -draft k<a-x>s^\h+<ret>"xy } catch %{ reg x '' }
