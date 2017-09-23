@@ -1121,9 +1121,9 @@ void select_object(Context& context, NormalParams params)
     const int count = params.count <= 0 ? 0 : params.count - 1;
     on_next_key_with_autoinfo(context, KeymapMode::Object,
                              [count](Key key, Context& context) {
-        auto cp = key.codepoint().value_or((Codepoint)-1);
-        if (cp == -1 or key == Key::Escape)
+        if (not key.codepoint() or key == Key::Escape)
             return;
+        const auto cp = *key.codepoint();
 
         static constexpr struct ObjectType
         {
