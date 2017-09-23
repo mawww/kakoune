@@ -1775,6 +1775,7 @@ void move_in_history(Context& context, NormalParams params)
     const int count = std::max(1, params.count);
     const int history_id = (int)buffer.current_history_id() +
         (direction == Direction::Forward ? count : -count);
+    const int max_history_id = (int)buffer.next_history_id() - 1;
     if (buffer.move_to((size_t)history_id))
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
@@ -1782,11 +1783,13 @@ void move_in_history(Context& context, NormalParams params)
             context.selections_write_only() = std::move(ranges);
         context.selections().avoid_eol();
 
-        context.print_status({ format("moved to change #{}", history_id),
+        context.print_status({ format("moved to change #{} ({})",
+                               history_id, max_history_id),
                                get_face("Information") });
     }
     else
-        context.print_status({ format("no such change: #{}", history_id),
+        context.print_status({ format("no such change: #{} ({})",
+                               history_id, max_history_id),
                                get_face("Information") });
 }
 
