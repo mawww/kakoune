@@ -16,6 +16,8 @@ struct CompiledRegex
         Match,
         Literal,
         AnyChar,
+        CharRange,
+        NegativeCharRange,
         Jump,
         Split,
         Save,
@@ -68,6 +70,8 @@ enum class Op
 {
     Literal,
     AnyChar,
+    CharRange,
+    NegativeCharRange,
     Sequence,
     Alternation,
     LineStart,
@@ -88,28 +92,38 @@ struct AstNode
 
 using AstNodePtr = std::unique_ptr<AstNode>;
 
+struct CharRange { char min, max; };
+
+struct ParsedRegex
+{
+    AstNodePtr ast;
+    size_t capture_count;
+    Vector<Vector<CharRange>> ranges;
+};
+
 AstNodePtr make_ast_node(Op op, char value = -1,
                          Quantifier quantifier = {Quantifier::One})
 {
     return AstNodePtr{new AstNode{op, value, quantifier, {}}};
 }
 
-// Recursive descent parser based on naming using in the ECMAScript
+// Recursive descent parser based on naming used in the ECMAScript
 // standard, although the syntax is not fully compatible.
 template<typename Iterator>
 struct Parser
 {
-    AstNodePtr parse(Iterator pos, Iterator end)
+    static ParsedRegex parse(Iterator pos, Iterator end)
     {
-        return disjunction(pos, end, 0);
+        ParsedRegex res;
+        res.capture_count = 1;
+        res.ast = disjunction(res, pos, end, 0);
+        return res;
     }
 
-    size_t capture_count() const { return m_next_capture; }
-
 private:
-    AstNodePtr disjunction(Iterator& pos, Iterator end, char capture = -1)
+    static AstNodePtr disjunction(ParsedRegex& parsed_regex, Iterator& pos, Iterator end, char capture = -1)
     {
-        AstNodePtr node = alternative(pos, end);
+        AstNodePtr node = alternative(parsed_regex, pos, end);
         if (pos == end or *pos != '|')
         {
             node->value = capture;
@@ -118,32 +132,32 @@ private:
 
         AstNodePtr res = make_ast_node(Op::Alternation);
         res->children.push_back(std::move(node));
-        res->children.push_back(disjunction(++pos, end));
+        res->children.push_back(disjunction(parsed_regex, ++pos, end));
         res->value = capture;
         return res;
     }
 
-    AstNodePtr alternative(Iterator& pos, Iterator end)
+    static AstNodePtr alternative(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
     {
         AstNodePtr res = make_ast_node(Op::Sequence);
-        while (auto node = term(pos, end))
+        while (auto node = term(parsed_regex, pos, end))
             res->children.push_back(std::move(node));
         return res;
     }
 
-    AstNodePtr term(Iterator& pos, Iterator end)
+    static AstNodePtr term(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
     {
-        if (auto node = assertion(pos, end))
+        if (auto node = assertion(parsed_regex, pos, end))
             return node;
-        if (auto node = atom(pos, end))
+        if (auto node = atom(parsed_regex, pos, end))
         {
-            node->quantifier = quantifier(pos, end);
+            node->quantifier = quantifier(parsed_regex, pos, end);
             return node;
         }
         return nullptr;
     }
 
-    AstNodePtr assertion(Iterator& pos, Iterator end)
+    static AstNodePtr assertion(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
     {
         switch (*pos)
         {
@@ -165,7 +179,7 @@ private:
         return nullptr;
     }
 
-    AstNodePtr atom(Iterator& pos, Iterator end)
+    static AstNodePtr atom(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
     {
         const auto c = *pos;
         switch (c)
@@ -174,13 +188,19 @@ private:
             case '(':
             {
                 ++pos;
-                auto content = disjunction(pos, end, m_next_capture++);
+                auto content = disjunction(parsed_regex, pos, end, parsed_regex.capture_count++);
 
                 if (pos == end or *pos != ')')
                     throw runtime_error{"Unclosed parenthesis"};
                 ++pos;
                 return content;
             }
+            case '\\':
+                ++pos;
+                return atom_escape(parsed_regex, pos, end);
+            case '[':
+                ++pos;
+                return character_class(parsed_regex, pos, end);
             default:
                 if (contains("^$.*+?()[]{}|", c))
                     return nullptr;
@@ -189,7 +209,67 @@ private:
         }
     }
 
-    Quantifier quantifier(Iterator& pos, Iterator end)
+    static AstNodePtr atom_escape(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
+    {
+        const auto c = *pos;
+
+        struct { char name; char value; } control_escapes[] = {
+            { 'f', '\f' }, { 'n', '\n' }, { 'r', '\r' }, { 't', '\t' }, { 'v', '\v' }
+        };
+        for (auto& control : control_escapes)
+        {
+            if (control.name == c)
+                return make_ast_node(Op::Literal, control.value);
+        }
+
+        // TOOD: \c..., \0..., '\0x...', \u...
+
+        if (contains("^$\\.*+?()[]{}|", c)) // SyntaxCharacter
+            return make_ast_node(Op::Literal, c);
+        throw runtime_error{"Unknown atom escape"};
+    }
+
+    static AstNodePtr character_class(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
+    {
+        const bool negative = pos != end and *pos == '^';
+        if (negative)
+            ++pos;
+
+        Vector<CharRange> ranges;
+        while (pos != end and *pos != ']')
+        {
+            const auto c = *pos++;
+            if (c == '-')
+            {
+                ranges.push_back({ '-', 0 });
+                continue;
+            }
+
+            if (pos == end)
+                break;
+
+            CharRange range = { c, 0 };
+            if (*pos == '-')
+            {
+                if (++pos == end)
+                    break;
+                range.max = *pos++;
+                if (range.min > range.max)
+                    throw runtime_error{"Invalid range specified"};
+            }
+            ranges.push_back(range);
+        }
+        if (pos == end)
+            throw runtime_error{"Unclosed character class"};
+        ++pos;
+
+        auto ranges_id = parsed_regex.ranges.size();
+        parsed_regex.ranges.push_back(std::move(ranges));
+
+        return make_ast_node(negative ? Op::NegativeCharRange : Op::CharRange, ranges_id);
+    }
+
+    static Quantifier quantifier(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
     {
         auto read_int = [](Iterator& pos, Iterator begin, Iterator end) {
             int res = 0;
@@ -226,11 +306,7 @@ private:
             default: return {Quantifier::One};
         }
     }
-
-    char m_next_capture = 1;
 };
-
-CompiledRegex::Offset compile_node(CompiledRegex& program, const AstNodePtr& node);
 
 CompiledRegex::Offset alloc_offset(CompiledRegex& program)
 {
@@ -244,7 +320,9 @@ CompiledRegex::Offset& get_offset(CompiledRegex& program, CompiledRegex::Offset 
     return *reinterpret_cast<CompiledRegex::Offset*>(&program.bytecode[pos]);
 }
 
-CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const AstNodePtr& node)
+CompiledRegex::Offset compile_node(CompiledRegex& program, const ParsedRegex& parsed_regex, const AstNodePtr& node);
+
+CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const ParsedRegex& parsed_regex, const AstNodePtr& node)
 {
     const auto start_pos = program.bytecode.size();
 
@@ -265,9 +343,35 @@ CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const AstNodePt
         case Op::AnyChar:
             program.bytecode.push_back(CompiledRegex::AnyChar);
             break;
+        case Op::CharRange: case Op::NegativeCharRange:
+        {
+            auto& ranges = parsed_regex.ranges[node->value];
+            size_t single_count = std::count_if(ranges.begin(), ranges.end(),
+                                                [](auto& r) { return r.max == 0; });
+            program.bytecode.push_back(node->op == Op::CharRange ?
+                                           CompiledRegex::CharRange
+                                         : CompiledRegex::NegativeCharRange);
+
+            program.bytecode.push_back((char)single_count);
+            program.bytecode.push_back((char)(ranges.size() - single_count));
+            for (auto& r : ranges)
+            {
+                if (r.max == 0)
+                    program.bytecode.push_back(r.min);
+            }
+            for (auto& r : ranges)
+            {
+                if (r.max != 0)
+                {
+                    program.bytecode.push_back(r.min);
+                    program.bytecode.push_back(r.max);
+                }
+            }
+            break;
+        }
         case Op::Sequence:
             for (auto& child : node->children)
-                compile_node(program, child);
+                compile_node(program, parsed_regex, child);
             break;
         case Op::Alternation:
         {
@@ -277,11 +381,11 @@ CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const AstNodePt
             program.bytecode.push_back(CompiledRegex::Split);
             auto offset = alloc_offset(program);
 
-            compile_node(program, children[0]);
+            compile_node(program, parsed_regex, children[0]);
             program.bytecode.push_back(CompiledRegex::Jump);
             goto_inner_end_offsets.push_back(alloc_offset(program));
 
-            auto right_pos = compile_node(program, children[1]);
+            auto right_pos = compile_node(program, parsed_regex, children[1]);
             get_offset(program, offset) = right_pos;
 
             break;
@@ -318,7 +422,7 @@ CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const AstNodePt
     return start_pos;
 }
 
-CompiledRegex::Offset compile_node(CompiledRegex& program, const AstNodePtr& node)
+CompiledRegex::Offset compile_node(CompiledRegex& program, const ParsedRegex& parsed_regex, const AstNodePtr& node)
 {
     CompiledRegex::Offset pos = program.bytecode.size();
     Vector<CompiledRegex::Offset> goto_end_offsets;
@@ -329,10 +433,10 @@ CompiledRegex::Offset compile_node(CompiledRegex& program, const AstNodePtr& nod
         goto_end_offsets.push_back(alloc_offset(program));
     }
 
-    auto inner_pos = compile_node_inner(program, node);
+    auto inner_pos = compile_node_inner(program, parsed_regex, node);
     // Write the node multiple times when we have a min count quantifier
     for (int i = 1; i < node->quantifier.min; ++i)
-        inner_pos = compile_node_inner(program, node);
+        inner_pos = compile_node_inner(program, parsed_regex, node);
 
     if (node->quantifier.allows_infinite_repeat())
     {
@@ -345,7 +449,7 @@ CompiledRegex::Offset compile_node(CompiledRegex& program, const AstNodePtr& nod
     {
         program.bytecode.push_back(CompiledRegex::Split);
         goto_end_offsets.push_back(alloc_offset(program));
-        compile_node_inner(program, node);
+        compile_node_inner(program, parsed_regex, node);
     }
 
     for (auto offset : goto_end_offsets)
@@ -367,22 +471,20 @@ void write_search_prefix(CompiledRegex& program)
     get_offset(program, alloc_offset(program)) = 1 + sizeof(CompiledRegex::Offset);
 }
 
-CompiledRegex compile(const AstNodePtr& node, size_t capture_count)
+CompiledRegex compile(const ParsedRegex& parsed_regex)
 {
     CompiledRegex res;
     write_search_prefix(res);
-    compile_node(res, node);
+    compile_node(res, parsed_regex, parsed_regex.ast);
     res.bytecode.push_back(CompiledRegex::Match);
-    res.save_count = capture_count * 2;
+    res.save_count = parsed_regex.capture_count * 2;
     return res;
 }
 
 template<typename Iterator>
 CompiledRegex compile(Iterator begin, Iterator end)
 {
-    Parser<Iterator> parser;
-    auto node = parser.parse(begin, end);
-    return compile(node, parser.capture_count());
+    return compile(Parser<Iterator>::parse(begin, end));
 }
 
 }
@@ -392,7 +494,8 @@ void dump(const CompiledRegex& program)
     for (auto pos = program.bytecode.begin(); pos < program.bytecode.end(); )
     {
         printf("%4zd    ", pos - program.bytecode.begin());
-        switch ((CompiledRegex::Op)*pos++)
+        const auto op = (CompiledRegex::Op)*pos++;
+        switch (op)
         {
             case CompiledRegex::Literal:
                 printf("literal %c\n", *pos++);
@@ -413,6 +516,24 @@ void dump(const CompiledRegex& program)
             case CompiledRegex::Save:
                 printf("save %d\n", *pos++);
                 break;
+            case CompiledRegex::CharRange: case CompiledRegex::NegativeCharRange:
+            {
+                printf("%schar range, [", op == CompiledRegex::NegativeCharRange ? "negative " : "");
+                auto single_count = *pos++;
+                auto range_count = *pos++;
+                for (int i = 0; i < single_count; ++i)
+                    printf("%c", *pos++);
+                printf("]");
+
+                for (int i = 0; i < range_count; ++i)
+                {
+                    auto min = *pos++;
+                    auto max = *pos++;
+                    printf(" [%c-%c]", min, max);
+                }
+                printf("\n");
+                break;
+            }
             case CompiledRegex::LineStart:
                 printf("line start\n");
                 break;
@@ -485,6 +606,33 @@ struct ThreadedRegexVM
                     const char index = *thread.inst++;
                     thread.saves[index] = m_pos;
                     break;
+                }
+                case CompiledRegex::CharRange: case CompiledRegex::NegativeCharRange:
+                {
+                    auto single_count = *thread.inst++;
+                    auto range_count = *thread.inst++;
+                    const char* end = thread.inst + single_count + 2 * range_count;
+                    for (int i = 0; i < single_count; ++i)
+                    {
+                        auto candidate = *thread.inst++;
+                        if (c == candidate)
+                        {
+                            thread.inst = end;
+                            return op == CompiledRegex::CharRange ? StepResult::Consumed : StepResult::Failed;
+                        }
+                    }
+                    for (int i = 0; i < range_count; ++i)
+                    {
+                        auto min = *thread.inst++;
+                        auto max = *thread.inst++;
+                        if (min <= c and c <= max)
+                        {
+                            thread.inst = end;
+                            return op == CompiledRegex::CharRange ? StepResult::Consumed : StepResult::Failed;
+                        }
+                    }
+                    kak_assert(thread.inst == end);
+                    return op == CompiledRegex::CharRange ? StepResult::Failed : StepResult::Consumed;
                 }
                 case CompiledRegex::LineStart:
                     if (not is_line_start())
@@ -689,6 +837,17 @@ auto test_regex = UnitTest{[]{
         kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "fooba"); // TODO: leftmost, longest
         kak_assert(vm.exec("mais que fais la police", false));
         kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "fa");
+    }
+
+    {
+        StringView re = R"([ab-dX-Z]{3,5})";
+        auto program = RegexCompiler::compile(re.begin(), re.end());
+        dump(program);
+        ThreadedRegexVM vm{program};
+        kak_assert(vm.exec("acY"));
+        kak_assert(not vm.exec("aeY"));
+        kak_assert(vm.exec("abcdX"));
+        kak_assert(not vm.exec("efg"));
     }
 }};
 
