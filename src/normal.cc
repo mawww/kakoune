@@ -1027,10 +1027,11 @@ void keep_pipe(Context& context, NormalParams)
     });
 }
 template<bool indent_empty = false>
-void indent(Context& context, NormalParams)
+void indent(Context& context, NormalParams params)
 {
+    CharCount count = params.count ? params.count : 1;
     CharCount indent_width = context.options()["indentwidth"].get<int>();
-    String indent = indent_width == 0 ? "\t" : String{' ', indent_width};
+    String indent = indent_width == 0 ? String{'\t', count} : String{' ', indent_width * count};
 
     auto& buffer = context.buffer();
     Vector<Selection> sels;
@@ -1054,12 +1055,14 @@ void indent(Context& context, NormalParams)
 }
 
 template<bool deindent_incomplete = true>
-void deindent(Context& context, NormalParams)
+void deindent(Context& context, NormalParams params)
 {
+    ColumnCount count = params.count ? params.count : 1;
     ColumnCount tabstop = context.options()["tabstop"].get<int>();
     ColumnCount indent_width = context.options()["indentwidth"].get<int>();
     if (indent_width == 0)
         indent_width = tabstop;
+    indent_width = indent_width * count;
 
     auto& buffer = context.buffer();
     Vector<Selection> sels;
