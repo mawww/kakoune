@@ -695,6 +695,9 @@ struct ThreadedRegexVM
                 const auto res = step(i);
                 if (res == StepResult::Matched)
                 {
+                    if (match)
+                        continue; // We are not at end, this is not a full match
+
                     m_captures = std::move(m_threads[i].saves);
                     found_match = true;
                     m_threads.resize(i); // remove this and lower priority threads
@@ -768,6 +771,7 @@ auto test_regex = UnitTest{[]{
         kak_assert(vm.exec("ab"));
         kak_assert(vm.exec("aaab"));
         kak_assert(not vm.exec("acb"));
+        kak_assert(not vm.exec("abc"));
         kak_assert(not vm.exec(""));
     }
 
