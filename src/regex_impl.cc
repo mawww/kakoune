@@ -19,7 +19,8 @@ struct CompiledRegex
         CharRange,
         NegativeCharRange,
         Jump,
-        Split,
+        Split_PrioritizeParent,
+        Split_PrioritizeChild,
         Save,
         LineStart,
         LineEnd,
@@ -378,7 +379,7 @@ CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const ParsedReg
             auto& children = node->children;
             kak_assert(children.size() == 2);
 
-            program.bytecode.push_back(CompiledRegex::Split);
+            program.bytecode.push_back(CompiledRegex::Split_PrioritizeParent);
             auto offset = alloc_offset(program);
 
             compile_node(program, parsed_regex, children[0]);
@@ -429,7 +430,7 @@ CompiledRegex::Offset compile_node(CompiledRegex& program, const ParsedRegex& pa
 
     if (node->quantifier.allows_none())
     {
-        program.bytecode.push_back(CompiledRegex::Split);
+        program.bytecode.push_back(CompiledRegex::Split_PrioritizeParent);
         goto_end_offsets.push_back(alloc_offset(program));
     }
 
@@ -440,14 +441,14 @@ CompiledRegex::Offset compile_node(CompiledRegex& program, const ParsedRegex& pa
 
     if (node->quantifier.allows_infinite_repeat())
     {
-        program.bytecode.push_back(CompiledRegex::Split);
+        program.bytecode.push_back(CompiledRegex::Split_PrioritizeChild);
         get_offset(program, alloc_offset(program)) = inner_pos;
     }
     // Write the node as an optional match for the min -> max counts
     else for (int i = std::max(1, node->quantifier.min); // STILL UGLY !
               i < node->quantifier.max; ++i)
     {
-        program.bytecode.push_back(CompiledRegex::Split);
+        program.bytecode.push_back(CompiledRegex::Split_PrioritizeParent);
         goto_end_offsets.push_back(alloc_offset(program));
         compile_node_inner(program, parsed_regex, node);
     }
@@ -464,10 +465,10 @@ constexpr CompiledRegex::Offset prefix_size = 3 + 2 * sizeof(CompiledRegex::Offs
 void write_search_prefix(CompiledRegex& program)
 {
     kak_assert(program.bytecode.empty());
-    program.bytecode.push_back(CompiledRegex::Split);
+    program.bytecode.push_back(CompiledRegex::Split_PrioritizeChild);
     get_offset(program, alloc_offset(program)) = prefix_size;
     program.bytecode.push_back(CompiledRegex::AnyChar);
-    program.bytecode.push_back(CompiledRegex::Split);
+    program.bytecode.push_back(CompiledRegex::Split_PrioritizeParent);
     get_offset(program, alloc_offset(program)) = 1 + sizeof(CompiledRegex::Offset);
 }
 
@@ -507,9 +508,12 @@ void dump(const CompiledRegex& program)
                 printf("jump %u\n", *reinterpret_cast<const CompiledRegex::Offset*>(&*pos));
                 pos += sizeof(CompiledRegex::Offset);
                 break;
-            case CompiledRegex::Split:
+            case CompiledRegex::Split_PrioritizeParent:
+            case CompiledRegex::Split_PrioritizeChild:
             {
-                printf("split %u\n", *reinterpret_cast<const CompiledRegex::Offset*>(&*pos));
+                printf("split (prioritize %s) %u\n",
+                       op == CompiledRegex::Split_PrioritizeParent ? "parent" : "child",
+                       *reinterpret_cast<const CompiledRegex::Offset*>(&*pos));
                 pos += sizeof(CompiledRegex::Offset);
                 break;
             }
@@ -594,11 +598,19 @@ struct ThreadedRegexVM
                     thread.inst = inst;
                     break;
                 }
-                case CompiledRegex::Split:
+                case CompiledRegex::Split_PrioritizeParent:
                 {
-                    add_thread(*reinterpret_cast<const CompiledRegex::Offset*>(thread.inst), thread.saves);
+                    add_thread(thread_index+1, *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst), thread.saves);
                     // thread is invalidated now, as we mutated the m_thread vector
                     m_threads[thread_index].inst += sizeof(CompiledRegex::Offset);
+                    break;
+                }
+                case CompiledRegex::Split_PrioritizeChild:
+                {
+                    auto prog_start = m_program.bytecode.data();
+                    add_thread(thread_index+1, thread.inst + sizeof(CompiledRegex::Offset) - prog_start, thread.saves);
+                    // thread is invalidated now, as we mutated the m_thread vector
+                    m_threads[thread_index].inst = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(m_threads[thread_index].inst);
                     break;
                 }
                 case CompiledRegex::Save:
@@ -659,16 +671,18 @@ struct ThreadedRegexVM
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::Match:
+                    thread.inst = nullptr;
                     return StepResult::Matched;
             }
         }
         return StepResult::Failed;
     }
 
-    bool exec(StringView data, bool match = true)
+    bool exec(StringView data, bool match = true, bool longest = false)
     {
+        bool found_match = false;
         m_threads.clear();
-        add_thread(match ? RegexCompiler::prefix_size : 0,
+        add_thread(0, match ? RegexCompiler::prefix_size : 0,
                    Vector<const char*>(m_program.save_count, nullptr));
 
         m_subject = data;
@@ -682,7 +696,10 @@ struct ThreadedRegexVM
                 if (res == StepResult::Matched)
                 {
                     m_captures = std::move(m_threads[i].saves);
-                    return true;
+                    found_match = true;
+                    m_threads.resize(i); // remove this and lower priority threads
+                    if (not longest)
+                        return true;
                 }
                 else if (res == StepResult::Failed)
                     m_threads[i].inst = nullptr;
@@ -699,18 +716,21 @@ struct ThreadedRegexVM
             if (step(i) == StepResult::Matched)
             {
                 m_captures = std::move(m_threads[i].saves);
-                return true;
+                found_match = true;
+                m_threads.resize(i); // remove this and lower priority threads
+                if (not longest)
+                    return true;
             }
         }
-        return false;
+        return found_match;
     }
 
-    void add_thread(CompiledRegex::Offset pos, Vector<const char*> saves)
+    void add_thread(int index, CompiledRegex::Offset pos, Vector<const char*> saves)
     {
         const char* inst = m_program.bytecode.data() + pos;
         if (std::find_if(m_threads.begin(), m_threads.end(),
                          [inst](const Thread& t) { return t.inst == inst; }) == m_threads.end())
-            m_threads.push_back({inst, std::move(saves)});
+            m_threads.insert(m_threads.begin() + index, {inst, std::move(saves)});
     }
 
     bool is_line_start() const
@@ -732,9 +752,10 @@ struct ThreadedRegexVM
 
     const CompiledRegex& m_program;
     Vector<Thread> m_threads;
-    Vector<const char*> m_captures;
     StringView m_subject;
     const char* m_pos;
+
+    Vector<const char*> m_captures;
 };
 
 auto test_regex = UnitTest{[]{
@@ -829,14 +850,16 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        StringView re = R"(f.*a)";
+        StringView re = R"(f.*a(.*o))";
         auto program = RegexCompiler::compile(re.begin(), re.end());
         dump(program);
         ThreadedRegexVM vm{program};
-        kak_assert(vm.exec("blahfoobarfoobaz", false));
-        kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "fooba"); // TODO: leftmost, longest
-        kak_assert(vm.exec("mais que fais la police", false));
-        kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "fa");
+        kak_assert(vm.exec("blahfoobarfoobaz", false, true));
+        kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "foobarfoo");
+        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "rfoo");
+        kak_assert(vm.exec("mais que fais la police", false, true));
+        kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "fais la po");
+        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == " po");
     }
 
     {
