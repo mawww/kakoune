@@ -3,6 +3,8 @@
 #include "unit_tests.hh"
 #include "string.hh"
 #include "unicode.hh"
+#include "utf8.hh"
+#include "utf8_iterator.hh"
 #include "exception.hh"
 #include "array_view.hh"
 
@@ -86,14 +88,14 @@ enum class Op
 struct AstNode
 {
     Op op;
-    char value;
+    Codepoint value;
     Quantifier quantifier;
     Vector<std::unique_ptr<AstNode>> children;
 };
 
 using AstNodePtr = std::unique_ptr<AstNode>;
 
-struct CharRange { char min, max; };
+struct CharRange { Codepoint min, max; };
 
 struct ParsedRegex
 {
@@ -102,7 +104,7 @@ struct ParsedRegex
     Vector<Vector<CharRange>> ranges;
 };
 
-AstNodePtr make_ast_node(Op op, char value = -1,
+AstNodePtr make_ast_node(Op op, Codepoint value = -1,
                          Quantifier quantifier = {Quantifier::One})
 {
     return AstNodePtr{new AstNode{op, value, quantifier, {}}};
@@ -110,19 +112,26 @@ AstNodePtr make_ast_node(Op op, char value = -1,
 
 // Recursive descent parser based on naming used in the ECMAScript
 // standard, although the syntax is not fully compatible.
-template<typename Iterator>
 struct Parser
 {
-    static ParsedRegex parse(Iterator pos, Iterator end)
+    struct InvalidPolicy
+    {
+        Codepoint operator()(Codepoint cp) { throw runtime_error{"Invalid utf8 in regex"}; }
+    };
+
+    using Iterator = utf8::iterator<const char*, Codepoint, int, InvalidPolicy>;
+
+    static ParsedRegex parse(StringView re)
     {
         ParsedRegex res;
         res.capture_count = 1;
+        Iterator pos{re.begin(), re}, end{re.end(), re};
         res.ast = disjunction(res, pos, end, 0);
         return res;
     }
 
 private:
-    static AstNodePtr disjunction(ParsedRegex& parsed_regex, Iterator& pos, Iterator end, char capture = -1)
+    static AstNodePtr disjunction(ParsedRegex& parsed_regex, Iterator& pos, Iterator end, unsigned capture = -1)
     {
         AstNodePtr node = alternative(parsed_regex, pos, end);
         if (pos == end or *pos != '|')
@@ -143,6 +152,8 @@ private:
         AstNodePtr res = make_ast_node(Op::Sequence);
         while (auto node = term(parsed_regex, pos, end))
             res->children.push_back(std::move(node));
+        if (res->children.empty())
+            throw runtime_error{"Parse error in alternative"};
         return res;
     }
 
@@ -160,6 +171,9 @@ private:
 
     static AstNodePtr assertion(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
     {
+        if (pos == end)
+            return nullptr;
+
         switch (*pos)
         {
             case '^': ++pos; return make_ast_node(Op::LineStart);
@@ -182,8 +196,11 @@ private:
 
     static AstNodePtr atom(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
     {
-        const auto c = *pos;
-        switch (c)
+        if (pos == end)
+            return nullptr;
+
+        const Codepoint cp = *pos;
+        switch (cp)
         {
             case '.': ++pos; return make_ast_node(Op::AnyChar);
             case '(':
@@ -203,30 +220,30 @@ private:
                 ++pos;
                 return character_class(parsed_regex, pos, end);
             default:
-                if (contains("^$.*+?()[]{}|", c))
+                if (contains("^$.*+?()[]{}|", cp))
                     return nullptr;
                 ++pos;
-                return make_ast_node(Op::Literal, c);
+                return make_ast_node(Op::Literal, cp);
         }
     }
 
     static AstNodePtr atom_escape(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
     {
-        const auto c = *pos;
+        const Codepoint cp = *pos;
 
-        struct { char name; char value; } control_escapes[] = {
+        struct { Codepoint name; Codepoint value; } control_escapes[] = {
             { 'f', '\f' }, { 'n', '\n' }, { 'r', '\r' }, { 't', '\t' }, { 'v', '\v' }
         };
         for (auto& control : control_escapes)
         {
-            if (control.name == c)
+            if (control.name == cp)
                 return make_ast_node(Op::Literal, control.value);
         }
 
         // TOOD: \c..., \0..., '\0x...', \u...
 
-        if (contains("^$\\.*+?()[]{}|", c)) // SyntaxCharacter
-            return make_ast_node(Op::Literal, c);
+        if (contains("^$\\.*+?()[]{}|", cp)) // SyntaxCharacter
+            return make_ast_node(Op::Literal, cp);
         throw runtime_error{"Unknown atom escape"};
     }
 
@@ -239,8 +256,8 @@ private:
         Vector<CharRange> ranges;
         while (pos != end and *pos != ']')
         {
-            const auto c = *pos++;
-            if (c == '-')
+            const auto cp = *pos++;
+            if (cp == '-')
             {
                 ranges.push_back({ '-', 0 });
                 continue;
@@ -249,7 +266,7 @@ private:
             if (pos == end)
                 break;
 
-            CharRange range = { c, 0 };
+            CharRange range = { cp, 0 };
             if (*pos == '-')
             {
                 if (++pos == end)
@@ -272,14 +289,17 @@ private:
 
     static Quantifier quantifier(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
     {
+        if (pos == end)
+            return {Quantifier::One};
+
         auto read_int = [](Iterator& pos, Iterator begin, Iterator end) {
             int res = 0;
             for (; pos != end; ++pos)
             {
-                const auto c = *pos;
-                if (c < '0' or c > '9')
+                const auto cp = *pos;
+                if (cp < '0' or cp > '9')
                     return pos == begin ? -1 : res;
-                res = res * 10 + c - '0';
+                res = res * 10 + cp - '0';
             }
             return res;
         };
@@ -321,14 +341,19 @@ CompiledRegex::Offset& get_offset(CompiledRegex& program, CompiledRegex::Offset 
     return *reinterpret_cast<CompiledRegex::Offset*>(&program.bytecode[pos]);
 }
 
+void push_codepoint(CompiledRegex& program, Codepoint cp)
+{
+    utf8::dump(std::back_inserter(program.bytecode), cp);
+}
+
 CompiledRegex::Offset compile_node(CompiledRegex& program, const ParsedRegex& parsed_regex, const AstNodePtr& node);
 
 CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const ParsedRegex& parsed_regex, const AstNodePtr& node)
 {
     const auto start_pos = program.bytecode.size();
 
-    const char capture = (node->op == Op::Alternation or node->op == Op::Sequence) ? node->value : -1;
-    if (capture >= 0)
+    const Codepoint capture = (node->op == Op::Alternation or node->op == Op::Sequence) ? node->value : -1;
+    if (capture != -1)
     {
         program.bytecode.push_back(CompiledRegex::Save);
         program.bytecode.push_back(capture * 2);
@@ -339,7 +364,7 @@ CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const ParsedReg
     {
         case Op::Literal:
             program.bytecode.push_back(CompiledRegex::Literal);
-            program.bytecode.push_back(node->value);
+            push_codepoint(program, node->value);
             break;
         case Op::AnyChar:
             program.bytecode.push_back(CompiledRegex::AnyChar);
@@ -358,14 +383,14 @@ CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const ParsedReg
             for (auto& r : ranges)
             {
                 if (r.max == 0)
-                    program.bytecode.push_back(r.min);
+                    push_codepoint(program, r.min);
             }
             for (auto& r : ranges)
             {
                 if (r.max != 0)
                 {
-                    program.bytecode.push_back(r.min);
-                    program.bytecode.push_back(r.max);
+                    push_codepoint(program, r.min);
+                    push_codepoint(program, r.max);
                 }
             }
             break;
@@ -414,7 +439,7 @@ CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const ParsedReg
     for (auto& offset : goto_inner_end_offsets)
         get_offset(program, offset) =  program.bytecode.size();
 
-    if (capture >= 0)
+    if (capture != -1)
     {
         program.bytecode.push_back(CompiledRegex::Save);
         program.bytecode.push_back(capture * 2 + 1);
@@ -482,24 +507,24 @@ CompiledRegex compile(const ParsedRegex& parsed_regex)
     return res;
 }
 
-template<typename Iterator>
-CompiledRegex compile(Iterator begin, Iterator end)
+CompiledRegex compile(StringView re)
 {
-    return compile(Parser<Iterator>::parse(begin, end));
+    return compile(Parser::parse(re));
 }
 
 }
 
 void dump(const CompiledRegex& program)
 {
-    for (auto pos = program.bytecode.begin(); pos < program.bytecode.end(); )
+    for (auto pos = program.bytecode.data(), end = program.bytecode.data() + program.bytecode.size();
+         pos < end; )
     {
-        printf("%4zd    ", pos - program.bytecode.begin());
+        printf("%4zd    ", pos - program.bytecode.data());
         const auto op = (CompiledRegex::Op)*pos++;
         switch (op)
         {
             case CompiledRegex::Literal:
-                printf("literal %c\n", *pos++);
+                printf("literal %lc\n", utf8::read_codepoint(pos, (const char*)nullptr));
                 break;
             case CompiledRegex::AnyChar:
                 printf("any char\n");
@@ -526,14 +551,14 @@ void dump(const CompiledRegex& program)
                 auto single_count = *pos++;
                 auto range_count = *pos++;
                 for (int i = 0; i < single_count; ++i)
-                    printf("%c", *pos++);
+                    printf("%lc", utf8::read_codepoint(pos, (const char*)nullptr));
                 printf("]");
 
                 for (int i = 0; i < range_count; ++i)
                 {
-                    auto min = *pos++;
-                    auto max = *pos++;
-                    printf(" [%c-%c]", min, max);
+                    Codepoint min = utf8::read_codepoint(pos, (const char*)nullptr);
+                    Codepoint max = utf8::read_codepoint(pos, (const char*)nullptr);
+                    printf(" [%lc-%lc]", min, max);
                 }
                 printf("\n");
                 break;
@@ -562,9 +587,11 @@ void dump(const CompiledRegex& program)
     }
 }
 
+template<typename Iterator>
 struct ThreadedRegexVM
 {
-    ThreadedRegexVM(const CompiledRegex& program) : m_program{program} {}
+    ThreadedRegexVM(const CompiledRegex& program)
+      : m_program{program} {}
 
     struct Thread
     {
@@ -575,22 +602,24 @@ struct ThreadedRegexVM
     enum class StepResult { Consumed, Matched, Failed };
     StepResult step(size_t thread_index)
     {
+        const auto prog_start = m_program.bytecode.data();
+        const auto prog_end = prog_start + m_program.bytecode.size();
         while (true)
         {
             auto& thread = m_threads[thread_index];
-            char c = m_pos == m_subject.end() ? 0 : *m_pos;
+            const Codepoint cp = m_pos == m_end ? 0 : *m_pos;
             const CompiledRegex::Op op = (CompiledRegex::Op)*thread.inst++;
             switch (op)
             {
                 case CompiledRegex::Literal:
-                    if (*thread.inst++ == c)
+                    if (utf8::read_codepoint(thread.inst, prog_end) == cp)
                         return StepResult::Consumed;
                     return StepResult::Failed;
                 case CompiledRegex::AnyChar:
                     return StepResult::Consumed;
                 case CompiledRegex::Jump:
                 {
-                    auto inst = m_program.bytecode.data() + *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst);
+                    auto inst = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst);
                     // if instruction is already going to be executed by another thread, drop this thread
                     if (std::find_if(m_threads.begin(), m_threads.end(),
                                      [inst](const Thread& t) { return t.inst == inst; }) != m_threads.end())
@@ -607,7 +636,6 @@ struct ThreadedRegexVM
                 }
                 case CompiledRegex::Split_PrioritizeChild:
                 {
-                    auto prog_start = m_program.bytecode.data();
                     add_thread(thread_index+1, thread.inst + sizeof(CompiledRegex::Offset) - prog_start, thread.saves);
                     // thread is invalidated now, as we mutated the m_thread vector
                     m_threads[thread_index].inst = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(m_threads[thread_index].inst);
@@ -616,34 +644,32 @@ struct ThreadedRegexVM
                 case CompiledRegex::Save:
                 {
                     const char index = *thread.inst++;
-                    thread.saves[index] = m_pos;
+                    thread.saves[index] = m_pos.base();
                     break;
                 }
                 case CompiledRegex::CharRange: case CompiledRegex::NegativeCharRange:
                 {
-                    auto single_count = *thread.inst++;
-                    auto range_count = *thread.inst++;
-                    const char* end = thread.inst + single_count + 2 * range_count;
+                    const int single_count = *thread.inst++;
+                    const int range_count = *thread.inst++;
                     for (int i = 0; i < single_count; ++i)
                     {
-                        auto candidate = *thread.inst++;
-                        if (c == candidate)
+                        auto candidate = utf8::read_codepoint(thread.inst, prog_end);
+                        if (cp == candidate)
                         {
-                            thread.inst = end;
+                            thread.inst = utf8::advance(thread.inst, prog_end, CharCount{single_count - (i + 1) + range_count * 2});
                             return op == CompiledRegex::CharRange ? StepResult::Consumed : StepResult::Failed;
                         }
                     }
                     for (int i = 0; i < range_count; ++i)
                     {
-                        auto min = *thread.inst++;
-                        auto max = *thread.inst++;
-                        if (min <= c and c <= max)
+                        auto min = utf8::read_codepoint(thread.inst, prog_end);
+                        auto max = utf8::read_codepoint(thread.inst, prog_end);
+                        if (min <= cp and cp <= max)
                         {
-                            thread.inst = end;
+                            thread.inst = utf8::advance(thread.inst, prog_end, CharCount{(range_count - (i + 1)) * 2});
                             return op == CompiledRegex::CharRange ? StepResult::Consumed : StepResult::Failed;
                         }
                     }
-                    kak_assert(thread.inst == end);
                     return op == CompiledRegex::CharRange ? StepResult::Failed : StepResult::Consumed;
                 }
                 case CompiledRegex::LineStart:
@@ -663,11 +689,11 @@ struct ThreadedRegexVM
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::SubjectBegin:
-                    if (m_pos != m_subject.begin())
+                    if (m_pos != m_begin)
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::SubjectEnd:
-                    if (m_pos != m_subject.end())
+                    if (m_pos != m_end)
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::Match:
@@ -685,10 +711,10 @@ struct ThreadedRegexVM
         add_thread(0, match ? RegexCompiler::prefix_size : 0,
                    Vector<const char*>(m_program.save_count, nullptr));
 
-        m_subject = data;
-        m_pos = data.begin();
+        m_begin = data.begin();
+        m_end = data.end();
 
-        for (m_pos = m_subject.begin(); m_pos != m_subject.end(); ++m_pos)
+        for (m_pos = Utf8It{m_begin, m_begin, m_end}; m_pos != m_end; ++m_pos)
         {
             for (int i = 0; i < m_threads.size(); ++i)
             {
@@ -738,35 +764,37 @@ struct ThreadedRegexVM
 
     bool is_line_start() const
     {
-        return m_pos == m_subject.begin() or *(m_pos-1) == '\n';
+        return m_pos == m_begin or *(m_pos-1) == '\n';
     }
 
     bool is_line_end() const
     {
-        return m_pos == m_subject.end() or *m_pos == '\n';
+        return m_pos == m_end or *m_pos == '\n';
     }
 
     bool is_word_boundary() const
     {
-        return m_pos == m_subject.begin() or
-               m_pos == m_subject.end() or
+        return m_pos == m_begin or m_pos == m_end or
                is_word(*(m_pos-1)) != is_word(*m_pos);
     }
 
     const CompiledRegex& m_program;
     Vector<Thread> m_threads;
-    StringView m_subject;
-    const char* m_pos;
+
+    using Utf8It = utf8::iterator<Iterator>;
+
+    Iterator m_begin;
+    Iterator m_end;
+    Utf8It m_pos;
 
     Vector<const char*> m_captures;
 };
 
 auto test_regex = UnitTest{[]{
     {
-        StringView re = R"(a*b)";
-        auto program = RegexCompiler::compile(re.begin(), re.end());
+        auto program = RegexCompiler::compile(R"(a*b)");
         dump(program);
-        ThreadedRegexVM vm{program};
+        ThreadedRegexVM<const char*> vm{program};
         kak_assert(vm.exec("b"));
         kak_assert(vm.exec("ab"));
         kak_assert(vm.exec("aaab"));
@@ -776,10 +804,9 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        StringView re = R"(^a.*b$)";
-        auto program = RegexCompiler::compile(re.begin(), re.end());
+        auto program = RegexCompiler::compile(R"(^a.*b$)");
         dump(program);
-        ThreadedRegexVM vm{program};
+        ThreadedRegexVM<const char*> vm{program};
         kak_assert(vm.exec("afoob"));
         kak_assert(vm.exec("ab"));
         kak_assert(not vm.exec("bab"));
@@ -787,10 +814,9 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        StringView re = R"(^(foo|qux|baz)+(bar)?baz$)";
-        auto program = RegexCompiler::compile(re.begin(), re.end());
+        auto program = RegexCompiler::compile(R"(^(foo|qux|baz)+(bar)?baz$)");
         dump(program);
-        ThreadedRegexVM vm{program};
+        ThreadedRegexVM<const char*> vm{program};
         kak_assert(vm.exec("fooquxbarbaz"));
         kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "qux");
         kak_assert(not vm.exec("fooquxbarbaze"));
@@ -801,10 +827,9 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        StringView re = R"(.*\b(foo|bar)\b.*)";
-        auto program = RegexCompiler::compile(re.begin(), re.end());
+        auto program = RegexCompiler::compile(R"(.*\b(foo|bar)\b.*)");
         dump(program);
-        ThreadedRegexVM vm{program};
+        ThreadedRegexVM<const char*> vm{program};
         kak_assert(vm.exec("qux foo baz"));
         kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "foo");
         kak_assert(not vm.exec("quxfoobaz"));
@@ -812,20 +837,18 @@ auto test_regex = UnitTest{[]{
         kak_assert(not vm.exec("foobar"));
     }
     {
-        StringView re = R"(\`(foo|bar)\')";
-        auto program = RegexCompiler::compile(re.begin(), re.end());
+        auto program = RegexCompiler::compile(R"(\`(foo|bar)\')");
         dump(program);
-        ThreadedRegexVM vm{program};
+        ThreadedRegexVM<const char*> vm{program};
         kak_assert(vm.exec("foo"));
         kak_assert(vm.exec("bar"));
         kak_assert(not vm.exec("foobar"));
     }
 
     {
-        StringView re = R"(\`a{3,5}b\')";
-        auto program = RegexCompiler::compile(re.begin(), re.end());
+        auto program = RegexCompiler::compile(R"(\`a{3,5}b\')");
         dump(program);
-        ThreadedRegexVM vm{program};
+        ThreadedRegexVM<const char*> vm{program};
         kak_assert(not vm.exec("aab"));
         kak_assert(vm.exec("aaab"));
         kak_assert(not vm.exec("aaaaaab"));
@@ -833,20 +856,18 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        StringView re = R"(\`a{3,}b\')";
-        auto program = RegexCompiler::compile(re.begin(), re.end());
+        auto program = RegexCompiler::compile(R"(\`a{3,}b\')");
         dump(program);
-        ThreadedRegexVM vm{program};
+        ThreadedRegexVM<const char*> vm{program};
         kak_assert(not vm.exec("aab"));
         kak_assert(vm.exec("aaab"));
         kak_assert(vm.exec("aaaaab"));
     }
 
     {
-        StringView re = R"(\`a{,3}b\')";
-        auto program = RegexCompiler::compile(re.begin(), re.end());
+        auto program = RegexCompiler::compile(R"(\`a{,3}b\')");
         dump(program);
-        ThreadedRegexVM vm{program};
+        ThreadedRegexVM<const char*> vm{program};
         kak_assert(vm.exec("b"));
         kak_assert(vm.exec("ab"));
         kak_assert(vm.exec("aaab"));
@@ -854,10 +875,9 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        StringView re = R"(f.*a(.*o))";
-        auto program = RegexCompiler::compile(re.begin(), re.end());
+        auto program = RegexCompiler::compile(R"(f.*a(.*o))");
         dump(program);
-        ThreadedRegexVM vm{program};
+        ThreadedRegexVM<const char*> vm{program};
         kak_assert(vm.exec("blahfoobarfoobaz", false, true));
         kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "foobarfoo");
         kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "rfoo");
@@ -867,13 +887,12 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        StringView re = R"([ab-dX-Z]{3,5})";
-        auto program = RegexCompiler::compile(re.begin(), re.end());
+        auto program = RegexCompiler::compile(R"([àb-dX-Z]{3,5})");
         dump(program);
-        ThreadedRegexVM vm{program};
-        kak_assert(vm.exec("acY"));
-        kak_assert(not vm.exec("aeY"));
-        kak_assert(vm.exec("abcdX"));
+        ThreadedRegexVM<const char*> vm{program};
+        kak_assert(vm.exec("càY"));
+        kak_assert(not vm.exec("àeY"));
+        kak_assert(vm.exec("dcbàX"));
         kak_assert(not vm.exec("efg"));
     }
 }};
