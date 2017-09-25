@@ -63,24 +63,36 @@ public:
 
     iterator operator+(DifferenceType count) const noexcept
     {
-        if (count < 0)
-            return operator-(-count);
-
         iterator res = *this;
-        while (count--)
-            ++res;
+        res += count;
         return res;
+    }
+
+    iterator& operator+=(DifferenceType count) noexcept
+    {
+        if (count < 0)
+            return operator-=(-count);
+
+        while (count--)
+            operator++();
+        return *this;
     }
 
     iterator operator-(DifferenceType count) const noexcept
     {
-        if (count < 0)
-            return operator+(-count);
-
         iterator res = *this;
-        while (count--)
-            --res;
+        res -= count;
         return res;
+    }
+
+    iterator& operator-=(DifferenceType count) noexcept
+    {
+        if (count < 0)
+            return operator+=(-count);
+
+        while (count--)
+            operator--();
+        return *this;
     }
 
     bool operator==(const iterator& other) const noexcept { return m_it == other.m_it; }
@@ -92,8 +104,8 @@ public:
     bool operator> (const iterator& other) const noexcept { return m_it > other.m_it; }
     bool operator>= (const iterator& other) const noexcept { return m_it >= other.m_it; }
 
-    bool operator==(const BaseIt& other) noexcept { return m_it == other; }
-    bool operator!=(const BaseIt& other) noexcept { return m_it != other; }
+    bool operator==(const BaseIt& other) const noexcept { return m_it == other; }
+    bool operator!=(const BaseIt& other) const noexcept { return m_it != other; }
 
     bool operator< (const BaseIt& other) const noexcept { return m_it < other; }
     bool operator<= (const BaseIt& other) const noexcept { return m_it <= other; }
