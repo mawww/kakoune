@@ -270,9 +270,17 @@ private:
             {
                 if (++m_pos == m_regex.end())
                     break;
-                range.max = *m_pos++;
-                if (range.min > range.max)
-                    parse_error("invalid range specified");
+                if (*m_pos != ']')
+                {
+                    range.max = *m_pos++;
+                    if (range.min > range.max)
+                        parse_error("invalid range specified");
+                }
+                else
+                {
+                    ranges.push_back(range);
+                    range = { '-', '-' };
+                }
             }
             ranges.push_back(range);
         }
@@ -934,8 +942,8 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        TestVM vm{R"([àb-dX-Z]{3,5})"};
-        kak_assert(vm.exec("càY"));
+        TestVM vm{R"([àb-dX-Z-]{3,5})"};
+        kak_assert(vm.exec("cà-Y"));
         kak_assert(not vm.exec("àeY"));
         kak_assert(vm.exec("dcbàX"));
         kak_assert(not vm.exec("efg"));
