@@ -20,8 +20,7 @@ struct CompiledRegex
         Match,
         Literal,
         AnyChar,
-        CharRange,
-        NegativeCharRange,
+        Matcher,
         Jump,
         Split_PrioritizeParent,
         Split_PrioritizeChild,
@@ -37,6 +36,7 @@ struct CompiledRegex
     using Offset = unsigned;
 
     Vector<char> bytecode;
+    Vector<std::function<bool (Codepoint)>> matchers;
     size_t save_count;
 };
 
@@ -75,8 +75,7 @@ enum class Op
 {
     Literal,
     AnyChar,
-    CharRange,
-    NegativeCharRange,
+    Matcher,
     Sequence,
     Alternation,
     LineStart,
@@ -103,7 +102,7 @@ struct ParsedRegex
 {
     AstNodePtr ast;
     size_t capture_count;
-    Vector<Vector<CharRange>> ranges;
+    Vector<std::function<bool (Codepoint)>> matchers;
 };
 
 AstNodePtr make_ast_node(Op op, Codepoint value = -1,
@@ -261,14 +260,14 @@ private:
             const auto cp = *pos++;
             if (cp == '-')
             {
-                ranges.push_back({ '-', 0 });
+                ranges.push_back({ '-', '-' });
                 continue;
             }
 
             if (pos == end)
                 break;
 
-            CharRange range = { cp, 0 };
+            CharRange range = { cp, cp };
             if (*pos == '-')
             {
                 if (++pos == end)
@@ -283,10 +282,17 @@ private:
             throw runtime_error{"Unclosed character class"};
         ++pos;
 
-        auto ranges_id = parsed_regex.ranges.size();
-        parsed_regex.ranges.push_back(std::move(ranges));
+        auto matcher = [negative, ranges = std::move(ranges)](Codepoint cp) {
+            auto found = contains_that(ranges, [cp](auto& r) {
+                return r.min <= cp and cp <= r.max;
+            });
+            return negative ? not found : found;
+        };
 
-        return make_ast_node(negative ? Op::NegativeCharRange : Op::CharRange, ranges_id);
+        auto matcher_id = parsed_regex.matchers.size();
+        parsed_regex.matchers.push_back(std::move(matcher));
+
+        return make_ast_node(Op::Matcher, matcher_id);
     }
 
     static Quantifier quantifier(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
@@ -371,32 +377,9 @@ CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const ParsedReg
         case Op::AnyChar:
             program.bytecode.push_back(CompiledRegex::AnyChar);
             break;
-        case Op::CharRange: case Op::NegativeCharRange:
-        {
-            auto& ranges = parsed_regex.ranges[node->value];
-            size_t single_count = std::count_if(ranges.begin(), ranges.end(),
-                                                [](auto& r) { return r.max == 0; });
-            program.bytecode.push_back(node->op == Op::CharRange ?
-                                           CompiledRegex::CharRange
-                                         : CompiledRegex::NegativeCharRange);
-
-            program.bytecode.push_back((char)single_count);
-            program.bytecode.push_back((char)(ranges.size() - single_count));
-            for (auto& r : ranges)
-            {
-                if (r.max == 0)
-                    push_codepoint(program, r.min);
-            }
-            for (auto& r : ranges)
-            {
-                if (r.max != 0)
-                {
-                    push_codepoint(program, r.min);
-                    push_codepoint(program, r.max);
-                }
-            }
-            break;
-        }
+        case Op::Matcher:
+            program.bytecode.push_back(CompiledRegex::Matcher);
+            program.bytecode.push_back(node->value);
         case Op::Sequence:
             for (auto& child : node->children)
                 compile_node(program, parsed_regex, child);
@@ -505,6 +488,7 @@ CompiledRegex compile(const ParsedRegex& parsed_regex)
     write_search_prefix(res);
     compile_node(res, parsed_regex, parsed_regex.ast);
     res.bytecode.push_back(CompiledRegex::Match);
+    res.matchers = parsed_regex.matchers;
     res.save_count = parsed_regex.capture_count * 2;
     return res;
 }
@@ -547,24 +531,9 @@ void dump(const CompiledRegex& program)
             case CompiledRegex::Save:
                 printf("save %d\n", *pos++);
                 break;
-            case CompiledRegex::CharRange: case CompiledRegex::NegativeCharRange:
-            {
-                printf("%schar range, [", op == CompiledRegex::NegativeCharRange ? "negative " : "");
-                auto single_count = *pos++;
-                auto range_count = *pos++;
-                for (int i = 0; i < single_count; ++i)
-                    printf("%lc", utf8::read_codepoint(pos, (const char*)nullptr));
-                printf("]");
-
-                for (int i = 0; i < range_count; ++i)
-                {
-                    Codepoint min = utf8::read_codepoint(pos, (const char*)nullptr);
-                    Codepoint max = utf8::read_codepoint(pos, (const char*)nullptr);
-                    printf(" [%lc-%lc]", min, max);
-                }
-                printf("\n");
+            case CompiledRegex::Matcher:
+                printf("matcher %d\n", *pos++);
                 break;
-            }
             case CompiledRegex::LineStart:
                 printf("line start\n");
                 break;
@@ -649,30 +618,11 @@ struct ThreadedRegexVM
                     thread.saves[index] = m_pos.base();
                     break;
                 }
-                case CompiledRegex::CharRange: case CompiledRegex::NegativeCharRange:
+                case CompiledRegex::Matcher:
                 {
-                    const int single_count = *thread.inst++;
-                    const int range_count = *thread.inst++;
-                    for (int i = 0; i < single_count; ++i)
-                    {
-                        auto candidate = utf8::read_codepoint(thread.inst, prog_end);
-                        if (cp == candidate)
-                        {
-                            thread.inst = utf8::advance(thread.inst, prog_end, CharCount{single_count - (i + 1) + range_count * 2});
-                            return op == CompiledRegex::CharRange ? StepResult::Consumed : StepResult::Failed;
-                        }
-                    }
-                    for (int i = 0; i < range_count; ++i)
-                    {
-                        auto min = utf8::read_codepoint(thread.inst, prog_end);
-                        auto max = utf8::read_codepoint(thread.inst, prog_end);
-                        if (min <= cp and cp <= max)
-                        {
-                            thread.inst = utf8::advance(thread.inst, prog_end, CharCount{(range_count - (i + 1)) * 2});
-                            return op == CompiledRegex::CharRange ? StepResult::Consumed : StepResult::Failed;
-                        }
-                    }
-                    return op == CompiledRegex::CharRange ? StepResult::Failed : StepResult::Consumed;
+                    const int matcher_id = *thread.inst++;
+                    return m_program.matchers[matcher_id](*m_pos) ?
+                        StepResult::Consumed : StepResult::Failed;
                 }
                 case CompiledRegex::LineStart:
                     if (not is_line_start())
