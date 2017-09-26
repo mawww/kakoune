@@ -28,6 +28,7 @@ struct ParsedRegex
         NotWordBoundary,
         SubjectBegin,
         SubjectEnd,
+        ResetStart,
     };
 
     struct Quantifier
@@ -154,6 +155,7 @@ private:
                     case 'B': m_pos += 2; return new_node(ParsedRegex::NotWordBoundary);
                     case '`': m_pos += 2; return new_node(ParsedRegex::SubjectBegin);
                     case '\'': m_pos += 2; return new_node(ParsedRegex::SubjectEnd);
+                    case 'K': m_pos += 2; return new_node(ParsedRegex::ResetStart);
                 }
                 break;
             /* TODO: look ahead, look behind */
@@ -513,6 +515,10 @@ private:
                 break;
             case ParsedRegex::SubjectEnd:
                 push_op(CompiledRegex::SubjectEnd);
+                break;
+            case ParsedRegex::ResetStart:
+                push_op(CompiledRegex::Save);
+                push_byte(0);
                 break;
         }
 
@@ -985,6 +991,13 @@ auto test_regex = UnitTest{[]{
         TestVM vm{R"(\Q...)"};
         kak_assert(vm.exec("..."));
         kak_assert(not vm.exec("bla"));
+    }
+
+    {
+        TestVM vm{R"(foo\Kbar)"};
+        kak_assert(vm.exec("foobar", true, true));
+        kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "bar");
+        kak_assert(not vm.exec("bar", true, true));
     }
 }};
 
