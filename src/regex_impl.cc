@@ -200,6 +200,19 @@ private:
     {
         const Codepoint cp = *m_pos++;
 
+        if (cp == 'Q')
+        {
+            auto escaped_sequence = new_node(ParsedRegex::Sequence);
+            constexpr StringView end_mark{"\\E"};
+            auto quote_end = std::search(m_pos.base(), m_regex.end(), end_mark.begin(), end_mark.end());
+            while (m_pos != quote_end)
+                escaped_sequence->children.push_back(new_node(ParsedRegex::Literal, *m_pos++));
+            if (quote_end != m_regex.end())
+                m_pos += 2;
+
+            return escaped_sequence;
+        }
+
         // CharacterClassEscape
         for (auto& character_class : character_class_escapes)
         {
@@ -961,6 +974,17 @@ auto test_regex = UnitTest{[]{
         TestVM vm{R"([-\d]+)"};
         kak_assert(vm.exec("123-456"));
         kak_assert(not vm.exec("123_456"));
+    }
+
+    {
+        TestVM vm{R"(\Q{}[]*+?\Ea+)"};
+        kak_assert(vm.exec("{}[]*+?aa"));
+    }
+
+    {
+        TestVM vm{R"(\Q...)"};
+        kak_assert(vm.exec("..."));
+        kak_assert(not vm.exec("bla"));
     }
 }};
 
