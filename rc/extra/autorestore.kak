@@ -8,7 +8,9 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
         buffer_dirname=$(dirname "${kak_buffile}")
 
         ## Find the name of the latest backup created for the buffer that was open
-        backup_path=$(ls -1t ."${kak_bufname}".kak.* 2>/dev/null | head -n 1)
+        ## NB. kak doesn't automatically cd to current buffer_dirname.
+        buffer_backup_glob="${buffer_dirname}/.${buffer_basename}.kak.*"
+        backup_path=$(ls -1t ${buffer_backup_glob} 2>/dev/null | head -n 1)
 
         if [ -z "${backup_path}" ]; then
             exit
@@ -16,6 +18,8 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
 
         printf %s\\n "
             ## Replace the content of the buffer with the content of the backup file
+            echo -debug \"Restoring file: ${backup_path}\" 
+
             exec -draft %{ %d!cat<space>${backup_path}<ret>d }
 
             ## If the backup file has to be removed, issue the command once
