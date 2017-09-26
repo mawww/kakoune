@@ -8,6 +8,8 @@
 #include "exception.hh"
 #include "array_view.hh"
 
+#include "buffer_utils.hh"
+
 namespace Kakoune
 {
 
@@ -114,13 +116,6 @@ AstNodePtr make_ast_node(Op op, Codepoint value = -1,
 // standard, although the syntax is not fully compatible.
 struct Parser
 {
-    struct InvalidPolicy
-    {
-        Codepoint operator()(Codepoint cp) { throw runtime_error{"Invalid utf8 in regex"}; }
-    };
-
-    using Iterator = utf8::iterator<const char*, Codepoint, int, InvalidPolicy>;
-
     static ParsedRegex parse(StringView re)
     {
         ParsedRegex res;
@@ -131,6 +126,13 @@ struct Parser
     }
 
 private:
+    struct InvalidPolicy
+    {
+        Codepoint operator()(Codepoint cp) { throw runtime_error{"Invalid utf8 in regex"}; }
+    };
+
+    using Iterator = utf8::iterator<const char*, Codepoint, int, InvalidPolicy>;
+
     static AstNodePtr disjunction(ParsedRegex& parsed_regex, Iterator& pos, Iterator end, unsigned capture = -1)
     {
         AstNodePtr node = alternative(parsed_regex, pos, end);
@@ -789,6 +791,18 @@ struct ThreadedRegexVM
 
     Vector<const char*> m_captures;
 };
+
+void validate_regex(StringView re)
+{
+    try
+    {
+        RegexCompiler::Parser::parse(re);
+    }
+    catch (runtime_error& err)
+    {
+        write_to_debug_buffer(format("regex-impl: <<{}>> failed to parse: {}", re, err.what()));
+    }
+}
 
 auto test_regex = UnitTest{[]{
     {
