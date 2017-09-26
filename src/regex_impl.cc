@@ -838,10 +838,18 @@ void validate_regex(StringView re)
 }
 
 auto test_regex = UnitTest{[]{
+    struct TestVM : ThreadedRegexVM<const char*>
     {
-        auto program = RegexCompiler::compile(R"(a*b)");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM(StringView re)
+            : ThreadedRegexVM{m_program},
+              m_program{RegexCompiler::compile(re)}
+        { dump(m_program); }
+
+        CompiledRegex m_program;
+    };
+
+    {
+        TestVM vm{R"(a*b)"};
         kak_assert(vm.exec("b"));
         kak_assert(vm.exec("ab"));
         kak_assert(vm.exec("aaab"));
@@ -851,9 +859,7 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        auto program = RegexCompiler::compile(R"(^a.*b$)");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM vm{R"(^a.*b$)"};
         kak_assert(vm.exec("afoob"));
         kak_assert(vm.exec("ab"));
         kak_assert(not vm.exec("bab"));
@@ -861,9 +867,7 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        auto program = RegexCompiler::compile(R"(^(foo|qux|baz)+(bar)?baz$)");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM vm{R"(^(foo|qux|baz)+(bar)?baz$)"};
         kak_assert(vm.exec("fooquxbarbaz"));
         kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "qux");
         kak_assert(not vm.exec("fooquxbarbaze"));
@@ -874,28 +878,23 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        auto program = RegexCompiler::compile(R"(.*\b(foo|bar)\b.*)");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM vm{R"(.*\b(foo|bar)\b.*)"};
         kak_assert(vm.exec("qux foo baz"));
         kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "foo");
         kak_assert(not vm.exec("quxfoobaz"));
         kak_assert(vm.exec("bar"));
         kak_assert(not vm.exec("foobar"));
     }
+
     {
-        auto program = RegexCompiler::compile(R"((foo|bar))");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM vm{R"((foo|bar))"};
         kak_assert(vm.exec("foo"));
         kak_assert(vm.exec("bar"));
         kak_assert(not vm.exec("foobar"));
     }
 
     {
-        auto program = RegexCompiler::compile(R"(a{3,5}b)");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM vm{R"(a{3,5}b)"};
         kak_assert(not vm.exec("aab"));
         kak_assert(vm.exec("aaab"));
         kak_assert(not vm.exec("aaaaaab"));
@@ -903,27 +902,21 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        auto program = RegexCompiler::compile(R"(a{3}b)");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM vm{R"(a{3}b)"};
         kak_assert(not vm.exec("aab"));
         kak_assert(vm.exec("aaab"));
         kak_assert(not vm.exec("aaaab"));
     }
 
     {
-        auto program = RegexCompiler::compile(R"(a{3,}b)");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM vm{R"(a{3,}b)"};
         kak_assert(not vm.exec("aab"));
         kak_assert(vm.exec("aaab"));
         kak_assert(vm.exec("aaaaab"));
     }
 
     {
-        auto program = RegexCompiler::compile(R"(a{,3}b)");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM vm{R"(a{,3}b)"};
         kak_assert(vm.exec("b"));
         kak_assert(vm.exec("ab"));
         kak_assert(vm.exec("aaab"));
@@ -931,9 +924,7 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        auto program = RegexCompiler::compile(R"(f.*a(.*o))");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM vm{R"(f.*a(.*o))"};
         kak_assert(vm.exec("blahfoobarfoobaz", false, true));
         kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "foobarfoo");
         kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "rfoo");
@@ -943,9 +934,7 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        auto program = RegexCompiler::compile(R"([àb-dX-Z]{3,5})");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM vm{R"([àb-dX-Z]{3,5})"};
         kak_assert(vm.exec("càY"));
         kak_assert(not vm.exec("àeY"));
         kak_assert(vm.exec("dcbàX"));
@@ -953,17 +942,13 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        auto program = RegexCompiler::compile(R"(\d{3})");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM vm{R"(\d{3})"};
         kak_assert(vm.exec("123"));
         kak_assert(not vm.exec("1x3"));
     }
 
     {
-        auto program = RegexCompiler::compile(R"([-\d]+)");
-        dump(program);
-        ThreadedRegexVM<const char*> vm{program};
+        TestVM vm{R"([-\d]+)"};
         kak_assert(vm.exec("123-456"));
         kak_assert(not vm.exec("123_456"));
     }
