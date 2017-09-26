@@ -13,18 +13,15 @@
 namespace Kakoune
 {
 
-struct CompiledRegex
+struct ParsedRegex
 {
-    enum Op : char
+    enum Op
     {
-        Match,
         Literal,
         AnyChar,
         Matcher,
-        Jump,
-        Split_PrioritizeParent,
-        Split_PrioritizeChild,
-        Save,
+        Sequence,
+        Alternation,
         LineStart,
         LineEnd,
         WordBoundary,
@@ -33,83 +30,48 @@ struct CompiledRegex
         SubjectEnd,
     };
 
-    using Offset = unsigned;
-
-    Vector<char> bytecode;
-    Vector<std::function<bool (Codepoint)>> matchers;
-    size_t save_count;
-};
-
-namespace RegexCompiler
-{
-
-struct Quantifier
-{
-    enum Type
+    struct Quantifier
     {
-        One,
-        Optional,
-        RepeatZeroOrMore,
-        RepeatOneOrMore,
-        RepeatMinMax,
+        enum Type
+        {
+            One,
+            Optional,
+            RepeatZeroOrMore,
+            RepeatOneOrMore,
+            RepeatMinMax,
+        };
+        Type type = One;
+        int min = -1, max = -1;
+
+        bool allows_none() const
+        {
+            return type == Quantifier::Optional or
+                   type == Quantifier::RepeatZeroOrMore or
+                  (type == Quantifier::RepeatMinMax and min <= 0);
+        }
+
+        bool allows_infinite_repeat() const
+        {
+            return type == Quantifier::RepeatZeroOrMore or
+                   type == Quantifier::RepeatOneOrMore or
+                  (type == Quantifier::RepeatMinMax and max == -1);
+        };
     };
-    Type type = One;
-    int min = -1, max = -1;
 
-    bool allows_none() const
+    struct AstNode
     {
-        return type == Quantifier::Optional or
-               type == Quantifier::RepeatZeroOrMore or
-              (type == Quantifier::RepeatMinMax and min <= 0);
-    }
-
-    bool allows_infinite_repeat() const
-    {
-        return type == Quantifier::RepeatZeroOrMore or
-               type == Quantifier::RepeatOneOrMore or
-              (type == Quantifier::RepeatMinMax and max == -1);
+        Op op;
+        Codepoint value;
+        Quantifier quantifier;
+        Vector<std::unique_ptr<AstNode>> children;
     };
-};
 
-enum class Op
-{
-    Literal,
-    AnyChar,
-    Matcher,
-    Sequence,
-    Alternation,
-    LineStart,
-    LineEnd,
-    WordBoundary,
-    NotWordBoundary,
-    SubjectBegin,
-    SubjectEnd,
-};
+    using AstNodePtr = std::unique_ptr<AstNode>;
 
-struct AstNode
-{
-    Op op;
-    Codepoint value;
-    Quantifier quantifier;
-    Vector<std::unique_ptr<AstNode>> children;
-};
-
-using AstNodePtr = std::unique_ptr<AstNode>;
-
-struct CharRange { Codepoint min, max; };
-
-struct ParsedRegex
-{
     AstNodePtr ast;
     size_t capture_count;
     Vector<std::function<bool (Codepoint)>> matchers;
 };
-
-AstNodePtr make_ast_node(Op op, Codepoint value = -1,
-                         Quantifier quantifier = {Quantifier::One})
-{
-    return AstNodePtr{new AstNode{op, value, quantifier, {}}};
-}
 
 // Recursive descent parser based on naming used in the ECMAScript
 // standard, although the syntax is not fully compatible.
@@ -124,6 +86,8 @@ struct RegexParser
 
     ParsedRegex get_parsed_regex() { return std::move(m_parsed_regex); }
 
+    static ParsedRegex parse(StringView re) { return RegexParser{re}.get_parsed_regex(); }
+
 private:
     struct InvalidPolicy
     {
@@ -131,6 +95,7 @@ private:
     };
 
     using Iterator = utf8::iterator<const char*, Codepoint, int, InvalidPolicy>;
+    using AstNodePtr = ParsedRegex::AstNodePtr;
 
     AstNodePtr disjunction(unsigned capture = -1)
     {
@@ -142,7 +107,7 @@ private:
         }
 
         ++m_pos;
-        AstNodePtr res = make_ast_node(Op::Alternation);
+        AstNodePtr res = new_node(ParsedRegex::Alternation);
         res->children.push_back(std::move(node));
         res->children.push_back(disjunction());
         res->value = capture;
@@ -151,7 +116,7 @@ private:
 
     AstNodePtr alternative()
     {
-        AstNodePtr res = make_ast_node(Op::Sequence);
+        AstNodePtr res = new_node(ParsedRegex::Sequence);
         while (auto node = term())
             res->children.push_back(std::move(node));
         if (res->children.empty())
@@ -178,17 +143,17 @@ private:
 
         switch (*m_pos)
         {
-            case '^': ++m_pos; return make_ast_node(Op::LineStart);
-            case '$': ++m_pos; return make_ast_node(Op::LineEnd);
+            case '^': ++m_pos; return new_node(ParsedRegex::LineStart);
+            case '$': ++m_pos; return new_node(ParsedRegex::LineEnd);
             case '\\':
                 if (m_pos+1 == m_regex.end())
                     return nullptr;
                 switch (*(m_pos+1))
                 {
-                    case 'b': m_pos += 2; return make_ast_node(Op::WordBoundary);
-                    case 'B': m_pos += 2; return make_ast_node(Op::NotWordBoundary);
-                    case '`': m_pos += 2; return make_ast_node(Op::SubjectBegin);
-                    case '\'': m_pos += 2; return make_ast_node(Op::SubjectEnd);
+                    case 'b': m_pos += 2; return new_node(ParsedRegex::WordBoundary);
+                    case 'B': m_pos += 2; return new_node(ParsedRegex::NotWordBoundary);
+                    case '`': m_pos += 2; return new_node(ParsedRegex::SubjectBegin);
+                    case '\'': m_pos += 2; return new_node(ParsedRegex::SubjectEnd);
                 }
                 break;
             /* TODO: look ahead, look behind */
@@ -204,7 +169,7 @@ private:
         const Codepoint cp = *m_pos;
         switch (cp)
         {
-            case '.': ++m_pos; return make_ast_node(Op::AnyChar);
+            case '.': ++m_pos; return new_node(ParsedRegex::AnyChar);
             case '(':
             {
                 ++m_pos;
@@ -225,7 +190,7 @@ private:
                 if (contains("^$.*+?()[]{}|", cp))
                     return nullptr;
                 ++m_pos;
-                return make_ast_node(Op::Literal, cp);
+                return new_node(ParsedRegex::Literal, cp);
         }
     }
 
@@ -244,7 +209,7 @@ private:
                      chars = character_class.additional_chars] (Codepoint cp) {
                         return iswctype(cp, ctype) or contains(chars, cp);
                     });
-                return make_ast_node(Op::Matcher, matcher_id);
+                return new_node(ParsedRegex::Matcher, matcher_id);
             }
         }
 
@@ -255,13 +220,13 @@ private:
         for (auto& control : control_escapes)
         {
             if (control.name == cp)
-                return make_ast_node(Op::Literal, control.value);
+                return new_node(ParsedRegex::Literal, control.value);
         }
 
         // TOOD: \c..., \0..., '\0x...', \u...
 
         if (contains("^$\\.*+?()[]{}|", cp)) // SyntaxCharacter
-            return make_ast_node(Op::Literal, cp);
+            return new_node(ParsedRegex::Literal, cp);
         parse_error("unknown atom escape");
     }
 
@@ -271,6 +236,7 @@ private:
         if (negative)
             ++m_pos;
 
+        struct CharRange { Codepoint min, max; };
         Vector<CharRange> ranges;
         Vector<std::pair<wctype_t, bool>> ctypes;
         while (m_pos != m_regex.end() and *m_pos != ']')
@@ -327,13 +293,13 @@ private:
         auto matcher_id = m_parsed_regex.matchers.size();
         m_parsed_regex.matchers.push_back(std::move(matcher));
 
-        return make_ast_node(Op::Matcher, matcher_id);
+        return new_node(ParsedRegex::Matcher, matcher_id);
     }
 
-    Quantifier quantifier()
+    ParsedRegex::Quantifier quantifier()
     {
         if (at_end())
-            return {Quantifier::One};
+            return {ParsedRegex::Quantifier::One};
 
         auto read_int = [](auto& pos, auto begin, auto end) {
             int res = 0;
@@ -349,9 +315,9 @@ private:
 
         switch (*m_pos)
         {
-            case '*': ++m_pos; return {Quantifier::RepeatZeroOrMore};
-            case '+': ++m_pos; return {Quantifier::RepeatOneOrMore};
-            case '?': ++m_pos; return {Quantifier::Optional};
+            case '*': ++m_pos; return {ParsedRegex::Quantifier::RepeatZeroOrMore};
+            case '+': ++m_pos; return {ParsedRegex::Quantifier::RepeatOneOrMore};
+            case '?': ++m_pos; return {ParsedRegex::Quantifier::Optional};
             case '{':
             {
                 auto it = m_pos+1;
@@ -365,11 +331,18 @@ private:
                 if (*it++ != '}')
                    parse_error("expected closing bracket");
                 m_pos = it;
-                return {Quantifier::RepeatMinMax, min, max};
+                return {ParsedRegex::Quantifier::RepeatMinMax, min, max};
             }
-            default: return {Quantifier::One};
+            default: return {ParsedRegex::Quantifier::One};
         }
     }
+
+    static AstNodePtr new_node(ParsedRegex::Op op, Codepoint value = -1,
+                               ParsedRegex::Quantifier quantifier = {ParsedRegex::Quantifier::One})
+    {
+        return AstNodePtr{new ParsedRegex::AstNode{op, value, quantifier, {}}};
+    }
+
 
     bool at_end() const { return m_pos == m_regex.end(); }
 
@@ -405,168 +378,210 @@ const RegexParser::CharacterClassEscape RegexParser::character_class_escapes[6] 
     { 's', "space", "", true },
 };
 
-CompiledRegex::Offset alloc_offset(CompiledRegex& program)
+struct CompiledRegex
 {
-    auto pos = program.bytecode.size();
-    program.bytecode.resize(pos + sizeof(CompiledRegex::Offset));
-    return pos;
-}
-
-CompiledRegex::Offset& get_offset(CompiledRegex& program, CompiledRegex::Offset pos)
-{
-    return *reinterpret_cast<CompiledRegex::Offset*>(&program.bytecode[pos]);
-}
-
-void push_codepoint(CompiledRegex& program, Codepoint cp)
-{
-    utf8::dump(std::back_inserter(program.bytecode), cp);
-}
-
-CompiledRegex::Offset compile_node(CompiledRegex& program, const ParsedRegex& parsed_regex, const AstNodePtr& node);
-
-CompiledRegex::Offset compile_node_inner(CompiledRegex& program, const ParsedRegex& parsed_regex, const AstNodePtr& node)
-{
-    const auto start_pos = program.bytecode.size();
-
-    const Codepoint capture = (node->op == Op::Alternation or node->op == Op::Sequence) ? node->value : -1;
-    if (capture != -1)
+    enum Op : char
     {
-        program.bytecode.push_back(CompiledRegex::Save);
-        program.bytecode.push_back(capture * 2);
+        Match,
+        Literal,
+        AnyChar,
+        Matcher,
+        Jump,
+        Split_PrioritizeParent,
+        Split_PrioritizeChild,
+        Save,
+        LineStart,
+        LineEnd,
+        WordBoundary,
+        NotWordBoundary,
+        SubjectBegin,
+        SubjectEnd,
+    };
+
+    using Offset = unsigned;
+
+    Vector<char> bytecode;
+    Vector<std::function<bool (Codepoint)>> matchers;
+    size_t save_count;
+};
+
+struct RegexCompiler
+{
+    RegexCompiler(const ParsedRegex& parsed_regex)
+        : m_parsed_regex{parsed_regex}
+    {
+        write_search_prefix();
+        compile_node(m_parsed_regex.ast);
+        push_op(CompiledRegex::Match);
+        m_program.matchers = m_parsed_regex.matchers;
+        m_program.save_count = m_parsed_regex.capture_count * 2;
     }
 
-    Vector<CompiledRegex::Offset> goto_inner_end_offsets;
-    switch (node->op)
+    CompiledRegex get_compiled_regex() { return std::move(m_program); }
+
+    using Offset = CompiledRegex::Offset;
+    static constexpr Offset search_prefix_size = 3 + 2 * sizeof(Offset);
+
+    static CompiledRegex compile(StringView re)
     {
-        case Op::Literal:
-            program.bytecode.push_back(CompiledRegex::Literal);
-            push_codepoint(program, node->value);
-            break;
-        case Op::AnyChar:
-            program.bytecode.push_back(CompiledRegex::AnyChar);
-            break;
-        case Op::Matcher:
-            program.bytecode.push_back(CompiledRegex::Matcher);
-            program.bytecode.push_back(node->value);
-        case Op::Sequence:
-            for (auto& child : node->children)
-                compile_node(program, parsed_regex, child);
-            break;
-        case Op::Alternation:
+        return RegexCompiler{RegexParser::parse(re)}.get_compiled_regex();
+    }
+
+private:
+    Offset compile_node_inner(const ParsedRegex::AstNodePtr& node)
+    {
+        const auto start_pos = m_program.bytecode.size();
+
+        const Codepoint capture = (node->op == ParsedRegex::Alternation or node->op == ParsedRegex::Sequence) ? node->value : -1;
+        if (capture != -1)
         {
-            auto& children = node->children;
-            kak_assert(children.size() == 2);
-
-            program.bytecode.push_back(CompiledRegex::Split_PrioritizeParent);
-            auto offset = alloc_offset(program);
-
-            compile_node(program, parsed_regex, children[0]);
-            program.bytecode.push_back(CompiledRegex::Jump);
-            goto_inner_end_offsets.push_back(alloc_offset(program));
-
-            auto right_pos = compile_node(program, parsed_regex, children[1]);
-            get_offset(program, offset) = right_pos;
-
-            break;
+            push_op(CompiledRegex::Save);
+            push_byte(capture * 2);
         }
-        case Op::LineStart:
-            program.bytecode.push_back(CompiledRegex::LineStart);
-            break;
-        case Op::LineEnd:
-            program.bytecode.push_back(CompiledRegex::LineEnd);
-            break;
-        case Op::WordBoundary:
-            program.bytecode.push_back(CompiledRegex::WordBoundary);
-            break;
-        case Op::NotWordBoundary:
-            program.bytecode.push_back(CompiledRegex::NotWordBoundary);
-            break;
-        case Op::SubjectBegin:
-            program.bytecode.push_back(CompiledRegex::SubjectBegin);
-            break;
-        case Op::SubjectEnd:
-            program.bytecode.push_back(CompiledRegex::SubjectEnd);
-            break;
+
+        Vector<Offset> goto_inner_end_offsets;
+        switch (node->op)
+        {
+            case ParsedRegex::Literal:
+                push_op(CompiledRegex::Literal);
+                push_codepoint(node->value);
+                break;
+            case ParsedRegex::AnyChar:
+                push_op(CompiledRegex::AnyChar);
+                break;
+            case ParsedRegex::Matcher:
+                push_op(CompiledRegex::Matcher);
+                push_byte(node->value);
+            case ParsedRegex::Sequence:
+                for (auto& child : node->children)
+                    compile_node(child);
+                break;
+            case ParsedRegex::Alternation:
+            {
+                auto& children = node->children;
+                kak_assert(children.size() == 2);
+
+                push_op(CompiledRegex::Split_PrioritizeParent);
+                auto offset = alloc_offset();
+
+                compile_node(children[0]);
+                push_op(CompiledRegex::Jump);
+                goto_inner_end_offsets.push_back(alloc_offset());
+
+                auto right_pos = compile_node(children[1]);
+                get_offset(offset) = right_pos;
+
+                break;
+            }
+            case ParsedRegex::LineStart:
+                push_op(CompiledRegex::LineStart);
+                break;
+            case ParsedRegex::LineEnd:
+                push_op(CompiledRegex::LineEnd);
+                break;
+            case ParsedRegex::WordBoundary:
+                push_op(CompiledRegex::WordBoundary);
+                break;
+            case ParsedRegex::NotWordBoundary:
+                push_op(CompiledRegex::NotWordBoundary);
+                break;
+            case ParsedRegex::SubjectBegin:
+                push_op(CompiledRegex::SubjectBegin);
+                break;
+            case ParsedRegex::SubjectEnd:
+                push_op(CompiledRegex::SubjectEnd);
+                break;
+        }
+
+        for (auto& offset : goto_inner_end_offsets)
+            get_offset(offset) =  m_program.bytecode.size();
+
+        if (capture != -1)
+        {
+            push_op(CompiledRegex::Save);
+            push_byte(capture * 2 + 1);
+        }
+
+        return start_pos;
     }
 
-    for (auto& offset : goto_inner_end_offsets)
-        get_offset(program, offset) =  program.bytecode.size();
-
-    if (capture != -1)
+    Offset compile_node(const ParsedRegex::AstNodePtr& node)
     {
-        program.bytecode.push_back(CompiledRegex::Save);
-        program.bytecode.push_back(capture * 2 + 1);
+        Offset pos = m_program.bytecode.size();
+        Vector<Offset> goto_end_offsets;
+
+        if (node->quantifier.allows_none())
+        {
+            push_op(CompiledRegex::Split_PrioritizeParent);
+            goto_end_offsets.push_back(alloc_offset());
+        }
+
+        auto inner_pos = compile_node_inner(node);
+        // Write the node multiple times when we have a min count quantifier
+        for (int i = 1; i < node->quantifier.min; ++i)
+            inner_pos = compile_node_inner(node);
+
+        if (node->quantifier.allows_infinite_repeat())
+        {
+            push_op(CompiledRegex::Split_PrioritizeChild);
+            get_offset(alloc_offset()) = inner_pos;
+        }
+        // Write the node as an optional match for the min -> max counts
+        else for (int i = std::max(1, node->quantifier.min); // STILL UGLY !
+                  i < node->quantifier.max; ++i)
+        {
+            push_op(CompiledRegex::Split_PrioritizeParent);
+            goto_end_offsets.push_back(alloc_offset());
+            compile_node_inner(node);
+        }
+
+        for (auto offset : goto_end_offsets)
+            get_offset(offset) = m_program.bytecode.size();
+
+        return pos;
     }
 
-    return start_pos;
-}
-
-CompiledRegex::Offset compile_node(CompiledRegex& program, const ParsedRegex& parsed_regex, const AstNodePtr& node)
-{
-    CompiledRegex::Offset pos = program.bytecode.size();
-    Vector<CompiledRegex::Offset> goto_end_offsets;
-
-    if (node->quantifier.allows_none())
+    // Add a '.*' as the first instructions for the search use case
+    void write_search_prefix()
     {
-        program.bytecode.push_back(CompiledRegex::Split_PrioritizeParent);
-        goto_end_offsets.push_back(alloc_offset(program));
+        kak_assert(m_program.bytecode.empty());
+        push_op(CompiledRegex::Split_PrioritizeChild);
+        get_offset(alloc_offset()) = search_prefix_size;
+        push_op(CompiledRegex::AnyChar);
+        push_op(CompiledRegex::Split_PrioritizeParent);
+        get_offset(alloc_offset()) = 1 + sizeof(Offset);
     }
 
-    auto inner_pos = compile_node_inner(program, parsed_regex, node);
-    // Write the node multiple times when we have a min count quantifier
-    for (int i = 1; i < node->quantifier.min; ++i)
-        inner_pos = compile_node_inner(program, parsed_regex, node);
-
-    if (node->quantifier.allows_infinite_repeat())
+    Offset alloc_offset()
     {
-        program.bytecode.push_back(CompiledRegex::Split_PrioritizeChild);
-        get_offset(program, alloc_offset(program)) = inner_pos;
+        auto pos = m_program.bytecode.size();
+        m_program.bytecode.resize(pos + sizeof(Offset));
+        return pos;
     }
-    // Write the node as an optional match for the min -> max counts
-    else for (int i = std::max(1, node->quantifier.min); // STILL UGLY !
-              i < node->quantifier.max; ++i)
+
+    Offset& get_offset(Offset pos)
     {
-        program.bytecode.push_back(CompiledRegex::Split_PrioritizeParent);
-        goto_end_offsets.push_back(alloc_offset(program));
-        compile_node_inner(program, parsed_regex, node);
+        return *reinterpret_cast<Offset*>(&m_program.bytecode[pos]);
     }
 
-    for (auto offset : goto_end_offsets)
-        get_offset(program, offset) = program.bytecode.size();
+    void push_op(CompiledRegex::Op op)
+    {
+        m_program.bytecode.push_back(op);
+    }
 
-    return pos;
-}
+    void push_byte(char byte)
+    {
+        m_program.bytecode.push_back(byte);
+    }
 
-constexpr CompiledRegex::Offset prefix_size = 3 + 2 * sizeof(CompiledRegex::Offset);
+    void push_codepoint(Codepoint cp)
+    {
+        utf8::dump(std::back_inserter(m_program.bytecode), cp);
+    }
 
-// Add a '.*' as the first instructions for the search use case
-void write_search_prefix(CompiledRegex& program)
-{
-    kak_assert(program.bytecode.empty());
-    program.bytecode.push_back(CompiledRegex::Split_PrioritizeChild);
-    get_offset(program, alloc_offset(program)) = prefix_size;
-    program.bytecode.push_back(CompiledRegex::AnyChar);
-    program.bytecode.push_back(CompiledRegex::Split_PrioritizeParent);
-    get_offset(program, alloc_offset(program)) = 1 + sizeof(CompiledRegex::Offset);
-}
-
-CompiledRegex compile(const ParsedRegex& parsed_regex)
-{
-    CompiledRegex res;
-    write_search_prefix(res);
-    compile_node(res, parsed_regex, parsed_regex.ast);
-    res.bytecode.push_back(CompiledRegex::Match);
-    res.matchers = parsed_regex.matchers;
-    res.save_count = parsed_regex.capture_count * 2;
-    return res;
-}
-
-CompiledRegex compile(StringView re)
-{
-    return compile(RegexParser{re}.get_parsed_regex());
-}
-
-}
+    CompiledRegex m_program;
+    const ParsedRegex& m_parsed_regex;
+};
 
 void dump(const CompiledRegex& program)
 {
@@ -728,7 +743,7 @@ struct ThreadedRegexVM
     {
         bool found_match = false;
         m_threads.clear();
-        add_thread(0, match ? RegexCompiler::prefix_size : 0,
+        add_thread(0, match ? RegexCompiler::search_prefix_size : 0,
                    Vector<const char*>(m_program.save_count, nullptr));
 
         m_begin = data.begin();
@@ -814,7 +829,7 @@ void validate_regex(StringView re)
 {
     try
     {
-        RegexCompiler::RegexParser{re};
+        RegexParser{re};
     }
     catch (runtime_error& err)
     {
