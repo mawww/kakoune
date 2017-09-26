@@ -113,16 +113,16 @@ AstNodePtr make_ast_node(Op op, Codepoint value = -1,
 
 // Recursive descent parser based on naming used in the ECMAScript
 // standard, although the syntax is not fully compatible.
-struct Parser
+struct RegexParser
 {
-    static ParsedRegex parse(StringView re)
+    RegexParser(StringView re)
+        : m_regex{re}, m_pos{re.begin(), re}
     {
-        ParsedRegex res;
-        res.capture_count = 1;
-        Iterator pos{re.begin(), re}, end{re.end(), re};
-        res.ast = disjunction(res, pos, end, 0);
-        return res;
+        m_parsed_regex.capture_count = 1;
+        m_parsed_regex.ast = disjunction(0);
     }
+
+    ParsedRegex get_parsed_regex() { return std::move(m_parsed_regex); }
 
 private:
     struct InvalidPolicy
@@ -132,62 +132,63 @@ private:
 
     using Iterator = utf8::iterator<const char*, Codepoint, int, InvalidPolicy>;
 
-    static AstNodePtr disjunction(ParsedRegex& parsed_regex, Iterator& pos, Iterator end, unsigned capture = -1)
+    AstNodePtr disjunction(unsigned capture = -1)
     {
-        AstNodePtr node = alternative(parsed_regex, pos, end);
-        if (pos == end or *pos != '|')
+        AstNodePtr node = alternative();
+        if (at_end() or *m_pos != '|')
         {
             node->value = capture;
             return node;
         }
 
+        ++m_pos;
         AstNodePtr res = make_ast_node(Op::Alternation);
         res->children.push_back(std::move(node));
-        res->children.push_back(disjunction(parsed_regex, ++pos, end));
+        res->children.push_back(disjunction());
         res->value = capture;
         return res;
     }
 
-    static AstNodePtr alternative(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
+    AstNodePtr alternative()
     {
         AstNodePtr res = make_ast_node(Op::Sequence);
-        while (auto node = term(parsed_regex, pos, end))
+        while (auto node = term())
             res->children.push_back(std::move(node));
         if (res->children.empty())
-            throw runtime_error{"Parse error in alternative"};
+            parse_error("empty alternative");
         return res;
     }
 
-    static AstNodePtr term(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
+    AstNodePtr term()
     {
-        if (auto node = assertion(parsed_regex, pos, end))
+        if (auto node = assertion())
             return node;
-        if (auto node = atom(parsed_regex, pos, end))
+        if (auto node = atom())
         {
-            node->quantifier = quantifier(parsed_regex, pos, end);
+            node->quantifier = quantifier();
             return node;
         }
         return nullptr;
     }
 
-    static AstNodePtr assertion(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
+    AstNodePtr assertion()
     {
-        if (pos == end)
+        if (at_end())
             return nullptr;
 
-        switch (*pos)
+        switch (*m_pos)
         {
-            case '^': ++pos; return make_ast_node(Op::LineStart);
-            case '$': ++pos; return make_ast_node(Op::LineEnd);
+            case '^': ++m_pos; return make_ast_node(Op::LineStart);
+            case '$': ++m_pos; return make_ast_node(Op::LineEnd);
             case '\\':
-                if (pos+1 == end)
+                if (m_pos+1 == m_regex.end())
                     return nullptr;
-                switch (*(pos+1))
+                switch (*(m_pos+1))
                 {
-                    case 'b': pos += 2; return make_ast_node(Op::WordBoundary);
-                    case 'B': pos += 2; return make_ast_node(Op::NotWordBoundary);
-                    case '`': pos += 2; return make_ast_node(Op::SubjectBegin);
-                    case '\'': pos += 2; return make_ast_node(Op::SubjectEnd);
+                    case 'b': m_pos += 2; return make_ast_node(Op::WordBoundary);
+                    case 'B': m_pos += 2; return make_ast_node(Op::NotWordBoundary);
+                    case '`': m_pos += 2; return make_ast_node(Op::SubjectBegin);
+                    case '\'': m_pos += 2; return make_ast_node(Op::SubjectEnd);
                 }
                 break;
             /* TODO: look ahead, look behind */
@@ -195,50 +196,50 @@ private:
         return nullptr;
     }
 
-    static AstNodePtr atom(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
+    AstNodePtr atom()
     {
-        if (pos == end)
+        if (at_end())
             return nullptr;
 
-        const Codepoint cp = *pos;
+        const Codepoint cp = *m_pos;
         switch (cp)
         {
-            case '.': ++pos; return make_ast_node(Op::AnyChar);
+            case '.': ++m_pos; return make_ast_node(Op::AnyChar);
             case '(':
             {
-                ++pos;
-                auto content = disjunction(parsed_regex, pos, end, parsed_regex.capture_count++);
+                ++m_pos;
+                auto content = disjunction(m_parsed_regex.capture_count++);
 
-                if (pos == end or *pos != ')')
-                    throw runtime_error{"Unclosed parenthesis"};
-                ++pos;
+                if (at_end() or *m_pos != ')')
+                    parse_error("unclosed parenthesis");
+                ++m_pos;
                 return content;
             }
             case '\\':
-                ++pos;
-                return atom_escape(parsed_regex, pos, end);
+                ++m_pos;
+                return atom_escape();
             case '[':
-                ++pos;
-                return character_class(parsed_regex, pos, end);
+                ++m_pos;
+                return character_class();
             default:
                 if (contains("^$.*+?()[]{}|", cp))
                     return nullptr;
-                ++pos;
+                ++m_pos;
                 return make_ast_node(Op::Literal, cp);
         }
     }
 
-    static AstNodePtr atom_escape(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
+    AstNodePtr atom_escape()
     {
-        const Codepoint cp = *pos++;
+        const Codepoint cp = *m_pos++;
 
         // CharacterClassEscape
         for (auto& character_class : character_class_escapes)
         {
             if (character_class.cp == cp)
             {
-                auto matcher_id = parsed_regex.matchers.size();
-                parsed_regex.matchers.push_back(
+                auto matcher_id = m_parsed_regex.matchers.size();
+                m_parsed_regex.matchers.push_back(
                     [ctype = wctype(character_class.ctype),
                      chars = character_class.additional_chars] (Codepoint cp) {
                         return iswctype(cp, ctype) or contains(chars, cp);
@@ -261,57 +262,57 @@ private:
 
         if (contains("^$\\.*+?()[]{}|", cp)) // SyntaxCharacter
             return make_ast_node(Op::Literal, cp);
-        throw runtime_error{"Unknown atom escape"};
+        parse_error("unknown atom escape");
     }
 
-    static AstNodePtr character_class(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
+    AstNodePtr character_class()
     {
-        const bool negative = pos != end and *pos == '^';
+        const bool negative = m_pos != m_regex.end() and *m_pos == '^';
         if (negative)
-            ++pos;
+            ++m_pos;
 
         Vector<CharRange> ranges;
         Vector<std::pair<wctype_t, bool>> ctypes;
-        while (pos != end and *pos != ']')
+        while (m_pos != m_regex.end() and *m_pos != ']')
         {
-            const auto cp = *pos++;
+            const auto cp = *m_pos++;
             if (cp == '-')
             {
                 ranges.push_back({ '-', '-' });
                 continue;
             }
 
-            if (pos == end)
+            if (at_end())
                 break;
 
             if (cp == '\\')
             {
                 auto it = find_if(character_class_escapes,
-                                  [cp = *pos](auto& t) { return t.cp == cp; });
+                                  [cp = *m_pos](auto& t) { return t.cp == cp; });
                 if (it != std::end(character_class_escapes))
                 {
                     ctypes.push_back({wctype(it->ctype), not it->neg});
                     for (auto& c : it->additional_chars)
                         ranges.push_back({(Codepoint)c, (Codepoint)c});
-                    ++pos;
+                    ++m_pos;
                     continue;
                 }
             }
 
             CharRange range = { cp, cp };
-            if (*pos == '-')
+            if (*m_pos == '-')
             {
-                if (++pos == end)
+                if (++m_pos == m_regex.end())
                     break;
-                range.max = *pos++;
+                range.max = *m_pos++;
                 if (range.min > range.max)
-                    throw runtime_error{"Invalid range specified"};
+                    parse_error("invalid range specified");
             }
             ranges.push_back(range);
         }
-        if (pos == end)
-            throw runtime_error{"Unclosed character class"};
-        ++pos;
+        if (at_end())
+            parse_error("unclosed character class");
+        ++m_pos;
 
         auto matcher = [ranges = std::move(ranges),
                         ctypes = std::move(ctypes), negative] (Codepoint cp) {
@@ -323,18 +324,18 @@ private:
             return negative ? not found : found;
         };
 
-        auto matcher_id = parsed_regex.matchers.size();
-        parsed_regex.matchers.push_back(std::move(matcher));
+        auto matcher_id = m_parsed_regex.matchers.size();
+        m_parsed_regex.matchers.push_back(std::move(matcher));
 
         return make_ast_node(Op::Matcher, matcher_id);
     }
 
-    static Quantifier quantifier(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
+    Quantifier quantifier()
     {
-        if (pos == end)
+        if (at_end())
             return {Quantifier::One};
 
-        auto read_int = [](Iterator& pos, Iterator begin, Iterator end) {
+        auto read_int = [](auto& pos, auto begin, auto end) {
             int res = 0;
             for (; pos != end; ++pos)
             {
@@ -346,29 +347,43 @@ private:
             return res;
         };
 
-        switch (*pos)
+        switch (*m_pos)
         {
-            case '*': ++pos; return {Quantifier::RepeatZeroOrMore};
-            case '+': ++pos; return {Quantifier::RepeatOneOrMore};
-            case '?': ++pos; return {Quantifier::Optional};
+            case '*': ++m_pos; return {Quantifier::RepeatZeroOrMore};
+            case '+': ++m_pos; return {Quantifier::RepeatOneOrMore};
+            case '?': ++m_pos; return {Quantifier::Optional};
             case '{':
             {
-                auto it = pos+1;
-                const int min = read_int(it, it, end);
+                auto it = m_pos+1;
+                const int min = read_int(it, it, m_regex.end());
                 int max = min;
                 if (*it == ',')
                 {
                     ++it;
-                    max = read_int(it, it, end);
+                    max = read_int(it, it, m_regex.end());
                 }
                 if (*it++ != '}')
-                   throw runtime_error{"expected closing bracket"};
-                pos = it;
+                   parse_error("expected closing bracket");
+                m_pos = it;
                 return {Quantifier::RepeatMinMax, min, max};
             }
             default: return {Quantifier::One};
         }
     }
+
+    bool at_end() const { return m_pos == m_regex.end(); }
+
+    [[gnu::noreturn]]
+    void parse_error(StringView error)
+    {
+        throw runtime_error(format("regex parse error: {} at '{}<<<HERE>>>{}'", error,
+                                   StringView{m_regex.begin(), m_pos.base()},
+                                   StringView{m_pos.base(), m_regex.end()}));
+    }
+
+    ParsedRegex m_parsed_regex;
+    StringView m_regex;
+    Iterator m_pos;
 
     struct CharacterClassEscape {
         Codepoint cp;
@@ -381,7 +396,7 @@ private:
 };
 
 // For some reason Gcc fails to link if this is constexpr
-const Parser::CharacterClassEscape Parser::character_class_escapes[6] = {
+const RegexParser::CharacterClassEscape RegexParser::character_class_escapes[6] = {
     { 'd', "digit", "", false },
     { 'D', "digit", "", true },
     { 'w', "alnum", "_", false },
@@ -548,7 +563,7 @@ CompiledRegex compile(const ParsedRegex& parsed_regex)
 
 CompiledRegex compile(StringView re)
 {
-    return compile(Parser::parse(re));
+    return compile(RegexParser{re}.get_parsed_regex());
 }
 
 }
@@ -799,11 +814,11 @@ void validate_regex(StringView re)
 {
     try
     {
-        RegexCompiler::Parser::parse(re);
+        RegexCompiler::RegexParser{re};
     }
     catch (runtime_error& err)
     {
-        write_to_debug_buffer(format("regex-impl: <<{}>> failed to parse: {}", re, err.what()));
+        write_to_debug_buffer(err.what());
     }
 }
 
