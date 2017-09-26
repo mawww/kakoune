@@ -186,9 +186,11 @@ private:
             case '[':
                 ++m_pos;
                 return character_class();
+            case '|': case ')':
+                return nullptr;
             default:
-                if (contains("^$.*+?()[]{}|", cp))
-                    return nullptr;
+                if (contains("^$.*+?[]{}", cp))
+                    parse_error(format("unexpected '{}'", cp));
                 ++m_pos;
                 return new_node(ParsedRegex::Literal, cp);
         }
