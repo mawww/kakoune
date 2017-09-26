@@ -320,8 +320,8 @@ private:
             case '{':
             {
                 auto it = pos+1;
-                int min = read_int(it, it, end);
-                int max = -1;
+                const int min = read_int(it, it, end);
+                int max = min;
                 if (*it == ',')
                 {
                     ++it;
@@ -801,7 +801,7 @@ auto test_regex = UnitTest{[]{
         kak_assert(not vm.exec("foobar"));
     }
     {
-        auto program = RegexCompiler::compile(R"(\`(foo|bar)\')");
+        auto program = RegexCompiler::compile(R"((foo|bar))");
         dump(program);
         ThreadedRegexVM<const char*> vm{program};
         kak_assert(vm.exec("foo"));
@@ -810,7 +810,7 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        auto program = RegexCompiler::compile(R"(\`a{3,5}b\')");
+        auto program = RegexCompiler::compile(R"(a{3,5}b)");
         dump(program);
         ThreadedRegexVM<const char*> vm{program};
         kak_assert(not vm.exec("aab"));
@@ -820,7 +820,16 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        auto program = RegexCompiler::compile(R"(\`a{3,}b\')");
+        auto program = RegexCompiler::compile(R"(a{3}b)");
+        dump(program);
+        ThreadedRegexVM<const char*> vm{program};
+        kak_assert(not vm.exec("aab"));
+        kak_assert(vm.exec("aaab"));
+        kak_assert(not vm.exec("aaaab"));
+    }
+
+    {
+        auto program = RegexCompiler::compile(R"(a{3,}b)");
         dump(program);
         ThreadedRegexVM<const char*> vm{program};
         kak_assert(not vm.exec("aab"));
@@ -829,7 +838,7 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        auto program = RegexCompiler::compile(R"(\`a{,3}b\')");
+        auto program = RegexCompiler::compile(R"(a{,3}b)");
         dump(program);
         ThreadedRegexVM<const char*> vm{program};
         kak_assert(vm.exec("b"));
