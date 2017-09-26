@@ -583,7 +583,7 @@ private:
     const ParsedRegex& m_parsed_regex;
 };
 
-void dump(const CompiledRegex& program)
+void dump_regex(const CompiledRegex& program)
 {
     for (auto pos = program.bytecode.data(), end = program.bytecode.data() + program.bytecode.size();
          pos < end; )
@@ -840,10 +840,10 @@ void validate_regex(StringView re)
 auto test_regex = UnitTest{[]{
     struct TestVM : ThreadedRegexVM<const char*>
     {
-        TestVM(StringView re)
+        TestVM(StringView re, bool dump = false)
             : ThreadedRegexVM{m_program},
               m_program{RegexCompiler::compile(re)}
-        { dump(m_program); }
+        { if (dump) dump_regex(m_program); }
 
         CompiledRegex m_program;
     };
