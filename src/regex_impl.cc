@@ -230,8 +230,24 @@ private:
 
     static AstNodePtr atom_escape(ParsedRegex& parsed_regex, Iterator& pos, Iterator end)
     {
-        const Codepoint cp = *pos;
+        const Codepoint cp = *pos++;
 
+        // CharacterClassEscape
+        for (auto& character_class : character_class_escapes)
+        {
+            if (character_class.cp == cp)
+            {
+                auto matcher_id = parsed_regex.matchers.size();
+                parsed_regex.matchers.push_back(
+                    [ctype = wctype(character_class.ctype),
+                     chars = character_class.additional_chars] (Codepoint cp) {
+                        return iswctype(cp, ctype) or contains(chars, cp);
+                    });
+                return make_ast_node(Op::Matcher, matcher_id);
+            }
+        }
+
+        // CharacterEscape
         struct { Codepoint name; Codepoint value; } control_escapes[] = {
             { 'f', '\f' }, { 'n', '\n' }, { 'r', '\r' }, { 't', '\t' }, { 'v', '\v' }
         };
@@ -255,6 +271,7 @@ private:
             ++pos;
 
         Vector<CharRange> ranges;
+        Vector<std::pair<wctype_t, bool>> ctypes;
         while (pos != end and *pos != ']')
         {
             const auto cp = *pos++;
@@ -266,6 +283,20 @@ private:
 
             if (pos == end)
                 break;
+
+            if (cp == '\\')
+            {
+                auto it = find_if(character_class_escapes,
+                                  [cp = *pos](auto& t) { return t.cp == cp; });
+                if (it != std::end(character_class_escapes))
+                {
+                    ctypes.push_back({wctype(it->ctype), not it->neg});
+                    for (auto& c : it->additional_chars)
+                        ranges.push_back({(Codepoint)c, (Codepoint)c});
+                    ++pos;
+                    continue;
+                }
+            }
 
             CharRange range = { cp, cp };
             if (*pos == '-')
@@ -282,9 +313,12 @@ private:
             throw runtime_error{"Unclosed character class"};
         ++pos;
 
-        auto matcher = [negative, ranges = std::move(ranges)](Codepoint cp) {
+        auto matcher = [ranges = std::move(ranges),
+                        ctypes = std::move(ctypes), negative] (Codepoint cp) {
             auto found = contains_that(ranges, [cp](auto& r) {
                 return r.min <= cp and cp <= r.max;
+            }) or contains_that(ctypes, [cp](auto& c) {
+                return (bool)iswctype(cp, c.first) == c.second;
             });
             return negative ? not found : found;
         };
@@ -335,6 +369,25 @@ private:
             default: return {Quantifier::One};
         }
     }
+
+    struct CharacterClassEscape {
+        Codepoint cp;
+        const char* ctype;
+        StringView additional_chars;
+        bool neg;
+    };
+
+    static const CharacterClassEscape character_class_escapes[6];
+};
+
+// For some reason Gcc fails to link if this is constexpr
+const Parser::CharacterClassEscape Parser::character_class_escapes[6] = {
+    { 'd', "digit", "", false },
+    { 'D', "digit", "", true },
+    { 'w', "alnum", "_", false },
+    { 'W', "alnum", "_", true },
+    { 's', "space", "", false },
+    { 's', "space", "", true },
 };
 
 CompiledRegex::Offset alloc_offset(CompiledRegex& program)
@@ -867,6 +920,22 @@ auto test_regex = UnitTest{[]{
         kak_assert(not vm.exec("àeY"));
         kak_assert(vm.exec("dcbàX"));
         kak_assert(not vm.exec("efg"));
+    }
+
+    {
+        auto program = RegexCompiler::compile(R"(\d{3})");
+        dump(program);
+        ThreadedRegexVM<const char*> vm{program};
+        kak_assert(vm.exec("123"));
+        kak_assert(not vm.exec("1x3"));
+    }
+
+    {
+        auto program = RegexCompiler::compile(R"([-\d]+)");
+        dump(program);
+        ThreadedRegexVM<const char*> vm{program};
+        kak_assert(vm.exec("123-456"));
+        kak_assert(not vm.exec("123_456"));
     }
 }};
 
