@@ -655,7 +655,7 @@ int run_server(StringView session, StringView server_init,
 
             if (sighup_raised)
             {
-                ClientManager::instance().remove_client(*local_client, true, 0);
+                ClientManager::instance().remove_client(*local_client, false, 0);
                 if (not client_manager.empty() and fork_server_to_background())
                     return 0;
                 sighup_raised = 0;
