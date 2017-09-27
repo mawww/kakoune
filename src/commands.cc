@@ -1989,7 +1989,7 @@ const CommandDesc set_face_cmd = {
     "attributes is a combination of:\n"
     "    u: underline, i: italic, b: bold, r: reverse,\n"
     "    B: blink, d: dim, e: exclusive\n"
-    "facespec can as well just be the name of another face" ,
+    "facespec can as well just be the name of another face",
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
     CommandFlags::None,
     CommandHelper{},
@@ -2037,7 +2037,9 @@ const CommandDesc set_register_cmd = {
 const CommandDesc select_cmd = {
     "select",
     nullptr,
-    "select <selections_desc>: select given selections",
+    "select <selections_desc>: select given selections\n"
+    "\n"
+    "selections_desc format is <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>:...",
     single_param,
     CommandFlags::None,
     CommandHelper{},

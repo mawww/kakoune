@@ -798,7 +798,7 @@ Some of Kakoune state is available through environment variables:
         the selection contents are escaped with a backslash.
  * `kak_selection_desc`: range of the main selection, represented as `anchor,cursor`;
         anchor and cursor are in this format: `line.column`
- * `kak_selections_desc`: range of the selecations separated by colons
+ * `kak_selections_desc`: range of the selections separated by colons
  * `kak_bufname`: name of the current buffer
  * `kak_buffile`: full path of the file or same as `kak_bufname` when
        there's no associated file
