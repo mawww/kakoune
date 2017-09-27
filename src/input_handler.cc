@@ -1256,8 +1256,10 @@ public:
     DisplayLine mode_line() const override
     {
         auto num_sel = context().selections().size();
-        return {AtomList{ { "insert ", get_face("StatusLineMode") },
-                          { format( "{} sel", num_sel), get_face("StatusLineInfo") } }};
+        auto main_index = context().selections().main_index();
+        return {AtomList{ { "insert", get_face("StatusLineMode") },
+                          { " ", get_face("StatusLine") },
+                          { format( "{} sels ({})", num_sel, main_index + 1), get_face("StatusLineInfo") } }};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }
