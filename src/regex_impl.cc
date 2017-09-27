@@ -222,9 +222,9 @@ private:
             {
                 auto matcher_id = m_parsed_regex.matchers.size();
                 m_parsed_regex.matchers.push_back(
-                    [ctype = wctype(character_class.ctype),
+                    [ctype = character_class.ctype ? wctype(character_class.ctype) : (wctype_t)0,
                      chars = character_class.additional_chars] (Codepoint cp) {
-                        return iswctype(cp, ctype) or contains(chars, cp);
+                        return (ctype != 0 and iswctype(cp, ctype)) or contains(chars, cp);
                     });
                 return new_node(ParsedRegex::Matcher, matcher_id);
             }
@@ -255,6 +255,7 @@ private:
 
         struct CharRange { Codepoint min, max; };
         Vector<CharRange> ranges;
+        Vector<Codepoint> excluded;
         Vector<std::pair<wctype_t, bool>> ctypes;
         while (m_pos != m_regex.end() and *m_pos != ']')
         {
@@ -274,9 +275,15 @@ private:
                                   [cp = *m_pos](auto& t) { return t.cp == cp; });
                 if (it != std::end(character_class_escapes))
                 {
-                    ctypes.push_back({wctype(it->ctype), not it->neg});
-                    for (auto& c : it->additional_chars)
-                        ranges.push_back({(Codepoint)c, (Codepoint)c});
+                    if (it->ctype)
+                        ctypes.push_back({wctype(it->ctype), not it->neg});
+                    for (auto& c : it->additional_chars) // TODO: handle negative case
+                    {
+                        if (it->neg)
+                            excluded.push_back((Codepoint)c);
+                        else
+                            ranges.push_back({(Codepoint)c, (Codepoint)c});
+                    }
                     ++m_pos;
                     continue;
                 }
@@ -306,12 +313,13 @@ private:
         ++m_pos;
 
         auto matcher = [ranges = std::move(ranges),
-                        ctypes = std::move(ctypes), negative] (Codepoint cp) {
+                        ctypes = std::move(ctypes),
+                        excluded = std::move(excluded), negative] (Codepoint cp) {
             auto found = contains_that(ranges, [cp](auto& r) {
                 return r.min <= cp and cp <= r.max;
             }) or contains_that(ctypes, [cp](auto& c) {
                 return (bool)iswctype(cp, c.first) == c.second;
-            });
+            }) or (not excluded.empty() and not contains(excluded, cp));
             return negative ? not found : found;
         };
 
@@ -390,17 +398,19 @@ private:
         bool neg;
     };
 
-    static const CharacterClassEscape character_class_escapes[6];
+    static const CharacterClassEscape character_class_escapes[8];
 };
 
 // For some reason Gcc fails to link if this is constexpr
-const RegexParser::CharacterClassEscape RegexParser::character_class_escapes[6] = {
+const RegexParser::CharacterClassEscape RegexParser::character_class_escapes[8] = {
     { 'd', "digit", "", false },
     { 'D', "digit", "", true },
     { 'w', "alnum", "_", false },
     { 'W', "alnum", "_", true },
     { 's', "space", "", false },
-    { 's', "space", "", true },
+    { 'S', "space", "", true },
+    { 'h', nullptr, " \t", false },
+    { 'H', nullptr, " \t", true },
 };
 
 struct CompiledRegex
@@ -980,6 +990,12 @@ auto test_regex = UnitTest{[]{
         TestVM vm{R"([-\d]+)"};
         kak_assert(vm.exec("123-456"));
         kak_assert(not vm.exec("123_456"));
+    }
+
+    {
+        TestVM vm{R"([ \H]+)"};
+        kak_assert(vm.exec("abc "));
+        kak_assert(not vm.exec("a \t"));
     }
 
     {
