@@ -2004,8 +2004,8 @@ const HashMap<Key, NormalCmd> keymap{
     { {'S'}, {"split selected text on regex matches", split_regex} },
     { {alt('s')}, {"split selected text on line ends", split_lines} },
 
-    { {'.'}, {"repeat last insert command", repeat_last_insert} },
-    { {alt('.')}, {"repeat last object select/character find", repeat_last_select} },
+    { {'.'}, {"repeat last insert command", repeated<repeat_last_insert>} },
+    { {alt('.')}, {"repeat last object select/character find", repeated<repeat_last_select>} },
 
     { {'%'}, {"select whole buffer", select_whole_buffer} },
 
