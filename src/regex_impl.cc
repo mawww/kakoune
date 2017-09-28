@@ -42,6 +42,7 @@ struct ParsedRegex
             RepeatMinMax,
         };
         Type type = One;
+        bool greedy = true;
         int min = -1, max = -1;
 
         bool allows_none() const
@@ -346,11 +347,18 @@ private:
             return res;
         };
 
+        auto check_greedy = [&]() {
+            if (at_end() or *m_pos != '?')
+                return true;
+            ++m_pos;
+            return false;
+        };
+
         switch (*m_pos)
         {
-            case '*': ++m_pos; return {ParsedRegex::Quantifier::RepeatZeroOrMore};
-            case '+': ++m_pos; return {ParsedRegex::Quantifier::RepeatOneOrMore};
-            case '?': ++m_pos; return {ParsedRegex::Quantifier::Optional};
+            case '*': ++m_pos; return {ParsedRegex::Quantifier::RepeatZeroOrMore, check_greedy()};
+            case '+': ++m_pos; return {ParsedRegex::Quantifier::RepeatOneOrMore, check_greedy()};
+            case '?': ++m_pos; return {ParsedRegex::Quantifier::Optional, check_greedy()};
             case '{':
             {
                 auto it = m_pos+1;
@@ -364,7 +372,7 @@ private:
                 if (*it++ != '}')
                    parse_error("expected closing bracket");
                 m_pos = it;
-                return {ParsedRegex::Quantifier::RepeatMinMax, min, max};
+                return {ParsedRegex::Quantifier::RepeatMinMax, true, min, max};
             }
             default: return {ParsedRegex::Quantifier::One};
         }
@@ -549,27 +557,32 @@ private:
         Offset pos = m_program.bytecode.size();
         Vector<Offset> goto_end_offsets;
 
-        if (node->quantifier.allows_none())
+        auto& quantifier = node->quantifier;
+
+        if (quantifier.allows_none())
         {
-            push_op(CompiledRegex::Split_PrioritizeParent);
+            push_op(quantifier.greedy ? CompiledRegex::Split_PrioritizeParent
+                                      : CompiledRegex::Split_PrioritizeChild);
             goto_end_offsets.push_back(alloc_offset());
         }
 
         auto inner_pos = compile_node_inner(node);
         // Write the node multiple times when we have a min count quantifier
-        for (int i = 1; i < node->quantifier.min; ++i)
+        for (int i = 1; i < quantifier.min; ++i)
             inner_pos = compile_node_inner(node);
 
-        if (node->quantifier.allows_infinite_repeat())
+        if (quantifier.allows_infinite_repeat())
         {
-            push_op(CompiledRegex::Split_PrioritizeChild);
+            push_op(quantifier.greedy ? CompiledRegex::Split_PrioritizeChild
+                                      : CompiledRegex::Split_PrioritizeParent);
             get_offset(alloc_offset()) = inner_pos;
         }
         // Write the node as an optional match for the min -> max counts
-        else for (int i = std::max(1, node->quantifier.min); // STILL UGLY !
-                  i < node->quantifier.max; ++i)
+        else for (int i = std::max(1, quantifier.min); // STILL UGLY !
+                  i < quantifier.max; ++i)
         {
-            push_op(CompiledRegex::Split_PrioritizeParent);
+            push_op(quantifier.greedy ? CompiledRegex::Split_PrioritizeParent
+                                      : CompiledRegex::Split_PrioritizeChild);
             goto_end_offsets.push_back(alloc_offset());
             compile_node_inner(node);
         }
@@ -1014,6 +1027,12 @@ auto test_regex = UnitTest{[]{
         kak_assert(vm.exec("foobar", true, true));
         kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "bar");
         kak_assert(not vm.exec("bar", true, true));
+    }
+
+    {
+        TestVM vm{R"((fo+?).*)"};
+        kak_assert(vm.exec("foooo", true, true));
+        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "fo");
     }
 }};
 
