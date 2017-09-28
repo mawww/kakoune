@@ -241,7 +241,7 @@ void goto_commands(Context& context, NormalParams params)
                 if (not context.has_client() or
                     not (target = context.client().last_buffer()))
                 {
-                    context.print_status({"no last buffer", get_face("Error")});
+                    throw runtime_error("no last buffer");
                     break;
                 }
                 context.push_jump();
@@ -1346,7 +1346,7 @@ void select_to_next_char(Context& context, NormalParams params)
                                                    : select_to,
                       _1, _2, *cp, params.count,
                       flags & SelectFlags::Inclusive));
-    }, get_title(),"enter char to select to");
+    }, get_title(), "enter char to select to");
 }
 
 void start_or_end_macro_recording(Context& context, NormalParams params)
@@ -1750,7 +1750,7 @@ void undo(Context& context, NormalParams params)
             context.selections_write_only() = std::move(ranges);
     }
     else
-        context.print_status({ "nothing left to undo", get_face("Information") });
+        throw runtime_error("nothing left to undo");
 }
 
 void redo(Context& context, NormalParams params)
@@ -1764,7 +1764,7 @@ void redo(Context& context, NormalParams params)
             context.selections_write_only() = std::move(ranges);
     }
     else
-        context.print_status({ "nothing left to redo", get_face("Information") });
+        throw runtime_error("nothing left to redo");
 }
 
 template<Direction direction>
@@ -1788,9 +1788,8 @@ void move_in_history(Context& context, NormalParams params)
                                get_face("Information") });
     }
     else
-        context.print_status({ format("no such change: #{} ({})",
-                               history_id, max_history_id),
-                               get_face("Information") });
+        throw runtime_error(format("no such change: #{} ({})",
+                            history_id, max_history_id));
 }
 
 void exec_user_mappings(Context& context, NormalParams params)
@@ -2016,7 +2015,7 @@ const HashMap<Key, NormalCmd> keymap{
     { {'!'}, {"insert command output", insert_output<InsertMode::Insert>} },
     { {alt('!')}, {"append command output", insert_output<InsertMode::Append>} },
 
-    { {' '}, {"remove all selection except main", keep_selection} },
+    { {' '}, {"remove all selections except main", keep_selection} },
     { {alt(' ')}, {"remove main selection", remove_selection} },
     { {';'}, {"reduce selections to their cursor", clear_selections} },
     { {alt(';')}, {"swap selections cursor and anchor", flip_selections} },
