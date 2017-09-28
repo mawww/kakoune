@@ -254,9 +254,20 @@ New commands can be defined using the *define-command* command:
 *-buffer-completion*:::
 	try buffer name completion on any parameter passed to this command
 
+*-command-completion*:::
+	try command completion on any parameter passed to this command
+
 *-shell-completion*:::
 	following string is a shell command which takes parameters as
-	positional params and output one completion candidate per line
+	positional params and output one completion candidate per line.
+	The provided shell command will run after each keypress
+
+*-shell-candidates*:::
+	following string is a shell command which takes parameters as
+	positional params and output one completion candidate per line.
+	The provided shell command will run once at the beginning of each
+	completion session, candidates are cached and then used by kakoune
+	internal fuzzy engine
 
 *-allow-override*:::
 	allow the new command to replace an existing one with the same name
