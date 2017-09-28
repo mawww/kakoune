@@ -2,6 +2,7 @@
 
 #include "alias_registry.hh"
 #include "client.hh"
+#include "face_registry.hh"
 #include "register_manager.hh"
 #include "window.hh"
 
@@ -85,26 +86,33 @@ void JumpList::push(SelectionList jump)
     m_current = m_jumps.size();
 }
 
-const SelectionList& JumpList::forward()
+const SelectionList& JumpList::forward(Context& context)
 {
     if (m_current != m_jumps.size() and
         m_current + 1 != m_jumps.size())
     {
         SelectionList& res = m_jumps[++m_current];
         res.update();
+        context.print_status({ format("jumped to #{} ({})",
+                               m_current, m_jumps.size() - 1),
+                               get_face("Information") });
         return res;
     }
     throw runtime_error("no next jump");
 }
 
-const SelectionList& JumpList::backward(const SelectionList& current)
+const SelectionList& JumpList::backward(Context& context)
 {
+    const SelectionList& current = context.selections();
     if (m_current != m_jumps.size() and
         m_jumps[m_current] != current)
     {
         push(current);
         SelectionList& res = m_jumps[--m_current];
         res.update();
+        context.print_status({ format("jumped to #{} ({})",
+                               m_current, m_jumps.size() - 1),
+                               get_face("Information") });
         return res;
     }
     if (m_current != 0)
@@ -117,6 +125,9 @@ const SelectionList& JumpList::backward(const SelectionList& current)
         }
         SelectionList& res = m_jumps[--m_current];
         res.update();
+        context.print_status({ format("jumped to #{} ({})",
+                               m_current, m_jumps.size() - 1),
+                               get_face("Information") });
         return res;
     }
     throw runtime_error("no previous jump");

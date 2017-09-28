@@ -1399,8 +1399,8 @@ template<Direction direction>
 void jump(Context& context, NormalParams)
 {
     auto jump = (direction == Forward) ?
-                 context.jump_list().forward() :
-                 context.jump_list().backward(context.selections());
+                 context.jump_list().forward(context) :
+                 context.jump_list().backward(context);
 
     Buffer* oldbuf = &context.buffer();
     Buffer& buffer = const_cast<Buffer&>(jump.buffer());
