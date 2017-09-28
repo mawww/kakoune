@@ -30,7 +30,7 @@ public:
     void handle_key(Key key) { RefPtr<InputMode> keep_alive{this}; on_key(key); }
 
     virtual void on_enabled() {}
-    virtual void on_disabled() {}
+    virtual void on_disabled(bool temporary) {}
 
     bool enabled() const { return &m_input_handler.current_mode() == this; }
     Context& context() const { return m_input_handler.context(); }
@@ -194,7 +194,7 @@ public:
         context().hooks().run_hook("NormalBegin", "", context());
     }
 
-    void on_disabled() override
+    void on_disabled(bool) override
     {
         m_idle_timer.set_next_date(TimePoint::max());
         m_fs_check_timer.set_next_date(TimePoint::max());
@@ -966,7 +966,7 @@ private:
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
-    void on_disabled() override
+    void on_disabled(bool) override
     {
         context().print_status({});
         m_idle_timer.set_next_date(TimePoint::max());
@@ -1063,29 +1063,29 @@ public:
                                      get_face("Error") });
     }
 
-    ~Insert() override
-    {
-        auto& selections = context().selections();
-        if (m_restore_cursor)
-        {
-            for (auto& sel : selections)
-            {
-                if (sel.cursor() > sel.anchor() and sel.cursor().column > 0)
-                    sel.cursor() = context().buffer().char_prev(sel.cursor());
-            }
-        }
-        selections.avoid_eol();
-    }
-
     void on_enabled() override
     {
         if (not (context().flags() & Context::Flags::Transient))
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
-    void on_disabled() override
+    void on_disabled(bool temporary) override
     {
         m_idle_timer.set_next_date(TimePoint::max());
+
+        if (not temporary)
+        {
+            auto& selections = context().selections();
+            if (m_restore_cursor)
+            {
+                for (auto& sel : selections)
+                {
+                    if (sel.cursor() > sel.anchor() and sel.cursor().column > 0)
+                        sel.cursor() = context().buffer().char_prev(sel.cursor());
+                }
+            }
+            selections.avoid_eol();
+        }
     }
 
     void on_key(Key key) override
@@ -1393,7 +1393,7 @@ InputHandler::~InputHandler() = default;
 
 void InputHandler::push_mode(InputMode* new_mode)
 {
-    current_mode().on_disabled();
+    current_mode().on_disabled(true);
     m_mode_stack.emplace_back(new_mode);
     new_mode->on_enabled();
 }
@@ -1403,7 +1403,7 @@ void InputHandler::pop_mode(InputMode* mode)
     kak_assert(m_mode_stack.back().get() == mode);
     kak_assert(m_mode_stack.size() > 1);
 
-    current_mode().on_disabled();
+    current_mode().on_disabled(false);
     m_mode_stack.pop_back();
     current_mode().on_enabled();
 }
@@ -1412,7 +1412,7 @@ void InputHandler::reset_normal_mode()
 {
     if (m_mode_stack.size() > 1)
     {
-        current_mode().on_disabled();
+        current_mode().on_disabled(false);
         m_mode_stack.resize(1);
     }
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
