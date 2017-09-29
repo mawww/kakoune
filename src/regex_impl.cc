@@ -125,8 +125,6 @@ private:
         AstNodePtr res = new_node(op);
         while (auto node = term())
             res->children.push_back(std::move(node));
-        if (res->children.empty())
-            parse_error("empty alternative");
         return res;
     }
 
@@ -158,8 +156,8 @@ private:
                 {
                     case 'b': m_pos += 2; return new_node(ParsedRegex::WordBoundary);
                     case 'B': m_pos += 2; return new_node(ParsedRegex::NotWordBoundary);
-                    case '`': m_pos += 2; return new_node(ParsedRegex::SubjectBegin);
-                    case '\'': m_pos += 2; return new_node(ParsedRegex::SubjectEnd);
+                    case 'A': m_pos += 2; return new_node(ParsedRegex::SubjectBegin);
+                    case 'z': m_pos += 2; return new_node(ParsedRegex::SubjectEnd);
                     case 'K': m_pos += 2; return new_node(ParsedRegex::ResetStart);
                 }
                 break;
