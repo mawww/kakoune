@@ -19,9 +19,9 @@ add-highlighter -group /kickstart/double_string fill string
 add-highlighter -group /kickstart/packages regex "^\h*[\w-]*" 0:value
 add-highlighter -group /kickstart/packages regex "#[^\n]*" 0:comment
 add-highlighter -group /kickstart/packages regex "^\h*@\^?[\h\w-]*" 0:attribute
-add-highlighter -group /kickstart/packages regex '\`\h*\K%packages\b' 0:type
+add-highlighter -group /kickstart/packages regex '\A\h*\K%packages\b' 0:type
 add-highlighter -group /kickstart/packages regex '^\h*%end\b' 0:type
-add-highlighter -group /kickstart/shell regex '\`\h*\K%(pre-install|pre|post)\b' 0:type
+add-highlighter -group /kickstart/shell regex '\A\h*\K%(pre-install|pre|post)\b' 0:type
 add-highlighter -group /kickstart/shell regex '^\h*%end\b' 0:type
 add-highlighter -group /kickstart/shell ref sh
 

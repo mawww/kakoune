@@ -51,11 +51,11 @@ def -hidden make-jump %{
         try %{
             exec gl<a-?> "Entering directory" <ret><a-:>
             # Try to parse the error into capture groups, failing on absolute paths
-            exec s "Entering directory '([^']+)'.*\n([^:/][^:]*):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
+            exec s "Entering directory '([^']+)'.*\n([^:/][^:]*):(\d+):(?:(\d+):)?([^\n]+)\Z" <ret>l
             set buffer make_current_error_line %val{cursor_line}
             eval -try-client %opt{jumpclient} "edit -existing %reg{1}/%reg{2} %reg{3} %reg{4}; echo -markup %{{Information}%reg{5}}; try %{ focus }"
         } catch %{
-            exec <a-h><a-l> s "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
+            exec <a-h><a-l> s "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?([^\n]+)\Z" <ret>l
             set buffer make_current_error_line %val{cursor_line}
             eval -try-client %opt{jumpclient} "edit -existing %reg{1} %reg{2} %reg{3}; echo -markup %{{Information}%reg{4}}; try %{ focus }"
         }

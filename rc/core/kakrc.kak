@@ -18,11 +18,11 @@ add-highlighter -group / regions -default code kakrc \
     shell '%sh\{' '\}' '\{' \
     shell '%sh\(' '\)' '\(' \
     shell '%sh\[' '\]' '\[' \
-    shell '%sh\<' '\>' '\<' \
+    shell '%sh<'  '>'  '<' \
     shell '-shell-(completion|candidates)\h+%\{' '\}' '\{' \
     shell '-shell-(completion|candidates)\h+%\(' '\)' '\(' \
     shell '-shell-(completion|candidates)\h+%\[' '\]' '\[' \
-    shell '-shell-(completion|candidates)\h+%\<' '\>' '\<'
+    shell '-shell-(completion|candidates)\h+%<'  '>'   '<'
 
 %sh{
     # Grammar

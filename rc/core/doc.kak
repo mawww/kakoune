@@ -24,7 +24,7 @@ def -hidden -params 1..2 doc-open %{
 
             if [ $# -gt 1 ]; then
                 needle=$(printf %s\\n "$2" | sed 's,<,<lt>,g')
-                printf %s\\n "try %{ exec '%<a-s><a-k>(?i)^\h+[^\n]*?\Q${needle}\E<ret>\'' } catch %{ exec <space>gg }"
+                printf %s\\n "try %{ exec '%<a-s><a-k>(?i)^\h+[^\n]*?\Q${needle}\E<ret>\Z' } catch %{ exec <space>gg }"
             fi
         else
            printf %s\\n "echo -markup %{{Error}doc '$@' failed: see *debug* buffer for details}"

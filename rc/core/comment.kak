@@ -110,17 +110,17 @@ def comment-block -docstring '(un)comment selected lines using block comments' %
 
         printf %s\\n "eval -draft %{ try %{
             ## The selection is empty
-            exec <a-K>\\A[\\h\\v\\n]*\\z<ret>
+            exec <a-K>\\A[\\h\\v\\n]*\\Z<ret>
 
             try %{
                 ## The selection has already been commented
-                exec %{<a-K>\\A\\Q${opening}\\E.*\\Q${closing}\\E\\n*\\z<ret>}
+                exec %{<a-K>\\A\\Q${opening}\\E.*\\Q${closing}\\E\\n*\\Z<ret>}
 
                 ## Comment the selection
                 exec -draft %{a${closing}<esc>i${opening}}
             } catch %{
                 ## Uncomment the commented selection
-                exec -draft %{s(\\A\\Q${opening}\\E)|(\\Q${closing}\\E\\n*\\z)<ret>d}
+                exec -draft %{s(\\A\\Q${opening}\\E)|(\\Q${closing}\\E\\n*\\Z)<ret>d}
             }
         } }"
     }
@@ -142,7 +142,7 @@ def comment-line -docstring '(un)comment selected lines using line comments' %{
 
             try %{
                 ## There’s no text on the line
-                exec <a-K>\\A[\\h\\v\\n]*\\z<ret>
+                exec <a-K>\\A[\\h\\v\\n]*\\Z<ret>
 
                 try %{
                     ## The line has already been commented

@@ -45,7 +45,7 @@ def -hidden elm-indent-on-new-line %{
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # align to first clause
-        try %{ exec -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|let)\h+\K.* <ret> s \`|.\' <ret> & }
+        try %{ exec -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|let)\h+\K.* <ret> s \A|.\Z <ret> & }
         # filter previous line
         try %{ exec -draft k : elm-filter-around-selections <ret> }
         # indent after lines beginning with condition or ending with expression or =(

@@ -37,8 +37,8 @@ def -hidden ragel-filter-around-selections %{
 def -hidden ragel-indent-on-char %<
     eval -draft -itersel %<
         # align closer token to its opener when alone on a line
-        try %< exec -draft <a-h> <a-k> ^\h+[]})]$ <ret>        m         s \`|.\' <ret> 1<a-&> >
-        try %< exec -draft <a-h> <a-k> ^\h+  [*]$ <ret> <a-?> [*]$ <ret> s \`|.\' <ret> 1<a-&> >
+        try %< exec -draft <a-h> <a-k> ^\h+[]})]$ <ret>        m         s \A|.\Z <ret> 1<a-&> >
+        try %< exec -draft <a-h> <a-k> ^\h+  [*]$ <ret> <a-?> [*]$ <ret> s \A|.\Z <ret> 1<a-&> >
     >
 >
 

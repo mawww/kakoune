@@ -50,21 +50,21 @@ def -hidden rust-indent-on-new-line %~
         # indent after lines ending with { or (
         try %[ exec -draft k <a-x> <a-k> [{(]\h*$ <ret> j <a-gt> ]
         # align to opening paren of previous line
-        try %{ exec -draft [( <a-k> \`\([^\n]+\n[^\n]*\n?\' <ret> s \`\(\h*.|.\' <ret> & }
+        try %{ exec -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\Z <ret> s \A\(\h*.|.\Z <ret> & }
     >
 ~
 
 def -hidden rust-indent-on-opening-curly-brace %[
     eval -draft -itersel %_
         # align indent with opening paren when { is entered on a new line after the closing paren
-        try %[ exec -draft h <a-F> ) M <a-k> \`\(.*\)\h*\n\h*\{\' <ret> s \`|.\' <ret> 1<a-&> ]
+        try %[ exec -draft h <a-F> ) M <a-k> \A\(.*\)\h*\n\h*\{\Z <ret> s \A|.\Z <ret> 1<a-&> ]
     _
 ]
 
 def -hidden rust-indent-on-closing-curly-brace %[
     eval -draft -itersel %_
         # align to opening curly brace when alone on a line
-        try %[ exec -draft <a-h> <a-k> ^\h+\}$ <ret> h m s \`|.\' <ret> 1<a-&> ]
+        try %[ exec -draft <a-h> <a-k> ^\h+\}$ <ret> h m s \A|.\Z <ret> 1<a-&> ]
     _
 ]
 
