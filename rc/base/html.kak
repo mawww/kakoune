@@ -47,7 +47,7 @@ def -hidden html-filter-around-selections %{
 def -hidden html-indent-on-char %{
     eval -draft -itersel %{
         # align closing tag to opening when alone on a line
-        try %{ exec -draft <space> <a-h> s ^\h+</(\w+)>$ <ret> <a-\;> <a-?> <lt><c-r>1 <ret> s \`|.\' <ret> <a-r> 1<a-&> }
+        try %{ exec -draft <space> <a-h> s ^\h+</(\w+)>$ <ret> <a-\;> <a-?> <lt><c-r>1 <ret> s \A|.\z <ret> <a-r> 1<a-&> }
     }
 }
 

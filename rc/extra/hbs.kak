@@ -12,19 +12,19 @@ hook global BufCreate .*[.](hbs) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter -group / regions -default html hbs  \
-    comment          {{!-- --}} '' \
-    comment          {{!   }}   '' \
-    block-expression {{    }}   '' 
+    comment          \{\{!-- --\}\} '' \
+    comment          \{\{!   \}\}   '' \
+    block-expression \{\{    \}\}   '' 
 
 add-highlighter -group /hbs/html ref html
 add-highlighter -group /hbs/comment fill comment
-add-highlighter -group /hbs/block-expression regex {{((#|/|)(\w|-)+) 1:meta
+add-highlighter -group /hbs/block-expression regex \{\{((#|/|)(\w|-)+) 1:meta
 
 # some hbs tags have a special meaning
-add-highlighter -group /hbs/block-expression regex {{((#|/|)(if|else|unless|with|lookup|log)) 1:keyword
+add-highlighter -group /hbs/block-expression regex \{\{((#|/|)(if|else|unless|with|lookup|log)) 1:keyword
 
 # 'each' is special as it really is two words 'each' and 'as'
-add-highlighter -group /hbs/block-expression regex {{((#|/|)((each).*(as))) 2:keyword 4:keyword 5:keyword
+add-highlighter -group /hbs/block-expression regex \{\{((#|/|)((each).*(as))) 2:keyword 4:keyword 5:keyword
 
 add-highlighter -group /hbs/block-expression regex ((\w|-)+)= 1:attribute
 

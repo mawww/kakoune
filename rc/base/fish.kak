@@ -39,9 +39,9 @@ def -hidden fish-filter-around-selections %{
 def -hidden fish-indent-on-char %{
     eval -no-hooks -draft -itersel %{
         # align middle and end structures to start and indent when necessary
-        try %{ exec -draft <a-x><a-k>^\h*(else)$<ret><a-\;><a-?>^\h*(if)<ret>s\A|\Z<ret>'<a-&> }
-        try %{ exec -draft <a-x><a-k>^\h*(end)$<ret><a-\;><a-?>^\h*(begin|for|function|if|switch|while)<ret>s\A|\Z<ret>'<a-&> }
-        try %{ exec -draft <a-x><a-k>^\h*(case)$<ret><a-\;><a-?>^\h*(switch)<ret>s\A|\Z<ret>'<a-&>'<space><a-gt> }
+        try %{ exec -draft <a-x><a-k>^\h*(else)$<ret><a-\;><a-?>^\h*(if)<ret>s\A|\z<ret>'<a-&> }
+        try %{ exec -draft <a-x><a-k>^\h*(end)$<ret><a-\;><a-?>^\h*(begin|for|function|if|switch|while)<ret>s\A|\z<ret>'<a-&> }
+        try %{ exec -draft <a-x><a-k>^\h*(case)$<ret><a-\;><a-?>^\h*(switch)<ret>s\A|\z<ret>'<a-&>'<space><a-gt> }
     }
 }
 

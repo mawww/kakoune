@@ -95,7 +95,7 @@ def -hidden modeline-parse-impl %{
 #   [text]{white}{vi:|vim:|Vim:|ex:}[white]se[t] {options}:[text]
 def modeline-parse -docstring "Read and interpret vi-format modelines at the beginning/end of the buffer" %{
     try %{ eval -draft %{
-        exec \%s\`|.\'<ret> %opt{modelines}k <a-x> %opt{modelines}X \
+        exec \%s\A|.\z<ret> %opt{modelines}k <a-x> %opt{modelines}X \
              s^\S*?\s+?(vim?|kak(oune)?):\s?[^\n]+<ret> <a-x>
         eval -draft -itersel modeline-parse-impl
     } }

@@ -40,7 +40,7 @@ def -hidden php-filter-around-selections %{
 def -hidden php-indent-on-char %<
     eval -draft -itersel %<
         # align closer token to its opener when alone on a line
-        try %/ exec -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \`|.\' <ret> 1<a-&> /
+        try %/ exec -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \A|.\z <ret> 1<a-&> /
     >
 >
 
