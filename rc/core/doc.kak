@@ -16,6 +16,7 @@ def -hidden -params 1..2 doc-open %{
                 exec |cat<space>${manout}<ret>gg
                 nop %sh{rm ${manout}}
                 set buffer filetype man
+                remove-hooks window man-hooks
             "
 
             if [ $# -gt 1 ]; then
