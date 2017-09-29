@@ -69,6 +69,7 @@ struct ParsedRegex
         Op op;
         Codepoint value;
         Quantifier quantifier;
+        bool ignore_case;
         Vector<std::unique_ptr<AstNode>> children;
     };
 
@@ -209,6 +210,14 @@ private:
                             parse_error("invalid disjunction");
 
                          validate_lookaround(content);
+                    }
+                    else if (c == 'i' or c == 'I')
+                    {
+                        m_ignore_case = c == 'i';
+                        if (advance() != ')')
+                            parse_error("unclosed parenthesis");
+                        ++m_pos;
+                        return atom(); // get next atom
                     }
                     else
                         parse_error("invalid disjunction");
@@ -351,9 +360,24 @@ private:
             parse_error("unclosed character class");
         ++m_pos;
 
+        if (m_ignore_case)
+        {
+            for (auto& range : ranges)
+            {
+                range.min = to_lower(range.max);
+                range.max = to_lower(range.max);
+            }
+            for (auto& cp : excluded)
+                cp = to_lower(cp);
+        }
+
         auto matcher = [ranges = std::move(ranges),
                         ctypes = std::move(ctypes),
-                        excluded = std::move(excluded), negative] (Codepoint cp) {
+                        excluded = std::move(excluded),
+                        negative, ignore_case = m_ignore_case] (Codepoint cp) {
+            if (ignore_case)
+                cp = to_lower(cp);
+
             auto found = contains_that(ranges, [cp](auto& r) {
                 return r.min <= cp and cp <= r.max;
             }) or contains_that(ctypes, [cp](auto& c) {
@@ -416,12 +440,11 @@ private:
         }
     }
 
-    static AstNodePtr new_node(ParsedRegex::Op op, Codepoint value = -1,
-                               ParsedRegex::Quantifier quantifier = {ParsedRegex::Quantifier::One})
+    AstNodePtr new_node(ParsedRegex::Op op, Codepoint value = -1,
+                        ParsedRegex::Quantifier quantifier = {ParsedRegex::Quantifier::One})
     {
-        return AstNodePtr{new ParsedRegex::AstNode{op, value, quantifier, {}}};
+        return AstNodePtr{new ParsedRegex::AstNode{op, value, quantifier, m_ignore_case, {}}};
     }
-
 
     bool at_end() const { return m_pos == m_regex.end(); }
 
@@ -443,6 +466,7 @@ private:
     ParsedRegex m_parsed_regex;
     StringView m_regex;
     Iterator m_pos;
+    bool m_ignore_case = false;
 
     struct CharacterClassEscape {
         Codepoint cp;
@@ -450,11 +474,6 @@ private:
         StringView additional_chars;
         bool neg;
     };
-
-    StringView peek(ByteCount count)
-    {
-        return StringView{m_pos.base(), m_regex.end()}.substr(0, count);
-    }
 
     static const CharacterClassEscape character_class_escapes[8];
 };
@@ -477,6 +496,7 @@ struct CompiledRegex
     {
         Match,
         Literal,
+        LiteralIgnoreCase,
         AnyChar,
         Matcher,
         Jump,
@@ -540,8 +560,10 @@ private:
         switch (node->op)
         {
             case ParsedRegex::Literal:
-                push_op(CompiledRegex::Literal);
-                push_codepoint(node->value);
+                push_op(node->ignore_case ? CompiledRegex::LiteralIgnoreCase
+                                          : CompiledRegex::Literal);
+                push_codepoint(node->ignore_case ? to_lower(node->value)
+                                                 : node->value);
                 break;
             case ParsedRegex::AnyChar:
                 push_op(CompiledRegex::AnyChar);
@@ -731,6 +753,9 @@ void dump_regex(const CompiledRegex& program)
             case CompiledRegex::Literal:
                 printf("literal %lc\n", utf8::read_codepoint(pos, (const char*)nullptr));
                 break;
+            case CompiledRegex::LiteralIgnoreCase:
+                printf("literal (ignore case) %lc\n", utf8::read_codepoint(pos, (const char*)nullptr));
+                break;
             case CompiledRegex::AnyChar:
                 printf("any char\n");
                 break;
@@ -824,6 +849,10 @@ struct ThreadedRegexVM
             {
                 case CompiledRegex::Literal:
                     if (utf8::read_codepoint(thread.inst, prog_end) == cp)
+                        return StepResult::Consumed;
+                    return StepResult::Failed;
+                case CompiledRegex::LiteralIgnoreCase:
+                    if (utf8::read_codepoint(thread.inst, prog_end) == to_lower(cp))
                         return StepResult::Consumed;
                     return StepResult::Failed;
                 case CompiledRegex::AnyChar:
@@ -1188,6 +1217,11 @@ auto test_regex = UnitTest{[]{
         TestVM vm{R"(...(?<!foo))"};
         kak_assert(not vm.exec("foo"));
         kak_assert(vm.exec("qux"));
+    }
+
+    {
+        TestVM vm{R"(Foo(?i)f[oB]+)"};
+        kak_assert(vm.exec("FooFOoBb"));
     }
 }};
 
