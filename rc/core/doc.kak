@@ -35,7 +35,7 @@ def -hidden -params 1..2 doc-open %{
 
 def -params 1..2 \
     -shell-candidates %{
-        find "${kak_runtime}/doc/" -type f -iname "*.gz" | while read l; do
+        find "${kak_runtime}/doc/" -type f -name "*.gz" | while read l; do
             basename "${l%.*}"
         done
     } \
