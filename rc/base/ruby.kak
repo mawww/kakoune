@@ -132,7 +132,7 @@ def -hidden ruby-indent-on-new-line %{
 def -hidden ruby-insert-on-new-line %{
     eval -no-hooks -draft -itersel %{
         # copy _#_ comment prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^ \h * \K \# \h * <ret> y gh j P }
+        try %{ exec -draft k <a-x> s '^\h*\K#\h*' <ret> y gh j P }
         # wisely add end structure
         eval -save-regs x %{
             try %{ exec -draft k <a-x> s ^ \h + <ret> \" x y } catch %{ reg x '' }

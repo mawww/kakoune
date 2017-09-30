@@ -3,7 +3,7 @@ hook global BufCreate .*\.ks %{
 }
 
 add-highlighter -group / regions -default code kickstart \
-    comment (^|\h)\K\# $ '' \
+    comment '(^|\h)\K#' $ '' \
     double_string '"' (?<!\\)(\\\\)*" '' \
     single_string "'" (?<!\\)(\\\\)*' '' \
     packages '^\h*\K%packages\b' '^\h*\K%end\b' '' \

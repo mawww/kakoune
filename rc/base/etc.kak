@@ -23,7 +23,7 @@ hook -group etc-resolv-conf-highlight global WinSetOption filetype=(?!etc-resolv
 ## /etc/hosts
 add-highlighter -group / group etc-hosts
 add-highlighter -group /etc-hosts regex ^(.+?)[\s\t]+?(.*?)$ 1:type 2:attribute
-add-highlighter -group /etc-hosts regex \#.*?$ 0:comment
+add-highlighter -group /etc-hosts regex '#.*?$' 0:comment
 
 hook -group etc-hosts-highlight global WinSetOption filetype=etc-hosts %{ add-highlighter ref etc-hosts }
 hook -group etc-hosts-highlight global WinSetOption filetype=(?!etc-hosts).* %{ remove-highlighter etc-hosts }
@@ -31,7 +31,7 @@ hook -group etc-hosts-highlight global WinSetOption filetype=(?!etc-hosts).* %{ 
 ## /etc/fstab
 add-highlighter -group / group etc-fstab
 add-highlighter -group /etc-fstab regex ^(\S{1,})\s+?(\S{1,})\s+?(\S{1,})\s+?(\S{1,})\s+?(\S{1,})\s+?(\S{1,})(?:\s+)?$ 1:keyword 2:value 3:type 4:string 5:attribute 6:attribute
-add-highlighter -group /etc-fstab regex \#.*?$ 0:comment
+add-highlighter -group /etc-fstab regex '#.*?$' 0:comment
 
 hook -group etc-fstab-highlight global WinSetOption filetype=etc-fstab %{ add-highlighter ref etc-fstab }
 hook -group etc-fstab-highlight global WinSetOption filetype=(?!etc-fstab).* %{ remove-highlighter etc-fstab }

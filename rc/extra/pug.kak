@@ -17,7 +17,7 @@ hook global BufCreate .*[.](pug|jade) %{
 
 add-highlighter -group / regions -default code pug                 \
     text          ^\h*\|\s     $                      '' \
-    text          ^\h*([A-Za-z][A-Za-z0-9_-]*)?(\#[A-Za-z][A-Za-z0-9_-]*)?((?:\.[A-Za-z][A-Za-z0-9_-]*)*)?(?<=\S)\h+\K.* $ '' \
+    text          '^\h*([A-Za-z][A-Za-z0-9_-]*)?(#[A-Za-z][A-Za-z0-9_-]*)?((?:\.[A-Za-z][A-Za-z0-9_-]*)*)?(?<=\S)\h+\K.*' $ '' \
     javascript    ^\h*[-=!]    $                      '' \
     double_string '"'          (?:(?<!\\)(\\\\)*"|$)  '' \
     single_string "'"          (?:(?<!\\)(\\\\)*'|$)  '' \
@@ -38,7 +38,7 @@ add-highlighter -group /pug/puglang          regex   \b(\block|extends|include|a
 add-highlighter -group /pug/attribute        regex   [()=]                             0:operator
 add-highlighter -group /pug/text             regex   \h*(\|)                           1:meta
 add-highlighter -group /pug/code             regex   ^\h*([A-Za-z][A-Za-z0-9_-]*)      1:type
-add-highlighter -group /pug/code             regex   (\#[A-Za-z][A-Za-z0-9_-]*)        1:variable
+add-highlighter -group /pug/code             regex   '(#[A-Za-z][A-Za-z0-9_-]*)'       1:variable
 add-highlighter -group /pug/code             regex   ((?:\.[A-Za-z][A-Za-z0-9_-]*)*)   1:value
 
 # Commands

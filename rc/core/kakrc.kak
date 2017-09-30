@@ -12,7 +12,7 @@ hook global BufCreate (.*/)?(kakrc|.*.kak) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter -group / regions -default code kakrc \
-    comment (^|\h)\K\# $ '' \
+    comment '(^|\h)\K#' $ '' \
     double_string %{(^|\h)"} %{(?<!\\)(\\\\)*"} '' \
     single_string %{(^|\h)'} %{(?<!\\)(\\\\)*'} '' \
     shell '%sh\{' '\}' '\{' \
