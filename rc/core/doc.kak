@@ -8,7 +8,7 @@ def -hidden -params 1..2 doc-open %{
         # This option is handled by the `man-db` implementation
         export MANWIDTH=${kak_window_width}
 
-        if man "$1" > "${manout}"; then
+        if man "$1" > "${manout}" 2>/dev/null; then
             readonly manout_noescape=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
 
             sed -e $(printf 's/.\x8//g') -e 's,\x1B\[[0-9;]*[a-zA-Z],,g' "${manout}" > "${manout_noescape}"
