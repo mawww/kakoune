@@ -12,10 +12,10 @@ hook global BufCreate .*[.](lua) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter -group / regions -default code lua \
-    string  '"' (?<!\\)(\\\\)*"       '' \
-    string  "'" (?<!\\)(\\\\)*'       '' \
-    comment '--' '$'                  '' \
-    comment '\Q--[[' ']]'             '' \
+    string  '"'      (?<!\\)(\\\\)*"  '' \
+    string  "'"      (?<!\\)(\\\\)*'  '' \
+    comment '--'     '$'              '' \
+    comment '--\[\[' '\]\]'           '' \
 
 add-highlighter -group /lua/string fill string
 

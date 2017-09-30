@@ -12,17 +12,17 @@ hook global BufCreate (.*/)?(kakrc|.*.kak) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter -group / regions -default code kakrc \
-    comment (^|\h)\K\# $ '' \
+    comment (^|\h)\K# $ '' \
     double_string %{(^|\h)\K"} %{(?<!\\)(\\\\)*"} '' \
     single_string %{(^|\h)\K'} %{(?<!\\)(\\\\)*'} '' \
     shell '(^|\h)\K%sh\{' '\}' '\{' \
     shell '(^|\h)\K%sh\(' '\)' '\(' \
     shell '(^|\h)\K%sh\[' '\]' '\[' \
-    shell '(^|\h)\K%sh\<' '\>' '\<' \
+    shell '(^|\h)\K%sh<'  '>'  '<' \
     shell '(^|\h)\K-shell-(completion|candidates)\h+%\{' '\}' '\{' \
     shell '(^|\h)\K-shell-(completion|candidates)\h+%\(' '\)' '\(' \
     shell '(^|\h)\K-shell-(completion|candidates)\h+%\[' '\]' '\[' \
-    shell '(^|\h)\K-shell-(completion|candidates)\h+%\<' '\>' '\<'
+    shell '(^|\h)\K-shell-(completion|candidates)\h+%<'  '>'  '<'
 
 %sh{
     # Grammar

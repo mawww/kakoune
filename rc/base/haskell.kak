@@ -14,7 +14,7 @@ hook global BufCreate .*[.](hs) %{
 add-highlighter -group / regions -default code haskell \
     string   '(?<!\'\\)(?<!\')"'         (?<!\\)(\\\\)*" ''   \
     macro   ^\h*?\K#                     (?<!\\)\n       ''   \
-    pragma  \{-#                         \#-\}           \{-  \
+    pragma  \{-#                         '#-\}'          \{-  \
     comment \{-                            -\}           \{-  \
     comment --(?![!#$%&*+./<>?@\\\^|~=]) $               ''
 
