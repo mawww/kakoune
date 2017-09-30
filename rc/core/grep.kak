@@ -8,23 +8,26 @@ def -params .. -file-completion \
     -docstring %{grep [<arguments>]: grep utility wrapper
 All the optional arguments are forwarded to the grep utility} \
     grep %{ %sh{
-     output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-grep.XXXXXXXX)/fifo
-     mkfifo ${output}
-     if [ $# -gt 0 ]; then
-         ( ${kak_opt_grepcmd} "$@" | tr -d '\r' > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
-     else
-         ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
-     fi
+    # fallback implementation: mktemp
+    export PATH="${PATH}:${kak_runtime}/sh"
 
-     printf %s\\n "eval -try-client '$kak_opt_toolsclient' %{
-               edit! -fifo ${output} -scroll *grep*
-               set buffer filetype grep
-               set buffer grep_current_line 0
-               hook -group fifo buffer BufCloseFifo .* %{
-                   nop %sh{ rm -r $(dirname ${output}) }
-                   remove-hooks buffer fifo
-               }
-           }"
+    output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-grep.XXXXXXXX)/fifo
+    mkfifo ${output}
+    if [ $# -gt 0 ]; then
+        ( ${kak_opt_grepcmd} "$@" | tr -d '\r' > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
+    else
+        ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
+    fi
+
+    printf %s\\n "eval -try-client '$kak_opt_toolsclient' %{
+              edit! -fifo ${output} -scroll *grep*
+              set buffer filetype grep
+              set buffer grep_current_line 0
+              hook -group fifo buffer BufCloseFifo .* %{
+                  nop %sh{ rm -r $(dirname ${output}) }
+                  remove-hooks buffer fifo
+              }
+          }"
 }}
 
 hook -group grep-highlight global WinSetOption filetype=grep %{

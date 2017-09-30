@@ -11,6 +11,9 @@ Formats of language supported:
     spell %{
     try %{ add-highlighter ranges 'spell_regions' }
     %sh{
+        # fallback implementation: mktemp
+        export PATH="${PATH}:${kak_runtime}/sh"
+
         file=$(mktemp -d "${TMPDIR:-/tmp}"/kak-spell.XXXXXXXX)/buffer
         printf 'eval -no-hooks write %s\n' "${file}"
         printf 'set buffer spell_tmp_file %s\n' "${file}"

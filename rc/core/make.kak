@@ -11,19 +11,22 @@ def -params .. \
     -docstring %{make [<arguments>]: make utility wrapper
 All the optional arguments are forwarded to the make utility} \
     make %{ %sh{
-     output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-make.XXXXXXXX)/fifo
-     mkfifo ${output}
-     ( eval ${kak_opt_makecmd} "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
+    # fallback implementation: mktemp
+    export PATH="${PATH}:${kak_runtime}/sh"
 
-     printf %s\\n "eval -try-client '$kak_opt_toolsclient' %{
-               edit! -fifo ${output} -scroll *make*
-               set buffer filetype make
-               set buffer make_current_error_line 0
-               hook -group fifo buffer BufCloseFifo .* %{
-                   nop %sh{ rm -r $(dirname ${output}) }
-                   remove-hooks buffer fifo
-               }
-           }"
+    output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-make.XXXXXXXX)/fifo
+    mkfifo ${output}
+    ( eval ${kak_opt_makecmd} "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
+
+    printf %s\\n "eval -try-client '$kak_opt_toolsclient' %{
+              edit! -fifo ${output} -scroll *make*
+              set buffer filetype make
+              set buffer make_current_error_line 0
+              hook -group fifo buffer BufCloseFifo .* %{
+                  nop %sh{ rm -r $(dirname ${output}) }
+                  remove-hooks buffer fifo
+              }
+          }"
 }}
 
 add-highlighter -group / group make

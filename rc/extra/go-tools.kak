@@ -21,6 +21,9 @@ decl -hidden completions gocode_completions
 
 def go-complete -docstring "Complete the current selection with gocode" %{
     %sh{
+        # fallback implementation: mktemp
+        export PATH="${PATH}:${kak_runtime}/sh"
+
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-go.XXXXXXXX)
         printf %s\\n "set buffer go_complete_tmp_dir ${dir}"
         printf %s\\n "eval -no-hooks write ${dir}/buf"
@@ -64,6 +67,9 @@ decl -hidden str go_format_tmp_dir
 def -params ..1 go-format \
     -docstring "go-format [-use-goimports]: custom formatter for go files" %{
     %sh{
+        # fallback implementation: mktemp
+        export PATH="${PATH}:${kak_runtime}/sh"
+
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-go.XXXXXXXX)
         printf %s\\n "set buffer go_format_tmp_dir ${dir}"
         printf %s\\n "eval -no-hooks write ${dir}/buf"
@@ -95,6 +101,9 @@ decl -hidden str go_doc_tmp_dir
 # FIXME text escaping
 def -hidden -params 1..2 gogetdoc-cmd %{
    %sh{
+        # fallback implementation: mktemp
+        export PATH="${PATH}:${kak_runtime}/sh"
+
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-go.XXXXXXXX)
         printf %s\\n "set buffer go_doc_tmp_dir ${dir}"
         printf %s\\n "eval -no-hooks write ${dir}/buf"
