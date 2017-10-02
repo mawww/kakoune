@@ -271,8 +271,8 @@ private:
                 auto matcher_id = m_parsed_regex.matchers.size();
                 m_parsed_regex.matchers.push_back(
                     [ctype = character_class.ctype ? wctype(character_class.ctype) : (wctype_t)0,
-                     chars = character_class.additional_chars] (Codepoint cp) {
-                        return (ctype != 0 and iswctype(cp, ctype)) or contains(chars, cp);
+                     chars = character_class.additional_chars, neg = character_class.neg] (Codepoint cp) {
+                        return ((ctype != 0 and iswctype(cp, ctype)) or contains(chars, cp)) != neg;
                     });
                 return new_node(ParsedRegex::Matcher, matcher_id);
             }
