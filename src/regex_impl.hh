@@ -167,7 +167,6 @@ struct ThreadedRegexVM
                     break;
                 }
                 case CompiledRegex::Match:
-                    thread.inst = nullptr;
                     return StepResult::Matched;
             }
         }
@@ -186,13 +185,16 @@ struct ThreadedRegexVM
 
         for (m_pos = Utf8It{m_begin, m_begin, m_end}; m_pos != m_end; ++m_pos)
         {
-            for (int i = 0; i < m_threads.size(); ++i)
+            for (int i = 0; i < m_threads.size(); )
             {
                 const auto res = step(i);
                 if (res == StepResult::Matched)
                 {
                     if (match)
+                    {
+                        m_threads.erase(m_threads.begin() + i);
                         continue; // We are not at end, this is not a full match
+                    }
 
                     m_captures = std::move(m_threads[i].saves);
                     found_match = true;
@@ -201,10 +203,19 @@ struct ThreadedRegexVM
                         return true;
                 }
                 else if (res == StepResult::Failed)
-                    m_threads[i].inst = nullptr;
+                    m_threads.erase(m_threads.begin() + i);
+                else
+                {
+                    auto it = m_threads.begin() + i;
+                    if (std::find_if(m_threads.begin(), it, [inst = it->inst](auto& t)
+                                     { return t.inst == inst; }) != it)
+                        m_threads.erase(it);
+                    else
+                        ++i;
+                }
             }
-            m_threads.erase(std::remove_if(m_threads.begin(), m_threads.end(),
-                                           [](const Thread& t) { return t.inst == nullptr; }), m_threads.end());
+            // we should never have more than one thread on the same instruction
+            kak_assert(m_threads.size() <= m_program.bytecode.size());
             if (m_threads.empty())
                 return found_match;
         }
@@ -230,6 +241,7 @@ struct ThreadedRegexVM
         if (std::find_if(m_threads.begin(), m_threads.end(),
                          [inst](const Thread& t) { return t.inst == inst; }) == m_threads.end())
             m_threads.insert(m_threads.begin() + index, {inst, std::move(saves)});
+        kak_assert(m_threads.size() < m_program.bytecode.size());
     }
 
     bool is_line_start() const
