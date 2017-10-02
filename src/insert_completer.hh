@@ -20,7 +20,8 @@ struct InsertCompleterDesc
     {
         Word,
         Option,
-        Filename
+        Filename,
+        Line
     };
 
     bool operator==(const InsertCompleterDesc& other) const

@@ -32,6 +32,8 @@ String option_to_string(const InsertCompleterDesc& opt)
             return "filename";
         case InsertCompleterDesc::Option:
             return "option=" + (opt.param ? *opt.param : "");
+        case InsertCompleterDesc::Line:
+            return "line";
     }
     kak_assert(false);
     return "";
@@ -58,6 +60,12 @@ void option_from_string(StringView str, InsertCompleterDesc& opt)
     else if (str == "filename")
     {
         opt.mode = InsertCompleterDesc::Filename;
+        opt.param = Optional<String>{};
+        return;
+    }
+    else if (str == "line")
+    {
+        opt.mode = InsertCompleterDesc::Line;
         opt.param = Optional<String>{};
         return;
     }
@@ -466,6 +474,9 @@ bool InsertCompleter::setup_ifn()
             if (completer.mode == InsertCompleterDesc::Word and
                 *completer.param == "all" and
                 try_complete(complete_word<true>))
+                return true;
+            if (completer.mode == InsertCompleterDesc::Line and
+                try_complete(complete_line))
                 return true;
         }
         return false;
