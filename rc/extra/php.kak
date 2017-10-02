@@ -23,7 +23,7 @@ add-highlighter -group /php/code regex \$\w* 0:variable
 add-highlighter -group /php/code regex \b(false|null|parent|self|this|true)\b 0:value
 add-highlighter -group /php/code regex "-?[0-9]*\.?[0-9]+" 0:value
 add-highlighter -group /php/code regex \b((string|int|bool)|[A-Z][a-z].*?)\b 0:type
-add-highlighter -group /php/code regex (?<=\W)/[^\n/]+/[gimy]* 0:meta
+add-highlighter -group /php/code regex \B/[^\n/]+/[gimy]* 0:meta
 
 # Keywords are collected at
 # http://php.net/manual/en/reserved.keywords.php

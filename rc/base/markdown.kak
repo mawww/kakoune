@@ -110,7 +110,7 @@ add-highlighter -group /markdown/content regex (\A|\n\n)[^\n]+\n-{2,}\h*\n\h*$ 0
 # Atx-style header
 add-highlighter -group /markdown/content regex ^(#+)(\h+)([^\n]+) 1:header
 
-add-highlighter -group /markdown/content regex ^\h?+((?:[\s\t]+)?[-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*\n)*$ 0:list 1:bullet
+add-highlighter -group /markdown/content regex ^\h?((?:[\s\t]+)?[-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*\n)*$ 0:list 1:bullet
 add-highlighter -group /markdown/content regex ^([-=~]+)\n[^\n\h].*?\n\1$ 0:block
 add-highlighter -group /markdown/content regex \B\+[^\n]+?\+\B 0:mono
 add-highlighter -group /markdown/content regex \B\*[^\n]+?\*\B 0:italic

@@ -40,13 +40,13 @@ add-highlighter -group /haskell/code regex (?<!['\w])(case|do|else|if|in|let|mdo
 
 # matches uppercase identifiers:  Monad Control.Monad
 # not non-space separated dot:    Just.const
-add-highlighter -group /haskell/code regex \b(\u['\w]*\.)*\u['\w]*(?!['\w])(?![.\l]) 0:variable
+add-highlighter -group /haskell/code regex \b([A-Z]['\w]*\.)*[A-Z]['\w]*(?!['\w])(?![.\l]) 0:variable
 
 # matches infix identifier: `mod` `Apa._T'M`
-add-highlighter -group /haskell/code regex `\b(\u['\w]*\.)*[\w]['\w]*` 0:operator
+add-highlighter -group /haskell/code regex `\b([A-Z]['\w]*\.)*[\w]['\w]*` 0:operator
 # matches imported operators: M.! M.. Control.Monad.>>
 # not operator keywords:      M... M.->
-add-highlighter -group /haskell/code regex \b\u['\w]*\.(?!([~=|:@\\]|<-|->|=>|\.\.|::)[^~<=>|:!?/.@$*&#%+\^\-\\])[~<=>|:!?/.@$*&#%+\^\-\\]+ 0:operator
+add-highlighter -group /haskell/code regex \b[A-Z]['\w]*\.(?!([~=|:@\\]|<-|->|=>|\.\.|::)[^~<=>|:!?/.@$*&#%+\^\-\\])[~<=>|:!?/.@$*&#%+\^\-\\]+ 0:operator
 # matches dot: .
 # not possibly incomplete import:  a.
 # not other operators:             !. .!

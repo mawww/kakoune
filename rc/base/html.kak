@@ -73,9 +73,9 @@ hook global WinSetOption filetype=(?:html|xml) %{
     hook window InsertChar \n -group html-indent html-indent-on-new-line
 }
 
-hook -group html-highlight global WinSetOption filetype=(?!html|xml).* %{ remove-highlighter html }
+hook -group html-highlight global WinSetOption filetype=(?!html)(?!xml).* %{ remove-highlighter html }
 
-hook global WinSetOption filetype=(?!html|xml).* %{
+hook global WinSetOption filetype=(?!html)(?!xml).* %{
     remove-hooks window html-indent
     remove-hooks window html-hooks
 }

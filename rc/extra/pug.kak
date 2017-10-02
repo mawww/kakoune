@@ -17,7 +17,7 @@ hook global BufCreate .*[.](pug|jade) %{
 
 add-highlighter -group / regions -default code pug                 \
     text          ^\h*\|\s     $                      '' \
-    text          '^\h*([A-Za-z][A-Za-z0-9_-]*)?(#[A-Za-z][A-Za-z0-9_-]*)?((?:\.[A-Za-z][A-Za-z0-9_-]*)*)?(?<=\S)\h+\K.*' $ '' \
+    text          '^\h*([A-Za-z][A-Za-z0-9_-]*)?(#[A-Za-z][A-Za-z0-9_-]*)?((?:\.[A-Za-z][A-Za-z0-9_-]*)*)?(?<!\t)(?<! )(?<!\n)\h+\K.*' $ '' \
     javascript    ^\h*[-=!]    $                      '' \
     double_string '"'          (?:(?<!\\)(\\\\)*"|$)  '' \
     single_string "'"          (?:(?<!\\)(\\\\)*'|$)  '' \
