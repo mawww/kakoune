@@ -497,38 +497,6 @@ const RegexParser::CharacterClassEscape RegexParser::character_class_escapes[8] 
     { 'H', nullptr, " \t", true },
 };
 
-struct CompiledRegex
-{
-    enum Op : char
-    {
-        Match,
-        Literal,
-        LiteralIgnoreCase,
-        AnyChar,
-        Matcher,
-        Jump,
-        Split_PrioritizeParent,
-        Split_PrioritizeChild,
-        Save,
-        LineStart,
-        LineEnd,
-        WordBoundary,
-        NotWordBoundary,
-        SubjectBegin,
-        SubjectEnd,
-        LookAhead,
-        LookBehind,
-        NegativeLookAhead,
-        NegativeLookBehind,
-    };
-
-    using Offset = unsigned;
-
-    Vector<char> bytecode;
-    Vector<std::function<bool (Codepoint)>> matchers;
-    size_t save_count;
-};
-
 struct RegexCompiler
 {
     RegexCompiler(const ParsedRegex& parsed_regex)
@@ -544,7 +512,6 @@ struct RegexCompiler
     CompiledRegex get_compiled_regex() { return std::move(m_program); }
 
     using Offset = CompiledRegex::Offset;
-    static constexpr Offset search_prefix_size = 3 + 2 * sizeof(Offset);
 
     static CompiledRegex compile(StringView re)
     {
@@ -697,7 +664,7 @@ private:
     {
         kak_assert(m_program.bytecode.empty());
         push_op(CompiledRegex::Split_PrioritizeChild);
-        get_offset(alloc_offset()) = search_prefix_size;
+        get_offset(alloc_offset()) = CompiledRegex::search_prefix_size;
         push_op(CompiledRegex::AnyChar);
         push_op(CompiledRegex::Split_PrioritizeParent);
         get_offset(alloc_offset()) = 1 + sizeof(Offset);
@@ -830,230 +797,18 @@ void dump_regex(const CompiledRegex& program)
     }
 }
 
-template<typename Iterator>
-struct ThreadedRegexVM
+CompiledRegex compile_regex(StringView re)
 {
-    ThreadedRegexVM(const CompiledRegex& program)
-      : m_program{program} {}
-
-    struct Thread
-    {
-        const char* inst;
-        Vector<const char*> saves = {};
-    };
-
-    enum class StepResult { Consumed, Matched, Failed };
-    StepResult step(size_t thread_index)
-    {
-        const auto prog_start = m_program.bytecode.data();
-        const auto prog_end = prog_start + m_program.bytecode.size();
-        while (true)
-        {
-            auto& thread = m_threads[thread_index];
-            const Codepoint cp = m_pos == m_end ? 0 : *m_pos;
-            const CompiledRegex::Op op = (CompiledRegex::Op)*thread.inst++;
-            switch (op)
-            {
-                case CompiledRegex::Literal:
-                    if (utf8::read_codepoint(thread.inst, prog_end) == cp)
-                        return StepResult::Consumed;
-                    return StepResult::Failed;
-                case CompiledRegex::LiteralIgnoreCase:
-                    if (utf8::read_codepoint(thread.inst, prog_end) == to_lower(cp))
-                        return StepResult::Consumed;
-                    return StepResult::Failed;
-                case CompiledRegex::AnyChar:
-                    return StepResult::Consumed;
-                case CompiledRegex::Jump:
-                {
-                    auto inst = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst);
-                    // if instruction is already going to be executed by another thread, drop this thread
-                    if (std::find_if(m_threads.begin(), m_threads.end(),
-                                     [inst](const Thread& t) { return t.inst == inst; }) != m_threads.end())
-                        return StepResult::Failed;
-                    thread.inst = inst;
-                    break;
-                }
-                case CompiledRegex::Split_PrioritizeParent:
-                {
-                    add_thread(thread_index+1, *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst), thread.saves);
-                    // thread is invalidated now, as we mutated the m_thread vector
-                    m_threads[thread_index].inst += sizeof(CompiledRegex::Offset);
-                    break;
-                }
-                case CompiledRegex::Split_PrioritizeChild:
-                {
-                    add_thread(thread_index+1, thread.inst + sizeof(CompiledRegex::Offset) - prog_start, thread.saves);
-                    // thread is invalidated now, as we mutated the m_thread vector
-                    m_threads[thread_index].inst = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(m_threads[thread_index].inst);
-                    break;
-                }
-                case CompiledRegex::Save:
-                {
-                    const char index = *thread.inst++;
-                    thread.saves[index] = m_pos.base();
-                    break;
-                }
-                case CompiledRegex::Matcher:
-                {
-                    const int matcher_id = *thread.inst++;
-                    return m_program.matchers[matcher_id](*m_pos) ?
-                        StepResult::Consumed : StepResult::Failed;
-                }
-                case CompiledRegex::LineStart:
-                    if (not is_line_start())
-                        return StepResult::Failed;
-                    break;
-                case CompiledRegex::LineEnd:
-                    if (not is_line_end())
-                        return StepResult::Failed;
-                    break;
-                case CompiledRegex::WordBoundary:
-                    if (not is_word_boundary())
-                        return StepResult::Failed;
-                    break;
-                case CompiledRegex::NotWordBoundary:
-                    if (is_word_boundary())
-                        return StepResult::Failed;
-                    break;
-                case CompiledRegex::SubjectBegin:
-                    if (m_pos != m_begin)
-                        return StepResult::Failed;
-                    break;
-                case CompiledRegex::SubjectEnd:
-                    if (m_pos != m_end)
-                        return StepResult::Failed;
-                    break;
-                case CompiledRegex::LookAhead:
-                case CompiledRegex::NegativeLookAhead:
-                {
-                    int count = *thread.inst++;
-                    for (auto it = m_pos; count and it != m_end; ++it, --count)
-                        if (*it != utf8::read(thread.inst))
-                            break;
-                    if ((op == CompiledRegex::LookAhead and count != 0) or
-                        (op == CompiledRegex::NegativeLookAhead and count == 0))
-                        return StepResult::Failed;
-                    thread.inst = utf8::advance(thread.inst, prog_end, CharCount{count - 1});
-                    break;
-                }
-                case CompiledRegex::LookBehind:
-                case CompiledRegex::NegativeLookBehind:
-                {
-                    int count = *thread.inst++;
-                    for (auto it = m_pos-1; count and it >= m_begin; --it, --count)
-                        if (*it != utf8::read(thread.inst))
-                            break;
-                    if ((op == CompiledRegex::LookBehind and count != 0) or
-                        (op == CompiledRegex::NegativeLookBehind and count == 0))
-                        return StepResult::Failed;
-                    thread.inst = utf8::advance(thread.inst, prog_end, CharCount{count - 1});
-                    break;
-                }
-                case CompiledRegex::Match:
-                    thread.inst = nullptr;
-                    return StepResult::Matched;
-            }
-        }
-        return StepResult::Failed;
-    }
-
-    bool exec(StringView data, bool match = true, bool longest = false)
-    {
-        bool found_match = false;
-        m_threads.clear();
-        add_thread(0, match ? RegexCompiler::search_prefix_size : 0,
-                   Vector<const char*>(m_program.save_count, nullptr));
-
-        m_begin = data.begin();
-        m_end = data.end();
-
-        for (m_pos = Utf8It{m_begin, m_begin, m_end}; m_pos != m_end; ++m_pos)
-        {
-            for (int i = 0; i < m_threads.size(); ++i)
-            {
-                const auto res = step(i);
-                if (res == StepResult::Matched)
-                {
-                    if (match)
-                        continue; // We are not at end, this is not a full match
-
-                    m_captures = std::move(m_threads[i].saves);
-                    found_match = true;
-                    m_threads.resize(i); // remove this and lower priority threads
-                    if (not longest)
-                        return true;
-                }
-                else if (res == StepResult::Failed)
-                    m_threads[i].inst = nullptr;
-            }
-            m_threads.erase(std::remove_if(m_threads.begin(), m_threads.end(),
-                                           [](const Thread& t) { return t.inst == nullptr; }), m_threads.end());
-            if (m_threads.empty())
-                return found_match;
-        }
-
-        // Step remaining threads to see if they match without consuming anything else
-        for (int i = 0; i < m_threads.size(); ++i)
-        {
-            if (step(i) == StepResult::Matched)
-            {
-                m_captures = std::move(m_threads[i].saves);
-                found_match = true;
-                m_threads.resize(i); // remove this and lower priority threads
-                if (not longest)
-                    return true;
-            }
-        }
-        return found_match;
-    }
-
-    void add_thread(int index, CompiledRegex::Offset pos, Vector<const char*> saves)
-    {
-        const char* inst = m_program.bytecode.data() + pos;
-        if (std::find_if(m_threads.begin(), m_threads.end(),
-                         [inst](const Thread& t) { return t.inst == inst; }) == m_threads.end())
-            m_threads.insert(m_threads.begin() + index, {inst, std::move(saves)});
-    }
-
-    bool is_line_start() const
-    {
-        return m_pos == m_begin or *(m_pos-1) == '\n';
-    }
-
-    bool is_line_end() const
-    {
-        return m_pos == m_end or *m_pos == '\n';
-    }
-
-    bool is_word_boundary() const
-    {
-        return m_pos == m_begin or m_pos == m_end or
-               is_word(*(m_pos-1)) != is_word(*m_pos);
-    }
-
-    const CompiledRegex& m_program;
-    Vector<Thread> m_threads;
-
-    using Utf8It = utf8::iterator<Iterator>;
-
-    Iterator m_begin;
-    Iterator m_end;
-    Utf8It m_pos;
-
-    Vector<const char*> m_captures;
-};
-
-void validate_regex(StringView re)
-{
+    CompiledRegex res;
     try
     {
-        RegexParser{re};
+        res = RegexCompiler::compile(re);
     }
     catch (runtime_error& err)
     {
         write_to_debug_buffer(err.what());
     }
+    return std::move(res);
 }
 
 auto test_regex = UnitTest{[]{
@@ -1063,6 +818,11 @@ auto test_regex = UnitTest{[]{
             : ThreadedRegexVM{m_program},
               m_program{RegexCompiler::compile(re)}
         { if (dump) dump_regex(m_program); }
+
+        bool exec(StringView re, bool match = true, bool longest = false)
+        {
+            return ThreadedRegexVM::exec(re.begin(), re.end(), match, longest);
+        }
 
         CompiledRegex m_program;
     };

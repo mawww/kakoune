@@ -5,6 +5,7 @@
 #include "string_utils.hh"
 #include "exception.hh"
 #include "utf8_iterator.hh"
+#include "regex_impl.hh"
 
 #include <boost/regex.hpp>
 
@@ -35,8 +36,11 @@ public:
 
     static constexpr const char* option_type_name = "regex";
 
+    const CompiledRegex& impl() const { return m_impl; }
+
 private:
     String m_str;
+    CompiledRegex m_impl;
 };
 
 template<typename It>
@@ -102,12 +106,39 @@ inline RegexConstant::match_flag_type match_flags(bool bol, bool eol, bool bow, 
            (eow ? RegexConstant::match_default : RegexConstant::match_not_eow);
 }
 
+void regex_mismatch(const Regex& re);
+
+template<typename It>
+void check_captures(const Regex& re, const MatchResults<It>& res, const Vector<It>& captures)
+{
+    if (res.size() > captures.size() * 2)
+        return regex_mismatch(re);
+
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+        if (not res[i].matched)
+        {
+            if (captures[i*2] != It{} or captures[i*2+1] != It{})
+                regex_mismatch(re);
+            continue;
+        }
+
+        if (res[i].first != captures[i*2])
+            regex_mismatch(re);
+        if (res[i].second != captures[i*2+1])
+            regex_mismatch(re);
+    }
+}
+
 template<typename It>
 bool regex_match(It begin, It end, const Regex& re)
 {
     try
     {
-        return boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, re);
+        bool matched = boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, re);
+        if (re.impl() and matched != regex_match(begin, end, re.impl()))
+            regex_mismatch(re);
+        return matched;
     }
     catch (std::runtime_error& err)
     {
@@ -120,7 +151,13 @@ bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
 {
     try
     {
-        return boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, res, re);
+        bool matched = boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, res, re);
+        Vector<It> captures;
+        if (re.impl() and matched != regex_match(begin, end, captures, re.impl()))
+            regex_mismatch(re);
+        if (re.impl() and matched)
+            check_captures(re, res, captures);
+        return matched;
     }
     catch (std::runtime_error& err)
     {
@@ -134,7 +171,10 @@ bool regex_search(It begin, It end, const Regex& re,
 {
     try
     {
-        return boost::regex_search<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, re, flags);
+        bool matched = boost::regex_search<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, re, flags);
+        if (re.impl() and matched != regex_search(begin, end, re.impl()))
+            regex_mismatch(re);
+        return matched;
     }
     catch (std::runtime_error& err)
     {
@@ -148,7 +188,13 @@ bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
 {
     try
     {
-        return boost::regex_search<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, res, re, flags);
+        bool matched = boost::regex_search<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, res, re, flags);
+        Vector<It> captures;
+        if (re.impl() and matched != regex_search(begin, end, captures, re.impl()))
+            regex_mismatch(re);
+        if (re.impl() and matched)
+            check_captures(re, res, captures);
+        return matched;
     }
     catch (std::runtime_error& err)
     {
