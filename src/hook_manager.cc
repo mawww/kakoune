@@ -13,6 +13,17 @@
 namespace Kakoune
 {
 
+struct HookManager::Hook
+{
+    String group;
+    Regex filter;
+    String commands;
+};
+
+HookManager::HookManager() : m_parent(nullptr) {}
+HookManager::HookManager(HookManager& parent) : SafeCountable{}, m_parent(&parent) {}
+HookManager::~HookManager() = default;
+
 void HookManager::add_hook(StringView hook_name, String group, Regex filter, String commands)
 {
     auto& hooks = m_hooks[hook_name];

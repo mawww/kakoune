@@ -4,17 +4,18 @@
 #include "hash_map.hh"
 #include "completion.hh"
 #include "safe_ptr.hh"
-#include "regex.hh"
 
 namespace Kakoune
 {
 
 class Context;
+class Regex;
 
 class HookManager : public SafeCountable
 {
 public:
-    HookManager(HookManager& parent) : SafeCountable{}, m_parent(&parent) {}
+    HookManager(HookManager& parent);
+    ~HookManager();
 
     void add_hook(StringView hook_name, String group, Regex filter, String commands);
     void remove_hooks(StringView group);
@@ -23,17 +24,11 @@ public:
                   Context& context) const;
 
 private:
-    HookManager()
-        : m_parent(nullptr) {}
+    HookManager();
     // the only one allowed to construct a root hook manager
     friend class Scope;
 
-    struct Hook
-    {
-        String group;
-        Regex filter;
-        String commands;
-    };
+    struct Hook;
 
     SafePtr<HookManager> m_parent;
     HashMap<String, Vector<std::unique_ptr<Hook>, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hooks;
