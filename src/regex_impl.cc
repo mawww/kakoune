@@ -812,19 +812,17 @@ CompiledRegex compile_regex(StringView re)
 }
 
 auto test_regex = UnitTest{[]{
-    struct TestVM : ThreadedRegexVM<const char*>
+    struct TestVM : CompiledRegex, ThreadedRegexVM<const char*>
     {
         TestVM(StringView re, bool dump = false)
-            : ThreadedRegexVM{m_program},
-              m_program{RegexCompiler::compile(re)}
-        { if (dump) dump_regex(m_program); }
+            : CompiledRegex{RegexCompiler::compile(re)},
+              ThreadedRegexVM{(const CompiledRegex&)*this}
+        { if (dump) dump_regex(*this); }
 
         bool exec(StringView re, bool match = true, bool longest = false)
         {
             return ThreadedRegexVM::exec(re.begin(), re.end(), match, longest);
         }
-
-        CompiledRegex m_program;
     };
 
     {
