@@ -441,7 +441,7 @@ private:
                 if (*it++ != '}')
                    parse_error("expected closing bracket");
                 m_pos = it;
-                return {ParsedRegex::Quantifier::RepeatMinMax, true, min, max};
+                return {ParsedRegex::Quantifier::RepeatMinMax, check_greedy(), min, max};
             }
             default: return {ParsedRegex::Quantifier::One};
         }
@@ -918,6 +918,23 @@ auto test_regex = UnitTest{[]{
         kak_assert(not vm.exec("àeY"));
         kak_assert(vm.exec("dcbàX"));
         kak_assert(not vm.exec("efg"));
+    }
+
+    {
+        TestVM vm{R"((a{3,5})a+)"};
+        kak_assert(vm.exec("aaaaaa", true, true));
+        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "aaaaa");
+    }
+
+    {
+        TestVM vm{R"((a{3,5}?)a+)"};
+        kak_assert(vm.exec("aaaaaa", true, true));
+        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "aaa");
+    }
+
+    {
+        TestVM vm{R"((a{3,5}?)a)"};
+        kak_assert(vm.exec("aaaa"));
     }
 
     {
