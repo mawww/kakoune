@@ -32,7 +32,7 @@ def -hidden c-family-indent-on-newline %< eval -draft -itersel %<
     exec \;
     try %<
         # if previous line closed a paren, copy indent of the opening paren line
-        exec -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?$<ret> m<a-\;>J s\A|.\Z<ret> 1<a-&>
+        exec -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?$<ret> m<a-\;>J s\A|.\z<ret> 1<a-&>
     > catch %<
         # else indent new lines with the same level as the previous one
         exec -draft K <a-&>
@@ -51,7 +51,7 @@ def -hidden c-family-indent-on-newline %< eval -draft -itersel %<
         # Go to opening parenthesis and opening brace, then select the most nested one
         try %< try %< exec [bZ<a-\;>[B<a-z><gt> > catch %< exec [B > >
         # Validate selection and get first and last char
-        exec <a-k>\A[{(](\h*\S+)+\n<ret> <a-:><a-\;>L s\A|.\Z<ret>
+        exec <a-k>\A[{(](\h*\S+)+\n<ret> <a-:><a-\;>L s\A|.\z<ret>
         # Remove eventual indent from new line
         try %< exec -draft <space> <a-h> s\h+<ret> d >
         # Now align that new line with the opening parenthesis/brace
@@ -61,12 +61,12 @@ def -hidden c-family-indent-on-newline %< eval -draft -itersel %<
 
 def -hidden c-family-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
-    try %[ exec -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\Z <ret> s \A|.\Z <ret> 1<a-&> ]
+    try %[ exec -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\Z <ret> 1<a-&> ]
 ]
 
 def -hidden c-family-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
-    try %[ exec -itersel -draft <a-h><a-:><a-k>^\h+\}$<ret>hms\A|.\Z<ret>1<a-&> ]
+    try %[ exec -itersel -draft <a-h><a-:><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
 def -hidden c-family-insert-on-closing-curly-brace %[
@@ -94,7 +94,7 @@ def -hidden c-family-insert-on-newline %[ eval -draft %[
         exec -draft k<a-x> <a-k>^(\h*/\*|\h+\*(?!/))<ret>
 
         # find comment opening, validate it was not closed, and check its using star prefixes
-        exec -draft <a-?>/\*<ret><a-H> <a-K>\*/<ret> <a-k>\A\h*/\*([^\n]*\n\h*\*)*[^\n]*\n\h*.\Z<ret>
+        exec -draft <a-?>/\*<ret><a-H> <a-K>\*/<ret> <a-k>\A\h*/\*([^\n]*\n\h*\*)*[^\n]*\n\h*.\z<ret>
 
         try %[
             # if the previous line is opening the comment, insert star preceeded by space

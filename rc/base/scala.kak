@@ -55,7 +55,7 @@ def -hidden scala-indent-on-new-line %[
 def -hidden scala-indent-on-closing-curly-brace %[
     eval -draft -itersel %[
         # align to opening curly brace when alone on a line
-        try %[ exec -draft <a-h> <a-k> ^\h+\}$ <ret> m s \A|.\Z <ret> 1<a-&> ]
+        try %[ exec -draft <a-h> <a-k> ^\h+\}$ <ret> m s \A|.\z <ret> 1<a-&> ]
     ]
 ]
 

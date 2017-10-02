@@ -44,7 +44,7 @@ def go-complete -docstring "Complete the current selection with gocode" %{
 def go-enable-autocomplete -docstring "Add gocode completion candidates to the completer" %{
     set window completers "option=gocode_completions:%opt{completers}"
     hook window -group go-autocomplete InsertIdle .* %{ try %{
-        exec -draft <a-h><a-k>[\w\.].\Z<ret>
+        exec -draft <a-h><a-k>[\w\.].\z<ret>
         go-complete
     } }
     alias window complete go-complete

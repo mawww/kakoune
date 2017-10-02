@@ -85,7 +85,7 @@ def -hidden haskell-indent-on-new-line %{
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # align to first clause
-        try %{ exec -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|do|let|where)\h+\K.* <ret> s \A|.\Z <ret> & }
+        try %{ exec -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|do|let|where)\h+\K.* <ret> s \A|.\z <ret> & }
         # filter previous line
         try %{ exec -draft k : haskell-filter-around-selections <ret> }
         # indent after lines beginning with condition or ending with expression or =(

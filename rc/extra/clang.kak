@@ -105,7 +105,7 @@ def clang-complete -docstring "Complete the current selection" %{ clang-parse -c
 
 def -hidden clang-show-completion-info %[ try %[
     eval -draft %[
-        exec <space>{( <a-k> ^\( <ret> b <a-k> \A\w+\Z <ret>
+        exec <space>{( <a-k> ^\( <ret> b <a-k> \A\w+\z <ret>
         %sh[
             desc=$(printf %s\\n "${kak_opt_clang_completions}" | sed -e "{ s/\([^\\]\):/\1\n/g }" | sed -ne "/^${kak_selection}|/ { s/^[^|]\+|//; s/|.*$//; s/\\\:/:/g; p }")
             if [ -n "$desc" ]; then
@@ -118,7 +118,7 @@ def clang-enable-autocomplete -docstring "Enable automatic clang completion" %{
     set window completers "option=clang_completions:%opt{completers}"
     hook window -group clang-autocomplete InsertIdle .* %{
         try %{
-            exec -draft <a-h><a-k>(\.|->|::).\Z<ret>
+            exec -draft <a-h><a-k>(\.|->|::).\z<ret>
             echo 'completing...'
             clang-complete
         }

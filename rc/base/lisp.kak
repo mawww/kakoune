@@ -36,7 +36,7 @@ def -hidden lisp-indent-on-new-line %{
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
         # indent when matches opening paren
-        try %{ exec -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\Z <ret> <a-\;> \; <a-gt> }
+        try %{ exec -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> <a-\;> \; <a-gt> }
     }
 }
 

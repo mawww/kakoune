@@ -158,7 +158,7 @@ private:
                     case 'b': m_pos += 2; return new_node(ParsedRegex::WordBoundary);
                     case 'B': m_pos += 2; return new_node(ParsedRegex::NotWordBoundary);
                     case 'A': m_pos += 2; return new_node(ParsedRegex::SubjectBegin);
-                    case 'Z': m_pos += 2; return new_node(ParsedRegex::SubjectEnd);
+                    case 'z': m_pos += 2; return new_node(ParsedRegex::SubjectEnd);
                     case 'K': m_pos += 2; return new_node(ParsedRegex::ResetStart);
                 }
                 break;

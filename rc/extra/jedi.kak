@@ -33,7 +33,7 @@ def jedi-complete -docstring "Complete the current selection" %{
 def jedi-enable-autocomplete -docstring "Add jedi completion candidates to the completer" %{
     set window completers "option=jedi_completions:%opt{completers}"
     hook window -group jedi-autocomplete InsertIdle .* %{ try %{
-        exec -draft <a-h><a-k>\..\Z<ret>
+        exec -draft <a-h><a-k>\..\z<ret>
         echo 'completing...'
         jedi-complete
     } }

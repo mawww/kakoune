@@ -55,7 +55,7 @@ def racer-complete -docstring "Complete the current selection with racer" %{
 def racer-enable-autocomplete -docstring "Add racer completion candidates to the completer" %{
     set window completers "option=racer_completions:%opt{completers}"
     hook window -group racer-autocomplete InsertIdle .* %{ try %{
-        exec -draft <a-h><a-k>([\w\.]|::).\Z<ret>
+        exec -draft <a-h><a-k>([\w\.]|::).\z<ret>
         racer-complete
     } }
     alias window complete racer-complete
