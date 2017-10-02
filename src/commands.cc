@@ -1639,11 +1639,11 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
             func(parser, c);
 
-            if (&sels.buffer() != &c.buffer())
-                throw runtime_error("the buffer has changed while iterating on selections");
-
             if (not draft)
             {
+                if (&sels.buffer() != &c.buffer())
+                    throw runtime_error("the buffer has changed while iterating on selections");
+
                 update_selections(new_sels, main, c.buffer(), timestamp);
                 timestamp = c.buffer().timestamp();
                 for (auto& sel : c.selections())
