@@ -307,7 +307,7 @@ private:
         Vector<std::pair<wctype_t, bool>> ctypes;
         while (m_pos != m_regex.end() and *m_pos != ']')
         {
-            const auto cp = *m_pos++;
+            auto cp = *m_pos++;
             if (cp == '-')
             {
                 ranges.push_back({ '-', '-' });
@@ -334,6 +334,13 @@ private:
                     }
                     ++m_pos;
                     continue;
+                }
+                else // its just an escaped character
+                {
+                    
+                    if (++m_pos == m_regex.end())
+                        break;
+                    cp = *m_pos;
                 }
             }
 
@@ -1222,6 +1229,12 @@ auto test_regex = UnitTest{[]{
     {
         TestVM vm{R"(Foo(?i)f[oB]+)"};
         kak_assert(vm.exec("FooFOoBb"));
+    }
+
+    {
+        TestVM vm{R"([^\]]+)"};
+        kak_assert(not vm.exec("a]c"));
+        kak_assert(vm.exec("abc"));
     }
 }};
 
