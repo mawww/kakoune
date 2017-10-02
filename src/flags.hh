@@ -27,7 +27,7 @@ constexpr Flags operator|(Flags lhs, Flags rhs)
 }
 
 template<typename Flags, typename = EnableIfWithBitOps<Flags>>
-Flags& operator|=(Flags& lhs, Flags rhs)
+constexpr Flags& operator|=(Flags& lhs, Flags rhs)
 {
     (UnderlyingType<Flags>&) lhs |= (UnderlyingType<Flags>) rhs;
     return lhs;
@@ -41,8 +41,8 @@ struct TestableFlags
     constexpr operator Flags() const { return value; }
     constexpr operator UnderlyingType<Flags>() const { return (UnderlyingType<Flags>)value; }
 
-    bool operator==(const TestableFlags<Flags>& other) const { return value == other.value; }
-    bool operator!=(const TestableFlags<Flags>& other) const { return value != other.value; }
+    constexpr bool operator==(const TestableFlags<Flags>& other) const { return value == other.value; }
+    constexpr bool operator!=(const TestableFlags<Flags>& other) const { return value != other.value; }
 };
 
 template<typename Flags, typename = EnableIfWithBitOps<Flags>>
@@ -52,7 +52,7 @@ constexpr TestableFlags<Flags> operator&(Flags lhs, Flags rhs)
 }
 
 template<typename Flags, typename = EnableIfWithBitOps<Flags>>
-Flags& operator&=(Flags& lhs, Flags rhs)
+constexpr Flags& operator&=(Flags& lhs, Flags rhs)
 {
     (UnderlyingType<Flags>&) lhs &= (UnderlyingType<Flags>) rhs;
     return lhs;
@@ -71,7 +71,7 @@ constexpr Flags operator^(Flags lhs, Flags rhs)
 }
 
 template<typename Flags, typename = EnableIfWithBitOps<Flags>>
-Flags& operator^=(Flags& lhs, Flags rhs)
+constexpr Flags& operator^=(Flags& lhs, Flags rhs)
 {
     (UnderlyingType<Flags>&) lhs ^= (UnderlyingType<Flags>) rhs;
     return lhs;
