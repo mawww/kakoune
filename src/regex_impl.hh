@@ -242,6 +242,8 @@ struct ThreadedRegexVM
             if (m_threads.empty())
                 return found_match;
         }
+        if (found_match)
+            return true;
 
         // Step remaining threads to see if they match without consuming anything else
         for (int i = 0; i < m_threads.size(); ++i)
@@ -249,14 +251,10 @@ struct ThreadedRegexVM
             if (step(i) == StepResult::Matched)
             {
                 m_captures = std::move(m_threads[i].saves);
-                if (flags & RegexExecFlags::AnyMatch)
-                    return true;
-
-                found_match = true;
-                m_threads.resize(i); // remove this and lower priority threads
+                return true;
             }
         }
-        return found_match;
+        return false;
     }
 
     void add_thread(int index, const char* inst, Vector<Iterator> saves)
