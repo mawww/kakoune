@@ -18,7 +18,7 @@ add-highlighter -group /latex/comment fill comment
 # Scopes, starting with a backslash
 add-highlighter -group /latex/content regex '\\(?!_)\w+\b' 0:keyword
 # Options passed to scopes, between brackets
-add-highlighter -group /latex/content regex '\\(?!_)\w+\b\[([^]]+)\]' 1:value
+add-highlighter -group /latex/content regex '\\(?!_)\w+\b\[([^\]]+)\]' 1:value
 # Content between dollar signs/pairs
 add-highlighter -group /latex/content regex '(?<!\\)\$\$?([^$]|(?<=\\)\$)+\$\$?' 0:magenta
 # Emphasized text
