@@ -821,7 +821,13 @@ auto test_regex = UnitTest{[]{
 
         bool exec(StringView re, bool match = true, bool longest = false)
         {
-            return ThreadedRegexVM::exec(re.begin(), re.end(), match, longest);
+            RegexExecFlags flags = RegexExecFlags::None;
+            if (not match)
+                flags |= RegexExecFlags::Search;
+            if (not longest)
+                flags |= RegexExecFlags::AnyMatch;
+
+            return ThreadedRegexVM::exec(re.begin(), re.end(), flags);
         }
     };
 

@@ -130,6 +130,28 @@ void check_captures(const Regex& re, const MatchResults<It>& res, const Vector<I
     }
 }
 
+inline RegexExecFlags convert_flags(RegexConstant::match_flag_type flags)
+{
+    auto res = RegexExecFlags::None;
+
+    if (flags & RegexConstant::match_not_bol)
+        res |= RegexExecFlags::NotBeginOfLine;
+    if (flags & RegexConstant::match_not_eol)
+        res |= RegexExecFlags::NotEndOfLine;
+    if (flags & RegexConstant::match_not_bow)
+        res |= RegexExecFlags::NotBeginOfWord;
+    if (flags & RegexConstant::match_not_eow)
+        res |= RegexExecFlags::NotEndOfWord;
+    if (flags & RegexConstant::match_not_bob)
+        res |= RegexExecFlags::NotBeginOfSubject;
+    if (flags & RegexConstant::match_not_initial_null)
+        res |= RegexExecFlags::NotInitialNull;
+    if (flags & RegexConstant::match_any)
+        res |= RegexExecFlags::AnyMatch;
+
+    return res;
+}
+
 template<typename It>
 bool regex_match(It begin, It end, const Regex& re)
 {
@@ -172,7 +194,7 @@ bool regex_search(It begin, It end, const Regex& re,
     try
     {
         bool matched = boost::regex_search<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, re, flags);
-        if (re.impl() and matched != regex_search(begin, end, re.impl()))
+        if (re.impl() and matched != regex_search(begin, end, re.impl(), convert_flags(flags)))
             regex_mismatch(re);
         return matched;
     }
@@ -190,7 +212,7 @@ bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
     {
         bool matched = boost::regex_search<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, res, re, flags);
         Vector<It> captures;
-        if (re.impl() and matched != regex_search(begin, end, captures, re.impl()))
+        if (re.impl() and matched != regex_search(begin, end, captures, re.impl(), convert_flags(flags)))
             regex_mismatch(re);
         if (re.impl() and matched)
             check_captures(re, res, captures);
