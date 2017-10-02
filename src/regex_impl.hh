@@ -92,16 +92,16 @@ struct ThreadedRegexVM
                 }
                 case CompiledRegex::Split_PrioritizeParent:
                 {
-                    add_thread(thread_index+1, *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst), thread.saves);
-                    // thread is invalidated now, as we mutated the m_thread vector
-                    m_threads[thread_index].inst += sizeof(CompiledRegex::Offset);
+                    auto new_thread_inst = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst);
+                    thread.inst += sizeof(CompiledRegex::Offset);
+                    add_thread(thread_index+1, new_thread_inst, thread.saves);
                     break;
                 }
                 case CompiledRegex::Split_PrioritizeChild:
                 {
-                    add_thread(thread_index+1, thread.inst + sizeof(CompiledRegex::Offset) - prog_start, thread.saves);
-                    // thread is invalidated now, as we mutated the m_thread vector
-                    m_threads[thread_index].inst = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(m_threads[thread_index].inst);
+                    auto new_thread_inst = thread.inst + sizeof(CompiledRegex::Offset);
+                    thread.inst = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst);
+                    add_thread(thread_index+1, new_thread_inst, thread.saves);
                     break;
                 }
                 case CompiledRegex::Save:
@@ -177,7 +177,8 @@ struct ThreadedRegexVM
     {
         bool found_match = false;
         m_threads.clear();
-        add_thread(0, match ? CompiledRegex::search_prefix_size : 0,
+        const auto start_offset = (match ? CompiledRegex::search_prefix_size : 0);
+        add_thread(0, m_program.bytecode.data() + start_offset,
                    Vector<Iterator>(m_program.save_count, Iterator{}));
 
         m_begin = begin;
@@ -235,9 +236,8 @@ struct ThreadedRegexVM
         return found_match;
     }
 
-    void add_thread(int index, CompiledRegex::Offset pos, Vector<Iterator> saves)
+    void add_thread(int index, const char* inst, Vector<Iterator> saves)
     {
-        const char* inst = m_program.bytecode.data() + pos;
         if (std::find_if(m_threads.begin(), m_threads.end(),
                          [inst](const Thread& t) { return t.inst == inst; }) == m_threads.end())
             m_threads.insert(m_threads.begin() + index, {inst, std::move(saves)});
