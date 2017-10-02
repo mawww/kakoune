@@ -5,6 +5,7 @@
 #include "utf8.hh"
 #include "utf8_iterator.hh"
 #include "vector.hh"
+#include "flags.hh"
 
 namespace Kakoune
 {
@@ -45,6 +46,21 @@ struct CompiledRegex
 };
 
 CompiledRegex compile_regex(StringView re);
+
+enum class RegexExecFlags
+{
+    None              = 0,
+    Search            = 1 << 0,
+    NotBeginOfLine    = 1 << 1,
+    NotEndOfLine      = 1 << 2,
+    NotBeginOfWord    = 1 << 3,
+    NotEndOfWord      = 1 << 4,
+    NotBeginOfSubject = 1 << 5,
+    NotInitialNull    = 1 << 6,
+    AnyMatch          = 1 << 7
+};
+
+constexpr bool with_bit_ops(Meta::Type<RegexExecFlags>) { return true; }
 
 template<typename Iterator>
 struct ThreadedRegexVM
@@ -133,7 +149,7 @@ struct ThreadedRegexVM
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::SubjectBegin:
-                    if (m_pos != m_begin)
+                    if (m_pos != m_begin or m_flags & RegexExecFlags::NotBeginOfSubject)
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::SubjectEnd:
@@ -173,16 +189,20 @@ struct ThreadedRegexVM
         return StepResult::Failed;
     }
 
-    bool exec(Iterator begin, Iterator end, bool match = true, bool longest = false)
+    bool exec(Iterator begin, Iterator end, RegexExecFlags flags)
     {
         bool found_match = false;
         m_threads.clear();
-        const auto start_offset = (match ? CompiledRegex::search_prefix_size : 0);
+        const auto start_offset = (flags & RegexExecFlags::Search) ? 0 : CompiledRegex::search_prefix_size;
         add_thread(0, m_program.bytecode.data() + start_offset,
                    Vector<Iterator>(m_program.save_count, Iterator{}));
 
         m_begin = begin;
         m_end = end;
+        m_flags = flags;
+
+        if (flags & RegexExecFlags::NotInitialNull and m_begin == m_end)
+            return false;
 
         for (m_pos = Utf8It{m_begin, m_begin, m_end}; m_pos != m_end; ++m_pos)
         {
@@ -191,17 +211,19 @@ struct ThreadedRegexVM
                 const auto res = step(i);
                 if (res == StepResult::Matched)
                 {
-                    if (match)
+                    if (not (flags & RegexExecFlags::Search) or // We are not at end, this is not a full match
+                        (flags & RegexExecFlags::NotInitialNull and m_pos == m_begin))
                     {
                         m_threads.erase(m_threads.begin() + i);
-                        continue; // We are not at end, this is not a full match
+                        continue;
                     }
 
                     m_captures = std::move(m_threads[i].saves);
+                    if (flags & RegexExecFlags::AnyMatch)
+                        return true;
+
                     found_match = true;
                     m_threads.resize(i); // remove this and lower priority threads
-                    if (not longest)
-                        return true;
                 }
                 else if (res == StepResult::Failed)
                     m_threads.erase(m_threads.begin() + i);
@@ -227,10 +249,11 @@ struct ThreadedRegexVM
             if (step(i) == StepResult::Matched)
             {
                 m_captures = std::move(m_threads[i].saves);
+                if (flags & RegexExecFlags::AnyMatch)
+                    return true;
+
                 found_match = true;
                 m_threads.resize(i); // remove this and lower priority threads
-                if (not longest)
-                    return true;
             }
         }
         return found_match;
@@ -246,17 +269,20 @@ struct ThreadedRegexVM
 
     bool is_line_start() const
     {
-        return m_pos == m_begin or *(m_pos-1) == '\n';
+        return (m_pos == m_begin and not (m_flags & RegexExecFlags::NotBeginOfLine)) or
+               *(m_pos-1) == '\n';
     }
 
     bool is_line_end() const
     {
-        return m_pos == m_end or *m_pos == '\n';
+        return (m_pos == m_end and not (m_flags & RegexExecFlags::NotEndOfLine)) or
+               *m_pos == '\n';
     }
 
     bool is_word_boundary() const
     {
-        return m_pos == m_begin or m_pos == m_end or
+        return (m_pos == m_begin and not (m_flags & RegexExecFlags::NotBeginOfWord)) or
+               (m_pos == m_end and not (m_flags & RegexExecFlags::NotEndOfWord)) or
                is_word(*(m_pos-1)) != is_word(*m_pos);
     }
 
@@ -268,22 +294,24 @@ struct ThreadedRegexVM
     Iterator m_begin;
     Iterator m_end;
     Utf8It m_pos;
+    RegexExecFlags m_flags;
 
     Vector<Iterator> m_captures;
 };
 
 template<typename It>
-bool regex_match(It begin, It end, const CompiledRegex& re)
+bool regex_match(It begin, It end, const CompiledRegex& re, RegexExecFlags flags = RegexExecFlags::None)
 {
     ThreadedRegexVM<It> vm{re};
-    return vm.exec(begin, end, true, false);
+    return vm.exec(begin, end, (RegexExecFlags)(flags & ~(RegexExecFlags::Search)) | RegexExecFlags::AnyMatch);
 }
 
 template<typename It>
-bool regex_match(It begin, It end, Vector<It>& captures, const CompiledRegex& re)
+bool regex_match(It begin, It end, Vector<It>& captures, const CompiledRegex& re,
+                 RegexExecFlags flags = RegexExecFlags::None)
 {
     ThreadedRegexVM<It> vm{re};
-    if (vm.exec(begin, end, true, true))
+    if (vm.exec(begin, end,  flags & ~(RegexExecFlags::Search)))
     {
         captures = std::move(vm.m_captures);
         return true;
@@ -292,17 +320,19 @@ bool regex_match(It begin, It end, Vector<It>& captures, const CompiledRegex& re
 }
 
 template<typename It>
-bool regex_search(It begin, It end, const CompiledRegex& re)
+bool regex_search(It begin, It end, const CompiledRegex& re,
+                  RegexExecFlags flags = RegexExecFlags::None)
 {
     ThreadedRegexVM<It> vm{re};
-    return vm.exec(begin, end, false, false);
+    return vm.exec(begin, end, flags | RegexExecFlags::Search | RegexExecFlags::AnyMatch);
 }
 
 template<typename It>
-bool regex_search(It begin, It end, Vector<It>& captures, const CompiledRegex& re)
+bool regex_search(It begin, It end, Vector<It>& captures, const CompiledRegex& re,
+                  RegexExecFlags flags = RegexExecFlags::None)
 {
     ThreadedRegexVM<It> vm{re};
-    if (vm.exec(begin, end, false, true))
+    if (vm.exec(begin, end, flags | RegexExecFlags::Search))
     {
         captures = std::move(vm.m_captures);
         return true;
