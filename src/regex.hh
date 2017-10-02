@@ -83,21 +83,6 @@ struct MatchResults : boost::match_results<RegexUtf8It<Iterator>>
     SubMatch operator[](size_t s) const { return {ParentType::operator[](s)}; }
 };
 
-template<typename Iterator>
-struct RegexIterator : RegexIteratorBase<Iterator>
-{
-    using Utf8It = RegexUtf8It<Iterator>;
-    using ValueType = MatchResults<Iterator>;
-
-    RegexIterator() = default;
-    RegexIterator(Iterator begin, Iterator end, const Regex& re,
-                  RegexConstant::match_flag_type flags = RegexConstant::match_default)
-        : RegexIteratorBase<Iterator>{Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re, flags} {}
-
-    const ValueType& operator*() const { return *reinterpret_cast<const ValueType*>(&RegexIteratorBase<Iterator>::operator*()); }
-    const ValueType* operator->() const { return reinterpret_cast<const ValueType*>(RegexIteratorBase<Iterator>::operator->()); }
-};
-
 inline RegexConstant::match_flag_type match_flags(bool bol, bool eol, bool bow, bool eow)
 {
     return (bol ? RegexConstant::match_default : RegexConstant::match_not_bol) |
@@ -226,6 +211,73 @@ bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
 
 String option_to_string(const Regex& re);
 void option_from_string(StringView str, Regex& re);
+
+template<typename Iterator>
+struct RegexIterator
+{
+    using Utf8It = RegexUtf8It<Iterator>;
+    using ValueType = MatchResults<Iterator>;
+
+    RegexIterator() = default;
+    RegexIterator(Iterator begin, Iterator end, const Regex& re,
+                  RegexConstant::match_flag_type flags = RegexConstant::match_default)
+        : m_regex{&re}, m_next_begin{begin}, m_begin{begin}, m_end{end}, m_flags{flags}
+    {
+        next();
+    }
+
+    const ValueType& operator*() const { kak_assert(m_regex); return m_results; }
+    const ValueType* operator->() const { kak_assert(m_regex); return &m_results; }
+
+    RegexIterator& operator++()
+    {
+        next();
+        return *this;
+    }
+
+    friend bool operator==(const RegexIterator& lhs, const RegexIterator& rhs)
+    {
+        if (lhs.m_regex == nullptr and rhs.m_regex == nullptr)
+            return true;
+
+        return lhs.m_regex == rhs.m_regex and
+               lhs.m_next_begin == rhs.m_next_begin and
+               lhs.m_end == rhs.m_end and
+               lhs.m_flags == rhs.m_flags and
+               lhs.m_results == rhs.m_results;
+    }
+
+    friend bool operator!=(const RegexIterator& lhs, const RegexIterator& rhs)
+    {
+        return not (lhs == rhs);
+    }
+
+private:
+    void next()
+    {
+        kak_assert(m_regex);
+
+        RegexConstant::match_flag_type additional_flags{};
+        if (m_results.size() and m_results[0].first == m_results[0].second)
+            additional_flags |= RegexConstant::match_not_initial_null;
+        if (m_begin != m_next_begin)
+            additional_flags |= RegexConstant::match_not_bob;
+
+        if (not regex_search(m_next_begin, m_end, m_results, *m_regex,
+                             m_flags | additional_flags))
+            m_regex = nullptr;
+        else
+            m_next_begin = m_results[0].second;
+    }
+
+    const Regex* m_regex = nullptr;
+    MatchResults<Iterator> m_results;
+    Iterator m_next_begin{};
+    const Iterator m_begin{};
+    const Iterator m_end{};
+    const RegexConstant::match_flag_type m_flags = RegexConstant::match_default;
+};
+
 
 }
 
