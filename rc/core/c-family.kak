@@ -261,7 +261,7 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
     alias window alt c-family-alternative-file
 ]
 
-hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[
+hook global WinSetOption filetype=(?!c)(?!cpp)(?!objc).* %[
     remove-hooks window c-family-hooks
     remove-hooks window c-family-indent
     remove-hooks window c-family-insert
@@ -270,13 +270,13 @@ hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[
 ]
 
 hook -group c-highlight global WinSetOption filetype=c %[ add-highlighter ref c ]
-hook -group c-highlight global WinSetOption filetype=(?!c$).* %[ remove-highlighter c ]
+hook -group c-highlight global WinSetOption filetype=(?!c).* %[ remove-highlighter c ]
 
 hook -group cpp-highlight global WinSetOption filetype=cpp %[ add-highlighter ref cpp ]
-hook -group cpp-highlight global WinSetOption filetype=(?!cpp$).* %[ remove-highlighter cpp ]
+hook -group cpp-highlight global WinSetOption filetype=(?!cpp).* %[ remove-highlighter cpp ]
 
 hook -group objc-highlight global WinSetOption filetype=objc %[ add-highlighter ref objc ]
-hook -group objc-highlight global WinSetOption filetype=(?!objc$).* %[ remove-highlighter objc ]
+hook -group objc-highlight global WinSetOption filetype=(?!objc).* %[ remove-highlighter objc ]
 
 decl -docstring %{control the type of include guard to be inserted in empty headers
 Can be one of the following:

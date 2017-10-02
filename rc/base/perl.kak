@@ -12,10 +12,10 @@ hook global BufCreate .*\.p[lm] %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter -group / regions -default code perl \
-    command '(?<!\$|\\)`' (?<!\\)(\\\\)*` '' \
-    double_string '(?<!\$|\\)"' (?<!\\)(\\\\)*" '' \
-    single_string "(?<!\\$|\\\\)'" (?<!\\)(\\\\)*' '' \
-    comment '(?<!\$|\\)#' $ ''
+    command '(?<!\$)(?<!\\)`' (?<!\\)(\\\\)*` '' \
+    double_string '(?<!\$)(?<!\\)"' (?<!\\)(\\\\)*" '' \
+    single_string "(?<!\\$)(?<!\\\\)'" (?<!\\)(\\\\)*' '' \
+    comment '(?<!\$)(?<!\\)#' $ ''
 
 add-highlighter -group /perl/command fill magenta
 add-highlighter -group /perl/double_string fill string
