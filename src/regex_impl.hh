@@ -57,7 +57,8 @@ enum class RegexExecFlags
     NotEndOfWord      = 1 << 4,
     NotBeginOfSubject = 1 << 5,
     NotInitialNull    = 1 << 6,
-    AnyMatch          = 1 << 7
+    AnyMatch          = 1 << 7,
+    NoSaves           = 1 << 8,
 };
 
 constexpr bool with_bit_ops(Meta::Type<RegexExecFlags>) { return true; }
@@ -124,7 +125,8 @@ struct ThreadedRegexVM
                     auto parent = thread.inst + sizeof(CompiledRegex::Offset);
                     auto child = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst);
                     thread.inst = parent;
-                    ++thread.saves->refcount;
+                    if (thread.saves)
+                        ++thread.saves->refcount;
                     m_current_threads.push_back({child, thread.saves});
                     break;
                 }
@@ -133,12 +135,16 @@ struct ThreadedRegexVM
                     auto parent = thread.inst + sizeof(CompiledRegex::Offset);
                     auto child = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst);
                     thread.inst = child;
-                    ++thread.saves->refcount;
+                    if (thread.saves)
+                        ++thread.saves->refcount;
                     m_current_threads.push_back({parent, thread.saves});
                     break;
                 }
                 case CompiledRegex::Save:
                 {
+                    if (thread.saves == nullptr)
+                        break;
+
                     const char index = *thread.inst++;
                     if (thread.saves->refcount > 1)
                     {
@@ -213,23 +219,29 @@ struct ThreadedRegexVM
 
     bool exec(Iterator begin, Iterator end, RegexExecFlags flags)
     {
+        m_begin = begin;
+        m_end = end;
+        m_flags = flags;
+
         bool found_match = false;
         m_current_threads.clear();
         m_next_threads.clear();
 
-        const auto start_offset = (flags & RegexExecFlags::Search) ? 0 : CompiledRegex::search_prefix_size;
-        m_saves.push_back(std::make_unique<Saves>(Saves{1, Vector<Iterator>(m_program.save_count, Iterator{})}));
-        m_current_threads.push_back({m_program.bytecode.data() + start_offset, m_saves.back().get()});
+        Saves* initial_saves = nullptr;
+        if (not (m_flags & RegexExecFlags::NoSaves))
+        {
+            m_saves.push_back(std::make_unique<Saves>(Saves{1, Vector<Iterator>(m_program.save_count, Iterator{})}));
+            initial_saves = m_saves.back().get();
+        }
 
-        m_begin = begin;
-        m_end = end;
-        m_flags = flags;
+        const auto start_offset = (flags & RegexExecFlags::Search) ? 0 : CompiledRegex::search_prefix_size;
+        m_current_threads.push_back({m_program.bytecode.data() + start_offset, initial_saves});
 
         if (flags & RegexExecFlags::NotInitialNull and m_begin == m_end)
             return false;
 
         auto release_saves = [this](Saves* saves) {
-            if (--saves->refcount == 0)
+            if (saves and --saves->refcount == 0)
                 m_free_saves.push_back(saves);
         };
 
@@ -249,7 +261,9 @@ struct ThreadedRegexVM
                         continue;
                     }
 
-                    m_captures = std::move(thread.saves->pos);
+                    if (thread.saves)
+                        m_captures = std::move(thread.saves->pos);
+
                     if (flags & RegexExecFlags::AnyMatch)
                         return true;
 
@@ -283,7 +297,8 @@ struct ThreadedRegexVM
             m_current_threads.pop_back();
             if (step(thread) == StepResult::Matched)
             {
-                m_captures = std::move(thread.saves->pos);
+                if (thread.saves)
+                    m_captures = std::move(thread.saves->pos);
                 return true;
             }
         }
@@ -330,7 +345,8 @@ template<typename It>
 bool regex_match(It begin, It end, const CompiledRegex& re, RegexExecFlags flags = RegexExecFlags::None)
 {
     ThreadedRegexVM<It> vm{re};
-    return vm.exec(begin, end, (RegexExecFlags)(flags & ~(RegexExecFlags::Search)) | RegexExecFlags::AnyMatch);
+    return vm.exec(begin, end, (RegexExecFlags)(flags & ~(RegexExecFlags::Search)) |
+                               RegexExecFlags::AnyMatch | RegexExecFlags::NoSaves);
 }
 
 template<typename It>
@@ -351,7 +367,7 @@ bool regex_search(It begin, It end, const CompiledRegex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
 {
     ThreadedRegexVM<It> vm{re};
-    return vm.exec(begin, end, flags | RegexExecFlags::Search | RegexExecFlags::AnyMatch);
+    return vm.exec(begin, end, flags | RegexExecFlags::Search | RegexExecFlags::AnyMatch | RegexExecFlags::NoSaves);
 }
 
 template<typename It>
