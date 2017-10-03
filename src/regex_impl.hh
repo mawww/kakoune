@@ -76,21 +76,17 @@ struct ThreadedRegexVM
 
     Saves* clone_saves(Saves* saves)
     {
-        Saves* res = nullptr;
         if (not m_free_saves.empty())
         {
-            res = m_free_saves.back();
+            Saves* res = m_free_saves.back();
             m_free_saves.pop_back();
-        }
-        else
-        {
-            m_saves.push_back(std::make_unique<Saves>());
-            res = m_saves.back().get();
+            res->refcount = 1;
+            res->pos = saves->pos;
+            return res;
         }
 
-        res->refcount = 1;
-        res->pos = saves->pos;
-        return res;
+        m_saves.push_back(std::make_unique<Saves>(Saves{1, saves->pos}));
+        return m_saves.back().get();
     }
 
     struct Thread
