@@ -69,10 +69,38 @@ struct ThreadedRegexVM
     ThreadedRegexVM(const CompiledRegex& program)
       : m_program{program} { kak_assert(m_program); }
 
+    ~ThreadedRegexVM()
+    {
+        for (auto* saves : m_saves)
+        {
+            for (size_t i = m_program.save_count-1; i > 0; --i)
+                saves->pos[i].~Iterator();
+            saves->~Saves();
+        }
+    }
+
     struct Saves
     {
         int refcount;
-        Vector<Iterator> pos;
+        Iterator pos[1];
+
+        static Saves* allocate(size_t count)
+        {
+            void* ptr = ::operator new (sizeof(Saves) + (count-1) * sizeof(Iterator));
+            Saves* saves = new (ptr) Saves{1, {}};
+            for (int i = 1; i < count; ++i)
+                new (&saves->pos[i]) Iterator{};
+            return saves;
+        }
+
+        static Saves* allocate(size_t count, const Iterator* pos)
+        {
+            void* ptr = ::operator new (sizeof(Saves) + (count-1) * sizeof(Iterator));
+            Saves* saves = new (ptr) Saves{1, pos[0]};
+            for (size_t i = 1; i < count; ++i)
+                new (&saves->pos[i]) Iterator{pos[i]};
+            return saves;
+        }
     };
 
     Saves* clone_saves(Saves* saves)
@@ -82,12 +110,12 @@ struct ThreadedRegexVM
             Saves* res = m_free_saves.back();
             m_free_saves.pop_back();
             res->refcount = 1;
-            res->pos = saves->pos;
+            std::copy(saves->pos, saves->pos + m_program.save_count, res->pos);
             return res;
         }
 
-        m_saves.push_back(std::make_unique<Saves>(Saves{1, saves->pos}));
-        return m_saves.back().get();
+        m_saves.push_back(Saves::allocate(m_program.save_count, saves->pos));
+        return m_saves.back();
     }
 
     void release_saves(Saves* saves)
@@ -150,13 +178,12 @@ struct ThreadedRegexVM
                 {
                     if (thread.saves == nullptr)
                         break;
-
-                    const char index = *thread.inst++;
                     if (thread.saves->refcount > 1)
                     {
                         --thread.saves->refcount;
                         thread.saves = clone_saves(thread.saves);
                     }
+                    const size_t index = *thread.inst++;
                     thread.saves->pos[index] = m_pos.base();
                     break;
                 }
@@ -237,8 +264,8 @@ struct ThreadedRegexVM
         Saves* initial_saves = nullptr;
         if (not (m_flags & RegexExecFlags::NoSaves))
         {
-            m_saves.push_back(std::make_unique<Saves>(Saves{1, Vector<Iterator>(m_program.save_count, Iterator{})}));
-            initial_saves = m_saves.back().get();
+            m_saves.push_back(Saves::allocate(m_program.save_count));
+            initial_saves = m_saves.back();
         }
 
         const bool search = (flags & RegexExecFlags::Search);
@@ -263,7 +290,7 @@ struct ThreadedRegexVM
                     }
 
                     if (thread.saves)
-                        m_captures = std::move(thread.saves->pos);
+                        m_captures = thread.saves;
 
                     if (flags & RegexExecFlags::AnyMatch)
                         return true;
@@ -299,7 +326,7 @@ struct ThreadedRegexVM
             if (step(thread, current_threads) == StepResult::Matched)
             {
                 if (thread.saves)
-                    m_captures = std::move(thread.saves->pos);
+                    m_captures = thread.saves;
                 return true;
             }
         }
@@ -334,10 +361,10 @@ struct ThreadedRegexVM
     Utf8It m_pos;
     RegexExecFlags m_flags;
 
-    Vector<std::unique_ptr<Saves>> m_saves;
+    Vector<Saves*> m_saves;
     Vector<Saves*> m_free_saves;
 
-    Vector<Iterator> m_captures;
+    Saves* m_captures = nullptr;
 };
 
 template<typename It>
@@ -355,7 +382,7 @@ bool regex_match(It begin, It end, Vector<It>& captures, const CompiledRegex& re
     ThreadedRegexVM<It> vm{re};
     if (vm.exec(begin, end,  flags & ~(RegexExecFlags::Search)))
     {
-        captures = std::move(vm.m_captures);
+        std::copy(vm.m_captures->pos, vm.m_captures->pos + re.save_count, std::back_inserter(captures));
         return true;
     }
     return false;
@@ -376,7 +403,7 @@ bool regex_search(It begin, It end, Vector<It>& captures, const CompiledRegex& r
     ThreadedRegexVM<It> vm{re};
     if (vm.exec(begin, end, flags | RegexExecFlags::Search))
     {
-        captures = std::move(vm.m_captures);
+        std::copy(vm.m_captures->pos, vm.m_captures->pos + re.save_count, std::back_inserter(captures));
         return true;
     }
     return false;
