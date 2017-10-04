@@ -502,7 +502,6 @@ struct RegexCompiler
     RegexCompiler(const ParsedRegex& parsed_regex)
         : m_parsed_regex{parsed_regex}
     {
-        write_search_prefix();
         compile_node(m_parsed_regex.ast);
         push_op(CompiledRegex::Match);
         m_program.matchers = m_parsed_regex.matchers;
@@ -657,17 +656,6 @@ private:
             get_offset(offset) = m_program.bytecode.size();
 
         return pos;
-    }
-
-    // Add a '.*' as the first instructions for the search use case
-    void write_search_prefix()
-    {
-        kak_assert(m_program.bytecode.empty());
-        push_op(CompiledRegex::Split_PrioritizeChild);
-        get_offset(alloc_offset()) = CompiledRegex::search_prefix_size;
-        push_op(CompiledRegex::AnyChar);
-        push_op(CompiledRegex::Split_PrioritizeParent);
-        get_offset(alloc_offset()) = 1 + sizeof(Offset);
     }
 
     Offset alloc_offset()
