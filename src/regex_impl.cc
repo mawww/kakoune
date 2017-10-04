@@ -852,7 +852,7 @@ auto test_regex = UnitTest{[]{
     {
         TestVM vm{R"(^(foo|qux|baz)+(bar)?baz$)"};
         kak_assert(vm.exec("fooquxbarbaz"));
-        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "qux");
+        kak_assert(StringView{vm.m_captures->pos[2], vm.m_captures->pos[3]} == "qux");
         kak_assert(not vm.exec("fooquxbarbaze"));
         kak_assert(not vm.exec("quxbar"));
         kak_assert(not vm.exec("blahblah"));
@@ -863,7 +863,7 @@ auto test_regex = UnitTest{[]{
     {
         TestVM vm{R"(.*\b(foo|bar)\b.*)"};
         kak_assert(vm.exec("qux foo baz"));
-        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "foo");
+        kak_assert(StringView{vm.m_captures->pos[2], vm.m_captures->pos[3]} == "foo");
         kak_assert(not vm.exec("quxfoobaz"));
         kak_assert(vm.exec("bar"));
         kak_assert(not vm.exec("foobar"));
@@ -909,11 +909,11 @@ auto test_regex = UnitTest{[]{
     {
         TestVM vm{R"(f.*a(.*o))"};
         kak_assert(vm.exec("blahfoobarfoobaz", false, true));
-        kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "foobarfoo");
-        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "rfoo");
+        kak_assert(StringView{vm.m_captures->pos[0], vm.m_captures->pos[1]} == "foobarfoo");
+        kak_assert(StringView{vm.m_captures->pos[2], vm.m_captures->pos[3]} == "rfoo");
         kak_assert(vm.exec("mais que fais la police", false, true));
-        kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "fais la po");
-        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == " po");
+        kak_assert(StringView{vm.m_captures->pos[0], vm.m_captures->pos[1]} == "fais la po");
+        kak_assert(StringView{vm.m_captures->pos[2], vm.m_captures->pos[3]} == " po");
     }
 
     {
@@ -927,13 +927,13 @@ auto test_regex = UnitTest{[]{
     {
         TestVM vm{R"((a{3,5})a+)"};
         kak_assert(vm.exec("aaaaaa", true, true));
-        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "aaaaa");
+        kak_assert(StringView{vm.m_captures->pos[2], vm.m_captures->pos[3]} == "aaaaa");
     }
 
     {
         TestVM vm{R"((a{3,5}?)a+)"};
         kak_assert(vm.exec("aaaaaa", true, true));
-        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "aaa");
+        kak_assert(StringView{vm.m_captures->pos[2], vm.m_captures->pos[3]} == "aaa");
     }
 
     {
@@ -973,20 +973,20 @@ auto test_regex = UnitTest{[]{
     {
         TestVM vm{R"(foo\Kbar)"};
         kak_assert(vm.exec("foobar", true, true));
-        kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "bar");
+        kak_assert(StringView{vm.m_captures->pos[0], vm.m_captures->pos[1]} == "bar");
         kak_assert(not vm.exec("bar", true, true));
     }
 
     {
         TestVM vm{R"((fo+?).*)"};
         kak_assert(vm.exec("foooo", true, true));
-        kak_assert(StringView{vm.m_captures[2], vm.m_captures[3]} == "fo");
+        kak_assert(StringView{vm.m_captures->pos[2], vm.m_captures->pos[3]} == "fo");
     }
 
     {
         TestVM vm{R"((?=foo).)"};
         kak_assert(vm.exec("barfoo", false, true));
-        kak_assert(StringView{vm.m_captures[0], vm.m_captures[1]} == "f");
+        kak_assert(StringView{vm.m_captures->pos[0], vm.m_captures->pos[1]} == "f");
     }
 
     {
