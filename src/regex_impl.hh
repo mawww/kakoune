@@ -67,6 +67,8 @@ struct ThreadedRegexVM
     ThreadedRegexVM(const CompiledRegex& program)
       : m_program{program} { kak_assert(m_program); }
 
+    ThreadedRegexVM(const ThreadedRegexVM&) = delete;
+
     ~ThreadedRegexVM()
     {
         for (auto* saves : m_saves)
@@ -124,13 +126,13 @@ struct ThreadedRegexVM
     using Utf8It = utf8::iterator<Iterator>;
 
     enum class StepResult { Consumed, Matched, Failed };
-    StepResult step(Thread& thread, Vector<Thread>& threads)
+    StepResult step(const Utf8It& pos, Thread& thread, Vector<Thread>& threads)
     {
         const auto prog_start = m_program.bytecode.data();
         const auto prog_end = prog_start + m_program.bytecode.size();
         while (true)
         {
-            const Codepoint cp = m_pos == m_end ? 0 : *m_pos;
+            const Codepoint cp = pos == m_end ? 0 : *pos;
             const CompiledRegex::Op op = (CompiledRegex::Op)*thread.inst++;
             switch (op)
             {
@@ -177,44 +179,44 @@ struct ThreadedRegexVM
                         thread.saves = new_saves<true>(thread.saves->pos);
                     }
                     const size_t index = *thread.inst++;
-                    thread.saves->pos[index] = m_pos.base();
+                    thread.saves->pos[index] = pos.base();
                     break;
                 }
                 case CompiledRegex::Matcher:
                 {
                     const int matcher_id = *thread.inst++;
-                    return m_program.matchers[matcher_id](*m_pos) ?
+                    return m_program.matchers[matcher_id](cp) ?
                         StepResult::Consumed : StepResult::Failed;
                 }
                 case CompiledRegex::LineStart:
-                    if (not is_line_start())
+                    if (not is_line_start(pos))
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::LineEnd:
-                    if (not is_line_end())
+                    if (not is_line_end(pos))
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::WordBoundary:
-                    if (not is_word_boundary())
+                    if (not is_word_boundary(pos))
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::NotWordBoundary:
-                    if (is_word_boundary())
+                    if (is_word_boundary(pos))
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::SubjectBegin:
-                    if (m_pos != m_begin or m_flags & RegexExecFlags::NotBeginOfSubject)
+                    if (pos != m_begin or (m_flags & RegexExecFlags::NotBeginOfSubject))
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::SubjectEnd:
-                    if (m_pos != m_end)
+                    if (pos != m_end)
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::LookAhead:
                 case CompiledRegex::NegativeLookAhead:
                 {
                     int count = *thread.inst++;
-                    for (auto it = m_pos; count and it != m_end; ++it, --count)
+                    for (auto it = pos; count and it != m_end; ++it, --count)
                         if (*it != utf8::read(thread.inst))
                             break;
                     if ((op == CompiledRegex::LookAhead and count != 0) or
@@ -227,7 +229,7 @@ struct ThreadedRegexVM
                 case CompiledRegex::NegativeLookBehind:
                 {
                     int count = *thread.inst++;
-                    for (auto it = m_pos-1; count and it >= m_begin; --it, --count)
+                    for (auto it = pos-1; count and it >= m_begin; --it, --count)
                         if (*it != utf8::read(thread.inst))
                             break;
                     if ((op == CompiledRegex::LookBehind and count != 0) or
@@ -243,28 +245,29 @@ struct ThreadedRegexVM
         return StepResult::Failed;
     }
 
-    bool exec_from(Utf8It start, Saves* initial_saves, Vector<Thread>& current_threads, Vector<Thread>& next_threads)
+    bool exec_from(const Utf8It& start, Saves* initial_saves, Vector<Thread>& current_threads, Vector<Thread>& next_threads)
     {
         current_threads.push_back({m_program.bytecode.data(), initial_saves});
         next_threads.clear();
 
         bool found_match = false;
-        for (m_pos = start; m_pos != m_end; ++m_pos)
+        for (Utf8It pos = start; pos != m_end; ++pos)
         {
             while (not current_threads.empty())
             {
                 auto thread = current_threads.back();
                 current_threads.pop_back();
-                switch (step(thread, current_threads))
+                switch (step(pos, thread, current_threads))
                 {
                 case StepResult::Matched:
                     if (not (m_flags & RegexExecFlags::Search) or // We are not at end, this is not a full match
-                        (m_flags & RegexExecFlags::NotInitialNull and m_pos == m_begin))
+                        (m_flags & RegexExecFlags::NotInitialNull and pos == m_begin))
                     {
                         release_saves(thread.saves);
                         continue;
                     }
 
+                    release_saves(m_captures);
                     m_captures = thread.saves;
                     if (m_flags & RegexExecFlags::AnyMatch)
                         return true;
@@ -293,12 +296,14 @@ struct ThreadedRegexVM
             return true;
 
         // Step remaining threads to see if they match without consuming anything else
+        const Utf8It end{m_end, m_begin, m_end};
         while (not current_threads.empty())
         {
             auto thread = current_threads.back();
             current_threads.pop_back();
-            if (step(thread, current_threads) == StepResult::Matched)
+            if (step(end, thread, current_threads) == StepResult::Matched)
             {
+                release_saves(m_captures);
                 m_captures = thread.saves;
                 return true;
             }
@@ -335,30 +340,29 @@ struct ThreadedRegexVM
         return false;
     }
 
-    bool is_line_start() const
+    bool is_line_start(const Utf8It& pos) const
     {
-        return (m_pos == m_begin and not (m_flags & RegexExecFlags::NotBeginOfLine)) or
-               *(m_pos-1) == '\n';
+        return (pos == m_begin and not (m_flags & RegexExecFlags::NotBeginOfLine)) or
+               *(pos-1) == '\n';
     }
 
-    bool is_line_end() const
+    bool is_line_end(const Utf8It& pos) const
     {
-        return (m_pos == m_end and not (m_flags & RegexExecFlags::NotEndOfLine)) or
-               *m_pos == '\n';
+        return (pos == m_end and not (m_flags & RegexExecFlags::NotEndOfLine)) or
+               *pos == '\n';
     }
 
-    bool is_word_boundary() const
+    bool is_word_boundary(const Utf8It& pos) const
     {
-        return (m_pos == m_begin and not (m_flags & RegexExecFlags::NotBeginOfWord)) or
-               (m_pos == m_end and not (m_flags & RegexExecFlags::NotEndOfWord)) or
-               is_word(*(m_pos-1)) != is_word(*m_pos);
+        return (pos == m_begin and not (m_flags & RegexExecFlags::NotBeginOfWord)) or
+               (pos == m_end and not (m_flags & RegexExecFlags::NotEndOfWord)) or
+               is_word(*(pos-1)) != is_word(*pos);
     }
 
     const CompiledRegex& m_program;
 
     Iterator m_begin;
     Iterator m_end;
-    Utf8It m_pos;
     RegexExecFlags m_flags;
 
     Vector<Saves*> m_saves;
