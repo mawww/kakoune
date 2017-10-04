@@ -171,6 +171,7 @@ struct ThreadedRegexVM
                 }
                 case CompiledRegex::Save:
                 {
+                    const size_t index = *thread.inst++;
                     if (thread.saves == nullptr)
                         break;
                     if (thread.saves->refcount > 1)
@@ -178,7 +179,6 @@ struct ThreadedRegexVM
                         --thread.saves->refcount;
                         thread.saves = new_saves<true>(thread.saves->pos);
                     }
-                    const size_t index = *thread.inst++;
                     thread.saves->pos[index] = pos.base();
                     break;
                 }
