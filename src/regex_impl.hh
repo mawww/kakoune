@@ -90,6 +90,12 @@ struct ThreadedRegexVM
         return m_saves.back().get();
     }
 
+    void release_saves(Saves* saves)
+    {
+        if (saves and --saves->refcount == 0)
+            m_free_saves.push_back(saves);
+    };
+
     struct Thread
     {
         const char* inst;
@@ -97,7 +103,7 @@ struct ThreadedRegexVM
     };
 
     enum class StepResult { Consumed, Matched, Failed };
-    StepResult step(Thread& thread)
+    StepResult step(Thread& thread, Vector<Thread>& threads)
     {
         const auto prog_start = m_program.bytecode.data();
         const auto prog_end = prog_start + m_program.bytecode.size();
@@ -127,7 +133,7 @@ struct ThreadedRegexVM
                     thread.inst = parent;
                     if (thread.saves)
                         ++thread.saves->refcount;
-                    m_current_threads.push_back({child, thread.saves});
+                    threads.push_back({child, thread.saves});
                     break;
                 }
                 case CompiledRegex::Split_PrioritizeChild:
@@ -137,7 +143,7 @@ struct ThreadedRegexVM
                     thread.inst = child;
                     if (thread.saves)
                         ++thread.saves->refcount;
-                    m_current_threads.push_back({parent, thread.saves});
+                    threads.push_back({parent, thread.saves});
                     break;
                 }
                 case CompiledRegex::Save:
@@ -224,8 +230,9 @@ struct ThreadedRegexVM
         m_flags = flags;
 
         bool found_match = false;
-        m_current_threads.clear();
-        m_next_threads.clear();
+
+        if (flags & RegexExecFlags::NotInitialNull and m_begin == m_end)
+            return false;
 
         Saves* initial_saves = nullptr;
         if (not (m_flags & RegexExecFlags::NoSaves))
@@ -234,24 +241,18 @@ struct ThreadedRegexVM
             initial_saves = m_saves.back().get();
         }
 
-        const auto start_offset = (flags & RegexExecFlags::Search) ? 0 : CompiledRegex::search_prefix_size;
-        m_current_threads.push_back({m_program.bytecode.data() + start_offset, initial_saves});
+        const bool search = (flags & RegexExecFlags::Search);
 
-        if (flags & RegexExecFlags::NotInitialNull and m_begin == m_end)
-            return false;
-
-        auto release_saves = [this](Saves* saves) {
-            if (saves and --saves->refcount == 0)
-                m_free_saves.push_back(saves);
-        };
-
+        const auto start_offset =  search ? 0 : CompiledRegex::search_prefix_size;
+        Vector<Thread> current_threads{Thread{m_program.bytecode.data() + start_offset, initial_saves}};
+        Vector<Thread> next_threads;
         for (m_pos = Utf8It{m_begin, m_begin, m_end}; m_pos != m_end; ++m_pos)
         {
-            while (not m_current_threads.empty())
+            while (not current_threads.empty())
             {
-                auto thread = m_current_threads.back();
-                m_current_threads.pop_back();
-                switch (step(thread))
+                auto thread = current_threads.back();
+                current_threads.pop_back();
+                switch (step(thread, current_threads))
                 {
                 case StepResult::Matched:
                     if (not (flags & RegexExecFlags::Search) or // We are not at end, this is not a full match
@@ -268,34 +269,34 @@ struct ThreadedRegexVM
                         return true;
 
                     found_match = true;
-                    m_current_threads.clear(); // remove this and lower priority threads
+                    current_threads.clear(); // remove this and lower priority threads
                     break;
                 case StepResult::Failed:
                     release_saves(thread.saves);
                     break;
                 case StepResult::Consumed:
-                    if (contains_that(m_next_threads, [&](auto& t) { return t.inst == thread.inst; }))
+                    if (contains_that(next_threads, [&](auto& t) { return t.inst == thread.inst; }))
                         release_saves(thread.saves);
                     else
-                        m_next_threads.push_back(thread);
+                        next_threads.push_back(thread);
                     break;
                 }
             }
-            if (m_next_threads.empty())
+            if (next_threads.empty())
                 return found_match;
 
-            std::swap(m_current_threads, m_next_threads);
-            std::reverse(m_current_threads.begin(), m_current_threads.end());
+            std::swap(current_threads, next_threads);
+            std::reverse(current_threads.begin(), current_threads.end());
         }
         if (found_match)
             return true;
 
         // Step remaining threads to see if they match without consuming anything else
-        while (not m_current_threads.empty())
+        while (not current_threads.empty())
         {
-            auto thread = m_current_threads.back();
-            m_current_threads.pop_back();
-            if (step(thread) == StepResult::Matched)
+            auto thread = current_threads.back();
+            current_threads.pop_back();
+            if (step(thread, current_threads) == StepResult::Matched)
             {
                 if (thread.saves)
                     m_captures = std::move(thread.saves->pos);
@@ -325,8 +326,6 @@ struct ThreadedRegexVM
     }
 
     const CompiledRegex& m_program;
-    Vector<Thread> m_current_threads;
-    Vector<Thread> m_next_threads;
 
     using Utf8It = utf8::iterator<Iterator>;
 
