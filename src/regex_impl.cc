@@ -30,8 +30,8 @@ struct ParsedRegex
         SubjectEnd,
         ResetStart,
         LookAhead,
-        LookBehind,
         NegativeLookAhead,
+        LookBehind,
         NegativeLookBehind,
     };
 
@@ -572,13 +572,13 @@ private:
                 push_op(CompiledRegex::LookAhead);
                 push_string(node->children);
                 break;
-            case ParsedRegex::LookBehind:
-                push_op(CompiledRegex::LookBehind);
-                push_string(node->children, true);
-                break;
             case ParsedRegex::NegativeLookAhead:
                 push_op(CompiledRegex::NegativeLookAhead);
                 push_string(node->children);
+                break;
+            case ParsedRegex::LookBehind:
+                push_op(CompiledRegex::LookBehind);
+                push_string(node->children, true);
                 break;
             case ParsedRegex::NegativeLookBehind:
                 push_op(CompiledRegex::NegativeLookBehind);
