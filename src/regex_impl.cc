@@ -189,7 +189,10 @@ private:
                 {
                     auto c = advance();
                     if (c == ':')
+                    {
+                        ++m_pos;
                         content = disjunction(-1);
+                    }
                     else if (contains("=!<", c))
                     {
                         bool behind = false;
@@ -1004,6 +1007,12 @@ auto test_regex = UnitTest{[]{
         TestVM vm{R"([^\]]+)"};
         kak_assert(not vm.exec("a]c"));
         kak_assert(vm.exec("abc"));
+    }
+
+    {
+        TestVM vm{R"((?:foo)+)"};
+        kak_assert(vm.exec("foofoofoo"));
+        kak_assert(not vm.exec("barbarbar"));
     }
 }};
 
