@@ -81,39 +81,32 @@ struct ThreadedRegexVM
     {
         int refcount;
         Iterator pos[1];
-
-        static Saves* allocate(size_t count)
-        {
-            void* ptr = ::operator new (sizeof(Saves) + (count-1) * sizeof(Iterator));
-            Saves* saves = new (ptr) Saves{1, {}};
-            for (int i = 1; i < count; ++i)
-                new (&saves->pos[i]) Iterator{};
-            return saves;
-        }
-
-        static Saves* allocate(size_t count, const Iterator* pos)
-        {
-            void* ptr = ::operator new (sizeof(Saves) + (count-1) * sizeof(Iterator));
-            Saves* saves = new (ptr) Saves{1, pos[0]};
-            for (size_t i = 1; i < count; ++i)
-                new (&saves->pos[i]) Iterator{pos[i]};
-            return saves;
-        }
     };
 
-    Saves* clone_saves(Iterator* pos)
+    template<bool copy>
+    Saves* new_saves(Iterator* pos)
     {
+        kak_assert(not copy or pos != nullptr);
+        const auto count = m_program.save_count;
         if (not m_free_saves.empty())
         {
             Saves* res = m_free_saves.back();
             m_free_saves.pop_back();
             res->refcount = 1;
-            std::copy(pos, pos + m_program.save_count, res->pos);
+            if (copy)
+                std::copy(pos, pos + count, res->pos);
+            else
+                std::fill(res->pos, res->pos + count, Iterator{});
+
             return res;
         }
 
-        m_saves.push_back(Saves::allocate(m_program.save_count, pos));
-        return m_saves.back();
+        void* ptr = ::operator new (sizeof(Saves) + (count-1) * sizeof(Iterator));
+        Saves* saves = new (ptr) Saves{1, copy ? pos[0] : Iterator{}};
+        for (size_t i = 1; i < count; ++i)
+            new (&saves->pos[i]) Iterator{copy ? pos[i] : Iterator{}};
+        m_saves.push_back(saves);
+        return saves;
     }
 
     void release_saves(Saves* saves)
@@ -181,7 +174,7 @@ struct ThreadedRegexVM
                     if (thread.saves->refcount > 1)
                     {
                         --thread.saves->refcount;
-                        thread.saves = clone_saves(thread.saves->pos);
+                        thread.saves = new_saves<true>(thread.saves->pos);
                     }
                     const size_t index = *thread.inst++;
                     thread.saves->pos[index] = m_pos.base();
@@ -325,10 +318,8 @@ struct ThreadedRegexVM
         Vector<Thread> current_threads, next_threads;
 
         const bool no_saves = (m_flags & RegexExecFlags::NoSaves);
-        Vector<Iterator> empty_saves(m_program.save_count, Iterator{});
-
         Utf8It start{m_begin, m_begin, m_end};
-        if (exec_from(start, no_saves ? nullptr : clone_saves(empty_saves.data()),
+        if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
                       current_threads, next_threads))
             return true;
 
@@ -337,7 +328,7 @@ struct ThreadedRegexVM
 
         while (start != end)
         {
-            if (exec_from(++start, no_saves ? nullptr : clone_saves(empty_saves.data()),
+            if (exec_from(++start, no_saves ? nullptr : new_saves<false>(nullptr),
                           current_threads, next_threads))
                 return true;
         }
