@@ -1989,9 +1989,6 @@ const HashMap<Key, NormalCmd> keymap{
     { {'v'}, {"move view", view_commands<false>} },
     { {'V'}, {"move view (locked)", view_commands<true>} },
 
-    { {Key::PageUp}, {  "scroll one page up", scroll<Backward>} },
-    { {Key::PageDown}, {"scroll one page down", scroll<Forward>} },
-
     { {'y'}, {"yank selected text", yank} },
     { {'p'}, {"paste after selected text", repeated<paste<InsertMode::Append>>} },
     { {'P'}, {"paste before selected text", repeated<paste<InsertMode::Insert>>} },
@@ -2117,6 +2114,9 @@ const HashMap<Key, NormalCmd> keymap{
     { {alt('C')}, {"copy selection on previous lines", copy_selections_on_next_lines<Backward>} },
 
     { {','}, {"user mappings", exec_user_mappings} },
+
+    { {Key::PageUp}, {  "scroll one page up", scroll<Backward>} },
+    { {Key::PageDown}, {"scroll one page down", scroll<Forward>} },
 
     { {ctrl('b')}, {"scroll one page up", scroll<Backward >} },
     { {ctrl('f')}, {"scroll one page down", scroll<Forward>} },
