@@ -30,8 +30,8 @@ struct CompiledRegex
         SubjectBegin,
         SubjectEnd,
         LookAhead,
-        LookBehind,
         NegativeLookAhead,
+        LookBehind,
         NegativeLookBehind,
     };
 
