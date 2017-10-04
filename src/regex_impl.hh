@@ -270,7 +270,7 @@ struct ThreadedRegexVM
 
         const bool search = (flags & RegexExecFlags::Search);
 
-        const auto start_offset =  search ? 0 : CompiledRegex::search_prefix_size;
+        const auto start_offset = search ? 0 : CompiledRegex::search_prefix_size;
         Vector<Thread> current_threads{Thread{m_program.bytecode.data() + start_offset, initial_saves}};
         Vector<Thread> next_threads;
         for (m_pos = Utf8It{m_begin, m_begin, m_end}; m_pos != m_end; ++m_pos)
@@ -282,16 +282,14 @@ struct ThreadedRegexVM
                 switch (step(thread, current_threads))
                 {
                 case StepResult::Matched:
-                    if (not (flags & RegexExecFlags::Search) or // We are not at end, this is not a full match
+                    if (not search or // We are not at end, this is not a full match
                         (flags & RegexExecFlags::NotInitialNull and m_pos == m_begin))
                     {
                         release_saves(thread.saves);
                         continue;
                     }
 
-                    if (thread.saves)
-                        m_captures = thread.saves;
-
+                    m_captures = thread.saves;
                     if (flags & RegexExecFlags::AnyMatch)
                         return true;
 
@@ -325,8 +323,7 @@ struct ThreadedRegexVM
             current_threads.pop_back();
             if (step(thread, current_threads) == StepResult::Matched)
             {
-                if (thread.saves)
-                    m_captures = thread.saves;
+                m_captures = thread.saves;
                 return true;
             }
         }
