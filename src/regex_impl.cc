@@ -381,6 +381,12 @@ private:
                 cp = to_lower(cp);
         }
 
+        // Optimize the relatively common case of using a character class to
+        // escape a character, such as [*]
+        if (ctypes.empty() and excluded.empty() and not negative and
+            ranges.size() == 1 and ranges.front().min == ranges.front().max)
+            return new_node(ParsedRegex::Literal, ranges.front().min);
+
         auto matcher = [ranges = std::move(ranges),
                         ctypes = std::move(ctypes),
                         excluded = std::move(excluded),
