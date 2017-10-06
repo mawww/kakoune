@@ -66,12 +66,14 @@ enum class RegexExecFlags
 constexpr bool with_bit_ops(Meta::Type<RegexExecFlags>) { return true; }
 
 template<typename Iterator>
-struct ThreadedRegexVM
+class ThreadedRegexVM
 {
+public:
     ThreadedRegexVM(const CompiledRegex& program)
       : m_program{program} { kak_assert(m_program); }
 
     ThreadedRegexVM(const ThreadedRegexVM&) = delete;
+    ThreadedRegexVM& operator=(const ThreadedRegexVM&) = delete;
 
     ~ThreadedRegexVM()
     {
@@ -83,6 +85,52 @@ struct ThreadedRegexVM
         }
     }
 
+    bool exec(Iterator begin, Iterator end, RegexExecFlags flags)
+    {
+        m_begin = begin;
+        m_end = end;
+        m_flags = flags;
+
+        if (flags & RegexExecFlags::NotInitialNull and m_begin == m_end)
+            return false;
+
+        Vector<Thread> current_threads, next_threads;
+
+        const bool no_saves = (m_flags & RegexExecFlags::NoSaves);
+        Utf8It start{m_begin, m_begin, m_end};
+
+        const bool* start_chars = m_program.start_chars ? m_program.start_chars->map : nullptr;
+
+        if (flags & RegexExecFlags::Search)
+            to_next_start(start, end, start_chars);
+
+        if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
+                      current_threads, next_threads))
+            return true;
+
+        if (not (flags & RegexExecFlags::Search))
+            return false;
+
+        do
+        {
+            to_next_start(++start, end, start_chars);
+            if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
+                          current_threads, next_threads))
+                return true;
+        }
+        while (start != end);
+
+        return false;
+    }
+
+    ArrayView<const Iterator> captures() const
+    {
+        if (m_captures)
+            return { m_captures->pos, m_program.save_count };
+        return {};
+    }
+
+private:
     struct Saves
     {
         int refcount;
@@ -325,44 +373,6 @@ struct ThreadedRegexVM
             ++start;
     }
 
-    bool exec(Iterator begin, Iterator end, RegexExecFlags flags)
-    {
-        m_begin = begin;
-        m_end = end;
-        m_flags = flags;
-
-        if (flags & RegexExecFlags::NotInitialNull and m_begin == m_end)
-            return false;
-
-        Vector<Thread> current_threads, next_threads;
-
-        const bool no_saves = (m_flags & RegexExecFlags::NoSaves);
-        Utf8It start{m_begin, m_begin, m_end};
-
-        const bool* start_chars = m_program.start_chars ? m_program.start_chars->map : nullptr;
-
-        if (flags & RegexExecFlags::Search)
-            to_next_start(start, end, start_chars);
-
-        if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
-                      current_threads, next_threads))
-            return true;
-
-        if (not (flags & RegexExecFlags::Search))
-            return false;
-
-        do
-        {
-            to_next_start(++start, end, start_chars);
-            if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
-                          current_threads, next_threads))
-                return true;
-        }
-        while (start != end);
-
-        return false;
-    }
-
     bool is_line_start(const Utf8It& pos) const
     {
         return (pos == m_begin and not (m_flags & RegexExecFlags::NotBeginOfLine)) or
@@ -409,7 +419,7 @@ bool regex_match(It begin, It end, Vector<It>& captures, const CompiledRegex& re
     ThreadedRegexVM<It> vm{re};
     if (vm.exec(begin, end,  flags & ~(RegexExecFlags::Search)))
     {
-        std::copy(vm.m_captures->pos, vm.m_captures->pos + re.save_count, std::back_inserter(captures));
+        std::copy(vm.captures().begin(), vm.captures().end(), std::back_inserter(captures));
         return true;
     }
     return false;
@@ -430,7 +440,7 @@ bool regex_search(It begin, It end, Vector<It>& captures, const CompiledRegex& r
     ThreadedRegexVM<It> vm{re};
     if (vm.exec(begin, end, flags | RegexExecFlags::Search))
     {
-        std::copy(vm.m_captures->pos, vm.m_captures->pos + re.save_count, std::back_inserter(captures));
+        std::copy(vm.captures().begin(), vm.captures().end(), std::back_inserter(captures));
         return true;
     }
     return false;
