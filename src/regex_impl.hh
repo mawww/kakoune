@@ -6,11 +6,12 @@
 #include "utf8_iterator.hh"
 #include "vector.hh"
 #include "flags.hh"
+#include "ref_ptr.hh"
 
 namespace Kakoune
 {
 
-struct CompiledRegex
+struct CompiledRegex : RefCountable
 {
     enum Op : char
     {
@@ -41,6 +42,9 @@ struct CompiledRegex
     Vector<char> bytecode;
     Vector<std::function<bool (Codepoint)>> matchers;
     size_t save_count;
+
+    struct StartChars { bool map[256]; };
+    std::unique_ptr<StartChars> start_chars;
 };
 
 CompiledRegex compile_regex(StringView re);
@@ -311,6 +315,16 @@ struct ThreadedRegexVM
         return false;
     }
 
+    void to_next_start(Utf8It& start, const Iterator& end, const bool* start_chars)
+    {
+        if (not start_chars)
+            return;
+
+        while (start != end and *start >= 0 and *start < 256 and
+               not start_chars[*start])
+            ++start;
+    }
+
     bool exec(Iterator begin, Iterator end, RegexExecFlags flags)
     {
         m_begin = begin;
@@ -324,6 +338,12 @@ struct ThreadedRegexVM
 
         const bool no_saves = (m_flags & RegexExecFlags::NoSaves);
         Utf8It start{m_begin, m_begin, m_end};
+
+        const bool* start_chars = m_program.start_chars ? m_program.start_chars->map : nullptr;
+
+        if (flags & RegexExecFlags::Search)
+            to_next_start(start, end, start_chars);
+
         if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
                       current_threads, next_threads))
             return true;
@@ -331,12 +351,15 @@ struct ThreadedRegexVM
         if (not (flags & RegexExecFlags::Search))
             return false;
 
-        while (start != end)
+        do
         {
-            if (exec_from(++start, no_saves ? nullptr : new_saves<false>(nullptr),
+            to_next_start(++start, end, start_chars);
+            if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
                           current_threads, next_threads))
                 return true;
         }
+        while (start != end);
+
         return false;
     }
 

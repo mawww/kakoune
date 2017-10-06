@@ -515,6 +515,7 @@ struct RegexCompiler
         push_op(CompiledRegex::Match);
         m_program.matchers = m_parsed_regex.matchers;
         m_program.save_count = m_parsed_regex.capture_count * 2;
+        m_program.start_chars = compute_start_chars();
     }
 
     CompiledRegex get_compiled_regex() { return std::move(m_program); }
@@ -706,6 +707,87 @@ private:
         else
             for (auto& cp : codepoints) 
                 push_codepoint(cp->value);
+    }
+
+    // Fills accepted and rejected according to which chars can start the given node,
+    // returns true if the node did not consume the char, hence a following node in
+    // sequence would be still relevant for the parent node start chars computation.
+    bool compute_start_chars(const ParsedRegex::AstNodePtr& node,
+                             bool (&accepted)[256], bool (&rejected)[256]) const
+    {
+        switch (node->op)
+        {
+            case ParsedRegex::Literal:
+                if (node->value < 256)
+                    accepted[node->value] = true;
+                return node->quantifier.allows_none();
+            case ParsedRegex::AnyChar:
+                for (auto& b : accepted)
+                    b = true;
+                return node->quantifier.allows_none();
+            case ParsedRegex::Matcher:
+                for (auto& b : accepted) // treat matcher as everything can match for now
+                    b = true;
+                return node->quantifier.allows_none();
+            case ParsedRegex::Sequence:
+            {
+                bool consumed = false;
+                for (auto& child : node->children)
+                {
+                    if (not compute_start_chars(child, accepted, rejected))
+                    {
+                        consumed = true;
+                        break;
+                    }
+                }
+                return not consumed or node->quantifier.allows_none();
+            }
+            case ParsedRegex::Alternation:
+            {
+                bool all_consumed = not node->quantifier.allows_none();
+                for (auto& child : node->children)
+                {
+                    if (compute_start_chars(child, accepted, rejected))
+                        all_consumed = false;
+                }
+                return not all_consumed;
+            }
+            case ParsedRegex::LineStart:
+            case ParsedRegex::LineEnd:
+            case ParsedRegex::WordBoundary:
+            case ParsedRegex::NotWordBoundary:
+            case ParsedRegex::SubjectBegin:
+            case ParsedRegex::SubjectEnd:
+            case ParsedRegex::ResetStart:
+                return true;
+            case ParsedRegex::LookAhead:
+                if (node->children.empty())
+                    compute_start_chars(node->children.front(), accepted, rejected);
+                return true;
+            case ParsedRegex::NegativeLookAhead:
+                if (node->children.empty())
+                    compute_start_chars(node->children.front(), rejected, accepted);
+                return true;
+            case ParsedRegex::LookBehind:
+                return true;
+            case ParsedRegex::NegativeLookBehind:
+                return true;
+        }
+        return false;
+    }
+
+    std::unique_ptr<CompiledRegex::StartChars> compute_start_chars() const
+    {
+        bool accepted[256] = {};
+        bool rejected[256] = {};
+        if (compute_start_chars(m_parsed_regex.ast, accepted, rejected))
+            return nullptr;
+
+        auto start_chars = std::make_unique<CompiledRegex::StartChars>();
+        for (int i = 0; i < 256; ++i)
+            start_chars->map[i] = accepted[i] and not rejected[i];
+
+        return start_chars;
     }
 
     CompiledRegex m_program;
@@ -1019,6 +1101,17 @@ auto test_regex = UnitTest{[]{
         TestVM vm{R"((?:foo)+)"};
         kak_assert(vm.exec("foofoofoo"));
         kak_assert(not vm.exec("barbarbar"));
+    }
+
+    {
+        TestVM vm{R"((?<!\\)(?:\\\\)*")"};
+        kak_assert(vm.exec("foo\"", false));
+    }
+
+    {
+        TestVM vm{R"($)"};
+        kak_assert(vm.exec("foo\n", false, true));
+        kak_assert(*vm.m_captures->pos[0] == '\n');
     }
 }};
 
