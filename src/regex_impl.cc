@@ -893,14 +893,8 @@ auto test_regex = UnitTest{[]{
               ThreadedRegexVM{(const CompiledRegex&)*this}
         { if (dump) dump_regex(*this); }
 
-        bool exec(StringView re, bool match = true, bool longest = false)
+        bool exec(StringView re, RegexExecFlags flags = RegexExecFlags::AnyMatch)
         {
-            RegexExecFlags flags = RegexExecFlags::None;
-            if (not match)
-                flags |= RegexExecFlags::Search;
-            if (not longest)
-                flags |= RegexExecFlags::AnyMatch;
-
             return ThreadedRegexVM::exec(re.begin(), re.end(), flags);
         }
     };
@@ -982,10 +976,10 @@ auto test_regex = UnitTest{[]{
 
     {
         TestVM vm{R"(f.*a(.*o))"};
-        kak_assert(vm.exec("blahfoobarfoobaz", false, true));
+        kak_assert(vm.exec("blahfoobarfoobaz", RegexExecFlags::Search));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]} == "foobarfoo");
         kak_assert(StringView{vm.captures()[2], vm.captures()[3]} == "rfoo");
-        kak_assert(vm.exec("mais que fais la police", false, true));
+        kak_assert(vm.exec("mais que fais la police", RegexExecFlags::Search));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]} == "fais la po");
         kak_assert(StringView{vm.captures()[2], vm.captures()[3]} == " po");
     }
@@ -1000,13 +994,13 @@ auto test_regex = UnitTest{[]{
 
     {
         TestVM vm{R"((a{3,5})a+)"};
-        kak_assert(vm.exec("aaaaaa", true, true));
+        kak_assert(vm.exec("aaaaaa", RegexExecFlags::None));
         kak_assert(StringView{vm.captures()[2], vm.captures()[3]} == "aaaaa");
     }
 
     {
         TestVM vm{R"((a{3,5}?)a+)"};
-        kak_assert(vm.exec("aaaaaa", true, true));
+        kak_assert(vm.exec("aaaaaa", RegexExecFlags::None));
         kak_assert(StringView{vm.captures()[2], vm.captures()[3]} == "aaa");
     }
 
@@ -1046,20 +1040,20 @@ auto test_regex = UnitTest{[]{
 
     {
         TestVM vm{R"(foo\Kbar)"};
-        kak_assert(vm.exec("foobar", true, true));
+        kak_assert(vm.exec("foobar", RegexExecFlags::None));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]} == "bar");
-        kak_assert(not vm.exec("bar", true, true));
+        kak_assert(not vm.exec("bar", RegexExecFlags::None));
     }
 
     {
         TestVM vm{R"((fo+?).*)"};
-        kak_assert(vm.exec("foooo", true, true));
+        kak_assert(vm.exec("foooo", RegexExecFlags::None));
         kak_assert(StringView{vm.captures()[2], vm.captures()[3]} == "fo");
     }
 
     {
         TestVM vm{R"((?=foo).)"};
-        kak_assert(vm.exec("barfoo", false, true));
+        kak_assert(vm.exec("barfoo", RegexExecFlags::Search));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]} == "f");
     }
 
@@ -1100,12 +1094,12 @@ auto test_regex = UnitTest{[]{
 
     {
         TestVM vm{R"((?<!\\)(?:\\\\)*")"};
-        kak_assert(vm.exec("foo\"", false));
+        kak_assert(vm.exec("foo\"", RegexExecFlags::Search));
     }
 
     {
         TestVM vm{R"($)"};
-        kak_assert(vm.exec("foo\n", false, true));
+        kak_assert(vm.exec("foo\n", RegexExecFlags::Search));
         kak_assert(*vm.captures()[0] == '\n');
     }
 }};
