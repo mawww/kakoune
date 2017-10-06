@@ -162,7 +162,6 @@ private:
                     case 'K': m_pos += 2; return new_node(ParsedRegex::ResetStart);
                 }
                 break;
-            /* TODO: look ahead, look behind */
         }
         return nullptr;
     }
@@ -267,18 +266,17 @@ private:
         }
 
         // CharacterClassEscape
-        for (auto& character_class : character_class_escapes)
+        auto class_it = find_if(character_class_escapes,
+                                [cp = to_lower(cp)](auto& c) { return c.cp == cp; });
+        if (class_it != std::end(character_class_escapes))
         {
-            if (character_class.cp == cp)
-            {
-                auto matcher_id = m_parsed_regex.matchers.size();
-                m_parsed_regex.matchers.push_back(
-                    [ctype = character_class.ctype ? wctype(character_class.ctype) : (wctype_t)0,
-                     chars = character_class.additional_chars, neg = character_class.neg] (Codepoint cp) {
-                        return ((ctype != 0 and iswctype(cp, ctype)) or contains(chars, cp)) != neg;
-                    });
-                return new_node(ParsedRegex::Matcher, matcher_id);
-            }
+            auto matcher_id = m_parsed_regex.matchers.size();
+            m_parsed_regex.matchers.push_back(
+                [ctype = class_it->ctype ? wctype(class_it->ctype) : (wctype_t)0,
+                 chars = class_it->additional_chars, neg = is_upper(cp)] (Codepoint cp) {
+                    return ((ctype != 0 and iswctype(cp, ctype)) or contains(chars, cp)) != neg;
+                });
+            return new_node(ParsedRegex::Matcher, matcher_id);
         }
 
         // CharacterEscape
@@ -323,14 +321,15 @@ private:
             if (cp == '\\')
             {
                 auto it = find_if(character_class_escapes,
-                                  [cp = *m_pos](auto& t) { return t.cp == cp; });
+                                  [cp = to_lower(*m_pos)](auto& t) { return t.cp == cp; });
                 if (it != std::end(character_class_escapes))
                 {
+                    auto negative = is_upper(*m_pos);
                     if (it->ctype)
-                        ctypes.push_back({wctype(it->ctype), not it->neg});
-                    for (auto& c : it->additional_chars) // TODO: handle negative case
+                        ctypes.push_back({wctype(it->ctype), not negative});
+                    for (auto& c : it->additional_chars)
                     {
-                        if (it->neg)
+                        if (negative)
                             excluded.push_back((Codepoint)c);
                         else
                             ranges.push_back({(Codepoint)c, (Codepoint)c});
@@ -497,13 +496,9 @@ private:
 // For some reason Gcc fails to link if this is constexpr
 const RegexParser::CharacterClassEscape RegexParser::character_class_escapes[8] = {
     { 'd', "digit", "", false },
-    { 'D', "digit", "", true },
     { 'w', "alnum", "_", false },
-    { 'W', "alnum", "_", true },
     { 's', "space", "", false },
-    { 'S', "space", "", true },
     { 'h', nullptr, " \t", false },
-    { 'H', nullptr, " \t", true },
 };
 
 struct RegexCompiler
