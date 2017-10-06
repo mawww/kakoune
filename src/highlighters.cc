@@ -517,7 +517,7 @@ HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
         GlobalScope::instance().options()[tokens[0].content].is_of_type<Regex>())
     {
         String option_name = tokens[0].content;
-        auto get_regex =  [option_name](const Context& context) {
+        auto get_regex = [option_name](const Context& context) {
             return context.options()[option_name].get<Regex>();
         };
         return {format("dynregex_{}", expr), make_dynamic_regex_highlighter(get_regex, get_face)};
