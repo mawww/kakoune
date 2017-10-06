@@ -518,7 +518,8 @@ View commands
 Some commands, all beginning with v permit to manipulate the current
 view.
 
- * `vv` or `vc`: center the main selection in the window
+ * `vv` or `vc`: center the main selection in the window (vertically)
+ * `vm`: center the main selection in the window (horizontally)
  * `vt`: scroll to put the main selection on the top line of the window
  * `vb`: scroll to put the main selection on the bottom line of the window
  * `vh`: scroll the window count columns left
@@ -630,7 +631,7 @@ object you want.
  * `i`: select the current indentation block
  * `n`: select the number
  * `u`: select the argument
- * `:`: select user defined object, will prompt
+ * `c`: select user defined object, will prompt
    for open and close text.
 
 For nestable objects, a count can be used in order to specify which surrounding

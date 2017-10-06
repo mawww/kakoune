@@ -408,7 +408,10 @@ View commands
 	for one of the following additional keys:
 
 	*v*, *c*:::
-		center the main selection in the window
+		center the main selection in the window (vertically)
+
+	*m*:::
+		center the main selection in the window (horizontally)
 
 	*t*:::
 		scroll to put the main selection on the top line of the window
@@ -605,7 +608,7 @@ object you want
 *u*::
 	select the argument
 
-*:*::
+*c*::
 	select user defined object, will prompt for open and close text
 
 Prompt Commands
