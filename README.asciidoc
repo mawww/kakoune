@@ -982,6 +982,7 @@ Some options are built in Kakoune, and can be used to control its behaviour:
      (`word=all`) or only the current one (`word=buffer`)
    - `filename` which tries to detect when a filename is being entered and
      provides completion based on local filesystem.
+   - `line` which complete using lines in current buffer
    - `option=<opt-name>` where <opt-name> is a _completions_ option.
  * `static_words` _str-list_: list of words that are always added to completion
      candidates when completing words in insert mode.
