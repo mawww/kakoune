@@ -1,0 +1,451 @@
++=----------------------------------------------------------------------------=+
+              _              _
+             | |            | |
+             | | __   __ _  | | __   ___    _   _   _ __     ___
+             | |/ /  / _` | | |/ /  / _ \  | | | | | '_ \   / _ \
+             |   <  | (_| | |   <  | (_) | | |_| | | | | | |  __/
+             |_|\_\  \__,_| |_|\_\  \___/   \__,_| |_| |_|  \___|
+
+                  Mawww's experiment for a better code editor
++=----------------------------------------------------------------------------=+
+
+This walk-through is an introduction to Kakoune's basic edition capabilities
+to help new users transition over easily from another editor, or simply
+learn how to write and edit documents with style.
+
+In the first section, you will learn about the primitives of the edition
+language to be able to get to a level of knowledge of the editor that
+guarantees that you can work with it efficiently.
+
+In the second section, for users who've gone through the basics and want to
+move on to more advanced functionalities, we explain other primitives whose
+role has a less dominant place in an everyday editing session, but still
+prove themselves powerful when used on the right occasion.
+
+Finally, as this document is in no way an exhaustive list of features, don't
+hesitate to check out the official documentation to compliment your tool-set,
+ask questions to more seasoned users on IRC, and check the documentation
+using the built-in `:doc` command.
+
++=--------------------------------=+ BASICS +=--------------------------------=+
+
+                    =[ MODES
+
+                    Kakoune uses a paradigm called "modal edition" to allow
+       .---,        users to either have every single key they type inserted
+       | i |        into the file being edited (called "insert mode"),
+       `---'        or execute commands that are triggered by the keys hit
+                    (the "normal mode").  Aside from arrow keys, most keys
+       .---,        described in this document are "edition primitives" that
+       |esc|        have to be hit in command mode, which is the default mode
+       `---'        when you start the editor. To enter insert mode, hit the
+                    `i` key, and to leave it, hit the escape key.
+
+
+                    =[ MOVEMENT
+       .---,
+       | ^ |        Movement in a buffer (the representation of the contents
+   .---'---'---,    of a file opened by Kakoune) can be achieved using the arrow
+   | < | v | > |    keys, which will move the cursor up one column/row into
+   `---'---'---`    a given direction.
+
+                    However, furthering the tradition of mode-based editors,
+ .---,---,---,---,  the `h`, `j`, `k` and `l` keys can be used for the same
+ | h | j | k | l |  purpose, and will respectively move the cursor to the
+ `---'---'---'---`  left, down, up, right by one, when hit. Using those keys
+   |   |   |   |    is the recommended way of moving around in a buffer.
+ .---,---,---,---,  If you're not familiar with this concept, the proximity
+ | < | V | ^ | > |  of those four keys with the rest of the lettered keys
+ `---'---'---'---`  on a `qwerty` layout allows faster interaction with the
+                    primitives than if the user had to moves their hand to
+   .---,            reach the arrow keys.
+   | g |_.
+   `---' |`.---,    Another way of moving the cursor is the "goto" utility,
+         | | g |    invoked by hitting the `g` key. A menu will pop up with a
+         | `---'    summary of all the possible keys that can be hit, along with
+          `.---,    the location where they will move the cursor to, but the
+           | e |    most used ones that we are interested in, for now, are `g`
+           `---'    and `e`. The first one will jump to the beginning of the
+                    buffer, and the second one to its end.
+
+
+                    =[ VIEW
+
+   .---,            Displacing the cursor can sometimes move the view into an
+   | v |_.          inconvenient configuration, leaving some necessary context
+   `---' |`.---,    off screen, or simply feel uncomfortable to type into.
+         | | t |    Kakoune provides a menu (similar to the `goto` menu
+         | `---'    mentioned in the previous section) that allows users to
+         |`.---,    move the current view in relation with the position of the
+         | | b |    cursor. Upon hitting the `v` key, a short menu appears
+         | `---'    which allows us to hit a second key according to how the
+          `.---,    view should be centered vertically: to leave the cursor
+           | v |    respectively on top, at the bottom or in the middle of the
+           `---'    current view, hit the `t`, `b` or `v` keys.
+
+
+                    =[ SEARCH
+
+                    In order to move the cursor to a specific word, the search
+                    command is the way to go. This functionality allows
+        .---,       the user to jump to the next occurrence of a piece of text.
+        | / |       Upon hitting the `/` key, a prompt reading "search"
+        `---'       will pop up in the status bar in which you can type
+                    your text and validate using the `<ret>` (return) key.
+     .---, .---,    You'll notice that as you type, the cursor changes location
+     |alt|+| / |    to automatically give you a preview of where the cursor
+     `---' `---'    would be displaced to if you validated the search. However,
+                    this behavior is only a preview, exiting prompt mode with
+                    the `<esc>` (escape) key will leave the current position
+        .---,       of the cursor unchanged. Note that you can also use a
+        | n |       Perl regular expression as input.  By default the search
+        `---'       function will look for results forward, starting from
+                    the current location of the cursor, but you can search
+     .---, .---,    backwards using `<a-/>` (alt + `/`).
+     |alt|+| n |
+     `---' `---'    Jumping from one match to the other forward can be achieved
+                    using the `n` key, and backwards using the `<a-n>` (alt +
+                    `n`) key combination.
+
+
+                    =[ SELECTIONS
+
+                    You have certainly noticed that when searching for
+        .---,       text, the cursor extends to highlight the entire match.
+        | ; |       In fact, what we know in other editors as a "cursor" is
+        `---'       actually a single character wide selection in Kakoune,
+                    and can be expanded using primitives. When "expanded",
+     .---, .---,    the selection is an area whose beginning is the "anchor"
+     |alt|+| ; |    and the end the "secondary cursor". To switch anchor and
+     `---' `---'    cursor, use `<a-;>`, and to collapse the selection onto
+                    its anchor, use `;`.
+
+                    Moreover, not only Kakoune expands the principle of
+                    "cursor" by introducing selections, but it also allows
+        .---,       multiple selections within the same buffer. This makes
+        | % |       it very convenient to modify text in multiple locations
+        `---'       at once, as edition primitives apply to all the currently
+                    selected text.
+        .---,
+        | s |       Example: to remove all occurrences of the word "foo", one
+        `---'       would select the entire buffer (`%`), select occurrences of
+                    the word (`s`, "\bfoo\b", `<ret>`), then remove it (`d`).
+
+                    ==[ SELECTING OBJECTS
+
+                    In addition to allowing text selection using regular
+     .---, .---,    expressions, certain objects are defined by default to
+     |alt|+| i |    allow easy selection of text. Objects are bits of text
+     `---' `---'    in the buffer that are identified according to their
+                    structure, rather than their contents, e.g. a paragraph,
+     .---, .---,    a sentence, or a word. When the cursor is located within
+     |alt|+| a |    the boundaries of an object you want to interact with,
+     `---' `---'    several options are available: selecting the contents of an
+                    object without its boundaries (`<a-i>`), a part of it (from
+        .---,       the anchor to its end or to its beginning, respectively `]`
+        | ] |       and `[`), or the entire object (`<a-a>`). Those "selection
+        `---'       ranges" are the first part of a two stages shortcut,
+                    as once you've used the key that dictates what part of
+        .---,       the object is to be selected, a menu with a description
+        | [ |       of all the object types select-able will be displayed,
+        `---'       giving a summary of all the keys you can hit to complete
+                    the selection procedure.
+
+                    Example: to select the paragraph in which the anchor lies,
+                    invoke the "inner object selection" shortcut (`<a-i>`),
+                    locate "paragraph" in the information box that pops up and
+    .---,           hit the according key (`p`). The entire two steps sequence
+    | [ |_.         is thus: `<a-i> p`.
+    `---' |`.---,
+          | | ( |   Example: to select everything between the anchor and the
+          | `---'   beginning of the current parenthesis pair, use the selection
+           `.---,   sequence is: `[ (`. Note that common objects that use
+            | r |   pairs of opening/closing punctuation signs (brackets,
+            `---'   braces, quotes etc) have an alternative second key that
+                    is displayed in the information menu that you can use to
+                    minimize finger gymnastics. The previous shortcut could
+                    thus also be written: `[ r`.
+
+                    ==[ MOVEMENT SELECTIONS
+
+                    If objects are an easy way to select content-agnostic
+    .---,           data in a buffer, they can also be seen as a way to move
+    | [ |_.         about the buffer. As selecting objects will displace the
+    `---'  `.---,   anchor into a given direction, you can wrap or move around
+            | p |   particular chunks of text without using the conventional
+            `---'   means (e.g. arrow keys or jumps), turning them partially
+                    into movement primitives.
+    .---,
+    | ] |_.         Example: one of the most used object selection combination
+    `---'  `.---,   is the "object end/begin paragraph" one: using `[` or
+            | p |   `]` will displace the anchor into a given direction, and
+            `---'   applying that to the paragraph object allows "jumping"
+                    from one newline separated block of text to another.
+                    The resulting shortcut is thus: `] p` to move forward, or
+                    `[ p` to move backward.
+
+
+                    =[ FILTERING A SELECTION
+
+                    Selecting an entire buffer (`%`) or parts of it (`s`) is a
+                    natural and basic operation in a typical editing session,
+     .---, .---,    however there are some cases where we need to be able to
+     |alt|+| k |    drop some selections arbitrarily, as opposed to trying
+     `---' `---'    to select the ones we need directly. This concept becomes
+                    very useful when coming up with a regular expression for
+     .---, .---,    the basic selection primitive (`s`) is too tedious (if
+     |alt|+| K |    even possible), that's why the editor provides us with a
+     `---' `---'    "keep matching" and a "keep not matching" operations,
+                    in order to respectively keep exclusively the selections
+                    who match or do not match a given regular expression.
+
+                    Example: when parsing a log file whose lines follow the
+                    usual log pattern (e.g. "[1484383442] ERROR: some data"),
+                    we want to be able to select all the lines individually
+     .---, .---,    (`%`, `<a-s>` to split all the lines), keep those that
+     |alt|+| s |    start with a bracketed time-stamp (`<a-k>^\[`), but
+     `---' `---'    exclude the debug messages (`<a-K>DEBUG`). Of course,
+                    it's possible to come up with a regular expression to
+                    match those simple requirements, but it would take more
+                    work to write it than to organically apply filters on a
+                    general selection, individually.
+
+
+                    =[ SELECTION DUPLICATION
+
+        .---,       Duplicating content can be achieved using a widely
+        | y |       implemented concept: yanking and pasting. Yanking the
+        `---'       current selection (`y`) into the copy register allows the
+        .---,       user to subsequently insert the copied text in the buffer
+        | p |       (`p`).
+        `---'
+        .---,       Note that the default "paste" primitive will insert the
+        | P |       contents of the copy register after the current selection,
+        `---'       if you want copied test to be inserted before the current
+                    selection then you can use the `P` key.
+
+
+                    =[ REPLACING SELECTIONS
+
+                    Text replacement is a two step process in Kakoune, which
+                    involves selecting text to be replaced, and then erasing it
+        .---,       to insert the replacement text. After selections have been
+        | c |       made, you can simply hit the deletion primitive (`d`), then
+        `---'       either enter insert mode to write down the replacement text
+                    (`i`), or stay in command mode to paste the replacement
+                    text stored in the copy register. As deleting and entering
+        .---,       insert mode can be redundant, a primitive that implements
+        | R |       deletion followed by insert mode entrance was implemented:
+        `---'       `c`. You can also directly replace the current selection
+                    with the content of the copy register using a primitive
+                    also implemented for that purpose: `R`.
+
+
++=-------------------------------=+ ADVANCED +=-------------------------------=+
+
+                    =[ SPLITTING
+
+                    The selection primitive (`s`) is a powerful tool to select
+                    chunks of data, but sometimes the format of said data isn't
+        .---,       uniform enough to allow creating clear cut selections. In
+        | S |       order to avoid having to write overly complicated regular
+        `---'       expressions that select precisely the wanted text, the
+                    splitting primitive (`S`) allows applying a delimiter to
+                    the current selection, splitting it into separate chunks.
+
+                    Example: selecting the items in a CSV-style list (e.g.
+                    "1,2,3,4") is as simple as selecting the line, then
+                    splitting it using the comma separator (`S,`). Note that
+                    more advanced splitting is possible, since the delimiter
+                    passed to this primitive is a regular expression.
+
+
+                    =[ ROTATING
+
+                    Often used in conjunction with the splitting primitive
+                    (`S`), the rotation primitive (`<a-">`) shifts all the
+                    selections clock-wise. Note that a count (described after)
+                    allows the rotation to take place in sub-groups whose size
+     .---, .---,    is given by the count parameter.
+     |alt|+| " |
+     `---' `---'    Example: in a numbered list where all the numbers are
+                    selected (e.g. `1 2 3 4 5 6 7 8 9 0`), a rotation using
+                    this primitive will shift all the numbers by one selection
+                    forward, while leaving the original multiple selection
+                    untouched (e.g. `0 1 2 3 4 5 6 7 8 9`).
+
+
+                    =[ COUNTS
+
+   .---,            In order to pass a count to a primitive, simply type the
+   |0-9|_.          number out before hitting the primitive key/combination.
+   `---' |`.---,    Counts allow primitives to specialize or extend their
+         | | g |    original functionality by using it as a parameter,
+         | `---'    acting on their side effect.
+         |`.---,
+         | | G |    Example: in order to respectively jump or select up to a
+         | `---'    particular line, pass the line number to the `g` or `G`
+         |`.---,    primitives (e.g. `42g` or `7G`).
+         | | o |
+         | `---'    Example: creating an arbitrary amount of new lines
+          `.---,    above or below the current line and spawning a new selection
+           | O |    for each of them is achieved by passing the amount of lines
+           `---'    as a count respectively to the `o` and `O` primitives.
+
+
+                    =[ REGISTERS
+
+                    Similarly to counts, registers influence the behavior of
+   .---,            certain primitives. They are storage structures identified
+   | " |_.          by a single character, and are populated by primitives as a
+   `---'  `.---,    result of a side effect. Although primitives populate a
+           |a-z|    specific register by default, it's possible to modify which
+           `---'    is going to be populated upon execution using the double
+                    quote (`"`) primitive, and subsequently hitting a key that
+        .---,       will serve as identifier.
+        | * |
+        `---'       Example: the smart search primitive (`*`) uses the current
+                    selection as a search pattern, which will be saved to the
+   .---,            `/` register. In order to use this primitive to execute a
+   | " |_. .---,    temporary search, one could make this primitive save the
+   `---'  `| _ |    pattern to a different register, to preserve the default one
+           `---'    e.g. `"m*` to save the pattern to the `m` register, or even
+                    `"_*` to save the pattern to a "null" register, which not
+                    store anything written to it.
+
+                    ==[ CAPTURE GROUPS
+
+                    Although registers can pass as mere buffer metadata,
+     .---, .---,    they are an integral part of an editing session. The
+     |ctl|+| r |    `<c-r>` key combination allows to insert into the buffer
+     `---' `---'    the value of a register, whose identifier is typed right
+                    after the combination.
+
+.---, .---,         Example: inserting the name of the current buffer in insert
+|ctl|+| r |_.       mode can be achieved using the `%` register, which holds
+`---' `---'  `.---, this information: `<c-r>%`.
+              | % |
+              `---' Another kind of registers that is set automatically are
+                    the numbered registers, which hold the values of the groups
+                    matched in the last search or select operation (`/` and
+.---, .---,         `s` primitives).
+|ctl|+| r |_.
+`---' `---'  `.---, Example: when using the search primitive (`/`) with a
+              |0-9| regular expression containing groups to match a list of
+              `---' first and last names (e.g. `(\w+) (\w+)` on `John Doe`),
+                    issuing `<c-r>1` would insert the first name (`John`),
+                    and `<c-r>2` the last name (`Doe`).
+
+
+                    =[ CUSTOM SELECTIONS
+
+                    Despite the ability to select bits of data using regular
+                    expressions, there are times when using them isn't enough,
+                    and additional manual edition of the selections is
+        .---,       needed. In order to loop through all the selections and
+        | ' |       remove the current one, two primitives are available:
+        `---'       respectively the simple quote (`'`), and the alt/space
+                    key combination (`<a-space>`).
+     .---, .---,
+     |alt|+|spc|    Example: given a list of three numbers all selected
+     `---' `---'    individually, (e.g. `1 2 3`), deselecting the second
+                    selection would be done by hitting the quote primitive
+                    (`'`) until the according selection is the current one,
+                    then hitting `<a-space>` to end up with only the first
+                    and third number selected.
+
+                    However, being able to trim out some selections out
+        .---,       of a bigger set isn't always convenient, as it doesn't
+        | ^ |       allow more advanced constructs such as combining sets of
+        `---'       multiple-selections that result from different regular
+        .---,       expressions. To allow that, the save mark (`Z`) and append
+        | Z |       mark (`<a-z>`) come in handy, as they respectively save
+        `---'       the current selection to the mark register (`^`), and
+                    show a menu that allows appending the current selection
+.---, .---,         to the mark register upon hitting the `a` key. That way,
+|alt|+| z |_.       it becomes possible to chain and save (append) several
+`---' `---'  `.---, selections made using completely different methods
+              | a | (select, split etc) without being forced to preserve
+              `---' them at all times.
+        .---,
+        | z |       Restoring a mark saved to the mark register using those
+        `---'       primitives can be achieved by using the restore mark
+                    primitive (`z`).
+
+
+                    =[ LEVERAGING SHELL COMMANDS
+
+                    UNIX systems provide with some tools whose purpose is
+                    to interact with raw data, and being a UNIX compliant
+        .---,       aspiring tool itself, Kakoune allows leveraging those
+        | | |       tools to modify a buffer's contents. Upon invoking the pipe
+        `---'       primitive (`|`), an input field pops up which prompts for
+                    a shell command, to which the selections will individually
+                    be sent through the command's standard input.
+
+                    Example: wrapping a selection can be achieved by invoking
+                    the `fold` utility, e.g. `|fold -w80`. You could also want
+                    to see a patch of all the modifications made to the buffer
+                    since it was last saved: `%|diff -u <c-r>% -`. Note that
+                    the `<c-r>%` has to be typed interactively, as it will
+                    insert the name name of the buffer into the command.
+
+                    Another equally useful primitive that doesn't depend on
+        .---,       the contents of the current selections is the exclamation
+        | ! |       mark primitive (`!`), which simply insert the output of
+        `---'       the given shell command before each selection.
+
+                    Example: in order to insert the date of the day at the
+                    beginning of the current buffer, one could use `gg`
+                    followed with `!date`.
+
+                    But not all shell-related primitives insert data into
+                    the current buffer, the `$` key is in fact a way to
+        .---,       apply a predicate to all selections, in order to filter
+        | $ |       them out. The command passed to this primitive will be
+        `---'       executed in a new shell using each individual selection for
+                    context, which will either be kept if the command returned
+                    a successful exit code (zero) or dropped otherwise (any
+                    non-zero value).
+
+                    Example: after selecting all the lines in a buffer and
+                    splitting them individually (`%`, `<a-s>`), keeping every
+                    odd numbered line can be achieved with the following
+                    sequence: `$` `[ $((kak_reg_hash)) -ne 0 ]`.
+
+
+                    =[ REPEATING ACTIONS
+
+                    ==[ PUNCTUAL INTERACTIONS
+
+                    In order to modify text efficiently or insert redundant
+                    bits of data, two primitives are available. The dot `.`
+        .---,       primitive repeats the last change that was made in insert
+        | . |       mode (e.g. writing down text after hitting the insert
+        `---'       primitive `i`). Similarly, repeating the last selection
+                    (make with e.g. the find primitive `f`) can be achieved
+                    using the `<a-.>` primitive.
+
+                    Example: to select a paragraph to append a newline
+     .---, .---,    character to it and cycle through the following paragraphs
+     |alt|+| . |    to repeat the same insertion an arbitrary amount of times,
+     `---' `---'    one would first select the paragraph with `]p`, append a
+                    newline to it `a<ret><esc>`, then repeat both operations
+                    as needed with `<a-.>` and `.` respectively.
+
+                    ==[ COMPLEX CHANGES
+
+                    Transforming successive chunks of formatted data can
+        .---,       be cumbersome when done manually, and lack hindsight
+        | q |       when writing a script for that particular purpose
+        `---'       non-interactively. The middle ground between the two
+        .---,       solutions is to record the modifications made to one
+        | Q |       chunk interactively, and replay the sequence of keys
+        `---'       at will. The sequence in question is a macro: the `q`
+                    primitive will create a new one (i.e. record all the keys
+.---, .---,         hit henceforth until the escape key `<esc>` is hit), and
+|ctl|+| r |_.       the `Q` primitive will replay the keys saved in the macro.
+`---' `---'  `.---,
+              | @ | Notes: macros can easily be translated into a proper
+              `---' script, as they are saved in the `@` register, which you
+                    can insert into a buffer using `<c-r>@`.

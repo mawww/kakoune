@@ -5,8 +5,8 @@ NAME
 ----
 commands - a
 
-Primitives
-----------
+Builtins
+--------
 
 Some commands take an exclamation mark (*!*), which can be used to force
 the execution of the command (i.e. to quit a modified buffer, the
