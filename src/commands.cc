@@ -1111,6 +1111,19 @@ const CommandDesc echo_cmd = {
     }
 };
 
+KeymapMode parse_keymap_mode(const String& str)
+{
+    if (prefix_match("normal", str)) return KeymapMode::Normal;
+    if (prefix_match("insert", str)) return KeymapMode::Insert;
+    if (prefix_match("menu", str))   return KeymapMode::Menu;
+    if (prefix_match("prompt", str)) return KeymapMode::Prompt;
+    if (prefix_match("goto", str))   return KeymapMode::Goto;
+    if (prefix_match("view", str))   return KeymapMode::View;
+    if (prefix_match("user", str))   return KeymapMode::User;
+    if (prefix_match("object", str)) return KeymapMode::Object;
+
+    throw runtime_error(format("unknown keymap mode '{}'", str));
+}
 
 const CommandDesc debug_cmd = {
     "debug",
@@ -1124,7 +1137,7 @@ const CommandDesc debug_cmd = {
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
                auto c = {"info", "buffers", "options", "memory", "shared-strings",
-                         "profile-hash-maps", "faces"};
+                         "profile-hash-maps", "faces", "mappings"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
@@ -1179,6 +1192,21 @@ const CommandDesc debug_cmd = {
             write_to_debug_buffer("Faces:");
             for (auto& face : FaceRegistry::instance().aliases())
                 write_to_debug_buffer(format(" * {}: {}", face.key, face.value.face));
+        }
+        else if (parser[0] == "mappings")
+        {
+            auto& keymaps = context.keymaps();
+            auto modes = {"normal", "insert", "prompt", "menu",
+                          "goto", "view", "user", "object"};
+            write_to_debug_buffer("Mappings:");
+            for (auto& mode : modes)
+            {
+                KeymapMode m = parse_keymap_mode(mode);
+                for (auto& key : keymaps.get_mapped_keys(m))
+                    write_to_debug_buffer(format(" * {} {}: {}",
+                                          mode, key_to_str(key),
+                                          keymaps.get_mapping(key, m).docstring));
+            }
         }
         else
             throw runtime_error(format("unknown debug command '{}'", parser[0]));
@@ -1393,20 +1421,6 @@ const CommandDesc declare_option_cmd = {
             opt->set_from_string(parser[2]);
     }
 };
-
-KeymapMode parse_keymap_mode(const String& str)
-{
-    if (prefix_match("normal", str)) return KeymapMode::Normal;
-    if (prefix_match("insert", str)) return KeymapMode::Insert;
-    if (prefix_match("menu", str))   return KeymapMode::Menu;
-    if (prefix_match("prompt", str)) return KeymapMode::Prompt;
-    if (prefix_match("goto", str))   return KeymapMode::Goto;
-    if (prefix_match("view", str))   return KeymapMode::View;
-    if (prefix_match("user", str))   return KeymapMode::User;
-    if (prefix_match("object", str)) return KeymapMode::Object;
-
-    throw runtime_error(format("unknown keymap mode '{}'", str));
-}
 
 auto map_key_completer =
     [](const Context& context, CompletionFlags flags,

@@ -685,7 +685,7 @@ Some commands take an exclamation mark (`!`), which can be used to force
 the execution of the command (i.e. to quit a modified buffer, the
 command `q!` has to be used).
 
- * `cd [<directory>]`: change the current directory to `<directory>`, or the home directory is unspecified
+ * `cd [<directory>]`: change the current directory to `<directory>`, or the home directory if unspecified
  * `doc <topic>`: display documentation about a topic. The completion list
      displays the available topics.
  * `e[dit][!] <filename> [<line> [<column>]]`: open buffer on file, go to given
@@ -1597,7 +1597,7 @@ Some helper commands can be used to define composite commands:
  * `reg <name> <content>`: set register <name> to <content>
  * `select <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>:...`:
      replace the current selections with the one described in the argument
- * `debug {info,buffers,options,memory,shared-strings,profile-hash-maps,faces}`:
+ * `debug {info,buffers,options,memory,shared-strings,profile-hash-maps,faces,mappings}`:
      print some debug information in the `*debug*` buffer
 
 Note that these commands are available in interactive command mode, but are
