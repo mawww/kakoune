@@ -84,8 +84,14 @@ inline CharCategories categorize(Codepoint c, ConstArrayView<Codepoint> extra_wo
 inline Codepoint to_lower(Codepoint cp) noexcept { return towlower((wchar_t)cp); }
 inline Codepoint to_upper(Codepoint cp) noexcept { return towupper((wchar_t)cp); }
 
+inline bool is_lower(Codepoint cp) noexcept { return iswlower((wchar_t)cp); }
+inline bool is_upper(Codepoint cp) noexcept { return iswupper((wchar_t)cp); }
+
 inline char to_lower(char c) noexcept { return c >= 'A' and c <= 'Z' ? c - 'A' + 'a' : c; }
 inline char to_upper(char c) noexcept { return c >= 'a' and c <= 'z' ? c - 'a' + 'A' : c; }
+
+inline bool is_lower(char c) noexcept { return c >= 'a' and c <= 'z'; }
+inline bool is_upper(char c) noexcept { return c >= 'A' and c <= 'Z'; }
 
 }
 
