@@ -136,6 +136,12 @@ void register_env_vars()
             [](StringView name, const Context& context) -> String
             { return to_string(context.client().pid()); }
         }, {
+            "client_list", false,
+            [](StringView name, const Context& context) -> String
+            { return join(ClientManager::instance() |
+                          transform([](const std::unique_ptr<Client>& c) -> const String&
+                                   { return c->context().name(); }), ':'); }
+        }, {
             "modified", false,
             [](StringView name, const Context& context) -> String
             { return context.buffer().is_modified() ? "true" : "false"; }
