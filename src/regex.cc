@@ -11,7 +11,8 @@ using Utf8It = RegexUtf8It<const char*>;
 Regex::Regex(StringView re, flag_type flags) try
     : RegexBase{Utf8It{re.begin(), re}, Utf8It{re.end(), re}, flags}, m_str{re.str()}
 {
-    m_impl = compile_regex(re);
+    if (auto compiled_regex = compile_regex(re))
+        m_impl = new CompiledRegex{std::move(compiled_regex)};
 } catch (std::runtime_error& err) { throw regex_error(err.what()); }
 
 String option_to_string(const Regex& re)

@@ -36,11 +36,11 @@ public:
 
     static constexpr const char* option_type_name = "regex";
 
-    const CompiledRegex& impl() const { return m_impl; }
+    const CompiledRegex* impl() const { return m_impl.get(); }
 
 private:
     String m_str;
-    CompiledRegex m_impl;
+    RefPtr<CompiledRegex> m_impl;
 };
 
 template<typename It>
@@ -143,7 +143,7 @@ bool regex_match(It begin, It end, const Regex& re)
     try
     {
         bool matched = boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, re);
-        if (re.impl() and matched != regex_match(begin, end, re.impl()))
+        if (re.impl() and matched != regex_match(begin, end, *re.impl()))
             regex_mismatch(re);
         return matched;
     }
@@ -160,7 +160,7 @@ bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
     {
         bool matched = boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, res, re);
         Vector<It> captures;
-        if (re.impl() and matched != regex_match(begin, end, captures, re.impl()))
+        if (re.impl() and matched != regex_match(begin, end, captures, *re.impl()))
             regex_mismatch(re);
         if (re.impl() and matched)
             check_captures(re, res, captures);
@@ -179,7 +179,7 @@ bool regex_search(It begin, It end, const Regex& re,
     try
     {
         bool matched = boost::regex_search<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, re, flags);
-        if (re.impl() and matched != regex_search(begin, end, re.impl(), convert_flags(flags)))
+        if (re.impl() and matched != regex_search(begin, end, *re.impl(), convert_flags(flags)))
             regex_mismatch(re);
         return matched;
     }
@@ -197,7 +197,7 @@ bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
     {
         bool matched = boost::regex_search<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, res, re, flags);
         Vector<It> captures;
-        if (re.impl() and matched != regex_search(begin, end, captures, re.impl(), convert_flags(flags)))
+        if (re.impl() and matched != regex_search(begin, end, captures, *re.impl(), convert_flags(flags)))
             regex_mismatch(re);
         if (re.impl() and matched)
             check_captures(re, res, captures);
