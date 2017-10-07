@@ -566,7 +566,7 @@ private:
                 goto_inner_end_offsets.push_back(alloc_offset());
 
                 auto right_pos = compile_node(children[1]);
-                get_offset(offset) = right_pos;
+                set_offset(offset, right_pos);
 
                 break;
             }
@@ -611,7 +611,7 @@ private:
         }
 
         for (auto& offset : goto_inner_end_offsets)
-            get_offset(offset) =  m_program.bytecode.size();
+            set_offset(offset, m_program.bytecode.size());
 
         if (capture != -1)
         {
@@ -645,7 +645,7 @@ private:
         {
             push_op(quantifier.greedy ? CompiledRegex::Split_PrioritizeChild
                                       : CompiledRegex::Split_PrioritizeParent);
-            get_offset(alloc_offset()) = inner_pos;
+            set_offset(alloc_offset(), inner_pos);
         }
         // Write the node as an optional match for the min -> max counts
         else for (int i = std::max(1, quantifier.min); // STILL UGLY !
@@ -658,7 +658,7 @@ private:
         }
 
         for (auto offset : goto_end_offsets)
-            get_offset(offset) = m_program.bytecode.size();
+            set_offset(offset, m_program.bytecode.size());
 
         return pos;
     }
@@ -670,9 +670,9 @@ private:
         return pos;
     }
 
-    Offset& get_offset(Offset pos)
+    void set_offset(Offset pos, Offset value)
     {
-        return *reinterpret_cast<Offset*>(&m_program.bytecode[pos]);
+        memcpy(&m_program.bytecode[pos], &value, sizeof(Offset));
     }
 
     void push_op(CompiledRegex::Op op)

@@ -8,6 +8,8 @@
 #include "flags.hh"
 #include "ref_ptr.hh"
 
+#include <string.h>
+
 namespace Kakoune
 {
 
@@ -199,12 +201,12 @@ private:
                 case CompiledRegex::AnyChar:
                     return StepResult::Consumed;
                 case CompiledRegex::Jump:
-                    thread.inst = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst);
+                    thread.inst = prog_start + get_offset(thread.inst);
                     break;
                 case CompiledRegex::Split_PrioritizeParent:
                 {
                     auto parent = thread.inst + sizeof(CompiledRegex::Offset);
-                    auto child = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst);
+                    auto child = prog_start + get_offset(thread.inst);
                     thread.inst = parent;
                     if (thread.saves)
                         ++thread.saves->refcount;
@@ -214,7 +216,7 @@ private:
                 case CompiledRegex::Split_PrioritizeChild:
                 {
                     auto parent = thread.inst + sizeof(CompiledRegex::Offset);
-                    auto child = prog_start + *reinterpret_cast<const CompiledRegex::Offset*>(thread.inst);
+                    auto child = prog_start + get_offset(thread.inst);
                     thread.inst = child;
                     if (thread.saves)
                         ++thread.saves->refcount;
@@ -371,6 +373,13 @@ private:
         while (start != end and *start >= 0 and *start < 256 and
                not start_chars[*start])
             ++start;
+    }
+
+    static CompiledRegex::Offset get_offset(const char* ptr)
+    {
+        CompiledRegex::Offset res;
+        memcpy(&res, ptr, sizeof(CompiledRegex::Offset));
+        return res;
     }
 
     bool is_line_start(const Utf8It& pos) const
