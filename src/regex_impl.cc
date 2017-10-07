@@ -883,7 +883,6 @@ struct TestVM : CompiledRegex, ThreadedRegexVM<const char*, dir>
 }
 
 auto test_regex = UnitTest{[]{
-
     {
         TestVM<> vm{R"(a*b)"};
         kak_assert(vm.exec("b"));

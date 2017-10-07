@@ -118,6 +118,7 @@ public:
             for (size_t i = m_program.save_count-1; i > 0; --i)
                 saves->pos[i].~Iterator();
             saves->~Saves();
+            ::operator delete(saves, sizeof(Saves) + (m_program.save_count-1) * sizeof(Iterator));
         }
     }
 
