@@ -1,14 +1,12 @@
 #include "regex_impl.hh"
-#include "vector.hh"
-#include "unit_tests.hh"
+
+#include "exception.hh"
 #include "string.hh"
 #include "unicode.hh"
+#include "unit_tests.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
-#include "exception.hh"
-#include "array_view.hh"
-
-#include "buffer_utils.hh"
+#include "vector.hh"
 
 namespace Kakoune
 {
@@ -873,16 +871,7 @@ void dump_regex(const CompiledRegex& program)
 
 CompiledRegex compile_regex(StringView re)
 {
-    CompiledRegex res;
-    try
-    {
-        res = RegexCompiler::compile(re);
-    }
-    catch (runtime_error& err)
-    {
-        write_to_debug_buffer(err.what());
-    }
-    return std::move(res);
+    return RegexCompiler::compile(re);
 }
 
 auto test_regex = UnitTest{[]{

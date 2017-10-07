@@ -2,6 +2,7 @@
 #define meta_hh_INCLUDED
 
 #include <utility>
+#include <stddef.h>
 
 namespace Kakoune
 {

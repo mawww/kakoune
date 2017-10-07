@@ -1,12 +1,12 @@
 #ifndef regex_impl_hh_INCLUDED
 #define regex_impl_hh_INCLUDED
 
+#include "flags.hh"
+#include "ref_ptr.hh"
 #include "unicode.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
 #include "vector.hh"
-#include "flags.hh"
-#include "ref_ptr.hh"
 
 #include <string.h>
 
