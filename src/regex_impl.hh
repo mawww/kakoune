@@ -326,20 +326,17 @@ private:
         return StepResult::Failed;
     }
 
-    bool exec_from(const Utf8It& start, Saves* initial_saves, Vector<Thread>& current_threads, Vector<Thread>& next_threads)
+    bool exec_from(Utf8It pos, Saves* initial_saves, Vector<Thread>& current_threads, Vector<Thread>& next_threads)
     {
         current_threads.push_back({0, initial_saves});
         next_threads.clear();
 
-        auto clear_processed = [this]() {
+        bool found_match = false;
+        while (true)
+        {
             for (auto& inst : m_program.instructions)
                 inst.processed = false;
-        };
 
-        bool found_match = false;
-        for (Utf8It pos = start; pos != m_end; ++pos)
-        {
-            clear_processed();
             while (not current_threads.empty())
             {
                 auto thread = current_threads.back();
@@ -347,7 +344,7 @@ private:
                 switch (step(pos, thread, current_threads))
                 {
                 case StepResult::Matched:
-                    if (not (m_flags & RegexExecFlags::Search) or // We are not at end, this is not a full match
+                    if ((pos != m_end and not (m_flags & RegexExecFlags::Search)) or
                         (m_flags & RegexExecFlags::NotInitialNull and pos == m_begin))
                     {
                         release_saves(thread.saves);
@@ -356,7 +353,7 @@ private:
 
                     release_saves(m_captures);
                     m_captures = thread.saves;
-                    if (m_flags & RegexExecFlags::AnyMatch)
+                    if (pos == m_end or (m_flags & RegexExecFlags::AnyMatch))
                         return true;
 
                     found_match = true;
@@ -373,29 +370,13 @@ private:
                     break;
                 }
             }
-            if (next_threads.empty())
+            if (pos == m_end or next_threads.empty())
                 return found_match;
 
             std::swap(current_threads, next_threads);
             std::reverse(current_threads.begin(), current_threads.end());
+            ++pos;
         }
-        if (found_match)
-            return true;
-
-        clear_processed();
-        // Step remaining threads to see if they match without consuming anything else
-        while (not current_threads.empty())
-        {
-            auto thread = current_threads.back();
-            current_threads.pop_back();
-            if (step(m_end, thread, current_threads) == StepResult::Matched)
-            {
-                release_saves(m_captures);
-                m_captures = thread.saves;
-                return true;
-            }
-        }
-        return false;
     }
 
     void to_next_start(Utf8It& start, const Utf8It& end, const bool* start_chars)
