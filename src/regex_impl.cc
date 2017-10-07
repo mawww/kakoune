@@ -1126,6 +1126,11 @@ auto test_regex = UnitTest{[]{
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]}  == "oober");
         kak_assert(StringView{vm.captures()[2], vm.captures()[3]}  == "ber");
     }
+
+    {
+        TestVM<> vm{R"(()*)"};
+        kak_assert(not vm.exec(" "));
+    }
 }};
 
 }

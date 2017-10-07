@@ -123,6 +123,7 @@ public:
             return false;
 
         Vector<Thread> current_threads, next_threads;
+        std::unique_ptr<bool[]> inst_processed{new bool[m_program.bytecode.size()]};
 
         const bool no_saves = (m_flags & RegexExecFlags::NoSaves);
         Utf8It start{m_begin};
@@ -133,7 +134,7 @@ public:
             to_next_start(start, m_end, start_chars);
 
         if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
-                      current_threads, next_threads))
+                      current_threads, next_threads, inst_processed.get()))
             return true;
 
         if (not (flags & RegexExecFlags::Search))
@@ -143,7 +144,7 @@ public:
         {
             to_next_start(++start, m_end, start_chars);
             if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
-                          current_threads, next_threads))
+                          current_threads, next_threads, inst_processed.get()))
                 return true;
         }
         while (start != m_end);
@@ -206,12 +207,17 @@ private:
     using Utf8It = typename ChooseUtf8It<Iterator, direction>::Type;
 
     enum class StepResult { Consumed, Matched, Failed };
-    StepResult step(const Utf8It& pos, Thread& thread, Vector<Thread>& threads)
+    StepResult step(const Utf8It& pos, Thread& thread, Vector<Thread>& threads, bool* inst_processed)
     {
         const auto prog_start = m_program.bytecode.data();
         const auto prog_end = prog_start + m_program.bytecode.size();
         while (true)
         {
+            const auto inst_offset = thread.inst - prog_start;
+            if (inst_processed[inst_offset])
+                return StepResult::Failed;
+            inst_processed[inst_offset] = true;
+
             const Codepoint cp = pos == m_end ? 0 : *pos;
             const CompiledRegex::Op op = (CompiledRegex::Op)*thread.inst++;
             switch (op)
@@ -325,7 +331,7 @@ private:
         return StepResult::Failed;
     }
 
-    bool exec_from(const Utf8It& start, Saves* initial_saves, Vector<Thread>& current_threads, Vector<Thread>& next_threads)
+    bool exec_from(const Utf8It& start, Saves* initial_saves, Vector<Thread>& current_threads, Vector<Thread>& next_threads, bool* inst_processed)
     {
         current_threads.push_back({m_program.bytecode.data(), initial_saves});
         next_threads.clear();
@@ -333,11 +339,12 @@ private:
         bool found_match = false;
         for (Utf8It pos = start; pos != m_end; ++pos)
         {
+            memset(inst_processed, 0, m_program.bytecode.size() * sizeof(bool));;
             while (not current_threads.empty())
             {
                 auto thread = current_threads.back();
                 current_threads.pop_back();
-                switch (step(pos, thread, current_threads))
+                switch (step(pos, thread, current_threads, inst_processed))
                 {
                 case StepResult::Matched:
                     if (not (m_flags & RegexExecFlags::Search) or // We are not at end, this is not a full match
@@ -375,12 +382,13 @@ private:
         if (found_match)
             return true;
 
+        memset(inst_processed, 0, m_program.bytecode.size() * sizeof(bool));;
         // Step remaining threads to see if they match without consuming anything else
         while (not current_threads.empty())
         {
             auto thread = current_threads.back();
             current_threads.pop_back();
-            if (step(m_end, thread, current_threads) == StepResult::Matched)
+            if (step(m_end, thread, current_threads, inst_processed) == StepResult::Matched)
             {
                 release_saves(m_captures);
                 m_captures = thread.saves;
