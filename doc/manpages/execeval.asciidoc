@@ -38,7 +38,7 @@ Optional flags
 	permits to make some modification to the buffer without modifying
 	the user’s selection
 
-*-itersel* (requires -draft)::
+*-itersel*::
 	execute once per selection, in a context with only the considered
 	selection. This permits avoiding cases where the selections may
 	get merged
@@ -56,3 +56,6 @@ Optional flags
 *-save-regs* <regs>::
 	regs is a string of registers to be restored after execution (overwrites
 	the list of registers saved by default, c.f. description)
+
+*-collapse-jumps*::
+	collapse all jumps into a single one from initial selection
