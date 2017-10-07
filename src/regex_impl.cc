@@ -513,14 +513,9 @@ struct RegexCompiler
 
     CompiledRegex get_compiled_regex() { return std::move(m_program); }
 
+private:
     using Offset = CompiledRegex::Offset;
 
-    static CompiledRegex compile(StringView re)
-    {
-        return RegexCompiler{RegexParser::parse(re)}.get_compiled_regex();
-    }
-
-private:
     Offset compile_node_inner(const ParsedRegex::AstNodePtr& node)
     {
         const auto start_pos = m_program.bytecode.size();
@@ -871,14 +866,14 @@ void dump_regex(const CompiledRegex& program)
 
 CompiledRegex compile_regex(StringView re)
 {
-    return RegexCompiler::compile(re);
+    return RegexCompiler{RegexParser::parse(re)}.get_compiled_regex();
 }
 
 auto test_regex = UnitTest{[]{
     struct TestVM : CompiledRegex, ThreadedRegexVM<const char*>
     {
         TestVM(StringView re, bool dump = false)
-            : CompiledRegex{RegexCompiler::compile(re)},
+            : CompiledRegex{compile_regex(re)},
               ThreadedRegexVM{(const CompiledRegex&)*this}
         { if (dump) dump_regex(*this); }
 
