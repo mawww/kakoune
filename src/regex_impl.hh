@@ -1,6 +1,7 @@
 #ifndef regex_impl_hh_INCLUDED
 #define regex_impl_hh_INCLUDED
 
+#include "exception.hh"
 #include "flags.hh"
 #include "ref_ptr.hh"
 #include "unicode.hh"
@@ -12,6 +13,12 @@
 
 namespace Kakoune
 {
+
+enum class MatchDirection
+{
+    Forward,
+    Backward
+};
 
 struct CompiledRegex : RefCountable
 {
@@ -43,13 +50,14 @@ struct CompiledRegex : RefCountable
 
     Vector<char> bytecode;
     Vector<std::function<bool (Codepoint)>> matchers;
+    MatchDirection direction;
     size_t save_count;
 
     struct StartChars { bool map[256]; };
     std::unique_ptr<StartChars> start_chars;
 };
 
-CompiledRegex compile_regex(StringView re);
+CompiledRegex compile_regex(StringView re, MatchDirection direction = MatchDirection::Forward);
 
 enum class RegexExecFlags
 {
@@ -67,12 +75,29 @@ enum class RegexExecFlags
 
 constexpr bool with_bit_ops(Meta::Type<RegexExecFlags>) { return true; }
 
+template<typename Iterator, MatchDirection direction>
+struct ChooseUtf8It
+{
+    using Type = utf8::iterator<Iterator>;
+};
+
 template<typename Iterator>
+struct ChooseUtf8It<Iterator, MatchDirection::Backward>
+{
+    using Type = std::reverse_iterator<utf8::iterator<Iterator>>;
+};
+
+template<typename Iterator, MatchDirection direction>
 class ThreadedRegexVM
 {
 public:
     ThreadedRegexVM(const CompiledRegex& program)
-      : m_program{program} { kak_assert(m_program); }
+      : m_program{program}
+      {
+          kak_assert(m_program);
+          if (direction != program.direction)
+              throw runtime_error{"Regex and VM direction mismatch"};
+      }
 
     ThreadedRegexVM(const ThreadedRegexVM&) = delete;
     ThreadedRegexVM& operator=(const ThreadedRegexVM&) = delete;
@@ -89,8 +114,9 @@ public:
 
     bool exec(Iterator begin, Iterator end, RegexExecFlags flags)
     {
-        m_begin = begin;
-        m_end = end;
+        const bool forward = direction == MatchDirection::Forward;
+        m_begin = Utf8It{utf8::iterator<Iterator>{forward ? begin : end, begin, end}};
+        m_end = Utf8It{utf8::iterator<Iterator>{forward ? end : begin, begin, end}};
         m_flags = flags;
 
         if (flags & RegexExecFlags::NotInitialNull and m_begin == m_end)
@@ -99,12 +125,12 @@ public:
         Vector<Thread> current_threads, next_threads;
 
         const bool no_saves = (m_flags & RegexExecFlags::NoSaves);
-        Utf8It start{m_begin, m_begin, m_end};
+        Utf8It start{m_begin};
 
         const bool* start_chars = m_program.start_chars ? m_program.start_chars->map : nullptr;
 
         if (flags & RegexExecFlags::Search)
-            to_next_start(start, end, start_chars);
+            to_next_start(start, m_end, start_chars);
 
         if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
                       current_threads, next_threads))
@@ -115,12 +141,12 @@ public:
 
         do
         {
-            to_next_start(++start, end, start_chars);
+            to_next_start(++start, m_end, start_chars);
             if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
                           current_threads, next_threads))
                 return true;
         }
-        while (start != end);
+        while (start != m_end);
 
         return false;
     }
@@ -177,7 +203,7 @@ private:
         Saves* saves;
     };
 
-    using Utf8It = utf8::iterator<Iterator>;
+    using Utf8It = typename ChooseUtf8It<Iterator, direction>::Type;
 
     enum class StepResult { Consumed, Matched, Failed };
     StepResult step(const Utf8It& pos, Thread& thread, Vector<Thread>& threads)
@@ -233,7 +259,7 @@ private:
                         --thread.saves->refcount;
                         thread.saves = new_saves<true>(thread.saves->pos);
                     }
-                    thread.saves->pos[index] = pos.base();
+                    thread.saves->pos[index] = get_base(pos);
                     break;
                 }
                 case CompiledRegex::Matcher:
@@ -350,12 +376,11 @@ private:
             return true;
 
         // Step remaining threads to see if they match without consuming anything else
-        const Utf8It end{m_end, m_begin, m_end};
         while (not current_threads.empty())
         {
             auto thread = current_threads.back();
             current_threads.pop_back();
-            if (step(end, thread, current_threads) == StepResult::Matched)
+            if (step(m_end, thread, current_threads) == StepResult::Matched)
             {
                 release_saves(m_captures);
                 m_captures = thread.saves;
@@ -365,7 +390,7 @@ private:
         return false;
     }
 
-    void to_next_start(Utf8It& start, const Iterator& end, const bool* start_chars)
+    void to_next_start(Utf8It& start, const Utf8It& end, const bool* start_chars)
     {
         if (not start_chars)
             return;
@@ -401,10 +426,13 @@ private:
                is_word(*(pos-1)) != is_word(*pos);
     }
 
+    static const Iterator& get_base(const utf8::iterator<Iterator>& it) { return it.base(); }
+    static const Iterator& get_base(const std::reverse_iterator<utf8::iterator<Iterator>>& it) { return it.base().base(); }
+
     const CompiledRegex& m_program;
 
-    Iterator m_begin;
-    Iterator m_end;
+    Utf8It m_begin;
+    Utf8It m_end;
     RegexExecFlags m_flags;
 
     Vector<Saves*> m_saves;
@@ -413,19 +441,19 @@ private:
     Saves* m_captures = nullptr;
 };
 
-template<typename It>
+template<typename It, MatchDirection direction = MatchDirection::Forward>
 bool regex_match(It begin, It end, const CompiledRegex& re, RegexExecFlags flags = RegexExecFlags::None)
 {
-    ThreadedRegexVM<It> vm{re};
+    ThreadedRegexVM<It, direction> vm{re};
     return vm.exec(begin, end, (RegexExecFlags)(flags & ~(RegexExecFlags::Search)) |
                                RegexExecFlags::AnyMatch | RegexExecFlags::NoSaves);
 }
 
-template<typename It>
+template<typename It, MatchDirection direction = MatchDirection::Forward>
 bool regex_match(It begin, It end, Vector<It>& captures, const CompiledRegex& re,
                  RegexExecFlags flags = RegexExecFlags::None)
 {
-    ThreadedRegexVM<It> vm{re};
+    ThreadedRegexVM<It, direction> vm{re};
     if (vm.exec(begin, end,  flags & ~(RegexExecFlags::Search)))
     {
         std::copy(vm.captures().begin(), vm.captures().end(), std::back_inserter(captures));
@@ -434,19 +462,19 @@ bool regex_match(It begin, It end, Vector<It>& captures, const CompiledRegex& re
     return false;
 }
 
-template<typename It>
+template<typename It, MatchDirection direction = MatchDirection::Forward>
 bool regex_search(It begin, It end, const CompiledRegex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
 {
-    ThreadedRegexVM<It> vm{re};
+    ThreadedRegexVM<It, direction> vm{re};
     return vm.exec(begin, end, flags | RegexExecFlags::Search | RegexExecFlags::AnyMatch | RegexExecFlags::NoSaves);
 }
 
-template<typename It>
+template<typename It, MatchDirection direction = MatchDirection::Forward>
 bool regex_search(It begin, It end, Vector<It>& captures, const CompiledRegex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
 {
-    ThreadedRegexVM<It> vm{re};
+    ThreadedRegexVM<It, direction> vm{re};
     if (vm.exec(begin, end, flags | RegexExecFlags::Search))
     {
         std::copy(vm.captures().begin(), vm.captures().end(), std::back_inserter(captures));
