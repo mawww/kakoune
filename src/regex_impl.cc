@@ -278,9 +278,6 @@ private:
         }
 
         // CharacterEscape
-        struct { Codepoint name; Codepoint value; } control_escapes[] = {
-            { 'f', '\f' }, { 'n', '\n' }, { 'r', '\r' }, { 't', '\t' }, { 'v', '\v' }
-        };
         for (auto& control : control_escapes)
         {
             if (control.name == cp)
@@ -337,10 +334,15 @@ private:
                 }
                 else // its just an escaped character
                 {
-                    
-                    if (++m_pos == m_regex.end())
-                        break;
-                    cp = *m_pos;
+                    cp = *m_pos++;
+                    for (auto& control : control_escapes)
+                    {
+                        if (control.name == cp)
+                        {
+                            cp = control.value;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -487,8 +489,10 @@ private:
         StringView additional_chars;
         bool neg;
     };
-
     static const CharacterClassEscape character_class_escapes[8];
+
+    struct ControlEscape { Codepoint name; Codepoint value; };
+    static const ControlEscape control_escapes[5];
 };
 
 // For some reason Gcc fails to link if this is constexpr
@@ -497,6 +501,11 @@ const RegexParser::CharacterClassEscape RegexParser::character_class_escapes[8] 
     { 'w', "alnum", "_", false },
     { 's', "space", "", false },
     { 'h', nullptr, " \t", false },
+};
+
+
+const RegexParser::ControlEscape RegexParser::control_escapes[5] = {
+    { 'f', '\f' }, { 'n', '\n' }, { 'r', '\r' }, { 't', '\t' }, { 'v', '\v' }
 };
 
 struct RegexCompiler
@@ -1059,6 +1068,12 @@ auto test_regex = UnitTest{[]{
     {
         TestVM<> vm{R"([^\]]+)"};
         kak_assert(not vm.exec("a]c"));
+        kak_assert(vm.exec("abc"));
+    }
+
+    {
+        TestVM<> vm{R"([^:\n]+)"};
+        kak_assert(not vm.exec("\nbc"));
         kak_assert(vm.exec("abc"));
     }
 
