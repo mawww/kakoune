@@ -435,7 +435,7 @@ private:
     }
 
     static const Iterator& get_base(const utf8::iterator<Iterator>& it) { return it.base(); }
-    static const Iterator& get_base(const std::reverse_iterator<utf8::iterator<Iterator>>& it) { return it.base().base(); }
+    static Iterator get_base(const std::reverse_iterator<utf8::iterator<Iterator>>& it) { return it.base().base(); }
 
     const CompiledRegex& m_program;
 
