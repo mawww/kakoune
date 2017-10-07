@@ -18,7 +18,8 @@ template<typename BaseIt,
          typename DifferenceType = CharCount,
          typename InvalidPolicy = utf8::InvalidPolicy::Pass>
 class iterator : public std::iterator<std::bidirectional_iterator_tag,
-                                      CodepointType, DifferenceType>
+                                      CodepointType, DifferenceType,
+                                      CodepointType*, CodepointType>
 {
 public:
     iterator() = default;
