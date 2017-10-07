@@ -207,12 +207,15 @@ private:
     using Utf8It = typename ChooseUtf8It<Iterator, direction>::Type;
 
     enum class StepResult { Consumed, Matched, Failed };
+
+    // Steps a thread until it consumes the current character, matches or fail
     StepResult step(const Utf8It& pos, Thread& thread, Vector<Thread>& threads, bool* inst_processed)
     {
         const auto prog_start = m_program.bytecode.data();
         const auto prog_end = prog_start + m_program.bytecode.size();
         while (true)
         {
+            // If we have hit this instruction on this character, in this thread or another, do not try again
             const auto inst_offset = thread.inst - prog_start;
             if (inst_processed[inst_offset])
                 return StepResult::Failed;
@@ -339,7 +342,7 @@ private:
         bool found_match = false;
         for (Utf8It pos = start; pos != m_end; ++pos)
         {
-            memset(inst_processed, 0, m_program.bytecode.size() * sizeof(bool));;
+            memset(inst_processed, 0, m_program.bytecode.size() * sizeof(bool));
             while (not current_threads.empty())
             {
                 auto thread = current_threads.back();
@@ -382,7 +385,7 @@ private:
         if (found_match)
             return true;
 
-        memset(inst_processed, 0, m_program.bytecode.size() * sizeof(bool));;
+        memset(inst_processed, 0, m_program.bytecode.size() * sizeof(bool));
         // Step remaining threads to see if they match without consuming anything else
         while (not current_threads.empty())
         {
