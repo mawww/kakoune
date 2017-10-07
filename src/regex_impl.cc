@@ -666,7 +666,7 @@ private:
     uint32_t push_inst(CompiledRegex::Op op, uint32_t param = 0)
     {
         uint32_t res = m_program.instructions.size();
-        m_program.instructions.push_back({ op, false, param });
+        m_program.instructions.push_back({ op, false, false, param });
         return res;
     }
 

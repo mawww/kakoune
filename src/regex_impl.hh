@@ -49,6 +49,7 @@ struct CompiledRegex : RefCountable
     {
         Op op;
         mutable bool processed;
+        mutable bool scheduled;
         uint32_t param;
     };
     static_assert(sizeof(Instruction) == 8, "");
@@ -225,15 +226,14 @@ private:
                 return StepResult::Failed;
             inst.processed = true;
 
-            const Codepoint cp = pos == m_end ? 0 : *pos;
             switch (inst.op)
             {
                 case CompiledRegex::Literal:
-                    if (inst.param == cp)
+                    if (pos != m_end and inst.param == *pos)
                         return StepResult::Consumed;
                     return StepResult::Failed;
                 case CompiledRegex::LiteralIgnoreCase:
-                    if (inst.param == to_lower(cp))
+                    if (pos != m_end and inst.param == to_lower(*pos))
                         return StepResult::Consumed;
                     return StepResult::Failed;
                 case CompiledRegex::AnyChar:
@@ -269,7 +269,9 @@ private:
                     break;
                 }
                 case CompiledRegex::Matcher:
-                    return m_program.matchers[inst.param](cp) ?
+                    if (pos == m_end)
+                        return StepResult::Failed;
+                    return m_program.matchers[inst.param](*pos) ?
                         StepResult::Consumed : StepResult::Failed;
                 case CompiledRegex::LineStart:
                     if (not is_line_start(pos))
@@ -332,10 +334,13 @@ private:
         next_threads.clear();
 
         bool found_match = false;
-        while (true)
+        while (true) // Iterate on all codepoints and once at the end
         {
             for (auto& inst : m_program.instructions)
+            {
                 inst.processed = false;
+                inst.scheduled = false;
+            }
 
             while (not current_threads.empty())
             {
@@ -363,10 +368,13 @@ private:
                     release_saves(thread.saves);
                     break;
                 case StepResult::Consumed:
-                    if (contains_that(next_threads, [&](auto& t) { return t.inst == thread.inst; }))
+                    if (m_program.instructions[thread.inst].scheduled)
+                    {
                         release_saves(thread.saves);
-                    else
-                        next_threads.push_back(thread);
+                        continue;
+                    }
+                    m_program.instructions[thread.inst].scheduled = true;
+                    next_threads.push_back(thread);
                     break;
                 }
             }
