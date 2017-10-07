@@ -505,7 +505,7 @@ struct RegexCompiler
         : m_parsed_regex{parsed_regex}, m_forward{direction == MatchDirection::Forward}
     {
         compile_node(m_parsed_regex.ast);
-        push_op(CompiledRegex::Match);
+        push_inst(CompiledRegex::Match);
         m_program.matchers = m_parsed_regex.matchers;
         m_program.save_count = m_parsed_regex.capture_count * 2;
         m_program.direction = direction;
@@ -515,34 +515,30 @@ struct RegexCompiler
     CompiledRegex get_compiled_regex() { return std::move(m_program); }
 
 private:
-    using Offset = CompiledRegex::Offset;
 
-    Offset compile_node_inner(const ParsedRegex::AstNodePtr& node)
+    uint32_t compile_node_inner(const ParsedRegex::AstNodePtr& node)
     {
-        const auto start_pos = m_program.bytecode.size();
+        const auto start_pos = m_program.instructions.size();
 
         const Codepoint capture = (node->op == ParsedRegex::Alternation or node->op == ParsedRegex::Sequence) ? node->value : -1;
         if (capture != -1)
-        {
-            push_op(CompiledRegex::Save);
-            push_byte(capture * 2 + (m_forward ? 0 : 1));
-        }
+            push_inst(CompiledRegex::Save, capture * 2 + (m_forward ? 0 : 1));
 
-        Vector<Offset> goto_inner_end_offsets;
+        Vector<uint32_t> goto_inner_end_offsets;
         switch (node->op)
         {
             case ParsedRegex::Literal:
-                push_op(node->ignore_case ? CompiledRegex::LiteralIgnoreCase
-                                          : CompiledRegex::Literal);
-                push_codepoint(node->ignore_case ? to_lower(node->value)
-                                                 : node->value);
+                if (node->ignore_case)
+                    push_inst(CompiledRegex::LiteralIgnoreCase, to_lower(node->value));
+                else
+                    push_inst(CompiledRegex::Literal, node->value);
                 break;
             case ParsedRegex::AnyChar:
-                push_op(CompiledRegex::AnyChar);
+                push_inst(CompiledRegex::AnyChar);
                 break;
             case ParsedRegex::Matcher:
-                push_op(CompiledRegex::Matcher);
-                push_byte(node->value);
+                push_inst(CompiledRegex::Matcher, node->value);
+                break;
             case ParsedRegex::Sequence:
             {
                 if (m_forward)
@@ -558,82 +554,77 @@ private:
                 auto& children = node->children;
                 kak_assert(children.size() == 2);
 
-                push_op(CompiledRegex::Split_PrioritizeParent);
-                auto offset = alloc_offset();
+                auto split_pos = push_inst(CompiledRegex::Split_PrioritizeParent);
 
                 compile_node(children[m_forward ? 0 : 1]);
-                push_op(CompiledRegex::Jump);
-                goto_inner_end_offsets.push_back(alloc_offset());
+                auto left_pos = push_inst(CompiledRegex::Jump);
+                goto_inner_end_offsets.push_back(left_pos);
 
                 auto right_pos = compile_node(children[m_forward ? 1 : 0]);
-                set_offset(offset, right_pos);
+                m_program.instructions[split_pos].param = right_pos;
 
                 break;
             }
             case ParsedRegex::LookAhead:
-                push_op(m_forward ? CompiledRegex::LookAhead
-                                  : CompiledRegex::LookBehind);
-                push_string(node->children, false);
+                push_inst(m_forward ? CompiledRegex::LookAhead
+                                    : CompiledRegex::LookBehind,
+                          push_lookaround(node->children, false));
                 break;
             case ParsedRegex::NegativeLookAhead:
-                push_op(m_forward ? CompiledRegex::NegativeLookAhead
-                                  : CompiledRegex::NegativeLookBehind);
-                push_string(node->children, false);
+                push_inst(m_forward ? CompiledRegex::NegativeLookAhead
+                                    : CompiledRegex::NegativeLookBehind,
+                          push_lookaround(node->children, false));
                 break;
             case ParsedRegex::LookBehind:
-                push_op(m_forward ? CompiledRegex::LookBehind
-                                  : CompiledRegex::LookAhead);
-                push_string(node->children, true);
+                push_inst(m_forward ? CompiledRegex::LookBehind
+                                    : CompiledRegex::LookAhead,
+                          push_lookaround(node->children, true));
                 break;
             case ParsedRegex::NegativeLookBehind:
-                push_op(m_forward ? CompiledRegex::NegativeLookBehind
-                                  : CompiledRegex::NegativeLookAhead);
-                push_string(node->children, true);
+                push_inst(m_forward ? CompiledRegex::NegativeLookBehind
+                                    : CompiledRegex::NegativeLookAhead,
+                          push_lookaround(node->children, true));
                 break;
             case ParsedRegex::LineStart:
-                push_op(m_forward ? CompiledRegex::LineStart
-                                  : CompiledRegex::LineEnd);
+                push_inst(m_forward ? CompiledRegex::LineStart
+                                    : CompiledRegex::LineEnd);
                 break;
             case ParsedRegex::LineEnd:
-                push_op(m_forward ? CompiledRegex::LineEnd
-                                  : CompiledRegex::LineStart);
+                push_inst(m_forward ? CompiledRegex::LineEnd
+                                    : CompiledRegex::LineStart);
                 break;
             case ParsedRegex::WordBoundary:
-                push_op(CompiledRegex::WordBoundary);
+                push_inst(CompiledRegex::WordBoundary);
                 break;
             case ParsedRegex::NotWordBoundary:
-                push_op(CompiledRegex::NotWordBoundary);
+                push_inst(CompiledRegex::NotWordBoundary);
                 break;
             case ParsedRegex::SubjectBegin:
-                push_op(m_forward ? CompiledRegex::SubjectBegin
-                                  : CompiledRegex::SubjectEnd);
+                push_inst(m_forward ? CompiledRegex::SubjectBegin
+                                    : CompiledRegex::SubjectEnd);
                 break;
             case ParsedRegex::SubjectEnd:
-                push_op(m_forward ? CompiledRegex::SubjectEnd
-                                  : CompiledRegex::SubjectBegin);
+                push_inst(m_forward ? CompiledRegex::SubjectEnd
+                                    : CompiledRegex::SubjectBegin);
                 break;
             case ParsedRegex::ResetStart:
-                push_op(CompiledRegex::Save);
-                push_byte(0);
+                push_inst(CompiledRegex::Save, 0);
                 break;
         }
 
         for (auto& offset : goto_inner_end_offsets)
-            set_offset(offset, m_program.bytecode.size());
+            m_program.instructions[offset].param = m_program.instructions.size();
 
         if (capture != -1)
-        {
-            push_op(CompiledRegex::Save);
-            push_byte(capture * 2 + (m_forward ? 1 : 0));
-        }
+            push_inst(CompiledRegex::Save, capture * 2 + (m_forward ? 1 : 0));
 
         return start_pos;
     }
 
-    Offset compile_node(const ParsedRegex::AstNodePtr& node)
+    uint32_t compile_node(const ParsedRegex::AstNodePtr& node)
     {
-        Offset pos = m_program.bytecode.size();
-        Vector<Offset> goto_end_offsets;
+        uint32_t pos = m_program.instructions.size();
+        Vector<uint32_t> goto_ends;
 
         auto& quantifier = node->quantifier;
 
@@ -641,9 +632,9 @@ private:
 
         if (quantifier.allows_none())
         {
-            push_op(quantifier.greedy ? CompiledRegex::Split_PrioritizeParent
-                                      : CompiledRegex::Split_PrioritizeChild);
-            goto_end_offsets.push_back(alloc_offset());
+            auto split_pos = push_inst(quantifier.greedy ? CompiledRegex::Split_PrioritizeParent
+                                                         : CompiledRegex::Split_PrioritizeChild);
+            goto_ends.push_back(split_pos);
         }
 
         auto inner_pos = compile_node_inner(node);
@@ -652,66 +643,45 @@ private:
             inner_pos = compile_node_inner(node);
 
         if (quantifier.allows_infinite_repeat())
-        {
-            push_op(quantifier.greedy ? CompiledRegex::Split_PrioritizeChild
-                                      : CompiledRegex::Split_PrioritizeParent);
-            set_offset(alloc_offset(), inner_pos);
-        }
+            push_inst(quantifier.greedy ? CompiledRegex::Split_PrioritizeChild
+                                        : CompiledRegex::Split_PrioritizeParent,
+                      inner_pos);
+
         // Write the node as an optional match for the min -> max counts
         else for (int i = std::max(1, quantifier.min); // STILL UGLY !
                   i < quantifier.max; ++i)
         {
-            push_op(quantifier.greedy ? CompiledRegex::Split_PrioritizeParent
-                                      : CompiledRegex::Split_PrioritizeChild);
-            goto_end_offsets.push_back(alloc_offset());
+            auto split_pos = push_inst(quantifier.greedy ? CompiledRegex::Split_PrioritizeParent
+                                                         : CompiledRegex::Split_PrioritizeChild);
+            goto_ends.push_back(split_pos);
             compile_node_inner(node);
         }
 
-        for (auto offset : goto_end_offsets)
-            set_offset(offset, m_program.bytecode.size());
+        for (auto offset : goto_ends)
+            m_program.instructions[offset].param = m_program.instructions.size();
 
         return pos;
     }
 
-    Offset alloc_offset()
+    uint32_t push_inst(CompiledRegex::Op op, uint32_t param = 0)
     {
-        auto pos = m_program.bytecode.size();
-        m_program.bytecode.resize(pos + sizeof(Offset));
-        return pos;
+        uint32_t res = m_program.instructions.size();
+        m_program.instructions.push_back({ op, param });
+        return res;
     }
 
-    void set_offset(Offset pos, Offset value)
+    uint32_t push_lookaround(const Vector<ParsedRegex::AstNodePtr>& literals, bool reversed = false)
     {
-        memcpy(&m_program.bytecode[pos], &value, sizeof(Offset));
-    }
-
-    void push_op(CompiledRegex::Op op)
-    {
-        m_program.bytecode.push_back(op);
-    }
-
-    void push_byte(char byte)
-    {
-        m_program.bytecode.push_back(byte);
-    }
-
-    void push_codepoint(Codepoint cp)
-    {
-        utf8::dump(std::back_inserter(m_program.bytecode), cp);
-    }
-
-    void push_string(const Vector<ParsedRegex::AstNodePtr>& codepoints, bool reversed = false)
-    {
-        if (codepoints.size() > 127)
-            throw runtime_error{"Too long literal string"};
-
-        push_byte(codepoints.size());
+        uint32_t res = m_program.lookarounds.size();
         if (reversed)
-            for (auto& cp : codepoints | reverse()) 
-                push_codepoint(cp->value);
+            for (auto& literal : literals | reverse()) 
+                m_program.lookarounds.push_back(literal->value);
         else
-            for (auto& cp : codepoints) 
-                push_codepoint(cp->value);
+            for (auto& literal : literals) 
+                m_program.lookarounds.push_back(literal->value);
+
+        m_program.lookarounds.push_back((Codepoint)-1);
+        return res;
     }
 
     // Fills accepted and rejected according to which chars can start the given node,
@@ -804,40 +774,35 @@ private:
 
 void dump_regex(const CompiledRegex& program)
 {
-    for (auto pos = program.bytecode.data(), end = program.bytecode.data() + program.bytecode.size();
-         pos < end; )
+    for (auto& inst : program.instructions)
     {
-        printf("%4zd    ", pos - program.bytecode.data());
-        const auto op = (CompiledRegex::Op)*pos++;
-        switch (op)
+        switch (inst.op)
         {
             case CompiledRegex::Literal:
-                printf("literal %lc\n", utf8::read_codepoint(pos, (const char*)nullptr));
+                printf("literal %lc\n", inst.param);
                 break;
             case CompiledRegex::LiteralIgnoreCase:
-                printf("literal (ignore case) %lc\n", utf8::read_codepoint(pos, (const char*)nullptr));
+                printf("literal (ignore case) %lc\n", inst.param);
                 break;
             case CompiledRegex::AnyChar:
                 printf("any char\n");
                 break;
             case CompiledRegex::Jump:
-                printf("jump %u\n", *reinterpret_cast<const CompiledRegex::Offset*>(&*pos));
-                pos += sizeof(CompiledRegex::Offset);
+                printf("jump %u\n", inst.param);
                 break;
             case CompiledRegex::Split_PrioritizeParent:
             case CompiledRegex::Split_PrioritizeChild:
             {
                 printf("split (prioritize %s) %u\n",
-                       op == CompiledRegex::Split_PrioritizeParent ? "parent" : "child",
-                       *reinterpret_cast<const CompiledRegex::Offset*>(&*pos));
-                pos += sizeof(CompiledRegex::Offset);
+                       inst.op == CompiledRegex::Split_PrioritizeParent ? "parent" : "child",
+                       inst.param);
                 break;
             }
             case CompiledRegex::Save:
-                printf("save %d\n", *pos++);
+                printf("save %d\n", inst.param);
                 break;
             case CompiledRegex::Matcher:
-                printf("matcher %d\n", *pos++);
+                printf("matcher %d\n", inst.param);
                 break;
             case CompiledRegex::LineStart:
                 printf("line start\n");
@@ -862,20 +827,20 @@ void dump_regex(const CompiledRegex& program)
             case CompiledRegex::LookBehind:
             case CompiledRegex::NegativeLookBehind:
             {
-                int count = *pos++;
-                StringView str{pos, pos + count};
                 const char* name = nullptr;
-                if (op == CompiledRegex::LookAhead)
+                if (inst.op == CompiledRegex::LookAhead)
                     name = "look ahead";
-                if (op == CompiledRegex::NegativeLookAhead)
+                if (inst.op == CompiledRegex::NegativeLookAhead)
                     name = "negative look ahead";
-                if (op == CompiledRegex::LookBehind)
+                if (inst.op == CompiledRegex::LookBehind)
                     name = "look behind";
-                if (op == CompiledRegex::NegativeLookBehind)
+                if (inst.op == CompiledRegex::NegativeLookBehind)
                     name = "negative look behind";
 
-                printf("%s (%s)\n", name, (const char*)str.zstr());
-                pos += count;
+                String str;
+                for (auto it = program.lookarounds.begin() + inst.param; *it != -1; ++it)
+                    utf8::dump(std::back_inserter(str), *it);
+                printf("%s (%s)\n", name, str.c_str());
                 break;
             }
             case CompiledRegex::Match:
