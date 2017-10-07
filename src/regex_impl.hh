@@ -48,8 +48,10 @@ struct CompiledRegex : RefCountable
     struct Instruction
     {
         Op op;
+        mutable bool processed;
         uint32_t param;
     };
+    static_assert(sizeof(Instruction) == 8, "");
 
     explicit operator bool() const { return not instructions.empty(); }
 
@@ -129,7 +131,6 @@ public:
             return false;
 
         Vector<Thread> current_threads, next_threads;
-        std::unique_ptr<bool[]> processed_inst{new bool[m_program.instructions.size()]};
 
         const bool no_saves = (m_flags & RegexExecFlags::NoSaves);
         Utf8It start{m_begin};
@@ -140,7 +141,7 @@ public:
             to_next_start(start, m_end, start_chars);
 
         if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
-                      current_threads, next_threads, processed_inst.get()))
+                      current_threads, next_threads))
             return true;
 
         if (not (flags & RegexExecFlags::Search))
@@ -150,7 +151,7 @@ public:
         {
             to_next_start(++start, m_end, start_chars);
             if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
-                          current_threads, next_threads, processed_inst.get()))
+                          current_threads, next_threads))
                 return true;
         }
         while (start != m_end);
@@ -215,15 +216,14 @@ private:
     enum class StepResult { Consumed, Matched, Failed };
 
     // Steps a thread until it consumes the current character, matches or fail
-    StepResult step(const Utf8It& pos, Thread& thread, Vector<Thread>& threads, bool* processed_inst)
+    StepResult step(const Utf8It& pos, Thread& thread, Vector<Thread>& threads)
     {
         while (true)
         {
-            if (processed_inst[thread.inst])
-                return StepResult::Failed;
-            processed_inst[thread.inst] = true;
-
             auto& inst = m_program.instructions[thread.inst++];
+            if (inst.processed)
+                return StepResult::Failed;
+            inst.processed = true;
 
             const Codepoint cp = pos == m_end ? 0 : *pos;
             switch (inst.op)
@@ -326,20 +326,25 @@ private:
         return StepResult::Failed;
     }
 
-    bool exec_from(const Utf8It& start, Saves* initial_saves, Vector<Thread>& current_threads, Vector<Thread>& next_threads, bool* processed_inst)
+    bool exec_from(const Utf8It& start, Saves* initial_saves, Vector<Thread>& current_threads, Vector<Thread>& next_threads)
     {
         current_threads.push_back({0, initial_saves});
         next_threads.clear();
 
+        auto clear_processed = [this]() {
+            for (auto& inst : m_program.instructions)
+                inst.processed = false;
+        };
+
         bool found_match = false;
         for (Utf8It pos = start; pos != m_end; ++pos)
         {
-            memset(processed_inst, 0, sizeof(bool) * m_program.instructions.size());
+            clear_processed();
             while (not current_threads.empty())
             {
                 auto thread = current_threads.back();
                 current_threads.pop_back();
-                switch (step(pos, thread, current_threads, processed_inst))
+                switch (step(pos, thread, current_threads))
                 {
                 case StepResult::Matched:
                     if (not (m_flags & RegexExecFlags::Search) or // We are not at end, this is not a full match
@@ -377,13 +382,13 @@ private:
         if (found_match)
             return true;
 
-        memset(processed_inst, 0, sizeof(bool) * m_program.instructions.size());
+        clear_processed();
         // Step remaining threads to see if they match without consuming anything else
         while (not current_threads.empty())
         {
             auto thread = current_threads.back();
             current_threads.pop_back();
-            if (step(m_end, thread, current_threads, processed_inst) == StepResult::Matched)
+            if (step(m_end, thread, current_threads) == StepResult::Matched)
             {
                 release_saves(m_captures);
                 m_captures = thread.saves;
