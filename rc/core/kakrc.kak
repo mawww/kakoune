@@ -68,8 +68,8 @@ def -hidden kak-indent-on-new-line %{
         try %{ exec -draft \; K <a-&> }
         # cleanup trailing whitespaces from previous line
         try %{ exec -draft k <a-x> s \h+$ <ret> d }
-        # indent after line ending with %[[:punct:]]
-        try %{ exec -draft k <a-x> <a-k> \%[[:punct:]]$ <ret> j <a-gt> }
+        # indent after line ending with %[\W\S]
+        try %{ exec -draft k <a-x> <a-k> \%[\W\S]$ <ret> j <a-gt> }
     }
 }
 
