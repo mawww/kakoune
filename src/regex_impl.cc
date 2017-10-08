@@ -769,6 +769,9 @@ private:
         if (compute_start_chars(m_parsed_regex.ast, accepted, rejected))
             return nullptr;
 
+        if (not contains(accepted, false) and not contains(rejected, true))
+            return nullptr;
+
         auto start_chars = std::make_unique<CompiledRegex::StartChars>();
         for (int i = 0; i < 256; ++i)
             start_chars->map[i] = accepted[i] and not rejected[i];
