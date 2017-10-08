@@ -198,7 +198,7 @@ private:
         }
 
         void* ptr = ::operator new (sizeof(Saves) + (count-1) * sizeof(Iterator));
-        Saves* saves = new (ptr) Saves{1, copy ? pos[0] : Iterator{}};
+        Saves* saves = new (ptr) Saves{1, {copy ? pos[0] : Iterator{}}};
         for (size_t i = 1; i < count; ++i)
             new (&saves->pos[i]) Iterator{copy ? pos[i] : Iterator{}};
         m_saves.push_back(saves);
