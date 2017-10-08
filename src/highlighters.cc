@@ -1673,7 +1673,10 @@ struct RegionMatches
                 --recurse_level;
             }
 
-            beg_pos = end_it->end_coord();
+            if (beg_pos != end_it->end_coord())
+                beg_pos = end_it->end_coord();
+            else
+                ++end_it;
         }
     }
 };
