@@ -157,7 +157,7 @@ void to_previous(Iterator& it, const Iterator& begin) noexcept
 {
     if (it != begin)
         --it;
-    while (not is_character_start(*it))
+    while (it != begin and not is_character_start(*it))
         --it;
 }
 // returns an iterator to the previous character first byte
