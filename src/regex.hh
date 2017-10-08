@@ -180,7 +180,8 @@ bool regex_search(It begin, It end, const Regex& re,
 {
     try
     {
-        bool matched = boost::regex_search<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, re, flags);
+        auto first = (flags & RegexConstant::match_prev_avail) ? begin-1 : begin;
+        bool matched = boost::regex_search<RegexUtf8It<It>>({begin, first, end}, {end, first, end}, re, flags);
         if (re.impl() and matched != regex_search(begin, end, *re.impl(), convert_flags(flags)))
             regex_mismatch(re);
         return matched;
@@ -197,7 +198,8 @@ bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
 {
     try
     {
-        bool matched = boost::regex_search<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, res, re, flags);
+        auto first = (flags & RegexConstant::match_prev_avail) ? begin-1 : begin;
+        bool matched = boost::regex_search<RegexUtf8It<It>>({begin, first, end}, {end, first, end}, res, re, flags);
         Vector<It> captures;
         if (re.impl() and matched != regex_search(begin, end, captures, *re.impl(), convert_flags(flags)))
             regex_mismatch(re);
