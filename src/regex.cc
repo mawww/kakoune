@@ -31,7 +31,6 @@ void option_from_string(StringView str, Regex& re)
     re = Regex{str};
 }
 
-
 void regex_mismatch(const Regex& re)
 {
     write_to_debug_buffer(format("regex mismatch for '{}'", re.str()));
