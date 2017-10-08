@@ -12,11 +12,11 @@ hook global BufCreate .*[.](haml) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter -group / regions -default code haml                                                         \
-    comment ^\h*/                                                                 $            '' \
+    comment ^\h*/                                                                $             '' \
     eval    ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)?\{\K|#\{\K (?=\})        \{ \
-    eval    ^\h*[=-]\K                                                           (?=[^|]\n)    '' \
-    coffee  ^\h*:coffee\K                                                        (?=^\h*[%=-]) '' \
-    sass    ^\h*:sass\K                                                          (?=^\h*[%=-]) ''
+    eval    ^\h*[=-]\K                                                           (?<!\|)(?=\n) '' \
+    coffee  ^\h*:coffee\K                                                        ^\h*[%=-]\K   '' \
+    sass    ^\h*:sass\K                                                          ^\h*[%=-]\K   ''
 
 # Filters
 # http://haml.info/docs/yardoc/file.REFERENCE.html#filters

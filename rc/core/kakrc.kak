@@ -33,7 +33,7 @@ add-highlighter -group / regions -default code kakrc \
     attributes="${attributes}|normal|insert|menu|prompt|goto|view|user|object"
     attributes="${attributes}|number_lines|show_matching|show_whitespaces|fill|regex|dynregex|group|flag_lines|ranges|line|column|wrap|ref|regions"
     types="int|bool|str|regex|int-list|str-list|line-flags|completions|range-faces"
-    values="default|black|red|green|yellow|blue|magenta|cyan|white|"
+    values="default|black|red|green|yellow|blue|magenta|cyan|white"
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=kak %{
