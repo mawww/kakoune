@@ -745,12 +745,12 @@ private:
             case ParsedRegex::ResetStart:
                 return true;
             case ParsedRegex::LookAhead:
-                if (node->children.empty())
+                if (not node->children.empty())
                     compute_start_chars(m_forward ? node->children.front() : node->children.back(),
                                         accepted, rejected);
                 return true;
             case ParsedRegex::NegativeLookAhead:
-                if (node->children.empty())
+                if (not node->children.empty())
                     compute_start_chars(m_forward ? node->children.front() : node->children.back(),
                                         rejected, accepted);
                 return true;
@@ -1123,6 +1123,11 @@ auto test_regex = UnitTest{[]{
         TestVM<> vm{R"(\b(?<!-)(a|b|)(?!-)\b)"};
         kak_assert(vm.exec("# foo bar", RegexExecFlags::Search));
         kak_assert(*vm.captures()[0] == '#');
+    }
+
+    {
+        TestVM<> vm{R"((?=))"};
+        kak_assert(vm.exec(""));
     }
 }};
 
