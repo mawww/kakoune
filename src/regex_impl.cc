@@ -1042,6 +1042,11 @@ auto test_regex = UnitTest{[]{
     }
 
     {
+        TestVM<> vm{R"((?<!f).)"};
+        kak_assert(vm.exec("f"));
+    }
+
+    {
         TestVM<> vm{R"((?!foo)...)"};
         kak_assert(not vm.exec("foo"));
         kak_assert(vm.exec("qux"));
@@ -1109,6 +1114,12 @@ auto test_regex = UnitTest{[]{
     {
         TestVM<> vm{R"(()*)"};
         kak_assert(not vm.exec(" "));
+    }
+
+    {
+        TestVM<> vm{R"(\b(?<!-)(a|b|)(?!-)\b)"};
+        kak_assert(vm.exec("# foo bar", RegexExecFlags::Search));
+        kak_assert(*vm.captures()[0] == '#');
     }
 }};
 

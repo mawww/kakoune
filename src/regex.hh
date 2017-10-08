@@ -133,6 +133,8 @@ inline RegexExecFlags convert_flags(RegexConstant::match_flag_type flags)
         res |= RegexExecFlags::NotInitialNull;
     if (flags & RegexConstant::match_any)
         res |= RegexExecFlags::AnyMatch;
+    if (flags & RegexConstant::match_prev_avail)
+        res |= RegexExecFlags::PrevAvailable;
 
     return res;
 }
@@ -261,7 +263,7 @@ private:
         if (m_results.size() and m_results[0].first == m_results[0].second)
             additional_flags |= RegexConstant::match_not_initial_null;
         if (m_begin != m_next_begin)
-            additional_flags |= RegexConstant::match_not_bob;
+            additional_flags |= RegexConstant::match_not_bob | RegexConstant::match_prev_avail;
 
         if (not regex_search(m_next_begin, m_end, m_results, *m_regex,
                              m_flags | additional_flags))

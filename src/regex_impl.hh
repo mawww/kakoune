@@ -80,6 +80,7 @@ enum class RegexExecFlags
     NotInitialNull    = 1 << 6,
     AnyMatch          = 1 << 7,
     NoSaves           = 1 << 8,
+    PrevAvailable     = 1 << 9,
 };
 
 constexpr bool with_bit_ops(Meta::Type<RegexExecFlags>) { return true; }
@@ -125,8 +126,11 @@ public:
     bool exec(Iterator begin, Iterator end, RegexExecFlags flags)
     {
         const bool forward = direction == MatchDirection::Forward;
-        m_begin = Utf8It{utf8::iterator<Iterator>{forward ? begin : end, begin, end}};
-        m_end = Utf8It{utf8::iterator<Iterator>{forward ? end : begin, begin, end}};
+        const bool prev_avail = flags & RegexExecFlags::PrevAvailable;
+        m_begin = Utf8It{utf8::iterator<Iterator>{forward ? begin : end,
+                                                  prev_avail ? begin-1 : begin, end}};
+        m_end = Utf8It{utf8::iterator<Iterator>{forward ? end : begin,
+                                                prev_avail ? begin-1 : begin, end}};
         m_flags = flags;
 
         if (flags & RegexExecFlags::NotInitialNull and m_begin == m_end)
@@ -314,8 +318,8 @@ private:
                 case CompiledRegex::NegativeLookBehind:
                 {
                     auto ref = m_program.lookarounds.begin() + inst.param;
-                    for (auto it = pos-1; *ref != -1 and it >= m_begin; --it, ++ref)
-                        if (*it != *ref)
+                    for (auto it = pos; *ref != -1 and it > m_begin; --it, ++ref)
+                        if (*(it-1) != *ref)
                             break;
                     if ((inst.op == CompiledRegex::LookBehind and *ref != -1) or
                         (inst.op == CompiledRegex::NegativeLookBehind and *ref == -1))
@@ -400,21 +404,25 @@ private:
 
     bool is_line_start(const Utf8It& pos) const
     {
-        return (pos == m_begin and not (m_flags & RegexExecFlags::NotBeginOfLine)) or
-               *(pos-1) == '\n';
+        if (not (m_flags & RegexExecFlags::PrevAvailable) and pos == m_begin)
+            return not (m_flags & RegexExecFlags::NotBeginOfLine);
+        return *(pos-1) == '\n';
     }
 
     bool is_line_end(const Utf8It& pos) const
     {
-        return (pos == m_end and not (m_flags & RegexExecFlags::NotEndOfLine)) or
-               *pos == '\n';
+        if (pos == m_end)
+            return not (m_flags & RegexExecFlags::NotEndOfLine);
+        return *pos == '\n';
     }
 
     bool is_word_boundary(const Utf8It& pos) const
     {
-        return (pos == m_begin and not (m_flags & RegexExecFlags::NotBeginOfWord)) or
-               (pos == m_end and not (m_flags & RegexExecFlags::NotEndOfWord)) or
-               is_word(*(pos-1)) != is_word(*pos);
+        if (not (m_flags & RegexExecFlags::PrevAvailable) and pos == m_begin)
+            return not (m_flags & RegexExecFlags::NotBeginOfWord);
+        if (pos == m_end)
+            return not (m_flags & RegexExecFlags::NotEndOfWord);
+        return is_word(*(pos-1)) != is_word(*pos);
     }
 
     static const Iterator& get_base(const utf8::iterator<Iterator>& it) { return it.base(); }
