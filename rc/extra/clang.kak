@@ -163,7 +163,7 @@ def clang-diagnostics-next -docstring "Jump to the next line that contains an er
         printf "%s\n" "${kak_opt_clang_errors}" | sed -e 's/\([^\\]\):/\1\n/g' | tail -n +2 | (
             while IFS='|' read candidate rest; do
                 first_line=${first_line-$candidate}
-                if [ $candidate -gt $kak_cursor_line ]; then
+                if [ "$candidate" -gt $kak_cursor_line ]; then
                     line=$candidate
                     break
                 fi
