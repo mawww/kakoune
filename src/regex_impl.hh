@@ -86,18 +86,6 @@ enum class RegexExecFlags
 constexpr bool with_bit_ops(Meta::Type<RegexExecFlags>) { return true; }
 
 template<typename Iterator, MatchDirection direction>
-struct ChooseUtf8It
-{
-    using Type = utf8::iterator<Iterator>;
-};
-
-template<typename Iterator>
-struct ChooseUtf8It<Iterator, MatchDirection::Backward>
-{
-    using Type = std::reverse_iterator<utf8::iterator<Iterator>>;
-};
-
-template<typename Iterator, MatchDirection direction>
 class ThreadedRegexVM
 {
 public:
@@ -217,7 +205,9 @@ private:
         Saves* saves;
     };
 
-    using Utf8It = typename ChooseUtf8It<Iterator, direction>::Type;
+    using Utf8It = std::conditional_t<direction == MatchDirection::Forward,
+                                      utf8::iterator<Iterator>,
+                                      std::reverse_iterator<utf8::iterator<Iterator>>>;
 
     enum class StepResult { Consumed, Matched, Failed };
 
