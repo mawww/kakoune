@@ -489,14 +489,14 @@ private:
         StringView additional_chars;
         bool neg;
     };
-    static const CharacterClassEscape character_class_escapes[8];
+    static const CharacterClassEscape character_class_escapes[4];
 
     struct ControlEscape { Codepoint name; Codepoint value; };
     static const ControlEscape control_escapes[5];
 };
 
 // For some reason Gcc fails to link if this is constexpr
-const RegexParser::CharacterClassEscape RegexParser::character_class_escapes[8] = {
+const RegexParser::CharacterClassEscape RegexParser::character_class_escapes[4] = {
     { 'd', "digit", "", false },
     { 'w', "alnum", "_", false },
     { 's', "space", "", false },
