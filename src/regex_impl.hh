@@ -67,7 +67,11 @@ struct CompiledRegex : RefCountable
     MatchDirection direction;
     size_t save_count;
 
-    struct StartChars { bool map[256]; };
+    struct StartChars
+    {
+        static constexpr size_t count = 256;
+        bool map[count];
+    };
     std::unique_ptr<StartChars> start_chars;
 };
 
