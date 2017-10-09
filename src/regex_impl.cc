@@ -14,7 +14,7 @@ namespace Kakoune
 
 struct ParsedRegex
 {
-    enum Op
+    enum Op : char
     {
         Literal,
         AnyChar,
@@ -36,7 +36,7 @@ struct ParsedRegex
 
     struct Quantifier
     {
-        enum Type
+        enum Type : char
         {
             One,
             Optional,
@@ -63,16 +63,17 @@ struct ParsedRegex
         };
     };
 
+    struct AstNode;
+    using AstNodePtr = std::unique_ptr<AstNode>;
+
     struct AstNode
     {
         Op op;
+        bool ignore_case;
         Codepoint value;
         Quantifier quantifier;
-        bool ignore_case;
-        Vector<std::unique_ptr<AstNode>> children;
+        Vector<AstNodePtr> children;
     };
-
-    using AstNodePtr = std::unique_ptr<AstNode>;
 
     AstNodePtr ast;
     size_t capture_count;
@@ -112,11 +113,15 @@ private:
             return node;
         }
 
-        ++m_pos;
         AstNodePtr res = new_node(ParsedRegex::Alternation);
-        res->children.push_back(std::move(node));
-        res->children.push_back(disjunction());
         res->value = capture;
+        res->children.push_back(std::move(node));
+        do
+        {
+            ++m_pos;
+            res->children.push_back(alternative());
+        }
+        while (not at_end() and *m_pos == '|');
         return res;
     }
 
@@ -459,7 +464,7 @@ private:
     AstNodePtr new_node(ParsedRegex::Op op, Codepoint value = -1,
                         ParsedRegex::Quantifier quantifier = {ParsedRegex::Quantifier::One})
     {
-        return AstNodePtr{new ParsedRegex::AstNode{op, value, quantifier, m_ignore_case, {}}};
+        return AstNodePtr{new ParsedRegex::AstNode{op, m_ignore_case, value, quantifier, {}}};
     }
 
     bool at_end() const { return m_pos == m_regex.end(); }
@@ -569,17 +574,23 @@ private:
             case ParsedRegex::Alternation:
             {
                 auto& children = node->children;
-                kak_assert(children.size() == 2);
+                kak_assert(children.size() > 1);
 
-                auto split_pos = push_inst(CompiledRegex::Split_PrioritizeParent);
+                const auto split_pos = m_program.instructions.size();
+                for (int i = 0; i < children.size() - 1; ++i)
+                    push_inst(CompiledRegex::Split_PrioritizeParent);
 
-                compile_node(children[m_forward ? 0 : 1]);
-                auto left_pos = push_inst(CompiledRegex::Jump);
-                goto_inner_end_offsets.push_back(left_pos);
-
-                auto right_pos = compile_node(children[m_forward ? 1 : 0]);
-                m_program.instructions[split_pos].param = right_pos;
-
+                for (int i = 0; i < children.size(); ++i)
+                {
+                    auto node = compile_node(children[i]);
+                    if (i > 0)
+                        m_program.instructions[split_pos + i - 1].param = node;
+                    if (i < children.size() - 1)
+                    {
+                        auto jump = push_inst(CompiledRegex::Jump);
+                        goto_inner_end_offsets.push_back(jump);
+                    }
+                }
                 break;
             }
             case ParsedRegex::LookAhead:
@@ -795,6 +806,7 @@ private:
         return false;
     }
 
+    [[gnu::noinline]]
     std::unique_ptr<CompiledRegex::StartChars> compute_start_chars() const
     {
         bool accepted[start_chars_count] = {};
