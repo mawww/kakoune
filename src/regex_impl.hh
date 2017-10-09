@@ -9,8 +9,6 @@
 #include "utf8_iterator.hh"
 #include "vector.hh"
 
-#include <string.h>
-
 namespace Kakoune
 {
 
@@ -108,9 +106,9 @@ class ThreadedRegexVM
 public:
     ThreadedRegexVM(const CompiledRegex& program)
       : m_program{program}
-      {
-          kak_assert(m_program and direction == m_program.direction);
-      }
+    {
+        kak_assert(m_program and direction == m_program.direction);
+    }
 
     ThreadedRegexVM(const ThreadedRegexVM&) = delete;
     ThreadedRegexVM& operator=(const ThreadedRegexVM&) = delete;
