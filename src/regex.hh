@@ -159,32 +159,32 @@ boost::regex_constants::match_flag_type convert_flags(RegexExecFlags flags);
 template<typename It>
 bool regex_match(It begin, It end, const Regex& re)
 {
+    const bool matched = regex_match(begin, end, *re.impl());
+#ifdef REGEX_CHECK_WITH_BOOST
     try
     {
-        const bool matched = regex_match(begin, end, *re.impl());
-#ifdef REGEX_CHECK_WITH_BOOST
         if (not re.boost_impl().empty() and
             matched != boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end},
                                                            re.boost_impl()))
             regex_mismatch(re);
-#endif
-        return matched;
     }
     catch (std::runtime_error& err)
     {
         throw runtime_error{format("Regex matching error: {}", err.what())};
     }
+#endif
+    return matched;
 }
 
 template<typename It>
 bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
 {
-    try
-    {
-        Vector<It> captures;
-        const bool matched = regex_match(begin, end, captures, *re.impl());
+    Vector<It> captures;
+    const bool matched = regex_match(begin, end, captures, *re.impl());
 
 #ifdef REGEX_CHECK_WITH_BOOST
+    try
+    {
         boost::match_results<RegexUtf8It<It>> boost_res;
         if (not re.boost_impl().empty() and
             matched != boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end},
@@ -192,50 +192,50 @@ bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
             regex_mismatch(re);
         if (not re.boost_impl().empty() and matched)
             check_captures(re, boost_res, captures);
-#endif
-
-        res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
-        return matched;
     }
     catch (std::runtime_error& err)
     {
         throw runtime_error{format("Regex matching error: {}", err.what())};
     }
+#endif
+
+    res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
+    return matched;
 }
 
 template<typename It>
 bool regex_search(It begin, It end, const Regex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
 {
-    try
-    {
-        const bool matched = regex_search(begin, end, *re.impl(), flags);
+    const bool matched = regex_search(begin, end, *re.impl(), flags);
 
 #ifdef REGEX_CHECK_WITH_BOOST
+    try
+    {
         auto first = (flags & RegexExecFlags::PrevAvailable) ? begin-1 : begin;
         if (not re.boost_impl().empty() and
             matched != boost::regex_search<RegexUtf8It<It>>({begin, first, end}, {end, first, end},
                                                             re.boost_impl(), convert_flags(flags)))
             regex_mismatch(re);
-#endif
-        return matched;
     }
     catch (std::runtime_error& err)
     {
         throw runtime_error{format("Regex searching error: {}", err.what())};
     }
+#endif
+    return matched;
 }
 
 template<typename It, MatchDirection direction = MatchDirection::Forward>
 bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
 {
-    try
-    {
-        Vector<It> captures;
-        const bool matched = regex_search<It, direction>(begin, end, captures, *re.impl(), flags);
+    Vector<It> captures;
+    const bool matched = regex_search<It, direction>(begin, end, captures, *re.impl(), flags);
 
 #ifdef REGEX_CHECK_WITH_BOOST
+    try
+    {
         if (direction == MatchDirection::Forward)
         {
             auto first = (flags & RegexExecFlags::PrevAvailable) ? begin-1 : begin;
@@ -247,15 +247,15 @@ bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
             if (not re.boost_impl().empty() and matched)
                 check_captures(re, boost_res, captures);
         }
-#endif
-
-        res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
-        return matched;
     }
     catch (std::runtime_error& err)
     {
         throw runtime_error{format("Regex searching error: {}", err.what())};
     }
+#endif
+
+    res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
+    return matched;
 }
 
 String option_to_string(const Regex& re);
