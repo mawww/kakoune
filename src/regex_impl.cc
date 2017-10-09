@@ -711,16 +711,19 @@ private:
         return res;
     }
 
+    static constexpr size_t start_chars_count = CompiledRegex::StartChars::count;
+
     // Fills accepted and rejected according to which chars can start the given node,
     // returns true if the node did not consume the char, hence a following node in
     // sequence would be still relevant for the parent node start chars computation.
     bool compute_start_chars(const ParsedRegex::AstNodePtr& node,
-                             bool (&accepted)[256], bool (&rejected)[256]) const
+                             bool (&accepted)[start_chars_count],
+                             bool (&rejected)[start_chars_count]) const
     {
         switch (node->op)
         {
             case ParsedRegex::Literal:
-                if (node->value < 256)
+                if (node->value < start_chars_count)
                     accepted[node->value] = true;
                 return node->quantifier.allows_none();
             case ParsedRegex::AnyChar:
@@ -763,18 +766,28 @@ private:
             case ParsedRegex::ResetStart:
                 return true;
             case ParsedRegex::LookAhead:
-                if (not node->children.empty())
-                    compute_start_chars(m_forward ? node->children.front() : node->children.back(),
-                                        accepted, rejected);
+            case ParsedRegex::LookBehind:
+                if (not node->children.empty() and
+                    m_forward == (node->op == ParsedRegex::LookAhead))
+                {
+                    auto& child = m_forward ? node->children.front() : node->children.back();
+                    if (child->op == ParsedRegex::Literal and child->value < start_chars_count)
+                    {
+                        // Any other char is rejected
+                        std::fill(rejected, rejected + child->value, true);
+                        std::fill(rejected + child->value + 1, rejected + start_chars_count, true);
+                    }
+                }
                 return true;
             case ParsedRegex::NegativeLookAhead:
-                if (not node->children.empty())
-                    compute_start_chars(m_forward ? node->children.front() : node->children.back(),
-                                        rejected, accepted);
-                return true;
-            case ParsedRegex::LookBehind:
-                return true;
             case ParsedRegex::NegativeLookBehind:
+                if (node->children.size() == 1 and
+                    m_forward == (node->op == ParsedRegex::NegativeLookAhead))
+                {
+                    auto& child = node->children.front();
+                    if (child->op == ParsedRegex::Literal and child->value < start_chars_count)
+                        rejected[child->value] = true;
+                }
                 return true;
         }
         return false;
@@ -782,8 +795,8 @@ private:
 
     std::unique_ptr<CompiledRegex::StartChars> compute_start_chars() const
     {
-        bool accepted[256] = {};
-        bool rejected[256] = {};
+        bool accepted[start_chars_count] = {};
+        bool rejected[start_chars_count] = {};
         if (compute_start_chars(m_parsed_regex.ast, accepted, rejected))
             return nullptr;
 
@@ -791,7 +804,7 @@ private:
             return nullptr;
 
         auto start_chars = std::make_unique<CompiledRegex::StartChars>();
-        for (int i = 0; i < 256; ++i)
+        for (int i = 0; i < start_chars_count; ++i)
             start_chars->map[i] = accepted[i] and not rejected[i];
 
         return start_chars;
@@ -1131,6 +1144,12 @@ auto test_regex = UnitTest{[]{
         kak_assert(vm.exec("foobarbazfoobazfooberbaz", RegexExecFlags::Search));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]}  == "oober");
         kak_assert(StringView{vm.captures()[2], vm.captures()[3]}  == "ber");
+    }
+
+    {
+        TestVM<MatchDirection::Backward> vm{R"((baz|boz|foo|qux)(?<!baz)(?<!o))"};
+        kak_assert(vm.exec("quxbozfoobaz", RegexExecFlags::Search));
+        kak_assert(StringView{vm.captures()[0], vm.captures()[1]}  == "boz");
     }
 
     {
