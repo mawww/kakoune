@@ -789,7 +789,7 @@ const CommandDesc add_hook_cmd = {
         if (not contains(hooks, parser[1]))
             throw runtime_error{format("Unknown hook '{}'", parser[1])};
 
-        Regex regex{parser[2], Regex::optimize | Regex::ECMAScript};
+        Regex regex{parser[2], RegexCompileFlags::Optimize};
         const String& command = parser[3];
         auto group = parser.get_switch("group").value_or(StringView{});
         get_scope(parser[0], context).hooks().add_hook(parser[1], group.str(), std::move(regex), command);

@@ -837,7 +837,7 @@ void select_buffer(SelectionList& selections)
     selections = SelectionList{ buffer, target_eol({{0,0}, buffer.back_coord()}) };
 }
 
-static RegexConstant::match_flag_type
+static RegexExecFlags
 match_flags(const Buffer& buf, const BufferIterator& begin, const BufferIterator& end)
 {
     return match_flags(is_bol(begin.coord()), is_eol(buf, end.coord()),

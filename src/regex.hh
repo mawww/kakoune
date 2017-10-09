@@ -12,89 +12,116 @@
 namespace Kakoune
 {
 
-struct regex_error : runtime_error
-{
-    regex_error(StringView desc)
-        : runtime_error{format("regex error: '{}'", desc)}
-    {}
-};
-
-using RegexBase = boost::basic_regex<wchar_t, boost::c_regex_traits<wchar_t>>;
-
 // Regex that keeps track of its string representation
-class Regex : public RegexBase
+class Regex
 {
 public:
     Regex() = default;
 
-    explicit Regex(StringView re, flag_type flags = ECMAScript);
+    explicit Regex(StringView re, RegexCompileFlags flags = RegexCompileFlags::None);
     bool empty() const { return m_str.empty(); }
     bool operator==(const Regex& other) const { return m_str == other.m_str; }
     bool operator!=(const Regex& other) const { return m_str != other.m_str; }
 
     const String& str() const { return m_str; }
 
+    size_t mark_count() const { return m_impl->save_count / 2 - 1; }
+
     static constexpr const char* option_type_name = "regex";
 
     const CompiledRegex* impl() const { return m_impl.get(); }
 
+    using BoostImpl = boost::basic_regex<wchar_t, boost::c_regex_traits<wchar_t>>;
+    const BoostImpl& boost_impl() const { return m_boost_impl; }
+
 private:
-    String m_str;
     RefPtr<CompiledRegex> m_impl;
+    String m_str;
+    BoostImpl m_boost_impl;
 };
 
-template<typename It>
-using RegexUtf8It = utf8::iterator<It, wchar_t, ssize_t>;
-
-template<typename It>
-using RegexIteratorBase = boost::regex_iterator<RegexUtf8It<It>, wchar_t,
-                                                boost::c_regex_traits<wchar_t>>;
-
-namespace RegexConstant = boost::regex_constants;
-
 template<typename Iterator>
-struct MatchResults : boost::match_results<RegexUtf8It<Iterator>>
+struct MatchResults
 {
-    using ParentType = boost::match_results<RegexUtf8It<Iterator>>;
     struct SubMatch : std::pair<Iterator, Iterator>
     {
         SubMatch() = default;
-        SubMatch(const boost::sub_match<RegexUtf8It<Iterator>>& m)
-            : std::pair<Iterator, Iterator>{m.first.base(), m.second.base()},
-              matched{m.matched}
+        SubMatch(Iterator begin, Iterator end)
+            : std::pair<Iterator, Iterator>{begin, end}, matched{begin != Iterator{}}
         {}
 
         bool matched = false;
     };
 
-    struct iterator : boost::match_results<RegexUtf8It<Iterator>>::iterator
+    struct iterator : std::iterator<std::bidirectional_iterator_tag, SubMatch, size_t, SubMatch*, SubMatch>
     {
-        using ParentType = typename boost::match_results<RegexUtf8It<Iterator>>::iterator;
-        iterator(const ParentType& it) : ParentType(it) {}
+        using It = typename Vector<Iterator>::const_iterator;
 
-        SubMatch operator*() const { return {ParentType::operator*()}; }
+        iterator() = default;
+        iterator(It it) : m_it{std::move(it)} {}
+
+        iterator& operator--() { m_it += 2; return *this; }
+        iterator& operator++() { m_it += 2; return *this; }
+        SubMatch operator*() const { return {*m_it, *(m_it+1)}; }
+
+        friend bool operator==(const iterator& lhs, const iterator& rhs) { return lhs.m_it == rhs.m_it; }
+        friend bool operator!=(const iterator& lhs, const iterator& rhs) { return lhs.m_it != rhs.m_it; }
+    private:
+
+        It m_it;
     };
 
-    iterator begin() const { return {ParentType::begin()}; }
-    iterator cbegin() const { return {ParentType::cbegin()}; }
-    iterator end() const { return {ParentType::end()}; }
-    iterator cend() const { return {ParentType::cend()}; }
+    MatchResults() = default;
+    MatchResults(Vector<Iterator> values) : m_values{std::move(values)} {}
 
-    SubMatch operator[](size_t s) const { return {ParentType::operator[](s)}; }
+    iterator begin() const { return iterator{m_values.begin()}; }
+    iterator cbegin() const { return iterator{m_values.cbegin()}; }
+    iterator end() const { return iterator{m_values.end()}; }
+    iterator cend() const { return iterator{m_values.cend()}; }
+
+    size_t size() const { return m_values.size() / 2; }
+    bool empty() const { return m_values.empty(); }
+
+    SubMatch operator[](size_t i) const
+    {
+        return i * 2 < m_values.size() ?
+            SubMatch{m_values[i*2], m_values[i*2+1]} : SubMatch{};
+    }
+
+    friend bool operator==(const MatchResults& lhs, const MatchResults& rhs)
+    {
+        return lhs.m_values == rhs.m_values;
+    }
+
+    friend bool operator!=(const MatchResults& lhs, const MatchResults& rhs)
+    {
+        return not (lhs == rhs);
+    }
+
+    void swap(MatchResults& other)
+    {
+        m_values.swap(other.m_values);
+    }
+
+private:
+    Vector<Iterator> m_values;
 };
 
-inline RegexConstant::match_flag_type match_flags(bool bol, bool eol, bool bow, bool eow)
+inline RegexExecFlags match_flags(bool bol, bool eol, bool bow, bool eow)
 {
-    return (bol ? RegexConstant::match_default : RegexConstant::match_not_bol) |
-           (eol ? RegexConstant::match_default : RegexConstant::match_not_eol) |
-           (bow ? RegexConstant::match_default : RegexConstant::match_not_bow) |
-           (eow ? RegexConstant::match_default : RegexConstant::match_not_eow);
+    return (bol ? RegexExecFlags::None : RegexExecFlags::NotBeginOfLine) |
+           (eol ? RegexExecFlags::None : RegexExecFlags::NotEndOfLine) |
+           (bow ? RegexExecFlags::None : RegexExecFlags::NotBeginOfWord) |
+           (eow ? RegexExecFlags::None : RegexExecFlags::NotEndOfWord);
 }
 
 void regex_mismatch(const Regex& re);
 
 template<typename It>
-void check_captures(const Regex& re, const MatchResults<It>& res, const Vector<It>& captures)
+using RegexUtf8It = utf8::iterator<It, wchar_t, ssize_t>;
+
+template<typename It>
+void check_captures(const Regex& re, const boost::match_results<RegexUtf8It<It>>& res, const Vector<It>& captures)
 {
     if (res.size() > captures.size() * 2)
         return regex_mismatch(re);
@@ -115,37 +142,18 @@ void check_captures(const Regex& re, const MatchResults<It>& res, const Vector<I
     }
 }
 
-inline RegexExecFlags convert_flags(RegexConstant::match_flag_type flags)
-{
-    auto res = RegexExecFlags::None;
-
-    if (flags & RegexConstant::match_not_bol)
-        res |= RegexExecFlags::NotBeginOfLine;
-    if (flags & RegexConstant::match_not_eol)
-        res |= RegexExecFlags::NotEndOfLine;
-    if (flags & RegexConstant::match_not_bow)
-        res |= RegexExecFlags::NotBeginOfWord;
-    if (flags & RegexConstant::match_not_eow)
-        res |= RegexExecFlags::NotEndOfWord;
-    if (flags & RegexConstant::match_not_bob)
-        res |= RegexExecFlags::NotBeginOfSubject;
-    if (flags & RegexConstant::match_not_initial_null)
-        res |= RegexExecFlags::NotInitialNull;
-    if (flags & RegexConstant::match_any)
-        res |= RegexExecFlags::AnyMatch;
-    if (flags & RegexConstant::match_prev_avail)
-        res |= RegexExecFlags::PrevAvailable;
-
-    return res;
-}
+boost::regbase::flag_type convert_flags(RegexCompileFlags flags);
+boost::regex_constants::match_flag_type convert_flags(RegexExecFlags flags);
 
 template<typename It>
 bool regex_match(It begin, It end, const Regex& re)
 {
     try
     {
-        bool matched = boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, re);
-        if (re.impl() and matched != regex_match(begin, end, *re.impl()))
+        const bool matched = regex_match(begin, end, *re.impl());
+        if (not re.boost_impl().empty() and
+            matched != boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end},
+                                                           re.boost_impl()))
             regex_mismatch(re);
         return matched;
     }
@@ -160,12 +168,18 @@ bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
 {
     try
     {
-        bool matched = boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end}, res, re);
         Vector<It> captures;
-        if (re.impl() and matched != regex_match(begin, end, captures, *re.impl()))
+        const bool matched = regex_match(begin, end, captures, *re.impl());
+
+        boost::match_results<RegexUtf8It<It>> boost_res;
+        if (not re.boost_impl().empty() and
+            matched != boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end},
+                                                           boost_res, re.boost_impl()))
             regex_mismatch(re);
-        if (re.impl() and matched)
-            check_captures(re, res, captures);
+        if (not re.boost_impl().empty() and matched)
+            check_captures(re, boost_res, captures);
+
+        res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
         return matched;
     }
     catch (std::runtime_error& err)
@@ -176,13 +190,16 @@ bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
 
 template<typename It>
 bool regex_search(It begin, It end, const Regex& re,
-                  RegexConstant::match_flag_type flags = RegexConstant::match_default)
+                  RegexExecFlags flags = RegexExecFlags::None)
 {
     try
     {
-        auto first = (flags & RegexConstant::match_prev_avail) ? begin-1 : begin;
-        bool matched = boost::regex_search<RegexUtf8It<It>>({begin, first, end}, {end, first, end}, re, flags);
-        if (re.impl() and matched != regex_search(begin, end, *re.impl(), convert_flags(flags)))
+        const bool matched = regex_search(begin, end, *re.impl(), flags);
+
+        auto first = (flags & RegexExecFlags::PrevAvailable) ? begin-1 : begin;
+        if (not re.boost_impl().empty() and
+            matched != boost::regex_search<RegexUtf8It<It>>({begin, first, end}, {end, first, end},
+                                                            re.boost_impl(), convert_flags(flags)))
             regex_mismatch(re);
         return matched;
     }
@@ -194,17 +211,23 @@ bool regex_search(It begin, It end, const Regex& re,
 
 template<typename It>
 bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
-                  RegexConstant::match_flag_type flags = RegexConstant::match_default)
+                  RegexExecFlags flags = RegexExecFlags::None)
 {
     try
     {
-        auto first = (flags & RegexConstant::match_prev_avail) ? begin-1 : begin;
-        bool matched = boost::regex_search<RegexUtf8It<It>>({begin, first, end}, {end, first, end}, res, re, flags);
         Vector<It> captures;
-        if (re.impl() and matched != regex_search(begin, end, captures, *re.impl(), convert_flags(flags)))
+        const bool matched = regex_search(begin, end, captures, *re.impl(), flags);
+
+        auto first = (flags & RegexExecFlags::PrevAvailable) ? begin-1 : begin;
+        boost::match_results<RegexUtf8It<It>> boost_res;
+        if (not re.boost_impl().empty() and
+            matched != boost::regex_search<RegexUtf8It<It>>({begin, first, end}, {end, first, end},
+                                                            boost_res, re.boost_impl(), convert_flags(flags)))
             regex_mismatch(re);
-        if (re.impl() and matched)
-            check_captures(re, res, captures);
+        if (not re.boost_impl().empty() and matched)
+            check_captures(re, boost_res, captures);
+
+        res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
         return matched;
     }
     catch (std::runtime_error& err)
@@ -219,12 +242,11 @@ void option_from_string(StringView str, Regex& re);
 template<typename Iterator>
 struct RegexIterator
 {
-    using Utf8It = RegexUtf8It<Iterator>;
     using ValueType = MatchResults<Iterator>;
 
     RegexIterator() = default;
     RegexIterator(Iterator begin, Iterator end, const Regex& re,
-                  RegexConstant::match_flag_type flags = RegexConstant::match_default)
+                  RegexExecFlags flags = RegexExecFlags::None)
         : m_regex{&re}, m_next_begin{begin}, m_begin{begin}, m_end{end}, m_flags{flags}
     {
         next();
@@ -261,11 +283,11 @@ private:
     {
         kak_assert(m_regex);
 
-        RegexConstant::match_flag_type additional_flags{};
+        RegexExecFlags additional_flags{};
         if (m_results.size() and m_results[0].first == m_results[0].second)
-            additional_flags |= RegexConstant::match_not_initial_null;
+            additional_flags |= RegexExecFlags::NotInitialNull;
         if (m_begin != m_next_begin)
-            additional_flags |= RegexConstant::match_not_bob | RegexConstant::match_prev_avail;
+            additional_flags |= RegexExecFlags::NotBeginOfSubject | RegexExecFlags::PrevAvailable;
 
         if (not regex_search(m_next_begin, m_end, m_results, *m_regex,
                              m_flags | additional_flags))
@@ -279,9 +301,8 @@ private:
     Iterator m_next_begin{};
     const Iterator m_begin{};
     const Iterator m_end{};
-    const RegexConstant::match_flag_type m_flags = RegexConstant::match_default;
+    const RegexExecFlags m_flags = RegexExecFlags::None;
 };
-
 
 }
 
