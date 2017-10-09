@@ -14,6 +14,11 @@
 namespace Kakoune
 {
 
+struct regex_error : runtime_error
+{
+    using runtime_error::runtime_error;
+};
+
 enum class MatchDirection
 {
     Forward,
@@ -66,7 +71,15 @@ struct CompiledRegex : RefCountable
     std::unique_ptr<StartChars> start_chars;
 };
 
-CompiledRegex compile_regex(StringView re, MatchDirection direction = MatchDirection::Forward);
+enum RegexCompileFlags
+{
+    None     = 0,
+    NoSubs   = 1 << 0,
+    Optimize = 1 << 1
+};
+constexpr bool with_bit_ops(Meta::Type<RegexCompileFlags>) { return true; }
+
+CompiledRegex compile_regex(StringView re, RegexCompileFlags flags, MatchDirection direction = MatchDirection::Forward);
 
 enum class RegexExecFlags
 {
@@ -475,7 +488,7 @@ bool regex_search(It begin, It end, Vector<It>& captures, const CompiledRegex& r
     ThreadedRegexVM<It, direction> vm{re};
     if (vm.exec(begin, end, flags | RegexExecFlags::Search))
     {
-        std::copy(vm.captures().begin(), vm.captures().end(), std::back_inserter(captures));
+        std::move(vm.captures().begin(), vm.captures().end(), std::back_inserter(captures));
         return true;
     }
     return false;

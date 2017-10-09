@@ -323,7 +323,7 @@ public:
 
         String id = format("hlregex'{}'", params[0]);
 
-        Regex ex{params[0], Regex::optimize};
+        Regex ex{params[0], RegexCompileFlags::Optimize};
 
         return {id, std::make_unique<RegexHighlighter>(std::move(ex),
                                                        std::move(faces))};
@@ -1823,8 +1823,8 @@ public:
             if (parser[i].empty() or parser[i+1].empty() or parser[i+2].empty())
                 throw runtime_error("group id, begin and end must not be empty");
 
-            const Regex::flag_type flags = match_capture ?
-                Regex::optimize : Regex::nosubs | Regex::optimize;
+            const RegexCompileFlags flags = match_capture ?
+                RegexCompileFlags::Optimize : RegexCompileFlags::NoSubs | RegexCompileFlags::Optimize;
 
             regions.push_back({ parser[i],
                                 Regex{parser[i+1], flags}, Regex{parser[i+2], flags},

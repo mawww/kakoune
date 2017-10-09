@@ -96,7 +96,7 @@ struct RegexParser
 private:
     struct InvalidPolicy
     {
-        Codepoint operator()(Codepoint cp) { throw runtime_error{"Invalid utf8 in regex"}; }
+        Codepoint operator()(Codepoint cp) { throw regex_error{"Invalid utf8 in regex"}; }
     };
 
     using Iterator = utf8::iterator<const char*, Codepoint, int, InvalidPolicy>;
@@ -466,9 +466,9 @@ private:
     [[gnu::noreturn]]
     void parse_error(StringView error)
     {
-        throw runtime_error(format("regex parse error: {} at '{}<<<HERE>>>{}'", error,
-                                   StringView{m_regex.begin(), m_pos.base()},
-                                   StringView{m_pos.base(), m_regex.end()}));
+        throw regex_error(format("regex parse error: {} at '{}<<<HERE>>>{}'", error,
+                                 StringView{m_regex.begin(), m_pos.base()},
+                                 StringView{m_pos.base(), m_regex.end()}));
     }
 
     void validate_lookaround(const AstNodePtr& node)
@@ -515,8 +515,8 @@ const RegexParser::ControlEscape RegexParser::control_escapes[5] = {
 
 struct RegexCompiler
 {
-    RegexCompiler(const ParsedRegex& parsed_regex, MatchDirection direction)
-        : m_parsed_regex{parsed_regex}, m_forward{direction == MatchDirection::Forward}
+    RegexCompiler(const ParsedRegex& parsed_regex, RegexCompileFlags flags, MatchDirection direction)
+        : m_parsed_regex{parsed_regex}, m_flags(flags), m_forward{direction == MatchDirection::Forward}
     {
         compile_node(m_parsed_regex.ast);
         push_inst(CompiledRegex::Match);
@@ -535,7 +535,7 @@ private:
         const auto start_pos = m_program.instructions.size();
 
         const Codepoint capture = (node->op == ParsedRegex::Alternation or node->op == ParsedRegex::Sequence) ? node->value : -1;
-        if (capture != -1)
+        if (capture != -1 and (capture == 0 or not (m_flags & RegexCompileFlags::NoSubs)))
             push_inst(CompiledRegex::Save, capture * 2 + (m_forward ? 0 : 1));
 
         Vector<uint32_t> goto_inner_end_offsets;
@@ -629,7 +629,7 @@ private:
         for (auto& offset : goto_inner_end_offsets)
             m_program.instructions[offset].param = m_program.instructions.size();
 
-        if (capture != -1)
+        if (capture != -1 and (capture == 0 or not (m_flags & RegexCompileFlags::NoSubs)))
             push_inst(CompiledRegex::Save, capture * 2 + (m_forward ? 1 : 0));
 
         return start_pos;
@@ -797,6 +797,7 @@ private:
     }
 
     CompiledRegex m_program;
+    RegexCompileFlags m_flags;
     const ParsedRegex& m_parsed_regex;
     const bool m_forward;
 };
@@ -878,9 +879,9 @@ void dump_regex(const CompiledRegex& program)
     }
 }
 
-CompiledRegex compile_regex(StringView re, MatchDirection direction)
+CompiledRegex compile_regex(StringView re, RegexCompileFlags flags, MatchDirection direction)
 {
-    return RegexCompiler{RegexParser::parse(re), direction}.get_compiled_regex();
+    return RegexCompiler{RegexParser::parse(re), flags, direction}.get_compiled_regex();
 }
 
 namespace
@@ -891,7 +892,7 @@ struct TestVM : CompiledRegex, ThreadedRegexVM<const char*, dir>
     using VMType = ThreadedRegexVM<const char*, dir>;
 
     TestVM(StringView re, bool dump = false)
-        : CompiledRegex{compile_regex(re, dir)},
+        : CompiledRegex{compile_regex(re, RegexCompileFlags::None, dir)},
           VMType{(const CompiledRegex&)*this}
     { if (dump) dump_regex(*this); }
 
