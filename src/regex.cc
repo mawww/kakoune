@@ -1,10 +1,13 @@
 #include "regex.hh"
 
+#ifdef REGEX_CHECK_WITH_BOOST
 #include "buffer_utils.hh"
+#endif
 
 namespace Kakoune
 {
 
+#ifdef REGEX_CHECK_WITH_BOOST
 using Utf8It = RegexUtf8It<const char*>;
 
 boost::regbase::flag_type convert_flags(RegexCompileFlags flags)
@@ -41,12 +44,19 @@ boost::regex_constants::match_flag_type convert_flags(RegexExecFlags flags)
     return res;
 }
 
+void regex_mismatch(const Regex& re)
+{
+    write_to_debug_buffer(format("regex mismatch for '{}'", re.str()));
+}
+#endif
+
 Regex::Regex(StringView re, RegexCompileFlags flags) try
     : m_impl{new CompiledRegex{compile_regex(re, flags)}},
-      m_str{re.str()},
-      m_boost_impl{Utf8It{re.begin(), re}, Utf8It{re.end(), re}, convert_flags(flags)}
-{
-} catch (std::runtime_error& err) { throw regex_error(err.what()); }
+      m_str{re.str()}
+#ifdef REGEX_CHECK_WITH_BOOST
+      , m_boost_impl{Utf8It{re.begin(), re}, Utf8It{re.end(), re}, convert_flags(flags)}
+#endif
+{} catch (std::runtime_error& err) { throw regex_error(err.what()); }
 
 String option_to_string(const Regex& re)
 {
@@ -56,11 +66,6 @@ String option_to_string(const Regex& re)
 void option_from_string(StringView str, Regex& re)
 {
     re = Regex{str};
-}
-
-void regex_mismatch(const Regex& re)
-{
-    write_to_debug_buffer(format("regex mismatch for '{}'", re.str()));
 }
 
 }

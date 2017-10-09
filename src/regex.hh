@@ -2,12 +2,16 @@
 #define regex_hh_INCLUDED
 
 #include "string.hh"
-#include "string_utils.hh"
-#include "exception.hh"
-#include "utf8_iterator.hh"
 #include "regex_impl.hh"
 
+#define REGEX_CHECK_WITH_BOOST
+
+#ifdef REGEX_CHECK_WITH_BOOST
+#include "exception.hh"
+#include "string_utils.hh"
+#include "utf8_iterator.hh"
 #include <boost/regex.hpp>
+#endif
 
 namespace Kakoune
 {
@@ -31,13 +35,17 @@ public:
 
     const CompiledRegex* impl() const { return m_impl.get(); }
 
+#ifdef REGEX_CHECK_WITH_BOOST
     using BoostImpl = boost::basic_regex<wchar_t, boost::c_regex_traits<wchar_t>>;
     const BoostImpl& boost_impl() const { return m_boost_impl; }
+#endif
 
 private:
     RefPtr<CompiledRegex> m_impl;
     String m_str;
+#ifdef REGEX_CHECK_WITH_BOOST
     BoostImpl m_boost_impl;
+#endif
 };
 
 template<typename Iterator>
@@ -115,6 +123,7 @@ inline RegexExecFlags match_flags(bool bol, bool eol, bool bow, bool eow)
            (eow ? RegexExecFlags::None : RegexExecFlags::NotEndOfWord);
 }
 
+#ifdef REGEX_CHECK_WITH_BOOST
 void regex_mismatch(const Regex& re);
 
 template<typename It>
@@ -144,6 +153,7 @@ void check_captures(const Regex& re, const boost::match_results<RegexUtf8It<It>>
 
 boost::regbase::flag_type convert_flags(RegexCompileFlags flags);
 boost::regex_constants::match_flag_type convert_flags(RegexExecFlags flags);
+#endif
 
 template<typename It>
 bool regex_match(It begin, It end, const Regex& re)
@@ -151,10 +161,12 @@ bool regex_match(It begin, It end, const Regex& re)
     try
     {
         const bool matched = regex_match(begin, end, *re.impl());
+#ifdef REGEX_CHECK_WITH_BOOST
         if (not re.boost_impl().empty() and
             matched != boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end},
                                                            re.boost_impl()))
             regex_mismatch(re);
+#endif
         return matched;
     }
     catch (std::runtime_error& err)
@@ -171,6 +183,7 @@ bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
         Vector<It> captures;
         const bool matched = regex_match(begin, end, captures, *re.impl());
 
+#ifdef REGEX_CHECK_WITH_BOOST
         boost::match_results<RegexUtf8It<It>> boost_res;
         if (not re.boost_impl().empty() and
             matched != boost::regex_match<RegexUtf8It<It>>({begin, begin, end}, {end, begin, end},
@@ -178,6 +191,7 @@ bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
             regex_mismatch(re);
         if (not re.boost_impl().empty() and matched)
             check_captures(re, boost_res, captures);
+#endif
 
         res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
         return matched;
@@ -196,11 +210,13 @@ bool regex_search(It begin, It end, const Regex& re,
     {
         const bool matched = regex_search(begin, end, *re.impl(), flags);
 
+#ifdef REGEX_CHECK_WITH_BOOST
         auto first = (flags & RegexExecFlags::PrevAvailable) ? begin-1 : begin;
         if (not re.boost_impl().empty() and
             matched != boost::regex_search<RegexUtf8It<It>>({begin, first, end}, {end, first, end},
                                                             re.boost_impl(), convert_flags(flags)))
             regex_mismatch(re);
+#endif
         return matched;
     }
     catch (std::runtime_error& err)
@@ -218,6 +234,7 @@ bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
         Vector<It> captures;
         const bool matched = regex_search(begin, end, captures, *re.impl(), flags);
 
+#ifdef REGEX_CHECK_WITH_BOOST
         auto first = (flags & RegexExecFlags::PrevAvailable) ? begin-1 : begin;
         boost::match_results<RegexUtf8It<It>> boost_res;
         if (not re.boost_impl().empty() and
@@ -226,6 +243,7 @@ bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
             regex_mismatch(re);
         if (not re.boost_impl().empty() and matched)
             check_captures(re, boost_res, captures);
+#endif
 
         res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
         return matched;
