@@ -8,7 +8,6 @@ namespace Kakoune
 
 class Regex;
 class Context;
-template<typename Iterator> struct MatchResults;
 
 inline Selection keep_direction(Selection res, const Selection& ref)
 {
