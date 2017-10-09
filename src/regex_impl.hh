@@ -388,8 +388,11 @@ private:
             auto cp = (look_direction == MatchDirection::Forward ? *pos : *(pos-1)), ref = *it;
             if (ref == 0xF000)
             {} // any character matches
-            else if (ref > 0xF0000 and ref <= 0xFFFFD and not m_program.matchers[ref - 0xF0001](cp))
-                return false;
+            else if (ref > 0xF0000 and ref <= 0xFFFFD)
+            {
+                if (not m_program.matchers[ref - 0xF0001](cp))
+                    return false;
+            }
             else if (ref != cp)
                 return false;
 
