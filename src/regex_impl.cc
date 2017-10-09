@@ -820,8 +820,10 @@ private:
 
 void dump_regex(const CompiledRegex& program)
 {
+    int count = 0;
     for (auto& inst : program.instructions)
     {
+        printf(" %03d     ", count++);
         switch (inst.op)
         {
             case CompiledRegex::Literal:
