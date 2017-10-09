@@ -98,9 +98,9 @@ trim_partial_lines(const Context& context, const Selection& selection);
 
 void select_buffer(SelectionList& selections);
 
-enum Direction { Forward, Backward };
+enum class MatchDirection;
 
-template<Direction direction>
+template<MatchDirection direction>
 Selection find_next_match(const Context& context, const Selection& sel,
                           const Regex& regex, bool& wrapped);
 

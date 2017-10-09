@@ -871,36 +871,25 @@ static bool find_prev(const Buffer& buffer, const BufferIterator& pos,
                       MatchResults<BufferIterator>& matches,
                       const Regex& ex, bool& wrapped)
 {
-    auto find_last_match = [&](const BufferIterator& pos) {
-        MatchResults<BufferIterator> m;
-        const bool is_pos_eol = is_eol(buffer, pos.coord());
-        const bool is_pos_eow = is_eow(buffer, pos.coord());
-        auto begin = buffer.begin();
-        while (begin != pos and
-               regex_search(begin, pos, m, ex,
-                            match_flags(is_bol(begin.coord()), is_pos_eol,
-                                        is_bow(buffer, begin.coord()), is_pos_eow)))
-        {
-            begin = utf8::next(m[0].first, pos);
-            if (matches.empty() or m[0].second > matches[0].second)
-                matches.swap(m);
-        }
-        return not matches.empty();
-    };
-    if (find_last_match(pos))
+    if (pos != buffer.begin() and
+        regex_search<BufferIterator, MatchDirection::Backward>(
+            buffer.begin(), pos, matches, ex,
+            match_flags(buffer, buffer.begin(), pos)))
         return true;
     wrapped = true;
-    return find_last_match(buffer.end());
+    return regex_search<BufferIterator, MatchDirection::Backward>(
+        buffer.begin(), buffer.end(), matches, ex,
+        match_flags(buffer, buffer.begin(), buffer.end()));
 }
 
-template<Direction direction>
+template<MatchDirection direction>
 Selection find_next_match(const Context& context, const Selection& sel, const Regex& regex, bool& wrapped)
 {
     auto& buffer = context.buffer();
     MatchResults<BufferIterator> matches;
-    auto pos = buffer.iterator_at(direction == Backward ? sel.min() : sel.max());
+    auto pos = buffer.iterator_at(direction == MatchDirection::Backward ? sel.min() : sel.max());
     wrapped = false;
-    const bool found = (direction == Forward) ?
+    const bool found = (direction == MatchDirection::Forward) ?
         find_next(buffer, utf8::next(pos, buffer.end()), matches, regex, wrapped)
       : find_prev(buffer, pos, matches, regex, wrapped);
 
@@ -913,13 +902,13 @@ Selection find_next_match(const Context& context, const Selection& sel, const Re
 
     auto begin = matches[0].first, end = matches[0].second;
     end = (begin == end) ? end : utf8::previous(end, begin);
-    if (direction == Backward)
+    if (direction == MatchDirection::Backward)
         std::swap(begin, end);
 
     return {begin.coord(), end.coord(), std::move(captures)};
 }
-template Selection find_next_match<Forward>(const Context&, const Selection&, const Regex&, bool&);
-template Selection find_next_match<Backward>(const Context&, const Selection&, const Regex&, bool&);
+template Selection find_next_match<MatchDirection::Forward>(const Context&, const Selection&, const Regex&, bool&);
+template Selection find_next_match<MatchDirection::Backward>(const Context&, const Selection&, const Regex&, bool&);
 
 using RegexIt = RegexIterator<BufferIterator>;
 

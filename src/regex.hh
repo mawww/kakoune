@@ -22,7 +22,8 @@ class Regex
 public:
     Regex() = default;
 
-    explicit Regex(StringView re, RegexCompileFlags flags = RegexCompileFlags::None);
+    explicit Regex(StringView re, RegexCompileFlags flags = RegexCompileFlags::None,
+                   MatchDirection direction = MatchDirection::Forward);
     bool empty() const { return m_str.empty(); }
     bool operator==(const Regex& other) const { return m_str == other.m_str; }
     bool operator!=(const Regex& other) const { return m_str != other.m_str; }
@@ -225,24 +226,27 @@ bool regex_search(It begin, It end, const Regex& re,
     }
 }
 
-template<typename It>
+template<typename It, MatchDirection direction = MatchDirection::Forward>
 bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
 {
     try
     {
         Vector<It> captures;
-        const bool matched = regex_search(begin, end, captures, *re.impl(), flags);
+        const bool matched = regex_search<It, direction>(begin, end, captures, *re.impl(), flags);
 
 #ifdef REGEX_CHECK_WITH_BOOST
-        auto first = (flags & RegexExecFlags::PrevAvailable) ? begin-1 : begin;
-        boost::match_results<RegexUtf8It<It>> boost_res;
-        if (not re.boost_impl().empty() and
-            matched != boost::regex_search<RegexUtf8It<It>>({begin, first, end}, {end, first, end},
-                                                            boost_res, re.boost_impl(), convert_flags(flags)))
-            regex_mismatch(re);
-        if (not re.boost_impl().empty() and matched)
-            check_captures(re, boost_res, captures);
+        if (direction == MatchDirection::Forward)
+        {
+            auto first = (flags & RegexExecFlags::PrevAvailable) ? begin-1 : begin;
+            boost::match_results<RegexUtf8It<It>> boost_res;
+            if (not re.boost_impl().empty() and
+                matched != boost::regex_search<RegexUtf8It<It>>({begin, first, end}, {end, first, end},
+                                                                boost_res, re.boost_impl(), convert_flags(flags)))
+                regex_mismatch(re);
+            if (not re.boost_impl().empty() and matched)
+                check_captures(re, boost_res, captures);
+        }
 #endif
 
         res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
