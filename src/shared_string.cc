@@ -1,6 +1,8 @@
 #include "shared_string.hh"
 #include "buffer_utils.hh"
 
+#include <cstring>
+
 namespace Kakoune
 {
 

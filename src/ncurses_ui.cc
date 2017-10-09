@@ -4,6 +4,7 @@
 #include "event_manager.hh"
 #include "keys.hh"
 #include "ranges.hh"
+#include "string_utils.hh"
 
 #include <algorithm>
 

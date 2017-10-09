@@ -2,6 +2,7 @@
 
 #include "exception.hh"
 #include "ranges.hh"
+#include "string_utils.hh"
 
 #include <cstdio>
 

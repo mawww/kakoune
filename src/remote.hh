@@ -5,6 +5,7 @@
 #include "exception.hh"
 #include "utils.hh"
 #include "vector.hh"
+#include "optional.hh"
 
 #include <memory>
 

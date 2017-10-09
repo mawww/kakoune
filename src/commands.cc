@@ -28,6 +28,7 @@
 #include "user_interface.hh"
 #include "window.hh"
 
+#include <cstring>
 #include <functional>
 #include <utility>
 

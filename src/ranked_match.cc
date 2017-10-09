@@ -3,6 +3,7 @@
 #include "flags.hh"
 #include "unit_tests.hh"
 #include "utf8_iterator.hh"
+#include "optional.hh"
 
 #include <algorithm>
 

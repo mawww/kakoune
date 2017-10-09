@@ -2,6 +2,7 @@
 #define regex_hh_INCLUDED
 
 #include "string.hh"
+#include "string_utils.hh"
 #include "exception.hh"
 #include "utf8_iterator.hh"
 

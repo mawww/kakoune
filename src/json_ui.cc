@@ -6,6 +6,7 @@
 #include "file.hh"
 #include "keys.hh"
 #include "ranges.hh"
+#include "string_utils.hh"
 #include "unit_tests.hh"
 #include "value.hh"
 

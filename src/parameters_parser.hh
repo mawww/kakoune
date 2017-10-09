@@ -7,6 +7,7 @@
 #include "array_view.hh"
 #include "optional.hh"
 #include "string.hh"
+#include "string_utils.hh"
 
 namespace Kakoune
 {

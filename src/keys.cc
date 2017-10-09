@@ -6,6 +6,7 @@
 #include "unit_tests.hh"
 #include "utf8_iterator.hh"
 #include "utils.hh"
+#include "string_utils.hh"
 
 namespace Kakoune
 {

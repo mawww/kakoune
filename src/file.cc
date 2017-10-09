@@ -10,6 +10,7 @@
 #include "unicode.hh"
 
 #include <cerrno>
+#include <cstring>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
