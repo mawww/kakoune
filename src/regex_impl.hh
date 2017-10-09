@@ -109,9 +109,7 @@ public:
     ThreadedRegexVM(const CompiledRegex& program)
       : m_program{program}
       {
-          kak_assert(m_program);
-          if (direction != program.direction)
-              throw runtime_error{"Regex and VM direction mismatch"};
+          kak_assert(m_program and direction == m_program.direction);
       }
 
     ThreadedRegexVM(const ThreadedRegexVM&) = delete;
