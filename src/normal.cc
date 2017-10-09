@@ -687,7 +687,7 @@ void paste_all(Context& context, NormalParams params)
         selections = std::move(result);
 }
 
-template<typename T>
+template<MatchDirection direction = MatchDirection::Forward, typename T>
 void regex_prompt(Context& context, String prompt, String default_regex, T func)
 {
     DisplayCoord position = context.has_window() ? context.window().position() : DisplayCoord{};
@@ -719,7 +719,7 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
                     context.push_jump();
 
                 if (not str.empty() or event == PromptEvent::Validate)
-                    func(str.empty() ? Regex{default_regex} : Regex{str}, event, context);
+                    func(Regex{str.empty() ? default_regex : str, RegexCompileFlags::None, direction}, event, context);
             }
             catch (regex_error& err)
             {
@@ -739,12 +739,12 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
         });
 }
 
-template<SelectMode mode, Direction direction>
+template<SelectMode mode, MatchDirection direction>
 void search(Context& context, NormalParams params)
 {
     constexpr StringView prompt = mode == SelectMode::Extend ?
-        (direction == Forward ? "search (extend):" : "reverse search (extend):")
-      : (direction == Forward ? "search:"          : "reverse search:");
+        (direction == MatchDirection::Forward ? "search (extend):" : "reverse search (extend):")
+      : (direction == MatchDirection::Forward ? "search:"          : "reverse search:");
 
     const char reg = to_lower(params.reg ? params.reg : '/');
     const int count = params.count;
@@ -753,7 +753,7 @@ void search(Context& context, NormalParams params)
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
     const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
-    regex_prompt(context, prompt.str(), saved_reg[main_index],
+    regex_prompt<direction>(context, prompt.str(), saved_reg[main_index],
                  [reg, count, saved_reg, main_index]
                  (Regex regex, PromptEvent event, Context& context) {
                      if (event == PromptEvent::Abort)
@@ -782,14 +782,14 @@ void search(Context& context, NormalParams params)
                  });
 }
 
-template<SelectMode mode, Direction direction>
+template<SelectMode mode, MatchDirection direction>
 void search_next(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
     StringView str = context.main_sel_register_value(reg);
     if (not str.empty())
     {
-        Regex regex{str};
+        Regex regex{str, RegexCompileFlags::None, direction};
         auto& selections = context.selections();
         bool main_wrapped = false;
         do {
@@ -1222,6 +1222,8 @@ void select_object(Context& context, NormalParams params)
          {{'n'},         "number"},
          {{'c'},         "custom object desc"}}));
 }
+
+enum Direction { Forward, Backward };
 
 template<Direction direction, bool half = false>
 void scroll(Context& context, NormalParams params)
@@ -2050,14 +2052,14 @@ static const HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> key
     { {'m'}, {"select to matching character", select<SelectMode::Replace, select_matching>} },
     { {'M'}, {"extend to matching character", select<SelectMode::Extend, select_matching>} },
 
-    { {'/'}, {"select next given regex match", search<SelectMode::Replace, Forward>} },
-    { {'?'}, {"extend with next given regex match", search<SelectMode::Extend, Forward>} },
-    { {alt('/')}, {"select previous given regex match", search<SelectMode::Replace, Backward>} },
-    { {alt('?')}, {"extend with previous given regex match", search<SelectMode::Extend, Backward>} },
-    { {'n'}, {"select next current search pattern match", search_next<SelectMode::Replace, Forward>} },
-    { {'N'}, {"extend with next current search pattern match", search_next<SelectMode::Append, Forward>} },
-    { {alt('n')}, {"select previous current search pattern match", search_next<SelectMode::Replace, Backward>} },
-    { {alt('N')}, {"extend with previous current search pattern match", search_next<SelectMode::Append, Backward>} },
+    { {'/'}, {"select next given regex match", search<SelectMode::Replace, MatchDirection::Forward>} },
+    { {'?'}, {"extend with next given regex match", search<SelectMode::Extend, MatchDirection::Forward>} },
+    { {alt('/')}, {"select previous given regex match", search<SelectMode::Replace, MatchDirection::Backward>} },
+    { {alt('?')}, {"extend with previous given regex match", search<SelectMode::Extend, MatchDirection::Backward>} },
+    { {'n'}, {"select next current search pattern match", search_next<SelectMode::Replace, MatchDirection::Forward>} },
+    { {'N'}, {"extend with next current search pattern match", search_next<SelectMode::Append, MatchDirection::Forward>} },
+    { {alt('n')}, {"select previous current search pattern match", search_next<SelectMode::Replace, MatchDirection::Backward>} },
+    { {alt('N')}, {"extend with previous current search pattern match", search_next<SelectMode::Append, MatchDirection::Backward>} },
     { {'*'}, {"set search pattern to main selection content", use_selection_as_search_pattern<true>} },
     { {alt('*')}, {"set search pattern to main selection content, do not detect words", use_selection_as_search_pattern<false>} },
 

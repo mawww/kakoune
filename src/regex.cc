@@ -50,13 +50,18 @@ void regex_mismatch(const Regex& re)
 }
 #endif
 
-Regex::Regex(StringView re, RegexCompileFlags flags) try
-    : m_impl{new CompiledRegex{compile_regex(re, flags)}},
+Regex::Regex(StringView re, RegexCompileFlags flags, MatchDirection direction)
+    : m_impl{new CompiledRegex{compile_regex(re, flags, direction)}},
       m_str{re.str()}
+{
 #ifdef REGEX_CHECK_WITH_BOOST
-      , m_boost_impl{Utf8It{re.begin(), re}, Utf8It{re.end(), re}, convert_flags(flags)}
+      if (direction == MatchDirection::Forward) try
+      {
+          m_boost_impl.assign({Utf8It{re.begin(), re}, Utf8It{re.end(), re}, convert_flags(flags)});
+      }
+      catch (std::runtime_error& err) { throw regex_error(err.what()); }
 #endif
-{} catch (std::runtime_error& err) { throw regex_error(err.what()); }
+}
 
 String option_to_string(const Regex& re)
 {
