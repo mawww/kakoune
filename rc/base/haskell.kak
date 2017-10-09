@@ -45,7 +45,7 @@ add-highlighter -group /haskell/code regex \b([A-Z]['\w]*\.)*[A-Z]['\w]*(?!\.) 0
 add-highlighter -group /haskell/code regex `\b([A-Z]['\w]*\.)*[\w]['\w]*` 0:operator
 # matches imported operators: M.! M.. Control.Monad.>>
 # not operator keywords:      M... M.->
-add-highlighter -group /haskell/code regex \b[A-Z]['\w]*\.(?!([~=|:@\\]|<-|->|=>|\.\.|::)[^~<=>|:!?/.@$*&#%+\^\-\\])[~<=>|:!?/.@$*&#%+\^\-\\]+ 0:operator
+add-highlighter -group /haskell/code regex \b[A-Z]['\w]*\.[~<=>|:!?/.@$*&#%+\^\-\\]+ 0:operator
 # matches dot: .
 # not possibly incomplete import:  a.
 # not other operators:             !. .!
@@ -53,7 +53,7 @@ add-highlighter -group /haskell/code regex (?<![\w~<=>|:!?/.@$*&#%+\^\-\\])\.(?!
 # matches other operators: ... > < <= ^ <*> <$> etc
 # not dot: .
 # not operator keywords:  @ .. -> :: ~
-add-highlighter -group /haskell/code regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])(?!([~=|:.@\\]|<-|->|=>|\.\.|::)[^~<=>|:!?/.@$*&#%+\^\-\\])[~<=>|:!?/.@$*&#%+\^\-\\]+ 0:operator
+add-highlighter -group /haskell/code regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])[~<=>|:!?/.@$*&#%+\^\-\\]+ 0:operator
 
 # matches operator keywords: @ ->
 add-highlighter -group /haskell/code regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])(@|~|<-|->|=>|::|=|:|[|])(?![~<=>|:!?/.@$*&#%+\^\-\\]) 1:keyword
