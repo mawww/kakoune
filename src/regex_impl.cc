@@ -474,8 +474,13 @@ private:
     void validate_lookaround(const AstNodePtr& node)
     {
         for (auto& child : node->children)
-            if (child->op != ParsedRegex::Literal)
-                parse_error("Lookaround can only contain literals");
+        {
+            if (child->op != ParsedRegex::Literal and child->op != ParsedRegex::Matcher and
+                child->op != ParsedRegex::AnyChar)
+                parse_error("Lookaround can only contain literals, any chars or character classes");
+            if (child->quantifier.type != ParsedRegex::Quantifier::One)
+                parse_error("Quantifiers cannot be used in lookarounds");
+        }
     }
 
     ParsedRegex m_parsed_regex;
@@ -679,15 +684,27 @@ private:
         return res;
     }
 
-    uint32_t push_lookaround(const Vector<ParsedRegex::AstNodePtr>& literals, bool reversed = false)
+    uint32_t push_lookaround(const Vector<ParsedRegex::AstNodePtr>& characters, bool reversed = false)
     {
         uint32_t res = m_program.lookarounds.size();
+        auto write_lookaround = [this](auto&& characters) {
+            for (auto& character : characters) 
+            {
+                if (character->op == ParsedRegex::Literal)
+                    m_program.lookarounds.push_back(character->value);
+                else if (character->op == ParsedRegex::AnyChar)
+                    m_program.lookarounds.push_back(0xF000);
+                else if (character->op == ParsedRegex::Matcher)
+                    m_program.lookarounds.push_back(0xF0001 + character->value);
+                else
+                    kak_assert(false);
+            }
+        };
+
         if (reversed)
-            for (auto& literal : literals | reverse()) 
-                m_program.lookarounds.push_back(literal->value);
+            write_lookaround(characters | reverse());
         else
-            for (auto& literal : literals) 
-                m_program.lookarounds.push_back(literal->value);
+            write_lookaround(characters);
 
         m_program.lookarounds.push_back((Codepoint)-1);
         return res;
