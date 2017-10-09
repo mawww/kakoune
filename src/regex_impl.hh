@@ -294,28 +294,14 @@ private:
                     break;
                 case CompiledRegex::LookAhead:
                 case CompiledRegex::NegativeLookAhead:
-                {
-                    auto ref = m_program.lookarounds.begin() + inst.param;
-                    for (auto it = pos; *ref != -1 and it != m_end; ++it, ++ref)
-                        if (*it != *ref)
-                            break;
-                    if ((inst.op == CompiledRegex::LookAhead and *ref != -1) or
-                        (inst.op == CompiledRegex::NegativeLookAhead and *ref == -1))
+                    if (lookaround<MatchDirection::Forward>(inst.param, pos) != (inst.op == CompiledRegex::LookAhead))
                         return StepResult::Failed;
                     break;
-                }
                 case CompiledRegex::LookBehind:
                 case CompiledRegex::NegativeLookBehind:
-                {
-                    auto ref = m_program.lookarounds.begin() + inst.param;
-                    for (auto it = pos; *ref != -1 and it > m_begin; --it, ++ref)
-                        if (*(it-1) != *ref)
-                            break;
-                    if ((inst.op == CompiledRegex::LookBehind and *ref != -1) or
-                        (inst.op == CompiledRegex::NegativeLookBehind and *ref == -1))
+                    if (lookaround<MatchDirection::Backward>(inst.param, pos) != (inst.op == CompiledRegex::LookBehind))
                         return StepResult::Failed;
                     break;
-                }
                 case CompiledRegex::Match:
                     return StepResult::Matched;
             }
@@ -390,6 +376,26 @@ private:
         while (start != end and *start >= 0 and *start < 256 and
                not start_chars[*start])
             ++start;
+    }
+
+    template<MatchDirection look_direction>
+    bool lookaround(uint32_t index, Utf8It pos) const
+    {
+        for (auto it = m_program.lookarounds.begin() + index; *it != -1; ++it)
+        {
+            if (pos == (look_direction == MatchDirection::Forward ? m_end : m_begin))
+                return false;
+            auto cp = (look_direction == MatchDirection::Forward ? *pos : *(pos-1)), ref = *it;
+            if (ref == 0xF000)
+            {} // any character matches
+            else if (ref > 0xF0000 and ref <= 0xFFFFD and not m_program.matchers[ref - 0xF0001](cp))
+                return false;
+            else if (ref != cp)
+                return false;
+
+            (look_direction == MatchDirection::Forward) ? ++pos : --pos;
+        }
+        return true;
     }
 
     bool is_line_start(const Utf8It& pos) const
