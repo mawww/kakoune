@@ -1067,13 +1067,13 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        TestVM<> vm{R"((?!foo)...)"};
+        TestVM<> vm{R"((?!f[oa]o)...)"};
         kak_assert(not vm.exec("foo"));
         kak_assert(vm.exec("qux"));
     }
 
     {
-        TestVM<> vm{R"(...(?<=foo))"};
+        TestVM<> vm{R"(...(?<=f.o))"};
         kak_assert(vm.exec("foo"));
         kak_assert(not vm.exec("qux"));
     }
