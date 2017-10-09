@@ -489,30 +489,32 @@ private:
     Iterator m_pos;
     bool m_ignore_case = false;
 
-    struct CharacterClassEscape {
+    static constexpr struct CharacterClassEscape {
         Codepoint cp;
         const char* ctype;
         StringView additional_chars;
         bool neg;
+    } character_class_escapes[] = {
+        { 'd', "digit", "", false },
+        { 'w', "alnum", "_", false },
+        { 's', "space", "", false },
+        { 'h', nullptr, " \t", false },
     };
-    static const CharacterClassEscape character_class_escapes[4];
 
-    struct ControlEscape { Codepoint name; Codepoint value; };
-    static const ControlEscape control_escapes[5];
+    static constexpr struct ControlEscape {
+        Codepoint name;
+        Codepoint value;
+    } control_escapes[] = {
+        { 'f', '\f' },
+        { 'n', '\n' },
+        { 'r', '\r' },
+        { 't', '\t' },
+        { 'v', '\v' }
+    };
 };
 
-// For some reason Gcc fails to link if this is constexpr
-const RegexParser::CharacterClassEscape RegexParser::character_class_escapes[4] = {
-    { 'd', "digit", "", false },
-    { 'w', "alnum", "_", false },
-    { 's', "space", "", false },
-    { 'h', nullptr, " \t", false },
-};
-
-
-const RegexParser::ControlEscape RegexParser::control_escapes[5] = {
-    { 'f', '\f' }, { 'n', '\n' }, { 'r', '\r' }, { 't', '\t' }, { 'v', '\v' }
-};
+constexpr RegexParser::CharacterClassEscape RegexParser::character_class_escapes[];
+constexpr RegexParser::ControlEscape RegexParser::control_escapes[];
 
 struct RegexCompiler
 {
