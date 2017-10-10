@@ -29,7 +29,7 @@ struct CompiledRegex : RefCountable
     {
         Match,
         Literal,
-        LiteralIgnoreCase,
+        Literal_IgnoreCase,
         AnyChar,
         Matcher,
         Jump,
@@ -46,6 +46,10 @@ struct CompiledRegex : RefCountable
         NegativeLookAhead,
         LookBehind,
         NegativeLookBehind,
+        LookAhead_IgnoreCase,
+        NegativeLookAhead_IgnoreCase,
+        LookBehind_IgnoreCase,
+        NegativeLookBehind_IgnoreCase,
     };
 
     struct Instruction
@@ -240,7 +244,7 @@ private:
                     if (pos != m_end and inst.param == *pos)
                         return StepResult::Consumed;
                     return StepResult::Failed;
-                case CompiledRegex::LiteralIgnoreCase:
+                case CompiledRegex::Literal_IgnoreCase:
                     if (pos != m_end and inst.param == to_lower(*pos))
                         return StepResult::Consumed;
                     return StepResult::Failed;
@@ -307,12 +311,26 @@ private:
                     break;
                 case CompiledRegex::LookAhead:
                 case CompiledRegex::NegativeLookAhead:
-                    if (lookaround<MatchDirection::Forward>(inst.param, pos) != (inst.op == CompiledRegex::LookAhead))
+                    if (lookaround<MatchDirection::Forward, false>(inst.param, pos) !=
+                        (inst.op == CompiledRegex::LookAhead))
+                        return StepResult::Failed;
+                    break;
+                case CompiledRegex::LookAhead_IgnoreCase:
+                case CompiledRegex::NegativeLookAhead_IgnoreCase:
+                    if (lookaround<MatchDirection::Forward, true>(inst.param, pos) !=
+                        (inst.op == CompiledRegex::LookAhead_IgnoreCase))
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::LookBehind:
                 case CompiledRegex::NegativeLookBehind:
-                    if (lookaround<MatchDirection::Backward>(inst.param, pos) != (inst.op == CompiledRegex::LookBehind))
+                    if (lookaround<MatchDirection::Backward, false>(inst.param, pos) !=
+                        (inst.op == CompiledRegex::LookBehind))
+                        return StepResult::Failed;
+                    break;
+                case CompiledRegex::LookBehind_IgnoreCase:
+                case CompiledRegex::NegativeLookBehind_IgnoreCase:
+                    if (lookaround<MatchDirection::Backward, true>(inst.param, pos) !=
+                        (inst.op == CompiledRegex::LookBehind_IgnoreCase))
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::Match:
@@ -391,7 +409,7 @@ private:
             ++start;
     }
 
-    template<MatchDirection look_direction>
+    template<MatchDirection look_direction, bool ignore_case>
     bool lookaround(uint32_t index, Utf8It pos) const
     {
         for (auto it = m_program.lookarounds.begin() + index; *it != -1; ++it)
@@ -399,6 +417,9 @@ private:
             if (pos == (look_direction == MatchDirection::Forward ? m_end : m_begin))
                 return false;
             auto cp = (look_direction == MatchDirection::Forward ? *pos : *(pos-1)), ref = *it;
+            if (ignore_case)
+                cp = to_lower(cp);
+
             if (ref == 0xF000)
             {} // any character matches
             else if (ref > 0xF0000 and ref <= 0xFFFFD)

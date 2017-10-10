@@ -541,6 +541,7 @@ private:
     uint32_t compile_node_inner(const ParsedRegex::AstNodePtr& node)
     {
         const auto start_pos = m_program.instructions.size();
+        const bool ignore_case = node->ignore_case;
 
         const Codepoint capture = (node->op == ParsedRegex::Alternation or node->op == ParsedRegex::Sequence) ? node->value : -1;
         if (capture != -1 and (capture == 0 or not (m_flags & RegexCompileFlags::NoSubs)))
@@ -550,8 +551,8 @@ private:
         switch (node->op)
         {
             case ParsedRegex::Literal:
-                if (node->ignore_case)
-                    push_inst(CompiledRegex::LiteralIgnoreCase, to_lower(node->value));
+                if (ignore_case)
+                    push_inst(CompiledRegex::Literal_IgnoreCase, to_lower(node->value));
                 else
                     push_inst(CompiledRegex::Literal, node->value);
                 break;
@@ -594,24 +595,32 @@ private:
                 break;
             }
             case ParsedRegex::LookAhead:
-                push_inst(m_forward ? CompiledRegex::LookAhead
-                                    : CompiledRegex::LookBehind,
-                          push_lookaround(node->children, false));
+                push_inst(m_forward ? (ignore_case ? CompiledRegex::LookAhead_IgnoreCase
+                                                   : CompiledRegex::LookAhead)
+                                    : (ignore_case ? CompiledRegex::LookBehind_IgnoreCase
+                                                   : CompiledRegex::LookBehind),
+                          push_lookaround(node->children, false, ignore_case));
                 break;
             case ParsedRegex::NegativeLookAhead:
-                push_inst(m_forward ? CompiledRegex::NegativeLookAhead
-                                    : CompiledRegex::NegativeLookBehind,
-                          push_lookaround(node->children, false));
+                push_inst(m_forward ? (ignore_case ? CompiledRegex::NegativeLookAhead_IgnoreCase
+                                                   : CompiledRegex::NegativeLookAhead)
+                                    : (ignore_case ? CompiledRegex::NegativeLookBehind_IgnoreCase
+                                                   : CompiledRegex::NegativeLookBehind),
+                          push_lookaround(node->children, false, ignore_case));
                 break;
             case ParsedRegex::LookBehind:
-                push_inst(m_forward ? CompiledRegex::LookBehind
-                                    : CompiledRegex::LookAhead,
-                          push_lookaround(node->children, true));
+                push_inst(m_forward ? (ignore_case ? CompiledRegex::LookBehind_IgnoreCase
+                                                   : CompiledRegex::LookBehind)
+                                    : (ignore_case ? CompiledRegex::LookAhead_IgnoreCase
+                                                   : CompiledRegex::LookAhead),
+                          push_lookaround(node->children, true, ignore_case));
                 break;
             case ParsedRegex::NegativeLookBehind:
-                push_inst(m_forward ? CompiledRegex::NegativeLookBehind
-                                    : CompiledRegex::NegativeLookAhead,
-                          push_lookaround(node->children, true));
+                push_inst(m_forward ? (ignore_case ? CompiledRegex::NegativeLookBehind_IgnoreCase
+                                                   : CompiledRegex::NegativeLookBehind)
+                                    : (ignore_case ? CompiledRegex::NegativeLookAhead_IgnoreCase
+                                                   : CompiledRegex::NegativeLookAhead),
+                          push_lookaround(node->children, true, ignore_case));
                 break;
             case ParsedRegex::LineStart:
                 push_inst(m_forward ? CompiledRegex::LineStart
@@ -698,14 +707,16 @@ private:
         return res;
     }
 
-    uint32_t push_lookaround(const Vector<ParsedRegex::AstNodePtr>& characters, bool reversed = false)
+    uint32_t push_lookaround(const Vector<ParsedRegex::AstNodePtr>& characters,
+                             bool reversed, bool ignore_case)
     {
         uint32_t res = m_program.lookarounds.size();
-        auto write_lookaround = [this](auto&& characters) {
+        auto write_lookaround = [this, ignore_case](auto&& characters) {
             for (auto& character : characters) 
             {
                 if (character->op == ParsedRegex::Literal)
-                    m_program.lookarounds.push_back(character->value);
+                    m_program.lookarounds.push_back(ignore_case ? to_lower(character->value)
+                                                                : character->value);
                 else if (character->op == ParsedRegex::AnyChar)
                     m_program.lookarounds.push_back(0xF000);
                 else if (character->op == ParsedRegex::Matcher)
@@ -841,7 +852,7 @@ void dump_regex(const CompiledRegex& program)
             case CompiledRegex::Literal:
                 printf("literal %lc\n", inst.param);
                 break;
-            case CompiledRegex::LiteralIgnoreCase:
+            case CompiledRegex::Literal_IgnoreCase:
                 printf("literal (ignore case) %lc\n", inst.param);
                 break;
             case CompiledRegex::AnyChar:
@@ -886,6 +897,10 @@ void dump_regex(const CompiledRegex& program)
             case CompiledRegex::NegativeLookAhead:
             case CompiledRegex::LookBehind:
             case CompiledRegex::NegativeLookBehind:
+            case CompiledRegex::LookAhead_IgnoreCase:
+            case CompiledRegex::NegativeLookAhead_IgnoreCase:
+            case CompiledRegex::LookBehind_IgnoreCase:
+            case CompiledRegex::NegativeLookBehind_IgnoreCase:
             {
                 const char* name = nullptr;
                 if (inst.op == CompiledRegex::LookAhead)
@@ -896,6 +911,15 @@ void dump_regex(const CompiledRegex& program)
                     name = "look behind";
                 if (inst.op == CompiledRegex::NegativeLookBehind)
                     name = "negative look behind";
+
+                if (inst.op == CompiledRegex::LookAhead_IgnoreCase)
+                    name = "look ahead (ignore case)";
+                if (inst.op == CompiledRegex::NegativeLookAhead_IgnoreCase)
+                    name = "negative look ahead (ignore case)";
+                if (inst.op == CompiledRegex::LookBehind_IgnoreCase)
+                    name = "look behind (ignore case)";
+                if (inst.op == CompiledRegex::NegativeLookBehind_IgnoreCase)
+                    name = "negative look behind (ignore case)";
 
                 String str;
                 for (auto it = program.lookarounds.begin() + inst.param; *it != -1; ++it)
@@ -1182,6 +1206,12 @@ auto test_regex = UnitTest{[]{
     {
         TestVM<> vm{R"((?=))"};
         kak_assert(vm.exec(""));
+    }
+
+    {
+        TestVM<> vm{R"((?i)(?=Foo))"};
+        kak_assert(vm.exec("fOO", RegexExecFlags::Search));
+        kak_assert(*vm.captures()[0] == 'f');
     }
 }};
 
