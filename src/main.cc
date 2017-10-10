@@ -550,8 +550,10 @@ int run_server(StringView session, StringView server_init,
         set_signal_handler(SIGTERM, [](int) { terminate = true; });
     }
 
-    StringRegistry      string_registry;
     EventManager        event_manager;
+    Server              server{session.empty() ? to_string(getpid()) : session.str()};
+
+    StringRegistry      string_registry;
     GlobalScope         global_scope;
     ShellManager        shell_manager;
     CommandManager      command_manager;
@@ -573,8 +575,6 @@ int run_server(StringView session, StringView server_init,
     write_to_debug_buffer("*** This is the debug buffer, where debug info will be written ***");
 
     GlobalScope::instance().options().get_local_option("readonly").set<bool>(flags & ServerFlags::ReadOnly);
-
-    Server server{session.empty() ? to_string(getpid()) : session.str()};
 
     bool startup_error = false;
     if (not (flags & ServerFlags::IgnoreKakrc)) try
