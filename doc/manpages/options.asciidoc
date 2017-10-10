@@ -154,7 +154,7 @@ Builtin options
 *idle_timeout* 'int'::
 	*default* 50 +
 	timeout, in milliseconds, with no user input that will trigger the
-	*PromptIdle*, *InsertIdle* and *NormalIdle* hooks. 
+	*PromptIdle*, *InsertIdle* and *NormalIdle* hooks, and autocompletion.
 
 *fs_checkout_timeout* 'int'::
 	*default* 500 +

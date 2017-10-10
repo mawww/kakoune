@@ -998,7 +998,7 @@ Some options are built in Kakoune, and can be used to control its behaviour:
  * `debug` _flags(hooks|shell|profile|keys|commands)_: dump various debug information in
    the `*debug*` buffer.
  * `idle_timeout` _int_: timeout, in milliseconds, with no user input that will
-   trigger the `PromptIdle`, `InsertIdle` and `NormalIdle` hooks.
+   trigger the `PromptIdle`, `InsertIdle` and `NormalIdle` hooks, and autocompletion.
  * `fs_checkout_timeout` _int_: timeout, in milliseconds, between checks in
    normal mode of modifications of the file associated with the current buffer
    on the filesystem.
@@ -1219,7 +1219,7 @@ Insert mode completion
 
 Kakoune can propose completions while inserting text, the `completers` option
 controls automatic completion, which kicks in when a certain idle timeout is
-reached (100 milliseconds). Insert mode completion can be explicitly triggered
+reached (see `idle_timeout` option). Insert mode completion can be explicitly triggered
 using `<c-x>`, followed, by:
 
  * *f* : filename completion
