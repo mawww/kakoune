@@ -141,7 +141,6 @@ public:
         if (flags & RegexExecFlags::NotInitialNull and m_begin == m_end)
             return false;
 
-        Vector<Thread> current_threads, next_threads;
 
         const bool no_saves = (m_flags & RegexExecFlags::NoSaves);
         Utf8It start{m_begin};
@@ -151,8 +150,9 @@ public:
         if (flags & RegexExecFlags::Search)
             to_next_start(start, m_end, start_chars);
 
+        ExecState state;
         if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
-                      current_threads, next_threads))
+                      state))
             return true;
 
         if (not (flags & RegexExecFlags::Search))
@@ -162,7 +162,7 @@ public:
         {
             to_next_start(++start, m_end, start_chars);
             if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
-                          current_threads, next_threads))
+                          state))
                 return true;
         }
         while (start != m_end);
@@ -226,17 +226,25 @@ private:
                                       utf8::iterator<Iterator>,
                                       std::reverse_iterator<utf8::iterator<Iterator>>>;
 
+    struct ExecState
+    {
+        Vector<Thread> current_threads;
+        Vector<Thread> next_threads;
+        Vector<uint32_t> processed;
+    };
+
     enum class StepResult { Consumed, Matched, Failed };
 
     // Steps a thread until it consumes the current character, matches or fail
-    StepResult step(const Utf8It& pos, Thread& thread, Vector<Thread>& threads)
+    StepResult step(const Utf8It& pos, Thread& thread, ExecState& state)
     {
         while (true)
         {
-            auto& inst = m_program.instructions[thread.inst++];
+            auto& inst = m_program.instructions[thread.inst];
             if (inst.processed)
                 return StepResult::Failed;
             inst.processed = true;
+            state.processed.push_back(thread.inst++);
 
             switch (inst.op)
             {
@@ -257,14 +265,14 @@ private:
                 {
                     if (thread.saves)
                         ++thread.saves->refcount;
-                    threads.push_back({inst.param, thread.saves});
+                    state.current_threads.push_back({inst.param, thread.saves});
                     break;
                 }
                 case CompiledRegex::Split_PrioritizeChild:
                 {
                     if (thread.saves)
                         ++thread.saves->refcount;
-                    threads.push_back({thread.inst, thread.saves});
+                    state.current_threads.push_back({thread.inst, thread.saves});
                     thread.inst = inst.param;
                     break;
                 }
@@ -340,25 +348,19 @@ private:
         return StepResult::Failed;
     }
 
-    bool exec_from(Utf8It pos, Saves* initial_saves, Vector<Thread>& current_threads, Vector<Thread>& next_threads)
+    bool exec_from(Utf8It pos, Saves* initial_saves, ExecState& state)
     {
-        current_threads.push_back({0, initial_saves});
-        next_threads.clear();
+        state.current_threads.push_back({0, initial_saves});
+        state.next_threads.clear();
 
         bool found_match = false;
         while (true) // Iterate on all codepoints and once at the end
         {
-            for (auto& inst : m_program.instructions)
+            while (not state.current_threads.empty())
             {
-                inst.processed = false;
-                inst.scheduled = false;
-            }
-
-            while (not current_threads.empty())
-            {
-                auto thread = current_threads.back();
-                current_threads.pop_back();
-                switch (step(pos, thread, current_threads))
+                auto thread = state.current_threads.back();
+                state.current_threads.pop_back();
+                switch (step(pos, thread, state))
                 {
                 case StepResult::Matched:
                     if ((pos != m_end and not (m_flags & RegexExecFlags::Search)) or
@@ -370,11 +372,8 @@ private:
 
                     release_saves(m_captures);
                     m_captures = thread.saves;
-                    if (pos == m_end or (m_flags & RegexExecFlags::AnyMatch))
-                        return true;
-
                     found_match = true;
-                    current_threads.clear(); // remove this and lower priority threads
+                    state.current_threads.clear(); // remove this and lower priority threads
                     break;
                 case StepResult::Failed:
                     release_saves(thread.saves);
@@ -386,15 +385,22 @@ private:
                         continue;
                     }
                     m_program.instructions[thread.inst].scheduled = true;
-                    next_threads.push_back(thread);
+                    state.next_threads.push_back(thread);
                     break;
                 }
             }
-            if (pos == m_end or next_threads.empty())
+            for (auto& thread : state.next_threads)
+                m_program.instructions[thread.inst].scheduled = false;
+            for (auto inst : state.processed)
+                m_program.instructions[inst].processed = false;
+            state.processed.clear();
+
+            if (pos == m_end or state.next_threads.empty() or
+                (found_match and (m_flags & RegexExecFlags::AnyMatch)))
                 return found_match;
 
-            std::swap(current_threads, next_threads);
-            std::reverse(current_threads.begin(), current_threads.end());
+            std::swap(state.current_threads, state.next_threads);
+            std::reverse(state.current_threads.begin(), state.current_threads.end());
             ++pos;
         }
     }
