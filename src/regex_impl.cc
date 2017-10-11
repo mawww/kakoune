@@ -1193,6 +1193,12 @@ auto test_regex = UnitTest{[]{
     }
 
     {
+        TestVM<MatchDirection::Backward> vm{R"($)"};
+        kak_assert(vm.exec("foo\nbar\nbaz\nqux", RegexExecFlags::Search | RegexExecFlags::NotEndOfLine));
+        kak_assert(StringView{vm.captures()[0]}  == "\nqux");
+    }
+
+    {
         TestVM<> vm{R"(()*)"};
         kak_assert(not vm.exec(" "));
     }

@@ -130,23 +130,28 @@ public:
 
     bool exec(Iterator begin, Iterator end, RegexExecFlags flags)
     {
-        const bool forward = direction == MatchDirection::Forward;
+        if (flags & RegexExecFlags::NotInitialNull and begin == end)
+            return false;
+
+        constexpr bool forward = direction == MatchDirection::Forward;
         const bool prev_avail = flags & RegexExecFlags::PrevAvailable;
+
         m_begin = Utf8It{utf8::iterator<Iterator>{forward ? begin : end,
                                                   prev_avail ? begin-1 : begin, end}};
         m_end = Utf8It{utf8::iterator<Iterator>{forward ? end : begin,
                                                 prev_avail ? begin-1 : begin, end}};
-        m_flags = flags;
+        if (forward)
+            m_flags = flags;
+        else // Flip line begin/end flags as we flipped the instructions on compilation.
+            m_flags = (RegexExecFlags)(flags & ~(RegexExecFlags::NotEndOfLine | RegexExecFlags::NotBeginOfLine)) |
+                ((flags & RegexExecFlags::NotEndOfLine) ? RegexExecFlags::NotBeginOfLine : RegexExecFlags::None) |
+                ((flags & RegexExecFlags::NotBeginOfLine) ? RegexExecFlags::NotEndOfLine : RegexExecFlags::None);
 
-        if (flags & RegexExecFlags::NotInitialNull and m_begin == m_end)
-            return false;
 
-
-        const bool no_saves = (m_flags & RegexExecFlags::NoSaves);
+        const bool no_saves = (flags & RegexExecFlags::NoSaves);
         Utf8It start{m_begin};
 
         const bool* start_chars = m_program.start_chars ? m_program.start_chars->map : nullptr;
-
         if (flags & RegexExecFlags::Search)
             to_next_start(start, m_end, start_chars);
 
