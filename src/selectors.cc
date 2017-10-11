@@ -891,7 +891,7 @@ Selection find_next_match(const Context& context, const Selection& sel, const Re
     wrapped = false;
     const bool found = (direction == MatchDirection::Forward) ?
         find_next(buffer, utf8::next(pos, buffer.end()), matches, regex, wrapped)
-      : find_prev(buffer, pos, matches, regex, wrapped);
+      : find_prev(buffer, utf8::previous(pos, buffer.begin()), matches, regex, wrapped);
 
     if (not found or matches[0].first == buffer.end())
         throw runtime_error(format("'{}': no matches found", regex.str()));
