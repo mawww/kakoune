@@ -1,15 +1,15 @@
-# solarized dark theme
+# solarized light theme
 
 %sh{
     # Base color definitions
-    base03="rgb:002b36"
-    base02="rgb:073642"
-    base01="rgb:586e75"
-    base00="rgb:657b83"
-     base0="rgb:839496"
-     base1="rgb:93a1a1"
-     base2="rgb:eee8d5"
-     base3="rgb:fdf6e3"
+     base3="rgb:002b36"
+     base2="rgb:073642"
+     base1="rgb:586e75"
+     base0="rgb:657b83"
+    base00="rgb:839496"
+    base01="rgb:93a1a1"
+    base02="rgb:eee8d5"
+    base03="rgb:fdf6e3"
 
     # Accent color definitions
     yellow="rgb:b58900"
@@ -70,3 +70,4 @@
         face BufferPadding      ${base01},${base03}
     "
 }
+
