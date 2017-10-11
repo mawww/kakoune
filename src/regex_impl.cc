@@ -418,7 +418,8 @@ private:
         if (at_end())
             return {ParsedRegex::Quantifier::One};
 
-        auto read_int = [](auto& pos, auto begin, auto end) {
+        constexpr int max_repeat = 1000;
+        auto read_int = [max_repeat, this](auto& pos, auto begin, auto end) {
             int res = 0;
             for (; pos != end; ++pos)
             {
@@ -426,6 +427,8 @@ private:
                 if (cp < '0' or cp > '9')
                     return pos == begin ? -1 : res;
                 res = res * 10 + cp - '0';
+                if (res > max_repeat)
+                    parse_error(format("Explicit quantifier is too big, maximum is {}", max_repeat));
             }
             return res;
         };
