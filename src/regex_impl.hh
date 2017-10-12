@@ -235,7 +235,7 @@ private:
     {
         Vector<Thread> current_threads;
         Vector<Thread> next_threads;
-        Vector<uint32_t> processed;
+        Vector<uint16_t> processed;
     };
 
     enum class StepResult { Consumed, Matched, Failed };
