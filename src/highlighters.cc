@@ -615,59 +615,37 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
         if (column < 0)
             return;
 
-        const Buffer& buffer = context.buffer();
-        const int tabstop = context.options()["tabstop"].get<int>();
         auto face = get_face(facespec);
+        auto win_column = context.window().position().column;
         for (auto& line : display_buffer.lines())
         {
-            const LineCount buf_line = line.range().begin.line;
-            const ByteCount byte_col = get_byte_to_column(buffer, tabstop, {buf_line, column});
-            const BufferCoord coord{buf_line, byte_col};
+            auto target_col = column - win_column; 
+            if (target_col < 0)
+                return;
+
             bool found = false;
-            if (buffer.is_valid(coord) and not buffer.is_end(coord))
+            auto first_buf = find_if(line, [](auto& atom) { return atom.has_buffer_range(); });
+            for (auto atom_it = first_buf; atom_it != line.end(); ++atom_it)
             {
-                for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
+                const auto atom_len = atom_it->length();
+                if (target_col < atom_len)
                 {
-                    if (atom_it->type() != DisplayAtom::Range)
-                        continue;
-
-                    kak_assert(atom_it->begin().line == buf_line);
-                    if (coord >= atom_it->begin() and coord < atom_it->end())
-                    {
-                        if (coord > atom_it->begin())
-                            atom_it = ++line.split(atom_it, coord);
-                        if (buffer.next(coord) < atom_it->end())
-                            atom_it = line.split(atom_it, buffer.next(coord));
-
-                        apply_face(face)(*atom_it);
-                        found = true;
-                        break;
-                    }
+                    if (target_col > 0)
+                        atom_it = ++line.split(atom_it, target_col);
+                    if (atom_it->length() > 1)
+                        atom_it = line.split(atom_it, 1_col);
+                    atom_it->face = merge_faces(atom_it->face, face);
+                    found = true;
+                    break;
                 }
+                target_col -= atom_len;
             }
-            if (not found)
-            {
-                ColumnCount last_buffer_col = context.window().position().column;
-                for (auto& atom : line)
-                {
-                    if (atom.has_buffer_range())
-                    {
-                        auto pos = atom.end();
-                        if (pos.column == 0)
-                            pos = {pos.line-1, buffer[pos.line-1].length()};
-                        if (pos != atom.begin())
-                            last_buffer_col = get_column(buffer, tabstop, pos);
-                    }
-                }
+            if (found)
+                continue;
 
-                ColumnCount count = column - last_buffer_col;
-                if (count >= 0)
-                {
-                    if (count > 0)
-                        line.push_back({String{' ',  count}});
-                    line.push_back({String{" "}, face});
-                }
-            }
+            if (target_col > 0)
+                line.push_back({String{' ', target_col}});
+            line.push_back({" ", face});
         }
     };
 
@@ -930,6 +908,7 @@ void show_whitespaces(const Context& context, HighlightPass, DisplayBuffer& disp
     const int tabstop = context.options()["tabstop"].get<int>();
     auto whitespaceface = get_face("Whitespace");
     auto& buffer = context.buffer();
+    auto win_column = context.window().position().column;
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -952,9 +931,10 @@ void show_whitespaces(const Context& context, HighlightPass, DisplayBuffer& disp
 
                     if (cp == '\t')
                     {
-                        int column = (int)get_column(buffer, tabstop, coord);
-                        int count = tabstop - (column % tabstop);
-                        atom_it->replace(tab + String(tabpad[(CharCount)0], CharCount{count-1}));
+                        const ColumnCount column = get_column(buffer, tabstop, coord);
+                        const ColumnCount count = tabstop - (column % tabstop) -
+                                                  std::max(win_column - column, 0_col);
+                        atom_it->replace(tab + String(tabpad[(CharCount)0], count - tab.column_length()));
                     }
                     else if (cp == ' ')
                         atom_it->replace(spc.str());
@@ -996,7 +976,7 @@ HighlighterAndId show_whitespaces_factory(HighlighterParameters params)
                           get_param("lf", "¬"),
                           get_param("nbsp", "⍽"));
 
-    return {"show_whitespaces", make_highlighter(std::move(func))};
+    return {"show_whitespaces", make_highlighter(std::move(func), HighlightPass::Move)};
 }
 
 struct LineNumbersHighlighter : Highlighter

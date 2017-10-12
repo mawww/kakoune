@@ -1,0 +1,5 @@
+add-highlighter number_lines
+set window tabstop 4
+add-highlighter column 3 default,red
+add-highlighter column 7 default,green
+add-highlighter column 5 default,blue

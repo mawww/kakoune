@@ -136,15 +136,18 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
             buffer()[buffer_line].length()
           : get_byte_to_column(buffer(), tabstop, {buffer_line, m_position.column + m_range.column});
 
+        // The display buffer always has at least one buffer atom, which might be empty if
+        // beg_byte == end_byte
         lines.emplace_back(AtomList{ {buffer(), {buffer_line, beg_byte}, {buffer_line, end_byte}} });
     }
 
     m_display_buffer.compute_range();
     BufferRange range{{0,0}, buffer().end_coord()};
     for (auto pass : { HighlightPass::Wrap, HighlightPass::Move, HighlightPass::Colorize })
+    {
         m_highlighters.highlight(context, pass, m_display_buffer, range);
-    for (auto pass : { HighlightPass::Wrap, HighlightPass::Move, HighlightPass::Colorize })
         m_builtin_highlighters.highlight(context, pass, m_display_buffer, range);
+    }
 
     m_display_buffer.optimize();
 

@@ -58,7 +58,7 @@ inline ColumnCount codepoint_width(Codepoint c) noexcept
     if (c == '\n')
         return 1;
     const auto width = wcwidth((wchar_t)c);
-    return width > 0 ? width : 0;
+    return width >= 0 ? width : 1;
 }
 
 enum class CharCategories
