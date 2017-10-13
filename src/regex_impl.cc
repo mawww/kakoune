@@ -135,7 +135,7 @@ private:
 
     AstNodePtr term()
     {
-        while (flag()) // read all flags
+        while (modifiers()) // read all modifiers
         {}
         if (auto node = assertion())
             return node;
@@ -158,7 +158,7 @@ private:
         return true;
     }
 
-    bool flag()
+    bool modifiers()
     {
         if (peek("(?i)"))
         {
