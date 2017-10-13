@@ -11,7 +11,7 @@ Regex Syntax
 Kakoune regex syntax is based on the ECMAScript syntax, as defined by the
 ECMA-262 standard.
 
-Kakoune's regex always run on unicode codepoint sequences, not on bytes.
+Kakoune's regex always run on Unicode codepoint sequences, not on bytes.
 
 Literals
 --------
@@ -26,7 +26,7 @@ Some additional literals are available as escape sequences:
 * `\n` matches the line feed character.
 * `\r` matches the carriage return character.
 * `\t` matches the tabulation character.
-* `\v` matches the the vertical tabulation character.
+* `\v` matches the vertical tabulation character.
 
 Character classes
 -----------------
@@ -58,18 +58,18 @@ The `-` characters in a character class that are not specifying a
 range are treated as literal `-`, so `[A-Z-+]` matches all upper case
 characters, the `-` character, and the `+` character.
 
-supported character class escapes are:
+Supported character class escapes are:
 
 * `\d` which matches all digits.
 * `\w` which matches all word characters.
 * `\s` which matches all whitespace characters.
 * `\h` which matches all horizontal whitespace characters.
 
-Using a upper case letter instead of a lower case one will negate
+Using an upper case letter instead of a lower case one will negate
 the character class, meaning for example that `\D` will match every
 non-digit character.
 
-character class escapes can be used outside of a character class, `\d`
+Character class escapes can be used outside of a character class, `\d`
 is equivalent to `[\d]`.
 
 Any character
@@ -81,7 +81,7 @@ Groups
 ------
 
 Regex atoms can be grouped using `(` and `)` or `(?:` and `)`. If `(` is
-used, the group will be a capturing group. which means the positions from
+used, the group will be a capturing group, which means the positions from
 the subject strings that matched between `(` and `)` will be recorded.
 
 Capture groups are numbered starting at 1 (0 is a special capture group
@@ -94,8 +94,8 @@ matches positions.
 Alternations
 ------------
 
-`|` introduces an alternation, which will either match its left hand side,
-or its right hand side (preferring the left hand side)
+`|` introduces an alternation, which will either match its left-hand side,
+or its right-hand side (preferring the left-hand side)
 
 For example, `foo|bar` matches either `foo` or `bar`, `foo(bar|baz|qux)`
 matches `foo` followed by either `bar`, `baz` or `qux`.
@@ -116,7 +116,7 @@ by a quantifier, which specifies the number of times they can match.
 
 By default, quantifiers are *greedy*, which means they will prefer to
 match more characters if possible. Suffixing a quantifier with `?` will
-make it non-greedy, meaning it will prefer to match less characters.
+make it non-greedy, meaning it will prefer to match fewer characters.
 
 Zero width assertions
 ---------------------
@@ -128,7 +128,7 @@ from matching if they are not fulfilled.
       character, or at the subject begin (except if specified that the
       subject begin is not a start of line).
 * `$` matches at the end of a line, that is just before a new line, or
-      at the subject end (except if specified that the subject end
+      at the subject end (except if specified that the subject's end
       is not an end of line).
 * `\b` matches at a word boundary, when one of the previous character
        and current character is a word character, and the other is not.
@@ -144,11 +144,11 @@ More complex assertions can be expressed with lookarounds:
 * `(?=...)` is a lookahead, it will match if its content matches the text
             following the current position
 * `(?!...)` is a negative lookahead, it will match if its content does
-            not matches the text following the current position
+            not match the text following the current position
 * `(?<=...)` is a lookbehind, it will match if its content matches
              the text preceding the current position
 * `(?<!...)` is a negative lookbehind, it will match if its content does
-            not matches the text preceding the current position
+             not match the text preceding the current position
 
 For performance reasons lookaround contents cannot be an arbitrary
 regular expression, it must be sequence of literals, character classes
@@ -161,11 +161,11 @@ preceded by `bar` and where `foo` matches from the current position
 Modifiers
 ---------
 
-Some modifiers can control the matching behaviour of the atoms following
+Some modifiers can control the matching behavior of the atoms following
 them:
 
-* `(?i)` will enable case insensitive matching.
-* `(?I)` will disable case insensitive matching.
+* `(?i)` enables case-insensitive matching
+* `(?I)` disables case-insensitive matching
 
 Quoting
 -------
