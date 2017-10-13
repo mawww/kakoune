@@ -185,7 +185,11 @@ public:
 private:
     struct Saves
     {
-        int refcount;
+        union // ref count when in use, next_free when in free list
+        {
+            int refcount;
+            Saves* next_free;
+        };
         Iterator pos[1];
     };
 
@@ -194,10 +198,10 @@ private:
     {
         kak_assert(not copy or pos != nullptr);
         const auto count = m_program.save_count;
-        if (not m_free_saves.empty())
+        if (m_first_free != nullptr)
         {
-            Saves* res = m_free_saves.back();
-            m_free_saves.pop_back();
+            Saves* res = m_first_free;
+            m_first_free = res->next_free;
             res->refcount = 1;
             if (copy)
                 std::copy(pos, pos + count, res->pos);
@@ -208,7 +212,7 @@ private:
         }
 
         void* ptr = ::operator new (sizeof(Saves) + (count-1) * sizeof(Iterator));
-        Saves* saves = new (ptr) Saves{1, {copy ? pos[0] : Iterator{}}};
+        Saves* saves = new (ptr) Saves{{1}, {copy ? pos[0] : Iterator{}}};
         for (size_t i = 1; i < count; ++i)
             new (&saves->pos[i]) Iterator{copy ? pos[i] : Iterator{}};
         m_saves.push_back(saves);
@@ -218,7 +222,10 @@ private:
     void release_saves(Saves* saves)
     {
         if (saves and --saves->refcount == 0)
-            m_free_saves.push_back(saves);
+        {
+            saves->next_free = m_first_free;
+            m_first_free = saves;
+        }
     };
 
     struct Thread
@@ -479,7 +486,7 @@ private:
     RegexExecFlags m_flags;
 
     Vector<Saves*> m_saves;
-    Vector<Saves*> m_free_saves;
+    Saves* m_first_free = nullptr;
 
     Saves* m_captures = nullptr;
 };
