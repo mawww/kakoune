@@ -1,0 +1,178 @@
+kakoune(k)
+==========
+
+NAME
+----
+regex - a
+
+Regex Syntax
+------------
+
+Kakoune regex syntax is based on the ECMAScript syntax, as defined by the
+ECMA-262 standard.
+
+Kakoune's regex always run on unicode codepoint sequences, not on bytes.
+
+Literals
+--------
+
+Every character except the syntax characters `\^$.*+?[]{}|().` match
+themselves, syntax characters can be escaped with a backspace so `\$` will
+match a literal `$` and `\\` will match a literal `\`.
+
+Some additional literals are available as escape sequences:
+
+* `\f` matches the form feed character.
+* `\n` matches the line feed character.
+* `\r` matches the carriage return character.
+* `\t` matches the tabulation character.
+* `\v` matches the the vertical tabulation character.
+
+Character classes
+-----------------
+
+The `[` character introduces a character class, which can match multiple
+characters.
+
+A character class contains a list of literals, character ranges,
+and character class escapes surrounded by `[` and `]`.
+
+If the first character inside a character class is `^`, then the character
+class is negated, meaning that it matches every character not specified
+in the character class.
+
+Literals match themselves, including syntax characters, so `^`
+does not need to be escaped in a character class. `[*+]` matches both
+the `*` character and the `+` character. Literal escape sequences are
+supported, so `[\n\r]` matches both the line feed and carriage return
+characters.
+
+The `]` character needs to be escaped for it to match a literal `]`
+instead of closing the character class.
+
+Character ranges are written as `<start character>-<end character>`, so
+`[A-Z]` matches all upper case basic letters. `[A-Z0-9]` will match all
+upper cases basic letters and all basic digits.
+
+The `-` characters in a character class that are not specifying a
+range are treated as literal `-`, so `[A-Z-+]` matches all upper case
+characters, the `-` character, and the `+` character.
+
+supported character class escapes are:
+
+* `\d` which matches all digits.
+* `\w` which matches all word characters.
+* `\s` which matches all whitespace characters.
+* `\h` which matches all horizontal whitespace characters.
+
+Using a upper case letter instead of a lower case one will negate
+the character class, meaning for example that `\D` will match every
+non-digit character.
+
+character class escapes can be used outside of a character class, `\d`
+is equivalent to `[\d]`.
+
+Any character
+-------------
+
+`.` matches any character, including new lines.
+
+Groups
+------
+
+Regex atoms can be grouped using `(` and `)` or `(?:` and `)`. If `(` is
+used, the group will be a capturing group. which means the positions from
+the subject strings that matched between `(` and `)` will be recorded.
+
+Capture groups are numbered starting at 1 (0 is a special capture group
+for the whole sequence that matched), They are numbered in the order of
+appearance of their `(` in the regex.
+
+`(?:` introduces a non capturing group, which will not record the
+matches positions.
+
+Alternations
+------------
+
+`|` introduces an alternation, which will either match its left hand side,
+or its right hand side (preferring the left hand side)
+
+For example, `foo|bar` matches either `foo` or `bar`, `foo(bar|baz|qux)`
+matches `foo` followed by either `bar`, `baz` or `qux`.
+
+Quantifier
+----------
+
+Literals, Character classes, Any characters and groups can be followed
+by a quantifier, which specifies the number of times they can match.
+
+* `?` matches zero or one times.
+* `*` matches zero or more times.
+* `+` matches one or more times.
+* `{n}` matches exactly n times.
+* `{n,}` matches n or more times.
+* `{n,m}` matches n to m times.
+* `{,m}` matches zero to m times.
+
+By default, quantifiers are *greedy*, which means they will prefer to
+match more characters if possible. Suffixing a quantifier with `?` will
+make it non-greedy, meaning it will prefer to match less characters.
+
+Zero width assertions
+---------------------
+
+Assertions do not consume any character, but will prevent the regex
+from matching if they are not fulfilled.
+
+* `^` matches at the start of a line, that is just after a new line
+      character, or at the subject begin (except if specified that the
+      subject begin is not a start of line).
+* `$` matches at the end of a line, that is just before a new line, or
+      at the subject end (except if specified that the subject end
+      is not an end of line).
+* `\b` matches at a word boundary, when one of the previous character
+       and current character is a word character, and the other is not.
+* `\B` matches at a non word boundary, when both the previous character
+       and the current character are word, or are not.
+* `\A` matches at the subject string begin.
+* `\z` matches at the subject string end.
+* `\K` matches anything, and reset the start position of the matching
+       text to the current position.
+
+More complex assertions can be expressed with lookarounds:
+
+* `(?=...)` is a lookahead, it will match if its content matches the text
+            following the current position
+* `(?!...)` is a negative lookahead, it will match if its content does
+            not matches the text following the current position
+* `(?<=...)` is a lookbehind, it will match if its content matches
+             the text preceding the current position
+* `(?<!...)` is a negative lookbehind, it will match if its content does
+            not matches the text preceding the current position
+
+For performance reasons lookaround contents cannot be an arbitrary
+regular expression, it must be sequence of literals, character classes
+or any-character (`.`), and the use of quantifiers are not supported.
+
+For example, `(?<!bar)(?=foo).` will match any character which is not
+preceded by `bar` and where `foo` matches from the current position
+(which means the character has to be an `f`).
+
+Modifiers
+---------
+
+Some modifiers can control the matching behaviour of the atoms following
+them:
+
+* `(?i)` will enable case insensitive matching.
+* `(?I)` will disable case insensitive matching.
+
+Quoting
+-------
+
+`\Q` will start a quoted sequence, where every character is treated as
+a literal. That quoted sequence will continue until either the end of
+the regex, or the appearance of `\E`.
+
+For example `.\Q.^$\E$` will match any character followed by the literal
+string `.^$` followed by an end of line.
