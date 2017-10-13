@@ -135,6 +135,8 @@ private:
 
     AstNodePtr term()
     {
+        while (flag()) // read all flags
+        {}
         if (auto node = assertion())
             return node;
         if (auto node = atom())
@@ -143,6 +145,34 @@ private:
             return node;
         }
         return nullptr;
+    }
+
+    bool peek(StringView expected) const
+    {
+        auto it = m_pos;
+        for (Iterator expected_it{expected.begin(), expected}; expected_it != expected.end(); ++expected_it)
+        {
+            if (it == m_regex.end() or *it++ != *expected_it)
+                return false;
+        }
+        return true;
+    }
+
+    bool flag()
+    {
+        if (peek("(?i)"))
+        {
+            m_ignore_case = true;
+            m_pos += 4;
+            return true;
+        }
+        if (peek("(?I)"))
+        {
+            m_ignore_case = false;
+            m_pos += 4;
+            return true;
+        }
+        return false;
     }
 
     AstNodePtr assertion()
@@ -166,6 +196,34 @@ private:
                     case 'K': m_pos += 2; return new_node(ParsedRegex::ResetStart);
                 }
                 break;
+            case '(':
+            {
+                Optional<ParsedRegex::Op> lookaround_op;
+                constexpr struct { StringView prefix; ParsedRegex::Op op; } lookarounds[] = {
+                    { "(?=", ParsedRegex::LookAhead },
+                    { "(?!", ParsedRegex::NegativeLookAhead },
+                    { "(?<=", ParsedRegex::LookBehind },
+                    { "(?<!", ParsedRegex::NegativeLookBehind }
+                };
+                for (auto& lookaround : lookarounds)
+                {
+                    if (peek(lookaround.prefix))
+                    {
+                        lookaround_op = lookaround.op;
+                        m_pos += (int)lookaround.prefix.char_length();
+                        break;
+                    }
+                }
+                if (not lookaround_op)
+                        return nullptr;
+
+                AstNodePtr lookaround = alternative(*lookaround_op);
+                if (at_end() or *m_pos++ != ')')
+                    parse_error("unclosed parenthesis");
+
+                validate_lookaround(lookaround);
+                return lookaround;
+            }
         }
         return nullptr;
     }
@@ -181,59 +239,17 @@ private:
             case '.': ++m_pos; return new_node(ParsedRegex::AnyChar);
             case '(':
             {
-                auto advance = [&]() {
-                    if (++m_pos == m_regex.end())
-                        parse_error("unclosed parenthesis");
-                    return *m_pos;
-                };
-
-                AstNodePtr content;
-                if (advance() == '?')
-                {
-                    auto c = advance();
-                    if (c == ':')
-                    {
-                        ++m_pos;
-                        content = disjunction(-1);
-                    }
-                    else if (contains("=!<", c))
-                    {
-                        bool behind = false;
-                        if (c == '<')
-                        {
-                            advance();
-                            behind = true;
-                        }
-
-                        auto type = *m_pos++;
-                        if (type == '=')
-                            content = alternative(behind ? ParsedRegex::LookBehind
-                                                         : ParsedRegex::LookAhead);
-                        else if (type == '!')
-                            content = alternative(behind ? ParsedRegex::NegativeLookBehind
-                                                         : ParsedRegex::NegativeLookAhead);
-                        else
-                            parse_error("invalid disjunction");
-
-                         validate_lookaround(content);
-                    }
-                    else if (c == 'i' or c == 'I')
-                    {
-                        m_ignore_case = c == 'i';
-                        if (advance() != ')')
-                            parse_error("unclosed parenthesis");
-                        ++m_pos;
-                        return atom(); // get next atom
-                    }
-                    else
-                        parse_error("invalid disjunction");
-                }
-                else
-                    content = disjunction(m_parsed_regex.capture_count++);
-
-                if (at_end() or *m_pos != ')')
-                    parse_error("unclosed parenthesis");
                 ++m_pos;
+                bool capture = true;
+                if (peek("?:"))
+                {
+                    capture = false;
+                    m_pos += 2;
+                }
+
+                AstNodePtr content = disjunction(capture ? m_parsed_regex.capture_count++ : -1);
+                if (at_end() or *m_pos++ != ')')
+                    parse_error("unclosed parenthesis");
                 return content;
             }
             case '\\':
@@ -473,7 +489,7 @@ private:
     bool at_end() const { return m_pos == m_regex.end(); }
 
     [[gnu::noreturn]]
-    void parse_error(StringView error)
+    void parse_error(StringView error) const
     {
         throw regex_error(format("regex parse error: {} at '{}<<<HERE>>>{}'", error,
                                  StringView{m_regex.begin(), m_pos.base()},
