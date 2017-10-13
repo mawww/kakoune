@@ -770,7 +770,15 @@ private:
         {
             case ParsedRegex::Literal:
                 if (node->value < start_chars_count)
-                    accepted[node->value] = true;
+                {
+                    if (node->ignore_case)
+                    {
+                        accepted[to_lower(node->value)] = true;
+                        accepted[to_upper(node->value)] = true;
+                    }
+                    else
+                        accepted[node->value] = true;
+                }
                 return node->quantifier.allows_none();
             case ParsedRegex::AnyChar:
                 for (auto& b : accepted)
@@ -819,9 +827,13 @@ private:
                     auto& child = m_forward ? node->children.front() : node->children.back();
                     if (child->op == ParsedRegex::Literal and child->value < start_chars_count)
                     {
-                        // Any other char is rejected
-                        std::fill(rejected, rejected + child->value, true);
-                        std::fill(rejected + child->value + 1, rejected + start_chars_count, true);
+                        // Every other char is rejected
+                        for (Codepoint c = 0; c < start_chars_count; ++c)
+                        {
+                            if ((not child->ignore_case and c != child->value) or
+                                (c != to_lower(child->value) and c != to_upper(child->value)))
+                                rejected[c] = true;
+                        }
                     }
                 }
                 return true;
@@ -832,7 +844,15 @@ private:
                 {
                     auto& child = node->children.front();
                     if (child->op == ParsedRegex::Literal and child->value < start_chars_count)
-                        rejected[child->value] = true;
+                    {
+                        if (child->ignore_case)
+                        {
+                            rejected[to_lower(child->value)] = true;
+                            rejected[to_upper(child->value)] = true;
+                        }
+                        else
+                            rejected[child->value] = true;
+                    }
                 }
                 return true;
         }
@@ -1240,6 +1260,11 @@ auto test_regex = UnitTest{[]{
     {
         TestVM<> vm{R"((?=))"};
         kak_assert(vm.exec(""));
+    }
+
+    {
+        TestVM<> vm{R"((?i)FOO)"};
+        kak_assert(vm.exec("foo", RegexExecFlags::Search));
     }
 
     {
