@@ -25,7 +25,8 @@ def -hidden -params 1.. iterm-new-split-impl %{
         -e "    tell current session of current window"               \
         -e "        tell (split ${direction} with same profile)"      \
         -e "            select"                                       \
-        -e "            write text \"TMPDIR='${TMPDIR}' ${sh_cmd}\"" \
+        -e "            write text \"export TMPDIR='${TMPDIR}'\""     \
+        -e "            write text \"exec ${sh_cmd}\""                \
         -e "        end tell"                                         \
         -e "    end tell"                                             \
         -e "end tell"
@@ -51,7 +52,8 @@ All optional arguments are forwarded to the new kak client} \
         -e "tell application \"iTerm\""                                        \
         -e "    tell current window"                                           \
         -e "        tell current session of (create tab with default profile)" \
-        -e "            write text \"TMPDIR='${TMPDIR}' ${sh_cmd}\""          \
+        -e "            write text \"export TMPDIR='${TMPDIR}'\""              \
+        -e "            write text \"exec ${sh_cmd}\""                         \
         -e "        end tell"                                                  \
         -e "    end tell"                                                      \
         -e "end tell"
@@ -69,7 +71,8 @@ All optional arguments are forwarded to the new kak client} \
         -e "tell application \"iTerm\""                           \
         -e "    set w to (create window with default profile)"    \
         -e "    tell current session of w"                        \
-        -e "        write text \"TMPDIR='${TMPDIR}' ${sh_cmd}\"" \
+        -e "        write text \"export TMPDIR='${TMPDIR}'\""     \
+        -e "        write text \"exec ${sh_cmd}\""                \
         -e "    end tell"                                         \
         -e "end tell"
     }
