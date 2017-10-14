@@ -55,8 +55,8 @@ struct CompiledRegex : RefCountable
     struct Instruction
     {
         Op op;
-        mutable bool processed;
         mutable bool scheduled;
+        mutable uint16_t last_step;
         uint32_t param;
     };
     static_assert(sizeof(Instruction) == 8, "");
@@ -242,7 +242,7 @@ private:
     {
         Vector<Thread> current_threads;
         Vector<Thread> next_threads;
-        Vector<uint16_t> processed;
+        uint16_t step = -1;
     };
 
     enum class StepResult { Consumed, Matched, Failed };
@@ -252,11 +252,10 @@ private:
     {
         while (true)
         {
-            auto& inst = m_program.instructions[thread.inst];
-            if (inst.processed)
+            auto& inst = m_program.instructions[thread.inst++];
+            if (inst.last_step == state.step)
                 return StepResult::Failed;
-            inst.processed = true;
-            state.processed.push_back(thread.inst++);
+            inst.last_step = state.step;
 
             switch (inst.op)
             {
@@ -368,6 +367,14 @@ private:
         bool found_match = false;
         while (true) // Iterate on all codepoints and once at the end
         {
+            if (++state.step == 0)
+            {
+                // We wrapped, avoid potential collision on inst.last_step by resetting them
+                for (auto& inst : m_program.instructions)
+                    inst.last_step = 0;
+                state.step = 1; // step 0 is never valid
+            }
+
             while (not state.current_threads.empty())
             {
                 auto thread = state.current_threads.back();
@@ -403,9 +410,6 @@ private:
             }
             for (auto& thread : state.next_threads)
                 m_program.instructions[thread.inst].scheduled = false;
-            for (auto inst : state.processed)
-                m_program.instructions[inst].processed = false;
-            state.processed.clear();
 
             if (pos == m_end or state.next_threads.empty() or
                 (found_match and (m_flags & RegexExecFlags::AnyMatch)))
