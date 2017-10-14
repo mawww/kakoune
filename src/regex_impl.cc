@@ -9,6 +9,8 @@
 #include "string_utils.hh"
 #include "vector.hh"
 
+#include <cstring> 
+
 namespace Kakoune
 {
 
@@ -763,8 +765,7 @@ private:
     // returns true if the node did not consume the char, hence a following node in
     // sequence would be still relevant for the parent node start chars computation.
     bool compute_start_chars(const ParsedRegex::AstNodePtr& node,
-                             bool (&accepted)[start_chars_count],
-                             bool (&rejected)[start_chars_count]) const
+                             bool (&accepted)[start_chars_count]) const
     {
         switch (node->op)
         {
@@ -785,14 +786,15 @@ private:
                     b = true;
                 return node->quantifier.allows_none();
             case ParsedRegex::Matcher:
-                for (auto& b : accepted) // treat matcher as everything can match for now
-                    b = true;
+                for (Codepoint c = 0; c < start_chars_count; ++c)
+                    if (m_program.matchers[node->value](c))
+                        accepted[c] = true;
                 return node->quantifier.allows_none();
             case ParsedRegex::Sequence:
             {
                 bool consumed = false;
                 auto consumes = [&, this](auto& child) {
-                    return not this->compute_start_chars(child, accepted, rejected);
+                    return not this->compute_start_chars(child, accepted);
                 };
                 if (m_forward)
                     consumed = contains_that(node->children, consumes);
@@ -806,7 +808,7 @@ private:
                 bool all_consumed = not node->quantifier.allows_none();
                 for (auto& child : node->children)
                 {
-                    if (compute_start_chars(child, accepted, rejected))
+                    if (compute_start_chars(child, accepted))
                         all_consumed = false;
                 }
                 return not all_consumed;
@@ -818,42 +820,10 @@ private:
             case ParsedRegex::SubjectBegin:
             case ParsedRegex::SubjectEnd:
             case ParsedRegex::ResetStart:
-                return true;
             case ParsedRegex::LookAhead:
             case ParsedRegex::LookBehind:
-                if (not node->children.empty() and
-                    m_forward == (node->op == ParsedRegex::LookAhead))
-                {
-                    auto& child = m_forward ? node->children.front() : node->children.back();
-                    if (child->op == ParsedRegex::Literal and child->value < start_chars_count)
-                    {
-                        // Every other char is rejected
-                        for (Codepoint c = 0; c < start_chars_count; ++c)
-                        {
-                            if ((not child->ignore_case and c != child->value) or
-                                (c != to_lower(child->value) and c != to_upper(child->value)))
-                                rejected[c] = true;
-                        }
-                    }
-                }
-                return true;
             case ParsedRegex::NegativeLookAhead:
             case ParsedRegex::NegativeLookBehind:
-                if (node->children.size() == 1 and
-                    m_forward == (node->op == ParsedRegex::NegativeLookAhead))
-                {
-                    auto& child = node->children.front();
-                    if (child->op == ParsedRegex::Literal and child->value < start_chars_count)
-                    {
-                        if (child->ignore_case)
-                        {
-                            rejected[to_lower(child->value)] = true;
-                            rejected[to_upper(child->value)] = true;
-                        }
-                        else
-                            rejected[child->value] = true;
-                    }
-                }
                 return true;
         }
         return false;
@@ -863,17 +833,14 @@ private:
     std::unique_ptr<CompiledRegex::StartChars> compute_start_chars() const
     {
         bool accepted[start_chars_count] = {};
-        bool rejected[start_chars_count] = {};
-        if (compute_start_chars(m_parsed_regex.ast, accepted, rejected))
+        if (compute_start_chars(m_parsed_regex.ast, accepted))
             return nullptr;
 
-        if (not contains(accepted, false) and not contains(rejected, true))
+        if (not contains(accepted, false))
             return nullptr;
 
         auto start_chars = std::make_unique<CompiledRegex::StartChars>();
-        for (int i = 0; i < start_chars_count; ++i)
-            start_chars->map[i] = accepted[i] and not rejected[i];
-
+        memcpy(start_chars->map, accepted, sizeof(bool[start_chars_count]));
         return start_chars;
     }
 
