@@ -315,13 +315,38 @@ private:
         parse_error(format("unknown atom escape '{}'", cp));
     }
 
+    struct CharRange { Codepoint min, max; };
+
+    void normalize_ranges(Vector<CharRange>& ranges)
+    {
+        if (ranges.empty())
+            return;
+
+        // Sort ranges so that we can use binary search
+        std::sort(ranges.begin(), ranges.end(),
+                  [](auto& lhs, auto& rhs) { return lhs.min < rhs.min; });
+
+        // merge overlapping ranges 
+        auto pos = ranges.begin();
+        for (auto next = pos+1; next != ranges.end(); ++next)
+        {
+            if (pos->max + 1 >= next->min)
+            {
+                if (next->max > pos->max)
+                    pos->max = next->max;
+            }
+            else
+                *++pos = *next;
+        }
+        ranges.erase(pos+1, ranges.end());
+    }
+
     AstNodePtr character_class()
     {
         const bool negative = m_pos != m_regex.end() and *m_pos == '^';
         if (negative)
             ++m_pos;
 
-        struct CharRange { Codepoint min, max; };
         Vector<CharRange> ranges;
         Vector<Codepoint> excluded;
         Vector<std::pair<wctype_t, bool>> ctypes;
@@ -404,6 +429,8 @@ private:
                 cp = to_lower(cp);
         }
 
+        normalize_ranges(ranges);
+
         // Optimize the relatively common case of using a character class to
         // escape a character, such as [*]
         if (ctypes.empty() and excluded.empty() and not negative and
@@ -417,9 +444,12 @@ private:
             if (ignore_case)
                 cp = to_lower(cp);
 
-            auto found = contains_that(ranges, [cp](auto& r) {
-                return r.min <= cp and cp <= r.max;
-            }) or contains_that(ctypes, [cp](auto& c) {
+            auto it = std::lower_bound(ranges.begin(), ranges.end(), cp,
+                                       [](auto& range, Codepoint cp)
+                                       { return range.max < cp; });
+
+            auto found = (it != ranges.end() and it->min <= cp) or
+            contains_that(ctypes, [cp](auto& c) {
                 return (bool)iswctype(cp, c.first) == c.second;
             }) or (not excluded.empty() and not contains(excluded, cp));
             return negative ? not found : found;
@@ -1238,6 +1268,11 @@ auto test_regex = UnitTest{[]{
         TestVM<> vm{R"((?i)(?=Foo))"};
         kak_assert(vm.exec("fOO", RegexExecFlags::Search));
         kak_assert(*vm.captures()[0] == 'f');
+    }
+
+    {
+        TestVM<> vm{R"([d-ea-dcf-k]+)"};
+        kak_assert(vm.exec("abcde"));
     }
 }};
 
