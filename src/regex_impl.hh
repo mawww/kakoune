@@ -23,7 +23,7 @@ enum class MatchDirection
     Backward
 };
 
-struct CompiledRegex : RefCountable
+struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
 {
     enum Op : char
     {
@@ -63,9 +63,9 @@ struct CompiledRegex : RefCountable
 
     explicit operator bool() const { return not instructions.empty(); }
 
-    Vector<Instruction> instructions;
-    Vector<std::function<bool (Codepoint)>> matchers;
-    Vector<Codepoint> lookarounds;
+    Vector<Instruction, MemoryDomain::Regex> instructions;
+    Vector<std::function<bool (Codepoint)>, MemoryDomain::Regex> matchers;
+    Vector<Codepoint, MemoryDomain::Regex> lookarounds;
     MatchDirection direction;
     size_t save_count;
 
@@ -124,7 +124,7 @@ public:
             for (size_t i = m_program.save_count-1; i > 0; --i)
                 saves->pos[i].~Iterator();
             saves->~Saves();
-            ::operator delete(saves);
+            operator delete(saves);
         }
     }
 
@@ -211,7 +211,7 @@ private:
             return res;
         }
 
-        void* ptr = ::operator new (sizeof(Saves) + (count-1) * sizeof(Iterator));
+        void* ptr = operator new (sizeof(Saves) + (count-1) * sizeof(Iterator));
         Saves* saves = new (ptr) Saves{{1}, {copy ? pos[0] : Iterator{}}};
         for (size_t i = 1; i < count; ++i)
             new (&saves->pos[i]) Iterator{copy ? pos[i] : Iterator{}};
@@ -240,8 +240,8 @@ private:
 
     struct ExecState
     {
-        Vector<Thread> current_threads;
-        Vector<Thread> next_threads;
+        Vector<Thread, MemoryDomain::Regex> current_threads;
+        Vector<Thread, MemoryDomain::Regex> next_threads;
         uint16_t step = -1;
     };
 
@@ -489,7 +489,7 @@ private:
     Utf8It m_end;
     RegexExecFlags m_flags;
 
-    Vector<Saves*> m_saves;
+    Vector<Saves*, MemoryDomain::Regex> m_saves;
     Saves* m_first_free = nullptr;
 
     Saves* m_captures = nullptr;

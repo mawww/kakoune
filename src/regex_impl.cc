@@ -74,12 +74,12 @@ struct ParsedRegex
         bool ignore_case;
         Codepoint value;
         Quantifier quantifier;
-        Vector<AstNodePtr> children;
+        Vector<AstNodePtr, MemoryDomain::Regex> children;
     };
 
     AstNodePtr ast;
     size_t capture_count;
-    Vector<std::function<bool (Codepoint)>> matchers;
+    Vector<std::function<bool (Codepoint)>, MemoryDomain::Regex> matchers;
 };
 
 // Recursive descent parser based on naming used in the ECMAScript
@@ -317,7 +317,7 @@ private:
 
     struct CharRange { Codepoint min, max; };
 
-    void normalize_ranges(Vector<CharRange>& ranges)
+    void normalize_ranges(Vector<CharRange, MemoryDomain::Regex>& ranges)
     {
         if (ranges.empty())
             return;
@@ -347,9 +347,9 @@ private:
         if (negative)
             ++m_pos;
 
-        Vector<CharRange> ranges;
-        Vector<Codepoint> excluded;
-        Vector<std::pair<wctype_t, bool>> ctypes;
+        Vector<CharRange, MemoryDomain::Regex> ranges;
+        Vector<Codepoint, MemoryDomain::Regex> excluded;
+        Vector<std::pair<wctype_t, bool>, MemoryDomain::Regex> ctypes;
         while (m_pos != m_regex.end() and *m_pos != ']')
         {
             auto cp = *m_pos++;
@@ -761,7 +761,7 @@ private:
         return res;
     }
 
-    uint32_t push_lookaround(const Vector<ParsedRegex::AstNodePtr>& characters,
+    uint32_t push_lookaround(ArrayView<const ParsedRegex::AstNodePtr> characters,
                              bool reversed, bool ignore_case)
     {
         uint32_t res = m_program.lookarounds.size();
