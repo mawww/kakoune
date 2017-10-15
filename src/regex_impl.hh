@@ -55,6 +55,7 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     struct Instruction
     {
         Op op;
+        // Those mutables are used during execution
         mutable bool scheduled;
         mutable uint16_t last_step;
         uint32_t param;
