@@ -1265,6 +1265,12 @@ auto test_regex = UnitTest{[]{
     }
 
     {
+        TestVM<> vm{R"(.?(?=foo))"};
+        kak_assert(vm.exec("afoo", RegexExecFlags::Search));
+        kak_assert(*vm.captures()[0] == 'a');
+    }
+
+    {
         TestVM<> vm{R"((?i)(?=Foo))"};
         kak_assert(vm.exec("fOO", RegexExecFlags::Search));
         kak_assert(*vm.captures()[0] == 'f');
