@@ -90,10 +90,13 @@ def -hidden modeline-parse-impl %{
 
 # Add the following function to a hook on BufOpenFile to automatically parse modelines
 # Select the first and last `modelines` lines in the buffer, only keep modelines
+# ref. options.txt (in vim `:help options`) : 2 forms of modelines: 
+#   [text]{white}{vi:|vim:|ex:}[white]{options}
+#   [text]{white}{vi:|vim:|Vim:|ex:}[white]se[t] {options}:[text]
 def modeline-parse -docstring "Read and interpret vi-format modelines at the beginning/end of the buffer" %{
     try %{ eval -draft %{
         exec \%s\`|.\'<ret> %opt{modelines}k <a-x> %opt{modelines}X \
-             s^[^\s]+?\s(vim?|kak(oune)?):\s?[^\n]+<ret> <a-x>
+             s^[^\s]*?\s(vim?|kak(oune)?):\s?[^\n]+<ret> <a-x>
         eval -draft -itersel modeline-parse-impl
     } }
 }
