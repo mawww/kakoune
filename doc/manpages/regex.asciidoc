@@ -151,9 +151,9 @@ More complex assertions can be expressed with lookarounds:
 * `(?<!...)` is a negative lookbehind, it will match if its content does
              not match the text preceding the current position
 
-For performance reasons lookaround contents cannot be an arbitrary
-regular expression, it must be sequence of literals, character classes
-or any-character (`.`), and the use of quantifiers are not supported.
+For performance reasons lookaround contents must be sequence of literals,
+character classes or any-character (`.`); The use of quantifiers
+are not supported.
 
 For example, `(?<!bar)(?=foo).` will match any character which is not
 preceded by `bar` and where `foo` matches from the current position
