@@ -31,8 +31,8 @@ Some additional literals are available as escape sequences:
 Character classes
 -----------------
 
-The `[` character introduces a character class, which can match multiple
-characters.
+The `[` character introduces a character class, matching one character
+from a set of characters.
 
 A character class contains a list of literals, character ranges,
 and character class escapes surrounded by `[` and `]`.
@@ -84,12 +84,12 @@ Regex atoms can be grouped using `(` and `)` or `(?:` and `)`. If `(` is
 used, the group will be a capturing group, which means the positions from
 the subject strings that matched between `(` and `)` will be recorded.
 
-Capture groups are numbered starting at 1 (0 is a special capture group
-for the whole sequence that matched), They are numbered in the order of
-appearance of their `(` in the regex.
+Capture groups are numbered starting at 1. They are numbered in the order of
+appearance of their `(` in the regex. A special capture group 0 is
+for the whole sequence that matched.
 
 `(?:` introduces a non capturing group, which will not record the
-matches positions.
+matching positions.
 
 Alternations
 ------------
@@ -116,7 +116,8 @@ by a quantifier, which specifies the number of times they can match.
 
 By default, quantifiers are *greedy*, which means they will prefer to
 match more characters if possible. Suffixing a quantifier with `?` will
-make it non-greedy, meaning it will prefer to match fewer characters.
+make it non-greedy, meaning it will prefer to match as few characters
+as possible.
 
 Zero width assertions
 ---------------------
@@ -136,8 +137,8 @@ from matching if they are not fulfilled.
        and the current character are word, or are not.
 * `\A` matches at the subject string begin.
 * `\z` matches at the subject string end.
-* `\K` matches anything, and reset the start position of the matching
-       text to the current position.
+* `\K` matches anything, and resets the start position of the capture
+       group 0 to the current position.
 
 More complex assertions can be expressed with lookarounds:
 
