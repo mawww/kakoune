@@ -579,9 +579,6 @@ struct RegexCompiler
     {
         compile_node(m_parsed_regex.ast);
         push_inst(CompiledRegex::Match);
-        constexpr auto max_instructions = std::numeric_limits<uint16_t>::max();
-        if (m_program.instructions.size() >= max_instructions)
-            throw regex_error(format("regex compiled to more than {} instructions", max_instructions));
         m_program.matchers = m_parsed_regex.matchers;
         m_program.save_count = m_parsed_regex.capture_count * 2;
         m_program.direction = direction;
@@ -756,7 +753,10 @@ private:
 
     uint32_t push_inst(CompiledRegex::Op op, uint32_t param = 0)
     {
+        constexpr auto max_instructions = std::numeric_limits<uint16_t>::max();
         uint32_t res = m_program.instructions.size();
+        if (res > max_instructions)
+            throw regex_error(format("regex compiled to more than {} instructions", max_instructions));
         m_program.instructions.push_back({ op, false, 0, param });
         return res;
     }
