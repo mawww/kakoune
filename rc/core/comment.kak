@@ -11,7 +11,7 @@ hook global BufSetOption filetype=asciidoc %{
     set-option buffer comment_block '///:///'
 }
 
-hook global BufSetOption filetype=(c|cpp|go|java|javascript|objc|php|sass|scala|scss|swift) %{
+hook global BufSetOption filetype=(c|cpp|go|java|javascript|objc|php|rust|sass|scala|scss|swift) %{
     set-option buffer comment_line '//'
     set-option buffer comment_block '/*:*/'
 }
@@ -76,8 +76,8 @@ hook global BufSetOption filetype=perl %{
     set-option buffer comment_block '#[:]'
 }
 
-hook global BufSetOption filetype=(pug|rust) %{
-    set-option buffer comment_line '//'
+hook global BufSetOption filetype=pug %{
+    set buffer comment_line '//'
 }
 
 hook global BufSetOption filetype=python %{
