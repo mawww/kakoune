@@ -1943,7 +1943,7 @@ void force_redraw(Context& context, NormalParams)
     }
 }
 
-const HashMap<Key, NormalCmd> keymap{
+static const HashMap<Key, NormalCmd> keymap{
     { {'h'}, {"move left", move<CharCount, Backward>} },
     { {'j'}, {"move down", move<LineCount, Forward>} },
     { {'k'}, {"move up",  move<LineCount, Backward>} },
@@ -2130,5 +2130,13 @@ const HashMap<Key, NormalCmd> keymap{
 
     { {ctrl('l')}, {"force redraw", force_redraw} },
 };
+
+Optional<NormalCmd> get_normal_command(Key key)
+{
+    auto it = keymap.find(key);
+    if (it != keymap.end())
+        return it->value;
+    return {};
+}
 
 }

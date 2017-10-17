@@ -1,7 +1,7 @@
 #ifndef normal_hh_INCLUDED
 #define normal_hh_INCLUDED
 
-#include "hash_map.hh"
+#include "optional.hh"
 #include "keys.hh"
 #include "string.hh"
 
@@ -22,7 +22,7 @@ struct NormalCmd
     void (*func)(Context& context, NormalParams params);
 };
 
-extern const HashMap<Key, NormalCmd> keymap;
+Optional<NormalCmd> get_normal_command(Key key);
 
 }
 
