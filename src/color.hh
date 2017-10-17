@@ -55,7 +55,7 @@ void option_from_string(StringView str, Color& color);
 
 bool is_color_name(StringView color);
 
-inline size_t hash_value(const Color& val)
+constexpr size_t hash_value(const Color& val)
 {
     return val.color == Color::RGB ?
         hash_values(val.color, val.r, val.g, val.b)

@@ -81,7 +81,7 @@ struct LineAndColumn
         return line != other.line or column != other.column;
     }
 
-    friend size_t hash_value(const EffectiveType& val)
+    friend constexpr size_t hash_value(const EffectiveType& val)
     {
         return hash_values(val.line, val.column);
     }
@@ -116,7 +116,7 @@ struct BufferCoordAndTarget : BufferCoord
     ColumnCount target;
 };
 
-inline size_t hash_value(const BufferCoordAndTarget& val)
+constexpr size_t hash_value(const BufferCoordAndTarget& val)
 {
     return hash_values(val.line, val.column, val.target);
 }

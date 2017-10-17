@@ -19,7 +19,7 @@ class StringOps
 public:
     using value_type = CharType;
 
-    friend inline size_t hash_value(const Type& str)
+    friend constexpr size_t hash_value(const Type& str)
     {
         return hash_data(str.data(), (int)str.length());
     }

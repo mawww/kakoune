@@ -112,7 +112,7 @@ constexpr Codepoint encode_coord(DisplayCoord coord) { return (Codepoint)(((int)
 
 constexpr Key resize(DisplayCoord dim) { return { Key::Modifiers::Resize, encode_coord(dim) }; }
 
-inline size_t hash_value(const Key& key) { return hash_values(key.modifiers, key.key); }
+constexpr size_t hash_value(const Key& key) { return hash_values(key.modifiers, key.key); }
 
 }
 
