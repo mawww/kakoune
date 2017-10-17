@@ -2105,6 +2105,20 @@ const CommandDesc rename_session_cmd = {
     }
 };
 
+const CommandDesc fail_cmd = {
+    "fail",
+    nullptr,
+    "fail [<message>]: raise an error with the given message",
+    ParameterDesc{},
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context&, const ShellContext&)
+    {
+        throw runtime_error(fix_atom_text(join(parser, ' ', false)));
+    }
+};
+
 }
 
 void register_commands()
@@ -2166,6 +2180,7 @@ void register_commands()
     register_command(select_cmd);
     register_command(change_directory_cmd);
     register_command(rename_session_cmd);
+    register_command(fail_cmd);
 }
 
 }

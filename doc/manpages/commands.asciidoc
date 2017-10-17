@@ -96,6 +96,9 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 *nop*::
 	does nothing, but arguments will be evaluated (e.g. shell expansion)
 
+*fail* <text>::
+	raise an error, uses <text> as its description
+
 *declare-option* [-hidden] <type> <name> [<value>]::
 	*alias* decl +
 	declare a new option, the -hidden hides the option in completion

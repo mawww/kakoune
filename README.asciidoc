@@ -725,6 +725,7 @@ command `q!` has to be used).
      `:%sh{ echo echo tchou }` will echo tchou in Kakoune, whereas
      `:nop %sh{ echo echo tchou }` will not, but both will execute the
      shell command.
+ * `fail <text>`: raise an error, uses <text> as its description
 
 Multiple commands
 ~~~~~~~~~~~~~~~~~
