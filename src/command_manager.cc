@@ -473,36 +473,37 @@ void CommandManager::execute(StringView command_line,
     TokenList tokens = parse<true>(command_line);
     if (tokens.empty())
         return;
+    // Tokens are going to be read as a stack
+    std::reverse(tokens.begin(), tokens.end());
 
     DisplayCoord command_coord;
     Vector<String> params;
-    for (auto it = tokens.begin(); it != tokens.end(); )
+    while (not tokens.empty())
     {
+        Token token = std::move(tokens.back());
+        tokens.pop_back();
         if (params.empty())
-            command_coord = it->coord;
+            command_coord = token.coord;
 
-        if (it->type == Token::Type::CommandSeparator)
+        if (token.type == Token::Type::CommandSeparator)
         {
             execute_single_command(params, context, shell_context, command_coord);
             params.clear();
         }
         // Shell expand are retokenized
-        else if (it->type == Token::Type::ShellExpand)
+        else if (token.type == Token::Type::ShellExpand)
         {
-            auto new_tokens = parse<true>(expand_token(*it, context,
+            auto new_tokens = parse<true>(expand_token(token, context,
                                                        shell_context));
-            it = tokens.insert(tokens.erase(it),
-                               std::make_move_iterator(new_tokens.begin()),
-                               std::make_move_iterator(new_tokens.end()));
-            continue; // skip incrementing, we already point to next token
+            tokens.insert(tokens.end(),
+                          std::make_move_iterator(new_tokens.rbegin()),
+                          std::make_move_iterator(new_tokens.rend()));
         }
-        else if (it->type == Token::Type::ArgExpand and it->content == '@')
+        else if (token.type == Token::Type::ArgExpand and token.content == '@')
             params.insert(params.end(), shell_context.params.begin(),
                           shell_context.params.end());
         else
-            params.push_back(expand_token(*it, context, shell_context));
-
-        ++it;
+            params.push_back(expand_token(token, context, shell_context));
     }
     execute_single_command(params, context, shell_context, command_coord);
 }
