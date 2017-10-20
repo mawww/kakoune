@@ -73,6 +73,7 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     struct StartChars
     {
         static constexpr size_t count = 256;
+        bool accept_other;
         bool map[count];
     };
     std::unique_ptr<StartChars> start_chars;
@@ -152,7 +153,7 @@ public:
         const bool no_saves = (flags & RegexExecFlags::NoSaves);
         Utf8It start{m_begin};
 
-        const bool* start_chars = m_program.start_chars ? m_program.start_chars->map : nullptr;
+        const CompiledRegex::StartChars* start_chars = m_program.start_chars.get();
         if (flags & RegexExecFlags::Search)
             to_next_start(start, m_end, start_chars);
 
@@ -422,13 +423,15 @@ private:
         }
     }
 
-    void to_next_start(Utf8It& start, const Utf8It& end, const bool* start_chars)
+    void to_next_start(Utf8It& start, const Utf8It& end,
+                       const CompiledRegex::StartChars* start_chars)
     {
         if (not start_chars)
             return;
 
-        while (start != end and *start >= 0 and *start < 256 and
-               not start_chars[*start])
+        while (start != end and *start >= 0 and
+               ((*start < 256 and not start_chars->map[*start]) or
+                (*start >= 256 and not start_chars->accept_other)))
             ++start;
     }
 

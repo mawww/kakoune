@@ -795,7 +795,7 @@ private:
     // returns true if the node did not consume the char, hence a following node in
     // sequence would be still relevant for the parent node start chars computation.
     bool compute_start_chars(const ParsedRegex::AstNodePtr& node,
-                             bool (&accepted)[start_chars_count]) const
+                             CompiledRegex::StartChars& start_chars) const
     {
         switch (node->op)
         {
@@ -804,27 +804,29 @@ private:
                 {
                     if (node->ignore_case)
                     {
-                        accepted[to_lower(node->value)] = true;
-                        accepted[to_upper(node->value)] = true;
+                        start_chars.map[to_lower(node->value)] = true;
+                        start_chars.map[to_upper(node->value)] = true;
                     }
                     else
-                        accepted[node->value] = true;
+                        start_chars.map[node->value] = true;
                 }
                 return node->quantifier.allows_none();
             case ParsedRegex::AnyChar:
-                for (auto& b : accepted)
+                for (auto& b : start_chars.map)
                     b = true;
+                start_chars.accept_other = true;
                 return node->quantifier.allows_none();
             case ParsedRegex::Matcher:
                 for (Codepoint c = 0; c < start_chars_count; ++c)
                     if (m_program.matchers[node->value](c))
-                        accepted[c] = true;
+                        start_chars.map[c] = true;
+                start_chars.accept_other = true; // stay safe
                 return node->quantifier.allows_none();
             case ParsedRegex::Sequence:
             {
                 bool consumed = false;
                 auto consumes = [&, this](auto& child) {
-                    return not this->compute_start_chars(child, accepted);
+                    return not this->compute_start_chars(child, start_chars);
                 };
                 if (m_forward)
                     consumed = contains_that(node->children, consumes);
@@ -838,7 +840,7 @@ private:
                 bool all_consumed = not node->quantifier.allows_none();
                 for (auto& child : node->children)
                 {
-                    if (compute_start_chars(child, accepted))
+                    if (compute_start_chars(child, start_chars))
                         all_consumed = false;
                 }
                 return not all_consumed;
@@ -862,16 +864,14 @@ private:
     [[gnu::noinline]]
     std::unique_ptr<CompiledRegex::StartChars> compute_start_chars() const
     {
-        bool accepted[start_chars_count] = {};
-        if (compute_start_chars(m_parsed_regex.ast, accepted))
+        CompiledRegex::StartChars start_chars{};
+        if (compute_start_chars(m_parsed_regex.ast, start_chars))
             return nullptr;
 
-        if (not contains(accepted, false))
+        if (not contains(start_chars.map, false))
             return nullptr;
 
-        auto start_chars = std::make_unique<CompiledRegex::StartChars>();
-        memcpy(start_chars->map, accepted, sizeof(bool[start_chars_count]));
-        return start_chars;
+        return std::make_unique<CompiledRegex::StartChars>(start_chars);
     }
 
     CompiledRegex m_program;
