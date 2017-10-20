@@ -858,6 +858,8 @@ private:
                     else
                         start_chars.map[node->value] = true;
                 }
+                else
+                    start_chars.accept_other = true;
                 return node->quantifier.allows_none();
             case ParsedRegex::AnyChar:
                 for (auto& b : start_chars.map)
@@ -1330,6 +1332,11 @@ auto test_regex = UnitTest{[]{
     {
         TestVM<> vm{R"([d-ea-dcf-k]+)"};
         kak_assert(vm.exec("abcde"));
+    }
+
+    {
+        TestVM<> vm{R"(д)"};
+        kak_assert(vm.exec("д", RegexExecFlags::Search));
     }
 
     {
