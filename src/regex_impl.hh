@@ -152,17 +152,12 @@ public:
                 ((flags & RegexExecFlags::NotEndOfLine) ? RegexExecFlags::NotBeginOfLine : RegexExecFlags::None) |
                 ((flags & RegexExecFlags::NotBeginOfLine) ? RegexExecFlags::NotEndOfLine : RegexExecFlags::None);
 
-
-        const bool no_saves = (flags & RegexExecFlags::NoSaves);
         const bool search = (flags & RegexExecFlags::Search);
-
         Utf8It start{m_begin};
         if (search)
             to_next_start(start, m_end, m_program.start_chars.get());
 
-        ExecState state;
-        return exec_program(start, search ? 0 : CompiledRegex::search_prefix_size,
-                            no_saves ? nullptr : new_saves<false>(nullptr), state);
+        return exec_program(start, Thread{search ? (uint16_t)0 : CompiledRegex::search_prefix_size, nullptr});
     }
 
     ArrayView<const Iterator> captures() const
@@ -240,6 +235,7 @@ private:
     // Steps a thread until it consumes the current character, matches or fail
     StepResult step(Utf8It& pos, Thread& thread, ExecState& state)
     {
+        const bool no_saves = (m_flags & RegexExecFlags::NoSaves);
         while (true)
         {
             auto& inst = m_program.instructions[thread.inst++];
@@ -279,9 +275,11 @@ private:
                 }
                 case CompiledRegex::Save:
                 {
-                    if (thread.saves == nullptr)
+                    if (no_saves)
                         break;
-                    if (thread.saves->refcount > 1)
+                    if (not thread.saves)
+                        thread.saves = new_saves<false>(nullptr);
+                    else if (thread.saves->refcount > 1)
                     {
                         --thread.saves->refcount;
                         thread.saves = new_saves<true>(thread.saves->pos);
@@ -354,10 +352,10 @@ private:
         return StepResult::Failed;
     }
 
-    bool exec_program(Utf8It pos, uint16_t first_inst, Saves* initial_saves, ExecState& state)
+    bool exec_program(Utf8It pos, Thread init_thread)
     {
-        state.current_threads.push_back({first_inst, initial_saves});
-        state.next_threads.clear();
+        ExecState state;
+        state.current_threads.push_back(init_thread);
 
         bool found_match = false;
         while (true) // Iterate on all codepoints and once at the end
@@ -388,7 +386,11 @@ private:
                     release_saves(m_captures);
                     m_captures = thread.saves;
                     found_match = true;
-                    state.current_threads.clear(); // remove this and lower priority threads
+
+                    // remove this and lower priority threads
+                    for (auto& t : state.current_threads)
+                        release_saves(t.saves);
+                    state.current_threads.clear();
                     break;
                 case StepResult::Failed:
                     release_saves(thread.saves);
@@ -413,7 +415,11 @@ private:
 
             if (pos == m_end or state.next_threads.empty() or
                 (found_match and (m_flags & RegexExecFlags::AnyMatch)))
+            {
+                for (auto& t : state.next_threads)
+                    release_saves(t.saves);
                 return found_match;
+            }
 
             std::swap(state.current_threads, state.next_threads);
             std::reverse(state.current_threads.begin(), state.current_threads.end());
