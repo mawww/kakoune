@@ -18,7 +18,7 @@ before_install:
 install:
   - if [ $TRAVIS_OS_NAME = linux ]; then
       if [ "$CXX" = "clang++" ]; then
-        export CXX=clang++-3.6;
+        export CXX=clang++-3.9;
       elif [ "$CXX" = "g++" ]; then
         export CXX=g++-5;
       fi;
@@ -34,9 +34,9 @@ addons:
     sources:
       - boost-latest
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.6
+      - llvm-toolchain-precise-3.9
     packages:
-      - clang-3.6
+      - clang-3.9
       - libstdc++-5-dev
       - g++-5
       - libncursesw5-dev
