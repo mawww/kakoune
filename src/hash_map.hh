@@ -8,20 +8,43 @@
 namespace Kakoune
 {
 
-template<MemoryDomain domain>
+template<typename T>
+constexpr void constexpr_swap(T& lhs, T& rhs)
+{
+    T tmp = std::move(lhs);
+    lhs = std::move(rhs);
+    rhs = std::move(tmp);
+}
+
+template<MemoryDomain domain,
+         template<typename, MemoryDomain> class Container>
 struct HashIndex
 {
     struct Entry
     {
-        size_t hash;
-        int index;
+        size_t hash = 0;
+        int index = -1;
     };
 
-    void resize(size_t new_size)
+    static constexpr float max_fill_rate = 0.5f;
+
+    constexpr HashIndex() = default;
+    constexpr HashIndex(size_t count)
+    {
+        const size_t min_size = (size_t)(count / max_fill_rate) + 1;
+        size_t new_size = 4;
+        while (new_size < min_size)
+            new_size *= 2;
+        m_entries.resize(new_size, {});
+    }
+
+    using ContainerType = Container<Entry, domain>;
+
+    constexpr void resize(size_t new_size)
     {
         kak_assert(new_size > m_entries.size());
-        Vector<Entry, domain> old_entries = std::move(m_entries);
-        m_entries.resize(new_size, {0,-1});
+        ContainerType old_entries = std::move(m_entries);
+        m_entries.resize(new_size, {});
         for (auto& entry : old_entries)
         {
             if (entry.index >= 0)
@@ -29,18 +52,19 @@ struct HashIndex
         }
     }
 
-    void reserve(size_t count)
+    constexpr void reserve(size_t count)
     {
-        constexpr float max_fill_rate = 0.5f;
+        kak_assert(count > 0);
         const size_t min_size = (size_t)(count / max_fill_rate) + 1;
         size_t new_size = m_entries.empty() ? 4 : m_entries.size();
         while (new_size < min_size)
             new_size *= 2;
+
         if (new_size > m_entries.size())
             resize(new_size);
     }
 
-    void add(size_t hash, int index)
+    constexpr void add(size_t hash, int index)
     {
         Entry entry{hash, index};
         while (true)
@@ -58,7 +82,7 @@ struct HashIndex
                 auto candidate_slot = compute_slot(m_entries[slot].hash);
                 if (target_slot < candidate_slot)
                 {
-                    std::swap(m_entries[slot], entry);
+                    constexpr_swap(m_entries[slot], entry);
                     target_slot = candidate_slot;
                 }
             }
@@ -67,7 +91,7 @@ struct HashIndex
         }
     }
 
-    void remove(size_t hash, int index)
+    constexpr void remove(size_t hash, int index)
     {
         for (auto slot = compute_slot(hash); slot < m_entries.size(); ++slot)
         {
@@ -82,14 +106,14 @@ struct HashIndex
                         compute_slot(m_entries[next].hash) == next)
                         break;
                     kak_assert(compute_slot(m_entries[next].hash) < next);
-                    std::swap(m_entries[next-1], m_entries[next]);
+                    constexpr_swap(m_entries[next-1], m_entries[next]);
                 }
                 break;
             }
         }
     }
 
-    void ordered_fix_entries(int index)
+    constexpr void ordered_fix_entries(int index)
     {
         for (auto& entry : m_entries)
         {
@@ -98,7 +122,7 @@ struct HashIndex
         }
     }
 
-    void unordered_fix_entries(size_t hash, int old_index, int new_index)
+    constexpr void unordered_fix_entries(size_t hash, int old_index, int new_index)
     {
         for (auto slot = compute_slot(hash); slot < m_entries.size(); ++slot)
         {
@@ -111,18 +135,18 @@ struct HashIndex
         kak_assert(false); // entry not found ?!
     }
 
-    const Entry& operator[](size_t index) const { return m_entries[index]; }
-    size_t size() const { return m_entries.size(); }
-    size_t compute_slot(size_t hash) const
+    constexpr const Entry& operator[](size_t index) const { return m_entries[index]; }
+    constexpr size_t size() const { return m_entries.size(); }
+    constexpr size_t compute_slot(size_t hash) const
     {
         // We assume entries.size() is power of 2
         return hash & (m_entries.size()-1);
     }
 
-    void clear() { m_entries.clear(); }
+    constexpr void clear() { m_entries.clear(); }
 
 private:
-    Vector<Entry, domain> m_entries;
+    ContainerType m_entries;
 };
 
 template<typename Key, typename Value>
@@ -132,21 +156,23 @@ struct HashItem
     Value value;
 };
 
-template<typename Key, typename Value, MemoryDomain domain = MemoryDomain::Undefined>
+template<typename Key, typename Value,
+         MemoryDomain domain = MemoryDomain::Undefined,
+         template<typename, MemoryDomain> class Container = Vector>
 struct HashMap
 {
     using Item = HashItem<Key, Value>;
+    using ContainerType = Container<Item, domain>;
 
-    HashMap() = default;
+    constexpr HashMap() = default;
 
-    HashMap(std::initializer_list<Item> val) : m_items{val}
+    constexpr HashMap(std::initializer_list<Item> val) : m_items(val), m_index(val.size())
     {
-        m_index.reserve(val.size());
         for (int i = 0; i < m_items.size(); ++i)
             m_index.add(hash_value(m_items[i].key), i);
     }
 
-    Value& insert(Item item)
+    constexpr Value& insert(Item item)
     {
         m_index.reserve(m_items.size()+1);
         m_index.add(hash_value(item.key), (int)m_items.size());
@@ -160,7 +186,7 @@ struct HashMap
     >;
 
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
-    int find_index(const KeyType& key, size_t hash) const
+    constexpr int find_index(const KeyType& key, size_t hash) const
     {
         for (auto slot = m_index.compute_slot(hash); slot < m_index.size(); ++slot)
         {
@@ -174,13 +200,13 @@ struct HashMap
     }
 
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
-    int find_index(const KeyType& key) const { return find_index(key, hash_value(key)); }
+    constexpr int find_index(const KeyType& key) const { return find_index(key, hash_value(key)); }
 
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
-    bool contains(const KeyType& key) const { return find_index(key) >= 0; }
+    constexpr bool contains(const KeyType& key) const { return find_index(key) >= 0; }
 
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
-    Value& operator[](KeyType&& key)
+    constexpr Value& operator[](KeyType&& key)
     {
         const auto hash = hash_value(key);
         auto index = find_index(key, hash);
@@ -194,7 +220,7 @@ struct HashMap
     }
 
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
-    void remove(const KeyType& key)
+    constexpr void remove(const KeyType& key)
     {
         const auto hash = hash_value(key);
         int index = find_index(key, hash);
@@ -207,13 +233,13 @@ struct HashMap
     }
 
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
-    void unordered_remove(const KeyType& key)
+    constexpr void unordered_remove(const KeyType& key)
     {
         const auto hash = hash_value(key);
         int index = find_index(key, hash);
         if (index >= 0)
         {
-            std::swap(m_items[index], m_items.back());
+            constexpr_swap(m_items[index], m_items.back());
             m_items.pop_back();
             m_index.remove(hash, index);
             if (index != m_items.size())
@@ -221,10 +247,10 @@ struct HashMap
         }
     }
 
-    void erase(const Key& key) { unordered_remove(key); }
+    constexpr void erase(const Key& key) { unordered_remove(key); }
 
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
-    void remove_all(const KeyType& key)
+    constexpr void remove_all(const KeyType& key)
     {
         const auto hash = hash_value(key);
         for (int index = find_index(key, hash); index >= 0;
@@ -236,32 +262,32 @@ struct HashMap
         }
     }
 
-    using iterator = typename Vector<Item, domain>::iterator;
-    iterator begin() { return m_items.begin(); }
-    iterator end() { return m_items.end(); }
+    using iterator = typename ContainerType::iterator;
+    constexpr iterator begin() { return m_items.begin(); }
+    constexpr iterator end() { return m_items.end(); }
 
-    using const_iterator = typename Vector<Item, domain>::const_iterator;
-    const_iterator begin() const { return m_items.begin(); }
-    const_iterator end() const { return m_items.end(); }
+    using const_iterator = typename ContainerType::const_iterator;
+    constexpr const_iterator begin() const { return m_items.begin(); }
+    constexpr const_iterator end() const { return m_items.end(); }
 
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
-    iterator find(const KeyType& key)
+    constexpr iterator find(const KeyType& key)
     {
         auto index = find_index(key);
         return index >= 0 ? begin() + index : end();
     }
 
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
-    const_iterator find(const KeyType& key) const
+    constexpr const_iterator find(const KeyType& key) const
     {
         return const_cast<HashMap*>(this)->find(key);
     }
 
-    void clear() { m_items.clear(); m_index.clear(); }
+    constexpr void clear() { m_items.clear(); m_index.clear(); }
 
-    size_t size() const { return m_items.size(); }
-    bool empty() const { return m_items.empty(); }
-    void reserve(size_t size)
+    constexpr size_t size() const { return m_items.size(); }
+    constexpr bool empty() const { return m_items.empty(); }
+    constexpr void reserve(size_t size)
     {
         m_items.reserve(size); 
         m_index.reserve(size);
@@ -269,7 +295,7 @@ struct HashMap
 
     // Equality is taking the order of insertion into account
     template<MemoryDomain otherDomain>
-    bool operator==(const HashMap<Key, Value, otherDomain>& other) const
+    constexpr bool operator==(const HashMap<Key, Value, otherDomain, Container>& other) const
     {
         return size() == other.size() and
             std::equal(begin(), end(), other.begin(),
@@ -279,14 +305,14 @@ struct HashMap
     }
 
     template<MemoryDomain otherDomain>
-    bool operator!=(const HashMap<Key, Value, otherDomain>& other) const
+    constexpr bool operator!=(const HashMap<Key, Value, otherDomain, Container>& other) const
     {
         return not (*this == other);
     }
 
 private:
-    Vector<Item, domain> m_items;
-    HashIndex<domain> m_index;
+    ContainerType m_items;
+    HashIndex<domain, Container> m_index;
 };
 
 void profile_hash_maps();

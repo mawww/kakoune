@@ -1943,7 +1943,10 @@ void force_redraw(Context& context, NormalParams)
     }
 }
 
-static const HashMap<Key, NormalCmd> keymap{
+template<typename T, MemoryDomain domain>
+using KeymapBackend = ConstexprVector<T, 1024>;
+
+static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> keymap = {
     { {'h'}, {"move left", move<CharCount, Backward>} },
     { {'j'}, {"move down", move<LineCount, Forward>} },
     { {'k'}, {"move up",  move<LineCount, Backward>} },

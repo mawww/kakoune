@@ -18,8 +18,8 @@ struct NormalParams
 
 struct NormalCmd
 {
-    StringView docstring;
-    void (*func)(Context& context, NormalParams params);
+    StringView docstring = {};
+    void (*func)(Context& context, NormalParams params) = nullptr;
 };
 
 Optional<NormalCmd> get_normal_command(Key key);

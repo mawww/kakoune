@@ -65,14 +65,16 @@ struct Key
         Invalid,
     };
 
-    Modifiers modifiers;
-    Codepoint key;
+    Modifiers modifiers = {};
+    Codepoint key = {};
 
     constexpr Key(Modifiers modifiers, Codepoint key)
         : modifiers(modifiers), key(key) {}
 
     constexpr Key(Codepoint key)
         : modifiers(Modifiers::None), key(key) {}
+
+    constexpr Key() = default;
 
     constexpr uint64_t val() const { return (uint64_t)modifiers << 32 | key; }
 
