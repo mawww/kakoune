@@ -23,7 +23,7 @@ void on_assert_failed(const char* message);
                              "\" at " __FILE__ ":" TOSTRING(__LINE__)); \
     } while (false)
 #else
-    #define kak_assert(...) do {} while(false)
+    #define kak_assert(...) do { (void)sizeof(__VA_ARGS__); } while(false)
 #endif
 
 
