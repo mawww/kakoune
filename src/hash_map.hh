@@ -35,7 +35,7 @@ struct HashIndex
         size_t new_size = 4;
         while (new_size < min_size)
             new_size *= 2;
-        m_entries.resize(new_size, {});
+        m_entries.resize(new_size);
     }
 
     using ContainerType = Container<Entry, domain>;
@@ -44,7 +44,7 @@ struct HashIndex
     {
         kak_assert(new_size > m_entries.size());
         ContainerType old_entries = std::move(m_entries);
-        m_entries.resize(new_size, {});
+        m_entries.resize(new_size);
         for (auto& entry : old_entries)
         {
             if (entry.index >= 0)

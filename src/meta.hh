@@ -57,17 +57,14 @@ struct ConstexprVector
     constexpr bool empty() const { return m_size == 0; }
     constexpr size_t size() const { return m_size; }
 
-    constexpr void resize(size_t n, const T& val)
+    constexpr void resize(size_t n, const T& val = {})
     {
         if (n >= capacity)
             throw "capacity exceeded";
-        if (n > m_size)
-        {
-            for (int i = n; i < m_size; ++i)
-                m_data[i] = val;
-        }
+        for (int i = m_size; i < n; ++i)
+            m_data[i] = val;
         m_size = n;
-        kak_assert(this->size() == m_size);
+        kak_assert(this->size() == m_size); // check for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=79520
     }
 
     constexpr T& operator[](size_t i) { return m_data[i]; }
