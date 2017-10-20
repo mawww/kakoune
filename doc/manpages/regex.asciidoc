@@ -17,16 +17,20 @@ Literals
 --------
 
 Every character except the syntax characters `\^$.*+?[]{}|().` match
-themselves, syntax characters can be escaped with a backspace so `\$` will
-match a literal `$` and `\\` will match a literal `\`.
+themselves. Syntax characters can be escaped with a backspace so `\$`
+will match a literal `$` and `\\` will match a literal `\`.
 
-Some additional literals are available as escape sequences:
+Some literals are available as escape sequences:
 
 * `\f` matches the form feed character.
 * `\n` matches the line feed character.
 * `\r` matches the carriage return character.
 * `\t` matches the tabulation character.
 * `\v` matches the vertical tabulation character.
+* `\0` matches the null character.
+* `\cX` matches the control-X character (X can be in `[A-Za-z]`).
+* `\xXX` matches the character whose codepoint is XX (in hexadecimal).
+* `\uXXXX` matches the character whose codepoint is XXXX (in hexadecimal).
 
 Character classes
 -----------------

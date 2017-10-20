@@ -308,7 +308,44 @@ private:
                 return new_node(ParsedRegex::Literal, control.value);
         }
 
-        // TOOD: \c..., \0..., '\0x...', \u...
+        auto read_hex = [this](size_t count)
+        {
+            Codepoint res = 0;
+            for (int i = 0; i < count; ++i)
+            {
+                if (at_end())
+                    parse_error("unterminated hex sequence");
+                Codepoint digit = *m_pos++;
+                Codepoint digit_value;
+                if ('0' <= digit and digit <= '9')
+                    digit_value = digit - '0';
+                else if ('a' <= digit and digit <= 'f')
+                    digit_value = 0xa + digit - 'a';
+                else if ('A' <= digit and digit <= 'F')
+                    digit_value = 0xa + digit - 'A';
+                else
+                    parse_error(format("invalid hex digit '{}'", digit));
+
+                res = res * 16 + digit_value;
+            }
+            return res;
+        };
+
+        if (cp == '0')
+            return new_node(ParsedRegex::Literal, '\0');
+        else if (cp == 'c')
+        {
+            if (at_end())
+                parse_error("unterminated control escape");
+            Codepoint ctrl = *m_pos++;
+            if (('a' <= ctrl and ctrl <= 'z') or ('A' <= ctrl and ctrl <= 'Z'))
+                return new_node(ParsedRegex::Literal, ctrl % 32);
+            parse_error(format("Invalid control escape character '{}'", ctrl));
+        }
+        else if (cp == 'x')
+            return new_node(ParsedRegex::Literal, read_hex(2));
+        else if (cp == 'u')
+            return new_node(ParsedRegex::Literal, read_hex(4));
 
         if (contains("^$\\.*+?()[]{}|", cp)) // SyntaxCharacter
             return new_node(ParsedRegex::Literal, cp);
@@ -467,7 +504,7 @@ private:
             return {ParsedRegex::Quantifier::One};
 
         constexpr int max_repeat = 1000;
-        auto read_int = [max_repeat, this](auto& pos, auto begin, auto end) {
+        auto read_bound = [max_repeat, this](auto& pos, auto begin, auto end) {
             int res = 0;
             for (; pos != end; ++pos)
             {
@@ -496,12 +533,12 @@ private:
             case '{':
             {
                 auto it = m_pos+1;
-                const int min = read_int(it, it, m_regex.end());
+                const int min = read_bound(it, it, m_regex.end());
                 int max = min;
                 if (*it == ',')
                 {
                     ++it;
-                    max = read_int(it, it, m_regex.end());
+                    max = read_bound(it, it, m_regex.end());
                 }
                 if (*it++ != '}')
                    parse_error("expected closing bracket");
@@ -1279,6 +1316,12 @@ auto test_regex = UnitTest{[]{
     {
         TestVM<> vm{R"([d-ea-dcf-k]+)"};
         kak_assert(vm.exec("abcde"));
+    }
+
+    {
+        TestVM<> vm{R"(\0\x0A\u260e\u260F)"};
+        const char str[] = "\0\n☎☏"; // work around the null byte in the literal
+        kak_assert(vm.exec({str, str + sizeof(str)-1}));
     }
 }};
 
