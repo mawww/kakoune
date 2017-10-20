@@ -1016,6 +1016,7 @@ void dump_regex(const CompiledRegex& program)
             }
             case CompiledRegex::FindNextStart:
                 printf("find next start\n");
+                break;
             case CompiledRegex::Match:
                 printf("match\n");
         }
