@@ -614,6 +614,7 @@ struct RegexCompiler
     RegexCompiler(const ParsedRegex& parsed_regex, RegexCompileFlags flags, MatchDirection direction)
         : m_parsed_regex{parsed_regex}, m_flags(flags), m_forward{direction == MatchDirection::Forward}
     {
+        write_search_prefix();
         compile_node(m_parsed_regex.ast);
         push_inst(CompiledRegex::Match);
         m_program.matchers = m_parsed_regex.matchers;
@@ -786,6 +787,16 @@ private:
             m_program.instructions[offset].param = m_program.instructions.size();
 
         return pos;
+    }
+
+    // Add an set of instruction prefix used in the search use case
+    void write_search_prefix()
+    {
+        kak_assert(m_program.instructions.empty());
+        push_inst(CompiledRegex::Split_PrioritizeChild, CompiledRegex::search_prefix_size);
+        push_inst(CompiledRegex::FindNextStart);
+        push_inst(CompiledRegex::Split_PrioritizeParent, 1);
+        kak_assert(m_program.instructions.size() == CompiledRegex::search_prefix_size);
     }
 
     uint32_t push_inst(CompiledRegex::Op op, uint32_t param = 0)
@@ -1003,6 +1014,8 @@ void dump_regex(const CompiledRegex& program)
                 printf("%s (%s)\n", name, str.c_str());
                 break;
             }
+            case CompiledRegex::FindNextStart:
+                printf("find next start\n");
             case CompiledRegex::Match:
                 printf("match\n");
         }

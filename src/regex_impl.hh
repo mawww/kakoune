@@ -28,6 +28,7 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     enum Op : char
     {
         Match,
+        FindNextStart,
         Literal,
         Literal_IgnoreCase,
         AnyChar,
@@ -61,6 +62,8 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
         uint32_t param;
     };
     static_assert(sizeof(Instruction) == 8, "");
+
+    static constexpr uint16_t search_prefix_size = 3;
 
     explicit operator bool() const { return not instructions.empty(); }
 
@@ -151,30 +154,15 @@ public:
 
 
         const bool no_saves = (flags & RegexExecFlags::NoSaves);
-        Utf8It start{m_begin};
+        const bool search = (flags & RegexExecFlags::Search);
 
-        const CompiledRegex::StartChars* start_chars = m_program.start_chars.get();
-        if (flags & RegexExecFlags::Search)
-            to_next_start(start, m_end, start_chars);
+        Utf8It start{m_begin};
+        if (search)
+            to_next_start(start, m_end, m_program.start_chars.get());
 
         ExecState state;
-        if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
-                      state))
-            return true;
-
-        if (not (flags & RegexExecFlags::Search))
-            return false;
-
-        do
-        {
-            to_next_start(++start, m_end, start_chars);
-            if (exec_from(start, no_saves ? nullptr : new_saves<false>(nullptr),
-                          state))
-                return true;
-        }
-        while (start != m_end);
-
-        return false;
+        return exec_program(start, search ? 0 : CompiledRegex::search_prefix_size,
+                            no_saves ? nullptr : new_saves<false>(nullptr), state);
     }
 
     ArrayView<const Iterator> captures() const
@@ -247,10 +235,10 @@ private:
         uint16_t step = -1;
     };
 
-    enum class StepResult { Consumed, Matched, Failed };
+    enum class StepResult { Consumed, Matched, Failed, FindNextStart };
 
     // Steps a thread until it consumes the current character, matches or fail
-    StepResult step(const Utf8It& pos, Thread& thread, ExecState& state)
+    StepResult step(Utf8It& pos, Thread& thread, ExecState& state)
     {
         while (true)
         {
@@ -354,6 +342,11 @@ private:
                         (inst.op == CompiledRegex::LookBehind_IgnoreCase))
                         return StepResult::Failed;
                     break;
+                case CompiledRegex::FindNextStart:
+                    kak_assert(state.current_threads.empty()); // search thread should by construction be the lower priority one
+                    if (state.next_threads.empty())
+                        return StepResult::FindNextStart;
+                    return StepResult::Consumed;
                 case CompiledRegex::Match:
                     return StepResult::Matched;
             }
@@ -361,9 +354,9 @@ private:
         return StepResult::Failed;
     }
 
-    bool exec_from(Utf8It pos, Saves* initial_saves, ExecState& state)
+    bool exec_program(Utf8It pos, uint16_t first_inst, Saves* initial_saves, ExecState& state)
     {
-        state.current_threads.push_back({0, initial_saves});
+        state.current_threads.push_back({first_inst, initial_saves});
         state.next_threads.clear();
 
         bool found_match = false;
@@ -377,6 +370,7 @@ private:
                 state.step = 1; // step 0 is never valid
             }
 
+            bool find_next_start = false;
             while (not state.current_threads.empty())
             {
                 auto thread = state.current_threads.back();
@@ -408,6 +402,10 @@ private:
                     m_program.instructions[thread.inst].scheduled = true;
                     state.next_threads.push_back(thread);
                     break;
+                case StepResult::FindNextStart:
+                    state.next_threads.push_back(thread);
+                    find_next_start = true;
+                    break;
                 }
             }
             for (auto& thread : state.next_threads)
@@ -420,6 +418,9 @@ private:
             std::swap(state.current_threads, state.next_threads);
             std::reverse(state.current_threads.begin(), state.current_threads.end());
             ++pos;
+
+            if (find_next_start)
+                to_next_start(pos, m_end, m_program.start_chars.get());
         }
     }
 
