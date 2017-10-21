@@ -13,16 +13,16 @@ hook global BufCreate (.*/)?(kakrc|.*.kak) %{
 
 add-highlighter -group / regions -default code kakrc \
     comment (^|\h)\K\# $ '' \
-    double_string %{(^|\h)"} %{(?<!\\)(\\\\)*"} '' \
-    single_string %{(^|\h)'} %{(?<!\\)(\\\\)*'} '' \
-    shell '%sh\{' '\}' '\{' \
-    shell '%sh\(' '\)' '\(' \
-    shell '%sh\[' '\]' '\[' \
-    shell '%sh\<' '\>' '\<' \
-    shell '-shell-(completion|candidates)\h+%\{' '\}' '\{' \
-    shell '-shell-(completion|candidates)\h+%\(' '\)' '\(' \
-    shell '-shell-(completion|candidates)\h+%\[' '\]' '\[' \
-    shell '-shell-(completion|candidates)\h+%\<' '\>' '\<'
+    double_string %{(^|\h)\K"} %{(?<!\\)(\\\\)*"} '' \
+    single_string %{(^|\h)\K'} %{(?<!\\)(\\\\)*'} '' \
+    shell '(^|\h)\K%sh\{' '\}' '\{' \
+    shell '(^|\h)\K%sh\(' '\)' '\(' \
+    shell '(^|\h)\K%sh\[' '\]' '\[' \
+    shell '(^|\h)\K%sh\<' '\>' '\<' \
+    shell '(^|\h)\K-shell-(completion|candidates)\h+%\{' '\}' '\{' \
+    shell '(^|\h)\K-shell-(completion|candidates)\h+%\(' '\)' '\(' \
+    shell '(^|\h)\K-shell-(completion|candidates)\h+%\[' '\]' '\[' \
+    shell '(^|\h)\K-shell-(completion|candidates)\h+%\<' '\>' '\<'
 
 %sh{
     # Grammar
