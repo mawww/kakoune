@@ -76,9 +76,10 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     struct StartChars
     {
         static constexpr size_t count = 256;
-        bool accept_other;
-        bool map[count];
+        static constexpr Codepoint other = 256;
+        bool map[count+1];
     };
+
     std::unique_ptr<StartChars> start_chars;
 };
 
@@ -437,8 +438,7 @@ private:
             return;
 
         while (start != end and *start >= 0 and
-               ((*start < 256 and not start_chars->map[*start]) or
-                (*start >= 256 and not start_chars->accept_other)))
+               not start_chars->map[std::min(*start, CompiledRegex::StartChars::other)])
             ++start;
     }
 

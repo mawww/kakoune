@@ -14,6 +14,8 @@
 namespace Kakoune
 {
 
+constexpr Codepoint CompiledRegex::StartChars::other;
+
 struct ParsedRegex
 {
     enum Op : char
@@ -837,8 +839,6 @@ private:
         return res;
     }
 
-    static constexpr size_t start_chars_count = CompiledRegex::StartChars::count;
-
     // Fills accepted and rejected according to which chars can start the given node,
     // returns true if the node did not consume the char, hence a following node in
     // sequence would be still relevant for the parent node start chars computation.
@@ -848,7 +848,7 @@ private:
         switch (node->op)
         {
             case ParsedRegex::Literal:
-                if (node->value < start_chars_count)
+                if (node->value < CompiledRegex::StartChars::count)
                 {
                     if (node->ignore_case)
                     {
@@ -859,18 +859,18 @@ private:
                         start_chars.map[node->value] = true;
                 }
                 else
-                    start_chars.accept_other = true;
+                    start_chars.map[CompiledRegex::StartChars::other] = true;
                 return node->quantifier.allows_none();
             case ParsedRegex::AnyChar:
                 for (auto& b : start_chars.map)
                     b = true;
-                start_chars.accept_other = true;
+                start_chars.map[CompiledRegex::StartChars::other] = true;
                 return node->quantifier.allows_none();
             case ParsedRegex::Matcher:
-                for (Codepoint c = 0; c < start_chars_count; ++c)
+                for (Codepoint c = 0; c < CompiledRegex::StartChars::count; ++c)
                     if (m_program.matchers[node->value](c))
                         start_chars.map[c] = true;
-                start_chars.accept_other = true; // stay safe
+                start_chars.map[CompiledRegex::StartChars::other] = true; // stay safe
                 return node->quantifier.allows_none();
             case ParsedRegex::Sequence:
             {
