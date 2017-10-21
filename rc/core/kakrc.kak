@@ -26,9 +26,11 @@ add-highlighter -group / regions -default code kakrc \
 
 %sh{
     # Grammar
-    keywords="hook|remove-hooks|rmhooks|add-highlighter|addhl|remove-highlighter|rmhl|exec|eval|source|runtime|define-command|def|alias"
-    keywords="${keywords}|unalias|declare-option|decl|echo|edit|set-option|set|unset-option|unset|map|unmap|set-face|face|prompt|menu|info"
-    keywords="${keywords}|try|catch|rename-client|rename-buffer|rename-session|change-directory|colorscheme"
+    keywords="edit|write|write-all|kill|quit|write-quit|write-all-quit|map|unmap|alias|unalias"
+    keywords="${keywords}|buffer|buffer-next|buffer-previous|delete-buffer|add-highlighter|remove-highlighter"
+    keywords="${keywords}|hook|remove-hooks|define-command|echo|debug|source|try|fail"
+    keywords="${keywords}|set-option|unset-option|update-option|declare-option|exec|eval|prompt|menu|on-key|info"
+    keywords="${keywords}|set-face|rename-client|set-register|select|change-directory|rename-session|colorscheme"
     attributes="global|buffer|window|current"
     attributes="${attributes}|normal|insert|menu|prompt|goto|view|user|object"
     attributes="${attributes}|number_lines|show_matching|show_whitespaces|fill|regex|dynregex|group|flag_lines|ranges|line|column|wrap|ref|regions|replace-ranges"
