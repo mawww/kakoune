@@ -634,9 +634,10 @@ private:
         const auto start_pos = m_program.instructions.size();
         const bool ignore_case = node->ignore_case;
 
-        const Codepoint capture = (node->op == ParsedRegex::Alternation or node->op == ParsedRegex::Sequence) ? node->value : -1;
-        if (capture != -1 and (capture == 0 or not (m_flags & RegexCompileFlags::NoSubs)))
-            push_inst(CompiledRegex::Save, capture * 2 + (m_forward ? 0 : 1));
+        const bool save = (node->op == ParsedRegex::Alternation or node->op == ParsedRegex::Sequence) and
+                          (node->value == 0 or (node->value != -1 and not (m_flags & RegexCompileFlags::NoSubs)));
+        if (save)
+            push_inst(CompiledRegex::Save, node->value * 2 + (m_forward ? 0 : 1));
 
         Vector<uint32_t> goto_inner_end_offsets;
         switch (node->op)
@@ -743,8 +744,8 @@ private:
         for (auto& offset : goto_inner_end_offsets)
             m_program.instructions[offset].param = m_program.instructions.size();
 
-        if (capture != -1 and (capture == 0 or not (m_flags & RegexCompileFlags::NoSubs)))
-            push_inst(CompiledRegex::Save, capture * 2 + (m_forward ? 1 : 0));
+        if (save)
+            push_inst(CompiledRegex::Save, node->value * 2 + (m_forward ? 1 : 0));
 
         return start_pos;
     }
