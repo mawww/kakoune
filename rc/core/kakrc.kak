@@ -31,8 +31,8 @@ add-highlighter -group / regions -default code kakrc \
     keywords="${keywords}|try|catch|rename-client|rename-buffer|rename-session|change-directory|colorscheme"
     attributes="global|buffer|window|current"
     attributes="${attributes}|normal|insert|menu|prompt|goto|view|user|object"
-    attributes="${attributes}|number_lines|show_matching|show_whitespaces|fill|regex|dynregex|group|flag_lines|ranges|line|column|wrap|ref|regions"
-    types="int|bool|str|regex|int-list|str-list|line-flags|completions|range-faces"
+    attributes="${attributes}|number_lines|show_matching|show_whitespaces|fill|regex|dynregex|group|flag_lines|ranges|line|column|wrap|ref|regions|replace-ranges"
+    types="int|bool|str|regex|int-list|str-list|completions|line-specs|range-specs"
     values="default|black|red|green|yellow|blue|magenta|cyan|white|"
 
     # Add the language's grammar to the static completion list
@@ -41,12 +41,12 @@ add-highlighter -group / regions -default code kakrc \
         set -- window extra_word_chars '-'
     }" | sed 's,|,:,g'
 
-    # Highlight keywords. Teach \b that - does not create a word boundary
+    # Highlight keywords (which are always surrounded by whitespace)
     printf %s "
-        add-highlighter -group /kakrc/code regex \b(?<!-)(${keywords})(?!-)\b 0:keyword
-        add-highlighter -group /kakrc/code regex \b(?<!-)(${attributes})(?!-)\b 0:attribute
-        add-highlighter -group /kakrc/code regex \b(?<!-)(${types})(?!-)\b 0:type
-        add-highlighter -group /kakrc/code regex \b(?<!-)(${values})(?!-)\b 0:value
+        add-highlighter -group /kakrc/code regex [\s\A]\K(${keywords})(?=[\s\z])\b 0:keyword
+        add-highlighter -group /kakrc/code regex [\s\A]\K(${attributes})(?=[\s\z])\b 0:attribute
+        add-highlighter -group /kakrc/code regex [\s\A]\K(${types})(?=[\s\z])\b 0:type
+        add-highlighter -group /kakrc/code regex [\s\A]\K(${values})(?=[\s\z])\b 0:value
     "
 }
 
