@@ -238,6 +238,14 @@ default_colors = {
     { Color::Magenta, COLOR_MAGENTA },
     { Color::Cyan,    COLOR_CYAN },
     { Color::White,   COLOR_WHITE },
+    { Color::BrBlack,    8 },
+    { Color::BrRed,      9 },
+    { Color::BrGreen,   10 },
+    { Color::BrYellow,  11 },
+    { Color::BrBlue,    12 },
+    { Color::BrMagenta, 13 },
+    { Color::BrCyan,    14 },
+    { Color::BrWhite,   15 },
 };
 
 NCursesUI::NCursesUI()

@@ -22,6 +22,14 @@ struct Color
         Magenta,
         Cyan,
         White,
+        BrBlack,
+        BrRed,
+        BrGreen,
+        BrYellow,
+        BrBlue,
+        BrMagenta,
+        BrCyan,
+        BrWhite,
         RGB,
     };
 
