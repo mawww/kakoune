@@ -712,8 +712,6 @@ private:
             }
             case ParsedRegex::Alternation:
             {
-                //kak_assert(children.size() > 1);
-
                 auto split_pos = m_program.instructions.size();
                 for_each_child(m_parsed_regex, index, [this, index](ParsedRegex::NodeIndex child) {
                     if (child != index+1)
