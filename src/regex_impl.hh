@@ -83,7 +83,7 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     std::unique_ptr<StartChars> start_chars;
 };
 
-enum RegexCompileFlags
+enum class RegexCompileFlags
 {
     None     = 0,
     NoSubs   = 1 << 0,
