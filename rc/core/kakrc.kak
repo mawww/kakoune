@@ -26,30 +26,31 @@ add-highlighter -group / regions -default code kakrc \
 
 %sh{
     # Grammar
-    keywords="edit|write|write-all|kill|quit|write-quit|write-all-quit|map|unmap|alias|unalias"
-    keywords="${keywords}|buffer|buffer-next|buffer-previous|delete-buffer|add-highlighter|remove-highlighter"
-    keywords="${keywords}|hook|remove-hooks|define-command|echo|debug|source|try|fail"
-    keywords="${keywords}|set-option|unset-option|update-option|declare-option|exec|eval|prompt|menu|on-key|info"
-    keywords="${keywords}|set-face|rename-client|set-register|select|change-directory|rename-session|colorscheme"
-    attributes="global|buffer|window|current"
-    attributes="${attributes}|normal|insert|menu|prompt|goto|view|user|object"
-    attributes="${attributes}|number_lines|show_matching|show_whitespaces|fill|regex|dynregex|group|flag_lines|ranges|line|column|wrap|ref|regions|replace-ranges"
-    types="int|bool|str|regex|int-list|str-list|completions|line-specs|range-specs"
-    values="default|black|red|green|yellow|blue|magenta|cyan|white|"
+    keywords="edit write write-all kill quit write-quit write-all-quit map unmap alias unalias
+              buffer buffer-next buffer-previous delete-buffer add-highlighter remove-highlighter
+              hook remove-hooks define-command echo debug source try fail
+              set-option unset-option update-option declare-option exec eval prompt menu on-key info
+              set-face rename-client set-register select change-directory rename-session colorscheme"
+    attributes="global buffer window current
+                normal insert menu prompt goto view user object
+                number_lines show_matching show_whitespaces fill regex dynregex group flag_lines
+                ranges line column wrap ref regions replace-ranges"
+    types="int bool str regex int-list str-list completions line-specs range-specs"
+    values="default black red green yellow blue magenta cyan white"
+
+    join() { printf "%s" "$1" | tr -s ' \n' "$2"; }
 
     # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=kak %{
-        set window static_words '${keywords}:${attributes}:${types}:${values}'
+    printf '%s\n' "hook global WinSetOption filetype=kak %{
+        set window static_words '$(join "${keywords}:${attributes}:${types}:${values}" '|')'
         set -- window extra_word_chars '-'
-    }" | sed 's,|,:,g'
+    }"
 
     # Highlight keywords (which are always surrounded by whitespace)
-    printf %s "
-        add-highlighter -group /kakrc/code regex [\s\A]\K(${keywords})(?=[\s\z])\b 0:keyword
-        add-highlighter -group /kakrc/code regex [\s\A]\K(${attributes})(?=[\s\z])\b 0:attribute
-        add-highlighter -group /kakrc/code regex [\s\A]\K(${types})(?=[\s\z])\b 0:type
-        add-highlighter -group /kakrc/code regex [\s\A]\K(${values})(?=[\s\z])\b 0:value
-    "
+    printf '%s\n' "add-highlighter -group /kakrc/code regex [\s\A]\K($(join "${keywords}" '|'))(?=[\s\z])\b 0:keyword
+                   add-highlighter -group /kakrc/code regex [\s\A]\K($(join "${attributes}" '|'))(?=[\s\z])\b 0:attribute
+                   add-highlighter -group /kakrc/code regex [\s\A]\K($(join "${types}" '|'))(?=[\s\z])\b 0:type
+                   add-highlighter -group /kakrc/code regex [\s\A]\K($(join "${values}" '|'))(?=[\s\z])\b 0:value"
 }
 
 add-highlighter -group /kakrc/code regex \brgb:[0-9a-fA-F]{6}\b 0:value
