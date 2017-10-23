@@ -50,7 +50,7 @@ struct ParsedRegex
         };
         Type type = One;
         bool greedy = true;
-        int min = -1, max = -1;
+        int16_t min = -1, max = -1;
 
         bool allows_none() const
         {
@@ -63,7 +63,7 @@ struct ParsedRegex
         {
             return type == Quantifier::RepeatZeroOrMore or
                    type == Quantifier::RepeatOneOrMore or
-                  (type == Quantifier::RepeatMinMax and max == -1);
+                  (type == Quantifier::RepeatMinMax and max < 0);
         };
     };
 
@@ -80,8 +80,8 @@ struct ParsedRegex
     };
 
     Vector<Node, MemoryDomain::Regex> nodes;
-    size_t capture_count;
     Vector<std::function<bool (Codepoint)>, MemoryDomain::Regex> matchers;
+    size_t capture_count;
 };
 
 namespace
@@ -536,12 +536,12 @@ private:
 
         constexpr int max_repeat = 1000;
         auto read_bound = [max_repeat, this](auto& pos, auto begin, auto end) {
-            int res = 0;
+            int16_t res = 0;
             for (; pos != end; ++pos)
             {
                 const auto cp = *pos;
                 if (cp < '0' or cp > '9')
-                    return pos == begin ? -1 : res;
+                    return pos == begin ? (int16_t)-1 : res;
                 res = res * 10 + cp - '0';
                 if (res > max_repeat)
                     parse_error(format("Explicit quantifier is too big, maximum is {}", max_repeat));
@@ -564,8 +564,8 @@ private:
             case '{':
             {
                 auto it = m_pos+1;
-                const int min = read_bound(it, it, m_regex.end());
-                int max = min;
+                const int16_t min = read_bound(it, it, m_regex.end());
+                int16_t max = min;
                 if (*it == ',')
                 {
                     ++it;
@@ -828,7 +828,7 @@ private:
                       inner_pos);
 
         // Write the node as an optional match for the min -> max counts
-        else for (int i = std::max(1, quantifier.min); // STILL UGLY !
+        else for (int i = std::max((int16_t)1, quantifier.min); // STILL UGLY !
                   i < quantifier.max; ++i)
         {
             auto split_pos = push_inst(quantifier.greedy ? CompiledRegex::Split_PrioritizeParent
