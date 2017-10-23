@@ -151,7 +151,7 @@ private:
         return nullptr;
     }
 
-    bool peek(StringView expected) const
+    bool accept(StringView expected)
     {
         auto it = m_pos;
         for (Iterator expected_it{expected.begin(), expected}; expected_it != expected.end(); ++expected_it)
@@ -159,21 +159,20 @@ private:
             if (it == m_regex.end() or *it++ != *expected_it)
                 return false;
         }
+        m_pos = it;
         return true;
     }
 
     bool modifiers()
     {
-        if (peek("(?i)"))
+        if (accept("(?i)"))
         {
             m_ignore_case = true;
-            m_pos += 4;
             return true;
         }
-        if (peek("(?I)"))
+        if (accept("(?I)"))
         {
             m_ignore_case = false;
-            m_pos += 4;
             return true;
         }
         return false;
@@ -211,10 +210,9 @@ private:
                 };
                 for (auto& lookaround : lookarounds)
                 {
-                    if (peek(lookaround.prefix))
+                    if (accept(lookaround.prefix))
                     {
                         lookaround_op = lookaround.op;
-                        m_pos += (int)lookaround.prefix.char_length();
                         break;
                     }
                 }
@@ -244,13 +242,7 @@ private:
             case '(':
             {
                 ++m_pos;
-                bool capture = true;
-                if (peek("?:"))
-                {
-                    capture = false;
-                    m_pos += 2;
-                }
-
+                const bool capture = not accept("?:");
                 AstNodePtr content = disjunction(capture ? m_parsed_regex.capture_count++ : -1);
                 if (at_end() or *m_pos++ != ')')
                     parse_error("unclosed parenthesis");
