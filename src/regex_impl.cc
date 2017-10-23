@@ -67,19 +67,19 @@ struct ParsedRegex
         };
     };
 
-    struct AstNode;
-    using AstNodeIndex = uint16_t;
+    struct Node;
+    using NodeIndex = uint16_t;
 
-    struct AstNode
+    struct Node
     {
         Op op;
         bool ignore_case;
-        AstNodeIndex children_end;
+        NodeIndex children_end;
         Codepoint value;
         Quantifier quantifier;
     };
 
-    Vector<AstNode, MemoryDomain::Regex> nodes;
+    Vector<Node, MemoryDomain::Regex> nodes;
     size_t capture_count;
     Vector<std::function<bool (Codepoint)>, MemoryDomain::Regex> matchers;
 };
@@ -87,7 +87,7 @@ struct ParsedRegex
 namespace
 {
 template<typename Func>
-bool for_each_child(const ParsedRegex& parsed_regex, ParsedRegex::AstNodeIndex index, Func&& func)
+bool for_each_child(const ParsedRegex& parsed_regex, ParsedRegex::NodeIndex index, Func&& func)
 {
     const auto end = parsed_regex.nodes[index].children_end;
     for (auto child = index+1; child != end;
@@ -100,9 +100,9 @@ bool for_each_child(const ParsedRegex& parsed_regex, ParsedRegex::AstNodeIndex i
 }
 
 template<typename Func>
-bool for_each_child_reverse(const ParsedRegex& parsed_regex, ParsedRegex::AstNodeIndex index, Func&& func)
+bool for_each_child_reverse(const ParsedRegex& parsed_regex, ParsedRegex::NodeIndex index, Func&& func)
 {
-    auto find_last_child = [&](ParsedRegex::AstNodeIndex begin, ParsedRegex::AstNodeIndex end) {
+    auto find_last_child = [&](ParsedRegex::NodeIndex begin, ParsedRegex::NodeIndex end) {
         while (parsed_regex.nodes[begin].children_end != end)
             begin = parsed_regex.nodes[begin].children_end;
         return begin;
@@ -128,7 +128,7 @@ struct RegexParser
         : m_regex{re}, m_pos{re.begin(), re}
     {
         m_parsed_regex.capture_count = 1;
-        AstNodeIndex root = disjunction(0);
+        NodeIndex root = disjunction(0);
         kak_assert(root == 0);
     }
 
@@ -143,11 +143,11 @@ private:
     };
 
     using Iterator = utf8::iterator<const char*, Codepoint, int, InvalidPolicy>;
-    using AstNodeIndex = ParsedRegex::AstNodeIndex;
+    using NodeIndex = ParsedRegex::NodeIndex;
 
-    AstNodeIndex disjunction(unsigned capture = -1)
+    NodeIndex disjunction(unsigned capture = -1)
     {
-        AstNodeIndex index = new_node(ParsedRegex::Alternation);
+        NodeIndex index = new_node(ParsedRegex::Alternation);
         get_node(index).value = capture;
         while (true)
         {
@@ -161,9 +161,9 @@ private:
         return index;
     }
 
-    AstNodeIndex alternative(ParsedRegex::Op op = ParsedRegex::Sequence)
+    NodeIndex alternative(ParsedRegex::Op op = ParsedRegex::Sequence)
     {
-        AstNodeIndex index = new_node(op);
+        NodeIndex index = new_node(op);
         while (auto t = term())
         {}
         get_node(index).children_end = m_parsed_regex.nodes.size();
@@ -171,7 +171,7 @@ private:
         return index;
     }
 
-    Optional<AstNodeIndex> term()
+    Optional<NodeIndex> term()
     {
         while (modifiers()) // read all modifiers
         {}
@@ -212,7 +212,7 @@ private:
         return false;
     }
 
-    Optional<AstNodeIndex> assertion()
+    Optional<NodeIndex> assertion()
     {
         if (at_end())
             return {};
@@ -253,7 +253,7 @@ private:
                 if (not lookaround_op)
                         return {};
 
-                AstNodeIndex lookaround = alternative(*lookaround_op);
+                NodeIndex lookaround = alternative(*lookaround_op);
                 if (at_end() or *m_pos++ != ')')
                     parse_error("unclosed parenthesis");
 
@@ -264,7 +264,7 @@ private:
         return {};
     }
 
-    Optional<AstNodeIndex> atom()
+    Optional<NodeIndex> atom()
     {
         if (at_end())
             return {};
@@ -277,7 +277,7 @@ private:
             {
                 ++m_pos;
                 const bool capture = not accept("?:");
-                AstNodeIndex content = disjunction(capture ? m_parsed_regex.capture_count++ : -1);
+                NodeIndex content = disjunction(capture ? m_parsed_regex.capture_count++ : -1);
                 if (at_end() or *m_pos++ != ')')
                     parse_error("unclosed parenthesis");
                 return content;
@@ -298,7 +298,7 @@ private:
         }
     }
 
-    AstNodeIndex atom_escape()
+    NodeIndex atom_escape()
     {
         const Codepoint cp = *m_pos++;
 
@@ -409,7 +409,7 @@ private:
         ranges.erase(pos+1, ranges.end());
     }
 
-    AstNodeIndex character_class()
+    NodeIndex character_class()
     {
         const bool negative = m_pos != m_regex.end() and *m_pos == '^';
         if (negative)
@@ -580,21 +580,21 @@ private:
         }
     }
 
-    AstNodeIndex new_node(ParsedRegex::Op op, Codepoint value = -1,
+    NodeIndex new_node(ParsedRegex::Op op, Codepoint value = -1,
                           ParsedRegex::Quantifier quantifier = {ParsedRegex::Quantifier::One})
     {
         constexpr auto max_nodes = std::numeric_limits<uint16_t>::max();
-        const AstNodeIndex res = m_parsed_regex.nodes.size();
+        const NodeIndex res = m_parsed_regex.nodes.size();
         if (res == max_nodes)
             parse_error(format("regex parsed to more than {} ast nodes", max_nodes));
-        const AstNodeIndex next = res+1;
+        const NodeIndex next = res+1;
         m_parsed_regex.nodes.push_back({op, m_ignore_case, next, value, quantifier});
         return res;
     }
 
     bool at_end() const { return m_pos == m_regex.end(); }
 
-    ParsedRegex::AstNode& get_node(AstNodeIndex index)
+    ParsedRegex::Node& get_node(NodeIndex index)
     {
         return m_parsed_regex.nodes[index];
     }
@@ -608,9 +608,9 @@ private:
                                  StringView{m_pos.base(), m_regex.end()}));
     }
 
-    void validate_lookaround(AstNodeIndex index)
+    void validate_lookaround(NodeIndex index)
     {
-        for_each_child(m_parsed_regex, index, [this](AstNodeIndex child_index) {
+        for_each_child(m_parsed_regex, index, [this](NodeIndex child_index) {
             auto& child = get_node(child_index);
             if (child.op != ParsedRegex::Literal and child.op != ParsedRegex::Matcher and
                 child.op != ParsedRegex::AnyChar)
@@ -671,7 +671,7 @@ struct RegexCompiler
 
 private:
 
-    uint32_t compile_node_inner(ParsedRegex::AstNodeIndex index)
+    uint32_t compile_node_inner(ParsedRegex::NodeIndex index)
     {
         auto& node = get_node(index);
 
@@ -701,11 +701,11 @@ private:
             case ParsedRegex::Sequence:
             {
                 if (m_forward)
-                    for_each_child(m_parsed_regex, index, [this](ParsedRegex::AstNodeIndex child) {
+                    for_each_child(m_parsed_regex, index, [this](ParsedRegex::NodeIndex child) {
                         compile_node(child); return true;
                     });
                 else
-                    for_each_child_reverse(m_parsed_regex, index, [this](ParsedRegex::AstNodeIndex  child) {
+                    for_each_child_reverse(m_parsed_regex, index, [this](ParsedRegex::NodeIndex  child) {
                         compile_node(child); return true;
                     });
                 break;
@@ -715,14 +715,14 @@ private:
                 //kak_assert(children.size() > 1);
 
                 auto split_pos = m_program.instructions.size();
-                for_each_child(m_parsed_regex, index, [this, index](ParsedRegex::AstNodeIndex child) {
+                for_each_child(m_parsed_regex, index, [this, index](ParsedRegex::NodeIndex child) {
                     if (child != index+1)
                         push_inst(CompiledRegex::Split_PrioritizeParent);
                     return true;
                 });
 
                 for_each_child(m_parsed_regex, index,
-                                  [&, end = node.children_end](ParsedRegex::AstNodeIndex  child) {
+                                  [&, end = node.children_end](ParsedRegex::NodeIndex  child) {
                     auto node = compile_node(child);
                     if (child != index+1)
                         m_program.instructions[split_pos++].param = node;
@@ -799,7 +799,7 @@ private:
         return start_pos;
     }
 
-    uint32_t compile_node(ParsedRegex::AstNodeIndex index)
+    uint32_t compile_node(ParsedRegex::NodeIndex index)
     {
         auto& node = get_node(index);
 
@@ -863,10 +863,10 @@ private:
         return res;
     }
 
-    uint32_t push_lookaround(ParsedRegex::AstNodeIndex index, bool reversed, bool ignore_case)
+    uint32_t push_lookaround(ParsedRegex::NodeIndex index, bool reversed, bool ignore_case)
     {
         uint32_t res = m_program.lookarounds.size();
-        auto write_matcher = [this, ignore_case](ParsedRegex::AstNodeIndex  child) {
+        auto write_matcher = [this, ignore_case](ParsedRegex::NodeIndex  child) {
                 auto& character = get_node(child);
                 if (character.op == ParsedRegex::Literal)
                     m_program.lookarounds.push_back(ignore_case ? to_lower(character.value)
@@ -892,7 +892,7 @@ private:
     // Fills accepted and rejected according to which chars can start the given node,
     // returns true if the node did not consume the char, hence a following node in
     // sequence would be still relevant for the parent node start chars computation.
-    bool compute_start_chars(ParsedRegex::AstNodeIndex index,
+    bool compute_start_chars(ParsedRegex::NodeIndex index,
                              CompiledRegex::StartChars& start_chars) const
     {
         auto& node = get_node(index);
@@ -939,7 +939,7 @@ private:
             case ParsedRegex::Alternation:
             {
                 bool all_consumed = not node.quantifier.allows_none();
-                for_each_child(m_parsed_regex, index, [&](ParsedRegex::AstNodeIndex  child) {
+                for_each_child(m_parsed_regex, index, [&](ParsedRegex::NodeIndex  child) {
                     if (compute_start_chars(child, start_chars))
                         all_consumed = false;
                     return true;
@@ -975,7 +975,7 @@ private:
         return std::make_unique<CompiledRegex::StartChars>(start_chars);
     }
 
-    const ParsedRegex::AstNode& get_node(ParsedRegex::AstNodeIndex index) const
+    const ParsedRegex::Node& get_node(ParsedRegex::NodeIndex index) const
     {
         return m_parsed_regex.nodes[index];
     }
