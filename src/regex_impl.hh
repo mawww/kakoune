@@ -449,10 +449,11 @@ private:
         {
             if (pos == (look_direction == MatchDirection::Forward ? m_end : m_begin))
                 return false;
-            auto cp = (look_direction == MatchDirection::Forward ? *pos : *(pos-1)), ref = *it;
+            Codepoint cp = (look_direction == MatchDirection::Forward ? *pos : *(pos-1));
             if (ignore_case)
                 cp = to_lower(cp);
 
+            const Codepoint ref = *it;
             if (ref == 0xF000)
             {} // any character matches
             else if (ref > 0xF0000 and ref <= 0xFFFFD)
