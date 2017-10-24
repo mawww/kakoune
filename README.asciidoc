@@ -1224,8 +1224,9 @@ reached (see `idle_timeout` option). Insert mode completion can be explicitly tr
 using `<c-x>`, followed, by:
 
  * *f* : filename completion
- * *w* : buffer word completion
- * *l* : buffer line completion
+ * *w* : word completion (current buffer)
+ * *W* : word completion (all buffers)
+ * *l* : line completion (current buffer)
 
 Completion candidates can be selected using `<c-n>` and `<c-p>`.
 

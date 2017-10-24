@@ -86,7 +86,8 @@ public:
     void reset();
 
     void explicit_file_complete();
-    void explicit_word_complete();
+    void explicit_word_buffer_complete();
+    void explicit_word_all_complete();
     void explicit_line_complete();
 
 private:

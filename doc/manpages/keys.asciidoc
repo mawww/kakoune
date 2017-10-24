@@ -50,7 +50,10 @@ Insert mode
 		explicit file completion
 
 	*w*:::
-		explicit word completion
+		explicit word completion (current buffer)
+
+	*W*:::
+		explicit word completion (all buffers)
 
 	*l*:::
 		explicit line completion

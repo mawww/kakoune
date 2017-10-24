@@ -1208,12 +1208,15 @@ public:
                     if (key.key == 'f')
                         m_completer.explicit_file_complete();
                     if (key.key == 'w')
-                        m_completer.explicit_word_complete();
+                        m_completer.explicit_word_buffer_complete();
+                    if (key.key == 'W')
+                        m_completer.explicit_word_all_complete();
                     if (key.key == 'l')
                         m_completer.explicit_line_complete();
             }, "enter completion type",
             "f: filename\n"
-            "w: word\n"
+            "w: word (current buffer)\n"
+            "W: word (all buffers)\n"
             "l: line\n");
             update_completions = false;
         }

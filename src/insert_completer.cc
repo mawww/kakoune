@@ -548,7 +548,13 @@ void InsertCompleter::explicit_file_complete()
     m_explicit_completer = complete_filename<false>;
 }
 
-void InsertCompleter::explicit_word_complete()
+void InsertCompleter::explicit_word_buffer_complete()
+{
+    try_complete(complete_word<false>);
+    m_explicit_completer = complete_word<false>;
+}
+
+void InsertCompleter::explicit_word_all_complete()
 {
     try_complete(complete_word<true>);
     m_explicit_completer = complete_word<true>;
