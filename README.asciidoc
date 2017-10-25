@@ -1046,6 +1046,7 @@ fg_color[,bg_color][+attributes]
 fg_color and bg_color can be:
 
  * A named color: `black, red, green, yellow, blue, magenta, cyan, white`.
+ * A named bright color: `bright-black, bright-red, bright-green, bright-yellow, bright-blue, bright-magenta, bright-cyan, bright-white`.
  * `default`, which keeps the existing color
  * An rgb color: `rgb:RRGGBB`, with RRGGBB the hexadecimal value of the color.
 

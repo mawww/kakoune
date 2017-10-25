@@ -229,15 +229,23 @@ void on_term_resize(int)
 
 static const std::initializer_list<HashMap<Kakoune::Color, int>::Item>
 default_colors = {
-    { Color::Default, -1 },
-    { Color::Black,   COLOR_BLACK },
-    { Color::Red,     COLOR_RED },
-    { Color::Green,   COLOR_GREEN },
-    { Color::Yellow,  COLOR_YELLOW },
-    { Color::Blue,    COLOR_BLUE },
-    { Color::Magenta, COLOR_MAGENTA },
-    { Color::Cyan,    COLOR_CYAN },
-    { Color::White,   COLOR_WHITE },
+    { Color::Default,       -1 },
+    { Color::Black,          0 },
+    { Color::Red,            1 },
+    { Color::Green,          2 },
+    { Color::Yellow,         3 },
+    { Color::Blue,           4 },
+    { Color::Magenta,        5 },
+    { Color::Cyan,           6 },
+    { Color::White,          7 },
+    { Color::BrightBlack,    8 },
+    { Color::BrightRed,      9 },
+    { Color::BrightGreen,   10 },
+    { Color::BrightYellow,  11 },
+    { Color::BrightBlue,    12 },
+    { Color::BrightMagenta, 13 },
+    { Color::BrightCyan,    14 },
+    { Color::BrightWhite,   15 },
 };
 
 NCursesUI::NCursesUI()
