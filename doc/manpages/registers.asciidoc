@@ -31,7 +31,7 @@ Default registers
 Most commands using a register default to a specific one if not specified:
 
 *"* (dquote)::
-	default yank register, used by yanking and pasting commands like *y*, *p*
+	default copy register, used by yanking and pasting commands like *y*, *p*
 	and *R*
 
 */* (slash)::
