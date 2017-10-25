@@ -185,6 +185,22 @@ void register_env_vars()
             "window_height", false,
             [](StringView name, const Context& context) -> String
             { return to_string(context.window().dimensions().line); }
+        }, {
+            "window_left", false,
+            [](StringView name, const Context& context) -> String
+            { return to_string(context.window().position().column + 1); }
+        }, {
+            "window_top", false,
+            [](StringView name, const Context& context) -> String
+            { return to_string(context.window().position().line + 1); }
+        }, {
+            "window_range_column", false,
+            [](StringView name, const Context& context) -> String
+            { return to_string(context.window().range().column); }
+        }, {
+            "window_range_line", false,
+            [](StringView name, const Context& context) -> String
+            { return to_string(context.window().range().line); }
         }
     };
 
