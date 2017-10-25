@@ -14,7 +14,7 @@ Completions shell_complete(const Context& context, CompletionFlags flags,
 
     bool command = true;
     const ByteCount len = prefix.length();
-    for (ByteCount pos = 0; pos < cursor_pos;)
+    for (ByteCount pos = 0; pos < cursor_pos and pos < len;)
     {
         command = (pos == 0 or prefix[pos-1] == ';' or prefix[pos-1] == '|' or
                    (pos > 1 and prefix[pos-1] == '&' and prefix[pos-2] == '&'));
