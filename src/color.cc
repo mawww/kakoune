@@ -19,14 +19,14 @@ static constexpr const char* color_names[] = {
     "magenta",
     "cyan",
     "white",
-    "brblack",
-    "brred",
-    "brgreen",
-    "bryellow",
-    "brblue",
-    "brmagenta",
-    "brcyan",
-    "brwhite",
+    "bright-black",
+    "bright-red",
+    "bright-green",
+    "bright-yellow",
+    "bright-blue",
+    "bright-magenta",
+    "bright-cyan",
+    "bright-white",
 };
 
 bool is_color_name(StringView color)
