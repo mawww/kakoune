@@ -88,7 +88,8 @@ public:
     void explicit_file_complete();
     void explicit_word_buffer_complete();
     void explicit_word_all_complete();
-    void explicit_line_complete();
+    void explicit_line_buffer_complete();
+    void explicit_line_all_complete();
 
 private:
     bool setup_ifn();

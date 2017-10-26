@@ -1223,12 +1223,15 @@ public:
                     if (key.key == 'W')
                         m_completer.explicit_word_all_complete();
                     if (key.key == 'l')
-                        m_completer.explicit_line_complete();
+                        m_completer.explicit_line_buffer_complete();
+                    if (key.key == 'L')
+                        m_completer.explicit_line_all_complete();
             }, "enter completion type",
             "f: filename\n"
             "w: word (current buffer)\n"
             "W: word (all buffers)\n"
-            "l: line\n");
+            "l: line (current buffer)\n"
+            "L: line (all buffers)\n");
             update_completions = false;
         }
         else if (key == ctrl('o'))

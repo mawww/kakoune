@@ -33,7 +33,7 @@ String option_to_string(const InsertCompleterDesc& opt)
         case InsertCompleterDesc::Option:
             return "option=" + (opt.param ? *opt.param : "");
         case InsertCompleterDesc::Line:
-            return "line";
+            return "line=" + (opt.param ? *opt.param : "");
     }
     kak_assert(false);
     return "";
@@ -63,11 +63,15 @@ void option_from_string(StringView str, InsertCompleterDesc& opt)
         opt.param = Optional<String>{};
         return;
     }
-    else if (str == "line")
+    else if (str.substr(0_byte, 5_byte) == "line=")
     {
-        opt.mode = InsertCompleterDesc::Line;
-        opt.param = Optional<String>{};
-        return;
+        auto param = str.substr(5_byte);
+        if (param == "all" or param == "buffer")
+        {
+            opt.mode = InsertCompleterDesc::Line;
+            opt.param = param.str();
+            return;
+        }
     }
     throw runtime_error(format("invalid completer description: '{}'", str));
 }
@@ -342,6 +346,7 @@ InsertCompletion complete_option(const SelectionList& sels,
     return {};
 }
 
+template<bool other_buffers>
 InsertCompletion complete_line(const SelectionList& sels, const OptionManager& options)
 {
     const Buffer& buffer = sels.buffer();
@@ -352,18 +357,37 @@ InsertCompletion complete_line(const SelectionList& sels, const OptionManager& o
 
     StringView prefix = buffer[cursor_pos.line].substr(0_byte, cursor_pos.column);
     InsertCompletion::CandidateList candidates;
-    for (LineCount l = 0_line; l < buffer.line_count(); ++l)
-    {
-        if (l == cursor_pos.line)
-            continue;
-        ByteCount len = buffer[l].length();
-        if (len > cursor_pos.column and std::equal(prefix.begin(), prefix.end(), buffer[l].begin()))
+
+    auto add_candidates = [&](const Buffer& buf) {
+        for (LineCount l = 0_line; l < buf.line_count(); ++l)
         {
-            StringView candidate = buffer[l].substr(0_byte, len-1);
-            candidates.push_back({candidate.str(), "",
-                                  expand_tabs(candidate, tabstop, column)});
+            // perf: it's unlikely the user intends to search among >10 candidates anyway
+            if (candidates.size() == 100)
+                break;
+            if (buf.name() == buffer.name() && l == cursor_pos.line)
+                continue;
+            ByteCount len = buf[l].length();
+            if (len > cursor_pos.column and std::equal(prefix.begin(), prefix.end(), buf[l].begin()))
+            {
+                StringView candidate = buf[l].substr(0_byte, len-1);
+                candidates.push_back({candidate.str(), "",
+                                      expand_tabs(candidate, tabstop, column)});
+            }
+        }
+    };
+
+    add_candidates(buffer);
+
+    if (other_buffers)
+    {
+        for (const auto& buf : BufferManager::instance())
+        {
+            if (buf.get() == &buffer or buf->flags() & Buffer::Flags::Debug)
+                continue;
+            add_candidates(*buf);
         }
     }
+
     if (candidates.empty())
         return {};
     std::sort(candidates.begin(), candidates.end());
@@ -500,7 +524,12 @@ bool InsertCompleter::setup_ifn()
                 try_complete(complete_word<true>))
                 return true;
             if (completer.mode == InsertCompleterDesc::Line and
-                try_complete(complete_line))
+                *completer.param == "buffer" and
+                try_complete(complete_line<false>))
+                return true;
+            if (completer.mode == InsertCompleterDesc::Line and
+                *completer.param == "all" and
+                try_complete(complete_line<true>))
                 return true;
         }
         return false;
@@ -584,10 +613,16 @@ void InsertCompleter::explicit_word_all_complete()
     m_explicit_completer = complete_word<true>;
 }
 
-void InsertCompleter::explicit_line_complete()
+void InsertCompleter::explicit_line_buffer_complete()
 {
-    try_complete(complete_line);
-    m_explicit_completer = complete_line;
+    try_complete(complete_line<false>);
+    m_explicit_completer = complete_line<false>;
+}
+
+void InsertCompleter::explicit_line_all_complete()
+{
+    try_complete(complete_line<true>);
+    m_explicit_completer = complete_line<true>;
 }
 
 }
