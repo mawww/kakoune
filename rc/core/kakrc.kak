@@ -85,6 +85,7 @@ hook global WinSetOption filetype=kak %{
     hook window InsertChar \n -group kak-indent kak-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
     hook window InsertEnd .* -group kak-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
+    set buffer extra_word_chars '-'
 }
 
 hook -group kak-highlight global WinSetOption filetype=(?!kak).* %{ remove-highlighter window/kakrc }
