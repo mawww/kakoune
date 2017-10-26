@@ -9,7 +9,7 @@ Regex Syntax
 ------------
 
 Kakoune regex syntax is based on the ECMAScript syntax, as defined by the
-ECMA-262 standard.
+ECMA-262 standard (see <<Compatibility>>).
 
 Kakoune's regex always run on Unicode codepoint sequences, not on bytes.
 
@@ -181,3 +181,17 @@ the regex, or the appearance of `\E`.
 
 For example `.\Q.^$\E$` will match any character followed by the literal
 string `.^$` followed by an end of line.
+
+Compatibility
+-------------
+
+The syntax tries to follow the ECMAScript regex syntax as defined by
+https://www.ecma-international.org/ecma-262/8.0/ some divergences
+exists for ease of use or performance reasons:
+
+* lookarounds are not arbitrary, but lookbehind are supported.
+* `\K`, `\Q..\E`, `\A`, `\h` and `\z` are added.
+* Stricter handling of escaping, as we introduce additional
+  escapes, identity escapes like `\X` with X a non-special character
+  are not accepted, to avoid confusions between `\h` meaning literal
+  `h` in ECMAScript, and horizontal blank in Kakoune.
