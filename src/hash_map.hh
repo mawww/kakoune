@@ -54,7 +54,9 @@ struct HashIndex
 
     constexpr void reserve(size_t count)
     {
-        kak_assert(count > 0);
+        if (count == 0)
+            return;
+
         const size_t min_size = (size_t)(count / max_fill_rate) + 1;
         size_t new_size = m_entries.empty() ? 4 : m_entries.size();
         while (new_size < min_size)
