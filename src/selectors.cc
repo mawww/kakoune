@@ -314,12 +314,13 @@ Optional<Iterator> find_closing(Iterator pos, Iterator end,
     return {};
 }
 
-template<typename Iterator>
+template<typename Container, typename Iterator>
 Optional<std::pair<Iterator, Iterator>>
-find_surrounding(Iterator begin, Iterator end,
-                 Iterator pos, StringView opening, StringView closing,
+find_surrounding(const Container& container, Iterator pos,
+                 StringView opening, StringView closing,
                  ObjectFlags flags, int init_level)
 {
+    using std::begin; using std::end;
     const bool to_begin = flags & ObjectFlags::ToBegin;
     const bool to_end   = flags & ObjectFlags::ToEnd;
     const bool nestable = opening != closing;
@@ -328,7 +329,7 @@ find_surrounding(Iterator begin, Iterator end,
     if (to_begin and opening != *pos)
     {
         using RevIt = std::reverse_iterator<Iterator>;
-        auto res = find_closing(RevIt{pos+1}, RevIt{begin},
+        auto res = find_closing(RevIt{pos+1}, RevIt{begin(container)},
                                 closing | reverse(), opening | reverse(),
                                 init_level, nestable);
         if (not res)
@@ -340,7 +341,7 @@ find_surrounding(Iterator begin, Iterator end,
     auto last = pos;
     if (to_end)
     {
-        auto res = find_closing(pos, end, opening, closing,
+        auto res = find_closing(pos, end(container), opening, closing,
                                 init_level, nestable);
         if (not res)
             return {};
@@ -357,17 +358,6 @@ find_surrounding(Iterator begin, Iterator end,
     }
     return to_end ? std::pair<Iterator, Iterator>{first, last}
                   : std::pair<Iterator, Iterator>{last, first};
-}
-
-template<typename Container, typename Iterator>
-Optional<std::pair<Iterator, Iterator>>
-find_surrounding(const Container& container, Iterator pos,
-                 StringView opening, StringView closing,
-                 ObjectFlags flags, int init_level)
-{
-    using std::begin; using std::end;
-    return find_surrounding(begin(container), end(container), pos,
-                            opening, closing, flags, init_level);
 }
 
 Optional<Selection>
