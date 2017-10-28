@@ -424,7 +424,8 @@ void command(Context& context, NormalParams params)
     CommandManager::instance().clear_last_complete_command();
 
     context.input_handler().prompt(
-        ":", "", get_face("Prompt"), PromptFlags::DropHistoryEntriesWithBlankPrefix,
+        ":", context.main_sel_register_value(':').str(),
+        get_face("Prompt"), PromptFlags::DropHistoryEntriesWithBlankPrefix | PromptFlags::InactiveInitString,
         [](const Context& context, CompletionFlags flags,
            StringView cmd_line, ByteCount pos) {
                return CommandManager::instance().complete(context, flags, cmd_line, pos);
@@ -494,8 +495,9 @@ void pipe(Context& context, NormalParams)
 {
     const char* prompt = replace ? "pipe:" : "pipe-to:";
     context.input_handler().prompt(
-        prompt, "", get_face("Prompt"),
-        PromptFlags::DropHistoryEntriesWithBlankPrefix, shell_complete,
+        prompt, context.main_sel_register_value("|").str(), get_face("Prompt"),
+        PromptFlags::DropHistoryEntriesWithBlankPrefix | PromptFlags::InactiveInitString,
+        shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -562,8 +564,9 @@ void insert_output(Context& context, NormalParams)
 {
     const char* prompt = mode == InsertMode::Insert ? "insert-output:" : "append-output:";
     context.input_handler().prompt(
-        prompt, "", get_face("Prompt"),
-        PromptFlags::DropHistoryEntriesWithBlankPrefix, shell_complete,
+        prompt, context.main_sel_register_value("|").str(), get_face("Prompt"),
+        PromptFlags::DropHistoryEntriesWithBlankPrefix | PromptFlags::InactiveInitString,
+        shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -685,12 +688,13 @@ void paste_all(Context& context, NormalParams params)
 }
 
 template<typename T>
-void regex_prompt(Context& context, String prompt, T func)
+void regex_prompt(Context& context, String prompt, String default_regex, T func)
 {
     DisplayCoord position = context.has_window() ? context.window().position() : DisplayCoord{};
     SelectionList selections = context.selections();
     context.input_handler().prompt(
-        std::move(prompt), "", get_face("Prompt"), PromptFlags::None, complete_nothing,
+        std::move(prompt), default_regex, get_face("Prompt"),
+        PromptFlags::InactiveInitString, complete_nothing,
         [=](StringView str, PromptEvent event, Context& context) mutable {
             try
             {
@@ -714,7 +718,7 @@ void regex_prompt(Context& context, String prompt, T func)
                 if (event == PromptEvent::Validate)
                     context.push_jump();
 
-                func(str.empty() ? Regex{} : Regex{str}, event, context);
+                func(str.empty() ? Regex{default_regex} : Regex{str}, event, context);
             }
             catch (regex_error& err)
             {
@@ -748,7 +752,7 @@ void search(Context& context, NormalParams params)
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
     const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
-    regex_prompt(context, prompt.str(),
+    regex_prompt(context, prompt.str(), saved_reg[main_index],
                  [reg, count, saved_reg, main_index]
                  (Regex regex, PromptEvent event, Context& context) {
                      if (event == PromptEvent::Abort)
@@ -756,9 +760,6 @@ void search(Context& context, NormalParams params)
                          RegisterManager::instance()[reg].set(context, saved_reg);
                          return;
                      }
-
-                     if (regex.empty())
-                         regex = Regex{saved_reg[main_index]};
                      RegisterManager::instance()[reg].set(context, regex.str());
 
                      if (not regex.empty() and not regex.str().empty())
@@ -862,7 +863,7 @@ void select_regex(Context& context, NormalParams params)
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
     const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
-    regex_prompt(context, std::move(prompt),
+    regex_prompt(context, std::move(prompt), saved_reg[main_index],
                  [reg, capture, saved_reg, main_index](Regex ex, PromptEvent event, Context& context) {
          if (event == PromptEvent::Abort)
          {
@@ -870,8 +871,6 @@ void select_regex(Context& context, NormalParams params)
              return;
          }
 
-        if (ex.empty())
-            ex = Regex{saved_reg[main_index]};
         RegisterManager::instance()[reg].set(context, ex.str());
 
         if (not ex.empty() and not ex.str().empty())
@@ -889,7 +888,7 @@ void split_regex(Context& context, NormalParams params)
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
     const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
-    regex_prompt(context, std::move(prompt),
+    regex_prompt(context, std::move(prompt), saved_reg[main_index],
                  [reg, capture, saved_reg, main_index](Regex ex, PromptEvent event, Context& context) {
          if (event == PromptEvent::Abort)
          {
@@ -897,8 +896,6 @@ void split_regex(Context& context, NormalParams params)
              return;
          }
 
-        if (ex.empty())
-            ex = Regex{saved_reg[main_index]};
         RegisterManager::instance()[reg].set(context, ex.str());
 
         if (not ex.empty() and not ex.str().empty())
@@ -967,7 +964,8 @@ template<bool matching>
 void keep(Context& context, NormalParams)
 {
     constexpr const char* prompt = matching ? "keep matching:" : "keep not matching:";
-    regex_prompt(context, prompt, [](const Regex& ex, PromptEvent event, Context& context) {
+    regex_prompt(context, prompt, String{},
+                 [](const Regex& ex, PromptEvent event, Context& context) {
         if (ex.empty() or event == PromptEvent::Abort)
             return;
         const Buffer& buffer = context.buffer();

@@ -486,10 +486,10 @@ public:
        m_cursor_pos = start + str.char_length();
     }
 
-    void reset(String line)
+    void reset(String line, CharCount cursor_pos = -1)
     {
         m_line = std::move(line);
-        m_cursor_pos = m_line.char_length();
+        m_cursor_pos = cursor_pos == -1 ? m_line.char_length() : cursor_pos;
         m_display_pos = 0;
     }
 
@@ -501,7 +501,7 @@ public:
         return m_line.substr(m_display_pos, m_cursor_pos).column_length();
     }
 
-    DisplayLine build_display_line(ColumnCount in_width)
+    DisplayLine build_display_line(ColumnCount in_width, bool inactive)
     {
         CharCount width = (int)in_width; // Todo: proper handling of char/column
         kak_assert(m_cursor_pos <= m_line.char_length());
@@ -510,13 +510,16 @@ public:
         if (m_cursor_pos >= m_display_pos + width)
             m_display_pos = m_cursor_pos + 1 - width;
 
+        const Face line_face = get_face(inactive ? "StatusLineInfo" : "StatusLine");
+        const Face cursor_face = get_face("StatusCursor");
+
         if (m_cursor_pos == m_line.char_length())
-            return DisplayLine{{ { fix_atom_text(m_line.substr(m_display_pos, width-1)), get_face("StatusLine") },
-                                 { " "_str, get_face("StatusCursor")} } };
+            return DisplayLine{{ { fix_atom_text(m_line.substr(m_display_pos, width-1)), line_face },
+                                 { " "_str, cursor_face} } };
         else
-            return DisplayLine({ { fix_atom_text(m_line.substr(m_display_pos, m_cursor_pos - m_display_pos)), get_face("StatusLine") },
-                                 { fix_atom_text(m_line.substr(m_cursor_pos,1)), get_face("StatusCursor") },
-                                 { fix_atom_text(m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1)), get_face("StatusLine") } });
+            return DisplayLine({ { fix_atom_text(m_line.substr(m_display_pos, m_cursor_pos - m_display_pos)), line_face },
+                                 { fix_atom_text(m_line.substr(m_cursor_pos,1)), cursor_face },
+                                 { fix_atom_text(m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1)), line_face } });
     }
 private:
     CharCount m_cursor_pos = 0;
@@ -625,7 +628,7 @@ public:
         {
             auto prompt = "filter:"_str;
             auto width = context().client().dimensions().column - prompt.column_length();
-            auto display_line = m_filter_editor.build_display_line(width);
+            auto display_line = m_filter_editor.build_display_line(width, false);
             display_line.insert(display_line.begin(), { prompt, get_face("Prompt") });
             context().print_status(display_line);
         }
@@ -710,11 +713,17 @@ public:
                        }}
     {
         m_history_it = ms_history[m_prompt].end();
-        m_line_editor.reset(std::move(initstr));
+        m_line_editor.reset(std::move(initstr), m_flags & PromptFlags::InactiveInitString ? 0 : -1);
     }
 
     void on_key(Key key) override
     {
+        if (m_flags & PromptFlags::InactiveInitString)
+        {
+            m_flags &= ~PromptFlags::InactiveInitString;
+            m_line_editor.reset(String{});
+        }
+
         History& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
 
@@ -950,7 +959,7 @@ private:
         auto width = context().client().dimensions().column - m_prompt.column_length();
         DisplayLine display_line;
         if (not (m_flags & PromptFlags::Password))
-            display_line = m_line_editor.build_display_line(width);
+            display_line = m_line_editor.build_display_line(width, m_flags & PromptFlags::InactiveInitString);
         display_line.insert(display_line.begin(), { m_prompt, m_prompt_face });
         context().print_status(display_line);
     }
