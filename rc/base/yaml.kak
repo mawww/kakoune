@@ -11,19 +11,19 @@ hook global BufCreate .*[.](ya?ml) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions -default code yaml      \
+add-highlighter shared/ regions -default code yaml      \
     double_string '"' (?<!\\)(\\\\)*"       '' \
     single_string "'" "'"                   '' \
     comment       '#' '$'                   ''
 
-add-highlighter -group /yaml/double_string fill string
-add-highlighter -group /yaml/single_string fill string
-add-highlighter -group /yaml/comment       fill comment
+add-highlighter shared/yaml/double_string fill string
+add-highlighter shared/yaml/single_string fill string
+add-highlighter shared/yaml/comment       fill comment
 
-add-highlighter -group /yaml/code regex ^(---|\.\.\.)$ 0:meta
-add-highlighter -group /yaml/code regex ^(\h*:\w*) 0:keyword
-add-highlighter -group /yaml/code regex \b(true|false|null)\b 0:value
-add-highlighter -group /yaml/code regex ^\h*-?\h*(\S+): 1:attribute
+add-highlighter shared/yaml/code regex ^(---|\.\.\.)$ 0:meta
+add-highlighter shared/yaml/code regex ^(\h*:\w*) 0:keyword
+add-highlighter shared/yaml/code regex \b(true|false|null)\b 0:value
+add-highlighter shared/yaml/code regex ^\h*-?\h*(\S+): 1:attribute
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -49,14 +49,14 @@ def -hidden yaml-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group yaml-highlight global WinSetOption filetype=yaml %{ add-highlighter ref yaml }
+hook -group yaml-highlight global WinSetOption filetype=yaml %{ add-highlighter window ref yaml }
 
 hook global WinSetOption filetype=yaml %{
     hook window InsertEnd  .* -group yaml-hooks  yaml-filter-around-selections
     hook window InsertChar \n -group yaml-indent yaml-indent-on-new-line
 }
 
-hook -group yaml-highlight global WinSetOption filetype=(?!yaml).* %{ remove-highlighter yaml }
+hook -group yaml-highlight global WinSetOption filetype=(?!yaml).* %{ remove-highlighter window/yaml }
 
 hook global WinSetOption filetype=(?!yaml).* %{
     remove-hooks window yaml-indent

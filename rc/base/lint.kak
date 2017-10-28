@@ -72,12 +72,12 @@ def -hidden lint-show %{
     } }
 
 def lint-enable -docstring "Activate automatic diagnostics of the code" %{
-    add-highlighter flag_lines default lint_flags
+    add-highlighter window flag_lines default lint_flags
     hook window -group lint-diagnostics NormalIdle .* %{ lint-show }
 }
 
 def lint-disable -docstring "Disable automatic diagnostics of the code" %{
-    remove-highlighter hlflags_lint_flags
+    remove-highlighter window/hlflags_lint_flags
     remove-hooks window lint-diagnostics
 }
 

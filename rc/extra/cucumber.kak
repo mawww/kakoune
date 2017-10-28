@@ -11,14 +11,14 @@ hook global BufCreate .*[.](feature|story) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions -default code cucumber \
+add-highlighter shared/ regions -default code cucumber \
     language ^\h*#\h*language: $           '' \
     comment  ^\h*#             $           ''
 
-add-highlighter -group /cucumber/language fill meta
-add-highlighter -group /cucumber/comment  fill comment
+add-highlighter shared/cucumber/language fill meta
+add-highlighter shared/cucumber/comment  fill comment
 
-add-highlighter -group /cucumber/language regex \S+$ 0:value
+add-highlighter shared/cucumber/language regex \S+$ 0:value
 
 # Spoken languages
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
@@ -51,7 +51,7 @@ add-highlighter -group /cucumber/language regex \S+$ 0:value
 #   …
 # }
 
-add-highlighter -group /cucumber/code regex \b(Feature|Business\h+Need|Ability|Background|Scenario|Scenario\h+Outline|Scenario\h+Template|Examples|Scenarios|Given|When|Then|And|But)\b 0:keyword
+add-highlighter shared/cucumber/code regex \b(Feature|Business\h+Need|Ability|Background|Scenario|Scenario\h+Outline|Scenario\h+Template|Examples|Scenarios|Given|When|Then|And|But)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -77,14 +77,14 @@ def -hidden cucumber-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group cucumber-highlight global WinSetOption filetype=cucumber %{ add-highlighter ref cucumber }
+hook -group cucumber-highlight global WinSetOption filetype=cucumber %{ add-highlighter window ref cucumber }
 
 hook global WinSetOption filetype=cucumber %{
     hook window InsertEnd  .* -group cucumber-hooks  cucumber-filter-around-selections
     hook window InsertChar \n -group cucumber-indent cucumber-indent-on-new-line
 }
 
-hook -group cucumber-highlight global WinSetOption filetype=(?!cucumber).* %{ remove-highlighter cucumber }
+hook -group cucumber-highlight global WinSetOption filetype=(?!cucumber).* %{ remove-highlighter window/cucumber }
 
 hook global WinSetOption filetype=(?!cucumber).* %{
     remove-hooks window cucumber-indent

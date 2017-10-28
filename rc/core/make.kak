@@ -26,18 +26,18 @@ All the optional arguments are forwarded to the make utility} \
            }"
 }}
 
-add-highlighter -group / group make
-add-highlighter -group /make regex "^((?:\w:)?[^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
-add-highlighter -group /make regex "^\h*(~*(?:(\^)~*)?)$" 1:green 2:cyan+b
-add-highlighter -group /make line '%opt{make_current_error_line}' default+b
+add-highlighter shared/ group make
+add-highlighter shared/make regex "^((?:\w:)?[^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
+add-highlighter shared/make regex "^\h*(~*(?:(\^)~*)?)$" 1:green 2:cyan+b
+add-highlighter shared/make line '%opt{make_current_error_line}' default+b
 
-hook -group make-highlight global WinSetOption filetype=make %{ add-highlighter ref make }
+hook -group make-highlight global WinSetOption filetype=make %{ add-highlighter window ref make }
 
 hook global WinSetOption filetype=make %{
     hook buffer -group make-hooks NormalKey <ret> make-jump
 }
 
-hook -group make-highlight global WinSetOption filetype=(?!make).* %{ remove-highlighter make }
+hook -group make-highlight global WinSetOption filetype=(?!make).* %{ remove-highlighter window/make }
 
 hook global WinSetOption filetype=(?!make).* %{
     remove-hooks buffer make-hooks

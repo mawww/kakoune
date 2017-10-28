@@ -22,8 +22,7 @@ void setup_builtin_highlighters(HighlighterGroup& group);
 Window::Window(Buffer& buffer)
     : Scope(buffer),
       m_buffer(&buffer),
-      m_highlighters{HighlightPass::All},
-      m_builtin_highlighters{HighlightPass::All}
+      m_builtin_highlighters{highlighters()}
 {
     run_hook_in_own_context("WinCreate", buffer.name());
 
@@ -144,10 +143,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     m_display_buffer.compute_range();
     BufferRange range{{0,0}, buffer().end_coord()};
     for (auto pass : { HighlightPass::Wrap, HighlightPass::Move, HighlightPass::Colorize })
-    {
-        m_highlighters.highlight(context, pass, m_display_buffer, range);
         m_builtin_highlighters.highlight(context, pass, m_display_buffer, range);
-    }
 
     m_display_buffer.optimize();
 
@@ -203,8 +199,6 @@ DisplaySetup Window::compute_display_setup(const Context& context)
         offset,
         false
     };
-    for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
-        m_highlighters.compute_display_setup(context, pass, setup);
     for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
         m_builtin_highlighters.compute_display_setup(context, pass, setup);
 

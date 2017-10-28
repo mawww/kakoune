@@ -11,25 +11,25 @@ hook global BufCreate .*[.](hbs) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions -default html hbs  \
+add-highlighter shared/ regions -default html hbs  \
     comment          \{\{!-- --\}\} '' \
     comment          \{\{!   \}\}   '' \
     block-expression \{\{    \}\}   '' 
 
-add-highlighter -group /hbs/html ref html
-add-highlighter -group /hbs/comment fill comment
-add-highlighter -group /hbs/block-expression regex \{\{((#|/|)(\w|-)+) 1:meta
+add-highlighter shared/hbs/html ref html
+add-highlighter shared/hbs/comment fill comment
+add-highlighter shared/hbs/block-expression regex \{\{((#|/|)(\w|-)+) 1:meta
 
 # some hbs tags have a special meaning
-add-highlighter -group /hbs/block-expression regex \{\{((#|/|)(if|else|unless|with|lookup|log)) 1:keyword
+add-highlighter shared/hbs/block-expression regex \{\{((#|/|)(if|else|unless|with|lookup|log)) 1:keyword
 
 # 'each' is special as it really is two words 'each' and 'as'
-add-highlighter -group /hbs/block-expression regex \{\{((#|/|)((each).*(as))) 2:keyword 4:keyword 5:keyword
+add-highlighter shared/hbs/block-expression regex \{\{((#|/|)((each).*(as))) 2:keyword 4:keyword 5:keyword
 
-add-highlighter -group /hbs/block-expression regex ((\w|-)+)= 1:attribute
+add-highlighter shared/hbs/block-expression regex ((\w|-)+)= 1:attribute
 
 # highlight the string values of attributes as a bonus
-add-highlighter -group /hbs/block-expression regex ((\w|-)+)=(('|").*?('|")) 1:attribute 3:value
+add-highlighter shared/hbs/block-expression regex ((\w|-)+)=(('|").*?('|")) 1:attribute 3:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -56,7 +56,7 @@ def -hidden hbs-indent-on-new-line %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook -group hbs-highlight global WinSetOption filetype=hbs %{
-    add-highlighter ref hbs
+    add-highlighter window ref hbs
 }
 
 hook global WinSetOption filetype=hbs %{
@@ -65,7 +65,7 @@ hook global WinSetOption filetype=hbs %{
 }
 
 hook -group hbs-highlight global WinSetOption filetype=(?!hbs).* %{
-    remove-highlighter hbs
+    remove-highlighter window/hbs
 }
 
 hook global WinSetOption filetype=(?!hbs).* %{

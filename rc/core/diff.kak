@@ -2,10 +2,10 @@ hook global BufCreate .*\.(diff|patch) %{
     set buffer filetype diff
 }
 
-add-highlighter -group / group diff
-add-highlighter -group /diff regex "^\+[^\n]*\n" 0:green,default
-add-highlighter -group /diff regex "^-[^\n]*\n" 0:red,default
-add-highlighter -group /diff regex "^@@[^\n]*@@" 0:cyan,default
+add-highlighter shared/ group diff
+add-highlighter shared/diff regex "^\+[^\n]*\n" 0:green,default
+add-highlighter shared/diff regex "^-[^\n]*\n" 0:red,default
+add-highlighter shared/diff regex "^@@[^\n]*@@" 0:cyan,default
 
-hook -group diff-highlight global WinSetOption filetype=diff %{ add-highlighter ref diff }
-hook -group diff-highlight global WinSetOption filetype=(?!diff).* %{ remove-highlighter diff }
+hook -group diff-highlight global WinSetOption filetype=diff %{ add-highlighter window ref diff }
+hook -group diff-highlight global WinSetOption filetype=(?!diff).* %{ remove-highlighter window/diff }

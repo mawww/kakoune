@@ -11,17 +11,17 @@ hook global BufCreate .*[.](lua) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions -default code lua \
+add-highlighter shared/ regions -default code lua \
     string  '"'      (?<!\\)(\\\\)*"  '' \
     string  "'"      (?<!\\)(\\\\)*'  '' \
     comment '--'     '$'              '' \
     comment '--\[\[' '\]\]'           '' \
 
-add-highlighter -group /lua/string fill string
+add-highlighter shared/lua/string fill string
 
-add-highlighter -group /lua/comment fill comment
+add-highlighter shared/lua/comment fill comment
 
-add-highlighter -group /lua/code regex \b(and|break|do|else|elseif|end|false|for|function|goto|if|in|local|nil|not|or|repeat|return|then|true|until|while)\b 0:keyword
+add-highlighter shared/lua/code regex \b(and|break|do|else|elseif|end|false|for|function|goto|if|in|local|nil|not|or|repeat|return|then|true|until|while)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -92,7 +92,7 @@ def -hidden lua-insert-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group lua-highlight global WinSetOption filetype=lua %{ add-highlighter ref lua }
+hook -group lua-highlight global WinSetOption filetype=lua %{ add-highlighter window ref lua }
 
 hook global WinSetOption filetype=lua %{
     hook window InsertChar .* -group lua-indent lua-indent-on-char
@@ -102,7 +102,7 @@ hook global WinSetOption filetype=lua %{
     alias window alt lua-alternative-file
 }
 
-hook -group lua-highlight global WinSetOption filetype=(?!lua).* %{ remove-highlighter lua }
+hook -group lua-highlight global WinSetOption filetype=(?!lua).* %{ remove-highlighter window/lua }
 
 hook global WinSetOption filetype=(?!lua).* %{
     remove-hooks window lua-indent

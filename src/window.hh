@@ -40,8 +40,6 @@ public:
     Optional<DisplayCoord> display_position(BufferCoord coord) const;
     BufferCoord buffer_coord(DisplayCoord coord) const;
 
-    Highlighter& highlighters() { return m_highlighters; }
-
     Buffer& buffer() const { return *m_buffer; }
 
     bool needs_redraw(const Context& context) const;
@@ -67,8 +65,7 @@ private:
     DisplayCoord m_dimensions;
     DisplayBuffer m_display_buffer;
 
-    HighlighterGroup m_highlighters;
-    HighlighterGroup m_builtin_highlighters;
+    Highlighters m_builtin_highlighters;
 
     struct Setup
     {

@@ -11,7 +11,7 @@ hook global BufCreate .*(([.](rb))|(irbrc)|(pryrc)|(Capfile|[.]cap)|(Gemfile)|(G
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions -default code ruby       \
+add-highlighter shared/ regions -default code ruby       \
     double_string '"' (?<!\\)(\\\\)*"        '' \
     single_string "'" (?<!\\)(\\\\)*'        '' \
     backtick      '`' (?<!\\)(\\\\)*`        '' \
@@ -27,25 +27,25 @@ add-highlighter -group / regions -default code ruby       \
 # Regular expression flags are: i → ignore case, m → multi-lines, o → only interpolate #{} blocks once, x → extended mode (ignore white spaces)
 # Literals are: i → array of symbols, q → string, r → regular expression, s → symbol, w → array of words, x → capture shell result
 
-add-highlighter -group /ruby/double_string fill string
-add-highlighter -group /ruby/double_string regions regions interpolation \Q#{ \} \{
-add-highlighter -group /ruby/double_string/regions/interpolation fill meta
+add-highlighter shared/ruby/double_string fill string
+add-highlighter shared/ruby/double_string regions regions interpolation \Q#{ \} \{
+add-highlighter shared/ruby/double_string/regions/interpolation fill meta
 
-add-highlighter -group /ruby/single_string fill string
+add-highlighter shared/ruby/single_string fill string
 
-add-highlighter -group /ruby/backtick fill meta
-add-highlighter -group /ruby/backtick regions regions interpolation \Q#{ \} \{
-add-highlighter -group /ruby/backtick/regions/interpolation fill meta
+add-highlighter shared/ruby/backtick fill meta
+add-highlighter shared/ruby/backtick regions regions interpolation \Q#{ \} \{
+add-highlighter shared/ruby/backtick/regions/interpolation fill meta
 
-add-highlighter -group /ruby/regex fill meta
-add-highlighter -group /ruby/regex regions regions interpolation \Q#{ \} \{
-add-highlighter -group /ruby/regex/regions/interpolation fill meta
+add-highlighter shared/ruby/regex fill meta
+add-highlighter shared/ruby/regex regions regions interpolation \Q#{ \} \{
+add-highlighter shared/ruby/regex/regions/interpolation fill meta
 
-add-highlighter -group /ruby/comment fill comment
+add-highlighter shared/ruby/comment fill comment
 
-add-highlighter -group /ruby/literal fill meta
+add-highlighter shared/ruby/literal fill meta
 
-add-highlighter -group /ruby/code regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|((?<!:):(([A-Za-z]\w*[=?!]?)|(\[\]=?)))|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:variable
+add-highlighter shared/ruby/code regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|((?<!:):(([A-Za-z]\w*[=?!]?)|(\[\]=?)))|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:variable
 
 %sh{
     # Grammar
@@ -65,10 +65,10 @@ add-highlighter -group /ruby/code regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|
 
     # Highlight keywords
     printf %s "
-        add-highlighter -group /ruby/code regex \b(${keywords})\b 0:keyword
-        add-highlighter -group /ruby/code regex \b(${attributes})\b 0:attribute
-        add-highlighter -group /ruby/code regex \b(${values})\b 0:value
-        add-highlighter -group /ruby/code regex \b(${meta})\b 0:meta
+        add-highlighter shared/ruby/code regex \b(${keywords})\b 0:keyword
+        add-highlighter shared/ruby/code regex \b(${attributes})\b 0:attribute
+        add-highlighter shared/ruby/code regex \b(${values})\b 0:value
+        add-highlighter shared/ruby/code regex \b(${meta})\b 0:meta
     "
 }
 
@@ -144,7 +144,7 @@ def -hidden ruby-insert-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group ruby-highlight global WinSetOption filetype=ruby %{ add-highlighter ref ruby }
+hook -group ruby-highlight global WinSetOption filetype=ruby %{ add-highlighter window ref ruby }
 
 hook global WinSetOption filetype=ruby %{
     hook window InsertChar .* -group ruby-indent ruby-indent-on-char
@@ -154,7 +154,7 @@ hook global WinSetOption filetype=ruby %{
     alias window alt ruby-alternative-file
 }
 
-hook -group ruby-highlight global WinSetOption filetype=(?!ruby).* %{ remove-highlighter ruby }
+hook -group ruby-highlight global WinSetOption filetype=(?!ruby).* %{ remove-highlighter window/ruby }
 
 hook global WinSetOption filetype=(?!ruby).* %{
     remove-hooks window ruby-indent

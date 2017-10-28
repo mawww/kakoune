@@ -8,26 +8,26 @@ hook global BufCreate .*[.](php) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions -default code php  \
+add-highlighter shared/ regions -default code php  \
     double_string '"'  (?<!\\)(\\\\)*" '' \
     single_string "'"  (?<!\\)(\\\\)*' '' \
     comment       //   '$'             '' \
     comment       /\*  \*/             '' \
     comment       '#'  '$'             ''
 
-add-highlighter -group /php/double_string fill string
-add-highlighter -group /php/single_string fill string
-add-highlighter -group /php/comment       fill comment
+add-highlighter shared/php/double_string fill string
+add-highlighter shared/php/single_string fill string
+add-highlighter shared/php/comment       fill comment
 
-add-highlighter -group /php/code regex \$\w* 0:variable
-add-highlighter -group /php/code regex \b(false|null|parent|self|this|true)\b 0:value
-add-highlighter -group /php/code regex "-?[0-9]*\.?[0-9]+" 0:value
-add-highlighter -group /php/code regex \b((string|int|bool)|[A-Z][a-z].*?)\b 0:type
-add-highlighter -group /php/code regex \B/[^\n/]+/[gimy]* 0:meta
+add-highlighter shared/php/code regex \$\w* 0:variable
+add-highlighter shared/php/code regex \b(false|null|parent|self|this|true)\b 0:value
+add-highlighter shared/php/code regex "-?[0-9]*\.?[0-9]+" 0:value
+add-highlighter shared/php/code regex \b((string|int|bool)|[A-Z][a-z].*?)\b 0:type
+add-highlighter shared/php/code regex \B/[^\n/]+/[gimy]* 0:meta
 
 # Keywords are collected at
 # http://php.net/manual/en/reserved.keywords.php
-add-highlighter -group /php/code regex \b(__halt_compiler|abstract|and|array|as|break|callable|case|catch|class|clone|const|continue|declare|default|die|do|echo|else|elseif|empty|enddeclare|endfor|endforeach|endif|endswitch|endwhile|eval|exit|extends|final|finally|for|foreach|function|global|goto|if|implements|include|include_once|instanceof|insteadof|interface|isset|list|namespace|new|or|print|private|protected|public|require|require_once|return|static|switch|throw|trait|try|unset|use|var|while|xor|yield|__CLASS__|__DIR__|__FILE__|__FUNCTION__|__LINE__|__METHOD__|__NAMESPACE__|__TRAIT__)\b 0:keyword
+add-highlighter shared/php/code regex \b(__halt_compiler|abstract|and|array|as|break|callable|case|catch|class|clone|const|continue|declare|default|die|do|echo|else|elseif|empty|enddeclare|endfor|endforeach|endif|endswitch|endwhile|eval|exit|extends|final|finally|for|foreach|function|global|goto|if|implements|include|include_once|instanceof|insteadof|interface|isset|list|namespace|new|or|print|private|protected|public|require|require_once|return|static|switch|throw|trait|try|unset|use|var|while|xor|yield|__CLASS__|__DIR__|__FILE__|__FUNCTION__|__LINE__|__METHOD__|__NAMESPACE__|__TRAIT__)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -60,7 +60,7 @@ def -hidden php-indent-on-new-line %<
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group php-highlight global WinSetOption filetype=php %{ add-highlighter ref php }
+hook -group php-highlight global WinSetOption filetype=php %{ add-highlighter window ref php }
 
 hook global WinSetOption filetype=php %{
     hook window InsertEnd  .* -group php-hooks  php-filter-around-selections
@@ -68,7 +68,7 @@ hook global WinSetOption filetype=php %{
     hook window InsertChar \n -group php-indent php-indent-on-new-line
 }
 
-hook -group php-highlight global WinSetOption filetype=(?!php).* %{ remove-highlighter php }
+hook -group php-highlight global WinSetOption filetype=(?!php).* %{ remove-highlighter window/php }
 
 hook global WinSetOption filetype=(?!php).* %{
     remove-hooks window php-indent

@@ -11,17 +11,17 @@ hook global BufCreate .*[.](lisp) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions -default code lisp \
+add-highlighter shared/ regions -default code lisp \
     string  '"' (?<!\\)(\\\\)*"        '' \
     comment ';' '$'                    ''
 
-add-highlighter -group /lisp/string  fill string
-add-highlighter -group /lisp/comment fill comment
+add-highlighter shared/lisp/string  fill string
+add-highlighter shared/lisp/comment fill comment
 
-add-highlighter -group /lisp/code regex \b(nil|true|false)\b 0:value
-add-highlighter -group /lisp/code regex (((\Q***\E)|(///)|(\Q+++\E)){1,3})|(1[+-])|(<|>|<=|=|>=) 0:operator
-add-highlighter -group /lisp/code regex \b(([':]\w+)|([*]\H+[*]))\b 0:variable
-add-highlighter -group /lisp/code regex \b(def[a-z]+|if|do|let|lambda|catch|and|assert|while|def|do|fn|finally|let|loop|new|quote|recur|set!|throw|try|var|case|if-let|if-not|when|when-first|when-let|when-not|(cond(->|->>)?))\b 0:keyword
+add-highlighter shared/lisp/code regex \b(nil|true|false)\b 0:value
+add-highlighter shared/lisp/code regex (((\Q***\E)|(///)|(\Q+++\E)){1,3})|(1[+-])|(<|>|<=|=|>=) 0:operator
+add-highlighter shared/lisp/code regex \b(([':]\w+)|([*]\H+[*]))\b 0:variable
+add-highlighter shared/lisp/code regex \b(def[a-z]+|if|do|let|lambda|catch|and|assert|while|def|do|fn|finally|let|loop|new|quote|recur|set!|throw|try|var|case|if-let|if-not|when|when-first|when-let|when-not|(cond(->|->>)?))\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -43,14 +43,14 @@ def -hidden lisp-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group lisp-highlight global WinSetOption filetype=lisp %{ add-highlighter ref lisp }
+hook -group lisp-highlight global WinSetOption filetype=lisp %{ add-highlighter window ref lisp }
 
 hook global WinSetOption filetype=lisp %{
     hook window InsertEnd  .* -group lisp-hooks  lisp-filter-around-selections
     hook window InsertChar \n -group lisp-indent lisp-indent-on-new-line
 }
 
-hook -group lisp-highlight global WinSetOption filetype=(?!lisp).* %{ remove-highlighter lisp }
+hook -group lisp-highlight global WinSetOption filetype=(?!lisp).* %{ remove-highlighter window/lisp }
 
 hook global WinSetOption filetype=(?!lisp).* %{
     remove-hooks window lisp-indent

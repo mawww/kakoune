@@ -633,112 +633,93 @@ const CommandDesc rename_buffer_cmd = {
     }
 };
 
-Completions complete_highlighter(const Context& context,
-                                 StringView arg, ByteCount pos_in_token, bool only_group)
+static constexpr auto highlighter_scopes = { "global", "buffer", "window", "shared" };
+
+template<bool add>
+Completions highlighter_cmd_completer(
+    const Context& context, CompletionFlags flags, CommandParameters params,
+    size_t token_to_complete, ByteCount pos_in_token)
 {
-    const bool shared = not arg.empty() and arg[0_byte] == '/';
-    if (shared)
+    if (token_to_complete == 0)
     {
-        auto& group = DefinedHighlighters::instance();
-        return offset_pos(group.complete_child(arg.substr(1_byte), pos_in_token-1, only_group), 1);
+
+        StringView path = params[0];
+        auto sep_it = find(path, '/');
+        if (sep_it == path.end())
+           return { 0_byte, pos_in_token, complete(path, pos_in_token, highlighter_scopes) };
+
+        StringView scope{path.begin(), sep_it};
+        HighlighterGroup* root = nullptr;
+        if (scope == "shared")
+            root = &DefinedHighlighters::instance();
+        else if (auto* s = get_scope_ifp(scope, context))
+            root = &s->highlighters();
+        else
+            return {};
+
+        auto offset = scope.length() + 1;
+        return offset_pos(root->complete_child(StringView{sep_it+1, path.end()}, pos_in_token - offset, add), offset);
+    }
+    else if (add and token_to_complete == 1)
+    {
+        StringView name = params[1];
+        return { 0_byte, name.length(), complete(name, pos_in_token, HighlighterRegistry::instance() | transform(std::mem_fn(&HighlighterRegistry::Item::key))) };
     }
     else
-    {
-        auto& group = context.window().highlighters();
-        return group.complete_child(arg, pos_in_token, only_group);
-    }
-}
-
-Completions remove_highlighter_completer(
-    const Context& context, CompletionFlags flags, CommandParameters params,
-    size_t token_to_complete, ByteCount pos_in_token)
-{
-    const String& arg = params[token_to_complete];
-    if (token_to_complete == 0 and not arg.empty() and arg.front() == '/')
-    {
-        auto& group = DefinedHighlighters::instance();
-        return offset_pos(group.complete_child(arg.substr(1_byte), pos_in_token-1, false), 1);
-    }
-    else if (token_to_complete == 0)
-        return context.window().highlighters().complete_child(arg, pos_in_token, false);
-    return {};
-}
-
-Completions add_highlighter_completer(
-    const Context& context, CompletionFlags flags, CommandParameters params,
-    size_t token_to_complete, ByteCount pos_in_token)
-{
-    StringView arg = params[token_to_complete];
-    if (token_to_complete == 1 and params[0] == "-group")
-        return complete_highlighter(context, params[1], pos_in_token, true);
-    else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
-        return { 0_byte, arg.length(), complete(arg, pos_in_token, HighlighterRegistry::instance() | transform(std::mem_fn(&HighlighterRegistry::Item::key))) };
-    return Completions{};
+        return {};
 }
 
 Highlighter& get_highlighter(const Context& context, StringView path)
 {
-    if (path.empty())
-        throw runtime_error("group path should not be empty");
-
-    Highlighter* root = nullptr;
-    if (path[0_byte] == '/')
-    {
-        root = &DefinedHighlighters::instance();
-        path = path.substr(1_byte);
-    }
-    else
-        root = &context.window().highlighters();
-
-    if (path.back() == '/')
+    if (not path.empty() and path.back() == '/')
         path = path.substr(0_byte, path.length() - 1);
 
-    if (not path.empty())
-        return root->get_child(path);
+    auto sep_it = find(path, '/');
+    StringView scope{path.begin(), sep_it};
+    auto* root = (scope == "shared") ? (HighlighterGroup*)&DefinedHighlighters::instance()
+                                     : (HighlighterGroup*)&get_scope(scope, context).highlighters();
+    if (sep_it != path.end())
+        return root->get_child(StringView{sep_it+1, path.end()});
     return *root;
 }
 
 const CommandDesc add_highlighter_cmd = {
     "add-highlighter",
     "addhl",
-    "add-highlighter <type> <type params>...: add an highlighter",
-    ParameterDesc{
-        { { "group", { true, "Set the group in which to put the highlighter. "
-                             "If starting with /, search in shared highlighters, "
-                             "else search in the current window" } } },
-      ParameterDesc::Flags::SwitchesOnlyAtStart, 1
-    },
+    "add-highlighter <path> <type> <type params>...: add an highlighter to the group identified by <path>\n"
+    "    <path> is a '/' delimited path of highlighters, starting with either\n"
+    "   'global', 'buffer', 'window' or 'shared'",
+    ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, 2 },
     CommandFlags::None,
     [](const Context& context, CommandParameters params) -> String
     {
-        if (params.size() > 0)
+        if (params.size() > 1)
         {
             HighlighterRegistry& registry = HighlighterRegistry::instance();
-            auto it = registry.find(params[0]);
+            auto it = registry.find(params[1]);
             if (it != registry.end())
-                return format("{}:\n{}", params[0], indent(it->value.docstring));
+                return format("{}:\n{}", params[1], indent(it->value.docstring));
         }
         return "";
     },
-    add_highlighter_completer,
+    highlighter_cmd_completer<true>,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         HighlighterRegistry& registry = HighlighterRegistry::instance();
 
         auto begin = parser.begin();
-        const String& name = *begin++;
+        StringView path = *begin++;
+        StringView name = *begin++;
         Vector<String> highlighter_params;
         for (; begin != parser.end(); ++begin)
             highlighter_params.push_back(*begin);
 
-        auto group_name = parser.get_switch("group");
-        auto& group = group_name ? get_highlighter(context, *group_name)
-                                 : context.window().highlighters();
         auto it = registry.find(name);
         if (it == registry.end())
             throw runtime_error(format("No such highlighter factory '{}'", name));
-        group.add_child(it->value.factory(highlighter_params));
+        get_highlighter(context, path).add_child(it->value.factory(highlighter_params));
 
+        // TODO: better, this will fail if we touch scopes highlighters that impact multiple windows
         if (context.has_window())
             context.window().force_redraw();
     }
@@ -747,20 +728,19 @@ const CommandDesc add_highlighter_cmd = {
 const CommandDesc remove_highlighter_cmd = {
     "remove-highlighter",
     "rmhl",
-    "remove-highlighter <name>: remove highlighter <name>",
-    single_param,
+    "remove-highlighter <path>: remove highlighter identified by <path>",
+    { {}, ParameterDesc::Flags::None, 1, 1 },
     CommandFlags::None,
     CommandHelper{},
-    remove_highlighter_completer,
+    highlighter_cmd_completer<false>,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         StringView path = parser[0];
-        auto sep_it = find(path | reverse(), '/');
-        auto& group = sep_it != path.rend() ?
-            get_highlighter(context, {path.begin(), sep_it.base()})
-          : context.window().highlighters();
-
-        group.remove_child({sep_it.base(), path.end()});
+        auto rev_path = path | reverse();
+        auto sep_it = find(rev_path, '/');
+        if (sep_it == rev_path.end())
+            return;
+        get_highlighter(context, {path.begin(), sep_it.base()}).remove_child({sep_it.base(), path.end()});
 
         if (context.has_window())
             context.window().force_redraw();

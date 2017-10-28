@@ -28,16 +28,16 @@ All the optional arguments are forwarded to the grep utility} \
 }}
 
 hook -group grep-highlight global WinSetOption filetype=grep %{
-    add-highlighter group grep
-    add-highlighter -group grep regex "^((?:\w:)?[^:]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
-    add-highlighter -group grep line %{%opt{grep_current_line}} default+b
+    add-highlighter window group grep
+    add-highlighter window/grep regex "^((?:\w:)?[^:]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
+    add-highlighter window/grep line %{%opt{grep_current_line}} default+b
 }
 
 hook global WinSetOption filetype=grep %{
     hook buffer -group grep-hooks NormalKey <ret> grep-jump
 }
 
-hook -group grep-highlight global WinSetOption filetype=(?!grep).* %{ remove-highlighter grep }
+hook -group grep-highlight global WinSetOption filetype=(?!grep).* %{ remove-highlighter window/grep }
 
 hook global WinSetOption filetype=(?!grep).* %{
     remove-hooks buffer grep-hooks

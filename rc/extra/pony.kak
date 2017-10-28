@@ -11,15 +11,15 @@ hook global BufCreate .*[.](pony) %{
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code pony \
+addhl shared/ regions -default code pony \
     double_string '"""' '"""'            '' \
     double_string '"'   (?<!\\)(\\\\)*"  '' \
     comment       '/\*'   '\*/'            '' \
     comment       '//'   '$'             ''
 
-addhl -group /pony/double_string fill string
-# addhl -group /pony/single_string fill string
-addhl -group /pony/comment       fill comment
+addhl shared/pony/double_string fill string
+# addhl shared/pony/single_string fill string
+addhl shared/pony/comment       fill comment
 
 
 %sh{
@@ -43,21 +43,21 @@ addhl -group /pony/comment       fill comment
 
     # Highlight keywords
     printf %s "
-        addhl -group /pony/code regex '\b(${values})\b' 0:value
-        addhl -group /pony/code regex '\b(${meta})\b' 0:meta
-        addhl -group /pony/code regex '\b(${func_decl})(\s+(${capabilities}))?(\s+\w+)\(' 1:type 3:builtin 4:builtin
-        addhl -group /pony/code regex '\b(${func_decl})\b' 0:type
-        addhl -group /pony/code regex '=>' 0:type
-        addhl -group /pony/code regex '\b(${keywords})\b' 0:keyword
-        addhl -group /pony/code regex ';' 0:keyword
-        addhl -group /pony/code regex '^\s*|' 0:keyword
-        addhl -group /pony/code regex '\b(${struct})\b' 0:variable
-        addhl -group /pony/code regex '\b(${capabilities})\b(!|^)?' 1:builtin 2:builtin
+        addhl shared/pony/code regex '\b(${values})\b' 0:value
+        addhl shared/pony/code regex '\b(${meta})\b' 0:meta
+        addhl shared/pony/code regex '\b(${func_decl})(\s+(${capabilities}))?(\s+\w+)\(' 1:type 3:builtin 4:builtin
+        addhl shared/pony/code regex '\b(${func_decl})\b' 0:type
+        addhl shared/pony/code regex '=>' 0:type
+        addhl shared/pony/code regex '\b(${keywords})\b' 0:keyword
+        addhl shared/pony/code regex ';' 0:keyword
+        addhl shared/pony/code regex '^\s*|' 0:keyword
+        addhl shared/pony/code regex '\b(${struct})\b' 0:variable
+        addhl shared/pony/code regex '\b(${capabilities})\b(!|^)?' 1:builtin 2:builtin
     "
 
     # Highlight types and attributes
     printf %s "
-        addhl -group /pony/code regex '@[\w_]+\b' 0:attribute
+        addhl shared/pony/code regex '@[\w_]+\b' 0:attribute
     "
 }
 
@@ -82,7 +82,7 @@ def -hidden pony-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group pony-highlight global WinSetOption filetype=pony %{ addhl ref pony }
+hook -group pony-highlight global WinSetOption filetype=pony %{ addhl window ref pony }
 
 hook global WinSetOption filetype=pony %{
     hook window InsertChar \n -group pony-indent pony-indent-on-new-line

@@ -11,13 +11,13 @@ hook global BufCreate .*\.taskpaper %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / group taskpaper
+add-highlighter shared/ group taskpaper
 
-add-highlighter -group /taskpaper regex ^\h*([^:\n]+):\h*\n 1:header
-add-highlighter -group /taskpaper regex \h@\w+(?:\(([^)]*)\))? 0:variable 1:value
-add-highlighter -group /taskpaper regex ^\h*([^-:\n]+)\n 1:+i
-add-highlighter -group /taskpaper regex ^\h*-\h+[^\n]*@done[^\n]* 0:+d
-add-highlighter -group /taskpaper regex (([a-z]+://\S+)|((mailto:)[\w+-]+@\S+)) 0:link
+add-highlighter shared/taskpaper regex ^\h*([^:\n]+):\h*\n 1:header
+add-highlighter shared/taskpaper regex \h@\w+(?:\(([^)]*)\))? 0:variable 1:value
+add-highlighter shared/taskpaper regex ^\h*([^-:\n]+)\n 1:+i
+add-highlighter shared/taskpaper regex ^\h*-\h+[^\n]*@done[^\n]* 0:+d
+add-highlighter shared/taskpaper regex (([a-z]+://\S+)|((mailto:)[\w+-]+@\S+)) 0:link
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -37,10 +37,10 @@ def -hidden taskpaper-indent-on-new-line %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook -group taskpaper-highlight global WinSetOption filetype=taskpaper %{
-    add-highlighter ref taskpaper
+    add-highlighter window ref taskpaper
     hook window InsertChar \n -group taskpaper-indent taskpaper-indent-on-new-line
 }
 hook -group taskpaper-highlight global WinSetOption filetype=(?!taskpaper).* %{
-    remove-highlighter taskpaper
+    remove-highlighter window/taskpaper
     remove-hooks window taskpaper-indent
 }

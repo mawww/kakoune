@@ -4,15 +4,15 @@ decl -docstring "name of the client in which documentation is to be displayed" \
 decl -hidden str manpage
 
 hook -group man-highlight global WinSetOption filetype=man %{
-    add-highlighter group man-highlight
+    add-highlighter window group man-highlight
     # Sections
-    add-highlighter -group man-highlight regex ^\S.*?$ 0:blue
+    add-highlighter window/man-highlight regex ^\S.*?$ 0:blue
     # Subsections
-    add-highlighter -group man-highlight regex '^ {3}\S.*?$' 0:default+b
+    add-highlighter window/man-highlight regex '^ {3}\S.*?$' 0:default+b
     # Command line options
-    add-highlighter -group man-highlight regex '^ {7}-[^\s,]+(,\s+-[^\s,]+)*' 0:yellow
+    add-highlighter window/man-highlight regex '^ {7}-[^\s,]+(,\s+-[^\s,]+)*' 0:yellow
     # References to other manpages
-    add-highlighter -group man-highlight regex [-a-zA-Z0-9_.]+\([a-z0-9]+\) 0:green
+    add-highlighter window/man-highlight regex [-a-zA-Z0-9_.]+\([a-z0-9]+\) 0:green
 }
 
 hook global WinSetOption filetype=man %{
@@ -21,7 +21,7 @@ hook global WinSetOption filetype=man %{
     }
 }
 
-hook -group man-highlight global WinSetOption filetype=(?!man).* %{ remove-highlighter man-highlight }
+hook -group man-highlight global WinSetOption filetype=(?!man).* %{ remove-highlighter window/man-highlight }
 
 hook global WinSetOption filetype=(?!man).* %{
     remove-hooks window man-hooks

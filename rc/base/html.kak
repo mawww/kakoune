@@ -15,26 +15,26 @@ hook global BufCreate .*\.xml %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions html                  \
+add-highlighter shared/ regions html                  \
     comment <!--     -->                  '' \
     tag     <          >                  '' \
     style   <style\b.*?>\K  (?=</style>)  '' \
     script  <script\b.*?>\K (?=</script>) ''
 
-add-highlighter -group /html/comment fill comment
+add-highlighter shared/html/comment fill comment
 
-add-highlighter -group /html/style  ref css
-add-highlighter -group /html/script ref javascript
+add-highlighter shared/html/style  ref css
+add-highlighter shared/html/script ref javascript
 
-add-highlighter -group /html/tag regex \b([a-zA-Z0-9_-]+)=? 1:attribute
-add-highlighter -group /html/tag regex </?(\w+) 1:keyword
-add-highlighter -group /html/tag regex <(!DOCTYPE(\h+\w+)+) 1:meta
+add-highlighter shared/html/tag regex \b([a-zA-Z0-9_-]+)=? 1:attribute
+add-highlighter shared/html/tag regex </?(\w+) 1:keyword
+add-highlighter shared/html/tag regex <(!DOCTYPE(\h+\w+)+) 1:meta
 
-add-highlighter -group /html/tag regions content \
+add-highlighter shared/html/tag regions content \
     string '"' (?<!\\)(\\\\)*"      '' \
     string "'" "'"                  ''
 
-add-highlighter -group /html/tag/content/string fill string
+add-highlighter shared/html/tag/content/string fill string
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -65,7 +65,7 @@ def -hidden html-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group html-highlight global WinSetOption filetype=(?:html|xml) %{ add-highlighter ref html }
+hook -group html-highlight global WinSetOption filetype=(?:html|xml) %{ add-highlighter window ref html }
 
 hook global WinSetOption filetype=(?:html|xml) %{
     hook window InsertEnd  .* -group html-hooks  html-filter-around-selections
@@ -73,7 +73,7 @@ hook global WinSetOption filetype=(?:html|xml) %{
     hook window InsertChar \n -group html-indent html-indent-on-new-line
 }
 
-hook -group html-highlight global WinSetOption filetype=(?!html)(?!xml).* %{ remove-highlighter html }
+hook -group html-highlight global WinSetOption filetype=(?!html)(?!xml).* %{ remove-highlighter window/html }
 
 hook global WinSetOption filetype=(?!html)(?!xml).* %{
     remove-hooks window html-indent

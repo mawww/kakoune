@@ -15,7 +15,7 @@ hook global BufCreate .*[.](pug|jade) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions -default code pug                 \
+add-highlighter shared/ regions -default code pug                 \
     text          ^\h*\|\s     $                      '' \
     text          '^\h*([A-Za-z][A-Za-z0-9_-]*)?(#[A-Za-z][A-Za-z0-9_-]*)?((?:\.[A-Za-z][A-Za-z0-9_-]*)*)?(?<!\t)(?<! )(?<!\n)\h+\K.*' $ '' \
     javascript    ^\h*[-=!]    $                      '' \
@@ -28,18 +28,18 @@ add-highlighter -group / regions -default code pug                 \
 # Filters
 # ‾‾‾‾‾‾‾
 
-add-highlighter -group /pug/double_string    fill    string
-add-highlighter -group /pug/single_string    fill    string
-add-highlighter -group /pug/comment          fill    comment
-add-highlighter -group /pug/javascript       ref     javascript
-add-highlighter -group /pug/attribute        ref     javascript
-add-highlighter -group /pug/puglang          ref     javascript
-add-highlighter -group /pug/puglang          regex   \b(\block|extends|include|append|prepend|if|unless|else|case|when|default|each|while|mixin|of|in)\b 0:keyword
-add-highlighter -group /pug/attribute        regex   [()=]                             0:operator
-add-highlighter -group /pug/text             regex   \h*(\|)                           1:meta
-add-highlighter -group /pug/code             regex   ^\h*([A-Za-z][A-Za-z0-9_-]*)      1:type
-add-highlighter -group /pug/code             regex   '(#[A-Za-z][A-Za-z0-9_-]*)'       1:variable
-add-highlighter -group /pug/code             regex   ((?:\.[A-Za-z][A-Za-z0-9_-]*)*)   1:value
+add-highlighter shared/pug/double_string    fill    string
+add-highlighter shared/pug/single_string    fill    string
+add-highlighter shared/pug/comment          fill    comment
+add-highlighter shared/pug/javascript       ref     javascript
+add-highlighter shared/pug/attribute        ref     javascript
+add-highlighter shared/pug/puglang          ref     javascript
+add-highlighter shared/pug/puglang          regex   \b(\block|extends|include|append|prepend|if|unless|else|case|when|default|each|while|mixin|of|in)\b 0:keyword
+add-highlighter shared/pug/attribute        regex   [()=]                             0:operator
+add-highlighter shared/pug/text             regex   \h*(\|)                           1:meta
+add-highlighter shared/pug/code             regex   ^\h*([A-Za-z][A-Za-z0-9_-]*)      1:type
+add-highlighter shared/pug/code             regex   '(#[A-Za-z][A-Za-z0-9_-]*)'       1:variable
+add-highlighter shared/pug/code             regex   ((?:\.[A-Za-z][A-Za-z0-9_-]*)*)   1:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -65,14 +65,14 @@ def -hidden pug-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group pug-highlight global WinSetOption filetype=pug %{ add-highlighter ref pug }
+hook -group pug-highlight global WinSetOption filetype=pug %{ add-highlighter window ref pug }
 
 hook global WinSetOption filetype=pug %{
     hook window InsertEnd  .* -group pug-hooks  pug-filter-around-selections
     hook window InsertChar \n -group pug-indent pug-indent-on-new-line
 }
 
-hook -group pug-highlight global WinSetOption filetype=(?!pug).* %{ remove-highlighter pug }
+hook -group pug-highlight global WinSetOption filetype=(?!pug).* %{ remove-highlighter window/pug }
 
 hook global WinSetOption filetype=(?!pug).* %{
     remove-hooks window pug-indent

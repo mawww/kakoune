@@ -9,7 +9,7 @@ Formats of language supported:
  - ISO language code, e.g. 'en'
  - language code above followed by a dash or underscore with an ISO country code, e.g. 'en-US'} \
     spell %{
-    try %{ add-highlighter ranges 'spell_regions' }
+    try %{ add-highlighter window ranges 'spell_regions' }
     %sh{
         file=$(mktemp -d "${TMPDIR:-/tmp}"/kak-spell.XXXXXXXX)/buffer
         printf 'eval -no-hooks write %s\n' "${file}"

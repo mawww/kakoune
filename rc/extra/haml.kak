@@ -11,7 +11,7 @@ hook global BufCreate .*[.](haml) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions -default code haml                                                         \
+add-highlighter shared/ regions -default code haml                                                         \
     comment ^\h*/                                                                $             '' \
     eval    ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)?\{\K|#\{\K (?=\})        \{ \
     eval    ^\h*[=-]\K                                                           (?<!\|)(?=\n) '' \
@@ -21,14 +21,14 @@ add-highlighter -group / regions -default code haml                             
 # Filters
 # http://haml.info/docs/yardoc/file.REFERENCE.html#filters
 
-add-highlighter -group /haml/comment fill comment
+add-highlighter shared/haml/comment fill comment
 
-add-highlighter -group /haml/eval   ref ruby
-add-highlighter -group /haml/coffee ref coffee
-add-highlighter -group /haml/sass   ref sass
+add-highlighter shared/haml/eval   ref ruby
+add-highlighter shared/haml/coffee ref coffee
+add-highlighter shared/haml/sass   ref sass
 
-add-highlighter -group /haml/code regex ^\h*(:[a-z]+|-|=)|^(!!!)$ 0:meta
-add-highlighter -group /haml/code regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)? 1:keyword 2:variable
+add-highlighter shared/haml/code regex ^\h*(:[a-z]+|-|=)|^(!!!)$ 0:meta
+add-highlighter shared/haml/code regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)? 1:keyword 2:variable
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -54,14 +54,14 @@ def -hidden haml-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group haml-highlight global WinSetOption filetype=haml %{ add-highlighter ref haml }
+hook -group haml-highlight global WinSetOption filetype=haml %{ add-highlighter window ref haml }
 
 hook global WinSetOption filetype=haml %{
     hook window InsertEnd  .* -group haml-hooks  haml-filter-around-selections
     hook window InsertChar \n -group haml-indent haml-indent-on-new-line
 }
 
-hook -group haml-highlight global WinSetOption filetype=(?!haml).* %{ remove-highlighter haml }
+hook -group haml-highlight global WinSetOption filetype=(?!haml).* %{ remove-highlighter window/haml }
 
 hook global WinSetOption filetype=(?!haml).* %{
     remove-hooks window haml-indent

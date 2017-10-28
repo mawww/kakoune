@@ -11,16 +11,16 @@ hook global BufCreate .*[.](py) %{
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions -default code python \
+add-highlighter shared/ regions -default code python \
     double_string '"""' '"""'            '' \
     single_string "'''" "'''"            '' \
     double_string '"'   (?<!\\)(\\\\)*"  '' \
     single_string "'"   (?<!\\)(\\\\)*'  '' \
     comment       '#'   '$'              ''
 
-add-highlighter -group /python/double_string fill string
-add-highlighter -group /python/single_string fill string
-add-highlighter -group /python/comment       fill comment
+add-highlighter shared/python/double_string fill string
+add-highlighter shared/python/single_string fill string
+add-highlighter shared/python/comment       fill comment
 
 %sh{
     # Grammar
@@ -47,16 +47,16 @@ add-highlighter -group /python/comment       fill comment
 
     # Highlight keywords
     printf %s "
-        add-highlighter -group /python/code regex '\b(${values})\b' 0:value
-        add-highlighter -group /python/code regex '\b(${meta})\b' 0:meta
-        add-highlighter -group /python/code regex '\b(${keywords})\b' 0:keyword
-        add-highlighter -group /python/code regex '\b(${functions})\b\(' 1:builtin
+        add-highlighter shared/python/code regex '\b(${values})\b' 0:value
+        add-highlighter shared/python/code regex '\b(${meta})\b' 0:meta
+        add-highlighter shared/python/code regex '\b(${keywords})\b' 0:keyword
+        add-highlighter shared/python/code regex '\b(${functions})\b\(' 1:builtin
     "
 
     # Highlight types and attributes
     printf %s "
-        add-highlighter -group /python/code regex '\b(${types})\b' 0:type
-        add-highlighter -group /python/code regex '@[\w_]+\b' 0:attribute
+        add-highlighter shared/python/code regex '\b(${types})\b' 0:type
+        add-highlighter shared/python/code regex '@[\w_]+\b' 0:attribute
     "
 }
 
@@ -79,7 +79,7 @@ def -hidden python-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group python-highlight global WinSetOption filetype=python %{ add-highlighter ref python }
+hook -group python-highlight global WinSetOption filetype=python %{ add-highlighter window ref python }
 
 hook global WinSetOption filetype=python %{
     hook window InsertChar \n -group python-indent python-indent-on-new-line
@@ -87,7 +87,7 @@ hook global WinSetOption filetype=python %{
     hook window InsertEnd .* -group python-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
 }
 
-hook -group python-highlight global WinSetOption filetype=(?!python).* %{ remove-highlighter python }
+hook -group python-highlight global WinSetOption filetype=(?!python).* %{ remove-highlighter window/python }
 
 hook global WinSetOption filetype=(?!python).* %{
     remove-hooks window python-indent

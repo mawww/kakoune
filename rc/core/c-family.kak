@@ -133,7 +133,7 @@ def -hidden c-family-insert-on-newline %[ eval -draft %[
         fi
 
         printf %s\\n '
-            add-highlighter -group / regions -default code -match-capture FT \
+            add-highlighter shared/ regions -default code -match-capture FT \
                 string %{MAYBEAT(?<!QUOTE)"} %{(?<!\\)(?:\\\\)*"} "" \
                 string %{R"([^(]*)\(} %{\)([^)]*)"} "" \
                 comment /\* \*/ "" \
@@ -141,17 +141,17 @@ def -hidden c-family-insert-on-newline %[ eval -draft %[
                 disabled ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" "#\h*if(?:def)?" \
                 macro %{^\h*?\K#} %{(?<!\\)\n} ""
 
-            add-highlighter -group /FT/string fill string
-            add-highlighter -group /FT/comment fill comment
-            add-highlighter -group /FT/disabled fill rgb:666666
-            add-highlighter -group /FT/macro fill meta
-            add-highlighter -group /FT/macro regex ^\h*#include\h+(\S*) 1:module
+            add-highlighter shared/FT/string fill string
+            add-highlighter shared/FT/comment fill comment
+            add-highlighter shared/FT/disabled fill rgb:666666
+            add-highlighter shared/FT/macro fill meta
+            add-highlighter shared/FT/macro regex ^\h*#include\h+(\S*) 1:module
             ' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g; s/MAYBEAT/${maybe_at}/;"
     done
 }
 
 # c specific
-add-highlighter -group /c/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+add-highlighter shared/c/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 %sh{
     # Grammar
     keywords="while|for|if|else|do|switch|case|default|goto|asm|break|continue|return|sizeof"
@@ -166,15 +166,15 @@ add-highlighter -group /c/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|
 
     # Highlight keywords
     printf %s "
-        add-highlighter -group /c/code regex \b(${keywords})\b 0:keyword
-        add-highlighter -group /c/code regex \b(${attributes})\b 0:attribute
-        add-highlighter -group /c/code regex \b(${types})\b 0:type
-        add-highlighter -group /c/code regex \b(${values})\b 0:value
+        add-highlighter shared/c/code regex \b(${keywords})\b 0:keyword
+        add-highlighter shared/c/code regex \b(${attributes})\b 0:attribute
+        add-highlighter shared/c/code regex \b(${types})\b 0:type
+        add-highlighter shared/c/code regex \b(${values})\b 0:value
     "
 }
 
 # c++ specific
-add-highlighter -group /cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+add-highlighter shared/cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 
 %sh{
     # Grammar
@@ -197,10 +197,10 @@ add-highlighter -group /cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)
 
     # Highlight keywords
     printf %s "
-        add-highlighter -group /cpp/code regex \b(${keywords})\b 0:keyword
-        add-highlighter -group /cpp/code regex \b(${attributes})\b 0:attribute
-        add-highlighter -group /cpp/code regex \b(${types})\b 0:type
-        add-highlighter -group /cpp/code regex \b(${values})\b 0:value
+        add-highlighter shared/cpp/code regex \b(${keywords})\b 0:keyword
+        add-highlighter shared/cpp/code regex \b(${attributes})\b 0:attribute
+        add-highlighter shared/cpp/code regex \b(${types})\b 0:type
+        add-highlighter shared/cpp/code regex \b(${values})\b 0:value
     "
 }
 
@@ -209,13 +209,13 @@ add-highlighter -group /cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)
     builtin_macros="__cplusplus|__STDC_HOSTED__|__FILE__|__LINE__|__DATE__|__TIME__|__STDCPP_DEFAULT_NEW_ALIGNMENT__"
 
     printf %s "
-        add-highlighter -group /c/code regex \b(${builtin_macros})\b 0:builtin
-        add-highlighter -group /cpp/code regex \b(${builtin_macros})\b 0:builtin
+        add-highlighter shared/c/code regex \b(${builtin_macros})\b 0:builtin
+        add-highlighter shared/cpp/code regex \b(${builtin_macros})\b 0:builtin
     "
 }
 
 # objective-c specific
-add-highlighter -group /objc/code regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+add-highlighter shared/objc/code regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 
 %sh{
     # Grammar
@@ -236,11 +236,11 @@ add-highlighter -group /objc/code regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:va
 
     # Highlight keywords
     printf %s "
-        add-highlighter -group /objc/code regex \b(${keywords})\b 0:keyword
-        add-highlighter -group /objc/code regex \b(${attributes})\b 0:attribute
-        add-highlighter -group /objc/code regex \b(${types})\b 0:type
-        add-highlighter -group /objc/code regex \b(${values})\b 0:value
-        add-highlighter -group /objc/code regex @(${decorators})\b 0:attribute
+        add-highlighter shared/objc/code regex \b(${keywords})\b 0:keyword
+        add-highlighter shared/objc/code regex \b(${attributes})\b 0:attribute
+        add-highlighter shared/objc/code regex \b(${types})\b 0:type
+        add-highlighter shared/objc/code regex \b(${values})\b 0:value
+        add-highlighter shared/objc/code regex @(${decorators})\b 0:attribute
     "
 }
 
@@ -269,14 +269,14 @@ hook global WinSetOption filetype=(?!c)(?!cpp)(?!objc).* %[
     unalias window alt c-family-alternative-file
 ]
 
-hook -group c-highlight global WinSetOption filetype=c %[ add-highlighter ref c ]
-hook -group c-highlight global WinSetOption filetype=(?!c).* %[ remove-highlighter c ]
+hook -group c-highlight global WinSetOption filetype=c %[ add-highlighter window ref c ]
+hook -group c-highlight global WinSetOption filetype=(?!c).* %[ remove-highlighter window/c ]
 
-hook -group cpp-highlight global WinSetOption filetype=cpp %[ add-highlighter ref cpp ]
-hook -group cpp-highlight global WinSetOption filetype=(?!cpp).* %[ remove-highlighter cpp ]
+hook -group cpp-highlight global WinSetOption filetype=cpp %[ add-highlighter window ref cpp ]
+hook -group cpp-highlight global WinSetOption filetype=(?!cpp).* %[ remove-highlighter window/cpp ]
 
-hook -group objc-highlight global WinSetOption filetype=objc %[ add-highlighter ref objc ]
-hook -group objc-highlight global WinSetOption filetype=(?!objc).* %[ remove-highlighter objc ]
+hook -group objc-highlight global WinSetOption filetype=objc %[ add-highlighter window ref objc ]
+hook -group objc-highlight global WinSetOption filetype=(?!objc).* %[ remove-highlighter window/objc ]
 
 decl -docstring %{control the type of include guard to be inserted in empty headers
 Can be one of the following:

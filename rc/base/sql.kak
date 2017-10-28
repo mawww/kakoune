@@ -11,7 +11,7 @@ hook global BufCreate .*/?(?i)sql %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions -default code sql \
+add-highlighter shared/ regions -default code sql \
     string '"' (?<!\\)(\\\\)*" '' \
     string "'" (?<!\\)(\\\\)*' '' \
     comment '--' '$' '' \
@@ -85,27 +85,27 @@ add-highlighter -group / regions -default code sql \
 
     # Highlight keywords
     printf %s "
-        add-highlighter -group /sql/code regex '\b(${functions})\(.*\)' 0:function
-        add-highlighter -group /sql/code regex '\b(${data_types_fn})\(.*?\)' 0:type
-        add-highlighter -group /sql/code regex '\b(${keywords})\b' 0:keyword
-        add-highlighter -group /sql/code regex '\b(${operators})\b' 0:operator
-        add-highlighter -group /sql/code regex '\b(${data_types})\b' 0:type
+        add-highlighter shared/sql/code regex '\b(${functions})\(.*\)' 0:function
+        add-highlighter shared/sql/code regex '\b(${data_types_fn})\(.*?\)' 0:type
+        add-highlighter shared/sql/code regex '\b(${keywords})\b' 0:keyword
+        add-highlighter shared/sql/code regex '\b(${operators})\b' 0:operator
+        add-highlighter shared/sql/code regex '\b(${data_types})\b' 0:type
     "
 }
 
-add-highlighter -group /sql/code regex '\+|-|\*|/|%|&|\||^|=|>|<|>=|<=|<>|\+=|-=|\*=|/=|%=|&=|^-=|\|\*=' 0:operator
-add-highlighter -group /sql/code regex \bNULL\b 0:value
-add-highlighter -group /sql/code regex \b\d+(?:\.\d+)?\b 0:value
-add-highlighter -group /sql/string fill string
-add-highlighter -group /sql/comment fill comment
+add-highlighter shared/sql/code regex '\+|-|\*|/|%|&|\||^|=|>|<|>=|<=|<>|\+=|-=|\*=|/=|%=|&=|^-=|\|\*=' 0:operator
+add-highlighter shared/sql/code regex \bNULL\b 0:value
+add-highlighter shared/sql/code regex \b\d+(?:\.\d+)?\b 0:value
+add-highlighter shared/sql/string fill string
+add-highlighter shared/sql/comment fill comment
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook -group sql-highlight global WinSetOption filetype=sql %{
-    add-highlighter ref sql
+    add-highlighter window ref sql
 }
 
 hook -group sql-highlight global WinSetOption filetype=(?!sql).* %{
-    remove-highlighter sql
+    remove-highlighter window/sql
 }

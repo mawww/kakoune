@@ -5,6 +5,7 @@
 #include "hash_map.hh"
 #include "highlighter.hh"
 #include "utils.hh"
+#include "safe_ptr.hh"
 
 namespace Kakoune
 {
@@ -27,12 +28,27 @@ public:
 
     Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override;
 
-private:
+protected:
     void do_highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override;
     void do_compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup) override;
 
     using HighlighterMap = HashMap<String, std::unique_ptr<Highlighter>, MemoryDomain::Highlight>;
     HighlighterMap m_highlighters;
+};
+
+class Highlighters : public HighlighterGroup, public SafeCountable
+{
+public:
+    Highlighters(Highlighters& parent) : HighlighterGroup{HighlightPass::All}, SafeCountable{}, m_parent(&parent) {}
+
+private:
+    void do_highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override;
+    void do_compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup) override;
+
+    friend class Scope;
+    Highlighters() : HighlighterGroup{HighlightPass::All} {}
+
+    SafePtr<Highlighters> m_parent;
 };
 
 struct DefinedHighlighters : public HighlighterGroup,

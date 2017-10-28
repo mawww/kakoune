@@ -147,13 +147,13 @@ def -hidden clang-show-error-info %{
 def clang-enable-diagnostics -docstring %{Activate automatic error reporting and diagnostics
 Information about the analysis are showned after the buffer has been parsed with the clang-parse function} \
 %{
-    add-highlighter flag_lines default clang_flags
+    add-highlighter window flag_lines default clang_flags
     hook window -group clang-diagnostics NormalIdle .* %{ clang-show-error-info }
     hook window -group clang-diagnostics WinSetOption ^clang_errors=.* %{ info; clang-show-error-info }
 }
 
 def clang-disable-diagnostics -docstring "Disable automatic error reporting and diagnostics" %{
-    remove-highlighter hlflags_clang_flags
+    remove-highlighter window/hlflags_clang_flags
     remove-hooks window clang-diagnostics
 }
 

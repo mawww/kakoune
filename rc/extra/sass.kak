@@ -11,20 +11,20 @@ hook global BufCreate .*[.](sass) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter -group / regions -default code sass \
+add-highlighter shared/ regions -default code sass \
     string  '"' (?<!\\)(\\\\)*"        '' \
     string  "'" "'"                    '' \
     comment '/' '$'                    ''
 
-add-highlighter -group /sass/string  fill string
-add-highlighter -group /sass/comment fill comment
+add-highlighter shared/sass/string  fill string
+add-highlighter shared/sass/comment fill comment
 
-add-highlighter -group /sass/code regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:variable
-add-highlighter -group /sass/code regex &|@[A-Za-z][A-Za-z0-9_-]* 0:meta
-add-highlighter -group /sass/code regex (#[0-9A-Fa-f]+)|((\d*\.)?\d+(em|px)) 0:value
-add-highlighter -group /sass/code regex ([A-Za-z][A-Za-z0-9_-]*)\h*: 1:keyword
-add-highlighter -group /sass/code regex :(before|after) 0:attribute
-add-highlighter -group /sass/code regex !important 0:keyword
+add-highlighter shared/sass/code regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:variable
+add-highlighter shared/sass/code regex &|@[A-Za-z][A-Za-z0-9_-]* 0:meta
+add-highlighter shared/sass/code regex (#[0-9A-Fa-f]+)|((\d*\.)?\d+(em|px)) 0:value
+add-highlighter shared/sass/code regex ([A-Za-z][A-Za-z0-9_-]*)\h*: 1:keyword
+add-highlighter shared/sass/code regex :(before|after) 0:attribute
+add-highlighter shared/sass/code regex !important 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -50,14 +50,14 @@ def -hidden sass-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group sass-highlight global WinSetOption filetype=sass %{ add-highlighter ref sass }
+hook -group sass-highlight global WinSetOption filetype=sass %{ add-highlighter window ref sass }
 
 hook global WinSetOption filetype=sass %{
     hook window InsertEnd  .* -group sass-hooks  sass-filter-around-selections
     hook window InsertChar \n -group sass-indent sass-indent-on-new-line
 }
 
-hook -group sass-highlight global WinSetOption filetype=(?!sass).* %{ remove-highlighter sass }
+hook -group sass-highlight global WinSetOption filetype=(?!sass).* %{ remove-highlighter window/sass }
 
 hook global WinSetOption filetype=(?!sass).* %{
     remove-hooks window sass-indent
