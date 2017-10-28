@@ -42,7 +42,7 @@ add-highlighter shared/ regions -default code kakrc \
 
     # Add the language's grammar to the static completion list
     printf '%s\n' "hook global WinSetOption filetype=kak %{
-        set window static_words '$(join "${keywords}:${attributes}:${types}:${values}" '|')'
+        set window static_words '$(join "${keywords}:${attributes}:${types}:${values}" ':')'
         set -- window extra_word_chars '-'
     }"
 
