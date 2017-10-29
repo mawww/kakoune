@@ -257,16 +257,12 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
     hook -group c-family-indent window InsertChar \{ c-family-indent-on-opening-curly-brace
     hook -group c-family-indent window InsertChar \} c-family-indent-on-closing-curly-brace
     hook -group c-family-insert window InsertChar \} c-family-insert-on-closing-curly-brace
-
-    alias window alt c-family-alternative-file
 ]
 
 hook global WinSetOption filetype=(?!c)(?!cpp)(?!objc).* %[
     remove-hooks window c-family-hooks
     remove-hooks window c-family-indent
     remove-hooks window c-family-insert
-
-    unalias window alt c-family-alternative-file
 ]
 
 hook -group c-highlight global WinSetOption filetype=c %[ add-highlighter ref c ]
@@ -299,43 +295,3 @@ def -hidden c-family-insert-include-guards %{
 }
 
 hook -group c-family-insert global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
-
-decl -docstring "colon separated list of path in which header files will be looked for" \
-    str-list alt_dirs ".:.."
-
-def c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
-    alt_dirs=$(printf %s\\n "${kak_opt_alt_dirs}" | tr ':' '\n')
-    file="${kak_buffile##*/}"
-    file_noext="${file%.*}"
-    dir=$(dirname "${kak_buffile}")
-
-    case ${file} in
-        *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
-            for alt_dir in ${alt_dirs}; do
-                for ext in h hh hpp hxx H; do
-                    altname="${dir}/${alt_dir}/${file_noext}.${ext}"
-                    if [ -f ${altname} ]; then
-                        printf 'edit %%{%s}\n' "${altname}"
-                        exit
-                    fi
-                done
-            done
-        ;;
-        *.h|*.hh|*.hpp|*.hxx|*.H)
-            for alt_dir in ${alt_dirs}; do
-                for ext in c cc cpp cxx C m; do
-                    altname="${dir}/${alt_dir}/${file_noext}.${ext}"
-                    if [ -f ${altname} ]; then
-                        printf 'edit %%{%s}\n' "${altname}"
-                        exit
-                    fi
-                done
-            done
-        ;;
-        *)
-            echo "echo -markup '{Error}extension not recognized'"
-            exit
-        ;;
-    esac
-    echo "echo -markup '{Error}alternative file not found'"
-}}
