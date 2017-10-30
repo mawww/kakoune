@@ -185,6 +185,7 @@ String read_file(StringView filename, bool text)
 }
 
 MappedFile::MappedFile(StringView filename)
+    : data{nullptr}
 {
     fd = open(filename.zstr(), O_RDONLY | O_NONBLOCK);
     if (fd == -1)
@@ -194,14 +195,23 @@ MappedFile::MappedFile(StringView filename)
     if (S_ISDIR(st.st_mode))
         throw file_access_error(filename, "is a directory");
 
+    if (st.st_size == 0)
+        return;
+
     data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (data == MAP_FAILED)
+        throw file_access_error{filename, strerror(errno)};
+
+    if (st.st_size > std::numeric_limits<int>::max())
+        throw runtime_error("file is too big");
 }
 
 MappedFile::~MappedFile()
 {
     if (fd != -1)
     {
-        munmap((void*)data, st.st_size);
+        if (data != nullptr)
+            munmap((void*)data, st.st_size);
         close(fd);
     }
 }
