@@ -1521,9 +1521,10 @@ You can redefine a key's meaning using the map command:
 :map <scope> <mode> <key> <keys>
 --------------------------------
 
-`scope` can be one of `global`, `buffer` or `window` (or any prefix),
-mode one of `insert`, `normal`, `prompt`, `menu` or `user` (or any prefix),
-`key` a single key name and `keys` a list of keys.
+`scope` can be one of `global`, `buffer` or `window` (or any prefix);
+mode one of `normal`, `insert`, `menu`, `prompt`, `goto`, `view`,
+`user` or `object` (or any prefix); `key` a single key name and `keys`
+a list of keys.
 
 `user` mode allows for user mapping behind the `,` key. Keys will be
 executed in normal mode.
