@@ -44,12 +44,12 @@ def -hidden html-filter-around-selections %{
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden html-indent-on-char %{
-    eval -draft -itersel %{
+def -hidden html-indent-on-greater-than %[
+    eval -draft -itersel %[
         # align closing tag to opening when alone on a line
-        try %{ exec -draft <space> <a-h> s ^\h+</(\w+)>$ <ret> <a-\;> <a-?> <lt><c-r>1 <ret> s \A|.\z <ret> <a-r> 1<a-&> }
-    }
-}
+        try %[ exec -draft <space> <a-h> s ^\h+<lt>/(\w+)<gt>$ <ret> {c<lt><c-r>1,<lt>/<c-r>1<gt> <ret> s \A|.\z <ret> 1<a-&> ]
+    ]
+]
 
 def -hidden html-indent-on-new-line %{
     eval -draft -itersel %{
@@ -69,7 +69,7 @@ hook -group html-highlight global WinSetOption filetype=(?:html|xml) %{ add-high
 
 hook global WinSetOption filetype=(?:html|xml) %{
     hook window InsertEnd  .* -group html-hooks  html-filter-around-selections
-    hook window InsertChar .* -group html-indent html-indent-on-char
+    hook window InsertChar '>' -group html-indent html-indent-on-greater-than
     hook window InsertChar \n -group html-indent html-indent-on-new-line
 }
 
