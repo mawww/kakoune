@@ -22,8 +22,6 @@ mandocs := $(docs:.asciidoc=.gz)
 PREFIX ?= /usr/local
 DESTDIR ?= # root dir
 
-NCURSESW_INCLUDE ?= /usr/include/ncursesw
-
 bindir := $(DESTDIR)$(PREFIX)/bin
 sharedir := $(DESTDIR)$(PREFIX)/share/kak
 docdir := $(DESTDIR)$(PREFIX)/share/doc/kak
@@ -49,8 +47,8 @@ else ifneq (,$(findstring CYGWIN,$(os)))
     CPPFLAGS += -D_XOPEN_SOURCE=700
     LIBS += -lncursesw -lboost_regex -ldbghelp
 else
-    LIBS += -lncursesw -lboost_regex
-    CPPFLAGS += -I$(NCURSESW_INCLUDE)
+    LIBS += $(shell pkg-config --libs ncursesw) -lboost_regex
+    CPPFLAGS += $(shell pkg-config --cflags ncursesw)
     LDFLAGS += -rdynamic
 endif
 
