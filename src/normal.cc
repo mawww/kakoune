@@ -718,7 +718,8 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
                 if (event == PromptEvent::Validate)
                     context.push_jump();
 
-                func(str.empty() ? Regex{default_regex} : Regex{str}, event, context);
+                if (not str.empty() or event == PromptEvent::Validate)
+                    func(str.empty() ? Regex{default_regex} : Regex{str}, event, context);
             }
             catch (regex_error& err)
             {
