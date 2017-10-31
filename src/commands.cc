@@ -1778,7 +1778,7 @@ const CommandDesc prompt_cmd = {
 
         CapturedShellContext sc{shell_context};
         context.input_handler().prompt(
-            parser[0], initstr.str(), get_face("Prompt"),
+            parser[0], initstr.str(), {}, get_face("Prompt"),
             flags, std::move(completer),
             [=](StringView str, PromptEvent event, Context& context) mutable
             {

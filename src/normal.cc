@@ -424,8 +424,8 @@ void command(Context& context, NormalParams params)
     CommandManager::instance().clear_last_complete_command();
 
     context.input_handler().prompt(
-        ":", context.main_sel_register_value(':').str(),
-        get_face("Prompt"), PromptFlags::DropHistoryEntriesWithBlankPrefix | PromptFlags::InactiveInitString,
+        ":", {}, context.main_sel_register_value(':').str(),
+        get_face("Prompt"), PromptFlags::DropHistoryEntriesWithBlankPrefix,
         [](const Context& context, CompletionFlags flags,
            StringView cmd_line, ByteCount pos) {
                return CommandManager::instance().complete(context, flags, cmd_line, pos);
@@ -495,8 +495,8 @@ void pipe(Context& context, NormalParams)
 {
     const char* prompt = replace ? "pipe:" : "pipe-to:";
     context.input_handler().prompt(
-        prompt, context.main_sel_register_value("|").str(), get_face("Prompt"),
-        PromptFlags::DropHistoryEntriesWithBlankPrefix | PromptFlags::InactiveInitString,
+        prompt, {}, context.main_sel_register_value("|").str(), get_face("Prompt"),
+        PromptFlags::DropHistoryEntriesWithBlankPrefix,
         shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context)
         {
@@ -564,8 +564,8 @@ void insert_output(Context& context, NormalParams)
 {
     const char* prompt = mode == InsertMode::Insert ? "insert-output:" : "append-output:";
     context.input_handler().prompt(
-        prompt, context.main_sel_register_value("|").str(), get_face("Prompt"),
-        PromptFlags::DropHistoryEntriesWithBlankPrefix | PromptFlags::InactiveInitString,
+        prompt, {}, context.main_sel_register_value("|").str(), get_face("Prompt"),
+        PromptFlags::DropHistoryEntriesWithBlankPrefix,
         shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context)
         {
@@ -693,8 +693,8 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
     DisplayCoord position = context.has_window() ? context.window().position() : DisplayCoord{};
     SelectionList selections = context.selections();
     context.input_handler().prompt(
-        std::move(prompt), default_regex, get_face("Prompt"),
-        PromptFlags::InactiveInitString, complete_nothing,
+        std::move(prompt), {}, default_regex, get_face("Prompt"),
+        PromptFlags::None, complete_nothing,
         [=](StringView str, PromptEvent event, Context& context) mutable {
             try
             {
@@ -994,7 +994,7 @@ void keep(Context& context, NormalParams)
 void keep_pipe(Context& context, NormalParams)
 {
     context.input_handler().prompt(
-        "keep pipe:", "", get_face("Prompt"),
+        "keep pipe:", {}, {}, get_face("Prompt"),
         PromptFlags::DropHistoryEntriesWithBlankPrefix, shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context) {
             if (event != PromptEvent::Validate)
@@ -1150,7 +1150,7 @@ void select_object(Context& context, NormalParams params)
                 AutoInfo::Command, context);
 
             context.input_handler().prompt(
-                "object desc:", "", get_face("Prompt"),
+                "object desc:", {}, {}, get_face("Prompt"),
                 PromptFlags::None, complete_nothing,
                 [count,info](StringView cmdline, PromptEvent event, Context& context) {
                     if (event != PromptEvent::Change)

@@ -34,7 +34,6 @@ enum class PromptFlags
     None = 0,
     Password = 1 << 0,
     DropHistoryEntriesWithBlankPrefix = 1 << 1,
-    InactiveInitString = 1 << 2,
 };
 constexpr bool with_bit_ops(Meta::Type<PromptFlags>) { return true; }
 
@@ -63,7 +62,7 @@ public:
     // abort or validation with corresponding PromptEvent value
     // returns to normal mode after validation if callback does
     // not change the mode itself
-    void prompt(StringView prompt, String initstr,
+    void prompt(StringView prompt, String initstr, String emptystr,
                 Face prompt_face, PromptFlags flags,
                 Completer completer, PromptCallback callback);
     void set_prompt_face(Face prompt_face);

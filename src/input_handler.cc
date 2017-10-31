@@ -486,10 +486,11 @@ public:
        m_cursor_pos = start + str.char_length();
     }
 
-    void reset(String line, CharCount cursor_pos = -1)
+    void reset(String line, StringView empty_text)
     {
         m_line = std::move(line);
-        m_cursor_pos = cursor_pos == -1 ? m_line.char_length() : cursor_pos;
+        m_empty_text = empty_text;
+        m_cursor_pos = m_line.char_length();
         m_display_pos = 0;
     }
 
@@ -501,7 +502,7 @@ public:
         return m_line.substr(m_display_pos, m_cursor_pos).column_length();
     }
 
-    DisplayLine build_display_line(ColumnCount in_width, bool inactive)
+    DisplayLine build_display_line(ColumnCount in_width)
     {
         CharCount width = (int)in_width; // Todo: proper handling of char/column
         kak_assert(m_cursor_pos <= m_line.char_length());
@@ -510,22 +511,26 @@ public:
         if (m_cursor_pos >= m_display_pos + width)
             m_display_pos = m_cursor_pos + 1 - width;
 
-        const Face line_face = get_face(inactive ? "StatusLineInfo" : "StatusLine");
+        const bool empty = m_line.empty();
+        StringView str = empty ? m_empty_text : m_line;
+
+        const Face line_face = get_face(empty ? "StatusLineInfo" : "StatusLine");
         const Face cursor_face = get_face("StatusCursor");
 
-        if (m_cursor_pos == m_line.char_length())
-            return DisplayLine{{ { fix_atom_text(m_line.substr(m_display_pos, width-1)), line_face },
+        if (m_cursor_pos == str.char_length())
+            return DisplayLine{{ { fix_atom_text(str.substr(m_display_pos, width-1)), line_face },
                                  { " "_str, cursor_face} } };
         else
-            return DisplayLine({ { fix_atom_text(m_line.substr(m_display_pos, m_cursor_pos - m_display_pos)), line_face },
-                                 { fix_atom_text(m_line.substr(m_cursor_pos,1)), cursor_face },
-                                 { fix_atom_text(m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1)), line_face } });
+            return DisplayLine({ { fix_atom_text(str.substr(m_display_pos, m_cursor_pos - m_display_pos)), line_face },
+                                 { fix_atom_text(str.substr(m_cursor_pos,1)), cursor_face },
+                                 { fix_atom_text(str.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1)), line_face } });
     }
 private:
-    CharCount m_cursor_pos = 0;
-    CharCount m_display_pos = 0;
+    CharCount  m_cursor_pos = 0;
+    CharCount  m_display_pos = 0;
 
-    String    m_line;
+    String     m_line;
+    StringView m_empty_text;
 };
 
 class Menu : public InputMode
@@ -575,7 +580,7 @@ public:
             {
                 m_edit_filter = false;
                 m_filter = Regex{".*"};
-                m_filter_editor.reset("");
+                m_filter_editor.reset("", "");
                 context().print_status(DisplayLine{});
             }
             else
@@ -628,7 +633,7 @@ public:
         {
             auto prompt = "filter:"_str;
             auto width = context().client().dimensions().column - prompt.column_length();
-            auto display_line = m_filter_editor.build_display_line(width, false);
+            auto display_line = m_filter_editor.build_display_line(width);
             display_line.insert(display_line.begin(), { prompt, get_face("Prompt") });
             context().print_status(display_line);
         }
@@ -695,9 +700,10 @@ class Prompt : public InputMode
 {
 public:
     Prompt(InputHandler& input_handler, StringView prompt,
-           String initstr, Face face, PromptFlags flags,
+           String initstr, String emptystr, Face face, PromptFlags flags,
            Completer completer, PromptCallback callback)
         : InputMode(input_handler), m_prompt(prompt.str()), m_prompt_face(face),
+          m_empty_text{std::move(emptystr)},
           m_flags(flags), m_completer(std::move(completer)), m_callback(std::move(callback)),
           m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Transient ?
@@ -713,17 +719,11 @@ public:
                        }}
     {
         m_history_it = ms_history[m_prompt].end();
-        m_line_editor.reset(std::move(initstr), m_flags & PromptFlags::InactiveInitString ? 0 : -1);
+        m_line_editor.reset(std::move(initstr), m_empty_text);
     }
 
     void on_key(Key key) override
     {
-        if (m_flags & PromptFlags::InactiveInitString)
-        {
-            m_flags &= ~PromptFlags::InactiveInitString;
-            m_line_editor.reset(String{});
-        }
-
         History& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
 
@@ -803,7 +803,7 @@ public:
                     if (prefix_match(*it, m_prefix))
                     {
                         m_history_it = it;
-                        m_line_editor.reset(*it);
+                        m_line_editor.reset(*it, m_empty_text);
                         break;
                     }
                 } while (it != history.begin());
@@ -823,9 +823,9 @@ public:
                     ++m_history_it;
 
                 if (m_history_it != history.end())
-                    m_line_editor.reset(*m_history_it);
+                    m_line_editor.reset(*m_history_it, m_empty_text);
                 else
-                    m_line_editor.reset(m_prefix);
+                    m_line_editor.reset(m_prefix, m_empty_text);
 
                 clear_completions();
                 m_refresh_completion_pending = true;
@@ -959,7 +959,7 @@ private:
         auto width = context().client().dimensions().column - m_prompt.column_length();
         DisplayLine display_line;
         if (not (m_flags & PromptFlags::Password))
-            display_line = m_line_editor.build_display_line(width, m_flags & PromptFlags::InactiveInitString);
+            display_line = m_line_editor.build_display_line(width);
         display_line.insert(display_line.begin(), { m_prompt, m_prompt_face });
         context().print_status(display_line);
     }
@@ -968,8 +968,7 @@ private:
     {
         display();
         m_line_changed = false;
-        m_callback((m_flags & PromptFlags::InactiveInitString) ? StringView{} : m_line_editor.line(),
-                   PromptEvent::Change, context());
+        m_callback(m_line_editor.line(), PromptEvent::Change, context());
 
         if (not (context().flags() & Context::Flags::Transient))
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
@@ -991,6 +990,7 @@ private:
     int            m_current_completion = -1;
     bool           m_prefix_in_completions = false;
     String         m_prefix;
+    String         m_empty_text;
     LineEditor     m_line_editor;
     bool           m_line_changed = false;
     PromptFlags    m_flags;
@@ -1456,12 +1456,12 @@ void InputHandler::repeat_last_insert()
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
 }
 
-void InputHandler::prompt(StringView prompt, String initstr,
+void InputHandler::prompt(StringView prompt, String initstr, String emptystr,
                           Face prompt_face, PromptFlags flags,
                           Completer completer, PromptCallback callback)
 {
-    push_mode(new InputModes::Prompt(*this, prompt, std::move(initstr), prompt_face,
-                                     flags, std::move(completer), std::move(callback)));
+    push_mode(new InputModes::Prompt(*this, prompt, std::move(initstr), std::move(emptystr),
+                                     prompt_face, flags, std::move(completer), std::move(callback)));
 }
 
 void InputHandler::set_prompt_face(Face prompt_face)
