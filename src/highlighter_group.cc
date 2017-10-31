@@ -69,19 +69,19 @@ Completions HighlighterGroup::complete_child(StringView path, ByteCount cursor_p
     return { 0, 0, std::move(candidates) };
 }
 
-void Highlighters::do_highlight(const Context& context, HighlightPass pass,
-                                    DisplayBuffer& display_buffer, BufferRange range)
+void Highlighters::highlight(const Context& context, HighlightPass pass,
+                             DisplayBuffer& display_buffer, BufferRange range)
 {
     if (m_parent)
-        m_parent->do_highlight(context, pass, display_buffer, range);
-    HighlighterGroup::do_highlight(context, pass, display_buffer, range);
+        m_parent->highlight(context, pass, display_buffer, range);
+    m_group.highlight(context, pass, display_buffer, range);
 }
 
-void Highlighters::do_compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup)
+void Highlighters::compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup)
 {
     if (m_parent)
-        m_parent->do_compute_display_setup(context, pass, setup);
-    HighlighterGroup::do_compute_display_setup(context, pass, setup);
+        m_parent->compute_display_setup(context, pass, setup);
+    m_group.compute_display_setup(context, pass, setup);
 }
 
 }

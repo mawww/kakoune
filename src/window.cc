@@ -28,7 +28,7 @@ Window::Window(Buffer& buffer)
 
     options().register_watcher(*this);
 
-    setup_builtin_highlighters(m_builtin_highlighters);
+    setup_builtin_highlighters(m_builtin_highlighters.group());
 
     for (auto& option : options().flatten_options())
         on_option_changed(*option);

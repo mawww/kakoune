@@ -653,7 +653,7 @@ Completions highlighter_cmd_completer(
         if (scope == "shared")
             root = &DefinedHighlighters::instance();
         else if (auto* s = get_scope_ifp(scope, context))
-            root = &s->highlighters();
+            root = &s->highlighters().group();
         else
             return {};
 
@@ -676,8 +676,8 @@ Highlighter& get_highlighter(const Context& context, StringView path)
 
     auto sep_it = find(path, '/');
     StringView scope{path.begin(), sep_it};
-    auto* root = (scope == "shared") ? (HighlighterGroup*)&DefinedHighlighters::instance()
-                                     : (HighlighterGroup*)&get_scope(scope, context).highlighters();
+    auto* root = (scope == "shared") ? static_cast<HighlighterGroup*>(&DefinedHighlighters::instance())
+                                     : static_cast<HighlighterGroup*>(&get_scope(scope, context).highlighters().group());
     if (sep_it != path.end())
         return root->get_child(StringView{sep_it+1, path.end()});
     return *root;

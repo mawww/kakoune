@@ -36,19 +36,25 @@ protected:
     HighlighterMap m_highlighters;
 };
 
-class Highlighters : public HighlighterGroup, public SafeCountable
+struct ScopeList;
+
+class Highlighters : public SafeCountable
 {
 public:
-    Highlighters(Highlighters& parent) : HighlighterGroup{HighlightPass::All}, SafeCountable{}, m_parent(&parent) {}
+    Highlighters(Highlighters& parent) : SafeCountable{}, m_parent{&parent}, m_group{HighlightPass::All} {}
+
+    HighlighterGroup& group() { return m_group; }
+    const HighlighterGroup& group() const { return m_group; }
+
+    void highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range);
+    void compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup);
 
 private:
-    void do_highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override;
-    void do_compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup) override;
-
     friend class Scope;
-    Highlighters() : HighlighterGroup{HighlightPass::All} {}
+    Highlighters() : m_group{HighlightPass::All} {}
 
     SafePtr<Highlighters> m_parent;
+    HighlighterGroup m_group;
 };
 
 struct DefinedHighlighters : public HighlighterGroup,
