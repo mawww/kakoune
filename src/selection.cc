@@ -122,6 +122,8 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
         auto forward_end = forward_sorted_until(change_it, changes.end());
         auto backward_end = backward_sorted_until(change_it, changes.end());
 
+        kak_assert(std::is_sorted(ranges.begin(), ranges.end(), compare_selections));
+
         size_t prev_size;
         size_t dummy = 0;
         if (forward_end >= backward_end)
