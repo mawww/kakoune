@@ -47,10 +47,10 @@ add-highlighter shared/ regions -default code kakrc \
     }"
 
     # Highlight keywords (which are always surrounded by whitespace)
-    printf '%s\n' "add-highlighter shared/kakrc/code regex [\s\A]\K($(join "${keywords}" '|'))(?=[\s\z])\b 0:keyword
-                   add-highlighter shared/kakrc/code regex [\s\A]\K($(join "${attributes}" '|'))(?=[\s\z])\b 0:attribute
-                   add-highlighter shared/kakrc/code regex [\s\A]\K($(join "${types}" '|'))(?=[\s\z])\b 0:type
-                   add-highlighter shared/kakrc/code regex [\s\A]\K($(join "${values}" '|'))(?=[\s\z])\b 0:value"
+    printf '%s\n' "add-highlighter shared/kakrc/code regex (?:\s|\A)\K($(join "${keywords}" '|'))(?:(?=\s)|\z) 0:keyword
+                   add-highlighter shared/kakrc/code regex (?:\s|\A)\K($(join "${attributes}" '|'))(?:(?=\s)|\z) 0:attribute
+                   add-highlighter shared/kakrc/code regex (?:\s|\A)\K($(join "${types}" '|'))(?:(?=\s)|\z) 0:type
+                   add-highlighter shared/kakrc/code regex (?:\s|\A)\K($(join "${values}" '|'))(?:(?=\s)|\z) 0:value"
 }
 
 add-highlighter shared/kakrc/code regex \brgb:[0-9a-fA-F]{6}\b 0:value
