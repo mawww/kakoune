@@ -654,8 +654,9 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
 
 struct WrapHighlighter : Highlighter
 {
-    WrapHighlighter(ColumnCount max_width, bool word_wrap)
-        : Highlighter{HighlightPass::Wrap}, m_max_width{max_width}, m_word_wrap{word_wrap} {}
+    WrapHighlighter(ColumnCount max_width, bool word_wrap, bool preserve_indent)
+        : Highlighter{HighlightPass::Wrap}, m_max_width{max_width},
+          m_word_wrap{word_wrap}, m_preserve_indent{preserve_indent} {}
 
     void do_highlight(const Context& context, HighlightPass pass,
                       DisplayBuffer& display_buffer, BufferRange) override
@@ -673,6 +674,9 @@ struct WrapHighlighter : Highlighter
         {
             const LineCount buf_line = it->range().begin.line;
             const ByteCount line_length = buffer[buf_line].length();
+            ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col; 
+            if (indent >= wrap_column) // do not preserve indent when its bigger than wrap column
+                indent = 0;
 
             auto coord = next_split_coord(buffer, wrap_column, tabstop, buf_line);
             if (buffer.is_valid(coord) and not buffer.is_end(coord))
@@ -695,9 +699,12 @@ struct WrapHighlighter : Highlighter
                     DisplayLine new_line{ AtomList{ atom_it, line.end() } };
                     line.erase(atom_it, line.end());
 
+                    if (indent != 0)
+                        new_line.insert(new_line.begin(), DisplayAtom{String{' ', indent}});
+
                     if (it+1 - display_buffer.lines().begin() == win_height)
                     {
-                        if (cursor >= new_line.begin()->begin()) // strip first lines if cursor is not visible
+                        if (cursor >= new_line.range().begin) // strip first lines if cursor is not visible
                         {
                             display_buffer.lines().erase(display_buffer.lines().begin(), display_buffer.lines().begin()+1);
                             --it;
@@ -710,7 +717,7 @@ struct WrapHighlighter : Highlighter
                     }
                     it = display_buffer.lines().insert(it+1, new_line);
 
-                    coord = next_split_coord(buffer, wrap_column, tabstop, coord);
+                    coord = next_split_coord(buffer, wrap_column - indent, tabstop, coord);
                     atom_it = it->begin();
                 }
             }
@@ -727,13 +734,14 @@ struct WrapHighlighter : Highlighter
         const auto& cursor = context.selections().main().cursor();
         const int tabstop = context.options()["tabstop"].get<int>();
 
-        auto line_wrap_count = [&](LineCount line) {
+        auto line_wrap_count = [&](LineCount line, ColumnCount indent) {
             LineCount count = 0;
             BufferCoord coord{line};
             const ByteCount line_length = buffer[line].length();
             while (true)
             {
-                coord = next_split_coord(buffer, wrap_column, tabstop, coord);
+                coord = next_split_coord(buffer, wrap_column - (coord.column == 0 ? 0_col : indent),
+                                         tabstop, coord);
                 if (coord.column == line_length)
                     break;
                 ++count;
@@ -756,7 +764,11 @@ struct WrapHighlighter : Highlighter
             if (buf_line >= buffer.line_count())
                 break;
 
-            const auto wrap_count = line_wrap_count(buf_line);
+            ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col; 
+            if (indent >= wrap_column) // do not preserve indent when its bigger than wrap column
+                indent = 0;
+
+            const auto wrap_count = line_wrap_count(buf_line, indent);
             setup.window_range.line -= wrap_count;
 
             if (win_line < setup.cursor_pos.line)
@@ -767,10 +779,14 @@ struct WrapHighlighter : Highlighter
                 BufferCoord coord{buf_line};
                 while (true)
                 {
-                    auto split_coord = next_split_coord(buffer, wrap_column, tabstop, coord);
+                    auto split_coord = next_split_coord(buffer, wrap_column - (coord.column == 0 ? 0_col : indent),
+                                                        tabstop, coord);
                     if (split_coord.column > cursor.column)
                     {
                         setup.cursor_pos.column = get_column(buffer, tabstop, cursor) - get_column(buffer, tabstop, coord);
+                        if (coord.column != 0)
+                            setup.cursor_pos.column += indent;
+
                         break;
                     }
                     ++setup.cursor_pos.line;
@@ -786,7 +802,7 @@ struct WrapHighlighter : Highlighter
             while (setup.window_pos.line < cursor.line and
                    setup.cursor_pos.line >= win_height - setup.scroll_offset.line)
             {
-                auto removed_lines = 1 + line_wrap_count(setup.window_pos.line++);
+                auto removed_lines = 1 + line_wrap_count(setup.window_pos.line++, indent);
                 setup.cursor_pos.line -= removed_lines;
                 win_line -= removed_lines;
                 // removed one line from the range, added removed_lines potential ones
@@ -807,6 +823,9 @@ struct WrapHighlighter : Highlighter
         auto column = get_column(buffer, tabstop, coord);
         auto col = get_byte_to_column(
             buffer, tabstop, {coord.line, column + wrap_column});
+        if (col == coord.column) // Can happen if we try to wrap on a tab char
+            col = buffer.char_next(coord).column;
+
         BufferCoord split_coord{coord.line, col};
 
         if (m_word_wrap)
@@ -823,10 +842,20 @@ struct WrapHighlighter : Highlighter
         return split_coord;
     };
 
+    ColumnCount line_indent(const Buffer& buffer, int tabstop, LineCount line) const
+    {
+        StringView l = buffer[line];
+        auto col = 0_byte;
+        while (is_horizontal_blank(l[col]))
+               ++col;
+        return get_column(buffer, tabstop, {line, col});
+    }
+
     static HighlighterAndId create(HighlighterParameters params)
     {
         static const ParameterDesc param_desc{
             { { "word", { false, "" } },
+              { "indent", { false, "" } },
               { "width", { true, "" } } },
             ParameterDesc::Flags::None, 0, 0
         };
@@ -836,10 +865,12 @@ struct WrapHighlighter : Highlighter
         if (auto width = parser.get_switch("width"))
             max_width = str_to_int(*width);
 
-        return {"wrap", std::make_unique<WrapHighlighter>(max_width, (bool)parser.get_switch("word"))};
+        return {"wrap", std::make_unique<WrapHighlighter>(max_width, (bool)parser.get_switch("word"),
+                                                          (bool)parser.get_switch("indent"))};
     }
 
     const bool m_word_wrap;
+    const bool m_preserve_indent;
     const ColumnCount m_max_width;
 };
 

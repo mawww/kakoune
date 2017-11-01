@@ -94,6 +94,9 @@ add-highlighter window regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
 	*-word*:::
 		wrap at word boundaries instead of codepoint boundaries.
 
+	*-indent*:::
+		preserve line indent when wrapping.
+
 	*-width <max_width>*:::
 		wrap text at *max_width* if the window is wider.
 
