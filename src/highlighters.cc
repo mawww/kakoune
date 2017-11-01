@@ -619,7 +619,7 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
         auto win_column = context.window().position().column;
         for (auto& line : display_buffer.lines())
         {
-            auto target_col = column - win_column; 
+            auto target_col = column - win_column;
             if (target_col < 0)
                 return;
 
@@ -674,7 +674,7 @@ struct WrapHighlighter : Highlighter
         {
             const LineCount buf_line = it->range().begin.line;
             const ByteCount line_length = buffer[buf_line].length();
-            ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col; 
+            ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col;
             if (indent >= wrap_column) // do not preserve indent when its bigger than wrap column
                 indent = 0;
 
@@ -764,7 +764,7 @@ struct WrapHighlighter : Highlighter
             if (buf_line >= buffer.line_count())
                 break;
 
-            ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col; 
+            ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col;
             if (indent >= wrap_column) // do not preserve indent when its bigger than wrap column
                 indent = 0;
 
@@ -1327,7 +1327,7 @@ private:
         update_line_specs_ifn(buffer, line_flags);
 
         ColumnCount width = 0;
-        try 
+        try
         {
             for (auto& line : line_flags.list)
                 width = std::max(parse_display_line(std::get<1>(line)).length(), width);
