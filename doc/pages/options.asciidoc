@@ -5,20 +5,50 @@ NAME
 ----
 options - a
 
+Options
+-------
+
+Kakoune can store named and typed values that can be used both to customize
+the core editor behaviour, and to store data used by extension scripts.
+
+Options can be modified using the *set-option* command:
+
+---------------------------------
+set-option <scope> <name> <value>
+---------------------------------
+
+<scope> can be *global*, *buffer* or *window* (See <<scopes#,`:doc scopes`>>)
+
+New options can be declared using the *declare-option* command:
+
+------------------------------------------------
+declare-option [-hidden] <type> <name> [<value>]
+------------------------------------------------
+
+If `-hidden` is specified, the option will not be displayed in completion
+suggestions.
+
 Types
 -----
+
+All options have a type, which defines how they are translated to/from text
+and their set of valid values.
+
+Some types are usable for user defined options while some other types
+are exclusively available to built-in options.
+
 *int*::
 	an integer number
 *bool*::
 	a boolean value, yes/true or no/false
 *str*::
 	a string, some freeform text
-*coord*::
-	a line, column pair (separated by comma)
 *regex*::
 	as a string but the set commands will complain if the entered text
 	is not a valid regex
-*int-list*, *str-list*, *codepoint-list*::
+*coord*::
+	a line, column pair (separated by comma)
+*<type>-list*::
 	a list, elements are separated by a colon (:) if an element needs
 	to contain a colon, it can be escaped with a backslash
 *range-specs*::
@@ -45,9 +75,6 @@ Types
 *flags(value1|value2|...)*::
 	a set of flags, taking a combination of the given values joined by a
 	'|' character
-
-Refer to the 'scopes' documentation page for more information about
-scopes.
 
 Builtin options
 ---------------
@@ -116,7 +143,7 @@ Builtin options
 	*default* ./:/usr/include +
 	directories to search for gf command
 
-*completers* 'str-list'::
+*completers* 'completer-list'::
 	*default* filename:word=all +
 	completion engines to use for insert mode completion (they are tried
 	in order until one generates candidates). Existing completers are:
@@ -178,7 +205,7 @@ Builtin options
 
 	The default value is '%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]'
 
-*ui_options*::
+*ui_options* 'str-to-str-map'::
 	colon separated list of key=value pairs that are forwarded to the user
 	interface implementation. The NCurses UI support the following options:
 

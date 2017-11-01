@@ -31,20 +31,28 @@ e.g. %{ roger {}; } is a valid string, %{ marcel \} as well
 
 Typed expansions
 ----------------
+
+%\{strings\} can have an expansion type between the *%* and the opening
+character. They will be written *%<type>\{<content>\}*. They will be
+expanded according to the given *<type>* using *<content>* as its
+parameter:
+
 *sh*::
 	shell expansion, similar to posix shell '$(...)' construct (c.f. next
 	section)
 *reg*::
-	register expansion, will be replaced by the content of the given
-	register
+	register expansion, will expand to the content of the register named
+	by *<content>*.
 *opt*::
-	option expansion, will be replaced with the value of the given option
+	option expansion, will expand to the value of the option named by
+	*<content>*
 *val*::
-	value expansion, gives access to the environment variable available
-	to the Shell expansion. The 'kak_' prefix is not used there
+	value expansion, will expand to the value of the environment variables
+	available to shell expansion. *<content>* shall be the name of that
+	variable without the *kak_* prefix.
 *arg*::
-	argument expansion, gives access to the arguments of the current
-	command, the content can be a number, or @ for all arguments
+	argument expansion, expand to the arguments of the current
+	command, *<content>* can be a number, or @ for all arguments
 
 Shell expansions
 ----------------
