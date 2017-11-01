@@ -16,7 +16,7 @@ endif
 sources := $(sort $(wildcard *.cc))
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
 deps := $(addprefix ., $(sources:.cc=$(suffix).d))
-docs := $(wildcard ../doc/manpages/*.asciidoc)
+docs := $(wildcard ../doc/pages/*.asciidoc)
 mandocs := $(docs:.asciidoc=.gz)
 
 PREFIX ?= /usr/local
@@ -80,7 +80,7 @@ kak$(suffix) : $(objects)
 # Generate the editor's documentation pages
 # Since `a2x` won't generate man pages if some sections are missing (which we don't need),
 # we generate the pages, patch them and then compress them
-../doc/manpages/%.gz: ../doc/manpages/%.asciidoc
+../doc/pages/%.gz: ../doc/pages/%.asciidoc
 	a2x --no-xmllint -f manpage $<
 	sed -i -r -e "s,^\.TH .+,.TH kakoune k \"\" \"\" \"$(basename $(notdir $<))\"," \
 	-e "/^\.SH \"NAME\"/{N;d;}" $(@:.gz=.k)
@@ -117,7 +117,7 @@ installdirs:
 install: kak man doc installdirs
 	install -m 0755 kak $(bindir)
 	install -m 0644 ../share/kak/kakrc $(sharedir)
-	install -m 0644 ../doc/manpages/*.gz $(sharedir)/doc
+	install -m 0644 ../doc/pages/*.gz $(sharedir)/doc
 	install -m 0644 ../rc/base/* $(sharedir)/rc/base
 	install -m 0644 ../rc/core/* $(sharedir)/rc/core
 	install -m 0644 ../rc/extra/* $(sharedir)/rc/extra
