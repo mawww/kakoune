@@ -7,10 +7,8 @@ License:        Unlicense
 URL:            http://kakoune.org/
 Source0:        kakoune-84f62e6f.tar
 
-BuildRequires:  boost-devel >= 1.50
 BuildRequires:  ncurses-devel >= 5.3
 BuildRequires:  asciidoc
-Requires:       boost >= 1.50
 Requires:       ncurses-libs >= 5.3
 
 %description

@@ -22,15 +22,6 @@ project to this operating system is pretty low.
 Moreover, you can get pretty decent performance by using Kakoune on Cygwin
 (which is officially supported).
 
-Can you get rid of the `boost` dependency and just use std::regex ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The `boost-regex` library provides use with several features that are heavily
-relied upon across several core scripts, and a few of them are not available
-in the standard `std::regex` implementations. Therefore, until the standard
-catches up with `boost` in terms of features, the latter will remain a hard
--mandatory- dependency.
-
 Kakoune is very slow on big files, what can I do about it ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -48,10 +39,7 @@ Can I use Kakoune as a pager ?
 
 Kakoune can be used as a pager, either by setting the `PAGER` environment
 variable to `kak`, or by writing data directly to its standard input using a
-shell pipeline. However, since the program relies on several heavy dynamic
-libraries (`boost` being one of them), it will be slightly less practical
-than other regular pagers (such as `less` or `more`) which have a minimal
-amount of runtime dependencies.
+shell pipeline.
 
 Are there any non-console based frontends available ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

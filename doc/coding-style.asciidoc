@@ -5,10 +5,6 @@ Kakoune is written in C++11, here are the main coding style points:
 
  * Avoid external dependencies besides posix/stdc++/ncurses
 
-   - That means avoid depending on boost, it is only allowed for the regex
-     implementation. The reference for the current regex support is available under
-     http://www.boost.org/doc/libs/release/libs/regex/doc/html/boost_regex/syntax/perl_syntax.html[Perl Regular Expression Syntax].
-
  * 4 spaces for indentation, no tabs
 
  * public interface before private methods/data when defining a class

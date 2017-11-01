@@ -35,15 +35,15 @@ ifeq ($(static),yes)
 endif
 
 ifeq (@(TUP_PLATFORM),macosx)
-	LIBS += -lncurses -lboost_regex-mt
+	LIBS += -lncurses
 	CPPFLAGS += -I/usr/local/opt/ncurses/include
 	LDFLAGS += -L/usr/local/opt/ncurses/lib
 else
 	ifeq (@(TUP_PLATFORM),win32)
-		LIBS += -lncursesw -lboost_regex -ldbghelp
+		LIBS += -lncursesw -ldbghelp
 		CPPFLAGS += -D_XOPEN_SOURCE=700
 	else
-		LIBS += -lncursesw -lboost_regex
+		LIBS += -lncursesw
 		CPPFLAGS += -I/usr/include/ncursesw
 
 		ifeq ($(CXX),g++)
