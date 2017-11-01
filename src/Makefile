@@ -30,24 +30,24 @@ mandir := $(DESTDIR)$(PREFIX)/share/man/man1
 os := $(shell uname)
 
 ifeq ($(os),Darwin)
-    LIBS += -lncurses -lboost_regex
-    CPPFLAGS += -I$(PREFIX)/opt/ncurses/include -I$(PREFIX)/opt/boost/include -I/opt/local/include
-    LDFLAGS += -L$(PREFIX)/opt/ncurses/lib -L$(PREFIX)/opt/boost/lib -L/opt/local/lib
+    LIBS += -lncurses
+    CPPFLAGS += -I$(PREFIX)/opt/ncurses/include -I/opt/local/include
+    LDFLAGS += -L$(PREFIX)/opt/ncurses/lib -L/opt/local/lib
 else ifeq ($(os),FreeBSD)
-    LIBS += -ltinfow -lncursesw -lboost_regex
+    LIBS += -ltinfow -lncursesw
     CPPFLAGS += -I/usr/local/include
     LDFLAGS += -L/usr/local/lib
 else ifeq ($(os),Haiku)
-    LIBS += -lncursesw -lboost_regex -lnetwork -lbe
+    LIBS += -lncursesw -lnetwork -lbe
 else ifeq ($(os),DragonFly)
-    LIBS += -lncursesw -lboost_regex
+    LIBS += -lncursesw
     CPPFLAGS += -I/usr/local/include
     LDFLAGS += -L/usr/local/lib
 else ifneq (,$(findstring CYGWIN,$(os)))
     CPPFLAGS += -D_XOPEN_SOURCE=700
-    LIBS += -lncursesw -lboost_regex -ldbghelp
+    LIBS += -lncursesw -ldbghelp
 else
-    LIBS += $(shell pkg-config --libs ncursesw) -lboost_regex
+    LIBS += $(shell pkg-config --libs ncursesw)
     CPPFLAGS += $(shell pkg-config --cflags ncursesw)
     LDFLAGS += -rdynamic
 endif
