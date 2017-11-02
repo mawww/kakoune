@@ -14,22 +14,22 @@ The *map* command makes *key* behave as if the *keys* sequence was typed.
 
 *mode* dictates in what context the mapping will be available:
 
-	*insert*::
-		insert mode
-	*normal*::
-		normal mode
-	*prompt*::
-		prompts, such as when entering a command through *:*, or a regex through */*
-	*menu*::
-		mode entered when a menu is displayed with the 'menu' command
-	*user*::
-		mode entered when the user prefix is hit (default: ',')
-	*goto*::
-		mode entered when the goto key is hit (default: 'g')
-	*view*::
-		mode entered when the view key is hit (default: 'v')
-	*object*::
-		mode entered when an object selection is triggered (e.g. '<a-i>')
+    *insert*::
+        insert mode
+    *normal*::
+        normal mode
+    *prompt*::
+        prompts, such as when entering a command through *:*, or a regex through */*
+    *menu*::
+        mode entered when a menu is displayed with the 'menu' command
+    *user*::
+        mode entered when the user prefix is hit (default: ',')
+    *goto*::
+        mode entered when the goto key is hit (default: 'g')
+    *view*::
+        mode entered when the view key is hit (default: 'v')
+    *object*::
+        mode entered when an object selection is triggered (e.g. '<a-i>')
 
 The context of execution of the above modes is always the current one at the
 time of execution of the mapping, except for *user* mode (always executed
@@ -52,49 +52,49 @@ For *key* and *keys* in the *map* command, the following key names can
 be used:
 
 *x*, *<x>*::
-	Most keys, especially alphabetic keys, represent themselves.
-	Keys can also be wrapped in angle-brackets for consistency
-	with the non-alphabetic keys below.
+    Most keys, especially alphabetic keys, represent themselves.
+    Keys can also be wrapped in angle-brackets for consistency
+    with the non-alphabetic keys below.
 
 *X*, *<X>*::
-	Holding down Shift while pressing the *x* key.
+    Holding down Shift while pressing the *x* key.
 
 *<c-x>*::
-	Holding down Control while pressing the *x* key.
+    Holding down Control while pressing the *x* key.
 
 *<a-x>*::
-	Holding down Alt while pressing the *x* key.
+    Holding down Alt while pressing the *x* key.
 
 *<lt>*, *<gt>*::
-	The *<* and *>* characters.
+    The *<* and *>* characters.
 
 *<plus>*, *<minus>*::
-	The *+* and *-* characters..
+    The *+* and *-* characters..
 
 *<ret>*::
-	The Return or Enter key.
+    The Return or Enter key.
 
 *<space>*::
-	The space bar.
+    The space bar.
 
 *<tab>*::
-	The Tab key.
+    The Tab key.
 
 *<backtab>*::
-	The reverse-tab key. This is Shift-Tab on most keyboards.
+    The reverse-tab key. This is Shift-Tab on most keyboards.
 
 *<backspace>*::
-	The Backspace (delete to the left) key.
+    The Backspace (delete to the left) key.
 
 *<del>*::
-	The Delete (to the right) key.
+    The Delete (to the right) key.
 
 *<esc>*::
-	The Escape key.
+    The Escape key.
 
 *<up>*, *<down>*, *<left>*, *<right>*, *<pageup>*, *<pagedown>*, *<home>*::
 *<end>*::
-	The usual cursor-movement keys.
+    The usual cursor-movement keys.
 
 *<f1>*, *<f2>*, ...*<f12>*::
-	Function keys.
+    Function keys.

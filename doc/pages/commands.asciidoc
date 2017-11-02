@@ -7,161 +7,161 @@ the execution of the command (i.e. to quit a modified buffer, the
 command *q!* has to be used). Aliases are mentionned below each commands.
 
 *change-directory* [<directory>]::
-	*alias* cd +
-	change the current directory to *directory*, or the home directory if
-	unspecified
+    *alias* cd +
+    change the current directory to *directory*, or the home directory if
+    unspecified
 
 *doc* <topic>::
-	*alias* help +
-	display documentation about a topic. The completion list displays the
-	available topics
+    *alias* help +
+    display documentation about a topic. The completion list displays the
+    available topics
 
 *edit[!]* <filename> [<line> [<column>]]::
-	*alias* e +
-	open buffer on file, go to given line and column. If file is already
-	opened, just switch to this file. Use edit! to force reloading
+    *alias* e +
+    open buffer on file, go to given line and column. If file is already
+    opened, just switch to this file. Use edit! to force reloading
 
 *write[!]* [<filename>]::
-	*alias* w +
-	write buffer to <filename> or use its name if filename is not
-	given. If the file is write-protected, its permissions are temporarily
-	changed to allow saving the buffer and restored afterwards when
-	the write! command is used.
+    *alias* w +
+    write buffer to <filename> or use its name if filename is not
+    given. If the file is write-protected, its permissions are temporarily
+    changed to allow saving the buffer and restored afterwards when
+    the write! command is used.
 
 *write-all*::
-	*alias* wa +
-	write all buffers that are associated to a file
+    *alias* wa +
+    write all buffers that are associated to a file
 
 *quit!* [<exit status>]::
-	*alias* q +
-	exit Kakoune, use quit! to force quitting even if there is some
-	unsaved buffers remaining. If specified, the client exit status
-	will be set to <exit status>
+    *alias* q +
+    exit Kakoune, use quit! to force quitting even if there is some
+    unsaved buffers remaining. If specified, the client exit status
+    will be set to <exit status>
 
 *write-all-quit* [<exit status>]::
-	*alias* waq +
-	write all buffers and quit. If specified, the client exit status
-	will be set to <exit status>
+    *alias* waq +
+    write all buffers and quit. If specified, the client exit status
+    will be set to <exit status>
 
 *kill[!]*::
-	terminate the current session, all the clients as well as the server
+    terminate the current session, all the clients as well as the server
 
 *buffer* <name>::
-	*alias* b +
-	switch to buffer <name>
+    *alias* b +
+    switch to buffer <name>
 
 *buffer-next*::
-	*alias* bn +
-	switch to the next buffer
+    *alias* bn +
+    switch to the next buffer
 
 *buffer-prev*::
-	*alias* bp +
-	switch to the previous buffer
+    *alias* bp +
+    switch to the previous buffer
 
 *delete-buffer[!]* [<name>]::
-	*alias* db +
-	delete the buffer <name>
+    *alias* db +
+    delete the buffer <name>
 
 *source* <filename>::
-	execute commands in <filename>
+    execute commands in <filename>
 
 *colorscheme* <name>::
-	load named colorscheme
+    load named colorscheme
 
 *rename-client* <name>::
-	*alias* nc +
-	set current client name
+    *alias* nc +
+    set current client name
 
 *rename-buffer* <name>::
-	set current buffer name
+    set current buffer name
 
 *rename-session* <name>::
-	set current session name
+    set current session name
 
 *echo* [options] <text>::
-	show *text* in status line, with the following *options*:
+    show *text* in status line, with the following *options*:
 
-	*-markup*:::
-		expand the markup strings in *text* (c.f. the 'expansions' documentation page)
+    *-markup*:::
+        expand the markup strings in *text* (c.f. the 'expansions' documentation page)
 
-	*-debug*:::
-		print the given text to the *\*debug** buffer
+    *-debug*:::
+        print the given text to the *\*debug** buffer
 
 *nop*::
-	does nothing, but arguments will be evaluated (e.g. shell expansion)
+    does nothing, but arguments will be evaluated (e.g. shell expansion)
 
 *fail* <text>::
-	raise an error, uses <text> as its description
+    raise an error, uses <text> as its description
 
 *declare-option* [-hidden] <type> <name> [<value>]::
-	*alias* decl +
-	declare a new option, the -hidden hides the option in completion
-	suggestions (c.f. the 'options' documentation page)
+    *alias* decl +
+    declare a new option, the -hidden hides the option in completion
+    suggestions (c.f. the 'options' documentation page)
 
 *set-option* <scope> <name> <value>::
-	*alias* set +
-	change the value of an option (c.f. the 'options' documentation page),
-	note that the name of a particular buffer can be specified when the
-	target *scope* is 'buffer', e.g. set buffer=/path/to/buffer foo "bar";
-	the scope can also take the `current` special value, which will automatically
-	point to the narrowest scope available in the current context
+    *alias* set +
+    change the value of an option (c.f. the 'options' documentation page),
+    note that the name of a particular buffer can be specified when the
+    target *scope* is 'buffer', e.g. set buffer=/path/to/buffer foo "bar";
+    the scope can also take the `current` special value, which will automatically
+    point to the narrowest scope available in the current context
 
 *unset-option* <scope> <name>::
-	*alias* unset +
-	unset the value of an option (c.f. the 'options' documentation page)
+    *alias* unset +
+    unset the value of an option (c.f. the 'options' documentation page)
 
 *update-option* <scope> <name>::
-	update the value of an option if its type supports that operation
-	(c.f. the 'options' documentation page)
+    update the value of an option if its type supports that operation
+    (c.f. the 'options' documentation page)
 
 *alias* <scope> <name> <command>::
-	define a new alias, within the context of a scope
+    define a new alias, within the context of a scope
 
 *unalias* <scope> <name> [<command>]::
-	remove an alias if its current value is the same as the one passed
-	as an optional parameter, remove it unconditionally otherwise
+    remove an alias if its current value is the same as the one passed
+    as an optional parameter, remove it unconditionally otherwise
 
 *set-face* <name> <facespec>::
-	*alias* face +
-	define a face (c.f. the 'faces' documentation page)
+    *alias* face +
+    define a face (c.f. the 'faces' documentation page)
 
 *exec* [<flags>] <key> ...::
-	execute a series of keys, as if they were hit (c.f. the 'execeval'
-	documentation page)
+    execute a series of keys, as if they were hit (c.f. the 'execeval'
+    documentation page)
 
 *eval* [<flags>] <command> ...::
-	execute commands, as if they were entered in the command prompt
-	(c.f. the 'execeval' documentation page)
+    execute commands, as if they were entered in the command prompt
+    (c.f. the 'execeval' documentation page)
 
 *define-command* [<flags>] <name> <command>::
-	*alias* def +
-	define a new command (c.f. the 'Declaring new commands' section below)
+    *alias* def +
+    define a new command (c.f. the 'Declaring new commands' section below)
 
 *map* <scope> <mode> <key> <keys>::
-	bind a list of keys to a combination (c.f. the 'mapping' documentation
-	page)
+    bind a list of keys to a combination (c.f. the 'mapping' documentation
+    page)
 
 *unmap* <scope> <mode> <key> [<expected>]::
-	unbind a key combination (c.f. the 'mapping' documentation page)
+    unbind a key combination (c.f. the 'mapping' documentation page)
 
 *hook* [-group <group>] <scope> <hook_name> <filtering_regex> <command>::
-	execute a command whenever an event is triggered (c.f. the 'hooks'
-	documentation page)
+    execute a command whenever an event is triggered (c.f. the 'hooks'
+    documentation page)
 
 *remove-hooks* <scope> <group>::
-	*alias* rmhooks +
-	remove every hooks in *scope* that are part of the given *group*
-	(c.f. the 'hooks' documentation page)
+    *alias* rmhooks +
+    remove every hooks in *scope* that are part of the given *group*
+    (c.f. the 'hooks' documentation page)
 
 *add-highlighter* [<flags>] <highlighter_name> <highlighter_parameters> ...::
-	*alias* addhl +
-	add a highlighter to the current window (c.f. the 'highlighters'
-	documentation page)
+    *alias* addhl +
+    add a highlighter to the current window (c.f. the 'highlighters'
+    documentation page)
 
 *remove-highlighter* <highlighter_id>::
-	*alias* rmhl +
-	remove the highlighter whose id is *highlighter_id* (c.f. the
-	'highlighters' documentation page)
+    *alias* rmhl +
+    remove the highlighter whose id is *highlighter_id* (c.f. the
+    'highlighters' documentation page)
 
 == Helpers
 
@@ -169,57 +169,57 @@ Kakoune provides some helper commands that can be used to define composite
 commands:
 
 *prompt* <prompt> <command>::
-	prompt the user for a string, when the user validates, executes the
-	command. The entered text is available in the `text` value accessible
-	through `$kak_text` in shells or `%val{text}` in commands.
+    prompt the user for a string, when the user validates, executes the
+    command. The entered text is available in the `text` value accessible
+    through `$kak_text` in shells or `%val{text}` in commands.
 
-	The *-init <str>* switch allows setting initial content, the
-	*-password* switch hides the entered text and clears the register
-	after command execution.
+    The *-init <str>* switch allows setting initial content, the
+    *-password* switch hides the entered text and clears the register
+    after command execution.
 
         The *-on-change* and *-on-abort* switches, followed by a command
         will have this command executed whenever the prompt content changes
         or the prompt is aborted, respectively.
 
 *on-key* <command>::
-	wait for next key from user, then execute <command>, the key is
-	available through the `key` value, accessible through `$kak_key`
-	in shells, or `%val{key}` in commands.
+    wait for next key from user, then execute <command>, the key is
+    available through the `key` value, accessible through `$kak_key`
+    in shells, or `%val{key}` in commands.
 
 *menu* <label1> <commands1> <label2> <commands2> ...::
-	display a menu using labels, the selected label’s commands are
-	executed. The *menu* command can take an *-auto-single* argument, to automatically
-	run commands when only one choice is provided, and a *-select-cmds*
-	argument, in which case menu takes three argument per item, the
-	last one being a command to execute when the item is selected (but
-	not validated)
+    display a menu using labels, the selected label’s commands are
+    executed. The *menu* command can take an *-auto-single* argument, to automatically
+    run commands when only one choice is provided, and a *-select-cmds*
+    argument, in which case menu takes three argument per item, the
+    last one being a command to execute when the item is selected (but
+    not validated)
 
 *info* [options] <text>::
-	display text in an information box with the following *options*:
+    display text in an information box with the following *options*:
 
-	*-anchor* <line>.<column>:::
-		print the text at the given coordinates
+    *-anchor* <line>.<column>:::
+        print the text at the given coordinates
 
-	*-placement* {above,below}:::
-		set the placement relative to the anchor
+    *-placement* {above,below}:::
+        set the placement relative to the anchor
 
-	*-title* <text>:::
-		set the title of the message box
+    *-title* <text>:::
+        set the title of the message box
 
 *try* <commands> catch <on_error_commands>::
-	prevent an error in *commands* from aborting the whole command
-	execution, execute *on_error_commands* instead. If nothing is to be
-	done on error, the catch part can be omitted
+    prevent an error in *commands* from aborting the whole command
+    execution, execute *on_error_commands* instead. If nothing is to be
+    done on error, the catch part can be omitted
 
 *set-register* <name> <content>::
-	*alias* reg +
-	set register *name* to *content*
+    *alias* reg +
+    set register *name* to *content*
 
 *select* <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>:...::
-	replace the current selections with the one described in the argument
+    replace the current selections with the one described in the argument
 
 *debug* {info,buffers,options,memory,shared-strings,profile-hash-maps,faces,mappings}::
-	print some debug information in the *\*debug** buffer
+    print some debug information in the *\*debug** buffer
 
 Note that those commands are also available in the interactive mode, but
 are not really useful in that context.
@@ -235,45 +235,45 @@ backslash (\;) to be considered as a literal semicolon argument
 New commands can be defined using the *define-command* command:
 
 *define-command* [flags] <command_name> <commands>::
-	*commands* is a string containing the commands to execute, and *flags*
-	can be any combination of the following parameters:
+    *commands* is a string containing the commands to execute, and *flags*
+    can be any combination of the following parameters:
 
 *-params* <num>:::
-	the command accepts a *num* parameter, which can be either a number,
-	or of the form <min>..<max>, with both <min> and <max> omittable
+    the command accepts a *num* parameter, which can be either a number,
+    or of the form <min>..<max>, with both <min> and <max> omittable
 
 *-file-completion*:::
-	try file completion on any parameter passed to this command
+    try file completion on any parameter passed to this command
 
 *-client-completion*:::
-	try client name completion on any parameter passed to this command
+    try client name completion on any parameter passed to this command
 
 *-buffer-completion*:::
-	try buffer name completion on any parameter passed to this command
+    try buffer name completion on any parameter passed to this command
 
 *-command-completion*:::
-	try command completion on any parameter passed to this command
+    try command completion on any parameter passed to this command
 
 *-shell-completion*:::
-	following string is a shell command which takes parameters as
-	positional params and output one completion candidate per line.
-	The provided shell command will run after each keypress
+    following string is a shell command which takes parameters as
+    positional params and output one completion candidate per line.
+    The provided shell command will run after each keypress
 
 *-shell-candidates*:::
-	following string is a shell command which takes parameters as
-	positional params and output one completion candidate per line.
-	The provided shell command will run once at the beginning of each
-	completion session, candidates are cached and then used by kakoune
-	internal fuzzy engine
+    following string is a shell command which takes parameters as
+    positional params and output one completion candidate per line.
+    The provided shell command will run once at the beginning of each
+    completion session, candidates are cached and then used by kakoune
+    internal fuzzy engine
 
 *-allow-override*:::
-	allow the new command to replace an existing one with the same name
+    allow the new command to replace an existing one with the same name
 
 *-hidden*:::
-	do not show the command in command name completions
+    do not show the command in command name completions
 
 *-docstring*:::
-	define the documentation string for the command
+    define the documentation string for the command
 
 Using shell expansion allows defining complex commands or accessing
 Kakoune's state:

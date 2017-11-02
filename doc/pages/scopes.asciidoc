@@ -11,11 +11,11 @@ value was declared in.
 Scopes are named as follows:
 
 *window*::
-	context linked to the window displaying a buffer
+    context linked to the window displaying a buffer
 *buffer*::
-	context linked directly to the buffer
+    context linked directly to the buffer
 *global*::
-	global context linked to the instance of Kakoune
+    global context linked to the instance of Kakoune
 
 The following order of priority applies to the above scopes:
 
@@ -37,16 +37,16 @@ default.
 Examples:
 
 *filetype*::
-	A single buffer opened in two separate windows can have different
-	filetypes declared in the *window* scope with 'set' (c.f. the 'options'
-	documentation page)
+    A single buffer opened in two separate windows can have different
+    filetypes declared in the *window* scope with 'set' (c.f. the 'options'
+    documentation page)
 
 *status line*::
-	All the buffers of the current session can have the same information
-	displayed in the status line, except for a specific buffer (the
-	'modelinefmt' option can be declared in the *global* scope, and
-	customized in the *buffer* scope with 'set', c.f. the 'options'
-	documentation page)
+    All the buffers of the current session can have the same information
+    displayed in the status line, except for a specific buffer (the
+    'modelinefmt' option can be declared in the *global* scope, and
+    customized in the *buffer* scope with 'set', c.f. the 'options'
+    documentation page)
 
 == Execution context
 

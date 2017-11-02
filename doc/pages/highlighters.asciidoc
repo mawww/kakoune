@@ -27,91 +27,91 @@ ids.
 == General highlighters
 
 *regex* <ex> <capture_id>:<face> ...::
-	highlight a regex, takes the regex as first parameter, followed by
-	any number of face parameters. For example:
+    highlight a regex, takes the regex as first parameter, followed by
+    any number of face parameters. For example:
 
 -------------------------------------------------------------------
 add-highlighter window regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
 -------------------------------------------------------------------
 
-	will highlight C++ style comments in cyan, with an eventual 'TODO:'
-	in yellow on red background
+    will highlight C++ style comments in cyan, with an eventual 'TODO:'
+    in yellow on red background
 
 *dynregex*::
-	Similar to regex, but expand (like a command parameter would) the
-	given expression before building a regex from the result
+    Similar to regex, but expand (like a command parameter would) the
+    given expression before building a regex from the result
 
 *flag_lines* <face> <option_name>::
-	add a column in front of the buffer, and display the flags specified
-	in <option_name>, using <face>
+    add a column in front of the buffer, and display the flags specified
+    in <option_name>, using <face>
 
 *show_matching*::
-	highlight matching char of the character under the selections' cursor
-	using MatchingChar face
+    highlight matching char of the character under the selections' cursor
+    using MatchingChar face
 
 *show_whitespaces* [options]::
-	display symbols on top of whitespaces to make them more explicit
-	using the Whitespace face, with the following *options*:
+    display symbols on top of whitespaces to make them more explicit
+    using the Whitespace face, with the following *options*:
 
-	*-lf* <separator>:::
-		a one character long separator that will replace line feeds
+    *-lf* <separator>:::
+        a one character long separator that will replace line feeds
 
-	*-spc* <separator>:::
-		a one character long separator that will replace spaces
+    *-spc* <separator>:::
+        a one character long separator that will replace spaces
 
-	*-nbsp* <separator>:::
-		a one character long separator that will replace non-breakable spaces
+    *-nbsp* <separator>:::
+        a one character long separator that will replace non-breakable spaces
 
-	*-tab* <separator>:::
-		a one character long separator that will replace tabulations
+    *-tab* <separator>:::
+        a one character long separator that will replace tabulations
 
-	*-tabpad* <separator>:::
-		a one character long separator that will be appended to tabulations to honor the *tabstop* option
+    *-tabpad* <separator>:::
+        a one character long separator that will be appended to tabulations to honor the *tabstop* option
 
 
 *number_lines* [options]::
-	show line numbers, with the following *options*:
+    show line numbers, with the following *options*:
 
-	*-relative*:::
-		show line numbers relative to the main cursor line
+    *-relative*:::
+        show line numbers relative to the main cursor line
 
-	*-hlcursor*:::
-		highlight the cursor line with a separate face
+    *-hlcursor*:::
+        highlight the cursor line with a separate face
 
-	*-separator* <separator text>:::
-		specify a string to separate the line numbers column with
-		the rest of the buffer (default is '|')
+    *-separator* <separator text>:::
+        specify a string to separate the line numbers column with
+        the rest of the buffer (default is '|')
 
 *wrap* [options]::
-	soft wrap buffer text at window width, with the following *options*:
+    soft wrap buffer text at window width, with the following *options*:
 
-	*-word*:::
-		wrap at word boundaries instead of codepoint boundaries.
+    *-word*:::
+        wrap at word boundaries instead of codepoint boundaries.
 
-	*-indent*:::
-		preserve line indent when wrapping.
+    *-indent*:::
+        preserve line indent when wrapping.
 
-	*-width <max_width>*:::
-		wrap text at *max_width* if the window is wider.
+    *-width <max_width>*:::
+        wrap text at *max_width* if the window is wider.
 
 *fill* <face>::
-	fill using the given *face*, mostly useful with regions highlighters
+    fill using the given *face*, mostly useful with regions highlighters
 
 *ranges* <option_name>::
-	use the data in the range-specs option of the given name to highlight
-	the buffer. The string part of the is interpretted as a face to apply
-	to the range.
+    use the data in the range-specs option of the given name to highlight
+    the buffer. The string part of the is interpretted as a face to apply
+    to the range.
 
 *replace-ranges* <option_name>::
-	use the data in the range-specs option of the given name to highlight
-	the buffer. The string part of the is interpretted as a display line to
-	display in place of the range.
+    use the data in the range-specs option of the given name to highlight
+    the buffer. The string part of the is interpretted as a display line to
+    display in place of the range.
 
 *column* <number> <face>::
-	highlight column *number* with face *face*
+    highlight column *number* with face *face*
 
 *line* <number> <face>::
-	highlight line *number* with face *face*
+    highlight line *number* with face *face*
 
 == Highlighting Groups
 
@@ -143,14 +143,14 @@ A special highlighter provides a way to segment the buffer into regions,
 which are to be highlighted differently.
 
 *name*::
-	user defined, used to identify the region
+    user defined, used to identify the region
 *opening*::
-	regex that defines the region start text
+    regex that defines the region start text
 *closing*::
-	regex that defines the region end text
+    regex that defines the region end text
 *recurse*::
-	regex that defines the text that matches recursively an end token
-	into the region
+    regex that defines the text that matches recursively an end token
+    into the region
 
 The *recurse* option is useful for regions that can be nested, for example
 the following contruct:
@@ -206,8 +206,8 @@ highlighter as root:
 
 -----------------------------------------------------------------
 add-highlighter <path> regions -default code <lang> \
-	string <str_opening> <str_closing> <str_recurse> \
-	comment <comment_opening> <comment_closing> <comment_recurse>
+    string <str_opening> <str_closing> <str_recurse> \
+    comment <comment_opening> <comment_closing> <comment_recurse>
 
 add-highlighter <path>/<lang>/code ...
 add-highlighter <path>/<lang>/string ...

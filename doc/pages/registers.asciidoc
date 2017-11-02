@@ -9,11 +9,11 @@ the last yanked text, or the captured groups associated with the selections.
 == Interacting
 
 *<c-r><c>*::
-	when in insert mode or in a prompt, insert the value stored in the
-	*c* register (single character)
+    when in insert mode or in a prompt, insert the value stored in the
+    *c* register (single character)
 
 *"<c>*::
-	in normal mode, select the *<c>* register (single character)
+    in normal mode, select the *<c>* register (single character)
 
 == Alternate names
 
@@ -25,22 +25,22 @@ in contexts where only alphanumeric identifiers are possible.
 Most commands using a register default to a specific one if not specified:
 
 *"* (dquote)::
-	default copy register, used by yanking and pasting commands like *y*, *p*
-	and *R*
+    default copy register, used by yanking and pasting commands like *y*, *p*
+    and *R*
 
 */* (slash)::
-	default search register, used by regex based commands like *s*, ***
-	or */*
+    default search register, used by regex based commands like *s*, ***
+    or */*
 
 *@* (arobase)::
-	default macro register, used by *q* and *Q*
+    default macro register, used by *q* and *Q*
 
 *^* (caret)::
-	default mark register, used by *z* and *Z*
+    default mark register, used by *z* and *Z*
 
 *|* (pipe)::
-	default shell command register, used by command that spawn a subshell such as
-	*|*, *<a-|>*, *!* or *<a-!>*
+    default shell command register, used by command that spawn a subshell such as
+    *|*, *<a-|>*, *!* or *<a-!>*
 
 == Special registers
 
@@ -48,19 +48,19 @@ Some registers are not general purposes, they cannot be written to, but they
 contain some special data
 
 *%* (percent)::
-	current buffer name
+    current buffer name
 
 *.* (dot)::
-	current selection contents
+    current selection contents
 
 *#* (hash)::
-	selection indices (first selection has 1, second has 2, ...)
+    selection indices (first selection has 1, second has 2, ...)
 
 *_* (underscore)::
-	null register, always empty
+    null register, always empty
 
 *:* (colon)::
-	last entered command
+    last entered command
 
 == Integer registers
 

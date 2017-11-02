@@ -21,36 +21,36 @@ when the commands have been executed: */*, *"*, *|*, *^*, *@*.
 == Optional flags
 
 *-client* <name>::
-	execute in the context of the client named *name*
+    execute in the context of the client named *name*
 
 *-try-client* <name>::
-	execute in the context of the client named *name* if such client
-	exists, or else in the current context
+    execute in the context of the client named *name* if such client
+    exists, or else in the current context
 
 *-draft*::
-	execute in a copy of the context of the selected client. Modifications
-	to the selections or input state will not affect the client. This
-	permits to make some modification to the buffer without modifying
-	the user’s selection
+    execute in a copy of the context of the selected client. Modifications
+    to the selections or input state will not affect the client. This
+    permits to make some modification to the buffer without modifying
+    the user’s selection
 
 *-itersel*::
-	execute once per selection, in a context with only the considered
-	selection. This permits avoiding cases where the selections may
-	get merged
+    execute once per selection, in a context with only the considered
+    selection. This permits avoiding cases where the selections may
+    get merged
 
 *-buffer* <names>::
-	execute in the context of each buffers in the comma separated list
-	*names*, as a name can be used to iterate on all buffers
+    execute in the context of each buffers in the comma separated list
+    *names*, as a name can be used to iterate on all buffers
 
 *-no-hooks*::
-	disable hook execution while executing the keys/commands
+    disable hook execution while executing the keys/commands
 
 *-with-maps*::
-	use user key mapping in instead of built in keys (*exec* only)
+    use user key mapping in instead of built in keys (*exec* only)
 
 *-save-regs* <regs>::
-	regs is a string of registers to be restored after execution (overwrites
-	the list of registers saved by default, c.f. description)
+    regs is a string of registers to be restored after execution (overwrites
+    the list of registers saved by default, c.f. description)
 
 *-collapse-jumps*::
-	collapse all jumps into a single one from initial selection
+    collapse all jumps into a single one from initial selection

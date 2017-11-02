@@ -15,58 +15,58 @@ documentation page.
 == Insert mode
 
 *<esc>*::
-	leave insert mode
+    leave insert mode
 
 *<backspace>*::
-	delete characters before cursors
+    delete characters before cursors
 
 *<del>*::
-	delete characters under cursors
+    delete characters under cursors
 
 *<left>*, *<right>*, *<up>*, *<down>*::
-	move the cursors in given direction
+    move the cursors in given direction
 
 *<home>*::
-	move cursors to line begin
+    move cursors to line begin
 
 *<end>*::
-	move cursors to end of line
+    move cursors to end of line
 
 *<c-n>*::
-	select next completion candidate
+    select next completion candidate
 
 *<c-p>*::
-	select previous completion candidate
+    select previous completion candidate
 
 *<c-x>*::
-	explicit insert completion query, followed by:
+    explicit insert completion query, followed by:
 
-	*f*:::
-		explicit file completion
+    *f*:::
+        explicit file completion
 
-	*w*:::
-		explicit word completion (current buffer)
+    *w*:::
+        explicit word completion (current buffer)
 
-	*W*:::
-		explicit word completion (all buffers)
+    *W*:::
+        explicit word completion (all buffers)
 
-	*l*:::
-		explicit line completion
+    *l*:::
+        explicit line completion
 
 *<c-o>*::
-	disable automatic completion for this insert session
+    disable automatic completion for this insert session
 
 *<c-r>*::
-	insert contents of the register given by next key
+    insert contents of the register given by next key
 
 *<c-v>*::
-	insert next keystroke directly into the buffer, without interpreting it
+    insert next keystroke directly into the buffer, without interpreting it
 
 *<c-u>*::
-	commit changes up to now as a single undo group
+    commit changes up to now as a single undo group
 
 *<a-;>*::
-	escape to normal mode for a single command
+    escape to normal mode for a single command
 
 == Using Counts
 
@@ -91,344 +91,344 @@ it when pasting text.
 is a sequence of non whitespace characters
 
 *h*::
-	select the character on the left of selection end
+    select the character on the left of selection end
 
 *j*::
-	select the character below the selection end
+    select the character below the selection end
 
 *k*::
-	select the character above the selection end
+    select the character above the selection end
 
 *l*::
-	select the character on the right of selection end
+    select the character on the right of selection end
 
 *w*::
-	select the word and following whitespaces on the right of selection end
+    select the word and following whitespaces on the right of selection end
 
 *b*::
-	select preceding whitespaces and the word on the left of selection end
+    select preceding whitespaces and the word on the left of selection end
 
 *e*::
-	select preceding whitespaces and the word on the right of selection end
+    select preceding whitespaces and the word on the right of selection end
 
 *<a-[wbe]>*::
-	same as [wbe] but select WORD instead of word
+    same as [wbe] but select WORD instead of word
 
 *f*::
-	select to the next occurrence of given character
+    select to the next occurrence of given character
 
 *t*::
-	select until the next occurrence of given character
+    select until the next occurrence of given character
 
 *<a-[ft]>*::
-	same as [ft] but in the other direction
+    same as [ft] but in the other direction
 
 *m*::
-	select to matching character
+    select to matching character
 
 *M*::
-	extend selection to matching character
+    extend selection to matching character
 
 *x*::
-	select line on which selection end lies (or next line when end lies
-	on an end-of-line)
+    select line on which selection end lies (or next line when end lies
+    on an end-of-line)
 
 *X*:: similar to *x*, except the current selection is extended
 
 *<a-x>*::
-	expand selections to contain full lines (including end-of-lines)
+    expand selections to contain full lines (including end-of-lines)
 
 *<a-X>*::
-	trim selections to only contain full lines (not including last
-	end-of-line)
+    trim selections to only contain full lines (not including last
+    end-of-line)
 
 *%*::
-	select whole buffer
+    select whole buffer
 
 *<a-h>*::
-	select to line begin
+    select to line begin
 
 *<a-l>*::
-	select to line end
+    select to line end
 
 */*::
-	search (select next match)
+    search (select next match)
 
 *<a-/>*::
-	search (select previous match)
+    search (select previous match)
 
 *?*::
-	search (extend to next match)
+    search (extend to next match)
 
 *<a-?>*::
-	search (extend to previous match)
+    search (extend to previous match)
 
 *n*::
-	select next match
+    select next match
 
 *N*::
-	add a new selection with next match
+    add a new selection with next match
 
 *<a-n>*::
-	select previous match
+    select previous match
 
 *<a-N>*::
-	add a new selection with previous match
+    add a new selection with previous match
 
 *pageup, <c-b>*::
-	scroll one page up
+    scroll one page up
 
 *pagedown, <c-f>*::
-	scroll one page down
+    scroll one page down
 
 *<c-u>*::
-	scroll half a page up
+    scroll half a page up
 
 *<c-d>*::
-	scroll half a page down
+    scroll half a page down
 
 *'*::
-	rotate selections (the main selection becomes the next one)
+    rotate selections (the main selection becomes the next one)
 
 *<a-'>*::
-	rotate selections backwards
+    rotate selections backwards
 
 *;*::
-	reduce selections to their cursor
+    reduce selections to their cursor
 
 *<a-;>*::
-	flip the selections direction
+    flip the selections direction
 
 *<a-:>*::
-	ensure selections are in forward direction (cursor after anchor)
+    ensure selections are in forward direction (cursor after anchor)
 
 *<a-.>*::
-	repeat last object or *f*/*t* selection command
+    repeat last object or *f*/*t* selection command
 
 == Changes
 
 *i*::
-	enter insert mode before current selection
+    enter insert mode before current selection
 
 *a*::
-	enter insert mode after current selection
+    enter insert mode after current selection
 
 *d*::
-	yank and delete current selection
+    yank and delete current selection
 
 *c*::
-	yank and delete current selection and enter insert mode
+    yank and delete current selection and enter insert mode
 
 *.*::
-	repeat last insert mode change (*i*, *a*, or *c*, including the
-	inserted text)
+    repeat last insert mode change (*i*, *a*, or *c*, including the
+    inserted text)
 
 *<a-d>*::
-	delete current selection (not yanking)
+    delete current selection (not yanking)
 
 *<a-c>*::
-	delete current selection and enter insert mode (not yanking)
+    delete current selection and enter insert mode (not yanking)
 
 *I*::
-	enter insert mode at current selection begin line start
+    enter insert mode at current selection begin line start
 
 *A*::
-	enter insert mode at current selection end line end
+    enter insert mode at current selection end line end
 
 *o*::
-	enter insert mode in a new line (or in a given count of new lines) below
-	current selection end
+    enter insert mode in a new line (or in a given count of new lines) below
+    current selection end
 
 *O*::
-	enter insert mode in a new line (or in a given count of new lines) above
-	current selection begin
+    enter insert mode in a new line (or in a given count of new lines) above
+    current selection begin
 
 *<a-o>*::
-	add an empty line below cursor
+    add an empty line below cursor
 
 *<a-O>*::
-	add an empty line above cursor
+    add an empty line above cursor
 
 *y*::
-	yank selections
+    yank selections
 
 *p*::
-	paste after current selection end
+    paste after current selection end
 
 *P*::
-	paste before current selection begin
+    paste before current selection begin
 
 *<a-p>*::
-	paste all after current selection end, and select each pasted string
+    paste all after current selection end, and select each pasted string
 
 *<a-P>*::
-	paste all before current selection begin, and select each pasted string
+    paste all before current selection begin, and select each pasted string
 
 *R*::
-	replace current selection with yanked text
+    replace current selection with yanked text
 
 *<a-R>*::
-	replace current selection with every yanked text
+    replace current selection with every yanked text
 
 *r*::
-	replace each character with the next entered one
+    replace each character with the next entered one
 
 *<a-j>*::
-	join selected lines
+    join selected lines
 
 *<a-J>*::
-	join selected lines and select spaces inserted in place of line breaks
+    join selected lines and select spaces inserted in place of line breaks
 
 *<a-m>*::
-	merge contiguous selections together (works across lines as well)
+    merge contiguous selections together (works across lines as well)
 
 *>*::
-	indent selected lines
+    indent selected lines
 
 *<a\->>*::
-	indent selected lines, including empty lines
+    indent selected lines, including empty lines
 
 *<*::
-	deindent selected lines
+    deindent selected lines
 
 *<a-<>*::
-	deindent selected lines, do not remove incomplete indent (3 leading
-	spaces when indent is 4)
+    deindent selected lines, do not remove incomplete indent (3 leading
+    spaces when indent is 4)
 
 *|*::
-	pipe each selection through the given external filter program and
-	replace the selection with its output
+    pipe each selection through the given external filter program and
+    replace the selection with its output
 
 *<a-|>*::
-	pipe each selection through the given external filter program and
-	ignore its output
+    pipe each selection through the given external filter program and
+    ignore its output
 
 *!*::
-	insert command output before selection
+    insert command output before selection
 
 *<a-!>*::
-	append command output after selection
+    append command output after selection
 
 *u*::
-	undo last change
+    undo last change
 
 *<a-u>*::
-	move backward in history
+    move backward in history
 
 *U*::
-	redo last change
+    redo last change
 
 *<a-U>*::
-	move forward in history
+    move forward in history
 
 *&*::
-	align selection, align the cursor of selections by inserting spaces
-	before the first character of the selection
+    align selection, align the cursor of selections by inserting spaces
+    before the first character of the selection
 
 *<a-&>*::
-	copy indent, copy the indentation of the main selection (or the
-	count one if a count is given) to all other ones
+    copy indent, copy the indentation of the main selection (or the
+    count one if a count is given) to all other ones
 
 *`*::
-	to lower case
+    to lower case
 
 *~*::
-	to upper case
+    to upper case
 
 *<a-`>*::
-	swap case
+    swap case
 
 *@*::
-	convert tabs to spaces in current selections, uses the buffer tabstop
-	option or the count parameter for tabstop
+    convert tabs to spaces in current selections, uses the buffer tabstop
+    option or the count parameter for tabstop
 
 *<a-@>*::
-	convert spaces to tabs in current selections, uses the buffer tabstop
-	option or the count parameter for tabstop
+    convert spaces to tabs in current selections, uses the buffer tabstop
+    option or the count parameter for tabstop
 
 *<a-">*::
-	rotate selections content, if specified, the count groups selections,
-	so the following command
+    rotate selections content, if specified, the count groups selections,
+    so the following command
 
 ----------
     3<a-">
 ----------
 
-	rotate (1, 2, 3) and (3, 4, 6) independently
+    rotate (1, 2, 3) and (3, 4, 6) independently
 
 == Goto Commands
 
 *g*, *G*::
-	When a count is specified, *G* only extends the current selection to the given line,
-	*g* sends the anchor to the given line and a menu is then displayed which waits
-	for one of the following additional keys:
+    When a count is specified, *G* only extends the current selection to the given line,
+    *g* sends the anchor to the given line and a menu is then displayed which waits
+    for one of the following additional keys:
 
-	*h*:::
-		go to line begin
+    *h*:::
+        go to line begin
 
-	*l*:::
-		go to line end
+    *l*:::
+        go to line end
 
-	*i*:::
-		go to non blank line start
+    *i*:::
+        go to non blank line start
 
-	*g*, *k*:::
-		go to the first line
+    *g*, *k*:::
+        go to the first line
 
-	*j*:::
-		go to the last line
+    *j*:::
+        go to the last line
 
-	*e*:::
-		go to last char of last line
+    *e*:::
+        go to last char of last line
 
-	*t*:::
-		go to the first displayed line
+    *t*:::
+        go to the first displayed line
 
-	*c*:::
-		go to the middle displayed line
+    *c*:::
+        go to the middle displayed line
 
-	*b*:::
-		go to the last displayed line
+    *b*:::
+        go to the last displayed line
 
-	*a*:::
-		go to the previous (alternate) buffer
+    *a*:::
+        go to the previous (alternate) buffer
 
-	*f*:::
-		open the file whose name is selected
+    *f*:::
+        open the file whose name is selected
 
-	*.*:::
-		go to last buffer modification position
+    *.*:::
+        go to last buffer modification position
 
 == View commands
 
 *v*, *V*::
-	*V* enters lock view mode (which will be left when the <esc> is hit),
-	and *v* modifies the current view; a menu is then displayed which waits
-	for one of the following additional keys:
+    *V* enters lock view mode (which will be left when the <esc> is hit),
+    and *v* modifies the current view; a menu is then displayed which waits
+    for one of the following additional keys:
 
-	*v*, *c*:::
-		center the main selection in the window (vertically)
+    *v*, *c*:::
+        center the main selection in the window (vertically)
 
-	*m*:::
-		center the main selection in the window (horizontally)
+    *m*:::
+        center the main selection in the window (horizontally)
 
-	*t*:::
-		scroll to put the main selection on the top line of the window
+    *t*:::
+        scroll to put the main selection on the top line of the window
 
-	*b*:::
-		scroll to put the main selection on the bottom line of the window
+    *b*:::
+        scroll to put the main selection on the bottom line of the window
 
-	*h*:::
-		scroll the window count columns left
+    *h*:::
+        scroll the window count columns left
 
-	*j*:::
-		scroll the window count line downward
+    *j*:::
+        scroll the window count line downward
 
-	*k*:::
-		scroll the window count line upward
+    *k*:::
+        scroll the window count line upward
 
-	*l*:::
-		scroll the window count columns right
+    *l*:::
+        scroll the window count columns right
 
 
 == Marks
@@ -436,239 +436,239 @@ is a sequence of non whitespace characters
 Marks use the *^* register by default.
 
 *Z*::
-	save the current selections to the register
+    save the current selections to the register
 
 *z*::
-	restore the selections from the register
+    restore the selections from the register
 
 *<a-z>*, *<a-Z>*::
-	*<a-z>* combines the selections from the register with the current ones, whereas
-	*<a-Z>* combines the current selections with the register; a menu is then
-	displayed which waits for one of the following additional keys:
+    *<a-z>* combines the selections from the register with the current ones, whereas
+    *<a-Z>* combines the current selections with the register; a menu is then
+    displayed which waits for one of the following additional keys:
 
-	*a*:::
-		append the selections
+    *a*:::
+        append the selections
 
-	*u*:::
-		keep a union of the selections
+    *u*:::
+        keep a union of the selections
 
-	*i*:::
-		keep an intersection of the selections
+    *i*:::
+        keep an intersection of the selections
 
-	*<*:::
-		select the selection with the leftmost cursor for each pair
+    *<*:::
+        select the selection with the leftmost cursor for each pair
 
-	*>*:::
-		select the selection with the rightmost cursor for each pair
+    *>*:::
+        select the selection with the rightmost cursor for each pair
 
-	*+*:::
-		select the longest selection
+    *+*:::
+        select the longest selection
 
-	*-*:::
-		select the shortest selection
+    *-*:::
+        select the shortest selection
 
 == Macros
 
 Macros use the *@* register by default
 
 *<esc>*::
-	end macro recording
+    end macro recording
 
 *Q*::
-	start or end macro recording
+    start or end macro recording
 
 *q*::
-	play a recorded macro
+    play a recorded macro
 
 == Searching
 
 Searches use the */* register by default
 
 ***::
-	set the search pattern to the current selection (automatically
-	detects word boundaries)
+    set the search pattern to the current selection (automatically
+    detects word boundaries)
 
 *<a-***>*::
-	set the search pattern to the current selection (verbatim, no smart
-	detection)
+    set the search pattern to the current selection (verbatim, no smart
+    detection)
 
 == Jump list
 
 
 *<c-i>*::
-	Jump forward
+    Jump forward
 
 *<c-o>*::
-	Jump backward
+    Jump backward
 
 *<c-s>*::
-	save current selections
+    save current selections
 
 == Multiple selections
 
 *s*::
-	create a selection
+    create a selection
 
 *<a-s>*::
-	split the current selections on line boundaries
+    split the current selections on line boundaries
 
 *S*::
-	split the current selection
+    split the current selection
 
 *C*::
-	copy the current selection to the next line
+    copy the current selection to the next line
 
 *<a-C>*::
-	copy the current selection to the previous line
+    copy the current selection to the previous line
 
 *<space>*::
-	clear a multiple selection
+    clear a multiple selection
 
 *<a-space>*::
-	clear the current selection
+    clear the current selection
 
 *<a-k>*::
-	keep the selections that match the given regex
+    keep the selections that match the given regex
 
 *<a-K>*::
-	clear selections that match the given regex
+    clear selections that match the given regex
 
 *$*::
-	pipe each selection to the given shell command and keep the ones
-	for which the shell returned 0
+    pipe each selection to the given shell command and keep the ones
+    for which the shell returned 0
 
 == Object Selection
 
 *<a-a>*::
-	selects the whole object
+    selects the whole object
 
 *<a-i>*::
-	selects the inner object, that is the object excluding its surrounder
+    selects the inner object, that is the object excluding its surrounder
 
 *[*::
-	selects to object start
+    selects to object start
 
 *]*::
-	selects to object end
+    selects to object end
 
 *{*::
-	extends selections to object start
+    extends selections to object start
 
 *}*::
-	extends selections to object end
+    extends selections to object end
 
 After these keys, you need to enter a second key in order to specify which
 object you want
 
 *b*, *(*, *)*::
-	select the enclosing parenthesis
+    select the enclosing parenthesis
 
 *B*, *{*, *}*::
-	select the enclosing {} block
+    select the enclosing {} block
 
 *r*, *[*, *]*::
-	select the enclosing [] block
+    select the enclosing [] block
 
 *a*, *<*, *>*::
-	select the enclosing <> block
+    select the enclosing <> block
 
 *"*, *Q*::
-	select the enclosing double quoted string
+    select the enclosing double quoted string
 
 *'*, *q*::
-	select the enclosing single quoted string
+    select the enclosing single quoted string
 
 *`*, *g*::
-	select the enclosing grave quoted string
+    select the enclosing grave quoted string
 
 *w*::
-	select the whole word
+    select the whole word
 
 *W*::
-	select the whole WORD
+    select the whole WORD
 
 *s*::
-	select the sentence
+    select the sentence
 
 *p*::
-	select the paragraph
+    select the paragraph
 
 *␣*::
-	select the whitespaces
+    select the whitespaces
 
 *i*::
-	select the current indentation block
+    select the current indentation block
 
 *n*::
-	select the number
+    select the number
 
 *u*::
-	select the argument
+    select the argument
 
 *c*::
-	select user defined object, will prompt for open and close text
+    select user defined object, will prompt for open and close text
 
 == Prompt Commands
 
 *<ret>*::
-	validate prompt
+    validate prompt
 
 *<esc>*::
-	abandon without
+    abandon without
 
 *<left>*, *<a-h>*::
-	move cursor to previous character
+    move cursor to previous character
 
 *<right>*, *<a-l>*::
-	move cursor to previous character
+    move cursor to previous character
 
 *<home>*::
-	move cursor to first character
+    move cursor to first character
 
 *<end>*::
-	move cursor past the last character
+    move cursor past the last character
 
 *<backspace>*, *<a-x>*::
-	erase character before cursor
+    erase character before cursor
 
 *<del>*, *<a-d>*::
-	erase character under cursor
+    erase character under cursor
 
 *<c-w>*::
-	avance to next word begin
+    avance to next word begin
 
 *<c-a-w>*::
-	advance to next WORD begin
+    advance to next WORD begin
 
 *<c-b>*::
-	go back to previous word begin
+    go back to previous word begin
 
 *<c-a-b>*::
-	go back to previous WORD begin
+    go back to previous WORD begin
 
 *<c-e>*::
-	advance to next word end
+    advance to next word end
 
 *<c-a-e>*::
-	advance to next word end
+    advance to next word end
 
 *<up>*, *<c-p>*::
-	select previous entry in history
+    select previous entry in history
 
 *<down>*, *<c-n>*::
-	select next entry in history
+    select next entry in history
 
 *<tab>*::
-	select next completion candidate
+    select next completion candidate
 
 *<backtab>*::
-	select previous completion candidate
+    select previous completion candidate
 
 *<c-r>*::
-	insert then content of the register given by next key
+    insert then content of the register given by next key
 
 *<c-v>*::
-	insert next keystroke without interpreting it
+    insert next keystroke without interpreting it
 
 *<c-o>*::
-	disable auto completion for this prompt
+    disable auto completion for this prompt
