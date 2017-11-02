@@ -29,6 +29,7 @@ define-command -params 1 -hidden doc-render %{
     # Setup the doc_render_ranges option
     set buffer doc_render_ranges %val{timestamp}
     doc-render-regex \B(?<!\\)\*[^\n]+?(?<!\\)\*\B \A|.\z 'H' default+b
+    doc-render-regex \b(?<!\\)_[^\n]+?(?<!\\)_\b \A|.\z 'H' default+i
     doc-render-regex \B(?<!\\)`[^\n]+?(?<!\\)`\B \A|.\z 'H' mono
     doc-render-regex ^=\h+[^\n]+ ^=\h+ '~' title
     doc-render-regex ^={2,}\h+[^\n]+ ^={2,}\h+ '' header
