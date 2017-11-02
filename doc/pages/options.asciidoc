@@ -103,50 +103,50 @@ are exclusively available to built-in options.
 == Builtin options
 
 *tabstop* `int`::
-    *default* 8 +
+    _default_ 8 +
     width of a tab character
 
 *indentwidth* `int`::
-    *default* 4 +
+    _default_ 4 +
     width (in spaces) used for indentation, 0 means a tab character
 
 *scrolloff* `coord`::
-    *default* 0,0 +
+    _default_ 0,0 +
     number of lines, columns to keep visible around the cursor when
     scrolling
 
 *eolformat* `enum(lf|crlf)`::
-    *default* lf +
+    _default_ lf +
     the format of end of lines when writing a buffer, this is autodetected
     on load; values of this option assigned to the `window` scope are
     ignored
 
 *BOM* `enum(none|utf8)`::
-    *default* none +
+    _default_ none +
     define if the file should be written with a unicode byte order mark;
     values of this option assigned to the `window` scope are ignored
 
 *readonly* `bool`::
-    *default* false +
+    _default_ false +
     prevent modifications from being saved to disk, all buffers if set
     to `true` in the `global` scope, or current buffer if set in the
     `buffer` scope; values of this option assigned to the `window`
     scope are ignored
 
 *incsearch* `bool`::
-    *default* true +
+    _default_ true +
     execute search as it is typed
 
 *aligntab* `bool`::
-    *default* false +
+    _default_ false +
     use tabs for alignment command
 
 *autoinfo* `flags(command|onkey|normal)`::
-    *default* command|onkey +
+    _default_ command|onkey +
     display automatic information box in the enabled contexts
 
 *autoshowcompl* `bool`::
-    *default* true +
+    _default_ true +
     automatically display possible completions when editing a prompt
 
 *ignored_files* `regex`::
@@ -163,11 +163,11 @@ are exclusively available to built-in options.
     actions should hook on this option changing for activation/deactivation
 
 *path* `str-list`::
-    *default* ./:/usr/include +
+    _default_ ./:/usr/include +
     directories to search for gf command
 
 *completers* `completer-list`::
-    *default* filename:word=all +
+    _default_ filename:word=all +
     completion engines to use for insert mode completion (they are tried
     in order until one generates candidates). Existing completers are:
 
@@ -195,19 +195,19 @@ are exclusively available to built-in options.
     as word character for the purpose of insert mode completion.
 
 *autoreload* `enum(yes|no|ask)`::
-    *default* ask +
+    _default_ ask +
     auto reload the buffers when an external modification is detected
 
 *debug* `flags(hooks|shell|profile|keys|commands)`::
     dump various debug information in the '\*debug*' buffer
 
 *idle_timeout* `int`::
-    *default* 50 +
+    _default_ 50 +
     timeout, in milliseconds, with no user input that will trigger the
     *PromptIdle*, *InsertIdle* and *NormalIdle* hooks, and autocompletion.
 
 *fs_checkout_timeout* `int`::
-    *default* 500 +
+    _default_ 500 +
     timeout, in milliseconds, between checks in normal mode of modifications
     of the file associated with the current buffer on the filesystem.
 
