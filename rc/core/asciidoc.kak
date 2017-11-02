@@ -17,6 +17,10 @@ add-highlighter shared/asciidoc regex (\A|\n\n)[^\n]+\n={2,}\h*$ 0:title
 add-highlighter shared/asciidoc regex (\A|\n\n)[^\n]+\n-{2,}\h*$ 0:header
 add-highlighter shared/asciidoc regex (\A|\n\n)[^\n]+\n~{2,}\h*$ 0:header
 add-highlighter shared/asciidoc regex (\A|\n\n)[^\n]+\n\^{2,}\h*$ 0:header
+
+add-highlighter shared/asciidoc regex (\A|\n\n)=\h+[^\n]+$ 0:title
+add-highlighter shared/asciidoc regex (\A|\n\n)={2,}\h+[^\n]+$ 0:header
+
 add-highlighter shared/asciidoc regex ^\h+([-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*)*$ 0:list 1:bullet
 add-highlighter shared/asciidoc regex ^(-{3,})\n[^\n\h].*?\n(-{3,})$ 0:block
 add-highlighter shared/asciidoc regex ^(={3,})\n[^\n\h].*?\n(={3,})$ 0:block
