@@ -1,12 +1,6 @@
-kakoune(k)
-==========
+= Highlighters
 
-NAME
-----
-highlighters - a
-
-Description
------------
+== Description
 
 Manipulation of the displayed text is done through highlighters, which can
 be added or removed with the following commands:
@@ -30,8 +24,8 @@ separated path starting with a scope. Scopes are *global*, *buffer*,
 completion in a prompt on the *remove-highlighter* command to see the existing highlighters
 ids.
 
-General highlighters
---------------------
+== General highlighters
+
 *regex* <ex> <capture_id>:<face> ...::
 	highlight a regex, takes the regex as first parameter, followed by
 	any number of face parameters. For example:
@@ -119,8 +113,8 @@ add-highlighter window regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
 *line* <number> <face>::
 	highlight line *number* with face *face*
 
-Highlighting Groups
--------------------
+== Highlighting Groups
+
 
 The *group* highlighter is a container for other highlighters. You can add a
 a subgroup to an existing group, or scope using:
@@ -143,8 +137,7 @@ or several (separated with a pipe sign) of *colorize*, *move* or *wrap* (default
 add-highlighter window group -passes colorize|move|wrap <name>
 --------------------------------------------------------------
 
-Regions highlighters
---------------------
+== Regions highlighters
 
 A special highlighter provides a way to segment the buffer into regions,
 which are to be highlighted differently.
@@ -221,8 +214,7 @@ add-highlighter <path>/<lang>/string ...
 add-highlighter <path>/<lang>/comment ...
 -----------------------------------------------------------------
 
-Shared Highlighters
--------------------
+== Shared Highlighters
 
 Highlighters are often defined for a specific filetype, and it makes then
 sense to share the highlighters between all the windows on the same filetypes.

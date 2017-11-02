@@ -1,12 +1,6 @@
-kakoune(k)
-==========
+= Commands
 
-NAME
-----
-commands - a
-
-Builtins
---------
+== Builtins
 
 Some commands take an exclamation mark (*!*), which can be used to force
 the execution of the command (i.e. to quit a modified buffer, the
@@ -169,8 +163,8 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 	remove the highlighter whose id is *highlighter_id* (c.f. the
 	'highlighters' documentation page)
 
-Helpers
--------
+== Helpers
+
 Kakoune provides some helper commands that can be used to define composite
 commands:
 
@@ -230,14 +224,14 @@ commands:
 Note that those commands are also available in the interactive mode, but
 are not really useful in that context.
 
-Multiple commands
------------------
+== Multiple commands
+
 Commands (c.f. previous sections) can be chained, by being separated either
 by new lines or by semicolons, as such a semicolon must be escaped with a
 backslash (\;) to be considered as a literal semicolon argument
 
-Declaring new commands
-----------------------
+== Declaring new commands
+
 New commands can be defined using the *define-command* command:
 
 *define-command* [flags] <command_name> <commands>::

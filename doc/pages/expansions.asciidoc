@@ -1,12 +1,7 @@
-kakoune(k)
-==========
+= Expansions
 
-NAME
-----
-expansions - a
+== Strings
 
-Strings
--------
 \'strings'::
 	uninterpreted strings, use a backslash (\') to escape the separator
 "strings"::
@@ -29,8 +24,7 @@ e.g. %[string], %<string>, %(string), %~string~, %!string!
 e.g. %{ roger {}; } is a valid string, %{ marcel \} as well
 -----------------------------------------------------------
 
-Typed expansions
-----------------
+== Typed expansions
 
 %\{strings\} can have an expansion type between the *%* and the opening
 character. They will be written *%<type>\{<content>\}*. They will be
@@ -54,8 +48,8 @@ parameter:
 	argument expansion, expand to the arguments of the current
 	command, *<content>* can be a number, or @ for all arguments
 
-Shell expansions
-----------------
+== Shell expansions
+
 The '%sh{...}' expansion replaces its content with the output of the
 shell commands in it. The following environment variables are used to pass
 informations about Kakoune's state:
@@ -131,8 +125,8 @@ informations about Kakoune's state:
 Note that in order for Kakoune to pass a value in the environment, the
 variable has to be spelled out within the body of the expansion
 
-Markup strings
---------------
+== Markup strings
+
 In certain contexts, Kakoune can take a markup string, which is a string
 containing formatting informations. In these strings, the {facename}
 syntax will enable the face facename until another face gets activated,

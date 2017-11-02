@@ -1,19 +1,12 @@
-kakoune(k)
-==========
+= FAQ
 
-NAME
-----
-faq - a
-
-How to pronounce the name of the project and what does it mean ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== How to pronounce the name of the project and what does it mean ?
 
 The name of the project is pronounced "Kak-oon", and is a word taken from a
 New Caledonian dialect based on french. It means a hard blow, usually a punch,
 but generally refers to a blow into which all of one's strength went.
 
-Is there going to be a Windows port of Kakoune ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Is there going to be a Windows port of Kakoune ?
 
 As many features provided by UNIX systems would be missing, or if anything
 much less efficient on a Windows system, the incentive to porting the
@@ -22,8 +15,7 @@ project to this operating system is pretty low.
 Moreover, you can get pretty decent performance by using Kakoune on Cygwin
 (which is officially supported).
 
-Kakoune is very slow on big files, what can I do about it ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Kakoune is very slow on big files, what can I do about it ?
 
 The default build mode (set in the `Makefile` of the `src` directory of the
 project) is "debug", which makes it convenient to track issues but also
@@ -34,21 +26,18 @@ Note that if your distribution provides a "kakoune" package, the program should
 already be built in non-debug mode (if you still experience slowness, please
 report the issue on the bug tracker).
 
-Can I use Kakoune as a pager ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Can I use Kakoune as a pager ?
 
 Kakoune can be used as a pager, either by setting the `PAGER` environment
 variable to `kak`, or by writing data directly to its standard input using a
 shell pipeline.
 
-Are there any non-console based frontends available ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Are there any non-console based frontends available ?
 
 No graphical frontend is currently officially maintained, you can however
 try experimental community-developed ones.
 
-Why are colors misrendered in my Kakoune clients ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Why are colors misrendered in my Kakoune clients ?
 
 The most probable cause for that is a very widespread practice that consists
 in setting the `TERM` environment variable in the shell's configuration file.
@@ -60,16 +49,14 @@ Note that if you're using `tmux`, the proper -official- way to get Kakoune to
 work is to add the following line to your `tmux` configuration file:
 `set -sg default-terminal screen-256color`
 
-Why does leaving insert mode take more than half a second in `tmux` ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Why does leaving insert mode take more than half a second in `tmux` ?
 
 Upon hitting the escape key, `tmux` waits for a short period of time to
 determine whether it's part of a function or a meta key sequence. In order
 to fix this "lag", set the waiting period in your `tmux` configuration file
 to a short time, e.g. 25ms: `set -sg escape-time 25`
 
-How do I automatically indent code, as Vim does with `=` ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== How do I automatically indent code, as Vim does with `=` ?
 
 As `Kakoune` doesn't parse the contents of the buffers, there is no builtin
 equivalent for this Vim feature. Use a formatter/prettifier dedicated to
@@ -80,8 +67,7 @@ Example: `%|indent<ret>` to indent an entire buffer with C code.
 Note that some languages have a default formatter set, which you can use
 with the `:format` command.
 
-Can Kakoune automatically complete the parameters of my functions ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Can Kakoune automatically complete the parameters of my functions ?
 
 As mentioned in the above question about Vim's `=` key, Kakoune does not
 parse the contents of a buffer by itself, which makes it impossible for
@@ -95,8 +81,7 @@ editing a C/C++ file, and completion will work on function parameters.
 Note that the same features are available for python buffers, with the
 `jedi` script.
 
-Why aren't widely known command line shortcuts such as <c-w> or <c-u> available in Kakoune ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Why aren't widely known command line shortcuts such as <c-w> or <c-u> available in Kakoune ?
 
 Despite their widespread availability in multiple tools, those shortcuts do
 not fit the paradigm that Kakoune implements, which is based on selections
@@ -106,8 +91,7 @@ However, you can easily declare key mappings in your configuration file
 to be able to use those control-based shortcuts in insert mode (c.f. the
 "map" command in the "commands" documentation page).
 
-How can I explore the filesystem the way Vim's NerdTree does ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== How can I explore the filesystem the way Vim's NerdTree does ?
 
 The builtin file completion engine used when opening a file for editing
 (using the `:edit` command and letting the suggestions popup in the menu
@@ -119,8 +103,7 @@ which should in return send an "edit" command followed by the path of the
 file you selected to the current Kakoune session (e.g. `echo "eval -client
 $kak_client edit /path/to/file" | kak -p $kak_session`).
 
-Why aren't there other scopes similar to `%sh{}` e.g. python ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Why aren't there other scopes similar to `%sh{}` e.g. python ?
 
 Supporting custom scopes would add hard dependencies to the project, which
 is too much of a drawback when balanced against the low cost of using
@@ -129,8 +112,7 @@ The shell scope allows users to spawn any interpreter they want, for a minimal
 cost in terms of performance, it is therefore the reason why it's the only
 one available by default.
 
-What shell is used to expand `%sh{}` scopes ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== What shell is used to expand `%sh{}` scopes ?
 
 The server expands shell scopes using the `sh` binary, stored in one of the
 directories where all the POSIX standard utilities can be found -this list
@@ -139,22 +121,19 @@ by Kakoune at startup.
 
 In most distributions, `/bin/sh` will end up being used.
 
-Can I disable auto-indentation completely ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Can I disable auto-indentation completely ?
 
 All the indentation hooks are conventionally named `<lang>-indent`, which
 allows us to use the `disabled_hooks` variable to disable indentation
 globally with the following command: `set global disabled_hooks '.+-indent'`
 
-How to enable syntax highlighting ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== How to enable syntax highlighting ?
 
 The mimetype of the files opened in new buffers is detected using the
 `file` command, and syntax highlighting enabled automatically when
 possible.
 
-My file seems to be highlighted with the wrong colors, I thought syntax highlighting was detected automatically ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== My file seems to be highlighted with the wrong colors, I thought syntax highlighting was detected automatically ?
 
 The `file` utility has several short comings, such as detecting the
 wrong mimetype for a file containing data with different syntax, e.g.
@@ -166,16 +145,14 @@ for a given format for instance), but not much can be done about those
 ambiguous cases. You might consider writing a custom `$HOME/.magic` file
 if needed.
 
-Can I disable syntax highlighting completely ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Can I disable syntax highlighting completely ?
 
 Similarly to the indentation hooks, the name format followed by the
 highlighting hooks is `<lang>-highlight`. You can thus disable syntax
 highlighting using the following command: `set global disabled_hooks
 '.+-highlight'`
 
-Why does a dot `.` in a regex select newline characters ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Why does a dot `.` in a regex select newline characters ?
 
 Data in buffers is a stream of characters, and newlines do not receive special
 treatment compared to other characters, with regards to regex matching. In
@@ -183,8 +160,7 @@ order to select data in a line without any trailing newline characters, one coul
 use the `[^\n]+` pattern, which is arguably a good compromise when
 balanced against the ability to select data over several lines.
 
-Can I split the window to display different buffers in them ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Can I split the window to display different buffers in them ?
 
 As a fairly compliant follower of the UNIX philosophy, Kakoune does not
 try to implement features that are best handled by separate, dedicated
@@ -198,8 +174,7 @@ In order to open buffers in the same window simultaneously using `tmux`
 and simply use the `:new` command to spawn new clients as you would
 have otherwise in an X11 environment.
 
-Why does `a` extend the current selection, but `i` leaves it untouched ?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== Why does `a` extend the current selection, but `i` leaves it untouched ?
 
 Selections are ranges of characters whose delimiters are an "anchor" and
 a "cursor", and inserting characters is always done before the cursor in

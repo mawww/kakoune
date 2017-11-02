@@ -1,12 +1,7 @@
-kakoune(k)
-==========
+= Keys
 
-NAME
-----
-keys - a
+== Key Syntax
 
-Key Syntax
-----------
 Usual keys are written using their ascii character, including capital
 keys. Non printable keys use an alternate name, written between *<*
 and *>*, such as *<esc>* or *<del>*. Modified keys are written between
@@ -17,8 +12,8 @@ name or ascii character), for example *<c-x>*, *<a-space>*.
 In order to bind some keys to arbitrary ones, refer to the 'mapping'
 documentation page.
 
-Insert mode
------------
+== Insert mode
+
 *<esc>*::
 	leave insert mode
 
@@ -73,8 +68,7 @@ Insert mode
 *<a-;>*::
 	escape to normal mode for a single command
 
-Using Counts
-------------
+== Using Counts
 
 In normal mode, commands can be prefixed with a numeric count, which can control
 the command behaviour.
@@ -82,8 +76,7 @@ the command behaviour.
 For example, *3W* selects 3 consecutive words and *3w* select the third word on
 the right of selection end.
 
-Disabling Hooks
----------------
+== Disabling Hooks
 
 Any normal mode command can be prefixed with *\* which will disable hook execution
 for the duration for the command (including the duration of modes the command could
@@ -92,8 +85,8 @@ move to, so *\i* will disable hooks for the whole insert session).
 As autoindentation is implemented in terms of hooks, this can be used to disable
 it when pasting text.
 
-Movement
---------
+== Movement
+
 'word' is a sequence of alphanumeric characters or underscore, and 'WORD'
 is a sequence of non whitespace characters
 
@@ -212,8 +205,7 @@ is a sequence of non whitespace characters
 *<a-.>*::
 	repeat last object or *f*/*t* selection command
 
-Changes
--------
+== Changes
 
 *i*::
 	enter insert mode before current selection
@@ -364,8 +356,7 @@ Changes
 
 	rotate (1, 2, 3) and (3, 4, 6) independently
 
-Goto Commands
--------------
+== Goto Commands
 
 *g*, *G*::
 	When a count is specified, *G* only extends the current selection to the given line,
@@ -408,8 +399,7 @@ Goto Commands
 	*.*:::
 		go to last buffer modification position
 
-View commands
--------------
+== View commands
 
 *v*, *V*::
 	*V* enters lock view mode (which will be left when the <esc> is hit),
@@ -441,8 +431,8 @@ View commands
 		scroll the window count columns right
 
 
-Marks
------
+== Marks
+
 Marks use the *^* register by default.
 
 *Z*::
@@ -477,8 +467,8 @@ Marks use the *^* register by default.
 	*-*:::
 		select the shortest selection
 
-Macros
-------
+== Macros
+
 Macros use the *@* register by default
 
 *<esc>*::
@@ -490,8 +480,8 @@ Macros use the *@* register by default
 *q*::
 	play a recorded macro
 
-Searching
----------
+== Searching
+
 Searches use the */* register by default
 
 ***::
@@ -502,8 +492,8 @@ Searches use the */* register by default
 	set the search pattern to the current selection (verbatim, no smart
 	detection)
 
-Jump list
----------
+== Jump list
+
 
 *<c-i>*::
 	Jump forward
@@ -514,8 +504,7 @@ Jump list
 *<c-s>*::
 	save current selections
 
-Multiple selections
--------------------
+== Multiple selections
 
 *s*::
 	create a selection
@@ -548,8 +537,7 @@ Multiple selections
 	pipe each selection to the given shell command and keep the ones
 	for which the shell returned 0
 
-Object Selection
-----------------
+== Object Selection
 
 *<a-a>*::
 	selects the whole object
@@ -620,8 +608,7 @@ object you want
 *c*::
 	select user defined object, will prompt for open and close text
 
-Prompt Commands
----------------
+== Prompt Commands
 
 *<ret>*::
 	validate prompt

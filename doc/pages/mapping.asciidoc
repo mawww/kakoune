@@ -1,12 +1,7 @@
-kakoune(k)
-==========
+= Mapping
 
-NAME
-----
-mapping - a
+== Description
 
-Description
------------
 Creating and removing shortcuts boils down to the following commands,
 respectively:
 
@@ -51,8 +46,7 @@ set to the same sequence of keys passed using the *expected* argument.
 For more information about the values of the *scope* parameter, refer to
 the 'scopes' documentation page.
 
-Mappable keys
--------------
+== Mappable keys
 
 For *key* and *keys* in the *map* command, the following key names can
 be used:

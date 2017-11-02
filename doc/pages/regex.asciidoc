@@ -1,20 +1,13 @@
-kakoune(k)
-==========
+= Regex
 
-NAME
-----
-regex - a
-
-Regex Syntax
-------------
+== Regex Syntax
 
 Kakoune regex syntax is based on the ECMAScript syntax, as defined by the
 ECMA-262 standard (see <<Compatibility>>).
 
 Kakoune's regex always run on Unicode codepoint sequences, not on bytes.
 
-Literals
---------
+== Literals
 
 Every character except the syntax characters `\^$.*+?[]{}|().` match
 themselves. Syntax characters can be escaped with a backspace so `\$`
@@ -32,8 +25,7 @@ Some literals are available as escape sequences:
 * `\xXX` matches the character whose codepoint is XX (in hexadecimal).
 * `\uXXXX` matches the character whose codepoint is XXXX (in hexadecimal).
 
-Character classes
------------------
+== Character classes
 
 The `[` character introduces a character class, matching one character
 from a set of characters.
@@ -76,13 +68,11 @@ non-digit character.
 Character class escapes can be used outside of a character class, `\d`
 is equivalent to `[\d]`.
 
-Any character
--------------
+== Any character
 
 `.` matches any character, including new lines.
 
-Groups
-------
+== Groups
 
 Regex atoms can be grouped using `(` and `)` or `(?:` and `)`. If `(` is
 used, the group will be a capturing group, which means the positions from
@@ -95,8 +85,7 @@ for the whole sequence that matched.
 `(?:` introduces a non capturing group, which will not record the
 matching positions.
 
-Alternations
-------------
+== Alternations
 
 `|` introduces an alternation, which will either match its left-hand side,
 or its right-hand side (preferring the left-hand side)
@@ -104,8 +93,7 @@ or its right-hand side (preferring the left-hand side)
 For example, `foo|bar` matches either `foo` or `bar`, `foo(bar|baz|qux)`
 matches `foo` followed by either `bar`, `baz` or `qux`.
 
-Quantifier
-----------
+== Quantifier
 
 Literals, Character classes, Any characters and groups can be followed
 by a quantifier, which specifies the number of times they can match.
@@ -123,8 +111,7 @@ match more characters if possible. Suffixing a quantifier with `?` will
 make it non-greedy, meaning it will prefer to match as few characters
 as possible.
 
-Zero width assertions
----------------------
+== Zero width assertions
 
 Assertions do not consume any character, but will prevent the regex
 from matching if they are not fulfilled.
@@ -163,8 +150,7 @@ For example, `(?<!bar)(?=foo).` will match any character which is not
 preceded by `bar` and where `foo` matches from the current position
 (which means the character has to be an `f`).
 
-Modifiers
----------
+== Modifiers
 
 Some modifiers can control the matching behavior of the atoms following
 them:
@@ -172,8 +158,7 @@ them:
 * `(?i)` enables case-insensitive matching
 * `(?I)` disables case-insensitive matching
 
-Quoting
--------
+== Quoting
 
 `\Q` will start a quoted sequence, where every character is treated as
 a literal. That quoted sequence will continue until either the end of
@@ -182,8 +167,7 @@ the regex, or the appearance of `\E`.
 For example `.\Q.^$\E$` will match any character followed by the literal
 string `.^$` followed by an end of line.
 
-Compatibility
--------------
+== Compatibility
 
 The syntax tries to follow the ECMAScript regex syntax as defined by
 https://www.ecma-international.org/ecma-262/8.0/ some divergences

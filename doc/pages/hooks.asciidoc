@@ -1,12 +1,6 @@
-kakoune(k)
-==========
+= Hooks
 
-NAME
-----
-hooks - a
-
-Description
------------
+== Description
 
 Commands can be registered to be executed when certain events arise. To
 register a hook use the following command:
@@ -38,8 +32,8 @@ remove-hooks <scope> <group>
 A call to the command above will remove every hooks in *scope* that are part
 of the given *group*.
 
-Default hooks
--------------
+== Default hooks
+
 *NormalIdle*::
 	a certain duration has passed since last key was pressed in normal mode
 
@@ -172,8 +166,7 @@ the following expansions:
 * `kak_hook_param`: filtering text passed to the currently executing hook
 * `kak_hook_param_capture_N`: text captured by the hook filter regex capture N
 
-Disabling Hooks
----------------
+== Disabling Hooks
 
 Any normal mode command can be prefixed with `\` which will disable hook
 execution for the duration for the command (including the duration of modes

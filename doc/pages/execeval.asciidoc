@@ -1,12 +1,7 @@
-kakoune(k)
-==========
+= Exec and Eval
 
-NAME
-----
-execeval - a
+== Description
 
-Description
------------
 The *exec* and *eval* commands can be used to run Kakoune commands, and
 should be used as follows:
 
@@ -23,8 +18,8 @@ the last key/command is reached, or an error is raised.
 These two commands also save the following registers, who are then restored
 when the commands have been executed: */*, *"*, *|*, *^*, *@*.
 
-Optional flags
---------------
+== Optional flags
+
 *-client* <name>::
 	execute in the context of the client named *name*
 

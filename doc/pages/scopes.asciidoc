@@ -1,19 +1,12 @@
-kakoune(k)
-==========
+= Scopes
 
-NAME
-----
-scopes - a
-
-Description
------------
+== Description
 
 Scopes are groups in which a particular Kakoune object (a variable,
 hook, alias etc) can have different values, depending on the group the
 value was declared in.
 
-Names and hierarchy
--------------------
+== Names and hierarchy
 
 Scopes are named as follows:
 
@@ -34,8 +27,7 @@ The above priority line implies that objects can have individual values that
 will be resolved first in the *window* scope (highest priority), then in
 the *buffer* scope, and finally in the *global* scope (lowest priority).
 
-Uses
-----
+== Uses
 
 The scope paradigm is very useful as it allows the user to customize the
 behavior of the editor without modifying the configuration globally, as
@@ -56,8 +48,7 @@ Examples:
 	customized in the *buffer* scope with 'set', c.f. the 'options'
 	documentation page)
 
-Execution context
------------------
+== Execution context
 
 Some commands work in a specific context that might exclude one or
 several scopes altogether, consequently ignoring some values of a given

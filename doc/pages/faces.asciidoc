@@ -1,12 +1,7 @@
-kakoune(k)
-==========
+= Faces
 
-NAME
-----
-faces - a
+== Declaration
 
-Declaration
------------
 A 'face' refers how the specified text is displayed, it has a foreground
 color, a background color, and some attributes. The value of a face has the
 following format:
@@ -42,8 +37,8 @@ fg_color[,bg_color][+attributes]
 			exclusive, override previous faces instead of merging
 			with them
 
-Builtin faces
--------------
+== Builtin faces
+
 The following default faces are used by color schemes to highlight certain
 areas of the user interface:
 

@@ -1,12 +1,6 @@
-kakoune(k)
-==========
+= Options
 
-NAME
-----
-options - a
-
-Options
--------
+== Description
 
 Kakoune can store named and typed values that can be used both to customize
 the core editor behaviour, and to store data used by extension scripts.
@@ -28,8 +22,7 @@ declare-option [-hidden] <type> <name> [<value>]
 If `-hidden` is specified, the option will not be displayed in completion
 suggestions.
 
-Types
------
+== Types
 
 All options have a type, which defines how they are translated to/from text
 and their set of valid values.
@@ -76,8 +69,7 @@ are exclusively available to built-in options.
 	a set of flags, taking a combination of the given values joined by a
 	'|' character
 
-Builtin options
----------------
+== Builtin options
 
 *tabstop* 'int'::
 	*default* 8 +
