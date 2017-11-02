@@ -633,7 +633,7 @@ const CommandDesc rename_buffer_cmd = {
     }
 };
 
-static constexpr auto highlighter_scopes = { "global", "buffer", "window", "shared" };
+static constexpr auto highlighter_scopes = { "global/", "buffer/", "window/", "shared/" };
 
 template<bool add>
 Completions highlighter_cmd_completer(

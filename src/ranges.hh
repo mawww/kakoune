@@ -328,6 +328,15 @@ Init accumulate(Range&& c, Init&& init, BinOp&& op)
     return std::accumulate(begin(c), end(c), init, op);
 }
 
+template<typename Container>
+auto gather()
+{
+    return make_view_factory([](auto&& range) {
+        using std::begin; using std::end;
+        return Container(begin(range), end(range));
+    });
+}
+
 }
 
 #endif // ranges_hh_INCLUDED
