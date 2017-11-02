@@ -700,7 +700,10 @@ struct WrapHighlighter : Highlighter
                     line.erase(atom_it, line.end());
 
                     if (indent != 0)
-                        new_line.insert(new_line.begin(), DisplayAtom{String{' ', indent}});
+                    {
+                        auto it = new_line.insert(new_line.begin(), {buffer, coord, coord});
+                        it->replace(String{' ', indent});
+                    }
 
                     if (it+1 - display_buffer.lines().begin() == win_height)
                     {
