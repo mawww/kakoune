@@ -2065,9 +2065,10 @@ void register_highlighters()
     registry.insert({
         "wrap",
         { WrapHighlighter::create,
-          "Parameters: [-word] [-width <max_width>]\n"
+          "Parameters: [-word] [-indent] [-width <max_width>]\n"
           "Wrap lines to window width, or max_width if given and window is wider,\n"
-          "wrap at word boundaries instead of codepoint boundaries if -word is given" } });
+          "wrap at word boundaries instead of codepoint boundaries if -word is given\n"
+          "preserve line indent in wrapped parts if -indent is given\n"} });
     registry.insert({
         "ref",
         { ReferenceHighlighter::create,
