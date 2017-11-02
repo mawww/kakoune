@@ -1212,10 +1212,6 @@ static void update_line_specs_ifn(const Buffer& buffer, LineAndSpecList& line_fl
 
     auto& lines = line_flags.list;
 
-    std::sort(lines.begin(), lines.end(),
-              [](const LineAndSpec& lhs, const LineAndSpec& rhs)
-              { return std::get<0>(lhs) < std::get<0>(rhs); });
-
     auto modifs = compute_line_modifications(buffer, line_flags.prefix);
     auto ins_pos = lines.begin();
     for (auto it = lines.begin(); it != lines.end(); ++it)
@@ -1244,6 +1240,13 @@ static void update_line_specs_ifn(const Buffer& buffer, LineAndSpecList& line_fl
 void option_update(LineAndSpecList& opt, const Context& context)
 {
     update_line_specs_ifn(context.buffer(), opt);
+}
+
+void option_list_postprocess(Vector<LineAndSpec, MemoryDomain::Options>& opt)
+{
+    std::sort(opt.begin(), opt.end(),
+              [](auto& lhs, auto& rhs)
+              { return std::get<0>(lhs) < std::get<0>(rhs); });
 }
 
 struct FlagLinesHighlighter : Highlighter
@@ -1402,6 +1405,16 @@ static void update_ranges_ifn(const Buffer& buffer, RangeAndStringList& range_an
         }
     }
     range_and_faces.prefix = buffer.timestamp();
+}
+
+void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt)
+{
+    std::sort(opt.begin(), opt.end(),
+              [](auto& lhs, auto& rhs) {
+        return std::get<0>(lhs).first == std::get<0>(rhs).first ?
+            std::get<0>(lhs).last < std::get<0>(rhs).last
+          : std::get<0>(lhs).first < std::get<0>(rhs).first;
+    });
 }
 
 void option_update(RangeAndStringList& opt, const Context& context)

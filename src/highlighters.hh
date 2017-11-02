@@ -27,6 +27,7 @@ constexpr StringView option_type_name(Meta::Type<LineAndSpecList>)
     return "line-specs";
 }
 void option_update(LineAndSpecList& opt, const Context& context);
+void option_list_postprocess(Vector<LineAndSpec, MemoryDomain::Options>& opt);
 
 using RangeAndString = std::tuple<InclusiveBufferRange, String>;
 using RangeAndStringList = TimestampedList<RangeAndString>;
@@ -36,6 +37,7 @@ constexpr StringView option_type_name(Meta::Type<RangeAndStringList>)
     return "range-specs";
 }
 void option_update(RangeAndStringList& opt, const Context& context);
+void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt);
 
 }
 

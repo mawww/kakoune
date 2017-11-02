@@ -76,6 +76,10 @@ String option_to_string(const Vector<T, domain>& opt)
 }
 
 template<typename T, MemoryDomain domain>
+void option_list_postprocess(Vector<T, domain>& opt)
+{}
+
+template<typename T, MemoryDomain domain>
 void option_from_string(StringView str, Vector<T, domain>& opt)
 {
     opt.clear();
@@ -85,6 +89,7 @@ void option_from_string(StringView str, Vector<T, domain>& opt)
         option_from_string(elem, opt_elem);
         opt.push_back(opt_elem);
     }
+    option_list_postprocess(opt);
 }
 
 template<typename T, MemoryDomain domain>
@@ -95,6 +100,7 @@ bool option_add(Vector<T, domain>& opt, StringView str)
     opt.insert(opt.end(),
                std::make_move_iterator(vec.begin()),
                std::make_move_iterator(vec.end()));
+    option_list_postprocess(opt);
     return not vec.empty();
 }
 
