@@ -2,18 +2,31 @@
 
 == Description
 
-Kakoune can store named and typed values that can be used both to customize
-the core editor behaviour, and to store data used by extension scripts.
+Kakoune can store named and typed values that can be used both to
+customize the core editor behaviour, and to store data used by extension
+scripts.
 
-Options can be modified using the *set-option* command:
+Options can be modified using the `set-option` command:
 
 ---------------------------------
 set-option <scope> <name> <value>
 ---------------------------------
 
-<scope> can be *global*, *buffer* or *window* (See <<scopes#,`:doc scopes`>>)
+<scope> can be *global*, *buffer*, *window* or *current* (See
+<<scopes#,`:doc scopes`>>). *current* relate to the narrowest scope in
+which the option is already set.
 
-New options can be declared using the *declare-option* command:
+Options values can be unset in a specific scope with the `unset-option`
+command:
+
+---------------------------
+unset-option <scope> <name>
+---------------------------
+
+Unsetting an option will make it fallback to the value of its parent mode,
+hence options cannot be unset from the *global* scope.
+
+New options can be declared using the `declare-option` command:
 
 ------------------------------------------------
 declare-option [-hidden] <type> <name> [<value>]
@@ -22,203 +35,221 @@ declare-option [-hidden] <type> <name> [<value>]
 If `-hidden` is specified, the option will not be displayed in completion
 suggestions.
 
+Certain option type can be *updated*, usually to match potential changes
+in the buffer they relate to. This can be triggered by the `update-option`
+command:
+
+----------------------------
+update-option <scope> <name>
+----------------------------
+
 == Types
 
-All options have a type, which defines how they are translated to/from text
-and their set of valid values.
+All options have a type, which defines how they are translated to/from
+text and their set of valid values.
 
 Some types are usable for user defined options while some other types
 are exclusively available to built-in options.
 
 *int*::
-	an integer number
+    an integer number
+
 *bool*::
-	a boolean value, yes/true or no/false
+    a boolean value, yes/true or no/false
+
 *str*::
-	a string, some freeform text
+    a string, some freeform text
+
 *regex*::
-	as a string but the set commands will complain if the entered text
-	is not a valid regex
+    as a string but the set commands will complain if the entered text
+    is not a valid regex
+
 *coord*::
-	a line, column pair (separated by comma)
+    a line, column pair (separated by comma)
+
 *<type>-list*::
-	a list, elements are separated by a colon (:) if an element needs
-	to contain a colon, it can be escaped with a backslash
+    a list, elements are separated by a colon (:) if an element needs
+    to contain a colon, it can be escaped with a backslash
+
 *range-specs*::
-	a `:` separated list of a pair of a buffer range (`<begin
-	line>.<begin column>,<end line>.<end column>` or `<begin
-	line>.<begin column>+<length>`) and a string (separated by `|`),
-	except for the first element which is just the timestamp of
-	the buffer.  When the `update-option` is used on an option of
-	this type, its ranges gets updated according to all the buffer
-	modifications that happened since its timestamp.
+    a `:` separated list of a pair of a buffer range (`<begin
+    line>.<begin column>,<end line>.<end column>` or `<begin line>.<begin
+    column>+<length>`) and a string (separated by `|`), except for the
+    first element which is just the timestamp of the buffer.  When the
+    `update-option` is used on an option of this type, its ranges gets
+    updated according to all the buffer modifications that happened
+    since its timestamp.
+
 *line-specs*::
-	a `:` separated list of a line number and a corresponding flag
-	(`<line>|<flag text>`), except for the first element which is
-	just the timestamp of the buffer. When the `update-option` is
-	used on an option of this type, its lines gets updated according
-	to all the buffer modifications that happened since its timestamp.
+    a `:` separated list of a line number and a corresponding flag
+    (`<line>|<flag text>`), except for the first element which is just
+    the timestamp of the buffer. When the `update-option` is used on
+    an option of this type, its lines gets updated according to all the
+    buffer modifications that happened since its timestamp.
+
 *completions*::
-	a `:` separated list of `<text>|<docstring>|<menu text>`
-	candidates, except for the first element which follows the
-	`<line>.<column>[+<length>]@<timestamp>` format to define where the
-	completion apply in the buffer. Markup can be used in the menu text.
+    a `:` separated list of `<text>|<docstring>|<menu text>`
+    candidates, except for the first element which follows the
+    `<line>.<column>[+<length>]@<timestamp>` format to define where the
+    completion apply in the buffer. Markup can be used in the menu text.
+
 *enum(value1|value2|...)*::
-	an enum, taking one of the given values
+    an enum, taking one of the given values
+
 *flags(value1|value2|...)*::
-	a set of flags, taking a combination of the given values joined by a
-	'|' character
+    a set of flags, taking a combination of the given values joined by a
+    '|' character
 
 == Builtin options
 
-*tabstop* 'int'::
-	*default* 8 +
-	width of a tab character
+*tabstop* `int`::
+    *default* 8 +
+    width of a tab character
 
-*indentwidth* 'int'::
-	*default* 4 +
-	width (in spaces) used for indentation, 0 means a tab character
+*indentwidth* `int`::
+    *default* 4 +
+    width (in spaces) used for indentation, 0 means a tab character
 
-*scrolloff* 'coord'::
-	*default* 0,0 +
-	number of lines, columns to keep visible around the cursor when
-	scrolling
+*scrolloff* `coord`::
+    *default* 0,0 +
+    number of lines, columns to keep visible around the cursor when
+    scrolling
 
-*eolformat* 'enum(lf|crlf)'::
-	*default* lf +
-	the format of end of lines when writing a buffer, this is autodetected
-	on load; values of this option assigned to the `window` scope are
-	ignored
+*eolformat* `enum(lf|crlf)`::
+    *default* lf +
+    the format of end of lines when writing a buffer, this is autodetected
+    on load; values of this option assigned to the `window` scope are
+    ignored
 
-*BOM* 'enum(none|utf8)'::
-	*default* none +
-	define if the file should be written with a unicode byte order mark;
-	values of this option assigned to the `window` scope are ignored
+*BOM* `enum(none|utf8)`::
+    *default* none +
+    define if the file should be written with a unicode byte order mark;
+    values of this option assigned to the `window` scope are ignored
 
-*readonly* 'bool'::
-	*default* false +
-	prevent modifications from being saved to disk, all buffers if set
-	to `true` in the `global` scope, or current buffer if set in the
-	`buffer` scope; values of this option assigned to the `window`
-	scope are ignored
+*readonly* `bool`::
+    *default* false +
+    prevent modifications from being saved to disk, all buffers if set
+    to `true` in the `global` scope, or current buffer if set in the
+    `buffer` scope; values of this option assigned to the `window`
+    scope are ignored
 
-*incsearch* 'bool'::
-	*default* true +
-	execute search as it is typed
+*incsearch* `bool`::
+    *default* true +
+    execute search as it is typed
 
-*aligntab* 'bool'::
-	*default* false +
-	use tabs for alignment command
+*aligntab* `bool`::
+    *default* false +
+    use tabs for alignment command
 
-*autoinfo* 'flags(command|onkey|normal)'::
-	*default* command|onkey +
-	display automatic information box in the enabled contexts
+*autoinfo* `flags(command|onkey|normal)`::
+    *default* command|onkey +
+    display automatic information box in the enabled contexts
 
-*autoshowcompl* 'bool'::
-	*default* true +
-	automatically display possible completions when editing a prompt
+*autoshowcompl* `bool`::
+    *default* true +
+    automatically display possible completions when editing a prompt
 
-*ignored_files* 'regex'::
-	filenames matching this regex won't be considered as candidates on
-	filename completion (except if the text being completed already
-	matches it)
+*ignored_files* `regex`::
+    filenames matching this regex won't be considered as candidates
+    on filename completion (except if the text being completed already
+    matches it)
 
-*disabled_hooks* 'regex'::
-	hooks whose group matches this regex won't be executed. For example
-	indentation hooks can be disabled with '.*-indent'
+*disabled_hooks* `regex`::
+    hooks whose group matches this regex won't be executed. For example
+    indentation hooks can be disabled with `.*-indent`
 
-*filetype* 'str'::
-	arbitrary string defining the type of the file filetype dependant
-	actions should hook on this option changing for activation/deactivation
+*filetype* `str`::
+    arbitrary string defining the type of the file filetype dependant
+    actions should hook on this option changing for activation/deactivation
 
-*path* 'str-list'::
-	*default* ./:/usr/include +
-	directories to search for gf command
+*path* `str-list`::
+    *default* ./:/usr/include +
+    directories to search for gf command
 
-*completers* 'completer-list'::
-	*default* filename:word=all +
-	completion engines to use for insert mode completion (they are tried
-	in order until one generates candidates). Existing completers are:
+*completers* `completer-list`::
+    *default* filename:word=all +
+    completion engines to use for insert mode completion (they are tried
+    in order until one generates candidates). Existing completers are:
 
-	*word=all*, *word=buffer*:::
-		which complete using words in all buffers (*word=all*)
-		or only the current one (*word=buffer*)
+    *word=all*, *word=buffer*:::
+        which complete using words in all buffers (*word=all*)
+        or only the current one (*word=buffer*)
 
-	*filename*:::
-		which tries to detect when a filename is being entered and
-		provides completion based on local filesystem
+    *filename*:::
+        which tries to detect when a filename is being entered and
+        provides completion based on local filesystem
 
-	*line*:::
-		which complete using lines in current buffer
+    *line*:::
+        which complete using lines in current buffer
 
-	*option=<opt-name>*:::
-		where *opt-name* is an option of type 'completions' whose
-		contents will be used
+    *option=<opt-name>*:::
+        where *opt-name* is an option of type 'completions' whose
+        contents will be used
 
-*static_words* 'str-list'::
-	list of words that are always added to completion candidates
-	when completing words in insert mode
+*static_words* `str-list`::
+    list of words that are always added to completion candidates
+    when completing words in insert mode
 
-*extra_word_chars* 'codepoint-list'::
-	a list of all additional codepoints that should be considered
-	as word character for the purpose of insert mode completion.
+*extra_word_chars* `codepoint-list`::
+    a list of all additional codepoints that should be considered
+    as word character for the purpose of insert mode completion.
 
-*autoreload* 'enum(yes|no|ask)'::
-	*default* ask +
-	auto reload the buffers when an external modification is detected
+*autoreload* `enum(yes|no|ask)`::
+    *default* ask +
+    auto reload the buffers when an external modification is detected
 
-*debug* 'flags(hooks|shell|profile|keys|commands)'::
-	dump various debug information in the '\*debug*' buffer
+*debug* `flags(hooks|shell|profile|keys|commands)`::
+    dump various debug information in the '\*debug*' buffer
 
-*idle_timeout* 'int'::
-	*default* 50 +
-	timeout, in milliseconds, with no user input that will trigger the
-	*PromptIdle*, *InsertIdle* and *NormalIdle* hooks, and autocompletion.
+*idle_timeout* `int`::
+    *default* 50 +
+    timeout, in milliseconds, with no user input that will trigger the
+    *PromptIdle*, *InsertIdle* and *NormalIdle* hooks, and autocompletion.
 
-*fs_checkout_timeout* 'int'::
-	*default* 500 +
-	timeout, in milliseconds, between checks in normal mode of modifications
-	of the file associated with the current buffer on the filesystem.
+*fs_checkout_timeout* `int`::
+    *default* 500 +
+    timeout, in milliseconds, between checks in normal mode of modifications
+    of the file associated with the current buffer on the filesystem.
 
-*modelinefmt* 'string'::
-	A format string used to generate the mode line, that string is first
-	expanded as a command line would be (expanding '%...{...}' strings),
-	then markup tags are applied (c.f. the 'Expansions' documentation page.)
-	Two special atoms are available as markup:
+*modelinefmt* `string`::
+    A format string used to generate the mode line, that string is
+    first expanded as a command line would be (expanding '%...{...}'
+    strings), then markup tags are applied (c.f. the 'Expansions'
+    documentation page.)  Two special atoms are available as markup:
 
-		*`{{mode_info}}`*:::
-			Information about the current mode, such as `insert 3 sel` or
-			`prompt`. The faces used are StatusLineMode, StatusLineInfo,
-			and StatusLineValue.
+        *`{{mode_info}}`*:::
+            Information about the current mode, such as `insert 3 sel` or
+            `prompt`. The faces used are StatusLineMode, StatusLineInfo,
+            and StatusLineValue.
 
-		*`{{context_info}}`*:::
-			Information such as `[+][recording (@)][no-hooks][new file][fifo]`,
-			in face Information.
+        *`{{context_info}}`*:::
+            Information such as `[+][recording (@)][no-hooks][new file][fifo]`,
+            in face Information.
 
-	The default value is '%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]'
+    The default value is '%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]'
 
-*ui_options* 'str-to-str-map'::
-	colon separated list of key=value pairs that are forwarded to the user
-	interface implementation. The NCurses UI support the following options:
+*ui_options* `str-to-str-map`::
+    colon separated list of key=value pairs that are forwarded to the user
+    interface implementation. The NCurses UI support the following options:
 
-		*ncurses_set_title*:::
-			if *yes* or *true*, the terminal emulator title will
-			be changed
+        *ncurses_set_title*:::
+            if *yes* or *true*, the terminal emulator title will
+            be changed
 
-		*ncurses_status_on_top*:::
-			if *yes*, or *true* the status line will be placed
-			at the top of the terminal rather than at the bottom
+        *ncurses_status_on_top*:::
+            if *yes*, or *true* the status line will be placed
+            at the top of the terminal rather than at the bottom
 
-		*ncurses_assistant*:::
-			specify the nice assistant you get in info boxes,
-			can be *clippy* (the default), *cat*, *dilbert* or *none*
+        *ncurses_assistant*:::
+            specify the nice assistant you get in info boxes,
+            can be *clippy* (the default), *cat*, *dilbert* or *none*
 
-		*ncurses_enable_mouse*:::
-			boolean option that enables mouse support
+        *ncurses_enable_mouse*:::
+            boolean option that enables mouse support
 
-		*ncurses_change_colors*:::
-			boolean option that can disable color palette changing if the
-			terminfo enables it but the terminal does not support it.
+        *ncurses_change_colors*:::
+            boolean option that can disable color palette changing if the
+            terminfo enables it but the terminal does not support it.
 
-		*ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
-			specify which button send for wheel down/up events
+        *ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
+            specify which button send for wheel down/up events
