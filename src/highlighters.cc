@@ -758,10 +758,10 @@ struct WrapHighlighter : Highlighter
         setup.scroll_offset.column = 0;
         setup.full_lines = true;
 
-        const LineCount win_height = context.window().dimensions().line;
         LineCount win_line = 0;
         for (auto buf_line = setup.window_pos.line;
-             buf_line < setup.window_pos.line + setup.window_range.line;
+             buf_line < setup.window_pos.line + setup.window_range.line or
+             buf_line <= cursor.line;
              ++buf_line)
         {
             if (buf_line >= buffer.line_count())
@@ -774,36 +774,32 @@ struct WrapHighlighter : Highlighter
             const auto wrap_count = line_wrap_count(buf_line, indent);
             setup.window_range.line -= wrap_count;
 
-            if (win_line < setup.cursor_pos.line)
-                setup.cursor_pos.line += wrap_count;
-            // Place the cursor correctly after its line gets wrapped
-            else if (win_line == setup.cursor_pos.line)
+            if (buf_line == cursor.line)
             {
                 BufferCoord coord{buf_line};
-                while (true)
+                for (LineCount count = 0; true; ++count)
                 {
                     auto split_coord = next_split_coord(buffer, wrap_column - (coord.column == 0 ? 0_col : indent),
                                                         tabstop, coord);
                     if (split_coord.column > cursor.column)
                     {
-                        setup.cursor_pos.column = get_column(buffer, tabstop, cursor) - get_column(buffer, tabstop, coord);
-                        if (coord.column != 0)
-                            setup.cursor_pos.column += indent;
-
+                        setup.cursor_pos = DisplayCoord{
+                            win_line + count,
+                            get_column(buffer, tabstop, cursor) -
+                            get_column(buffer, tabstop, coord) +
+                            (coord.column != 0 ? indent : 0_col)
+                        };
                         break;
                     }
-                    ++setup.cursor_pos.line;
                     coord = split_coord;
                 }
                 kak_assert(setup.cursor_pos.column >= 0 and setup.cursor_pos.column < setup.window_range.column);
-                if (setup.cursor_pos.line >= win_height) // In that case we will remove some lines from the top
-                    setup.cursor_pos.line = win_height - 1;
             }
             win_line += wrap_count + 1;
 
             // scroll window to keep cursor visible, and update range as lines gets removed
             while (setup.window_pos.line < cursor.line and
-                   setup.cursor_pos.line >= win_height - setup.scroll_offset.line)
+                   cursor.line + setup.scroll_offset.line >= setup.window_pos.line + setup.window_range.line)
             {
                 auto removed_lines = 1 + line_wrap_count(setup.window_pos.line++, indent);
                 setup.cursor_pos.line -= removed_lines;
@@ -826,14 +822,14 @@ struct WrapHighlighter : Highlighter
         auto column = get_column(buffer, tabstop, coord);
         auto col = get_byte_to_column(
             buffer, tabstop, {coord.line, column + wrap_column});
+        StringView line = buffer[coord.line];
         if (col == coord.column) // Can happen if we try to wrap on a tab char
-            col = buffer.char_next(coord).column;
+            col = line.byte_count_to(line.char_count_to(coord.column)+1);
 
         BufferCoord split_coord{coord.line, col};
 
         if (m_word_wrap)
         {
-            StringView line = buffer[coord.line];
             utf8::iterator<const char*> it{&line[col], line};
             while (it != line.end() and it != line.begin() and is_word<WORD>(*it))
                 --it;
