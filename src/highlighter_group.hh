@@ -36,8 +36,6 @@ protected:
     HighlighterMap m_highlighters;
 };
 
-struct ScopeList;
-
 class Highlighters : public SafeCountable
 {
 public:
