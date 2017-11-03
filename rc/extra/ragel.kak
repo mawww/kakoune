@@ -7,7 +7,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](ragel|rl) %{
-    set buffer filetype ragel
+    set-option buffer filetype ragel
 }
 
 # Highlighters
@@ -29,12 +29,12 @@ add-highlighter shared/ragel/code regex \b(action|alnum|alpha|any|ascii|case|cnt
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden ragel-filter-around-selections %{
+define-command -hidden ragel-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden ragel-indent-on-char %<
+define-command -hidden ragel-indent-on-char %<
     eval -draft -itersel %<
         # align closer token to its opener when alone on a line
         try %< exec -draft <a-h> <a-k> ^\h+[]})]$ <ret>        m         s \A|.\z <ret> 1<a-&> >
@@ -42,7 +42,7 @@ def -hidden ragel-indent-on-char %<
     >
 >
 
-def -hidden ragel-indent-on-new-line %<
+define-command -hidden ragel-indent-on-new-line %<
     eval -draft -itersel %<
         # copy _#_ comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }

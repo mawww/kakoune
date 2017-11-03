@@ -1,5 +1,5 @@
 hook global BufCreate .*\.(diff|patch) %{
-    set buffer filetype diff
+    set-option buffer filetype diff
 }
 
 add-highlighter shared/ group diff

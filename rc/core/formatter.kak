@@ -1,7 +1,7 @@
-decl -docstring "shell command to which the contents of the current buffer is piped" \
+declare-option -docstring "shell command to which the contents of the current buffer is piped" \
     str formatcmd
 
-def format -docstring "Format the contents of the current buffer" %{ eval -draft %{
+define-command format -docstring "Format the contents of the current buffer" %{ eval -draft %{
     %sh{
         if [ -n "${kak_opt_formatcmd}" ]; then
             path_file_tmp=$(mktemp "${TMPDIR:-/tmp}"/kak-formatter-XXXXXX)

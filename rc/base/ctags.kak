@@ -3,10 +3,10 @@
 # This script requires the readtags command available in ctags source but
 # not installed by default
 
-decl -docstring "colon separated list of paths to tag files to parse when looking up a symbol" \
+declare-option -docstring "colon separated list of paths to tag files to parse when looking up a symbol" \
     str-list ctagsfiles 'tags'
 
-def -params ..1 \
+define-command -params ..1 \
     -shell-candidates '
         printf %s\\n "$kak_opt_ctagsfiles" | tr \':\' \'\n\' |
         while read -r candidate; do
@@ -43,16 +43,16 @@ If no symbol is passed then the current selection is used as symbol name} \
         END { print ( length(out) == 0 ? "echo -markup %{{Error}no such tag " ENVIRON["tagname"] "}" : "menu -markup -auto-single " out ) }'
     }}
 
-def ctags-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ eval -draft %{
+define-command ctags-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ eval -draft %{
     exec <space>hb<a-k>^\w+$<ret>
     %sh{ {
         compl=$(readtags -p "$kak_selection" | cut -f 1 | sort | uniq | sed -e 's/:/\\:/g' | sed -e 's/\n/:/g' )
         compl="${kak_cursor_line}.${kak_cursor_column}+${#kak_selection}@${kak_timestamp}:${compl}"
-        printf %s\\n "set buffer=$kak_bufname ctags_completions '${compl}'" | kak -p ${kak_session}
+        printf %s\\n "set-option buffer=$kak_bufname ctags_completions '${compl}'" | kak -p ${kak_session}
     } > /dev/null 2>&1 < /dev/null & }
 }}
 
-def ctags-funcinfo -docstring "Display ctags information about a selected function" %{
+define-command ctags-funcinfo -docstring "Display ctags information about a selected function" %{
     eval -draft %{
         try %{
             exec -no-hooks '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
@@ -66,18 +66,18 @@ def ctags-funcinfo -docstring "Display ctags information about a selected functi
     }
 }
 
-def ctags-enable-autoinfo -docstring "Automatically display ctags information about function" %{
+define-command ctags-enable-autoinfo -docstring "Automatically display ctags information about function" %{
      hook window -group ctags-autoinfo NormalIdle .* ctags-funcinfo
      hook window -group ctags-autoinfo InsertIdle .* ctags-funcinfo
 }
 
-def ctags-disable-autoinfo -docstring "Disable automatic ctags information displaying" %{ remove-hooks window ctags-autoinfo }
+define-command ctags-disable-autoinfo -docstring "Disable automatic ctags information displaying" %{ remove-hooks window ctags-autoinfo }
 
-decl -docstring "options to pass to the `ctags` shell command" \
+declare-option -docstring "options to pass to the `ctags` shell command" \
     str ctagsopts "-R"
-decl -docstring "path to the directory in which the tags file will be generated" str ctagspaths "."
+declare-option -docstring "path to the directory in which the tags file will be generated" str ctagspaths "."
 
-def ctags-generate -docstring 'Generate tag file asynchronously' %{
+define-command ctags-generate -docstring 'Generate tag file asynchronously' %{
     echo -markup "{Information}launching tag generation in the background"
     %sh{ {
         while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
@@ -94,7 +94,7 @@ def ctags-generate -docstring 'Generate tag file asynchronously' %{
     } > /dev/null 2>&1 < /dev/null & }
 }
 
-def ctags-update-tags -docstring 'Update tags for the given file' %{
+define-command ctags-update-tags -docstring 'Update tags for the given file' %{
     %sh{ {
         while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
             trap 'rmdir .tags.kaklock' EXIT

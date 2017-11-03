@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](lisp) %{
-    set buffer filetype lisp
+    set-option buffer filetype lisp
 }
 
 # Highlighters
@@ -26,12 +26,12 @@ add-highlighter shared/lisp/code regex \b(def[a-z]+|if|do|let|lambda|catch|and|a
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden lisp-filter-around-selections %{
+define-command -hidden lisp-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden lisp-indent-on-new-line %{
+define-command -hidden lisp-indent-on-new-line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }

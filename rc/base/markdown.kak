@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](markdown|md|mkd) %{
-    set buffer filetype markdown
+    set-option buffer filetype markdown
 }
 
 # Highlighters
@@ -123,7 +123,7 @@ add-highlighter shared/markdown/content regex \H\K\h\h$ 0:PrimarySelection
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden markdown-indent-on-new-line %{
+define-command -hidden markdown-indent-on-new-line %{
     eval -draft -itersel %{
         # copy block quote(s), list item prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K((>\h*)+([*+-]\h)?|(>\h*)*[*+-]\h)\h* <ret> y gh j P }

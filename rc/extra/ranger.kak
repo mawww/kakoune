@@ -1,7 +1,7 @@
 # http://ranger.nongnu.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-def ranger-open-on-edit-directory \
+define-command ranger-open-on-edit-directory \
     -docstring 'Start the ranger file system explorer when trying to edit a directory' %{
         hook global RuntimeError "\d+:\d+: '\w+' (.*): is a directory" %{ %sh{
           directory=$kak_hook_param_capture_1
@@ -9,7 +9,7 @@ def ranger-open-on-edit-directory \
     }}
 }
 
-def \
+define-command \
   -params .. -file-completion \
   -docstring %{ranger [<arguments>]: open the file system explorer to select buffers to open
 All the optional arguments are forwarded to the ranger utility} \

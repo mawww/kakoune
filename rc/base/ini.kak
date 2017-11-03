@@ -1,5 +1,5 @@
 hook global BufCreate .*\.(repo|service|target|socket|ini|cfg) %{
-    set buffer filetype ini
+    set-option buffer filetype ini
 }
 
 add-highlighter shared/ regions -default code ini \

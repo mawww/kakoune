@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](elm) %{
-    set buffer filetype elm
+    set-option buffer filetype elm
 }
 
 # Highlighters
@@ -29,16 +29,16 @@ add-highlighter shared/elm/code regex \b(Array|Bool|Char|Float|Int|String)\b 0:t
 
 # http://elm-lang.org/docs/style-guide
 
-def -hidden elm-filter-around-selections %{
+define-command -hidden elm-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden elm-indent-after "
+define-command -hidden elm-indent-after "
  exec -draft \\; k x <a-k> ^\\h*(if)|(case\\h+[\\w']+\\h+of|let|in|\\{\\h+\\w+|\\w+\\h+->|[=(])$ <ret> j <a-gt>
 "
 
-def -hidden elm-indent-on-new-line %{
+define-command -hidden elm-indent-on-new-line %{
     eval -draft -itersel %{
         # copy -- comments prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }

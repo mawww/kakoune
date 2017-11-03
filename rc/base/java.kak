@@ -1,5 +1,5 @@
 hook global BufCreate .*\.java %{
-    set buffer filetype java
+    set-option buffer filetype java
 }
 
 add-highlighter shared/ regions -default code java \
@@ -18,7 +18,7 @@ add-highlighter shared/java/code regex "\b(final|public|protected|private|abstra
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden java-indent-on-new-line %~
+define-command -hidden java-indent-on-new-line %~
     eval -draft -itersel %=
         # preserve previous line indent
         try %{ exec -draft \;K<a-&> }
@@ -37,12 +37,12 @@ def -hidden java-indent-on-new-line %~
     =
 ~
 
-def -hidden java-indent-on-opening-curly-brace %[
+define-command -hidden java-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ exec -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
 ]
 
-def -hidden java-indent-on-closing-curly-brace %[
+define-command -hidden java-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]

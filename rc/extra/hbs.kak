@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](hbs) %{
-    set buffer filetype hbs
+    set-option buffer filetype hbs
 }
 
 # Highlighters
@@ -34,12 +34,12 @@ add-highlighter shared/hbs/block-expression regex ((\w|-)+)=(('|").*?('|")) 1:at
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden hbs-filter-around-selections %{
+define-command -hidden hbs-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden hbs-indent-on-new-line %{
+define-command -hidden hbs-indent-on-new-line %{
     eval -draft -itersel %{
         # copy '/' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K/\h* <ret> y j p }

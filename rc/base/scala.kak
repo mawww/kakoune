@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](scala) %{
-    set buffer filetype scala
+    set-option buffer filetype scala
 }
 
 # Highlighters
@@ -34,12 +34,12 @@ add-highlighter shared/scala/code regex "'[_A-Za-z0-9$]+" 0:variable
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden scala-filter-around-selections %{
+define-command -hidden scala-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden scala-indent-on-new-line %[
+define-command -hidden scala-indent-on-new-line %[
     eval -draft -itersel %[
         # copy // comments prefix and following white spaces
         try %[ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P ]
@@ -52,7 +52,7 @@ def -hidden scala-indent-on-new-line %[
     ]
 ]
 
-def -hidden scala-indent-on-closing-curly-brace %[
+define-command -hidden scala-indent-on-closing-curly-brace %[
     eval -draft -itersel %[
         # align to opening curly brace when alone on a line
         try %[ exec -draft <a-h> <a-k> ^\h+\}$ <ret> m s \A|.\z <ret> 1<a-&> ]

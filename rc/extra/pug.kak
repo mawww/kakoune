@@ -9,7 +9,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](pug|jade) %{
-    set buffer filetype pug
+    set-option buffer filetype pug
 }
 
 # Highlighters
@@ -44,12 +44,12 @@ add-highlighter shared/pug/code             regex   ((?:\.[A-Za-z][A-Za-z0-9_-]*
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden pug-filter-around-selections %{
+define-command -hidden pug-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden pug-indent-on-new-line %{
+define-command -hidden pug-indent-on-new-line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }

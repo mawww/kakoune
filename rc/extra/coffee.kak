@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](coffee) %{
-    set buffer filetype coffee
+    set-option buffer filetype coffee
 }
 
 # Highlighters
@@ -45,7 +45,7 @@ add-highlighter shared/coffee/code regex \b(break|case|catch|class|const|continu
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden coffee-filter-around-selections %{
+define-command -hidden coffee-filter-around-selections %{
     eval -draft -itersel %{
         exec <a-x>
         # remove trailing white spaces
@@ -53,7 +53,7 @@ def -hidden coffee-filter-around-selections %{
     }
 }
 
-def -hidden coffee-indent-on-new-line %{
+define-command -hidden coffee-indent-on-new-line %{
     eval -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s '^\h*\K#\h*' <ret> y gh j P }

@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](moon) %{
-    set buffer filetype moon
+    set-option buffer filetype moon
 }
 
 # Highlighters
@@ -30,7 +30,7 @@ add-highlighter shared/moon/code regex \b(and|break|catch|class|continue|do|else
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def moon-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
+define-command moon-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
     case $kak_buffile in
         *spec/*_spec.moon)
             altfile=$(eval printf %s\\n $(printf %s\\n $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
@@ -55,7 +55,7 @@ def moon-alternative-file -docstring 'Jump to the alternate file (implementation
     printf %s\\n "edit $altfile"
 }}
 
-def -hidden moon-filter-around-selections %{
+define-command -hidden moon-filter-around-selections %{
     eval -draft -itersel %{
         exec <a-x>
         # remove trailing white spaces
@@ -63,7 +63,7 @@ def -hidden moon-filter-around-selections %{
     }
 }
 
-def -hidden moon-indent-on-char %{
+define-command -hidden moon-indent-on-char %{
     eval -draft -itersel %{
         # align _else_ statements to start
         try %{ exec -draft <a-x> <a-k> ^ \h * (else(if)?) $ <ret> <a-\;> <a-?> ^ \h * (if|unless|when) <ret> s \A | \z <ret> \' <a-&> }
@@ -74,7 +74,7 @@ def -hidden moon-indent-on-char %{
     }
 }
 
-def -hidden moon-indent-on-new-line %{
+define-command -hidden moon-indent-on-new-line %{
     eval -draft -itersel %{
         # copy -- comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^ \h * \K -- \h * <ret> y gh j P }

@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](hs) %{
-    set buffer filetype haskell
+    set-option buffer filetype haskell
 }
 
 # Highlighters
@@ -72,12 +72,12 @@ add-highlighter shared/haskell/code regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
 
 # http://en.wikibooks.org/wiki/Haskell/Indentation
 
-def -hidden haskell-filter-around-selections %{
+define-command -hidden haskell-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden haskell-indent-on-new-line %{
+define-command -hidden haskell-indent-on-new-line %{
     eval -draft -itersel %{
         # copy -- comments prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
@@ -98,7 +98,7 @@ def -hidden haskell-indent-on-new-line %{
 hook -group haskell-highlight global WinSetOption filetype=haskell %{ add-highlighter window ref haskell }
 
 hook global WinSetOption filetype=haskell %{
-    set window extra_word_chars "'"
+    set-option window extra_word_chars "'"
     hook window InsertEnd  .* -group haskell-hooks  haskell-filter-around-selections
     hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
 }

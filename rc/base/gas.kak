@@ -1,7 +1,7 @@
 # Detection
 # ---------
 hook global BufCreate .*\.(s|S|asm)$ %{
-    set buffer filetype gas
+    set-option buffer filetype gas
 }
 
 
@@ -66,7 +66,7 @@ add-highlighter shared/gas/code regex \
 ^\h*(cvttp[ds]2dq|cvttp[ds]2pi|cvtts[ds]2si)\b|\
 ^\h*(vxorp[sd]|vandp[sd]|ucomis[sd])\b 0:keyword
 
-def -hidden gas-filter-around-selections %{
+define-command -hidden gas-filter-around-selections %{
     eval -draft -itersel %{
         exec <a-x>
         # remove trailing white spaces
@@ -74,7 +74,7 @@ def -hidden gas-filter-around-selections %{
     }
 }
 
-def -hidden gas-indent-on-new-line %~
+define-command -hidden gas-indent-on-new-line %~
     eval -draft -itersel %<
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }

@@ -14,7 +14,7 @@ hook global KakBegin .* %{
 }
 
 ## Temporarily override the default client creation command
-def -hidden -params 1.. tmux-new-impl %{
+define-command -hidden -params 1.. tmux-new-impl %{
     %sh{
         tmux=${kak_client_env_TMUX:-$TMUX}
         if [ -z "$tmux" ]; then
@@ -28,19 +28,19 @@ def -hidden -params 1.. tmux-new-impl %{
     }
 }
 
-def tmux-new-vertical -params .. -command-completion -docstring "Create a new vertical pane" %{
+define-command tmux-new-vertical -params .. -command-completion -docstring "Create a new vertical pane" %{
     tmux-new-impl 'split-window -v' %arg{@}
 }
 
-def tmux-new-horizontal -params .. -command-completion -docstring "Create a new horizontal pane" %{
+define-command tmux-new-horizontal -params .. -command-completion -docstring "Create a new horizontal pane" %{
     tmux-new-impl 'split-window -h' %arg{@}
 }
 
-def tmux-new-window -params .. -command-completion -docstring "Create a new window" %{
+define-command tmux-new-window -params .. -command-completion -docstring "Create a new window" %{
     tmux-new-impl 'new-window' %arg{@}
 }
 
-def -docstring %{tmux-focus [<client>]: focus the given client
+define-command -docstring %{tmux-focus [<client>]: focus the given client
 If no client is passed then the current one is used} \
     -params ..1 -client-completion \
     tmux-focus %{ %sh{

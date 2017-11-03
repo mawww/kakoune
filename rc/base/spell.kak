@@ -1,8 +1,8 @@
-decl -hidden range-specs spell_regions
-decl -hidden str spell_lang
-decl -hidden str spell_tmp_file
+declare-option -hidden range-specs spell_regions
+declare-option -hidden str spell_lang
+declare-option -hidden str spell_tmp_file
 
-def -params ..1 \
+define-command -params ..1 \
     -docstring %{spell [<language>]: spell check the current buffer
 The first optional argument is the language against which the check will be performed
 Formats of language supported:
@@ -13,7 +13,7 @@ Formats of language supported:
     %sh{
         file=$(mktemp -d "${TMPDIR:-/tmp}"/kak-spell.XXXXXXXX)/buffer
         printf 'eval -no-hooks write %s\n' "${file}"
-        printf 'set buffer spell_tmp_file %s\n' "${file}"
+        printf 'set-option buffer spell_tmp_file %s\n' "${file}"
     }
     %sh{
         if [ $# -ge 1 ]; then
@@ -23,7 +23,7 @@ Formats of language supported:
                 exit 1
             else
                 options="-l '$1'"
-                printf 'set buffer spell_lang %s\n' "$1"
+                printf 'set-option buffer spell_lang %s\n' "$1"
             fi
         fi
 
@@ -49,7 +49,7 @@ Formats of language supported:
                         *) printf 'echo -markup %%{{Error}%s}\n' "${line}" | kak -p "${kak_session}";;
                     esac
                 done
-                printf 'set "buffer=%s" spell_regions %%{%s}' "${kak_bufname}" "${regions}" \
+                printf 'set-option "buffer=%s" spell_regions %%{%s}' "${kak_bufname}" "${regions}" \
                     | kak -p "${kak_session}"
             }
             rm -rf $(dirname "$kak_opt_spell_tmp_file")
@@ -57,7 +57,7 @@ Formats of language supported:
     }
 }
 
-def spell-next %{ %sh{
+define-command spell-next %{ %sh{
     anchor_line="${kak_selection_desc%%.*}"
     anchor_col="${kak_selection_desc%%,*}"
     anchor_col="${anchor_col##*.}"
@@ -101,7 +101,7 @@ def spell-next %{ %sh{
     fi
 } }
 
-def spell-replace %{ %sh{
+define-command spell-replace %{ %sh{
     if [ -n "$kak_opt_spell_lang" ]; then
         options="-l '$kak_opt_spell_lang'"
     fi

@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*/?(?i)sql %{
-    set buffer filetype sql
+    set-option buffer filetype sql
 }
 
 # Highlighters
@@ -80,7 +80,7 @@ add-highlighter shared/ regions -default code sql \
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=sql %{
-        set window static_words '${keywords}:${operators}:${functions}:${data_types}:${data_types_fn}:NULL'
+        set-option window static_words '${keywords}:${operators}:${functions}:${data_types}:${data_types_fn}:NULL'
     }" | sed 's,|,:,g'
 
     # Highlight keywords

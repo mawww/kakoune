@@ -1,5 +1,5 @@
 hook global BufCreate .*\.ks %{
-    set buffer filetype kickstart
+    set-option buffer filetype kickstart
 }
 
 add-highlighter shared/ regions -default code kickstart \

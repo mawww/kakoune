@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*\.taskpaper %{
-    set buffer filetype taskpaper
+    set-option buffer filetype taskpaper
 } 
 
 # Highlighters
@@ -22,7 +22,7 @@ add-highlighter shared/taskpaper regex (([a-z]+://\S+)|((mailto:)[\w+-]+@\S+)) 0
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden taskpaper-indent-on-new-line %{
+define-command -hidden taskpaper-indent-on-new-line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft \;K<a-&> }

@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](ex|exs) %{
-    set buffer filetype elixir
+    set-option buffer filetype elixir
 }
 
 
@@ -42,12 +42,12 @@ add-highlighter shared/elixir/code regex '\b\d+[\d_]*\b' 0:value
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden elixir-filter-around-selections %{
+define-command -hidden elixir-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden elixir-indent-on-new-line %{
+define-command -hidden elixir-indent-on-new-line %{
     eval -draft -itersel %{
         # copy -- comments prefix and following white spaces 
         try %{ exec -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }

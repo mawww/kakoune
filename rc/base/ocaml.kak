@@ -7,7 +7,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*\.mli? %{
-  set buffer filetype ocaml
+  set-option buffer filetype ocaml
 }
 
 # Highlighters
@@ -23,7 +23,7 @@ add-highlighter shared/ocaml/comment fill comment
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden ocaml-indent-on-char %{
+define-command -hidden ocaml-indent-on-char %{
   eval -no-hooks -draft -itersel %{
     exec ";i<space><esc>Gg|ocp-indent --config base=%opt{indentwidth} --indent-empty --lines %val{cursor_line}<ret>"
   }
@@ -52,7 +52,7 @@ hook global WinSetOption filetype=(?!ocaml).* %{
   echo "
     add-highlighter shared/ocaml/code regex \b($(printf $keywords | tr : '|'))\b 0:keyword
     hook global WinSetOption filetype=ocaml %{
-      set window static_words $keywords
+      set-option window static_words $keywords
     }
     hook global WinSetOption filetype=(?!ocaml).* %{
       unset window static_words

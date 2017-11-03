@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](rust|rs) %{
-    set buffer filetype rust
+    set-option buffer filetype rust
 }
 
 # Highlighters
@@ -34,12 +34,12 @@ add-highlighter shared/rust/code regex \b(?:u8|u16|u32|u64|usize|i8|i16|i32|i64|
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden rust-filter-around-selections %{
+define-command -hidden rust-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden rust-indent-on-new-line %~
+define-command -hidden rust-indent-on-new-line %~
     eval -draft -itersel %<
         # copy // comments prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K//\h* <ret> y gh j P }
@@ -54,14 +54,14 @@ def -hidden rust-indent-on-new-line %~
     >
 ~
 
-def -hidden rust-indent-on-opening-curly-brace %[
+define-command -hidden rust-indent-on-opening-curly-brace %[
     eval -draft -itersel %_
         # align indent with opening paren when { is entered on a new line after the closing paren
         try %[ exec -draft h <a-F> ) M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
     _
 ]
 
-def -hidden rust-indent-on-closing-curly-brace %[
+define-command -hidden rust-indent-on-closing-curly-brace %[
     eval -draft -itersel %_
         # align to opening curly brace when alone on a line
         try %[ exec -draft <a-h> <a-k> ^\h+\}$ <ret> h m s \A|.\z <ret> 1<a-&> ]

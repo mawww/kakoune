@@ -1,34 +1,34 @@
 hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H)$ %{
-    set buffer filetype cpp
+    set-option buffer filetype cpp
 }
 
 hook global BufSetOption filetype=c\+\+ %{
-    set buffer filetype cpp
+    set-option buffer filetype cpp
 }
 
 hook global BufCreate .*\.c$ %{
-    set buffer filetype c
+    set-option buffer filetype c
 }
 
 hook global BufCreate .*\.h$ %{
     try %{
         exec -draft %{%s\b::\b|\btemplate\h*<lt>|\bclass\h+\w+|\b(typename|namespace)\b|\b(public|private|protected)\h*:<ret>}
-        set buffer filetype cpp
+        set-option buffer filetype cpp
     } catch %{
-        set buffer filetype c
+        set-option buffer filetype c
     }
 }
 
 hook global BufCreate .*\.m %{
-    set buffer filetype objc
+    set-option buffer filetype objc
 }
 
-def -hidden c-family-trim-autoindent %[ eval -draft -itersel %[
+define-command -hidden c-family-trim-autoindent %[ eval -draft -itersel %[
     # remove the line if it's empty when leaving the insert mode
     try %[ exec <a-x> 1s^(\h+)$<ret> d ]
 ] ]
 
-def -hidden c-family-indent-on-newline %< eval -draft -itersel %<
+define-command -hidden c-family-indent-on-newline %< eval -draft -itersel %<
     exec \;
     try %<
         # if previous line closed a paren, copy indent of the opening paren line
@@ -59,22 +59,22 @@ def -hidden c-family-indent-on-newline %< eval -draft -itersel %<
      > >
 > >
 
-def -hidden c-family-indent-on-opening-curly-brace %[
+define-command -hidden c-family-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ exec -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
 ]
 
-def -hidden c-family-indent-on-closing-curly-brace %[
+define-command -hidden c-family-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-:><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-def -hidden c-family-insert-on-closing-curly-brace %[
+define-command -hidden c-family-insert-on-closing-curly-brace %[
     # add a semicolon after a closing brace if part of a class, union or struct definition
     try %[ exec -itersel -draft hm<a-x>B<a-x><a-k>\A\h*(class|struct|union|enum)<ret> a\;<esc> ]
 ]
 
-def -hidden c-family-insert-on-newline %[ eval -draft %[
+define-command -hidden c-family-insert-on-newline %[ eval -draft %[
     exec \;
     try %[
         eval -draft %[
@@ -161,7 +161,7 @@ add-highlighter shared/c/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=c %{
-        set window static_words '${keywords}:${attributes}:${types}:${values}'
+        set-option window static_words '${keywords}:${attributes}:${types}:${values}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -192,7 +192,7 @@ add-highlighter shared/cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=cpp %{
-        set window static_words '${keywords}:${attributes}:${types}:${values}'
+        set-option window static_words '${keywords}:${attributes}:${types}:${values}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -231,7 +231,7 @@ add-highlighter shared/objc/code regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:val
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=objc %{
-        set window static_words '${keywords}:${attributes}:${types}:${values}:${decorators}'
+        set-option window static_words '${keywords}:${attributes}:${types}:${values}:${decorators}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -278,13 +278,13 @@ hook -group cpp-highlight global WinSetOption filetype=(?!cpp).* %[ remove-highl
 hook -group objc-highlight global WinSetOption filetype=objc %[ add-highlighter window ref objc ]
 hook -group objc-highlight global WinSetOption filetype=(?!objc).* %[ remove-highlighter window/objc ]
 
-decl -docstring %{control the type of include guard to be inserted in empty headers
+declare-option -docstring %{control the type of include guard to be inserted in empty headers
 Can be one of the following:
  ifdef: old style ifndef/define guard
  pragma: newer type of guard using "pragma once"} \
     str c_include_guard_style "ifdef"
 
-def -hidden c-family-insert-include-guards %{
+define-command -hidden c-family-insert-include-guards %{
     %sh{
         case "${kak_opt_c_include_guard_style}" in
             ifdef)
@@ -300,10 +300,10 @@ def -hidden c-family-insert-include-guards %{
 
 hook -group c-family-insert global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
 
-decl -docstring "colon separated list of path in which header files will be looked for" \
+declare-option -docstring "colon separated list of path in which header files will be looked for" \
     str-list alt_dirs ".:.."
 
-def c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
+define-command c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
     alt_dirs=$(printf %s\\n "${kak_opt_alt_dirs}" | tr ':' '\n')
     file="${kak_buffile##*/}"
     file_noext="${file%.*}"

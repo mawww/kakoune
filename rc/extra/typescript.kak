@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](ts)x? %{
-    set buffer filetype typescript
+    set-option buffer filetype typescript
 }
 
 # Highlighters

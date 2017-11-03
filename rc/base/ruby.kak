@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*(([.](rb))|(irbrc)|(pryrc)|(Capfile|[.]cap)|(Gemfile)|(Guardfile)|(Rakefile|[.]rake)|(Thorfile|[.]thor)|(Vagrantfile)) %{
-    set buffer filetype ruby
+    set-option buffer filetype ruby
 }
 
 # Highlighters
@@ -60,7 +60,7 @@ add-highlighter shared/ruby/code regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|(
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=ruby %{
-        set window static_words '${keywords}:${attributes}:${values}:${meta}'
+        set-option window static_words '${keywords}:${attributes}:${values}:${meta}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -75,7 +75,7 @@ add-highlighter shared/ruby/code regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|(
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def ruby-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
+define-command ruby-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
     case $kak_buffile in
         *spec/*_spec.rb)
             altfile=$(eval echo $(echo $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
@@ -100,7 +100,7 @@ def ruby-alternative-file -docstring 'Jump to the alternate file (implementation
     echo "edit $altfile"
 }}
 
-def -hidden ruby-filter-around-selections %{
+define-command -hidden ruby-filter-around-selections %{
     eval -no-hooks -draft -itersel %{
         exec <a-x>
         # remove trailing white spaces
@@ -108,7 +108,7 @@ def -hidden ruby-filter-around-selections %{
     }
 }
 
-def -hidden ruby-indent-on-char %{
+define-command -hidden ruby-indent-on-char %{
     eval -no-hooks -draft -itersel %{
         # align middle and end structures to start
         try %{ exec -draft <a-x> <a-k> ^ \h * (else|elsif) $ <ret> <a-\;> <a-?> ^ \h * (if)                                                       <ret> s \A | \z <ret> \' <a-&> }
@@ -118,7 +118,7 @@ def -hidden ruby-indent-on-char %{
     }
 }
 
-def -hidden ruby-indent-on-new-line %{
+define-command -hidden ruby-indent-on-new-line %{
     eval -no-hooks -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft K <a-&> }
@@ -129,7 +129,7 @@ def -hidden ruby-indent-on-new-line %{
     }
 }
 
-def -hidden ruby-insert-on-new-line %{
+define-command -hidden ruby-insert-on-new-line %{
     eval -no-hooks -draft -itersel %{
         # copy _#_ comment prefix and following white spaces
         try %{ exec -draft k <a-x> s '^\h*\K#\h*' <ret> y gh j P }

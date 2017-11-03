@@ -2,7 +2,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](php) %{
-    set buffer filetype php
+    set-option buffer filetype php
 }
 
 # Highlighters
@@ -32,19 +32,19 @@ add-highlighter shared/php/code regex \b(__halt_compiler|abstract|and|array|as|b
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden php-filter-around-selections %{
+define-command -hidden php-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden php-indent-on-char %<
+define-command -hidden php-indent-on-char %<
     eval -draft -itersel %<
         # align closer token to its opener when alone on a line
         try %/ exec -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \A|.\z <ret> 1<a-&> /
     >
 >
 
-def -hidden php-indent-on-new-line %<
+define-command -hidden php-indent-on-new-line %<
     eval -draft -itersel %<
         # copy // comments prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }

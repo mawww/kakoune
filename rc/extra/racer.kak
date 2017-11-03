@@ -1,10 +1,10 @@
-decl -hidden str racer_tmp_dir
-decl -hidden completions racer_completions
+declare-option -hidden str racer_tmp_dir
+declare-option -hidden completions racer_completions
 
-def racer-complete -docstring "Complete the current selection with racer" %{
+define-command racer-complete -docstring "Complete the current selection with racer" %{
     %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-racer.XXXXXXXX)
-        printf %s\\n "set buffer racer_tmp_dir ${dir}"
+        printf %s\\n "set-option buffer racer_tmp_dir ${dir}"
         printf %s\\n "eval -no-hooks %{ write ${dir}/buf }"
     }
     %sh{
@@ -45,15 +45,15 @@ def racer-complete -docstring "Complete the current selection with racer" %{
                 }'
             )
             printf %s\\n "eval -client '${kak_client}' %{
-                set buffer=${kak_bufname} racer_completions %@${compl}@
+                set-option buffer=${kak_bufname} racer_completions %@${compl}@
             }" | kak -p ${kak_session}
             rm -r ${dir}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
 
-def racer-enable-autocomplete -docstring "Add racer completion candidates to the completer" %{
-    set window completers "option=racer_completions:%opt{completers}"
+define-command racer-enable-autocomplete -docstring "Add racer completion candidates to the completer" %{
+    set-option window completers "option=racer_completions:%opt{completers}"
     hook window -group racer-autocomplete InsertIdle .* %{ try %{
         exec -draft <a-h><a-k>([\w\.]|::).\z<ret>
         racer-complete
@@ -61,8 +61,8 @@ def racer-enable-autocomplete -docstring "Add racer completion candidates to the
     alias window complete racer-complete
 }
 
-def racer-disable-autocomplete -docstring "Disable racer completion" %{
-    set window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed 's/option=racer_completions://g' }
-    rmhooks window racer-autocomplete
+define-command racer-disable-autocomplete -docstring "Disable racer completion" %{
+    set-option window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed 's/option=racer_completions://g' }
+    remove-hooks window racer-autocomplete
     unalias window complete racer-complete
 }

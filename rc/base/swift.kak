@@ -1,5 +1,5 @@
 hook global BufCreate .*\.(swift) %{
-    set buffer filetype swift
+    set-option buffer filetype swift
 }
 
 add-highlighter shared/ regions -default code swift \

@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](feature|story) %{
-    set buffer filetype cucumber
+    set-option buffer filetype cucumber
 }
 
 # Highlighters
@@ -56,12 +56,12 @@ add-highlighter shared/cucumber/code regex \b(Feature|Business\h+Need|Ability|Ba
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden cucumber-filter-around-selections %{
+define-command -hidden cucumber-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden cucumber-indent-on-new-line %{
+define-command -hidden cucumber-indent-on-new-line %{
     eval -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }

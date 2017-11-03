@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](ya?ml) %{
-    set buffer filetype yaml
+    set-option buffer filetype yaml
 }
 
 # Highlighters
@@ -28,12 +28,12 @@ add-highlighter shared/yaml/code regex ^\h*-?\h*(\S+): 1:attribute
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden yaml-filter-around-selections %{
+define-command -hidden yaml-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden yaml-indent-on-new-line %{
+define-command -hidden yaml-indent-on-new-line %{
     eval -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }

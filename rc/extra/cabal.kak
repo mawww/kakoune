@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](cabal) %{
-    set buffer filetype cabal
+    set-option buffer filetype cabal
 }
 
 # Highlighters
@@ -24,12 +24,12 @@ add-highlighter shared/cabal/code regex ^\h*([A-Za-z][A-Za-z0-9_-]*)\h*: 1:varia
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden cabal-filter-around-selections %{
+define-command -hidden cabal-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden cabal-indent-on-new-line %[
+define-command -hidden cabal-indent-on-new-line %[
     eval -draft -itersel %[
         # copy '#' comment prefix and following white spaces
         try %[ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P ]
@@ -42,14 +42,14 @@ def -hidden cabal-indent-on-new-line %[
     ]
 ]
 
-def -hidden cabal-indent-on-opening-curly-brace %[
+define-command -hidden cabal-indent-on-opening-curly-brace %[
     eval -draft -itersel %[
         # align indent with opening paren when { is entered on a new line after the closing paren
         try %[ exec -draft h <a-F> ) M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
     ]
 ]
 
-def -hidden cabal-indent-on-closing-curly-brace %[
+define-command -hidden cabal-indent-on-closing-curly-brace %[
     eval -draft -itersel %[
         # align to opening curly brace when alone on a line
         try %[ exec -draft <a-h> <a-k> ^\h+\}$ <ret> h m s \A|.\z<ret> 1<a-&> ]

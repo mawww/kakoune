@@ -2,7 +2,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*/?[mM]akefile %{
-    set buffer filetype makefile
+    set-option buffer filetype makefile
 }
 
 # Highlighters
@@ -24,7 +24,7 @@ add-highlighter shared/makefile/content regex [+?:]= 0:operator
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=makefile %{
-        set window static_words '${keywords}'
+        set-option window static_words '${keywords}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -34,7 +34,7 @@ add-highlighter shared/makefile/content regex [+?:]= 0:operator
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden makefile-indent-on-new-line %{
+define-command -hidden makefile-indent-on-new-line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft \;K<a-&> }

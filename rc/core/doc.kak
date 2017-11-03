@@ -1,4 +1,4 @@
-decl -docstring "name of the client in which documentation is to be displayed" \
+declare-option -docstring "name of the client in which documentation is to be displayed" \
     str docsclient
 
 declare-option -hidden range-specs doc_render_ranges
@@ -11,7 +11,7 @@ define-command -hidden -params 4 doc-render-regex %{
         %sh{
             ranges=$(echo "$kak_selections_desc" | sed -e "s/:/|$4:/g; s/\$/|$4/")
             echo "update-option buffer doc_render_ranges"
-            echo "set -add buffer doc_render_ranges '$ranges'"
+            echo "set-option -add buffer doc_render_ranges '$ranges'"
         }
     } }
 }
@@ -27,7 +27,7 @@ define-command -params 1 -hidden doc-render %{
     try %{ exec -draft \%s \h*(\+|:{2,})$ <ret> d }
 
     # Setup the doc_render_ranges option
-    set buffer doc_render_ranges %val{timestamp}
+    set-option buffer doc_render_ranges %val{timestamp}
     doc-render-regex \B(?<!\\)\*[^\n]+?(?<!\\)\*\B \A|.\z 'H' default+b
     doc-render-regex \b(?<!\\)_[^\n]+?(?<!\\)_\b \A|.\z 'H' default+i
     doc-render-regex \B(?<!\\)`[^\n]+?(?<!\\)`\B \A|.\z 'H' mono
@@ -44,7 +44,7 @@ define-command -params 1 -hidden doc-render %{
     add-highlighter buffer wrap -word -indent
 }
 
-def -params 1 \
+define-command -params 1 \
     -shell-candidates %{
         find "${kak_runtime}/doc/" -type f -name "*.asciidoc" | while read l; do
             basename "${l%.*}"

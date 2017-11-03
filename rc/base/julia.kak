@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*\.(jl) %{
-    set buffer filetype julia
+    set-option buffer filetype julia
 }
 
 # Highlighters

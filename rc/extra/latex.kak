@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*\.tex %{
-    set buffer filetype latex
+    set-option buffer filetype latex
 }
 
 # Highlighters

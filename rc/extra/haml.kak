@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](haml) %{
-    set buffer filetype haml
+    set-option buffer filetype haml
 }
 
 # Highlighters
@@ -33,12 +33,12 @@ add-highlighter shared/haml/code regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden haml-filter-around-selections %{
+define-command -hidden haml-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden haml-indent-on-new-line %{
+define-command -hidden haml-indent-on-new-line %{
     eval -draft -itersel %{
         # copy '/' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*\K/\h* <ret> y gh j P }

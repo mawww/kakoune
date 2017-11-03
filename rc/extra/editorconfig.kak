@@ -1,9 +1,9 @@
 # http://editorconfig.org/#file-format-details
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-decl -hidden bool editorconfig_trim_trailing_whitespace false
+declare-option -hidden bool editorconfig_trim_trailing_whitespace false
 
-def editorconfig-load -params ..1 -docstring "editorconfig-load [file]: set formatting behavior according to editorconfig" %{
+define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file]: set-option formatting behavior according to editorconfig" %{
     remove-hooks buffer editorconfig-hooks
     %sh{
         command -v editorconfig >/dev/null 2>&1 || { echo 'echo -markup "{Error}editorconfig could not be found"'; exit 1; }
@@ -17,24 +17,24 @@ def editorconfig-load -params ..1 -docstring "editorconfig-load [file]: set form
 
             END {
                 if (indent_style == "tab") {
-                    print "set buffer indentwidth 0"
-                    print "set buffer aligntab true"
+                    print "set-option buffer indentwidth 0"
+                    print "set-option buffer aligntab true"
                 }
                 if (indent_style == "space") {
-                    print "set buffer indentwidth " (indent_size == "tab" ? 4 : indent_size)
-                    print "set buffer aligntab false"
+                    print "set-option buffer indentwidth " (indent_size == "tab" ? 4 : indent_size)
+                    print "set-option buffer aligntab false"
                 }
                 if (indent_size || tab_width) {
-                    print "set buffer tabstop " (tab_width ? tab_width : indent_size)
+                    print "set-option buffer tabstop " (tab_width ? tab_width : indent_size)
                 }
                 if (end_of_line == "lf" || end_of_line == "crlf") {
-                    print "set buffer eolformat " end_of_line
+                    print "set-option buffer eolformat " end_of_line
                 }
                 if (charset == "utf-8-bom") {
-                    print "set buffer BOM utf8"
+                    print "set-option buffer BOM utf8"
                 }
                 if (trim_trailing_whitespace == "true") {
-                    print "set buffer editorconfig_trim_trailing_whitespace true"
+                    print "set-option buffer editorconfig_trim_trailing_whitespace true"
                 }
             }
         '

@@ -7,10 +7,10 @@
 ## Only a few options are supported, in order to prevent the
 ## buffers from poking around the configuration too much
 
-decl -docstring "amount of lines that will be checked at the beginning and the end of the buffer" \
+declare-option -docstring "amount of lines that will be checked at the beginning and the end of the buffer" \
     int modelines 5
 
-def -hidden modeline-parse-impl %{
+define-command -hidden modeline-parse-impl %{
     %sh{
         # Translate a vim option into the corresponding kakoune one
         translate_opt_vim() {
@@ -37,7 +37,7 @@ def -hidden modeline-parse-impl %{
                 *) printf %s\\n "echo -debug 'Unsupported vim variable: ${key}'";;
             esac
 
-            [ -n "${tr}" ] && printf %s\\n "set buffer ${tr}"
+            [ -n "${tr}" ] && printf %s\\n "set-option buffer ${tr}"
         }
 
         # Pass a few whitelisted options to kakoune directly
@@ -51,7 +51,7 @@ def -hidden modeline-parse-impl %{
                    return;;
             esac
 
-            printf %s\\n "set buffer ${key} ${value}"
+            printf %s\\n "set-option buffer ${key} ${value}"
         }
 
         case "${kak_selection}" in
@@ -93,7 +93,7 @@ def -hidden modeline-parse-impl %{
 # ref. options.txt (in vim `:help options`) : 2 forms of modelines: 
 #   [text]{white}{vi:|vim:|ex:}[white]{options}
 #   [text]{white}{vi:|vim:|Vim:|ex:}[white]se[t] {options}:[text]
-def modeline-parse -docstring "Read and interpret vi-format modelines at the beginning/end of the buffer" %{
+define-command modeline-parse -docstring "Read and interpret vi-format modelines at the beginning/end of the buffer" %{
     try %{ eval -draft %{
         exec \%s\A|.\z<ret> %opt{modelines}k <a-x> %opt{modelines}X \
              s^\S*?\s+?(vim?|kak(oune)?):\s?[^\n]+<ret> <a-x>

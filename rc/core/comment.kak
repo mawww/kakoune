@@ -1,99 +1,99 @@
 ## Line comments
-decl -docstring "characters inserted at the beginning of a commented line" \
+declare-option -docstring "characters inserted at the beginning of a commented line" \
     str comment_line '#'
 
 ## Block comments
-decl -docstring "colon separated tuple containing the characters inserted before/after a commented line" \
+declare-option -docstring "colon separated tuple containing the characters inserted before/after a commented line" \
     str-list comment_block
 
 ## Default comments for all languages
 hook global BufSetOption filetype=asciidoc %{
-    set buffer comment_block '///:///'
+    set-option buffer comment_block '///:///'
 }
 
 hook global BufSetOption filetype=(c|cpp|go|java|javascript|objc|php|sass|scala|scss|swift) %{
-    set buffer comment_line '//'
-    set buffer comment_block '/*:*/'
+    set-option buffer comment_line '//'
+    set-option buffer comment_block '/*:*/'
 }
 
 hook global BufSetOption filetype=(cabal|haskell|moon) %{
-    set buffer comment_line '--'
-    set buffer comment_block '{-:-}'
+    set-option buffer comment_line '--'
+    set-option buffer comment_block '{-:-}'
 }
 
 hook global BufSetOption filetype=clojure %{
-    set buffer comment_line '#_ '
-    set buffer comment_block '(comment :)'
+    set-option buffer comment_line '#_ '
+    set-option buffer comment_block '(comment :)'
 }
 
 hook global BufSetOption filetype=coffee %{
-    set buffer comment_block '###:###'
+    set-option buffer comment_block '###:###'
 }
 
 hook global BufSetOption filetype=css %{
-    set buffer comment_line ''
-    set buffer comment_block '/*:*/'
+    set-option buffer comment_line ''
+    set-option buffer comment_block '/*:*/'
 }
 
 hook global BufSetOption filetype=d %{
-    set buffer comment_line '//'
-    set buffer comment_block '/+:+/'
+    set-option buffer comment_line '//'
+    set-option buffer comment_block '/+:+/'
 }
 
 hook global BufSetOption filetype=(gas|ini) %{
-    set buffer comment_line ';'
+    set-option buffer comment_line ';'
 }
 
 hook global BufSetOption filetype=haml %{
-    set buffer comment_line '-#'
+    set-option buffer comment_line '-#'
 }
 
 hook global BufSetOption filetype=html %{
-    set buffer comment_line ''
-    set buffer comment_block '<!--:-->'
+    set-option buffer comment_line ''
+    set-option buffer comment_block '<!--:-->'
 }
 
 hook global BufSetOption filetype=latex %{
-    set buffer comment_line '%'
+    set-option buffer comment_line '%'
 }
 
 hook global BufSetOption filetype=lisp %{
-    set buffer comment_line ';'
-    set buffer comment_block '#|:|#'
+    set-option buffer comment_line ';'
+    set-option buffer comment_block '#|:|#'
 }
 
 hook global BufSetOption filetype=lua %{
-    set buffer comment_line '--'
-    set buffer comment_block '--[[:]]'
+    set-option buffer comment_line '--'
+    set-option buffer comment_block '--[[:]]'
 }
 
 hook global BufSetOption filetype=markdown %{
-    set buffer comment_line ''
-    set buffer comment_block '[//]: # (:)'
+    set-option buffer comment_line ''
+    set-option buffer comment_block '[//]: # (:)'
 }
 
 hook global BufSetOption filetype=perl %{
-    set buffer comment_block '#[:]'
+    set-option buffer comment_block '#[:]'
 }
 
 hook global BufSetOption filetype=(pug|rust) %{
-    set buffer comment_line '//'
+    set-option buffer comment_line '//'
 }
 
 hook global BufSetOption filetype=python %{
-    set buffer comment_block "''':'''"
+    set-option buffer comment_block "''':'''"
 }
 
 hook global BufSetOption filetype=ragel %{
-    set buffer comment_line '%%'
-    set buffer comment_block '%%{:}%%'
+    set-option buffer comment_line '%%'
+    set-option buffer comment_block '%%{:}%%'
 }
 
 hook global BufSetOption filetype=ruby %{
-    set buffer comment_block '^begin=:^=end'
+    set-option buffer comment_block '^begin=:^=end'
 }
 
-def comment-block -docstring '(un)comment selected lines using block comments' %{
+define-command comment-block -docstring '(un)comment selected lines using block comments' %{
     %sh{
         exec_proof() {
             ## Replace the '<' sign that is interpreted differently in `exec`
@@ -126,7 +126,7 @@ def comment-block -docstring '(un)comment selected lines using block comments' %
     }
 }
 
-def comment-line -docstring '(un)comment selected lines using line comments' %{
+define-command comment-line -docstring '(un)comment selected lines using line comments' %{
     %sh{
         readonly opening="${kak_opt_comment_line}"
         readonly opening_escaped="\\Q${opening}\\E"

@@ -16,13 +16,13 @@
 # Auto-completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-decl -hidden str go_complete_tmp_dir
-decl -hidden completions gocode_completions
+declare-option -hidden str go_complete_tmp_dir
+declare-option -hidden completions gocode_completions
 
-def go-complete -docstring "Complete the current selection with gocode" %{
+define-command go-complete -docstring "Complete the current selection with gocode" %{
     %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-go.XXXXXXXX)
-        printf %s\\n "set buffer go_complete_tmp_dir ${dir}"
+        printf %s\\n "set-option buffer go_complete_tmp_dir ${dir}"
         printf %s\\n "eval -no-hooks write ${dir}/buf"
     }
     %sh{
@@ -35,14 +35,14 @@ def go-complete -docstring "Complete the current selection with gocode" %{
             header="${kak_cursor_line}.$((${kak_cursor_column} - $column_offset))@${kak_timestamp}"
             compl=$(echo "${gocode_data}" | sed 1d | awk -F ",," '{print $2 "||" $1}' | paste -s -d: -)
             printf %s\\n "eval -client '${kak_client}' %{
-                set buffer=${kak_bufname} gocode_completions '${header}:${compl}'
+                set-option buffer=${kak_bufname} gocode_completions '${header}:${compl}'
             }" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
 
-def go-enable-autocomplete -docstring "Add gocode completion candidates to the completer" %{
-    set window completers "option=gocode_completions:%opt{completers}"
+define-command go-enable-autocomplete -docstring "Add gocode completion candidates to the completer" %{
+    set-option window completers "option=gocode_completions:%opt{completers}"
     hook window -group go-autocomplete InsertIdle .* %{ try %{
         exec -draft <a-h><a-k>[\w\.].\z<ret>
         go-complete
@@ -50,8 +50,8 @@ def go-enable-autocomplete -docstring "Add gocode completion candidates to the c
     alias window complete go-complete
 }
 
-def go-disable-autocomplete -docstring "Disable gocode completion" %{
-    set window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed 's/option=gocode_completions://g' }
+define-command go-disable-autocomplete -docstring "Disable gocode completion" %{
+    set-option window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed 's/option=gocode_completions://g' }
     remove-hooks window go-autocomplete
     unalias window complete go-complete
 }
@@ -59,13 +59,13 @@ def go-disable-autocomplete -docstring "Disable gocode completion" %{
 # Auto-format
 # ‾‾‾‾‾‾‾‾‾‾‾
 
-decl -hidden str go_format_tmp_dir
+declare-option -hidden str go_format_tmp_dir
 
-def -params ..1 go-format \
+define-command -params ..1 go-format \
     -docstring "go-format [-use-goimports]: custom formatter for go files" %{
     %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-go.XXXXXXXX)
-        printf %s\\n "set buffer go_format_tmp_dir ${dir}"
+        printf %s\\n "set-option buffer go_format_tmp_dir ${dir}"
         printf %s\\n "eval -no-hooks write ${dir}/buf"
     }
     %sh{
@@ -90,13 +90,13 @@ def -params ..1 go-format \
 # Documentation
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-decl -hidden str go_doc_tmp_dir
+declare-option -hidden str go_doc_tmp_dir
 
 # FIXME text escaping
-def -hidden -params 1..2 gogetdoc-cmd %{
+define-command -hidden -params 1..2 gogetdoc-cmd %{
    %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-go.XXXXXXXX)
-        printf %s\\n "set buffer go_doc_tmp_dir ${dir}"
+        printf %s\\n "set-option buffer go_doc_tmp_dir ${dir}"
         printf %s\\n "eval -no-hooks write ${dir}/buf"
     }
     %sh{
@@ -160,19 +160,19 @@ def -hidden -params 1..2 gogetdoc-cmd %{
     }
 }
 
-def go-doc-info -docstring "Show the documention of the symbol under the cursor" %{
+define-command go-doc-info -docstring "Show the documention of the symbol under the cursor" %{
     gogetdoc-cmd "info"
 }
 
-def go-print-signature -docstring "Print the signature of the symbol under the cursor" %{
+define-command go-print-signature -docstring "Print the signature of the symbol under the cursor" %{
     gogetdoc-cmd "echo"
 }
 
-def go-jump -docstring "Jump to the symbol definition" %{
+define-command go-jump -docstring "Jump to the symbol definition" %{
     gogetdoc-cmd "jump" 1
 }
 
-def go-share-selection -docstring "Share the selection using the Go Playground" %{ %sh{
+define-command go-share-selection -docstring "Share the selection using the Go Playground" %{ %sh{
     snippet_id=$(printf %s\\n "${kak_selection}" | curl -s https://play.golang.org/share --data-binary @-)
     printf "echo https://play.golang.org/p/%s" ${snippet_id}
 } }

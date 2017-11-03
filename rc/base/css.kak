@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](css) %{
-    set buffer filetype css
+    set-option buffer filetype css
 }
 
 # Highlighters
@@ -38,12 +38,12 @@ add-highlighter shared/css/selector regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:varia
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden css-filter-around-selections %{
+define-command -hidden css-filter-around-selections %{
     # remove trailing white spaces
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden css-indent-on-new-line %[
+define-command -hidden css-indent-on-new-line %[
     eval -draft -itersel %[
         # preserve previous line indent
         try %[ exec -draft \; K <a-&> ]
@@ -54,7 +54,7 @@ def -hidden css-indent-on-new-line %[
     ]
 ]
 
-def -hidden css-indent-on-closing-curly-brace %[
+define-command -hidden css-indent-on-closing-curly-brace %[
     eval -draft -itersel %[
         # align to opening curly brace when alone on a line
         try %[ exec -draft <a-h> <a-k> ^\h+\}$ <ret> m s \A|.\z <ret> 1<a-&> ]

@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*\.go %{
-    set buffer filetype go
+    set-option buffer filetype go
 }
 
 # Highlighters
@@ -37,7 +37,7 @@ add-highlighter shared/go/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=go %{
-        set window static_words '${keywords}:${attributes}:${types}:${values}:${functions}'
+        set-option window static_words '${keywords}:${attributes}:${types}:${values}:${functions}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -53,7 +53,7 @@ add-highlighter shared/go/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden go-indent-on-new-line %~
+define-command -hidden go-indent-on-new-line %~
     eval -draft -itersel %=
         # preserve previous line indent
         try %{ exec -draft \;K<a-&> }
@@ -72,12 +72,12 @@ def -hidden go-indent-on-new-line %~
     =
 ~
 
-def -hidden go-indent-on-opening-curly-brace %[
+define-command -hidden go-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ exec -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
 ]
 
-def -hidden go-indent-on-closing-curly-brace %[
+define-command -hidden go-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]

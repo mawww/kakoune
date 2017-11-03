@@ -5,21 +5,21 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](pony) %{
-    set buffer filetype pony
+    set-option buffer filetype pony
 }
 
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl shared/ regions -default code pony \
+add-highlighter shared/ regions -default code pony \
     double_string '"""' '"""'            '' \
     double_string '"'   (?<!\\)(\\\\)*"  '' \
     comment       '/\*'   '\*/'            '' \
     comment       '//'   '$'             ''
 
-addhl shared/pony/double_string fill string
-# addhl shared/pony/single_string fill string
-addhl shared/pony/comment       fill comment
+add-highlighter shared/pony/double_string fill string
+# add-highlighter shared/pony/single_string fill string
+add-highlighter shared/pony/comment       fill comment
 
 
 %sh{
@@ -38,33 +38,33 @@ addhl shared/pony/comment       fill comment
     static_words="${values}:${meta}:${keywords}:${types_decl}:${capabilities}"
     static_words="${static_words}::${struct}"
     printf %s\\n "hook global WinSetOption filetype=pony %{
-        set window static_words '${static_words}'
+        set-option window static_words '${static_words}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
     printf %s "
-        addhl shared/pony/code regex '\b(${values})\b' 0:value
-        addhl shared/pony/code regex '\b(${meta})\b' 0:meta
-        addhl shared/pony/code regex '\b(${func_decl})(\s+(${capabilities}))?(\s+\w+)\(' 1:type 3:builtin 4:builtin
-        addhl shared/pony/code regex '\b(${func_decl})\b' 0:type
-        addhl shared/pony/code regex '=>' 0:type
-        addhl shared/pony/code regex '\b(${keywords})\b' 0:keyword
-        addhl shared/pony/code regex ';' 0:keyword
-        addhl shared/pony/code regex '^\s*|' 0:keyword
-        addhl shared/pony/code regex '\b(${struct})\b' 0:variable
-        addhl shared/pony/code regex '\b(${capabilities})\b(!|^)?' 1:builtin 2:builtin
+        add-highlighter shared/pony/code regex '\b(${values})\b' 0:value
+        add-highlighter shared/pony/code regex '\b(${meta})\b' 0:meta
+        add-highlighter shared/pony/code regex '\b(${func_decl})(\s+(${capabilities}))?(\s+\w+)\(' 1:type 3:builtin 4:builtin
+        add-highlighter shared/pony/code regex '\b(${func_decl})\b' 0:type
+        add-highlighter shared/pony/code regex '=>' 0:type
+        add-highlighter shared/pony/code regex '\b(${keywords})\b' 0:keyword
+        add-highlighter shared/pony/code regex ';' 0:keyword
+        add-highlighter shared/pony/code regex '^\s*|' 0:keyword
+        add-highlighter shared/pony/code regex '\b(${struct})\b' 0:variable
+        add-highlighter shared/pony/code regex '\b(${capabilities})\b(!|^)?' 1:builtin 2:builtin
     "
 
     # Highlight types and attributes
     printf %s "
-        addhl shared/pony/code regex '@[\w_]+\b' 0:attribute
+        add-highlighter shared/pony/code regex '@[\w_]+\b' 0:attribute
     "
 }
 
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden pony-indent-on-new-line %{
+define-command -hidden pony-indent-on-new-line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
@@ -82,7 +82,7 @@ def -hidden pony-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group pony-highlight global WinSetOption filetype=pony %{ addhl window ref pony }
+hook -group pony-highlight global WinSetOption filetype=pony %{ add-highlighter window ref pony }
 
 hook global WinSetOption filetype=pony %{
     hook window InsertChar \n -group pony-indent pony-indent-on-new-line
@@ -91,12 +91,12 @@ hook global WinSetOption filetype=pony %{
 }
 
 hook global WinSetOption filetype=pony %{
-    set buffer tabstop 2
-    set buffer indentwidth 2
+    set-option buffer tabstop 2
+    set-option buffer indentwidth 2
 }
 
-hook -group pony-highlight global WinSetOption filetype=(?!pony).* %{ rmhl pony }
+hook -group pony-highlight global WinSetOption filetype=(?!pony).* %{ remove-highlighter pony }
 
 hook global WinSetOption filetype=(?!pony).* %{
-    rmhooks window pony-indent
+    remove-hooks window pony-indent
 }

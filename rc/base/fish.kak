@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](fish) %{
-    set buffer filetype fish
+    set-option buffer filetype fish
 }
 
 # Highlighters
@@ -29,14 +29,14 @@ add-highlighter shared/fish/code regex \b(and|begin|bg|bind|block|break|breakpoi
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden fish-filter-around-selections %{
+define-command -hidden fish-filter-around-selections %{
     eval -no-hooks -draft -itersel %{
         # remove trailing white spaces
         try %{ exec -draft <a-x>s\h+$<ret>d }
     }
 }
 
-def -hidden fish-indent-on-char %{
+define-command -hidden fish-indent-on-char %{
     eval -no-hooks -draft -itersel %{
         # align middle and end structures to start and indent when necessary
         try %{ exec -draft <a-x><a-k>^\h*(else)$<ret><a-\;><a-?>^\h*(if)<ret>s\A|\z<ret>'<a-&> }
@@ -45,7 +45,7 @@ def -hidden fish-indent-on-char %{
     }
 }
 
-def -hidden fish-indent-on-new-line %{
+define-command -hidden fish-indent-on-new-line %{
     eval -no-hooks -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft <space>K<a-&> }
@@ -56,7 +56,7 @@ def -hidden fish-indent-on-new-line %{
     }
 }
 
-def -hidden fish-insert-on-new-line %{
+define-command -hidden fish-insert-on-new-line %{
     eval -no-hooks -draft -itersel %{
         # copy _#_ comment prefix and following white spaces
         try %{ exec -draft k<a-x>s^\h*\K#\h*<ret>yjp }
