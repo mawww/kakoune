@@ -1,4 +1,4 @@
-hook global BufCreate .*\.(z|ba|c|k)?sh(rc|_profile)? %{
+hook global BufCreate .*\.(z|ba|c|k|mk)?sh(rc|_profile)? %{
     set buffer filetype sh
 }
 
