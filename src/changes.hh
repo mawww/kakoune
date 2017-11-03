@@ -56,19 +56,17 @@ void update_backward(ConstArrayView<Buffer::Change> changes, RangeContainer& ran
 {
     ForwardChangesTracker changes_tracker;
 
-    using ReverseIt = std::reverse_iterator<const Buffer::Change*>;
-    auto change_it = ReverseIt(changes.end());
-    auto change_end = ReverseIt(changes.begin());
-    auto advance_while_relevant = [&](const BufferCoord& pos) mutable {
-        while (change_it != change_end)
+    auto advance_while_relevant = [&, it = changes.rbegin(), end = changes.rend()]
+                                  (const BufferCoord& pos) mutable {
+        while (it != end)
         {
-            auto change = *change_it;
+            auto change = *it;
             change.begin = changes_tracker.get_new_coord(change.begin);
             change.end = changes_tracker.get_new_coord(change.end);
             if (not changes_tracker.relevant(change, pos))
                 break;
             changes_tracker.update(change);
-            ++change_it;
+            ++it;
         }
     };
 
