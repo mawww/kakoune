@@ -29,7 +29,7 @@ define-command autorestore-restore-buffer -docstring "Restore the backup for the
             ## Replace the content of the buffer with the content of the backup file
             echo -debug Restoring file: ${newer}
 
-            exec -draft %{ %d!cat<space>\"${newer}\"<ret>d }
+            execute-keys -draft %{ %d!cat<space>\"${newer}\"<ret>d }
 
             ## If the backup file has to be removed, issue the command once
             ## the current buffer has been saved

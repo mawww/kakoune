@@ -34,26 +34,26 @@ add-highlighter shared/php/code regex \b(__halt_compiler|abstract|and|array|as|b
 
 define-command -hidden php-filter-around-selections %{
     # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 define-command -hidden php-indent-on-char %<
-    eval -draft -itersel %<
+    evaluate-commands -draft -itersel %<
         # align closer token to its opener when alone on a line
-        try %/ exec -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \A|.\z <ret> 1<a-&> /
+        try %/ execute-keys -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \A|.\z <ret> 1<a-&> /
     >
 >
 
 define-command -hidden php-indent-on-new-line %<
-    eval -draft -itersel %<
+    evaluate-commands -draft -itersel %<
         # copy // comments prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : php-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : php-filter-around-selections <ret> }
         # indent after lines beginning / ending with opener token
-        try %_ exec -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
+        try %_ execute-keys -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
     >
 >
 

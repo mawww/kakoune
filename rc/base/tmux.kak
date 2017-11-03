@@ -45,7 +45,7 @@ If no client is passed then the current one is used} \
     -params ..1 -client-completion \
     tmux-focus %{ %sh{
     if [ $# -eq 1 ]; then
-        printf %s\\n "eval -client '$1' focus"
+        printf %s\\n "evaluate-commands -client '$1' focus"
     elif [ -n "${kak_client_env_TMUX}" ]; then
         TMUX="${kak_client_env_TMUX}" tmux select-pane -t "${kak_client_env_TMUX_PANE}" > /dev/null
     fi

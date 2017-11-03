@@ -96,7 +96,7 @@ hook global BufSetOption filetype=ruby %{
 define-command comment-block -docstring '(un)comment selected lines using block comments' %{
     %sh{
         exec_proof() {
-            ## Replace the '<' sign that is interpreted differently in `exec`
+            ## Replace the '<' sign that is interpreted differently in `execute-keys`
             printf %s\\n "$@" | sed 's,<,<lt>,g'
         }
 
@@ -108,19 +108,19 @@ define-command comment-block -docstring '(un)comment selected lines using block 
             exit
         fi
 
-        printf %s\\n "eval -draft %{ try %{
+        printf %s\\n "evaluate-commands -draft %{ try %{
             ## The selection is empty
-            exec <a-K>\\A[\\h\\v\\n]*\\z<ret>
+            execute-keys <a-K>\\A[\\h\\v\\n]*\\z<ret>
 
             try %{
                 ## The selection has already been commented
-                exec %{<a-K>\\A\\Q${opening}\\E.*\\Q${closing}\\E\\n*\\z<ret>}
+                execute-keys %{<a-K>\\A\\Q${opening}\\E.*\\Q${closing}\\E\\n*\\z<ret>}
 
                 ## Comment the selection
-                exec -draft %{a${closing}<esc>i${opening}}
+                execute-keys -draft %{a${closing}<esc>i${opening}}
             } catch %{
                 ## Uncomment the commented selection
-                exec -draft %{s(\\A\\Q${opening}\\E)|(\\Q${closing}\\E\\n*\\z)<ret>d}
+                execute-keys -draft %{s(\\A\\Q${opening}\\E)|(\\Q${closing}\\E\\n*\\z)<ret>d}
             }
         } }"
     }
@@ -136,23 +136,23 @@ define-command comment-line -docstring '(un)comment selected lines using line co
             exit
         fi
 
-        printf %s\\n "eval -draft %{
+        printf %s\\n "evaluate-commands -draft %{
             ## Select the content of the lines, without indentation
-            exec <a-s>I<esc><a-l>
+            execute-keys <a-s>I<esc><a-l>
 
             try %{
                 ## There’s no text on the line
-                exec <a-K>\\A[\\h\\v\\n]*\\z<ret>
+                execute-keys <a-K>\\A[\\h\\v\\n]*\\z<ret>
 
                 try %{
                     ## The line has already been commented
-                    exec %{<a-K>\\A${opening_escaped}<ret>}
+                    execute-keys %{<a-K>\\A${opening_escaped}<ret>}
 
                     ## Comment the line
-                    exec -draft %{i${opening}}
+                    execute-keys -draft %{i${opening}}
                 } catch %{
                     ## Uncomment the line
-                    exec -draft %{s\\A${opening_escaped}\\h*<ret>d}
+                    execute-keys -draft %{s\\A${opening_escaped}\\h*<ret>d}
                 }
             }
         }"

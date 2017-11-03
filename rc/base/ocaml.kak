@@ -24,8 +24,8 @@ add-highlighter shared/ocaml/comment fill comment
 # ‾‾‾‾‾‾‾‾
 
 define-command -hidden ocaml-indent-on-char %{
-  eval -no-hooks -draft -itersel %{
-    exec ";i<space><esc>Gg|ocp-indent --config base=%opt{indentwidth} --indent-empty --lines %val{cursor_line}<ret>"
+  evaluate-commands -no-hooks -draft -itersel %{
+    execute-keys ";i<space><esc>Gg|ocp-indent --config base=%opt{indentwidth} --indent-empty --lines %val{cursor_line}<ret>"
   }
 }
 

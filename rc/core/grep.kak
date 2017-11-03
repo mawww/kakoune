@@ -16,7 +16,7 @@ All the optional arguments are forwarded to the grep utility} \
          ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
      fi
 
-     printf %s\\n "eval -try-client '$kak_opt_toolsclient' %{
+     printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
                edit! -fifo ${output} -scroll *grep*
                set-option buffer filetype grep
                set-option buffer grep_current_line 0
@@ -47,34 +47,34 @@ declare-option -docstring "name of the client in which all source code jumps wil
     str jumpclient
 
 define-command -hidden grep-jump %{
-    eval -collapse-jumps %{
+    evaluate-commands -collapse-jumps %{
         try %{
-            exec '<a-x>s^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
+            execute-keys '<a-x>s^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
             set-option buffer grep_current_line %val{cursor_line}
-            eval -try-client %opt{jumpclient} edit -existing %reg{1} %reg{2} %reg{3}
+            evaluate-commands -try-client %opt{jumpclient} edit -existing %reg{1} %reg{2} %reg{3}
             try %{ focus %opt{jumpclient} }
         }
     }
 }
 
 define-command grep-next-match -docstring 'Jump to the next grep match' %{
-    eval -collapse-jumps -try-client %opt{jumpclient} %{
+    evaluate-commands -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
         # First jump to enf of buffer so that if grep_current_line == 0
         # 0g<a-l> will be a no-op and we'll jump to the first result.
         # Yeah, thats ugly...
-        exec "ge %opt{grep_current_line}g<a-l> /^[^:]+:\d+:<ret>"
+        execute-keys "ge %opt{grep_current_line}g<a-l> /^[^:]+:\d+:<ret>"
         grep-jump
     }
-    try %{ eval -client %opt{toolsclient} %{ exec gg %opt{grep_current_line}g } }
+    try %{ evaluate-commands -client %opt{toolsclient} %{ execute-keys gg %opt{grep_current_line}g } }
 }
 
 define-command grep-previous-match -docstring 'Jump to the previous grep match' %{
-    eval -collapse-jumps -try-client %opt{jumpclient} %{
+    evaluate-commands -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
         # See comment in grep-next-match
-        exec "ge %opt{grep_current_line}g<a-h> <a-/>^[^:]+:\d+:<ret>"
+        execute-keys "ge %opt{grep_current_line}g<a-h> <a-/>^[^:]+:\d+:<ret>"
         grep-jump
     }
-    try %{ eval -client %opt{toolsclient} %{ exec gg %opt{grep_current_line}g } }
+    try %{ evaluate-commands -client %opt{toolsclient} %{ execute-keys gg %opt{grep_current_line}g } }
 }

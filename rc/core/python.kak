@@ -64,15 +64,15 @@ add-highlighter shared/python/comment       fill comment
 # ‾‾‾‾‾‾‾‾
 
 define-command -hidden python-indent-on-new-line %{
-    eval -draft -itersel %{
+    evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
+        try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ exec -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with :
-        try %{ exec -draft <space> k x <a-k> :$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> :$ <ret> j <a-gt> }
     }
 }
 
@@ -84,7 +84,7 @@ hook -group python-highlight global WinSetOption filetype=python %{ add-highligh
 hook global WinSetOption filetype=python %{
     hook window InsertChar \n -group python-indent python-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window InsertEnd .* -group python-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
+    hook window InsertEnd .* -group python-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
 }
 
 hook -group python-highlight global WinSetOption filetype=(?!python).* %{ remove-highlighter window/python }

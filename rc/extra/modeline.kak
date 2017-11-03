@@ -94,9 +94,9 @@ define-command -hidden modeline-parse-impl %{
 #   [text]{white}{vi:|vim:|ex:}[white]{options}
 #   [text]{white}{vi:|vim:|Vim:|ex:}[white]se[t] {options}:[text]
 define-command modeline-parse -docstring "Read and interpret vi-format modelines at the beginning/end of the buffer" %{
-    try %{ eval -draft %{
-        exec \%s\A|.\z<ret> %opt{modelines}k <a-x> %opt{modelines}X \
+    try %{ evaluate-commands -draft %{
+        execute-keys \%s\A|.\z<ret> %opt{modelines}k <a-x> %opt{modelines}X \
              s^\S*?\s+?(vim?|kak(oune)?):\s?[^\n]+<ret> <a-x>
-        eval -draft -itersel modeline-parse-impl
+        evaluate-commands -draft -itersel modeline-parse-impl
     } }
 }

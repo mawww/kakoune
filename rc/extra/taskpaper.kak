@@ -23,13 +23,13 @@ add-highlighter shared/taskpaper regex (([a-z]+://\S+)|((mailto:)[\w+-]+@\S+)) 0
 # ‾‾‾‾‾‾‾‾
 
 define-command -hidden taskpaper-indent-on-new-line %{
-    eval -draft -itersel %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft \;K<a-&> }
+        try %{ execute-keys -draft \;K<a-&> }
         ## If the line above is a project indent with a tab
-        try %{ exec -draft Z k<a-x> <a-k>^\h*([^:\n]+):<ret> z i<tab> }
+        try %{ execute-keys -draft Z k<a-x> <a-k>^\h*([^:\n]+):<ret> z i<tab> }
         # cleanup trailing white spaces on previous line
-        try %{ exec -draft k<a-x> s \h+$ <ret>d }
+        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
     }
 }
 

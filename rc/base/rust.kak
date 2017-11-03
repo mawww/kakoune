@@ -36,35 +36,35 @@ add-highlighter shared/rust/code regex \b(?:u8|u16|u32|u64|usize|i8|i16|i32|i64|
 
 define-command -hidden rust-filter-around-selections %{
     # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 define-command -hidden rust-indent-on-new-line %~
-    eval -draft -itersel %<
+    evaluate-commands -draft -itersel %<
         # copy // comments prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*\K//\h* <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K//\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : rust-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : rust-filter-around-selections <ret> }
         # indent after lines ending with { or (
-        try %[ exec -draft k <a-x> <a-k> [{(]\h*$ <ret> j <a-gt> ]
+        try %[ execute-keys -draft k <a-x> <a-k> [{(]\h*$ <ret> j <a-gt> ]
         # align to opening paren of previous line
-        try %{ exec -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> & }
+        try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> & }
     >
 ~
 
 define-command -hidden rust-indent-on-opening-curly-brace %[
-    eval -draft -itersel %_
+    evaluate-commands -draft -itersel %_
         # align indent with opening paren when { is entered on a new line after the closing paren
-        try %[ exec -draft h <a-F> ) M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
+        try %[ execute-keys -draft h <a-F> ) M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
     _
 ]
 
 define-command -hidden rust-indent-on-closing-curly-brace %[
-    eval -draft -itersel %_
+    evaluate-commands -draft -itersel %_
         # align to opening curly brace when alone on a line
-        try %[ exec -draft <a-h> <a-k> ^\h+\}$ <ret> h m s \A|.\z <ret> 1<a-&> ]
+        try %[ execute-keys -draft <a-h> <a-k> ^\h+\}$ <ret> h m s \A|.\z <ret> 1<a-&> ]
     _
 ]
 

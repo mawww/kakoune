@@ -10,9 +10,9 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
     %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-lint.XXXXXXXX)
         mkfifo "$dir"/fifo
-        printf '%s\n' "eval -no-hooks write $dir/buf"
+        printf '%s\n' "evaluate-commands -no-hooks write $dir/buf"
 
-        printf '%s\n' "eval -draft %{
+        printf '%s\n' "evaluate-commands -draft %{
                   edit! -fifo $dir/fifo -debug *lint-output*
                   set-option buffer filetype make
                   set-option buffer make_current_error_line 0
@@ -24,8 +24,8 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
 
         { # do the parsing in the background and when ready send to the session
 
-        eval "$kak_opt_lintcmd '$dir'/buf" | sort -t: -k2,2 -n > "$dir"/stderr
-        printf '%s\n' "eval -client $kak_client echo 'linting done'" | kak -p "$kak_session"
+        evaluate-commands "$kak_opt_lintcmd '$dir'/buf" | sort -t: -k2,2 -n > "$dir"/stderr
+        printf '%s\n' "evaluate-commands -client $kak_client echo 'linting done'" | kak -p "$kak_session"
 
         # Flags for the gutter:
         #   line3|{red}:line11|{yellow}

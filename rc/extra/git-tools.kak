@@ -43,7 +43,7 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
         mkfifo ${output}
         ( git "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
 
-        printf %s "eval -try-client '$kak_opt_docsclient' %{
+        printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
                   set-option buffer filetype '${filetype}'
                   hook -group fifo buffer BufCloseFifo .* %{
@@ -55,7 +55,7 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
 
     run_git_blame() {
         (
-            printf %s "eval -client '$kak_client' %{
+            printf %s "evaluate-commands -client '$kak_client' %{
                       try %{ add-highlighter window flag_lines GitBlame git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
@@ -130,9 +130,9 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
         printf %s "edit '$msgfile'
               hook buffer BufWritePost '.*\Q$msgfile\E' %{ %sh{
                   if git commit -F '$msgfile' --cleanup=strip $@ > /dev/null; then
-                     printf %s 'eval -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
+                     printf %s 'evaluate-commands -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
                   else
-                     printf %s 'eval -client $kak_client echo -markup %{{Error}Commit failed}'
+                     printf %s 'evaluate-commands -client $kak_client echo -markup %{{Error}Commit failed}'
                   fi
               } }"
     }

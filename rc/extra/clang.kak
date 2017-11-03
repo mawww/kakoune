@@ -14,13 +14,13 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
         printf %s\\n "set-option buffer clang_tmp_dir ${dir}"
-        printf %s\\n "eval -no-hooks write ${dir}/buf"
+        printf %s\\n "evaluate-commands -no-hooks write ${dir}/buf"
     }
     # end the previous %sh{} so that its output gets interpreted by kakoune
     # before launching the following as a background task.
     %sh{
         dir=${kak_opt_clang_tmp_dir}
-        printf %s\\n "eval -draft %{
+        printf %s\\n "evaluate-commands -draft %{
                   edit! -fifo ${dir}/fifo -debug *clang-output*
                   set-option buffer filetype make
                   set-option buffer make_current_error_line 0
@@ -75,11 +75,11 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                                     print id  "|" docstrings[id] "|" menu
                                 }
                             }' | paste -s -d ':' - | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
-                printf %s\\n "eval -client ${kak_client} echo 'clang completion done'
+                printf %s\\n "evaluate-commands -client ${kak_client} echo 'clang completion done'
                       set-option 'buffer=${kak_buffile}' clang_completions '${header}:${compl}'" | kak -p ${kak_session}
             else
                 clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} - < ${dir}/buf 2> ${dir}/stderr
-                printf %s\\n "eval -client ${kak_client} echo 'clang parsing done'" | kak -p ${kak_session}
+                printf %s\\n "evaluate-commands -client ${kak_client} echo 'clang parsing done'" | kak -p ${kak_session}
             fi
 
             flags=$(cat ${dir}/stderr | sed -rne "
@@ -104,12 +104,12 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
 define-command clang-complete -docstring "Complete the current selection" %{ clang-parse -complete }
 
 define-command -hidden clang-show-completion-info %[ try %[
-    eval -draft %[
-        exec <space>{( <a-k> ^\( <ret> b <a-k> \A\w+\z <ret>
+    evaluate-commands -draft %[
+        execute-keys <space>{( <a-k> ^\( <ret> b <a-k> \A\w+\z <ret>
         %sh[
             desc=$(printf %s\\n "${kak_opt_clang_completions}" | sed -e "{ s/\([^\\]\):/\1\n/g }" | sed -ne "/^${kak_selection}|/ { s/^[^|]\+|//; s/|.*$//; s/\\\:/:/g; p }")
             if [ -n "$desc" ]; then
-                printf %s\\n "eval -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} -placement above %{${desc}}}"
+                printf %s\\n "evaluate-commands -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} -placement above %{${desc}}}"
             fi
     ] ]
 ] ]
@@ -118,7 +118,7 @@ define-command clang-enable-autocomplete -docstring "Enable automatic clang comp
     set-option window completers "option=clang_completions:%opt{completers}"
     hook window -group clang-autocomplete InsertIdle .* %{
         try %{
-            exec -draft <a-h><a-k>(\.|->|::).\z<ret>
+            execute-keys -draft <a-h><a-k>(\.|->|::).\z<ret>
             echo 'completing...'
             clang-complete
         }
@@ -170,7 +170,7 @@ define-command clang-diagnostics-next -docstring "Jump to the next line that con
             done
             line=${line-$first_line}
             if [ -n "$line" ]; then
-                printf %s\\n "exec ${line} g"
+                printf %s\\n "execute-keys ${line} g"
             else
                 echo "echo -markup '{Error}no next clang diagnostic'"
             fi

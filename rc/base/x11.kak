@@ -39,7 +39,7 @@ If no client is passed, then the current client is used} \
     -params ..1 -client-completion \
     x11-focus %{ %sh{
         if [ $# -eq 1 ]; then
-            printf %s\\n "eval -client '$1' focus"
+            printf %s\\n "evaluate-commands -client '$1' focus"
         else
             xdotool windowactivate $kak_client_env_WINDOWID > /dev/null
         fi

@@ -37,14 +37,14 @@ If no symbol is passed then the current selection is used as symbol name} \
             re=$0;
             sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
             keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
-            out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps %{ try %{ edit %{" tagroot $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
+            out = out " %{" $2 " {MenuInfo}" re "} %{evaluate-commands -collapse-jumps %{ try %{ edit %{" tagroot $2 "}; execute-keys %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
         }
-        /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps %{ edit %{" tagroot $2 "} %{" $3 "}}}" }
+        /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{evaluate-commands -collapse-jumps %{ edit %{" tagroot $2 "} %{" $3 "}}}" }
         END { print ( length(out) == 0 ? "echo -markup %{{Error}no such tag " ENVIRON["tagname"] "}" : "menu -markup -auto-single " out ) }'
     }}
 
-define-command ctags-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ eval -draft %{
-    exec <space>hb<a-k>^\w+$<ret>
+define-command ctags-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ evaluate-commands -draft %{
+    execute-keys <space>hb<a-k>^\w+$<ret>
     %sh{ {
         compl=$(readtags -p "$kak_selection" | cut -f 1 | sort | uniq | sed -e 's/:/\\:/g' | sed -e 's/\n/:/g' )
         compl="${kak_cursor_line}.${kak_cursor_column}+${#kak_selection}@${kak_timestamp}:${compl}"
@@ -53,13 +53,13 @@ define-command ctags-complete -docstring "Insert completion candidates for the c
 }}
 
 define-command ctags-funcinfo -docstring "Display ctags information about a selected function" %{
-    eval -draft %{
+    evaluate-commands -draft %{
         try %{
-            exec -no-hooks '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
+            execute-keys -no-hooks '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
             %sh{
                 sigs=$(readtags -e ${kak_selection%(} | grep kind:f | sed -re 's/^(\S+).*((class|struct|namespace):(\S+))?.*signature:(.*)$/\5 [\4::\1]/')
                 if [ -n "$sigs" ]; then
-                    printf %s\\n "eval -client ${kak_client} %{info -anchor $kak_cursor_line.$kak_cursor_column -placement above '$sigs'}"
+                    printf %s\\n "evaluate-commands -client ${kak_client} %{info -anchor $kak_cursor_line.$kak_cursor_column -placement above '$sigs'}"
                 fi
             }
         }
@@ -90,7 +90,7 @@ define-command ctags-generate -docstring 'Generate tag file asynchronously' %{
             msg="tags generation failed"
         fi
 
-        printf %s\\n "eval -client $kak_client echo -markup '{Information}${msg}'" | kak -p ${kak_session}
+        printf %s\\n "evaluate-commands -client $kak_client echo -markup '{Information}${msg}'" | kak -p ${kak_session}
     } > /dev/null 2>&1 < /dev/null & }
 }
 
@@ -110,6 +110,6 @@ define-command ctags-update-tags -docstring 'Update tags for the given file' %{
             msg="tags update failed for $kak_bufname"
         fi
 
-        printf %s\\n "eval -client $kak_client echo -markup '{Information}${msg}'" | kak -p ${kak_session}
+        printf %s\\n "evaluate-commands -client $kak_client echo -markup '{Information}${msg}'" | kak -p ${kak_session}
     } > /dev/null 2>&1 < /dev/null & }
 }

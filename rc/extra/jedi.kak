@@ -8,11 +8,11 @@ define-command jedi-complete -docstring "Complete the current selection" %{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-jedi.XXXXXXXX)
         mkfifo ${dir}/fifo
         printf %s\\n "set-option buffer jedi_tmp_dir ${dir}"
-        printf %s\\n "eval -no-hooks write ${dir}/buf"
+        printf %s\\n "evaluate-commands -no-hooks write ${dir}/buf"
     }
     %sh{
         dir=${kak_opt_jedi_tmp_dir}
-        printf %s\\n "eval -draft %{ edit! -fifo ${dir}/fifo *jedi-output* }"
+        printf %s\\n "evaluate-commands -draft %{ edit! -fifo ${dir}/fifo *jedi-output* }"
         (
             cd $(dirname ${kak_buffile})
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
@@ -24,7 +24,7 @@ define-command jedi-complete -docstring "Complete the current selection" %{
 		print(':'.join([(str(c.name).replace("|", "\\|") + "|" + str(c.docstring()).replace("|", "\\|")).replace(":", "\\:") + "|" + str(c.name).replace("|", "\\|") for c in script.completions()]).replace("'", r"\\\\'"))
 		END
             )
-            printf %s\\n "eval -client ${kak_client} 'echo completed; set-option %{buffer=${kak_buffile}} jedi_completions \'${header}:${compl}\''" | kak -p ${kak_session}
+            printf %s\\n "evaluate-commands -client ${kak_client} 'echo completed; set-option %{buffer=${kak_buffile}} jedi_completions \'${header}:${compl}\''" | kak -p ${kak_session}
             rm -r ${dir}
         ) > /dev/null 2>&1 < /dev/null &
     }
@@ -33,7 +33,7 @@ define-command jedi-complete -docstring "Complete the current selection" %{
 define-command jedi-enable-autocomplete -docstring "Add jedi completion candidates to the completer" %{
     set-option window completers "option=jedi_completions:%opt{completers}"
     hook window -group jedi-autocomplete InsertIdle .* %{ try %{
-        exec -draft <a-h><a-k>\..\z<ret>
+        execute-keys -draft <a-h><a-k>\..\z<ret>
         echo 'completing...'
         jedi-complete
     } }

@@ -30,40 +30,40 @@ add-highlighter shared/fish/code regex \b(and|begin|bg|bind|block|break|breakpoi
 # ‾‾‾‾‾‾‾‾
 
 define-command -hidden fish-filter-around-selections %{
-    eval -no-hooks -draft -itersel %{
+    evaluate-commands -no-hooks -draft -itersel %{
         # remove trailing white spaces
-        try %{ exec -draft <a-x>s\h+$<ret>d }
+        try %{ execute-keys -draft <a-x>s\h+$<ret>d }
     }
 }
 
 define-command -hidden fish-indent-on-char %{
-    eval -no-hooks -draft -itersel %{
+    evaluate-commands -no-hooks -draft -itersel %{
         # align middle and end structures to start and indent when necessary
-        try %{ exec -draft <a-x><a-k>^\h*(else)$<ret><a-\;><a-?>^\h*(if)<ret>s\A|\z<ret>'<a-&> }
-        try %{ exec -draft <a-x><a-k>^\h*(end)$<ret><a-\;><a-?>^\h*(begin|for|function|if|switch|while)<ret>s\A|\z<ret>'<a-&> }
-        try %{ exec -draft <a-x><a-k>^\h*(case)$<ret><a-\;><a-?>^\h*(switch)<ret>s\A|\z<ret>'<a-&>'<space><a-gt> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-\;><a-?>^\h*(if)<ret>s\A|\z<ret>'<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-\;><a-?>^\h*(begin|for|function|if|switch|while)<ret>s\A|\z<ret>'<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(case)$<ret><a-\;><a-?>^\h*(switch)<ret>s\A|\z<ret>'<a-&>'<space><a-gt> }
     }
 }
 
 define-command -hidden fish-indent-on-new-line %{
-    eval -no-hooks -draft -itersel %{
+    evaluate-commands -no-hooks -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft <space>K<a-&> }
+        try %{ execute-keys -draft <space>K<a-&> }
         # filter previous line
-        try %{ exec -draft k:fish-filter-around-selections<ret> }
+        try %{ execute-keys -draft k:fish-filter-around-selections<ret> }
         # indent after start structure
-        try %{ exec -draft k<a-x><a-k>^\h*(begin|case|else|for|function|if|switch|while)\b<ret>j<a-gt> }
+        try %{ execute-keys -draft k<a-x><a-k>^\h*(begin|case|else|for|function|if|switch|while)\b<ret>j<a-gt> }
     }
 }
 
 define-command -hidden fish-insert-on-new-line %{
-    eval -no-hooks -draft -itersel %{
+    evaluate-commands -no-hooks -draft -itersel %{
         # copy _#_ comment prefix and following white spaces
-        try %{ exec -draft k<a-x>s^\h*\K#\h*<ret>yjp }
+        try %{ execute-keys -draft k<a-x>s^\h*\K#\h*<ret>yjp }
         # wisely add end structure
-        eval -save-regs x %{
-            try %{ exec -draft k<a-x>s^\h+<ret>"xy } catch %{ reg x '' }
-            try %{ exec -draft k<a-x><a-k>^<c-r>x(begin|for|function|if|switch|while)<ret>j<a-a>iX<a-\;>K<a-K>^<c-r>x(begin|for|function|if|switch|while).*\n<c-r>xend$<ret>jxypjaend<esc><a-lt> }
+        evaluate-commands -save-regs x %{
+            try %{ execute-keys -draft k<a-x>s^\h+<ret>"xy } catch %{ reg x '' }
+            try %{ execute-keys -draft k<a-x><a-k>^<c-r>x(begin|for|function|if|switch|while)<ret>j<a-a>iX<a-\;>K<a-K>^<c-r>x(begin|for|function|if|switch|while).*\n<c-r>xend$<ret>jxypjaend<esc><a-lt> }
         }
     }
 }

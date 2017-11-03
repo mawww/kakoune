@@ -65,17 +65,17 @@ add-highlighter shared/pony/comment       fill comment
 # ‾‾‾‾‾‾‾‾
 
 define-command -hidden pony-indent-on-new-line %{
-    eval -draft -itersel %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft <space> K <a-&> }
+        try %{ execute-keys -draft <space> K <a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ exec -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
         # copy '//' comment prefix and following white spaces
-        # try %{ exec -draft k x s ^\h*//\h* <ret> y jgh P }
+        # try %{ execute-keys -draft k x s ^\h*//\h* <ret> y jgh P }
         # indent after line ending with :
-        try %{ exec -draft <space> k x <a-k> (do|try|then|else|:|=>)$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> (do|try|then|else|:|=>)$ <ret> j <a-gt> }
         # else, end are always de-indented
-        try %{ exec -draft <space> k x <a-k> (else|end):$ <ret> k x s ^\h* <ret> y j x <a-k> ^<c-r>" <ret> J <a-lt> }
+        try %{ execute-keys -draft <space> k x <a-k> (else|end):$ <ret> k x s ^\h* <ret> y j x <a-k> ^<c-r>" <ret> J <a-lt> }
     }
 }
 
@@ -87,7 +87,7 @@ hook -group pony-highlight global WinSetOption filetype=pony %{ add-highlighter 
 hook global WinSetOption filetype=pony %{
     hook window InsertChar \n -group pony-indent pony-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window InsertEnd .* -group pony-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
+    hook window InsertEnd .* -group pony-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
 }
 
 hook global WinSetOption filetype=pony %{

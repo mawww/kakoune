@@ -40,24 +40,24 @@ add-highlighter shared/css/selector regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:varia
 
 define-command -hidden css-filter-around-selections %{
     # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 define-command -hidden css-indent-on-new-line %[
-    eval -draft -itersel %[
+    evaluate-commands -draft -itersel %[
         # preserve previous line indent
-        try %[ exec -draft \; K <a-&> ]
+        try %[ execute-keys -draft \; K <a-&> ]
         # filter previous line
-        try %[ exec -draft k : css-filter-around-selections <ret> ]
+        try %[ execute-keys -draft k : css-filter-around-selections <ret> ]
         # indent after lines ending with with {
-        try %[ exec -draft k <a-x> <a-k> \{$ <ret> j <a-gt> ]
+        try %[ execute-keys -draft k <a-x> <a-k> \{$ <ret> j <a-gt> ]
     ]
 ]
 
 define-command -hidden css-indent-on-closing-curly-brace %[
-    eval -draft -itersel %[
+    evaluate-commands -draft -itersel %[
         # align to opening curly brace when alone on a line
-        try %[ exec -draft <a-h> <a-k> ^\h+\}$ <ret> m s \A|.\z <ret> 1<a-&> ]
+        try %[ execute-keys -draft <a-h> <a-k> ^\h+\}$ <ret> m s \A|.\z <ret> 1<a-&> ]
     ]
 ]
 

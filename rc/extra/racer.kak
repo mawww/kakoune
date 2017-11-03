@@ -5,7 +5,7 @@ define-command racer-complete -docstring "Complete the current selection with ra
     %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-racer.XXXXXXXX)
         printf %s\\n "set-option buffer racer_tmp_dir ${dir}"
-        printf %s\\n "eval -no-hooks %{ write ${dir}/buf }"
+        printf %s\\n "evaluate-commands -no-hooks %{ write ${dir}/buf }"
     }
     %sh{
         dir=${kak_opt_racer_tmp_dir}
@@ -44,7 +44,7 @@ define-command racer-complete -docstring "Complete the current selection with ra
                     print candidate
                 }'
             )
-            printf %s\\n "eval -client '${kak_client}' %{
+            printf %s\\n "evaluate-commands -client '${kak_client}' %{
                 set-option buffer=${kak_bufname} racer_completions %@${compl}@
             }" | kak -p ${kak_session}
             rm -r ${dir}
@@ -55,7 +55,7 @@ define-command racer-complete -docstring "Complete the current selection with ra
 define-command racer-enable-autocomplete -docstring "Add racer completion candidates to the completer" %{
     set-option window completers "option=racer_completions:%opt{completers}"
     hook window -group racer-autocomplete InsertIdle .* %{ try %{
-        exec -draft <a-h><a-k>([\w\.]|::).\z<ret>
+        execute-keys -draft <a-h><a-k>([\w\.]|::).\z<ret>
         racer-complete
     } }
     alias window complete racer-complete

@@ -101,42 +101,42 @@ define-command ruby-alternative-file -docstring 'Jump to the alternate file (imp
 }}
 
 define-command -hidden ruby-filter-around-selections %{
-    eval -no-hooks -draft -itersel %{
-        exec <a-x>
+    evaluate-commands -no-hooks -draft -itersel %{
+        execute-keys <a-x>
         # remove trailing white spaces
-        try %{ exec -draft s \h + $ <ret> d }
+        try %{ execute-keys -draft s \h + $ <ret> d }
     }
 }
 
 define-command -hidden ruby-indent-on-char %{
-    eval -no-hooks -draft -itersel %{
+    evaluate-commands -no-hooks -draft -itersel %{
         # align middle and end structures to start
-        try %{ exec -draft <a-x> <a-k> ^ \h * (else|elsif) $ <ret> <a-\;> <a-?> ^ \h * (if)                                                       <ret> s \A | \z <ret> \' <a-&> }
-        try %{ exec -draft <a-x> <a-k> ^ \h * (when)       $ <ret> <a-\;> <a-?> ^ \h * (case)                                                     <ret> s \A | \z <ret> \' <a-&> }
-        try %{ exec -draft <a-x> <a-k> ^ \h * (rescue)     $ <ret> <a-\;> <a-?> ^ \h * (begin)                                                    <ret> s \A | \z <ret> \' <a-&> }
-        try %{ exec -draft <a-x> <a-k> ^ \h * (end)        $ <ret> <a-\;> <a-?> ^ \h * (begin|case|class|def|do|for|if|module|unless|until|while) <ret> s \A | \z <ret> \' <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else|elsif) $ <ret> <a-\;> <a-?> ^ \h * (if)                                                       <ret> s \A | \z <ret> \' <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when)       $ <ret> <a-\;> <a-?> ^ \h * (case)                                                     <ret> s \A | \z <ret> \' <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (rescue)     $ <ret> <a-\;> <a-?> ^ \h * (begin)                                                    <ret> s \A | \z <ret> \' <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (end)        $ <ret> <a-\;> <a-?> ^ \h * (begin|case|class|def|do|for|if|module|unless|until|while) <ret> s \A | \z <ret> \' <a-&> }
     }
 }
 
 define-command -hidden ruby-indent-on-new-line %{
-    eval -no-hooks -draft -itersel %{
+    evaluate-commands -no-hooks -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft K <a-&> }
+        try %{ execute-keys -draft K <a-&> }
         # filter previous line
-        try %{ exec -draft k : ruby-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : ruby-filter-around-selections <ret> }
         # indent after start structure
-        try %{ exec -draft k <a-x> <a-k> ^ \h * (begin|case|class|def|do|else|elsif|ensure|for|if|module|rescue|unless|until|when|while) \b <ret> j <a-gt> }
+        try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (begin|case|class|def|do|else|elsif|ensure|for|if|module|rescue|unless|until|when|while) \b <ret> j <a-gt> }
     }
 }
 
 define-command -hidden ruby-insert-on-new-line %{
-    eval -no-hooks -draft -itersel %{
+    evaluate-commands -no-hooks -draft -itersel %{
         # copy _#_ comment prefix and following white spaces
-        try %{ exec -draft k <a-x> s '^\h*\K#\h*' <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s '^\h*\K#\h*' <ret> y gh j P }
         # wisely add end structure
-        eval -save-regs x %{
-            try %{ exec -draft k <a-x> s ^ \h + <ret> \" x y } catch %{ reg x '' }
-            try %{ exec -draft k <a-x> <a-k> ^ <c-r> x (begin|case|class|def|do|for|if|module|unless|until|while) <ret> j <a-a> i X <a-\;> K <a-K> ^ <c-r> x (begin|case|class|def|do|for|if|module|unless|until|while) . * \n <c-r> x end $ <ret> j x y p j a end <esc> <a-lt> }
+        evaluate-commands -save-regs x %{
+            try %{ execute-keys -draft k <a-x> s ^ \h + <ret> \" x y } catch %{ reg x '' }
+            try %{ execute-keys -draft k <a-x> <a-k> ^ <c-r> x (begin|case|class|def|do|for|if|module|unless|until|while) <ret> j <a-a> i X <a-\;> K <a-K> ^ <c-r> x (begin|case|class|def|do|for|if|module|unless|until|while) . * \n <c-r> x end $ <ret> j x y p j a end <esc> <a-lt> }
         }
     }
 }

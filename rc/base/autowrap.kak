@@ -8,16 +8,16 @@ declare-option -docstring %{command to which the paragraphs to wrap will be pass
 all occurences of '%c' are replaced with `autowrap_column`} \
     str autowrap_fmtcmd 'fold -s -w %c'
 
-define-command -hidden autowrap-cursor %{ eval -save-regs '/"|^@m' %{
+define-command -hidden autowrap-cursor %{ evaluate-commands -save-regs '/"|^@m' %{
     try %{
         ## if the line isn't too long, do nothing
-        exec -draft "<a-x><a-k>^[^\n]{%opt{autowrap_column},}[^\n]<ret>"
+        execute-keys -draft "<a-x><a-k>^[^\n]{%opt{autowrap_column},}[^\n]<ret>"
 
         try %{
             reg m "%val{selections_desc}"
 
             ## if we're adding characters past the limit, just wrap them around
-            exec -draft "<a-h><a-k>.{%opt{autowrap_column}}\h*[^\s]*<ret>1s(\h+)[^\h]*\z<ret>c<ret>"
+            execute-keys -draft "<a-h><a-k>.{%opt{autowrap_column}}\h*[^\s]*<ret>1s(\h+)[^\h]*\z<ret>c<ret>"
         } catch %{
             ## if we're adding characters in the middle of a sentence, use
             ## the `fmtcmd` command to wrap the entire paragraph
@@ -27,9 +27,9 @@ define-command -hidden autowrap-cursor %{ eval -save-regs '/"|^@m' %{
                     format_cmd=$(printf %s "${kak_opt_autowrap_fmtcmd}" \
                                  | sed "s/%c/${kak_opt_autowrap_column}/g")
                     printf %s "
-                        eval -draft %{
-                            exec '<a-]>p<a-x><a-j>|${format_cmd}<ret>'
-                            try %{ exec s\h+$<ret> d }
+                        evaluate-commands -draft %{
+                            execute-keys '<a-]>p<a-x><a-j>|${format_cmd}<ret>'
+                            try %{ execute-keys s\h+$<ret> d }
                         }
                         select '${kak_reg_m}'
                     "

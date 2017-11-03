@@ -1669,9 +1669,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 }
 
 const CommandDesc exec_string_cmd = {
+    "execute-keys",
     "exec",
-    nullptr,
-    "exec <switches> <keys>: execute given keys as if entered by user",
+    "execute-keys <switches> <keys>: execute given keys as if entered by user",
     context_wrap_params,
     CommandFlags::None,
     CommandHelper{},
@@ -1694,9 +1694,9 @@ const CommandDesc exec_string_cmd = {
 };
 
 const CommandDesc eval_string_cmd = {
+    "evaluate-commands",
     "eval",
-    nullptr,
-    "eval <switches> <commands>...: execute commands as if entered by user",
+    "evaluate-commands <switches> <commands>...: execute commands as if entered by user",
     context_wrap_params,
     CommandFlags::None,
     CommandHelper{},

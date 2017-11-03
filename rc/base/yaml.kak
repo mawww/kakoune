@@ -30,19 +30,19 @@ add-highlighter shared/yaml/code regex ^\h*-?\h*(\S+): 1:attribute
 
 define-command -hidden yaml-filter-around-selections %{
     # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 define-command -hidden yaml-indent-on-new-line %{
-    eval -draft -itersel %{
+    evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : yaml-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : yaml-filter-around-selections <ret> }
         # indent after :
-        try %{ exec -draft <space> k x <a-k> :$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> :$ <ret> j <a-gt> }
     }
 }
 

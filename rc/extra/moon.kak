@@ -56,36 +56,36 @@ define-command moon-alternative-file -docstring 'Jump to the alternate file (imp
 }}
 
 define-command -hidden moon-filter-around-selections %{
-    eval -draft -itersel %{
-        exec <a-x>
+    evaluate-commands -draft -itersel %{
+        execute-keys <a-x>
         # remove trailing white spaces
-        try %{ exec -draft s \h + $ <ret> d }
+        try %{ execute-keys -draft s \h + $ <ret> d }
     }
 }
 
 define-command -hidden moon-indent-on-char %{
-    eval -draft -itersel %{
+    evaluate-commands -draft -itersel %{
         # align _else_ statements to start
-        try %{ exec -draft <a-x> <a-k> ^ \h * (else(if)?) $ <ret> <a-\;> <a-?> ^ \h * (if|unless|when) <ret> s \A | \z <ret> \' <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else(if)?) $ <ret> <a-\;> <a-?> ^ \h * (if|unless|when) <ret> s \A | \z <ret> \' <a-&> }
         # align _when_ to _switch_ then indent
-        try %{ exec -draft <a-x> <a-k> ^ \h * (when) $ <ret> <a-\;> <a-?> ^ \h * (switch) <ret> s \A | \z <ret> \' <a-&> \' <space> <gt> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when) $ <ret> <a-\;> <a-?> ^ \h * (switch) <ret> s \A | \z <ret> \' <a-&> \' <space> <gt> }
         # align _catch_ and _finally_ to _try_
-        try %{ exec -draft <a-x> <a-k> ^ \h * (catch|finally) $ <ret> <a-\;> <a-?> ^ \h * (try) <ret> s \A | \z <ret> \' <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (catch|finally) $ <ret> <a-\;> <a-?> ^ \h * (try) <ret> s \A | \z <ret> \' <a-&> }
     }
 }
 
 define-command -hidden moon-indent-on-new-line %{
-    eval -draft -itersel %{
+    evaluate-commands -draft -itersel %{
         # copy -- comment prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^ \h * \K -- \h * <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s ^ \h * \K -- \h * <ret> y gh j P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : moon-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : moon-filter-around-selections <ret> }
         # indent after start structure
-        try %{ exec -draft k <a-x> <a-k> ^ \h * (class|else(if)?|for|if|switch|unless|when|while|with) \b | ([:=]|[-=]>) $ <ret> j <a-gt> }
+        try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (class|else(if)?|for|if|switch|unless|when|while|with) \b | ([:=]|[-=]>) $ <ret> j <a-gt> }
         # deindent after return statements
-        try %{ exec -draft k <a-x> <a-k> ^ \h * (break|return) \b <ret> j <a-lt> }
+        try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (break|return) \b <ret> j <a-lt> }
     }
 }
 

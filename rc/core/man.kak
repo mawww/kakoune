@@ -37,7 +37,7 @@ define-command -hidden -params 1..2 man-impl %{ %sh{
     if [ "${retval}" -eq 0 ]; then
         printf %s\\n "
                 edit -scratch '*man*'
-                exec '%|cat<space>${colout}<ret>gk'
+                execute-keys '%|cat<space>${colout}<ret>gk'
                 nop %sh{rm ${colout}}
                 set-option buffer filetype man
                 set-option window manpage '$@'
@@ -75,5 +75,5 @@ The page can be a word, or a word directly followed by a section number between 
             ;;
     esac
 
-    printf %s\\n "eval -collapse-jumps -try-client %opt{docsclient} man-impl $pagenum $subject"
+    printf %s\\n "evaluate-commands -collapse-jumps -try-client %opt{docsclient} man-impl $pagenum $subject"
 } }

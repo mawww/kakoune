@@ -41,7 +41,7 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
     }
     hook buffer BufWritePre %val{buffile} -group editorconfig-hooks %{ %sh{
         if [ ${kak_opt_editorconfig_trim_trailing_whitespace} = "true" ]; then
-            printf %s\\n "try %{ exec -draft %{ %s\h+$<ret>d } }"
+            printf %s\\n "try %{ execute-keys -draft %{ %s\h+$<ret>d } }"
         fi
     } }
 }
