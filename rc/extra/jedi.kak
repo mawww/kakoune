@@ -1,18 +1,18 @@
-decl -hidden str jedi_tmp_dir
-decl -hidden completions jedi_completions
-decl -docstring "colon separated list of path added to `python`'s $PYTHONPATH environment variable" \
+declare-option -hidden str jedi_tmp_dir
+declare-option -hidden completions jedi_completions
+declare-option -docstring "colon separated list of path added to `python`'s $PYTHONPATH environment variable" \
     str-list jedi_python_path
 
-def jedi-complete -docstring "Complete the current selection" %{
+define-command jedi-complete -docstring "Complete the current selection" %{
     %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-jedi.XXXXXXXX)
         mkfifo ${dir}/fifo
-        printf %s\\n "set buffer jedi_tmp_dir ${dir}"
-        printf %s\\n "eval -no-hooks write ${dir}/buf"
+        printf %s\\n "set-option buffer jedi_tmp_dir ${dir}"
+        printf %s\\n "evaluate-commands -no-hooks write ${dir}/buf"
     }
     %sh{
         dir=${kak_opt_jedi_tmp_dir}
-        printf %s\\n "eval -draft %{ edit! -fifo ${dir}/fifo *jedi-output* }"
+        printf %s\\n "evaluate-commands -draft %{ edit! -fifo ${dir}/fifo *jedi-output* }"
         (
             cd $(dirname ${kak_buffile})
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
@@ -24,24 +24,24 @@ def jedi-complete -docstring "Complete the current selection" %{
 		print(':'.join([(str(c.name).replace("|", "\\|") + "|" + str(c.docstring()).replace("|", "\\|")).replace(":", "\\:") + "|" + str(c.name).replace("|", "\\|") for c in script.completions()]).replace("'", r"\\\\'"))
 		END
             )
-            printf %s\\n "eval -client ${kak_client} 'echo completed; set %{buffer=${kak_buffile}} jedi_completions \'${header}:${compl}\''" | kak -p ${kak_session}
+            printf %s\\n "evaluate-commands -client ${kak_client} 'echo completed; set-option %{buffer=${kak_buffile}} jedi_completions \'${header}:${compl}\''" | kak -p ${kak_session}
             rm -r ${dir}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
 
-def jedi-enable-autocomplete -docstring "Add jedi completion candidates to the completer" %{
-    set window completers "option=jedi_completions:%opt{completers}"
+define-command jedi-enable-autocomplete -docstring "Add jedi completion candidates to the completer" %{
+    set-option window completers "option=jedi_completions:%opt{completers}"
     hook window -group jedi-autocomplete InsertIdle .* %{ try %{
-        exec -draft <a-h><a-k>\..\z<ret>
+        execute-keys -draft <a-h><a-k>\..\z<ret>
         echo 'completing...'
         jedi-complete
     } }
     alias window complete jedi-complete
 }
 
-def jedi-disable-autocomplete -docstring "Disable jedi completion" %{
-    set window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed -e 's/option=jedi_completions://g' }
+define-command jedi-disable-autocomplete -docstring "Disable jedi completion" %{
+    set-option window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed -e 's/option=jedi_completions://g' }
     remove-hooks window jedi-autocomplete
     unalias window complete jedi-complete
 }

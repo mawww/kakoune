@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](cabal) %{
-    set buffer filetype cabal
+    set-option buffer filetype cabal
 }
 
 # Highlighters
@@ -24,35 +24,35 @@ add-highlighter shared/cabal/code regex ^\h*([A-Za-z][A-Za-z0-9_-]*)\h*: 1:varia
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden cabal-filter-around-selections %{
+define-command -hidden cabal-filter-around-selections %{
     # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden cabal-indent-on-new-line %[
-    eval -draft -itersel %[
+define-command -hidden cabal-indent-on-new-line %[
+    evaluate-commands -draft -itersel %[
         # copy '#' comment prefix and following white spaces
-        try %[ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P ]
+        try %[ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P ]
         # preserve previous line indent
-        try %[ exec -draft \; K <a-&> ]
+        try %[ execute-keys -draft \; K <a-&> ]
         # filter previous line
-        try %[ exec -draft k : cabal-filter-around-selections <ret> ]
+        try %[ execute-keys -draft k : cabal-filter-around-selections <ret> ]
         # indent after lines ending with { or :
-        try %[ exec -draft <space> k <a-x> <a-k> [:{]$ <ret> j <a-gt> ]
+        try %[ execute-keys -draft <space> k <a-x> <a-k> [:{]$ <ret> j <a-gt> ]
     ]
 ]
 
-def -hidden cabal-indent-on-opening-curly-brace %[
-    eval -draft -itersel %[
+define-command -hidden cabal-indent-on-opening-curly-brace %[
+    evaluate-commands -draft -itersel %[
         # align indent with opening paren when { is entered on a new line after the closing paren
-        try %[ exec -draft h <a-F> ) M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
+        try %[ execute-keys -draft h <a-F> ) M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
     ]
 ]
 
-def -hidden cabal-indent-on-closing-curly-brace %[
-    eval -draft -itersel %[
+define-command -hidden cabal-indent-on-closing-curly-brace %[
+    evaluate-commands -draft -itersel %[
         # align to opening curly brace when alone on a line
-        try %[ exec -draft <a-h> <a-k> ^\h+\}$ <ret> h m s \A|.\z<ret> 1<a-&> ]
+        try %[ execute-keys -draft <a-h> <a-k> ^\h+\}$ <ret> h m s \A|.\z<ret> 1<a-&> ]
     ]
 ]
 

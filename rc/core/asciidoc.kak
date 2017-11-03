@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .+\.(a(scii)?doc|asc) %{
-    set buffer filetype asciidoc
+    set-option buffer filetype asciidoc
 }
 
 # Highlighters

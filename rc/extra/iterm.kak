@@ -14,7 +14,7 @@ hook global KakBegin .* %{
     }
 }
 
-def -hidden -params 1.. iterm-new-split-impl %{
+define-command -hidden -params 1.. iterm-new-split-impl %{
     %sh{
         direction="$1"
         shift
@@ -33,15 +33,15 @@ def -hidden -params 1.. iterm-new-split-impl %{
     }
 }
 
-def iterm-new-vertical -params .. -command-completion -docstring "Create a new vertical pane" %{
+define-command iterm-new-vertical -params .. -command-completion -docstring "Create a new vertical pane" %{
     iterm-new-split-impl 'vertically' %arg{@}
 }
 
-def iterm-new-horizontal -params .. -command-completion -docstring "Create a new horizontal pane" %{
+define-command iterm-new-horizontal -params .. -command-completion -docstring "Create a new horizontal pane" %{
     iterm-new-split-impl 'horizontally' %arg{@}
 }
 
-def -params .. -command-completion \
+define-command -params .. -command-completion \
     -docstring %{iterm-new-tab [<arguments>]: create a new tab
 All optional arguments are forwarded to the new kak client} \
     iterm-new-tab %{
@@ -60,7 +60,7 @@ All optional arguments are forwarded to the new kak client} \
     }
 }
 
-def -params .. -command-completion \
+define-command -params .. -command-completion \
     -docstring %{iterm-new-window [<arguments>]: create a new window
 All optional arguments are forwarded to the new kak client} \
     iterm-new-window %{
@@ -69,7 +69,7 @@ All optional arguments are forwarded to the new kak client} \
         sh_cmd="kak -c ${kak_session} ${kakoune_params}"
         osascript                                                 \
         -e "tell application \"iTerm\""                           \
-        -e "    set w to (create window with default profile)"    \
+        -e "    set-option w to (create window with default profile)"    \
         -e "    tell current session of w"                        \
         -e "        write text \"export TMPDIR='${TMPDIR}'\""     \
         -e "        write text \"exec ${sh_cmd}\""                \
@@ -78,7 +78,7 @@ All optional arguments are forwarded to the new kak client} \
     }
 }
 
-def -params ..1 -client-completion \
+define-command -params ..1 -client-completion \
     -docstring %{iterm-focus [<client>]: focus the given client
 If no client is passed then the current one is used} \
     iterm-focus %{

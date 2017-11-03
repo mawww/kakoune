@@ -22,7 +22,7 @@ hook global KakBegin .* %{
     }
 }
 
-def -hidden -params 1..2 tmux-repl-impl %{
+define-command -hidden -params 1..2 tmux-repl-impl %{
     %sh{
         if [ -z "$TMUX" ]; then
             echo "echo -markup '{Error}This command is only available in a tmux session'"
@@ -37,19 +37,19 @@ def -hidden -params 1..2 tmux-repl-impl %{
     }
 }
 
-def tmux-repl-vertical -params 0..1 -command-completion -docstring "Create a new vertical pane for repl interaction" %{
+define-command tmux-repl-vertical -params 0..1 -command-completion -docstring "Create a new vertical pane for repl interaction" %{
     tmux-repl-impl 'split-window -v' %arg{@}
 }
 
-def tmux-repl-horizontal -params 0..1 -command-completion -docstring "Create a new horizontal pane for repl interaction" %{
+define-command tmux-repl-horizontal -params 0..1 -command-completion -docstring "Create a new horizontal pane for repl interaction" %{
     tmux-repl-impl 'split-window -h' %arg{@}
 }
 
-def tmux-repl-window -params 0..1 -command-completion -docstring "Create a new window for repl interaction" %{
+define-command tmux-repl-window -params 0..1 -command-completion -docstring "Create a new window for repl interaction" %{
     tmux-repl-impl 'new-window' %arg{@}
 }
 
-def -hidden tmux-send-text -docstring "Send the selected text to the repl pane" %{
+define-command -hidden tmux-send-text -docstring "Send the selected text to the repl pane" %{
     nop %sh{
         tmux set-buffer -b kak_selection "${kak_selection}"
         kak_orig_window=$(tmux display-message -p '#I')
@@ -62,7 +62,7 @@ def -hidden tmux-send-text -docstring "Send the selected text to the repl pane" 
     }
 }
 
-def -hidden tmux-repl-disabled %{ %sh{
+define-command -hidden tmux-repl-disabled %{ %sh{
     VERSION_TMUX=$(tmux -V)
     printf %s "echo -markup %{{Error}The version of tmux is too old: got ${VERSION_TMUX}, expected >= 2.x}"
 } }

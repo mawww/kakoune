@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate (.*/)?(kakrc|.*.kak) %{
-    set buffer filetype kak
+    set-option buffer filetype kak
 }
 
 # Highlighters & Completion
@@ -29,8 +29,9 @@ add-highlighter shared/ regions -default code kakrc \
     keywords="edit write write-all kill quit write-quit write-all-quit map unmap alias unalias
               buffer buffer-next buffer-previous delete-buffer add-highlighter remove-highlighter
               hook remove-hooks define-command echo debug source try fail
-              set-option unset-option update-option declare-option exec eval prompt menu on-key info
-              set-face rename-client set-register select change-directory rename-session colorscheme"
+              set-option unset-option update-option declare-option execute-keys evaluate-commands
+              prompt menu on-key info set-face rename-client set-register select change-directory
+              rename-session colorscheme"
     attributes="global buffer window current
                 normal insert menu prompt goto view user object
                 number_lines show_matching show_whitespaces fill regex dynregex group flag_lines
@@ -42,8 +43,8 @@ add-highlighter shared/ regions -default code kakrc \
 
     # Add the language's grammar to the static completion list
     printf '%s\n' "hook global WinSetOption filetype=kak %{
-        set window static_words '$(join "${keywords}:${attributes}:${types}:${values}" ':')'
-        set -- window extra_word_chars '-'
+        set-option window static_words '$(join "${keywords}:${attributes}:${types}:${values}" ':')'
+        set-option -- window extra_word_chars '-'
     }"
 
     # Highlight keywords (which are always surrounded by whitespace)
@@ -63,16 +64,16 @@ add-highlighter shared/kakrc/shell ref sh
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden kak-indent-on-new-line %{
-    eval -draft -itersel %{
+define-command -hidden kak-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
+        try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ exec -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with %[\W\S]
-        try %{ exec -draft k <a-x> <a-k> \%[\W\S]$ <ret> j <a-gt> }
+        try %{ execute-keys -draft k <a-x> <a-k> \%[\W\S]$ <ret> j <a-gt> }
     }
 }
 
@@ -84,8 +85,8 @@ hook -group kak-highlight global WinSetOption filetype=kak %{ add-highlighter wi
 hook global WinSetOption filetype=kak %{
     hook window InsertChar \n -group kak-indent kak-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window InsertEnd .* -group kak-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
-    set buffer extra_word_chars '-'
+    hook window InsertEnd .* -group kak-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
+    set-option buffer extra_word_chars '-'
 }
 
 hook -group kak-highlight global WinSetOption filetype=(?!kak).* %{ remove-highlighter window/kakrc }

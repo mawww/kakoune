@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](elm) %{
-    set buffer filetype elm
+    set-option buffer filetype elm
 }
 
 # Highlighters
@@ -29,25 +29,25 @@ add-highlighter shared/elm/code regex \b(Array|Bool|Char|Float|Int|String)\b 0:t
 
 # http://elm-lang.org/docs/style-guide
 
-def -hidden elm-filter-around-selections %{
+define-command -hidden elm-filter-around-selections %{
     # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden elm-indent-after "
- exec -draft \\; k x <a-k> ^\\h*(if)|(case\\h+[\\w']+\\h+of|let|in|\\{\\h+\\w+|\\w+\\h+->|[=(])$ <ret> j <a-gt>
+define-command -hidden elm-indent-after "
+ execute-keys -draft \\; k x <a-k> ^\\h*(if)|(case\\h+[\\w']+\\h+of|let|in|\\{\\h+\\w+|\\w+\\h+->|[=(])$ <ret> j <a-gt>
 "
 
-def -hidden elm-indent-on-new-line %{
-    eval -draft -itersel %{
+define-command -hidden elm-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # copy -- comments prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # align to first clause
-        try %{ exec -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|let)\h+\K.* <ret> s \A|.\z <ret> & }
+        try %{ execute-keys -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|let)\h+\K.* <ret> s \A|.\z <ret> & }
         # filter previous line
-        try %{ exec -draft k : elm-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : elm-filter-around-selections <ret> }
         # indent after lines beginning with condition or ending with expression or =(
         try %{ elm-indent-after }
     }

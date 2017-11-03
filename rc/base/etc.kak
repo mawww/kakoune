@@ -1,15 +1,15 @@
 # Highlighting for common files in /etc
-hook global BufCreate .*/etc/(hosts|networks|services)  %{ set buffer filetype etc-hosts }
-hook global BufCreate .*/etc/resolv.conf                %{ set buffer filetype etc-resolv-conf }
-hook global BufCreate .*/etc/shadow                     %{ set buffer filetype etc-shadow }
-hook global BufCreate .*/etc/passwd                     %{ set buffer filetype etc-passwd }
-hook global BufCreate .*/etc/gshadow                    %{ set buffer filetype etc-gshadow }
-hook global BufCreate .*/etc/group                      %{ set buffer filetype etc-group }
-hook global BufCreate .*/etc/(fs|m)tab                  %{ set buffer filetype etc-fstab }
-hook global BufCreate .*/etc/environment                %{ set buffer filetype sh }
-hook global BufCreate .*/etc/env.d/.*                   %{ set buffer filetype sh }
-hook global BufCreate .*/etc/profile(\.(csh|env))?      %{ set buffer filetype sh }
-hook global BufCreate .*/etc/profile\.d/.*              %{ set buffer filetype sh }
+hook global BufCreate .*/etc/(hosts|networks|services)  %{ set-option buffer filetype etc-hosts }
+hook global BufCreate .*/etc/resolv.conf                %{ set-option buffer filetype etc-resolv-conf }
+hook global BufCreate .*/etc/shadow                     %{ set-option buffer filetype etc-shadow }
+hook global BufCreate .*/etc/passwd                     %{ set-option buffer filetype etc-passwd }
+hook global BufCreate .*/etc/gshadow                    %{ set-option buffer filetype etc-gshadow }
+hook global BufCreate .*/etc/group                      %{ set-option buffer filetype etc-group }
+hook global BufCreate .*/etc/(fs|m)tab                  %{ set-option buffer filetype etc-fstab }
+hook global BufCreate .*/etc/environment                %{ set-option buffer filetype sh }
+hook global BufCreate .*/etc/env.d/.*                   %{ set-option buffer filetype sh }
+hook global BufCreate .*/etc/profile(\.(csh|env))?      %{ set-option buffer filetype sh }
+hook global BufCreate .*/etc/profile\.d/.*              %{ set-option buffer filetype sh }
 
 # Highlighters
 ## /etc/resolv.conf

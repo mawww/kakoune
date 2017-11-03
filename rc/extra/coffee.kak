@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](coffee) %{
-    set buffer filetype coffee
+    set-option buffer filetype coffee
 }
 
 # Highlighters
@@ -45,24 +45,24 @@ add-highlighter shared/coffee/code regex \b(break|case|catch|class|const|continu
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden coffee-filter-around-selections %{
-    eval -draft -itersel %{
-        exec <a-x>
+define-command -hidden coffee-filter-around-selections %{
+    evaluate-commands -draft -itersel %{
+        execute-keys <a-x>
         # remove trailing white spaces
-        try %{ exec -draft s \h + $ <ret> d }
+        try %{ execute-keys -draft s \h + $ <ret> d }
     }
 }
 
-def -hidden coffee-indent-on-new-line %{
-    eval -draft -itersel %{
+define-command -hidden coffee-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k <a-x> s '^\h*\K#\h*' <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s '^\h*\K#\h*' <ret> y gh j P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : coffee-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : coffee-filter-around-selections <ret> }
         # indent after start structure
-        try %{ exec -draft k <a-x> <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) \b | (=|->) $ <ret> j <a-gt> }
+        try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) \b | (=|->) $ <ret> j <a-gt> }
     }
 }
 

@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](hs) %{
-    set buffer filetype haskell
+    set-option buffer filetype haskell
 }
 
 # Highlighters
@@ -72,23 +72,23 @@ add-highlighter shared/haskell/code regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
 
 # http://en.wikibooks.org/wiki/Haskell/Indentation
 
-def -hidden haskell-filter-around-selections %{
+define-command -hidden haskell-filter-around-selections %{
     # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden haskell-indent-on-new-line %{
-    eval -draft -itersel %{
+define-command -hidden haskell-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # copy -- comments prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # align to first clause
-        try %{ exec -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|do|let|where)\h+\K.* <ret> s \A|.\z <ret> & }
+        try %{ execute-keys -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|do|let|where)\h+\K.* <ret> s \A|.\z <ret> & }
         # filter previous line
-        try %{ exec -draft k : haskell-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : haskell-filter-around-selections <ret> }
         # indent after lines beginning with condition or ending with expression or =(
-        try %{ exec -draft \; k x <a-k> ^\h*(if)|(case\h+[\w']+\h+of|do|let|where|[=(])$ <ret> j <a-gt> }
+        try %{ execute-keys -draft \; k x <a-k> ^\h*(if)|(case\h+[\w']+\h+of|do|let|where|[=(])$ <ret> j <a-gt> }
     }
 }
 
@@ -98,7 +98,7 @@ def -hidden haskell-indent-on-new-line %{
 hook -group haskell-highlight global WinSetOption filetype=haskell %{ add-highlighter window ref haskell }
 
 hook global WinSetOption filetype=haskell %{
-    set window extra_word_chars "'"
+    set-option window extra_word_chars "'"
     hook window InsertEnd  .* -group haskell-hooks  haskell-filter-around-selections
     hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
 }

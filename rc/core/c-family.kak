@@ -1,125 +1,125 @@
 hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H)$ %{
-    set buffer filetype cpp
+    set-option buffer filetype cpp
 }
 
 hook global BufSetOption filetype=c\+\+ %{
-    set buffer filetype cpp
+    set-option buffer filetype cpp
 }
 
 hook global BufCreate .*\.c$ %{
-    set buffer filetype c
+    set-option buffer filetype c
 }
 
 hook global BufCreate .*\.h$ %{
     try %{
-        exec -draft %{%s\b::\b|\btemplate\h*<lt>|\bclass\h+\w+|\b(typename|namespace)\b|\b(public|private|protected)\h*:<ret>}
-        set buffer filetype cpp
+        execute-keys -draft %{%s\b::\b|\btemplate\h*<lt>|\bclass\h+\w+|\b(typename|namespace)\b|\b(public|private|protected)\h*:<ret>}
+        set-option buffer filetype cpp
     } catch %{
-        set buffer filetype c
+        set-option buffer filetype c
     }
 }
 
 hook global BufCreate .*\.m %{
-    set buffer filetype objc
+    set-option buffer filetype objc
 }
 
-def -hidden c-family-trim-autoindent %[ eval -draft -itersel %[
+define-command -hidden c-family-trim-autoindent %[ evaluate-commands -draft -itersel %[
     # remove the line if it's empty when leaving the insert mode
-    try %[ exec <a-x> 1s^(\h+)$<ret> d ]
+    try %[ execute-keys <a-x> 1s^(\h+)$<ret> d ]
 ] ]
 
-def -hidden c-family-indent-on-newline %< eval -draft -itersel %<
-    exec \;
+define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -itersel %<
+    execute-keys \;
     try %<
         # if previous line closed a paren, copy indent of the opening paren line
-        exec -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?$<ret> m<a-\;>J s\A|.\z<ret> 1<a-&>
+        execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?$<ret> m<a-\;>J s\A|.\z<ret> 1<a-&>
     > catch %<
         # else indent new lines with the same level as the previous one
-        exec -draft K <a-&>
+        execute-keys -draft K <a-&>
     >
     # remove previous empty lines resulting from the automatic indent
-    try %< exec -draft k <a-x> <a-k>^\h+$<ret> Hd >
+    try %< execute-keys -draft k <a-x> <a-k>^\h+$<ret> Hd >
     # indent after an opening brace
-    try %< exec -draft k <a-x> s\{\h*$<ret> j <a-gt> >
+    try %< execute-keys -draft k <a-x> s\{\h*$<ret> j <a-gt> >
     # indent after a label
-    try %< exec -draft k <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> >
+    try %< execute-keys -draft k <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> >
     # indent after a statement not followed by an opening brace
-    try %< exec -draft k <a-x> <a-k>\b(if|else|for|while)\h*\(.+?\)\h*$<ret> j <a-gt> >
+    try %< execute-keys -draft k <a-x> <a-k>\b(if|else|for|while)\h*\(.+?\)\h*$<ret> j <a-gt> >
     # align to the opening parenthesis or opening brace (whichever is first)
     # on a previous line if its followed by text on the same line
-    try %< eval -draft %<
+    try %< evaluate-commands -draft %<
         # Go to opening parenthesis and opening brace, then select the most nested one
-        try %< try %< exec [bZ<a-\;>[B<a-z><gt> > catch %< exec [B > >
+        try %< try %< execute-keys [bZ<a-\;>[B<a-z><gt> > catch %< execute-keys [B > >
         # Validate selection and get first and last char
-        exec <a-k>\A[{(](\h*\S+)+\n<ret> <a-:><a-\;>L s\A|.\z<ret>
+        execute-keys <a-k>\A[{(](\h*\S+)+\n<ret> <a-:><a-\;>L s\A|.\z<ret>
         # Remove eventual indent from new line
-        try %< exec -draft <space> <a-h> s\h+<ret> d >
+        try %< execute-keys -draft <space> <a-h> s\h+<ret> d >
         # Now align that new line with the opening parenthesis/brace
-        exec &
+        execute-keys &
      > >
 > >
 
-def -hidden c-family-indent-on-opening-curly-brace %[
+define-command -hidden c-family-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
-    try %[ exec -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
+    try %[ execute-keys -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
 ]
 
-def -hidden c-family-indent-on-closing-curly-brace %[
+define-command -hidden c-family-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
-    try %[ exec -itersel -draft <a-h><a-:><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
+    try %[ execute-keys -itersel -draft <a-h><a-:><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-def -hidden c-family-insert-on-closing-curly-brace %[
+define-command -hidden c-family-insert-on-closing-curly-brace %[
     # add a semicolon after a closing brace if part of a class, union or struct definition
-    try %[ exec -itersel -draft hm<a-x>B<a-x><a-k>\A\h*(class|struct|union|enum)<ret> a\;<esc> ]
+    try %[ execute-keys -itersel -draft hm<a-x>B<a-x><a-k>\A\h*(class|struct|union|enum)<ret> a\;<esc> ]
 ]
 
-def -hidden c-family-insert-on-newline %[ eval -draft %[
-    exec \;
+define-command -hidden c-family-insert-on-newline %[ evaluate-commands -draft %[
+    execute-keys \;
     try %[
-        eval -draft %[
+        evaluate-commands -draft %[
             # copy the commenting prefix
-            exec -save-regs '' k <a-x>1s^\h*(//+\h*)<ret> y
+            execute-keys -save-regs '' k <a-x>1s^\h*(//+\h*)<ret> y
             try %[
                 # if the previous comment isn't empty, create a new one
-                exec <a-x><a-K>^\h*//+\h*$<ret> j<a-x>s^\h*<ret>P
+                execute-keys <a-x><a-K>^\h*//+\h*$<ret> j<a-x>s^\h*<ret>P
             ] catch %[
                 # if there is no text in the previous comment, remove it completely
-                exec d
+                execute-keys d
             ]
         ]
     ]
     try %[
         # if the previous line isn't within a comment scope, break
-        exec -draft k<a-x> <a-k>^(\h*/\*|\h+\*(?!/))<ret>
+        execute-keys -draft k<a-x> <a-k>^(\h*/\*|\h+\*(?!/))<ret>
 
         # find comment opening, validate it was not closed, and check its using star prefixes
-        exec -draft <a-?>/\*<ret><a-H> <a-K>\*/<ret> <a-k>\A\h*/\*([^\n]*\n\h*\*)*[^\n]*\n\h*.\z<ret>
+        execute-keys -draft <a-?>/\*<ret><a-H> <a-K>\*/<ret> <a-k>\A\h*/\*([^\n]*\n\h*\*)*[^\n]*\n\h*.\z<ret>
 
         try %[
             # if the previous line is opening the comment, insert star preceeded by space
-            exec -draft k<a-x><a-k>^\h*/\*<ret>
-            exec -draft i<space>*<space><esc>
+            execute-keys -draft k<a-x><a-k>^\h*/\*<ret>
+            execute-keys -draft i<space>*<space><esc>
         ] catch %[
            try %[
                 # if the next line is a comment line insert a star
-                exec -draft j<a-x><a-k>^\h+\*<ret>
-                exec -draft i*<space><esc>
+                execute-keys -draft j<a-x><a-k>^\h+\*<ret>
+                execute-keys -draft i*<space><esc>
             ] catch %[
                 try %[
                     # if the previous line is an empty comment line, close the comment scope
-                    exec -draft k<a-x><a-k>^\h+\*\h+$<ret> <a-x>1s\*(\h*)<ret>c/<esc>
+                    execute-keys -draft k<a-x><a-k>^\h+\*\h+$<ret> <a-x>1s\*(\h*)<ret>c/<esc>
                 ] catch %[
                     # if the previous line is a non-empty comment line, add a star
-                    exec -draft i*<space><esc>
+                    execute-keys -draft i*<space><esc>
                 ]
             ]
         ]
 
         # trim trailing whitespace on the previous line
-        try %[ exec -draft 1s(\h+)$<ret>d ]
+        try %[ execute-keys -draft 1s(\h+)$<ret>d ]
         # align the new star with the previous one
-        exec J<a-x>1s^[^*]*(\*)<ret>&
+        execute-keys J<a-x>1s^[^*]*(\*)<ret>&
     ]
 ] ]
 
@@ -161,7 +161,7 @@ add-highlighter shared/c/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=c %{
-        set window static_words '${keywords}:${attributes}:${types}:${values}'
+        set-option window static_words '${keywords}:${attributes}:${types}:${values}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -192,7 +192,7 @@ add-highlighter shared/cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=cpp %{
-        set window static_words '${keywords}:${attributes}:${types}:${values}'
+        set-option window static_words '${keywords}:${attributes}:${types}:${values}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -231,7 +231,7 @@ add-highlighter shared/objc/code regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:val
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=objc %{
-        set window static_words '${keywords}:${attributes}:${types}:${values}:${decorators}'
+        set-option window static_words '${keywords}:${attributes}:${types}:${values}:${decorators}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -278,20 +278,20 @@ hook -group cpp-highlight global WinSetOption filetype=(?!cpp).* %[ remove-highl
 hook -group objc-highlight global WinSetOption filetype=objc %[ add-highlighter window ref objc ]
 hook -group objc-highlight global WinSetOption filetype=(?!objc).* %[ remove-highlighter window/objc ]
 
-decl -docstring %{control the type of include guard to be inserted in empty headers
+declare-option -docstring %{control the type of include guard to be inserted in empty headers
 Can be one of the following:
  ifdef: old style ifndef/define guard
  pragma: newer type of guard using "pragma once"} \
     str c_include_guard_style "ifdef"
 
-def -hidden c-family-insert-include-guards %{
+define-command -hidden c-family-insert-include-guards %{
     %sh{
         case "${kak_opt_c_include_guard_style}" in
             ifdef)
-                echo 'exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>'
+                echo 'execute-keys ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>'
                 ;;
             pragma)
-                echo 'exec ggi#pragma<space>once<esc>'
+                echo 'execute-keys ggi#pragma<space>once<esc>'
                 ;;
             *);;
         esac
@@ -300,10 +300,10 @@ def -hidden c-family-insert-include-guards %{
 
 hook -group c-family-insert global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
 
-decl -docstring "colon separated list of path in which header files will be looked for" \
+declare-option -docstring "colon separated list of path in which header files will be looked for" \
     str-list alt_dirs ".:.."
 
-def c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
+define-command c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
     alt_dirs=$(printf %s\\n "${kak_opt_alt_dirs}" | tr ':' '\n')
     file="${kak_buffile##*/}"
     file_noext="${file%.*}"

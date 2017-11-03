@@ -2,7 +2,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*/?[mM]akefile %{
-    set buffer filetype makefile
+    set-option buffer filetype makefile
 }
 
 # Highlighters
@@ -10,10 +10,10 @@ hook global BufCreate .*/?[mM]akefile %{
 
 add-highlighter shared/ regions -default content makefile \
    comment '#' '$' '' \
-   eval '\$\(' '\)' '\('
+   evaluate-commands '\$\(' '\)' '\('
 
 add-highlighter shared/makefile/comment fill comment
-add-highlighter shared/makefile/eval fill value
+add-highlighter shared/makefile/evaluate-commands fill value
 
 add-highlighter shared/makefile/content regex ^[\w.%-]+\h*:\s 0:variable
 add-highlighter shared/makefile/content regex [+?:]= 0:operator
@@ -24,7 +24,7 @@ add-highlighter shared/makefile/content regex [+?:]= 0:operator
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=makefile %{
-        set window static_words '${keywords}'
+        set-option window static_words '${keywords}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -34,16 +34,16 @@ add-highlighter shared/makefile/content regex [+?:]= 0:operator
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden makefile-indent-on-new-line %{
-    eval -draft -itersel %{
+define-command -hidden makefile-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft \;K<a-&> }
+        try %{ execute-keys -draft \;K<a-&> }
         ## If the line above is a target indent with a tab
-        try %{ exec -draft Z k<a-x> <a-k>^[^:]+:\s<ret> z i<tab> }
+        try %{ execute-keys -draft Z k<a-x> <a-k>^[^:]+:\s<ret> z i<tab> }
         # cleanup trailing white space son previous line
-        try %{ exec -draft k<a-x> s \h+$ <ret>d }
+        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
         # indent after some keywords
-        try %{ exec -draft Z k<a-x> <a-k> ^\h*(ifeq|ifneq|ifdef|ifndef|else|define)\b<ret> z <a-gt> }
+        try %{ execute-keys -draft Z k<a-x> <a-k> ^\h*(ifeq|ifneq|ifdef|ifndef|else|define)\b<ret> z <a-gt> }
     }
 }
 

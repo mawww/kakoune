@@ -16,14 +16,14 @@
 # Auto-completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-decl -hidden str go_complete_tmp_dir
-decl -hidden completions gocode_completions
+declare-option -hidden str go_complete_tmp_dir
+declare-option -hidden completions gocode_completions
 
-def go-complete -docstring "Complete the current selection with gocode" %{
+define-command go-complete -docstring "Complete the current selection with gocode" %{
     %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-go.XXXXXXXX)
-        printf %s\\n "set buffer go_complete_tmp_dir ${dir}"
-        printf %s\\n "eval -no-hooks write ${dir}/buf"
+        printf %s\\n "set-option buffer go_complete_tmp_dir ${dir}"
+        printf %s\\n "evaluate-commands -no-hooks write ${dir}/buf"
     }
     %sh{
         dir=${kak_opt_go_complete_tmp_dir}
@@ -34,24 +34,24 @@ def go-complete -docstring "Complete the current selection with gocode" %{
 
             header="${kak_cursor_line}.$((${kak_cursor_column} - $column_offset))@${kak_timestamp}"
             compl=$(echo "${gocode_data}" | sed 1d | awk -F ",," '{print $2 "||" $1}' | paste -s -d: -)
-            printf %s\\n "eval -client '${kak_client}' %{
-                set buffer=${kak_bufname} gocode_completions '${header}:${compl}'
+            printf %s\\n "evaluate-commands -client '${kak_client}' %{
+                set-option buffer=${kak_bufname} gocode_completions '${header}:${compl}'
             }" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
 
-def go-enable-autocomplete -docstring "Add gocode completion candidates to the completer" %{
-    set window completers "option=gocode_completions:%opt{completers}"
+define-command go-enable-autocomplete -docstring "Add gocode completion candidates to the completer" %{
+    set-option window completers "option=gocode_completions:%opt{completers}"
     hook window -group go-autocomplete InsertIdle .* %{ try %{
-        exec -draft <a-h><a-k>[\w\.].\z<ret>
+        execute-keys -draft <a-h><a-k>[\w\.].\z<ret>
         go-complete
     } }
     alias window complete go-complete
 }
 
-def go-disable-autocomplete -docstring "Disable gocode completion" %{
-    set window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed 's/option=gocode_completions://g' }
+define-command go-disable-autocomplete -docstring "Disable gocode completion" %{
+    set-option window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed 's/option=gocode_completions://g' }
     remove-hooks window go-autocomplete
     unalias window complete go-complete
 }
@@ -59,14 +59,14 @@ def go-disable-autocomplete -docstring "Disable gocode completion" %{
 # Auto-format
 # ‾‾‾‾‾‾‾‾‾‾‾
 
-decl -hidden str go_format_tmp_dir
+declare-option -hidden str go_format_tmp_dir
 
-def -params ..1 go-format \
+define-command -params ..1 go-format \
     -docstring "go-format [-use-goimports]: custom formatter for go files" %{
     %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-go.XXXXXXXX)
-        printf %s\\n "set buffer go_format_tmp_dir ${dir}"
-        printf %s\\n "eval -no-hooks write ${dir}/buf"
+        printf %s\\n "set-option buffer go_format_tmp_dir ${dir}"
+        printf %s\\n "evaluate-commands -no-hooks write ${dir}/buf"
     }
     %sh{
         dir=${kak_opt_go_format_tmp_dir}
@@ -90,14 +90,14 @@ def -params ..1 go-format \
 # Documentation
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-decl -hidden str go_doc_tmp_dir
+declare-option -hidden str go_doc_tmp_dir
 
 # FIXME text escaping
-def -hidden -params 1..2 gogetdoc-cmd %{
+define-command -hidden -params 1..2 gogetdoc-cmd %{
    %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-go.XXXXXXXX)
-        printf %s\\n "set buffer go_doc_tmp_dir ${dir}"
-        printf %s\\n "eval -no-hooks write ${dir}/buf"
+        printf %s\\n "set-option buffer go_doc_tmp_dir ${dir}"
+        printf %s\\n "evaluate-commands -no-hooks write ${dir}/buf"
     }
     %sh{
         dir=${kak_opt_go_doc_tmp_dir}
@@ -119,12 +119,12 @@ def -hidden -params 1..2 gogetdoc-cmd %{
             case "$1" in
                 "info")
                     if [ ${status} -eq 0 ]; then
-                        printf %s\\n "eval -client '${kak_client}' %{
+                        printf %s\\n "evaluate-commands -client '${kak_client}' %{
                             info -anchor ${kak_cursor_line}.${kak_cursor_column} %@${output}@
                         }" | kak -p ${kak_session}
                     else
                         msg=$(printf %s "${output}" | cut -d' ' -f2-)
-                        printf %s\\n "eval -client '${kak_client}' %{
+                        printf %s\\n "evaluate-commands -client '${kak_client}' %{
                             echo '${msg}'
                         }" | kak -p ${kak_session}
                     fi
@@ -132,7 +132,7 @@ def -hidden -params 1..2 gogetdoc-cmd %{
         	"echo")
                     if [ ${status} -eq 0 ]; then
                         signature=$(printf %s "${output}" | sed -n 3p)
-                        printf %s\\n "eval -client '${kak_client}' %{
+                        printf %s\\n "evaluate-commands -client '${kak_client}' %{
                             echo '${signature}'
                         }" | kak -p ${kak_session}
                     fi
@@ -143,14 +143,14 @@ def -hidden -params 1..2 gogetdoc-cmd %{
                         file=$(printf %s "${pos}" | cut -d: -f1)
                         line=$(printf %s "${pos}" | cut -d: -f2)
                         col=$(printf %s "${pos}" | cut -d: -f3)
-                        printf %s\\n "eval -client '${kak_client}' %{
-                            eval -try-client '${kak_opt_jumpclient}' edit -existing ${file} ${line} ${col}
+                        printf %s\\n "evaluate-commands -client '${kak_client}' %{
+                            evaluate-commands -try-client '${kak_opt_jumpclient}' edit -existing ${file} ${line} ${col}
                             try %{ focus '${kak_opt_jumpclient}' }
                         }" | kak -p ${kak_session}
                     fi
                     ;;
                 *)
-                        printf %s\\n "eval -client '${kak_client}' %{
+                        printf %s\\n "evaluate-commands -client '${kak_client}' %{
                             echo -error %{unkown command '$1'}
                         }" | kak -p ${kak_session}
                     ;;
@@ -160,19 +160,19 @@ def -hidden -params 1..2 gogetdoc-cmd %{
     }
 }
 
-def go-doc-info -docstring "Show the documention of the symbol under the cursor" %{
+define-command go-doc-info -docstring "Show the documention of the symbol under the cursor" %{
     gogetdoc-cmd "info"
 }
 
-def go-print-signature -docstring "Print the signature of the symbol under the cursor" %{
+define-command go-print-signature -docstring "Print the signature of the symbol under the cursor" %{
     gogetdoc-cmd "echo"
 }
 
-def go-jump -docstring "Jump to the symbol definition" %{
+define-command go-jump -docstring "Jump to the symbol definition" %{
     gogetdoc-cmd "jump" 1
 }
 
-def go-share-selection -docstring "Share the selection using the Go Playground" %{ %sh{
+define-command go-share-selection -docstring "Share the selection using the Go Playground" %{ %sh{
     snippet_id=$(printf %s\\n "${kak_selection}" | curl -s https://play.golang.org/share --data-binary @-)
     printf "echo https://play.golang.org/p/%s" ${snippet_id}
 } }

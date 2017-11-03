@@ -5,11 +5,11 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*\.html %{
-    set buffer filetype html
+    set-option buffer filetype html
 }
 
 hook global BufCreate .*\.xml %{
-    set buffer filetype xml
+    set-option buffer filetype xml
 }
 
 # Highlighters
@@ -39,26 +39,26 @@ add-highlighter shared/html/tag/content/string fill string
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden html-filter-around-selections %{
+define-command -hidden html-filter-around-selections %{
     # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden html-indent-on-greater-than %[
-    eval -draft -itersel %[
+define-command -hidden html-indent-on-greater-than %[
+    evaluate-commands -draft -itersel %[
         # align closing tag to opening when alone on a line
-        try %[ exec -draft <space> <a-h> s ^\h+<lt>/(\w+)<gt>$ <ret> {c<lt><c-r>1,<lt>/<c-r>1<gt> <ret> s \A|.\z <ret> 1<a-&> ]
+        try %[ execute-keys -draft <space> <a-h> s ^\h+<lt>/(\w+)<gt>$ <ret> {c<lt><c-r>1,<lt>/<c-r>1<gt> <ret> s \A|.\z <ret> 1<a-&> ]
     ]
 ]
 
-def -hidden html-indent-on-new-line %{
-    eval -draft -itersel %{
+define-command -hidden html-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : html-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : html-filter-around-selections <ret> }
         # indent after lines ending with opening tag
-        try %{ exec -draft k <a-x> <a-k> <[^/][^>]+>$ <ret> j <a-gt> }
+        try %{ execute-keys -draft k <a-x> <a-k> <[^/][^>]+>$ <ret> j <a-gt> }
     }
 }
 

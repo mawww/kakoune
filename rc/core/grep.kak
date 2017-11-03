@@ -1,10 +1,10 @@
-decl -docstring "shell command run to search for subtext in a file/directory" \
+declare-option -docstring "shell command run to search for subtext in a file/directory" \
     str grepcmd 'grep -RHn'
-decl -docstring "name of the client in which utilities display information" \
+declare-option -docstring "name of the client in which utilities display information" \
     str toolsclient
-decl -hidden int grep_current_line 0
+declare-option -hidden int grep_current_line 0
 
-def -params .. -file-completion \
+define-command -params .. -file-completion \
     -docstring %{grep [<arguments>]: grep utility wrapper
 All the optional arguments are forwarded to the grep utility} \
     grep %{ %sh{
@@ -16,10 +16,10 @@ All the optional arguments are forwarded to the grep utility} \
          ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
      fi
 
-     printf %s\\n "eval -try-client '$kak_opt_toolsclient' %{
+     printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
                edit! -fifo ${output} -scroll *grep*
-               set buffer filetype grep
-               set buffer grep_current_line 0
+               set-option buffer filetype grep
+               set-option buffer grep_current_line 0
                hook -group fifo buffer BufCloseFifo .* %{
                    nop %sh{ rm -r $(dirname ${output}) }
                    remove-hooks buffer fifo
@@ -43,38 +43,38 @@ hook global WinSetOption filetype=(?!grep).* %{
     remove-hooks buffer grep-hooks
 }
 
-decl -docstring "name of the client in which all source code jumps will be executed" \
+declare-option -docstring "name of the client in which all source code jumps will be executed" \
     str jumpclient
 
-def -hidden grep-jump %{
-    eval -collapse-jumps %{
+define-command -hidden grep-jump %{
+    evaluate-commands -collapse-jumps %{
         try %{
-            exec '<a-x>s^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
-            set buffer grep_current_line %val{cursor_line}
-            eval -try-client %opt{jumpclient} edit -existing %reg{1} %reg{2} %reg{3}
+            execute-keys '<a-x>s^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
+            set-option buffer grep_current_line %val{cursor_line}
+            evaluate-commands -try-client %opt{jumpclient} edit -existing %reg{1} %reg{2} %reg{3}
             try %{ focus %opt{jumpclient} }
         }
     }
 }
 
-def grep-next-match -docstring 'Jump to the next grep match' %{
-    eval -collapse-jumps -try-client %opt{jumpclient} %{
+define-command grep-next-match -docstring 'Jump to the next grep match' %{
+    evaluate-commands -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
         # First jump to enf of buffer so that if grep_current_line == 0
         # 0g<a-l> will be a no-op and we'll jump to the first result.
         # Yeah, thats ugly...
-        exec "ge %opt{grep_current_line}g<a-l> /^[^:]+:\d+:<ret>"
+        execute-keys "ge %opt{grep_current_line}g<a-l> /^[^:]+:\d+:<ret>"
         grep-jump
     }
-    try %{ eval -client %opt{toolsclient} %{ exec gg %opt{grep_current_line}g } }
+    try %{ evaluate-commands -client %opt{toolsclient} %{ execute-keys gg %opt{grep_current_line}g } }
 }
 
-def grep-previous-match -docstring 'Jump to the previous grep match' %{
-    eval -collapse-jumps -try-client %opt{jumpclient} %{
+define-command grep-previous-match -docstring 'Jump to the previous grep match' %{
+    evaluate-commands -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
         # See comment in grep-next-match
-        exec "ge %opt{grep_current_line}g<a-h> <a-/>^[^:]+:\d+:<ret>"
+        execute-keys "ge %opt{grep_current_line}g<a-h> <a-/>^[^:]+:\d+:<ret>"
         grep-jump
     }
-    try %{ eval -client %opt{toolsclient} %{ exec gg %opt{grep_current_line}g } }
+    try %{ evaluate-commands -client %opt{toolsclient} %{ execute-keys gg %opt{grep_current_line}g } }
 }

@@ -7,7 +7,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](cljs?) %{
-    set buffer filetype clojure
+    set-option buffer filetype clojure
 }
 
 # Highlighters
@@ -22,8 +22,8 @@ add-highlighter shared/clojure regex \b(clojure.core/['/\w]+)\b 0:keyword
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden clojure-filter-around-selections lisp-filter-around-selections
-def -hidden clojure-indent-on-new-line       lisp-indent-on-new-line
+define-command -hidden clojure-filter-around-selections lisp-filter-around-selections
+define-command -hidden clojure-indent-on-new-line       lisp-indent-on-new-line
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾

@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](markdown|md|mkd) %{
-    set buffer filetype markdown
+    set-option buffer filetype markdown
 }
 
 # Highlighters
@@ -123,14 +123,14 @@ add-highlighter shared/markdown/content regex \H\K\h\h$ 0:PrimarySelection
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden markdown-indent-on-new-line %{
-    eval -draft -itersel %{
+define-command -hidden markdown-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # copy block quote(s), list item prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*\K((>\h*)+([*+-]\h)?|(>\h*)*[*+-]\h)\h* <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K((>\h*)+([*+-]\h)?|(>\h*)*[*+-]\h)\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # remove trailing white spaces
-        try %{ exec -draft -itersel %{ k<a-x> s \h+$ <ret> d } }
+        try %{ execute-keys -draft -itersel %{ k<a-x> s \h+$ <ret> d } }
     }
 }
 

@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](sass) %{
-    set buffer filetype sass
+    set-option buffer filetype sass
 }
 
 # Highlighters
@@ -29,21 +29,21 @@ add-highlighter shared/sass/code regex !important 0:keyword
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden sass-filter-around-selections %{
+define-command -hidden sass-filter-around-selections %{
     # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden sass-indent-on-new-line %{
-    eval -draft -itersel %{
+define-command -hidden sass-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # copy '/' comment prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*\K/\h* <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : sass-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : sass-filter-around-selections <ret> }
         # avoid indent after properties and comments
-        try %{ exec -draft k <a-x> <a-K> [:/] <ret> j <a-gt> }
+        try %{ execute-keys -draft k <a-x> <a-K> [:/] <ret> j <a-gt> }
     }
 }
 

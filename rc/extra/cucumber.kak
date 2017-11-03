@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](feature|story) %{
-    set buffer filetype cucumber
+    set-option buffer filetype cucumber
 }
 
 # Highlighters
@@ -56,21 +56,21 @@ add-highlighter shared/cucumber/code regex \b(Feature|Business\h+Need|Ability|Ba
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden cucumber-filter-around-selections %{
+define-command -hidden cucumber-filter-around-selections %{
     # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden cucumber-indent-on-new-line %{
-    eval -draft -itersel %{
+define-command -hidden cucumber-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : cucumber-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : cucumber-filter-around-selections <ret> }
         # indent after lines containing :
-        try %{ exec -draft <space> k x <a-k> : <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> : <ret> j <a-gt> }
     }
 }
 

@@ -1,7 +1,7 @@
 # Detection
 # ---------
 hook global BufCreate .*\.(s|S|asm)$ %{
-    set buffer filetype gas
+    set-option buffer filetype gas
 }
 
 
@@ -66,22 +66,22 @@ add-highlighter shared/gas/code regex \
 ^\h*(cvttp[ds]2dq|cvttp[ds]2pi|cvtts[ds]2si)\b|\
 ^\h*(vxorp[sd]|vandp[sd]|ucomis[sd])\b 0:keyword
 
-def -hidden gas-filter-around-selections %{
-    eval -draft -itersel %{
-        exec <a-x>
+define-command -hidden gas-filter-around-selections %{
+    evaluate-commands -draft -itersel %{
+        execute-keys <a-x>
         # remove trailing white spaces
-        try %{ exec -draft s \h+$ <ret> d }
+        try %{ execute-keys -draft s \h+$ <ret> d }
     }
 }
 
-def -hidden gas-indent-on-new-line %~
-    eval -draft -itersel %<
+define-command -hidden gas-indent-on-new-line %~
+    evaluate-commands -draft -itersel %<
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ exec -draft k : gas-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : gas-filter-around-selections <ret> }
         # indent after label
-        try %[ exec -draft k <a-x> <a-k> :$ <ret> j <a-gt> ]
+        try %[ execute-keys -draft k <a-x> <a-k> :$ <ret> j <a-gt> ]
     >
 ~
 

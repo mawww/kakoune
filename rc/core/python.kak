@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](py) %{
-    set buffer filetype python
+    set-option buffer filetype python
 }
 
 # Highlighters & Completion
@@ -42,7 +42,7 @@ add-highlighter shared/python/comment       fill comment
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=python %{
-        set window static_words '${values}:${meta}:${keywords}:${types}:${functions}'
+        set-option window static_words '${values}:${meta}:${keywords}:${types}:${functions}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -63,16 +63,16 @@ add-highlighter shared/python/comment       fill comment
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden python-indent-on-new-line %{
-    eval -draft -itersel %{
+define-command -hidden python-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
+        try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ execute-keys -draft \; K <a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ exec -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with :
-        try %{ exec -draft <space> k x <a-k> :$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> :$ <ret> j <a-gt> }
     }
 }
 
@@ -84,7 +84,7 @@ hook -group python-highlight global WinSetOption filetype=python %{ add-highligh
 hook global WinSetOption filetype=python %{
     hook window InsertChar \n -group python-indent python-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window InsertEnd .* -group python-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
+    hook window InsertEnd .* -group python-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
 }
 
 hook -group python-highlight global WinSetOption filetype=(?!python).* %{ remove-highlighter window/python }

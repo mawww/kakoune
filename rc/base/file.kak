@@ -10,7 +10,7 @@ hook global BufOpenFile .* %{ %sh{
             text/*)   filetype="${mime#text/}" ;;
         esac
         if [ -n "${filetype}" ]; then
-            printf "set buffer filetype '%s'\n" "${filetype}"
+            printf "set-option buffer filetype '%s'\n" "${filetype}"
         fi
     fi
 } }

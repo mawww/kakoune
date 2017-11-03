@@ -7,7 +7,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*Dockerfile %{
-    set buffer filetype dockerfile
+    set-option buffer filetype dockerfile
 }
 
 # Highlighters

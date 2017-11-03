@@ -1,7 +1,7 @@
-decl -docstring "name of the client in which documentation is to be displayed" \
+declare-option -docstring "name of the client in which documentation is to be displayed" \
     str docsclient
 
-decl -hidden str manpage
+declare-option -hidden str manpage
 
 hook -group man-highlight global WinSetOption filetype=man %{
     add-highlighter window group man-highlight
@@ -27,7 +27,7 @@ hook global WinSetOption filetype=(?!man).* %{
     remove-hooks window man-hooks
 }
 
-def -hidden -params 1..2 man-impl %{ %sh{
+define-command -hidden -params 1..2 man-impl %{ %sh{
     manout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
     colout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
     MANWIDTH=${kak_window_width} man "$@" > $manout 2>/dev/null
@@ -37,10 +37,10 @@ def -hidden -params 1..2 man-impl %{ %sh{
     if [ "${retval}" -eq 0 ]; then
         printf %s\\n "
                 edit -scratch '*man*'
-                exec '%|cat<space>${colout}<ret>gk'
+                execute-keys '%|cat<space>${colout}<ret>gk'
                 nop %sh{rm ${colout}}
-                set buffer filetype man
-                set window manpage '$@'
+                set-option buffer filetype man
+                set-option window manpage '$@'
         "
     else
        printf %s\\n "echo -markup %{{Error}man '$@' failed: see *debug* buffer for details}"
@@ -48,7 +48,7 @@ def -hidden -params 1..2 man-impl %{ %sh{
     fi
 } }
 
-def -params ..1 \
+define-command -params ..1 \
   -shell-completion %{
     prefix=$(printf %s\\n "$1" | cut -c1-${kak_pos_in_token} 2>/dev/null)
     for page in /usr/share/man/*/${prefix}*.[1-8]*; do
@@ -75,5 +75,5 @@ The page can be a word, or a word directly followed by a section number between 
             ;;
     esac
 
-    printf %s\\n "eval -collapse-jumps -try-client %opt{docsclient} man-impl $pagenum $subject"
+    printf %s\\n "evaluate-commands -collapse-jumps -try-client %opt{docsclient} man-impl $pagenum $subject"
 } }

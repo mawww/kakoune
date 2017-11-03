@@ -4,13 +4,13 @@
 # Faces
 # ‾‾‾‾‾
 
-face MercurialCommitComment cyan
+set-face MercurialCommitComment cyan
 
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*hg-editor-\w+\.txt$ %{
-    set buffer filetype hg-commit
+    set-option buffer filetype hg-commit
 }
 
 hook -group hg-commit-highlight global WinSetOption filetype=(?!hg-commit).* %{

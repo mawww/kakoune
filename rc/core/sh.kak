@@ -1,5 +1,5 @@
 hook global BufCreate .*\.(z|ba|c|k|mk)?sh(rc|_profile)? %{
-    set buffer filetype sh
+    set-option buffer filetype sh
 }
 
 add-highlighter shared/ regions -default code -match-capture sh \
@@ -23,7 +23,7 @@ add-highlighter shared/sh/heredoc fill string
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=sh %{
-        set window static_words '${keywords}'
+        set-option window static_words '${keywords}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords

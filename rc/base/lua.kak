@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](lua) %{
-    set buffer filetype lua
+    set-option buffer filetype lua
 }
 
 # Highlighters
@@ -26,7 +26,7 @@ add-highlighter shared/lua/code regex \b(and|break|do|else|elseif|end|false|for|
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def lua-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
+define-command lua-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
     case $kak_buffile in
         *spec/*_spec.lua)
             altfile=$(eval printf %s\\n $(printf %s\\n $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
@@ -51,40 +51,40 @@ def lua-alternative-file -docstring 'Jump to the alternate file (implementation 
     printf %s\\n "edit $altfile"
 }}
 
-def -hidden lua-filter-around-selections %{
-    eval -no-hooks -draft -itersel %{
+define-command -hidden lua-filter-around-selections %{
+    evaluate-commands -no-hooks -draft -itersel %{
         # remove trailing white spaces
-        try %{ exec -draft <a-x>s\h+$<ret>d }
+        try %{ execute-keys -draft <a-x>s\h+$<ret>d }
     }
 }
 
-def -hidden lua-indent-on-char %{
-    eval -no-hooks -draft -itersel %{
+define-command -hidden lua-indent-on-char %{
+    evaluate-commands -no-hooks -draft -itersel %{
         # align middle and end structures to start and indent when necessary, elseif is already covered by else
-        try %{ exec -draft <a-x><a-k>^\h*(else)$<ret><a-\;><a-?>^\h*(if)<ret>s\A|\z<ret>'<a-&> }
-        try %{ exec -draft <a-x><a-k>^\h*(end)$<ret><a-\;><a-?>^\h*(for|function|if|while)<ret>s\A|\z<ret>'<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-\;><a-?>^\h*(if)<ret>s\A|\z<ret>'<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-\;><a-?>^\h*(for|function|if|while)<ret>s\A|\z<ret>'<a-&> }
     }
 }
 
-def -hidden lua-indent-on-new-line %{
-    eval -no-hooks -draft -itersel %{
+define-command -hidden lua-indent-on-new-line %{
+    evaluate-commands -no-hooks -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft <space>K<a-&> }
+        try %{ execute-keys -draft <space>K<a-&> }
         # filter previous line
-        try %{ exec -draft k:lua-filter-around-selections<ret> }
+        try %{ execute-keys -draft k:lua-filter-around-selections<ret> }
         # indent after start structure
-        try %{ exec -draft k<a-x><a-k>^\h*(else|elseif|for|function|if|while)\b<ret>j<a-gt> }
+        try %{ execute-keys -draft k<a-x><a-k>^\h*(else|elseif|for|function|if|while)\b<ret>j<a-gt> }
     }
 }
 
-def -hidden lua-insert-on-new-line %{
-    eval -no-hooks -draft -itersel %{
+define-command -hidden lua-insert-on-new-line %{
+    evaluate-commands -no-hooks -draft -itersel %{
         # copy -- comment prefix and following white spaces
-        try %{ exec -draft k<a-x>s^\h*\K--\h*<ret>yghjP }
+        try %{ execute-keys -draft k<a-x>s^\h*\K--\h*<ret>yghjP }
         # wisely add end structure
-        eval -save-regs x %{
-            try %{ exec -draft k<a-x>s^\h+<ret>"xy } catch %{ reg x '' }
-            try %{ exec -draft k<a-x><a-k>^<c-r>x(for|function|if|while)<ret>j<a-a>iX<a-\;>K<a-K>^<c-r>x(for|function|if|while).*\n<c-r>x(else|end|elseif[^\n]*)$<ret>jxypjaend<esc><a-lt> }
+        evaluate-commands -save-regs x %{
+            try %{ execute-keys -draft k<a-x>s^\h+<ret>"xy } catch %{ reg x '' }
+            try %{ execute-keys -draft k<a-x><a-k>^<c-r>x(for|function|if|while)<ret>j<a-a>iX<a-\;>K<a-K>^<c-r>x(for|function|if|while).*\n<c-r>x(else|end|elseif[^\n]*)$<ret>jxypjaend<esc><a-lt> }
         }
     }
 }

@@ -7,7 +7,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](scss) %{
-    set buffer filetype scss
+    set-option buffer filetype scss
 }
 
 # Highlighters
@@ -25,9 +25,9 @@ add-highlighter shared/scss/core regex @[A-Za-z][A-Za-z0-9_-]* 0:meta
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden scss-filter-around-selections      css-filter-around-selections
-def -hidden scss-indent-on-new-line            css-indent-on-new-line
-def -hidden scss-indent-on-closing-curly-brace css-indent-on-closing-curly-brace
+define-command -hidden scss-filter-around-selections      css-filter-around-selections
+define-command -hidden scss-indent-on-new-line            css-indent-on-new-line
+define-command -hidden scss-indent-on-closing-curly-brace css-indent-on-closing-curly-brace
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾

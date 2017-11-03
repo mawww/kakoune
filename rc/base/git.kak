@@ -1,5 +1,5 @@
 hook global BufCreate .*(COMMIT_EDITMSG|MERGE_MSG) %{
-    set buffer filetype git-commit
+    set-option buffer filetype git-commit
 }
 
 hook -group git-commit-highlight global WinSetOption filetype=git-commit %{
@@ -12,7 +12,7 @@ hook -group git-commit-highlight global WinSetOption filetype=git-commit %{
 hook -group git-commit-highlight global WinSetOption filetype=(?!git-commit).* %{ remove-highlighter window/git-commit-highlight }
 
 hook global BufCreate .*git-rebase-todo %{
-    set buffer filetype git-rebase
+    set-option buffer filetype git-rebase
 }
 
 hook -group git-rebase-highlight global WinSetOption filetype=git-rebase %{

@@ -5,7 +5,7 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate (.+/)?[Tt]upfile %{
-    set buffer filetype tupfile
+    set-option buffer filetype tupfile
 }
 
 # Highlighters

@@ -1,5 +1,5 @@
 hook global BufCreate .+\.eml %{
-    set buffer filetype mail
+    set-option buffer filetype mail
 }
 
 add-highlighter shared/ group mail
