@@ -531,7 +531,10 @@ static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    if (find(session, '/')!= session.end())
+    auto slash_count = std::count(session.begin(), session.end(), '/');
+    if (slash_count > 1)
+        throw runtime_error{"Session names are either <user>/<name> or <name>"};
+    else if (slash_count == 1)
         format_to(addr.sun_path, "{}/kakoune/{}", tmpdir(), session);
     else
         format_to(addr.sun_path, "{}/kakoune/{}/{}", tmpdir(),
@@ -766,6 +769,9 @@ private:
 Server::Server(String session_name)
     : m_session{std::move(session_name)}
 {
+    if (contains(m_session, '/'))
+        throw runtime_error{"Cannot create sessions with '/' in their name"};
+
     int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
     sockaddr_un addr = session_addr(m_session);
