@@ -274,6 +274,14 @@ static void check_extra_word_chars(const Vector<Codepoint, MemoryDomain::Options
         throw runtime_error{"blanks are not accepted for extra completion characters"};
 }
 
+static void check_matching_pairs(const Vector<Codepoint, MemoryDomain::Options>& pairs)
+{
+    if ((pairs.size() % 2) != 0)
+        throw runtime_error{"matching pairs should have a pair number of element"};
+    if (contains_that(pairs, [](Codepoint c) { return not is_punctuation(c); }))
+        throw runtime_error{"matching pairs can only be punctuation"};
+}
+
 void register_options()
 {
     OptionsRegistry& reg = GlobalScope::instance().option_registry();
@@ -345,6 +353,10 @@ void register_options()
         "extra_word_chars",
         "Additional characters to be considered as words for insert completion",
         {});
+    reg.declare_option<Vector<Codepoint, MemoryDomain::Options>, check_matching_pairs>(
+        "matching_pairs",
+        "set of pair of characters to be considered as matching pairs",
+        { '(', ')', '{', '}', '[', ']', '<', '>' });
 }
 
 static Client* local_client = nullptr;

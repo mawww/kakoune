@@ -192,7 +192,12 @@ are exclusively available to built-in options.
 
 *extra_word_chars* `codepoint-list`::
     a list of all additional codepoints that should be considered
-    as word character for the purpose of insert mode completion.
+    as word character.
+
+*matching_pairs* `codepoint-list`::
+    _default_ `(:):{:}:[:]:<:>`
+    a list of codepoints that are to be treated as matching pairs
+    for the *m* command.
 
 *autoreload* `enum(yes|no|ask)`::
     _default_ ask +

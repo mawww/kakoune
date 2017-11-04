@@ -124,7 +124,8 @@ is a sequence of non whitespace characters
     same as [ft] but in the other direction
 
 *m*::
-    select to matching character
+    select to matching character, see the `matching_pairs` options
+    in <<doc/pages/options#,`:doc options`>>
 
 *M*::
     extend selection to matching character

@@ -227,7 +227,7 @@ Optional<Selection>
 select_matching(const Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
-    ConstArrayView<Codepoint> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
+    auto& matching_pairs = context.options()["matching_pairs"].get<Vector<Codepoint, MemoryDomain::Options>>();
     Utf8Iterator it{buffer.iterator_at(selection.cursor()), buffer};
     auto match = matching_pairs.end();
     while (not is_eol(*it))
