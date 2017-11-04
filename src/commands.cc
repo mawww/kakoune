@@ -845,7 +845,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
         flags = CommandFlags::Hidden;
 
     const String& commands = parser[1];
-    Command cmd;
+    CommandFunc cmd;
     ParameterDesc desc;
     if (auto params = parser.get_switch("params"))
     {

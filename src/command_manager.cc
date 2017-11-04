@@ -22,14 +22,14 @@ bool CommandManager::command_defined(StringView command_name) const
 }
 
 void CommandManager::register_command(String command_name,
-                                      Command command,
+                                      CommandFunc func,
                                       String docstring,
                                       ParameterDesc param_desc,
                                       CommandFlags flags,
                                       CommandHelper helper,
                                       CommandCompleter completer)
 {
-    m_commands[command_name] = { std::move(command),
+    m_commands[command_name] = { std::move(func),
                                  std::move(docstring),
                                  std::move(param_desc),
                                  flags,
@@ -411,8 +411,8 @@ String expand(StringView str, const Context& context,
 
 struct command_not_found : runtime_error
 {
-    command_not_found(StringView command)
-        : runtime_error(command + " : no such command") {}
+    command_not_found(StringView name)
+        : runtime_error(name + " : no such command") {}
 };
 
 CommandManager::CommandMap::const_iterator
@@ -458,7 +458,7 @@ void CommandManager::execute_single_command(CommandParameters params,
     {
         ParametersParser parameter_parser(param_view,
                                           command_it->value.param_desc);
-        command_it->value.command(parameter_parser, context, shell_context);
+        command_it->value.func(parameter_parser, context, shell_context);
     }
     catch (runtime_error& error)
     {

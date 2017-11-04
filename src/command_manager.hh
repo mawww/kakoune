@@ -19,9 +19,9 @@ namespace Kakoune
 
 class Context;
 using CommandParameters = ConstArrayView<String>;
-using Command = std::function<void (const ParametersParser& parser,
-                                    Context& context,
-                                    const ShellContext& shell_context)>;
+using CommandFunc = std::function<void (const ParametersParser& parser,
+                                        Context& context,
+                                        const ShellContext& shell_context)>;
 
 using CommandCompleter = std::function<Completions (const Context& context,
                                                     CompletionFlags,
@@ -84,7 +84,7 @@ public:
 
     bool command_defined(StringView command_name) const;
 
-    void register_command(String command_name, Command command,
+    void register_command(String command_name, CommandFunc func,
                           String docstring,
                           ParameterDesc param_desc,
                           CommandFlags flags = CommandFlags::None,
@@ -101,16 +101,16 @@ private:
                                 const ShellContext& shell_context,
                                 DisplayCoord pos);
 
-    struct CommandDescriptor
+    struct Command
     {
-        Command command;
+        CommandFunc func;
         String docstring;
         ParameterDesc param_desc;
         CommandFlags flags;
         CommandHelper helper;
         CommandCompleter completer;
     };
-    using CommandMap = HashMap<String, CommandDescriptor, MemoryDomain::Commands>;
+    using CommandMap = HashMap<String, Command, MemoryDomain::Commands>;
     CommandMap m_commands;
     String m_last_complete_command;
     int m_command_depth = 0;
