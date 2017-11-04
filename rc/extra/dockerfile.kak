@@ -6,33 +6,40 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*Dockerfile %{
+hook global BufCreate .*/?Dockerfile(\.\w+)?$ %{
     set-option buffer filetype dockerfile
 }
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions dockerfile                                                                                             \
-    instruction '^(?i)(ONBUILD\h+)?(FROM|MAINTAINER|RUN|CMD|LABEL|EXPOSE|ENV|ADD|COPY|ENTRYPOINT|VOLUME|USER|WORKDIR)' '$' '' \
-    comment     '#'                                                                                                    '$' ''
+add-highlighter shared/ regions -default code dockerfile \
+    string '"' '(?<!\\)(\\\\)*"' '' \
+    string "'" "'"               '' \
+    comment '#' $ ''
 
-add-highlighter shared/dockerfile/instruction regex '^(?i)(ONBUILD\h+)?(FROM|MAINTAINER|RUN|CMD|LABEL|EXPOSE|ENV|ADD|COPY|ENTRYPOINT|VOLUME|USER|WORKDIR)' 0:keyword
+%sh{
+set -x
+    # Grammar
+    keywords="ADD|ARG|CMD|COPY|ENTRYPOINT|ENV|EXPOSE|FROM|HEALTHCHECK|LABEL"
+    keywords="${keywords}|MAINTAINER|RUN|SHELL|STOPSIGNAL|USER|VOLUME|WORKDIR"
 
-add-highlighter shared/dockerfile/instruction regions regions                           \
-    plain '^(?i)(ONBUILD\h+)?(LABEL|ENV)'                               '$' '' \
-    json  '^(?i)(ONBUILD\h+)?(RUN|CMD|ADD|COPY|ENTRYPOINT|VOLUME)\h+\[' \]  \[ \
-    sh    '^(?i)(ONBUILD\h+)?(RUN|CMD|ENTRYPOINT)\h+([A-Z/a-z])+'       '$' ''
+    # Add the language's grammar to the static completion list
+    printf %s\\n "hook global WinSetOption filetype=dockerfile %{
+        set window static_words 'ONBUILD|${keywords}'
+    }" | sed 's,|,:,g'
 
-add-highlighter shared/dockerfile/instruction/regions/plain regions regions \
-    string '"' '(?<!\\)(\\\\)*"' ''                                \
-    string "'" "'"               ''
+    # Highlight keywords
+    printf %s "
+        add-highlighter shared/dockerfile/code regex '^(?i)(ONBUILD\h+)?(${keywords})\b' 2:keyword
+        add-highlighter shared/dockerfile/code regex '^(?i)(ONBUILD)\h+' 1:keyword
+    "
+}
 
-add-highlighter shared/dockerfile/instruction/regions/plain/regions/string fill string
+add-highlighter shared/dockerfile/code regex '\$\{[\w_]+\}' 0:value
+add-highlighter shared/dockerfile/code regex '\$[\w_]+' 0:value
 
-add-highlighter shared/dockerfile/instruction/regions/json ref json
-add-highlighter shared/dockerfile/instruction/regions/sh   ref sh
-
+add-highlighter shared/dockerfile/string fill string
 add-highlighter shared/dockerfile/comment fill comment
 
 # Initialization
