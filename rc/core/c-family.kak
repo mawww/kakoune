@@ -180,16 +180,20 @@ add-highlighter shared/cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?
 
 %sh{
     # Grammar
-    keywords="alignas|alignof|and|and_eq|asm|break|case|catch|const_cast"
-    keywords="${keywords}|continue|decltype|default|delete|do|dynamic_cast"
-    keywords="${keywords}|else|explicit|for|goto|if|new|not|operator|or|or_eq"
-    keywords="${keywords}|reinterpret_cast|return|sizeof|static_cast|switch"
-    keywords="${keywords}|throw|try|using|while"
+    keywords="alignas|alignof|and|and_eq|asm|bitand|bitor|break|case|catch"
+    keywords="${keywords}|compl|const_cast|continue|decltype|default|delete"
+    keywords="${keywords}|do|dynamic_cast|else|explicit|for|goto|if|new|not"
+    keywords="${keywords}|not_eq|operator|or|or_eq|reinterpret_cast|return"
+    keywords="${keywords}|sizeof|static_assert|static_cast|switch|throw|try"
+    keywords="${keywords}|typeid|using|while|xor|xor_eq"
     attributes="auto|class|const|constexpr|enum|extern|final|friend|inline"
     attributes="${attributes}|mutable|namespace|noexcept|override|private"
-    attributes="${attributes}|protected|public|static|struct|template|typedef"
-    attributes="${attributes}|typename|union|virtual|volatile"
-    types="bool|char|double|float|int|long|short|signed|size_t|unsigned|void"
+    attributes="${attributes}|protected|public|register|static|struct|template"
+    attributes="${attributes}|thread_local|typedef|typename|union|virtual"
+    attributes="${attributes}|volatile"
+    types="bool|byte|char|char16_t|char32_t|double|float|int|long|max_align_t"
+    types="${types}|nullptr_t|ptrdiff_t|short|signed|size_t|unsigned|void"
+    types="${types}|wchar_t"
     values="NULL|false|nullptr|this|true"
 
     # Add the language's grammar to the static completion list
