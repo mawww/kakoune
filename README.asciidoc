@@ -781,7 +781,7 @@ Advanced topics
 ---------------
 
 Faces
------
+~~~~~
 
 See <<doc/pages/faces#,`:doc faces`>>.
 
