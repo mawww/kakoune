@@ -455,7 +455,7 @@ void command(Context& context, NormalParams params)
             {
                 if (cmdline.empty())
                     cmdline = context.main_sel_register_value(':');
-                else
+                else if (not is_blank(cmdline[0]))
                     RegisterManager::instance()[':'].set(context, cmdline.str());
 
                 EnvVarMap env_vars = {
