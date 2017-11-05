@@ -154,9 +154,11 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -draft %[
 add-highlighter shared/c/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 %sh{
     # Grammar
-    keywords="while|for|if|else|do|switch|case|default|goto|asm|break|continue|return|sizeof"
-    attributes="const|auto|register|inline|static|volatile|struct|enum|union|typedef|extern|restrict"
-    types="void|char|short|int|long|signed|unsigned|float|double|size_t"
+    keywords="asm|break|case|continue|default|do|else|for|goto|if|return"
+    keywords="${keywords}|sizeof|switch|while"
+    attributes="auto|const|enum|extern|inline|register|restrict|static|struct"
+    attributes="${attributes}|typedef|union|volatile"
+    types="char|double|float|int|long|short|signed|size_t|unsigned|void"
     values="NULL"
 
     # Add the language's grammar to the static completion list
@@ -178,17 +180,17 @@ add-highlighter shared/cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?
 
 %sh{
     # Grammar
-    keywords="while|for|if|else|do|switch|case|default|goto|asm|break|continue"
-    keywords="${keywords}|return|using|try|catch|throw|new|delete|and|and_eq|or"
-    keywords="${keywords}|or_eq|not|operator|explicit|reinterpret_cast"
-    keywords="${keywords}|const_cast|static_cast|dynamic_cast|sizeof|alignof"
-    keywords="${keywords}|alignas|decltype"
-    attributes="const|constexpr|mutable|auto|noexcept|namespace|inline|static"
-    attributes="${attributes}|volatile|class|struct|enum|union|public|protected"
-    attributes="${attributes}|private|template|typedef|virtual|friend|extern"
-    attributes="${attributes}|typename|override|final"
-    types="void|char|short|int|long|signed|unsigned|float|double|size_t|bool"
-    values="this|true|false|NULL|nullptr"
+    keywords="alignas|alignof|and|and_eq|asm|break|case|catch|const_cast"
+    keywords="${keywords}|continue|decltype|default|delete|do|dynamic_cast"
+    keywords="${keywords}|else|explicit|for|goto|if|new|not|operator|or|or_eq"
+    keywords="${keywords}|reinterpret_cast|return|sizeof|static_cast|switch"
+    keywords="${keywords}|throw|try|using|while"
+    attributes="auto|class|const|constexpr|enum|extern|final|friend|inline"
+    attributes="${attributes}|mutable|namespace|noexcept|override|private"
+    attributes="${attributes}|protected|public|static|struct|template|typedef"
+    attributes="${attributes}|typename|union|virtual|volatile"
+    types="bool|char|double|float|int|long|short|signed|size_t|unsigned|void"
+    values="NULL|false|nullptr|this|true"
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=cpp %{
@@ -219,15 +221,17 @@ add-highlighter shared/objc/code regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:val
 
 %sh{
     # Grammar
-    keywords="while|for|if|else|do|switch|case|default|goto|break|continue|return"
-    attributes="const|auto|inline|static|volatile|struct|enum|union|typedef"
-    attributes="${attributes}|extern|__block|nonatomic|assign|copy|strong"
-    attributes="${attributes}|retain|weak|readonly|IBAction|IBOutlet"
-    types="void|char|short|int|long|signed|unsigned|float|bool|size_t"
-    types="${types}|instancetype|BOOL|NSInteger|NSUInteger|CGFloat|NSString"
-    values="self|nil|id|super|TRUE|FALSE|YES|NO|NULL"
-    decorators="property|synthesize|interface|implementation|protocol|end"
-    decorators="${decorators}|selector|autoreleasepool|try|catch|class|synchronized"
+    keywords="break|case|continue|default|do|else|for|goto|if|return|switch"
+    keywords="${keywords}|while"
+    attributes="IBAction|IBOutlet|__block|assign|auto|const|copy|enum|extern"
+    attributes="${attributes}|inline|nonatomic|readonly|retain|static|strong"
+    attributes="${attributes}|struct|typedef|union|volatile|weak"
+    types="BOOL|CGFloat|NSInteger|NSString|NSUInteger|bool|char|float"
+    types="${types}|instancetype|int|long|short|signed|size_t|unsigned|void"
+    values="FALSE|NO|NULL|TRUE|YES|id|nil|self|super"
+    decorators="autoreleasepool|catch|class|end|implementation|interface"
+    decorators="${decorators}|property|protocol|selector|synchronized"
+    decorators="${decorators}|synthesize|try"
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=objc %{
