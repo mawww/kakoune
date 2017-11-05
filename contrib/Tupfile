@@ -16,7 +16,7 @@ static   = no
 suffix   = .opt
 
 CXX      = g++
-CXXFLAGS = -pedantic -std=gnu++11 -Wall -Wno-reorder -Wno-sign-compare -Wno-address
+CXXFLAGS = -pedantic -std=gnu++14 -Wall -Wno-unused-parameter -Wno-reorder -Wno-sign-compare -Wno-address -Wno-noexcept-type -Wno-unknown-attributes -Wno-unknown-warning-option
 CPPFLAGS =
 LDFLAGS  =
 LIBS     =
@@ -43,8 +43,8 @@ else
 		LIBS += -lncursesw -ldbghelp
 		CPPFLAGS += -D_XOPEN_SOURCE=700
 	else
-		LIBS += -lncursesw
-		CPPFLAGS += -I/usr/include/ncursesw
+		LIBS += `pkg-config --libs ncursesw`
+		CPPFLAGS += `pkg-config --cflags ncursesw`
 
 		ifeq ($(CXX),g++)
 			LDFLAGS += -rdynamic
