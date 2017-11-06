@@ -82,8 +82,6 @@ define-command -params 1 \
 An optional keyword argument can be passed to the function, which will be automatically selected in the documentation} %{
     %sh{
         readonly page="${kak_runtime}/doc/${1}.asciidoc"
-
-        shift
         if [ -f "${page}" ]; then
             printf %s\\n "evaluate-commands -try-client %opt{docsclient} doc-render ${page}"
         else
