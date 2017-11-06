@@ -33,7 +33,9 @@ struct missing_option_value: public parameter_error
 
 struct wrong_argument_count : public parameter_error
 {
-    wrong_argument_count() : parameter_error("wrong argument count") {}
+    wrong_argument_count(size_t count,size_t min, size_t max)
+        : parameter_error(format("wrong argument count - given: {}, expected: min {} max {}",
+                                  count, min, max)) {}
 };
 
 struct SwitchDesc
