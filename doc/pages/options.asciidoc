@@ -219,8 +219,8 @@ are exclusively available to built-in options.
 *modelinefmt* `string`::
     A format string used to generate the mode line, that string is
     first expanded as a command line would be (expanding '%...{...}'
-    strings), then markup tags are applied (c.f. the 'Expansions'
-    documentation page.)  Two special atoms are available as markup:
+    strings), then markup tags are applied (See <<expansions#,`:doc expansions`>>)
+    Two special atoms are available as markup:
 
         *`{{mode_info}}`*:::
             Information about the current mode, such as `insert 3 sel` or

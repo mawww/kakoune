@@ -38,15 +38,15 @@ Examples:
 
 *filetype*::
     A single buffer opened in two separate windows can have different
-    filetypes declared in the *window* scope with 'set' (c.f. the 'options'
-    documentation page)
+    filetypes declared in the *window* scope with 'set'.
+    (See <<options#,`:doc options`>>)
 
 *status line*::
     All the buffers of the current session can have the same information
     displayed in the status line, except for a specific buffer (the
     'modelinefmt' option can be declared in the *global* scope, and
-    customized in the *buffer* scope with 'set', c.f. the 'options'
-    documentation page)
+    customized in the *buffer* scope with 'set'.
+    (See <<options#,`:doc options`>>)
 
 == Execution context
 

@@ -44,7 +44,7 @@ The *unmap* command removes a mapping of *key* in the given *scope* and
 set to the same sequence of keys passed using the *expected* argument.
 
 For more information about the values of the *scope* parameter, refer to
-the 'scopes' documentation page.
+<<scopes#,`:doc scopes`>>.
 
 == Mappable keys
 
@@ -64,6 +64,9 @@ be used:
 
 *<a-x>*::
     Holding down Alt while pressing the *x* key.
+
+*<c-a-x>*::
+    Holding down Control and Alt while pressing the *x* key.
 
 *<lt>*, *<gt>*::
     The *<* and *>* characters.
@@ -92,8 +95,8 @@ be used:
 *<esc>*::
     The Escape key.
 
-*<up>*, *<down>*, *<left>*, *<right>*, *<pageup>*, *<pagedown>*, *<home>*::
-*<end>*::
+*<up>*, *<down>*, *<left>*, *<right>*::
+*<pageup>*, *<pagedown>*, *<home>*, *<end>*::
     The usual cursor-movement keys.
 
 *<f1>*, *<f2>*, ...*<f12>*::

@@ -7,10 +7,9 @@ keys. Non printable keys use an alternate name, written between *<*
 and *>*, such as *<esc>* or *<del>*. Modified keys are written between
 *<* and *>* as well, with the modifier specified as either *c* for
 Control, or *a* for Alt, followed by a *-* and the key (either its
-name or ascii character), for example *<c-x>*, *<a-space>*.
+name or ascii character), for example *<c-x>*, *<a-space>*, *<c-a-w>*.
 
-In order to bind some keys to arbitrary ones, refer to the 'mapping'
-documentation page.
+In order to bind some keys to arbitrary ones, refer to <<mapping#,`:doc mapping`>>
 
 == Insert mode
 
@@ -124,8 +123,8 @@ is a sequence of non whitespace characters
     same as [ft] but in the other direction
 
 *m*::
-    select to matching character, see the `matching_pairs` options
-    in <<doc/pages/options#,`:doc options`>>
+    select to matching character, see the `matching_pairs` option
+    in <<options#,`:doc options`>>
 
 *M*::
     extend selection to matching character
@@ -134,7 +133,8 @@ is a sequence of non whitespace characters
     select line on which selection end lies (or next line when end lies
     on an end-of-line)
 
-*X*:: similar to *x*, except the current selection is extended
+*X*::
+    similar to *x*, except the current selection is extended
 
 *<a-x>*::
     expand selections to contain full lines (including end-of-lines)
@@ -494,7 +494,6 @@ Searches use the */* register by default
     detection)
 
 == Jump list
-
 
 *<c-i>*::
     Jump forward
