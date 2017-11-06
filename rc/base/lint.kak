@@ -24,7 +24,7 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
 
         { # do the parsing in the background and when ready send to the session
 
-        evaluate-commands "$kak_opt_lintcmd '$dir'/buf" | sort -t: -k2,2 -n > "$dir"/stderr
+        eval "$kak_opt_lintcmd '$dir'/buf" | sort -t: -k2,2 -n > "$dir"/stderr
         printf '%s\n' "evaluate-commands -client $kak_client echo 'linting done'" | kak -p "$kak_session"
 
         # Flags for the gutter:
