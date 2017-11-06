@@ -46,9 +46,7 @@ define-command -params 1 -hidden doc-render %{
 
 define-command -params 1 \
     -shell-candidates %{
-        find "${kak_runtime}/doc/" -type f -name "*.asciidoc" | while read l; do
-            basename "${l%.*}"
-        done
+        find "${kak_runtime}/doc/" -type f -name "*.asciidoc" | sed 's,.*/,,; s/\.[^/]*$//'
     } \
     doc -docstring %{doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
 An optional keyword argument can be passed to the function, which will be automatically selected in the documentation} %{
