@@ -88,8 +88,8 @@ not fit the paradigm that Kakoune implements, which is based on selections
 first.
 
 However, you can easily declare key mappings in your configuration file
-to be able to use those control-based shortcuts in insert mode (c.f. the
-"map" command in the "commands" documentation page).
+to be able to use those control-based shortcuts in insert mode.
+(See <<mapping#,`:doc mapping`>>)
 
 == How can I explore the filesystem the way Vim's NerdTree does ?
 
