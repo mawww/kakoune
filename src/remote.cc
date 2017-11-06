@@ -808,6 +808,9 @@ Server::Server(String session_name)
 
 bool Server::rename_session(StringView name)
 {
+    if (contains(name, '/'))
+        throw runtime_error{"Cannot create sessions with '/' in their name"};
+
     String old_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
                                     getpwuid(geteuid())->pw_name, m_session);
     String new_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
