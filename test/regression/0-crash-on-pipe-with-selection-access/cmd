@@ -1,0 +1,1 @@
+%<a-s>|[ $kak_selection = "bar" ] && echo "yes"<ret>

@@ -512,9 +512,11 @@ void pipe(Context& context, NormalParams)
                 return;
 
             Buffer& buffer = context.buffer();
-            SelectionList& selections = context.selections();
-            const int old_main = selections.main_index();
-            auto restore_main = on_scope_end([&] { selections.set_main_index(old_main); });
+            SelectionList selections = context.selections();
+            auto restore_sels = on_scope_end([&, old_main = selections.main_index()] {
+                selections.set_main_index(old_main);
+                context.selections() = std::move(selections);
+            });
             if (replace)
             {
                 ScopedEdition edition(context);
@@ -531,6 +533,10 @@ void pipe(Context& context, NormalParams)
                     const bool insert_eol = in.back() != '\n';
                     if (insert_eol)
                         in += '\n';
+
+                    // Needed in case we read selections inside the cmdline
+                    context.selections_write_only() = selections;
+
                     String out = ShellManager::instance().eval(
                         cmdline, context, in,
                         ShellManager::Flags::WaitForStdout).first;
