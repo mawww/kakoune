@@ -32,11 +32,10 @@ template<typename RangeContainer>
 void update_forward(ConstArrayView<Buffer::Change> changes, RangeContainer& ranges)
 {
     ForwardChangesTracker changes_tracker;
-
-    auto change_it = changes.begin();
-    auto advance_while_relevant = [&](const BufferCoord& pos) mutable {
-        while (change_it != changes.end() and changes_tracker.relevant(*change_it, pos))
-            changes_tracker.update(*change_it++);
+    auto advance_while_relevant = [&, it = changes.begin()]
+                                  (const BufferCoord& pos) mutable {
+        while (it != changes.end() and changes_tracker.relevant(*it, pos))
+            changes_tracker.update(*it++);
     };
 
     for (auto& range : ranges)
@@ -55,14 +54,13 @@ template<typename RangeContainer>
 void update_backward(ConstArrayView<Buffer::Change> changes, RangeContainer& ranges)
 {
     ForwardChangesTracker changes_tracker;
-
-    auto advance_while_relevant = [&, it = changes.rbegin(), end = changes.rend()]
+    auto advance_while_relevant = [&, it = changes.rbegin()]
                                   (const BufferCoord& pos) mutable {
-        while (it != end)
+        while (it != changes.rend())
         {
-            auto change = *it;
-            change.begin = changes_tracker.get_new_coord(change.begin);
-            change.end = changes_tracker.get_new_coord(change.end);
+            const Buffer::Change change{it->type,
+                                        changes_tracker.get_new_coord(it->begin),
+                                        changes_tracker.get_new_coord(it->end)};
             if (not changes_tracker.relevant(change, pos))
                 break;
             changes_tracker.update(change);
