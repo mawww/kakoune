@@ -1059,6 +1059,7 @@ public:
                            context().hooks().run_hook("InsertIdle", "", context());
                        }}
     {
+        last_insert().recording.set();
         last_insert().mode = mode;
         last_insert().keys.clear();
         last_insert().disable_hooks = context().hooks_disabled();
@@ -1084,6 +1085,8 @@ public:
 
         if (not temporary)
         {
+            last_insert().recording.unset();
+
             auto& selections = context().selections();
             if (m_restore_cursor)
             {
@@ -1100,7 +1103,6 @@ public:
     void on_key(Key key) override
     {
         auto& buffer = context().buffer();
-        last_insert().keys.push_back(key);
 
         const bool transient = context().flags() & Context::Flags::Transient;
         bool update_completions = true;
@@ -1441,18 +1443,23 @@ void InputHandler::repeat_last_insert()
     if (m_last_insert.keys.empty())
         return;
 
-    if (dynamic_cast<InputModes::Normal*>(&current_mode()) == nullptr)
+    if (dynamic_cast<InputModes::Normal*>(&current_mode()) == nullptr or
+        m_last_insert.recording)
         throw runtime_error{"repeating last insert not available in this context"};
 
     Vector<Key> keys;
     swap(keys, m_last_insert.keys);
     ScopedSetBool disable_hooks(context().hooks_disabled(),
                                 m_last_insert.disable_hooks);
-    // context.last_insert will be refilled by the new Insert
-    // this is very inefficient.
+
     push_mode(new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count));
     for (auto& key : keys)
+    {
+        // refill last_insert,  this is very inefficient, but necesary at the moment
+        // to properly handle insert completion
+        m_last_insert.keys.push_back(key);
         current_mode().handle_key(key);
+    }
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
 }
 
@@ -1526,6 +1533,12 @@ void InputHandler::handle_key(Key key)
         ++m_handle_key_level;
         auto dec = on_scope_end([this]{ --m_handle_key_level; });
 
+        auto process_key = [&](Key key) {
+            if (m_last_insert.recording)
+                m_last_insert.keys.push_back(key);
+            current_mode().handle_key(key);
+        };
+
         auto keymap_mode = current_mode().keymap_mode();
         KeymapManager& keymaps = m_context.keymaps();
         if (keymaps.is_mapped(key, keymap_mode) and
@@ -1533,10 +1546,10 @@ void InputHandler::handle_key(Key key)
         {
             ScopedSetBool disable_history{context().history_disabled()};
             for (auto& k : keymaps.get_mapping(key, keymap_mode).keys)
-                current_mode().handle_key(k);
+                process_key(k);
         }
         else
-            current_mode().handle_key(key);
+            process_key(key);
 
         // do not record the key that made us enter or leave recording mode,
         // and the ones that are triggered recursively by previous keys.

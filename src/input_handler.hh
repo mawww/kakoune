@@ -116,8 +116,13 @@ private:
     void push_mode(InputMode* new_mode);
     void pop_mode(InputMode* current_mode);
 
-    struct Insertion{ InsertMode mode; Vector<Key> keys; bool disable_hooks; int count; };
-    Insertion m_last_insert = { InsertMode::Insert, {}, false, 1 };
+    struct Insertion{
+        NestedBool recording;
+        InsertMode mode;
+        Vector<Key> keys;
+        bool disable_hooks;
+        int count;
+    } m_last_insert = { {}, InsertMode::Insert, {}, false, 1 };
 
     char   m_recording_reg = 0;
     String m_recorded_keys;
