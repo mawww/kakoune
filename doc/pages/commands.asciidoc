@@ -83,7 +83,7 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 
     *-markup*:::
         expand the markup strings in *text* (See
-        <<expansions#Markup strings,`:doc expansions 'Markup strings'`>>)
+        <<expansions#markup-strings,`:doc expansions markup-strings`>>)
 
     *-debug*:::
         print the given text to the *\*debug** buffer
@@ -138,7 +138,7 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 
 *define-command* [<flags>] <name> <command>::
     *alias* def +
-    define a new command (c.f. the 'Declaring new commands' section below)
+    define a new command (See <<declaring-new-commands,Declaring new commands>>)
 
 *map* <scope> <mode> <key> <keys>::
     bind a list of keys to a combination (See <<mapping#,`:doc mapping`>>)
