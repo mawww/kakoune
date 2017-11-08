@@ -6,6 +6,7 @@ Kakoune can store named and typed values that can be used both to
 customize the core editor behaviour, and to store data used by extension
 scripts.
 
+[[set-option]]
 Options can be modified using the `set-option` command:
 
 ---------------------------------
@@ -16,6 +17,7 @@ set-option <scope> <name> <value>
 <<scopes#,`:doc scopes`>>). *current* relate to the narrowest scope in
 which the option is already set.
 
+[[unset-option]]
 Options values can be unset in a specific scope with the `unset-option`
 command:
 
@@ -26,6 +28,7 @@ unset-option <scope> <name>
 Unsetting an option will make it fallback to the value of its parent mode,
 hence options cannot be unset from the *global* scope.
 
+[[declare-option]]
 New options can be declared using the `declare-option` command:
 
 ------------------------------------------------
@@ -35,6 +38,7 @@ declare-option [-hidden] <type> <name> [<value>]
 If `-hidden` is specified, the option will not be displayed in completion
 suggestions.
 
+[[update-option]]
 Certain option type can be *updated*, usually to match potential changes
 in the buffer they relate to. This can be triggered by the `update-option`
 command:

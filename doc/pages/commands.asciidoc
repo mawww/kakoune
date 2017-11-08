@@ -82,7 +82,8 @@ command *q!* has to be used). Aliases are mentionned below each commands.
     show *text* in status line, with the following *options*:
 
     *-markup*:::
-        expand the markup strings in *text* (See <<expansions#,`:doc expansions`>>)
+        expand the markup strings in *text* (See
+        <<expansions#Markup strings,`:doc expansions 'Markup strings'`>>)
 
     *-debug*:::
         print the given text to the *\*debug** buffer
@@ -96,7 +97,7 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 *declare-option* [-hidden] <type> <name> [<value>]::
     *alias* decl +
     declare a new option, the -hidden hides the option in completion
-    suggestions (See <<options#,`:doc options`>>)
+    suggestions (See <<options#declare-option,`:doc options declare-option`>>)
 
 *set-option* <scope> <name> <value>::
     *alias* set +
@@ -105,15 +106,15 @@ command *q!* has to be used). Aliases are mentionned below each commands.
     target *scope* is 'buffer', e.g. set buffer=/path/to/buffer foo "bar";
     the scope can also take the `current` special value, which will automatically
     point to the narrowest scope available in the current context
-    (See <<options#,`:doc options`>>)
+    (See <<options#set-option,`:doc options set-option`>>)
 
 *unset-option* <scope> <name>::
     *alias* unset +
-    unset the value of an option (See <<options#,`:doc options`>>)
+    unset the value of an option (See <<options#unset-option,`:doc options unset-option`>>)
 
 *update-option* <scope> <name>::
     update the value of an option if its type supports that operation
-    (See <<options#,`:doc options`>>)
+    (See <<options#update-option,`:doc options update-option`>>)
 
 *alias* <scope> <name> <command>::
     define a new alias, within the context of a scope
