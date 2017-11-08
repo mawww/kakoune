@@ -2,7 +2,8 @@ The preferred way to contribute would be through github pull requests,
 as an alternative patches can be discussed on the irc channel.
 
 When contributing your first changes, please include an empty commit for
-copyright waiver using the following message:
+copyright waiver using the following message (replace 'John Doe' with
+your name or nickname):
 
   John Doe Copyright Waiver
 
