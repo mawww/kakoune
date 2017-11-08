@@ -180,5 +180,6 @@ A less temporary alternative is to set the `disabled_hooks` option which
 accepts a regex describing which hooks won't be executed.
 For example indentation hooks can be disabled with '.*-indent'.
 
-Finally, hook execution can be disabled while using the `exec` or `eval`
-commands by using the `-no-hooks` switch.
+Finally, hook execution can be disabled while using the `execute-keys` or
+`evaluate-commands` commands by using the `-no-hooks` switch.
+(See <<execeval#,`:doc execeval`>>)
