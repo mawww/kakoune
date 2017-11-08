@@ -496,7 +496,7 @@ Commands beginning with `g` are used to goto certain position and or buffer.
 If a count is given prior to hitting `g`, `g` will jump to the given line.
 Using `G` will extend the selection rather than jump.
 
-See <<doc/pages/keys#goto-commands,`:doc keys`>>.
+See <<doc/pages/keys#goto-commands,`:doc keys goto-commands`>>.
 
 View commands
 ~~~~~~~~~~~~~
@@ -504,7 +504,7 @@ View commands
 Commands beginning with `v` permit to center or scroll the current
 view. Using `V` will lock view mode until `<esc>` is hit
 
-See <<doc/pages/keys#view-commands,`:doc keys`>>.
+See <<doc/pages/keys#view-commands,`:doc keys view-commands`>>.
 
 Marks
 ~~~~~
@@ -874,11 +874,11 @@ Defining Commands
 
 New commands can be created using `:define-command`.
 
-See <<doc/pages/commands#declaring-new-commands,`:doc commands`>>.
+See <<doc/pages/commands#declaring-new-commands,`:doc commands declaring-new-commands`>>.
 
 Some helper commands are available to define composite commands.
 
-See <<doc/pages/commands#helpers,`:doc commands`>>.
+See <<doc/pages/commands#helpers,`:doc commands helpers`>>.
 
 Aliases
 ~~~~~~~
