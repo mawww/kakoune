@@ -492,44 +492,19 @@ Changes
 Goto Commands
 ~~~~~~~~~~~~~
 
-Commands beginning with g are used to goto certain position and or buffer:
-
- * `gh`: select to line begin
- * `gl`: select to line end
- * `gi`: select to line begin (non blank)
-
- * `gg`, `gk`: go to the first line
- * `gj`: go to the last line
- * `ge`: go to last char of last line
-
- * `gt`: go to the first displayed line
- * `gc`: go to the middle displayed line
- * `gb`: go to the last displayed line
-
- * `ga`: go to the previous (alternate) buffer
- * `gf`: open the file whose name is selected
-
- * `g.`: go to last buffer modification position
-
+Commands beginning with `g` are used to goto certain position and or buffer.
 If a count is given prior to hitting `g`, `g` will jump to the given line.
 Using `G` will extend the selection rather than jump.
+
+See <<doc/pages/keys#goto-commands,`:doc keys`>>.
 
 View commands
 ~~~~~~~~~~~~~
 
-Some commands, all beginning with v permit to manipulate the current
-view.
+Commands beginning with `v` permit to center or scroll the current
+view. Using `V` will lock view mode until `<esc>` is hit
 
- * `vv` or `vc`: center the main selection in the window (vertically)
- * `vm`: center the main selection in the window (horizontally)
- * `vt`: scroll to put the main selection on the top line of the window
- * `vb`: scroll to put the main selection on the bottom line of the window
- * `vh`: scroll the window count columns left
- * `vj`: scroll the window count line downward
- * `vk`: scroll the window count line upward
- * `vl`: scroll the window count columns right
-
-Using `V` will lock view mode until `<esc>` is hit
+See <<doc/pages/keys#view-commands,`:doc keys`>>.
 
 Marks
 ~~~~~
@@ -737,6 +712,8 @@ semicolon argument.
 String syntax and expansions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Values, options and shell context can be interpolated in strings.
+
 See <<doc/pages/expansions#,`:doc expansions`>>.
 
 Configuration & Autoloading
@@ -774,6 +751,10 @@ precedence.
 Options
 -------
 
+Kakoune can store named and typed values that can be used both to
+customize the core editor behaviour, and to keep data used by extension
+scripts.
+
 See <<doc/pages/options#,`:doc options`>>.
 
 
@@ -783,10 +764,15 @@ Advanced topics
 Faces
 ~~~~~
 
+Faces describe how characters are displayed on the screen: color, bold, italic...
+
 See <<doc/pages/faces#,`:doc faces`>>.
 
 Registers
 ~~~~~~~~~
+
+Registers are named lists of text. They are used for various purposes,
+like storing the last yanked text, or the captured groups associated with the selections.
 
 See <<doc/pages/registers#,`:doc registers`>>.
 
@@ -814,10 +800,16 @@ Kakoune trying to be smart.
 Regex syntax
 ~~~~~~~~~~~~
 
+Kakoune regex syntax is based on the ECMAScript syntax (ECMA-262 standard).
+It always run on Unicode codepoint sequences, not on bytes.
+
 See <<doc/pages/regex#,`:doc regex`>>.
 
 Exec and Eval
 ~~~~~~~~~~~~~
+
+The `execute-keys` and `evaluate-commands` are useful for scripting
+in non interactive contexts.
 
 See <<doc/pages/execeval#,`:doc execeval`>>.
 
@@ -858,89 +850,35 @@ and entering back insert mode (with which binding ?)
 Highlighters
 ~~~~~~~~~~~~
 
+Manipulation of the displayed text, such as syntax coloration and wrapping
+is done through highlighters.
+
 See <<doc/pages/highlighters#,`:doc highlighters`>>.
 
 Hooks
 ~~~~~
+
+Commands can be registered to be executed when certain events arise with hooks.
 
 See <<doc/pages/hooks#,`:doc hooks`>>.
 
 Key Mapping
 ~~~~~~~~~~~
 
+Custom key shortcuts can be registered through mappings.
+
 See <<doc/pages/mapping#,`:doc mapping`>>.
 
 Defining Commands
 ~~~~~~~~~~~~~~~~~
 
-New commands can be defined using the `:def` command.
+New commands can be created using `:define-command`.
 
-------------------------------
-:def <command_name> <commands>
-------------------------------
+See <<doc/pages/commands#declaring-new-commands,`:doc commands`>>.
 
-`<commands>` is a string containing the commands to execute.
+Some helper commands are available to define composite commands.
 
-`def` can also take some flags:
-
- * `-params <num>`: the command accept <num> parameters, with <num>
-    either a number, or of the form <min>..<max>, with both <min> and
-    <max> omittable.
- * `-file-completion`: try file completion on any parameter passed
-    to this command
- * `-client-completion`: try client name completion on any parameter
-    passed to this command
- * `-buffer-completion`: try buffer name completion on any parameter
-    passed to this command
- * `-command-completion`: try command completion on any parameter
-    passed to this command
- * `-shell-completion`: following string is a shell command which takes
-    parameters as positional params and output one completion candidate
-    per line. The provided shell command will run after each keypress
- * `-shell-candidates`: following string is a shell command which takes
-    parameters as positional params and output one completion candidate
-    per line. The provided shell command will run once at the beginning
-    of each completion session, candidates are cached and then used by
-    kakoune internal fuzzy engine
- * `-allow-override`: allow the new command to replace an existing one
-    with the same name.
- * `-hidden`: do not show the command in command name completions
- * `-docstring`: define the documentation string for the command
-
-Using shell expansion permits defining complex commands or accessing
-Kakoune state:
-
-------------------------------------------------------
-:def print_selection %{ echo %sh{ ${kak_selection} } }
-------------------------------------------------------
-
-Some helper commands can be used to define composite commands:
-
- * `prompt <prompt> <command>`: prompt the user for a string, when the user validates,
-     executes <command>. The entered text is available in the `text` value
-     accessible through `$kak_text` in shells or `%val{text}` in commands.
- * `on-key <command>`: wait for next key from user, then execute <command>,
-     the key is available through the `key` value, accessible through `$kak_key`.
- * `menu <label1> <commands1> <label2> <commands2>...`: display a menu using
-     labels, the selected label's commands are executed.
-     `menu` can take a -auto-single argument, to automatically run commands
-     when only one choice is provided. And a -select-cmds argument, in which
-     case menu takes three argument per item, the last one being a command
-     to execute when the item is selected (but not validated).
- * `info <text>`: display text in an information box, at can take a -anchor
-     option, which accepts `left`, `right` and `cursor` as value, in order to
-     specify where the info box should be anchored relative to the main selection.
- * `try <commands> catch <on_error_commands>`: prevent an error in <commands>
-     from aborting the command execution, execute <on_error_commands>
-     instead. If nothing is to be done on error, the catch part can be ommitted.
- * `reg <name> <content>`: set register <name> to <content>
- * `select <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>:...`:
-     replace the current selections with the one described in the argument
- * `debug {info,buffers,options,memory,shared-strings,profile-hash-maps,faces,mappings}`:
-     print some debug information in the `*debug*` buffer
-
-Note that these commands are available in interactive command mode, but are
-not that useful in this context.
+See <<doc/pages/commands#helpers,`:doc commands`>>.
 
 Aliases
 ~~~~~~~
