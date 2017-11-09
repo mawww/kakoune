@@ -154,24 +154,26 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -draft %[
 add-highlighter shared/c/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 %sh{
     # Grammar
-    keywords="asm|break|case|continue|default|do|else|for|goto|if|return"
-    keywords="${keywords}|sizeof|switch|while"
-    attributes="auto|const|enum|extern|inline|register|restrict|static|struct"
-    attributes="${attributes}|typedef|union|volatile"
-    types="char|double|float|int|long|short|signed|size_t|unsigned|void"
+    keywords="asm break case continue default do else for goto if return
+              sizeof switch while"
+    attributes="auto const enum extern inline register restrict static struct
+                typedef union volatile"
+    types="char double float int long short signed size_t unsigned void"
     values="NULL"
 
+    join() { printf "%s" "$1" | tr -s ' \n' "$2"; }
+
     # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=c %{
-        set-option window static_words '${keywords}:${attributes}:${types}:${values}'
-    }" | sed 's,|,:,g'
+    printf '%s\n' "hook global WinSetOption filetype=c %{
+        set-option window static_words '$(join "${keywords}:${attributes}:${types}:${values}" ':')'
+    }"
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/c/code regex \b(${keywords})\b 0:keyword
-        add-highlighter shared/c/code regex \b(${attributes})\b 0:attribute
-        add-highlighter shared/c/code regex \b(${types})\b 0:type
-        add-highlighter shared/c/code regex \b(${values})\b 0:value
+        add-highlighter shared/c/code regex \b($(join "${keywords}" '|'))\b 0:keyword
+        add-highlighter shared/c/code regex \b($(join "${attributes}" '|'))\b 0:attribute
+        add-highlighter shared/c/code regex \b($(join "${types}" '|'))\b 0:type
+        add-highlighter shared/c/code regex \b($(join "${values}" '|'))\b 0:value
     "
 }
 
@@ -180,33 +182,32 @@ add-highlighter shared/cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?
 
 %sh{
     # Grammar
-    keywords="alignas|alignof|and|and_eq|asm|bitand|bitor|break|case|catch"
-    keywords="${keywords}|compl|const_cast|continue|decltype|default|delete"
-    keywords="${keywords}|do|dynamic_cast|else|explicit|for|goto|if|new|not"
-    keywords="${keywords}|not_eq|operator|or|or_eq|reinterpret_cast|return"
-    keywords="${keywords}|sizeof|static_assert|static_cast|switch|throw|try"
-    keywords="${keywords}|typeid|using|while|xor|xor_eq"
-    attributes="auto|class|const|constexpr|enum|extern|final|friend|inline"
-    attributes="${attributes}|mutable|namespace|noexcept|override|private"
-    attributes="${attributes}|protected|public|register|static|struct|template"
-    attributes="${attributes}|thread_local|typedef|typename|union|virtual"
-    attributes="${attributes}|volatile"
-    types="bool|byte|char|char16_t|char32_t|double|float|int|long|max_align_t"
-    types="${types}|nullptr_t|ptrdiff_t|short|signed|size_t|unsigned|void"
-    types="${types}|wchar_t"
-    values="NULL|false|nullptr|this|true"
+    keywords="alignas alignof and and_eq asm bitand bitor break case catch
+              compl const_cast continue decltype default delete do dynamic_cast
+              else explicit for goto if new not not_eq operator or or_eq
+              reinterpret_cast return sizeof static_assert static_cast switch
+              throw try typeid using while xor xor_eq"
+    attributes="auto class const constexpr enum extern final friend inline
+                mutable namespace noexcept override private protected public
+                register static struct template thread_local typedef typename
+                union virtual volatile"
+    types="bool byte char char16_t char32_t double float int long max_align_t
+           nullptr_t ptrdiff_t short signed size_t unsigned void wchar_t"
+    values="NULL false nullptr this true"
+
+    join() { printf "%s" "$1" | tr -s ' \n' "$2"; }
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=cpp %{
-        set-option window static_words '${keywords}:${attributes}:${types}:${values}'
-    }" | sed 's,|,:,g'
+        set-option window static_words '$(join "${keywords}:${attributes}:${types}:${values}" ':')'
+    }"
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/cpp/code regex \b(${keywords})\b 0:keyword
-        add-highlighter shared/cpp/code regex \b(${attributes})\b 0:attribute
-        add-highlighter shared/cpp/code regex \b(${types})\b 0:type
-        add-highlighter shared/cpp/code regex \b(${values})\b 0:value
+        add-highlighter shared/cpp/code regex \b($(join "${keywords}" '|'))\b 0:keyword
+        add-highlighter shared/cpp/code regex \b($(join "${attributes}" '|'))\b 0:attribute
+        add-highlighter shared/cpp/code regex \b($(join "${types}" '|'))\b 0:type
+        add-highlighter shared/cpp/code regex \b($(join "${values}" '|'))\b 0:value
     "
 }
 
@@ -225,30 +226,31 @@ add-highlighter shared/objc/code regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:val
 
 %sh{
     # Grammar
-    keywords="break|case|continue|default|do|else|for|goto|if|return|switch"
-    keywords="${keywords}|while"
-    attributes="IBAction|IBOutlet|__block|assign|auto|const|copy|enum|extern"
-    attributes="${attributes}|inline|nonatomic|readonly|retain|static|strong"
-    attributes="${attributes}|struct|typedef|union|volatile|weak"
-    types="BOOL|CGFloat|NSInteger|NSString|NSUInteger|bool|char|float"
-    types="${types}|instancetype|int|long|short|signed|size_t|unsigned|void"
-    values="FALSE|NO|NULL|TRUE|YES|id|nil|self|super"
-    decorators="autoreleasepool|catch|class|end|implementation|interface"
-    decorators="${decorators}|property|protocol|selector|synchronized"
-    decorators="${decorators}|synthesize|try"
+    keywords="break case continue default do else for goto if return switch
+              while"
+    attributes="IBAction IBOutlet __block assign auto const copy enum extern
+                inline nonatomic readonly retain static strong struct typedef
+                union volatile weak"
+    types="BOOL CGFloat NSInteger NSString NSUInteger bool char float
+           instancetype int long short signed size_t unsigned void"
+    values="FALSE NO NULL TRUE YES id nil self super"
+    decorators="autoreleasepool catch class end implementation interface
+                property protocol selector synchronized synthesize try"
+
+    join() { printf "%s" "$1" | tr -s ' \n' "$2"; }
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=objc %{
-        set-option window static_words '${keywords}:${attributes}:${types}:${values}:${decorators}'
-    }" | sed 's,|,:,g'
+        set-option window static_words '$(join "${keywords}:${attributes}:${types}:${values}:${decorators}" ':')'
+    }"
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/objc/code regex \b(${keywords})\b 0:keyword
-        add-highlighter shared/objc/code regex \b(${attributes})\b 0:attribute
-        add-highlighter shared/objc/code regex \b(${types})\b 0:type
-        add-highlighter shared/objc/code regex \b(${values})\b 0:value
-        add-highlighter shared/objc/code regex @(${decorators})\b 0:attribute
+        add-highlighter shared/objc/code regex \b($(join "${keywords}" '|'))\b 0:keyword
+        add-highlighter shared/objc/code regex \b($(join "${attributes}" '|'))\b 0:attribute
+        add-highlighter shared/objc/code regex \b($(join "${types}" '|'))\b 0:type
+        add-highlighter shared/objc/code regex \b($(join "${values}" '|'))\b 0:value
+        add-highlighter shared/objc/code regex  @($(join "${decorators}" '|'))\b 0:attribute
     "
 }
 
