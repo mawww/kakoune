@@ -798,10 +798,11 @@ struct WrapHighlighter : Highlighter
             win_line += wrap_count + 1;
 
             // scroll window to keep cursor visible, and update range as lines gets removed
-            while (setup.window_pos.line < cursor.line and
+            while (buf_line >= cursor.line and setup.window_pos.line < cursor.line and
                    cursor.line + setup.scroll_offset.line >= setup.window_pos.line + setup.window_range.line)
             {
-                auto removed_lines = 1 + line_wrap_count(setup.window_pos.line++, indent);
+                auto removed_lines = std::min(context.window().dimensions().line,
+                                              1 + line_wrap_count(setup.window_pos.line++, indent));
                 setup.cursor_pos.line -= removed_lines;
                 win_line -= removed_lines;
                 // removed one line from the range, added removed_lines potential ones
