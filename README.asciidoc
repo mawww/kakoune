@@ -510,30 +510,16 @@ Marks
 ~~~~~
 
 Current selections position can be saved in a register and restored later on.
-By default, marks use the '^' register, but using the register can be set
-using `"<reg>` prefix.
 
-`Z` will save the current selections to the register.
-`<a-Z>` will combine the current selections to the register.
-`z` will restore the selections from the register.
-`<a-z>` will combine the selections from the register with the existing ones.
-
-When combining selections, kakoune will prompt for a combining mode:
-
-`+` will append selections from both lists into a single list
-`<` will select the selection with the leftmost cursor for each pair
-`>` will select the selection with the rightmost cursor for each pair
+See <<doc/pages/keys#marks,`:doc keys marks`>>.
 
 Jump list
 ~~~~~~~~~
 
 Some commands, like the goto commands, buffer switch or search commands,
-push the previous selections to the client's jump list. It is possible
-to forward or backward in the jump list using:
+push the previous selections to the client's jump list.
 
- * `<c-i>`: Jump forward
- * `<c-o>`: Jump backward
- * `<c-s>`: save current selections
+See <<doc/pages/keys#jump-list,`:doc keys jump-list`>>.
 
 Multi Selection
 ~~~~~~~~~~~~~~~
@@ -579,40 +565,10 @@ Selections whose shell command returns 0 will be kept, other will be dropped.
 Object Selection
 ~~~~~~~~~~~~~~~~
 
-Some keys allow you to select a text object:
+Objects are specific portions of text, like sentences, paragraphs, numbers…
+Kakoune offers many keys allowing you to select various text objects.
 
- * `<a-a>`: selects the whole object
- * `<a-i>`: selects the inner object, that is the object excluding its surrounder.
-            For example, for a quoted string, this will not select the quote, and
-            for a word this will not select trailing spaces.
- * `[`: selects to object start
- * `]`: selects to object end
- * `{`: extends selections to object start
- * `}`: extends selections to object end
-
-After this key, you need to enter a second key in order to specify which
-object you want.
-
- * `b`, `(` or `)`: select the enclosing parenthesis
- * `B`, `{` or `}`: select the enclosing {} block
- * `r`, `[` or `]`: select the enclosing [] block
- * `a`, `<` or `>`: select the enclosing <> block
- * `"` or `Q`: select the enclosing double quoted string
- * `'` or `q`: select the enclosing single quoted string
- * ``` or `g`: select the enclosing grave quoted string
- * `w`: select the whole word
- * `W`: select the whole WORD
- * `s`: select the sentence
- * `p`: select the paragraph
- * `␣`: select the whitespaces
- * `i`: select the current indentation block
- * `n`: select the number
- * `u`: select the argument
- * `c`: select user defined object, will prompt
-   for open and close text.
-
-For nestable objects, a count can be used in order to specify which surrounding
-level to select.
+See <<doc/pages/keys#object-selection,`:doc keys object-selection`>>.
 
 Commands
 --------
@@ -622,39 +578,7 @@ When pressing `:` in normal mode, Kakoune will open a prompt to enter a command.
 Commands are used for non editing tasks, such as opening a buffer, writing the
 current one, quitting, etc.
 
-A few keys are recognized by prompt mode to help edit a command:
-
- * `<ret>`: validate prompt
- * `<esc>`: abandon without
-
- * `<left> or <a-h>`: move cursor to previous character
- * `<right> or <a-l>`: move cursor to previous character
- * `<home>`: move cursor to first character
- * `<end>`: move cursor past the last character
- * `<backspace> or <a-x>`: erase character before cursor
- * `<del> or <a-d>`: erase character under cursor
-
- * `<c-w>`: advance to next word begin
- * `<c-a-w>`: advance to next WORD begin
- * `<c-b>`: go back to previous word begin
- * `<c-a-b>`: go back to previous WORD begin
- * `<c-e>`: advance to next word end
- * `<c-a-e>`: advance to next word end
-
- * `<up> or <c-p>`: select previous entry in history
- * `<down> or <c-n>`: select next entry in history
-
- * `<tab>`: select next completion candidate
- * `<backtab>`: select previous completion candidate
-
- * `<c-r>`: insert then content of the register given by next key.
- * `<c-v>`: insert next keystroke without interpreting it
-
- * `<c-o>`: disable auto completion for this prompt
-
-
-Commands starting with horizontal whitespace (e.g. a space) will not be
-saved in the command history.
+See <<doc/pages/keys#prompt-commands,`:doc keys prompt-commands`>>.
 
 Basic Commands
 ~~~~~~~~~~~~~~
@@ -662,6 +586,9 @@ Basic Commands
 Some commands take an exclamation mark (`!`), which can be used to force
 the execution of the command (i.e. to quit a modified buffer, the
 command `q!` has to be used).
+
+Commands starting with horizontal whitespace (e.g. a space) will not be
+saved in the command history.
 
  * `cd [<directory>]`: change the current directory to `<directory>`, or the home directory if unspecified
  * `doc <topic>`: display documentation about a topic. The completion list
@@ -781,21 +708,13 @@ Macros
 
 Kakoune can record and replay a sequence of key presses.
 
-Macros are recorded with the `Q` key, and are stored by default in the `@`
-register. Another register can be chosen by with hitting `"<reg>` before
-the `Q` key.
-
-To replay a macro, use the `q` key.
+See <<doc/pages/keys#macros,`:doc keys macros`>>.
 
 Search selection
 ~~~~~~~~~~~~~~~~
 
 Using the `*` key, you can set the search pattern to the current selection.
-This tries to be intelligent. It will for example detect if the current selection
-begins and/or ends at word boundaries and set the search pattern accordingly.
-
-With `<a-*>` you can set the search pattern to the current selection without
-Kakoune trying to be smart.
+See <<doc/pages/keys#searching,`:doc keys searching`>>.
 
 Regex syntax
 ~~~~~~~~~~~~

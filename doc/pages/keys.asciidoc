@@ -357,7 +357,7 @@ is a sequence of non whitespace characters
 
     rotate (1, 2, 3) and (3, 4, 6) independently
 
-== Goto Commands
+== Goto commands
 
 *g*, *G*::
     When a count is specified, *G* only extends the current selection to the given line,
@@ -431,10 +431,10 @@ is a sequence of non whitespace characters
     *l*:::
         scroll the window count columns right
 
-
 == Marks
 
-Marks use the *^* register by default.
+Current selections position can be saved in a register and restored later on.
+Marks use the *^* register by default (See <<registers#,`:doc registers`>>)
 
 *Z*::
     save the current selections to the register
@@ -470,10 +470,7 @@ Marks use the *^* register by default.
 
 == Macros
 
-Macros use the *@* register by default
-
-*<esc>*::
-    end macro recording
+Macros use the *@* register by default (See <<registers#,`:doc registers`>>)
 
 *Q*::
     start or end macro recording
@@ -481,9 +478,12 @@ Macros use the *@* register by default
 *q*::
     play a recorded macro
 
+*<esc>*::
+    end macro recording
+
 == Searching
 
-Searches use the */* register by default
+Searches use the */* register by default (See <<registers#,`:doc registers`>>)
 
 ***::
     set the search pattern to the current selection (automatically
@@ -495,11 +495,15 @@ Searches use the */* register by default
 
 == Jump list
 
+Some commands, like the goto commands, buffer switch or search commands,
+push the previous selections to the client's jump list. It is possible
+to skim through the jump list using:
+
 *<c-i>*::
-    Jump forward
+    jump forward
 
 *<c-o>*::
-    Jump backward
+    jump backward
 
 *<c-s>*::
     save current selections
@@ -539,11 +543,16 @@ Searches use the */* register by default
 
 == Object Selection
 
+For nestable objects, a count can be used in order to specify which surrounding
+level to select.
+
 *<a-a>*::
     selects the whole object
 
 *<a-i>*::
-    selects the inner object, that is the object excluding its surrounder
+    selects the inner object, that is the object excluding its surrounder.
+    For example, for a quoted string, this will not select the quote, and
+    for a word this will not select trailing spaces.
 
 *[*::
     selects to object start
@@ -572,13 +581,13 @@ object you want
 *a*, *<*, *>*::
     select the enclosing <> block
 
-*"*, *Q*::
+*Q*, *"*::
     select the enclosing double quoted string
 
-*'*, *q*::
+*q*, *'*::
     select the enclosing single quoted string
 
-*`*, *g*::
+*g*, *`*::
     select the enclosing grave quoted string
 
 *w*::
@@ -608,7 +617,11 @@ object you want
 *c*::
     select user defined object, will prompt for open and close text
 
-== Prompt Commands
+== Prompt commands
+
+When pressing `:` in normal mode, Kakoune will open a prompt to enter a command.
+The following keys are recognized by this mode to help edition.
+(See <<commands#,`:doc commands`>>)
 
 *<ret>*::
     validate prompt
