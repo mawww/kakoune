@@ -900,28 +900,13 @@ buffer. The following command defines `<alias>` as an alias for `<command>`:
 Will remove the given alias in the given scope. If `<expected>` is specified
 the alias will only be removed if its current value is `<expected>`.
 
-FIFO Buffer
+FIFO Buffers
 ~~~~~~~~~~~
 
-The `:edit` command can take a `-fifo` parameter:
+FIFO buffers are very useful for running some commands asynchronously while
+progressively displaying their result in Kakoune.
 
----------------------------------------------
-:edit -fifo <filename> [-scroll] <buffername>
----------------------------------------------
-
-In this case, a buffer named `<buffername>` is created which reads its content
-from fifo `<filename>`. When the fifo is written to, the buffer is automatically
-updated.
-
-If the `-scroll` switch is specified, the initial cursor position will be made
-such as the window displaying the buffer will scroll as new data is read.
-
-This is very useful for running some commands asynchronously while displaying
-their result in a buffer. See `rc/make.kak` and `rc/grep.kak` for examples.
-
-When the buffer is deleted, the fifo will be closed, so any program writing
-to it will receive `SIGPIPE`. This is useful as it permits to stop the writing
-program when the buffer is deleted.
+See <<doc/pages/buffers#fifo-buffers,`:doc buffers fifo-buffers`>>.
 
 Menus
 ~~~~~
