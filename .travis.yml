@@ -34,7 +34,6 @@ env:
 addons:
   apt:
     sources:
-      - boost-latest
       - ubuntu-toolchain-r-test
       - llvm-toolchain-precise-3.9
     packages:
@@ -42,7 +41,6 @@ addons:
       - libstdc++-5-dev
       - g++-5
       - libncursesw5-dev
-      - libboost-regex1.55-dev
   coverity_scan:
     project:
       name: "mawww/kakoune"
