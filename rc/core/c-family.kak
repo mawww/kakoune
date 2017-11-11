@@ -183,7 +183,7 @@ add-highlighter shared/cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?
 %sh{
     # Grammar
     keywords="alignas alignof and and_eq asm bitand bitor break case catch
-              const_cast continue decltype default delete do dynamic_cast
+              compl const_cast continue decltype default delete do dynamic_cast
               else explicit for goto if new not not_eq operator or or_eq
               reinterpret_cast return sizeof static_assert static_cast switch
               throw try typeid using while xor xor_eq"
