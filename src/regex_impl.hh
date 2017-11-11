@@ -158,7 +158,7 @@ public:
         if (search)
             to_next_start(start, m_end, m_program.start_chars.get());
 
-        return exec_program(start, Thread{search ? (uint16_t)0 : CompiledRegex::search_prefix_size, nullptr});
+        return exec_program(start, Thread{&m_program.instructions[search ? 0 : CompiledRegex::search_prefix_size], nullptr});
     }
 
     ArrayView<const Iterator> captures() const
@@ -216,7 +216,7 @@ private:
 
     struct Thread
     {
-        uint32_t inst;
+        const CompiledRegex::Instruction* inst;
         Saves* saves;
     };
 
@@ -237,9 +237,10 @@ private:
     StepResult step(Utf8It& pos, Thread& thread, ExecState& state)
     {
         const bool no_saves = (m_flags & RegexExecFlags::NoSaves);
+        auto* instructions = m_program.instructions.data();
         while (true)
         {
-            auto& inst = m_program.instructions[thread.inst++];
+            auto& inst = *thread.inst++;
             if (inst.last_step == state.step)
                 return StepResult::Failed;
             inst.last_step = state.step;
@@ -257,13 +258,13 @@ private:
                 case CompiledRegex::AnyChar:
                     return StepResult::Consumed;
                 case CompiledRegex::Jump:
-                    thread.inst = inst.param;
+                    thread.inst = instructions + inst.param;
                     break;
                 case CompiledRegex::Split_PrioritizeParent:
                 {
                     if (thread.saves)
                         ++thread.saves->refcount;
-                    state.current_threads.push_back({inst.param, thread.saves});
+                    state.current_threads.push_back({instructions + inst.param, thread.saves});
                     break;
                 }
                 case CompiledRegex::Split_PrioritizeChild:
@@ -271,7 +272,7 @@ private:
                     if (thread.saves)
                         ++thread.saves->refcount;
                     state.current_threads.push_back({thread.inst, thread.saves});
-                    thread.inst = inst.param;
+                    thread.inst = instructions + inst.param;
                     break;
                 }
                 case CompiledRegex::Save:
@@ -397,12 +398,12 @@ private:
                     release_saves(thread.saves);
                     break;
                 case StepResult::Consumed:
-                    if (m_program.instructions[thread.inst].scheduled)
+                    if (thread.inst->scheduled)
                     {
                         release_saves(thread.saves);
                         continue;
                     }
-                    m_program.instructions[thread.inst].scheduled = true;
+                    thread.inst->scheduled = true;
                     state.next_threads.push_back(thread);
                     break;
                 case StepResult::FindNextStart:
@@ -412,7 +413,7 @@ private:
                 }
             }
             for (auto& thread : state.next_threads)
-                m_program.instructions[thread.inst].scheduled = false;
+                thread.inst->scheduled = false;
 
             if (pos == m_end or state.next_threads.empty() or
                 (found_match and (m_flags & RegexExecFlags::AnyMatch)))
