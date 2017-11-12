@@ -202,6 +202,8 @@ void NCursesUI::set_face(NCursesWin* window, Face face, const Face& default_face
         face.fg = default_face.fg;
     if (face.bg == Color::Default)
         face.bg = default_face.bg;
+    if (face.attributes == Attribute::Normal)
+        face.attributes = default_face.attributes;
 
     if (face.fg != Color::Default or face.bg != Color::Default)
     {
