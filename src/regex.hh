@@ -47,7 +47,7 @@ struct MatchResults
 
     struct iterator : std::iterator<std::bidirectional_iterator_tag, SubMatch, size_t, SubMatch*, SubMatch>
     {
-        using It = typename Vector<Iterator>::const_iterator;
+        using It = typename Vector<Iterator, MemoryDomain::Regex>::const_iterator;
 
         iterator() = default;
         iterator(It it) : m_it{std::move(it)} {}
@@ -64,7 +64,7 @@ struct MatchResults
     };
 
     MatchResults() = default;
-    MatchResults(Vector<Iterator> values) : m_values{std::move(values)} {}
+    MatchResults(Vector<Iterator, MemoryDomain::Regex> values) : m_values{std::move(values)} {}
 
     iterator begin() const { return iterator{m_values.begin()}; }
     iterator cbegin() const { return iterator{m_values.cbegin()}; }
@@ -96,7 +96,7 @@ struct MatchResults
     }
 
 private:
-    Vector<Iterator> m_values;
+    Vector<Iterator, MemoryDomain::Regex> m_values;
 };
 
 inline RegexExecFlags match_flags(bool bol, bool eol, bool bow, bool eow)
@@ -116,7 +116,7 @@ bool regex_match(It begin, It end, const Regex& re)
 template<typename It>
 bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
 {
-    Vector<It> captures;
+    Vector<It, MemoryDomain::Regex> captures;
     const bool matched = regex_match(begin, end, captures, *re.impl());
     res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
     return matched;
@@ -133,7 +133,7 @@ template<typename It, MatchDirection direction = MatchDirection::Forward>
 bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
 {
-    Vector<It> captures;
+    Vector<It, MemoryDomain::Regex> captures;
     const bool matched = regex_search<It, direction>(begin, end, captures, *re.impl(), flags);
     res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
     return matched;

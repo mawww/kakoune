@@ -517,7 +517,7 @@ bool regex_match(It begin, It end, const CompiledRegex& re, RegexExecFlags flags
 }
 
 template<typename It, MatchDirection direction = MatchDirection::Forward>
-bool regex_match(It begin, It end, Vector<It>& captures, const CompiledRegex& re,
+bool regex_match(It begin, It end, Vector<It, MemoryDomain::Regex>& captures, const CompiledRegex& re,
                  RegexExecFlags flags = RegexExecFlags::None)
 {
     ThreadedRegexVM<It, direction> vm{re};
@@ -538,7 +538,7 @@ bool regex_search(It begin, It end, const CompiledRegex& re,
 }
 
 template<typename It, MatchDirection direction = MatchDirection::Forward>
-bool regex_search(It begin, It end, Vector<It>& captures, const CompiledRegex& re,
+bool regex_search(It begin, It end, Vector<It, MemoryDomain::Regex>& captures, const CompiledRegex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
 {
     ThreadedRegexVM<It, direction> vm{re};
