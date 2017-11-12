@@ -490,7 +490,7 @@ private:
         {
             for (auto& range : ranges)
             {
-                range.min = to_lower(range.max);
+                range.min = to_lower(range.min);
                 range.max = to_lower(range.max);
             }
             for (auto& cp : excluded)
