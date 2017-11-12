@@ -503,13 +503,16 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 }
 
 int run_client(StringView session, StringView client_init,
-               Optional<BufferCoord> init_coord, UIType ui_type)
+               Optional<BufferCoord> init_coord, UIType ui_type,
+               bool suspend)
 {
     try
     {
         EventManager event_manager;
         RemoteClient client{session, make_ui(ui_type), getpid(), get_env_vars(),
                             client_init, std::move(init_coord)};
+        if (suspend)
+            raise(SIGTSTP);
         while (not client.exit_status())
             event_manager.handle_next_events(EventMode::Normal);
         return *client.exit_status();
@@ -661,7 +664,9 @@ int run_server(StringView session, StringView server_init,
                 local_client->info_show("Welcome to Kakoune", startup_info, {}, InfoStyle::Prompt);
         }
 
-        while (not terminate and (not client_manager.empty() or (flags & ServerFlags::Daemon)))
+        while (not terminate and
+               (not client_manager.empty() or server.negotiating() or
+                (flags & ServerFlags::Daemon)))
         {
             client_manager.redraw_clients();
             event_manager.handle_next_events(EventMode::Normal);
@@ -980,7 +985,7 @@ int main(int argc, char* argv[])
             for (auto name : files)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
-            return run_client(*server_session, new_files + client_init, init_coord, ui_type);
+            return run_client(*server_session, new_files + client_init, init_coord, ui_type, false);
         }
         else
         {
@@ -995,10 +1000,9 @@ int main(int argc, char* argv[])
             }
             catch (convert_to_client_mode& convert)
             {
-                raise(SIGTSTP);
                 return run_client(convert.session,
                                   format("try %^buffer '{}'; select '{}'^; echo converted to client only mode",
-                                         escape(convert.buffer_name, "'^", '\\'), convert.selections), {}, ui_type);
+                                         escape(convert.buffer_name, "'^", '\\'), convert.selections), {}, ui_type, true);
             }
         }
     }

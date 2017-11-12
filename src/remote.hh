@@ -53,6 +53,8 @@ struct Server : public Singleton<Server>
     bool rename_session(StringView name);
     void close_session(bool do_unlink = true);
 
+    bool negotiating() const { return not m_accepters.empty(); }
+
 private:
     class Accepter;
     void remove_accepter(Accepter* accepter);
