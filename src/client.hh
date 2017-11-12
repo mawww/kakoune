@@ -1,6 +1,7 @@
 #ifndef client_hh_INCLUDED
 #define client_hh_INCLUDED
 
+#include "constexpr_utils.hh"
 #include "display_buffer.hh"
 #include "env_vars.hh"
 #include "input_handler.hh"

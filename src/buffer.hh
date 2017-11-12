@@ -3,6 +3,7 @@
 
 #include "clock.hh"
 #include "coord.hh"
+#include "constexpr_utils.hh"
 #include "enum.hh"
 #include "safe_ptr.hh"
 #include "scope.hh"

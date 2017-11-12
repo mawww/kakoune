@@ -2,6 +2,7 @@
 #define input_handler_hh_INCLUDED
 
 #include "completion.hh"
+#include "constexpr_utils.hh"
 #include "context.hh"
 #include "face.hh"
 #include "normal.hh"

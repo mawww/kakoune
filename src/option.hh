@@ -3,6 +3,8 @@
 
 #include "enum.hh"
 #include "meta.hh"
+#include "vector.hh"
+#include "constexpr_utils.hh"
 
 namespace Kakoune
 {
@@ -46,15 +48,15 @@ enum class DebugFlags
 
 constexpr bool with_bit_ops(Meta::Type<DebugFlags>) { return true; }
 
-constexpr Array<EnumDesc<DebugFlags>, 5> enum_desc(Meta::Type<DebugFlags>)
+constexpr auto enum_desc(Meta::Type<DebugFlags>)
 {
-    return { {
+    return make_array<EnumDesc<DebugFlags>, 5>({
         { DebugFlags::Hooks, "hooks" },
         { DebugFlags::Shell, "shell" },
         { DebugFlags::Profile, "profile" },
         { DebugFlags::Keys, "keys" },
         { DebugFlags::Commands, "commands" },
-    } };
+    });
 }
 
 }
