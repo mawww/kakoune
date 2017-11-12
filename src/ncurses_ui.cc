@@ -198,10 +198,7 @@ void NCursesUI::set_face(NCursesWin* window, Face face, const Face& default_face
     if (m_active_pair != -1)
         wattroff(window, COLOR_PAIR(m_active_pair));
 
-    if (face.fg == Color::Default)
-        face.fg = default_face.fg;
-    if (face.bg == Color::Default)
-        face.bg = default_face.bg;
+    face = merge_faces(default_face, face);
 
     if (face.fg != Color::Default or face.bg != Color::Default)
     {
