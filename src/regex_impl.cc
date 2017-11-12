@@ -1389,6 +1389,11 @@ auto test_regex = UnitTest{[]{
     }
 
     {
+        TestVM<> vm{R"((?i)[a-c]+)"};
+        kak_assert(vm.exec("bCa"));
+    }
+
+    {
         TestVM<> vm{R"(д)"};
         kak_assert(vm.exec("д", RegexExecFlags::Search));
     }
