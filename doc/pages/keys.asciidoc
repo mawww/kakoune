@@ -566,8 +566,8 @@ level to select.
 *}*::
     extends selections to object end
 
-After these keys, you need to enter a second key in order to specify which
-object you want
+After these keys, a second key needs to be entered in order to specify
+the wanted object:
 
 *b*, *(*, *)*::
     select the enclosing parenthesis

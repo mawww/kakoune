@@ -115,8 +115,8 @@ add-highlighter window regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
 == Highlighting Groups
 
 
-The *group* highlighter is a container for other highlighters. You can add a
-a subgroup to an existing group, or scope using:
+The *group* highlighter is a container for other highlighters. A subgroup
+can be added to an existing group or scope using:
 
 -----------------------------------
 add-highlighter <path> group <name>

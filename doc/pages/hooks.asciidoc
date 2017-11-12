@@ -160,8 +160,8 @@ some hooks will not consider underlying scopes depending on what context
 they are bound to be run into, e.g. the `BufWritePost` hook is a buffer
 hook, and will not consider the `window` scope.
 
-While defining hook commands with a `%sh{}` block, you have access to
-the following expansions:
+While defining hook commands with a `%sh{}` block, some additional env
+vars are available:
 
 * `kak_hook_param`: filtering text passed to the currently executing hook
 * `kak_hook_param_capture_N`: text captured by the hook filter regex capture N

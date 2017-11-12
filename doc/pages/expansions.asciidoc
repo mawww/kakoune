@@ -10,8 +10,8 @@
 %\{strings\}::
     these strings are very useful when entering commands
 +
-    * the '{' and '}' delimiters are configurable, you can use any non
-    alphanumeric character
+    * the '{' and '}' delimiters are configurable, any non alphanumeric
+    character can be used
 +
 ----------------------------------------------------------
 e.g. %[string], %<string>, %(string), %~string~, %!string!
