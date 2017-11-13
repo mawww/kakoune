@@ -9,6 +9,7 @@
 #include "option.hh"
 #include "ranges.hh"
 #include "string.hh"
+#include "string_utils.hh"
 #include "units.hh"
 
 #include <tuple>
@@ -234,6 +235,8 @@ inline bool option_add(WorstMatch, StringView)
 {
     throw runtime_error("no add operation supported for this option type");
 }
+
+class Context;
 
 inline void option_update(WorstMatch, const Context&)
 {
