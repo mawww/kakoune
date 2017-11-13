@@ -1403,11 +1403,12 @@ void replay_macro(Context& context, NormalParams params)
 }
 
 template<Direction direction>
-void jump(Context& context, NormalParams)
+void jump(Context& context, NormalParams params)
 {
+    const int count = std::max(1, params.count);
     auto jump = (direction == Forward) ?
-                 context.jump_list().forward(context) :
-                 context.jump_list().backward(context);
+                 context.jump_list().forward(context, count) :
+                 context.jump_list().backward(context, count);
 
     Buffer* oldbuf = &context.buffer();
     Buffer& buffer = const_cast<Buffer&>(jump.buffer());

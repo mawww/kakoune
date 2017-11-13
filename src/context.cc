@@ -86,12 +86,13 @@ void JumpList::push(SelectionList jump)
     m_current = m_jumps.size();
 }
 
-const SelectionList& JumpList::forward(Context& context)
+const SelectionList& JumpList::forward(Context& context, int count)
 {
     if (m_current != m_jumps.size() and
-        m_current + 1 != m_jumps.size())
+        m_current + count < m_jumps.size())
     {
-        SelectionList& res = m_jumps[++m_current];
+        m_current += count;
+        SelectionList& res = m_jumps[m_current];
         res.update();
         context.print_status({ format("jumped to #{} ({})",
                                m_current, m_jumps.size() - 1),
@@ -101,14 +102,18 @@ const SelectionList& JumpList::forward(Context& context)
     throw runtime_error("no next jump");
 }
 
-const SelectionList& JumpList::backward(Context& context)
+const SelectionList& JumpList::backward(Context& context, int count)
 {
+    if ((int)m_current - count < 0)
+        throw runtime_error("no previous jump");
+
     const SelectionList& current = context.selections();
     if (m_current != m_jumps.size() and
         m_jumps[m_current] != current)
     {
         push(current);
-        SelectionList& res = m_jumps[--m_current];
+        m_current -= count;
+        SelectionList& res = m_jumps[m_current];
         res.update();
         context.print_status({ format("jumped to #{} ({})",
                                m_current, m_jumps.size() - 1),
@@ -123,7 +128,8 @@ const SelectionList& JumpList::backward(Context& context)
             if (--m_current == 0)
                 throw runtime_error("no previous jump");
         }
-        SelectionList& res = m_jumps[--m_current];
+        m_current -= count;
+        SelectionList& res = m_jumps[m_current];
         res.update();
         context.print_status({ format("jumped to #{} ({})",
                                m_current, m_jumps.size() - 1),

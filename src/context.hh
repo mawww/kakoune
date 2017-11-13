@@ -20,8 +20,8 @@ class AliasRegistry;
 struct JumpList
 {
     void push(SelectionList jump);
-    const SelectionList& forward(Context& context);
-    const SelectionList& backward(Context& context);
+    const SelectionList& forward(Context& context, int count);
+    const SelectionList& backward(Context& context, int count);
     void forget_buffer(Buffer& buffer);
 
     friend bool operator==(const JumpList& lhs, const JumpList& rhs)
