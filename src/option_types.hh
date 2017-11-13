@@ -322,13 +322,17 @@ EnableIfWithBitOps<Flags, bool> option_add(Flags& opt, StringView str)
 template<typename P, typename T>
 inline String option_to_string(const PrefixedList<P, T>& opt)
 {
-    return format("{}:{}", opt.prefix, option_to_string(opt.list));
+    if (opt.list.empty())
+        return format("{}", escape(option_to_string(opt.prefix), list_separator, '\\'));
+    else
+        return format("{}{}{}", escape(option_to_string(opt.prefix), list_separator, '\\'),
+                      list_separator, option_to_string(opt.list));
 }
 
 template<typename P, typename T>
 inline void option_from_string(StringView str, PrefixedList<P, T>& opt)
 {
-    auto it = find(str, ':');
+    auto it = find(str, list_separator);
     option_from_string(StringView{str.begin(), it}, opt.prefix);
     if (it != str.end())
         option_from_string({it+1, str.end()}, opt.list);
