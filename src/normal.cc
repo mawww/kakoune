@@ -932,6 +932,19 @@ void split_lines(Context& context, NormalParams)
     selections = std::move(res);
 }
 
+void select_boundaries(Context& context, NormalParams)
+{
+    auto& selections = context.selections();
+    Vector<Selection> res;
+    for (auto& sel : selections)
+    {
+        res.push_back(sel.min());
+        if (sel.min() != sel.max())
+            res.push_back(sel.max());
+    }
+    selections = std::move(res);
+}
+
 void join_lines_select_spaces(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
@@ -2011,6 +2024,7 @@ static const HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> key
     { {'s'}, {"select regex matches in selected text", select_regex} },
     { {'S'}, {"split selected text on regex matches", split_regex} },
     { {alt('s')}, {"split selected text on line ends", split_lines} },
+    { {alt('S')}, {"select selection boundaries", select_boundaries} },
 
     { {'.'}, {"repeat last insert command", repeat_last_insert} },
     { {alt('.')}, {"repeat last object select/character find", repeat_last_select} },

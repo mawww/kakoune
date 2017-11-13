@@ -513,11 +513,14 @@ to skim through the jump list using:
 *s*::
     create a selection
 
+*S*::
+    split the current selection
+
 *<a-s>*::
     split the current selections on line boundaries
 
-*S*::
-    split the current selection
+*<a-S>*::
+    select first and last characters of each selections
 
 *C*::
     copy the current selection to the next line
