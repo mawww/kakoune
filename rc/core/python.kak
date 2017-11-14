@@ -18,14 +18,46 @@ add-highlighter shared/ regions -default code python \
     single_string "'"   (?<!\\)(\\\\)*'  '' \
     comment       '#'   '$'              ''
 
+# Integer formats
+add-highlighter shared/python/code regex '(?i)\b0b[01]+l?\b' 0:value
+add-highlighter shared/python/code regex '(?i)\b0x[\da-f]+l?\b' 0:value
+add-highlighter shared/python/code regex '(?i)\b0o?[0-7]+l?\b' 0:value
+add-highlighter shared/python/code regex '(?i)\b([1-9]\d*|0)l?\b' 0:value
+# Float formats
+add-highlighter shared/python/code regex '\b\d+[eE][+-]?\d+\b' 0:value
+add-highlighter shared/python/code regex '(\b\d+)?\.\d+\b' 0:value
+add-highlighter shared/python/code regex '\b\d+\.' 0:value
+# Imaginary formats
+add-highlighter shared/python/code regex '\b\d+\+\d+[jJ]\b' 0:value
+
 add-highlighter shared/python/double_string fill string
 add-highlighter shared/python/single_string fill string
 add-highlighter shared/python/comment       fill comment
 
 %sh{
     # Grammar
-    values="True|False|None"
+    values="True|False|None|self|inf"
     meta="import|from"
+    # attributes and methods list based on https://docs.python.org/3/reference/datamodel.html
+    attributes="__annotations__|__closure__|__code__|__defaults__|__dict__|__doc__"
+    attributes="${attributes}|__globals__|__kwdefaults__|__module__|__name__|__qualname__"
+    methods="__abs__|__add__|__aenter__|__aexit__|__aiter__|__and__|__anext__"
+    methods="${methods}|__await__|__bool__|__bytes__|__call__|__complex__|__contains__"
+    methods="${methods}|__del__|__delattr__|__delete__|__delitem__|__dir__|__divmod__"
+    methods="${methods}|__enter__|__eq__|__exit__|__float__|__floordiv__|__format__"
+    methods="${methods}|__ge__|__get__|__getattr__|__getattribute__|__getitem__"
+    methods="${methods}|__gt__|__hash__|__iadd__|__iand__|__ifloordiv__|__ilshift__"
+    methods="${methods}|__imatmul__|__imod__|__imul__|__index__|__init__"
+    methods="${methods}|__init_subclass__|__int__|__invert__|__ior__|__ipow__"
+    methods="${methods}|__irshift__|__isub__|__iter__|__itruediv__|__ixor__|__le__"
+    methods="${methods}|__len__|__length_hint__|__lshift__|__lt__|__matmul__"
+    methods="${methods}|__missing__|__mod__|__mul__|__ne__|__neg__|__new__|__or__"
+    methods="${methods}|__pos__|__pow__|__radd__|__rand__|__rdivmod__|__repr__"
+    methods="${methods}|__reversed__|__rfloordiv__|__rlshift__|__rmatmul__|__rmod__"
+    methods="${methods}|__rmul__|__ror__|__round__|__rpow__|__rrshift__|__rshift__"
+    methods="${methods}|__rsub__|__rtruediv__|__rxor__|__set__|__setattr__"
+    methods="${methods}|__setitem__|__set_name__|__slots__|__str__|__sub__"
+    methods="${methods}|__truediv__|__xor__"
     # Keyword list is collected using `keyword.kwlist` from `keyword`
     keywords="and|as|assert|break|class|continue|def|del|elif|else|except|exec"
     keywords="${keywords}|finally|for|global|if|in|is|lambda|not|or|pass|print"
@@ -42,13 +74,15 @@ add-highlighter shared/python/comment       fill comment
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=python %{
-        set-option window static_words '${values}:${meta}:${keywords}:${types}:${functions}'
+        set-option window static_words '${values}:${meta}:${attributes}:${methods}:${keywords}:${types}:${functions}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
     printf %s "
         add-highlighter shared/python/code regex '\b(${values})\b' 0:value
         add-highlighter shared/python/code regex '\b(${meta})\b' 0:meta
+        add-highlighter shared/python/code regex '\b(${attribute})\b' 0:attribute
+        add-highlighter shared/python/code regex '\bdef\s+(${methods})\b' 1:function
         add-highlighter shared/python/code regex '\b(${keywords})\b' 0:keyword
         add-highlighter shared/python/code regex '\b(${functions})\b\(' 1:builtin
     "
