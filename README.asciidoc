@@ -145,7 +145,7 @@ brew upgrade --fetch-HEAD kakoune
 ====
 
 [TIP]
-.Fedora 22/23/24/Rawhide
+.Fedora supported versions and Rawhide
 ====
 Use the https://copr.fedoraproject.org/coprs/jkonecny/kakoune/[copr]
 repository.
