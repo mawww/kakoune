@@ -32,7 +32,7 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
     execute-keys \;
     try %<
         # if previous line closed a paren, copy indent of the opening paren line
-        execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?$<ret> m<a-\;>J s\A|.\z<ret> 1<a-&>
+        execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?$<ret> m<a-\;>J <a-S> 1<a-&>
     > catch %<
         # else indent new lines with the same level as the previous one
         execute-keys -draft K <a-&>
@@ -51,7 +51,7 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
         # Go to opening parenthesis and opening brace, then select the most nested one
         try %< try %< execute-keys [bZ<a-\;>[B<a-z><gt> > catch %< execute-keys [B > >
         # Validate selection and get first and last char
-        execute-keys <a-k>\A[{(](\h*\S+)+\n<ret> <a-:><a-\;>L s\A|.\z<ret>
+        execute-keys <a-k>\A[{(](\h*\S+)+\n<ret> <a-:><a-\;>L <a-S>
         # Remove eventual indent from new line
         try %< execute-keys -draft <space> <a-h> s\h+<ret> d >
         # Now align that new line with the opening parenthesis/brace
@@ -61,12 +61,12 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
 
 define-command -hidden c-family-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
-    try %[ execute-keys -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
+    try %[ execute-keys -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> <a-S> 1<a-&> ]
 ]
 
 define-command -hidden c-family-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
-    try %[ execute-keys -itersel -draft <a-h><a-:><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
+    try %[ execute-keys -itersel -draft <a-h><a-:><a-k>^\h+\}$<ret>hm<a-S>1<a-&> ]
 ]
 
 define-command -hidden c-family-insert-on-closing-curly-brace %[
