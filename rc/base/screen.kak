@@ -3,7 +3,7 @@
  
 hook global KakBegin .* %{
     %sh{
-        [ -z "kak_client_env_$STY" ] && exit
+        [ -z "${kak_client_env_STY}" ] && exit
         echo "
             alias global focus screen-focus
             alias global new screen-new-vertical
@@ -14,7 +14,6 @@ hook global KakBegin .* %{
 
 def screen-new-vertical -params .. -command-completion -docstring "Create a new vertical region" %{
      %sh{
-
         tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
         screen -X eval 'split -h' 'focus down' "screen kak -c \"${kak_session}\" -e \"$*\"" < "/dev/$tty"
     }
@@ -43,8 +42,8 @@ If no client is passed then the current one is used} \
                 evaluate-commands -client '$1' %{ %sh{
                     screen -X focus
             }}"
-        elif [ -n "kak_client_env_$STY" ]; then
+        elif [ -n "${kak_client_env_STY}" ]; then
             tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
-            screen -X select "$kak_client_env_WINDOW" < "$/dev/$tty"
+            screen -X select "$kak_client_env_WINDOW" < "/dev/$tty"
         fi
 } }
