@@ -12,28 +12,28 @@ hook global KakBegin .* %{
 }
 
 
-def screen-new-vertical -params .. -command-completion -docstring "Create a new vertical region" %{
+define-command screen-new-vertical -params .. -command-completion -docstring "Create a new vertical region" %{
      %sh{
         tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
         screen -X eval 'split -h' 'focus down' "screen kak -c \"${kak_session}\" -e \"$*\"" < "/dev/$tty"
     }
 }
 
-def screen-new-horizontal -params .. -command-completion -docstring "Create a new horizontal region" %{
+define-command screen-new-horizontal -params .. -command-completion -docstring "Create a new horizontal region" %{
      %sh{
         tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
         screen -X eval 'split -v' 'focus right' "screen kak -c \"${kak_session}\" -e \"$*\"" < "/dev/$tty"
     }
 }
 
-def screen-new-window -params .. -command-completion -docstring "Create a new window" %{
+define-command screen-new-window -params .. -command-completion -docstring "Create a new window" %{
     %sh{
         tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
         screen -X screen kak -c "${kak_session}" -e "$*" < "/dev/$tty"
     }
 }
 
-def -docstring %{screen-focus [<client>]: focus the given client
+define-command -docstring %{screen-focus [<client>]: focus the given client
 If no client is passed then the current one is used} \
     -params ..1 -client-completion \
     screen-focus %{ %sh{
