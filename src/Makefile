@@ -17,6 +17,8 @@ sources := $(sort $(wildcard *.cc))
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
 deps := $(addprefix ., $(sources:.cc=$(suffix).d))
 
+PKG_CONFIG ?= pkg-config
+
 PREFIX ?= /usr/local
 DESTDIR ?= # root dir
 
@@ -45,8 +47,8 @@ else ifneq (,$(findstring CYGWIN,$(os)))
     CPPFLAGS += -D_XOPEN_SOURCE=700
     LIBS += -lncursesw -ldbghelp
 else
-    LIBS += $(shell pkg-config --libs ncursesw)
-    CPPFLAGS += $(shell pkg-config --cflags ncursesw)
+    LIBS += $(shell $(PKG_CONFIG) --libs ncursesw)
+    CPPFLAGS += $(shell $(PKG_CONFIG) --cflags ncursesw)
     LDFLAGS += -rdynamic
 endif
 
