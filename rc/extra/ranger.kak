@@ -23,6 +23,29 @@ All the optional arguments are forwarded to the ranger utility} \
             kak -p $kak_session; \
             tmux select-pane -t $kak_client_env_TMUX_PANE'.format(file=fm.thisfile.path)) \
           if fm.thisfile.is_file else fm.execute_console('move right=1')"
+
+  elif [ -n "${STY}" ]; then
+
+    script="/tmp/kak-ranger-${kak_client}-${kak_session}.sh"
+    selections="/tmp/kak-ranger-${kak_client}-${kak_session}.txt"
+    cat > "$script" << EOF
+#! /usr/bin/env sh
+cd "$PWD"
+ranger --choosefiles="$selections" $@
+while read -r f; do
+    printf %s  "evaluate-commands -client '${kak_client}' edit '\"\$f\"'" | kak -p '${kak_session}'
+done < "$selections"
+screen -X remove
+rm -f "$selections" "$script"
+EOF
+
+        tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
+        screen -X eval \
+            'split -h' \
+            'focus down' \
+            "screen sh '$script'" \
+        < "/dev/$tty"
+
   elif [ -n "$WINDOWID" ]; then
     setsid $kak_opt_termcmd " \
       ranger $@ --cmd "'"'" \
