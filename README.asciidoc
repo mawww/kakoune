@@ -219,33 +219,7 @@ Running
 ~~~~~~~
 
 Just running *kak* launch a new kak session with a client on local terminal.
-*kak* accepts some switches:
-
- * `-c <session>`: connect to given session, sessions are unix sockets
-       `/tmp/kakoune/<user>/<session>`, `<user>/<session>` can be used
-       as well to connect to another user's session, provided the socket
-       permissions have been changed to allow it.
- * `-e <commands>`: execute commands on startup
- * `-n`: ignore kakrc file
- * `-s <session>`: set the session name, by default it will be the pid
-       of the initial kak process.
- * `-d`: run Kakoune in daemon mode, without user interface. This requires
-       the session name to be specified with -s. In this mode, the Kakoune
-       server will keep running even if there is no connected client, and
-       will quit when receiving SIGTERM.
- * `-p <session>`: read stdin, and then send its content to the given session
-       acting as a remote control.
- * `-f <keys>`: Work as a filter, read every file given on the command line
-       and stdin if piped in, and apply given keys on each.
- * `-ui <userinterface>`: use given user interface, `<userinterface>` can be
-    - `ncurses`: default terminal user interface
-    - `dummy`: empty user interface not displaying anything
-    - `json`: json-rpc based user interface that writes json on stdout and
-        read keystrokes as json on stdin.
- * `-l`: list existing sessions, and check the dead ones
- * `-clear`: clear dead session's socket files
- * `-ro`: prevent modifications to all buffers from being saved to disk
- * `+line[:column]`: specify a target line and column for the first file
+Run *kak -help* to discover the valid <<doc/kak.1#options,command line flags>>.
 
 Configuration
 ^^^^^^^^^^^^^

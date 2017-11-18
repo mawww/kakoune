@@ -47,6 +47,9 @@ OPTIONS
 -f <keys>::
 	enter in 'filter mode' and execute *keys* on the files passed as arguments
 
+-i <suffix>::
+	backup the files on which a filter is applied using the given suffix
+
 -q::
 	when in 'filter mode', don't print any errors
 
