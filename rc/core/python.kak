@@ -38,6 +38,7 @@ add-highlighter shared/python/comment       fill comment
     # Grammar
     values="True|False|None|self|inf"
     meta="import|from"
+
     # attributes and methods list based on https://docs.python.org/3/reference/datamodel.html
     attributes="__annotations__|__closure__|__code__|__defaults__|__dict__|__doc__"
     attributes="${attributes}|__globals__|__kwdefaults__|__module__|__name__|__qualname__"
@@ -58,12 +59,33 @@ add-highlighter shared/python/comment       fill comment
     methods="${methods}|__rsub__|__rtruediv__|__rxor__|__set__|__setattr__"
     methods="${methods}|__setitem__|__set_name__|__slots__|__str__|__sub__"
     methods="${methods}|__truediv__|__xor__"
+
+    # built-in exceptions https://docs.python.org/3/library/exceptions.html
+    exceptions="ArithmeticError|AssertionError|AttributeError|BaseException|BlockingIOError"
+    exceptions="${exceptions}|BrokenPipeError|BufferError|BytesWarning|ChildProcessError"
+    exceptions="${exceptions}|ConnectionAbortedError|ConnectionError|ConnectionRefusedError"
+    exceptions="${exceptions}|ConnectionResetError|DeprecationWarning|EOFError|Exception"
+    exceptions="${exceptions}|FileExistsError|FileNotFoundError|FloatingPointError|FutureWarning"
+    exceptions="${exceptions}|GeneratorExit|ImportError|ImportWarning|IndentationError"
+    exceptions="${exceptions}|IndexError|InterruptedError|IsADirectoryError|KeyboardInterrupt"
+    exceptions="${exceptions}|KeyError|LookupError|MemoryError|ModuleNotFoundError|NameError"
+    exceptions="${exceptions}|NotADirectoryError|NotImplementedError|OSError|OverflowError"
+    exceptions="${exceptions}|PendingDeprecationWarning|PermissionError|ProcessLookupError"
+    exceptions="${exceptions}|RecursionError|ReferenceError|ResourceWarning|RuntimeError"
+    exceptions="${exceptions}|RuntimeWarning|StopAsyncIteration|StopIteration|SyntaxError"
+    exceptions="${exceptions}|SyntaxWarning|SystemError|SystemExit|TabError|TimeoutError|TypeError"
+    exceptions="${exceptions}|UnboundLocalError|UnicodeDecodeError|UnicodeEncodeError|UnicodeError"
+    exceptions="${exceptions}|UnicodeTranslateError|UnicodeWarning|UserWarning|ValueError|Warning"
+    exceptions="${exceptions}|ZeroDivisionError"
+
     # Keyword list is collected using `keyword.kwlist` from `keyword`
     keywords="and|as|assert|break|class|continue|def|del|elif|else|except|exec"
     keywords="${keywords}|finally|for|global|if|in|is|lambda|not|or|pass|print"
     keywords="${keywords}|raise|return|try|while|with|yield"
+
     types="bool|buffer|bytearray|bytes|complex|dict|file|float|frozenset|int"
     types="${types}|list|long|memoryview|object|set|str|tuple|unicode|xrange"
+
     functions="abs|all|any|ascii|bin|callable|chr|classmethod|compile|complex"
     functions="${functions}|delattr|dict|dir|divmod|enumerate|eval|exec|filter"
     functions="${functions}|format|frozenset|getattr|globals|hasattr|hash|help"
@@ -74,7 +96,7 @@ add-highlighter shared/python/comment       fill comment
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=python %{
-        set-option window static_words '${values}:${meta}:${attributes}:${methods}:${keywords}:${types}:${functions}'
+        set-option window static_words '${values}:${meta}:${attributes}:${methods}:${exceptions}:${keywords}:${types}:${functions}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -83,12 +105,9 @@ add-highlighter shared/python/comment       fill comment
         add-highlighter shared/python/code regex '\b(${meta})\b' 0:meta
         add-highlighter shared/python/code regex '\b(${attribute})\b' 0:attribute
         add-highlighter shared/python/code regex '\bdef\s+(${methods})\b' 1:function
+        add-highlighter shared/python/code regex '\b(${exceptions})\b' 0:function
         add-highlighter shared/python/code regex '\b(${keywords})\b' 0:keyword
         add-highlighter shared/python/code regex '\b(${functions})\b\(' 1:builtin
-    "
-
-    # Highlight types and attributes
-    printf %s "
         add-highlighter shared/python/code regex '\b(${types})\b' 0:type
         add-highlighter shared/python/code regex '@[\w_]+\b' 0:attribute
     "
