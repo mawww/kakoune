@@ -1,5 +1,12 @@
 debug ?= yes
 static ?= no
+gzip_man ?= yes
+
+ifneq ($(gzip_man),yes)
+    ifneq ($(gzip_man),no)
+        $(error gzip_man should be either yes or no)
+    endif
+endif
 
 ifeq ($(debug),yes)
     CPPFLAGS += -DKAK_DEBUG
@@ -73,9 +80,16 @@ kak$(suffix) : $(objects)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
 
 # Generate the man page
+ifeq ($(gzip_man),yes)
 ../doc/kak.1.gz: ../doc/kak.1.txt
 	a2x --no-xmllint -f manpage $<
 	gzip -n -9 -f $(basename $<)
+man: ../doc/kak.1.gz
+else
+../doc/kak.1: ../doc/kak.1.txt
+	a2x --no-xmllint -f manpage $<
+man: ../doc/kak.1
+endif
 
 check: test
 test:
@@ -84,14 +98,13 @@ test:
 TAGS: tags
 tags:
 	ctags -R
-man: ../doc/kak.1.gz
 
 clean:
 	rm -f .*.o .*.d
 
 distclean: clean
 	rm -f kak kak$(suffix)
-	find ../doc -type f -name \*\\.gz -exec rm -f '{}' +
+	find ../doc -type f \( -name \*\\.gz -o -name \*\\.1 \) -exec rm -f '{}' +
 
 installdirs:
 	install -d $(bindir) \
@@ -113,7 +126,11 @@ install: kak man installdirs
 	[ -e $(sharedir)/autoload ] || ln -s rc $(sharedir)/autoload
 	install -m 0644 ../colors/* $(sharedir)/colors
 	install -m 0644 ../README.asciidoc $(docdir)
+ifeq ($(gzip_man),yes)
 	install -m 0644 ../doc/kak.1.gz $(mandir)
+else
+	install -m 0644 ../doc/kak.1 $(mandir)
+endif
 
 install-strip: install
 	strip -s $(bindir)/kak
@@ -122,7 +139,8 @@ uninstall:
 	rm -rf $(bindir)/kak \
 		$(sharedir) \
 		$(docdir) \
-		$(mandir)/kak.1.gz
+		$(mandir)/kak.1.gz \
+		$(mandir)/kak.1
 
 .PHONY: check TAGS clean distclean installdirs install install-strip uninstall
 .PHONY: tags test man kak
