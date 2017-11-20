@@ -667,24 +667,6 @@ private:
     LineEditor m_filter_editor;
 };
 
-String common_prefix(ConstArrayView<String> strings)
-{
-    String res;
-    if (strings.empty())
-        return res;
-    res = strings[0];
-    for (auto& str : strings)
-    {
-        ByteCount len = std::min(res.length(), str.length());
-        ByteCount common_len = 0;
-        while (common_len < len and str[common_len] == res[common_len])
-            ++common_len;
-        if (common_len != res.length())
-            res = res.substr(0, common_len).str();
-    }
-    return res;
-}
-
 static Optional<Codepoint> get_raw_codepoint(Key key)
 {
     if (auto cp = key.codepoint())
