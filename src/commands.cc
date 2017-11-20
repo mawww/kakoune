@@ -387,7 +387,8 @@ static void ensure_all_buffers_are_saved()
     if (it == end)
         return;
 
-    String message = "modified buffers remaining: [";
+    String message = format("{} modified buffers remaining: [",
+                            std::count_if(it, end, is_modified));
     while (it != end)
     {
         message += (*it)->name();
