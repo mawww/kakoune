@@ -752,14 +752,15 @@ struct WrapHighlighter : Highlighter
             return count;
         };
 
+        const auto win_height = context.window().dimensions().line;
+
         // Disable horizontal scrolling when using a WrapHighlighter
-        setup.cursor_pos.column += setup.window_pos.column;
         setup.window_pos.column = 0;
+        setup.window_range.line = win_height;
         setup.scroll_offset.column = 0;
         setup.full_lines = true;
 
-        LineCount win_line = 0;
-        for (auto buf_line = setup.window_pos.line;
+        for (auto buf_line = setup.window_pos.line, win_line = 0_line;
              buf_line < setup.window_pos.line + setup.window_range.line or
              buf_line <= cursor.line;
              ++buf_line)
@@ -801,20 +802,14 @@ struct WrapHighlighter : Highlighter
             while (buf_line >= cursor.line and setup.window_pos.line < cursor.line and
                    cursor.line + setup.scroll_offset.line >= setup.window_pos.line + setup.window_range.line)
             {
-                auto removed_lines = std::min(context.window().dimensions().line,
-                                              1 + line_wrap_count(setup.window_pos.line++, indent));
-                setup.cursor_pos.line -= removed_lines;
-                win_line -= removed_lines;
-                // removed one line from the range, added removed_lines potential ones
-                setup.window_range.line += removed_lines - 1;
+                auto remove_count = std::min(win_height, 1 + line_wrap_count(setup.window_pos.line, indent));
+                ++setup.window_pos.line;
+                setup.cursor_pos.line -= remove_count;
+                win_line -= remove_count;
+                // removed one line from the range, added remove_count potential ones
+                setup.window_range.line += remove_count - 1;
                 kak_assert(setup.cursor_pos.line >= 0);
             }
-
-            if (setup.window_range.line <= buf_line - setup.window_pos.line)
-                setup.window_range.line = buf_line - setup.window_pos.line + 1;
-            // Todo: support displaying partial lines, so that we can ensure the cursor is
-            // visible even if a line takes more than the full screen height once wrapped.
-            // kak_assert(setup.cursor_pos.line >= 0 and setup.cursor_pos.line < win_height);
         }
     }
 
