@@ -760,7 +760,7 @@ void search(Context& context, NormalParams params)
     const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
     regex_prompt<direction>(context, prompt.str(), saved_reg[main_index],
-                 [reg, count, saved_reg, main_index]
+                 [reg, count, saved_reg]
                  (Regex regex, PromptEvent event, Context& context) {
                      if (event == PromptEvent::Abort)
                      {
@@ -871,7 +871,7 @@ void select_regex(Context& context, NormalParams params)
     const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
     regex_prompt(context, std::move(prompt), saved_reg[main_index],
-                 [reg, capture, saved_reg, main_index](Regex ex, PromptEvent event, Context& context) {
+                 [reg, capture, saved_reg](Regex ex, PromptEvent event, Context& context) {
          if (event == PromptEvent::Abort)
          {
              RegisterManager::instance()[reg].set(context, saved_reg);
@@ -896,7 +896,7 @@ void split_regex(Context& context, NormalParams params)
     const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
     regex_prompt(context, std::move(prompt), saved_reg[main_index],
-                 [reg, capture, saved_reg, main_index](Regex ex, PromptEvent event, Context& context) {
+                 [reg, capture, saved_reg](Regex ex, PromptEvent event, Context& context) {
          if (event == PromptEvent::Abort)
          {
              RegisterManager::instance()[reg].set(context, saved_reg);
