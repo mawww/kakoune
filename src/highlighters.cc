@@ -484,14 +484,6 @@ private:
     RegexHighlighter m_highlighter;
 };
 
-template<typename RegexGetter, typename FaceGetter>
-std::unique_ptr<DynamicRegexHighlighter<RegexGetter, FaceGetter>>
-make_dynamic_regex_highlighter(RegexGetter regex_getter, FaceGetter face_getter)
-{
-    return std::make_unique<DynamicRegexHighlighter<RegexGetter, FaceGetter>>(
-        std::move(regex_getter), std::move(face_getter));
-}
-
 HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
 {
     if (params.size() < 2)
@@ -509,6 +501,12 @@ HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
         faces.emplace_back(capture, String{colon+1, spec.end()});
     }
 
+
+    auto make_hl = [](auto& regex_getter, auto& face_getter) {
+        return std::make_unique<DynamicRegexHighlighter<std::decay_t<decltype(regex_getter)>,
+                                                        std::decay_t<decltype(face_getter)>>>(
+            std::move(regex_getter), std::move(face_getter));
+    };
     auto get_face = [faces](const Context& context){ return faces;; };
 
     String expr = params[0];
@@ -520,7 +518,7 @@ HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
         auto get_regex = [option_name](const Context& context) {
             return context.options()[option_name].get<Regex>();
         };
-        return {format("dynregex_{}", expr), make_dynamic_regex_highlighter(get_regex, get_face)};
+        return {format("dynregex_{}", expr), make_hl(get_regex, get_face)};
     }
 
     auto get_regex = [expr](const Context& context){
@@ -535,7 +533,7 @@ HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
             return Regex{};
         }
     };
-    return {format("dynregex_{}", expr), make_dynamic_regex_highlighter(get_regex, get_face)};
+    return {format("dynregex_{}", expr), make_hl(get_regex, get_face)};
 }
 
 HighlighterAndId create_line_highlighter(HighlighterParameters params)
