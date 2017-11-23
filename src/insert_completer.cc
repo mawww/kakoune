@@ -463,7 +463,7 @@ bool InsertCompleter::setup_ifn()
                 try_complete(complete_filename<true>))
                 return true;
             if (completer.mode == InsertCompleterDesc::Option and
-                try_complete([&,this](const SelectionList& sels, const OptionManager& options) {
+                try_complete([&](const SelectionList& sels, const OptionManager& options) {
                    return complete_option(sels, options, *completer.param);
                 }))
                 return true;

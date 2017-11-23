@@ -457,7 +457,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
 
     if (not dirname.empty())
     {
-        auto filter = [&dirname](const dirent& entry, const struct stat& st)
+        auto filter = [](const dirent& entry, const struct stat& st)
         {
             bool executable = (st.st_mode & S_IXUSR)
                             | (st.st_mode & S_IXGRP)
@@ -496,7 +496,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
         auto& cache = command_cache[dirname];
         if (memcmp(&cache.mtim, &st.st_mtim, sizeof(TimeSpec)) != 0)
         {
-            auto filter = [&dirname](const dirent& entry, const struct stat& st) {
+            auto filter = [](const dirent& entry, const struct stat& st) {
                 bool executable = (st.st_mode & S_IXUSR)
                                 | (st.st_mode & S_IXGRP)
                                 | (st.st_mode & S_IXOTH);
