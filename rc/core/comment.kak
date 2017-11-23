@@ -59,7 +59,7 @@ hook global BufSetOption filetype=haml %{
 
 hook global BufSetOption filetype=html %{
     set-option buffer comment_line ''
-    set-option buffer comment_block_begin '<lt>!--'
+    set-option buffer comment_block_begin '<!--'
     set-option buffer comment_block_end '-->'
 }
 
@@ -121,14 +121,18 @@ define-command comment-block -docstring '(un)comment selections using block comm
         execute-keys <a-K>\A\s*\z<ret>
 
         try %{
-            # Assert that the selection has not been commented
-            execute-keys "<a-K>\A\Q%opt{comment_block_begin}\E.*\Q%opt{comment_block_end}\E\n*\z<ret>"
-
-            # Comment the selection
-            execute-keys -draft "a%opt{comment_block_end}<esc>i%opt{comment_block_begin}"
+            # Assert that the selection has been commented
+            set-register / "\A\Q%opt{comment_block_begin}\E.*\Q%opt{comment_block_end}\E\n*\z"
+            execute-keys "s<ret>"
+            # Uncomment it
+            set-register / "\A\Q%opt{comment_block_begin}\E|\Q%opt{comment_block_end}\E\n*\z"
+            execute-keys s<ret>d
         } catch %{
-            # Uncomment the commented selection
-            execute-keys -draft "s(\A\Q%opt{comment_block_begin}\E)|(\Q%opt{comment_block_end}\E\n*\z)<ret>d"
+            # Comment the selection
+            set-register '"' "%opt{comment_block_begin}"
+            execute-keys P
+            set-register '"' "%opt{comment_block_end}"
+            execute-keys p
         }
     }
 }
@@ -148,14 +152,13 @@ define-command comment-line -docstring '(un)comment selected lines using line co
             execute-keys <a-K>\A\s*\z<ret>
 
             try %{
-                # Assert that the line has not been commented
-                execute-keys "<a-K>\A\Q%opt{comment_line}\E<ret>"
-
-                # Comment the line
-                execute-keys -draft "i%opt{comment_line}"
+                # Select the comment characters and remove them
+                set-register / "\A\Q%opt{comment_line}\E\h*"
+                execute-keys s<ret>d
             } catch %{
-                # Uncomment the line
-                execute-keys -draft "s\A\Q%opt{comment_line}\E\h*<ret>d"
+                # Comment the line
+                set-register '"' "%opt{comment_line}"
+                execute-keys P
             }
         }
     }
