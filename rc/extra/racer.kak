@@ -1,6 +1,12 @@
 declare-option -hidden str racer_tmp_dir
 declare-option -hidden completions racer_completions
 
+%sh{
+    if ! command -v racer >/dev/null; then
+        echo 'echo -debug racer: warning, command dependency unmet: racer'
+    fi
+}
+
 define-command racer-complete -docstring "Complete the current selection with racer" %{
     %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-racer.XXXXXXXX)

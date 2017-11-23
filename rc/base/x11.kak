@@ -21,6 +21,12 @@ A shell command is appended to the one set-option in this option at runtime} \
     done
 }
 
+%sh{
+    if ! command -v xdotool >/dev/null; then
+        echo 'echo -debug x11: warning, command dependency unmet: xdotool'
+    fi
+}
+
 define-command -docstring %{x11-new [<command>]: create a new kak client for the current session
 The optional arguments will be passed as arguments to the new client} \
     -params .. \

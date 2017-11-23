@@ -6,6 +6,12 @@ declare-option -hidden completions clang_completions
 declare-option -hidden line-specs clang_flags
 declare-option -hidden line-specs clang_errors
 
+%sh{
+    if ! command -v clang++ >/dev/null; then
+        echo 'echo -debug clang: warning, command dependency unmet: clang++'
+    fi
+}
+
 define-command -params ..1 \
     -docstring %{Parse the contents of the current buffer
 The syntaxic errors detected during parsing are shown when auto-diagnostics are enabled} \

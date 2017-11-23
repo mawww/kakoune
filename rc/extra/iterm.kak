@@ -14,6 +14,12 @@ hook global KakBegin .* %{
     }
 }
 
+%sh{
+    if ! command -v osascript >/dev/null; then
+        echo 'echo -debug iterm: warning, command dependency unmet: osascript'
+    fi
+}
+
 define-command -hidden -params 1.. iterm-new-split-impl %{
     %sh{
         direction="$1"

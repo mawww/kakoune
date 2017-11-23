@@ -1,6 +1,12 @@
 declare-option -docstring "name of the client in which documentation is to be displayed" \
     str docsclient
 
+%sh{
+    if ! command -v git >/dev/null; then
+        echo 'echo -debug git-tools: warning, command dependency unmet: git'
+    fi
+}
+
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
     add-highlighter window group git-log-highlight
     add-highlighter window/git-log-highlight regex '^(commit) ([0-9a-f]+)$' 1:yellow 2:red

@@ -7,8 +7,8 @@
 
 %sh{
     for dep in gocode goimports gogetdoc jq; do
-        if ! command -v $dep > /dev/null 2>&1; then
-            echo "echo -debug %{Dependency unmet: $dep, please install it to use go-tools}"
+        if ! command -v "${dep}" >/dev/null; then
+            printf 'echo -debug go-tools: warning, command dependency unmet: %s\n' "${dep}"
         fi
     done
 }

@@ -3,6 +3,12 @@
 
 declare-option -hidden bool editorconfig_trim_trailing_whitespace false
 
+%sh{
+    if ! command -v editorconfig >/dev/null; then
+        echo 'echo -debug editorconfig: warning, command dependency unmet: editorconfig'
+    fi
+}
+
 define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file]: set-option formatting behavior according to editorconfig" %{
     remove-hooks buffer editorconfig-hooks
     %sh{

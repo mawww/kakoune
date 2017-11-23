@@ -1,3 +1,9 @@
+%sh{
+    if ! command -v xdotool >/dev/null; then
+        echo 'echo -debug x11-repl: warning, command dependency unmet: xdotool'
+    fi
+}
+
 # termcmd should already be set-option in x11.kak
 define-command -docstring %{x11-repl [<arguments>]: create a new window for repl interaction
 All optional parameters are forwarded to the new window} \

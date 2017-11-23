@@ -1,10 +1,15 @@
 # Kakoune Exuberant CTags support script
-#
-# This script requires the readtags command available in ctags source but
-# not installed by default
 
 declare-option -docstring "colon separated list of paths to tag files to parse when looking up a symbol" \
     str-list ctagsfiles 'tags'
+
+%sh{
+    for dep in readtags ctags; do
+        if ! command -v "${dep}" >/dev/null; then
+            printf 'echo -debug ctags: warning, command dependency unmet: %s\n' "${dep}"
+        fi
+    done
+}
 
 define-command -params ..1 \
     -shell-candidates '

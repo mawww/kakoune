@@ -1,6 +1,12 @@
 # http://tmux.github.io/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+%sh{
+    if ! command -v tmux >/dev/null; then
+        echo 'echo -debug tmux: warning, command dependency unmet: tmux'
+    fi
+}
+
 hook global KakBegin .* %{
     %sh{
         if [ -n "$TMUX" ]; then

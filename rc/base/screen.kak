@@ -1,6 +1,12 @@
 # http://gnu.org/software/screen/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
  
+%sh{
+    if ! command -v screen >/dev/null; then
+        echo 'echo -debug screen: warning, command dependency unmet: screen'
+    fi
+}
+
 hook global KakBegin .* %{
     %sh{
         [ -z "${kak_client_env_STY}" ] && exit
