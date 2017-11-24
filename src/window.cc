@@ -260,7 +260,8 @@ BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
         }
         column -= len;
     }
-    return buffer.clamp(buffer.prev(range.end));
+    return range.end == BufferCoord{0,0} ?
+        range.end : buffer.prev(range.end);
 }
 }
 
