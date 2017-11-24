@@ -36,12 +36,12 @@ public:
     bool is_mapped(Key key, KeymapMode mode) const;
     KeyList get_mapped_keys(KeymapMode mode) const;
 
-    struct KeyMapInfo
+    struct KeymapInfo
     {
         KeyList keys;
         String docstring;
     };
-    const KeyMapInfo& get_mapping(Key key, KeymapMode mode) const;
+    const KeymapInfo& get_mapping(Key key, KeymapMode mode) const;
 
 private:
     KeymapManager()
@@ -51,7 +51,7 @@ private:
 
     KeymapManager* m_parent;
     using KeyAndMode = std::pair<Key, KeymapMode>;
-    HashMap<KeyAndMode, KeyMapInfo, MemoryDomain::Mapping> m_mapping;
+    HashMap<KeyAndMode, KeymapInfo, MemoryDomain::Mapping> m_mapping;
 };
 
 }
