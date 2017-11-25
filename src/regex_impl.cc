@@ -187,13 +187,13 @@ private:
 
     bool accept(StringView expected)
     {
-        auto it = m_pos;
-        for (Iterator expected_it{expected.begin(), expected}; expected_it != expected.end(); ++expected_it)
+        auto it = m_pos.base();
+        for (auto expected_it = expected.begin(); expected_it != expected.end(); ++expected_it)
         {
             if (it == m_regex.end() or *it++ != *expected_it)
                 return false;
         }
-        m_pos = it;
+        m_pos = Iterator{it, m_regex};
         return true;
     }
 
