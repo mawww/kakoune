@@ -23,6 +23,33 @@ enum class MatchDirection
     Backward
 };
 
+enum class CharacterType : unsigned char
+{
+    None                    = 0,
+    Word                    = 1 << 0,
+    Whitespace              = 1 << 1,
+    HorizontalWhitespace    = 1 << 2,
+    Digit                   = 1 << 3,
+    NotWord                 = 1 << 4,
+    NotWhitespace           = 1 << 5,
+    NotHorizontalWhitespace = 1 << 6,
+    NotDigit                = 1 << 7
+};
+constexpr bool with_bit_ops(Meta::Type<CharacterType>) { return true; }
+
+struct CharacterClass
+{
+    struct Range { Codepoint min, max; };
+
+    Vector<Range, MemoryDomain::Regex> ranges;
+    CharacterType ctypes = CharacterType::None;
+    bool negative = false;
+    bool ignore_case = false;
+};
+
+bool is_character_class(const CharacterClass& character_class, Codepoint cp);
+bool is_ctype(CharacterType ctype, Codepoint cp);
+
 struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
 {
     enum Op : char
@@ -32,7 +59,8 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
         Literal,
         Literal_IgnoreCase,
         AnyChar,
-        Matcher,
+        Class,
+        CharacterType,
         Jump,
         Split_PrioritizeParent,
         Split_PrioritizeChild,
@@ -68,7 +96,7 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     explicit operator bool() const { return not instructions.empty(); }
 
     Vector<Instruction, MemoryDomain::Regex> instructions;
-    Vector<std::function<bool (Codepoint)>, MemoryDomain::Regex> matchers;
+    Vector<CharacterClass, MemoryDomain::Regex> character_classes;
     Vector<Codepoint, MemoryDomain::Regex> lookarounds;
     MatchDirection direction;
     size_t save_count;
@@ -289,11 +317,16 @@ private:
                     thread.saves->pos[inst.param] = get_base(pos);
                     break;
                 }
-                case CompiledRegex::Matcher:
+                case CompiledRegex::Class:
                     if (pos == m_end)
                         return StepResult::Failed;
-                    return m_program.matchers[inst.param](*pos) ?
+                    return is_character_class(m_program.character_classes[inst.param], *pos) ?
                         StepResult::Consumed : StepResult::Failed;
+                case CompiledRegex::CharacterType:
+                    if (pos == m_end)
+                        return StepResult::Failed;
+                    return is_ctype((CharacterType)inst.param, *pos) ?
+                        StepResult::Consumed : StepResult::Failed;;
                 case CompiledRegex::LineStart:
                     if (not is_line_start(pos))
                         return StepResult::Failed;
@@ -457,9 +490,14 @@ private:
             const Codepoint ref = *it;
             if (ref == 0xF000)
             {} // any character matches
-            else if (ref > 0xF0000 and ref <= 0xFFFFD)
+            else if (ref > 0xF0000 and ref < 0xF8000)
             {
-                if (not m_program.matchers[ref - 0xF0001](cp))
+                if (not is_character_class(m_program.character_classes[ref - 0xF0001], cp))
+                    return false;
+            }
+            else if (ref >= 0xF8000 and ref <= 0xFFFFD)
+            {
+                if (not is_ctype((CharacterType)(ref & 0xFF), cp))
                     return false;
             }
             else if (ref != cp)
