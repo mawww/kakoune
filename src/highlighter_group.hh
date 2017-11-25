@@ -28,9 +28,11 @@ public:
 
     Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override;
 
+    void fill_unique_ids(Vector<StringView>& unique_ids) const override;
+
 protected:
-    void do_highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) override;
-    void do_compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup) override;
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override;
+    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) override;
 
     using HighlighterMap = HashMap<String, std::unique_ptr<Highlighter>, MemoryDomain::Highlight>;
     HighlighterMap m_highlighters;
@@ -44,8 +46,8 @@ public:
     HighlighterGroup& group() { return m_group; }
     const HighlighterGroup& group() const { return m_group; }
 
-    void highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range);
-    void compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup);
+    void highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range);
+    void compute_display_setup(HighlightContext context, DisplaySetup& setup);
 
 private:
     friend class Scope;

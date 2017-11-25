@@ -6,17 +6,22 @@
 namespace Kakoune
 {
 
-void HighlighterGroup::do_highlight(const Context& context, HighlightPass pass,
-                                    DisplayBuffer& display_buffer, BufferRange range)
+void HighlighterGroup::do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range)
 {
     for (auto& hl : m_highlighters)
-       hl.value->highlight(context, pass, display_buffer, range);
+        hl.value->highlight(context, display_buffer, range);
 }
 
-void HighlighterGroup::do_compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup)
+void HighlighterGroup::do_compute_display_setup(HighlightContext context, DisplaySetup& setup)
 {
     for (auto& hl : m_highlighters)
-       hl.value->compute_display_setup(context, pass, setup);
+        hl.value->compute_display_setup(context, setup);
+}
+
+void HighlighterGroup::fill_unique_ids(Vector<StringView>& unique_ids) const
+{
+    for (auto& hl : m_highlighters)
+        hl.value->fill_unique_ids(unique_ids);
 }
 
 void HighlighterGroup::add_child(HighlighterAndId&& hl)
@@ -69,19 +74,24 @@ Completions HighlighterGroup::complete_child(StringView path, ByteCount cursor_p
     return { 0, 0, std::move(candidates) };
 }
 
-void Highlighters::highlight(const Context& context, HighlightPass pass,
-                             DisplayBuffer& display_buffer, BufferRange range)
+void Highlighters::highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range)
 {
+    Vector<StringView> disabled_ids(context.disabled_ids.begin(), context.disabled_ids.end());
+    m_group.fill_unique_ids(disabled_ids);
+
     if (m_parent)
-        m_parent->highlight(context, pass, display_buffer, range);
-    m_group.highlight(context, pass, display_buffer, range);
+        m_parent->highlight({context.context, context.pass, disabled_ids}, display_buffer, range);
+    m_group.highlight(context, display_buffer, range);
 }
 
-void Highlighters::compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup)
+void Highlighters::compute_display_setup(HighlightContext context, DisplaySetup& setup)
 {
+    Vector<StringView> disabled_ids(context.disabled_ids.begin(), context.disabled_ids.end());
+    m_group.fill_unique_ids(disabled_ids);
+
     if (m_parent)
-        m_parent->compute_display_setup(context, pass, setup);
-    m_group.compute_display_setup(context, pass, setup);
+        m_parent->compute_display_setup({context.context, context.pass, disabled_ids}, setup);
+    m_group.compute_display_setup(context, setup);
 }
 
 }

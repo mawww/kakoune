@@ -51,21 +51,30 @@ struct DisplaySetup
     bool full_lines;
 };
 
+using HighlighterIdList = ConstArrayView<StringView>;
+
+struct HighlightContext
+{
+    const Context& context;
+    HighlightPass pass;
+    HighlighterIdList disabled_ids;
+};
+
 struct Highlighter
 {
     Highlighter(HighlightPass passes) : m_passes{passes} {}
     virtual ~Highlighter() = default;
 
-    void highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range)
+    void highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range)
     {
-        if (pass & m_passes)
-            do_highlight(context, pass, display_buffer, range);
+        if (context.pass & m_passes)
+            do_highlight(context, display_buffer, range);
     }
 
-    void compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup)
+    void compute_display_setup(HighlightContext context, DisplaySetup& setup)
     {
-        if (pass & m_passes)
-            do_compute_display_setup(context, pass, setup);
+        if (context.pass & m_passes)
+            do_compute_display_setup(context, setup);
     }
 
     virtual bool has_children() const { return false; }
@@ -74,11 +83,13 @@ struct Highlighter
     virtual void remove_child(StringView id) { throw runtime_error("this highlighter do not hold children"); }
     virtual Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const { throw runtime_error("this highlighter do not hold children"); }
 
+    virtual void fill_unique_ids(Vector<StringView>& unique_ids) const {}
+
     HighlightPass passes() const { return m_passes; }
 
 private:
-    virtual void do_highlight(const Context& context, HighlightPass pass, DisplayBuffer& display_buffer, BufferRange range) = 0;
-    virtual void do_compute_display_setup(const Context& context, HighlightPass pass, DisplaySetup& setup) {}
+    virtual void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) = 0;
+    virtual void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) {}
 
     const HighlightPass m_passes;
 };
