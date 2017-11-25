@@ -425,6 +425,13 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
         keystrokes.emplace_back(Key::Delete);
     for (auto& c : candidate.completion)
         keystrokes.emplace_back(c);
+
+    if (m_context.has_client())
+    {
+        const auto param = (m_current_candidate == m_completions.candidates.size() - 1) ?
+            StringView{} : candidate.completion;
+        m_context.hooks().run_hook("InsertCompletionSelect", param, m_context);
+    }
 }
 
 void InsertCompleter::update()

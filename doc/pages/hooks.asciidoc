@@ -151,6 +151,11 @@ of the given *group*.
 *InsertCompletionHide*::
     Triggered when the insert completion menu gets hidden
 
+*InsertCompletionSelect*::
+    Triggered when an entry is selected in the insert completion
+    menu. The filtering text is the selected completion text or
+    the empty string if the original text was selected back.
+
 *RawKey*::
     Triggered whenever a key is pressed by the user, the key is
     used for filtering.
