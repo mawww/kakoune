@@ -167,6 +167,8 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
 
         kak_assert(std::is_sorted(ranges.begin() + prev_size, ranges.end(), compare_selections));
         std::inplace_merge(ranges.begin(), ranges.begin() + prev_size, ranges.end(), compare_selections);
+        // The newly added ranges might be overlapping pre-existing ones
+        ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy, overlaps), ranges.end());
     }
 
     const auto end_coord = buffer.end_coord();
