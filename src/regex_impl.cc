@@ -130,6 +130,7 @@ struct RegexParser
         : m_regex{re}, m_pos{re.begin(), re}
     {
         m_parsed_regex.capture_count = 1;
+        m_parsed_regex.nodes.reserve((size_t)re.length());
         NodeIndex root = disjunction(0);
         kak_assert(root == 0);
     }
@@ -620,16 +621,19 @@ constexpr RegexParser::ControlEscape RegexParser::control_escapes[];
 
 struct RegexCompiler
 {
-    RegexCompiler(const ParsedRegex& parsed_regex, RegexCompileFlags flags, MatchDirection direction)
+    RegexCompiler(ParsedRegex&& parsed_regex, RegexCompileFlags flags, MatchDirection direction)
         : m_parsed_regex{parsed_regex}, m_flags(flags), m_forward{direction == MatchDirection::Forward}
     {
+        // Approximation of the number of instructions generated
+        m_program.instructions.reserve(CompiledRegex::search_prefix_size + parsed_regex.nodes.size() + 1);
+        m_program.start_chars = compute_start_chars();
+
         write_search_prefix();
         compile_node(0);
         push_inst(CompiledRegex::Match);
-        m_program.character_classes = m_parsed_regex.character_classes;
+        m_program.character_classes = std::move(m_parsed_regex.character_classes);
         m_program.save_count = m_parsed_regex.capture_count * 2;
         m_program.direction = direction;
-        m_program.start_chars = compute_start_chars();
     }
 
     CompiledRegex get_compiled_regex() { return std::move(m_program); }
@@ -899,7 +903,7 @@ private:
             case ParsedRegex::CharacterType:
             {
                 const CharacterType ctype = (CharacterType)node.value;
-                for (Codepoint cp = 0; cp < CompiledRegex::StartChars::count; ++cp)
+                for (Codepoint cp = 0; cp < CompiledRegex::StartChars::other; ++cp)
                 {
                     if (is_ctype(ctype, cp))
                         start_chars.map[cp] = true;
@@ -950,10 +954,8 @@ private:
     std::unique_ptr<CompiledRegex::StartChars> compute_start_chars() const
     {
         CompiledRegex::StartChars start_chars{};
-        if (compute_start_chars(0, start_chars))
-            return nullptr;
-
-        if (not contains(start_chars.map, false))
+        if (compute_start_chars(0, start_chars) or
+            not contains(start_chars.map, false))
             return nullptr;
 
         return std::make_unique<CompiledRegex::StartChars>(start_chars);
@@ -966,7 +968,7 @@ private:
 
     CompiledRegex m_program;
     RegexCompileFlags m_flags;
-    const ParsedRegex& m_parsed_regex;
+    ParsedRegex& m_parsed_regex;
     const bool m_forward;
 };
 
