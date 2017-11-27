@@ -651,7 +651,7 @@ The following keys are recognized by this mode to help edition.
     erase character under cursor
 
 *<c-w>*::
-    avance to next word begin
+    advance to next word begin
 
 *<c-a-w>*::
     advance to next WORD begin
