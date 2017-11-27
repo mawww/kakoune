@@ -1091,23 +1091,14 @@ bool is_character_class(const CharacterClass& character_class, Codepoint cp)
 
 bool is_ctype(CharacterType ctype, Codepoint cp)
 {
-    if ((ctype & CharacterType::Digit) and iswdigit(cp))
-        return true;
-    if ((ctype & CharacterType::Word) and is_word(cp))
-        return true;
-    if ((ctype & CharacterType::Whitespace) and is_blank(cp))
-        return true;
-    if ((ctype & CharacterType::HorizontalWhitespace) and is_horizontal_blank(cp))
-        return true;
-    if ((ctype & CharacterType::NotDigit) and not iswdigit(cp))
-        return true;
-    if ((ctype & CharacterType::NotWord) and not is_word(cp))
-        return true;
-    if ((ctype & CharacterType::NotWhitespace) and not is_blank(cp))
-        return true;
-    if ((ctype & CharacterType::NotHorizontalWhitespace) and not is_horizontal_blank(cp))
-        return true;
-    return false;
+    return ((ctype & CharacterType::Whitespace)              and     is_blank(cp))            or
+           ((ctype & CharacterType::HorizontalWhitespace)    and     is_horizontal_blank(cp)) or
+           ((ctype & CharacterType::Digit)                   and     iswdigit(cp))            or
+           ((ctype & CharacterType::Word)                    and     is_word(cp))             or
+           ((ctype & CharacterType::NotWhitespace)           and not is_blank(cp))            or
+           ((ctype & CharacterType::NotHorizontalWhitespace) and not is_horizontal_blank(cp)) or
+           ((ctype & CharacterType::NotDigit)                and not iswdigit(cp))            or
+           ((ctype & CharacterType::NotWord)                 and not is_word(cp));
 }
 
 namespace

@@ -26,13 +26,13 @@ enum class MatchDirection
 enum class CharacterType : unsigned char
 {
     None                    = 0,
-    Word                    = 1 << 0,
-    Whitespace              = 1 << 1,
-    HorizontalWhitespace    = 1 << 2,
+    Whitespace              = 1 << 0,
+    HorizontalWhitespace    = 1 << 1,
+    Word                    = 1 << 2,
     Digit                   = 1 << 3,
-    NotWord                 = 1 << 4,
-    NotWhitespace           = 1 << 5,
-    NotHorizontalWhitespace = 1 << 6,
+    NotWhitespace           = 1 << 4,
+    NotHorizontalWhitespace = 1 << 5,
+    NotWord                 = 1 << 6,
     NotDigit                = 1 << 7
 };
 constexpr bool with_bit_ops(Meta::Type<CharacterType>) { return true; }
