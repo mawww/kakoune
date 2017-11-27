@@ -79,6 +79,7 @@ struct ParsedRegex
         Codepoint value;
         Quantifier quantifier;
     };
+    static_assert(sizeof(Node) == 16, "");
 
     Vector<Node, MemoryDomain::Regex> nodes;
 
@@ -503,13 +504,13 @@ private:
             return {ParsedRegex::Quantifier::One};
 
         constexpr int max_repeat = 1000;
-        auto read_bound = [max_repeat, this](auto& pos, auto begin, auto end) {
+        auto read_bound = [&]() {
             int16_t res = 0;
-            for (; pos != end; ++pos)
+            for (auto begin = m_pos; m_pos != m_regex.end(); ++m_pos)
             {
-                const auto cp = *pos;
+                const auto cp = *m_pos;
                 if (cp < '0' or cp > '9')
-                    return pos == begin ? (int16_t)-1 : res;
+                    return m_pos == begin ? (int16_t)-1 : res;
                 res = res * 10 + cp - '0';
                 if (res > max_repeat)
                     parse_error(format("Explicit quantifier is too big, maximum is {}", max_repeat));
@@ -531,17 +532,16 @@ private:
             case '?': ++m_pos; return {ParsedRegex::Quantifier::Optional, check_greedy()};
             case '{':
             {
-                auto it = m_pos+1;
-                const int16_t min = read_bound(it, it, m_regex.end());
+                ++m_pos;
+                const int16_t min = read_bound();
                 int16_t max = min;
-                if (*it == ',')
+                if (*m_pos == ',')
                 {
-                    ++it;
-                    max = read_bound(it, it, m_regex.end());
+                    ++m_pos;
+                    max = read_bound();
                 }
-                if (*it++ != '}')
+                if (*m_pos++ != '}')
                    parse_error("expected closing bracket");
-                m_pos = it;
                 return {ParsedRegex::Quantifier::RepeatMinMax, check_greedy(), min, max};
             }
             default: return {ParsedRegex::Quantifier::One};
@@ -887,8 +887,7 @@ private:
             case ParsedRegex::AnyChar:
                 for (auto& b : start_chars.map)
                     b = true;
-                start_chars.map[CompiledRegex::StartChars::other] = true;
-                return node.quantifier.allows_none();
+               return node.quantifier.allows_none();
             case ParsedRegex::Class:
             {
                 auto& character_class = m_parsed_regex.character_classes[node.value];
