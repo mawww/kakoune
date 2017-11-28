@@ -759,14 +759,13 @@ struct WrapHighlighter : Highlighter
 
         // Disable horizontal scrolling when using a WrapHighlighter
         setup.window_pos.column = 0;
-        setup.window_range.line = win_height;
+        setup.window_range.line = 0;
         setup.scroll_offset.column = 0;
         setup.full_lines = true;
 
         for (auto buf_line = setup.window_pos.line, win_line = 0_line;
-             buf_line < setup.window_pos.line + setup.window_range.line or
-             buf_line <= cursor.line;
-             ++buf_line)
+             win_line < win_height or buf_line <= cursor.line;
+             ++buf_line, ++setup.window_range.line)
         {
             if (buf_line >= buffer.line_count())
                 break;
@@ -774,9 +773,6 @@ struct WrapHighlighter : Highlighter
             ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col;
             if (indent >= wrap_column) // do not preserve indent when its bigger than wrap column
                 indent = 0;
-
-            const auto wrap_count = line_wrap_count(buf_line, indent);
-            setup.window_range.line -= wrap_count;
 
             if (buf_line == cursor.line)
             {
@@ -799,18 +795,18 @@ struct WrapHighlighter : Highlighter
                 }
                 kak_assert(setup.cursor_pos.column >= 0 and setup.cursor_pos.column < setup.window_range.column);
             }
+            const auto wrap_count = line_wrap_count(buf_line, indent);
             win_line += wrap_count + 1;
 
             // scroll window to keep cursor visible, and update range as lines gets removed
             while (buf_line >= cursor.line and setup.window_pos.line < cursor.line and
-                   cursor.line + setup.scroll_offset.line >= setup.window_pos.line + setup.window_range.line)
+                   setup.cursor_pos.line + setup.scroll_offset.line >= win_height)
             {
                 auto remove_count = std::min(win_height, 1 + line_wrap_count(setup.window_pos.line, indent));
                 ++setup.window_pos.line;
+                --setup.window_range.line;
                 setup.cursor_pos.line -= remove_count;
                 win_line -= remove_count;
-                // removed one line from the range, added remove_count potential ones
-                setup.window_range.line += remove_count - 1;
                 kak_assert(setup.cursor_pos.line >= 0);
             }
         }
