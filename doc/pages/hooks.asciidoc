@@ -169,11 +169,12 @@ While defining hook commands with a `%sh{}` block, some additional env
 vars are available:
 
 * `kak_hook_param`: filtering text passed to the currently executing hook
+
 * `kak_hook_param_capture_N`: text captured by the hook filter regex capture N
 
 == Disabling Hooks
 
-Any normal mode command can be prefixed with `\` which will disable hook
+Any normal mode command can be prefixed with `\ ` which will disable hook
 execution for the duration for the command (including the duration of modes
 the command could move to, so `\i` will disable hooks for the whole insert
 session).
