@@ -95,6 +95,8 @@ struct MatchResults
         m_values.swap(other.m_values);
     }
 
+    Vector<Iterator, MemoryDomain::Regex>& values() { return m_values; }
+
 private:
     Vector<Iterator, MemoryDomain::Regex> m_values;
 };
@@ -116,10 +118,8 @@ bool regex_match(It begin, It end, const Regex& re)
 template<typename It>
 bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
 {
-    Vector<It, MemoryDomain::Regex> captures;
-    const bool matched = regex_match(begin, end, captures, *re.impl());
-    res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
-    return matched;
+    res.values().clear();
+    return regex_match(begin, end, res.values(), *re.impl());
 }
 
 template<typename It>
@@ -133,10 +133,8 @@ template<typename It, MatchDirection direction = MatchDirection::Forward>
 bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
 {
-    Vector<It, MemoryDomain::Regex> captures;
-    const bool matched = regex_search<It, direction>(begin, end, captures, *re.impl(), flags);
-    res = matched ? MatchResults<It>{std::move(captures)} : MatchResults<It>{};
-    return matched;
+    res.values().clear();
+    return regex_search<It, direction>(begin, end, res.values(), *re.impl(), flags);
 }
 
 String option_to_string(const Regex& re);
