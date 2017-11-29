@@ -109,7 +109,7 @@ Kakoune dependencies are:
  * asciidoc (for the `a2k` tool), to generate man pages
 
 To build, just type *make* in the src directory.
-To generate man pages, type *make doc* in the src directory.
+To generate man pages, type *make man* in the src directory.
 
 Kakoune can be built on Linux, MacOS, and Cygwin. Due to Kakoune relying heavily
 on being in a Unix-like environment, no native Windows version is planned.
@@ -452,7 +452,7 @@ Changes
 
  * ```: to lower case
  * `~`: to upper case
- * `<a-`>`: swap case
+ * ``<a-`>``: swap case
 
  * `@`: convert tabs to spaces in current selections, uses the buffer
         tabstop option or the count parameter for tabstop.
