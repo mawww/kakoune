@@ -189,28 +189,16 @@ private:
         return {};
     }
 
-    bool accept(StringView expected)
-    {
-        auto it = m_pos.base();
-        for (auto expected_it = expected.begin(); expected_it != expected.end(); ++expected_it)
-        {
-            if (it == m_regex.end() or *it++ != *expected_it)
-                return false;
-        }
-        m_pos = Iterator{it, m_regex};
-        return true;
-    }
-
     bool modifiers()
     {
-        if (accept("(?i)"))
+        auto it = m_pos.base();
+        if (m_regex.end() - it >= 4 and *it++ == '(' and *it++ == '?')
         {
-            m_ignore_case = true;
-            return true;
-        }
-        if (accept("(?I)"))
-        {
-            m_ignore_case = false;
+            auto m = *it++;
+            if ((m != 'i' and m != 'I') or *it++ != ')')
+                return false;
+            m_ignore_case = (m == 'i');
+            m_pos = Iterator{it, m_regex};
             return true;
         }
         return false;
@@ -239,25 +227,29 @@ private:
                 break;
             case '(':
             {
-                Optional<ParsedRegex::Op> lookaround_op;
-                constexpr struct { StringView prefix; ParsedRegex::Op op; } lookarounds[] = {
-                    { "(?=", ParsedRegex::LookAhead },
-                    { "(?!", ParsedRegex::NegativeLookAhead },
-                    { "(?<=", ParsedRegex::LookBehind },
-                    { "(?<!", ParsedRegex::NegativeLookBehind }
-                };
-                for (auto& lookaround : lookarounds)
+                auto it = m_pos.base()+1;
+                if (m_regex.end() - it <= 2 or *it++ != '?')
+                    return {};
+
+                ParsedRegex::Op op;
+                switch (*it++)
                 {
-                    if (accept(lookaround.prefix))
+                    case '=': op = ParsedRegex::LookAhead; break;
+                    case '!': op = ParsedRegex::NegativeLookAhead; break;
+                    case '<':
                     {
-                        lookaround_op = lookaround.op;
+                        switch (*it++)
+                        {
+                            case '=': op = ParsedRegex::LookBehind; break;
+                            case '!': op = ParsedRegex::NegativeLookBehind; break;
+                            default: return {};
+                        }
                         break;
                     }
+                    default: return {};
                 }
-                if (not lookaround_op)
-                        return {};
-
-                NodeIndex lookaround = alternative(*lookaround_op);
+                m_pos = Iterator{it, m_regex};
+                NodeIndex lookaround = alternative(op);
                 if (at_end() or *m_pos++ != ')')
                     parse_error("unclosed parenthesis");
 
@@ -273,15 +265,20 @@ private:
         if (at_end())
             return {};
 
-        const Codepoint cp = *m_pos;
-        switch (cp)
+        switch (const Codepoint cp = *m_pos)
         {
             case '.': ++m_pos; return new_node(ParsedRegex::AnyChar);
             case '(':
             {
-                ++m_pos;
-                const bool capture = not accept("?:");
-                NodeIndex content = disjunction(capture ? m_parsed_regex.capture_count++ : -1);
+                auto captures = [this, it = (++m_pos).base()]() mutable {
+                    if (m_regex.end() - it >= 2 and *it++ == '?' and *it++ == ':')
+                    {
+                        m_pos = Iterator{it, m_regex};
+                        return false;
+                    }
+                    return true;
+                };
+                NodeIndex content = disjunction(captures() ? m_parsed_regex.capture_count++ : -1);
                 if (at_end() or *m_pos++ != ')')
                     parse_error("unclosed parenthesis");
                 return content;
