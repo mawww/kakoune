@@ -891,10 +891,23 @@ private:
             case ParsedRegex::Class:
             {
                 auto& character_class = m_parsed_regex.character_classes[node.value];
-                for (Codepoint cp = 0; cp < CompiledRegex::StartChars::count; ++cp)
+                if (character_class.ctypes == CharacterType::None and not character_class.negative)
                 {
-                    if (is_character_class(character_class, cp))
-                        start_chars.map[cp] = true;
+                    for (auto& range : character_class.ranges)
+                    {
+                        auto min = std::min(CompiledRegex::StartChars::other, range.min);
+                        auto max = std::min(CompiledRegex::StartChars::other, range.max);
+                        for (Codepoint cp = min; cp <= max; ++cp)
+                            start_chars.map[cp] = true;
+                    }
+                }
+                else
+                {
+                    for (Codepoint cp = 0; cp < CompiledRegex::StartChars::other; ++cp)
+                    {
+                        if (start_chars.map[cp] or is_character_class(character_class, cp))
+                            start_chars.map[cp] = true;
+                    }
                 }
                 start_chars.map[CompiledRegex::StartChars::other] = true;
                 return node.quantifier.allows_none();
