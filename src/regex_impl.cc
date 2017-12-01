@@ -292,7 +292,7 @@ private:
             case '|': case ')':
                 return {};
             default:
-                if (contains("^$.*+?[]{}", cp))
+                if (contains("^$.*+?[]{}", cp) or (cp >= 0xF0000 and cp <= 0xFFFFF))
                     parse_error(format("unexpected '{}'", cp));
                 ++m_pos;
                 return new_node(ParsedRegex::Literal, cp);
