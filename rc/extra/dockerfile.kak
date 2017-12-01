@@ -19,7 +19,6 @@ add-highlighter shared/ regions -default code dockerfile \
     comment '#' $ ''
 
 %sh{
-set -x
     # Grammar
     keywords="ADD|ARG|CMD|COPY|ENTRYPOINT|ENV|EXPOSE|FROM|HEALTHCHECK|LABEL"
     keywords="${keywords}|MAINTAINER|RUN|SHELL|STOPSIGNAL|USER|VOLUME|WORKDIR"
