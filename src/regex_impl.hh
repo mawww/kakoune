@@ -98,8 +98,8 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     Vector<Instruction, MemoryDomain::Regex> instructions;
     Vector<CharacterClass, MemoryDomain::Regex> character_classes;
     Vector<Codepoint, MemoryDomain::Regex> lookarounds;
-    MatchDirection direction;
-    size_t save_count;
+    uint32_t first_backward_inst; // -1 if no backward support, 0 if only backward, >0 if both forward and backward
+    uint32_t save_count;
 
     struct StartDesc
     {
@@ -108,18 +108,21 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
         bool map[count+1];
     };
 
-    std::unique_ptr<StartDesc> start_desc;
+    std::unique_ptr<StartDesc> forward_start_desc;
+    std::unique_ptr<StartDesc> backward_start_desc;
 };
 
 enum class RegexCompileFlags
 {
     None     = 0,
     NoSubs   = 1 << 0,
-    Optimize = 1 << 1
+    Optimize = 1 << 1,
+    Backward = 1 << 1,
+    NoForward = 1 << 2,
 };
 constexpr bool with_bit_ops(Meta::Type<RegexCompileFlags>) { return true; }
 
-CompiledRegex compile_regex(StringView re, RegexCompileFlags flags, MatchDirection direction = MatchDirection::Forward);
+CompiledRegex compile_regex(StringView re, RegexCompileFlags flags);
 
 enum class RegexExecFlags
 {
@@ -145,7 +148,8 @@ public:
     ThreadedRegexVM(const CompiledRegex& program)
       : m_program{program}
     {
-        kak_assert(m_program and direction == m_program.direction);
+        kak_assert((direction == MatchDirection::Forward and program.first_backward_inst != 0) or
+                   (direction == MatchDirection::Backward and program.first_backward_inst != -1));
     }
 
     ThreadedRegexVM(const ThreadedRegexVM&) = delete;
@@ -183,20 +187,30 @@ public:
 
         const bool search = (flags & RegexExecFlags::Search);
         Utf8It start{m_begin};
-        if (m_program.start_desc)
+        const auto& start_desc = direction == MatchDirection::Forward ? m_program.forward_start_desc
+                                                                      : m_program.backward_start_desc;
+        if (start_desc)
         {
             if (search)
             {
-                to_next_start(start, m_end, *m_program.start_desc);
+                to_next_start(start, m_end, *start_desc);
                 if (start == m_end) // If start_desc is not null, it means we consume at least one char
                     return false;
             }
             else if (start != m_end and
-                     not m_program.start_desc->map[std::min(*start, CompiledRegex::StartDesc::other)])
+                     not start_desc->map[std::min(*start, CompiledRegex::StartDesc::other)])
                 return false;
         }
 
-        return exec_program(start, Thread{&m_program.instructions[search ? 0 : CompiledRegex::search_prefix_size], nullptr});
+        ConstArrayView<CompiledRegex::Instruction> instructions{m_program.instructions};
+        if (direction == MatchDirection::Forward)
+            instructions = instructions.subrange(0, m_program.first_backward_inst);
+        else
+            instructions = instructions.subrange(m_program.first_backward_inst);
+        if (not search)
+            instructions = instructions.subrange(CompiledRegex::search_prefix_size);
+
+        return exec_program(start, instructions);
     }
 
     ArrayView<const Iterator> captures() const
@@ -397,10 +411,13 @@ private:
         return StepResult::Failed;
     }
 
-    bool exec_program(Utf8It pos, Thread init_thread)
+    bool exec_program(Utf8It pos, ConstArrayView<CompiledRegex::Instruction> instructions)
     {
         ExecState state;
-        state.current_threads.push_back(init_thread);
+        state.current_threads.push_back({instructions.begin(), nullptr});
+
+        const auto& start_desc = direction == MatchDirection::Forward ? m_program.forward_start_desc
+                                                                      : m_program.backward_start_desc;
 
         bool found_match = false;
         while (true) // Iterate on all codepoints and once at the end
@@ -408,7 +425,7 @@ private:
             if (++state.step == 0)
             {
                 // We wrapped, avoid potential collision on inst.last_step by resetting them
-                for (auto& inst : m_program.instructions)
+                for (auto& inst : instructions)
                     inst.last_step = 0;
                 state.step = 1; // step 0 is never valid
             }
@@ -470,8 +487,8 @@ private:
             std::reverse(state.current_threads.begin(), state.current_threads.end());
             ++pos;
 
-            if (find_next_start and m_program.start_desc)
-                to_next_start(pos, m_end, *m_program.start_desc);
+            if (find_next_start and start_desc)
+                to_next_start(pos, m_end, *start_desc);
         }
     }
 

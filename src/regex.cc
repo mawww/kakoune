@@ -3,8 +3,8 @@
 namespace Kakoune
 {
 
-Regex::Regex(StringView re, RegexCompileFlags flags, MatchDirection direction)
-    : m_impl{new CompiledRegex{compile_regex(re, flags, direction)}},
+Regex::Regex(StringView re, RegexCompileFlags flags)
+    : m_impl{new CompiledRegex{compile_regex(re, flags)}},
       m_str{re.str()}
 {}
 

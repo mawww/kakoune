@@ -13,8 +13,7 @@ class Regex
 public:
     Regex() = default;
 
-    explicit Regex(StringView re, RegexCompileFlags flags = RegexCompileFlags::None,
-                   MatchDirection direction = MatchDirection::Forward);
+    explicit Regex(StringView re, RegexCompileFlags flags = RegexCompileFlags::None);
     bool empty() const { return m_str.empty(); }
     bool operator==(const Regex& other) const { return m_str == other.m_str; }
     bool operator!=(const Regex& other) const { return m_str != other.m_str; }

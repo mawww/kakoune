@@ -693,6 +693,12 @@ void paste_all(Context& context, NormalParams params)
         selections = std::move(result);
 }
 
+constexpr RegexCompileFlags direction_flags(MatchDirection direction)
+{
+    return (direction == MatchDirection::Forward) ?
+        RegexCompileFlags::None : RegexCompileFlags::Backward | RegexCompileFlags::NoForward;
+}
+
 template<MatchDirection direction = MatchDirection::Forward, typename T>
 void regex_prompt(Context& context, String prompt, String default_regex, T func)
 {
@@ -725,7 +731,7 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
                     context.push_jump();
 
                 if (not str.empty() or event == PromptEvent::Validate)
-                    func(Regex{str.empty() ? default_regex : str, RegexCompileFlags::None, direction}, event, context);
+                    func(Regex{str.empty() ? default_regex : str, direction_flags(direction)}, event, context);
             }
             catch (regex_error& err)
             {
@@ -795,7 +801,7 @@ void search_next(Context& context, NormalParams params)
     StringView str = context.main_sel_register_value(reg);
     if (not str.empty())
     {
-        Regex regex{str, RegexCompileFlags::None, direction};
+        Regex regex{str, direction_flags(direction)};
         auto& selections = context.selections();
         bool main_wrapped = false;
         do {

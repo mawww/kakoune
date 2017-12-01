@@ -618,26 +618,43 @@ constexpr RegexParser::ControlEscape RegexParser::control_escapes[];
 
 struct RegexCompiler
 {
-    RegexCompiler(ParsedRegex&& parsed_regex, RegexCompileFlags flags, MatchDirection direction)
-        : m_parsed_regex{parsed_regex}, m_flags(flags), m_forward{direction == MatchDirection::Forward}
+    RegexCompiler(ParsedRegex&& parsed_regex, RegexCompileFlags flags)
+        : m_parsed_regex{parsed_regex}, m_flags(flags)
     {
+        kak_assert(not (flags & RegexCompileFlags::NoForward) or flags & RegexCompileFlags::Backward);
         // Approximation of the number of instructions generated
-        m_program.instructions.reserve(CompiledRegex::search_prefix_size + parsed_regex.nodes.size() + 1);
-        m_program.start_desc = compute_start_desc();
+        m_program.instructions.reserve((CompiledRegex::search_prefix_size + parsed_regex.nodes.size() + 1)
+                                       * (((flags & RegexCompileFlags::Backward) and
+                                           not (flags & RegexCompileFlags::NoForward)) ? 2 : 1));
 
-        write_search_prefix();
-        compile_node(0);
-        push_inst(CompiledRegex::Match);
+        if (not (flags & RegexCompileFlags::NoForward))
+        {
+            m_program.forward_start_desc = compute_start_desc(true);
+            write_search_prefix();
+            compile_node(0, true);
+            push_inst(CompiledRegex::Match);
+        }
+
+        if (flags & RegexCompileFlags::Backward)
+        {
+            m_program.first_backward_inst = m_program.instructions.size();
+            m_program.backward_start_desc = compute_start_desc(false);
+            write_search_prefix();
+            compile_node(0, false);
+            push_inst(CompiledRegex::Match);
+        }
+        else
+            m_program.first_backward_inst = -1;
+
         m_program.character_classes = std::move(m_parsed_regex.character_classes);
         m_program.save_count = m_parsed_regex.capture_count * 2;
-        m_program.direction = direction;
     }
 
     CompiledRegex get_compiled_regex() { return std::move(m_program); }
 
 private:
 
-    uint32_t compile_node_inner(ParsedRegex::NodeIndex index)
+    uint32_t compile_node_inner(ParsedRegex::NodeIndex index, bool forward)
     {
         auto& node = get_node(index);
 
@@ -647,7 +664,7 @@ private:
         const bool save = (node.op == ParsedRegex::Alternation or node.op == ParsedRegex::Sequence) and
                           (node.value == 0 or (node.value != -1 and not (m_flags & RegexCompileFlags::NoSubs)));
         if (save)
-            push_inst(CompiledRegex::Save, node.value * 2 + (m_forward ? 0 : 1));
+            push_inst(CompiledRegex::Save, node.value * 2 + (forward ? 0 : 1));
 
         Vector<uint32_t> goto_inner_end_offsets;
         switch (node.op)
@@ -669,13 +686,13 @@ private:
                 break;
             case ParsedRegex::Sequence:
             {
-                if (m_forward)
+                if (forward)
                     for_each_child(m_parsed_regex, index, [this](ParsedRegex::NodeIndex child) {
-                        compile_node(child); return true;
+                        compile_node(child, true); return true;
                     });
                 else
                     for_each_child_reverse(m_parsed_regex, index, [this](ParsedRegex::NodeIndex  child) {
-                        compile_node(child); return true;
+                        compile_node(child, false); return true;
                     });
                 break;
             }
@@ -690,7 +707,7 @@ private:
 
                 for_each_child(m_parsed_regex, index,
                                   [&, end = node.children_end](ParsedRegex::NodeIndex  child) {
-                    auto node = compile_node(child);
+                    auto node = compile_node(child, forward);
                     if (child != index+1)
                         m_program.instructions[split_pos++].param = node;
                     if (get_node(child).children_end != end)
@@ -703,40 +720,40 @@ private:
                 break;
             }
             case ParsedRegex::LookAhead:
-                push_inst(m_forward ? (ignore_case ? CompiledRegex::LookAhead_IgnoreCase
-                                                   : CompiledRegex::LookAhead)
-                                    : (ignore_case ? CompiledRegex::LookBehind_IgnoreCase
-                                                   : CompiledRegex::LookBehind),
+                push_inst(forward ? (ignore_case ? CompiledRegex::LookAhead_IgnoreCase
+                                                 : CompiledRegex::LookAhead)
+                                  : (ignore_case ? CompiledRegex::LookBehind_IgnoreCase
+                                                 : CompiledRegex::LookBehind),
                           push_lookaround(index, false, ignore_case));
                 break;
             case ParsedRegex::NegativeLookAhead:
-                push_inst(m_forward ? (ignore_case ? CompiledRegex::NegativeLookAhead_IgnoreCase
-                                                   : CompiledRegex::NegativeLookAhead)
-                                    : (ignore_case ? CompiledRegex::NegativeLookBehind_IgnoreCase
-                                                   : CompiledRegex::NegativeLookBehind),
+                push_inst(forward ? (ignore_case ? CompiledRegex::NegativeLookAhead_IgnoreCase
+                                                 : CompiledRegex::NegativeLookAhead)
+                                  : (ignore_case ? CompiledRegex::NegativeLookBehind_IgnoreCase
+                                                 : CompiledRegex::NegativeLookBehind),
                           push_lookaround(index, false, ignore_case));
                 break;
             case ParsedRegex::LookBehind:
-                push_inst(m_forward ? (ignore_case ? CompiledRegex::LookBehind_IgnoreCase
-                                                   : CompiledRegex::LookBehind)
-                                    : (ignore_case ? CompiledRegex::LookAhead_IgnoreCase
-                                                   : CompiledRegex::LookAhead),
+                push_inst(forward ? (ignore_case ? CompiledRegex::LookBehind_IgnoreCase
+                                                 : CompiledRegex::LookBehind)
+                                  : (ignore_case ? CompiledRegex::LookAhead_IgnoreCase
+                                                 : CompiledRegex::LookAhead),
                           push_lookaround(index, true, ignore_case));
                 break;
             case ParsedRegex::NegativeLookBehind:
-                push_inst(m_forward ? (ignore_case ? CompiledRegex::NegativeLookBehind_IgnoreCase
-                                                   : CompiledRegex::NegativeLookBehind)
-                                    : (ignore_case ? CompiledRegex::NegativeLookAhead_IgnoreCase
-                                                   : CompiledRegex::NegativeLookAhead),
+                push_inst(forward ? (ignore_case ? CompiledRegex::NegativeLookBehind_IgnoreCase
+                                                 : CompiledRegex::NegativeLookBehind)
+                                  : (ignore_case ? CompiledRegex::NegativeLookAhead_IgnoreCase
+                                                 : CompiledRegex::NegativeLookAhead),
                           push_lookaround(index, true, ignore_case));
                 break;
             case ParsedRegex::LineStart:
-                push_inst(m_forward ? CompiledRegex::LineStart
-                                    : CompiledRegex::LineEnd);
+                push_inst(forward ? CompiledRegex::LineStart
+                                  : CompiledRegex::LineEnd);
                 break;
             case ParsedRegex::LineEnd:
-                push_inst(m_forward ? CompiledRegex::LineEnd
-                                    : CompiledRegex::LineStart);
+                push_inst(forward ? CompiledRegex::LineEnd
+                                  : CompiledRegex::LineStart);
                 break;
             case ParsedRegex::WordBoundary:
                 push_inst(CompiledRegex::WordBoundary);
@@ -745,12 +762,12 @@ private:
                 push_inst(CompiledRegex::NotWordBoundary);
                 break;
             case ParsedRegex::SubjectBegin:
-                push_inst(m_forward ? CompiledRegex::SubjectBegin
-                                    : CompiledRegex::SubjectEnd);
+                push_inst(forward ? CompiledRegex::SubjectBegin
+                                  : CompiledRegex::SubjectEnd);
                 break;
             case ParsedRegex::SubjectEnd:
-                push_inst(m_forward ? CompiledRegex::SubjectEnd
-                                    : CompiledRegex::SubjectBegin);
+                push_inst(forward ? CompiledRegex::SubjectEnd
+                                  : CompiledRegex::SubjectBegin);
                 break;
             case ParsedRegex::ResetStart:
                 push_inst(CompiledRegex::Save, 0);
@@ -761,12 +778,12 @@ private:
             m_program.instructions[offset].param = m_program.instructions.size();
 
         if (save)
-            push_inst(CompiledRegex::Save, node.value * 2 + (m_forward ? 1 : 0));
+            push_inst(CompiledRegex::Save, node.value * 2 + (forward ? 1 : 0));
 
         return start_pos;
     }
 
-    uint32_t compile_node(ParsedRegex::NodeIndex index)
+    uint32_t compile_node(ParsedRegex::NodeIndex index, bool forward)
     {
         auto& node = get_node(index);
 
@@ -784,10 +801,10 @@ private:
             goto_ends.push_back(split_pos);
         }
 
-        auto inner_pos = compile_node_inner(index);
+        auto inner_pos = compile_node_inner(index, forward);
         // Write the node multiple times when we have a min count quantifier
         for (int i = 1; i < quantifier.min; ++i)
-            inner_pos = compile_node_inner(index);
+            inner_pos = compile_node_inner(index, forward);
 
         if (quantifier.allows_infinite_repeat())
             push_inst(quantifier.greedy ? CompiledRegex::Split_PrioritizeChild
@@ -801,7 +818,7 @@ private:
             auto split_pos = push_inst(quantifier.greedy ? CompiledRegex::Split_PrioritizeParent
                                                          : CompiledRegex::Split_PrioritizeChild);
             goto_ends.push_back(split_pos);
-            compile_node_inner(index);
+            compile_node_inner(index, forward);
         }
 
         for (auto offset : goto_ends)
@@ -813,11 +830,11 @@ private:
     // Add an set of instruction prefix used in the search use case
     void write_search_prefix()
     {
-        kak_assert(m_program.instructions.empty());
-        push_inst(CompiledRegex::Split_PrioritizeChild, CompiledRegex::search_prefix_size);
+        const uint32_t first_inst = m_program.instructions.size();
+        push_inst(CompiledRegex::Split_PrioritizeChild, first_inst + CompiledRegex::search_prefix_size);
         push_inst(CompiledRegex::FindNextStart);
-        push_inst(CompiledRegex::Split_PrioritizeParent, 1);
-        kak_assert(m_program.instructions.size() == CompiledRegex::search_prefix_size);
+        push_inst(CompiledRegex::Split_PrioritizeParent, first_inst + 1);
+        kak_assert(m_program.instructions.size() == first_inst + CompiledRegex::search_prefix_size);
     }
 
     uint32_t push_inst(CompiledRegex::Op op, uint32_t param = 0)
@@ -862,7 +879,7 @@ private:
     // returns true if the node did not consume the char, hence a following node in
     // sequence would be still relevant for the parent node start chars computation.
     bool compute_start_desc(ParsedRegex::NodeIndex index,
-                             CompiledRegex::StartDesc& start_desc) const
+                             CompiledRegex::StartDesc& start_desc, bool forward) const
     {
         auto& node = get_node(index);
         switch (node.op)
@@ -924,9 +941,9 @@ private:
             {
                 bool did_not_consume = false;
                 auto does_not_consume = [&, this](auto child) {
-                    return this->compute_start_desc(child, start_desc);
+                    return this->compute_start_desc(child, start_desc, forward);
                 };
-                if (m_forward)
+                if (forward)
                     did_not_consume = for_each_child(m_parsed_regex, index, does_not_consume);
                 else
                     did_not_consume = for_each_child_reverse(m_parsed_regex, index, does_not_consume);
@@ -937,7 +954,7 @@ private:
             {
                 bool all_consumed = not node.quantifier.allows_none();
                 for_each_child(m_parsed_regex, index, [&](ParsedRegex::NodeIndex  child) {
-                    if (compute_start_desc(child, start_desc))
+                    if (compute_start_desc(child, start_desc, forward))
                         all_consumed = false;
                     return true;
                 });
@@ -960,10 +977,10 @@ private:
     }
 
     [[gnu::noinline]]
-    std::unique_ptr<CompiledRegex::StartDesc> compute_start_desc() const
+    std::unique_ptr<CompiledRegex::StartDesc> compute_start_desc(bool forward) const
     {
         CompiledRegex::StartDesc start_desc{};
-        if (compute_start_desc(0, start_desc) or
+        if (compute_start_desc(0, start_desc, forward) or
             not contains(start_desc.map, false))
             return nullptr;
 
@@ -978,7 +995,6 @@ private:
     CompiledRegex m_program;
     RegexCompileFlags m_flags;
     ParsedRegex& m_parsed_regex;
-    const bool m_forward;
 };
 
 void dump_regex(const CompiledRegex& program)
@@ -1079,9 +1095,9 @@ void dump_regex(const CompiledRegex& program)
     }
 }
 
-CompiledRegex compile_regex(StringView re, RegexCompileFlags flags, MatchDirection direction)
+CompiledRegex compile_regex(StringView re, RegexCompileFlags flags)
 {
-    return RegexCompiler{RegexParser::parse(re), flags, direction}.get_compiled_regex();
+    return RegexCompiler{RegexParser::parse(re), flags}.get_compiled_regex();
 }
 
 bool is_character_class(const CharacterClass& character_class, Codepoint cp)
@@ -1120,7 +1136,8 @@ struct TestVM : CompiledRegex, ThreadedRegexVM<const char*, dir>
     using VMType = ThreadedRegexVM<const char*, dir>;
 
     TestVM(StringView re, bool dump = false)
-        : CompiledRegex{compile_regex(re, RegexCompileFlags::None, dir)},
+        : CompiledRegex{compile_regex(re, dir == MatchDirection::Forward ?
+                                          RegexCompileFlags::None : RegexCompileFlags::Backward)},
           VMType{(const CompiledRegex&)*this}
     { if (dump) dump_regex(*this); }
 
