@@ -183,8 +183,18 @@ public:
 
         const bool search = (flags & RegexExecFlags::Search);
         Utf8It start{m_begin};
-        if (search and m_program.start_desc)
-            to_next_start(start, m_end, *m_program.start_desc);
+        if (m_program.start_desc)
+        {
+            if (search)
+            {
+                to_next_start(start, m_end, *m_program.start_desc);
+                if (start == m_end) // If start_desc is not null, it means we consume at least one char
+                    return false;
+            }
+            else if (start != m_end and
+                     not m_program.start_desc->map[std::min(*start, CompiledRegex::StartDesc::other)])
+                return false;
+        }
 
         return exec_program(start, Thread{&m_program.instructions[search ? 0 : CompiledRegex::search_prefix_size], nullptr});
     }
