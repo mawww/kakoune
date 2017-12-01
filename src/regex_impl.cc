@@ -14,7 +14,7 @@
 namespace Kakoune
 {
 
-constexpr Codepoint CompiledRegex::StartChars::other;
+constexpr Codepoint CompiledRegex::StartDesc::other;
 
 struct ParsedRegex
 {
@@ -623,7 +623,7 @@ struct RegexCompiler
     {
         // Approximation of the number of instructions generated
         m_program.instructions.reserve(CompiledRegex::search_prefix_size + parsed_regex.nodes.size() + 1);
-        m_program.start_chars = compute_start_chars();
+        m_program.start_desc = compute_start_desc();
 
         write_search_prefix();
         compile_node(0);
@@ -861,28 +861,28 @@ private:
     // Fills accepted and rejected according to which chars can start the given node,
     // returns true if the node did not consume the char, hence a following node in
     // sequence would be still relevant for the parent node start chars computation.
-    bool compute_start_chars(ParsedRegex::NodeIndex index,
-                             CompiledRegex::StartChars& start_chars) const
+    bool compute_start_desc(ParsedRegex::NodeIndex index,
+                             CompiledRegex::StartDesc& start_desc) const
     {
         auto& node = get_node(index);
         switch (node.op)
         {
             case ParsedRegex::Literal:
-                if (node.value < CompiledRegex::StartChars::count)
+                if (node.value < CompiledRegex::StartDesc::count)
                 {
                     if (node.ignore_case)
                     {
-                        start_chars.map[to_lower(node.value)] = true;
-                        start_chars.map[to_upper(node.value)] = true;
+                        start_desc.map[to_lower(node.value)] = true;
+                        start_desc.map[to_upper(node.value)] = true;
                     }
                     else
-                        start_chars.map[node.value] = true;
+                        start_desc.map[node.value] = true;
                 }
                 else
-                    start_chars.map[CompiledRegex::StartChars::other] = true;
+                    start_desc.map[CompiledRegex::StartDesc::other] = true;
                 return node.quantifier.allows_none();
             case ParsedRegex::AnyChar:
-                for (auto& b : start_chars.map)
+                for (auto& b : start_desc.map)
                     b = true;
                return node.quantifier.allows_none();
             case ParsedRegex::Class:
@@ -892,39 +892,39 @@ private:
                 {
                     for (auto& range : character_class.ranges)
                     {
-                        auto min = std::min(CompiledRegex::StartChars::other, range.min);
-                        auto max = std::min(CompiledRegex::StartChars::other, range.max);
+                        auto min = std::min(CompiledRegex::StartDesc::other, range.min);
+                        auto max = std::min(CompiledRegex::StartDesc::other, range.max);
                         for (Codepoint cp = min; cp <= max; ++cp)
-                            start_chars.map[cp] = true;
+                            start_desc.map[cp] = true;
                     }
                 }
                 else
                 {
-                    for (Codepoint cp = 0; cp < CompiledRegex::StartChars::other; ++cp)
+                    for (Codepoint cp = 0; cp < CompiledRegex::StartDesc::other; ++cp)
                     {
-                        if (start_chars.map[cp] or is_character_class(character_class, cp))
-                            start_chars.map[cp] = true;
+                        if (start_desc.map[cp] or is_character_class(character_class, cp))
+                            start_desc.map[cp] = true;
                     }
                 }
-                start_chars.map[CompiledRegex::StartChars::other] = true;
+                start_desc.map[CompiledRegex::StartDesc::other] = true;
                 return node.quantifier.allows_none();
             }
             case ParsedRegex::CharacterType:
             {
                 const CharacterType ctype = (CharacterType)node.value;
-                for (Codepoint cp = 0; cp < CompiledRegex::StartChars::other; ++cp)
+                for (Codepoint cp = 0; cp < CompiledRegex::StartDesc::other; ++cp)
                 {
                     if (is_ctype(ctype, cp))
-                        start_chars.map[cp] = true;
+                        start_desc.map[cp] = true;
                 }
-                start_chars.map[CompiledRegex::StartChars::other] = true;
+                start_desc.map[CompiledRegex::StartDesc::other] = true;
                 return node.quantifier.allows_none();
             }
             case ParsedRegex::Sequence:
             {
                 bool did_not_consume = false;
                 auto does_not_consume = [&, this](auto child) {
-                    return this->compute_start_chars(child, start_chars);
+                    return this->compute_start_desc(child, start_desc);
                 };
                 if (m_forward)
                     did_not_consume = for_each_child(m_parsed_regex, index, does_not_consume);
@@ -937,7 +937,7 @@ private:
             {
                 bool all_consumed = not node.quantifier.allows_none();
                 for_each_child(m_parsed_regex, index, [&](ParsedRegex::NodeIndex  child) {
-                    if (compute_start_chars(child, start_chars))
+                    if (compute_start_desc(child, start_desc))
                         all_consumed = false;
                     return true;
                 });
@@ -960,14 +960,14 @@ private:
     }
 
     [[gnu::noinline]]
-    std::unique_ptr<CompiledRegex::StartChars> compute_start_chars() const
+    std::unique_ptr<CompiledRegex::StartDesc> compute_start_desc() const
     {
-        CompiledRegex::StartChars start_chars{};
-        if (compute_start_chars(0, start_chars) or
-            not contains(start_chars.map, false))
+        CompiledRegex::StartDesc start_desc{};
+        if (compute_start_desc(0, start_desc) or
+            not contains(start_desc.map, false))
             return nullptr;
 
-        return std::make_unique<CompiledRegex::StartChars>(start_chars);
+        return std::make_unique<CompiledRegex::StartDesc>(start_desc);
     }
 
     const ParsedRegex::Node& get_node(ParsedRegex::NodeIndex index) const

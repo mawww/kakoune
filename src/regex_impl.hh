@@ -101,14 +101,14 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     MatchDirection direction;
     size_t save_count;
 
-    struct StartChars
+    struct StartDesc
     {
         static constexpr size_t count = 256;
         static constexpr Codepoint other = 256;
         bool map[count+1];
     };
 
-    std::unique_ptr<StartChars> start_chars;
+    std::unique_ptr<StartDesc> start_desc;
 };
 
 enum class RegexCompileFlags
@@ -183,8 +183,8 @@ public:
 
         const bool search = (flags & RegexExecFlags::Search);
         Utf8It start{m_begin};
-        if (search)
-            to_next_start(start, m_end, m_program.start_chars.get());
+        if (search and m_program.start_desc)
+            to_next_start(start, m_end, *m_program.start_desc);
 
         return exec_program(start, Thread{&m_program.instructions[search ? 0 : CompiledRegex::search_prefix_size], nullptr});
     }
@@ -460,19 +460,16 @@ private:
             std::reverse(state.current_threads.begin(), state.current_threads.end());
             ++pos;
 
-            if (find_next_start)
-                to_next_start(pos, m_end, m_program.start_chars.get());
+            if (find_next_start and m_program.start_desc)
+                to_next_start(pos, m_end, *m_program.start_desc);
         }
     }
 
     void to_next_start(Utf8It& start, const Utf8It& end,
-                       const CompiledRegex::StartChars* start_chars)
+                       const CompiledRegex::StartDesc& start_desc)
     {
-        if (not start_chars)
-            return;
-
         while (start != end and *start >= 0 and
-               not start_chars->map[std::min(*start, CompiledRegex::StartChars::other)])
+               not start_desc.map[std::min(*start, CompiledRegex::StartDesc::other)])
             ++start;
     }
 
