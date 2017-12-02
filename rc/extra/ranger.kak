@@ -1,6 +1,12 @@
 # http://ranger.nongnu.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+%sh{
+    if ! command -v ranger >/dev/null; then
+        echo 'echo -debug ranger: warning, command dependency unmet: ranger'
+    fi
+}
+
 define-command ranger-open-on-edit-directory \
     -docstring 'Start the ranger file system explorer when trying to edit a directory' %{
         hook global RuntimeError "\d+:\d+: '\w+' (.*): is a directory" %{ %sh{

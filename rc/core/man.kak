@@ -3,6 +3,12 @@ declare-option -docstring "name of the client in which documentation is to be di
 
 declare-option -hidden str manpage
 
+%sh{
+    if ! command -v man >/dev/null; then
+        echo 'echo -debug man: warning, command dependency unmet: man'
+    fi
+}
+
 hook -group man-highlight global WinSetOption filetype=man %{
     add-highlighter window group man-highlight
     # Sections

@@ -1,6 +1,12 @@
 # http://tmux.github.io/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+%sh{
+    if ! command -v tmux >/dev/null; then
+        echo 'echo -debug tmux: warning, command dependency unmet: tmux'
+    fi
+}
+
 ## The default behaviour for the `new` command is to open an horizontal pane in a tmux session
 hook global KakBegin .* %{
     %sh{

@@ -2,6 +2,12 @@ declare-option -hidden range-specs spell_regions
 declare-option -hidden str spell_lang
 declare-option -hidden str spell_tmp_file
 
+%sh{
+    if ! command -v aspell >/dev/null; then
+        echo 'echo -debug spell: warning, command dependency unmet: aspell'
+    fi
+}
+
 define-command -params ..1 \
     -docstring %{spell [<language>]: spell check the current buffer
 The first optional argument is the language against which the check will be performed
