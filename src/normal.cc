@@ -1171,7 +1171,9 @@ void select_object(Context& context, NormalParams params)
         if (cp == 'c')
         {
             const bool info = show_auto_info_ifn(
-                "Enter object desc", "format: <open text>,<close text>",
+                "Enter object desc",
+                "format: <open regex>,<close regex>\n"
+                "        escape commas with '\\'",
                 AutoInfo::Command, context);
 
             context.input_handler().prompt(
@@ -1189,7 +1191,8 @@ void select_object(Context& context, NormalParams params)
 
                     select_and_set_last<mode>(
                         context, std::bind(select_surrounding, _1, _2,
-                                           params[0], params[1],
+                                           Regex{params[0], RegexCompileFlags::Backward},
+                                           Regex{params[1], RegexCompileFlags::Backward},
                                            count, flags));
                 });
             return;
@@ -1197,36 +1200,36 @@ void select_object(Context& context, NormalParams params)
 
         static constexpr struct SurroundingPair
         {
-            StringView opening;
-            StringView closing;
-            Codepoint name;
+            char opening;
+            char closing;
+            char name;
         } surrounding_pairs[] = {
-            { "(", ")", 'b' },
-            { "{", "}", 'B' },
-            { "[", "]", 'r' },
-            { "<", ">", 'a' },
-            { "\"", "\"", 'Q' },
-            { "'", "'", 'q' },
-            { "`", "`", 'g' },
+            { '(', ')', 'b' },
+            { '{', '}', 'B' },
+            { '[', ']', 'r' },
+            { '<', '>', 'a' },
+            { '"', '"', 'Q' },
+            { '\'', '\'', 'q' },
+            { '`', '`', 'g' },
         };
         auto pair_it = find_if(surrounding_pairs,
                                [cp](const SurroundingPair& s) {
-                                   return s.opening[0_char] == cp or
-                                          s.closing[0_char] == cp or
+                                   return s.opening == cp or s.closing == cp or
                                           (s.name != 0 and s.name == cp);
                                });
         if (pair_it != std::end(surrounding_pairs))
             return select_and_set_last<mode>(
                 context, std::bind(select_surrounding, _1, _2,
-                                   pair_it->opening, pair_it->closing,
+                                   Regex{format("\\Q{}", pair_it->opening), RegexCompileFlags::Backward},
+                                   Regex{format("\\Q{}", pair_it->closing), RegexCompileFlags::Backward},
                                    count, flags));
 
         if (is_punctuation(cp) or cp == '_')
         {
-            auto utf8cp = to_string(cp);
+            auto re = Regex{"\\Q" + to_string(cp), RegexCompileFlags::Backward};
             return select_and_set_last<mode>(
                 context, std::bind(select_surrounding, _1, _2,
-                                   utf8cp, utf8cp, count, flags));
+                                   re, re, count, flags));
         }
     }, get_title(),
     build_autoinfo_for_mapping(context, KeymapMode::Object,

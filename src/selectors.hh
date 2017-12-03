@@ -109,7 +109,7 @@ void split_selections(SelectionList& selections, const Regex& regex, int capture
 
 Optional<Selection>
 select_surrounding(const Context& context, const Selection& selection,
-                   StringView opening, StringView closing, int level,
+                   const Regex& opening, const Regex& closing, int level,
                    ObjectFlags flags);
 
 }

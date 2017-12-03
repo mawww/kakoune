@@ -275,40 +275,55 @@ select_matching(const Context& context, const Selection& selection)
     return {};
 }
 
-template<typename Iterator, typename Container>
-Optional<Iterator> find_closing(Iterator pos, Iterator end,
-                                Container opening, Container closing,
-                                int init_level, bool nestable)
+template<typename Iterator>
+Optional<std::pair<Iterator, Iterator>>
+find_opening(const Iterator& begin, Iterator pos,
+             const Regex& opening, const Regex& closing,
+             int level, bool nestable)
 {
-    const auto opening_len = opening.end() - opening.begin();
-    const auto closing_len = closing.end() - closing.begin();
+    MatchResults<Iterator> res;
+    if (backward_regex_search(begin, pos, res, closing) and
+        res[0].second == pos)
+        pos = res[0].first;
 
-    int level = nestable ? init_level : 0;
-
-    if (end - pos >= opening_len and
-        std::equal(opening.begin(), opening.end(), pos))
-        pos += opening_len;
-
-    while (pos != end)
+    for (auto match : RegexIterator<Iterator, MatchDirection::Backward>{begin, pos, opening})
     {
-        auto close = std::search(pos, end, closing.begin(), closing.end());
-        if (close == end)
-            return {};
-
         if (nestable)
         {
-            for (auto open = pos; open != close; open += opening_len)
-            {
-                open = std::search(open, close, opening.begin(), opening.end());
-                if (open == close)
-                    break;
+            for (auto m : RegexIterator<Iterator, MatchDirection::Backward>{match[0].second, pos, closing})
                 ++level;
-            }
         }
 
-        pos = close + closing_len;
-        if (level == 0)
-            return pos-1;
+        if (not nestable or level == 0)
+            return match[0];
+        pos = match[0].first;
+        --level;
+    }
+    return {};
+}
+
+template<typename Iterator>
+Optional<std::pair<Iterator, Iterator>>
+find_closing(Iterator pos, const Iterator& end,
+             const Regex& opening, const Regex& closing,
+             int level, bool nestable)
+{
+    MatchResults<Iterator> res;
+    if (regex_search(pos, end, res, opening) and
+        res[0].first == pos)
+        pos = res[0].second;
+
+    for (auto match : RegexIterator<Iterator, MatchDirection::Forward>{pos, end, closing})
+    {
+        if (nestable)
+        {
+            for (auto m : RegexIterator<Iterator, MatchDirection::Forward>{pos, match[0].first, opening})
+                ++level;
+        }
+
+        if (not nestable or level == 0)
+            return match[0];
+        pos = match[0].second;
         --level;
     }
     return {};
@@ -317,84 +332,70 @@ Optional<Iterator> find_closing(Iterator pos, Iterator end,
 template<typename Container, typename Iterator>
 Optional<std::pair<Iterator, Iterator>>
 find_surrounding(const Container& container, Iterator pos,
-                 StringView opening, StringView closing,
-                 ObjectFlags flags, int init_level)
+                 const Regex& opening, const Regex& closing,
+                 ObjectFlags flags, int level)
 {
-    using std::begin; using std::end;
-    const bool to_begin = flags & ObjectFlags::ToBegin;
-    const bool to_end   = flags & ObjectFlags::ToEnd;
     const bool nestable = opening != closing;
 
-    auto first = pos;
-    if (to_begin and opening != *pos)
-    {
-        using RevIt = std::reverse_iterator<Iterator>;
-        auto res = find_closing(RevIt{pos+1}, RevIt{begin(container)},
-                                closing | reverse(), opening | reverse(),
-                                init_level, nestable);
-        if (not res)
-            return {};
+    // When onto the token of a non nestable block, consider it as an opening.
+    MatchResults<Iterator> matches;
+    if (not nestable and regex_search(pos, container.end(), matches, opening) and
+        matches[0].first == pos)
+        pos = matches[0].second;
 
-        first = res->base() - 1; 
+    auto first = pos;
+    if (flags & ObjectFlags::ToBegin)
+    {
+        // When positionned onto opening and searching to opening, search the parent one
+        if (nestable and first != container.begin() and not (flags & ObjectFlags::ToEnd) and
+            regex_search(first, container.end(), matches, opening) and matches[0].first == first)
+            first = utf8::previous(first, container.begin());
+
+        if (auto res = find_opening(container.begin(), first+1, opening, closing, level, nestable))
+            first = (flags & ObjectFlags::Inner) ? res->second : res->first; 
+        else
+            return {};
     }
 
     auto last = pos;
-    if (to_end)
+    if (flags & ObjectFlags::ToEnd)
     {
-        auto res = find_closing(pos, end(container), opening, closing,
-                                init_level, nestable);
-        if (not res)
+        // When positionned onto closing and searching to closing, search the parent one
+        auto next = utf8::next(last, container.end());
+        if (nestable and next != container.end() and not (flags & ObjectFlags::ToBegin) and
+            backward_regex_search(container.begin(), next, matches, closing) and matches[0].second == next)
+            last = next;
+
+        if (auto res = find_closing(last, container.end(), opening, closing, level, nestable))
+            last = (flags & ObjectFlags::Inner) ? utf8::previous(res->first, container.begin())
+                                                : utf8::previous(res->second, container.begin()); 
+        else
             return {};
-
-        last = *res; 
     }
+    if (first > last)
+        last = first;
 
-    if (flags & ObjectFlags::Inner)
-    {
-        if (to_begin and first != last)
-            first += (int)opening.length();
-        if (to_end and first != last)
-            last -= (int)closing.length();
-    }
-    return to_end ? std::pair<Iterator, Iterator>{first, last}
-                  : std::pair<Iterator, Iterator>{last, first};
+    return std::pair<Iterator, Iterator>{first, last};
 }
 
 Optional<Selection>
 select_surrounding(const Context& context, const Selection& selection,
-                   StringView opening, StringView closing, int level,
+                   const Regex& opening, const Regex& closing, int level,
                    ObjectFlags flags)
 {
     auto& buffer = context.buffer();
-    const bool nestable = opening != closing;
-    auto pos = selection.cursor();
-    if (not nestable or flags & ObjectFlags::Inner)
-    {
-        if (auto res = find_surrounding(buffer, buffer.iterator_at(pos),
-                                        opening, closing, flags, level))
-            return utf8_range(res->first, res->second);
-        return {};
-    }
+    auto pos = buffer.iterator_at(selection.cursor());
 
-    auto c = buffer.byte_at(pos);
-    if ((flags == ObjectFlags::ToBegin and c == opening) or
-        (flags == ObjectFlags::ToEnd and c == closing))
-        ++level;
+    auto res = find_surrounding(buffer, pos, opening, closing, flags, level);
 
-    auto res = find_surrounding(buffer, buffer.iterator_at(pos),
-                                opening, closing, flags, level);
-    if (not res)
-        return {};
+    // When we already had the full object selected, select its parent
+    if (res and flags == (ObjectFlags::ToBegin | ObjectFlags::ToEnd) and
+        res->first.coord() == selection.min() and res->second.coord() == selection.max())
+        res = find_surrounding(buffer, pos, opening, closing, flags, level+1);
 
-    Selection sel = utf8_range(res->first, res->second);
-
-    if (flags != (ObjectFlags::ToBegin | ObjectFlags::ToEnd) or
-        sel.min() != selection.min() or sel.max() != selection.max())
-        return sel;
-
-    if (auto res_parent = find_surrounding(buffer, buffer.iterator_at(pos),
-                                           opening, closing, flags, level+1))
-        return utf8_range(res_parent->first, res_parent->second);
+    if (res)
+        return (flags & ObjectFlags::ToEnd) ? utf8_range(res->first, res->second)
+                                            : utf8_range(res->second, res->first);
     return {};
 }
 
@@ -987,30 +988,34 @@ void split_selections(SelectionList& selections, const Regex& regex, int capture
 
 UnitTest test_find_surrounding{[]()
 {
-    StringView s("[salut { toi[] }]");
+    StringView s = "{foo [bar { baz[] }]}";
     auto check_equal = [&](const char* pos, StringView opening, StringView closing,
-                           ObjectFlags flags, int init_level, StringView expected) {
-        auto res = find_surrounding(s, pos, opening, closing, flags, init_level);
+                           ObjectFlags flags, int level, StringView expected) {
+        auto res = find_surrounding(s, pos,
+                                    Regex{"\\Q" + opening, RegexCompileFlags::Backward},
+                                    Regex{"\\Q" + closing, RegexCompileFlags::Backward},
+                                    flags, level);
+        kak_assert(res);
         auto min = std::min(res->first, res->second),
              max = std::max(res->first, res->second);
-        kak_assert(res and StringView{min, max+1} == expected);
+        kak_assert(StringView{min, max+1} == expected);
     };
 
-    check_equal(s.begin() + 10, '{', '}', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "{ toi[] }");
-    check_equal(s.begin() + 10, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0, "salut { toi[] }");
-    check_equal(s.begin(), '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "[salut { toi[] }]");
-    check_equal(s.begin()+7, '{', '}', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "{ toi[] }");
-    check_equal(s.begin() + 12, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0, "]");
-    check_equal(s.begin() + 14, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "[salut { toi[] }]");
-    check_equal(s.begin() + 1, '[', ']', ObjectFlags::ToBegin, 0, "[s");
+    check_equal(s.begin() + 13, '{', '}', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "{ baz[] }");
+    check_equal(s.begin() + 13, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0, "bar { baz[] }");
+    check_equal(s.begin() + 5, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "[bar { baz[] }]");
+    check_equal(s.begin() + 10, '{', '}', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "{ baz[] }");
+    check_equal(s.begin() + 16, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0, "]");
+    check_equal(s.begin() + 18, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "[bar { baz[] }]");
+    check_equal(s.begin() + 6, '[', ']', ObjectFlags::ToBegin, 0, "[b");
 
-    s = "[]";
-    check_equal(s.begin() + 1, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "[]");
+    s = "[*][] foo";
+    kak_assert(not find_surrounding(s, s.begin() + 6,
+                                    Regex{"\\Q[", RegexCompileFlags::Backward},
+                                    Regex{"\\Q]", RegexCompileFlags::Backward},
+                                    ObjectFlags::ToBegin, 0));
 
-    s = "[*][] hehe";
-    kak_assert(not find_surrounding(s, s.begin() + 6, '[', ']', ObjectFlags::ToBegin, 0));
-
-    s = "begin tchou begin tchaa end end";
+    s = "begin foo begin bar end end";
     check_equal(s.begin() + 6, "begin", "end", ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, s);
 }};
 
