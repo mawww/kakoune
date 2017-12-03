@@ -1,0 +1,61 @@
+# https://nim-lang.org/
+#
+
+# Detection
+# ‾‾‾‾‾‾‾‾‾
+
+hook global BufCreate .*\.nim %{
+    set-option buffer filetype nim
+}
+
+# Highlighters
+# ‾‾‾‾‾‾‾‾‾‾‾‾
+
+add-highlighter shared/ regions -default code nim \
+    double_string '"' (?<!\\)(\\\\)*" '' \
+    double_string '"""' '"""' '' \
+    comment '#?#\[' '\]##?' ''
+
+add-highlighter shared/nim/double_string fill string
+add-highlighter shared/nim/comment fill comment
+
+add-highlighter shared/nim/code regex \b(0[xXocCbB])?[\d_]+('[iIuUfFdD](8|16|32|64|128))?\b 0:value
+add-highlighter shared/nim/code regex \b\d+\.\d+\b 0:value
+add-highlighter shared/nim/code regex %{'[^'\n]'} 0:string
+
+%sh{
+    # Grammar
+    keywords="addr|and|as|asm|atomic|bind|block|break|case|cast|concept|const"
+    keywords="${keywords}|continue|converter|defer|discard|distinct|div|do|elif"
+    keywords="${keywords}|else|end|enum|except|export|finally|for|from|func"
+    keywords="${keywords}|generic|if|import|in|include|interface|is|isnot"
+    keywords="${keywords}|iterator|let|macro|method|mixin|mod|nil|not|notin"
+    keywords="${keywords}|of|or|out|proc|ptr|raise|ref|return|shl|shr"
+    keywords="${keywords}|static|template|try|type|using|var|when|while"
+    keywords="${keywords}|with|without|xor|yield"
+    types="int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|float"
+    types="${types}|float32|float64|bool|char|object|seq|array|cstring|string"
+    types="${types}|tuple|varargs"
+    values="false|true"
+
+    # Add the language's grammar to the static completion list
+    printf %s\\n "hook global WinSetOption filetype=nim %{
+        set-option window static_words '${keywords}:${types}:${values}'
+    }" | sed 's,|,:,g'
+
+    # Highlight keywords
+    printf %s "
+        add-highlighter shared/nim/code regex \b(${keywords})\b 0:keyword
+        add-highlighter shared/nim/code regex \b(${types})\b 0:type
+        add-highlighter shared/nim/code regex \b(${values})\b 0:value
+    "
+}
+
+add-highlighter shared/nim/code regex '#[^\n]+' 0:comment
+
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook -group nim-highlight global WinSetOption filetype=nim %{ add-highlighter window ref nim }
+
+hook -group nim-highlight global WinSetOption filetype=(?!nim).* %{ remove-highlighter window/nim }
