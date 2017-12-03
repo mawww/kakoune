@@ -49,7 +49,7 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
     # on a previous line if its followed by text on the same line
     try %< evaluate-commands -draft %<
         # Go to opening parenthesis and opening brace, then select the most nested one
-        try %< try %< execute-keys [bZ<a-\;>[B<a-z><gt> > catch %< execute-keys [B > >
+        try %< execute-keys [c [({],[)}] <ret> >
         # Validate selection and get first and last char
         execute-keys <a-k>\A[{(](\h*\S+)+\n<ret> <a-:><a-\;>L <a-S>
         # Remove eventual indent from new line
