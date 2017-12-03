@@ -862,14 +862,14 @@ static bool find_prev(const Buffer& buffer, const BufferIterator& pos,
                       const Regex& ex, bool& wrapped)
 {
     if (pos != buffer.begin() and
-        regex_search<BufferIterator, MatchDirection::Backward>(
-            buffer.begin(), pos, matches, ex,
-            match_flags(buffer, buffer.begin(), pos) | RegexExecFlags::NotInitialNull))
+        backward_regex_search(buffer.begin(), pos, matches, ex,
+                              match_flags(buffer, buffer.begin(), pos) |
+                              RegexExecFlags::NotInitialNull))
         return true;
     wrapped = true;
-    return regex_search<BufferIterator, MatchDirection::Backward>(
-        buffer.begin(), buffer.end(), matches, ex,
-        match_flags(buffer, buffer.begin(), buffer.end()) | RegexExecFlags::NotInitialNull);
+    return backward_regex_search(buffer.begin(), buffer.end(), matches, ex,
+                                 match_flags(buffer, buffer.begin(), buffer.end()) |
+                                 RegexExecFlags::NotInitialNull);
 }
 
 template<MatchDirection direction>

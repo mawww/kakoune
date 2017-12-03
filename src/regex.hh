@@ -136,6 +136,13 @@ bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
     return regex_search<It, direction>(begin, end, res.values(), *re.impl(), flags);
 }
 
+template<typename It>
+bool backward_regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
+                  RegexExecFlags flags = RegexExecFlags::None)
+{
+    return regex_search<It, MatchDirection::Backward>(std::move(begin), std::move(end), res, re, flags);
+}
+
 String option_to_string(const Regex& re);
 void option_from_string(StringView str, Regex& re);
 
@@ -204,8 +211,8 @@ private:
         }
         else
         {
-            if (not regex_search<Iterator, MatchDirection::Backward>(m_begin, m_next_pos, m_results, *m_regex,
-                                                                     m_flags | additional_flags))
+            if (not backward_regex_search(m_begin, m_next_pos, m_results, *m_regex,
+                                          m_flags | additional_flags))
                 m_regex = nullptr;
             else
                 m_next_pos = m_results[0].first;
