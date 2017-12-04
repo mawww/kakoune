@@ -528,6 +528,23 @@ void RemoteUI::exit(int status)
     m_socket_watcher.events() |= FdEvents::Write;
 }
 
+String get_user_name(int uid)
+{
+    struct invalid_index : runtime_error
+    {
+        invalid_index(size_t i) : runtime_error{format("invalid index '{}'", i)} {}
+    };
+
+    MappedFile passwd{"/etc/passwd"};
+    for (auto entry : (StringView)passwd | split<StringView>('\n'))
+    {
+        auto name_and_id = entry | split<StringView>(':') | elements<invalid_index, 0, 2>();
+        if (str_to_int(name_and_id[1]) == uid)
+            return name_and_id[0].str();
+    }
+    throw runtime_error(format("Cannot find user name for uid '{}'", uid));
+}
+
 static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
@@ -539,7 +556,7 @@ static sockaddr_un session_addr(StringView session)
         format_to(addr.sun_path, "{}/kakoune/{}", tmpdir(), session);
     else
         format_to(addr.sun_path, "{}/kakoune/{}/{}", tmpdir(),
-                  getpwuid(geteuid())->pw_name, session);
+                  get_user_name(geteuid()), session);
     return addr;
 }
 
@@ -813,9 +830,9 @@ bool Server::rename_session(StringView name)
         throw runtime_error{"Cannot create sessions with '/' in their name"};
 
     String old_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
-                                    getpwuid(geteuid())->pw_name, m_session);
+                                    get_user_name(geteuid()), m_session);
     String new_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
-                                    getpwuid(geteuid())->pw_name, name);
+                                    get_user_name(geteuid()), name);
 
     if (rename(old_socket_file.c_str(), new_socket_file.c_str()) != 0)
         return false;
@@ -829,7 +846,7 @@ void Server::close_session(bool do_unlink)
     if (do_unlink)
     {
         String socket_file = format("{}/kakoune/{}/{}", tmpdir(),
-                                    getpwuid(geteuid())->pw_name, m_session);
+                                    get_user_name(geteuid()), m_session);
         unlink(socket_file.c_str());
     }
     m_listener->close_fd();

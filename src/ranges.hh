@@ -6,6 +6,8 @@
 #include <iterator>
 #include <numeric>
 
+#include "constexpr_utils.hh"
+
 namespace Kakoune
 {
 
@@ -334,6 +336,21 @@ auto gather()
     return make_view_factory([](auto&& range) {
         using std::begin; using std::end;
         return Container(begin(range), end(range));
+    });
+}
+
+template<typename ExceptionType, size_t... Indexes>
+auto elements()
+{
+    return make_view_factory([] (auto&& range) {
+        using std::begin; using std::end;
+        auto elem = [it = begin(range), end = end(range), i = 0u](size_t index) mutable {
+            for (; i < index; ++i, ++it)
+                if (it == end) throw ExceptionType{i};
+            return *it;
+        };
+        // Note that initializer lists elements are guaranteed to be sequenced
+        return Array<std::decay_t<decltype(*begin(range))>, sizeof...(Indexes)>{{elem(Indexes)...}};
     });
 }
 
