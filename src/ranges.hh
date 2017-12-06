@@ -173,13 +173,13 @@ struct SplitView
 
     struct Iterator : std::iterator<std::forward_iterator_tag, ValueType>
     {
-        Iterator(RangeIt pos, RangeIt end, Element separator, Element escaper)
-         : pos(pos), sep(pos), end(end), separator(separator), escaper(escaper)
+        Iterator(RangeIt pos, const RangeIt& end, Element separator, Element escaper)
+         : done{pos == end}, pos{pos}, sep{pos}, end(end), separator{std::move(separator)}, escaper{std::move(escaper)}
         {
             bool escaped = false;
             while (sep != end and (escaped or *sep != separator))
             {
-                escaped = escape and *sep == escaper;
+                escaped = escape and not escaped and *sep == escaper;
                 ++sep;
             }
         }
@@ -187,8 +187,8 @@ struct SplitView
         Iterator& operator++() { advance(); return *this; }
         Iterator operator++(int) { auto copy = *this; advance(); return copy; }
 
-        bool operator==(const Iterator& other) const { return pos == other.pos; }
-        bool operator!=(const Iterator& other) const { return pos != other.pos; }
+        bool operator==(const Iterator& other) const { return pos == other.pos and done == other.done; }
+        bool operator!=(const Iterator& other) const { return pos != other.pos or done != other.done; }
 
         ValueType operator*() { return {pos, sep}; }
 
@@ -198,6 +198,7 @@ struct SplitView
             if (sep == end)
             {
                 pos = end;
+                done = true;
                 return;
             }
 
@@ -211,6 +212,7 @@ struct SplitView
             }
         }
 
+        bool done;
         RangeIt pos;
         RangeIt sep;
         RangeIt end;
