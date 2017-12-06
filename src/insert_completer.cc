@@ -134,19 +134,14 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
     };
     Vector<RankedMatchAndBuffer> matches;
 
-    auto add_matches = [&](const Buffer& buf) {
-        auto& word_db = get_word_db(buf);
-        auto bufmatches = word_db.find_matching(prefix);
-        for (auto& m : bufmatches)
-            matches.push_back({ m, &buf });
-    };
-
-    add_matches(buffer);
+    auto& word_db = get_word_db(buffer);
+    for (auto& m : word_db.find_matching(prefix))
+        matches.push_back({ m, &buffer });
 
     // Remove words that are being edited
     for (auto& word_count : sel_word_counts)
     {
-        if (get_word_db(buffer).get_word_occurences(word_count.key) <= word_count.value)
+        if (word_db.get_word_occurences(word_count.key) <= word_count.value)
             unordered_erase(matches, word_count.key);
     }
 
@@ -156,7 +151,11 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
         {
             if (buf.get() == &buffer or buf->flags() & Buffer::Flags::Debug)
                 continue;
-            add_matches(*buf);
+            for (auto& m : get_word_db(*buf).find_matching(prefix) |
+                           // filter out words that are not considered words for the current buffer
+                           filter([&](auto& rm) { return std::all_of(rm.candidate().begin(), rm.candidate().end(),
+                                                                     is_word_pred); }))
+                matches.push_back({ m, buf.get() });
         }
     }
 
