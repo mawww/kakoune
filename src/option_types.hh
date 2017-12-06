@@ -84,7 +84,8 @@ template<typename T, MemoryDomain domain>
 void option_from_string(StringView str, Vector<T, domain>& opt)
 {
     opt.clear();
-    for (auto& elem : split(str, list_separator, '\\'))
+    for (auto&& elem : str | split<StringView>(list_separator, '\\')
+                           | transform(unescape<list_separator, '\\'>))
     {
         T opt_elem;
         option_from_string(elem, opt_elem);
@@ -130,16 +131,18 @@ template<typename Key, typename Value, MemoryDomain domain>
 bool option_add(HashMap<Key, Value, domain>& opt, StringView str)
 {
     bool changed = false;
-    for (auto& elem : split(str, list_separator, '\\'))
+    for (auto&& elem : str | split<StringView>(list_separator, '\\')
+                           | transform(unescape<list_separator, '\\'>))
     {
-        Vector<String> pair_str = split(elem, '=', '\\');
-        if (pair_str.size() != 2)
-            throw runtime_error("map option expects key=value");
-        Key key;
-        Value value;
-        option_from_string(pair_str[0], key);
-        option_from_string(pair_str[1], value);
-        opt.insert({ std::move(key), std::move(value) });
+        struct error : runtime_error { error(size_t) : runtime_error{"map option expects key=value"} {} };
+        auto key_value = elem | split<StringView>('=', '\\')
+                              | transform(unescape<'=', '\\'>)
+                              | static_gather<error, 2>();
+
+        HashItem<Key, Value> item;
+        option_from_string(key_value[0], item.key);
+        option_from_string(key_value[1], item.value);
+        opt.insert(std::move(item));
         changed = true;
     }
     return changed;
@@ -200,11 +203,16 @@ String option_to_string(const std::tuple<Types...>& opt)
 template<typename... Types>
 void option_from_string(StringView str, std::tuple<Types...>& opt)
 {
-    auto elems = split(str, tuple_separator, '\\');
-    if (elems.size() != sizeof...(Types))
-        throw runtime_error(elems.size() < sizeof...(Types) ?
-                              "not enough elements in tuple"
-                            : "too many elements in tuple");
+    struct error : runtime_error
+    {
+        error(size_t i) : runtime_error{i < sizeof...(Types) ?
+                                          "not enough elements in tuple"
+                                        : "too many elements in tuple"} {}
+    };
+    auto elems = str | split<StringView>(tuple_separator, '\\')
+                     | transform(unescape<tuple_separator, '\\'>)
+                     | static_gather<error, sizeof...(Types)>();
+
     TupleOptionDetail<sizeof...(Types)-1, Types...>::from_string(elems, opt);
 }
 
@@ -246,9 +254,9 @@ inline void option_update(WorstMatch, const Context&)
 template<typename EffectiveType, typename LineType, typename ColumnType>
 inline void option_from_string(StringView str, LineAndColumn<EffectiveType, LineType, ColumnType>& opt)
 {
-    auto vals = split(str, ',');
-    if (vals.size() != 2)
-        throw runtime_error("expected <line>,<column>");
+    struct error : runtime_error { error(size_t) : runtime_error{"expected <line>,<column>"} {} };
+    auto vals = str | split<StringView>(',')
+                    | static_gather<error, 2>();
     opt.line = str_to_int(vals[0]);
     opt.column = str_to_int(vals[1]);
 }

@@ -5,6 +5,8 @@
 #include <initializer_list>
 #include <stddef.h>
 
+#include "array_view.hh"
+
 namespace Kakoune
 {
 
@@ -15,6 +17,9 @@ struct Array
     constexpr const T& operator[](int i) const { return m_data[i]; }
     constexpr const T* begin() const { return m_data; }
     constexpr const T* end() const { return m_data+N; }
+
+    constexpr operator ArrayView<T>() { return {m_data, N}; }
+    constexpr operator ConstArrayView<T>() const { return {m_data, N}; }
 
     T m_data[N];
 };

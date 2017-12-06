@@ -8,13 +8,13 @@
 namespace Kakoune
 {
 
-Vector<String> split(StringView str, char separator, char escape);
-Vector<StringView> split(StringView str, char separator);
-
 StringView trim_whitespaces(StringView str);
 
 String escape(StringView str, StringView characters, char escape);
 String unescape(StringView str, StringView characters, char escape);
+
+template<char character, char escape>
+String unescape(StringView str) { return unescape(str, character, escape); }
 
 String indent(StringView str, StringView indent = "    ");
 

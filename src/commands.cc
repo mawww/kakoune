@@ -932,8 +932,8 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
                                                           ShellManager::Flags::WaitForStdout,
                                                           shell_context).first;
             CandidateList candidates;
-            for (auto& str : split(output, '\n', 0))
-                candidates.push_back(std::move(str));
+            for (auto&& candidate : output | split<StringView>('\n'))
+                candidates.push_back(candidate.str());
 
             return Completions{ 0_byte, pos_in_token, std::move(candidates) };
         };
@@ -1579,7 +1579,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
                 context_wrap_for_buffer(*buffer);
         }
         else
-            for (auto& name : split(*bufnames, ','))
+            for (auto&& name : *bufnames | split<StringView>(','))
                 context_wrap_for_buffer(BufferManager::instance().get_buffer(name));
         return;
     }

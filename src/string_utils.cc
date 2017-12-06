@@ -7,60 +7,6 @@
 namespace Kakoune
 {
 
-Vector<String> split(StringView str, char separator, char escape)
-{
-    Vector<String> res;
-    auto it = str.begin();
-    auto start = it;
-    while (it != str.end())
-    {
-        res.emplace_back();
-        String& element = res.back();
-        while (it != str.end())
-        {
-            auto c = *it;
-            if (c == escape and it + 1 != str.end() and *(it+1) == separator)
-            {
-                element += StringView{start, it+1};
-                element.back() = separator;
-                it += 2;
-                start = it;
-            }
-            else if (c == separator)
-            {
-                element += StringView{start, it};
-                ++it;
-                start = it;
-                break;
-            }
-            else
-                ++it;
-        }
-    }
-    if (start != str.end())
-        res.back() += StringView{start, str.end()};
-    return res;
-}
-
-Vector<StringView> split(StringView str, char separator)
-{
-    Vector<StringView> res;
-    if (str.empty())
-        return res;
-
-    auto beg = str.begin();
-    for (auto it = beg; it != str.end(); ++it)
-    {
-        if (*it == separator)
-        {
-            res.emplace_back(beg, it);
-            beg = it + 1;
-        }
-    }
-    res.emplace_back(beg, str.end());
-    return res;
-}
-
 StringView trim_whitespaces(StringView str)
 {
     auto beg = str.begin(), end = str.end();
@@ -389,22 +335,6 @@ String format(StringView fmt, ArrayView<const StringView> params)
 UnitTest test_string{[]()
 {
     kak_assert(String("youpi ") + "matin" == "youpi matin");
-
-    Vector<String> splited = split("youpi:matin::tchou\\:kanaky:hihi\\:", ':', '\\');
-    kak_assert(splited[0] == "youpi");
-    kak_assert(splited[1] == "matin");
-    kak_assert(splited[2] == "");
-    kak_assert(splited[3] == "tchou:kanaky");
-    kak_assert(splited[4] == "hihi:");
-
-    Vector<StringView> splitedview = split("youpi:matin::tchou\\:kanaky:hihi\\:", ':');
-    kak_assert(splitedview[0] == "youpi");
-    kak_assert(splitedview[1] == "matin");
-    kak_assert(splitedview[2] == "");
-    kak_assert(splitedview[3] == "tchou\\");
-    kak_assert(splitedview[4] == "kanaky");
-    kak_assert(splitedview[5] == "hihi\\");
-    kak_assert(splitedview[6] == "");
 
     Vector<StringView> wrapped = wrap_lines("wrap this paragraph\n respecting whitespaces and much_too_long_words", 16);
     kak_assert(wrapped.size() == 6);

@@ -161,7 +161,8 @@ inline auto transform(Transform t)
     });
 }
 
-template<typename Range, typename Separator = ValueOf<Range>,
+template<typename Range, bool escape = false,
+         typename Element = ValueOf<Range>,
          typename ValueTypeParam = void>
 struct SplitView
 {
@@ -172,11 +173,15 @@ struct SplitView
 
     struct Iterator : std::iterator<std::forward_iterator_tag, ValueType>
     {
-        Iterator(RangeIt pos, RangeIt end, char separator)
-         : pos(pos), sep(pos), end(end), separator(separator)
+        Iterator(RangeIt pos, RangeIt end, Element separator, Element escaper)
+         : pos(pos), sep(pos), end(end), separator(separator), escaper(escaper)
         {
-            while (sep != end and *sep != separator)
+            bool escaped = false;
+            while (sep != end and (escaped or *sep != separator))
+            {
+                escaped = escape and *sep == escaper;
                 ++sep;
+            }
         }
 
         Iterator& operator++() { advance(); return *this; }
@@ -197,32 +202,45 @@ struct SplitView
             }
 
             pos = sep+1;
+            bool escaped = escape and *sep == escaper;
             for (sep = pos; sep != end; ++sep)
             {
-                if (*sep == separator)
+                if (not escaped and *sep == separator)
                     break;
+                escaped = escape and not escaped and *sep == escaper;
             }
         }
 
         RangeIt pos;
         RangeIt sep;
         RangeIt end;
-        Separator separator;
+        Element separator;
+        Element escaper;
     };
 
-    Iterator begin() const { return {std::begin(m_range), std::end(m_range), m_separator}; }
-    Iterator end()   const { return {std::end(m_range), std::end(m_range), m_separator}; }
+    Iterator begin() const { return {std::begin(m_range), std::end(m_range), m_separator, m_escaper}; }
+    Iterator end()   const { return {std::end(m_range), std::end(m_range), m_separator, m_escaper}; }
 
     Range m_range;
-    Separator m_separator;
+    Element m_separator;
+    Element m_escaper;
 };
 
-template<typename ValueType = void, typename Separator>
-auto split(Separator separator)
+template<typename ValueType = void, typename Element>
+auto split(Element separator)
 {
     return make_view_factory([s = std::move(separator)](auto&& range) {
         using Range = decltype(range);
-        return SplitView<decay_range<Range>, Separator, ValueType>{std::forward<Range>(range), std::move(s)};
+        return SplitView<decay_range<Range>, false, Element, ValueType>{std::forward<Range>(range), std::move(s), {}};
+    });
+}
+
+template<typename ValueType = void, typename Element>
+auto split(Element separator, Element escaper)
+{
+    return make_view_factory([s = std::move(separator), e = std::move(escaper)](auto&& range) {
+        using Range = decltype(range);
+        return SplitView<decay_range<Range>, true, Element, ValueType>{std::forward<Range>(range), std::move(s), std::move(e)};
     });
 }
 
@@ -340,18 +358,35 @@ auto gather()
 }
 
 template<typename ExceptionType, size_t... Indexes>
-auto elements()
+auto elements(bool exact_size = false)
 {
-    return make_view_factory([] (auto&& range) {
+    return make_view_factory([=] (auto&& range) {
         using std::begin; using std::end;
-        auto elem = [it = begin(range), end = end(range), i = 0u](size_t index) mutable {
-            for (; i < index; ++i, ++it)
-                if (it == end) throw ExceptionType{i};
+        auto it = begin(range), end_it = end(range);
+        size_t i = 0;
+        auto elem = [&](size_t index) {
+            for (; i < index; ++i)
+                if (++it == end_it) throw ExceptionType{i};
             return *it;
         };
         // Note that initializer lists elements are guaranteed to be sequenced
-        return Array<std::decay_t<decltype(*begin(range))>, sizeof...(Indexes)>{{elem(Indexes)...}};
+        Array<std::decay_t<decltype(*begin(range))>, sizeof...(Indexes)> res{{elem(Indexes)...}};
+        if (exact_size and ++it != end_it)
+            throw ExceptionType{++i};
+        return res;
     });
+}
+
+template<typename ExceptionType, size_t... Indexes>
+auto static_gather_impl(std::index_sequence<Indexes...>)
+{
+    return elements<ExceptionType, Indexes...>(true);
+}
+
+template<typename ExceptionType, size_t size>
+auto static_gather()
+{
+    return static_gather_impl<ExceptionType>(std::make_index_sequence<size>());
 }
 
 }

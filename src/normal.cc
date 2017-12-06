@@ -1185,9 +1185,13 @@ void select_object(Context& context, NormalParams params)
                     if (event != PromptEvent::Validate)
                         return;
 
-                    Vector<String> params = split(cmdline, ',', '\\');
-                    if (params.size() != 2 or params[0].empty() or params[1].empty())
-                        throw runtime_error{"desc parsing failed, expected <open>,<close>"};
+                    struct error : runtime_error { error(size_t) : runtime_error{"desc parsing failed, expected <open>,<close>"} {} };
+
+                    auto params = cmdline | split<StringView>(',', '\\') |
+                        transform(unescape<',', '\\'>) | static_gather<error, 2>();
+
+                    if (params[0].empty() or params[1].empty())
+                        throw error{0};
 
                     select_and_set_last<mode>(
                         context, std::bind(select_surrounding, _1, _2,
