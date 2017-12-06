@@ -49,16 +49,8 @@ define-command -hidden -params 1..2 man-impl %{ %sh{
 } }
 
 define-command -params ..1 \
-  -shell-completion %{
-    prefix=$(printf %s\\n "$1" | cut -c1-${kak_pos_in_token} 2>/dev/null)
-    for page in /usr/share/man/*/${prefix}*.[1-8]*; do
-        candidate=$(basename ${page%%.[1-8]*})
-        pagenum=$(printf %s\\n "$page" | sed 's,^.*\.\([1-8][^.]*\).*$,\1,')
-        case $candidate in
-            *\*) ;;
-            *) printf %s\\n "$candidate($pagenum)";;
-        esac
-    done
+  -shell-candidates %{
+      find /usr/share/man/ -name '*.[1-8]*' | sed 's,^.*/\(.*\)\.\([1-8][a-zA-Z]*\).*$,\1(\2),' 
   } \
   -docstring %{man [<page>]: manpage viewer wrapper
 If no argument is passed to the command, the selection will be used as page
