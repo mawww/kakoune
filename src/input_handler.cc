@@ -194,10 +194,16 @@ public:
         context().hooks().run_hook("NormalBegin", "", context());
     }
 
-    void on_disabled(bool) override
+    void on_disabled(bool temporary) override
     {
         m_idle_timer.set_next_date(TimePoint::max());
         m_fs_check_timer.set_next_date(TimePoint::max());
+
+        if (not temporary and m_hooks_disabled)
+        {
+            context().hooks_disabled().unset();
+            m_hooks_disabled = false;
+        }
 
         context().hooks().run_hook("NormalEnd", "", context());
     }
