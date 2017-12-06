@@ -351,8 +351,8 @@ UnitTest test_string{[]()
     kak_assert(wrapped2[1] == "unknown");
     kak_assert(wrapped2[2] == "type");
 
-    kak_assert(escape("youpi:matin:tchou:", ':', '\\') == "youpi\\:matin\\:tchou\\:");
-    kak_assert(unescape("youpi\\:matin\\:tchou\\:", ':', '\\') == "youpi:matin:tchou:");
+    kak_assert(escape(R"(\youpi:matin:tchou\:)", ":\\", '\\') == R"(\\youpi\:matin\:tchou\\\:)");
+    kak_assert(unescape(R"(\\youpi\:matin\:tchou\\\:)", ":\\", '\\') == R"(\youpi:matin:tchou\:)");
 
     kak_assert(prefix_match("tchou kanaky", "tchou"));
     kak_assert(prefix_match("tchou kanaky", "tchou kanaky"));

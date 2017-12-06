@@ -14,7 +14,11 @@ String escape(StringView str, StringView characters, char escape);
 String unescape(StringView str, StringView characters, char escape);
 
 template<char character, char escape>
-String unescape(StringView str) { return unescape(str, character, escape); }
+String unescape(StringView str)
+{
+    const char to_escape[2] = { character, escape };
+    return unescape(str, {to_escape, 2}, escape);
+}
 
 String indent(StringView str, StringView indent = "    ");
 
