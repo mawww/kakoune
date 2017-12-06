@@ -209,9 +209,17 @@ bool RankedMatch::operator<(const RankedMatch& other) const
         const auto cp2 = utf8::read_codepoint(it2, end2);
         if (cp1 != cp2)
         {
+            const bool punct1 = iswpunct((wchar_t)cp1);
+            const bool punct2 = iswpunct((wchar_t)cp2);
+            if (punct1 != punct2)
+                return punct1;
+
             const bool low1 = iswlower((wchar_t)cp1);
             const bool low2 = iswlower((wchar_t)cp2);
-            return low1 == low2 ? order(cp1) < order(cp2) : low1;
+            if (low1 != low2)
+                return low1;
+
+            return order(cp1) < order(cp2);
         }
         last1 = it1; last2 = it2;
     }
@@ -232,6 +240,7 @@ UnitTest test_ranked_match{[] {
     kak_assert(RankedMatch{"create_task", "ct"} < RankedMatch{"constructor", "ct"});
     kak_assert(RankedMatch{"class", "cla"} < RankedMatch{"class::attr", "cla"});
     kak_assert(RankedMatch{"meta/", "meta"} < RankedMatch{"meta-a/", "meta"});
+    kak_assert(RankedMatch{"find(1p)", "find"} < RankedMatch{"findfs(8)", "find"});
 }};
 
 UnitTest test_used_letters{[]()
