@@ -530,6 +530,9 @@ void RemoteUI::exit(int status)
 
 String get_user_name(int uid)
 {
+#if defined(__APPLE__)
+    return getpwuid(uid)->pw_name;
+#else // Do not use getpwuid to avoid dependency on dynamic glibc
     struct invalid_index : runtime_error
     {
         invalid_index(size_t i) : runtime_error{format("invalid index '{}'", i)} {}
@@ -543,6 +546,7 @@ String get_user_name(int uid)
             return name_and_id[0].str();
     }
     throw runtime_error(format("Cannot find user name for uid '{}'", uid));
+#endif
 }
 
 static sockaddr_un session_addr(StringView session)
