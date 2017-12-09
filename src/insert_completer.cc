@@ -226,7 +226,8 @@ InsertCompletion complete_filename(const SelectionList& sels,
     InsertCompletion::CandidateList candidates;
     if (prefix.front() == '/' or prefix.front() == '~')
     {
-        for (auto& filename : Kakoune::complete_filename(prefix, Regex{}))
+        for (auto& filename : Kakoune::complete_filename(prefix,
+                                                         options["ignored_files"].get<Regex>()))
             candidates.push_back({ filename, "", filename });
     }
     else
@@ -235,7 +236,8 @@ InsertCompletion complete_filename(const SelectionList& sels,
         {
             if (not dir.empty() and dir.back() != '/')
                 dir += '/';
-            for (auto& filename : Kakoune::complete_filename(dir + prefix, Regex{}))
+            for (auto& filename : Kakoune::complete_filename(dir + prefix,
+                                                             options["ignored_files"].get<Regex>()))
             {
                 StringView candidate = filename.substr(dir.length());
                 candidates.push_back({ candidate.str(), "", candidate.str() });
