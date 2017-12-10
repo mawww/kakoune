@@ -12,51 +12,52 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter shared/ regions -default content markdown \
-    c          ```\h*c          ```          '' \
-    cabal      ```\h*cabal      ```          '' \
-    clojure    ```\h*clojure    ```          '' \
-    coffee     ```\h*coffee     ```          '' \
-    cpp        ```\h*cpp        ```          '' \
-    css        ```\h*css        ```          '' \
-    cucumber   ```\h*cucumber   ```          '' \
-    d          ```\h*d          ```          '' \
-    diff       ```\h*diff       ```          '' \
-    dockerfile ```\h*dockerfile ```          '' \
-    fish       ```\h*fish       ```          '' \
-    gas        ```\h*gas        ```          '' \
-    go         ```\h*go         ```          '' \
-    haml       ```\h*haml       ```          '' \
-    haskell    ```\h*haskell    ```          '' \
-    html       ```\h*html       ```          '' \
-    ini        ```\h*ini        ```          '' \
-    java       ```\h*java       ```          '' \
-    javascript ```\h*javascript ```          '' \
-    json       ```\h*json       ```          '' \
-    julia      ```\h*julia      ```          '' \
-    kak        ```\h*kak        ```          '' \
-    kickstart  ```\h*kickstart  ```          '' \
-    latex      ```\h*latex      ```          '' \
-    lisp       ```\h*lisp       ```          '' \
-    lua        ```\h*lua        ```          '' \
-    makefile   ```\h*makefile   ```          '' \
-    moon       ```\h*moon       ```          '' \
-    objc       ```\h*objc       ```          '' \
-    perl       ```\h*perl       ```          '' \
-    pug        ```\h*pug        ```          '' \
-    python     ```\h*python     ```          '' \
-    ragel      ```\h*ragel      ```          '' \
-    ruby       ```\h*ruby       ```          '' \
-    rust       ```\h*rust       ```          '' \
-    sass       ```\h*sass       ```          '' \
-    scala      ```\h*scala      ```          '' \
-    scss       ```\h*scss       ```          '' \
-    sh         ```\h*sh         ```          '' \
-    swift      ```\h*swift      ```          '' \
-    tupfile    ```\h*tupfile    ```          '' \
-    yaml       ```\h*yaml       ```          '' \
-    code       ```              ```          '' \
-    code       ``               ``           '' \
-    code       `                `            ''
+    c          ^```\h*c\b\K          ```          '' \
+    cabal      ^```\h*cabal\b\K      ```          '' \
+    clojure    ^```\h*clojure\b\K    ```          '' \
+    coffee     ^```\h*coffee\b\K     ```          '' \
+    cpp        ^```\h*cpp\b\K        ```          '' \
+    css        ^```\h*css\b\K        ```          '' \
+    cucumber   ^```\h*cucumber\b\K   ```          '' \
+    d          ^```\h*d\b\K          ```          '' \
+    diff       ^```\h*diff\b\K       ```          '' \
+    dockerfile ^```\h*dockerfile\b\K ```          '' \
+    fish       ^```\h*fish\b\K       ```          '' \
+    gas        ^```\h*gas\b\K        ```          '' \
+    go         ^```\h*go\b\K         ```          '' \
+    haml       ^```\h*haml\b\K       ```          '' \
+    haskell    ^```\h*haskell\b\K    ```          '' \
+    html       ^```\h*html\b\K       ```          '' \
+    ini        ^```\h*ini\b\K        ```          '' \
+    java       ^```\h*java\b\K       ```          '' \
+    javascript ^```\h*javascript\b\K ```          '' \
+    json       ^```\h*json\b\K       ```          '' \
+    julia      ^```\h*julia\b\K      ```          '' \
+    kak        ^```\h*kak\b\K        ```          '' \
+    kickstart  ^```\h*kickstart\b\K  ```          '' \
+    latex      ^```\h*latex\b\K      ```          '' \
+    lisp       ^```\h*lisp\b\K       ```          '' \
+    lua        ^```\h*lua\b\K        ```          '' \
+    makefile   ^```\h*makefile\b\K   ```          '' \
+    moon       ^```\h*moon\b\K       ```          '' \
+    objc       ^```\h*objc\b\K       ```          '' \
+    perl       ^```\h*perl\b\K       ```          '' \
+    pug        ^```\h*pug\b\K        ```          '' \
+    python     ^```\h*python\b\K     ```          '' \
+    ragel      ^```\h*ragel\b\K      ```          '' \
+    ruby       ^```\h*ruby\b\K       ```          '' \
+    rust       ^```\h*rust\b\K       ```          '' \
+    sass       ^```\h*sass\b\K       ```          '' \
+    scala      ^```\h*scala\b\K      ```          '' \
+    scss       ^```\h*scss\b\K       ```          '' \
+    sh         ^```\h*sh\b\K         ```          '' \
+    swift      ^```\h*swift\b\K      ```          '' \
+    tupfile    ^```\h*tupfile\b\K    ```          '' \
+    typescript ^```\h*typescript\b\K ```          '' \
+    yaml       ^```\h*yaml\b\K       ```          '' \
+    code       ^```((!?=(c|cabal|clojure|coffee|cpp|css|cucumber|diff|dockerfile|fish|gas|go|haml|haskell|html|ini|java|javascript|json|julia|kakrc|kickstart|latex|lisp|lua|makefile|moon|objc|perl|pug|python|ragel|ruby|rust|sass|scala|scss|sh|swift|tupfile|typescript|yaml)[^\n])*)$          ```          '' \
+    code       ^``[^`]            ``           '' \
+    code       ^`[^`]             `            ''
 
 add-highlighter shared/markdown/code fill meta
 
@@ -101,6 +102,7 @@ add-highlighter shared/markdown/scss       ref scss
 add-highlighter shared/markdown/sh         ref sh
 add-highlighter shared/markdown/swift      ref swift
 add-highlighter shared/markdown/tupfile    ref tupfile
+add-highlighter shared/markdown/typescript ref typescript
 add-highlighter shared/markdown/yaml       ref yaml
 
 # Setext-style header
