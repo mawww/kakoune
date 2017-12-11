@@ -24,8 +24,8 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
 
 %sh{
     autoload_directory() {
-        find -L "$1" -type f -name '*\.kak' \
-            -exec printf 'try %%{ source "%s" } catch %%{ echo -debug Autoload: could not load "%s" }\n' '{}' '{}' \;
+        find -L "$1" -type f -name '*\.kak' | sort | xargs -I {} \
+            printf 'try %%{ source "%s" } catch %%{ echo -debug Autoload: could not load "%s" }\n' '{}' '{}'
     }
 
     localconfdir=${XDG_CONFIG_HOME:-${HOME}/.config}/kak
