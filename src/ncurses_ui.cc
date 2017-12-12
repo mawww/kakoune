@@ -29,6 +29,16 @@ using std::max;
 
 struct NCursesWin : WINDOW {};
 
+static constexpr StringView assistant_navi[] =
+{ R"( |\    ^    )",
+  R"( | \  | )  ╭)",
+  R"( \  \ | /  │)",
+  R"(  \ * * *  │)",
+  R"(   *     * ╯)",
+  R"(   /* * *   )",
+  R"(   |/ V     )",
+  R"(            )"};
+
 static constexpr StringView assistant_cat[] =
     { R"(  ___            )",
       R"( (__ \           )",
@@ -1028,6 +1038,8 @@ void NCursesUI::set_ui_options(const Options& options)
             m_assistant = assistant_cat;
         else if (it->value == "dilbert")
             m_assistant = assistant_dilbert;
+        else if (it->value == "navi")
+            m_assistant = assistant_navi;
         else if (it->value == "none" or it->value == "off")
             m_assistant = ConstArrayView<StringView>{};
     }
