@@ -493,10 +493,14 @@ Selection selection_from_string(StringView desc)
         throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> format", desc));
 
     BufferCoord anchor{str_to_int({desc.begin(), dot_anchor}) - 1,
-                     str_to_int({dot_anchor+1, comma}) - 1};
+                       str_to_int({dot_anchor+1, comma}) - 1};
 
     BufferCoord cursor{str_to_int({comma+1, dot_cursor}) - 1,
-                     str_to_int({dot_cursor+1, desc.end()}) - 1};
+                       str_to_int({dot_cursor+1, desc.end()}) - 1};
+
+    if (anchor.line < 0 or anchor.column < 0 or
+        cursor.line < 0 or cursor.column < 0)
+        throw runtime_error(format("coordinates must be >= 1: '{}'", desc));
 
     return Selection{anchor, cursor};
 }
