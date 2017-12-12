@@ -75,8 +75,6 @@ def -hidden nim-indent-on-new-line %{
 hook -group nim-highlight global WinSetOption filetype=nim %{ add-highlighter window ref nim }
 
 hook global WinSetOption filetype=nim %{
-    set buffer tabstop 2
-    set buffer indentwidth 2
     hook window InsertChar \n -group nim-indent nim-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
     hook window InsertEnd .* -group nim-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
