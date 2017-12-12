@@ -11,99 +11,31 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default content markdown \
-    c          ^```\h*c\b\K          ```          '' \
-    cabal      ^```\h*cabal\b\K      ```          '' \
-    clojure    ^```\h*clojure\b\K    ```          '' \
-    coffee     ^```\h*coffee\b\K     ```          '' \
-    cpp        ^```\h*cpp\b\K        ```          '' \
-    css        ^```\h*css\b\K        ```          '' \
-    cucumber   ^```\h*cucumber\b\K   ```          '' \
-    d          ^```\h*d\b\K          ```          '' \
-    diff       ^```\h*diff\b\K       ```          '' \
-    dockerfile ^```\h*dockerfile\b\K ```          '' \
-    fish       ^```\h*fish\b\K       ```          '' \
-    gas        ^```\h*gas\b\K        ```          '' \
-    go         ^```\h*go\b\K         ```          '' \
-    haml       ^```\h*haml\b\K       ```          '' \
-    haskell    ^```\h*haskell\b\K    ```          '' \
-    html       ^```\h*html\b\K       ```          '' \
-    ini        ^```\h*ini\b\K        ```          '' \
-    java       ^```\h*java\b\K       ```          '' \
-    javascript ^```\h*javascript\b\K ```          '' \
-    json       ^```\h*json\b\K       ```          '' \
-    julia      ^```\h*julia\b\K      ```          '' \
-    kak        ^```\h*kak\b\K        ```          '' \
-    kickstart  ^```\h*kickstart\b\K  ```          '' \
-    latex      ^```\h*latex\b\K      ```          '' \
-    lisp       ^```\h*lisp\b\K       ```          '' \
-    lua        ^```\h*lua\b\K        ```          '' \
-    makefile   ^```\h*makefile\b\K   ```          '' \
-    moon       ^```\h*moon\b\K       ```          '' \
-    objc       ^```\h*objc\b\K       ```          '' \
-    perl       ^```\h*perl\b\K       ```          '' \
-    pug        ^```\h*pug\b\K        ```          '' \
-    python     ^```\h*python\b\K     ```          '' \
-    ragel      ^```\h*ragel\b\K      ```          '' \
-    ruby       ^```\h*ruby\b\K       ```          '' \
-    rust       ^```\h*rust\b\K       ```          '' \
-    sass       ^```\h*sass\b\K       ```          '' \
-    scala      ^```\h*scala\b\K      ```          '' \
-    scss       ^```\h*scss\b\K       ```          '' \
-    sh         ^```\h*sh\b\K         ```          '' \
-    swift      ^```\h*swift\b\K      ```          '' \
-    tupfile    ^```\h*tupfile\b\K    ```          '' \
-    typescript ^```\h*typescript\b\K ```          '' \
-    yaml       ^```\h*yaml\b\K       ```          '' \
-    code       ^```((!?=(c|cabal|clojure|coffee|cpp|css|cucumber|diff|dockerfile|fish|gas|go|haml|haskell|html|ini|java|javascript|json|julia|kakrc|kickstart|latex|lisp|lua|makefile|moon|objc|perl|pug|python|ragel|ruby|rust|sass|scala|scss|sh|swift|tupfile|typescript|yaml)[^\n])*)$          ```          '' \
-    code       ^``[^`]            ``           '' \
-    code       ^`[^`]             `            ''
+%sh{
+  languages="
+    c cabal clojure coffee cpp css cucumber d diff dockerfile fish gas go
+    haml haskell html ini java javascript json julia kak kickstart latex
+    lisp lua makefile markdown moon objc perl pug python ragel ruby rust
+    sass scala scss sh swift tupfile typescript yaml
+  "
+  echo 'add-highlighter shared/ regions -default content markdown \'
+  for lang in ${languages}; do
+    printf '%s    ```\h*%s\\b   ```   "" ' "${lang}" "${lang}"
+  done
+  echo     'code  ```            ```   "" \
+            code  ``[^`]         ``    "" \
+            code  `[^`]          `     "" '
+  for lang in ${languages}; do
+    ref=$([ "${lang}" = kak ] && echo kakrc || echo "${lang}")
+    printf '
+      add-highlighter shared/markdown/%s/ regions -default fence outer inner \A```[^\\n]*\K (?=```) ""
+      add-highlighter shared/markdown/%s/outer/fence fill meta
+      add-highlighter shared/markdown/%s/outer/inner ref %s
+    ' "${lang}" "${lang}" "${lang}" "${ref}"
+  done
+}
 
 add-highlighter shared/markdown/code fill meta
-
-add-highlighter shared/markdown/c          ref c
-add-highlighter shared/markdown/cabal      ref cabal
-add-highlighter shared/markdown/clojure    ref clojure
-add-highlighter shared/markdown/coffee     ref coffee
-add-highlighter shared/markdown/cpp        ref cpp
-add-highlighter shared/markdown/css        ref css
-add-highlighter shared/markdown/cucumber   ref cucumber
-add-highlighter shared/markdown/d          ref d
-add-highlighter shared/markdown/diff       ref diff
-add-highlighter shared/markdown/dockerfile ref dockerfile
-add-highlighter shared/markdown/fish       ref fish
-add-highlighter shared/markdown/gas        ref gas
-add-highlighter shared/markdown/go         ref go
-add-highlighter shared/markdown/haml       ref haml
-add-highlighter shared/markdown/haskell    ref haskell
-add-highlighter shared/markdown/html       ref html
-add-highlighter shared/markdown/ini        ref ini
-add-highlighter shared/markdown/java       ref java
-add-highlighter shared/markdown/javascript ref javascript
-add-highlighter shared/markdown/json       ref json
-add-highlighter shared/markdown/julia      ref julia
-add-highlighter shared/markdown/kak        ref kakrc
-add-highlighter shared/markdown/kickstart  ref kickstart
-add-highlighter shared/markdown/latex      ref latex
-add-highlighter shared/markdown/lisp       ref lisp
-add-highlighter shared/markdown/lua        ref lua
-add-highlighter shared/markdown/makefile   ref makefile
-add-highlighter shared/markdown/moon       ref moon
-add-highlighter shared/markdown/objc       ref objc
-add-highlighter shared/markdown/perl       ref perl
-add-highlighter shared/markdown/pug        ref pug
-add-highlighter shared/markdown/python     ref python
-add-highlighter shared/markdown/ragel      ref ragel
-add-highlighter shared/markdown/ruby       ref ruby
-add-highlighter shared/markdown/rust       ref rust
-add-highlighter shared/markdown/sass       ref sass
-add-highlighter shared/markdown/scala      ref scala
-add-highlighter shared/markdown/scss       ref scss
-add-highlighter shared/markdown/sh         ref sh
-add-highlighter shared/markdown/swift      ref swift
-add-highlighter shared/markdown/tupfile    ref tupfile
-add-highlighter shared/markdown/typescript ref typescript
-add-highlighter shared/markdown/yaml       ref yaml
 
 # Setext-style header
 add-highlighter shared/markdown/content regex (\A|\n\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
