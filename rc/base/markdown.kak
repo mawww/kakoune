@@ -55,9 +55,9 @@ add-highlighter shared/ regions -default content markdown \
     tupfile    ^```\h*tupfile\b\K    ```          '' \
     typescript ^```\h*typescript\b\K ```          '' \
     yaml       ^```\h*yaml\b\K       ```          '' \
-    code       ^```((!?=(c|cabal|clojure|coffee|cpp|css|cucumber|diff|dockerfile|fish|gas|go|haml|haskell|html|ini|java|javascript|json|julia|kakrc|kickstart|latex|lisp|lua|makefile|moon|objc|perl|pug|python|ragel|ruby|rust|sass|scala|scss|sh|swift|tupfile|typescript|yaml)[^\n])*)$          ```          '' \
-    code       ^``[^`]            ``           '' \
-    code       ^`[^`]             `            ''
+    code       ^```(c|cabal|clojure|coffee|cpp|css|cucumber|diff|dockerfile|fish|gas|go|haml|haskell|html|ini|java|javascript|json|julia|kakrc|kickstart|latex|lisp|lua|makefile|moon|objc|perl|pug|python|ragel|ruby|rust|sass|scala|scss|sh|swift|tupfile|typescript|yaml)\K ```          '' \
+    code       ^``[^`]               ``           '' \
+    code       ^`[^`]                `            ''
 
 add-highlighter shared/markdown/code fill meta
 
