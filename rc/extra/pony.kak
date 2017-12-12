@@ -90,11 +90,6 @@ hook global WinSetOption filetype=pony %{
     hook window InsertEnd .* -group pony-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
 }
 
-hook global WinSetOption filetype=pony %{
-    set-option buffer tabstop 2
-    set-option buffer indentwidth 2
-}
-
 hook -group pony-highlight global WinSetOption filetype=(?!pony).* %{ remove-highlighter pony }
 
 hook global WinSetOption filetype=(?!pony).* %{
