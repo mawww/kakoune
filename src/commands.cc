@@ -249,11 +249,13 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
         buffer->flags() &= ~Buffer::Flags::NoHooks;
     }
 
+    Buffer* current_buffer = context.has_buffer() ? &context.buffer() : nullptr;
+
     const size_t param_count = parser.positional_count();
-    if (buffer != &context.buffer() or param_count > 1)
+    if (current_buffer and (buffer != current_buffer or param_count > 1))
         context.push_jump();
 
-    if (buffer != &context.buffer())
+    if (buffer != current_buffer)
         context.change_buffer(*buffer);
 
     if (param_count > 1 and not parser[1].empty())

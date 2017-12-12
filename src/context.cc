@@ -159,10 +159,10 @@ void JumpList::forget_buffer(Buffer& buffer)
 
 void Context::change_buffer(Buffer& buffer)
 {
-    if (&buffer == &this->buffer())
+    if (has_buffer() and &buffer == &this->buffer())
         return;
 
-    if (m_edition_level > 0)
+    if (has_buffer() and m_edition_level > 0)
        this->buffer().commit_undo_group();
 
     m_window.reset();
