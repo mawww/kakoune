@@ -111,7 +111,26 @@ things easier to understand, bugs easier to fix, and code easier to change.
    When Kakoune tries to be smart, it should provide the alternative, 'non
    smart' version (+\*+ tries to detect word boundaries on the selection, but
    +alt-*+ permits to avoid this behavior).
-   
+
+Unified interactive use and scripting
+-------------------------------------
+
+As both an effect of Orthogonality and Simplicity, normal mode is *not*
+a layer on top of a text editing language layer (normal mode keys are
+*not* bound to text editing commands), normal mode *is* the text editing
+language.
+
+That means there is no +delete-selected-text+ command that +d+ is bound
+to, +d+ *is* the +delete selected text+ command.
+
+This permits to have scripting use case and interactive use cases share
+the same text editing language. Both use normal mode to express complex
+edition.
+
+Besides promoting simplicity by avoiding the introduction of another
+layer, this helps ensure the interactive editing language is as expressive
+as possible as we need to make it able to handle complex use cases,
+such as indentation hooks.
 
 Language agnostic
 -----------------
