@@ -204,7 +204,8 @@ DisplaySetup Window::compute_display_setup(const Context& context)
 
     // now ensure the cursor column is visible
     {
-        auto underflow = setup.cursor_pos.column - setup.scroll_offset.column;
+        auto underflow = std::max(-setup.window_pos.column,
+                                  setup.cursor_pos.column - setup.scroll_offset.column);
         if (underflow < 0)
         {
             setup.window_pos.column += underflow;
