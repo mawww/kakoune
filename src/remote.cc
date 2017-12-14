@@ -530,23 +530,7 @@ void RemoteUI::exit(int status)
 
 String get_user_name(int uid)
 {
-#if defined(__APPLE__)
     return getpwuid(uid)->pw_name;
-#else // Do not use getpwuid to avoid dependency on dynamic glibc
-    struct invalid_index : runtime_error
-    {
-        invalid_index(size_t i) : runtime_error{format("invalid index '{}'", i)} {}
-    };
-
-    MappedFile passwd{"/etc/passwd"};
-    for (auto entry : (StringView)passwd | split<StringView>('\n'))
-    {
-        auto name_and_id = entry | split<StringView>(':') | elements<invalid_index, 0, 2>();
-        if (str_to_int(name_and_id[1]) == uid)
-            return name_and_id[0].str();
-    }
-    throw runtime_error(format("Cannot find user name for uid '{}'", uid));
-#endif
 }
 
 static sockaddr_un session_addr(StringView session)
