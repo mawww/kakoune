@@ -43,8 +43,8 @@ of the given *group*.
 *NormalEnd*::
     leaving normal mode
 
-*NormalKey*::
-    a key is received in normal mode, the key is used for filtering
+*NormalKey* `key`::
+    a key is received in normal mode
 
 *InsertIdle*::
     a certain duration has passed since last key was pressed in insert mode
@@ -55,80 +55,70 @@ of the given *group*.
 *InsertEnd*::
     leaving insert mode
 
-*InsertKey*::
-    a key is received in insert mode, the key is used for filtering
+*InsertKey* `key`::
+    a key is received in insert mode
 
-*InsertChar*::
-    a character is received in insert mode, the character is used for
-    filtering
+*InsertChar* `char`::
+    a character is received in insert mode
 
-*InsertDelete*::
-    a character is deleted in insert mode, the character deleted by
-    the main selection is used for filtering
+*InsertDelete* `deleted char`::
+    a character is deleted in insert mode
 
-*InsertMove*::
-    the cursor moved (without inserting) in insert mode, the key that
-    triggered the move is used for filtering
+*InsertMove* `move key`::
+    the cursor moved (without inserting) in insert mode
 
 *PromptIdle*::
     a certain duration has passed since last key was pressed in prompt mode
 
-*WinCreate*::
-    a window was created, the filtering text is the buffer name
+*WinCreate* `buffer name`::
+    a window was created
 
-*WinClose*::
-    a window was destroyed, the filtering text is the buffer name
+*WinClose* `buffer name`::
+    a window was destroyed
 
-*WinResize*::
-    a window resized, the filtering text is *<line>.<column>*
+*WinResize* `<line>.<column>`::
+    a window was resized
 
-*WinDisplay*::
-    a window was bound a client, the filtering text is the buffer name
+*WinDisplay* `buffer name`::
+    a window was bound a client
 
-*WinSetOption*::
-    an option was set in a window context, the filtering text is
-    *<option_name>=<new_value>*
+*WinSetOption* `<option_name>=<new_value>`::
+    an option was set in a window context
 
-*BufSetOption*::
-    an option was set in a buffer context, the filtering text is
-    *<option_name>=<new_value>*
+*BufSetOption* `<option_name>=<new_value>`::
+    an option was set in a buffer context
 
-*BufNewFile*::
-    a buffer for a new file has been created, filename is used for
-    filtering
+*BufNewFile* `filename`::
+    a buffer for a new file has been created
 
-*BufOpenFile*::
-    a buffer for an existing file has been created, filename is used
-    for filtering
+*BufOpenFile* `filename`::
+    a buffer for an existing file has been created
 
-*BufCreate*::
-    a buffer has been created, filename is used for filtering
+*BufCreate* `filename`::
+    a buffer has been created
 
-*BufWritePre*::
-    executed just before a buffer is written, filename is used for
-    filtering
+*BufWritePre* `filename`::
+    executed just before a buffer is written
 
-*BufWritePost*::
-    executed just after a buffer is written, filename is used for filtering
+*BufWritePost* `filename`::
+    executed just after a buffer is written
 
-*BufClose*::
+*BufClose* `buffer name`::
     executed when a buffer is deleted, while it is still valid
 
-*BufOpenFifo*::
+*BufOpenFifo* `buffer name`::
     executed when a buffer opens a fifo
 
-*BufReadFifo*::
+*BufReadFifo* `buffer name`::
     executed after some data has been read from a fifo and inserted in
     the buffer
 
 *BufCloseFifo*::
     executed when a fifo buffer closes its fifo file descriptor either
-    because the buffer is being deleted,
-    or because the writing end has been closed
+    because the buffer is being deleted or the writing end has been closed
 
-*RuntimeError*::
-    an error was encountered while executing a user command the error
-    message is used for filtering
+*RuntimeError* `error message`::
+    an error was encountered while executing a user command
 
 *KakBegin*::
     kakoune has started, this hook is called just after reading the user
@@ -137,13 +127,11 @@ of the given *group*.
 *KakEnd*::
     kakoune is quitting
 
-*FocusIn*::
-    on supported clients, triggered when the client gets focused. The
-    filtering text is the client name
+*FocusIn* `client name`::
+    on supported clients, triggered when the client gets focused
 
-*FocusOut*::
-    on supported clients, triggered when the client gets unfocused. The
-    filtering text is the client name
+*FocusOut* `client name`::
+    on supported clients, triggered when the client gets unfocused
 
 *InsertCompletionShow*::
     Triggered when the insert completion menu gets displayed
@@ -151,14 +139,13 @@ of the given *group*.
 *InsertCompletionHide*::
     Triggered when the insert completion menu gets hidden
 
-*InsertCompletionSelect*::
+*InsertCompletionSelect* `selected completion`::
     Triggered when an entry is selected in the insert completion
     menu. The filtering text is the selected completion text or
     the empty string if the original text was selected back.
 
-*RawKey*::
-    Triggered whenever a key is pressed by the user, the key is
-    used for filtering.
+*RawKey* `key`::
+    Triggered whenever a key is pressed by the user
 
 When not specified, the filtering text is an empty string. Note that
 some hooks will not consider underlying scopes depending on what context
