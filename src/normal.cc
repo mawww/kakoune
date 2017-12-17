@@ -331,29 +331,29 @@ void view_commands(Context& context, NormalParams params)
         {
         case 'v':
         case 'c':
-            context.window().center_line(cursor.line);
+            window.center_line(cursor.line);
             break;
         case 'm':
-            context.window().center_column(
+            window.center_column(
                 context.buffer()[cursor.line].column_count_to(cursor.column));
             break;
         case 't':
-            context.window().display_line_at(cursor.line, 0);
+            window.display_line_at(cursor.line, 0);
             break;
         case 'b':
-            context.window().display_line_at(cursor.line, window.dimensions().line-1);
+            window.display_line_at(cursor.line, window.dimensions().line-1);
             break;
         case 'h':
-            context.window().scroll(-std::max<ColumnCount>(1, count));
+            window.scroll(-std::max<ColumnCount>(1, count));
             break;
         case 'j':
-            context.window().scroll( std::max<LineCount>(1, count));
+            window.scroll( std::max<LineCount>(1, count));
             break;
         case 'k':
-            context.window().scroll(-std::max<LineCount>(1, count));
+            window.scroll(-std::max<LineCount>(1, count));
             break;
         case 'l':
-            context.window().scroll( std::max<ColumnCount>(1, count));
+            window.scroll( std::max<ColumnCount>(1, count));
             break;
         }
     }, lock ? "view (lock)" : "view",
