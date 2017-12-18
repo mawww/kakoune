@@ -120,6 +120,9 @@ of the given *group*.
 *RuntimeError* `error message`::
     an error was encountered while executing a user command
 
+*InputModeChange* `<old mode>:<new mode>`::
+    Triggered whenever the current input mode changes
+
 *KakBegin*::
     kakoune has started, this hook is called just after reading the user
     configuration files

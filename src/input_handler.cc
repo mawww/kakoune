@@ -39,6 +39,8 @@ public:
 
     virtual KeymapMode keymap_mode() const = 0;
 
+    virtual StringView name() const = 0;
+
     virtual std::pair<CursorMode, DisplayCoord> get_cursor_info() const
     {
         const auto cursor = context().selections().main().cursor();
@@ -331,6 +333,8 @@ public:
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Normal; }
+
+    StringView name() const override { return "normal"; }
 
 private:
     friend struct InputHandler::ScopedForceNormal;
@@ -652,6 +656,8 @@ public:
 
     KeymapMode keymap_mode() const override { return KeymapMode::Menu; }
 
+    StringView name() const override { return "menu"; }
+
 private:
     MenuCallback m_callback;
 
@@ -893,6 +899,8 @@ public:
 
     KeymapMode keymap_mode() const override { return KeymapMode::Prompt; }
 
+    StringView name() const override { return "prompt"; }
+
     std::pair<CursorMode, DisplayCoord> get_cursor_info() const override
     {
         DisplayCoord coord{0_line, m_prompt.column_length() + m_line_editor.cursor_display_column()};
@@ -1025,6 +1033,8 @@ public:
     }
 
     KeymapMode keymap_mode() const override { return m_keymap_mode; }
+
+    StringView name() const override { return "next-key"; }
 
 private:
     KeyCallback m_callback;
@@ -1266,6 +1276,8 @@ public:
 
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }
 
+    StringView name() const override { return "insert"; }
+
 private:
     template<typename Type>
     void move(Type offset)
@@ -1395,9 +1407,13 @@ InputHandler::~InputHandler() = default;
 
 void InputHandler::push_mode(InputMode* new_mode)
 {
+    StringView prev_name = current_mode().name();
+
     current_mode().on_disabled(true);
     m_mode_stack.emplace_back(new_mode);
     new_mode->on_enabled();
+
+    context().hooks().run_hook("InputModeChange", format("{}:{}", prev_name, new_mode->name()), context());
 }
 
 void InputHandler::pop_mode(InputMode* mode)
@@ -1405,20 +1421,27 @@ void InputHandler::pop_mode(InputMode* mode)
     kak_assert(m_mode_stack.back().get() == mode);
     kak_assert(m_mode_stack.size() > 1);
 
+    StringView prev_name = mode->name();
+
     current_mode().on_disabled(false);
     m_mode_stack.pop_back();
     current_mode().on_enabled();
+
+    context().hooks().run_hook("InputModeChange", format("{}:{}", prev_name, current_mode().name()), context());
 }
 
 void InputHandler::reset_normal_mode()
 {
-    if (m_mode_stack.size() > 1)
-    {
-        current_mode().on_disabled(false);
-        m_mode_stack.resize(1);
-    }
-    kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
+    kak_assert(dynamic_cast<InputModes::Normal*>(m_mode_stack[0].get()) != nullptr);
+    if (m_mode_stack.size() == 1)
+        return;
+
+    StringView prev_name = current_mode().name();
+    current_mode().on_disabled(false);
+    m_mode_stack.resize(1);
     current_mode().on_enabled();
+
+    context().hooks().run_hook("InputModeChange", format("{}:{}", prev_name, current_mode().name()), context());
 }
 
 void InputHandler::insert(InsertMode mode, int count)

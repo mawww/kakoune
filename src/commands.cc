@@ -756,7 +756,7 @@ static constexpr auto hooks = {
     "InsertBegin", "InsertChar", "InsertDelete", "InsertEnd", "InsertIdle", "InsertKey",
     "InsertMove", "InsertCompletionHide", "InsertCompletionShow", "InsertCompletionSelect",
     "KakBegin", "KakEnd", "FocusIn", "FocusOut", "RuntimeError", "PromptIdle",
-    "NormalBegin", "NormalEnd", "NormalIdle", "NormalKey", "RawKey",
+    "NormalBegin", "NormalEnd", "NormalIdle", "NormalKey", "InputModeChange", "RawKey",
     "WinClose", "WinCreate", "WinDisplay", "WinResize", "WinSetOption",
 };
 
