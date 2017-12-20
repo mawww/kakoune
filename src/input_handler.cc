@@ -281,6 +281,9 @@ public:
         }
         else
         {
+            // Preserve hooks disabled for the whole execution prior to pop_mode
+            ScopedSetBool disable_hooks{context().hooks_disabled(),
+                                        m_single_command and m_hooks_disabled};
             if (m_single_command)
                 pop_mode();
 
@@ -1050,6 +1053,7 @@ public:
           m_edition(context()),
           m_completer(context()),
           m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()},
+          m_disable_hooks{context().hooks_disabled(), context().hooks_disabled()},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Transient ?
                        Timer::Callback{} : [this](Timer&) {
                            if (m_autoshowcompl)
@@ -1392,6 +1396,7 @@ private:
     Timer           m_idle_timer;
     bool            m_in_end = false;
     MouseHandler    m_mouse_handler;
+    ScopedSetBool   m_disable_hooks;
 };
 
 }
