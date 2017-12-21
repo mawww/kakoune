@@ -618,7 +618,7 @@ int run_server(StringView session, StringView server_init,
 
     {
         Context empty_context{Context::EmptyContextFlag{}};
-        global_scope.hooks().run_hook("KakBegin", "", empty_context);
+        global_scope.hooks().run_hook("KakBegin", session, empty_context);
     }
 
     if (not files.empty()) try
