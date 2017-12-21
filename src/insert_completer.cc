@@ -165,29 +165,35 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
             matches.emplace_back(match, nullptr);
 
     unordered_erase(matches, prefix);
-    std::sort(matches.begin(), matches.end());
-    matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
-
     const auto longest = accumulate(matches, 0_char,
                                     [](const CharCount& lhs, const RankedMatchAndBuffer& rhs)
                                     { return std::max(lhs, rhs.candidate().char_length()); });
 
+    constexpr size_t max_count = 100;
+    // Gather best max_count matches
+    auto greater = [](auto& lhs, auto& rhs) { return rhs < lhs; };
+    auto first = matches.begin(), last = matches.end();
+    std::make_heap(first, last, greater);
     InsertCompletion::CandidateList candidates;
-    candidates.reserve(matches.size());
-    for (auto& m : matches)
+    candidates.reserve(std::min(matches.size(), max_count));
+    while (candidates.size() < max_count and first != last)
     {
-        DisplayLine menu_entry;
-        if (m.buffer)
+        if (candidates.empty() or candidates.back().completion != first->candidate())
         {
-            const auto pad_len = longest + 1 - m.candidate().char_length();
-            menu_entry.push_back(m.candidate().str());
-            menu_entry.push_back(String{' ', pad_len});
-            menu_entry.push_back({ m.buffer->display_name(), get_face("MenuInfo") });
-        }
-        else
-            menu_entry.push_back(m.candidate().str());
+            DisplayLine menu_entry;
+            if (first->buffer)
+            {
+                const auto pad_len = longest + 1 - first->candidate().char_length();
+                menu_entry.push_back(first->candidate().str());
+                menu_entry.push_back(String{' ', pad_len});
+                menu_entry.push_back({ first->buffer->display_name(), get_face("MenuInfo") });
+            }
+            else
+                menu_entry.push_back(first->candidate().str());
 
-        candidates.push_back({m.candidate().str(), "", std::move(menu_entry)});
+            candidates.push_back({first->candidate().str(), "", std::move(menu_entry)});
+        }
+        std::pop_heap(first, last--, greater);
     }
 
     return { std::move(candidates), word_begin, cursor_pos, buffer.timestamp() };
@@ -313,12 +319,22 @@ InsertCompletion complete_option(const SelectionList& sels,
                     matches.push_back(std::move(match));
                 }
             }
-            std::sort(matches.begin(), matches.end());
+
+            constexpr size_t max_count = 100;
+            // Gather best max_count matches
+            auto greater = [](auto& lhs, auto& rhs) { return rhs < lhs; };
+            auto first = matches.begin(), last = matches.end();
+            std::make_heap(first, last, greater);
             InsertCompletion::CandidateList candidates;
+            candidates.reserve(std::min(matches.size(), max_count));
             candidates.reserve(matches.size());
-            for (auto& match : matches)
-                candidates.push_back({ match.candidate().str(), match.docstring.str(),
-                                       std::move(match.menu_entry) });
+            while (candidates.size() < max_count and first != last)
+            {
+                if (candidates.empty() or candidates.back().completion != first->candidate())
+                    candidates.push_back({ first->candidate().str(), first->docstring.str(),
+                                           std::move(first->menu_entry) });
+                std::pop_heap(first, last--, greater);
+            }
 
             return { std::move(candidates), coord, end, timestamp };
         }

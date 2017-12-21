@@ -978,8 +978,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
 
             constexpr size_t max_count = 100;
             // Gather best max_count matches
-            auto greater = [](const RankedMatch& lhs,
-                              const RankedMatch& rhs) { return rhs < lhs; };
+            auto greater = [](auto& lhs, auto& rhs) { return rhs < lhs; };
             auto first = matches.begin(), last = matches.end();
             std::make_heap(first, last, greater);
             CandidateList res;
