@@ -229,7 +229,7 @@ static HighlighterAndId create_fill_highlighter(HighlighterParameters params)
 
     auto func = [=](HighlightContext, DisplayBuffer& display_buffer, BufferRange range)
     {
-        highlight_range(display_buffer, range.begin, range.end, true,
+        highlight_range(display_buffer, range.begin, range.end, false,
                         apply_face(get_face(facespec)));
     };
     return {"fill_" + facespec, make_highlighter(std::move(func))};
@@ -291,7 +291,7 @@ public:
 
             highlight_range(display_buffer,
                             matches[m].begin, matches[m].end,
-                            true, apply_face(face));
+                            false, apply_face(face));
         }
     }
 
@@ -1467,7 +1467,7 @@ private:
             {
                 auto& r = std::get<0>(range);
                 if (buffer.is_valid(r.first) and buffer.is_valid(r.last))
-                    highlight_range(display_buffer, r.first, buffer.char_next(r.last), true,
+                    highlight_range(display_buffer, r.first, buffer.char_next(r.last), false,
                                     apply_face(get_face(std::get<1>(range))));
             }
             catch (runtime_error&)
