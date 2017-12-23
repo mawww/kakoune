@@ -4,12 +4,13 @@
 #include "assert.hh"
 #include "hash.hh"
 
+#include <stdint.h>
 #include <type_traits>
 
 namespace Kakoune
 {
 
-template<typename RealType, typename ValueType = int>
+template<typename RealType, typename ValueType = int64_t>
 class StronglyTypedNumber
 {
 public:
@@ -124,12 +125,12 @@ protected:
     ValueType m_value;
 };
 
-struct LineCount : public StronglyTypedNumber<LineCount, int>
+struct LineCount : public StronglyTypedNumber<LineCount, int64_t>
 {
     LineCount() = default;
 
     [[gnu::always_inline]]
-    constexpr LineCount(int value) : StronglyTypedNumber<LineCount>(value) {}
+    constexpr LineCount(int64_t value) : StronglyTypedNumber<LineCount>(value) {}
 };
 
 [[gnu::always_inline]]
@@ -138,12 +139,12 @@ inline constexpr LineCount operator"" _line(unsigned long long int value)
     return LineCount(value);
 }
 
-struct ByteCount : public StronglyTypedNumber<ByteCount, int>
+struct ByteCount : public StronglyTypedNumber<ByteCount, int64_t>
 {
     ByteCount() = default;
 
     [[gnu::always_inline]]
-    constexpr ByteCount(int value) : StronglyTypedNumber<ByteCount>(value) {}
+    constexpr ByteCount(int64_t value) : StronglyTypedNumber<ByteCount>(value) {}
 };
 
 [[gnu::always_inline]]
@@ -152,12 +153,12 @@ inline constexpr ByteCount operator"" _byte(unsigned long long int value)
     return ByteCount(value);
 }
 
-struct CharCount : public StronglyTypedNumber<CharCount, int>
+struct CharCount : public StronglyTypedNumber<CharCount, int64_t>
 {
     CharCount() = default;
 
     [[gnu::always_inline]]
-    constexpr CharCount(int value) : StronglyTypedNumber<CharCount>(value) {}
+    constexpr CharCount(int64_t value) : StronglyTypedNumber<CharCount>(value) {}
 };
 
 [[gnu::always_inline]]
@@ -166,12 +167,12 @@ inline constexpr CharCount operator"" _char(unsigned long long int value)
     return CharCount(value);
 }
 
-struct ColumnCount : public StronglyTypedNumber<ColumnCount, int>
+struct ColumnCount : public StronglyTypedNumber<ColumnCount, int64_t>
 {
     ColumnCount() = default;
 
     [[gnu::always_inline]]
-    constexpr ColumnCount(int value) : StronglyTypedNumber<ColumnCount>(value) {}
+    constexpr ColumnCount(int64_t value) : StronglyTypedNumber<ColumnCount>(value) {}
 };
 
 [[gnu::always_inline]]

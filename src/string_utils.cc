@@ -90,7 +90,7 @@ String replace(StringView str, StringView substr, StringView replacement)
             break;
 
         res += replacement;
-        it = match + (int)substr.length();
+        it = match + (int64_t)substr.length();
     }
     return res;
 }

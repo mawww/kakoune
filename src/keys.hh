@@ -110,7 +110,7 @@ constexpr Key ctrlalt(Key key)
     return { key.modifiers | Key::Modifiers::ControlAlt, key.key };
 }
 
-constexpr Codepoint encode_coord(DisplayCoord coord) { return (Codepoint)(((int)coord.line << 16) | ((int)coord.column & 0x0000FFFF)); }
+constexpr Codepoint encode_coord(DisplayCoord coord) { return (Codepoint)(((int64_t)coord.line << 16) | ((int64_t)coord.column & 0x0000FFFF)); }
 
 constexpr Key resize(DisplayCoord dim) { return { Key::Modifiers::Resize, encode_coord(dim) }; }
 

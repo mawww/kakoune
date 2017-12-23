@@ -108,7 +108,7 @@ String compact_path(StringView filename)
     const char* home = getenv("HOME");
     if (home)
     {
-        ByteCount home_len = (int)strlen(home);
+        ByteCount home_len = strlen(home);
         if (real_filename.substr(0, home_len) == home)
             return "~" + real_filename.substr(home_len);
     }
@@ -202,7 +202,7 @@ MappedFile::MappedFile(StringView filename)
     if (data == MAP_FAILED)
         throw file_access_error{filename, strerror(errno)};
 
-    if (st.st_size > std::numeric_limits<int>::max())
+    if (st.st_size > std::numeric_limits<int64_t>::max())
         throw runtime_error("file is too big");
 }
 
@@ -218,7 +218,7 @@ MappedFile::~MappedFile()
 
 MappedFile::operator StringView() const
 {
-    return { data, (int)st.st_size };
+    return { data, (int64_t)st.st_size };
 }
 
 bool file_exists(StringView filename)
@@ -230,7 +230,7 @@ bool file_exists(StringView filename)
 void write(int fd, StringView data)
 {
     const char* ptr = data.data();
-    ssize_t count   = (int)data.length();
+    ssize_t count   = (int64_t)data.length();
 
     while (count)
     {

@@ -264,20 +264,20 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
                 it += d.len;
             else if (d.mode == Diff::Add)
             {
-                const LineCount cur_line = (int)(it - m_lines.begin());
+                const LineCount cur_line = (int64_t)(it - m_lines.begin());
 
                 for (LineCount line = 0; line < d.len; ++line)
                     m_current_undo_group.push_back({
                         Modification::Insert, cur_line + line,
-                        parsed_lines.lines[(int)(d.posB + line)]});
+                        parsed_lines.lines[(int64_t)(d.posB + line)]});
 
                 m_changes.push_back({ Change::Insert, cur_line, cur_line + d.len });
                 m_lines.insert(it, &parsed_lines.lines[d.posB], &parsed_lines.lines[d.posB + d.len]);
-                it = m_lines.begin() + (int)(cur_line + d.len);
+                it = m_lines.begin() + (int64_t)(cur_line + d.len);
             }
             else if (d.mode == Diff::Remove)
             {
-                const LineCount cur_line = (int)(it - m_lines.begin());
+                const LineCount cur_line = (int64_t)(it - m_lines.begin());
 
                 for (LineCount line = d.len-1; line >= 0; --line)
                     m_current_undo_group.push_back({
@@ -478,7 +478,7 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
     else if (start != content.length() or not suffix.empty())
         new_lines.push_back(StringData::create({content.substr(start), suffix}));
 
-    auto line_it = m_lines.begin() + (int)pos.line;
+    auto line_it = m_lines.begin() + (int64_t)pos.line;
     auto new_lines_it = new_lines.begin();
     if (not append_lines) // replace first line with new first line
         *line_it++ = std::move(*new_lines_it++);
@@ -509,13 +509,13 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
     if (not prefix.empty() or not suffix.empty())
     {
         auto new_line = StringData::create({prefix, suffix});
-        m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
+        m_lines.erase(m_lines.begin() + (int64_t)begin.line, m_lines.begin() + (int64_t)end.line);
         m_lines.get_storage(begin.line) = std::move(new_line);
         next = begin;
     }
     else
     {
-        m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
+        m_lines.erase(m_lines.begin() + (int64_t)begin.line, m_lines.begin() + (int64_t)end.line);
         next = begin.line;
     }
 
@@ -661,7 +661,7 @@ BufferCoord Buffer::char_prev(BufferCoord coord) const
         return { coord.line - 1, m_lines[coord.line - 1].length() - 1 };
 
     auto line = m_lines[coord.line];
-    auto column = (int)(utf8::character_start(line.begin() + (int)coord.column - 1, line.begin()) - line.begin());
+    auto column = (int64_t)(utf8::character_start(line.begin() + (int64_t)coord.column - 1, line.begin()) - line.begin());
     return { coord.line, column };
 }
 
@@ -712,7 +712,7 @@ String Buffer::debug_description() const
 {
     size_t content_size = 0;
     for (auto& line : m_lines)
-        content_size += (int)line->strview().length();
+        content_size += (int64_t)line->strview().length();
 
     static size_t (*count_mem)(const HistoryNode&) = [](const HistoryNode& node) {
         size_t size = node.undo_group.size() * sizeof(Modification);
@@ -830,13 +830,13 @@ UnitTest test_undo{[]()
     buffer.replace(2_line, buffer.end_coord(), "foo");        // change 6
     buffer.commit_undo_group();
 
-    kak_assert((int)buffer.line_count() == 3);
+    kak_assert((int64_t)buffer.line_count() == 3);
     kak_assert(buffer[0_line] == "allo ?\n");
     kak_assert(buffer[1_line] == "mais que fais la police\n");
     kak_assert(buffer[2_line] == "foo\n");
 
     buffer.move_to(3);
-    kak_assert((int)buffer.line_count() == 5);
+    kak_assert((int64_t)buffer.line_count() == 5);
     kak_assert(buffer[0_line] == "allo ?\n");
     kak_assert(buffer[1_line] == "mais que fais la police\n");
     kak_assert(buffer[2_line] == "tchou\n");
@@ -844,7 +844,7 @@ UnitTest test_undo{[]()
     kak_assert(buffer[4_line] == " youpi\n");
 
     buffer.move_to(4);
-    kak_assert((int)buffer.line_count() == 5);
+    kak_assert((int64_t)buffer.line_count() == 5);
     kak_assert(buffer[0_line] == "allo ?\n");
     kak_assert(buffer[1_line] == "mais que fais la police\n");
     kak_assert(buffer[2_line] == "mutch\n");

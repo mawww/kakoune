@@ -1791,7 +1791,7 @@ const CommandDesc prompt_cmd = {
                 auto& text = sc.env_vars["text"_sv] = str.str();
                 auto clear_password = on_scope_end([&] {
                     if (flags & PromptFlags::Password)
-                        memset(text.data(), 0, (int)text.length());
+                        memset(text.data(), 0, (int64_t)text.length());
                 });
 
                 ScopedSetBool disable_history{context.history_disabled()};

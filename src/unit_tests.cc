@@ -49,7 +49,7 @@ UnitTest test_diff{[]()
         StringView s1 = "mais que fais la police";
         StringView s2 = "mais ou va la police";
 
-        auto diff = find_diff(s1.begin(), (int)s1.length(), s2.begin(), (int)s2.length());
+        auto diff = find_diff(s1.begin(), (int64_t)s1.length(), s2.begin(), (int64_t)s2.length());
         kak_assert(diff.size() == 11);
     }
 }};

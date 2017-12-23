@@ -233,11 +233,11 @@ private:
     {
         [[gnu::always_inline]]
         StringDataPtr& get_storage(LineCount line)
-        { return BufferLines::operator[]((int)line); }
+        { return BufferLines::operator[]((int64_t)line); }
 
         [[gnu::always_inline]]
         const StringDataPtr& get_storage(LineCount line) const
-        { return BufferLines::operator[]((int)line); }
+        { return BufferLines::operator[]((int64_t)line); }
 
         [[gnu::always_inline]]
         StringView operator[](LineCount line) const
