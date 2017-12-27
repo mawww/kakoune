@@ -15,7 +15,7 @@ TL;DR
 
 {website}
 
-*Vim inspired* -- *Faster as in fewer keystrokes* --
+*Modal editor* -- *Faster as in fewer keystrokes* --
 *Multiple selections* -- *Orthogonal design*
 
 ---------------------------------------------
@@ -26,7 +26,7 @@ make
 ---------------------------------------------
 
 See http://github.com/mawww/golf for kakoune solutions to vimgolf challenges,
-regularly beating the best vim solution.
+regularly beating the best Vim solution.
 
 See the link:doc/design.asciidoc[design document] for more information on
 Kakoune philosophy and design.
@@ -36,9 +36,9 @@ Kakoune philosophy and design.
 Introduction
 ------------
 
-Kakoune is a code editor heavily inspired by Vim, as such most of its
-commands are similar to vi's ones, and it shares Vi's "keystrokes as
-a text editing language" model.
+Kakoune is a code editor that implements Vi's "keystrokes as a text editing
+language" model. As it's also a modal editor, it is somewhat similar to the
+Vim editor (after which Kakoune was originally inspired).
 
 Kakoune can operate in two modes, normal and insertion. In insertion mode,
 keys are directly inserted into the current buffer. In normal mode, keys
