@@ -100,12 +100,14 @@ private:
     Vector<Iterator, MemoryDomain::Regex> m_values;
 };
 
-inline RegexExecFlags match_flags(bool bol, bool eol, bool bow, bool eow)
+inline RegexExecFlags match_flags(bool bol, bool eol, bool bow, bool eow, bool bos, bool eos)
 {
     return (bol ? RegexExecFlags::None : RegexExecFlags::NotBeginOfLine) |
            (eol ? RegexExecFlags::None : RegexExecFlags::NotEndOfLine) |
            (bow ? RegexExecFlags::None : RegexExecFlags::NotBeginOfWord) |
-           (eow ? RegexExecFlags::None : RegexExecFlags::NotEndOfWord);
+           (eow ? RegexExecFlags::None : RegexExecFlags::NotEndOfWord) |
+           (bos ? RegexExecFlags::None : RegexExecFlags::NotBeginOfSubject) |
+           (eos ? RegexExecFlags::None : RegexExecFlags::NotEndOfSubject);
 }
 
 template<typename It>

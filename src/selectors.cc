@@ -839,10 +839,12 @@ void select_buffer(SelectionList& selections)
 }
 
 static RegexExecFlags
-match_flags(const Buffer& buf, const BufferIterator& begin, const BufferIterator& end)
+match_flags(const Buffer& buf, const BufferIterator& begin, const BufferIterator& end,
+            bool bos, bool eos)
 {
     return match_flags(is_bol(begin.coord()), is_eol(buf, end.coord()),
-                       is_bow(buf, begin.coord()), is_eow(buf, end.coord()));
+                       is_bow(buf, begin.coord()), is_eow(buf, end.coord()),
+                       bos, eos);
 }
 
 static bool find_next(const Buffer& buffer, const BufferIterator& pos,
@@ -851,11 +853,11 @@ static bool find_next(const Buffer& buffer, const BufferIterator& pos,
 {
     if (pos != buffer.end() and
         regex_search(pos, buffer.end(), matches, ex,
-                     match_flags(buffer, pos, buffer.end())))
+                     match_flags(buffer, pos, buffer.end(), pos.coord() == BufferCoord{0,0}, true)))
         return true;
     wrapped = true;
     return regex_search(buffer.begin(), buffer.end(), matches, ex,
-                        match_flags(buffer, buffer.begin(), buffer.end()));
+                        match_flags(buffer, buffer.begin(), buffer.end(), true, true));
 }
 
 static bool find_prev(const Buffer& buffer, const BufferIterator& pos,
@@ -864,12 +866,12 @@ static bool find_prev(const Buffer& buffer, const BufferIterator& pos,
 {
     if (pos != buffer.begin() and
         backward_regex_search(buffer.begin(), pos, matches, ex,
-                              match_flags(buffer, buffer.begin(), pos) |
+                              match_flags(buffer, buffer.begin(), pos, true, buffer.is_end(pos.coord())) |
                               RegexExecFlags::NotInitialNull))
         return true;
     wrapped = true;
     return backward_regex_search(buffer.begin(), buffer.end(), matches, ex,
-                                 match_flags(buffer, buffer.begin(), buffer.end()) |
+                                 match_flags(buffer, buffer.begin(), buffer.end(), true, true) |
                                  RegexExecFlags::NotInitialNull);
 }
 
@@ -916,7 +918,7 @@ void select_all_matches(SelectionList& selections, const Regex& regex, int captu
         auto sel_beg = buffer.iterator_at(sel.min());
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
         RegexIt re_it(sel_beg, sel_end, regex,
-                      match_flags(buffer, sel_beg, sel_end));
+                      match_flags(buffer, sel_beg, sel_end, true, true));
         RegexIt re_end;
 
         for (; re_it != re_end; ++re_it)
@@ -961,7 +963,7 @@ void split_selections(SelectionList& selections, const Regex& regex, int capture
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
 
         RegexIt re_it(begin, sel_end, regex,
-                      match_flags(buffer, begin, sel_end));
+                      match_flags(buffer, begin, sel_end, true, true));
         RegexIt re_end;
 
         for (; re_it != re_end; ++re_it)

@@ -367,7 +367,9 @@ private:
                       match_flags(is_bol(range.begin),
                                   is_eol(buffer, range.end),
                                   is_bow(buffer, range.begin),
-                                  is_eow(buffer, range.end))};
+                                  is_eow(buffer, range.end),
+                                  range.begin == BufferCoord{0,0},
+                                  buffer.is_end(range.end))};
         RegexIt re_end;
         for (; re_it != re_end; ++re_it)
         {
