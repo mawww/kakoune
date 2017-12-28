@@ -123,7 +123,7 @@ of the given *group*.
 *InputModeChange* `<old mode>:<new mode>`::
     Triggered whenever the current input mode changes
 
-*KakBegin*::
+*KakBegin* `session name`::
     kakoune has started, this hook is called just after reading the user
     configuration files
 
