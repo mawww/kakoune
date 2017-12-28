@@ -45,7 +45,9 @@ static const char* startup_info =
 " * Highlighters have been refactored to be part of scopes\n"
 "   the add-highlighter and remove-highlighter command syntax changed.\n"
 " * Regex implementation switched to a custom one, the syntax is slightly\n"
-"   less tolerant.\n";
+"   less tolerant.\n"
+" * InputModeChange hook has been introduced and is expected to replace\n"
+"   the various ${MODE}Begin/${MODE}End hooks, consider those deprecated.\n";
 
 struct startup_error : runtime_error
 {
