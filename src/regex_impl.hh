@@ -133,10 +133,11 @@ enum class RegexExecFlags
     NotBeginOfWord    = 1 << 3,
     NotEndOfWord      = 1 << 4,
     NotBeginOfSubject = 1 << 5,
-    NotInitialNull    = 1 << 6,
-    AnyMatch          = 1 << 7,
-    NoSaves           = 1 << 8,
-    PrevAvailable     = 1 << 9,
+    NotEndOfSubject   = 1 << 6,
+    NotInitialNull    = 1 << 7,
+    AnyMatch          = 1 << 8,
+    NoSaves           = 1 << 9,
+    PrevAvailable     = 1 << 10,
 };
 
 constexpr bool with_bit_ops(Meta::Type<RegexExecFlags>) { return true; }
@@ -372,7 +373,7 @@ private:
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::SubjectEnd:
-                    if (pos != m_end)
+                    if (pos != m_end or (m_flags & RegexExecFlags::NotEndOfSubject))
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::LookAhead:
