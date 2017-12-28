@@ -130,7 +130,7 @@ define-command -params 1..2 \
                 awk '
                     /^==+ +/ { sub(/^==+ +/, ""); print }
                     /^\[\[[^\]]+\]\]/ { sub(/^\[\[/, ""); sub(/\]\].*/, ""); print }
-                ' < $page
+                ' < $page | tr '[A-Z ]' '[a-z-]'
             fi
         fi
     } \
