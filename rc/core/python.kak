@@ -120,6 +120,9 @@ add-highlighter shared/python/comment       fill comment
     "
 }
 
+add-highlighter shared/python/code regex (?<=[\w\s\d'"_])(<=|<<|>>|>=|<>|<|>|!=|==|\||\^|&|\+|-|\*\*|\*|//|/|%|~) 0:operator
+add-highlighter shared/python/code regex (?<=[\w\s\d'"_])((?<![=<>!])=(?![=])|[+*-]=) 0:builtin
+
 # Commands
 # ‾‾‾‾‾‾‾‾
 
