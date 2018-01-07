@@ -357,7 +357,9 @@ void write_all_buffers(Context& context)
 
     for (auto& buffer : buffers)
     {
-        if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified()
+        if ((buffer->flags() & Buffer::Flags::File) and
+            ((buffer->flags() & Buffer::Flags::New) or
+             buffer->is_modified())
             and !(buffer->flags() & Buffer::Flags::ReadOnly))
         {
             buffer->run_hook_in_own_context("BufWritePre", buffer->name(), context.name());
