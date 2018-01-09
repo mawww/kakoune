@@ -127,6 +127,10 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
     for (const auto& buffer : BufferManager::instance())
     {
         StringView bufname = buffer->display_name();
+
+        if (bufname == context.buffer().display_name())
+            continue;
+
         if (buffer->flags() & Buffer::Flags::File)
         {
             if (RankedMatch match{split_path(bufname).second, query})
