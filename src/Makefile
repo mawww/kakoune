@@ -24,7 +24,7 @@ sources := $(sort $(wildcard *.cc))
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
 deps := $(addprefix ., $(sources:.cc=$(suffix).d))
 
-PKG_CONFIG ?= pkg-config
+PKG_CONFIG ?= $(shell command -v pkg-config 2>/dev/null)
 
 PREFIX ?= /usr/local
 DESTDIR ?= # root dir
@@ -66,7 +66,12 @@ endif
 
 CXXFLAGS += -pedantic -std=gnu++14 -g -Wall -Wextra -Wno-unused-parameter -Wno-reorder -Wno-sign-compare -Wno-address -Wno-noexcept-type -Wno-unknown-attributes -Wno-unknown-warning-option
 
-all : kak
+all : check_pkg_config kak
+
+check_pkg_config:
+ifeq ($(PKG_CONFIG),)
+	$(error "pkg-config not found in PATH")
+endif
 
 kak : kak$(suffix)
 	ln -sf $< $@
