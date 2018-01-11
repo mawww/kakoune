@@ -16,16 +16,26 @@ SelectionList::SelectionList(Buffer& buffer, Selection s, size_t timestamp)
 SelectionList::SelectionList(Buffer& buffer, Selection s)
     : SelectionList(buffer, std::move(s), buffer.timestamp()) {}
 
-SelectionList::SelectionList(Buffer& buffer, Vector<Selection> s, size_t timestamp)
-    : m_buffer(&buffer), m_selections(std::move(s)), m_timestamp(timestamp)
+SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list, size_t timestamp)
+    : m_buffer(&buffer), m_selections(std::move(list)), m_timestamp(timestamp)
 {
     kak_assert(size() > 0);
     m_main = size() - 1;
     check_invariant();
 }
 
-SelectionList::SelectionList(Buffer& buffer, Vector<Selection> s)
-    : SelectionList(buffer, std::move(s), buffer.timestamp()) {}
+SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list)
+    : SelectionList(buffer, std::move(list), buffer.timestamp()) {}
+
+SelectionList::SelectionList(SelectionList::UnsortedTag, Buffer& buffer, Vector<Selection> list)
+    : SelectionList(UnsortedTag{}, buffer, std::move(list), buffer.timestamp()) {}
+
+SelectionList::SelectionList(SelectionList::UnsortedTag, Buffer& buffer, Vector<Selection> list, size_t timestamp)
+    : m_buffer(&buffer), m_selections(std::move(list)), m_timestamp(timestamp)
+{
+    sort_and_merge_overlapping();
+    check_invariant();
+}
 
 void SelectionList::remove(size_t index)
 {
@@ -480,7 +490,11 @@ String selection_to_string(const Selection& selection)
 
 String selection_list_to_string(const SelectionList& selections)
 {
-    return join(selections | transform(selection_to_string), ':', false);
+    auto beg = &*selections.begin(), end = &*selections.end();
+    auto main = beg + selections.main_index();
+    using View = ConstArrayView<Selection>;
+    return join(concatenated(View{main, end}, View{beg, main}) |
+                transform(selection_to_string), ':', false);
 }
 
 Selection selection_from_string(StringView desc)
@@ -510,18 +524,10 @@ SelectionList selection_list_from_string(Buffer& buffer, StringView desc)
     if (desc.empty())
         throw runtime_error{"empty selection description"};
 
-    Vector<Selection> sels;
-    for (auto sel_desc : desc | split<StringView>(':'))
-    {
-        auto sel = selection_from_string(sel_desc);
-        clamp(sel, buffer);
-        sels.push_back(sel);
-    }
-    size_t main = 0;
-    std::sort(sels.begin(), sels.end(), compare_selections);
-    sels.erase(merge_overlapping(sels.begin(), sels.end(), main, overlaps), sels.end());
-
-    return {buffer, std::move(sels)};
+    auto sels = desc | split<StringView>(':')
+                     | transform([&](auto&& d) { auto s = selection_from_string(d); clamp(s, buffer); return s; })
+                     | gather<Vector<Selection>>();
+    return {SelectionList::UnsortedTag{}, buffer, std::move(sels)};
 }
 
 }

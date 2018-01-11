@@ -87,6 +87,10 @@ struct SelectionList
     SelectionList(Buffer& buffer, Vector<Selection> s);
     SelectionList(Buffer& buffer, Vector<Selection> s, size_t timestamp);
 
+    struct UnsortedTag {};
+    SelectionList(UnsortedTag, Buffer& buffer, Vector<Selection> s);
+    SelectionList(UnsortedTag, Buffer& buffer, Vector<Selection> s, size_t timestamp);
+
     void update();
 
     void check_invariant() const;

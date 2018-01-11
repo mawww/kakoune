@@ -1620,14 +1620,13 @@ SelectionList read_selections_from_register(char reg, Context& context)
     Buffer& buffer = BufferManager::instance().get_buffer({arobase+1, percent});
     size_t timestamp = str_to_int({percent + 1, desc.end()});
 
-    Vector<Selection> sels;
-    for (auto sel_desc : StringView{desc.begin(), arobase} | split<StringView>(':'))
-        sels.push_back(selection_from_string(sel_desc));
-
+    auto sels = StringView{desc.begin(), arobase} | split<StringView>(':')
+                                                  | transform(selection_from_string)
+                                                  | gather<Vector<Selection>>();
     if (sels.empty())
         throw runtime_error(format("Register {} contains an empty selection list", reg));
 
-    return {buffer, std::move(sels), timestamp};
+    return {SelectionList::UnsortedTag{}, buffer, std::move(sels), timestamp};
 }
 
 enum class CombineOp

@@ -249,8 +249,8 @@ auto split(Element separator, Element escaper)
 template<typename Range1, typename Range2>
 struct ConcatView
 {
-    using RangeIt1 = decltype(begin(std::declval<Range1>()));
-    using RangeIt2 = decltype(begin(std::declval<Range2>()));
+    using RangeIt1 = decltype(std::declval<Range1>().begin());
+    using RangeIt2 = decltype(std::declval<Range2>().begin());
     using ValueType = typename std::common_type_t<typename std::iterator_traits<RangeIt1>::value_type,
                                                   typename std::iterator_traits<RangeIt2>::value_type>;
 
