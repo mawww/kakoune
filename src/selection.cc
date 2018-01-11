@@ -480,7 +480,18 @@ String selection_to_string(const Selection& selection)
 
 String selection_list_to_string(const SelectionList& selections)
 {
-    return join(selections | transform(selection_to_string), ':', false);
+    String selections_str = selection_to_string(selections.main());
+
+    for (size_t i = 0; i < selections.size(); i++)
+    {
+        if (i == selections.main_index())
+            continue;
+
+        selections_str += ':';
+        selections_str += selection_to_string(selections[i]);
+    }
+
+    return selections_str;
 }
 
 Selection selection_from_string(StringView desc)

@@ -1627,7 +1627,11 @@ SelectionList read_selections_from_register(char reg, Context& context)
     if (sels.empty())
         throw runtime_error(format("Register {} contains an empty selection list", reg));
 
-    return {buffer, std::move(sels), timestamp};
+    SelectionList sels_list{buffer, Selection{}, timestamp};
+
+    sels_list.set(std::move(sels), 0);
+
+    return std::move(sels_list);
 }
 
 enum class CombineOp
