@@ -1655,15 +1655,16 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     }
     else
     {
-        const bool collapse_jumps = not draft and (bool)parser.get_switch("collapse-jumps");
-        SelectionList jump = c.selections();
-        JumpList original_jump_list = collapse_jumps ? c.jump_list() : JumpList{};
+        Optional<JumpList> original_jump_list;
+        if (not draft and (bool)parser.get_switch("collapse-jumps"))
+            original_jump_list = c.jump_list();
 
+        SelectionList jump = c.selections();
         func(parser, c);
 
-        if (collapse_jumps and c.jump_list() != original_jump_list)
+        if (original_jump_list and c.jump_list() != *original_jump_list)
         {
-            c.jump_list() = std::move(original_jump_list);
+            c.jump_list() = std::move(*original_jump_list);
             c.jump_list().push(std::move(jump));
         }
     }
