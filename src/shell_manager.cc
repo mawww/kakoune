@@ -288,7 +288,7 @@ std::pair<String, int> ShellManager::eval(
     }
 
     if (wait_notified) // clear the status line
-        context.print_status({ "", get_face("Information") }, true);
+        context.print_status({}, true);
 
     return { std::move(stdout_contents), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
 }
