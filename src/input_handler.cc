@@ -1543,41 +1543,40 @@ static bool is_valid(Key key)
 
 void InputHandler::handle_key(Key key)
 {
-    if (is_valid(key))
+    if (not is_valid(key))
+        return;
+
+    const bool was_recording = is_recording();
+    ++m_handle_key_level;
+    auto dec = on_scope_end([this]{ --m_handle_key_level; });
+
+    auto process_key = [&](Key key) {
+        if (m_last_insert.recording)
+            m_last_insert.keys.push_back(key);
+        current_mode().handle_key(key);
+    };
+
+    const auto keymap_mode = current_mode().keymap_mode();
+    KeymapManager& keymaps = m_context.keymaps();
+    if (keymaps.is_mapped(key, keymap_mode) and not m_context.keymaps_disabled())
     {
-        const bool was_recording = is_recording();
-        ++m_handle_key_level;
-        auto dec = on_scope_end([this]{ --m_handle_key_level; });
+        ScopedSetBool disable_history{context().history_disabled()};
+        for (auto& k : keymaps.get_mapping(key, keymap_mode).keys)
+            process_key(k);
+    }
+    else
+        process_key(key);
 
-        auto process_key = [&](Key key) {
-            if (m_last_insert.recording)
-                m_last_insert.keys.push_back(key);
-            current_mode().handle_key(key);
-        };
+    // do not record the key that made us enter or leave recording mode,
+    // and the ones that are triggered recursively by previous keys.
+    if (was_recording and is_recording() and m_handle_key_level == m_recording_level)
+        m_recorded_keys += key_to_str(key);
 
-        auto keymap_mode = current_mode().keymap_mode();
-        KeymapManager& keymaps = m_context.keymaps();
-        if (keymaps.is_mapped(key, keymap_mode) and
-            not m_context.keymaps_disabled())
-        {
-            ScopedSetBool disable_history{context().history_disabled()};
-            for (auto& k : keymaps.get_mapping(key, keymap_mode).keys)
-                process_key(k);
-        }
-        else
-            process_key(key);
-
-        // do not record the key that made us enter or leave recording mode,
-        // and the ones that are triggered recursively by previous keys.
-        if (was_recording and is_recording() and m_handle_key_level == m_recording_level)
-            m_recorded_keys += key_to_str(key);
-
-        if (m_handle_key_level < m_recording_level)
-        {
-            write_to_debug_buffer("Macro recording started but not finished");
-            m_recording_reg = 0;
-            m_recording_level = -1;
-        }
+    if (m_handle_key_level < m_recording_level)
+    {
+        write_to_debug_buffer("Macro recording started but not finished");
+        m_recording_reg = 0;
+        m_recording_level = -1;
     }
 }
 
