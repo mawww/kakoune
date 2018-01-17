@@ -109,7 +109,7 @@ bool option_add(Vector<T, domain>& opt, StringView str)
 template<typename T, MemoryDomain D>
 String option_type_name(Meta::Type<Vector<T, D>>)
 {
-    return option_type_name(Meta::Type<T>{}) + StringView{"-list"};
+    return option_type_name(Meta::Type<T>{}) + "-list"_sv;
 }
 
 template<typename Key, typename Value, MemoryDomain domain>

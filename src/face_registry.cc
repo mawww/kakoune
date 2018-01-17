@@ -63,7 +63,7 @@ String to_string(Attribute attributes)
                          filter([=](const Attr& a) { return attributes & a.attr; }) |
                          transform([](const Attr& a) { return a.name; });
 
-    return accumulate(filteredAttrs, String{"+"}, std::plus<>{});
+    return accumulate(filteredAttrs, "+"_str, std::plus<>{});
 }
 
 String to_string(Face face)

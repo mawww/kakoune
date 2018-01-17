@@ -671,7 +671,7 @@ select_indent(const Context& context, const Selection& selection,
     LineCount begin_line = line - 1;
     if (to_begin)
     {
-        while (begin_line >= 0 and (buffer[begin_line] == StringView{"\n"} or
+        while (begin_line >= 0 and (buffer[begin_line] == "\n"_sv or
                                     get_indent(buffer[begin_line], tabstop) >= indent))
             --begin_line;
     }
@@ -680,7 +680,7 @@ select_indent(const Context& context, const Selection& selection,
     if (to_end)
     {
         const LineCount end = buffer.line_count();
-        while (end_line < end and (buffer[end_line] == StringView{"\n"} or
+        while (end_line < end and (buffer[end_line] == "\n"_sv or
                                    get_indent(buffer[end_line], tabstop) >= indent))
             ++end_line;
     }

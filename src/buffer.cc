@@ -794,20 +794,20 @@ UnitTest test_buffer{[]()
     // check insert at end behaviour: auto add end of line if necessary
     pos = buffer.end()-1;
     buffer.insert(pos.coord(), "tchou");
-    kak_assert(buffer.string(pos.coord(), buffer.end_coord()) == StringView{"tchou\n"});
+    kak_assert(buffer.string(pos.coord(), buffer.end_coord()) == "tchou\n"_sv);
 
     pos = buffer.end()-1;
     buffer.insert(buffer.end_coord(), "kanaky\n");
-    kak_assert(buffer.string((pos+1).coord(), buffer.end_coord()) == StringView{"kanaky\n"});
+    kak_assert(buffer.string((pos+1).coord(), buffer.end_coord()) == "kanaky\n"_sv);
 
     buffer.commit_undo_group();
     buffer.erase((pos+1).coord(), buffer.end_coord());
     buffer.insert(buffer.end_coord(), "mutch\n");
     buffer.commit_undo_group();
     buffer.undo();
-    kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -7), buffer.end_coord()) == StringView{"kanaky\n"});
+    kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -7), buffer.end_coord()) == "kanaky\n"_sv);
     buffer.redo();
-    kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -6), buffer.end_coord()) == StringView{"mutch\n"});
+    kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -6), buffer.end_coord()) == "mutch\n"_sv);
 }};
 
 UnitTest test_undo{[]()

@@ -880,7 +880,7 @@ int main(int argc, char* argv[])
             return 0;
         };
 
-        if (contains(ConstArrayView<char*>{argv+1, (size_t)argc-1}, StringView{"--help"}))
+        if (contains(ConstArrayView<char*>{argv+1, (size_t)argc-1}, "--help"_sv))
             return show_usage();
 
         ParametersParser parser{params, param_desc};
