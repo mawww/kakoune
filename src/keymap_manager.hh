@@ -22,6 +22,7 @@ enum class KeymapMode : char
     View,
     User,
     Object,
+    FirstUserMode,
 };
 
 class KeymapManager
@@ -43,6 +44,10 @@ public:
     };
     const KeymapInfo& get_mapping(Key key, KeymapMode mode) const;
 
+    using UserModeList = Vector<String>;
+    const UserModeList& user_modes() const { return m_user_modes; }
+    void add_user_mode(const String user_mode_name);
+
 private:
     KeymapManager()
         : m_parent(nullptr) {}
@@ -52,6 +57,8 @@ private:
     KeymapManager* m_parent;
     using KeyAndMode = std::pair<Key, KeymapMode>;
     HashMap<KeyAndMode, KeymapInfo, MemoryDomain::Mapping> m_mapping;
+
+    UserModeList m_user_modes;
 };
 
 }

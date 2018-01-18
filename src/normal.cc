@@ -127,12 +127,6 @@ void repeat_last_select(Context& context, NormalParams)
     context.repeat_last_select();
 }
 
-struct KeyInfo
-{
-    ConstArrayView<Key> keys;
-    StringView docstring;
-};
-
 String build_autoinfo_for_mapping(Context& context, KeymapMode mode,
                                   ConstArrayView<KeyInfo> built_ins)
 {

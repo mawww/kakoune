@@ -2,6 +2,8 @@
 
 #include "array_view.hh"
 #include "assert.hh"
+#include "exception.hh"
+#include "string_utils.hh"
 
 #include <algorithm>
 
@@ -47,6 +49,21 @@ KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
             res.emplace_back(map.key.first);
     }
     return res;
+}
+
+void KeymapManager::add_user_mode(const String user_mode_name)
+{
+    auto modes = {"normal", "insert", "prompt", "menu", "goto", "view", "user", "object"};
+    if (contains(modes, user_mode_name))
+        throw runtime_error(format("'{}' is already a regular mode", user_mode_name));
+
+    if (contains(m_user_modes, user_mode_name))
+        throw runtime_error(format("user mode '{}' already defined", user_mode_name));
+
+    if (contains_that(user_mode_name, [](char c){ return not isalnum(c); }))
+        throw runtime_error(format("invalid mode name: '{}'", user_mode_name));
+
+    m_user_modes.push_back(user_mode_name);
 }
 
 }
