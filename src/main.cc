@@ -68,6 +68,14 @@ String runtime_directory()
     return "/usr/share/kak";
 }
 
+String config_directory()
+{
+    StringView config_home = getenv("XDG_CONFIG_HOME");
+    if (config_home.empty())
+        return format("{}/.config/kak", getenv("HOME"));
+    return format("{}/kak", config_home);
+}
+
 void register_env_vars()
 {
     static const struct {
@@ -112,6 +120,10 @@ void register_env_vars()
             "runtime", false,
             [](StringView name, const Context& context)
             { return runtime_directory(); }
+        }, {
+            "config", false,
+            [](StringView name, const Context& context)
+            { return config_directory(); }
         }, {
             "opt_", true,
             [](StringView name, const Context& context)
