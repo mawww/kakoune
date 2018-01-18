@@ -9,7 +9,7 @@ namespace Kakoune
 StringDataPtr StringData::create(ArrayView<const StringView> strs)
 {
     const int len = accumulate(strs, 0, [](int l, StringView s) {
-                        return l + (int)s.length();
+                        return l + (int64_t)s.length();
                     });
     void* ptr = StringData::operator new(sizeof(StringData) + len + 1);
     auto* res = new (ptr) StringData(len);
@@ -17,7 +17,7 @@ StringDataPtr StringData::create(ArrayView<const StringView> strs)
     for (auto& str : strs)
     {
         memcpy(data, str.begin(), (size_t)str.length());
-        data += (int)str.length();
+        data += (int64_t)str.length();
     }
     *data = 0;
     return RefPtr<StringData, PtrPolicy>{res};
@@ -50,7 +50,7 @@ void StringData::Registry::debug_stats() const
     for (auto& st : m_strings)
     {
         total_refcount += st.value->refcount - 1;
-        total_size += (int)st.value->length;
+        total_size += (int64_t)st.value->length;
     }
     write_to_debug_buffer(format("  data size: {}, mean: {}", total_size, (float)total_size/count));
     write_to_debug_buffer(format("  refcounts: {}, mean: {}", total_refcount, (float)total_refcount/count));

@@ -517,7 +517,7 @@ public:
 
     DisplayLine build_display_line(ColumnCount in_width)
     {
-        CharCount width = (int)in_width; // Todo: proper handling of char/column
+        CharCount width = (int64_t)in_width; // Todo: proper handling of char/column
         kak_assert(m_cursor_pos <= m_line.char_length());
         if (m_cursor_pos < m_display_pos)
             m_display_pos = m_cursor_pos;

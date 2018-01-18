@@ -73,7 +73,7 @@ public:
     void write(StringView str)
     {
         write(str.length());
-        write(str.data(), (int)str.length());
+        write(str.data(), (int64_t)str.length());
     };
 
     void write(const String& str)
@@ -271,8 +271,8 @@ String MsgReader::read<String>()
     String res;
     if (length > 0)
     {
-        res.force_size((int)length);
-        read(&res[0_byte], (int)length);
+        res.force_size((int64_t)length);
+        read(&res[0_byte], (int64_t)length);
     }
     return res;
 }

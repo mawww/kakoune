@@ -1052,13 +1052,13 @@ private:
 
         char format[16];
         format_to(format, "%{}d", digit_count);
-        const int main_line = (int)context.context.selections().main().cursor().line + 1;
-        int last_line = -1;
+        const int64_t main_line = (int64_t)context.context.selections().main().cursor().line + 1;
+        int64_t last_line = -1;
         for (auto& line : display_buffer.lines())
         {
-            const int current_line = (int)line.range().begin.line + 1;
+            const int64_t current_line = (int64_t)line.range().begin.line + 1;
             const bool is_cursor_line = main_line == current_line;
-            const int line_to_format = (m_relative and not is_cursor_line) ?
+            const int64_t line_to_format = (m_relative and not is_cursor_line) ?
                                        current_line - main_line : current_line;
             char buffer[16];
             snprintf(buffer, 16, format, std::abs(line_to_format));
@@ -1319,7 +1319,7 @@ private:
         const DisplayAtom empty{String{' ', width}, def_face};
         for (auto& line : display_buffer.lines())
         {
-            int line_num = (int)line.range().begin.line + 1;
+            int64_t line_num = (int64_t)line.range().begin.line + 1;
             auto it = find_if(lines,
                               [&](const LineAndSpec& l)
                               { return std::get<0>(l) == line_num; });

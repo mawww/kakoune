@@ -94,7 +94,7 @@ void WordDB::rebuild_db()
 
     m_words.clear();
     m_lines.clear();
-    m_lines.reserve((int)buffer.line_count());
+    m_lines.reserve((int64_t)buffer.line_count());
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
     {
         m_lines.push_back(buffer.line_storage(line));
@@ -114,7 +114,7 @@ void WordDB::update_db()
         return;
 
     Lines new_lines;
-    new_lines.reserve((int)buffer.line_count());
+    new_lines.reserve((int64_t)buffer.line_count());
 
     auto old_line = 0_line;
     for (auto& modif : modifs)
@@ -123,14 +123,14 @@ void WordDB::update_db()
         kak_assert(modif.new_line < buffer.line_count() or modif.num_added == 0);
         kak_assert(old_line <= modif.old_line);
         while (old_line < modif.old_line)
-            new_lines.push_back(std::move(m_lines[(int)old_line++]));
+            new_lines.push_back(std::move(m_lines[(int64_t)old_line++]));
 
-        kak_assert((int)new_lines.size() == (int)modif.new_line);
+        kak_assert((int64_t)new_lines.size() == (int64_t)modif.new_line);
 
         while (old_line < modif.old_line + modif.num_removed)
         {
             kak_assert(old_line < m_lines.size());
-            remove_words(m_lines[(int)old_line++]->strview());
+            remove_words(m_lines[(int64_t)old_line++]->strview());
         }
 
         for (auto l = 0_line; l < modif.num_added; ++l)
@@ -139,8 +139,8 @@ void WordDB::update_db()
             add_words(new_lines.back()->strview());
         }
     }
-    while (old_line != (int)m_lines.size())
-        new_lines.push_back(std::move(m_lines[(int)old_line++]));
+    while (old_line != (int64_t)m_lines.size())
+        new_lines.push_back(std::move(m_lines[(int64_t)old_line++]));
 
     m_lines = std::move(new_lines);
 }

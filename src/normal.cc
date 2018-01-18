@@ -470,7 +470,7 @@ void command(Context& context, NormalParams params)
 
 void apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView after)
 {
-    auto diffs = find_diff(before.begin(), (int)before.length(), after.begin(), (int)after.length());
+    auto diffs = find_diff(before.begin(), (int64_t)before.length(), after.begin(), (int64_t)after.length());
 
     for (auto& diff : diffs)
     {
@@ -1492,8 +1492,8 @@ void align(Context& context, NormalParams)
                 ColumnCount inscol = get_column(buffer, tabstop, insert_coord);
                 ColumnCount targetcol = inscol + inscount;
                 ColumnCount tabcol = inscol - (inscol % tabstop);
-                CharCount tabs = (int)((targetcol - tabcol) / tabstop);
-                CharCount spaces = (int)(targetcol - (tabs ? (tabcol + (int)tabs * tabstop) : inscol));
+                CharCount tabs = (int64_t)((targetcol - tabcol) / tabstop);
+                CharCount spaces = (int64_t)(targetcol - (tabs ? (tabcol + (int64_t)tabs * tabstop) : inscol));
                 padstr = String{ '\t', tabs } + String{ ' ', spaces };
             }
             buffer.insert(insert_coord, padstr);
@@ -1504,7 +1504,7 @@ void align(Context& context, NormalParams)
 
 void copy_indent(Context& context, NormalParams params)
 {
-    int selection = params.count;
+    int64_t selection = params.count;
     auto& buffer = context.buffer();
     auto& selections = context.selections();
     Vector<LineCount> lines;
@@ -1523,7 +1523,7 @@ void copy_indent(Context& context, NormalParams params)
     auto it = line.begin();
     while (it != line.end() and is_horizontal_blank(*it))
         ++it;
-    const StringView indent = line.substr(0_byte, (int)(it-line.begin()));
+    const StringView indent = line.substr(0_byte, (int64_t)(it-line.begin()));
 
     ScopedEdition edition{context};
     for (auto& l : lines)

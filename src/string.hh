@@ -21,7 +21,7 @@ public:
 
     friend constexpr size_t hash_value(const Type& str)
     {
-        return hash_data(str.data(), (int)str.length());
+        return hash_data(str.data(), (size_t)str.length());
     }
 
     using iterator = CharType*;
@@ -36,10 +36,10 @@ public:
     const_iterator begin() const { return type().data(); }
 
     [[gnu::always_inline]]
-    iterator end() { return type().data() + (int)type().length(); }
+    iterator end() { return type().data() + (int64_t)type().length(); }
 
     [[gnu::always_inline]]
-    const_iterator end() const { return type().data() + (int)type().length(); }
+    const_iterator end() const { return type().data() + (int64_t)type().length(); }
 
     reverse_iterator rbegin() { return reverse_iterator{end()}; }
     const_reverse_iterator rbegin() const { return const_reverse_iterator{end()}; }
@@ -49,14 +49,14 @@ public:
 
     CharType& front() { return *type().data(); }
     const CharType& front() const { return *type().data(); }
-    CharType& back() { return type().data()[(int)type().length() - 1]; }
-    const CharType& back() const { return type().data()[(int)type().length() - 1]; }
+    CharType& back() { return type().data()[(int64_t)type().length() - 1]; }
+    const CharType& back() const { return type().data()[(int64_t)type().length() - 1]; }
 
     [[gnu::always_inline]]
-    CharType& operator[](ByteCount pos) { return type().data()[(int)pos]; }
+    CharType& operator[](ByteCount pos) { return type().data()[(int64_t)pos]; }
 
     [[gnu::always_inline]]
-    const CharType& operator[](ByteCount pos) const { return type().data()[(int)pos]; }
+    const CharType& operator[](ByteCount pos) const { return type().data()[(int64_t)pos]; }
 
     Codepoint operator[](CharCount pos) const
     { return utf8::codepoint(utf8::advance(begin(), end(), pos), end()); }
@@ -74,10 +74,10 @@ public:
     { return utf8::advance(begin(), end(), count) - begin(); }
 
     CharCount char_count_to(ByteCount count) const
-    { return utf8::distance(begin(), begin() + (int)count); }
+    { return utf8::distance(begin(), begin() + (int64_t)count); }
 
     ColumnCount column_count_to(ByteCount count) const
-    { return utf8::column_distance(begin(), begin() + (int)count); }
+    { return utf8::column_distance(begin(), begin() + (int64_t)count); }
 
     StringView substr(ByteCount from, ByteCount length = INT_MAX) const;
     StringView substr(CharCount from, CharCount length = INT_MAX) const;
@@ -106,13 +106,13 @@ public:
     String(const char* content, ByteCount len) : m_data(content, (size_t)len) {}
     explicit String(Codepoint cp, CharCount count = 1)
     {
-        reserve(utf8::codepoint_size(cp) * (int)count);
+        reserve(utf8::codepoint_size(cp) * (int64_t)count);
         while (count-- > 0)
             utf8::dump(std::back_inserter(*this), cp);
     }
     explicit String(Codepoint cp, ColumnCount count)
     {
-        int cp_count = (int)(count / std::max(codepoint_width(cp), 1_col));
+        int64_t cp_count = (int64_t)(count / std::max(codepoint_width(cp), 1_col));
         reserve(utf8::codepoint_size(cp) * cp_count);
         while (cp_count-- > 0)
             utf8::dump(std::back_inserter(*this), cp);
@@ -216,7 +216,7 @@ public:
         : m_data{data}, m_length{length} {}
     constexpr StringView(const char* data) : m_data{data}, m_length{data ? strlen(data) : 0} {}
     constexpr StringView(const char* begin, const char* end) : m_data{begin}, m_length{(int)(end - begin)} {}
-    StringView(const String& str) : m_data{str.data()}, m_length{(int)str.length()} {}
+    StringView(const String& str) : m_data{str.data()}, m_length{str.length()} {}
     StringView(const char& c) : m_data(&c), m_length(1) {}
     StringView(int c) = delete;
     StringView(Codepoint c) = delete;
@@ -265,7 +265,7 @@ inline StringView StringOps<Type, CharType>::substr(ByteCount from, ByteCount le
         length = INT_MAX;
     const auto str_len = type().length();
     kak_assert(from >= 0 and from <= str_len);
-    return StringView{ type().data() + (int)from, std::min(str_len - from, length) };
+    return StringView{ type().data() + (int64_t)from, std::min(str_len - from, length) };
 }
 
 template<typename Type, typename CharType>
