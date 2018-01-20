@@ -10,13 +10,14 @@
 #include "unicode.hh"
 
 #include <cerrno>
-#include <cstring>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <dirent.h>
 #include <cstdlib>
+#include <cstring>
+#include <dirent.h>
+#include <fcntl.h>
+#include <pwd.h>
+#include <sys/mman.h>
 #include <sys/select.h>
+#include <unistd.h>
 
 #if defined(__FreeBSD__)
 #include <sys/sysctl.h>
@@ -51,7 +52,7 @@ String parse_filename(StringView filename)
 {
     auto prefix = filename.substr(0_byte, 2_byte);
     if (prefix == "~" or prefix == "~/")
-        return getenv("HOME") + filename.substr(1_byte);
+        return homedir() + filename.substr(1_byte);
     return filename.str();
 }
 
@@ -105,10 +106,10 @@ String compact_path(StringView filename)
     if (prefix_match(real_filename, real_cwd))
         return real_filename.substr(real_cwd.length()).str();
 
-    const char* home = getenv("HOME");
-    if (home)
+    const StringView home = homedir();
+    if (not home.empty())
     {
-        ByteCount home_len = (int)strlen(home);
+        ByteCount home_len = home.length();
         if (real_filename.substr(0, home_len) == home)
             return "~" + real_filename.substr(home_len);
     }
@@ -123,6 +124,14 @@ StringView tmpdir()
         return tmpdir.back() == '/' ? tmpdir.substr(0_byte, tmpdir.length()-1)
                                     : tmpdir;
     return "/tmp";
+}
+
+StringView homedir()
+{
+    StringView home = getenv("HOME");
+    if (home.empty())
+        return getpwuid(geteuid())->pw_dir;
+    return home;
 }
 
 bool fd_readable(int fd)
@@ -331,7 +340,7 @@ String find_file(StringView filename, ConstArrayView<String> paths)
     }
     if (filename.substr(0_byte, 2_byte) == "~/")
     {
-        String candidate = getenv("HOME") + filename.substr(1_byte);
+        String candidate = homedir() + filename.substr(1_byte);
         if (stat(candidate.c_str(), &buf) == 0 and S_ISREG(buf.st_mode))
             return candidate;
         return "";

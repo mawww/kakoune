@@ -80,7 +80,10 @@ informations about Kakoune's state:
     history id of the current buffer, the history id is an integer value
     which is used to reference a specific buffer version in the undo tree
 *kak_runtime*::
-    directory containing the kak binary
+    directory containing the kak support files, determined from kakoune's
+    binary location.
+*kak_config*::
+    directory containing the user configuration
 *kak_count*::
     count parameter passed to the command
 *kak_opt_<name>*::

@@ -72,7 +72,7 @@ String config_directory()
 {
     StringView config_home = getenv("XDG_CONFIG_HOME");
     if (config_home.empty())
-        return format("{}/.config/kak", getenv("HOME"));
+        return format("{}/.config/kak", homedir());
     return format("{}/kak", config_home);
 }
 

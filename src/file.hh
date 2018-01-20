@@ -25,6 +25,7 @@ String real_path(StringView filename);
 String compact_path(StringView filename);
 
 StringView tmpdir();
+StringView homedir();
 
 // returns pair { directory, filename }
 std::pair<StringView, StringView> split_path(StringView path);
