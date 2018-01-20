@@ -1418,7 +1418,7 @@ void InputHandler::push_mode(InputMode* new_mode)
     m_mode_stack.emplace_back(new_mode);
     new_mode->on_enabled();
 
-    context().hooks().run_hook("InputModeChange", format("{}:{}", prev_name, new_mode->name()), context());
+    context().hooks().run_hook("ModeChange", format("{}:{}", prev_name, new_mode->name()), context());
 }
 
 void InputHandler::pop_mode(InputMode* mode)
@@ -1432,7 +1432,7 @@ void InputHandler::pop_mode(InputMode* mode)
     m_mode_stack.pop_back();
     current_mode().on_enabled();
 
-    context().hooks().run_hook("InputModeChange", format("{}:{}", prev_name, current_mode().name()), context());
+    context().hooks().run_hook("ModeChange", format("{}:{}", prev_name, current_mode().name()), context());
 }
 
 void InputHandler::reset_normal_mode()
@@ -1446,7 +1446,7 @@ void InputHandler::reset_normal_mode()
     m_mode_stack.resize(1);
     current_mode().on_enabled();
 
-    context().hooks().run_hook("InputModeChange", format("{}:{}", prev_name, current_mode().name()), context());
+    context().hooks().run_hook("ModeChange", format("{}:{}", prev_name, current_mode().name()), context());
 }
 
 void InputHandler::insert(InsertMode mode, int count)

@@ -120,7 +120,7 @@ of the given *group*.
 *RuntimeError* `error message`::
     an error was encountered while executing a user command
 
-*InputModeChange* `<old mode>:<new mode>`::
+*ModeChange* `<old mode>:<new mode>`::
     Triggered whenever the current input mode changes
 
 *KakBegin* `session name`::
