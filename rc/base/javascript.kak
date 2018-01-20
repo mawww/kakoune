@@ -70,7 +70,7 @@ define-command -hidden javascript-indent-on-new-line %<
 hook -group javascript-highlight global WinSetOption filetype=javascript %{ add-highlighter window ref javascript }
 
 hook global WinSetOption filetype=javascript %{
-    hook window InsertEnd  .* -group javascript-hooks  javascript-filter-around-selections
+    hook window ModeChange insert:.* -group javascript-hooks  javascript-filter-around-selections
     hook window InsertChar .* -group javascript-indent javascript-indent-on-char
     hook window InsertChar \n -group javascript-indent javascript-indent-on-new-line
 }

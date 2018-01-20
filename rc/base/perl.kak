@@ -106,7 +106,7 @@ hook -group perl-highlight global WinSetOption filetype=perl %{ add-highlighter 
 
 hook global WinSetOption filetype=perl %{
     # cleanup trailing whitespaces when exiting insert mode
-    hook window InsertEnd .* -group perl-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange insert:.* -group perl-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group perl-indent perl-indent-on-new-line
     hook window InsertChar \{ -group perl-indent perl-indent-on-opening-curly-brace
     hook window InsertChar \} -group perl-indent perl-indent-on-closing-curly-brace

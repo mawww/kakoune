@@ -68,7 +68,7 @@ define-command -hidden elixir-indent-on-new-line %{
 hook -group elixir-highlight global WinSetOption filetype=elixir %{ add-highlighter window ref elixir }
 
 hook global WinSetOption filetype=elixir %{
-    hook window InsertEnd  .* -group elixir-hooks  elixir-filter-around-selections
+    hook window ModeChange insert:.* -group elixir-hooks  elixir-filter-around-selections
     hook window InsertChar \n -group elixir-indent elixir-indent-on-new-line
 }
 

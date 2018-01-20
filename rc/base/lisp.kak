@@ -46,7 +46,7 @@ define-command -hidden lisp-indent-on-new-line %{
 hook -group lisp-highlight global WinSetOption filetype=lisp %{ add-highlighter window ref lisp }
 
 hook global WinSetOption filetype=lisp %{
-    hook window InsertEnd  .* -group lisp-hooks  lisp-filter-around-selections
+    hook window ModeChange insert:.* -group lisp-hooks  lisp-filter-around-selections
     hook window InsertChar \n -group lisp-indent lisp-indent-on-new-line
 }
 

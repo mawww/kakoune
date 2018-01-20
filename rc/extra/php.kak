@@ -63,7 +63,7 @@ define-command -hidden php-indent-on-new-line %<
 hook -group php-highlight global WinSetOption filetype=php %{ add-highlighter window ref php }
 
 hook global WinSetOption filetype=php %{
-    hook window InsertEnd  .* -group php-hooks  php-filter-around-selections
+    hook window ModeChange insert:.* -group php-hooks  php-filter-around-selections
     hook window InsertChar .* -group php-indent php-indent-on-char
     hook window InsertChar \n -group php-indent php-indent-on-new-line
 }

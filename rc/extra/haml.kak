@@ -57,7 +57,7 @@ define-command -hidden haml-indent-on-new-line %{
 hook -group haml-highlight global WinSetOption filetype=haml %{ add-highlighter window ref haml }
 
 hook global WinSetOption filetype=haml %{
-    hook window InsertEnd  .* -group haml-hooks  haml-filter-around-selections
+    hook window ModeChange insert:.* -group haml-hooks  haml-filter-around-selections
     hook window InsertChar \n -group haml-indent haml-indent-on-new-line
 }
 

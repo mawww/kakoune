@@ -62,7 +62,7 @@ define-command -hidden cabal-indent-on-closing-curly-brace %[
 hook -group cabal-highlight global WinSetOption filetype=cabal %{ add-highlighter window ref cabal }
 
 hook global WinSetOption filetype=cabal %[
-    hook window InsertEnd  .* -group cabal-hooks  cabal-filter-around-selections
+    hook window ModeChange insert:.* -group cabal-hooks  cabal-filter-around-selections
     hook window InsertChar \n -group cabal-indent cabal-indent-on-new-line
     hook window InsertChar \{ -group cabal-indent cabal-indent-on-opening-curly-brace
     hook window InsertChar \} -group cabal-indent cabal-indent-on-closing-curly-brace

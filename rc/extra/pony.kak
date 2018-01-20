@@ -87,7 +87,7 @@ hook -group pony-highlight global WinSetOption filetype=pony %{ add-highlighter 
 hook global WinSetOption filetype=pony %{
     hook window InsertChar \n -group pony-indent pony-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window InsertEnd .* -group pony-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange insert:.* -group pony-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
 }
 
 hook -group pony-highlight global WinSetOption filetype=(?!pony).* %{ remove-highlighter pony }

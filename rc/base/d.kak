@@ -117,7 +117,7 @@ hook -group d-highlight global WinSetOption filetype=d %{ add-highlighter window
 
 hook global WinSetOption filetype=d %{
     # cleanup trailing whitespaces when exiting insert mode
-    hook window InsertEnd .* -group d-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange insert:.* -group d-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group d-indent d-indent-on-new-line
     hook window InsertChar \{ -group d-indent d-indent-on-opening-curly-brace
     hook window InsertChar \} -group d-indent d-indent-on-closing-curly-brace

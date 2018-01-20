@@ -72,7 +72,7 @@ define-command -hidden coffee-indent-on-new-line %{
 hook -group coffee-highlight global WinSetOption filetype=coffee %{ add-highlighter window ref coffee }
 
 hook global WinSetOption filetype=coffee %{
-    hook window InsertEnd  .* -group coffee-hooks  coffee-filter-around-selections
+    hook window ModeChange insert:.* -group coffee-hooks  coffee-filter-around-selections
     hook window InsertChar \n -group coffee-indent coffee-indent-on-new-line
 }
 

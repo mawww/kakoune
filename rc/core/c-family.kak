@@ -277,7 +277,7 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
         remove-hooks window c-family-insert
     }
 
-    hook -group c-family-indent window InsertEnd .* c-family-trim-autoindent
+    hook -group c-family-indent window ModeChange insert:.* c-family-trim-autoindent
     hook -group c-family-insert window InsertChar \n c-family-insert-on-newline
     hook -group c-family-indent window InsertChar \n c-family-indent-on-newline
     hook -group c-family-indent window InsertChar \{ c-family-indent-on-opening-curly-brace

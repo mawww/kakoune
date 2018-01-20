@@ -51,7 +51,7 @@ define-command -hidden java-indent-on-closing-curly-brace %[
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 hook global WinSetOption filetype=java %{
     # cleanup trailing whitespaces when exiting insert mode
-    hook window InsertEnd .* -group java-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange insert:.* -group java-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group java-indent java-indent-on-new-line
     hook window InsertChar \{ -group java-indent java-indent-on-opening-curly-brace
     hook window InsertChar \} -group java-indent java-indent-on-closing-curly-brace

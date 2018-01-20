@@ -41,7 +41,7 @@ add-highlighter shared/typescript/code regex \b(enum|as|implements|interface|pac
 hook -group typescript-highlight global WinSetOption filetype=typescript %{ add-highlighter window ref typescript }
 
 hook global WinSetOption filetype=javascript %{
-    hook window InsertEnd  .* -group typescript-hooks  javascript-filter-around-selections
+    hook window ModeChange insert:.* -group typescript-hooks  javascript-filter-around-selections
     hook window InsertChar .* -group typescript-indent javascript-indent-on-char
     hook window InsertChar \n -group typescript-indent javascript-indent-on-new-line
 }

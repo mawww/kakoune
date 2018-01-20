@@ -60,7 +60,7 @@ hook -group hbs-highlight global WinSetOption filetype=hbs %{
 }
 
 hook global WinSetOption filetype=hbs %{
-    hook window InsertEnd  .* -group hbs-hooks  hbs-filter-around-selections
+    hook window ModeChange insert:.* -group hbs-hooks  hbs-filter-around-selections
     hook window InsertChar \n -group hbs-indent hbs-indent-on-new-line
 }
 

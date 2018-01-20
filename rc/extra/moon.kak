@@ -95,7 +95,7 @@ define-command -hidden moon-indent-on-new-line %{
 hook -group moon-highlight global WinSetOption filetype=moon %{ add-highlighter window ref moon }
 
 hook global WinSetOption filetype=moon %{
-    hook window InsertEnd  .* -group moon-hooks  moon-filter-around-selections
+    hook window ModeChange insert:.* -group moon-hooks  moon-filter-around-selections
     hook window InsertChar .* -group moon-indent moon-indent-on-char
     hook window InsertChar \n -group moon-indent moon-indent-on-new-line
 

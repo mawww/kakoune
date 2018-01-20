@@ -68,7 +68,7 @@ define-command -hidden html-indent-on-new-line %{
 hook -group html-highlight global WinSetOption filetype=(?:html|xml) %{ add-highlighter window ref html }
 
 hook global WinSetOption filetype=(?:html|xml) %{
-    hook window InsertEnd  .* -group html-hooks  html-filter-around-selections
+    hook window ModeChange insert:.* -group html-hooks  html-filter-around-selections
     hook window InsertChar '>' -group html-indent html-indent-on-greater-than
     hook window InsertChar \n -group html-indent html-indent-on-new-line
 }

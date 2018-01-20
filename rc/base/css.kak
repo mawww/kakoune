@@ -67,7 +67,7 @@ define-command -hidden css-indent-on-closing-curly-brace %[
 hook -group css-highlight global WinSetOption filetype=css %{ add-highlighter window ref css }
 
 hook global WinSetOption filetype=css %[
-    hook window InsertEnd  .* -group css-hooks  css-filter-around-selections
+    hook window ModeChange insert:.* -group css-hooks  css-filter-around-selections
     hook window InsertChar \n -group css-indent css-indent-on-new-line
     hook window InsertChar \} -group css-indent css-indent-on-closing-curly-brace
 ]
