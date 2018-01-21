@@ -90,6 +90,11 @@ void ClientManager::process_pending_inputs() const
     }
 }
 
+bool ClientManager::has_pending_inputs() const
+{
+    return contains_that(m_clients, [](auto&& c) { return c->has_pending_inputs(); });
+}
+
 void ClientManager::remove_client(Client& client, bool graceful, int status)
 {
     auto it = find(m_clients, &client);

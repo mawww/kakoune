@@ -683,7 +683,8 @@ int run_server(StringView session, StringView server_init,
                 (flags & ServerFlags::Daemon)))
         {
             client_manager.redraw_clients();
-            event_manager.handle_next_events(EventMode::Normal);
+            event_manager.handle_next_events(EventMode::Normal, nullptr,
+                                             not client_manager.has_pending_inputs());
             client_manager.process_pending_inputs();
             client_manager.clear_client_trash();
             client_manager.clear_window_trash();

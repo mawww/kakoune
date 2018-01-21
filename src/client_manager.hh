@@ -36,6 +36,7 @@ public:
 
     void redraw_clients() const;
     void process_pending_inputs() const;
+    bool has_pending_inputs() const;
 
     Client*  get_client_ifp(StringView name);
     Client&  get_client(StringView name);

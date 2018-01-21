@@ -38,6 +38,7 @@ public:
     Client(Client&&) = delete;
 
     bool process_pending_inputs();
+    bool has_pending_inputs() const { return not m_pending_keys.empty(); }
 
     void menu_show(Vector<DisplayLine> choices, BufferCoord anchor, MenuStyle style);
     void menu_select(int selected);
