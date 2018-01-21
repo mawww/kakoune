@@ -106,6 +106,10 @@ are exclusively available to built-in options.
 
 == Builtin options
 
+*config* `str`::
+    _default_ `${XDG_CONFIG_DIR:-${HOME}/.config}/kak` +
+    path to the user configuration directory
+
 *tabstop* `int`::
     _default_ 8 +
     width of a tab character
