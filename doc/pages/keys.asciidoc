@@ -298,17 +298,21 @@ is a sequence of non whitespace characters
 
 *|*::
     pipe each selection through the given external filter program and
-    replace the selection with its output
+    replace the selection with its output. Shell expansions are available,
+    (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
 
 *<a-|>*::
     pipe each selection through the given external filter program and
-    ignore its output
+    ignore its output. Shell expansions are available,
+    (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
 
 *!*::
-    insert command output before selection
+    insert command output before selection. Shell expansions are available,
+    (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
 
 *<a-!>*::
-    append command output after selection
+    append command output after selection. Shell expansions are available,
+    (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
 
 *u*::
     undo last change
@@ -542,7 +546,8 @@ to skim through the jump list using:
 
 *$*::
     pipe each selection to the given shell command and keep the ones
-    for which the shell returned 0
+    for which the shell returned 0. Shell expansions are available,
+    (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
 
 == Object Selection
 
