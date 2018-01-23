@@ -1287,9 +1287,10 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
         if (is_main)
             main_index = result.size();
         result.push_back(std::move(sel));
+        const LineCount height = std::max(anchor.line, cursor.line) - std::min(anchor.line, cursor.line) + 1;
         for (int i = 0; i < std::max(params.count, 1); ++i)
         {
-            LineCount offset = (direction == Forward ? 1 : -1) * (i + 1);
+            LineCount offset =  (direction == Forward ? 1 : -1) * (i + 1) * height;
 
             const LineCount anchor_line = anchor.line + offset;
             const LineCount cursor_line = cursor.line + offset;
