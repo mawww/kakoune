@@ -318,6 +318,8 @@ private:
 
             return escaped_sequence;
         }
+        else if (cp == 'E')
+            return {};
 
         // CharacterClassEscape
         auto class_it = find_if(character_class_escapes, [cp](auto& c) { return c.cp == cp; });
