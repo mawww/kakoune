@@ -181,7 +181,7 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
         if (candidates.empty() or candidates.back().completion != first->candidate())
         {
             DisplayLine menu_entry;
-            if (first->buffer)
+            if (other_buffers && first->buffer)
             {
                 const auto pad_len = longest + 1 - first->candidate().char_length();
                 menu_entry.push_back(first->candidate().str());
