@@ -35,8 +35,7 @@ define-command -hidden json-indent-on-char %<
 
 define-command -hidden json-indent-on-new-line %<
     evaluate-commands -draft -itersel %<
-        # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        preserve-previous-line-indent
         # filter previous line
         try %{ execute-keys -draft k : json-filter-around-selections <ret> }
         # indent after lines beginning with opener token

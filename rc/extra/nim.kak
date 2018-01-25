@@ -60,8 +60,7 @@ def -hidden nim-indent-on-new-line %{
     eval -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
-        # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        preserve-previous-line-indent
         # cleanup trailing whitespaces from previous line
         try %{ exec -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with const, let, var, ':' or '='

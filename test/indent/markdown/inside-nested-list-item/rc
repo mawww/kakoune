@@ -1,3 +1,4 @@
 source "%val{runtime}/colors/default.kak"
+source "%val{runtime}/rc/core/indent.kak"
 source "%val{runtime}/rc/base/markdown.kak"
 set buffer filetype markdown

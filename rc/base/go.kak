@@ -55,8 +55,7 @@ add-highlighter shared/go/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9
 
 define-command -hidden go-indent-on-new-line %~
     evaluate-commands -draft -itersel %=
-        # preserve previous line indent
-        try %{ execute-keys -draft \;K<a-&> }
+        preserve-previous-line-indent
         # indent after lines ending with { or (
         try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line

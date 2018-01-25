@@ -68,8 +68,7 @@ define-command -hidden lua-indent-on-char %{
 
 define-command -hidden lua-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
-        # preserve previous line indent
-        try %{ execute-keys -draft <space>K<a-&> }
+        preserve-previous-line-indent
         # filter previous line
         try %{ execute-keys -draft k:lua-filter-around-selections<ret> }
         # indent after start structure

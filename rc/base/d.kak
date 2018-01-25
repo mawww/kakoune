@@ -83,8 +83,7 @@ add-highlighter shared/d/code regex "\b(this)\b\s*[^(]" 1:value
 
 define-command -hidden d-indent-on-new-line %~
     evaluate-commands -draft -itersel %=
-        # preserve previous line indent
-        try %{ execute-keys -draft \;K<a-&> }
+        preserve-previous-line-indent
         # indent after lines ending with { or (
         try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line
