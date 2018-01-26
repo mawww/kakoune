@@ -311,9 +311,10 @@ void Client::on_buffer_reload_key(Key key)
 void Client::close_buffer_reload_dialog()
 {
     kak_assert(m_buffer_reload_dialog_opened);
+    // Reset first as this might check for reloading.
+    m_input_handler.reset_normal_mode();
     m_buffer_reload_dialog_opened = false;
     info_hide(true);
-    m_input_handler.reset_normal_mode();
 }
 
 void Client::check_if_buffer_needs_reloading()
