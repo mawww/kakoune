@@ -33,8 +33,7 @@ define-command -hidden lisp-filter-around-selections %{
 
 define-command -hidden lisp-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
-        # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        preserve-previous-line-indent
         # indent when matches opening paren
         try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> <a-\;> \; <a-gt> }
     }

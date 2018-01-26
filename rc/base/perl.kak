@@ -72,8 +72,7 @@ add-highlighter shared/perl/code regex \$(LAST_REGEXP_CODE_RESULT|LIST_SEPARATOR
 
 define-command -hidden perl-indent-on-new-line %~
     evaluate-commands -draft -itersel %=
-        # preserve previous line indent
-        try %{ execute-keys -draft \;K<a-&> }
+        preserve-previous-line-indent
         # indent after lines ending with { or (
         try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line

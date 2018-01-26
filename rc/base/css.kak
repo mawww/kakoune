@@ -45,8 +45,7 @@ define-command -hidden css-filter-around-selections %{
 
 define-command -hidden css-indent-on-new-line %[
     evaluate-commands -draft -itersel %[
-        # preserve previous line indent
-        try %[ execute-keys -draft \; K <a-&> ]
+        preserve-previous-line-indent
         # filter previous line
         try %[ execute-keys -draft k : css-filter-around-selections <ret> ]
         # indent after lines ending with with {

@@ -120,8 +120,7 @@ define-command -hidden ruby-indent-on-char %{
 
 define-command -hidden ruby-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
-        # preserve previous line indent
-        try %{ execute-keys -draft K <a-&> }
+        preserve-previous-line-indent
         # filter previous line
         try %{ execute-keys -draft k : ruby-filter-around-selections <ret> }
         # indent after start structure

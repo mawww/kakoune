@@ -14,7 +14,7 @@ hook global BufCreate .*[.](hbs) %{
 add-highlighter shared/ regions -default html hbs  \
     comment          \{\{!-- --\}\} '' \
     comment          \{\{!   \}\}   '' \
-    block-expression \{\{    \}\}   '' 
+    block-expression \{\{    \}\}   ''
 
 add-highlighter shared/hbs/html ref html
 add-highlighter shared/hbs/comment fill comment
@@ -43,8 +43,7 @@ define-command -hidden hbs-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '/' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y j p }
-        # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        preserve-previous-line-indent
         # filter previous line
         try %{ execute-keys -draft k : hbs-filter-around-selections <ret> }
         # indent after lines beginning with : or -

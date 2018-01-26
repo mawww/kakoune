@@ -51,8 +51,7 @@ define-command -hidden pug-filter-around-selections %{
 
 define-command -hidden pug-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
-        # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        preserve-previous-line-indent
         # filter previous line
         try %{ execute-keys -draft k : pug-filter-around-selections <ret> }
         # copy '//', '|', '-' or '(!)=' prefix and following whitespace

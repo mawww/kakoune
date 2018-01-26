@@ -53,8 +53,7 @@ define-command -hidden html-indent-on-greater-than %[
 
 define-command -hidden html-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
-        # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        preserve-previous-line-indent
         # filter previous line
         try %{ execute-keys -draft k : html-filter-around-selections <ret> }
         # indent after lines ending with opening tag

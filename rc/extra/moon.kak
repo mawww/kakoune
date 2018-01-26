@@ -78,8 +78,7 @@ define-command -hidden moon-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^ \h * \K -- \h * <ret> y gh j P }
-        # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        preserve-previous-line-indent
         # filter previous line
         try %{ execute-keys -draft k : moon-filter-around-selections <ret> }
         # indent after start structure

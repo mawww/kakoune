@@ -66,8 +66,7 @@ add-highlighter shared/pony/comment       fill comment
 
 define-command -hidden pony-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
-        # preserve previous line indent
-        try %{ execute-keys -draft <space> K <a-&> }
+        preserve-previous-line-indent
         # cleanup trailing whitespaces from previous line
         try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
         # copy '//' comment prefix and following white spaces

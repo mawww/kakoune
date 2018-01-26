@@ -49,13 +49,12 @@ define-command -hidden elixir-filter-around-selections %{
 
 define-command -hidden elixir-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
-        # copy -- comments prefix and following white spaces 
+        # copy -- comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
-        # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
-        # indent after line ending with: 
-	# try %{ execute-keys -draft k x <a-k> (do|else|->)$ <ret> & }
-	# filter previous line
+        preserve-previous-line-indent
+        # indent after line ending with:
+        # try %{ execute-keys -draft k x <a-k> (do|else|->)$ <ret> & }
+        # filter previous line
         try %{ execute-keys -draft k : elixir-filter-around-selections <ret> }
         # indent after lines ending with do or ->
         try %{ execute-keys -draft \\; k x <a-k> ^.+(do|->)$ <ret> j <a-gt> }
