@@ -766,7 +766,7 @@ void search(Context& context, NormalParams params)
 
     regex_prompt<direction>(context, prompt.str(), saved_reg[main_index],
                  [reg, count, saved_reg]
-                 (Regex regex, PromptEvent event, Context& context) {
+                 (const Regex& regex, PromptEvent event, Context& context) {
                      if (event == PromptEvent::Abort)
                      {
                          RegisterManager::instance()[reg].set(context, saved_reg);
@@ -775,22 +775,22 @@ void search(Context& context, NormalParams params)
                      if (not context.history_disabled())
                          RegisterManager::instance()[reg].set(context, regex.str());
 
-                     if (not regex.empty() and not regex.str().empty())
-                     {
-                         int c = count;
-                         auto& selections = context.selections();
-                         do {
-                            bool wrapped = false;
-                            for (auto& sel : selections)
-                            {
-                                if (mode == SelectMode::Replace)
-                                    sel = keep_direction(find_next_match<direction>(context, sel, regex, wrapped), sel);
-                                if (mode == SelectMode::Extend)
-                                    sel.cursor() = find_next_match<direction>(context, sel, regex, wrapped).cursor();
-                            }
-                            selections.sort_and_merge_overlapping();
-                         } while (--c > 0);
-                     }
+                     if (regex.empty() or regex.str().empty())
+                         return;
+
+                     int c = count;
+                     auto& selections = context.selections();
+                     do {
+                        bool wrapped = false;
+                        for (auto& sel : selections)
+                        {
+                            if (mode == SelectMode::Replace)
+                                sel = keep_direction(find_next_match<direction>(context, sel, regex, wrapped), sel);
+                            if (mode == SelectMode::Extend)
+                                sel.cursor() = find_next_match<direction>(context, sel, regex, wrapped).cursor();
+                        }
+                        selections.sort_and_merge_overlapping();
+                     } while (--c > 0);
                  });
 }
 
@@ -987,15 +987,30 @@ void join_lines(Context& context, NormalParams params)
 }
 
 template<bool matching>
-void keep(Context& context, NormalParams)
+void keep(Context& context, NormalParams params)
 {
-    constexpr const char* prompt = matching ? "keep matching:" : "keep not matching:";
-    regex_prompt(context, prompt, String{},
-                 [](const Regex& ex, PromptEvent event, Context& context) {
-        if (ex.empty() or event == PromptEvent::Abort)
-            return;
-        const Buffer& buffer = context.buffer();
+    constexpr StringView prompt = matching ? "keep matching:" : "keep not matching:";
 
+    const char reg = to_lower(params.reg ? params.reg : '/');
+    auto saved_reg = RegisterManager::instance()[reg].get(context) | gather<Vector<String>>();
+    const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
+
+    regex_prompt(context, prompt.str(), saved_reg[main_index],
+                 [saved_reg, reg, main_index]
+                 (const Regex& regex, PromptEvent event, Context& context) {
+
+        if (event == PromptEvent::Abort)
+        {
+            RegisterManager::instance()[reg].set(context, saved_reg);
+            return;
+        }
+        if (not context.history_disabled())
+            RegisterManager::instance()[reg].set(context, regex.str());
+
+        if (regex.empty() or regex.str().empty())
+            return;
+
+        const Buffer& buffer = context.buffer();
         Vector<Selection> keep;
         for (auto& sel : context.selections())
         {
@@ -1008,7 +1023,7 @@ void keep(Context& context, NormalParams)
                                            is_eow(buffer, end.coord()),
                                            true, true) |
                                RegexExecFlags::AnyMatch;
-            if (regex_search(begin, end, ex, flags) == matching)
+            if (regex_search(begin, end, regex, flags) == matching)
                 keep.push_back(sel);
         }
         if (keep.empty())

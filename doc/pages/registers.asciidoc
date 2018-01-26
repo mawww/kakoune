@@ -29,8 +29,8 @@ Most commands using a register default to a specific one if not specified:
     and *R*
 
 */* (slash)::
-    default search register, used by regex based commands like *s*, ***
-    or */*
+    default search register, used by regex based commands like *s*, ***,
+    */* or *<a-k>*.
 
 *@* (arobase)::
     default macro register, used by *q* and *Q*
