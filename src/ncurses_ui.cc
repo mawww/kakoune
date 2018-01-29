@@ -270,7 +270,6 @@ NCursesUI::NCursesUI()
     enable_mouse(true);
 
     set_signal_handler(SIGWINCH, on_term_resize);
-    set_signal_handler(SIGCONT, on_term_resize);
 
     check_resize(true);
 
@@ -592,7 +591,13 @@ Optional<Key> NCursesUI::get_next_key()
                 return {Key::Backspace};
             if (c == control('z'))
             {
-                raise(SIGTSTP);
+                bool mouse_enabled = m_mouse_enabled;
+                enable_mouse(false);
+
+                raise(SIGTSTP); // We suspend at this line
+
+                check_resize(true);
+                enable_mouse(mouse_enabled);
                 return {};
             }
             return ctrl(Codepoint(c) - 1 + 'a');
