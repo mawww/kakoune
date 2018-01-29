@@ -11,7 +11,7 @@ hook global BufCreate .*(([.](rb))|(irbrc)|(pryrc)|(Capfile|[.]cap)|(Gemfile)|(G
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code ruby       \
+add-highlighter shared/ regions -default code -match-capture ruby       \
     double_string '"' (?<!\\)(\\\\)*"        '' \
     single_string "'" (?<!\\)(\\\\)*'        '' \
     backtick      '`' (?<!\\)(\\\\)*`        '' \
@@ -22,6 +22,7 @@ add-highlighter shared/ regions -default code ruby       \
     literal       '%[iqrswxIQRSWX]\{' \}     \{ \
     literal       '%[iqrswxIQRSWX]\[' \]     \[ \
     literal       '%[iqrswxIQRSWX]<'   >      < \
+    heredoc '<<-?(\w+)'         '^\h*(\w+)$' '' \
     division '[\w\)\]](/|(\h+/\h+))' '\w' '' # Help Kakoune to better detect /…/ literals
 
 # Regular expression flags are: i → ignore case, m → multi-lines, o → only interpolate #{} blocks once, x → extended mode (ignore white spaces)
@@ -32,6 +33,7 @@ add-highlighter shared/ruby/double_string regions regions interpolation \Q#{ \} 
 add-highlighter shared/ruby/double_string/regions/interpolation fill meta
 
 add-highlighter shared/ruby/single_string fill string
+add-highlighter shared/ruby/heredoc fill string
 
 add-highlighter shared/ruby/backtick fill meta
 add-highlighter shared/ruby/backtick regions regions interpolation \Q#{ \} \{
