@@ -47,7 +47,8 @@ static const char* startup_info =
 " * Regex implementation switched to a custom one, the syntax is slightly\n"
 "   less tolerant.\n"
 " * ModeChange hook has been introduced and is expected to replace\n"
-"   the various ${MODE}Begin/${MODE}End hooks, consider those deprecated.\n";
+"   the various ${MODE}Begin/${MODE}End hooks, consider those deprecated.\n"
+" * '*' Does not strip whitespaces anymore\n";
 
 struct startup_error : runtime_error
 {
