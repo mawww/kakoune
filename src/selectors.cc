@@ -230,9 +230,9 @@ select_matching(const Context& context, const Selection& selection)
     auto& matching_pairs = context.options()["matching_pairs"].get<Vector<Codepoint, MemoryDomain::Options>>();
     Utf8Iterator it{buffer.iterator_at(selection.cursor()), buffer};
     auto match = matching_pairs.end();
-    while (not is_eol(*it))
+    while (it != buffer.end())
     {
-        match = std::find(matching_pairs.begin(), matching_pairs.end(), *it);
+        match = find(matching_pairs, *it);
         if (match != matching_pairs.end())
             break;
         ++it;
