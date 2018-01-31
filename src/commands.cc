@@ -1208,6 +1208,10 @@ const CommandDesc source_cmd = {
     filename_completer,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
+        const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
+        const bool profile = debug_flags & DebugFlags::Profile;
+        auto start_time = profile ? Clock::now() : Clock::time_point{};
+
         String path = real_path(parse_filename(parser[0]));
         String file_content = read_file(path, true);
         try
@@ -1220,6 +1224,11 @@ const CommandDesc source_cmd = {
             write_to_debug_buffer(format("{}:{}", parser[0], err.what()));
             throw;
         }
+
+        using namespace std::chrono;
+        if (profile)
+            write_to_debug_buffer(format("sourcing '{}' took {} us", parser[0],
+                                         (size_t)duration_cast<microseconds>(Clock::now() - start_time).count()));
     }
 };
 
