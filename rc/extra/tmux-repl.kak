@@ -5,9 +5,10 @@ hook global KakBegin .* %{
     %sh{
         if [ -n "$TMUX" ]; then
             VERSION_TMUX=$(tmux -V)
-            VERSION_TMUX=$(expr "${VERSION_TMUX}" : 'tmux \([0-9]*\).*')
+            VERSION_TMUX=$(expr "${VERSION_TMUX}" : 'tmux \([0-9]*\|master\)')
 
-            if [ "${VERSION_TMUX}" -gt 1 ]; then
+            if [ "${VERSION_TMUX}" = "master" ] \
+                || [ "${VERSION_TMUX}" -ge 2 ]; then
                 echo "
                     alias global repl tmux-repl-horizontal
                     alias global send-text tmux-send-text
