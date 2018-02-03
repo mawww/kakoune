@@ -49,51 +49,54 @@ namespace
 struct Reader
 {
 public:
-    Reader(StringView s) : str{s}, pos{}, coord{} {}
+    Reader(StringView s) : str{s}, pos{s.begin()}, line_start{s.begin()}, line{} {}
 
     [[gnu::always_inline]]
-    char operator*() const
+    Codepoint operator*() const
     {
-        kak_assert(pos < str.length());
-        return str[pos];
+        kak_assert(pos < str.end());
+        return utf8::codepoint(pos, str.end());
     }
 
     Reader& operator++()
     {
-        kak_assert(pos < str.length());
-        if (str[pos++] == '\n')
-        {
-            ++coord.line;
-            coord.column = 0;
-        }
-        else
-            ++coord.column;
+        kak_assert(pos < str.end());
+        if (*pos == '\n')
+            ++line;
+        utf8::to_next(pos, str.end());
         return *this;
     }
 
     [[gnu::always_inline]]
-    explicit operator bool() const { return pos < str.length(); }
+    explicit operator bool() const { return pos < str.end(); }
 
     [[gnu::always_inline]]
-    StringView substr_from(ByteCount start) const
+    StringView substr_from(const char* start) const
     {
         kak_assert(start <= pos);
-        return str.substr(start, pos - start);
+        return {start, pos};
     }
 
-    Optional<char> peek_next() const
+    Optional<Codepoint> peek_next() const
     {
-        if (pos+1 != str.length())
-            return str[pos+1];
+        auto next = utf8::next(pos, str.end());
+        if (next != str.end())
+            return utf8::codepoint(next, str.end());
         return {};
     }
 
+    DisplayCoord coord() const
+    {
+        return {line, utf8::column_distance(line_start, pos)};
+    }
+
     StringView str;
-    ByteCount pos;
-    DisplayCoord coord;
+    const char* pos;
+    const char* line_start;
+    LineCount line;
 };
 
-bool is_command_separator(char c)
+bool is_command_separator(Codepoint c)
 {
     return c == ';' or c == '\n';
 }
@@ -107,7 +110,7 @@ String get_until_delimiter(Reader& reader, Func is_delimiter)
 
     while (reader)
     {
-        const char c = *reader;
+        const Codepoint c = *reader;
         if (is_delimiter(c))
         {
             str += reader.substr_from(beg);
@@ -122,26 +125,27 @@ String get_until_delimiter(Reader& reader, Func is_delimiter)
         was_antislash = c == '\\';
         ++reader;
     }
-    if (beg < reader.str.length())
+    if (beg < reader.str.end())
         str += reader.substr_from(beg);
     return str;
 }
 
 [[gnu::always_inline]]
-inline String get_until_delimiter(Reader& reader, char c)
+inline String get_until_delimiter(Reader& reader, Codepoint c)
 {
-    return get_until_delimiter(reader, [c](char ch) { return c == ch; });
+    return get_until_delimiter(reader, [c](Codepoint ch) { return c == ch; });
 }
 
-StringView get_until_closing_delimiter(Reader& reader, char opening_delimiter,
-                                       char closing_delimiter)
+StringView get_until_closing_delimiter(Reader& reader, Codepoint opening_delimiter,
+                                       Codepoint closing_delimiter)
 {
-    kak_assert(reader.str[reader.pos-1] == opening_delimiter);
+    kak_assert(utf8::codepoint(utf8::previous(reader.pos, reader.str.begin()),
+                               reader.str.end()) == opening_delimiter);
     int level = 0;
     auto start = reader.pos;
     while (reader)
     {
-        const char c = *reader;
+        const Codepoint c = *reader;
         if (c == opening_delimiter)
             ++level;
         else if (c == closing_delimiter)
@@ -181,10 +185,10 @@ void skip_blanks_and_comments(Reader& reader)
 {
     while (reader)
     {
-        const char c = *reader;
+        const Codepoint c = *reader;
         if (is_horizontal_blank(c))
             ++reader;
-        else if (c == '\\' and reader.peek_next().value_or('\0') == '\n')
+        else if (c == '\\' and reader.peek_next().value_or((Codepoint)'\0') == '\n')
             ++(++reader);
         else if (c == '#')
         {
@@ -200,7 +204,7 @@ template<bool throw_on_unterminated>
 Token parse_percent_token(Reader& reader)
 {
     ++reader;
-    const ByteCount type_start = reader.pos;
+    const auto type_start = reader.pos;
     while (reader and isalpha(*reader))
         ++reader;
     StringView type_name = reader.substr_from(type_start);
@@ -215,21 +219,22 @@ Token parse_percent_token(Reader& reader)
 
     Token::Type type = token_type<throw_on_unterminated>(type_name);
 
-    constexpr struct CharPair { char opening; char closing; } matching_pairs[] = {
+    constexpr struct CharPair { Codepoint opening; Codepoint closing; } matching_pairs[] = {
         { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
     };
 
-    char opening_delimiter = *reader;
-    auto coord = reader.coord;
+    const Codepoint opening_delimiter = *reader;
+    auto coord = reader.coord();
     ++reader;
     auto start = reader.pos;
 
     auto it = find_if(matching_pairs, [opening_delimiter](const CharPair& cp)
                       { return opening_delimiter == cp.opening; });
 
+    const auto str_beg = reader.str.begin();
     if (it != std::end(matching_pairs))
     {
-        const char closing_delimiter = it->closing;
+        const Codepoint closing_delimiter = it->closing;
         auto token = get_until_closing_delimiter(reader, opening_delimiter,
                                                  closing_delimiter);
         if (throw_on_unterminated and not reader)
@@ -237,7 +242,7 @@ Token parse_percent_token(Reader& reader)
                                      coord.line, coord.column, type_name,
                                      opening_delimiter, closing_delimiter)};
 
-        return {type, start, reader.pos, coord, token.str()};
+        return {type, start - str_beg, reader.pos - str_beg, coord, token.str()};
     }
     else
     {
@@ -248,7 +253,7 @@ Token parse_percent_token(Reader& reader)
                                      coord.line, coord.column, type_name,
                                      opening_delimiter, opening_delimiter)};
 
-        return {type, start, reader.pos, coord, std::move(token)};
+        return {type, start - str_beg, reader.pos - str_beg, coord, std::move(token)};
     }
 }
 
@@ -321,10 +326,10 @@ TokenList parse(StringView line)
         if (not reader)
             break;
 
-        ByteCount start = reader.pos;
-        auto coord = reader.coord;
+        const char* start = reader.pos;
+        auto coord = reader.coord();
 
-        const char c = *reader;
+        const Codepoint c = *reader;
         if (c == '"' or c == '\'')
         {
             start = (++reader).pos;
@@ -333,24 +338,24 @@ TokenList parse(StringView line)
                 throw parse_error{format("unterminated string {0}...{0}", c)};
             result.push_back({c == '"' ? Token::Type::RawEval
                                          : Token::Type::RawQuoted,
-                              start, reader.pos, coord, std::move(token)});
+                              start - line.begin(), reader.pos - line.begin(), coord, std::move(token)});
         }
         else if (c == '%')
             result.push_back(
                 parse_percent_token<throw_on_unterminated>(reader));
         else
         {
-            String str = get_until_delimiter(reader, [](char c) {
+            String str = get_until_delimiter(reader, [](Codepoint c) {
                 return is_command_separator(c) or is_horizontal_blank(c);
             });
 
             if (not str.empty())
-                result.push_back({Token::Type::Raw, start, reader.pos,
+                result.push_back({Token::Type::Raw, start - line.begin(), reader.pos - line.begin(),
                                   coord, unescape(str, "%", '\\')});
 
             if (reader and is_command_separator(*reader))
                 result.push_back({Token::Type::CommandSeparator,
-                                  reader.pos, reader.pos+1, coord, {}});
+                                  reader.pos - line.begin(), utf8::next(reader.pos, line.end()) - line.begin(), coord, {}});
         }
 
         if (not reader)
@@ -367,10 +372,10 @@ String expand_impl(StringView str, const Context& context,
 {
     Reader reader{str};
     String res;
-    auto beg = 0_byte;
+    auto beg = str.begin();
     while (reader)
     {
-        char c = *reader;
+        Codepoint c = *reader;
         if (c == '\\')
         {
             c = *++reader;
