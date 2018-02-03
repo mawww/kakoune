@@ -54,6 +54,10 @@ else ifneq (,$(findstring CYGWIN,$(os)))
     CPPFLAGS += -D_XOPEN_SOURCE=700
     LIBS += -lncursesw -ldbghelp
 else
+    ifeq ($(PKG_CONFIG),)
+    	$(error "pkg-config not found in PATH")
+    endif
+
     LIBS += $(shell $(PKG_CONFIG) --libs ncursesw)
     CPPFLAGS += $(shell $(PKG_CONFIG) --cflags ncursesw)
     LDFLAGS += -rdynamic
@@ -66,12 +70,7 @@ endif
 
 CXXFLAGS += -pedantic -std=gnu++14 -g -Wall -Wextra -Wno-unused-parameter -Wno-reorder -Wno-sign-compare -Wno-address -Wno-noexcept-type -Wno-unknown-attributes -Wno-unknown-warning-option
 
-all : check_pkg_config kak
-
-check_pkg_config:
-ifeq ($(PKG_CONFIG),)
-	$(error "pkg-config not found in PATH")
-endif
+all : kak
 
 kak : kak$(suffix)
 	ln -sf $< $@
