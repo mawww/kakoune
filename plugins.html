@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Kakoune - Official site</title>
+
+        <meta name="description" content="The official website of Kakoune, a selection-first modal code editor">
+        <meta name="author" content="@lenormf">
+        <link rel="icon" type="image/png" href="img/favicon16.png">
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="css/font-gafata.css">
+        <link rel="stylesheet" href="css/default.css">
+
+        <style>
+            body {
+                padding-top: 65px;
+            }
+
+            .media .media-object {
+                width: 64px;
+                height: 64px;
+                border: 1px solid #EEE;
+            }
+
+            .panel {
+                box-shadow: 0 1px 2px #DDD;
+            }
+
+            @media only screen and (min-width: 1280px) {
+                #pluginsList > .col-lg-4:nth-child(3n+1) {
+                    clear: both;
+                }
+            }
+
+            @media only screen and (max-width: 1279px) {
+                #pluginsList > .col-md-6:nth-child(2n+1) {
+                    clear: both;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/">
+                        <img alt="kakoune logo" src="img/kakoune_logo_32.png">
+                    </a>
+                    <p class="navbar-text"><b>Kakoune</b></p>
+                </div>
+
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li><a href="https://github.com/mawww/kakoune#2-getting-started"><i class="fa fa-fw fa-flag"></i>&nbsp;Get started!</a></li>
+                        <li><a href="https://github.com/mawww/kakoune/blob/master/README.asciidoc#3-basic-interaction"><i class="fa fa-fw fa-list-alt"></i>&nbsp;Documentation</a></li>
+                        <li><a href="https://github.com/mawww/kakoune/issues"><i class="fa fa-fw fa-bug"></i>&nbsp;Issue Tracker</a></li>
+                        <li><a href="https://github.com/mawww/kakoune/wiki"><i class="fa fa-fw fa-group"></i>&nbsp;Wiki</a></li>
+                        <li><a href="https://github.com/mawww/kakoune/blob/master/doc/design.asciidoc"><i class="fa fa-fw fa-book"></i>&nbsp;Design Notes</a></li>
+                        <li><a href="gallery.html"><i class="fa fa-fw fa-camera"></i>&nbsp;Gallery</a></li>
+                        <li><a href="plugins.html"><i class="fa fa-fw fa-plug"></i>&nbsp;Plugins</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+
+                <strong>Warning!</strong> The following plugins are fetched from <a href="https://github.com/">Github</a> automatically, and have not necessarily been reviewed or approved by Kakoune developers. Use them at your own risks!
+            </div>
+
+            <div class="row-fluid" id="pluginsList">
+            </div>
+
+            <div class="row-fluid">
+                <div id="footer" class="col-sm-8 col-sm-offset-2">
+                    2012-2018 · <a href="https://github.com/mawww/kakoune"><i>kakoune</i></a>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="vendor/jquery-template/1.5.10/jquery.loadTemplate.min.js"></script>
+        <script type="text/javascript" src="js/app.js"></script>
+
+        <script type="text/html" id="pluginTmpl">
+            <div class="col-sm-12 col-lg-4 col-md-6">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="media">
+                            <div class="media-left">
+                                <a data-href="owner.profile_url">
+                                    <img class="media-object" data-src="owner.avatar_url" data-alt="owner.username">
+                                </a>
+                            </div>
+
+                            <div class="media-body">
+                                <h4 class="media-heading">
+                                    <a data-href="plugin.repository_url" data-content="plugin.name"></a>
+
+                                    <small class="pull-right">
+                                        <i class="fa fa-fw fa-star"></i>
+                                        <span data-content="plugin.stars"></span>
+                                    </small>
+                                </h4>
+
+                                <span data-content="plugin.description"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </script>
+        <script>
+            $(document).ready(function () {
+                function escapeHtml(str) {
+                    var e = document.createElement("span");
+
+                    e.appendChild(document.createTextNode(str));
+
+                    return e.innerHTML;
+                }
+
+                const URL_ENDPOINT = "https://api.github.com/search/repositories";
+                const DATA_ENDPOINT = { q: "topic:kakoune" };
+
+                $.getJSON(URL_ENDPOINT, DATA_ENDPOINT)
+                    .done(function (data) {
+                        if ("items" in data) {
+                            var pluginTmpl = $("#pluginTmpl"),
+                                pluginsList = $("#pluginsList"),
+                                pluginsContext = [];
+
+                            $.each(data.items, function (_, e) {
+                                pluginsContext.push({
+                                    owner: {
+                                        username: escapeHtml(e.owner.login),
+                                        profile_url: escapeHtml(e.owner.html_url),
+                                        avatar_url: escapeHtml(e.owner.avatar_url),
+                                    },
+                                    plugin: {
+                                        name: escapeHtml(e.name),
+                                        stars: escapeHtml(e.stargazers_count),
+                                        repository_url: escapeHtml(e.html_url),
+                                        description: escapeHtml(e.description),
+                                    },
+                                });
+                            });
+
+                            pluginsList.loadTemplate(pluginTmpl, pluginsContext, {
+                                append: true,
+                                isFile: false,
+                            });
+                        } else {
+                            alert("Corrupted data received by the endpoint, check the console log");
+                            console.log(data);
+                        }
+                    })
+                    .fail(function (_, __, error) {
+                        alert("Unable to fetch plugin list: " + error);
+                    });
+            });
+        </script>
+    </body>
+</html>
