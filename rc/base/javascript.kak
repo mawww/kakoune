@@ -1,40 +1,13 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](js) %{
+hook global BufCreate .*[.](js)x? %{
     set-option buffer filetype javascript
 }
 
-# Highlighters
-# ‾‾‾‾‾‾‾‾‾‾‾‾
-
-add-highlighter shared/ regions -default code javascript \
-    double_string '"'  (?<!\\)(\\\\)*"         '' \
-    single_string "'"  (?<!\\)(\\\\)*'         '' \
-    literal       "`"  (?<!\\)(\\\\)*`         '' \
-    comment       //   '$'                     '' \
-    comment       /\*  \*/                     '' \
-    regex         /    (?<!\\)(\\\\)*/[gimuy]* '' \
-    division '[\w\)\]](/|(\h+/\h+))' '\w' '' # Help Kakoune to better detect /…/ literals
-
-# Regular expression flags are: g → global match, i → ignore case, m → multi-lines, u → unicode, y → sticky
-# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
-
-add-highlighter shared/javascript/double_string fill string
-add-highlighter shared/javascript/single_string fill string
-add-highlighter shared/javascript/regex         fill meta
-add-highlighter shared/javascript/comment       fill comment
-add-highlighter shared/javascript/literal       fill string
-add-highlighter shared/javascript/literal       regex \$\{.*?\} 0:value
-
-add-highlighter shared/javascript/code regex \$\w* 0:variable
-add-highlighter shared/javascript/code regex \b(document|false|null|parent|self|this|true|undefined|window)\b 0:value
-add-highlighter shared/javascript/code regex "-?[0-9]*\.?[0-9]+" 0:value
-add-highlighter shared/javascript/code regex \b(Array|Boolean|Date|Function|Number|Object|RegExp|String|Symbol)\b 0:type
-
-# Keywords are collected at
-# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
-add-highlighter shared/javascript/code regex \b(async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|let|new|of|return|static|super|switch|throw|try|typeof|var|void|while|with|yield)\b 0:keyword
+hook global BufCreate .*[.](ts)x? %{
+    set-option buffer filetype typescript
+}
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -64,20 +37,92 @@ define-command -hidden javascript-indent-on-new-line %<
     >
 >
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+# Highlighting and hooks bulder for JavaScript and TypeScript
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+define-command -hidden init-javascript-filetype -params 1 %~
+    # Highlighters
+    # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group javascript-highlight global WinSetOption filetype=javascript %{ add-highlighter window ref javascript }
+    add-highlighter shared/ regions -default code %arg{1} \
+        double_string '"'  (?<!\\)(\\\\)*"         '' \
+        single_string "'"  (?<!\\)(\\\\)*'         '' \
+        literal       "`"  (?<!\\)(\\\\)*`         '' \
+        comment       //   '$'                     '' \
+        comment       /\*  \*/                     '' \
+        regex         /    (?<!\\)(\\\\)*/[gimuy]* '' \
+        jsx           (?<![\w<])<[a-zA-Z][\w:.-]*(?!\hextends)(?=[\s/>])(?!>\()) (</.*?>|/>) (?<![\w<])<[a-zA-Z][\w:.-]* \
+        division '[\w\)\]](/|(\h+/\h+))' '(?=\w)' '' # Help Kakoune to better detect /…/ literals
 
-hook global WinSetOption filetype=javascript %{
-    hook window ModeChange insert:.* -group javascript-hooks  javascript-filter-around-selections
-    hook window InsertChar .* -group javascript-indent javascript-indent-on-char
-    hook window InsertChar \n -group javascript-indent javascript-indent-on-new-line
-}
+    # Regular expression flags are: g → global match, i → ignore case, m → multi-lines, u → unicode, y → sticky
+    # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
 
-hook -group javascript-highlight global WinSetOption filetype=(?!javascript).* %{ remove-highlighter window/javascript }
+    add-highlighter "shared/%arg{1}/double_string" fill string
+    add-highlighter "shared/%arg{1}/single_string" fill string
+    add-highlighter "shared/%arg{1}/regex"         fill meta
+    add-highlighter "shared/%arg{1}/comment"       fill comment
 
-hook global WinSetOption filetype=(?!javascript).* %{
-    remove-hooks window javascript-indent
-    remove-hooks window javascript-hooks
-}
+    add-highlighter "shared/%arg{1}/literal"       fill string
+    add-highlighter "shared/%arg{1}/literal"       regex \$\{.*?\} 0:value
+
+    add-highlighter "shared/%arg{1}/code" regex \$\w* 0:variable
+    add-highlighter "shared/%arg{1}/code" regex \b(document|false|null|parent|self|this|true|undefined|window)\b 0:value
+    add-highlighter "shared/%arg{1}/code" regex "-?\b[0-9]*\.?[0-9]+" 0:value
+    add-highlighter "shared/%arg{1}/code" regex \b(Array|Boolean|Date|Function|Number|Object|RegExp|String|Symbol)\b 0:type
+
+    # jsx: In well-formed xml the number of opening and closing tags match up regardless of tag name.
+    #
+    # We inline a small XML highlighter here since it anyway need to recurse back up to the starting highlighter.
+    # To make things simple we assume that jsx is always enabled.
+
+    add-highlighter "shared/%arg{1}/jsx" regions content \
+        tag     <(?=[/a-zA-Z]) (?<!=)> <  \
+        expr    \{             \}      \{
+
+    add-highlighter "shared/%arg{1}/jsx/content/expr" ref %arg{1}
+
+    add-highlighter "shared/%arg{1}/jsx/content/tag" regex (\w+) 1:attribute
+
+    add-highlighter "shared/%arg{1}/jsx/content/tag" regex </?([\w-$]+) 1:keyword
+    add-highlighter "shared/%arg{1}/jsx/content/tag" regex (</?|/?>) 0:meta
+
+    add-highlighter "shared/%arg{1}/jsx/content/tag" regions content \
+        string =\K" (?<!\\)(\\\\)*" '' \
+        string =\K' (?<!\\)(\\\\)*' '' \
+        expr   \{   \}              \{
+
+    add-highlighter "shared/%arg{1}/jsx/content/tag/content/string" fill string
+    add-highlighter "shared/%arg{1}/jsx/content/tag/content/expr"   fill default,default+e
+    add-highlighter "shared/%arg{1}/jsx/content/tag/content/expr"   ref %arg{1}
+
+    # Keywords are collected at
+    # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
+    add-highlighter "shared/%arg{1}/code" regex \b(async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|let|new|of|return|static|super|switch|throw|try|typeof|var|void|while|with|yield)\b 0:keyword
+
+    # Initialization
+    # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+    hook -group "%arg{1}-highlight" global WinSetOption "filetype=%arg{1}" "add-highlighter window ref %arg{1}"
+
+    hook global WinSetOption "filetype=%arg{1}" "
+        hook window ModeChange insert:.* -group %arg{1}-hooks  javascript-filter-around-selections
+        hook window InsertChar .* -group %arg{1}-indent javascript-indent-on-char
+        hook window InsertChar \n -group %arg{1}-indent javascript-indent-on-new-line
+    "
+
+    hook -group "%arg{1}-highlight" global WinSetOption "filetype=(?!%arg{1}).*" "remove-highlighter window/%arg{1}"
+
+    hook global WinSetOption "filetype=(?!%arg{1}).*" "
+        remove-hooks window %arg{1}-indent
+        remove-hooks window %arg{1}-hooks
+    "
+~
+
+init-javascript-filetype javascript
+init-javascript-filetype typescript
+
+# Highlighting specific to TypeScript
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+add-highlighter shared/typescript/code regex \b(array|boolean|date|number|object|regexp|string|symbol)\b 0:type
+
+# Keywords grabbed from https://github.com/Microsoft/TypeScript/issues/2536
+add-highlighter shared/typescript/code regex \b(as|constructor|declare|enum|from|implements|interface|module|namespace|package|private|protected|public|readonly|static|type)\b 0:keyword
