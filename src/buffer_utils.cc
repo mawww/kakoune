@@ -86,6 +86,7 @@ void reload_file_buffer(Buffer& buffer)
     kak_assert(buffer.flags() & Buffer::Flags::File);
     MappedFile file_data{buffer.name()};
     buffer.reload(file_data, file_data.st.st_mtim);
+    buffer.flags() &= ~Buffer::Flags::New;
 }
 
 Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll)
