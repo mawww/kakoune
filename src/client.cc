@@ -274,9 +274,18 @@ void Client::force_redraw()
 void Client::reload_buffer()
 {
     Buffer& buffer = context().buffer();
-    reload_file_buffer(buffer);
-    context().print_status({ format("'{}' reloaded", buffer.display_name()),
-                             get_face("Information") });
+    try
+    {
+        reload_file_buffer(buffer);
+        context().print_status({ format("'{}' reloaded", buffer.display_name()),
+                                 get_face("Information") });
+    }
+    catch (runtime_error& error)
+    {
+        context().print_status({ format("error while reloading buffer: '{}'", error.what()),
+                                 get_face("Error") });
+        buffer.set_fs_timestamp(get_fs_timestamp(buffer.name()));
+    }
 }
 
 void Client::on_buffer_reload_key(Key key)
