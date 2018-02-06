@@ -205,7 +205,7 @@ Token parse_percent_token(Reader& reader)
 {
     ++reader;
     const auto type_start = reader.pos;
-    while (reader and isalpha(*reader))
+    while (reader and iswalpha(*reader))
         ++reader;
     StringView type_name = reader.substr_from(type_start);
 
