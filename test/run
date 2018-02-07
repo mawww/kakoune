@@ -47,7 +47,7 @@ main() {
       [ -f $file ] && cp $file $work/$dir/
     done
     cd $work/$dir;
-    indent="$(echo "$dir/" | sed -e 's|[^/]*/\+|  |g')"
+    indent="$(echo "$dir/" | sed -e 's|[^/]*//*|  |g')"
     name=${PWD##*/}
     if [ ! -f cmd ]; then
       echo "$indent$name"
