@@ -69,9 +69,9 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                             END {
                                 for (id in docstrings) {
                                     menu=id
-                                    gsub(/(^|[^[:alnum:]_])(operator|new|delete)($|[^[:alnum:]{}_]+)/, "{keyword}&{}", menu)
+                                    gsub(/(^|[^[:alnum:]_])(operator|new|delete)($|[^{}_[:alnum:]]+)/, "{keyword}&{}", menu)
                                     gsub(/(^|[[:space:]])(int|size_t|bool|char|unsigned|signed|long)($|[[:space:]])/, "{type}&{}", menu)
-                                    gsub(/[^[:alnum:]{}_]+/, "{operator}&{}", menu)
+                                    gsub(/[^{}_[:alnum:]]+/, "{operator}&{}", menu)
                                     print id  "|" docstrings[id] "|" menu
                                 }
                             }' | paste -s -d ':' - | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
