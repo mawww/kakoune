@@ -54,7 +54,7 @@ add-highlighter shared/ruby/code regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|(
     # Keywords are collected searching for keywords at
     # https://github.com/ruby/ruby/blob/trunk/parse.y
     keywords="alias|and|begin|break|case|class|def|defined|do|else|elsif|end"
-    keywords="${keywords}|ensure|false|for|if|in|module|next|nil|not|or|redo"
+    keywords="${keywords}|ensure|false|for|if|in|module|next|nil|not|or|private|protected|public|redo"
     keywords="${keywords}|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield"
     attributes="attr_reader|attr_writer|attr_accessor"
     values="false|true|nil"
