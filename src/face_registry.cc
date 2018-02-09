@@ -71,7 +71,7 @@ String to_string(Face face)
     return format("{},{}{}", face.fg, face.bg, face.attributes);
 }
 
-Face FaceRegistry::operator[](const String& facedesc)
+Face FaceRegistry::operator[](StringView facedesc)
 {
     auto it = m_aliases.find(facedesc);
     while (it != m_aliases.end())
@@ -83,7 +83,7 @@ Face FaceRegistry::operator[](const String& facedesc)
     return parse_face(facedesc);
 }
 
-void FaceRegistry::register_alias(const String& name, const String& facedesc,
+void FaceRegistry::register_alias(StringView name, StringView facedesc,
                                   bool override)
 {
     if (not override and m_aliases.find(name) != m_aliases.end())
@@ -110,7 +110,7 @@ void FaceRegistry::register_alias(const String& name, const String& facedesc,
             it = m_aliases.find(it->value.alias);
         }
 
-        alias.alias = facedesc;
+        alias.alias = facedesc.str();
     }
     else
     {

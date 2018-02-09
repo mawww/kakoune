@@ -14,8 +14,8 @@ class FaceRegistry : public Singleton<FaceRegistry>
 public:
     FaceRegistry();
 
-    Face operator[](const String& facedesc);
-    void register_alias(const String& name, const String& facedesc,
+    Face operator[](StringView facedesc);
+    void register_alias(StringView name, StringView facedesc,
                         bool override = false);
 
     CandidateList complete_alias_name(StringView prefix,
@@ -34,7 +34,7 @@ private:
     AliasMap m_aliases;
 };
 
-inline Face get_face(const String& facedesc)
+inline Face get_face(StringView facedesc)
 {
     if (FaceRegistry::has_instance())
         return FaceRegistry::instance()[facedesc];
