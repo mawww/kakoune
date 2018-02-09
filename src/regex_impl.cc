@@ -87,38 +87,46 @@ struct ParsedRegex
 
 namespace
 {
-template<typename Func>
-bool for_each_child(const ParsedRegex& parsed_regex, ParsedRegex::NodeIndex index, Func&& func)
+template<MatchDirection = MatchDirection::Forward>
+struct ForEachChild
 {
-    const auto end = parsed_regex.nodes[index].children_end;
-    for (auto child = index+1; child != end;
-         child = parsed_regex.nodes[child].children_end)
+    template<typename Func>
+    static bool apply(const ParsedRegex& parsed_regex, ParsedRegex::NodeIndex index, Func&& func)
     {
-        if (func(child) == false)
-            return false;
+        const auto end = parsed_regex.nodes[index].children_end;
+        for (auto child = index+1; child != end;
+             child = parsed_regex.nodes[child].children_end)
+        {
+            if (func(child) == false)
+                return false;
+        }
+        return true;
     }
-    return true;
-}
+};
 
-template<typename Func>
-bool for_each_child_reverse(const ParsedRegex& parsed_regex, ParsedRegex::NodeIndex index, Func&& func)
+template<>
+struct ForEachChild<MatchDirection::Backward>
 {
-    auto find_last_child = [&](ParsedRegex::NodeIndex begin, ParsedRegex::NodeIndex end) {
-        while (parsed_regex.nodes[begin].children_end != end)
-            begin = parsed_regex.nodes[begin].children_end;
-        return begin;
-    };
-    const auto first_child = index+1;
-    auto end = parsed_regex.nodes[index].children_end;
-    while (end != first_child)
+    template<typename Func>
+    static bool apply(const ParsedRegex& parsed_regex, ParsedRegex::NodeIndex index, Func&& func)
     {
-        auto child = find_last_child(first_child, end);
-        if (func(child) == false)
-            return false;
-        end = child;
+        auto find_last_child = [&](ParsedRegex::NodeIndex begin, ParsedRegex::NodeIndex end) {
+            while (parsed_regex.nodes[begin].children_end != end)
+                begin = parsed_regex.nodes[begin].children_end;
+            return begin;
+        };
+        const auto first_child = index+1;
+        auto end = parsed_regex.nodes[index].children_end;
+        while (end != first_child)
+        {
+            auto child = find_last_child(first_child, end);
+            if (func(child) == false)
+                return false;
+            end = child;
+        }
+        return true;
     }
-    return true;
-}
+};
 }
 
 // Recursive descent parser based on naming used in the ECMAScript
@@ -573,7 +581,7 @@ private:
 
     void validate_lookaround(NodeIndex index)
     {
-        for_each_child(m_parsed_regex, index, [this](NodeIndex child_index) {
+        ForEachChild<>::apply(m_parsed_regex, index, [this](NodeIndex child_index) {
             auto& child = get_node(child_index);
             if (child.op != ParsedRegex::Literal and child.op != ParsedRegex::Class and
                 child.op != ParsedRegex::CharacterType and child.op != ParsedRegex::AnyChar)
@@ -627,18 +635,18 @@ struct RegexCompiler
 
         if (not (flags & RegexCompileFlags::NoForward))
         {
-            m_program.forward_start_desc = compute_start_desc(true);
+            m_program.forward_start_desc = compute_start_desc<MatchDirection::Forward>();
             write_search_prefix();
-            compile_node(0, true);
+            compile_node<MatchDirection::Forward>(0);
             push_inst(CompiledRegex::Match);
         }
 
         if (flags & RegexCompileFlags::Backward)
         {
             m_program.first_backward_inst = m_program.instructions.size();
-            m_program.backward_start_desc = compute_start_desc(false);
+            m_program.backward_start_desc = compute_start_desc<MatchDirection::Backward>();
             write_search_prefix();
-            compile_node(0, false);
+            compile_node<MatchDirection::Backward>(0);
             push_inst(CompiledRegex::Match);
         }
         else
@@ -652,7 +660,8 @@ struct RegexCompiler
 
 private:
 
-    uint32_t compile_node_inner(ParsedRegex::NodeIndex index, bool forward)
+    template<MatchDirection direction>
+    uint32_t compile_node_inner(ParsedRegex::NodeIndex index)
     {
         auto& node = get_node(index);
 
@@ -661,6 +670,7 @@ private:
 
         const bool save = (node.op == ParsedRegex::Alternation or node.op == ParsedRegex::Sequence) and
                           (node.value == 0 or (node.value != -1 and not (m_flags & RegexCompileFlags::NoSubs)));
+        constexpr bool forward = direction == MatchDirection::Forward;
         if (save)
             push_inst(CompiledRegex::Save, node.value * 2 + (forward ? 0 : 1));
 
@@ -684,28 +694,23 @@ private:
                 break;
             case ParsedRegex::Sequence:
             {
-                if (forward)
-                    for_each_child(m_parsed_regex, index, [this](ParsedRegex::NodeIndex child) {
-                        compile_node(child, true); return true;
-                    });
-                else
-                    for_each_child_reverse(m_parsed_regex, index, [this](ParsedRegex::NodeIndex  child) {
-                        compile_node(child, false); return true;
-                    });
+                ForEachChild<direction>::apply(m_parsed_regex, index, [this](ParsedRegex::NodeIndex child) {
+                    compile_node<direction>(child); return true;
+                });
                 break;
             }
             case ParsedRegex::Alternation:
             {
                 auto split_pos = m_program.instructions.size();
-                for_each_child(m_parsed_regex, index, [this, index](ParsedRegex::NodeIndex child) {
+                ForEachChild<>::apply(m_parsed_regex, index, [this, index](ParsedRegex::NodeIndex child) {
                     if (child != index+1)
                         push_inst(CompiledRegex::Split_PrioritizeParent);
                     return true;
                 });
 
-                for_each_child(m_parsed_regex, index,
-                                  [&, end = node.children_end](ParsedRegex::NodeIndex  child) {
-                    auto node = compile_node(child, forward);
+                ForEachChild<>::apply(m_parsed_regex, index,
+                                      [&, end = node.children_end](ParsedRegex::NodeIndex  child) {
+                    auto node = compile_node<direction>(child);
                     if (child != index+1)
                         m_program.instructions[split_pos++].param = node;
                     if (get_node(child).children_end != end)
@@ -722,28 +727,28 @@ private:
                                                  : CompiledRegex::LookAhead)
                                   : (ignore_case ? CompiledRegex::LookBehind_IgnoreCase
                                                  : CompiledRegex::LookBehind),
-                          push_lookaround(index, false, ignore_case));
+                          push_lookaround<MatchDirection::Forward>(index, ignore_case));
                 break;
             case ParsedRegex::NegativeLookAhead:
                 push_inst(forward ? (ignore_case ? CompiledRegex::NegativeLookAhead_IgnoreCase
                                                  : CompiledRegex::NegativeLookAhead)
                                   : (ignore_case ? CompiledRegex::NegativeLookBehind_IgnoreCase
                                                  : CompiledRegex::NegativeLookBehind),
-                          push_lookaround(index, false, ignore_case));
+                          push_lookaround<MatchDirection::Forward>(index, ignore_case));
                 break;
             case ParsedRegex::LookBehind:
                 push_inst(forward ? (ignore_case ? CompiledRegex::LookBehind_IgnoreCase
                                                  : CompiledRegex::LookBehind)
                                   : (ignore_case ? CompiledRegex::LookAhead_IgnoreCase
                                                  : CompiledRegex::LookAhead),
-                          push_lookaround(index, true, ignore_case));
+                          push_lookaround<MatchDirection::Backward>(index, ignore_case));
                 break;
             case ParsedRegex::NegativeLookBehind:
                 push_inst(forward ? (ignore_case ? CompiledRegex::NegativeLookBehind_IgnoreCase
                                                  : CompiledRegex::NegativeLookBehind)
                                   : (ignore_case ? CompiledRegex::NegativeLookAhead_IgnoreCase
                                                  : CompiledRegex::NegativeLookAhead),
-                          push_lookaround(index, true, ignore_case));
+                          push_lookaround<MatchDirection::Backward>(index, ignore_case));
                 break;
             case ParsedRegex::LineStart:
                 push_inst(forward ? CompiledRegex::LineStart
@@ -781,7 +786,8 @@ private:
         return start_pos;
     }
 
-    uint32_t compile_node(ParsedRegex::NodeIndex index, bool forward)
+    template<MatchDirection direction>
+    uint32_t compile_node(ParsedRegex::NodeIndex index)
     {
         auto& node = get_node(index);
 
@@ -799,10 +805,10 @@ private:
             goto_ends.push_back(split_pos);
         }
 
-        auto inner_pos = compile_node_inner(index, forward);
+        auto inner_pos = compile_node_inner<direction>(index);
         // Write the node multiple times when we have a min count quantifier
         for (int i = 1; i < quantifier.min; ++i)
-            inner_pos = compile_node_inner(index, forward);
+            inner_pos = compile_node_inner<direction>(index);
 
         if (quantifier.allows_infinite_repeat())
             push_inst(quantifier.greedy ? CompiledRegex::Split_PrioritizeChild
@@ -816,7 +822,7 @@ private:
             auto split_pos = push_inst(quantifier.greedy ? CompiledRegex::Split_PrioritizeParent
                                                          : CompiledRegex::Split_PrioritizeChild);
             goto_ends.push_back(split_pos);
-            compile_node_inner(index, forward);
+            compile_node_inner<direction>(index);
         }
 
         for (auto offset : goto_ends)
@@ -845,7 +851,8 @@ private:
         return res;
     }
 
-    uint32_t push_lookaround(ParsedRegex::NodeIndex index, bool reversed, bool ignore_case)
+    template<MatchDirection direction>
+    uint32_t push_lookaround(ParsedRegex::NodeIndex index, bool ignore_case)
     {
         uint32_t res = m_program.lookarounds.size();
         auto write_matcher = [this, ignore_case](ParsedRegex::NodeIndex  child) {
@@ -864,10 +871,7 @@ private:
                 return true;
         };
 
-        if (reversed)
-            for_each_child_reverse(m_parsed_regex, index, write_matcher);
-        else
-            for_each_child(m_parsed_regex, index, write_matcher);
+        ForEachChild<direction>::apply(m_parsed_regex, index, write_matcher);
 
         m_program.lookarounds.push_back((Codepoint)-1);
         return res;
@@ -876,8 +880,9 @@ private:
     // Fills accepted and rejected according to which chars can start the given node,
     // returns true if the node did not consume the char, hence a following node in
     // sequence would be still relevant for the parent node start chars computation.
+    template<MatchDirection direction>
     bool compute_start_desc(ParsedRegex::NodeIndex index,
-                             CompiledRegex::StartDesc& start_desc, bool forward) const
+                             CompiledRegex::StartDesc& start_desc) const
     {
         auto& node = get_node(index);
         switch (node.op)
@@ -939,20 +944,17 @@ private:
             {
                 bool did_not_consume = false;
                 auto does_not_consume = [&, this](auto child) {
-                    return this->compute_start_desc(child, start_desc, forward);
+                    return this->compute_start_desc<direction>(child, start_desc);
                 };
-                if (forward)
-                    did_not_consume = for_each_child(m_parsed_regex, index, does_not_consume);
-                else
-                    did_not_consume = for_each_child_reverse(m_parsed_regex, index, does_not_consume);
+                did_not_consume = ForEachChild<direction>::apply(m_parsed_regex, index, does_not_consume);
 
                 return did_not_consume or node.quantifier.allows_none();
             }
             case ParsedRegex::Alternation:
             {
                 bool all_consumed = not node.quantifier.allows_none();
-                for_each_child(m_parsed_regex, index, [&](ParsedRegex::NodeIndex  child) {
-                    if (compute_start_desc(child, start_desc, forward))
+                ForEachChild<>::apply(m_parsed_regex, index, [&](ParsedRegex::NodeIndex  child) {
+                    if (compute_start_desc<direction>(child, start_desc))
                         all_consumed = false;
                     return true;
                 });
@@ -974,11 +976,12 @@ private:
         return false;
     }
 
+    template<MatchDirection direction>
     [[gnu::noinline]]
-    std::unique_ptr<CompiledRegex::StartDesc> compute_start_desc(bool forward) const
+    std::unique_ptr<CompiledRegex::StartDesc> compute_start_desc() const
     {
         CompiledRegex::StartDesc start_desc{};
-        if (compute_start_desc(0, start_desc, forward) or
+        if (compute_start_desc<direction>(0, start_desc) or
             not contains(start_desc.map, false))
             return nullptr;
 
