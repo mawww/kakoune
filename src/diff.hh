@@ -14,9 +14,12 @@
 namespace Kakoune
 {
 
+// A snake is an edit followed by a (possibly empty) diagonal
 struct Snake
 {
+    // The end points of the diagonal (x, y) -> (u, v)
     int x, y, u, v;
+    // the edit op, reverse op happen at the end of the diagonal
     enum Op { Add, Del, RevAdd, RevDel } op;
 };
 
@@ -77,22 +80,23 @@ Snake find_middle_snake(Iterator a, int N, Iterator b, int M,
 
     // We did not find a minimal path in less than max_D iterations, iterate one more time finding the best
     Snake best{};
+    auto score = [](const Snake& s) { return s.u + s.v; };
     for (int k1 = -max_D; k1 <= max_D; k1 += 2)
     {
         auto p = find_end_snake_of_further_reaching_dpath(a, N, b, M, V1, max_D, k1, eq);
         V1[k1] = p.u;
-        if ((delta % 2 != 0) and p.u + p.v >= best.u + best.v and p.u <= N and p.v <= M)
+        if ((delta % 2 != 0) and p.u <= N and p.v <= M and score(p) >= score(best))
             best = p;
     }
     for (int k2 = -max_D; k2 <= max_D; k2 += 2)
     {
         auto p = find_end_snake_of_further_reaching_dpath(ra, N, rb, M, V2, max_D, k2, eq);
         V2[k2] = p.u;
-        if ((delta % 2 == 0) and p.u + p.v >= best.u + best.v and p.u <= N and p.v <= M)
+        if ((delta % 2 == 0) and p.u <= N and p.v <= M and score(p) >= score(best))
             best = {p.x, p.y, p.u, p.v, (Snake::Op)(p.op + Snake::RevAdd)};
     }
 
-    if (best.op >= Snake::RevAdd)
+    if (best.op >= Snake::RevAdd) // reverse the snake now, as we were comparing snake length
         best = { N - best.u, M - best.v, N - best.x , M - best.y, best.op };
     return best;
 }
