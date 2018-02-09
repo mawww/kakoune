@@ -470,6 +470,16 @@ void command(Context& context, NormalParams params)
 
 void apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView after)
 {
+    // The diff algorithm is O(ND) with N the sum of string len, and D the diff count
+    // do not use it if our data is too big
+    constexpr ByteCount size_limit = 100 * 1024;
+    if (before.length() + after.length() > size_limit)
+    {
+        buffer.erase(pos, buffer.advance(pos, before.length()));
+        buffer.insert(pos, after);
+        return;
+    }
+
     auto diffs = find_diff(before.begin(), (int)before.length(), after.begin(), (int)after.length());
 
     for (auto& diff : diffs)
