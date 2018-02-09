@@ -85,9 +85,9 @@ public:
         return {};
     }
 
-    DisplayCoord coord() const
+    BufferCoord coord() const
     {
-        return {line, utf8::column_distance(line_start, pos)};
+        return {line, (int)(pos - line_start)};
     }
 
     StringView str;
@@ -432,7 +432,7 @@ CommandManager::find_command(const Context& context, StringView name) const
 void CommandManager::execute_single_command(CommandParameters params,
                                             Context& context,
                                             const ShellContext& shell_context,
-                                            DisplayCoord pos)
+                                            BufferCoord pos)
 {
     if (params.empty())
         return;
@@ -481,7 +481,7 @@ void CommandManager::execute(StringView command_line,
     // Tokens are going to be read as a stack
     std::reverse(tokens.begin(), tokens.end());
 
-    DisplayCoord command_coord;
+    BufferCoord command_coord;
     Vector<String> params;
     while (not tokens.empty())
     {

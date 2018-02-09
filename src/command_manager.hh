@@ -57,7 +57,7 @@ struct Token
     Type type;
     ByteCount begin;
     ByteCount end;
-    DisplayCoord coord;
+    BufferCoord coord;
     String content;
 };
 
@@ -99,7 +99,7 @@ private:
     void execute_single_command(CommandParameters params,
                                 Context& context,
                                 const ShellContext& shell_context,
-                                DisplayCoord pos);
+                                BufferCoord pos);
 
     struct Command
     {
