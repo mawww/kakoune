@@ -68,9 +68,7 @@ struct ParsedRegex
         };
     };
 
-    struct Node;
     using NodeIndex = uint16_t;
-
     struct Node
     {
         Op op;
