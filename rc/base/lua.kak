@@ -14,8 +14,8 @@ hook global BufCreate .*[.](lua) %{
 add-highlighter shared/ regions -default code lua \
     string  '"'      (?<!\\)(\\\\)*"  '' \
     string  "'"      (?<!\\)(\\\\)*'  '' \
-    comment '--'     '$'              '' \
     comment '--\[\[' '\]\]'           '' \
+    comment '--'     '$'              '' \
 
 add-highlighter shared/lua/string fill string
 
