@@ -158,6 +158,12 @@ bool Buffer::set_name(String name)
     return false;
 }
 
+void Buffer::throw_if_read_only() const
+{
+    if (m_flags & Flags::ReadOnly)
+        throw runtime_error("Buffer is read-only");
+}
+
 void Buffer::update_display_name()
 {
     if (m_flags & Flags::File)
@@ -315,8 +321,10 @@ void Buffer::commit_undo_group()
     m_history_cursor = node;
 }
 
-bool Buffer::undo(size_t count) noexcept
+bool Buffer::undo(size_t count)
 {
+    throw_if_read_only();
+
     commit_undo_group();
 
     if (not m_history_cursor->parent)
@@ -333,8 +341,10 @@ bool Buffer::undo(size_t count) noexcept
     return true;
 }
 
-bool Buffer::redo(size_t count) noexcept
+bool Buffer::redo(size_t count)
 {
+    throw_if_read_only();
+
     if (not m_history_cursor->redo_child)
         return false;
 
@@ -350,8 +360,10 @@ bool Buffer::redo(size_t count) noexcept
     return true;
 }
 
-void Buffer::move_to(HistoryNode* history_node) noexcept
+void Buffer::move_to(HistoryNode* history_node)
 {
+    throw_if_read_only();
+
     commit_undo_group();
 
     auto find_lowest_common_parent = [](HistoryNode* a, HistoryNode* b) {
@@ -419,7 +431,7 @@ Buffer::HistoryNode* Buffer::find_history_node(HistoryNode* node, const Func& fu
     return nullptr;
 }
 
-bool Buffer::move_to(size_t history_id) noexcept
+bool Buffer::move_to(size_t history_id)
 {
     auto* target_node = find_history_node(&m_history, [history_id](auto* node)
                                           { return node->id == history_id; });
@@ -548,6 +560,8 @@ void Buffer::apply_modification(const Modification& modification)
 
 BufferCoord Buffer::insert(BufferCoord pos, StringView content)
 {
+    throw_if_read_only();
+
     kak_assert(is_valid(pos));
     if (content.empty())
         return pos;
@@ -568,6 +582,8 @@ BufferCoord Buffer::insert(BufferCoord pos, StringView content)
 
 BufferCoord Buffer::erase(BufferCoord begin, BufferCoord end)
 {
+    throw_if_read_only();
+
     kak_assert(is_valid(begin) and is_valid(end));
     // do not erase last \n except if we erase from the start of a line, and normalize
     // end coord
@@ -585,6 +601,8 @@ BufferCoord Buffer::erase(BufferCoord begin, BufferCoord end)
 
 BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end, StringView content)
 {
+    throw_if_read_only();
+
     if (is_end(end) and not content.empty() and content.back() == '\n')
     {
         end = back_coord();

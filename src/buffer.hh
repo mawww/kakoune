@@ -139,9 +139,9 @@ public:
     void           set_fs_timestamp(timespec ts);
 
     void           commit_undo_group();
-    bool           undo(size_t count = 1) noexcept;
-    bool           redo(size_t count = 1) noexcept;
-    bool           move_to(size_t history_id) noexcept;
+    bool           undo(size_t count = 1);
+    bool           redo(size_t count = 1);
+    bool           move_to(size_t history_id);
     size_t         current_history_id() const noexcept;
     size_t         next_history_id() const noexcept { return m_next_history_id; }
 
@@ -218,6 +218,7 @@ public:
     void on_registered();
     void on_unregistered();
 
+    void throw_if_read_only() const;
 private:
     void on_option_changed(const Option& option) override;
 
@@ -272,7 +273,7 @@ private:
     SafePtr<HistoryNode>  m_last_save_history_cursor;
     UndoGroup             m_current_undo_group;
 
-    void move_to(HistoryNode* history_node) noexcept;
+    void move_to(HistoryNode* history_node);
 
     template<typename Func> HistoryNode* find_history_node(HistoryNode* node, const Func& func);
 

@@ -181,12 +181,17 @@ void write_to_debug_buffer(StringView str)
     // where the user can put its cursor to scroll with new messages
     const bool eol_back = not str.empty() and str.back() == '\n';
     if (Buffer* buffer = BufferManager::instance().get_buffer_ifp(debug_buffer_name))
+    {
+        buffer->flags() &= ~Buffer::Flags::ReadOnly;
+        auto restore = on_scope_end([buffer] { buffer->flags() |= Buffer::Flags::ReadOnly; });
+
         buffer->insert(buffer->back_coord(), eol_back ? str : str + "\n");
+    }
     else
     {
         String line = str + (eol_back ? "\n" : "\n\n");
         BufferManager::instance().create_buffer(
-            debug_buffer_name.str(), Buffer::Flags::NoUndo | Buffer::Flags::Debug,
+            debug_buffer_name.str(), Buffer::Flags::NoUndo | Buffer::Flags::Debug | Buffer::Flags::ReadOnly,
             line, InvalidTime);
     }
 }

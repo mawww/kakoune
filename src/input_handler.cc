@@ -1061,6 +1061,8 @@ public:
                            context().hooks().run_hook("InsertIdle", "", context());
                        }}
     {
+        context().buffer().throw_if_read_only();
+
         last_insert().recording.set();
         last_insert().mode = mode;
         last_insert().keys.clear();
@@ -1068,11 +1070,6 @@ public:
         last_insert().count = count;
         context().hooks().run_hook("InsertBegin", "", context());
         prepare(mode, count);
-
-        if (context().has_client() and
-            context().options()["readonly"].get<bool>())
-            context().print_status({ "Warning: This buffer is readonly",
-                                     get_face("Error") });
     }
 
     void on_enabled() override
