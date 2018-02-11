@@ -954,7 +954,7 @@ void show_whitespaces(HighlightContext context, DisplayBuffer& display_buffer, B
             for (BufferIterator it = begin; it != end; )
             {
                 auto coord = it.coord();
-                Codepoint cp = utf8::read_codepoint<utf8::InvalidPolicy::Pass>(it, end);
+                Codepoint cp = utf8::read_codepoint(it, end);
                 if (cp == '\t' or cp == ' ' or cp == '\n' or cp == 0xA0)
                 {
                     if (coord != begin.coord())
@@ -1204,7 +1204,7 @@ void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer,
                           end = get_iterator(buffer, atom_it->end()); it < end;)
                 {
                     auto coord = it.coord();
-                    Codepoint cp = utf8::read_codepoint<utf8::InvalidPolicy::Pass>(it, end);
+                    Codepoint cp = utf8::read_codepoint(it, end);
                     if (cp != '\n' and not iswprint((wchar_t)cp))
                     {
                         if (coord != atom_it->begin())
