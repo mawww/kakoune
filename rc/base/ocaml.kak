@@ -54,8 +54,5 @@ hook global WinSetOption filetype=(?!ocaml).* %{
     hook global WinSetOption filetype=ocaml %{
       set-option window static_words $keywords
     }
-    hook global WinSetOption filetype=(?!ocaml).* %{
-      unset window static_words
-    }
   "
 }
