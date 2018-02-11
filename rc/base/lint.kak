@@ -74,6 +74,7 @@ define-command -hidden lint-show %{
 define-command lint-enable -docstring "Activate automatic diagnostics of the code" %{
     add-highlighter window flag_lines default lint_flags
     hook window -group lint-diagnostics NormalIdle .* %{ lint-show }
+    hook window -group lint-diagnostics WinSetOption lint_flags=.* %{ info; lint-show }
 }
 
 define-command lint-disable -docstring "Disable automatic diagnostics of the code" %{
