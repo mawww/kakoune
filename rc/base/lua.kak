@@ -11,11 +11,12 @@ hook global BufCreate .*[.](lua) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code lua \
-    string  '"'      (?<!\\)(\\\\)*"  '' \
-    string  "'"      (?<!\\)(\\\\)*'  '' \
-    comment '--\[\[' '\]\]'           '' \
-    comment '--'     '$'              '' \
+add-highlighter shared/ regions -default code -match-capture lua \
+    string  '"'           (?<!\\)(\\\\)*" '' \
+    string  "'"          (?<!\\)(\\\\)*'  '' \
+    string  '\[(=*)\['   '\](=*)\]'       '' \
+    comment '--\[(=*)\[' '\](=*)\]'       '' \
+    comment '--'         '$'              '' \
 
 add-highlighter shared/lua/string fill string
 
