@@ -55,16 +55,42 @@ struct Token
     };
 
     Type type;
-    ByteCount begin;
-    ByteCount end;
+    ByteCount pos;
     BufferCoord coord;
     String content;
 };
 
-using TokenList = Vector<Token>;
+struct Reader
+{
+public:
+    Reader(StringView s) : str{s}, pos{s.begin()}, line_start{s.begin()}, line{} {}
 
-template<bool throw_on_unterminated>
-TokenList parse(StringView line);
+    Codepoint operator*() const;
+    Reader& operator++();
+
+    explicit operator bool() const { return pos < str.end(); }
+    StringView substr_from(const char* start) const { return {start, pos}; }
+    BufferCoord coord() const { return {line, (int)(pos - line_start)}; }
+
+    StringView str;
+    const char* pos;
+    const char* line_start;
+    LineCount line;
+};
+
+class CommandParser
+{
+public:
+    CommandParser(StringView command_line);
+    Optional<Token> read_token(bool throw_on_unterminated);
+
+    const char* pos() const { return m_reader.pos; }
+    BufferCoord coord() const { return m_reader.coord(); }
+    bool done() const { return not m_reader; }
+
+private:
+    Reader m_reader;
+};
 
 class CommandManager : public Singleton<CommandManager>
 {

@@ -509,19 +509,18 @@ HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
     };
     auto get_face = [faces](const Context& context){ return faces;; };
 
-    String expr = params[0];
-    auto tokens = parse<true>(expr);
-    if (tokens.size() == 1 and tokens[0].type == Token::Type::OptionExpand and
-        GlobalScope::instance().options()[tokens[0].content].is_of_type<Regex>())
+    CommandParser parser{params[0]};
+    auto token = parser.read_token(true);
+    if (token and parser.done() and token->type == Token::Type::OptionExpand and
+        GlobalScope::instance().options()[token->content].is_of_type<Regex>())
     {
-        String option_name = tokens[0].content;
-        auto get_regex = [option_name](const Context& context) {
+        auto get_regex = [option_name = token->content](const Context& context) {
             return context.options()[option_name].get<Regex>();
         };
-        return {format("dynregex_{}", expr), make_hl(get_regex, get_face)};
+        return {format("dynregex_{}", params[0]), make_hl(get_regex, get_face)};
     }
 
-    auto get_regex = [expr](const Context& context){
+    auto get_regex = [expr = params[0]](const Context& context){
         try
         {
             auto re = expand(expr, context);
@@ -533,7 +532,7 @@ HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
             return Regex{};
         }
     };
-    return {format("dynregex_{}", expr), make_hl(get_regex, get_face)};
+    return {format("dynregex_{}", params[0]), make_hl(get_regex, get_face)};
 }
 
 HighlighterAndId create_line_highlighter(HighlighterParameters params)
