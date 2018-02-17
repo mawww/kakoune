@@ -849,9 +849,9 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
     for (auto& sel : sels)
     {
         const auto beg = sel.min(), end = buffer.char_next(sel.max());
-        patterns.push_back(format("{}\\Q{}\\E{}",
+        patterns.push_back(format("{}{}{}",
                                   smart and is_bow(buffer, beg) ? "\\b" : "",
-                                  buffer.string(beg, end),
+                                  escape(buffer.string(beg, end), "^$\\.*+?()[]{}|", '\\'),
                                   smart and is_eow(buffer, end) ? "\\b" : ""));
     }
 
