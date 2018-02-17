@@ -88,7 +88,9 @@
                 <strong>Have your plugin shown in that list!</strong> Your repository will be included in the page automatically if it has both the <i><strong>kakoune</strong></i> and <i><strong>plugin</strong></i> topics. Have a look at <a href="https://github.com/search?q=topic%3Akakoune+topic%3Aplugin" class="alert-link">the official Github search page</a>, that's where we fetch our data from!
             </div>
 
-            <div class="row-fluid" id="pluginsList">
+            <!-- NOTE: we split the list and its container in order to be able to get the row's height, which remains at 0 when all of its content is floating -->
+            <div class="row" id="pluginsListContainer">
+                <div id="pluginsList"></div>
             </div>
 
             <div class="row-fluid">
