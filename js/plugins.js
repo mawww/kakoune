@@ -11,7 +11,7 @@
         }
 
         const URL_ENDPOINT = "https://api.github.com/search/repositories";
-        const DATA_ENDPOINT = { q: "topic:kakoune" };
+        const DATA_ENDPOINT = { q: "topic:kakoune topic:plugin" };
 
         $.getJSON(URL_ENDPOINT, DATA_ENDPOINT)
             .done(function (data) {
