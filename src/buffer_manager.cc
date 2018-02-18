@@ -21,7 +21,8 @@ BufferManager::~BufferManager()
         buffer->on_unregistered();
 
     // Make sure not clients exists
-    ClientManager::instance().clear();
+    if (ClientManager::has_instance())
+        ClientManager::instance().clear();
 }
 
 Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
@@ -55,7 +56,8 @@ void BufferManager::delete_buffer(Buffer& buffer)
     m_buffer_trash.emplace_back(std::move(*it));
     m_buffers.erase(it);
 
-    ClientManager::instance().ensure_no_client_uses_buffer(buffer);
+    if (ClientManager::has_instance())
+        ClientManager::instance().ensure_no_client_uses_buffer(buffer);
 
     buffer.on_unregistered();
 }
@@ -105,8 +107,11 @@ void BufferManager::clear_buffer_trash()
     {
         // Do that again, to be tolerant in some corner cases, where a buffer is
         // deleted during its creation
-        ClientManager::instance().ensure_no_client_uses_buffer(*buffer);
-        ClientManager::instance().clear_window_trash();
+        if (ClientManager::has_instance())
+        {
+            ClientManager::instance().ensure_no_client_uses_buffer(*buffer);
+            ClientManager::instance().clear_window_trash();
+        }
 
         buffer.reset();
     }
