@@ -26,6 +26,11 @@ deps := $(addprefix ., $(sources:.cc=$(suffix).d))
 
 PKG_CONFIG ?= $(shell command -v pkg-config 2>/dev/null)
 
+ifeq ($(static),yes)
+    PKG_CONFIG_FLAGS += -static
+    LDFLAGS += -static -pthread
+endif
+
 PREFIX ?= /usr/local
 DESTDIR ?= # root dir
 
@@ -58,14 +63,9 @@ else
     	$(error "pkg-config not found in PATH")
     endif
 
-    LIBS += $(shell $(PKG_CONFIG) --libs ncursesw)
-    CPPFLAGS += $(shell $(PKG_CONFIG) --cflags ncursesw)
+    LIBS += $(shell $(PKG_CONFIG) $(PKG_CONFIG_FLAGS) --libs ncursesw)
+    CPPFLAGS += $(shell $(PKG_CONFIG) $(PKG_CONFIG_FLAGS) --cflags ncursesw)
     LDFLAGS += -rdynamic
-endif
-
-ifeq ($(static),yes)
-    LIBS += -ltinfo -lgpm
-    LDFLAGS += -static -pthread
 endif
 
 CXXFLAGS += -pedantic -std=gnu++14 -g -Wall -Wextra -Wno-unused-parameter -Wno-reorder -Wno-sign-compare -Wno-address -Wno-noexcept-type -Wno-unknown-attributes -Wno-unknown-warning-option
