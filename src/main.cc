@@ -77,135 +77,124 @@ String config_directory()
     return format("{}/kak", config_home);
 }
 
-void register_env_vars()
-{
-    static const struct {
-        const char* name;
-        bool prefix;
-        String (*func)(StringView, const Context&);
-    } env_vars[] = { {
-            "bufname", false,
-            [](StringView name, const Context& context) -> String
-            { return context.buffer().display_name(); }
-        }, {
-            "buffile", false,
-            [](StringView name, const Context& context) -> String
-            { return context.buffer().name(); }
-        }, {
-            "buflist", false,
-            [](StringView name, const Context& context)
-            { return join(BufferManager::instance() |
-                          transform(std::mem_fn(&Buffer::display_name)), ':'); }
-        }, {
-            "buf_line_count", false,
-            [](StringView name, const Context& context) -> String
-            { return to_string(context.buffer().line_count()); }
-        }, {
-            "timestamp", false,
-            [](StringView name, const Context& context) -> String
-            { return to_string(context.buffer().timestamp()); }
-        }, {
-            "history_id", false,
-            [](StringView name, const Context& context) -> String
-            { return to_string(context.buffer().current_history_id()); }
-        }, {
-            "selection", false,
-            [](StringView name, const Context& context)
-            { const Selection& sel = context.selections().main();
-              return content(context.buffer(), sel); }
-        }, {
-            "selections", false,
-            [](StringView name, const Context& context)
-            { return join(context.selections_content(), ':'); }
-        }, {
-            "runtime", false,
-            [](StringView name, const Context& context)
-            { return runtime_directory(); }
-        }, {
-            "config", false,
-            [](StringView name, const Context& context)
-            { return config_directory(); }
-        }, {
-            "opt_", true,
-            [](StringView name, const Context& context)
-            { return context.options()[name.substr(4_byte)].get_as_string(); }
-        }, {
-            "reg_", true,
-            [](StringView name, const Context& context)
-            { return context.main_sel_register_value(name.substr(4_byte)).str(); }
-        }, {
-            "client_env_", true,
-            [](StringView name, const Context& context)
-            { return context.client().get_env_var(name.substr(11_byte)).str(); }
-        }, {
-            "session", false,
-            [](StringView name, const Context& context) -> String
-            { return Server::instance().session(); }
-        }, {
-            "client", false,
-            [](StringView name, const Context& context) -> String
-            { return context.name(); }
-        }, {
-            "client_pid", false,
-            [](StringView name, const Context& context) -> String
-            { return to_string(context.client().pid()); }
-        }, {
-            "client_list", false,
-            [](StringView name, const Context& context) -> String
-            { return join(ClientManager::instance() |
-                          transform([](const std::unique_ptr<Client>& c) -> const String&
-                                   { return c->context().name(); }), ':'); }
-        }, {
-            "modified", false,
-            [](StringView name, const Context& context) -> String
-            { return context.buffer().is_modified() ? "true" : "false"; }
-        }, {
-            "cursor_line", false,
-            [](StringView name, const Context& context) -> String
-            { return to_string(context.selections().main().cursor().line + 1); }
-        }, {
-            "cursor_column", false,
-            [](StringView name, const Context& context) -> String
-            { return to_string(context.selections().main().cursor().column + 1); }
-        }, {
-            "cursor_char_value", false,
-            [](StringView name, const Context& context) -> String
-            { auto coord = context.selections().main().cursor();
-              auto& buffer = context.buffer();
-              return to_string((size_t)utf8::codepoint(buffer.iterator_at(coord), buffer.end())); }
-        }, {
-            "cursor_char_column", false,
-            [](StringView name, const Context& context) -> String
-            { auto coord = context.selections().main().cursor();
-              return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
-        }, {
-            "cursor_byte_offset", false,
-            [](StringView name, const Context& context) -> String
-            { auto cursor = context.selections().main().cursor();
-              return to_string(context.buffer().distance({0,0}, cursor)); }
-        }, {
-            "selection_desc", false,
-            [](StringView name, const Context& context)
-            { return selection_to_string(context.selections().main()); }
-        }, {
-            "selections_desc", false,
-            [](StringView name, const Context& context)
-            { return selection_list_to_string(context.selections()); }
-        }, {
-            "window_width", false,
-            [](StringView name, const Context& context) -> String
-            { return to_string(context.window().dimensions().column); }
-        }, {
-            "window_height", false,
-            [](StringView name, const Context& context) -> String
-            { return to_string(context.window().dimensions().line); }
-        }
-    };
-
-    ShellManager& shell_manager = ShellManager::instance();
-    for (auto& env_var : env_vars)
-        shell_manager.register_env_var(env_var.name, env_var.prefix, env_var.func);
-}
+static const EnvVarDesc builtin_env_vars[] = { {
+        "bufname", false,
+        [](StringView name, const Context& context) -> String
+        { return context.buffer().display_name(); }
+    }, {
+        "buffile", false,
+        [](StringView name, const Context& context) -> String
+        { return context.buffer().name(); }
+    }, {
+        "buflist", false,
+        [](StringView name, const Context& context)
+        { return join(BufferManager::instance() |
+                      transform(std::mem_fn(&Buffer::display_name)), ':'); }
+    }, {
+        "buf_line_count", false,
+        [](StringView name, const Context& context) -> String
+        { return to_string(context.buffer().line_count()); }
+    }, {
+        "timestamp", false,
+        [](StringView name, const Context& context) -> String
+        { return to_string(context.buffer().timestamp()); }
+    }, {
+        "history_id", false,
+        [](StringView name, const Context& context) -> String
+        { return to_string(context.buffer().current_history_id()); }
+    }, {
+        "selection", false,
+        [](StringView name, const Context& context)
+        { const Selection& sel = context.selections().main();
+          return content(context.buffer(), sel); }
+    }, {
+        "selections", false,
+        [](StringView name, const Context& context)
+        { return join(context.selections_content(), ':'); }
+    }, {
+        "runtime", false,
+        [](StringView name, const Context& context)
+        { return runtime_directory(); }
+    }, {
+        "config", false,
+        [](StringView name, const Context& context)
+        { return config_directory(); }
+    }, {
+        "opt_", true,
+        [](StringView name, const Context& context)
+        { return context.options()[name.substr(4_byte)].get_as_string(); }
+    }, {
+        "reg_", true,
+        [](StringView name, const Context& context)
+        { return context.main_sel_register_value(name.substr(4_byte)).str(); }
+    }, {
+        "client_env_", true,
+        [](StringView name, const Context& context)
+        { return context.client().get_env_var(name.substr(11_byte)).str(); }
+    }, {
+        "session", false,
+        [](StringView name, const Context& context) -> String
+        { return Server::instance().session(); }
+    }, {
+        "client", false,
+        [](StringView name, const Context& context) -> String
+        { return context.name(); }
+    }, {
+        "client_pid", false,
+        [](StringView name, const Context& context) -> String
+        { return to_string(context.client().pid()); }
+    }, {
+        "client_list", false,
+        [](StringView name, const Context& context) -> String
+        { return join(ClientManager::instance() |
+                      transform([](const std::unique_ptr<Client>& c) -> const String&
+                               { return c->context().name(); }), ':'); }
+    }, {
+        "modified", false,
+        [](StringView name, const Context& context) -> String
+        { return context.buffer().is_modified() ? "true" : "false"; }
+    }, {
+        "cursor_line", false,
+        [](StringView name, const Context& context) -> String
+        { return to_string(context.selections().main().cursor().line + 1); }
+    }, {
+        "cursor_column", false,
+        [](StringView name, const Context& context) -> String
+        { return to_string(context.selections().main().cursor().column + 1); }
+    }, {
+        "cursor_char_value", false,
+        [](StringView name, const Context& context) -> String
+        { auto coord = context.selections().main().cursor();
+          auto& buffer = context.buffer();
+          return to_string((size_t)utf8::codepoint(buffer.iterator_at(coord), buffer.end())); }
+    }, {
+        "cursor_char_column", false,
+        [](StringView name, const Context& context) -> String
+        { auto coord = context.selections().main().cursor();
+          return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
+    }, {
+        "cursor_byte_offset", false,
+        [](StringView name, const Context& context) -> String
+        { auto cursor = context.selections().main().cursor();
+          return to_string(context.buffer().distance({0,0}, cursor)); }
+    }, {
+        "selection_desc", false,
+        [](StringView name, const Context& context)
+        { return selection_to_string(context.selections().main()); }
+    }, {
+        "selections_desc", false,
+        [](StringView name, const Context& context)
+        { return selection_list_to_string(context.selections()); }
+    }, {
+        "window_width", false,
+        [](StringView name, const Context& context) -> String
+        { return to_string(context.window().dimensions().column); }
+    }, {
+        "window_height", false,
+        [](StringView name, const Context& context) -> String
+        { return to_string(context.window().dimensions().line); }
+    }
+};
 
 void register_registers()
 {
@@ -584,7 +573,7 @@ int run_server(StringView session, StringView server_init,
 
     StringRegistry      string_registry;
     GlobalScope         global_scope;
-    ShellManager        shell_manager;
+    ShellManager        shell_manager{builtin_env_vars};
     CommandManager      command_manager;
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
@@ -594,7 +583,6 @@ int run_server(StringView session, StringView server_init,
     BufferManager       buffer_manager;
 
     register_options();
-    register_env_vars();
     register_registers();
     register_commands();
     register_highlighters();
@@ -731,14 +719,13 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
     StringRegistry  string_registry;
     GlobalScope     global_scope;
     EventManager    event_manager;
-    ShellManager    shell_manager;
+    ShellManager    shell_manager{builtin_env_vars};
     CommandManager  command_manager;
     RegisterManager register_manager;
     ClientManager   client_manager;
     BufferManager   buffer_manager;
 
     register_options();
-    register_env_vars();
     register_registers();
     register_commands();
 

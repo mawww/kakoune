@@ -23,7 +23,8 @@ extern char **environ;
 namespace Kakoune
 {
 
-ShellManager::ShellManager()
+ShellManager::ShellManager(ConstArrayView<EnvVarDesc> builtin_env_vars)
+    : m_env_vars{builtin_env_vars}
 {
     // Get a guaranteed to be POSIX shell binary
     {
@@ -291,12 +292,6 @@ std::pair<String, int> ShellManager::eval(
         context.print_status({}, true);
 
     return { std::move(stdout_contents), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
-}
-
-void ShellManager::register_env_var(StringView str, bool prefix,
-                                    EnvVarRetriever retriever)
-{
-    m_env_vars.push_back({ str.str(), prefix, std::move(retriever) });
 }
 
 String ShellManager::get_val(StringView name, const Context& context) const

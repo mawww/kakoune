@@ -12,18 +12,26 @@ namespace Kakoune
 
 class Context;
 
-using EnvVarRetriever = std::function<String (StringView name, const Context&)>;
-
 struct ShellContext
 {
     ConstArrayView<String> params;
     EnvVarMap env_vars;
 };
 
+
+struct EnvVarDesc
+{
+    using Retriever = String (*)(StringView name, const Context&);
+
+    StringView str;
+    bool prefix;
+    Retriever func;
+};
+
 class ShellManager : public Singleton<ShellManager>
 {
 public:
-    ShellManager();
+    ShellManager(ConstArrayView<EnvVarDesc> builtin_env_vars);
 
     enum class Flags
     {
@@ -37,7 +45,6 @@ public:
                                 Flags flags = Flags::WaitForStdout,
                                 const ShellContext& shell_context = {});
 
-    void register_env_var(StringView str, bool prefix, EnvVarRetriever retriever);
     String get_val(StringView name, const Context& context) const;
 
     CandidateList complete_env_var(StringView prefix, ByteCount cursor_pos) const;
@@ -45,8 +52,7 @@ public:
 private:
     String m_shell;
 
-    struct EnvVarDesc { String str; bool prefix; EnvVarRetriever func; };
-    Vector<EnvVarDesc, MemoryDomain::EnvVars> m_env_vars;
+    ConstArrayView<EnvVarDesc> m_env_vars;
 };
 
 }
