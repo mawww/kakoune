@@ -419,7 +419,7 @@ void for_each_codepoint(Context& context, NormalParams)
 void command(Context& context, NormalParams params)
 {
     if (not CommandManager::has_instance())
-        return;
+        throw runtime_error{"commands are not supported"};
 
     CommandManager::instance().clear_last_complete_command();
 
