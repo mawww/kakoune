@@ -1100,7 +1100,7 @@ const CommandDesc echo_cmd = {
     }
 };
 
-KeymapMode parse_keymap_mode(const String& str, const KeymapManager::UserModeList& user_modes)
+KeymapMode parse_keymap_mode(StringView str, const KeymapManager::UserModeList& user_modes)
 {
     if (prefix_match("normal", str)) return KeymapMode::Normal;
     if (prefix_match("insert", str)) return KeymapMode::Insert;

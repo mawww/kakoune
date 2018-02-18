@@ -51,7 +51,7 @@ KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
     return res;
 }
 
-void KeymapManager::add_user_mode(const String user_mode_name)
+void KeymapManager::add_user_mode(String user_mode_name)
 {
     auto modes = {"normal", "insert", "prompt", "menu", "goto", "view", "user", "object"};
     if (contains(modes, user_mode_name))
@@ -63,7 +63,7 @@ void KeymapManager::add_user_mode(const String user_mode_name)
     if (contains_that(user_mode_name, [](char c){ return not isalnum(c); }))
         throw runtime_error(format("invalid mode name: '{}'", user_mode_name));
 
-    m_user_modes.push_back(user_mode_name);
+    m_user_modes.push_back(std::move(user_mode_name));
 }
 
 }
