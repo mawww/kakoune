@@ -714,20 +714,17 @@ int run_server(StringView session, StringView server_init,
     return local_client_exit;
 }
 
-int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView> files, bool quiet, StringView suffix_backup)
+int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, StringView suffix_backup)
 {
     StringRegistry  string_registry;
     GlobalScope     global_scope;
     EventManager    event_manager;
     ShellManager    shell_manager{builtin_env_vars};
-    CommandManager  command_manager;
     RegisterManager register_manager;
-    ClientManager   client_manager;
     BufferManager   buffer_manager;
 
     register_options();
     register_registers();
-    register_commands();
 
     try
     {
@@ -741,10 +738,6 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
                     { buffer, Selection{{0,0}, buffer.back_coord()} },
                     Context::Flags::Transient
                 };
-
-                if (not commands.empty())
-                    command_manager.execute(commands, input_handler.context(),
-                                            ShellContext{});
 
                 for (auto& key : keys)
                     input_handler.handle_key(key);
@@ -942,8 +935,7 @@ int main(int argc, char* argv[])
             for (size_t i = 0; i < parser.positional_count(); ++i)
                 files.emplace_back(parser[i]);
 
-            return run_filter(*keys, client_init, files,
-                              (bool)parser.get_switch("q"),
+            return run_filter(*keys, files, (bool)parser.get_switch("q"),
                               parser.get_switch("i").value_or(StringView{}));
         }
 
