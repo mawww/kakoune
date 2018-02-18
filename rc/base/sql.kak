@@ -81,7 +81,7 @@ add-highlighter shared/ regions -default code sql \
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=sql %{
         set-option window static_words '${keywords}:${operators}:${functions}:${data_types}:${data_types_fn}:NULL'
-    }" | sed 's,|,:,g'
+    }" | tr '|' ':'
 
     # Highlight keywords
     printf %s "

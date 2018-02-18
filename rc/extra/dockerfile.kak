@@ -26,7 +26,7 @@ add-highlighter shared/ regions -default code dockerfile \
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=dockerfile %{
         set window static_words 'ONBUILD|${keywords}'
-    }" | sed 's,|,:,g'
+    }" | tr '|' ':'
 
     # Highlight keywords
     printf %s "

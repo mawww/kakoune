@@ -39,7 +39,7 @@ add-highlighter shared/pony/comment       fill comment
     static_words="${static_words}::${struct}"
     printf %s\\n "hook global WinSetOption filetype=pony %{
         set-option window static_words '${static_words}'
-    }" | sed 's,|,:,g'
+    }" | tr '|' ':'
 
     # Highlight keywords
     printf %s "

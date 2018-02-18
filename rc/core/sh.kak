@@ -24,7 +24,7 @@ add-highlighter shared/sh/heredoc fill string
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=sh %{
         set-option window static_words '${keywords}'
-    }" | sed 's,|,:,g'
+    }" | tr '|' ':'
 
     # Highlight keywords
     printf %s "add-highlighter shared/sh/code regex \b(${keywords})\b 0:keyword"

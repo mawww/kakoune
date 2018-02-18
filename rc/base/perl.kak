@@ -42,7 +42,7 @@ add-highlighter shared/perl/comment fill comment
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=perl %{
         set-option window static_words '${keywords}:${attributes}:${values}'
-    }" | sed 's,|,:,g'
+    }" | tr '|' ':'
 
     # Highlight keywords
     printf %s "

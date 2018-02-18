@@ -63,7 +63,7 @@ add-highlighter shared/ruby/code regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|(
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=ruby %{
         set-option window static_words '${keywords}:${attributes}:${values}:${meta}'
-    }" | sed 's,|,:,g'
+    }" | tr '|' ':'
 
     # Highlight keywords
     printf %s "

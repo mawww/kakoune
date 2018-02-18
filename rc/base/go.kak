@@ -38,7 +38,7 @@ add-highlighter shared/go/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=go %{
         set-option window static_words '${keywords}:${attributes}:${types}:${values}:${functions}'
-    }" | sed 's,|,:,g'
+    }" | tr '|' ':'
 
     # Highlight keywords
     printf %s "
