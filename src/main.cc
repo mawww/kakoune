@@ -772,7 +772,7 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
 
         for (auto& file : files)
         {
-            Buffer* buffer = open_file_buffer(file);
+            Buffer* buffer = open_file_buffer(file, Buffer::Flags::NoHooks);
             if (not suffix_backup.empty())
                 write_buffer_to_file(*buffer, buffer->name() + suffix_backup);
             apply_to_buffer(*buffer);
@@ -782,7 +782,7 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
         if (not isatty(0))
         {
             Buffer& buffer = *buffer_manager.create_buffer(
-                "*stdin*", Buffer::Flags::None, read_fd(0), InvalidTime);
+                "*stdin*", Buffer::Flags::NoHooks, read_fd(0), InvalidTime);
             apply_to_buffer(buffer);
             write_buffer_to_fd(buffer, 1);
             buffer_manager.delete_buffer(buffer);

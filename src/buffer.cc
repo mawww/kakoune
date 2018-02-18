@@ -107,6 +107,12 @@ void Buffer::on_registered()
 
     options().register_watcher(*this);
 
+    if (m_flags & Buffer::Flags::NoHooks)
+    {
+        on_option_changed(options()["readonly"]);
+        return;
+    }
+
     run_hook_in_own_context("BufCreate", m_name);
 
     if (m_flags & Flags::File)
