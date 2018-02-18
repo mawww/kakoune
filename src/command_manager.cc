@@ -297,7 +297,8 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
         String token = get_until_delimiter(m_reader, c);
         if (throw_on_unterminated and not m_reader)
             throw parse_error{format("unterminated string {0}...{0}", c)};
-        ++m_reader;
+        if (m_reader)
+            ++m_reader;
         return Token{c == '"' ? Token::Type::RawEval
                               : Token::Type::RawQuoted,
                      start - line.begin(), coord, std::move(token)};
@@ -305,7 +306,8 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
     else if (c == '%')
     {
         auto token = parse_percent_token(m_reader, throw_on_unterminated);
-        ++m_reader;
+        if (m_reader)
+            ++m_reader;
         return token;
     }
     else if (is_command_separator(*m_reader))
@@ -604,7 +606,7 @@ Completions CommandManager::complete(const Context& context,
     case Token::Type::RawQuoted:
     case Token::Type::RawEval:
     {
-        if (token.type != Token::Type::Raw)
+        if (token.type != Token::Type::Raw and token.type != Token::Type::RawQuoted)
             return Completions{};
 
         StringView command_name = tokens.front().content;
