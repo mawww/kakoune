@@ -12,8 +12,8 @@ hook global BufCreate .*[.](lua) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter shared/ regions -default code -match-capture lua \
-    string  '"'           (?<!\\)(\\\\)*" '' \
-    string  "'"          (?<!\\)(\\\\)*'  '' \
+    string  '"'           (?<!\\)(?:\\\\)*" '' \
+    string  "'"          (?<!\\)(?:\\\\)*'  '' \
     string  '\[(=*)\['   '\](=*)\]'       '' \
     comment '--\[(=*)\[' '\](=*)\]'       '' \
     comment '--'         '$'              '' \
