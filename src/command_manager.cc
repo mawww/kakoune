@@ -66,8 +66,9 @@ bool is_command_separator(Codepoint c)
     return c == ';' or c == '\n';
 }
 
-template<typename Func>
-String get_until_delimiter(Reader& reader, Func is_delimiter)
+template<typename Func, typename UnescapeFunc>
+String get_until_delimiter(Reader& reader, Func is_delimiter,
+                           UnescapeFunc unescape = [](Codepoint) { return false; })
 {
     auto beg = reader.pos;
     String str;
@@ -76,7 +77,7 @@ String get_until_delimiter(Reader& reader, Func is_delimiter)
     while (reader)
     {
         const Codepoint c = *reader;
-        if (is_delimiter(c))
+        if (is_delimiter(c) or (was_antislash and unescape(c)))
         {
             str += reader.substr_from(beg);
             if (was_antislash)
@@ -98,7 +99,7 @@ String get_until_delimiter(Reader& reader, Func is_delimiter)
 [[gnu::always_inline]]
 inline String get_until_delimiter(Reader& reader, Codepoint c)
 {
-    return get_until_delimiter(reader, [c](Codepoint ch) { return c == ch; });
+    return get_until_delimiter(reader, [c](Codepoint ch) { return c == ch; }, [](Codepoint) { return false; });
 }
 
 StringView get_until_closing_delimiter(Reader& reader, Codepoint opening_delimiter,
@@ -317,9 +318,9 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
     {
         String str = get_until_delimiter(m_reader, [](Codepoint c) {
             return is_command_separator(c) or is_horizontal_blank(c);
-        });
+        }, [](Codepoint c) { return c == '%'; });
         return Token{Token::Type::Raw, start - line.begin(),
-                     coord, unescape(str, "%", '\\')};
+                     coord, std::move(str)};
     }
     return {};
 }
