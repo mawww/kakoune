@@ -15,6 +15,7 @@
 #include "highlighter.hh"
 #include "highlighters.hh"
 #include "insert_completer.hh"
+#include "normal.hh"
 #include "option_manager.hh"
 #include "option_types.hh"
 #include "parameters_parser.hh"
@@ -1099,7 +1100,7 @@ const CommandDesc echo_cmd = {
     }
 };
 
-KeymapMode parse_keymap_mode(const String& str)
+KeymapMode parse_keymap_mode(const String& str, const KeymapManager::UserModeList& user_modes)
 {
     if (prefix_match("normal", str)) return KeymapMode::Normal;
     if (prefix_match("insert", str)) return KeymapMode::Insert;
@@ -1110,7 +1111,12 @@ KeymapMode parse_keymap_mode(const String& str)
     if (prefix_match("user", str))   return KeymapMode::User;
     if (prefix_match("object", str)) return KeymapMode::Object;
 
-    throw runtime_error(format("unknown keymap mode '{}'", str));
+    auto it = find(user_modes, str);
+    if (it == user_modes.end())
+        throw runtime_error(format("unknown keymap mode '{}'", str));
+
+    char offset = static_cast<char>(KeymapMode::FirstUserMode);
+    return (KeymapMode)(std::distance(user_modes.begin(), it) + offset);
 }
 
 const CommandDesc debug_cmd = {
@@ -1189,7 +1195,7 @@ const CommandDesc debug_cmd = {
             write_to_debug_buffer("Mappings:");
             for (auto& mode : modes)
             {
-                KeymapMode m = parse_keymap_mode(mode);
+                KeymapMode m = parse_keymap_mode(mode, keymaps.user_modes());
                 for (auto& key : keymaps.get_mapped_keys(m))
                     write_to_debug_buffer(format(" * {} {}: {}",
                                           mode, key_to_str(key),
@@ -1427,11 +1433,13 @@ auto map_key_completer =
         if (token_to_complete == 0)
             return { 0_byte, params[0].length(),
                      complete(params[0], pos_in_token, scopes) };
+
         if (token_to_complete == 1)
         {
-            constexpr const char* modes[] = { "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" };
+            static constexpr auto modes = { "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" };
+            auto& user_modes = get_scope(params[0], context).keymaps().user_modes();
             return { 0_byte, params[1].length(),
-                     complete(params[1], pos_in_token, modes) };
+                     complete(params[1], pos_in_token, concatenated(modes, user_modes) | gather<Vector<String>>()) };
         }
         return {};
     };
@@ -1459,7 +1467,7 @@ const CommandDesc map_key_cmd = {
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
-        KeymapMode keymap_mode = parse_keymap_mode(parser[1]);
+        KeymapMode keymap_mode = parse_keymap_mode(parser[1], keymaps.user_modes());
 
         KeyList key = parse_keys(parser[2]);
         if (key.size() != 1)
@@ -1492,7 +1500,7 @@ const CommandDesc unmap_key_cmd = {
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
-        KeymapMode keymap_mode = parse_keymap_mode(parser[1]);
+        KeymapMode keymap_mode = parse_keymap_mode(parser[1], keymaps.user_modes());
 
         KeyList key = parse_keys(parser[2]);
         if (key.size() != 1)
@@ -2113,6 +2121,64 @@ const CommandDesc fail_cmd = {
     }
 };
 
+const CommandDesc declare_user_mode_cmd = {
+    "declare-user-mode",
+    nullptr,
+    "declare-user-mode <scope> <name>: add a new user keymap mode in given <scope>",
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    CommandFlags::None,
+    CommandHelper{},
+    make_completer(complete_scope),
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
+        keymaps.add_user_mode(std::move(parser[1]));
+    }
+};
+
+const CommandDesc enter_user_mode_cmd = {
+    "enter-user-mode",
+    nullptr,
+    "enter-user-mode <scope> <name>: enable <name> keymap mode for next key",
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    CommandFlags::None,
+    CommandHelper{},
+    [](const Context& context, CompletionFlags flags,
+       CommandParameters params, size_t token_to_complete,
+       ByteCount pos_in_token) -> Completions
+    {
+        if (token_to_complete == 0)
+            return { 0_byte, params[0].length(),
+                     complete(params[0], pos_in_token, scopes) };
+        if (token_to_complete == 1)
+        {
+            KeymapManager& keymaps = get_scope(params[0], context).keymaps();
+            return { 0_byte, params[1].length(),
+                     complete(params[1], pos_in_token, keymaps.user_modes()) };
+        }
+        return {};
+    },
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
+        KeymapMode mode = parse_keymap_mode(parser[1], keymaps.user_modes());
+        on_next_key_with_autoinfo(context, mode,
+                                 [mode](Key key, Context& context) mutable {
+            if (not context.keymaps().is_mapped(key, mode))
+                return;
+
+            auto& mapping = context.keymaps().get_mapping(key, mode);
+            ScopedSetBool disable_keymaps(context.keymaps_disabled());
+
+            InputHandler::ScopedForceNormal force_normal{context.input_handler(), {}};
+
+            ScopedEdition edition(context);
+            for (auto& key : mapping.keys)
+                context.input_handler().handle_key(key);
+        }, parser[1], build_autoinfo_for_mapping(context, mode, {}));
+    }
+};
+
 }
 
 void register_commands()
@@ -2175,6 +2241,8 @@ void register_commands()
     register_command(change_directory_cmd);
     register_command(rename_session_cmd);
     register_command(fail_cmd);
+    register_command(declare_user_mode_cmd);
+    register_command(enter_user_mode_cmd);
 }
 
 }

@@ -1,8 +1,10 @@
 #ifndef normal_hh_INCLUDED
 #define normal_hh_INCLUDED
 
+#include "context.hh"
 #include "optional.hh"
 #include "keys.hh"
+#include "keymap_manager.hh"
 #include "string.hh"
 
 namespace Kakoune
@@ -23,6 +25,15 @@ struct NormalCmd
 };
 
 Optional<NormalCmd> get_normal_command(Key key);
+
+struct KeyInfo
+{
+    ConstArrayView<Key> keys;
+    StringView docstring;
+};
+
+String build_autoinfo_for_mapping(Context& context, KeymapMode mode,
+                                  ConstArrayView<KeyInfo> built_ins);
 
 }
 
