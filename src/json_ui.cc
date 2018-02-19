@@ -296,7 +296,9 @@ parse_json(const char* pos, const char* end)
     if (*pos == '[')
     {
         JsonArray array;
-        if (*++pos == ']')
+        if (++pos == end)
+            throw runtime_error("unable to parse array");
+        if (*pos == ']')
             return Result{std::move(array), pos+1};
 
         while (true)
@@ -319,8 +321,10 @@ parse_json(const char* pos, const char* end)
     }
     if (*pos == '{')
     {
+        if (++pos == end)
+            throw runtime_error("unable to parse object");
         JsonObject object;
-        if (*++pos == '}')
+        if (*pos == '}')
             return Result{std::move(object), pos+1};
 
         while (true)
