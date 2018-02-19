@@ -2162,7 +2162,7 @@ const CommandDesc enter_user_mode_cmd = {
     {
         KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
         KeymapMode mode = parse_keymap_mode(parser[1], keymaps.user_modes());
-        on_next_key_with_autoinfo(context, mode,
+        on_next_key_with_autoinfo(context, KeymapMode::None,
                                  [mode](Key key, Context& context) mutable {
             if (not context.keymaps().is_mapped(key, mode))
                 return;
