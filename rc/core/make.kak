@@ -46,6 +46,14 @@ hook global WinSetOption filetype=(?!make).* %{
 declare-option -docstring "name of the client in which all source code jumps will be executed" \
     str jumpclient
 
+define-command -hidden make-open-error -params 4 %{
+    evaluate-commands -try-client %opt{jumpclient} %{
+        edit -existing "%arg{1}" %arg{2} %arg{3}
+        echo -markup "{Information}%arg{4}"
+        try %{ focus }
+    }
+}
+
 define-command -hidden make-jump %{
     evaluate-commands -collapse-jumps %{
         try %{
@@ -53,11 +61,11 @@ define-command -hidden make-jump %{
             # Try to parse the error into capture groups, failing on absolute paths
             execute-keys s "Entering directory '([^']+)'.*\n([^:/][^:]*):(\d+):(?:(\d+):)?([^\n]+)\z" <ret>l
             set-option buffer make_current_error_line %val{cursor_line}
-            evaluate-commands -try-client %opt{jumpclient} "edit -existing %reg{1}/%reg{2} %reg{3} %reg{4}; echo -markup %{{Information}%reg{5}}; try %{ focus }"
+            make-open-error "%reg{1}/%reg{2}" "%reg{3}" "%reg{4}" "%reg{5}"
         } catch %{
             execute-keys <a-h><a-l> s "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?([^\n]+)\z" <ret>l
             set-option buffer make_current_error_line %val{cursor_line}
-            evaluate-commands -try-client %opt{jumpclient} "edit -existing %reg{1} %reg{2} %reg{3}; echo -markup %{{Information}%reg{4}}; try %{ focus }"
+            make-open-error "%reg{1}" "%reg{2}" "%reg{3}" "%reg{4}"
         }
     }
 }
