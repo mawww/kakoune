@@ -49,9 +49,10 @@ define-command -hidden init-javascript-filetype -params 1 %~
         literal       "`"  (?<!\\)(\\\\)*`         '' \
         comment       //   '$'                     '' \
         comment       /\*  \*/                     '' \
+        shebang       ^#!  $                       '' \
         regex         /    (?<!\\)(\\\\)*/[gimuy]* '' \
         jsx           (?<![\w<])<[a-zA-Z][\w:.-]*(?!\hextends)(?=[\s/>])(?!>\()) (</.*?>|/>) (?<![\w<])<[a-zA-Z][\w:.-]* \
-        division '[\w\)\]](/|(\h+/\h+))' '(?=\w)' '' # Help Kakoune to better detect /…/ literals
+        division '[\w\)\]]\K(/|(\h+/\h+))' '(?=\w)' '' # Help Kakoune to better detect /…/ literals
 
     # Regular expression flags are: g → global match, i → ignore case, m → multi-lines, u → unicode, y → sticky
     # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
@@ -60,6 +61,7 @@ define-command -hidden init-javascript-filetype -params 1 %~
     add-highlighter "shared/%arg{1}/single_string" fill string
     add-highlighter "shared/%arg{1}/regex"         fill meta
     add-highlighter "shared/%arg{1}/comment"       fill comment
+    add-highlighter "shared/%arg{1}/shebang"       fill meta
 
     add-highlighter "shared/%arg{1}/literal"       fill string
     add-highlighter "shared/%arg{1}/literal"       regex \$\{.*?\} 0:value
