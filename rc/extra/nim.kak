@@ -41,7 +41,7 @@ add-highlighter shared/nim/code regex %{'[^'\n]'} 0:string
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=nim %{
         set-option window static_words '${keywords}:${types}:${values}'
-    }" | tr '|' ':' ':'
+    }" | tr '|' ':'
 
     # Highlight keywords
     printf %s "
