@@ -263,7 +263,7 @@ struct ConcatView
             : m_it1(std::move(it1)), m_end1(std::move(end1)),
               m_it2(std::move(it2)) {}
 
-        ValueType operator*() { return is2() ? *m_it2 : *m_it1; }
+        decltype(auto) operator*() { return is2() ? *m_it2 : *m_it1; }
         Iterator& operator++() { if (is2()) ++m_it2; else ++m_it1; return *this; }
         Iterator operator++(int) { auto copy = *this; ++*this; return copy; }
 
@@ -293,12 +293,12 @@ struct ConcatView
     Iterator end()   const { return {m_range1.end(), m_range1.end(), m_range2.end()}; }
 
 private:
-    Range1& m_range1;
-    Range2& m_range2;
+    Range1 m_range1;
+    Range2 m_range2;
 };
 
 template<typename Range1, typename Range2>
-ConcatView<Range1, Range2> concatenated(Range1&& range1, Range2&& range2)
+ConcatView<decay_range<Range1>, decay_range<Range2>> concatenated(Range1&& range1, Range2&& range2)
 {
     return {range1, range2};
 }
