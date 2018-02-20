@@ -87,20 +87,6 @@ void OptionManager::unset_option(StringView name)
     }
 }
 
-OptionManager::OptionList OptionManager::flatten_options() const
-{
-    OptionList res = m_parent ? m_parent->flatten_options() : OptionList{};
-    for (auto& option : m_options)
-    {
-        auto it = find_if(res, [&](const Option* opt) { return opt->name() == option.key; });
-        if (it != res.end())
-            *it = option.value.get();
-        else
-            res.emplace_back(option.value.get());
-    }
-    return res;
-}
-
 void OptionManager::on_option_changed(const Option& option)
 {
     // if parent option changed, but we overrided it, it's like nothing happened

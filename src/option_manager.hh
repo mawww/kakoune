@@ -90,8 +90,18 @@ public:
 
     void unset_option(StringView name);
 
-    using OptionList = Vector<const Option*>;
-    OptionList flatten_options() const;
+    auto flatten_options() const
+    {
+        auto merge = [](auto&& first, const OptionMap& second) {
+            return concatenated(std::forward<decltype(first)>(first)
+                                | filter([&second](auto& i) { return not second.contains(i.key); }),
+                                second);
+        };
+        static const OptionMap empty;
+        auto& parent = m_parent ? m_parent->m_options : empty;
+        auto& grand_parent = (m_parent and m_parent->m_parent) ? m_parent->m_parent->m_options : empty;
+        return merge(merge(grand_parent, parent), m_options) | transform(std::mem_fn(&OptionMap::Item::value));
+    }
 
     void register_watcher(OptionManagerWatcher& watcher) const;
     void unregister_watcher(OptionManagerWatcher& watcher) const;
@@ -103,8 +113,9 @@ private:
     // the only one allowed to construct a root option manager
     friend class Scope;
     friend class OptionsRegistry;
+    using OptionMap = HashMap<StringView, std::unique_ptr<Option>, MemoryDomain::Options>;
 
-    HashMap<StringView, std::unique_ptr<Option>, MemoryDomain::Options> m_options;
+    OptionMap m_options;
     OptionManager* m_parent;
 
     mutable Vector<OptionManagerWatcher*, MemoryDomain::Options> m_watchers;
