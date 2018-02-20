@@ -81,7 +81,23 @@ All optional arguments are forwarded to the new kak client} \
 define-command -params ..1 -client-completion \
     -docstring %{iterm-focus [<client>]: focus the given client
 If no client is passed then the current one is used} \
-    iterm-focus %{
-    # Should be possible using ${kak_client_env_ITERM_SESSION_ID}.
-     %sh{echo "echo -markup '{Error}Not implemented yet for iTerm'"}
+    iterm-focus %{ %sh{
+        if [ $# -eq 1 ]; then
+            printf %s\\n "evaluate-commands -client '$1' focus"
+        else
+            session="${kak_client_env_ITERM_SESSION_ID#*:}"
+            osascript                                                      \
+            -e "tell application \"iTerm\" to repeat with aWin in windows" \
+            -e "    tell aWin to repeat with aTab in tabs"                 \
+            -e "        tell aTab to repeat with aSession in sessions"     \
+            -e "            tell aSession"                                 \
+            -e "                if (unique id = \"${session}\") then"      \
+            -e "                    select"                                \
+            -e "                end if"                                    \
+            -e "            end tell"                                      \
+            -e "        end repeat"                                        \
+            -e "    end repeat"                                            \
+            -e "end repeat"
+        fi
+    }
 }
