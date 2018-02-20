@@ -18,12 +18,26 @@ public:
 
     Vector<StringView> aliases_for(StringView command) const;
 
+    auto flatten_aliases() const
+    {
+        auto merge = [](auto&& first, const AliasMap& second) {
+            return concatenated(std::forward<decltype(first)>(first)
+                                | filter([&second](auto& i) { return not second.contains(i.key); }),
+                                second);
+        };
+        static const AliasMap empty;
+        auto& parent = m_parent ? m_parent->m_aliases : empty;
+        auto& grand_parent = (m_parent and m_parent->m_parent) ? m_parent->m_parent->m_aliases : empty;
+        return merge(merge(grand_parent, parent), m_aliases);
+    }
+
 private:
     friend class Scope;
     AliasRegistry() {}
 
     SafePtr<AliasRegistry> m_parent;
-    HashMap<String, String, MemoryDomain::Aliases> m_aliases;
+    using AliasMap = HashMap<String, String, MemoryDomain::Aliases>;
+    AliasMap m_aliases;
 };
 
 }
