@@ -30,7 +30,10 @@ Window::Window(Buffer& buffer)
 
     setup_builtin_highlighters(m_builtin_highlighters.group());
 
-    for (auto& option : options().flatten_options())
+    // gather as on_option_changed can mutate the option managers
+    for (auto& option : options().flatten_options()
+                      | transform([](auto& ptr) { return ptr.get(); })
+                      | gather<Vector<const Option*>>())
         on_option_changed(*option);
 }
 
