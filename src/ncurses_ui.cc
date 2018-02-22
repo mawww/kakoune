@@ -717,13 +717,14 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     m_menu.style = style;
     m_menu.anchor = anchor;
 
-    if (style == MenuStyle::Prompt)
-        anchor = DisplayCoord{m_status_on_top ? 0_line : m_dimensions.line, 0};
-    else if (m_status_on_top)
-        anchor.line += 1;
-
     DisplayCoord maxsize = m_dimensions;
-    maxsize.column -= anchor.column;
+    if (style != MenuStyle::Prompt)
+    {
+        if (m_status_on_top)
+            anchor.line += 1;
+        maxsize.column -= anchor.column;
+    }
+
     if (maxsize.column <= 2)
         return;
 
@@ -748,16 +749,20 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
         kak_assert(m_menu.items.back().length() <= maxlen);
     }
 
-    int height = min(10, div_round_up(item_count, m_menu.columns));
+    const LineCount height = min<LineCount>(min(10_line, maxsize.line),
+                                            div_round_up(item_count, m_menu.columns));
 
-    int line = (int)anchor.line + 1;
-    if (line + height >= (int)maxsize.line)
-        line = (int)anchor.line - height;
-    m_menu.selected_item = item_count;
-    m_menu.top_line = 0;
+    LineCount line = anchor.line + 1;
+    if (is_prompt)
+        line = m_status_on_top ? 1_line : m_dimensions.line - height;
+    else if (line + height >= maxsize.line)
+        line = anchor.line - height;
 
     auto width = is_prompt ? maxsize.column : min(longest+1, maxsize.column);
     m_menu.create({line, anchor.column}, {height, width});
+    m_menu.selected_item = item_count;
+    m_menu.top_line = 0;
+
     draw_menu();
 
     if (m_info)
