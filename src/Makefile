@@ -27,7 +27,7 @@ deps := $(addprefix ., $(sources:.cc=$(suffix).d))
 PKG_CONFIG ?= $(shell command -v pkg-config 2>/dev/null)
 
 ifeq ($(static),yes)
-    PKG_CONFIG_FLAGS += -static
+    PKG_CONFIG_FLAGS += --static
     LDFLAGS += -static -pthread
 endif
 
