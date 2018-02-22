@@ -27,7 +27,7 @@ void HighlighterGroup::fill_unique_ids(Vector<StringView>& unique_ids) const
 void HighlighterGroup::add_child(HighlighterAndId&& hl)
 {
     if ((hl.second->passes() & passes()) != hl.second->passes())
-        throw runtime_error{"Cannot add that highlighter to this group, passes dont match"};
+        throw runtime_error{"Cannot add that highlighter to this group, passes don't match"};
 
     hl.first = replace(hl.first, "/", "<slash>");
 

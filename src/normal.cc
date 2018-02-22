@@ -1740,7 +1740,7 @@ void combine_selections(Context& context, SelectionList list, Func func)
                                  else
                                  {
                                      if (list.size() != sels.size())
-                                         throw runtime_error{"The two selection lists dont have the same number of elements"};
+                                         throw runtime_error{"The two selection lists don't have the same number of elements"};
                                      for (int i = 0; i < list.size(); ++i)
                                          combine_selection(sels.buffer(), list[i], sels[i], op);
                                      list.set_main_index(sels.main_index());

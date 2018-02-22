@@ -299,7 +299,7 @@ void register_options()
     reg.declare_option("BOM", "byte order mark to use when writing buffer",
                        ByteOrderMark::None);
     reg.declare_option("incsearch",
-                       "incrementaly apply search/select/split regex",
+                       "incrementally apply search/select/split regex",
                        true);
     reg.declare_option("autoinfo",
                        "automatically display contextual help",
@@ -308,7 +308,7 @@ void register_options()
                        "automatically display possible completions for prompts",
                        true);
     reg.declare_option("aligntab",
-                       "use tab characters when possible for alignement",
+                       "use tab characters when possible for alignment",
                        false);
     reg.declare_option("ignored_files",
                        "patterns to ignore when completing filenames",

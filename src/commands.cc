@@ -1122,7 +1122,7 @@ KeymapMode parse_keymap_mode(StringView str, const KeymapManager::UserModeList& 
 const CommandDesc debug_cmd = {
     "debug",
     nullptr,
-    "debug <command>: write some debug informations in the debug buffer\n"
+    "debug <command>: write some debug information to the debug buffer\n"
     "existing commands: info, buffers, options, memory, shared-strings, profile-hash-maps, faces",
     ParameterDesc{{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1},
     CommandFlags::None,
