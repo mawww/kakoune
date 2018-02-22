@@ -351,6 +351,9 @@ is a sequence of non whitespace characters
     convert spaces to tabs in current selections, uses the buffer tabstop
     option or the count parameter for tabstop
 
+*_*::
+    trim selections
+
 *<a-">*::
     rotate selections content, if specified, the count groups selections,
     so the following command

@@ -1612,6 +1612,22 @@ void spaces_to_tabs(Context& context, NormalParams params)
         SelectionList{ buffer, std::move(spaces) }.insert("\t"_str, InsertMode::Replace);
 }
 
+void trim_selections(Context& context, NormalParams)
+{
+    auto& buffer = context.buffer();
+    for (auto& sel : context.selections())
+    {
+        auto beg = buffer.iterator_at(sel.min());
+        auto end = buffer.iterator_at(sel.max());
+        while (beg != end and is_blank(*beg))
+            ++beg;
+        while (beg != end and is_blank(*end))
+            --end;
+        sel.min() = beg.coord();
+        sel.max() = end.coord();
+    }
+}
+
 SelectionList read_selections_from_register(char reg, Context& context)
 {
     if (not is_basic_alpha(reg) and reg != '^')
@@ -2159,6 +2175,8 @@ static const HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> key
 
     { {'@'}, {"convert tabs to spaces in selections", tabs_to_spaces} },
     { {alt('@')}, {"convert spaces to tabs in selections", spaces_to_tabs} },
+
+    { {'_'}, {"trim selections", trim_selections} },
 
     { {'C'}, {"copy selection on next lines", copy_selections_on_next_lines<Forward>} },
     { {alt('C')}, {"copy selection on previous lines", copy_selections_on_next_lines<Backward>} },
