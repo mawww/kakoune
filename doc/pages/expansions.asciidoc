@@ -86,6 +86,8 @@ informations about Kakoune's state:
     directory containing the user configuration
 *kak_count*::
     count parameter passed to the command
+*kak_register*::
+    register parameter passed to the command
 *kak_opt_<name>*::
     value of option *name*
 *kak_reg_<r>*::
