@@ -1,22 +1,29 @@
 def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
-  -shell-candidates %{
-      for col in ${kak_runtime}/colors/*.kak ${kak_config}/colors/*.kak; do
-          candidate=$(basename "${col}" .kak)
-          case ${candidate} in
-             \**) ;;
-             *) echo ${candidate} ;;
-          esac
-      done
+    -shell-candidates %{
+    find -L "${kak_runtime}/colors" "${kak_config}/colors" -type f -name '*\.kak' \
+        | while read -r path_colorscheme; do
+            basename="${path_colorscheme##*/}"
+            printf %s\\n "${basename%.*}"
+        done | sort -u
   } \
   colorscheme %{ %sh{
-    if [ $# -eq 1 ]; then
-        if [ -f "${kak_config}/colors/$1.kak" ];then
-            echo "source '${kak_config}/colors/$1.kak'"
-        else
-            echo "source '${kak_runtime}/colors/$1.kak'"
-        fi
+    find_colorscheme() {
+        find -L "${1}" -type f -name "${2}\\.kak" | head -n 1
+    }
+
+    if [ $# -lt 1 ]; then
+        echo "echo -markup '{Error}Usage: colorscheme <scheme name>'"
     else
-        echo "echo -color Error 'Usage: colorscheme <scheme name>'"
+        path_colorscheme=$(find_colorscheme "${kak_config}/colors" "${1}")
+        if [ -z "${path_colorscheme}" ];then
+            path_colorscheme=$(find_colorscheme "${kak_runtime}/colors" "${1}")
+        fi
+
+        if [ -z "${path_colorscheme}" ]; then
+            echo "echo -markup '{Error}No such colorscheme'"
+        else
+            printf 'source %%{%s}' "${path_colorscheme}"
+        fi
     fi
 }}
 
