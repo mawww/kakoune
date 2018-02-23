@@ -157,6 +157,14 @@ a:hover {
     margin-bottom: 1em;
 }
 
+.feature-more {
+    background: white;
+    border: #fa5300 1px solid;
+    color: #fa5300;
+    font-size: 1.2em;
+    margin: 1em 0;
+}
+
 .demo-caption {
     font-size: 1.1em;
     font-style: italic;
