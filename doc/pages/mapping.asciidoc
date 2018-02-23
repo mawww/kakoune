@@ -33,7 +33,7 @@ The *map* command makes *key* behave as if the *keys* sequence was typed.
 
 The context of execution of the above modes is always the current one at the
 time of execution of the mapping, except for *user* mode (always executed
-in a 'normal' context).
+in a 'normal' context). Refer to <<modes#,`:doc modes`>> for more details.
 
 An optional *-docstring* switch followed by a string can be used
 to describe what the mapping does. This docstring will be used
@@ -47,6 +47,8 @@ For more information about the values of the *scope* parameter, refer to
 <<scopes#,`:doc scopes`>>.
 
 == Mappable keys
+
+See <<keys#,`:doc keys`>> to discover the list of default bindings.
 
 For *key* and *keys* in the *map* command, the following key names can
 be used:

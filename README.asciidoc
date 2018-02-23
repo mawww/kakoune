@@ -740,6 +740,8 @@ This feature is tailored for scripting/macros, as it provides a more predictable
 behaviour than leaving insert mode with `<esc>`, executing normal mode command
 and entering back insert mode (with which binding ?)
 
+See <<doc/pages/modes#,`:doc modes`>>.
+
 Highlighters
 ~~~~~~~~~~~~
 
