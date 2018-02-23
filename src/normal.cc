@@ -1740,7 +1740,8 @@ void combine_selections(Context& context, SelectionList list, Func func)
                                  else
                                  {
                                      if (list.size() != sels.size())
-                                         throw runtime_error{"The two selection lists don't have the same number of elements"};
+                                         throw runtime_error{format("The two selection lists don't have the same number of elements ({} vs {})",
+                                                                    list.size(), sels.size())};
                                      for (int i = 0; i < list.size(); ++i)
                                          combine_selection(sels.buffer(), list[i], sels[i], op);
                                      list.set_main_index(sels.main_index());
@@ -1771,7 +1772,9 @@ void save_selections(Context& context, NormalParams params)
                              context.buffer().name(),
                              context.buffer().timestamp());
         RegisterManager::instance()[reg].set(context, desc);
-        context.print_status({format("{} selections to register '{}'", combine ? "Combined" : "Saved", reg), get_face("Information")});
+        context.print_status({format("{} {} selections to register '{}'",
+                                     combine ? "Combined" : "Saved", sels.size(), reg),
+                              get_face("Information")});
     };
 
     if (combine and not empty)
@@ -1787,8 +1790,11 @@ void restore_selections(Context& context, NormalParams params)
     auto selections = read_selections_from_register(reg, context);
 
     auto set_selections = [reg](Context& context, SelectionList sels) {
+        auto size = sels.size();
         context.selections_write_only() = std::move(sels);
-        context.print_status({format("{} selections from register '{}'", combine ? "Combined" : "Restored", reg), get_face("Information")});
+        context.print_status({format("{} {} selections from register '{}'",
+                                     combine ? "Combined" : "Restored", size, reg),
+                              get_face("Information")});
     };
 
     if (not combine)
