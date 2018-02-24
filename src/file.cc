@@ -140,8 +140,7 @@ bool fd_readable(int fd)
     FD_ZERO(&rfds);
     FD_SET(fd, &rfds);
 
-    timeval tv{0,0};
-    return select(fd+1, &rfds, nullptr, nullptr, &tv) == 1;
+    return select(fd+1, &rfds, nullptr, nullptr, nullptr) == 1;
 }
 
 bool fd_writable(int fd)
@@ -150,8 +149,7 @@ bool fd_writable(int fd)
     FD_ZERO(&wfds);
     FD_SET(fd, &wfds);
 
-    timeval tv{0,0};
-    return select(fd+1, nullptr, &wfds, nullptr, &tv) == 1;
+    return select(fd+1, nullptr, &wfds, nullptr, nullptr) == 1;
 }
 
 String read_fd(int fd, bool text)
