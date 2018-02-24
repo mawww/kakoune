@@ -614,7 +614,6 @@ void erase_selections(Context& context, NormalParams params)
     }
     ScopedEdition edition(context);
     context.selections().erase();
-    context.selections().avoid_eol();
 }
 
 template<bool yank>
@@ -1841,7 +1840,6 @@ void move_in_history(Context& context, NormalParams params)
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
             context.selections_write_only() = std::move(ranges);
-        context.selections().avoid_eol();
 
         context.print_status({ format("moved to change #{} ({})",
                                history_id, max_history_id),
@@ -1924,9 +1922,6 @@ void move(Context& context, NormalParams params)
         sel.cursor() = cursor;
     }
     selections.sort();
-
-    if (std::is_same<Type, LineCount>::value)
-        selections.avoid_eol();
 
     selections.merge_overlapping();
 }

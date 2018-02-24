@@ -1095,7 +1095,6 @@ public:
                         sel.cursor() = context().buffer().char_prev(sel.cursor());
                 }
             }
-            selections.avoid_eol();
         }
     }
 

@@ -334,24 +334,6 @@ void SelectionList::sort_and_merge_overlapping()
     merge_overlapping();
 }
 
-static inline void _avoid_eol(const Buffer& buffer, BufferCoord& coord)
-{
-    auto column = coord.column;
-    auto line = buffer[coord.line];
-    if (column != 0 and column == line.length() - 1)
-        coord.column = line.byte_count_to(line.char_length() - 2);
-}
-
-void SelectionList::avoid_eol()
-{
-    update();
-    for (auto& sel : m_selections)
-    {
-        _avoid_eol(buffer(), sel.anchor());
-        _avoid_eol(buffer(), sel.cursor());
-    }
-}
-
 BufferCoord get_insert_pos(const Buffer& buffer, const Selection& sel,
                            InsertMode mode)
 {

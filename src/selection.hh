@@ -100,8 +100,6 @@ struct SelectionList
     size_t main_index() const { return m_main; }
     void set_main_index(size_t main) { kak_assert(main < size()); m_main = main; }
 
-    void avoid_eol();
-
     void push_back(const Selection& sel) { m_selections.push_back(sel); }
     void push_back(Selection&& sel) { m_selections.push_back(std::move(sel)); }
 
