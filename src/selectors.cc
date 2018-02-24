@@ -485,7 +485,7 @@ select_sentence(const Context& context, const Selection& selection,
     auto& buffer = context.buffer();
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
-    if (not (flags & ObjectFlags::ToEnd))
+    if (not (flags & ObjectFlags::ToEnd) and first != buffer.begin())
     {
         BufferIterator prev_non_blank = first-1;
         skip_while_reverse(prev_non_blank, buffer.begin(),
