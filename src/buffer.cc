@@ -194,9 +194,7 @@ BufferCoord Buffer::clamp(BufferCoord coord) const
 
 BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool)
 {
-    StringView line = m_lines[coord.line];
-    auto target = utf8::advance(&line[coord.column], offset < 0 ? line.begin() : line.end()-1, offset);
-    return {coord.line, (int)(target - line.begin())};
+    return utf8::advance(iterator_at(coord), offset < 0 ? begin() : end()-1, offset).coord();
 }
 
 BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol)
