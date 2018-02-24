@@ -1522,8 +1522,7 @@ const ParameterDesc context_wrap_params = {
       { "no-hooks",   { false, "disable hooks" } },
       { "with-maps",  { false, "use user defined key mapping when executing keys" } },
       { "itersel",    { false, "run once for each selection with that selection as the only one" } },
-      { "save-regs",  { true, "restore all given registers after execution (defaults to '/\"|^@')" } },
-      { "collapse-jumps",  { false, "collapse all jumps into a single one from initial selection" } } },
+      { "save-regs",  { true, "restore all given registers after execution (defaults to '/\"|^@')" } } },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 1
 };
 
@@ -1675,17 +1674,17 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     }
     else
     {
-        Optional<JumpList> original_jump_list;
-        if (not draft and (bool)parser.get_switch("collapse-jumps"))
-            original_jump_list = c.jump_list();
+        auto original_jump_list = draft ? Optional<JumpList>{} : c.jump_list();
+        auto jump = draft ? Optional<SelectionList>{} : c.selections();
 
-        SelectionList jump = c.selections();
         func(parser, c);
 
-        if (original_jump_list and c.jump_list() != *original_jump_list)
+        // If the jump list got mutated, collapse all jumps into a single one from original selections
+        if (not draft and c.jump_list() != *original_jump_list)
         {
-            c.jump_list() = std::move(*original_jump_list);
-            c.jump_list().push(std::move(jump));
+            original_jump_list->push(std::move(*jump));
+            if (c.jump_list() != *original_jump_list)
+                c.jump_list() = std::move(*original_jump_list);
         }
     }
 }

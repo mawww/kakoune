@@ -69,5 +69,5 @@ The page can be a word, or a word directly followed by a section number between 
             ;;
     esac
 
-    printf %s\\n "evaluate-commands -collapse-jumps -try-client %opt{docsclient} man-impl *man* $pagenum $subject"
+    printf %s\\n "evaluate-commands -try-client %opt{docsclient} man-impl *man* $pagenum $subject"
 } }

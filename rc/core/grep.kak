@@ -47,7 +47,7 @@ declare-option -docstring "name of the client in which all source code jumps wil
     str jumpclient
 
 define-command -hidden grep-jump %{
-    evaluate-commands -collapse-jumps %{
+    evaluate-commands %{ # use evaluate-commands to ensure jumps are collapsed
         try %{
             execute-keys '<a-x>s^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
             set-option buffer grep_current_line %val{cursor_line}
@@ -58,7 +58,7 @@ define-command -hidden grep-jump %{
 }
 
 define-command grep-next-match -docstring 'Jump to the next grep match' %{
-    evaluate-commands -collapse-jumps -try-client %opt{jumpclient} %{
+    evaluate-commands -try-client %opt{jumpclient} %{
         buffer '*grep*'
         # First jump to enf of buffer so that if grep_current_line == 0
         # 0g<a-l> will be a no-op and we'll jump to the first result.
@@ -70,7 +70,7 @@ define-command grep-next-match -docstring 'Jump to the next grep match' %{
 }
 
 define-command grep-previous-match -docstring 'Jump to the previous grep match' %{
-    evaluate-commands -collapse-jumps -try-client %opt{jumpclient} %{
+    evaluate-commands -try-client %opt{jumpclient} %{
         buffer '*grep*'
         # See comment in grep-next-match
         execute-keys "ge %opt{grep_current_line}g<a-h> <a-/>^[^:]+:\d+:<ret>"

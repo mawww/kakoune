@@ -55,7 +55,7 @@ define-command -hidden make-open-error -params 4 %{
 }
 
 define-command -hidden make-jump %{
-    evaluate-commands -collapse-jumps %{
+    evaluate-commands %{
         try %{
             execute-keys gl<a-?> "Entering directory" <ret><a-:>
             # Try to parse the error into capture groups, failing on absolute paths
@@ -71,7 +71,7 @@ define-command -hidden make-jump %{
 }
 
 define-command make-next-error -docstring 'Jump to the next make error' %{
-    evaluate-commands -collapse-jumps -try-client %opt{jumpclient} %{
+    evaluate-commands -try-client %opt{jumpclient} %{
         buffer '*make*'
         execute-keys "%opt{make_current_error_line}ggl" "/^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
         make-jump
@@ -80,7 +80,7 @@ define-command make-next-error -docstring 'Jump to the next make error' %{
 }
 
 define-command make-previous-error -docstring 'Jump to the previous make error' %{
-    evaluate-commands -collapse-jumps -try-client %opt{jumpclient} %{
+    evaluate-commands -try-client %opt{jumpclient} %{
         buffer '*make*'
         execute-keys "%opt{make_current_error_line}g" "<a-/>^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
         make-jump
