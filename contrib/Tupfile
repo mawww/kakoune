@@ -60,6 +60,6 @@ endif
 !ld = |> $(CXX) $(LDFLAGS) $(LIBS) %f -o %o |>
 !ln = |> ln -sf %f %o |>
 
-:foreach *.cc |> !cxx |> %B$(suffix).o {objects}
+:foreach *.cc |> !cxx |> .%B$(suffix).o {objects}
 :{objects} |> !ld |> kak$(suffix)
 :kak$(suffix) |> !ln |> kak
