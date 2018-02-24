@@ -7,7 +7,7 @@ kak - a vim inspired, selection oriented code editor
 
 SYNOPSIS
 --------
-*kak* [-help] [-q] [-n] [-l] [-ro] [-clear] [-ui ui_type] [-e command] [-E command] [-f keys] [-p session_id] [-c session_id|[[-d] -s session_id] [+line[:column]|+:] file ...
+*kak* [-help] [-q] [-n] [-l] [-ro] [-clear] [-ui ui_type] [-e command] [-E command] [-f keys] [-p session_id | -F session_id] [-c session_id|[[-d] -s session_id] [+line[:column]|+:] file ...
 
 DESCRIPTION
 -----------
@@ -55,6 +55,9 @@ OPTIONS
 
 -p <session_id>::
 	send the commands written on the standard input to session *session_id*
+
+-F <session_id>::
+    make session *session_id* expand the string passed on the standard input, and print it on the standard output
 
 -c <session_id>::
 	connect to the given session

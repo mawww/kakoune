@@ -781,7 +781,26 @@ int run_pipe(StringView session)
 {
     try
     {
-        send_command(session, read_fd(0));
+        if (fd_readable(0))
+            send_message(session, read_fd(0), MessageType::Command);
+    }
+    catch (disconnected& e)
+    {
+        write_stderr(format("{}\ndisconnecting\n", e.what()));
+        return -1;
+    }
+    return 0;
+}
+
+int run_format(StringView session)
+{
+    try
+    {
+        if (fd_readable(0))
+        {
+            if (auto output = send_message(session, read_fd(0), MessageType::Format))
+                write_stdout(format("{}", *output));
+        }
     }
     catch (disconnected& e)
     {
@@ -850,6 +869,7 @@ int main(int argc, char* argv[])
                    { "s", { true,  "set session name" } },
                    { "d", { false, "run as a headless session (requires -s)" } },
                    { "p", { true,  "just send stdin as commands to the given session" } },
+                   { "F", { true,  "expand the string passed on stdin in the given session" } },
                    { "f", { true,  "act as a filter, executing given keys on given files" } },
                    { "i", { true, "backup the files on which a filter is applied using the given suffix" } },
                    { "q", { false, "in filter mode, be quiet about errors applying keys" } },
@@ -908,7 +928,7 @@ int main(int argc, char* argv[])
 
         if (auto session = parser.get_switch("p"))
         {
-            for (auto opt : { "c", "n", "s", "d", "e", "E", "ro" })
+            for (auto opt : { "c", "n", "s", "d", "e", "E", "ro", "F" })
             {
                 if (parser.get_switch(opt))
                 {
@@ -917,6 +937,19 @@ int main(int argc, char* argv[])
                 }
             }
             return run_pipe(*session);
+        }
+
+        if (auto session = parser.get_switch("F"))
+        {
+            for (auto opt : { "c", "n", "s", "d", "e", "E", "ro", "p" })
+            {
+                if (parser.get_switch(opt))
+                {
+                    write_stderr(format("error: -{} is incompatible with -F\n", opt));
+                    return -1;
+                }
+            }
+            return run_format(*session);
         }
 
         auto client_init = parser.get_switch("e").value_or(StringView{});

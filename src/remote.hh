@@ -25,6 +25,27 @@ struct BufferCoord;
 
 using RemoteBuffer = Vector<char, MemoryDomain::Remote>;
 
+enum class MessageType : uint8_t
+{
+    Unknown,
+    Connect,
+    Command,
+    MenuShow,
+    MenuSelect,
+    MenuHide,
+    InfoShow,
+    InfoHide,
+    Draw,
+    DrawStatus,
+    SetCursor,
+    Refresh,
+    SetOptions,
+    Exit,
+    Key,
+    Format,
+    String,
+};
+
 // A remote client handle communication between a client running on the server
 // and a user interface running on the local process.
 class RemoteClient
@@ -42,7 +63,7 @@ private:
     Optional<int>                  m_exit_status;
 };
 
-void send_command(StringView session, StringView command);
+Optional<String> send_message(StringView session, StringView command, MessageType type);
 String get_user_name(int uid);
 
 struct Server : public Singleton<Server>
