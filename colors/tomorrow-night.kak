@@ -57,6 +57,8 @@
         face SecondarySelection default,${selection}
         face PrimaryCursor black,${aqua}
         face SecondaryCursor black,${aqua}
+        face PrimaryCursorEol black,${green_dark}
+        face SecondaryCursorEol black,${green_dark}
         face LineNumbers ${text_light},${background}
         face LineNumberCursor ${yellow},rgb:282828+b
         face MenuForeground ${text_light},blue

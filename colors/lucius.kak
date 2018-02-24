@@ -54,6 +54,8 @@
         face SecondarySelection  ${lucius_lighter_grey},${lucius_dark_blue}
         face PrimaryCursor ${lucius_darker_grey},${lucius_lighter_grey}
         face SecondaryCursor ${lucius_darker_grey},${lucius_lighter_grey}
+        face PrimaryCursorEol ${lucius_darker_grey},${lucius_dark_green}
+        face SecondaryCursorEol ${lucius_darker_grey},${lucius_dark_green}
         face LineNumbers ${lucius_grey},${lucius_dark_grey}
         face LineNumberCursor ${lucius_grey},${lucius_dark_grey}+b
         face MenuForeground ${lucius_blue},${lucius_dark_blue}

@@ -5,6 +5,7 @@
     zentext="rgb:cfcfcf"
     zenselectionbg="rgb:3f7fcc"
     zencursor="rgb:2a2a2a,rgb:dfdfbf"
+    zencursoreol="rgb:2a2a2a,rgb:cc9393"
     zensecondaryfg="rgb:2a2a2a"
     zendefault="${zentext},rgb:3f3f3f"
     zenstatus="rgb:efdcbc,rgb:2a2a2a"
@@ -60,6 +61,8 @@
         face SecondarySelection ${zensecondaryfg},${zenselectionbg}
         face PrimaryCursor ${zencursor}
         face SecondaryCursor ${zencursor}
+        face PrimaryCursorEol ${zencursoreol}
+        face SecondaryCursorEol ${zencursoreol}
         face LineNumbers ${zendefault}
         face LineNumberCursor ${zenstatus}
         face MenuForeground ${zenmenufg}

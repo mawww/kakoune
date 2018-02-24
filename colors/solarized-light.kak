@@ -50,6 +50,8 @@
         face SecondarySelection ${base1},${base01}
         face PrimaryCursor      ${base3},${base00}
         face SecondaryCursor    ${base3},${base1}
+        face PrimaryCursorEol   ${base3},${yellow}
+        face SecondaryCursorEol ${base3},${orange}
         face LineNumbers        ${base1},${base2}
         face LineNumberCursor   ${base01},${base2}
         face LineNumbersWrapped ${base2},${base2}

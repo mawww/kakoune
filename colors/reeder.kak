@@ -50,8 +50,10 @@
         face Default            ${black_light},${white}
         face PrimarySelection   ${black},${brown_lighter}
         face SecondarySelection ${black_light},${grey_light}
-        face PrimaryCursor      ${black},white
-        face SecondaryCursor    ${black},white
+        face PrimaryCursor      ${black},${grey_dark}
+        face SecondaryCursor    ${black},${grey_dark}
+        face PrimaryCursorEol   ${black},${brown_dark}
+        face SecondaryCursorEol ${black},${brown_dark}
         face LineNumbers        ${grey_dark},${white}
         face LineNumberCursor   ${grey_dark},${brown_lighter}
         face MenuForeground     ${orange},${brown_lighter}

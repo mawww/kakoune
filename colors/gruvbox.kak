@@ -53,6 +53,8 @@
         face SecondarySelection ${bg},${blue}
         face PrimaryCursor      ${bg},${fg}
         face SecondaryCursor    ${bg},${fg}
+        face PrimaryCursorEol   ${bg},${fg4}
+        face SecondaryCursorEol ${bg},${fg4}
         face LineNumbers        ${bg4}
         face LineNumberCursor   ${yellow},${bg1}
         face MenuForeground     ${bg2},${blue}

@@ -32,8 +32,10 @@ face list yellow
 face Default rgb:121213,rgb:F8F8FF
 face PrimarySelection default,rgb:A6F3A6
 face SecondarySelection default,rgb:DBFFDB
-face PrimaryCursor black,white
-face SecondaryCursor black,white
+face PrimaryCursor black,rgb:888888
+face SecondaryCursor black,rgb:888888
+face PrimaryCursorEol black,rgb:A71D5D
+face SecondaryCursorEol black,rgb:A71D5D
 face LineNumbers rgb:A0A0A0,rgb:ECECEC
 face LineNumberCursor rgb:434343,rgb:DDDDDD
 face MenuForeground rgb:434343,rgb:CDCDFD

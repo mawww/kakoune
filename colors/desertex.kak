@@ -36,6 +36,9 @@ face SecondarySelection black,blue
 face PrimaryCursor   black,white
 face SecondaryCursor black,white
 
+face PrimaryCursorEol   black,rgb:7ccd7c
+face SecondaryCursorEol black,rgb:7ccd7c
+
 face LineNumbers      rgb:605958
 face LineNumberCursor yellow,default+b
 

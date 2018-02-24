@@ -52,6 +52,8 @@
         face SecondarySelection black,blue
         face PrimaryCursor black,white
         face SecondaryCursor black,white
+        face PrimaryCursorEol black,${cyan_light}
+        face SecondaryCursorEol black,${cyan_light}
         face LineNumbers ${grey_light},${black_lighter}
         face LineNumberCursor ${grey_light},rgb:282828+b
         face MenuForeground ${grey_light},blue
