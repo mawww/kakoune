@@ -10,13 +10,10 @@ main() {
         set global autoreload yes
         set global autoinfo ""
         set global autoshowcompl false
-        try %{ source rc }
         try %{
-            exec -save-regs / %{%s%\(\K[^)]+<ret><c-s>}
-            exec -draft ld
-            exec -draft <a-\;>hHd
-            exec i<c-u><esc><c-o>
+            exec -save-regs / %{%s%\(\K[^)]+\)<ret>a<backspace><esc>i<backspace><backspace><c-u><esc><a-;>}
         } catch %{ exec gg }
+        try %{ source rc }
         hook global RuntimeError .+ %{
             echo -debug -- error: %val{hook_param}
             eval -buffer *debug* write debug
