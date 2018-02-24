@@ -449,7 +449,7 @@ void command(Context& context, NormalParams params)
             {
                 if (cmdline.empty())
                     cmdline = context.main_sel_register_value(':');
-                else if (not is_blank(cmdline[0]) and not context.history_disabled())
+                else if (not is_blank(cmdline[0]))
                     RegisterManager::instance()[':'].set(context, cmdline.str());
 
                 EnvVarMap env_vars = {
@@ -509,7 +509,7 @@ void pipe(Context& context, NormalParams)
 
             if (cmdline.empty())
                 cmdline = context.main_sel_register_value("|");
-            else if (not context.history_disabled())
+            else
                 RegisterManager::instance()['|'].set(context, cmdline.str());
 
             if (cmdline.empty())
@@ -584,7 +584,7 @@ void insert_output(Context& context, NormalParams)
 
             if (cmdline.empty())
                 cmdline = context.main_sel_register_value("|");
-            else if (not context.history_disabled())
+            else
                 RegisterManager::instance()['|'].set(context, cmdline.str());
 
             if (cmdline.empty())
@@ -765,7 +765,8 @@ void search(Context& context, NormalParams params)
     const char reg = to_lower(params.reg ? params.reg : '/');
     const int count = params.count;
 
-    auto saved_reg = RegisterManager::instance()[reg].get(context) | gather<Vector<String>>();
+    auto reg_content = RegisterManager::instance()[reg].get(context);
+    Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
     const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
     regex_prompt<direction>(context, prompt.str(), saved_reg[main_index],
@@ -776,8 +777,7 @@ void search(Context& context, NormalParams params)
                          RegisterManager::instance()[reg].set(context, saved_reg);
                          return;
                      }
-                     if (not context.history_disabled())
-                         RegisterManager::instance()[reg].set(context, regex.str());
+                     RegisterManager::instance()[reg].set(context, regex.str());
 
                      if (regex.empty() or regex.str().empty())
                          return;
