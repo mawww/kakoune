@@ -796,8 +796,6 @@ private:
 
         auto& quantifier = node.quantifier;
 
-        // TODO reverse, invert the way we write optional quantifiers ?
-
         if (quantifier.allows_none())
         {
             auto split_pos = push_inst(quantifier.greedy ? CompiledRegex::Split_PrioritizeParent
@@ -814,7 +812,6 @@ private:
             push_inst(quantifier.greedy ? CompiledRegex::Split_PrioritizeChild
                                         : CompiledRegex::Split_PrioritizeParent,
                       inner_pos);
-
         // Write the node as an optional match for the min -> max counts
         else for (int i = std::max((int16_t)1, quantifier.min); // STILL UGLY !
                   i < quantifier.max; ++i)
@@ -831,7 +828,7 @@ private:
         return start_pos;
     }
 
-    // Add an set of instruction prefix used in the search use case
+    // Add a sequence of instructions that enable searching for a match instead of checking for it
     void write_search_prefix()
     {
         const uint32_t first_inst = m_program.instructions.size();
@@ -844,7 +841,7 @@ private:
     uint32_t push_inst(CompiledRegex::Op op, uint32_t param = 0)
     {
         constexpr auto max_instructions = std::numeric_limits<uint16_t>::max();
-        uint32_t res = m_program.instructions.size();
+        const uint32_t res = m_program.instructions.size();
         if (res > max_instructions)
             throw regex_error(format("regex compiled to more than {} instructions", max_instructions));
         m_program.instructions.push_back({ op, false, 0, param });
@@ -854,7 +851,7 @@ private:
     template<MatchDirection direction>
     uint32_t push_lookaround(ParsedRegex::NodeIndex index, bool ignore_case)
     {
-        uint32_t res = m_program.lookarounds.size();
+        const uint32_t res = m_program.lookarounds.size();
         auto write_matcher = [this, ignore_case](ParsedRegex::NodeIndex  child) {
                 auto& character = get_node(child);
                 if (character.op == ParsedRegex::Literal)
@@ -877,9 +874,9 @@ private:
         return res;
     }
 
-    // Fills accepted and rejected according to which chars can start the given node,
-    // returns true if the node did not consume the char, hence a following node in
-    // sequence would be still relevant for the parent node start chars computation.
+    // Mutate start_desc with informations on which Codepoint could start a match.
+    // Returns true if the node can not consume the char, in which case the next node
+    // would still be relevant for the parent node start chars computation.
     template<MatchDirection direction>
     bool compute_start_desc(ParsedRegex::NodeIndex index,
                              CompiledRegex::StartDesc& start_desc) const

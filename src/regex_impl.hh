@@ -294,6 +294,8 @@ private:
         while (true)
         {
             auto& inst = *thread.inst++;
+            // if this instruction was already executed for this step in another thread,
+            // then this thread is redundant and can be dropped
             if (inst.last_step == state.step)
                 return StepResult::Failed;
             inst.last_step = state.step;
