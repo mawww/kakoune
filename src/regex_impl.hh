@@ -101,7 +101,7 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     uint32_t first_backward_inst; // -1 if no backward support, 0 if only backward, >0 if both forward and backward
     uint32_t save_count;
 
-    struct StartDesc
+    struct StartDesc : UseMemoryDomain<MemoryDomain::Regex>
     {
         static constexpr size_t count = 256;
         static constexpr Codepoint other = 256;
