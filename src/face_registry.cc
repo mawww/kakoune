@@ -133,6 +133,8 @@ FaceRegistry::FaceRegistry()
         { "SecondarySelection", {Face{ Color::Black, Color::Blue }} },
         { "PrimaryCursor", {Face{ Color::Black, Color::White }} },
         { "SecondaryCursor", {Face{ Color::Black, Color::White }} },
+        { "PrimaryCursorEol", {Face{ Color::Black, Color::Cyan }} },
+        { "SecondaryCursorEol", {Face{ Color::Black, Color::Cyan }} },
         { "LineNumbers", {Face{ Color::Default, Color::Default }} },
         { "LineNumberCursor", {Face{ Color::Default, Color::Default, Attribute::Reverse }} },
         { "LineNumbersWrapped", {Face{ Color::Default, Color::Default, Attribute::Italic }} },

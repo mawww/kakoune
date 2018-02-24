@@ -31,6 +31,8 @@ face PrimarySelection white,blue
 face SecondarySelection black,blue
 face PrimaryCursor black,white
 face SecondaryCursor black,white
+face PrimaryCursorEol black,cyan
+face SecondaryCursorEol black,cyan
 face LineNumbers default,default
 face LineNumberCursor default,default+r
 face MenuForeground white,blue

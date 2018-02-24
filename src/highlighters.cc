@@ -1163,10 +1163,11 @@ HighlighterAndId create_matching_char_highlighter(HighlighterParameters params)
 void highlight_selections(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
     const auto& buffer = context.context.buffer();
-    const Face primary_face = get_face("PrimarySelection");
-    const Face secondary_face = get_face("SecondarySelection");
-    const Face primary_cursor_face = get_face("PrimaryCursor");
-    const Face secondary_cursor_face = get_face("SecondaryCursor");
+    const Face faces[6] = {
+            get_face("PrimarySelection"), get_face("SecondarySelection"),
+            get_face("PrimaryCursor"),    get_face("SecondaryCursor"),
+            get_face("PrimaryCursorEol"), get_face("SecondaryCursorEol"),
+    };
 
     const auto& selections = context.context.selections();
     for (size_t i = 0; i < selections.size(); ++i)
@@ -1178,14 +1179,16 @@ void highlight_selections(HighlightContext context, DisplayBuffer& display_buffe
 
         const bool primary = (i == selections.main_index());
         highlight_range(display_buffer, begin, end, false,
-                        apply_face(primary ? primary_face : secondary_face));
+                        apply_face(faces[primary ? 0 : 1]));
     }
     for (size_t i = 0; i < selections.size(); ++i)
     {
         auto& sel = selections[i];
+        const BufferCoord coord = sel.cursor();
         const bool primary = (i == selections.main_index());
-        highlight_range(display_buffer, sel.cursor(), buffer.char_next(sel.cursor()), false,
-                        apply_face(primary ? primary_cursor_face : secondary_cursor_face));
+        const bool eol = buffer[coord.line].length() - 1 == coord.column;
+        highlight_range(display_buffer, coord, buffer.char_next(coord), false,
+                        apply_face(faces[2 + (eol ? 2 : 0) + (primary ? 0 : 1)]));
     }
 }
 

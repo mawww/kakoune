@@ -57,6 +57,12 @@ areas of the user interface:
 *SecondaryCursor*::
     cursor of the secondary selection
 
+*PrimaryCursorEol*::
+    cursor of the primary selection when it lies on and end of line character
+
+*SecondaryCursorEol*::
+    cursor of the secondary selection when it lies on and end of line character
+
 *LineNumbers*::
     face used by the number_lines highlighter
 
