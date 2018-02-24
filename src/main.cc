@@ -39,16 +39,14 @@ namespace Kakoune
 
 static const char* startup_info =
 "Kakoune recent breaking changes:\n"
-" * Selection extending behaviour has been simplified, it now just\n"
-"   maintain the current anchor and moves the cursor,\n"
-" * Custom text objects are bound to 'c' instead of ':'\n"
 " * Highlighters have been refactored to be part of scopes\n"
 "   the add-highlighter and remove-highlighter command syntax changed.\n"
 " * Regex implementation switched to a custom one, the syntax is slightly\n"
 "   less tolerant.\n"
 " * ModeChange hook has been introduced and is expected to replace\n"
 "   the various ${MODE}Begin/${MODE}End hooks, consider those deprecated.\n"
-" * '*' Does not strip whitespaces anymore\n";
+" * '*' Does not strip whitespaces anymore, use built-in _ to strip them\n"
+" * 'l' on eol will go to next line, 'h' on first char will go to previous\n";
 
 struct startup_error : runtime_error
 {
