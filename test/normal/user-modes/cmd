@@ -1,4 +1,0 @@
-:declare-user-mode global foo<ret>
-:map global foo f '<esc>wchello from foo<esc>'
-:enter-user-mode global foo
-f
