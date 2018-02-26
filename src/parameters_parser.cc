@@ -59,7 +59,7 @@ Optional<StringView> ParametersParser::get_switch(StringView name) const
     for (size_t i = 0; i < m_params.size(); ++i)
     {
         const auto& param = m_params[i];
-        if (param[0_byte] == '-' and param.substr(1_byte) == name)
+        if (param.substr(0_byte, 1_byte) == "-" and param.substr(1_byte) == name)
             return it->value.takes_arg ? m_params[i+1] : StringView{};
 
         if (param == "--")
