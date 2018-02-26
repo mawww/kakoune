@@ -45,7 +45,7 @@ define-command racer-complete -docstring "Complete the current selection with ra
                 }'
             )
             printf %s\\n "evaluate-commands -client '${kak_client}' %{
-                set-option buffer=${kak_bufname} racer_completions %@${compl}@
+                set-option buffer=${kak_bufname} racer_completions %@${compl: : -1}@
             }" | kak -p ${kak_session}
             rm -r ${dir}
         ) > /dev/null 2>&1 < /dev/null &
