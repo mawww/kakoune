@@ -768,6 +768,7 @@ public:
 
                     display();
                     m_line_changed = true;
+                    m_refresh_completion_pending = true;
                 }, "enter register name", register_doc);
             display();
             return;
@@ -781,6 +782,7 @@ public:
                         m_line_editor.insert(*cp);
                         display();
                         m_line_changed = true;
+                        m_refresh_completion_pending = true;
                     }
                 }, "raw insert", "enter key to insert");
             display();
