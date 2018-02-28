@@ -361,17 +361,17 @@ InsertCompletion complete_line(const SelectionList& sels, const OptionManager& o
     auto add_candidates = [&](const Buffer& buf) {
         for (LineCount l = 0_line; l < buf.line_count(); ++l)
         {
-            // perf: it's unlikely the user intends to search among >10 candidates anyway
-            if (candidates.size() == 100)
-                break;
             if (buf.name() == buffer.name() && l == cursor_pos.line)
                 continue;
-            ByteCount len = buf[l].length();
-            if (len > cursor_pos.column and std::equal(prefix.begin(), prefix.end(), buf[l].begin()))
+            const StringView line = buf[l];
+            if (prefix == line.substr(0_byte, prefix.length()))
             {
-                StringView candidate = buf[l].substr(0_byte, len-1);
+                StringView candidate = line.substr(0_byte, line.length()-1);
                 candidates.push_back({candidate.str(), "",
                                       expand_tabs(candidate, tabstop, column)});
+                // perf: it's unlikely the user intends to search among >10 candidates anyway
+                if (candidates.size() == 100)
+                    break;
             }
         }
     };
@@ -382,9 +382,8 @@ InsertCompletion complete_line(const SelectionList& sels, const OptionManager& o
     {
         for (const auto& buf : BufferManager::instance())
         {
-            if (buf.get() == &buffer or buf->flags() & Buffer::Flags::Debug)
-                continue;
-            add_candidates(*buf);
+            if (buf.get() != &buffer and not (buf->flags() & Buffer::Flags::Debug))
+                add_candidates(*buf);
         }
     }
 
