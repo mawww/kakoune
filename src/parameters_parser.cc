@@ -7,24 +7,19 @@ namespace Kakoune
 
 String generate_switches_doc(const SwitchMap& switches)
 {
-    Vector<int> lengths(switches.size());
-    int i = 0;
-    for (auto& sw : switches) {
-        lengths[i++] = (int)sw.key.length() + (sw.value.takes_arg ? 5: 0);
-    }
-    int maxlen = *std::max_element(lengths.begin(), lengths.end());
-
     String res;
-    i = 0;
+    if (switches.empty())
+        return res;
+
+    auto switch_len = [](auto& sw) { return sw.key.column_length() + (sw.value.takes_arg ? 5 : 0); };
+    auto switches_len = switches | transform(switch_len);
+    const ColumnCount maxlen = *std::max_element(switches_len.begin(), switches_len.end());
+
     for (auto& sw : switches) {
-        int len = lengths[i++];
-        String pad = "  ";
-        while (len++ < maxlen)
-            pad += ' ';
         res += format("  -{} {}{}{}\n",
                       sw.key,
                       sw.value.takes_arg ? "<arg>" : "",
-                      pad,
+                      String{' ', maxlen - switch_len(sw) + 1},
                       sw.value.description);
     }
     return res;
