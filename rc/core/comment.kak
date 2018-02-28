@@ -57,7 +57,7 @@ hook global BufSetOption filetype=haml %{
     set-option buffer comment_line '-#'
 }
 
-hook global BufSetOption filetype=html %{
+hook global BufSetOption filetype=(html|xml) %{
     set-option buffer comment_line ''
     set-option buffer comment_block_begin '<!--'
     set-option buffer comment_block_end '-->'
