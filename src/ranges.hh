@@ -64,7 +64,7 @@ struct FilterView
                                     typename std::iterator_traits<RangeIt>::value_type>
     {
         Iterator(const FilterView& view, RangeIt it, RangeIt end)
-            : m_it{std::move(it)}, m_end{std::move(end)}, m_view{view}
+            : m_it{std::move(it)}, m_end{std::move(end)}, m_view{&view}
         {
             do_filter();
         }
@@ -88,13 +88,13 @@ struct FilterView
     private:
         void do_filter()
         {
-            while (m_it != m_end and not m_view.m_filter(*m_it))
+            while (m_it != m_end and not m_view->m_filter(*m_it))
                 ++m_it;
         }
 
         RangeIt m_it;
         RangeIt m_end;
-        const FilterView& m_view;
+        const FilterView* m_view;
     };
 
     Iterator begin() const { return {*this, std::begin(m_range), std::end(m_range)}; }
@@ -122,9 +122,9 @@ struct TransformView
     struct Iterator : std::iterator<std::forward_iterator_tag, std::remove_reference_t<ResType>>
     {
         Iterator(const TransformView& view, RangeIt it)
-            : m_it{std::move(it)}, m_view{view} {}
+            : m_it{std::move(it)}, m_view{&view} {}
 
-        decltype(auto) operator*() { return m_view.m_transform(*m_it); }
+        decltype(auto) operator*() { return m_view->m_transform(*m_it); }
         Iterator& operator++() { ++m_it; return *this; }
         Iterator operator++(int) { auto copy = *this; ++m_it; return copy; }
 
@@ -142,7 +142,7 @@ struct TransformView
 
     private:
         RangeIt m_it;
-        const TransformView& m_view;
+        const TransformView* m_view;
     };
 
     Iterator begin() const { return {*this, std::begin(m_range)}; }
