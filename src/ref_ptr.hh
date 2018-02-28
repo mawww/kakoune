@@ -22,7 +22,7 @@ struct RefCountable
 struct RefCountablePolicy
 {
     static void inc_ref(RefCountable* r, void*) noexcept { ++r->refcount; }
-    static void dec_ref(RefCountable* r, void*) noexcept(noexcept(r->~RefCountable())) { if (--r->refcount == 0) delete r; }
+    static void dec_ref(RefCountable* r, void*) noexcept { if (--r->refcount == 0) delete r; }
     static void ptr_moved(RefCountable*, void*, void*) noexcept {}
 };
 
@@ -31,7 +31,7 @@ struct RefPtr
 {
     RefPtr() = default;
     explicit RefPtr(T* ptr) : m_ptr(ptr) { acquire(); }
-    ~RefPtr() noexcept(noexcept(std::declval<RefPtr>().release())) { release(); }
+    ~RefPtr() noexcept { release(); }
     RefPtr(const RefPtr& other) : m_ptr(other.m_ptr) { acquire(); }
     RefPtr(RefPtr&& other)
         noexcept(noexcept(std::declval<RefPtr>().moved(nullptr)))
@@ -102,8 +102,7 @@ private:
     }
 
     [[gnu::always_inline]]
-    void release()
-        noexcept(noexcept(Policy::dec_ref(nullptr, nullptr)))
+    void release() noexcept
     {
         if (m_ptr)
             Policy::dec_ref(m_ptr, this);
