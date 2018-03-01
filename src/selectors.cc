@@ -173,17 +173,13 @@ Optional<Selection>
 select_line(const Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
-    Utf8Iterator first{buffer.iterator_at(selection.cursor()), buffer};
-    if (*first == '\n' and first + 1 != buffer.end())
-        ++first;
-
-    while (first != buffer.begin() and *(first - 1) != '\n')
-        --first;
-
-    Utf8Iterator last = first;
-    while (last + 1 != buffer.end() and *last != '\n')
-        ++last;
-    return target_eol(utf8_range(first, last));
+    auto line = selection.cursor().line;
+    // Next line if line fully selected
+    if (selection.anchor() <= BufferCoord{line, 0_byte} and
+        selection.cursor() == BufferCoord{line, buffer[line].length() - 1} and
+        line != buffer.line_count() - 1)
+        ++line;
+    return target_eol({{line, 0_byte}, {line, buffer[line].length() - 1}});
 }
 
 template<bool only_move>
