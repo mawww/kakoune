@@ -2135,11 +2135,38 @@ const CommandDesc declare_user_mode_cmd = {
     }
 };
 
+void enter_user_mode(Context& context, const String mode_name, KeymapMode mode, bool lock)
+{
+    on_next_key_with_autoinfo(context, KeymapMode::None,
+                             [mode_name, mode, lock](Key key, Context& context) mutable {
+        if (key == Key::Escape)
+            return;
+        if (not context.keymaps().is_mapped(key, mode))
+            return;
+
+        auto& mapping = context.keymaps().get_mapping(key, mode);
+        ScopedSetBool disable_keymaps(context.keymaps_disabled());
+
+        InputHandler::ScopedForceNormal force_normal{context.input_handler(), {}};
+
+        ScopedEdition edition(context);
+        for (auto& key : mapping.keys)
+            context.input_handler().handle_key(key);
+
+        if (lock)
+            enter_user_mode(context, std::move(mode_name), mode, true);
+    }, lock ? format("{} (lock)", mode_name) : mode_name,
+    build_autoinfo_for_mapping(context, mode, {}));
+}
+
 const CommandDesc enter_user_mode_cmd = {
     "enter-user-mode",
     nullptr,
-    "enter-user-mode <scope> <name>: enable <name> keymap mode for next key",
-    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    "enter-user-mode <switches> <scope> <name>: enable <name> keymap mode for next key",
+    ParameterDesc{
+        { { "lock", { false, "stay in mode until <esc> is pressed" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 2, 2
+    },
     CommandFlags::None,
     CommandHelper{},
     [](const Context& context, CompletionFlags flags,
@@ -2159,22 +2186,11 @@ const CommandDesc enter_user_mode_cmd = {
     },
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
+        auto lock = (bool)parser.get_switch("lock");
         KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
         KeymapMode mode = parse_keymap_mode(parser[1], keymaps.user_modes());
-        on_next_key_with_autoinfo(context, KeymapMode::None,
-                                 [mode](Key key, Context& context) mutable {
-            if (not context.keymaps().is_mapped(key, mode))
-                return;
 
-            auto& mapping = context.keymaps().get_mapping(key, mode);
-            ScopedSetBool disable_keymaps(context.keymaps_disabled());
-
-            InputHandler::ScopedForceNormal force_normal{context.input_handler(), {}};
-
-            ScopedEdition edition(context);
-            for (auto& key : mapping.keys)
-                context.input_handler().handle_key(key);
-        }, parser[1], build_autoinfo_for_mapping(context, mode, {}));
+        enter_user_mode(context, std::move(parser[1]), mode, lock);
     }
 };
 

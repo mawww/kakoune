@@ -135,6 +135,9 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 *enter-user-mode* <scope> <name>::
     enable <name> keymap mode for next key
 
+    *-lock*:::
+        stay in mode until `<esc>` is pressed
+
 == Hooks
 
 *hook* [-group <group>] <scope> <hook_name> <filtering_regex> <command>::
