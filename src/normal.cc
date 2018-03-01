@@ -20,6 +20,7 @@
 #include "shell_manager.hh"
 #include "string.hh"
 #include "user_interface.hh"
+#include "unit_tests.hh"
 #include "window.hh"
 
 namespace Kakoune
@@ -33,6 +34,33 @@ enum class SelectMode
     Extend,
     Append,
 };
+
+void merge_selections(Selection& sel, const Selection& new_sel)
+{
+    const bool forward = sel.cursor() >= sel.anchor();
+    const bool new_forward = new_sel.cursor() > new_sel.anchor();
+    if (forward and new_forward)
+        sel.anchor() = std::min(sel.anchor(), new_sel.anchor());
+    const bool backward = sel.cursor() <= sel.anchor();
+    const bool new_backward = new_sel.cursor() < new_sel.anchor();
+    if (backward and new_backward)
+        sel.anchor() = std::max(sel.anchor(), new_sel.anchor());
+
+    sel.cursor() = new_sel.cursor();
+}
+
+UnitTest test_merge_selection{[] {
+    auto merge = [](Selection sel, const Selection& new_sel) {
+        merge_selections(sel, new_sel);
+        return sel;
+    };
+    kak_assert(merge({{0, 1}, {0, 2} }, {{0, 3}, {0, 4}}) == Selection{{0, 1}, {0, 4}});
+    kak_assert(merge({{0, 1}, {0, 2} }, {{0, 1}, {0, 2}}) == Selection{{0, 1}, {0, 2}});
+    kak_assert(merge({{0, 1}, {0, 2} }, {{0, 0}, {0, 0}}) == Selection{{0, 1}, {0, 0}});
+    kak_assert(merge({{0, 1}, {0, 2} }, {{0, 0}, {0, 3}}) == Selection{{0, 0}, {0, 3}});
+    kak_assert(merge({{0, 1}, {0, 3} }, {{0, 4}, {0, 2}}) == Selection{{0, 1}, {0, 2}});
+    kak_assert(merge({{0, 1}, {0, 2} }, {{0, 1}, {0, 1}}) == Selection{{0, 1}, {0, 1}});
+}};
 
 template<SelectMode mode, typename T>
 void select(Context& context, T func)
@@ -63,7 +91,7 @@ void select(Context& context, T func)
             }
 
             if (mode == SelectMode::Extend)
-                sel.cursor() = res->cursor();
+                merge_selections(sel, *res);
             else
             {
                 sel.anchor() = res->anchor();
@@ -788,7 +816,7 @@ void search(Context& context, NormalParams params)
                             if (mode == SelectMode::Replace)
                                 sel = keep_direction(find_next_match<direction>(context, sel, regex, wrapped), sel);
                             if (mode == SelectMode::Extend)
-                                sel.cursor() = find_next_match<direction>(context, sel, regex, wrapped).cursor();
+                                merge_selections(sel, find_next_match<direction>(context, sel, regex, wrapped));
                         }
                         selections.sort_and_merge_overlapping();
                      } while (--c > 0);
