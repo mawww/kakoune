@@ -45,8 +45,10 @@ static const char* startup_info =
 "   less tolerant.\n"
 " * ModeChange hook has been introduced and is expected to replace\n"
 "   the various ${MODE}Begin/${MODE}End hooks, consider those deprecated.\n"
-" * '*' Does not strip whitespaces anymore, use built-in _ to strip them\n"
-" * 'l' on eol will go to next line, 'h' on first char will go to previous\n";
+" * '*' Does not strip whitespaces anymore, use built-in '_' to strip them\n"
+" * 'l' on eol will go to next line, 'h' on first char will go to previous\n"
+" * selections merging behaviour is now a bit more complex again\n"
+" * 'x' will only jump to next line if full line is already selected\n";
 
 struct startup_error : runtime_error
 {
