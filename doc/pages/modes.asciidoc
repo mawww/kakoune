@@ -6,18 +6,17 @@ Kakoune is a modal editor which means that keys have different effects depending
 on the current mode. Therefore, modes can be conceptualized as a way to group
 related behaviors together during a text editing workflow.
 
-By default Kakoune starts in Normal mode. A few keys let users enter other
-modes where they can focus on a specific task before going back to Normal mode
-explicitly with `<esc>` or automatically in the case of *one shot* modes.
+Kakoune starts in Normal mode. A few keys let users enter other modes
+where they can focus on a specific task before going back to Normal mode.
 
 Modes are stored in a stack with the top of the stack being the active mode.
 So in some scenarios, the Normal mode may feel *nested* in another one.
 The `ModeChange` hook is triggered each time a mode is popped or pushed
 on this stack. See <<hooks#,`:doc hooks`>>
 
-To get a comprehensive list of commands available for each modes,
-see <<keys#,`:doc keys`>>.
-Most of them are described in *info* boxes in real-time if the `autoinfo` option is set.
+To get a comprehensive list of commands available for each modes, see
+<<keys#,`:doc keys`>>. Most of them are described in *info* boxes in
+real-time if the `autoinfo` option is set.
 
 To customize key mappings in various modes, refer to <<mapping#,`:doc mapping`>>.
 
@@ -25,66 +24,82 @@ To customize key mappings in various modes, refer to <<mapping#,`:doc mapping`>>
 
 === Normal mode
 
-Normal mode is the starting mode mainly dedicated to move, extend or create
-selections where users spend most of their time (besides inserting content).
-It also serves as a *basecamp* to access other modes.
+Normal mode is the default mode. It provides commands to manipulate
+selections, such as general movement, text object selection, searching,
+splitting, and commands to manipulate the text underlying the current
+selections, such as yanking, pasting, deleting…
+
+It also provides commands to enter other modes.
 
 See normal commands <<keys#movement,`:doc keys movement`>>.
 
 === Insert mode
 
-In Insert mode, typing keys add content to the current buffer like in many other
-text editors. There are several ways to reach Insert Mode and start editing at
-common locations for maximum efficiency (after cursor, at the beginning of the line…).
+Insert mode provides an efficient way to interactively write text into
+the buffer. Most keys will insert their corresponding characters before
+every selections cursors. It also provides completion support for inserted
+text along with some commands for basic movement.
+
+Insert mode can be entered from Normal modes through a set of commands
+such as `i` to insert before selection, `a` to insert after selection,
+`o` to insert in a new line below selections… It can then be exited with
+`<esc>` to return to Normal mode.
+
 See changes <<keys#changes,`:doc keys changes`>>.
 
-Use `<esc>` to go back to Normal Mode: it pops Insert mode from the modes stack.
-Use `<a-;>` to temporary enable Normal mode for one command: in this case, this quick
-Normal Mode is pushed on the modes stack.
+From Insert mode, `<a-;>` provides a way to temporarily enter a new
+Normal mode for a single command, before returning to Insert mode.
 
 See insert commands <<keys#insert-mode,`:doc keys insert-mode`>>.
 
 === Goto mode
 
-Default keys: `g`, `G`
-Goto mode groups commands dedicated to jump inside a buffer (top, bottom…).
+Goto mode provides commands dedicated to jumping either inside a buffer
+(such as jumping to buffer start/end, window top/botton) or to another
+(such as jumping to the file whose path is currently selected).
+
 See goto commands <<keys#goto-commands,`:doc keys goto-commands`>>.
 
 === View mode
 
-Default keys: `v`, `V`
-View mode let users center and scroll the current window.
+View mode provides commands dedicated to controlling the window, such
+as scrolling or centering the main selection cursor.
+
 See view commands <<keys#view-commands,`:doc keys view-commands`>>.
 
 === Menu mode
 
-Mode entered when a menu is displayed with the *menu* command or by autocompletion.
-Mappings are used to choose and select intended items.
+Menu mode is entered when a menu is displayed with the *menu* command.
+Mappings are used to filter and select intended items.
 
 === Prompt mode
 
-Mode entered with `:`, `/` or the `:prompt` command.
-The commands defined in this mode help editing.
+Mode entered with `:`, `/` or the `:prompt` command. During prompt mode a
+line of text is edited and then validated with `<ret>` or abandoned with
+`<esc>`.
+
 See prompt commands <<keys#prompt-commands,`:doc keys prompt-commands`>>.
 
 === Object mode
 
 Mode entered with `<a-i>`, `<a-a>` and various combinations of `[]{}` keys.
 It aims at crafting semantic selections, often called *text-objects*.
+
 See object commands <<keys#object-commands,`:doc keys object-commands`>>.
 
 === User mode
 
-Default key: `,`
-The user mode is empty by default and is the opportunity to store custom mappings
-with no risk to shadow builtin ones. The context of execution is always the Normal mode.
+The user mode is empty by default and is the opportunity to store custom
+mappings with no risk to shadow builtin ones. The context of execution
+is always the Normal mode.
 
 == User modes
 
-The following two commands are useful in advanced use cases, when the builtin User mode
-gets too crowded by mappings competing for the same key that deserves to be split
-in more meaningful collections. It's mostly useful for plugin authors who want
-to bind their new commands in extensible menus.
+The following two commands are useful in advanced use cases, when the
+builtin User mode gets too crowded by mappings competing for the same
+key that deserves to be split in more meaningful collections. It's
+mostly useful for plugin authors who want to bind their new commands in
+extensible menus.
 
 --------------------------------
 declare-user-mode <scope> <name>
@@ -98,6 +113,7 @@ through the output results.
 enter-user-mode <scope> <name>
 -------------------------------
 
-Enable the designated mode for the next key. Docstrings are shown in the automatic
-info box to increase discoverability. To keep illustrating the aforementioned
-fictional `grep` mode, a normal mapping on `<a-g>` could be used to enter this mode.
+Enable the designated mode for the next key. Docstrings are shown in the
+automatic info box to increase discoverability. To keep illustrating
+the aforementioned fictional `grep` mode, a normal mapping on `<a-g>`
+could be used to enter this mode.
