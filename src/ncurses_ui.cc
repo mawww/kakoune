@@ -764,9 +764,8 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
            space_above -= 1;
            space_below += 1;
         }
-        const bool is_below = space_below >= 10_line or space_below >= space_above;
+        const bool is_below = space_below >= space_above;
         const LineCount space = is_below ? space_below : space_above;
-
         height = min(space, height);
         line = is_below ? anchor.line + 1 : anchor.line - height;
     }
