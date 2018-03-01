@@ -754,6 +754,8 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     LineCount line;
     if (is_prompt)
         line = m_status_on_top ? 1_line : m_dimensions.line - height;
+    else if (anchor.line + height < m_dimensions.line)
+        line = anchor.line + 1;
     else {
         LineCount space_below = m_dimensions.line - anchor.line - 1;
         LineCount space_above = anchor.line;
