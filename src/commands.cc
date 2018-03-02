@@ -1192,10 +1192,11 @@ const CommandDesc debug_cmd = {
             auto& keymaps = context.keymaps();
             auto modes = {"normal", "insert", "prompt", "menu",
                           "goto", "view", "user", "object"};
+            auto user_modes = keymaps.user_modes();
             write_to_debug_buffer("Mappings:");
-            for (auto& mode : modes)
+            for (auto& mode : concatenated(modes, user_modes) | gather<Vector<String>>())
             {
-                KeymapMode m = parse_keymap_mode(mode, keymaps.user_modes());
+                KeymapMode m = parse_keymap_mode(mode, user_modes);
                 for (auto& key : keymaps.get_mapped_keys(m))
                     write_to_debug_buffer(format(" * {} {}: {}",
                                           mode, key_to_str(key),
@@ -2123,15 +2124,14 @@ const CommandDesc fail_cmd = {
 const CommandDesc declare_user_mode_cmd = {
     "declare-user-mode",
     nullptr,
-    "declare-user-mode <scope> <name>: add a new user keymap mode in given <scope>",
-    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    "declare-user-mode <name>: add a new user keymap mode",
+    single_param,
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_scope),
+    CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
-        keymaps.add_user_mode(std::move(parser[1]));
+        context.keymaps().add_user_mode(std::move(parser[0]));
     }
 };
 
@@ -2162,10 +2162,10 @@ void enter_user_mode(Context& context, const String mode_name, KeymapMode mode, 
 const CommandDesc enter_user_mode_cmd = {
     "enter-user-mode",
     nullptr,
-    "enter-user-mode <switches> <scope> <name>: enable <name> keymap mode for next key",
+    "enter-user-mode <switches> <name>: enable <name> keymap mode for next key",
     ParameterDesc{
         { { "lock", { false, "stay in mode until <esc> is pressed" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 2, 2
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
     },
     CommandFlags::None,
     CommandHelper{},
@@ -2174,23 +2174,17 @@ const CommandDesc enter_user_mode_cmd = {
        ByteCount pos_in_token) -> Completions
     {
         if (token_to_complete == 0)
-            return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, scopes) };
-        if (token_to_complete == 1)
         {
-            KeymapManager& keymaps = get_scope(params[0], context).keymaps();
-            return { 0_byte, params[1].length(),
-                     complete(params[1], pos_in_token, keymaps.user_modes()) };
+            return { 0_byte, params[0].length(),
+                     complete(params[0], pos_in_token, context.keymaps().user_modes()) };
         }
         return {};
     },
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         auto lock = (bool)parser.get_switch("lock");
-        KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
-        KeymapMode mode = parse_keymap_mode(parser[1], keymaps.user_modes());
-
-        enter_user_mode(context, std::move(parser[1]), mode, lock);
+        KeymapMode mode = parse_keymap_mode(parser[0], context.keymaps().user_modes());
+        enter_user_mode(context, std::move(parser[0]), mode, lock);
     }
 };
 

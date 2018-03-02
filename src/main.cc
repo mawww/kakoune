@@ -193,6 +193,10 @@ static const EnvVarDesc builtin_env_vars[] = { {
         "window_height", false,
         [](StringView name, const Context& context) -> String
         { return to_string(context.window().dimensions().line); }
+    }, {
+        "user_modes", false,
+        [](StringView name, const Context& context) -> String
+        { return join(context.keymaps().user_modes(), ':'); }
     }
 };
 

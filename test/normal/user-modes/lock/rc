@@ -1,3 +1,3 @@
-declare-user-mode global foo
+declare-user-mode foo
 map global foo f d
-map global normal <a-,> ':enter-user-mode -lock global foo<ret>'
+map global normal <a-,> ':enter-user-mode -lock foo<ret>'

@@ -126,6 +126,8 @@ informations about Kakoune's state:
 *kak_client_env_<name>*::
     value of the *name* variable in the client environment
     (e.g. *$kak_client_env_SHELL* is the SHELL variable)
+*kak_user_modes*::
+    the user modes list, each modes separated by a colon
 
 Note that in order for Kakoune to pass a value in the environment, the
 variable has to be spelled out within the body of the expansion.

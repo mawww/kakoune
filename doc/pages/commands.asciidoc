@@ -129,10 +129,10 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 *unmap* <scope> <mode> <key> [<expected>]::
     unbind a key combination (See <<mapping#,`:doc mapping`>>)
 
-*declare-user-mode* <scope> <name>::
-    declare a new user keymap mode within the context of a scope
+*declare-user-mode* <name>::
+    declare a new user keymap mode
 
-*enter-user-mode* <scope> <name>::
+*enter-user-mode* <name>::
     enable <name> keymap mode for next key
 
     *-lock*:::

@@ -102,7 +102,7 @@ mostly useful for plugin authors who want to bind their new commands in
 extensible menus.
 
 --------------------------------
-declare-user-mode <scope> <name>
+declare-user-mode <name>
 --------------------------------
 
 Declare a new custom mode that can later be referred by the *map* command.
@@ -110,7 +110,7 @@ For example a `grep` custom mode to attach keys like `n` or `p` to skim
 through the output results.
 
 -------------------------------
-enter-user-mode <scope> <name>
+enter-user-mode <name>
 -------------------------------
 
 Enable the designated mode for the next key. Docstrings are shown in the
