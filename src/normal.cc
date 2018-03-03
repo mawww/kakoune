@@ -1017,7 +1017,7 @@ void keep(Context& context, NormalParams params)
     const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
     regex_prompt(context, prompt.str(), saved_reg[main_index],
-                 [saved_reg, reg, main_index]
+                 [saved_reg, reg]
                  (const Regex& regex, PromptEvent event, Context& context) {
 
         if (event == PromptEvent::Abort)
