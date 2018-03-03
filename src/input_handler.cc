@@ -1314,19 +1314,6 @@ private:
         SelectionList& selections = context().selections();
         Buffer& buffer = context().buffer();
 
-        auto duplicate_selections = [](SelectionList& sels, int count) {
-            count = count > 0 ? count : 1;
-            Vector<Selection> new_sels;
-            new_sels.reserve(count * sels.size());
-            for (auto& sel : sels)
-                for (int i = 0; i < count; ++i)
-                    new_sels.push_back(sel);
-
-            size_t new_main = sels.main_index() * count + count - 1;
-            sels = SelectionList{sels.buffer(), std::move(new_sels)};
-            sels.set_main_index(new_main);
-        };
-
         switch (mode)
         {
         case InsertMode::Insert:
@@ -1351,22 +1338,41 @@ private:
                 sel.set({sel.max().line, buffer[sel.max().line].length() - 1});
             break;
         case InsertMode::OpenLineBelow:
-            for (auto& sel : selections)
-                sel.set({sel.max().line, buffer[sel.max().line].length() - 1});
-            duplicate_selections(selections, count);
-            insert('\n');
-            break;
-        case InsertMode::OpenLineAbove:
-            for (auto& sel : selections)
-                sel.set({sel.min().line});
-            duplicate_selections(selections, count);
-            // Do not use insert method here as we need to fixup selection
-            // before running the InsertChar hook.
-            selections.insert("\n"_str, InsertMode::InsertCursor);
-            for (auto& sel : selections) // fixup selection positions
-                sel.set({sel.cursor().line - 1});
+        {
+            Vector<Selection> new_sels;
+            count = count > 0 ? count : 1;
+            LineCount inserted_count = 0;
+            for (auto sel : selections)
+            {
+                buffer.insert(sel.max().line + inserted_count + 1,
+                              String{'\n', CharCount{count}});
+                for (int i = 0; i < count; ++i)
+                    new_sels.push_back({sel.max().line + inserted_count + i + 1});
+                inserted_count += count;
+            }
+            selections.set(std::move(new_sels),
+                           selections.main_index() * count + count - 1);
             context().hooks().run_hook("InsertChar", "\n", context());
             break;
+        }
+        case InsertMode::OpenLineAbove:
+        {
+            Vector<Selection> new_sels;
+            count = count > 0 ? count : 1;
+            LineCount inserted_count = 0;
+            for (auto sel : selections)
+            {
+                buffer.insert(sel.min().line + inserted_count,
+                              String{'\n', CharCount{count}});
+                for (int i = 0; i < count; ++i)
+                    new_sels.push_back({sel.max().line + inserted_count + i});
+                inserted_count += count;
+            }
+            selections.set(std::move(new_sels),
+                           selections.main_index() * count + count - 1);
+            context().hooks().run_hook("InsertChar", "\n", context());
+            break;
+        }
         case InsertMode::InsertAtLineBegin:
             for (auto& sel : selections)
             {
