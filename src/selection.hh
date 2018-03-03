@@ -137,7 +137,6 @@ struct SelectionList
     Buffer& buffer() const { return *m_buffer; }
 
     size_t timestamp() const { return m_timestamp; }
-    void update_timestamp() { m_timestamp = m_buffer->timestamp(); }
 
     void insert(ConstArrayView<String> strings, InsertMode mode,
                 Vector<BufferCoord>* out_insert_pos = nullptr);

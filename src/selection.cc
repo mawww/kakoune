@@ -48,11 +48,10 @@ void SelectionList::set(Vector<Selection> list, size_t main)
     kak_assert(main < list.size());
     m_selections = std::move(list);
     m_main = main;
+    m_timestamp = m_buffer->timestamp();
     sort_and_merge_overlapping();
-    update_timestamp();
     check_invariant();
 }
-
 
 namespace
 {
