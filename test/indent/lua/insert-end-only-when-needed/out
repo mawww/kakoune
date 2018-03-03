@@ -1,0 +1,14 @@
+function fun1()
+    foo()
+end
+
+function fun2()
+    foo()
+end
+
+
+function fun3()
+    if true then
+        foo()
+    end
+end

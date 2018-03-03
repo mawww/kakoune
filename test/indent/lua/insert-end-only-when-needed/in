@@ -1,0 +1,9 @@
+function fun1()%( )
+end
+
+function fun2()%( )
+
+
+function fun3()
+    if true then%( )
+end

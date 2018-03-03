@@ -1,0 +1,4 @@
+bugdemo = {}
+function bugdemo.bug()
+    foo()
+end

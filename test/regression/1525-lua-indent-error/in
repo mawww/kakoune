@@ -1,0 +1,2 @@
+bugdemo = {}
+function bugdemo.bug()%( )
