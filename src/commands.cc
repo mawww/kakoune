@@ -108,8 +108,17 @@ auto filename_completer = make_completer(
                                             context.options()["ignored_files"].get<Regex>(),
                                             cursor_pos, FilenameFlags::Expand) }; });
 
-static Completions complete_buffer_name(const Context& context, CompletionFlags flags,
-                                        StringView prefix, ByteCount cursor_pos)
+enum class BufferCompletionFlags
+{
+   None = 0,
+   IgnoreCurrentBuffer = 1 << 0,
+};
+
+constexpr bool with_bit_ops(Meta::Type<BufferCompletionFlags>) { return true; }
+
+static Completions complete_buffer_name_impl(const Context& context, CompletionFlags flags,
+                                             StringView prefix, ByteCount cursor_pos,
+                                             BufferCompletionFlags buffer_completion_flags)
 {
     struct RankedMatchAndBuffer : RankedMatch
     {
@@ -127,6 +136,10 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
     Vector<RankedMatchAndBuffer> matches;
     for (const auto& buffer : BufferManager::instance())
     {
+        if ((buffer_completion_flags & BufferCompletionFlags::IgnoreCurrentBuffer)
+            and buffer.get() == &context.buffer())
+            continue;
+
         StringView bufname = buffer->display_name();
         if (buffer->flags() & Buffer::Flags::File)
         {
@@ -151,7 +164,22 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
     return { 0, cursor_pos, res };
 }
 
+static Completions complete_buffer_name(const Context& context, CompletionFlags flags,
+                                        StringView prefix, ByteCount cursor_pos)
+{
+   return complete_buffer_name_impl(context, flags, prefix, cursor_pos,
+                                    BufferCompletionFlags::None);
+}
+
+static Completions complete_other_buffer_name(const Context& context, CompletionFlags flags,
+                                              StringView prefix, ByteCount cursor_pos)
+{
+   return complete_buffer_name_impl(context, flags, prefix, cursor_pos,
+                                    BufferCompletionFlags::IgnoreCurrentBuffer);
+}
+
 auto buffer_completer = make_completer(complete_buffer_name);
+auto other_buffer_completer = make_completer(complete_other_buffer_name);
 
 const ParameterDesc no_params{ {}, ParameterDesc::Flags::None, 0, 0 };
 const ParameterDesc single_param{ {}, ParameterDesc::Flags::None, 1, 1 };
@@ -521,7 +549,7 @@ const CommandDesc buffer_cmd = {
     single_param,
     CommandFlags::None,
     CommandHelper{},
-    buffer_completer,
+    other_buffer_completer,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         Buffer& buffer = BufferManager::instance().get_buffer(parser[0]);
@@ -918,7 +946,8 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
                        CommandParameters params,
                        size_t token_to_complete, ByteCount pos_in_token)
         {
-             return complete_buffer_name(context, flags, params[token_to_complete], pos_in_token);
+             return complete_buffer_name(context, flags, params[token_to_complete],
+                                         pos_in_token);
         };
     }
     else if (auto shell_cmd_opt = parser.get_switch("shell-completion"))
