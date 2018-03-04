@@ -113,21 +113,29 @@ inline RegexExecFlags match_flags(bool bol, bool eol, bool bow, bool eow, bool b
 template<typename It>
 bool regex_match(It begin, It end, const Regex& re)
 {
-    return regex_match(begin, end, *re.impl());
+    ThreadedRegexVM<It, MatchDirection::Forward> vm{*re.impl()};
+    return vm.exec(begin, end, RegexExecFlags::AnyMatch | RegexExecFlags::NoSaves);
 }
 
 template<typename It>
 bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
 {
     res.values().clear();
-    return regex_match(begin, end, res.values(), *re.impl());
+    ThreadedRegexVM<It, MatchDirection::Forward> vm{*re.impl()};
+    if (vm.exec(begin, end,  RegexExecFlags::None))
+    {
+        std::copy(vm.captures().begin(), vm.captures().end(), std::back_inserter(res.values()));
+        return true;
+    }
+    return false;
 }
 
 template<typename It>
 bool regex_search(It begin, It end, const Regex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
 {
-    return regex_search(begin, end, *re.impl(), flags);
+    ThreadedRegexVM<It, MatchDirection::Forward> vm{*re.impl()};
+    return vm.exec(begin, end, flags | RegexExecFlags::Search | RegexExecFlags::AnyMatch | RegexExecFlags::NoSaves);
 }
 
 template<typename It, MatchDirection direction = MatchDirection::Forward>
@@ -135,7 +143,13 @@ bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
 {
     res.values().clear();
-    return regex_search<It, direction>(begin, end, res.values(), *re.impl(), flags);
+    ThreadedRegexVM<It, direction> vm{*re.impl()};
+    if (vm.exec(begin, end, flags | RegexExecFlags::Search))
+    {
+        std::move(vm.captures().begin(), vm.captures().end(), std::back_inserter(res.values()));
+        return true;
+    }
+    return false;
 }
 
 template<typename It>

@@ -573,48 +573,6 @@ private:
     Saves* m_captures = nullptr;
 };
 
-template<typename It, MatchDirection direction = MatchDirection::Forward>
-bool regex_match(It begin, It end, const CompiledRegex& re, RegexExecFlags flags = RegexExecFlags::None)
-{
-    ThreadedRegexVM<It, direction> vm{re};
-    return vm.exec(begin, end, (RegexExecFlags)(flags & ~(RegexExecFlags::Search)) |
-                               RegexExecFlags::AnyMatch | RegexExecFlags::NoSaves);
-}
-
-template<typename It, MatchDirection direction = MatchDirection::Forward>
-bool regex_match(It begin, It end, Vector<It, MemoryDomain::Regex>& captures, const CompiledRegex& re,
-                 RegexExecFlags flags = RegexExecFlags::None)
-{
-    ThreadedRegexVM<It, direction> vm{re};
-    if (vm.exec(begin, end,  flags & ~(RegexExecFlags::Search)))
-    {
-        std::copy(vm.captures().begin(), vm.captures().end(), std::back_inserter(captures));
-        return true;
-    }
-    return false;
-}
-
-template<typename It, MatchDirection direction = MatchDirection::Forward>
-bool regex_search(It begin, It end, const CompiledRegex& re,
-                  RegexExecFlags flags = RegexExecFlags::None)
-{
-    ThreadedRegexVM<It, direction> vm{re};
-    return vm.exec(begin, end, flags | RegexExecFlags::Search | RegexExecFlags::AnyMatch | RegexExecFlags::NoSaves);
-}
-
-template<typename It, MatchDirection direction = MatchDirection::Forward>
-bool regex_search(It begin, It end, Vector<It, MemoryDomain::Regex>& captures, const CompiledRegex& re,
-                  RegexExecFlags flags = RegexExecFlags::None)
-{
-    ThreadedRegexVM<It, direction> vm{re};
-    if (vm.exec(begin, end, flags | RegexExecFlags::Search))
-    {
-        std::move(vm.captures().begin(), vm.captures().end(), std::back_inserter(captures));
-        return true;
-    }
-    return false;
-}
-
 }
 
 #endif // regex_impl_hh_INCLUDED
