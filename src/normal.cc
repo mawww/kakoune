@@ -1041,10 +1041,9 @@ void keep(Context& context, NormalParams params)
             // give more intuitive behaviours in keep use cases.
             const auto flags = match_flags(is_bol(begin.coord()), false,
                                            is_bow(buffer, begin.coord()),
-                                           is_eow(buffer, end.coord()),
-                                           true, true) |
+                                           is_eow(buffer, end.coord())) |
                                RegexExecFlags::AnyMatch;
-            if (regex_search(begin, end, regex, flags) == matching)
+            if (regex_search(begin, end, begin, end, regex, flags) == matching)
                 keep.push_back(sel);
         }
         if (keep.empty())

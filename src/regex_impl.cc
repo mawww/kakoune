@@ -1141,7 +1141,7 @@ struct TestVM : CompiledRegex, ThreadedRegexVM<const char*, dir>
 
     bool exec(StringView re, RegexExecFlags flags = RegexExecFlags::AnyMatch)
     {
-        return VMType::exec(re.begin(), re.end(), flags);
+        return VMType::exec(re.begin(), re.end(), re.begin(), re.end(), flags);
     }
 };
 }

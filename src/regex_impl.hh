@@ -132,12 +132,9 @@ enum class RegexExecFlags
     NotEndOfLine      = 1 << 2,
     NotBeginOfWord    = 1 << 3,
     NotEndOfWord      = 1 << 4,
-    NotBeginOfSubject = 1 << 5,
-    NotEndOfSubject   = 1 << 6,
-    NotInitialNull    = 1 << 7,
-    AnyMatch          = 1 << 8,
-    NoSaves           = 1 << 9,
-    PrevAvailable     = 1 << 10,
+    NotInitialNull    = 1 << 5,
+    AnyMatch          = 1 << 6,
+    NoSaves           = 1 << 7,
 };
 
 constexpr bool with_bit_ops(Meta::Type<RegexExecFlags>) { return true; }
@@ -167,18 +164,21 @@ public:
         }
     }
 
-    bool exec(Iterator begin, Iterator end, RegexExecFlags flags)
+    bool exec(Iterator begin, Iterator end,
+              Iterator subject_begin, Iterator subject_end,
+              RegexExecFlags flags)
     {
         if (flags & RegexExecFlags::NotInitialNull and begin == end)
             return false;
 
         constexpr bool forward = direction == MatchDirection::Forward;
-        const bool prev_avail = flags & RegexExecFlags::PrevAvailable;
 
-        m_begin = Utf8It{utf8::iterator<Iterator>{forward ? begin : end,
-                                                  prev_avail ? begin-1 : begin, end}};
-        m_end = Utf8It{utf8::iterator<Iterator>{forward ? end : begin,
-                                                prev_avail ? begin-1 : begin, end}};
+        m_begin = EffectiveIt{Utf8It{forward ? begin : end, subject_begin, subject_end}};
+        m_end = EffectiveIt{Utf8It{forward ? end : begin, subject_begin, subject_end}};
+
+        m_subject_begin = EffectiveIt{Utf8It{forward ? subject_begin : subject_end, subject_begin, subject_end}};
+        m_subject_end = EffectiveIt{Utf8It{forward ? subject_end : subject_begin, subject_begin, subject_end}};
+
         if (forward)
             m_flags = flags;
         else // Flip line begin/end flags as we flipped the instructions on compilation.
@@ -187,7 +187,7 @@ public:
                 ((flags & RegexExecFlags::NotBeginOfLine) ? RegexExecFlags::NotEndOfLine : RegexExecFlags::None);
 
         const bool search = (flags & RegexExecFlags::Search);
-        Utf8It start{m_begin};
+        EffectiveIt start{m_begin};
         const auto& start_desc = direction == MatchDirection::Forward ? m_program.forward_start_desc
                                                                       : m_program.backward_start_desc;
         if (start_desc)
@@ -273,9 +273,9 @@ private:
         Saves* saves;
     };
 
-    using Utf8It = std::conditional_t<direction == MatchDirection::Forward,
-                                      utf8::iterator<Iterator>,
-                                      std::reverse_iterator<utf8::iterator<Iterator>>>;
+    using Utf8It = utf8::iterator<Iterator>;
+    using EffectiveIt = std::conditional_t<direction == MatchDirection::Forward,
+                                           Utf8It, std::reverse_iterator<Utf8It>>;
 
     struct ExecState
     {
@@ -287,7 +287,7 @@ private:
     enum class StepResult { Consumed, Matched, Failed, FindNextStart };
 
     // Steps a thread until it consumes the current character, matches or fail
-    StepResult step(Utf8It& pos, Thread& thread, ExecState& state)
+    StepResult step(EffectiveIt& pos, Thread& thread, ExecState& state)
     {
         const bool no_saves = (m_flags & RegexExecFlags::NoSaves);
         auto* instructions = m_program.instructions.data();
@@ -371,11 +371,11 @@ private:
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::SubjectBegin:
-                    if (pos != m_begin or (m_flags & RegexExecFlags::NotBeginOfSubject))
+                    if (pos != m_subject_begin)
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::SubjectEnd:
-                    if (pos != m_end or (m_flags & RegexExecFlags::NotEndOfSubject))
+                    if (pos != m_subject_end)
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::LookAhead:
@@ -414,7 +414,7 @@ private:
         return StepResult::Failed;
     }
 
-    bool exec_program(Utf8It pos, ConstArrayView<CompiledRegex::Instruction> instructions)
+    bool exec_program(EffectiveIt pos, ConstArrayView<CompiledRegex::Instruction> instructions)
     {
         ExecState state;
         state.current_threads.push_back({instructions.begin(), nullptr});
@@ -495,7 +495,7 @@ private:
         }
     }
 
-    void to_next_start(Utf8It& start, const Utf8It& end,
+    void to_next_start(EffectiveIt& start, const EffectiveIt& end,
                        const CompiledRegex::StartDesc& start_desc)
     {
         while (start != end and *start >= 0 and
@@ -504,11 +504,12 @@ private:
     }
 
     template<MatchDirection look_direction, bool ignore_case>
-    bool lookaround(uint32_t index, Utf8It pos) const
+    bool lookaround(uint32_t index, EffectiveIt pos) const
     {
+        const auto end = (look_direction == MatchDirection::Forward ? m_subject_end : m_subject_begin);
         for (auto it = m_program.lookarounds.begin() + index; *it != -1; ++it)
         {
-            if (pos == (look_direction == MatchDirection::Forward ? m_end : m_begin))
+            if (pos == end)
                 return false;
             Codepoint cp = (look_direction == MatchDirection::Forward ? *pos : *(pos-1));
             if (ignore_case)
@@ -535,36 +536,38 @@ private:
         return true;
     }
 
-    bool is_line_start(const Utf8It& pos) const
+    bool is_line_start(const EffectiveIt& pos) const
     {
-        if (not (m_flags & RegexExecFlags::PrevAvailable) and pos == m_begin)
+        if (pos == m_subject_begin)
             return not (m_flags & RegexExecFlags::NotBeginOfLine);
         return *(pos-1) == '\n';
     }
 
-    bool is_line_end(const Utf8It& pos) const
+    bool is_line_end(const EffectiveIt& pos) const
     {
-        if (pos == m_end)
+        if (pos == m_subject_end)
             return not (m_flags & RegexExecFlags::NotEndOfLine);
         return *pos == '\n';
     }
 
-    bool is_word_boundary(const Utf8It& pos) const
+    bool is_word_boundary(const EffectiveIt& pos) const
     {
-        if (not (m_flags & RegexExecFlags::PrevAvailable) and pos == m_begin)
+        if (pos == m_subject_begin)
             return not (m_flags & RegexExecFlags::NotBeginOfWord);
-        if (pos == m_end)
+        if (pos == m_subject_end)
             return not (m_flags & RegexExecFlags::NotEndOfWord);
         return is_word(*(pos-1)) != is_word(*pos);
     }
 
-    static const Iterator& get_base(const utf8::iterator<Iterator>& it) { return it.base(); }
-    static Iterator get_base(const std::reverse_iterator<utf8::iterator<Iterator>>& it) { return it.base().base(); }
+    static const Iterator& get_base(const Utf8It& it) { return it.base(); }
+    static Iterator get_base(const std::reverse_iterator<Utf8It>& it) { return it.base().base(); }
 
     const CompiledRegex& m_program;
 
-    Utf8It m_begin;
-    Utf8It m_end;
+    EffectiveIt m_begin;
+    EffectiveIt m_end;
+    EffectiveIt m_subject_begin;
+    EffectiveIt m_subject_end;
     RegexExecFlags m_flags;
 
     Vector<Saves*, MemoryDomain::Regex> m_saves;
