@@ -43,14 +43,17 @@ private:
     Highlighters  m_highlighters;
 };
 
-class GlobalScope : public Scope, public Singleton<GlobalScope>
+class GlobalScope : public Scope, public OptionManagerWatcher, public Singleton<GlobalScope>
 {
     public:
-        GlobalScope() : m_option_registry(m_options) {}
+        GlobalScope();
+        ~GlobalScope();
 
         OptionsRegistry& option_registry() { return m_option_registry; }
         const OptionsRegistry& option_registry() const { return m_option_registry; }
     private:
+        void on_option_changed(const Option& option);
+
         OptionsRegistry m_option_registry;
 };
 
