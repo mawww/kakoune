@@ -130,10 +130,12 @@ String generate_context_info(const Context& context)
         s += "[+]";
     if (context.client().input_handler().is_recording())
         s += format("[recording ({})]", context.client().input_handler().recording_reg());
-    if (context.buffer().flags() & Buffer::Flags::New)
-        s += "[new file]";
     if (context.hooks_disabled())
         s += "[no-hooks]";
+    if (not(context.buffer().flags() & (Buffer::Flags::File | Buffer::Flags::Debug)))
+        s += "[scratch]";
+    if (context.buffer().flags() & Buffer::Flags::New)
+        s += "[new file]";
     if (context.buffer().flags() & Buffer::Flags::Fifo)
         s += "[fifo]";
     if (context.buffer().flags() & Buffer::Flags::Debug)
