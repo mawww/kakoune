@@ -85,6 +85,9 @@ of the given *group*.
 *WinSetOption* `<option_name>=<new_value>`::
     an option was set in a window context
 
+*GlobalSetOption* `<option_name>=<new_value>`::
+    an option was set at the global scope
+
 *BufSetOption* `<option_name>=<new_value>`::
     an option was set in a buffer context
 
