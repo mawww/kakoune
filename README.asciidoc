@@ -709,18 +709,9 @@ See <<doc/pages/execeval#,`:doc execeval`>>.
 Insert mode completion
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Kakoune can propose completions while inserting text, the `completers` option
-controls automatic completion, which kicks in when a certain idle timeout is
-reached (see `idle_timeout` option). Insert mode completion can be explicitly triggered
-using `<c-x>`, followed, by:
+Kakoune can propose completions while inserting text: filenames, words, lines…
 
- * *f* : filename completion
- * *w* : word completion (current buffer)
- * *W* : word completion (all buffers)
- * *l* : line completion (current buffer)
- * *L* : line completion (all buffers)
-
-Completion candidates can be selected using `<c-n>` and `<c-p>`.
+See <<doc/pages/keys#insert-mode-completion,`:doc keys insert-mode-completion`>>.
 
 Escape to normal mode
 ~~~~~~~~~~~~~~~~~~~~~

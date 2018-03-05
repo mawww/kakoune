@@ -31,6 +31,26 @@ In order to bind some keys to arbitrary ones, refer to <<mapping#,`:doc mapping`
 *<end>*::
     move cursors to end of line
 
+*<c-r>*::
+    insert contents of the register given by next key
+
+*<c-v>*::
+    insert next keystroke directly into the buffer, without interpreting it
+
+*<c-u>*::
+    commit changes up to now as a single undo group
+
+*<a-;>*::
+    escape to normal mode for a single command
+
+== Insert mode completion
+
+The `completers` option controls automatic completion, which kicks in when
+the value specified in the `idle_timeout` option is reached.
+
+*<c-o>*::
+    disable automatic completion for this insert session
+
 *<c-n>*::
     select next completion candidate
 
@@ -50,22 +70,10 @@ In order to bind some keys to arbitrary ones, refer to <<mapping#,`:doc mapping`
         explicit word completion (all buffers)
 
     *l*:::
-        explicit line completion
+        explicit line completion (current buffer)
 
-*<c-o>*::
-    disable automatic completion for this insert session
-
-*<c-r>*::
-    insert contents of the register given by next key
-
-*<c-v>*::
-    insert next keystroke directly into the buffer, without interpreting it
-
-*<c-u>*::
-    commit changes up to now as a single undo group
-
-*<a-;>*::
-    escape to normal mode for a single command
+    *L*:::
+        explicit line completion (all buffers)
 
 == Using Counts
 
