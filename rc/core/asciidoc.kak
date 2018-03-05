@@ -27,7 +27,7 @@ add-highlighter shared/asciidoc regex ^(={3,})\n[^\n\h].*?\n(={3,})$ 0:block
 add-highlighter shared/asciidoc regex ^(~{3,})\n[^\n\h].*?\n(~{3,})$ 0:block
 add-highlighter shared/asciidoc regex ^(\*{3,})\n[^\n\h].*?\n(\*{3,})$ 0:block
 add-highlighter shared/asciidoc regex \B(?:\+[^\n]+?\+|`[^\n]+?`)\B 0:mono
-add-highlighter shared/asciidoc regex \B_[^\n]+?_\B 0:italic
+add-highlighter shared/asciidoc regex \b_[^\n]+?_\b 0:italic
 add-highlighter shared/asciidoc regex \B\*[^\n]+?\*\B 0:bold
 add-highlighter shared/asciidoc regex ^:[-\w]+: 0:meta
 
