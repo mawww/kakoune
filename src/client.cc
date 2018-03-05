@@ -294,14 +294,28 @@ void Client::on_buffer_reload_key(Key key)
 {
     auto& buffer = context().buffer();
 
-    if (key == 'y' or key == Key::Return)
+    auto set_autoreload = [this](Autoreload autoreload) {
+        auto* option = &context().options()["autoreload"];
+        // Do not touch global autoreload, set it at least at buffer level
+        if (&option->manager() == &GlobalScope::instance().options())
+            option = &context().buffer().options().get_local_option("autoreload");
+        option->set(autoreload);
+    };
+
+    if (key == 'y' or key == 'Y' or key == Key::Return)
+    {
         reload_buffer();
-    else if (key == 'n' or key == Key::Escape)
+        if (key == 'Y')
+            set_autoreload(Autoreload::Yes);
+    }
+    else if (key == 'n' or key == 'N' or key == Key::Escape)
     {
         // reread timestamp in case the file was modified again
         buffer.set_fs_timestamp(get_fs_timestamp(buffer.name()));
         print_status({ format("'{}' kept", buffer.display_name()),
                        get_face("Information") });
+        if (key == 'N')
+            set_autoreload(Autoreload::No);
     }
     else
     {
@@ -347,7 +361,8 @@ void Client::check_if_buffer_needs_reloading()
         StringView bufname = buffer.display_name();
         info_show(format("reload '{}' ?", bufname),
                   format("'{}' was modified externally\n"
-                         "press <ret> or y to reload, <esc> or n to keep",
+                         " y, <ret>: reload | n, <esc>: keep\n"
+                         " Y: always reload | N: always keep\n",
                          bufname), {}, InfoStyle::Modal);
 
         m_buffer_reload_dialog_opened = true;
