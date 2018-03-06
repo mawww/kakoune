@@ -24,34 +24,15 @@ separated path starting with a scope. Scopes are *global*, *buffer*,
 completion in a prompt on the *remove-highlighter* command to see the
 existing highlighters ids.
 
-== General highlighters
-
-*regex* <ex> <capture_id>:<face> ...::
-    highlight a regex, takes the regex as first parameter, followed by
-    any number of face parameters. For example:
-
--------------------------------------------------------------------
-add-highlighter window regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
--------------------------------------------------------------------
-
-    will highlight C++ style comments in cyan, with an eventual 'TODO:'
-    in yellow on red background
-
-*dynregex*::
-    Similar to regex, but expand (like a command parameter would) the
-    given expression before building a regex from the result
-
-*flag_lines* <face> <option_name>::
-    add a column in front of the buffer, and display the flags specified
-    in <option_name>, using <face>
+== Convenient highlighters
 
 *show_matching*::
     highlight matching char of the character under the selections' cursor
-    using MatchingChar face
+    using `MatchingChar` face
 
 *show_whitespaces* [options]::
     display symbols on top of whitespaces to make them more explicit
-    using the Whitespace face, with the following *options*:
+    using the `Whitespace` face, with the following *options*:
 
     *-lf* <separator>:::
         a one character long separator that will replace line feeds
@@ -93,18 +74,10 @@ add-highlighter window regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
     *-width <max_width>*:::
         wrap text at *max_width* if the window is wider.
 
+== General highlighters
+
 *fill* <face>::
     fill using the given *face*, mostly useful with regions highlighters
-
-*ranges* <option_name>::
-    use the data in the range-specs option of the given name to highlight
-    the buffer. The string part of the is interpretted as a face to apply
-    to the range.
-
-*replace-ranges* <option_name>::
-    use the data in the range-specs option of the given name to highlight
-    the buffer. The string part of the is interpretted as a display line to
-    display in place of the range.
 
 *column* <number> <face>::
     highlight column *number* with face *face*
@@ -112,8 +85,69 @@ add-highlighter window regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
 *line* <number> <face>::
     highlight line *number* with face *face*
 
-== Highlighting Groups
+*regex* <regex> <capture_id>:<face> ...::
+    highlight a regex, takes the regex as first parameter, followed by
+    any number of face parameters.
+    This highlights C++ style comments in cyan, with an eventual 'TODO:'
+    in yellow on red background:
 
+-------------------------------------------------------------------
+add-highlighter window regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
+-------------------------------------------------------------------
+
+*dynregex* <expression> <capture_id>:<face> ...::
+    similar to regex, but expand (like a command parameter would) the
+    given expression before building a regex from the result.
+    This highlights all the current search matches in italic:
+
+---------------------------------------------
+add-highlighter window dynregex '%reg{/}' 0:i
+---------------------------------------------
+
+== Specs highlighters
+
+The following highlighters are useful to add indicators like lint warnings,
+git blame output or spelling typos.
+See <<options#types,`:doc options types`>> for the format of `line-specs`
+and `range-specs`.
+
+*flag_lines* <face> <option_name>::
+    add columns in front of the buffer, and display the flags specified
+    in `line-specs` option, using <face>.
+    In this example two words will be added in the gutter: a blue Foo at
+    line 1 and a bold red/yellow Bar on line 3:
+
+---------------------------------------------------------------
+declare-option line-specs my_flags
+set-option window my_flags 1486635122:1|Foo:3|{red,yellow+b}Bar
+add-highlighter window/ flag_lines blue my_flags
+---------------------------------------------------------------
+
+*ranges* <option_name>::
+    use the data in the `range-specs` option of the given name to highlight
+    the buffer. The string part of each tuple of the range-specs is
+    interpreted as a *face* to apply to the range.
+    In this example the 3 first chars of the buffer will be colored in red:
+
+-------------------------------------------------
+declare-option range-specs my_range
+set-option window my_range 1486635122:1.1,1.3|red
+add-highlighter window/ ranges my_range
+-------------------------------------------------
+
+*replace-ranges* <option_name>::
+    use the data in the `range-specs` option of the given name to highlight
+    the buffer. The string part of each tuple of the range-specs is
+    interpreted as a *display line* to display in place of the range.
+    Here, the 3 first chars of the buffer will be replaced by the word 'red':
+
+-------------------------------------------------
+declare-option range-specs my_range
+set-option window my_range 1486635122:1.1,1.3|red
+add-highlighter window/ replace-ranges my_range
+-------------------------------------------------
+
+== Highlighting Groups
 
 The *group* highlighter is a container for other highlighters. A subgroup
 can be added to an existing group or scope using:
