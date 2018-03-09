@@ -1181,17 +1181,16 @@ void select_object(Context& context, NormalParams params)
     const int count = params.count <= 0 ? 0 : params.count - 1;
     on_next_key_with_autoinfo(context, KeymapMode::Object,
                              [count](Key key, Context& context) {
-        if (not key.codepoint() or key == Key::Escape)
+        if (key == Key::Escape)
             return;
-        const auto cp = *key.codepoint();
 
         static constexpr struct ObjectType
         {
-            Codepoint key;
+            Key key;
             Optional<Selection> (*func)(const Context&, const Selection&, int, ObjectFlags);
         } selectors[] = {
             { 'w', select_word<Word> },
-            { 'W', select_word<WORD> },
+            { alt('w'), select_word<WORD> },
             { 's', select_sentence },
             { 'p', select_paragraph },
             { ' ', select_whitespaces },
@@ -1199,12 +1198,12 @@ void select_object(Context& context, NormalParams params)
             { 'n', select_number },
             { 'u', select_argument },
         };
-        auto obj_it = find(selectors | transform(std::mem_fn(&ObjectType::key)), cp).base();
+        auto obj_it = find(selectors | transform(std::mem_fn(&ObjectType::key)), key).base();
         if (obj_it != std::end(selectors))
             return select_and_set_last<mode>(
                 context, std::bind(obj_it->func, _1, _2, count, flags));
 
-        if (cp == 'c')
+        if (key == 'c')
         {
             const bool info = show_auto_info_ifn(
                 "Enter object desc",
@@ -1253,9 +1252,9 @@ void select_object(Context& context, NormalParams params)
             { '`', '`', 'g' },
         };
         auto pair_it = find_if(surrounding_pairs,
-                               [cp](const SurroundingPair& s) {
-                                   return s.opening == cp or s.closing == cp or
-                                          (s.name != 0 and s.name == cp);
+                               [key](const SurroundingPair& s) {
+                                   return key == s.opening or key == s.closing or
+                                          (s.name != 0 and key == s.name);
                                });
         if (pair_it != std::end(surrounding_pairs))
             return select_and_set_last<mode>(
@@ -1264,6 +1263,10 @@ void select_object(Context& context, NormalParams params)
                                    Regex{format("\\Q{}", pair_it->closing), RegexCompileFlags::Backward},
                                    count, flags));
 
+        if (not key.codepoint())
+            return;
+
+        const Codepoint cp = *key.codepoint();
         if (is_punctuation(cp) or cp == '_')
         {
             auto re = Regex{"\\Q" + to_string(cp), RegexCompileFlags::Backward};
@@ -1281,7 +1284,7 @@ void select_object(Context& context, NormalParams params)
          {{'\'','q'},    "single quote string"},
          {{'`','g'},     "grave quote string"},
          {{'w'},         "word"},
-         {{'W'},         "WORD"},
+         {{alt('w')},    "WORD"},
          {{'s'},         "sentence"},
          {{'p'},         "paragraph"},
          {{' '},         "whitespaces"},

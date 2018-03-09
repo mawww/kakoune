@@ -48,7 +48,8 @@ static const char* startup_info =
 " * '*' Does not strip whitespaces anymore, use built-in '_' to strip them\n"
 " * 'l' on eol will go to next line, 'h' on first char will go to previous\n"
 " * selections merging behaviour is now a bit more complex again\n"
-" * 'x' will only jump to next line if full line is already selected\n";
+" * 'x' will only jump to next line if full line is already selected\n"
+" * WORD text object moved to <a-w> instead of W for consistency\n";
 
 struct startup_error : runtime_error
 {

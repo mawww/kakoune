@@ -612,7 +612,7 @@ the wanted object:
 *w*::
     select the whole word
 
-*W*::
+*<a-w>*::
     select the whole WORD
 
 *s*::
