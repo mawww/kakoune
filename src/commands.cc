@@ -1346,7 +1346,7 @@ const CommandDesc update_option_cmd = {
     "update-option",
     nullptr,
     "update-option <scope> <name>: update <name> option from scope\n"
-    "some option types, such as line-descs or range-descs can be updated to latest buffer timestamp\n"
+    "some option types, such as line-specs or range-specs can be updated to latest buffer timestamp\n"
     "<scope> can be buffer, window, or current which refers to the narrowest "
     "scope the option is set in",
     ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },

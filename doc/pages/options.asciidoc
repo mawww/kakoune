@@ -79,10 +79,11 @@ are exclusively available to built-in options.
     a `:` separated list of a pair of a buffer range (`<begin
     line>.<begin column>,<end line>.<end column>` or `<begin line>.<begin
     column>+<length>`) and a string (separated by `|`), except for the
-    first element which is just the timestamp of the buffer.  When the
+    first element which is just the timestamp of the buffer. When the
     `update-option` is used on an option of this type, its ranges gets
     updated according to all the buffer modifications that happened
     since its timestamp.
+    See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
 
 *line-specs*::
     a `:` separated list of a line number and a corresponding flag
@@ -90,6 +91,7 @@ are exclusively available to built-in options.
     the timestamp of the buffer. When the `update-option` is used on
     an option of this type, its lines gets updated according to all the
     buffer modifications that happened since its timestamp.
+    See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
 
 *completions*::
     a `:` separated list of `<text>|<docstring>|<menu text>`
