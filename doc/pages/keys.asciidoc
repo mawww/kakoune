@@ -644,7 +644,7 @@ The following keys are recognized by this mode to help edition.
     move cursor to previous character
 
 *<right>*, *<a-l>*::
-    move cursor to previous character
+    move cursor to next character
 
 *<home>*::
     move cursor to first character
