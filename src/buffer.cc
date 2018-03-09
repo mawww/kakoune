@@ -613,6 +613,9 @@ BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end, StringView conte
         content = content.substr(0, content.length() - 1);
     }
 
+    if (std::equal(iterator_at(begin), iterator_at(end), content.begin(), content.end()))
+        return begin;
+
     auto pos = erase(begin, end);
     return insert(pos, content);
 }
