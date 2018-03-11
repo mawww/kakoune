@@ -12,8 +12,10 @@ Scopes are named as follows:
 
 *window*::
     context linked to the window displaying a buffer
+
 *buffer*::
     context linked directly to the buffer
+
 *global*::
     global context linked to the instance of Kakoune
 
@@ -26,6 +28,9 @@ window ]> buffer ]> global
 The above priority line implies that objects can have individual values that
 will be resolved first in the *window* scope (highest priority), then in
 the *buffer* scope, and finally in the *global* scope (lowest priority).
+
+The `set-option` and `unset-option` commands also accept *current* as 
+a valid scope name. It refers to the narrowest scope the option is set in.
 
 == Uses
 
