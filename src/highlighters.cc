@@ -1581,6 +1581,14 @@ struct ReferenceHighlighter : Highlighter
 private:
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
     {
+        static Vector<std::pair<StringView, BufferRange>> running_refs;
+        const std::pair<StringView, BufferRange> desc{m_name, range};
+        if (contains(running_refs, desc))
+            return write_to_debug_buffer(format("highlighting recursion detected with ref to {}", m_name));
+
+        running_refs.push_back(desc);
+        auto pop_desc = on_scope_end([] { running_refs.pop_back(); });
+
         try
         {
             DefinedHighlighters::instance().get_child(m_name).highlight(context, display_buffer, range);
