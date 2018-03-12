@@ -93,3 +93,53 @@ define-command racer-disable-autocomplete -docstring "Disable racer completion" 
     remove-hooks window racer-autocomplete
     unalias window complete racer-complete
 }
+
+define-command racer-go-definition -docstring "Jump to where the rust identifier below the cursor is defined" %{
+    %sh{
+        dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-racer.XXXXXXXX)
+        printf %s\\n "set-option buffer racer_tmp_dir ${dir}"
+        printf %s\\n "evaluate-commands -no-hooks %{ write ${dir}/buf }"
+    }
+    %sh{
+        dir=${kak_opt_racer_tmp_dir}
+        (
+            cursor="${kak_cursor_line} $((${kak_cursor_column} - 1))"
+            racer_data=$(racer --interface tab-text  find-definition ${cursor} ${kak_buffile} ${dir}/buf | head -n 1)
+            racer_match=$(echo "$racer_data" | cut -f1 )
+            if [[ "$racer_match" == "MATCH" ]]; then
+              racer_line=$(echo "$racer_data" | cut -f3 )
+              racer_column=$(echo "$racer_data" | cut -f4 )
+              racer_file=$(echo "$racer_data" | cut -f5 )
+              printf %s\\n "edit -existing '$racer_file' $racer_line $racer_column"
+              printf %s\\n "set-option buffer readonly true"
+            else
+              printf %s\\n "echo -debug 'racer could not find a definition'"
+            fi
+        )
+    }
+}
+
+define-command racer-show-doc -docstring "Show the documentation about the rust identifier below the cursor" %{
+    %sh{
+        dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-racer.XXXXXXXX)
+        printf %s\\n "set-option buffer racer_tmp_dir ${dir}"
+        printf %s\\n "evaluate-commands -no-hooks %{ write ${dir}/buf }"
+    }
+    %sh{
+        dir=${kak_opt_racer_tmp_dir}
+        (
+            cursor="${kak_cursor_line} $((${kak_cursor_column} - 1))"
+            racer_data=$(racer --interface tab-text  complete-with-snippet  ${cursor} ${kak_buffile} ${dir}/buf | head -n 2 | tail -n 1)
+            racer_match=$(echo "$racer_data" | cut -f1 )
+            printf %s\\n "info '$racer_data'"
+            if [[ "$racer_match" == "MATCH" ]]; then
+              racer_doc=$(echo "$racer_data" | cut -f9 | xargs )
+              racer_doc=$(echo "${racer_doc//\\n/
+}") # This is a bit ugly and probably should be replaced with something better than a new line in the code itself, but I couldn't work how
+              printf %s\\n "info '$racer_doc'"
+            else
+              printf %s\\n "echo -debug 'racer could not find a definition'"
+            fi
+        )
+    }
+}
