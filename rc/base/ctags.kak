@@ -73,8 +73,8 @@ define-command ctags-enable-autoinfo -docstring "Automatically display ctags inf
 
 define-command ctags-disable-autoinfo -docstring "Disable automatic ctags information displaying" %{ remove-hooks window ctags-autoinfo }
 
-declare-option -docstring "options to pass to the `ctags` shell command" \
-    str ctagsopts "-R"
+declare-option -docstring "shell command to run" \
+    str ctagscmd "ctags -R"
 declare-option -docstring "path to the directory in which the tags file will be generated" str ctagspaths "."
 
 define-command ctags-generate -docstring 'Generate tag file asynchronously' %{
@@ -83,7 +83,7 @@ define-command ctags-generate -docstring 'Generate tag file asynchronously' %{
         while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
         trap 'rmdir .tags.kaklock' EXIT
 
-        if ctags -f .tags.kaktmp ${kak_opt_ctagsopts} ${kak_opt_ctagspaths}; then
+        if ${kak_opt_ctagscmd} -f .tags.kaktmp ${kak_opt_ctagspaths}; then
             mv .tags.kaktmp tags
             msg="tags generation complete"
         else
@@ -99,7 +99,7 @@ define-command ctags-update-tags -docstring 'Update tags for the given file' %{
         while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
             trap 'rmdir .tags.kaklock' EXIT
 
-        if ctags -f .file_tags.kaktmp ${kak_opt_ctagsopts} $kak_bufname; then
+        if ${kak_opt_ctagscmd} -f .file_tags.kaktmp $kak_bufname; then
             export LC_COLLATE=C LC_ALL=C # ensure ASCII sorting order
             # merge the updated tags tags with the general tags (filtering out out of date tags from it) into the target file
             grep -Fv "$(printf '\t%s\t' "$kak_bufname")" tags | grep -v '^!' | sort --merge - .file_tags.kaktmp >> .tags.kaktmp
