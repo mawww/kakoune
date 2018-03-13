@@ -717,13 +717,9 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     m_menu.style = style;
     m_menu.anchor = anchor;
 
-    DisplayCoord maxsize = m_dimensions;
-    if (style != MenuStyle::Prompt)
-    {
-        if (m_status_on_top)
-            anchor.line += 1;
-        maxsize.column -= anchor.column;
-    }
+    const DisplayCoord maxsize = m_dimensions;
+    if (style != MenuStyle::Prompt and m_status_on_top)
+        anchor.line += 1;
 
     if (maxsize.column <= 2)
         return;
@@ -734,12 +730,12 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     const auto longest = accumulate(items | transform(&DisplayLine::length),
                                     1_col, [](auto&& lhs, auto&& rhs) { return std::max(lhs, rhs); });
 
+    const ColumnCount last_column = maxsize.column - 1;
     const bool is_prompt = style == MenuStyle::Prompt;
-    m_menu.columns = is_prompt ? max((int)((maxsize.column-1) / (longest+1)), 1) : 1;
+    m_menu.columns = is_prompt ? max((int)(last_column / (longest+1)), 1) : 1;
 
-    ColumnCount maxlen = maxsize.column-1;
-    if (m_menu.columns > 1 and item_count > 1)
-        maxlen = maxlen / m_menu.columns - 1;
+    const ColumnCount maxlen = (m_menu.columns > 1 and item_count > 1) ?
+        last_column / m_menu.columns - 1 : last_column;
 
     for (auto& item : items)
     {
@@ -757,8 +753,10 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     else if (line + height >= maxsize.line)
         line = anchor.line - height;
 
+    const ColumnCount column = std::max(0_col, std::min(anchor.column, maxsize.column - longest - 1));
+
     auto width = is_prompt ? maxsize.column : min(longest+1, maxsize.column);
-    m_menu.create({line, anchor.column}, {height, width});
+    m_menu.create({line, column}, {height, width});
     m_menu.selected_item = item_count;
     m_menu.top_line = 0;
 
