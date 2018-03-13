@@ -726,7 +726,7 @@ void Buffer::run_hook_in_own_context(StringView hook_name, StringView param, Str
     hooks().run_hook(hook_name, param, hook_handler.context());
 }
 
-BufferCoord Buffer::last_modification_coord() const
+Optional<BufferCoord> Buffer::last_modification_coord() const
 {
     if (m_history_cursor.get() == &m_history)
         return {};

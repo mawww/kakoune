@@ -306,9 +306,11 @@ void goto_commands(Context& context, NormalParams params)
             {
                 context.push_jump();
                 auto pos = buffer.last_modification_coord();
-                if (pos >= buffer.back_coord())
+                if (not pos)
+                    throw runtime_error("no last modification position");
+                if (*pos >= buffer.back_coord())
                     pos = buffer.back_coord();
-                select_coord<mode>(buffer, pos, context.selections());
+                select_coord<mode>(buffer, *pos, context.selections());
                 break;
             }
             }

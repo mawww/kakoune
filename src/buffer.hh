@@ -5,6 +5,7 @@
 #include "coord.hh"
 #include "constexpr_utils.hh"
 #include "enum.hh"
+#include "optional.hh"
 #include "safe_ptr.hh"
 #include "scope.hh"
 #include "shared_string.hh"
@@ -163,11 +164,11 @@ public:
     bool           is_valid(BufferCoord c) const;
     bool           is_end(BufferCoord c) const;
 
-    BufferCoord    last_modification_coord() const;
-
     BufferIterator begin() const;
     BufferIterator end() const;
     LineCount      line_count() const;
+
+    Optional<BufferCoord> last_modification_coord() const;
 
     StringView operator[](LineCount line) const
     { return m_lines[line]; }
