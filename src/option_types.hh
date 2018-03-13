@@ -30,7 +30,7 @@ option_type_name(Meta::Type<Enum>)
 {
     return format("{}({})", with_bit_ops(Meta::Type<Enum>{}) ? "flags" : "enum",
                   join(enum_desc(Meta::Type<Enum>{}) |
-                       transform(std::mem_fn(&EnumDesc<Enum>::name)), '|'));
+                       transform(&EnumDesc<Enum>::name), '|'));
 }
 
 inline String option_to_string(int opt) { return to_string(opt); }

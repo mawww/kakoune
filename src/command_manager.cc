@@ -538,10 +538,10 @@ Completions CommandManager::complete_command_name(const Context& context, String
 {
     auto commands = m_commands
             | filter([](const CommandMap::Item& cmd) { return not (cmd.value.flags & CommandFlags::Hidden); })
-            | transform(std::mem_fn(&CommandMap::Item::key));
+            | transform(&CommandMap::Item::key);
 
     auto aliases = context.aliases().flatten_aliases()
-            | transform(std::mem_fn(&HashItem<String, String>::key))
+            | transform(&HashItem<String, String>::key)
             | filter([](auto& alias) { return alias.length() > 3; });
 
     return {0, query.length(), Kakoune::complete(query, query.length(), concatenated(commands, aliases))};

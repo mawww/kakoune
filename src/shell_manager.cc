@@ -310,7 +310,7 @@ CandidateList ShellManager::complete_env_var(StringView prefix,
                                              ByteCount cursor_pos) const
 {
     return complete(prefix, cursor_pos,
-                    m_env_vars | transform(std::mem_fn(&EnvVarDesc::str)));
+                    m_env_vars | transform(&EnvVarDesc::str));
 }
 
 }

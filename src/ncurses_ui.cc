@@ -731,7 +731,7 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     const int item_count = items.size();
     m_menu.items.clear(); // make sure it is empty
     m_menu.items.reserve(item_count);
-    const auto longest = accumulate(items | transform(std::mem_fn(&DisplayLine::length)),
+    const auto longest = accumulate(items | transform(&DisplayLine::length),
                                     1_col, [](auto&& lhs, auto&& rhs) { return std::max(lhs, rhs); });
 
     const bool is_prompt = style == MenuStyle::Prompt;
@@ -945,7 +945,7 @@ void NCursesUI::info_show(StringView title, StringView content,
     }
 
     const DisplayCoord size{(int)info_box.size(),
-                            accumulate(info_box | transform(std::mem_fn(&String::column_length)), 0_col,
+                            accumulate(info_box | transform(&String::column_length), 0_col,
                                        [](auto&& lhs, auto&& rhs){ return std::max(lhs, rhs); })};
     const Rect rect = {m_status_on_top ? 1_line : 0_line, m_dimensions};
     DisplayCoord pos;

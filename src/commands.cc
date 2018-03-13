@@ -669,7 +669,7 @@ Completions highlighter_cmd_completer(
     else if (add and token_to_complete == 1)
     {
         StringView name = params[1];
-        return { 0_byte, name.length(), complete(name, pos_in_token, HighlighterRegistry::instance() | transform(std::mem_fn(&HighlighterRegistry::Item::key))) };
+        return { 0_byte, name.length(), complete(name, pos_in_token, HighlighterRegistry::instance() | transform(&HighlighterRegistry::Item::key)) };
     }
     else
         return {};
@@ -1593,7 +1593,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         if (*bufnames == "*")
         {
             for (auto&& buffer : BufferManager::instance()
-                               | transform(std::mem_fn(&std::unique_ptr<Buffer>::get))
+                               | transform(&std::unique_ptr<Buffer>::get)
                                | filter([](Buffer* buf) { return not (buf->flags() & Buffer::Flags::Debug); })
                                | gather<Vector<SafePtr<Buffer>>>()) // gather as we might be mutating the buffer list in the loop.
                 context_wrap_for_buffer(*buffer);

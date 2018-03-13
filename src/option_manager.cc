@@ -109,7 +109,7 @@ CandidateList OptionsRegistry::complete_option_name(StringView prefix,
     return complete(prefix, cursor_pos, m_descs |
                     filter([](const OptionPtr& desc)
                            { return not (desc->flags() & OptionFlags::Hidden); }) |
-                    transform(std::mem_fn(&OptionDesc::name)));
+                    transform(&OptionDesc::name));
 }
 
 }

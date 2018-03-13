@@ -123,7 +123,7 @@ CandidateList FaceRegistry::complete_alias_name(StringView prefix,
                                                 ByteCount cursor_pos) const
 {
     return complete(prefix, cursor_pos,
-                    m_aliases | transform(std::mem_fn(&AliasMap::Item::key)));
+                    m_aliases | transform(&AliasMap::Item::key));
 }
 
 FaceRegistry::FaceRegistry()

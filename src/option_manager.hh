@@ -100,7 +100,7 @@ public:
         static const OptionMap empty;
         auto& parent = m_parent ? m_parent->m_options : empty;
         auto& grand_parent = (m_parent and m_parent->m_parent) ? m_parent->m_parent->m_options : empty;
-        return merge(merge(grand_parent, parent), m_options) | transform(std::mem_fn(&OptionMap::Item::value));
+        return merge(merge(grand_parent, parent), m_options) | transform(&OptionMap::Item::value);
     }
 
     void register_watcher(OptionManagerWatcher& watcher) const;

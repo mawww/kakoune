@@ -5,6 +5,7 @@
 #include <utility>
 #include <iterator>
 #include <numeric>
+#include <functional>
 
 #include "constexpr_utils.hh"
 
@@ -159,6 +160,12 @@ inline auto transform(Transform t)
         using Range = decltype(range);
         return TransformView<decay_range<Range>, Transform>{std::forward<Range>(range), std::move(t)};
     });
+}
+
+template<typename M, typename T>
+inline auto transform(M T::*m)
+{
+    return transform(std::mem_fn(std::forward<decltype(m)>(m)));
 }
 
 template<typename Range, bool escape = false,

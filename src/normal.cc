@@ -1200,7 +1200,7 @@ void select_object(Context& context, NormalParams params)
             { 'n', select_number },
             { 'u', select_argument },
         };
-        auto obj_it = find(selectors | transform(std::mem_fn(&ObjectType::key)), key).base();
+        auto obj_it = find(selectors | transform(&ObjectType::key), key).base();
         if (obj_it != std::end(selectors))
             return select_and_set_last<mode>(
                 context, std::bind(obj_it->func, _1, _2, count, flags));

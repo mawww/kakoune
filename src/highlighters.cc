@@ -1869,7 +1869,7 @@ public:
             return offset_pos(hl.complete_child(path.substr(offset), cursor_pos - offset, group), offset);
         }
 
-        auto container = m_groups | transform(std::mem_fn(&decltype(m_groups)::Item::key));
+        auto container = m_groups | transform(&decltype(m_groups)::Item::key);
         return { 0, 0, complete(path, cursor_pos, container) };
     }
 
