@@ -2055,6 +2055,11 @@ static const HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> key
     { {'K'}, {"extend up", move<LineCount, Backward, SelectMode::Extend>} },
     { {'L'}, {"extend right", move<CharCount, Forward, SelectMode::Extend>} },
 
+    { {Key::ShiftLeft}, {"extend left", move<CharCount, Backward, SelectMode::Extend>} },
+    { {Key::ShiftDown}, {"extend down", move<LineCount, Forward, SelectMode::Extend>} },
+    { {Key::ShiftUp}, {"extend up", move<LineCount, Backward, SelectMode::Extend>} },
+    { {Key::ShiftRight}, {"extend right", move<CharCount, Forward, SelectMode::Extend>} },
+
     { {'t'}, {"select to next character", select_to_next_char<SelectFlags::None>} },
     { {'f'}, {"select to next character included", select_to_next_char<SelectFlags::Inclusive>} },
     { {'T'}, {"extend to next character", select_to_next_char<SelectFlags::Extend>} },
@@ -2133,9 +2138,11 @@ static const HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> key
     { {alt('l')}, {"select to line end", repeated<select<SelectMode::Replace, select_to_line_end<false>>>} },
     { {Key::End}, {"select to line end", repeated<select<SelectMode::Replace, select_to_line_end<false>>>} },
     { {alt('L')}, {"extend to line end", repeated<select<SelectMode::Extend, select_to_line_end<false>>>} },
+    { {Key::ShiftEnd}, {"extend to line end", repeated<select<SelectMode::Extend, select_to_line_end<false>>>} },
     { {alt('h')}, {"select to line begin", repeated<select<SelectMode::Replace, select_to_line_begin<false>>>} },
     { {Key::Home}, {"select to line begin", repeated<select<SelectMode::Replace, select_to_line_begin<false>>>} },
     { {alt('H')}, {"extend to line begin", repeated<select<SelectMode::Extend, select_to_line_begin<false>>>} },
+    { {Key::ShiftHome}, {"extend to line begin", repeated<select<SelectMode::Extend, select_to_line_begin<false>>>} },
 
     { {'x'}, {"select line", repeated<select<SelectMode::Replace, select_line>>} },
     { {'X'}, {"extend line", repeated<select<SelectMode::Extend, select_line>>} },

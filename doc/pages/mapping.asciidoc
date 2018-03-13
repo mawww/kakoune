@@ -94,12 +94,19 @@ be used:
 *<del>*::
     The Delete (to the right) key.
 
+*<DEL>*::
+    Holding down Shift while pressing the Delete (to the right) key.
+
 *<esc>*::
     The Escape key.
 
 *<up>*, *<down>*, *<left>*, *<right>*::
 *<pageup>*, *<pagedown>*, *<home>*, *<end>*::
     The usual cursor-movement keys.
+
+*<UP>*, *<DOWN>*, *<LEFT>*, *<RIGHT>*::
+*<PAGEUP>*, *<PAGEDOWN>*, *<HOME>*, *<END>*::
+    Holding down Shift while pressing the usual cursor-movement keys.
 
 *<f1>*, *<f2>*, ...*<f12>*::
     Function keys.
