@@ -102,20 +102,18 @@ define-command racer-go-definition -docstring "Jump to where the rust identifier
     }
     %sh{
         dir=${kak_opt_racer_tmp_dir}
-        (
-            cursor="${kak_cursor_line} $((${kak_cursor_column} - 1))"
-            racer_data=$(racer --interface tab-text  find-definition ${cursor} ${kak_buffile} ${dir}/buf | head -n 1)
-            racer_match=$(printf %s\\n "$racer_data" | cut -f1 )
-            if [[ "$racer_match" == "MATCH" ]]; then
-              racer_line=$(printf %s\\n "$racer_data" | cut -f3 )
-              racer_column=$(printf %s\\n "$racer_data" | cut -f4 )
-              racer_file=$(printf %s\\n "$racer_data" | cut -f5 )
-              printf %s\\n "edit -existing '$racer_file' $racer_line $racer_column"
-              printf %s\\n "set-option buffer readonly true"
-            else
-              printf %s\\n "echo -debug 'racer could not find a definition'"
-            fi
-        )
+        cursor="${kak_cursor_line} $((${kak_cursor_column} - 1))"
+        racer_data=$(racer --interface tab-text  find-definition ${cursor} "${kak_buffile}" "${dir}/buf" | head -n 1)
+        racer_match=$(printf %s\\n "$racer_data" | cut -f1 )
+        if [ "$racer_match" = "MATCH" ]; then
+          racer_line=$(printf %s\\n "$racer_data" | cut -f3 )
+          racer_column=$(printf %s\\n "$racer_data" | cut -f4 )
+          racer_file=$(printf %s\\n "$racer_data" | cut -f5 )
+          printf %s\\n "edit -existing '$racer_file' $racer_line $racer_column"
+          #printf %s\\n "set-option buffer readonly true"
+        else
+          printf %s\\n "echo -debug 'racer could not find a definition'"
+        fi
     }
 }
 
@@ -127,20 +125,16 @@ define-command racer-show-doc -docstring "Show the documentation about the rust 
     }
     %sh{
         dir=${kak_opt_racer_tmp_dir}
-        (
-            printf -v NEWLINE '\n'
-            cursor="${kak_cursor_line} ${kak_cursor_column}"
-            racer_data=$(racer --interface tab-text  complete-with-snippet  ${cursor} ${kak_buffile} ${dir}/buf | head -n 2 | tail -n 1)
-            racer_match=$(printf %s\\n "$racer_data" | cut -f1)
-            printf %s\\n "info %@.$racer_match.@"
-            if [[ "$racer_match" == "MATCH" ]]; then
-              racer_doc=$(printf %s\\n "$racer_data" | cut -f9 | xargs )
-              racer_doc=$(printf %s\\n "$racer_doc" | sed -e "s/\\\n/\\$NEWLINE/g")
-              racer_doc=$(printf %s\\n "$racer_doc" | sed -e "s/@/\\@/g")
-              printf %s\\n "info %@$racer_doc@"
-            else
-              printf %s\\n "echo -debug 'racer could not find a definition'"
-            fi
-        )
+        cursor="${kak_cursor_line} ${kak_cursor_column}"
+        racer_data=$(racer --interface tab-text  complete-with-snippet  ${cursor} "${kak_buffile}" "${dir}/buf" | head -n 2 | tail -n 1)
+        racer_match=$(printf %s\\n "$racer_data" | cut -f1)
+        if [ "$racer_match" = "MATCH" ]; then
+          racer_doc=$(printf %s\\n "$racer_data" | cut -f9 )
+          racer_doc=$(printf %s\\n "$racer_doc" | sed -e 's/^"\(.*\)"$/\1/g')
+          racer_doc=$(printf %s\\n "$racer_doc" | sed -e "s/@/\\\\@/g")
+          printf "info %%@$racer_doc@"
+        else
+          printf %s\\n "echo -debug 'racer could not find a definition'"
+        fi
     }
 }
