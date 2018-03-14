@@ -8,6 +8,7 @@ hook global BufOpenFile .* %{ %sh{
             text/x-shellscript) filetype="sh" ;;
             text/x-*) filetype="${mime#text/x-}" ;;
             text/*)   filetype="${mime#text/}" ;;
+            application/*) filetype="${mime#application/}" ;;
         esac
         if [ -n "${filetype}" ]; then
             printf "set-option buffer filetype '%s'\n" "${filetype}"
