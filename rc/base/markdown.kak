@@ -52,6 +52,7 @@ add-highlighter shared/markdown/content regex [^_](_([^\s_]|([^\s_][^_]*[^\s_]))
 add-highlighter shared/markdown/content regex [^*](\*\*([^\s*]|([^\s*][^*]*[^\s*]))\*\*)[^*] 1:bold
 add-highlighter shared/markdown/content regex [^_](__([^\s_]|([^\s_][^_]*[^\s_]))__)[^_] 1:bold
 add-highlighter shared/markdown/content regex <(([a-z]+://.*?)|((mailto:)?[\w+-]+@[a-z]+[.][a-z]+))> 0:link
+add-highlighter shared/markdown/content regex ^\[[^\]\n]*\]:\h*([^\n]*) 1:link
 add-highlighter shared/markdown/content regex ^\h*(>\h*)+ 0:comment
 add-highlighter shared/markdown/content regex \H\K\h\h$ 0:PrimarySelection
 
