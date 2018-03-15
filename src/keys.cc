@@ -11,6 +11,11 @@
 namespace Kakoune
 {
 
+struct key_parse_error : runtime_error
+{
+    using runtime_error::runtime_error;
+};
+
 static Key canonicalize_ifn(Key key)
 {
     if (key.key > 0 and key.key < 27)
@@ -19,6 +24,22 @@ static Key canonicalize_ifn(Key key)
         key.modifiers = Key::Modifiers::Control;
         key.key = key.key - 1 + 'a';
     }
+
+    if (key.modifiers & Key::Modifiers::Shift)
+    {
+        if (is_basic_alpha(key.key))
+        {
+            // Shift + ASCII letters is just the uppercase letter.
+            key.modifiers &= ~Key::Modifiers::Shift;
+            key.key = to_upper(key.key);
+        }
+        else if (key.key < 0xD800 || key.key > 0xDFFF)
+        {
+            // Shift + any other printable character is not allowed.
+            throw key_parse_error(format("Shift modifier only works on special keys and lowercase ASCII, not '{}'", key.key));
+        }
+    }
+
     return key;
 }
 
@@ -53,7 +74,6 @@ static constexpr KeyAndName keynamemap[] = {
     { "pagedown", Key::PageDown },
     { "home", Key::Home },
     { "end", Key::End },
-    { "backtab", Key::BackTab },
     { "del", Key::Delete },
     { "plus", '+' },
     { "minus", '-' },
@@ -85,16 +105,17 @@ KeyList parse_keys(StringView str)
         for (auto dash = find(desc, '-'); dash != desc.end(); dash = find(desc, '-'))
         {
             if (dash != desc.begin() + 1)
-                throw runtime_error(format("unable to parse modifier in '{}'",
-                                           full_desc));
+                throw key_parse_error(format("unable to parse modifier in '{}'",
+                                                    full_desc));
 
             switch(to_lower(desc[0_byte]))
             {
                 case 'c': modifier |= Key::Modifiers::Control; break;
                 case 'a': modifier |= Key::Modifiers::Alt; break;
+                case 's': modifier |= Key::Modifiers::Shift; break;
                 default:
-                    throw runtime_error(format("unable to parse modifier in '{}'",
-                                               full_desc));
+                    throw key_parse_error(format("unable to parse modifier in '{}'",
+                                                        full_desc));
             }
             desc = StringView{dash+1, desc.end()};
         }
@@ -104,17 +125,17 @@ KeyList parse_keys(StringView str)
         if (name_it != std::end(keynamemap))
             result.push_back(canonicalize_ifn({ modifier, name_it->key }));
         else if (desc.char_length() == 1)
-            result.emplace_back(modifier, desc[0_char]);
+            result.push_back(canonicalize_ifn({ modifier, desc[0_char] }));
         else if (to_lower(desc[0_byte]) == 'f' and desc.length() <= 3)
         {
             int val = str_to_int(desc.substr(1_byte));
             if (val >= 1 and val <= 12)
                 result.emplace_back(modifier, Key::F1 + (val - 1));
             else
-                throw runtime_error("only F1 through F12 are supported");
+                throw key_parse_error(format("only F1 through F12 are supported, not '{}'", desc));
         }
         else
-            throw runtime_error("unable to parse " +
+            throw key_parse_error("unable to parse " +
                                  StringView{it.base(), end_it.base()+1});
 
         it = end_it;
@@ -165,13 +186,10 @@ String key_to_str(Key key)
     else
         res = String{key.key};
 
-    switch (key.modifiers)
-    {
-    case Key::Modifiers::Control:    res = "c-" + res; named = true; break;
-    case Key::Modifiers::Alt:        res = "a-" + res; named = true; break;
-    case Key::Modifiers::ControlAlt: res = "c-a-" + res; named = true; break;
-    default: break;
-    }
+    if (key.modifiers & Key::Modifiers::Shift)   { res = "s-" + res; named = true; }
+    if (key.modifiers & Key::Modifiers::Alt)     { res = "a-" + res; named = true; }
+    if (key.modifiers & Key::Modifiers::Control) { res = "c-" + res; named = true; }
+
     if (named)
         res = StringView{'<'} + res + StringView{'>'};
     return res;
@@ -182,8 +200,10 @@ UnitTest test_keys{[]()
     KeyList keys{
          { ' ' },
          { 'c' },
-         { Key::Modifiers::Alt, 'j' },
-         { Key::Modifiers::Control, 'r' }
+         { Key::Up },
+         alt('j'),
+         ctrl('r'),
+         shift(Key::Up),
     };
     String keys_as_str;
     for (auto& key : keys)
@@ -191,7 +211,28 @@ UnitTest test_keys{[]()
     auto parsed_keys = parse_keys(keys_as_str);
     kak_assert(keys == parsed_keys);
     kak_assert(ConstArrayView<Key>{parse_keys("a<c-a-b>c")} ==
-               ConstArrayView<Key>{'a', {Key::Modifiers::ControlAlt, 'b'}, 'c'});
+               ConstArrayView<Key>{'a', ctrl(alt({'b'})), 'c'});
+
+    kak_assert(parse_keys("x") == KeyList{ {'x'} });
+    kak_assert(parse_keys("<x>") == KeyList{ {'x'} });
+    kak_assert(parse_keys("<s-x>") == KeyList{ {'X'} });
+    kak_assert(parse_keys("<s-X>") == KeyList{ {'X'} });
+    kak_assert(parse_keys("<X>") == KeyList{ {'X'} });
+    kak_assert(parse_keys("X") == KeyList{ {'X'} });
+    kak_assert(parse_keys("<s-up>") == KeyList{ shift({Key::Up}) });
+    kak_assert(parse_keys("<s-tab>") == KeyList{ shift({Key::Tab}) });
+
+    kak_assert(key_to_str(shift({Key::Tab})) == "<s-tab>");
+
+    kak_expect_throw(key_parse_error, parse_keys("<-x>"));
+    kak_expect_throw(key_parse_error, parse_keys("<xy-z>"));
+    kak_expect_throw(key_parse_error, parse_keys("<x-y>"));
+    kak_expect_throw(key_parse_error, parse_keys("<s-/>"));
+    kak_expect_throw(key_parse_error, parse_keys("<s-ë>"));
+    kak_expect_throw(key_parse_error, parse_keys("<s-lt>"));
+    kak_expect_throw(key_parse_error, parse_keys("<f99>"));
+    kak_expect_throw(key_parse_error, parse_keys("<backtab>"));
+    kak_expect_throw(key_parse_error, parse_keys("<invalidkey>"));
 }};
 
 }

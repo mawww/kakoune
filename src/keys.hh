@@ -19,17 +19,17 @@ struct Key
         None    = 0,
         Control = 1 << 0,
         Alt     = 1 << 1,
-        ControlAlt = Control | Alt,
+        Shift   = 1 << 2,
 
-        MousePress   = 1 << 2,
-        MouseRelease = 1 << 3,
-        MousePos     = 1 << 4,
-        MouseWheelDown = 1 << 5,
-        MouseWheelUp = 1 << 6,
+        MousePress   = 1 << 3,
+        MouseRelease = 1 << 4,
+        MousePos     = 1 << 5,
+        MouseWheelDown = 1 << 6,
+        MouseWheelUp = 1 << 7,
         MouseEvent = MousePress | MouseRelease | MousePos |
                      MouseWheelDown | MouseWheelUp,
 
-        Resize = 1 << 7,
+        Resize = 1 << 8,
     };
     enum NamedKey : Codepoint
     {
@@ -47,7 +47,6 @@ struct Key
         Home,
         End,
         Tab,
-        BackTab,
         F1,
         F2,
         F3,
@@ -97,6 +96,10 @@ class StringView;
 KeyList parse_keys(StringView str);
 String  key_to_str(Key key);
 
+constexpr Key shift(Key key)
+{
+    return { key.modifiers | Key::Modifiers::Shift, key.key };
+}
 constexpr Key alt(Key key)
 {
     return { key.modifiers | Key::Modifiers::Alt, key.key };
@@ -104,10 +107,6 @@ constexpr Key alt(Key key)
 constexpr Key ctrl(Key key)
 {
     return { key.modifiers | Key::Modifiers::Control, key.key };
-}
-constexpr Key ctrlalt(Key key)
-{
-    return { key.modifiers | Key::Modifiers::ControlAlt, key.key };
 }
 
 constexpr Codepoint encode_coord(DisplayCoord coord) { return (Codepoint)(((int)coord.line << 16) | ((int)coord.column & 0x0000FFFF)); }

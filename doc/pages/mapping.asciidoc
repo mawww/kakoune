@@ -65,14 +65,19 @@ be used:
     Keys can also be wrapped in angle-brackets for consistency
     with the non-alphabetic keys below.
 
-*X*, *<X>*::
-    Holding down Shift while pressing the *x* key.
-
 *<c-x>*::
     Holding down Control while pressing the *x* key.
 
 *<a-x>*::
     Holding down Alt while pressing the *x* key.
+
+*<s-x>*, *X*, *<X>*, *<s-X>*::
+    Holding down Shift while pressing the *x* key.
+    *<s-x>*, *<s-X>* and *<X>* are treated as the same key. The *s-* modifier
+    only works with ASCII letters and cannot be used with other printable keys
+    (non-ASCII letters, digits, punctuation) because their shift behaviour
+    depends on your keyboard layout. The *s-* modifier _can_ be used with
+    special keys like *<up>* and *<tab>*.
 
 *<c-a-x>*::
     Holding down Control and Alt while pressing the *x* key.
@@ -92,9 +97,6 @@ be used:
 *<tab>*::
     The Tab key.
 
-*<backtab>*::
-    The reverse-tab key. This is Shift-Tab on most keyboards.
-
 *<backspace>*::
     The Backspace (delete to the left) key.
 
@@ -110,3 +112,8 @@ be used:
 
 *<f1>*, *<f2>*, ...*<f12>*::
     Function keys.
+
+NOTE: Although Kakoune allows many key combinations to be mapped, not every
+possible combination can be triggered. For example, due to limitations in
+the way terminals handle control characters, mappings like *<c-s-a>* are
+unlikely to work in Kakoune's terminal UI.

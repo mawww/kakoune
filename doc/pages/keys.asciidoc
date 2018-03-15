@@ -6,8 +6,8 @@ Usual keys are written using their ascii character, including capital
 keys. Non printable keys use an alternate name, written between *<*
 and *>*, such as *<esc>* or *<del>*. Modified keys are written between
 *<* and *>* as well, with the modifier specified as either *c* for
-Control, or *a* for Alt, followed by a *-* and the key (either its
-name or ascii character), for example *<c-x>*, *<a-space>*, *<c-a-w>*.
+Control, *a* for Alt, or *s* for Shift, followed by a *-* and the key (either
+its name or ascii character), for example *<c-x>*, *<a-space>*, *<c-a-w>*.
 
 In order to bind some keys to arbitrary ones, refer to <<mapping#,`:doc mapping`>>
 
@@ -95,18 +95,20 @@ it when pasting text.
 == Movement
 
 'word' is a sequence of alphanumeric characters or underscore, and 'WORD'
-is a sequence of non whitespace characters
+is a sequence of non whitespace characters. Generally, a movement on it own
+will move the selection to cover the text moved over, while holding down
+the Shift modifier and moving will extend the selection instead.
 
-*h*::
+*h*, *<left>*::
     select the character on the left of selection end
 
-*j*::
+*j*, *<down>*::
     select the character below the selection end
 
-*k*::
+*k*, *<up>*::
     select the character above the selection end
 
-*l*::
+*l*, *<right>*::
     select the character on the right of selection end
 
 *w*::
@@ -134,15 +136,9 @@ is a sequence of non whitespace characters
     select to matching character, see the `matching_pairs` option
     in <<options#,`:doc options`>>
 
-*M*::
-    extend selection to matching character
-
 *x*::
     select line on which selection end lies (or next line when end lies
     on an end-of-line)
-
-*X*::
-    similar to *x*, except the current selection is extended
 
 *<a-x>*::
     expand selections to contain full lines (including end-of-lines)
@@ -154,10 +150,10 @@ is a sequence of non whitespace characters
 *%*::
     select whole buffer
 
-*<a-h>*::
+*<a-h>*, *<home>*::
     select to line begin
 
-*<a-l>*::
+*<a-l>*, *<end>*::
     select to line end
 
 */*::
@@ -696,7 +692,7 @@ The following keys are recognized by this mode to help edition.
 *<tab>*::
     select next completion candidate
 
-*<backtab>*::
+*<s-tab>*::
     select previous completion candidate
 
 *<c-r>*::

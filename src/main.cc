@@ -53,7 +53,8 @@ static const char* startup_info =
 " * 'x' will only jump to next line if full line is already selected\n"
 " * WORD text object moved to <a-w> instead of W for consistency\n"
 " * rotate main selection moved to ), rotate content to <a-)>, ( for backward\n"
-" * faces are now scoped, set-face command takes an additional scope parameter\n";
+" * faces are now scoped, set-face command takes an additional scope parameter\n"
+" * <backtab> key is gone, use <s-tab> instead\n";
 
 struct startup_error : runtime_error
 {

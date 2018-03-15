@@ -570,15 +570,24 @@ Optional<Key> NCursesUI::get_next_key()
         {
         case KEY_BACKSPACE: case 127: return {Key::Backspace};
         case KEY_DC: return {Key::Delete};
+        case KEY_SDC: return shift(Key::Delete);
         case KEY_UP: return {Key::Up};
+        case KEY_SR: return shift(Key::Up);
         case KEY_DOWN: return {Key::Down};
+        case KEY_SF: return shift(Key::Down);
         case KEY_LEFT: return {Key::Left};
+        case KEY_SLEFT: return shift(Key::Left);
         case KEY_RIGHT: return {Key::Right};
+        case KEY_SRIGHT: return shift(Key::Right);
         case KEY_PPAGE: return {Key::PageUp};
+        case KEY_SPREVIOUS: return shift(Key::PageUp);
         case KEY_NPAGE: return {Key::PageDown};
+        case KEY_SNEXT: return shift(Key::PageDown);
         case KEY_HOME: return {Key::Home};
+        case KEY_SHOME: return shift(Key::Home);
         case KEY_END: return {Key::End};
-        case KEY_BTAB: return {Key::BackTab};
+        case KEY_SEND: return shift(Key::End);
+        case KEY_BTAB: return shift(Key::Tab);
         case KEY_RESIZE: return resize(m_dimensions);
         }
 

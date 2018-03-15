@@ -461,15 +461,15 @@ public:
         }
         else if (key == ctrl('w'))
             to_next_word_begin<Word>(m_cursor_pos, m_line);
-        else if (key == ctrlalt('w'))
+        else if (key == ctrl(alt('w')))
             to_next_word_begin<WORD>(m_cursor_pos, m_line);
         else if (key == ctrl('b'))
             to_prev_word_begin<Word>(m_cursor_pos, m_line);
-        else if (key == ctrlalt('b'))
+        else if (key == ctrl(alt('b')))
             to_prev_word_begin<WORD>(m_cursor_pos, m_line);
         else if (key == ctrl('e'))
             to_next_word_end<Word>(m_cursor_pos, m_line);
-        else if (key == ctrlalt('e'))
+        else if (key == ctrl(alt('e')))
             to_next_word_end<WORD>(m_cursor_pos, m_line);
         else if (key == ctrl('k'))
             m_line = m_line.substr(0_char, m_cursor_pos).str();
@@ -623,7 +623,7 @@ public:
                 it = std::find_if(m_choices.begin(), m_selected, match_filter);
             select(it);
         }
-        else if (key == Key::Up or key == Key::BackTab or
+        else if (key == Key::Up or key == shift(Key::Tab) or
                  key == ctrl('p') or (not m_edit_filter and key == 'k'))
         {
             ChoiceList::const_reverse_iterator selected(m_selected+1);
@@ -837,9 +837,9 @@ public:
                 m_refresh_completion_pending = true;
             }
         }
-        else if (key == Key::Tab or key == Key::BackTab) // tab completion
+        else if (key == Key::Tab or key == shift(Key::Tab)) // tab completion
         {
-            const bool reverse = (key == Key::BackTab);
+            const bool reverse = (key == shift(Key::Tab));
             CandidateList& candidates = m_completions.candidates;
             // first try, we need to ask our completer for completions
             if (candidates.empty())
@@ -1568,8 +1568,10 @@ InputHandler::ScopedForceNormal::~ScopedForceNormal()
 
 static bool is_valid(Key key)
 {
+    constexpr Key::Modifiers valid_mods = (Key::Modifiers::Control | Key::Modifiers::Alt | Key::Modifiers::Shift);
+
     return key != Key::Invalid and
-        ((key.modifiers & ~Key::Modifiers::ControlAlt) or key.key <= 0x10FFFF);
+        ((key.modifiers & ~valid_mods) or key.key <= 0x10FFFF);
 }
 
 void InputHandler::handle_key(Key key)
