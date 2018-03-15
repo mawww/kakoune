@@ -67,7 +67,16 @@ KeyList parse_keys(StringView str)
     {
         if (*it != '<')
         {
-            result.emplace_back(Key::Modifiers::None, *it);
+            Key::Modifiers modifier = Key::Modifiers::None;
+            Codepoint key = *it;
+
+            if (is_upper(key))
+            {
+                modifier |= Key::Modifiers::Shift;
+                key = to_lower(key);
+            }
+
+            result.emplace_back(modifier, key);
             continue;
         }
 
@@ -92,6 +101,7 @@ KeyList parse_keys(StringView str)
             {
                 case 'c': modifier |= Key::Modifiers::Control; break;
                 case 'a': modifier |= Key::Modifiers::Alt; break;
+                case 's': modifier |= Key::Modifiers::Shift; break;
                 default:
                     throw runtime_error(format("unable to parse modifier in '{}'",
                                                full_desc));
@@ -104,7 +114,18 @@ KeyList parse_keys(StringView str)
         if (name_it != std::end(keynamemap))
             result.push_back(canonicalize_ifn({ modifier, name_it->key }));
         else if (desc.char_length() == 1)
-            result.emplace_back(modifier, desc[0_char]);
+        {
+            Codepoint key = desc[0_char];
+
+            if (modifier & Key::Modifiers::Shift && !is_lower(key))
+                throw runtime_error("Shift modifier only works on special keys and lowercase ASCII");
+            else if (is_upper(key))
+            {
+                modifier |= Key::Modifiers::Shift;
+                key = to_lower(key);
+            }
+            result.emplace_back(modifier, key);
+        }
         else if (to_lower(desc[0_byte]) == 'f' and desc.length() <= 3)
         {
             int val = str_to_int(desc.substr(1_byte));
@@ -167,9 +188,13 @@ String key_to_str(Key key)
 
     switch (key.modifiers)
     {
-    case Key::Modifiers::Control:    res = "c-" + res; named = true; break;
-    case Key::Modifiers::Alt:        res = "a-" + res; named = true; break;
-    case Key::Modifiers::ControlAlt: res = "c-a-" + res; named = true; break;
+    case Key::Modifiers::Control:         res = "c-" + res; named = true; break;
+    case Key::Modifiers::Alt:             res = "a-" + res; named = true; break;
+    case Key::Modifiers::Shift:           res = "s-" + res; named = true; break;
+    case Key::Modifiers::ControlAlt:      res = "c-a-" + res; named = true; break;
+    case Key::Modifiers::ControlShift:    res = "c-s-" + res; named = true; break;
+    case Key::Modifiers::AltShift:        res = "a-s-" + res; named = true; break;
+    case Key::Modifiers::ControlAltShift: res = "c-a-s-" + res; named = true; break;
     default: break;
     }
     if (named)
@@ -182,8 +207,10 @@ UnitTest test_keys{[]()
     KeyList keys{
          { ' ' },
          { 'c' },
+         { Key::Up },
          { Key::Modifiers::Alt, 'j' },
-         { Key::Modifiers::Control, 'r' }
+         { Key::Modifiers::Control, 'r' },
+         { Key::Modifiers::Shift, 'r' }
     };
     String keys_as_str;
     for (auto& key : keys)
@@ -192,6 +219,29 @@ UnitTest test_keys{[]()
     kak_assert(keys == parsed_keys);
     kak_assert(ConstArrayView<Key>{parse_keys("a<c-a-b>c")} ==
                ConstArrayView<Key>{'a', {Key::Modifiers::ControlAlt, 'b'}, 'c'});
+
+    kak_assert(parse_keys("x") == KeyList{ {'x'} });
+    kak_assert(parse_keys("<x>") == KeyList{ {'x'} });
+    kak_assert(parse_keys("<s-x>") == KeyList{ {Key::Modifiers::Shift, 'x'} });
+    kak_assert(parse_keys("<X>") == KeyList{ {Key::Modifiers::Shift, 'x'} });
+    kak_assert(parse_keys("X") == KeyList{ {Key::Modifiers::Shift, 'x'} });
+    kak_assert(parse_keys("<s-up>") == KeyList{ {Key::Modifiers::Shift, Key::Up} });
+
+    try {
+        parse_keys("<s-X>");
+    } catch (runtime_error& err) {
+	kak_assert(err.what() == "Shift modifier only works on special keys and lowercase ASCII");
+    }
+    try {
+        parse_keys("<s-/>");
+    } catch (runtime_error& err) {
+	kak_assert(err.what() == "Shift modifier only works on special keys and lowercase ASCII");
+    }
+    try {
+        parse_keys("<s-ë>");
+    } catch (runtime_error& err) {
+	kak_assert(err.what() == "Shift modifier only works on special keys and lowercase ASCII");
+    }
 }};
 
 }

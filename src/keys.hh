@@ -19,17 +19,21 @@ struct Key
         None    = 0,
         Control = 1 << 0,
         Alt     = 1 << 1,
+        Shift   = 1 << 2,
         ControlAlt = Control | Alt,
+        ControlShift = Control | Shift,
+        AltShift = Alt | Shift,
+        ControlAltShift = Control | Alt | Shift,
 
-        MousePress   = 1 << 2,
-        MouseRelease = 1 << 3,
-        MousePos     = 1 << 4,
-        MouseWheelDown = 1 << 5,
-        MouseWheelUp = 1 << 6,
+        MousePress   = 1 << 3,
+        MouseRelease = 1 << 4,
+        MousePos     = 1 << 5,
+        MouseWheelDown = 1 << 6,
+        MouseWheelUp = 1 << 7,
         MouseEvent = MousePress | MouseRelease | MousePos |
                      MouseWheelDown | MouseWheelUp,
 
-        Resize = 1 << 7,
+        Resize = 1 << 8,
     };
     enum NamedKey : Codepoint
     {
@@ -97,6 +101,10 @@ class StringView;
 KeyList parse_keys(StringView str);
 String  key_to_str(Key key);
 
+constexpr Key shift(Key key)
+{
+    return { key.modifiers | Key::Modifiers::Shift, key.key };
+}
 constexpr Key alt(Key key)
 {
     return { key.modifiers | Key::Modifiers::Alt, key.key };
@@ -108,6 +116,18 @@ constexpr Key ctrl(Key key)
 constexpr Key ctrlalt(Key key)
 {
     return { key.modifiers | Key::Modifiers::ControlAlt, key.key };
+}
+constexpr Key ctrlshift(Key key)
+{
+    return { key.modifiers | Key::Modifiers::ControlShift, key.key };
+}
+constexpr Key altshift(Key key)
+{
+    return { key.modifiers | Key::Modifiers::AltShift, key.key };
+}
+constexpr Key ctrlaltshift(Key key)
+{
+    return { key.modifiers | Key::Modifiers::ControlAltShift, key.key };
 }
 
 constexpr Codepoint encode_coord(DisplayCoord coord) { return (Codepoint)(((int)coord.line << 16) | ((int)coord.column & 0x0000FFFF)); }
