@@ -180,7 +180,9 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     if (diff != Flags::None)
         return (int)(m_flags & diff) > (int)(other.m_flags & diff);
 
-    if (not (m_flags & Flags::Prefix) and
+    // If we are SingleWord, FirstCharMatch will do the job, and we dont want to take
+    // other words boundaries into account.
+    if (not (m_flags & (Flags::Prefix | Flags::SingleWord)) and
         m_word_boundary_match_count != other.m_word_boundary_match_count)
         return m_word_boundary_match_count > other.m_word_boundary_match_count;
 
@@ -241,6 +243,7 @@ UnitTest test_ranked_match{[] {
     kak_assert(RankedMatch{"class", "cla"} < RankedMatch{"class::attr", "cla"});
     kak_assert(RankedMatch{"meta/", "meta"} < RankedMatch{"meta-a/", "meta"});
     kak_assert(RankedMatch{"find(1p)", "find"} < RankedMatch{"findfs(8)", "find"});
+    kak_assert(RankedMatch{"expresions", "expresins"} < RankedMatch{"expressionism's", "expresins"});
 }};
 
 UnitTest test_used_letters{[]()
