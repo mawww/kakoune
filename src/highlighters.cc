@@ -1469,7 +1469,7 @@ private:
             try
             {
                 auto& r = std::get<0>(range);
-                if (buffer.is_valid(r.first) and buffer.is_valid(r.last))
+                if (buffer.is_valid(r.first) and (buffer.is_valid(r.last) and not buffer.is_end(r.last)))
                     highlight_range(display_buffer, r.first, buffer.char_next(r.last), false,
                                     apply_face(get_face(std::get<1>(range))));
             }
