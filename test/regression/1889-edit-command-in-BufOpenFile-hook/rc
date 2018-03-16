@@ -1,0 +1,6 @@
+set global debug commands
+set -add global debug hooks
+
+hook -group test global BufOpenFile .*/test.bad %{
+    edit "test.good"
+}
