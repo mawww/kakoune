@@ -93,3 +93,56 @@ define-command racer-disable-autocomplete -docstring "Disable racer completion" 
     remove-hooks window racer-autocomplete
     unalias window complete racer-complete
 }
+
+define-command racer-go-definition -docstring "Jump to where the rust identifier below the cursor is defined" %{
+    %sh{
+        dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-racer.XXXXXXXX)
+        printf %s\\n "set-option buffer racer_tmp_dir ${dir}"
+        printf %s\\n "evaluate-commands -no-hooks %{ write ${dir}/buf }"
+    }
+    %sh{
+        dir=${kak_opt_racer_tmp_dir}
+        cursor="${kak_cursor_line} $((${kak_cursor_column} - 1))"
+        racer_data=$(racer --interface tab-text  find-definition ${cursor} "${kak_buffile}" "${dir}/buf" | head -n 1)
+
+        racer_match=$(printf %s\\n "$racer_data" | cut -f1 )
+        if [ "$racer_match" = "MATCH" ]; then
+          racer_line=$(printf %s\\n "$racer_data" | cut -f3 )
+          racer_column=$(printf %s\\n "$racer_data" | cut -f4 )
+          racer_file=$(printf %s\\n "$racer_data" | cut -f5 )
+          printf %s\\n "edit -existing '$racer_file' $racer_line $racer_column"
+          if [[ "$racer_file" == ${RUST_SRC_PATH}* ]]; then
+            printf %s\\n "set-option buffer readonly true" # The definition resides on the standard library, and the new buffer should be readonly
+          else
+            if [[ "$racer_file" == ${HOME}/.cargo/registry/src* ]]; then
+              printf %s\\n "set-option buffer readonly true" # The definition resides on an external crate, and the new buffer should be readonly
+            fi
+          fi
+        else
+          printf %s\\n "echo -debug 'racer could not find a definition'"
+        fi
+    }
+}
+
+define-command racer-show-doc -docstring "Show the documentation about the rust identifier below the cursor" %{
+    %sh{
+        dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-racer.XXXXXXXX)
+        printf %s\\n "set-option buffer racer_tmp_dir ${dir}"
+        printf %s\\n "evaluate-commands -no-hooks %{ write ${dir}/buf }"
+    }
+    %sh{
+        dir=${kak_opt_racer_tmp_dir}
+        cursor="${kak_cursor_line} ${kak_cursor_column}"
+        racer_data=$(racer --interface tab-text  complete-with-snippet  ${cursor} "${kak_buffile}" "${dir}/buf" | sed -n 2p )
+        racer_match=$(printf %s\\n "$racer_data" | cut -f1)
+        if [ "$racer_match" = "MATCH" ]; then
+          racer_doc=$(printf %s\\n "$racer_data" | cut -f9 )
+          racer_doc=$(printf %s\\n "$racer_doc" |
+            sed -e 's/^"\(.*\)"$/\1/g' | # Remove leading and trailing quotes
+            sed -e "s/@/\\\\@/g")        # Escape all @ so that it can be properly used in the string expansion
+          printf "info %%@$racer_doc@"
+        else
+          printf %s\\n "echo -debug 'racer could not find a definition'"
+        fi
+    }
+}
