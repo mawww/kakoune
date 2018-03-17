@@ -112,10 +112,8 @@ define-command racer-go-definition -docstring "Jump to where the rust identifier
           racer_file=$(printf %s\\n "$racer_data" | cut -f5 )
           printf %s\\n "edit -existing '$racer_file' $racer_line $racer_column"
           case ${racer_file} in
-            "${RUST_SRC_PATH}"*)
-              printf %s\\n "set-option buffer readonly true";; # The definition resides on the standard library, and the new buffer should be readonly
-            "${HOME}/.cargo/registry/src/"*)
-              printf %s\\n "set-option buffer readonly true";; # The definition resides on an external crate, and the new buffer should be readonly
+            "${RUST_SRC_PATH}"* | "${CARGO_HOME:-$HOME/.cargo}"/registry/src/*)
+              printf %s\\n "set-option buffer readonly true";;
           esac
         else
           printf %s\\n "echo -debug 'racer could not find a definition'"
@@ -139,8 +137,15 @@ define-command racer-show-doc -docstring "Show the documentation about the rust 
           remove_surrond_quotes_regex='s/^"\(.*\)"$/\1/g'
           escape_at_sign_regex="s/@/\\\\@/g"
           racer_doc=$(printf %s\\n "$racer_doc" |
-            sed -e "$remove_surrond_quotes_regex" \
-                -e "$escape_at_sign_regex")
+            sed -e '
+
+              # Remove leading and trailing quotes
+              s/^"\(.*\)"$/\1/g
+
+              # Escape all @ so that it can be properly used in the string expansion
+              s/@/\\@/g
+
+            ')
           printf "info %%@$racer_doc@"
         else
           printf %s\\n "echo -debug 'racer could not find a definition'"
