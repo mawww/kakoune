@@ -168,6 +168,7 @@ void skip_blanks_and_comments(Reader& reader)
 
 Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
 {
+    kak_assert(*reader == '%');
     ++reader;
     const auto type_start = reader.pos;
     while (reader and iswalpha(*reader))
@@ -340,7 +341,9 @@ String expand_impl(StringView str, const Context& context,
         Codepoint c = *reader;
         if (c == '\\')
         {
-            c = *++reader;
+            if (not (++reader))
+                throw parse_error{"unterminated escape"};
+            c = *reader;
             if (c == '%' or c == '\\')
             {
                 res += reader.substr_from(beg);
