@@ -744,14 +744,26 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
         kak_assert(m_menu.items.back().length() <= maxlen);
     }
 
-    const LineCount height = min<LineCount>(min(10_line, maxsize.line),
-                                            div_round_up(item_count, m_menu.columns));
-
-    LineCount line = anchor.line + 1;
+    LineCount height = min<LineCount>(min(10_line, maxsize.line),
+                                      div_round_up(item_count, m_menu.columns));
+    LineCount line;
     if (is_prompt)
         line = m_status_on_top ? 1_line : m_dimensions.line - height;
-    else if (line + height >= maxsize.line)
-        line = anchor.line - height;
+    else if (anchor.line + height < m_dimensions.line)
+        line = anchor.line + 1;
+    else {
+        LineCount space_below = m_dimensions.line - anchor.line - 1;
+        LineCount space_above = anchor.line;
+        if (m_status_on_top)
+        {
+           space_above -= 1;
+           space_below += 1;
+        }
+        const bool is_below = space_below >= space_above;
+        const LineCount space = is_below ? space_below : space_above;
+        height = min(space, height);
+        line = is_below ? anchor.line + 1 : anchor.line - height;
+    }
 
     const ColumnCount column = std::max(0_col, std::min(anchor.column, maxsize.column - longest - 1));
 
