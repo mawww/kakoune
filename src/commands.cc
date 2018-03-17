@@ -772,7 +772,7 @@ static Completions complete_hooks(const Context&, CompletionFlags,
 const CommandDesc add_hook_cmd = {
     "hook",
     nullptr,
-    "hook <switches> <scope> <hook_name> <filter> <command>: add <command> in <scope> "
+    "hook [<switches>] <scope> <hook_name> <filter> <command>: add <command> in <scope> "
     "to be executed on hook <hook_name> when its parameter matches the <filter> regex\n"
     "<scope> can be:\n"
     "  * global: hook is executed for any buffer or window\n"
@@ -1017,7 +1017,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
 const CommandDesc define_command_cmd = {
     "define-command",
     "def",
-    "define-command <switches> <name> <cmds>: define a command <name> executing <cmds>",
+    "define-command [<switches>] <name> <cmds>: define a command <name> executing <cmds>",
     ParameterDesc{
         { { "params",             { true, "take parameters, accessible to each shell escape as $0..$N\n"
                                           "parameter should take the form <count> or <min>..<max> (both omittable)" } },
@@ -1264,7 +1264,7 @@ static OptionManager& get_options(StringView scope, const Context& context, Stri
 const CommandDesc set_option_cmd = {
     "set-option",
     "set",
-    "set-option <switches> <scope> <name> <value>: set option <name> in <scope> to <value>\n"
+    "set-option [<switches>] <scope> <name> <value>: set option <name> in <scope> to <value>\n"
     "<scope> can be global, buffer, window, or current which refers to the narrowest "
     "scope the option is set in",
     ParameterDesc{
@@ -1448,7 +1448,7 @@ auto map_key_completer =
 const CommandDesc map_key_cmd = {
     "map",
     nullptr,
-    "map <scope> <mode> <key> <keys>: map <key> to <keys> in given mode in <scope>.\n"
+    "map [<switches>] <scope> <mode> <key> <keys>: map <key> to <keys> in given mode in <scope>.\n"
     "<mode> can be:\n"
     "    normal\n"
     "    insert\n"
@@ -1693,7 +1693,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 const CommandDesc exec_string_cmd = {
     "execute-keys",
     "exec",
-    "execute-keys <switches> <keys>: execute given keys as if entered by user",
+    "execute-keys [<switches>] <keys>: execute given keys as if entered by user",
     context_wrap_params,
     CommandFlags::None,
     CommandHelper{},
@@ -1718,7 +1718,7 @@ const CommandDesc exec_string_cmd = {
 const CommandDesc eval_string_cmd = {
     "evaluate-commands",
     "eval",
-    "evaluate-commands <switches> <commands>...: execute commands as if entered by user",
+    "evaluate-commands [<switches>] <commands>...: execute commands as if entered by user",
     context_wrap_params,
     CommandFlags::None,
     CommandHelper{},
@@ -1831,7 +1831,7 @@ const CommandDesc prompt_cmd = {
 const CommandDesc menu_cmd = {
     "menu",
     nullptr,
-    "menu <switches> <name1> <commands1> <name2> <commands2>...: display a "
+    "menu [<switches>] <name1> <commands1> <name2> <commands2>...: display a "
     "menu and execute commands for the selected item",
     ParameterDesc{
         { { "auto-single", { false, "instantly validate if only one item is available" } },
@@ -1911,7 +1911,7 @@ const CommandDesc on_key_cmd = {
 const CommandDesc info_cmd = {
     "info",
     nullptr,
-    "info <switches> <params>...: display an info box with the params as content",
+    "info [<switches>] <params>...: display an info box with the params as content",
     ParameterDesc{
         { { "anchor",    { true, "set info anchoring <line>.<column>" } },
           { "placement", { true, "set placement relative to anchor (above, below)" } },
@@ -2162,7 +2162,7 @@ void enter_user_mode(Context& context, const String mode_name, KeymapMode mode, 
 const CommandDesc enter_user_mode_cmd = {
     "enter-user-mode",
     nullptr,
-    "enter-user-mode <switches> <name>: enable <name> keymap mode for next key",
+    "enter-user-mode [<switches>] <name>: enable <name> keymap mode for next key",
     ParameterDesc{
         { { "lock", { false, "stay in mode until <esc> is pressed" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
