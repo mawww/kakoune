@@ -67,6 +67,7 @@ std::pair<StringView, StringView> split_path(StringView path)
 
 String real_path(StringView filename)
 {
+    kak_assert(not filename.empty());
     char buffer[PATH_MAX+1];
 
     StringView existing = filename;
@@ -74,22 +75,21 @@ String real_path(StringView filename)
 
     while (true)
     {
-        char* res = realpath(existing.zstr(), buffer);
-        if (res)
+        if (char* res = realpath(existing.zstr(), buffer))
         {
             if (non_existing.empty())
                 return res;
-            return format("{}/{}", res, non_existing);
+            return format("{}{}", res, non_existing);
         }
 
-        auto it = find(existing.rbegin(), existing.rend(), '/');
+        auto it = find(existing.rbegin() + 1, existing.rend(), '/');
         if (it == existing.rend())
         {
             char cwd[1024];
             return format("{}/{}", getcwd(cwd, 1024), filename);
         }
 
-        existing = StringView{existing.begin(), it.base()-1};
+        existing = StringView{existing.begin(), it.base()};
         non_existing = StringView{it.base(), filename.end()};
     }
 }

@@ -1,0 +1,4 @@
+eval -draft %{
+    edit /kakoune-inexisting-directory/missing-file
+    reg a %val{buffile}
+}
