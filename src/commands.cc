@@ -1244,10 +1244,11 @@ const CommandDesc source_cmd = {
 
 static String option_doc_helper(const Context& context, CommandParameters params)
 {
-    if (params.size() < 2)
+    const bool add = params.size() > 1 and params[0] == "-add";
+    if (params.size() < 2 + (add ? 1 : 0))
         return "";
 
-    auto desc = GlobalScope::instance().option_registry().option_desc(params[1]);
+    auto desc = GlobalScope::instance().option_registry().option_desc(params[1 + (add ? 1 : 0)]);
     if (not desc or desc->docstring().empty())
         return "";
 
