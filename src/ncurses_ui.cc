@@ -845,14 +845,20 @@ static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
     return pos;
 }
 
-Vector<String> make_info_box(StringView title, StringView message, ColumnCount max_width,
-                             ConstArrayView<StringView> assistant)
+struct InfoBox
+{
+    DisplayCoord size;
+    Vector<String> contents;
+};
+
+InfoBox make_info_box(StringView title, StringView message, ColumnCount max_width,
+                      ConstArrayView<StringView> assistant)
 {
     DisplayCoord assistant_size;
     if (not assistant.empty())
         assistant_size = { (int)assistant.size(), assistant[0].column_length() };
 
-    Vector<String> result;
+    InfoBox result{};
 
     const ColumnCount max_bubble_width = max_width - assistant_size.column - 6;
     if (max_bubble_width < 4)
@@ -864,8 +870,8 @@ Vector<String> make_info_box(StringView title, StringView message, ColumnCount m
     for (auto& line : lines)
         bubble_width = max(bubble_width, line.column_length());
 
-    auto line_count = max(assistant_size.line-1,
-                          LineCount{(int)lines.size()} + 2);
+    auto line_count = max(assistant_size.line-1, LineCount{(int)lines.size()} + 2);
+    result.size = DisplayCoord{line_count, bubble_width + assistant_size.column + 4};
     const auto assistant_top_margin = (line_count - assistant_size.line+1) / 2;
     for (LineCount i = 0; i < line_count; ++i)
     {
@@ -899,9 +905,21 @@ Vector<String> make_info_box(StringView title, StringView message, ColumnCount m
         else if (i == lines.size() + 1)
             line += "╰─" + String(dash, bubble_width) + "─╯";
 
-        result.push_back(std::move(line));
+        result.contents.push_back(std::move(line));
     }
     return result;
+}
+
+InfoBox make_simple_info_box(StringView contents, ColumnCount max_width)
+{
+    InfoBox info_box{};
+    for (auto& line : wrap_lines(contents, max_width))
+    {
+        ++info_box.size.line;
+        info_box.size.column = std::max(line.column_length(), info_box.size.column);
+        info_box.contents.push_back(line.str());
+    }
+    return info_box;
 }
 
 void NCursesUI::info_show(StringView title, StringView content,
@@ -915,59 +933,62 @@ void NCursesUI::info_show(StringView title, StringView content,
     m_info.face = face;
     m_info.style = style;
 
-    Vector<String> info_box;
+    const Rect rect = {m_status_on_top ? 1_line : 0_line, m_dimensions};
+    InfoBox info_box;
     if (style == InfoStyle::Prompt)
     {
-        info_box = make_info_box(m_info.title, m_info.content,
-                                 m_dimensions.column, m_assistant);
-        anchor = DisplayCoord{m_status_on_top ? 0 : m_dimensions.line,
-                              m_dimensions.column-1};
+        info_box = make_info_box(m_info.title, m_info.content, m_dimensions.column, m_assistant);
+        anchor = DisplayCoord{m_status_on_top ? 0 : m_dimensions.line, m_dimensions.column-1};
+        anchor = compute_pos(anchor, info_box.size, rect, m_menu, style == InfoStyle::InlineAbove);
     }
     else if (style == InfoStyle::Modal)
-        info_box = make_info_box(m_info.title, m_info.content,
-                                 m_dimensions.column, {});
-    else
     {
-        if (m_status_on_top)
-            anchor.line += 1;
-        ColumnCount col = anchor.column;
-        if (style == InfoStyle::MenuDoc and m_menu)
-            col = m_menu.pos.column + m_menu.size.column;
+        info_box = make_info_box(m_info.title, m_info.content, m_dimensions.column, {});
+        auto half = [](const DisplayCoord& c) { return DisplayCoord{c.line / 2, c.column / 2}; };
+        anchor = rect.pos + half(rect.size) - half(info_box.size);
+    }
+    else if (style == InfoStyle::MenuDoc)
+    {
+        if (not m_menu)
+            return;
 
-        const ColumnCount max_width = m_dimensions.column - col;
+        const auto right_max_width = m_dimensions.column - (m_menu.pos.column + m_menu.size.column);
+        const auto left_max_width = m_menu.pos.column;
+        const auto max_width = std::max(right_max_width, left_max_width);
         if (max_width < 4)
             return;
 
-        for (auto& line : wrap_lines(m_info.content, max_width))
-            info_box.push_back(line.str());
-    }
-
-    const DisplayCoord size{(int)info_box.size(),
-                            accumulate(info_box | transform(&String::column_length), 0_col,
-                                       [](auto&& lhs, auto&& rhs){ return std::max(lhs, rhs); })};
-    const Rect rect = {m_status_on_top ? 1_line : 0_line, m_dimensions};
-    DisplayCoord pos;
-    if (style == InfoStyle::MenuDoc and m_menu)
-        pos = m_menu.pos + DisplayCoord{0_line, m_menu.size.column};
-    else if (style == InfoStyle::Modal)
-    {
-        auto half = [](const DisplayCoord& c) { return DisplayCoord{c.line / 2, c.column / 2}; };
-        pos = rect.pos + half(rect.size) - half(size);
+        info_box = make_simple_info_box(m_info.content, max_width);
+        anchor.line = m_menu.pos.line;
+        if (info_box.size.column <= right_max_width or right_max_width >= left_max_width)
+            anchor.column = m_menu.pos.column + m_menu.size.column;
+        else
+            anchor.column = m_menu.pos.column - info_box.size.column;
     }
     else
-        pos = compute_pos(anchor, size, rect, m_menu, style == InfoStyle::InlineAbove);
+    {
+        const ColumnCount max_width = m_dimensions.column - anchor.column;
+        if (max_width < 4)
+            return;
+
+        info_box = make_simple_info_box(m_info.content, max_width);
+        anchor = compute_pos(anchor, info_box.size, rect, m_menu, style == InfoStyle::InlineAbove);
+
+        if (m_status_on_top)
+            anchor.line += 1;
+    }
 
     // The info box does not fit
-    if (pos < rect.pos or pos + size > rect.pos + rect.size)
+    if (anchor < rect.pos or anchor + info_box.size > rect.pos + rect.size)
         return;
 
-    m_info.create(pos, size);
+    m_info.create(anchor, info_box.size);
 
     wbkgd(m_info.win, COLOR_PAIR(get_color_pair(face)));
-    for (size_t line = 0; line < info_box.size(); ++line)
+    for (auto line = 0_line; line < info_box.size.line; ++line)
     {
-        wmove(m_info.win, line, 0);
-        add_str(m_info.win, info_box[line]);
+        wmove(m_info.win, (int)line, 0);
+        add_str(m_info.win, info_box.contents[(int)line]);
     }
     m_dirty = true;
 }
