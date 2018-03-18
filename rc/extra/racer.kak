@@ -111,13 +111,10 @@ define-command racer-go-definition -docstring "Jump to where the rust identifier
           racer_column=$(printf %s\\n "$racer_data" | cut -f4 )
           racer_file=$(printf %s\\n "$racer_data" | cut -f5 )
           printf %s\\n "edit -existing '$racer_file' $racer_line $racer_column"
-          if [[ "$racer_file" == ${RUST_SRC_PATH}* ]]; then
-            printf %s\\n "set-option buffer readonly true" # The definition resides on the standard library, and the new buffer should be readonly
-          else
-            if [[ "$racer_file" == ${HOME}/.cargo/registry/src* ]]; then
-              printf %s\\n "set-option buffer readonly true" # The definition resides on an external crate, and the new buffer should be readonly
-            fi
-          fi
+          case ${racer_file} in
+            "${RUST_SRC_PATH}"* | "${CARGO_HOME:-$HOME/.cargo}"/registry/src/*)
+              printf %s\\n "set-option buffer readonly true";;
+          esac
         else
           printf %s\\n "echo -debug 'racer could not find a definition'"
         fi
@@ -136,10 +133,18 @@ define-command racer-show-doc -docstring "Show the documentation about the rust 
         racer_data=$(racer --interface tab-text  complete-with-snippet  ${cursor} "${kak_buffile}" "${dir}/buf" | sed -n 2p )
         racer_match=$(printf %s\\n "$racer_data" | cut -f1)
         if [ "$racer_match" = "MATCH" ]; then
-          racer_doc=$(printf %s\\n "$racer_data" | cut -f9 )
-          racer_doc=$(printf %s\\n "$racer_doc" |
-            sed -e 's/^"\(.*\)"$/\1/g' | # Remove leading and trailing quotes
-            sed -e "s/@/\\\\@/g")        # Escape all @ so that it can be properly used in the string expansion
+          racer_doc=$(
+            printf %s\\n "$racer_data" |
+            cut -f9  |
+            sed -e '
+
+              # Remove leading and trailing quotes
+              s/^"\(.*\)"$/\1/g
+
+              # Escape all @ so that it can be properly used in the string expansion
+              s/@/\\@/g
+
+            ')
           printf "info %%@$racer_doc@"
         else
           printf %s\\n "echo -debug 'racer could not find a definition'"
