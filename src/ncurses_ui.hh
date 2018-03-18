@@ -32,6 +32,10 @@ public:
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
 
+    void draw_zone(StringView zone,
+                   const DisplayLine& zone_line,
+                   const Face& default_face);
+
     void menu_show(ConstArrayView<DisplayLine> items,
                    DisplayCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
@@ -144,6 +148,11 @@ private:
     bool m_change_colors = true;
 
     bool m_dirty = false;
+
+    Vector<String> m_layout;
+    using ZoneMap = HashMap<String, DisplayLine>;
+    ZoneMap m_zones;
+    int get_zone_line(StringView zone_name);
 };
 
 }

@@ -1,7 +1,9 @@
 #include "ncurses_ui.hh"
 
+#include "buffer_utils.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
+#include "face_registry.hh"
 #include "keys.hh"
 #include "ranges.hh"
 #include "string_utils.hh"
@@ -256,7 +258,8 @@ NCursesUI::NCursesUI()
       }},
       m_assistant(assistant_clippy),
       m_colors{default_colors},
-      m_cursor{CursorMode::Buffer, {}}
+      m_cursor{CursorMode::Buffer, {}},
+      m_layout{"main", "status"}
 {
     initscr();
     raw();
@@ -317,16 +320,17 @@ void NCursesUI::Window::refresh()
 void NCursesUI::redraw()
 {
     pnoutrefresh(m_window, 0, 0, 0, 0,
-                 (int)m_dimensions.line + 1, (int)m_dimensions.column);
+                 (int)m_dimensions.line + (int)m_layout.size() - 1, (int)m_dimensions.column);
 
     m_menu.refresh();
     m_info.refresh();
+    for (auto zone : m_zones)
+        draw_zone(zone.key, zone.value, get_face("StatusLine"));
 
     if (m_cursor.mode == CursorMode::Prompt)
-        wmove(newscr, m_status_on_top ? 0 : (int)m_dimensions.line,
-              (int)m_cursor.coord.column);
+        wmove(newscr, get_zone_line("status"), (int)m_cursor.coord.column);
     else
-        wmove(newscr, (int)m_cursor.coord.line + (m_status_on_top ? 1 : 0),
+        wmove(newscr, (int)m_cursor.coord.line + get_zone_line("main"),
               (int)m_cursor.coord.column);
 
     doupdate();
@@ -390,7 +394,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
 
     check_resize();
 
-    LineCount line_index = m_status_on_top ? 1 : 0;
+    LineCount line_index = get_zone_line("main");
     for (const DisplayLine& line : display_buffer.lines())
     {
         wmove(m_window, (int)line_index, 0);
@@ -402,7 +406,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     wbkgdset(m_window, COLOR_PAIR(get_color_pair(padding_face)));
     set_face(m_window, padding_face, default_face);
 
-    while (line_index < m_dimensions.line + (m_status_on_top ? 1 : 0))
+    while (line_index < m_dimensions.line + get_zone_line("main"))
     {
         wmove(m_window, (int)line_index++, 0);
         wclrtoeol(m_window);
@@ -416,7 +420,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
                             const DisplayLine& mode_line,
                             const Face& default_face)
 {
-    const int status_line_pos = m_status_on_top ? 0 : (int)m_dimensions.line;
+    const int status_line_pos = get_zone_line("status");
     wmove(m_window, status_line_pos, 0);
 
     wbkgdset(m_window, COLOR_PAIR(get_color_pair(default_face)));
@@ -467,6 +471,18 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     m_dirty = true;
 }
 
+void NCursesUI::draw_zone(const StringView zone,
+                          const DisplayLine& zone_line,
+                          const Face& default_face)
+{
+    wmove(m_window, get_zone_line(zone), 0);
+    wbkgdset(m_window, COLOR_PAIR(get_color_pair(default_face)));
+    wclrtoeol(m_window);
+
+    draw_line(m_window, zone_line, 0, m_dimensions.column, default_face);
+    m_dirty = true;
+}
+
 void NCursesUI::check_resize(bool force)
 {
     if (not force and not resize_pending)
@@ -492,7 +508,8 @@ void NCursesUI::check_resize(bool force)
         keypad(m_window, true);
         meta(m_window, true);
 
-        m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
+        m_dimensions = DisplayCoord{ws.ws_row - (int)(m_layout.size()-1),
+                                    ws.ws_col};
 
         if (char* csr = tigetstr((char*)"csr"))
             putp(tparm(csr, 0, ws.ws_row));
@@ -504,6 +521,9 @@ void NCursesUI::check_resize(bool force)
         }
         if (info)
             info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
+
+        for (auto zone : m_zones)
+            draw_zone(zone.key, zone.value, get_face("StatusLine"));
     }
     else
         kak_assert(false);
@@ -557,7 +577,7 @@ Optional<Key> NCursesUI::get_next_key()
             };
 
             return Key{ get_modifiers(ev.bstate),
-                        encode_coord({ ev.y - (m_status_on_top ? 1 : 0), ev.x }) };
+                        encode_coord({ ev.y - get_zone_line("main"), ev.x }) };
         }
     }
 
@@ -744,13 +764,14 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     const LineCount height = min<LineCount>(min(10_line, max_height),
                                             div_round_up(item_count, m_menu.columns));
 
-    if (style != MenuStyle::Prompt and m_status_on_top)
-        anchor.line += 1;
-
+    auto main_line_pos = get_zone_line("main");
+    anchor.line += main_line_pos;
     LineCount line = anchor.line + 1;
+
     if (is_prompt)
-        line = m_status_on_top ? 1_line : m_dimensions.line - height;
-    else if (line + height > m_dimensions.line)
+        line = m_status_on_top ? main_line_pos
+                               : main_line_pos + m_dimensions.line - height;
+    else if (line + height >= m_dimensions.line)
         line = anchor.line - height;
 
     const ColumnCount column = std::max(0_col, std::min(anchor.column, m_dimensions.column - longest - 1));
@@ -933,12 +954,13 @@ void NCursesUI::info_show(StringView title, StringView content,
     m_info.face = face;
     m_info.style = style;
 
-    const Rect rect = {m_status_on_top ? 1_line : 0_line, m_dimensions};
+    auto main_line_pos = get_zone_line("main");
+    const Rect rect = {{main_line_pos}, m_dimensions};
     InfoBox info_box;
     if (style == InfoStyle::Prompt)
     {
         info_box = make_info_box(m_info.title, m_info.content, m_dimensions.column, m_assistant);
-        anchor = DisplayCoord{m_status_on_top ? 0 : m_dimensions.line, m_dimensions.column-1};
+        anchor = DisplayCoord{m_status_on_top ? main_line_pos-1 : main_line_pos + m_dimensions.line, m_dimensions.column-1};
         anchor = compute_pos(anchor, info_box.size, rect, m_menu, style == InfoStyle::InlineAbove);
     }
     else if (style == InfoStyle::Modal)
@@ -974,8 +996,7 @@ void NCursesUI::info_show(StringView title, StringView content,
         info_box = make_simple_info_box(m_info.content, max_width);
         anchor = compute_pos(anchor, info_box.size, rect, m_menu, style == InfoStyle::InlineAbove);
 
-        if (m_status_on_top)
-            anchor.line += 1;
+        anchor.line += main_line_pos;
     }
 
     // The info box does not fit
@@ -1061,9 +1082,31 @@ void NCursesUI::set_ui_options(const Options& options)
     }
 
     {
-        auto it = options.find("ncurses_status_on_top"_sv);
-        m_status_on_top = it != options.end() and
-            (it->value == "yes" or it->value == "true");
+        auto it = options.find("ncurses_layout"_sv);
+        if (it != options.end())
+        {
+            auto layout = it->value | split<String>(',') | gather<Vector<String>>();
+            auto main = find(layout, "main");
+            auto status = find(layout, "status");
+            if (main == m_layout.end() or status == m_layout.end())
+                write_to_debug_buffer("main and status zones are mandatory in ncurses_layout");
+
+            m_layout = layout;
+            m_status_on_top = status < main;
+
+            for (auto zone : layout)
+            {
+                if (zone == "main" or zone == "status")
+                  continue;
+
+                auto zone_it = options.find(zone);
+                if (zone_it == options.end())
+                    write_to_debug_buffer(format("zone '{}' definition not found in ui_options", zone));
+                else
+                    m_zones.insert({ zone, parse_display_line(zone_it->value) });
+            }
+            check_resize(true);
+        }
     }
 
     {
@@ -1104,6 +1147,17 @@ void NCursesUI::set_ui_options(const Options& options)
         m_wheel_down_button = wheel_down_it != options.end() ?
             str_to_int_ifp(wheel_down_it->value).value_or(5) : 5;
     }
+}
+
+int NCursesUI::get_zone_line (StringView zone_name)
+{
+    int line = 0;
+    for (auto& zone : m_layout) {
+        if (zone == zone_name)
+            return line;
+        line += (zone == "main") ? (int)m_dimensions.line : 1;
+    }
+    return line;
 }
 
 }
