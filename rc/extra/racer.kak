@@ -133,10 +133,9 @@ define-command racer-show-doc -docstring "Show the documentation about the rust 
         racer_data=$(racer --interface tab-text  complete-with-snippet  ${cursor} "${kak_buffile}" "${dir}/buf" | sed -n 2p )
         racer_match=$(printf %s\\n "$racer_data" | cut -f1)
         if [ "$racer_match" = "MATCH" ]; then
-          racer_doc=$(printf %s\\n "$racer_data" | cut -f9 )
-          remove_surrond_quotes_regex='s/^"\(.*\)"$/\1/g'
-          escape_at_sign_regex="s/@/\\\\@/g"
-          racer_doc=$(printf %s\\n "$racer_doc" |
+          racer_doc=$(
+            printf %s\\n "$racer_data" |
+            cut -f9  |
             sed -e '
 
               # Remove leading and trailing quotes
