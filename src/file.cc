@@ -166,16 +166,12 @@ String read_fd(int fd, bool text)
 
         if  (text)
         {
-            ssize_t beg = 0;
-            for (ssize_t pos = 0; pos < size; ++pos)
+            for (StringView data{buf, buf + size}; not data.empty();)
             {
-                if (buf[pos] == '\r')
-                {
-                   content += StringView{buf + beg, buf + pos};
-                   beg = pos + 1;
-                }
+               auto it = find(data, '\r');
+               content += StringView{data.begin(), it};
+               data = StringView{(it != data.end()) ? it+1 : it, data.end()};
             }
-            content += StringView{buf + beg, buf + size};
         }
         else
             content += StringView{buf, buf + size};
