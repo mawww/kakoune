@@ -45,9 +45,30 @@ This variable should be set by the terminal emulator, and not overridden with
 an arbitrary value, otherwise it might interfere with general UI rendering on
 the terminal's window.
 
-Note that if you're using `tmux`, the proper -official- way to get Kakoune to
-work is to add the following line to your `tmux` configuration file:
-`set -sg default-terminal screen-256color`
+== I'm using `tmux` and colors look weird
+
+If you're using a tool that doesn't support "palette switching", colors will
+still be slightly off: they are being rounded down to values supported by the
+regular color palette by Kakoune. Fortunately, on recent versions of `tmux`
+(>=2.6), you can work around that by using the following configuration
+settings:
+
+~/.tmux.conf
+```
+set -g default-terminal "tmux-256color"
+set -ga terminal-overrides ",*col*:Tc"
+```
+
+Note: `\*col*` is a regular expression that matches your terminal's `$TERM`
+value, modify it if necessary, e.g. `xterm-termite`.
+
+Next, run the following command to create a local `terminfo` override:
+
+```
+$ tic /path/to/kakoune/contrib/tmux-256color.terminfo
+```
+
+Finally, quit all existing sessions (`tmux kill-server`), and restart `tmux`.
 
 == Why does leaving insert mode take more than half a second in `tmux` ?
 

@@ -1,0 +1,4 @@
+tmux-256color|tmux with 256 color and palette setting,
+	use=tmux-256color,
+	ccc,
+	initc=\E]4;%p1%d;rgb\:%p2%{255}%*%{1000}%/%2.2X/%p3%{255}%*%{1000}%/%2.2X/%p4%{255}%*%{1000}%/%2.2X\E\\,
