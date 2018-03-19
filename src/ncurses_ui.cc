@@ -717,11 +717,7 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     m_menu.style = style;
     m_menu.anchor = anchor;
 
-    const DisplayCoord maxsize = m_dimensions;
-    if (style != MenuStyle::Prompt and m_status_on_top)
-        anchor.line += 1;
-
-    if (maxsize.column <= 2)
+    if (m_dimensions.column <= 2)
         return;
 
     const int item_count = items.size();
@@ -730,7 +726,7 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     const auto longest = accumulate(items | transform(&DisplayLine::length),
                                     1_col, [](auto&& lhs, auto&& rhs) { return std::max(lhs, rhs); });
 
-    const ColumnCount last_column = maxsize.column - 1;
+    const ColumnCount last_column = m_dimensions.column - 1;
     const bool is_prompt = style == MenuStyle::Prompt;
     m_menu.columns = is_prompt ? max((int)(last_column / (longest+1)), 1) : 1;
 
@@ -744,18 +740,22 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
         kak_assert(m_menu.items.back().length() <= maxlen);
     }
 
-    const LineCount height = min<LineCount>(min(10_line, maxsize.line),
+    const LineCount max_height = std::max(anchor.line, m_dimensions.line - anchor.line - 1);
+    const LineCount height = min<LineCount>(min(10_line, max_height),
                                             div_round_up(item_count, m_menu.columns));
+
+    if (style != MenuStyle::Prompt and m_status_on_top)
+        anchor.line += 1;
 
     LineCount line = anchor.line + 1;
     if (is_prompt)
         line = m_status_on_top ? 1_line : m_dimensions.line - height;
-    else if (line + height >= maxsize.line)
+    else if (line + height > m_dimensions.line)
         line = anchor.line - height;
 
-    const ColumnCount column = std::max(0_col, std::min(anchor.column, maxsize.column - longest - 1));
+    const ColumnCount column = std::max(0_col, std::min(anchor.column, m_dimensions.column - longest - 1));
 
-    auto width = is_prompt ? maxsize.column : min(longest+1, maxsize.column);
+    auto width = is_prompt ? m_dimensions.column : min(longest+1, m_dimensions.column);
     m_menu.create({line, column}, {height, width});
     m_menu.selected_item = item_count;
     m_menu.top_line = 0;
