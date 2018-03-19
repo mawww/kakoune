@@ -67,7 +67,9 @@ std::pair<StringView, StringView> split_path(StringView path)
 
 String real_path(StringView filename)
 {
-    kak_assert(not filename.empty());
+    if (filename.empty())
+        return {};
+
     char buffer[PATH_MAX+1];
 
     StringView existing = filename;
