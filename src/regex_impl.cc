@@ -429,24 +429,21 @@ private:
             if (cp == '\\')
             {
                 auto it = find_if(character_class_escapes,
-                                  [cp = *m_pos](auto& t) { return t.cp == cp; });
+                                  [cp = *m_pos](auto&& t) { return t.cp == cp; });
                 if (it != std::end(character_class_escapes))
                 {
                     character_class.ctypes |= it->ctype;
                     ++m_pos;
                     continue;
                 }
-                else // its just an escaped character
+                else // its an escaped character
                 {
                     cp = *m_pos++;
-                    for (auto& control : control_escapes)
-                    {
-                        if (control.name == cp)
-                        {
-                            cp = control.value;
-                            break;
-                        }
-                    }
+                    auto it = find_if(control_escapes, [cp](auto&& t) { return t.name == cp; });
+                    if (it != std::end(control_escapes))
+                        cp = it->value;
+                    else if (not contains("^$\\.*+?()[]{}|-", cp)) // SyntaxCharacter and -
+                        parse_error(format("unknown character class escape '{}'", cp));
                 }
             }
 
