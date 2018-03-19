@@ -742,6 +742,9 @@ const CommandDesc remove_highlighter_cmd = {
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         StringView path = parser[0];
+        if (not path.empty() and path.back() == '/') // ignore trailing /
+            path = path.substr(0_byte, path.length() - 1_byte);
+
         auto rev_path = path | reverse();
         auto sep_it = find(rev_path, '/');
         if (sep_it == rev_path.end())
