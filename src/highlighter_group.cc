@@ -39,8 +39,6 @@ void HighlighterGroup::add_child(HighlighterAndId&& hl)
 
 void HighlighterGroup::remove_child(StringView id)
 {
-    if (not m_highlighters.contains(id))
-        throw runtime_error{format("no such child: {}", id)};
     m_highlighters.remove(id);
 }
 
