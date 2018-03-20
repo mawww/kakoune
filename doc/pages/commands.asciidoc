@@ -79,12 +79,12 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 
 == Options
 
-*declare-option* [-hidden] <type> <name> [<value>]::
+*declare-option* [<switches>] <type> <name> [<value>]::
     *alias* decl +
-    declare a new option, the -hidden hides the option in completion
+    declare a new option, the -hidden switch hides the option in completion
     suggestions (See <<options#declare-option,`:doc options declare-option`>>)
 
-*set-option* <scope> <name> <value>::
+*set-option* [<switches>] <scope> <name> <value>::
     *alias* set +
     change the value of an option
     note that the name of a particular buffer can be specified when the
@@ -103,7 +103,7 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 
 == Commands and Keys
 
-*define-command* [<flags>] <name> <command>::
+*define-command* [<switches>] <name> <command>::
     *alias* def +
     define a new command (See <<declaring-new-commands,Declaring new commands>>)
 
@@ -114,16 +114,16 @@ command *q!* has to be used). Aliases are mentionned below each commands.
     remove an alias if its current value is the same as the one passed
     as an optional parameter, remove it unconditionally otherwise
 
-*evaluate-commands* [<flags>] <command> ...::
+*evaluate-commands* [<switches>] <command> ...::
     *alias* eval +
     evaluate commands, as if they were entered in the command prompt
     (See <<execeval#,`:doc execeval`>>)
 
-*execute-keys* [<flags>] <key> ...::
+*execute-keys* [<switches>] <key> ...::
     *alias* exec +
     execute a series of keys, as if they were hit (See <<execeval#,`:doc execeval`>>)
 
-*map* <scope> <mode> <key> <keys>::
+*map* [<switches>] <scope> <mode> <key> <keys>::
     bind a list of keys to a combination (See <<mapping#,`:doc mapping`>>)
 
 *unmap* <scope> <mode> <key> [<expected>]::
@@ -132,7 +132,7 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 *declare-user-mode* <name>::
     declare a new user keymap mode
 
-*enter-user-mode* <name>::
+*enter-user-mode* [<switches>] <name>::
     enable <name> keymap mode for next key
 
     *-lock*:::
@@ -151,8 +151,8 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 
 == Display
 
-*echo* [options] <text>::
-    show *text* in status line, with the following *options*:
+*echo* [<switches>] <text>::
+    show *text* in status line, with the following *switches*:
 
     *-markup*:::
         expand the markup strings in *text* (See
@@ -168,7 +168,7 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 *colorscheme* <name>::
     load named colorscheme
 
-*add-highlighter* [<flags>] <highlighter_name> <highlighter_parameters> ...::
+*add-highlighter* <highlighter_name> <highlighter_parameters> ...::
     *alias* addhl +
     add a highlighter to the current window
     (See <<highlighters#,`:doc highlighters`>>)
@@ -184,7 +184,7 @@ Kakoune provides some helper commands that can be used to define composite
 commands in scripts. They are also available in the interactive mode,
 but not really useful in that context.
 
-*prompt* <prompt> <command>::
+*prompt* [<switches>] <prompt> <command>::
     prompt the user for a string, when the user validates, executes the
     command. The entered text is available in the `text` value accessible
     through `$kak_text` in shells or `%val{text}` in commands.
@@ -202,7 +202,7 @@ but not really useful in that context.
     available through the `key` value, accessible through `$kak_key`
     in shells, or `%val{key}` in commands.
 
-*menu* <label1> <commands1> <label2> <commands2> ...::
+*menu* [<switches>] <label1> <commands1> <label2> <commands2> ...::
     display a menu using labels, the selected label’s commands are
     executed. The *menu* command can take an *-auto-single* argument, to automatically
     run commands when only one choice is provided, and a *-select-cmds*
@@ -210,8 +210,8 @@ but not really useful in that context.
     last one being a command to execute when the item is selected (but
     not validated)
 
-*info* [options] <text>::
-    display text in an information box with the following *options*:
+*info* [<switches>] <text>::
+    display text in an information box with the following *switches*:
 
     *-anchor* <line>.<column>:::
         print the text at the given coordinates
@@ -253,8 +253,8 @@ backslash (\;) to be considered as a literal semicolon argument
 
 New commands can be defined using the *define-command* command:
 
-*define-command* [flags] <command_name> <commands>::
-    *commands* is a string containing the commands to execute, and *flags*
+*define-command* [<switches>] <command_name> <commands>::
+    *commands* is a string containing the commands to execute, and *switches*
     can be any combination of the following parameters:
 
 *-params* <num>:::
