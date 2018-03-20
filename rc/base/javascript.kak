@@ -51,7 +51,7 @@ define-command -hidden init-javascript-filetype -params 1 %~
         comment       /\*  \*/                     '' \
         shebang       ^#!  $                       '' \
         regex         /    (?<!\\)(\\\\)*/[gimuy]* '' \
-        jsx           (?<![\w<])<[a-zA-Z][\w:.-]*(?!\hextends)(?=[\s/>])(?!>\()) (</.*?>|/>) (?<![\w<])<[a-zA-Z][\w:.-]* \
+        jsx           (?<![\w<])<(|([a-zA-Z][\w:.-]*(?!\hextends))(?=[\s/>])(?!>\())) (</.*?>|/>) (?<![\w<])<[a-zA-Z][\w:.-]* \
         division '[\w\)\]]\K(/|(\h+/\h+))' '(?=\w)' '' # Help Kakoune to better detect /…/ literals
 
     # Regular expression flags are: g → global match, i → ignore case, m → multi-lines, u → unicode, y → sticky
@@ -76,7 +76,7 @@ define-command -hidden init-javascript-filetype -params 1 %~
     # To make things simple we assume that jsx is always enabled.
 
     add-highlighter "shared/%arg{1}/jsx" regions content \
-        tag     <(?=[/a-zA-Z]) (?<!=)> <  \
+        tag     <(?=[>/a-zA-Z]) (?<!=)> <  \
         expr    \{             \}      \{
 
     add-highlighter "shared/%arg{1}/jsx/content/expr" ref %arg{1}
