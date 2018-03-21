@@ -70,6 +70,7 @@ hook global WinSetOption filetype=css %[
     hook window ModeChange insert:.* -group css-hooks  css-filter-around-selections
     hook window InsertChar \n -group css-indent css-indent-on-new-line
     hook window InsertChar \} -group css-indent css-indent-on-closing-curly-brace
+    set-option buffer extra_word_chars '-'
 ]
 
 hook -group css-highlight global WinSetOption filetype=(?!css).* %{ remove-highlighter window/css }
