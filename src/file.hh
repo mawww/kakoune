@@ -19,8 +19,10 @@ class Regex;
 
 using CandidateList = Vector<String, MemoryDomain::Completion>;
 
-// parse ~/ and $env values in filename and returns the translated filename
+// parse ~/ and %/ in filename and returns the translated filename
+String parse_filename(StringView filename, StringView buf_dir);
 String parse_filename(StringView filename);
+
 String real_path(StringView filename);
 String compact_path(StringView filename);
 
@@ -54,7 +56,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename, bool force = fals
 void write_buffer_to_fd(Buffer& buffer, int fd);
 void write_buffer_to_backup_file(Buffer& buffer);
 
-String find_file(StringView filename, ConstArrayView<String> paths);
+String find_file(StringView filename, StringView buf_dir, ConstArrayView<String> paths);
 bool file_exists(StringView filename);
 
 Vector<String> list_files(StringView directory);

@@ -278,11 +278,8 @@ void goto_commands(Context& context, NormalParams params)
                     return;
 
                 auto paths = context.options()["path"].get<Vector<String, MemoryDomain::Options>>();
-                StringView buffer_dir = split_path(buffer.name()).first;
-                if (not buffer_dir.empty())
-                    paths.insert(paths.begin(), buffer_dir.str());
-
-                String path = find_file(filename, paths);
+                const StringView buffer_dir = split_path(buffer.name()).first;
+                String path = find_file(filename, buffer_dir, paths);
                 if (path.empty())
                     throw runtime_error(format("unable to find file '{}'", filename));
 

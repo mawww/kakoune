@@ -48,12 +48,19 @@ public:
         : runtime_error(format("fd {}: {}", fd, error_desc)) {}
 };
 
-String parse_filename(StringView filename)
+String parse_filename(StringView filename, StringView buf_dir)
 {
     auto prefix = filename.substr(0_byte, 2_byte);
     if (prefix == "~" or prefix == "~/")
         return homedir() + filename.substr(1_byte);
+    if ((prefix == "%" or prefix == "%/") and not buf_dir.empty())
+        return buf_dir + filename.substr(1_byte);
     return filename.str();
+}
+
+String parse_filename(StringView filename)
+{
+    return parse_filename(filename, {});
 }
 
 std::pair<StringView, StringView> split_path(StringView path)
@@ -331,7 +338,7 @@ void write_buffer_to_backup_file(Buffer& buffer)
     }
 }
 
-String find_file(StringView filename, ConstArrayView<String> paths)
+String find_file(StringView filename, StringView buf_dir, ConstArrayView<String> paths)
 {
     struct stat buf;
     if (filename.substr(0_byte, 1_byte) == "/")
@@ -348,7 +355,7 @@ String find_file(StringView filename, ConstArrayView<String> paths)
         return "";
     }
 
-    for (auto candidate : paths | transform(parse_filename))
+    for (auto candidate : paths | transform([&](StringView s) { return parse_filename(s, buf_dir); }))
     {
         if (not candidate.empty() and candidate.back() != '/')
             candidate += '/';

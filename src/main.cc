@@ -323,7 +323,7 @@ void register_options()
                       Regex{});
     reg.declare_option("filetype", "buffer filetype", ""_str);
     reg.declare_option("path", "path to consider when trying to find a file",
-                   Vector<String, MemoryDomain::Options>({ "./", "/usr/include" }));
+                   Vector<String, MemoryDomain::Options>({ "./", "%/", "/usr/include" }));
     reg.declare_option("completers", "insert mode completers to execute.",
                        InsertCompleterDescList({
                            InsertCompleterDesc{ InsertCompleterDesc::Filename, {} },

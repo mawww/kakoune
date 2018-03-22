@@ -246,6 +246,13 @@ InsertCompletion complete_filename(const SelectionList& sels,
         {
             if (not dir.empty() and dir.back() != '/')
                 dir += '/';
+            if (dir.substr(0, 2_byte) == "%/")
+            {
+                if (not (buffer.flags() & Buffer::Flags::File))
+                    continue;
+                dir = split_path(buffer.name()).first.str() + '/' + dir.substr(2_byte);
+            }
+
             for (auto& filename : Kakoune::complete_filename(dir + prefix,
                                                              options["ignored_files"].get<Regex>()))
             {
