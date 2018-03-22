@@ -31,7 +31,7 @@ add-highlighter shared/ regions -default code kakrc \
               hook remove-hooks define-command echo debug source try fail
               set-option unset-option update-option declare-option execute-keys evaluate-commands
               prompt menu on-key info set-face rename-client set-register select change-directory
-              rename-session colorscheme"
+              rename-session colorscheme declare-user-mode enter-user-mode"
     attributes="global buffer window current
                 normal insert menu prompt goto view user object
                 number_lines show_matching show_whitespaces fill regex dynregex group flag_lines
