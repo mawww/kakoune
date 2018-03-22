@@ -511,14 +511,14 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
     return std::make_unique<LocalUI>();
 }
 
-int run_client(StringView session, StringView client_init,
+int run_client(StringView session, StringView name, StringView client_init,
                Optional<BufferCoord> init_coord, UIType ui_type,
                bool suspend)
 {
     try
     {
         EventManager event_manager;
-        RemoteClient client{session, make_ui(ui_type), getpid(), get_env_vars(),
+        RemoteClient client{session, name, make_ui(ui_type), getpid(), get_env_vars(),
                             client_init, std::move(init_coord)};
         if (suspend)
             raise(SIGTSTP);
@@ -536,6 +536,7 @@ int run_client(StringView session, StringView client_init,
 struct convert_to_client_mode
 {
     String session;
+    String client_name;
     String buffer_name;
     String selections;
 };
@@ -659,7 +660,7 @@ int run_server(StringView session, StringView server_init,
         if (not (flags & ServerFlags::Daemon))
         {
             local_client = client_manager.create_client(
-                 create_local_ui(ui_type), getpid(), get_env_vars(), client_init, std::move(init_coord),
+                 create_local_ui(ui_type), getpid(), {}, get_env_vars(), client_init, std::move(init_coord),
                  [](int status) { local_client_exit = status; });
 
             if (startup_error)
@@ -693,8 +694,9 @@ int run_server(StringView session, StringView server_init,
             }
             else if (convert_to_client_pending)
             {
-                String buffer_name = local_client->context().buffer().name();
-                String selections = selection_list_to_string(local_client->context().selections());
+                const String client_name = local_client->context().name();
+                const String buffer_name = local_client->context().buffer().name();
+                const String selections = selection_list_to_string(local_client->context().selections());
 
                 ClientManager::instance().remove_client(*local_client, true, 0);
                 client_manager.clear_client_trash();
@@ -704,7 +706,7 @@ int run_server(StringView session, StringView server_init,
                 {
                     String session = server.session();
                     server.close_session(false);
-                    throw convert_to_client_mode{ std::move(session), std::move(buffer_name), std::move(selections) };
+                    throw convert_to_client_mode{ std::move(session), std::move(client_name), std::move(buffer_name), std::move(selections) };
                 }
             }
         }
@@ -985,7 +987,7 @@ int main(int argc, char* argv[])
             for (auto name : files)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
-            return run_client(*server_session, new_files + client_init, init_coord, ui_type, false);
+            return run_client(*server_session, {}, new_files + client_init, init_coord, ui_type, false);
         }
         else
         {
@@ -1000,7 +1002,7 @@ int main(int argc, char* argv[])
             }
             catch (convert_to_client_mode& convert)
             {
-                return run_client(convert.session,
+                return run_client(convert.session, convert.client_name,
                                   format("try %^buffer '{}'; select '{}'^; echo converted to client only mode",
                                          escape(convert.buffer_name, "'^", '\\'), convert.selections), {}, ui_type, true);
             }

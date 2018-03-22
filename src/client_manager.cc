@@ -39,7 +39,7 @@ String ClientManager::generate_name() const
 }
 
 Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pid,
-                                     EnvVarMap env_vars, StringView init_cmds,
+                                     String name, EnvVarMap env_vars, StringView init_cmds,
                                      Optional<BufferCoord> init_coord,
                                      Client::OnExitCallback on_exit)
 {
@@ -47,7 +47,8 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
     WindowAndSelections ws = get_free_window(buffer);
     Client* client = new Client{std::move(ui), std::move(ws.window),
                                 std::move(ws.selections), pid,
-                                std::move(env_vars), generate_name(),
+                                std::move(env_vars),
+                                name.empty() ? generate_name() : std::move(name),
                                 std::move(on_exit)};
     m_clients.emplace_back(client);
 
