@@ -169,8 +169,9 @@ are exclusively available to built-in options.
     actions should hook on this option changing for activation/deactivation
 
 *path* `str-list`::
-    _default_ ./:/usr/include +
-    directories to search for gf command
+    _default_ ./:%/:/usr/include +
+    directories to search for *gf* command and filenames completion
+    `%/` represents the current buffer directory
 
 *completers* `completer-list`::
     _default_ filename:word=all +
