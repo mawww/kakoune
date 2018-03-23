@@ -18,18 +18,14 @@ define-command -hidden -params 1.. iterm-new-split-impl %{
     %sh{
         direction="$1"
         shift
-        if [ $# -gt 0 ]; then kakoune_params="-e '$@'"; fi
-        sh_cmd="kak -c ${kak_session} ${kakoune_params}"
-        osascript                                                     \
-        -e "tell application \"iTerm\""                               \
-        -e "    tell current session of current window"               \
-        -e "        tell (split ${direction} with same profile)"      \
-        -e "            select"                                       \
-        -e "            write text \"export TMPDIR='${TMPDIR}'\""     \
-        -e "            write text \"exec ${sh_cmd}\""                \
-        -e "        end tell"                                         \
-        -e "    end tell"                                             \
-        -e "end tell"
+        if [ $# -gt 0 ]; then kakoune_params="-e \\\"$@\\\""; fi
+        cmd="env -P ${PATH} TMPDIR=${TMPDIR} kak -c ${kak_session} ${kakoune_params}"
+        osascript                                                                             \
+        -e "tell application \"iTerm\""                                                       \
+        -e "    tell current session of current window"                                       \
+        -e "        tell (split ${direction} with same profile command \"${cmd}\") to select" \
+        -e "    end tell"                                                                     \
+        -e "end tell" >/dev/null
     }
 }
 
@@ -46,17 +42,14 @@ define-command -params .. -command-completion \
 All optional arguments are forwarded to the new kak client} \
     iterm-new-tab %{
     %sh{
-        if [ $# -gt 0 ]; then kakoune_params="-e '$@'"; fi
-        sh_cmd="kak -c ${kak_session} ${kakoune_params}"
-        osascript                                                              \
-        -e "tell application \"iTerm\""                                        \
-        -e "    tell current window"                                           \
-        -e "        tell current session of (create tab with default profile)" \
-        -e "            write text \"export TMPDIR='${TMPDIR}'\""              \
-        -e "            write text \"exec ${sh_cmd}\""                         \
-        -e "        end tell"                                                  \
-        -e "    end tell"                                                      \
-        -e "end tell"
+        if [ $# -gt 0 ]; then kakoune_params="-e \\\"$@\\\""; fi
+        cmd="env -P ${PATH} TMPDIR=${TMPDIR} kak -c ${kak_session} ${kakoune_params}"
+        osascript                                                       \
+        -e "tell application \"iTerm\""                                 \
+        -e "    tell current window"                                    \
+        -e "        create tab with default profile command \"${cmd}\"" \
+        -e "    end tell"                                               \
+        -e "end tell" >/dev/null
     }
 }
 
@@ -65,16 +58,12 @@ define-command -params .. -command-completion \
 All optional arguments are forwarded to the new kak client} \
     iterm-new-window %{
     %sh{
-        if [ $# -gt 0 ]; then kakoune_params="-e '$@'"; fi
-        sh_cmd="kak -c ${kak_session} ${kakoune_params}"
-        osascript                                                 \
-        -e "tell application \"iTerm\""                           \
-        -e "    set-option w to (create window with default profile)"    \
-        -e "    tell current session of w"                        \
-        -e "        write text \"export TMPDIR='${TMPDIR}'\""     \
-        -e "        write text \"exec ${sh_cmd}\""                \
-        -e "    end tell"                                         \
-        -e "end tell"
+        if [ $# -gt 0 ]; then kakoune_params="-e \\\"$@\\\""; fi
+        cmd="env -P ${PATH} TMPDIR=${TMPDIR} kak -c ${kak_session} ${kakoune_params}"
+        osascript                                                      \
+        -e "tell application \"iTerm\""                                \
+        -e "    create window with default profile command \"${cmd}\"" \
+        -e "end tell" >/dev/null
     }
 }
 
