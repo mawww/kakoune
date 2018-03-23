@@ -22,7 +22,7 @@ add-highlighter shared/ regions -default code -match-capture ruby       \
     literal       '%[iqrswxIQRSWX]\{' \}     \{ \
     literal       '%[iqrswxIQRSWX]\[' \]     \[ \
     literal       '%[iqrswxIQRSWX]<'   >      < \
-    heredoc '<<-?(\w+)'         '^\h*(\w+)$' '' \
+    heredoc '<<[-~]?(\w+)'      '^\h*(\w+)$' '' \
     division '[\w\)\]](/|(\h+/\h+))' '\w' '' # Help Kakoune to better detect /…/ literals
 
 # Regular expression flags are: i → ignore case, m → multi-lines, o → only interpolate #{} blocks once, x → extended mode (ignore white spaces)
