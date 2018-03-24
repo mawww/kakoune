@@ -654,6 +654,17 @@ select_indent(const Context& context, const Selection& selection,
         return indent;
     };
 
+    auto get_current_indent = [&](const Buffer& buffer, LineCount line, int tabstop)
+    {
+        for (auto l = line; l >= 0; --l)
+            if (buffer[l] != "\n"_sv)
+                return get_indent(buffer[l], tabstop);
+        for (auto l = line+1; l < buffer.line_count(); ++l)
+            if (buffer[l] != "\n"_sv)
+                return get_indent(buffer[l], tabstop);
+        return 0_char;
+    };
+
     auto is_only_whitespaces = [](StringView str) {
         auto it = str.begin();
         skip_while(it, str.end(),
@@ -667,8 +678,8 @@ select_indent(const Context& context, const Selection& selection,
     auto& buffer = context.buffer();
     int tabstop = context.options()["tabstop"].get<int>();
     auto pos = selection.cursor();
-    LineCount line = pos.line;
-    auto indent = get_indent(buffer[line], tabstop);
+    const LineCount line = pos.line;
+    const auto indent = get_current_indent(buffer, line, tabstop);
 
     LineCount begin_line = line - 1;
     if (to_begin)
