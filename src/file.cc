@@ -58,11 +58,6 @@ String parse_filename(StringView filename, StringView buf_dir)
     return filename.str();
 }
 
-String parse_filename(StringView filename)
-{
-    return parse_filename(filename, {});
-}
-
 std::pair<StringView, StringView> split_path(StringView path)
 {
     auto it = find(path | reverse(), '/');

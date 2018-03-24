@@ -3,6 +3,7 @@
 
 #include "array_view.hh"
 #include "meta.hh"
+#include "string.hh"
 #include "units.hh"
 #include "vector.hh"
 
@@ -14,14 +15,12 @@ namespace Kakoune
 
 class Buffer;
 class String;
-class StringView;
 class Regex;
 
 using CandidateList = Vector<String, MemoryDomain::Completion>;
 
 // parse ~/ and %/ in filename and returns the translated filename
-String parse_filename(StringView filename, StringView buf_dir);
-String parse_filename(StringView filename);
+String parse_filename(StringView filename, StringView buf_dir = {});
 
 String real_path(StringView filename);
 String compact_path(StringView filename);
