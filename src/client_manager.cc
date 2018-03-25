@@ -33,7 +33,7 @@ String ClientManager::generate_name() const
     for (int i = 0; true; ++i)
     {
         String name = format("unnamed{}", i);
-        if (validate_client_name(name))
+        if (not client_name_exists(name))
             return name;
     }
 }
@@ -172,10 +172,9 @@ void ClientManager::clear_client_trash()
     m_client_trash.clear();
 }
 
-bool ClientManager::validate_client_name(StringView name) const
+bool ClientManager::client_name_exists(StringView name) const
 {
-    return all_of(name, is_identifier) and
-        const_cast<ClientManager*>(this)->get_client_ifp(name) == nullptr;
+    return const_cast<ClientManager*>(this)->get_client_ifp(name) != nullptr;
 }
 
 Client* ClientManager::get_client_ifp(StringView name)

@@ -2034,10 +2034,14 @@ const CommandDesc rename_client_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        if (ClientManager::instance().validate_client_name(parser[0]))
-            context.set_name(parser[0]);
-        else if (context.name() != parser[0])
-            throw runtime_error(format("client name '{}' is not unique", parser[0]));
+        const String& name = parser[0];
+        if (not all_of(name, is_identifier))
+            throw runtime_error{format("Invalid client name '{}'", name)};
+        else if (ClientManager::instance().client_name_exists(name) and
+                 context.name() != name)
+            throw runtime_error{format("client name '{}' is not unique", name)};
+        else
+            context.set_name(name);
     }
 };
 

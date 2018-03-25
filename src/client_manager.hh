@@ -40,7 +40,7 @@ public:
 
     Client*  get_client_ifp(StringView name);
     Client&  get_client(StringView name);
-    bool validate_client_name(StringView name) const;
+    bool client_name_exists(StringView name) const;
     void remove_client(Client& client, bool graceful, int status);
 
     using ClientList = Vector<std::unique_ptr<Client>, MemoryDomain::Client>;
