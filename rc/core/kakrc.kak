@@ -37,7 +37,7 @@ add-highlighter shared/ regions -default code kakrc \
                 number_lines show_matching show_whitespaces fill regex dynregex group flag_lines
                 ranges line column wrap ref regions replace-ranges"
     types="int bool str regex int-list str-list completions line-specs range-specs"
-    values="default black red green yellow blue magenta cyan white"
+    values="default black red green yellow blue magenta cyan white yes no false true"
 
     join() { printf "%s" "$1" | tr -s ' \n' "$2"; }
 
