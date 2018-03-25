@@ -1365,10 +1365,11 @@ void rotate_selections(Context& context, NormalParams params)
                               : (index + (num - count % num)) % num);
 }
 
+template<Direction direction>
 void rotate_selections_content(Context& context, NormalParams params)
 {
-    int group = params.count;
-    int count = 1;
+    size_t group = params.count;
+    size_t count = 1;
     auto strings = context.selections_content();
     if (group == 0 or group > (int)strings.size())
         group = (int)strings.size();
@@ -1376,13 +1377,20 @@ void rotate_selections_content(Context& context, NormalParams params)
     for (auto it = strings.begin(); it != strings.end(); )
     {
         auto end = std::min(strings.end(), it + group);
-        std::rotate(it, end-count, end);
+        if (direction == Direction::Forward)
+            std::rotate(it, end-count, end);
+        else
+            std::rotate(it, it+count, end);
         it = end;
     }
     auto& selections = context.selections();
     selections.insert(strings, InsertMode::Replace);
-    selections.set_main_index((selections.main_index() + count) %
-                              selections.size());
+    const size_t index = selections.main_index();
+    const size_t index_in_group = index % group;
+    selections.set_main_index(index - index_in_group +
+                              (direction == Forward) ?
+                                (index_in_group + count) % group
+                              : (index_in_group + group - count % group) % group);
 }
 
 enum class SelectFlags
@@ -2182,9 +2190,10 @@ static const HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> key
     { {ctrl('o')}, {"jump backward in jump list", jump<Backward>} },
     { {ctrl('s')}, {"push current selections in jump list", push_selections} },
 
-    { {'\''}, {"rotate main selection forward", rotate_selections<Forward>} },
-    { {alt('\'')}, {"rotate main selection backward", rotate_selections<Backward>} },
-    { {alt('"')}, {"rotate selections content", rotate_selections_content} },
+    { {')'}, {"rotate main selection forward", rotate_selections<Forward>} },
+    { {'('}, {"rotate main selection backward", rotate_selections<Backward>} },
+    { {alt(')')}, {"rotate selections content forward", rotate_selections_content<Forward>} },
+    { {alt('(')}, {"rotate selections content backward", rotate_selections_content<Backward>} },
 
     { {'q'}, {"replay recorded macro", replay_macro} },
     { {'Q'}, {"start or end macro recording", start_or_end_macro_recording} },

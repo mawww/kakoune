@@ -196,11 +196,11 @@ is a sequence of non whitespace characters
 *<c-d>*::
     scroll half a page down
 
-*'*::
-    rotate selections (the main selection becomes the next one)
+*)*::
+    rotate main selection (the main selection becomes the next one)
 
-*<a-'>*::
-    rotate selections backwards
+*(*::
+    rotate main selection backward (the main selection becomes the previous one)
 
 *;*::
     reduce selections to their cursor
@@ -362,7 +362,7 @@ is a sequence of non whitespace characters
 *_*::
     trim selections
 
-*<a-">*::
+*<a-)>*::
     rotate selections content, if specified, the count groups selections,
     so the following command
 
@@ -371,6 +371,9 @@ is a sequence of non whitespace characters
 ----------
 
     rotate (1, 2, 3) and (3, 4, 6) independently
+
+*<a-(>*::
+    rotate selections content backward
 
 == Goto commands
 
