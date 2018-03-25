@@ -49,8 +49,7 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
 
 void BufferManager::delete_buffer(Buffer& buffer)
 {
-    auto it = find_if(m_buffers, [&](const std::unique_ptr<Buffer>& p)
-                      { return p.get() == &buffer; });
+    auto it = find_if(m_buffers, [&](auto& p) { return p.get() == &buffer; });
     kak_assert(it != m_buffers.end());
 
     m_buffer_trash.emplace_back(std::move(*it));
@@ -84,8 +83,7 @@ Buffer& BufferManager::get_buffer(StringView name)
 
 Buffer& BufferManager::get_first_buffer()
 {
-    if (not contains_that(m_buffers, [](const std::unique_ptr<Buffer>& p)
-                          { return not (p->flags() & Buffer::Flags::Debug); }))
+    if (all_of(m_buffers, [](auto& b) { return (b->flags() & Buffer::Flags::Debug); }))
         create_buffer("*scratch*", Buffer::Flags::None);
 
     return *m_buffers.front();

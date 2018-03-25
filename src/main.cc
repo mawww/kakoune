@@ -280,7 +280,7 @@ static void check_timeout(const int& timeout)
 
 static void check_extra_word_chars(const Vector<Codepoint, MemoryDomain::Options>& extra_chars)
 {
-    if (contains_that(extra_chars, is_blank))
+    if (any_of(extra_chars, is_blank))
         throw runtime_error{"blanks are not accepted for extra completion characters"};
 }
 
@@ -288,7 +288,7 @@ static void check_matching_pairs(const Vector<Codepoint, MemoryDomain::Options>&
 {
     if ((pairs.size() % 2) != 0)
         throw runtime_error{"matching pairs should have a pair number of element"};
-    if (contains_that(pairs, [](Codepoint c) { return not is_punctuation(c); }))
+    if (not all_of(pairs, is_punctuation))
         throw runtime_error{"matching pairs can only be punctuation"};
 }
 

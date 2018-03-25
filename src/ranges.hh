@@ -332,13 +332,6 @@ bool contains(Range&& range, const T& value)
 }
 
 template<typename Range, typename T>
-bool contains_that(Range&& range, T op)
-{
-    using std::end;
-    return find_if(range, op) != end(range);
-}
-
-template<typename Range, typename T>
 bool all_of(Range&& range, T op)
 {
     using std::begin; using std::end;

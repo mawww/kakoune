@@ -126,10 +126,10 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
         StringView name{(*it)[1].first, (*it)[1].second};
 
         auto match_name = [&](const String& s) {
-            return s.length() > name.length()  and
-                   prefix_match(s, name) and s[name.length()] == '=';
+            return s.substr(0_byte, name.length()) == name and
+                   s.substr(name.length(), 1_byte) == "=";
         };
-        if (contains_that(kak_env, match_name))
+        if (any_of(kak_env, match_name))
             continue;
 
         auto var_it = shell_context.env_vars.find(name);

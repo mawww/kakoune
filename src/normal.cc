@@ -274,7 +274,7 @@ void goto_commands(Context& context, NormalParams params)
             {
                 auto filename = content(buffer, context.selections().main());
                 static constexpr char forbidden[] = { '\'', '\\', '\0' };
-                if (contains_that(filename, [](char c){ return contains(forbidden, c); }))
+                if (any_of(filename, [](char c){ return contains(forbidden, c); }))
                     return;
 
                 auto paths = context.options()["path"].get<Vector<String, MemoryDomain::Options>>();
@@ -670,7 +670,7 @@ void paste(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
     auto strings = RegisterManager::instance()[reg].get(context);
-    const bool linewise = contains_that(strings, [](StringView str) {
+    const bool linewise = any_of(strings, [](StringView str) {
         return not str.empty() and str.back() == '\n';
     });
     const auto effective_mode = linewise ? adapt_for_linewise(mode) : mode;

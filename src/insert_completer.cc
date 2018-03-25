@@ -294,8 +294,7 @@ InsertCompletion complete_option(const SelectionList& sels,
         }
         size_t timestamp = (size_t)str_to_int({match[4].first, match[4].second});
         auto changes = buffer.changes_since(timestamp);
-        if (contains_that(changes, [&](const Buffer::Change& change)
-                          { return change.begin < coord; }))
+        if (any_of(changes, [&](auto&& change) { return change.begin < coord; }))
             return {};
 
         if (cursor_pos.line == coord.line and cursor_pos.column >= coord.column)
