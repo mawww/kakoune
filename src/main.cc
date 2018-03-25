@@ -49,7 +49,8 @@ static const char* startup_info =
 " * 'l' on eol will go to next line, 'h' on first char will go to previous\n"
 " * selections merging behaviour is now a bit more complex again\n"
 " * 'x' will only jump to next line if full line is already selected\n"
-" * WORD text object moved to <a-w> instead of W for consistency\n";
+" * WORD text object moved to <a-w> instead of W for consistency\n"
+" * rotate main selection moved to ), rotate content to <a-)>, ( for backward\n";
 
 struct startup_error : runtime_error
 {
