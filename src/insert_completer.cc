@@ -221,9 +221,6 @@ InsertCompletion complete_filename(const SelectionList& sels,
     if (begin != buffer.begin() and *begin == '/' and *(begin-1) == '~')
         --begin;
 
-    if (begin == pos)
-        return {};
-
     StringView prefix = buffer.substr(begin.coord(), pos.coord());
     if (require_slash and not contains(prefix, '/'))
         return {};
