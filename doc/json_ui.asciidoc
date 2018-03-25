@@ -49,6 +49,7 @@ Here are the requests that can be written by the json ui on stdout:
   mode can be:
   - prompt: the coordinate line should be 0, and the cursor is in the prompt area
   - buffer: the cursor is in the buffer display area
+* refresh(bool force)
 
 The requests that the json ui can interpret on stdin are:
 
