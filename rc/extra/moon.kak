@@ -66,11 +66,11 @@ define-command -hidden moon-filter-around-selections %{
 define-command -hidden moon-indent-on-char %{
     evaluate-commands -draft -itersel %{
         # align _else_ statements to start
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else(if)?) $ <ret> <a-\;> <a-?> ^ \h * (if|unless|when) <ret> s \A | \z <ret> \' <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else(if)?) $ <ret> <a-\;> <a-?> ^ \h * (if|unless|when) <ret> s \A | \z <ret> ) <a-&> }
         # align _when_ to _switch_ then indent
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when) $ <ret> <a-\;> <a-?> ^ \h * (switch) <ret> s \A | \z <ret> \' <a-&> \' <space> <gt> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when) $ <ret> <a-\;> <a-?> ^ \h * (switch) <ret> s \A | \z <ret> ) <a-&> ) <space> <gt> }
         # align _catch_ and _finally_ to _try_
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (catch|finally) $ <ret> <a-\;> <a-?> ^ \h * (try) <ret> s \A | \z <ret> \' <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (catch|finally) $ <ret> <a-\;> <a-?> ^ \h * (try) <ret> s \A | \z <ret> ) <a-&> }
     }
 }
 

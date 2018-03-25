@@ -91,7 +91,7 @@ define-command -hidden perl-indent-on-new-line %~
 
 define-command -hidden perl-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
-    try %[ execute-keys -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\' <ret> s \A|.\z <ret> 1<a-&> ]
+    try %[ execute-keys -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{) <ret> s \A|.\z <ret> 1<a-&> ]
 ]
 
 define-command -hidden perl-indent-on-closing-curly-brace %[
