@@ -51,8 +51,8 @@ struct MappedFile
     struct stat st {};
 };
 
-void write_buffer_to_file(Buffer& buffer, StringView filename, bool force = false);
-void write_buffer_to_fd(Buffer& buffer, int fd);
+void write_buffer_to_file(Buffer& buffer, StringView filename, bool force = false, bool brand = false);
+void write_buffer_to_fd(Buffer& buffer, int fd, bool brand = false);
 void write_buffer_to_backup_file(Buffer& buffer);
 
 String find_file(StringView filename, StringView buf_dir, ConstArrayView<String> paths);
