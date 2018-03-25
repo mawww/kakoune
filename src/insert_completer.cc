@@ -239,16 +239,17 @@ InsertCompletion complete_filename(const SelectionList& sels,
     }
     else
     {
+        Vector<String> visited_dirs;
         for (auto dir : options["path"].get<StringList>())
         {
+            dir = real_path(parse_filename(dir, (buffer.flags() & Buffer::Flags::File) ?
+                                           split_path(buffer.name()).first : StringView{}));
+
             if (not dir.empty() and dir.back() != '/')
                 dir += '/';
-            if (dir.substr(0, 2_byte) == "%/")
-            {
-                if (not (buffer.flags() & Buffer::Flags::File))
-                    continue;
-                dir = split_path(buffer.name()).first.str() + '/' + dir.substr(2_byte);
-            }
+
+            if (contains(visited_dirs, dir))
+                continue;
 
             for (auto& filename : Kakoune::complete_filename(dir + prefix,
                                                              options["ignored_files"].get<Regex>()))
@@ -256,6 +257,8 @@ InsertCompletion complete_filename(const SelectionList& sels,
                 StringView candidate = filename.substr(dir.length());
                 candidates.push_back({ candidate.str(), "", candidate.str() });
             }
+
+            visited_dirs.push_back(std::move(dir));
         }
     }
     if (candidates.empty())
