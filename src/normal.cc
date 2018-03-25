@@ -1293,7 +1293,7 @@ void select_object(Context& context, NormalParams params)
          {{'c'},         "custom object desc"}}));
 }
 
-enum Direction { Forward, Backward };
+enum Direction { Backward = -1, Forward = 1 };
 
 template<Direction direction, bool half = false>
 void scroll(Context& context, NormalParams params)
@@ -1302,7 +1302,7 @@ void scroll(Context& context, NormalParams params)
     const int count = params.count ? params.count : 1;
     const LineCount offset = (window.dimensions().line - 2) / (half ? 2 : 1) * count;
 
-    scroll_window(context, direction == Direction::Forward ? offset : -offset);
+    scroll_window(context, offset * direction);
 }
 
 template<Direction direction>
@@ -1327,7 +1327,7 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
         const LineCount height = std::max(anchor.line, cursor.line) - std::min(anchor.line, cursor.line) + 1;
         for (int i = 0; i < std::max(params.count, 1); ++i)
         {
-            LineCount offset =  (direction == Forward ? 1 : -1) * (i + 1) * height;
+            LineCount offset =  direction * (i + 1) * height;
 
             const LineCount anchor_line = anchor.line + offset;
             const LineCount cursor_line = cursor.line + offset;
@@ -1867,8 +1867,7 @@ void move_in_history(Context& context, NormalParams params)
     Buffer& buffer = context.buffer();
     size_t timestamp = buffer.timestamp();
     const int count = std::max(1, params.count);
-    const int history_id = (int)buffer.current_history_id() +
-        (direction == Direction::Forward ? count : -count);
+    const int history_id = (int)buffer.current_history_id() + direction * count;
     const int max_history_id = (int)buffer.next_history_id() - 1;
     if (buffer.move_to((size_t)history_id))
     {
@@ -1945,9 +1944,7 @@ template<typename Type, Direction direction, SelectMode mode = SelectMode::Repla
 void move(Context& context, NormalParams params)
 {
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
-    Type offset(std::max(params.count,1));
-    if (direction == Backward)
-        offset = -offset;
+    const Type offset(direction * std::max(params.count,1));
     const ColumnCount tabstop = context.options()["tabstop"].get<int>();
     auto& selections = context.selections();
     for (auto& sel : selections)
