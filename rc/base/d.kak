@@ -12,25 +12,30 @@ hook global BufCreate .*\.di? %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter shared/ regions -default code d \
-    string '"' (?<!\\)(\\\\)*" '' \
+    string %{(?<!')(?<!'\\)"} %{(?<!\\)(?:\\\\)*"} "" \
     verbatim_string ` ` '' \
-    verbatim_string_prefixed 'r"' '"' '' \
-    token '#' '\n' '' \
-    disabled /\+ \+/ '' \
-    comment /\* \*/ '' \
-    comment '//' $ ''
+    verbatim_string %{(?<!')(?<!'\\)`} %{(?<!\\)(?:\\\\)*`} "" \
+    verbatim_string_prefixed %{r`([^(]*)\(} %{\)([^)]*)`} "" \
+    disabled '/\+[^+]?' '\+/' '' \
+    comment '/\*[^*]?' '\*/' '' \
+    comment '//[^/]?' $ '' \
+    docstring '/\+\+' '\+/' '' \
+    docstring '/\*\*' '\*/' '' \
+    docstring /// $ ''
 
 add-highlighter shared/d/string fill string
 add-highlighter shared/d/verbatim_string fill magenta
 add-highlighter shared/d/verbatim_string_prefixed fill magenta
-add-highlighter shared/d/token fill meta
 add-highlighter shared/d/disabled fill rgb:777777
 add-highlighter shared/d/comment fill comment
+add-highlighter shared/d/docstring fill blue
 
 add-highlighter shared/d/string regex %{\\(x[0-9a-fA-F]{2}|[0-7]{1,3}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})\b} 0:value
 add-highlighter shared/d/code regex %{'((\\.)?|[^'\\])'} 0:value
 add-highlighter shared/d/code regex "-?([0-9_]*\.(?!0[xXbB]))?\b([0-9_]+|0[xX][0-9a-fA-F_]*\.?[0-9a-fA-F_]+|0[bb][01_]+)([ep]-?[0-9_]+)?[fFlLuUi]*\b" 0:value
 add-highlighter shared/d/code regex "\b(this)\b\s*[^(]" 1:value
+add-highlighter shared/d/code regex "((?:~|\b)this)\b\s*\(" 1:function
+add-highlighter shared/d/code regex '#\s*line\b.*' 0:meta
 
 %sh{
     # Grammar
@@ -77,6 +82,9 @@ add-highlighter shared/d/code regex "\b(this)\b\s*[^(]" 1:value
         add-highlighter shared/d/code regex \.(${properties})\b 1:builtin
     "
 }
+
+add-highlighter shared/d/code regex "\bimport\s+([\w._-]+)(?:\s*=\s*([\w._-]+))?" 1:module 2:module
+add-highlighter shared/d/code regex "\bmodule\s+([\w_-]+)\b" 1:module
 
 # Commands
 # ‾‾‾‾‾‾‾‾
