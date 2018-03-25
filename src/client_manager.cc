@@ -174,7 +174,8 @@ void ClientManager::clear_client_trash()
 
 bool ClientManager::validate_client_name(StringView name) const
 {
-    return const_cast<ClientManager*>(this)->get_client_ifp(name) == nullptr;
+    return all_of(name, is_identifier) and
+        const_cast<ClientManager*>(this)->get_client_ifp(name) == nullptr;
 }
 
 Client* ClientManager::get_client_ifp(StringView name)

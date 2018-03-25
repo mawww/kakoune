@@ -777,8 +777,8 @@ private:
 Server::Server(String session_name)
     : m_session{std::move(session_name)}
 {
-    if (contains(m_session, '/'))
-        throw runtime_error{"Cannot create sessions with '/' in their name"};
+    if (not all_of(m_session, is_identifier))
+        throw runtime_error{format("Invalid session name '{}'", session_name)};
 
     int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
@@ -816,8 +816,8 @@ Server::Server(String session_name)
 
 bool Server::rename_session(StringView name)
 {
-    if (contains(name, '/'))
-        throw runtime_error{"Cannot create sessions with '/' in their name"};
+    if (not all_of(name, is_identifier))
+        throw runtime_error{format("Invalid session name '{}'", name)};
 
     String old_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
                                     get_user_name(geteuid()), m_session);

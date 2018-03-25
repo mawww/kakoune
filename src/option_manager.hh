@@ -214,13 +214,11 @@ public:
                            const T& value,
                            OptionFlags flags = OptionFlags::None)
     {
-        auto is_not_identifier = [](char c) {
-            return (c < 'a' or c > 'z') and
-                   (c < 'A' or c > 'Z') and
-                   (c < '0' or c > '9') and c != '_';
+        auto is_option_identifier = [](char c) {
+            return is_basic_alpha(c) or is_basic_digit(c) or c == '_';
         };
 
-        if (contains_that(name, is_not_identifier))
+        if (not all_of(name, is_option_identifier))
             throw runtime_error{format("name '{}' contains char out of [a-zA-Z0-9_]", name)};
 
         auto& opts = m_global_manager.m_options;

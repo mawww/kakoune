@@ -338,6 +338,20 @@ bool contains_that(Range&& range, T op)
     return find_if(range, op) != end(range);
 }
 
+template<typename Range, typename T>
+bool all_of(Range&& range, T op)
+{
+    using std::begin; using std::end;
+    return std::all_of(begin(range), end(range), op);
+}
+
+template<typename Range, typename T>
+bool any_of(Range&& range, T op)
+{
+    using std::begin; using std::end;
+    return std::any_of(begin(range), end(range), op);
+}
+
 template<typename Range, typename U>
 void unordered_erase(Range&& vec, U&& value)
 {

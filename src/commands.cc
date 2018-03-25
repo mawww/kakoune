@@ -846,7 +846,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     const String& cmd_name = parser[0];
     auto& cm = CommandManager::instance();
 
-    if (contains_that(cmd_name, is_blank))
+    if (not all_of(cmd_name, is_identifier))
         throw runtime_error(format("invalid command name: '{}'", cmd_name));
 
     if (cm.command_defined(cmd_name) and not parser.get_switch("allow-override"))

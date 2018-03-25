@@ -61,7 +61,7 @@ void KeymapManager::add_user_mode(String user_mode_name)
     if (contains(user_modes(), user_mode_name))
         throw runtime_error(format("user mode '{}' already defined", user_mode_name));
 
-    if (contains_that(user_mode_name, is_blank))
+    if (not all_of(user_mode_name, is_identifier))
         throw runtime_error(format("invalid mode name: '{}'", user_mode_name));
 
     user_modes().push_back(std::move(user_mode_name));

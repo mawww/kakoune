@@ -53,6 +53,17 @@ inline bool is_basic_alpha(Codepoint c) noexcept
     return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z');
 }
 
+inline bool is_basic_digit(Codepoint c) noexcept
+{
+    return c >= '0' and c <= '9';
+}
+
+inline bool is_identifier(Codepoint c) noexcept
+{
+    return is_basic_alpha(c) or is_basic_digit(c) or
+           c == '_' or c == '-';
+}
+
 inline ColumnCount codepoint_width(Codepoint c) noexcept
 {
     if (c == '\n')
