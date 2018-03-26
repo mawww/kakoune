@@ -1365,7 +1365,7 @@ private:
                 buffer.insert(sel.min().line + inserted_count,
                               String{'\n', CharCount{count}});
                 for (int i = 0; i < count; ++i)
-                    new_sels.push_back({sel.max().line + inserted_count + i});
+                    new_sels.push_back({sel.min().line + inserted_count + i});
                 inserted_count += count;
             }
             selections.set(std::move(new_sels),
