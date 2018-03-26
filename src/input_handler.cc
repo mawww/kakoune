@@ -1005,9 +1005,9 @@ private:
 
     void history_push(History& history, StringView entry)
     {
-        if(entry.empty() or
-           (m_flags & PromptFlags::DropHistoryEntriesWithBlankPrefix and
-            is_horizontal_blank(entry[0_byte])))
+        if (entry.empty() or
+            (m_flags & PromptFlags::DropHistoryEntriesWithBlankPrefix and
+             is_horizontal_blank(entry[0_byte])))
             return;
 
         history.erase(std::remove(history.begin(), history.end(), entry),
