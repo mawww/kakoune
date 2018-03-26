@@ -416,13 +416,7 @@ void CommandManager::execute_single_command(CommandParameters params,
 
     const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
     if (debug_flags & DebugFlags::Commands)
-    {
-        String repr_parameters;
-
-        for (auto repr_param : param_view)
-            repr_parameters += " " + repr_param;
-        write_to_debug_buffer(format("command {}{}", params[0], repr_parameters));
-    }
+        write_to_debug_buffer(format("command {} {}", params[0], join(param_view, ' ')));
 
     try
     {
