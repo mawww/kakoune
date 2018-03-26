@@ -1388,9 +1388,9 @@ void rotate_selections_content(Context& context, NormalParams params)
     const size_t index = selections.main_index();
     const size_t index_in_group = index % group;
     selections.set_main_index(index - index_in_group +
-                              (direction == Forward) ?
-                                (index_in_group + count) % group
-                              : (index_in_group + group - count % group) % group);
+                              ((direction == Forward) ?
+                                 (index_in_group + count) % group
+                               : (index_in_group + group - count % group) % group));
 }
 
 enum class SelectFlags
