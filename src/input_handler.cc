@@ -968,8 +968,7 @@ private:
     void on_enabled() override
     {
         display();
-        m_line_changed = false;
-        m_callback(m_line_editor.line(), PromptEvent::Change, context());
+        m_line_changed = true;
 
         if (not (context().flags() & Context::Flags::Transient))
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
