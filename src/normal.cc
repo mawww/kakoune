@@ -936,8 +936,9 @@ void split_regex(Context& context, NormalParams params)
     });
 }
 
-void split_lines(Context& context, NormalParams)
+void split_lines(Context& context, NormalParams params)
 {
+    const LineCount count{params.count == 0 ? 1 : params.count};
     auto& selections = context.selections();
     auto& buffer = context.buffer();
     Vector<Selection> res;
@@ -950,10 +951,14 @@ void split_lines(Context& context, NormalParams)
         }
         auto min = sel.min();
         auto max = sel.max();
-        res.push_back(keep_direction({min, {min.line, buffer[min.line].length()-1}}, sel));
-        for (auto line = min.line+1; line < max.line; ++line)
-            res.push_back(keep_direction({line, {line, buffer[line].length()-1}}, sel));
-        res.push_back(keep_direction({max.line, max}, sel));
+        for (auto line = min.line; line <= max.line; line += count)
+        {
+            auto last_line = std::min(line + count - 1, buffer.line_count() - 1);
+            res.push_back(keep_direction({
+                    std::max<BufferCoord>(min, line),
+                    std::min<BufferCoord>(max, {last_line, buffer[last_line].length() - 1})
+                }, sel));
+        }
     }
     selections = std::move(res);
 }
