@@ -3,11 +3,11 @@
 == Description
 
 The *execute-keys* and *evaluate-commands* commands can be used to run
-Kakoune commands, and should be used as follows:
+Kakoune commands:
 
 ----------------------------
-execute-keys [<flags>] <key> ...
-evaluate-commands [<flags>] <command> ...
+execute-keys [<switches>] <key> ...
+evaluate-commands [<switches>] <command> ...
 ----------------------------
 
 *execute-keys* runs keys as if they were pressed, whereas *evaluate-commands*
@@ -19,7 +19,7 @@ These two commands also save the following registers, who are then restored
 when the commands have been executed: */*, *"*, *|*, *^*, *@*.
 (See <<registers#,`:doc registers`>>)
 
-== Optional flags
+== Optional switches
 
 *-client* <name>::
     execute in the context of the client named *name*
@@ -41,7 +41,7 @@ when the commands have been executed: */*, *"*, *|*, *^*, *@*.
 
 *-buffer* <names>::
     execute in the context of each buffers in the comma separated list
-    *names*, as a name can be used to iterate on all buffers
+    *names*. `*` as a name can be used to iterate on all buffers
 
 *-no-hooks*::
     disable hook execution while executing the keys/commands
