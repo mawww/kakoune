@@ -263,11 +263,11 @@ using the built-in `:doc` command.
                     =[ ROTATING
 
                     Often used in conjunction with the splitting primitive
-                    (`S`), the rotation primitive (`<a-">`) shifts all the
+                    (`S`), the rotation primitive (`<a-)>`) shifts all the
                     selections clock-wise. Note that a count (described after)
                     allows the rotation to take place in sub-groups whose size
      .---, .---,    is given by the count parameter.
-     |alt|+| " |
+     |alt|+| ) |
      `---' `---'    Example: in a numbered list where all the numbers are
                     selected (e.g. `1 2 3 4 5 6 7 8 9 0`), a rotation using
                     this primitive will shift all the numbers by one selection
@@ -343,14 +343,14 @@ using the built-in `:doc` command.
                     expressions, there are times when using them isn't enough,
                     and additional manual edition of the selections is
         .---,       needed. In order to loop through all the selections and
-        | ' |       remove the current one, two primitives are available:
-        `---'       respectively the simple quote (`'`), and the alt/space
+        | ) |       remove the current one, two primitives are available:
+        `---'       respectively the parenthesis (`)`), and the alt/space
                     key combination (`<a-space>`).
      .---, .---,
      |alt|+|spc|    Example: given a list of three numbers all selected
      `---' `---'    individually, (e.g. `1 2 3`), deselecting the second
-                    selection would be done by hitting the quote primitive
-                    (`'`) until the according selection is the current one,
+                    selection would be done by hitting the parenthesis primitive
+                    (`)`) until the according selection is the current one,
                     then hitting `<a-space>` to end up with only the first
                     and third number selected.
 
