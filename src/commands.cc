@@ -1891,7 +1891,7 @@ const CommandDesc menu_cmd = {
 const CommandDesc on_key_cmd = {
     "on-key",
     nullptr,
-    "on-key <command>: wait for next user key then and execute <command>, "
+    "on-key <command>: wait for next user key and then execute <command>, "
     "with key available in the `key` value",
     single_param,
     CommandFlags::None,
