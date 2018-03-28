@@ -543,7 +543,7 @@ private:
     CharCount  m_display_pos = 0;
 
     String     m_line;
-    StringView m_empty_text;
+    StringView m_empty_text = {};
 };
 
 class Menu : public InputMode
