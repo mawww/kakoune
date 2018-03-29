@@ -145,7 +145,7 @@ define-command comment-line -docstring '(un)comment selected lines using line co
     }
     evaluate-commands -draft %{
         # Select the content of the lines, without indentation
-        execute-keys <a-s>_
+        execute-keys <a-s>gi<a-l>
 
         try %{
             # Keep non-empty lines
