@@ -142,7 +142,7 @@ bool option_add(HashMap<Key, Value, domain>& opt, StringView str)
         HashItem<Key, Value> item;
         option_from_string(key_value[0], item.key);
         option_from_string(key_value[1], item.value);
-        opt.insert(std::move(item));
+        opt[std::move(item.key)] = std::move(item.value);
         changed = true;
     }
     return changed;
