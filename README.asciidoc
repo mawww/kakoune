@@ -348,8 +348,8 @@ Movement
  * `<c-u>`: scroll half a page up
  * `<c-d>`: scroll half a page down
 
- * `'`: rotate selections (the main selection becomes the next one)
- * `<a-'>`: rotate selections backwards
+ * `)`: rotate selections (the main selection becomes the next one)
+ * `(`: rotate selections backwards
 
  * `;`: reduce selections to their cursor
  * `<a-;>`: flip the selections' direction
@@ -357,6 +357,7 @@ Movement
 
  * `<a-.>`: repeat last object or `f`/`t` selection command.
 
+ * `_`: trim selections
 
 A word is a sequence of alphanumeric characters or underscore, a WORD is a
 sequence of non whitespace characters.
@@ -459,9 +460,10 @@ Changes
  * `<a-@>`: convert spaces to tabs in current selections, uses the buffer
             tabstop option or the count parameter for tabstop.
 
- * `<a-">`: rotate selections content, if specified, the count groups
+ * `<a-)>`: rotate selections content, if specified, the count groups
             selections, so `3<a-">` rotate (1, 2, 3) and (3, 4, 6)
             independently.
+ * `<a-(>`: rotate selections content backwards
 
 Goto Commands
 ~~~~~~~~~~~~~
