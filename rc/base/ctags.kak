@@ -8,9 +8,10 @@ declare-option -docstring "colon separated list of paths to tag files to parse w
 
 define-command -params ..1 \
     -shell-candidates '
+        realpath() { ( path=$(readlink "$1"); cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
         printf %s\\n "$kak_opt_ctagsfiles" | tr \':\' \'\n\' |
         while read -r candidate; do
-            [ -f "$candidate" ] && readlink -f "$candidate"
+            [ -f "$candidate" ] && realpath "$candidate"
         done | awk \'!x[$0]++\' | # remove duplicates
         while read -r tags; do
             namecache="${tags%/*}/.kak.${tags##*/}.namecache"
@@ -23,13 +24,14 @@ define-command -params ..1 \
 If no symbol is passed then the current selection is used as symbol name} \
     ctags-search \
     %{ %sh{
+        realpath() { ( path=$(readlink "$1"); cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
         export tagname=${1:-${kak_selection}}
         printf %s\\n "$kak_opt_ctagsfiles" | tr ':' '\n' |
         while read -r candidate; do
-            [ -f "$candidate" ] && readlink -f "$candidate"
+            [ -f "$candidate" ] && realpath "$candidate"
         done | awk '!x[$0]++' | # remove duplicates
         while read -r tags; do
-            printf '!TAGROOT\t%s\n' "$(readlink -f "${tags%/*}")/"
+            printf '!TAGROOT\t%s\n' "$(realpath "${tags%/*}")/"
             readtags -t "$tags" $tagname
         done | awk -F '\t|\n' '
         /^!TAGROOT\t/ { tagroot=$2 }
