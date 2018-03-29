@@ -1240,7 +1240,12 @@ public:
             m_completer.reset();
         }
         else if (key == ctrl('u'))
+        {
             context().buffer().commit_undo_group();
+            context().print_status({ format("committed change #{}",
+                                            context().buffer().current_history_id()),
+                                     get_face("Information") });
+        }
         else if (key == ctrl('v'))
         {
             on_next_key_with_autoinfo(context(), KeymapMode::None,
