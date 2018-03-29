@@ -47,7 +47,7 @@ public:
     void info_show(String title, String content, BufferCoord anchor, InfoStyle style);
     void info_hide(bool even_modal = false);
 
-    void print_status(DisplayLine status_line, bool immediate = false);
+    void print_status(DisplayLine status_line);
 
     DisplayCoord dimensions() const;
 

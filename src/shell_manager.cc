@@ -1,6 +1,7 @@
 #include "shell_manager.hh"
 
 #include "buffer_utils.hh"
+#include "client.hh"
 #include "clock.hh"
 #include "context.hh"
 #include "display_buffer.hh"
@@ -259,9 +260,14 @@ std::pair<String, int> ShellManager::eval(
     Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer)
     {
         auto wait_duration = Clock::now() - wait_time;
-        context.print_status({ format("waiting for shell command to finish ({}s)",
-                                      duration_cast<seconds>(wait_duration).count()),
-                                get_face("Information") }, true);
+        if (context.has_client())
+        {
+            auto& client = context.client();
+            client.print_status({ format("waiting for shell command to finish ({}s)",
+                                          duration_cast<seconds>(wait_duration).count()),
+                                    get_face("Information") });
+            client.redraw_ifn();
+        }
         timer.set_next_date(Clock::now() + wait_timeout);
         wait_notified = true;
     }, EventMode::Urgent};
@@ -288,8 +294,11 @@ std::pair<String, int> ShellManager::eval(
                                      (size_t)full.count(), (size_t)spawn.count(), (size_t)wait.count()));
     }
 
-    if (wait_notified) // clear the status line
-        context.print_status({}, true);
+    if (wait_notified and context.has_client()) // clear the status line
+    {
+        context.print_status({});
+        context.client().redraw_ifn();
+    }
 
     return { std::move(stdout_contents), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
 }

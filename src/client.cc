@@ -47,6 +47,11 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
     m_ui->set_on_key([this](Key key) {
         if (key == ctrl('c'))
             killpg(getpgrp(), SIGINT);
+        else if (key.modifiers == Key::Modifiers::Resize)
+        {
+            m_window->set_dimensions(m_ui->dimensions());
+            force_redraw();
+        }
         else
             m_pending_keys.push_back(key);
     });
@@ -83,11 +88,6 @@ bool Client::process_pending_inputs()
                 context().hooks().run_hook("FocusIn", context().name(), context());
             else if (key == Key::FocusOut)
                 context().hooks().run_hook("FocusOut", context().name(), context());
-            else if (key.modifiers == Key::Modifiers::Resize)
-            {
-                m_window->set_dimensions(m_ui->dimensions());
-                force_redraw();
-            }
             else
                 m_input_handler.handle_key(key);
 
@@ -103,18 +103,10 @@ bool Client::process_pending_inputs()
     return not keys.empty();
 }
 
-void Client::print_status(DisplayLine status_line, bool immediate)
+void Client::print_status(DisplayLine status_line)
 {
     m_status_line = std::move(status_line);
-    if (immediate)
-    {
-        m_ui->draw_status(m_status_line, m_mode_line, get_face("StatusLine"));
-        m_ui->refresh(true);
-    }
-    else
-    {
-        m_ui_pending |= StatusLine;
-    }
+    m_ui_pending |= StatusLine;
 }
 
 
