@@ -317,16 +317,16 @@ void NCursesUI::Window::refresh()
 void NCursesUI::redraw()
 {
     pnoutrefresh(m_window, 0, 0, 0, 0,
-                 (int)m_dimensions.line + 1, (int)m_dimensions.column);
+                 (int)m_dimensions.line + 2, (int)m_dimensions.column);
 
     m_menu.refresh();
     m_info.refresh();
 
     if (m_cursor.mode == CursorMode::Prompt)
-        wmove(newscr, m_status_on_top ? 0 : (int)m_dimensions.line,
+        wmove(newscr, m_status_on_top ? 0 : (int)m_dimensions.line + 1,
               (int)m_cursor.coord.column);
     else
-        wmove(newscr, (int)m_cursor.coord.line + (m_status_on_top ? 1 : 0),
+        wmove(newscr, (int)m_cursor.coord.line + (m_status_on_top ? 2 : 0),
               (int)m_cursor.coord.column);
 
     doupdate();
@@ -390,7 +390,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
 
     check_resize();
 
-    LineCount line_index = m_status_on_top ? 1 : 0;
+    LineCount line_index = m_status_on_top ? 2 : 0;
     for (const DisplayLine& line : display_buffer.lines())
     {
         wmove(m_window, (int)line_index, 0);
@@ -402,7 +402,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     wbkgdset(m_window, COLOR_PAIR(get_color_pair(padding_face)));
     set_face(m_window, padding_face, default_face);
 
-    while (line_index < m_dimensions.line + (m_status_on_top ? 1 : 0))
+    while (line_index < m_dimensions.line + (m_status_on_top ? 2 : 0))
     {
         wmove(m_window, (int)line_index++, 0);
         wclrtoeol(m_window);
@@ -416,7 +416,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
                             const DisplayLine& mode_line,
                             const Face& default_face)
 {
-    const int status_line_pos = m_status_on_top ? 0 : (int)m_dimensions.line;
+    const int status_line_pos = m_status_on_top ? 0 : (int)m_dimensions.line + 1;
     wmove(m_window, status_line_pos, 0);
 
     wbkgdset(m_window, COLOR_PAIR(get_color_pair(default_face)));
@@ -492,7 +492,7 @@ void NCursesUI::check_resize(bool force)
         keypad(m_window, true);
         meta(m_window, true);
 
-        m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
+        m_dimensions = DisplayCoord{ws.ws_row-2, ws.ws_col};
 
         if (char* csr = tigetstr((char*)"csr"))
             putp(tparm(csr, 0, ws.ws_row));
@@ -749,7 +749,7 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
 
     LineCount line = anchor.line + 1;
     if (is_prompt)
-        line = m_status_on_top ? 1_line : m_dimensions.line - height;
+        line = m_status_on_top ? 1_line : m_dimensions.line - height + 1;
     else if (line + height > m_dimensions.line)
         line = anchor.line - height;
 
@@ -933,12 +933,12 @@ void NCursesUI::info_show(StringView title, StringView content,
     m_info.face = face;
     m_info.style = style;
 
-    const Rect rect = {m_status_on_top ? 1_line : 0_line, m_dimensions};
+    const Rect rect = {m_status_on_top ? 2_line : 0_line, m_dimensions};
     InfoBox info_box;
     if (style == InfoStyle::Prompt)
     {
         info_box = make_info_box(m_info.title, m_info.content, m_dimensions.column, m_assistant);
-        anchor = DisplayCoord{m_status_on_top ? 0 : m_dimensions.line, m_dimensions.column-1};
+        anchor = DisplayCoord{m_status_on_top ? 1 : m_dimensions.line, m_dimensions.column-1};
         anchor = compute_pos(anchor, info_box.size, rect, m_menu, style == InfoStyle::InlineAbove);
     }
     else if (style == InfoStyle::Modal)
