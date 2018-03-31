@@ -256,20 +256,22 @@ std::pair<String, int> ShellManager::eval(
 
     using namespace std::chrono;
     static constexpr seconds wait_timeout{1};
-    bool wait_notified = false;
+    Optional<DisplayLine> previous_status;
     Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer)
     {
         auto wait_duration = Clock::now() - wait_time;
         if (context.has_client())
         {
             auto& client = context.client();
+            if (not previous_status)
+                previous_status = client.current_status();
+
             client.print_status({ format("waiting for shell command to finish ({}s)",
                                           duration_cast<seconds>(wait_duration).count()),
                                     get_face("Information") });
             client.redraw_ifn();
         }
         timer.set_next_date(Clock::now() + wait_timeout);
-        wait_notified = true;
     }, EventMode::Urgent};
 
     while (not terminated or child_stdin.write_fd() != -1 or
@@ -294,9 +296,9 @@ std::pair<String, int> ShellManager::eval(
                                      (size_t)full.count(), (size_t)spawn.count(), (size_t)wait.count()));
     }
 
-    if (wait_notified and context.has_client()) // clear the status line
+    if (previous_status) // restore the status line
     {
-        context.print_status({});
+        context.print_status(std::move(*previous_status));
         context.client().redraw_ifn();
     }
 
