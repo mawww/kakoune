@@ -475,38 +475,38 @@ void NCursesUI::check_resize(bool force)
     resize_pending = 0;
 
     const int fd = open("/dev/tty", O_RDWR);
-    auto close_fd = on_scope_end([fd]{ close(fd); });
+    auto close_fd = on_scope_end([fd]{ ::close(fd); });
     winsize ws;
-    if (ioctl(fd, TIOCGWINSZ, (void*)&ws) == 0)
-    {
-        const bool info = (bool)m_info;
-        const bool menu = (bool)m_menu;
-        if (m_window) delwin(m_window);
-        if (info) m_info.destroy();
-        if (menu) m_menu.destroy();
 
-        resize_term(ws.ws_row, ws.ws_col);
-
-        m_window = (NCursesWin*)newpad(ws.ws_row, ws.ws_col);
-        intrflush(m_window, false);
-        keypad(m_window, true);
-        meta(m_window, true);
-
-        m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
-
-        if (char* csr = tigetstr((char*)"csr"))
-            putp(tparm(csr, 0, ws.ws_row));
-
-        if (menu)
-        {
-            auto items = std::move(m_menu.items);
-            menu_show(items, m_menu.anchor, m_menu.fg, m_menu.bg, m_menu.style);
-        }
-        if (info)
-            info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
-    }
-    else
+    kak_assert(fd > -1);
+    if (::ioctl(fd, TIOCGWINSZ, &ws) != 0)
         kak_assert(false);
+
+    const bool info = (bool)m_info;
+    const bool menu = (bool)m_menu;
+    if (m_window) delwin(m_window);
+    if (info) m_info.destroy();
+    if (menu) m_menu.destroy();
+
+    resize_term(ws.ws_row, ws.ws_col);
+
+    m_window = (NCursesWin*)newpad(ws.ws_row, ws.ws_col);
+    intrflush(m_window, false);
+    keypad(m_window, true);
+    meta(m_window, true);
+
+    m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
+
+    if (char* csr = tigetstr((char*)"csr"))
+        putp(tparm(csr, 0, ws.ws_row));
+
+    if (menu)
+    {
+        auto items = std::move(m_menu.items);
+        menu_show(items, m_menu.anchor, m_menu.fg, m_menu.bg, m_menu.style);
+    }
+    if (info)
+        info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
 
     ungetch(KEY_RESIZE);
     clearok(curscr, true);
