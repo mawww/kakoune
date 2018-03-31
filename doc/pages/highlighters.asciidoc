@@ -117,11 +117,11 @@ and `range-specs`.
     In this example two words will be added in the gutter: a blue Foo at
     line 1 and a bold red/yellow Bar on line 3:
 
----------------------------------------------------------------
+----------------------------------------------------------------------
 declare-option line-specs my_flags
-set-option window my_flags 1486635122:1|Foo:3|{red,yellow+b}Bar
+set-option window my_flags "%val{timestamp}:1|Foo:3|{red,yellow+b}Bar"
 add-highlighter window/ flag_lines blue my_flags
----------------------------------------------------------------
+----------------------------------------------------------------------
 
 *ranges* <option_name>::
     use the data in the `range-specs` option of the given name to highlight
@@ -129,11 +129,11 @@ add-highlighter window/ flag_lines blue my_flags
     interpreted as a *face* to apply to the range.
     In this example the 3 first chars of the buffer will be colored in red:
 
--------------------------------------------------
+--------------------------------------------------------
 declare-option range-specs my_range
-set-option window my_range 1486635122:1.1,1.3|red
+set-option window my_range "%val{timestamp}:1.1,1.3|red"
 add-highlighter window/ ranges my_range
--------------------------------------------------
+--------------------------------------------------------
 
 *replace-ranges* <option_name>::
     use the data in the `range-specs` option of the given name to highlight
@@ -141,11 +141,11 @@ add-highlighter window/ ranges my_range
     interpreted as a *display line* to display in place of the range.
     Here, the 3 first chars of the buffer will be replaced by the word 'red':
 
--------------------------------------------------
+--------------------------------------------------------
 declare-option range-specs my_range
-set-option window my_range 1486635122:1.1,1.3|red
+set-option window my_range "%val{timestamp}:1.1,1.3|red"
 add-highlighter window/ replace-ranges my_range
--------------------------------------------------
+--------------------------------------------------------
 
 == Highlighting Groups
 
