@@ -248,9 +248,15 @@ are exclusively available to built-in options.
             if *yes* or *true*, the terminal emulator title will
             be changed
 
-        *ncurses_status_on_top*:::
-            if *yes*, or *true* the status line will be placed
-            at the top of the terminal rather than at the bottom
+        *ncurses_layout*:::
+            a comma separated list of "zone names" describing the UI appearance
+            from top to bottom. Default value is `main,status`, meaning that
+            the status bar is displayed below the main editing zone.
+            *main* and *status* are mandatory names reserved by Kakoune.
+            If specified, additional zone names must refer to existing keys=value
+            pairs in `ui_options`. For example:
+            `set global ui_options 'ncurses_layout=foo,main,status:foo=hello'`
+            will add a bar on top of the screen displaying hello.
 
         *ncurses_assistant*:::
             specify the nice assistant displayed in info boxes,
