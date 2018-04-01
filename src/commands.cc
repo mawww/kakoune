@@ -320,8 +320,13 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
     auto filename = parser.positional_count() == 0 ?
                     buffer.name() : parse_filename(parser[0]);
 
+    bool brand = false;
+    auto filetype = context.options()["filetype"].get_as_string();
+    if (filetype.empty() or filetype == "plain")
+        brand = true;
+
     context.hooks().run_hook("BufWritePre", filename, context);
-    write_buffer_to_file(buffer, filename, force);
+    write_buffer_to_file(buffer, filename, force, brand);
     context.hooks().run_hook("BufWritePost", filename, context);
 }
 

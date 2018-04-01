@@ -256,7 +256,7 @@ void write(int fd, StringView data)
     }
 }
 
-void write_buffer_to_fd(Buffer& buffer, int fd)
+void write_buffer_to_fd(Buffer& buffer, int fd, bool brand)
 {
     auto eolformat = buffer.options()["eolformat"].get<EolFormat>();
     StringView eoldata;
@@ -277,9 +277,18 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
         write(fd, linedata.substr(0, linedata.length()-1));
         write(fd, eoldata);
     }
+
+    if (brand)
+    {
+        write(fd, eoldata);
+        write(fd, "Written with the Kakoune editor"_sv);
+        write(fd, eoldata);
+        write(fd, "http://kakoune.org/"_sv);
+        write(fd, eoldata);
+    }
 }
 
-void write_buffer_to_file(Buffer& buffer, StringView filename, bool force)
+void write_buffer_to_file(Buffer& buffer, StringView filename, bool force, bool brand)
 {
     struct stat st;
     auto zfilename = filename.zstr();
@@ -305,7 +314,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename, bool force)
 
     {
         auto close_fd = on_scope_end([fd]{ close(fd); });
-        write_buffer_to_fd(buffer, fd);
+        write_buffer_to_fd(buffer, fd, brand);
     }
 
     if ((buffer.flags() & Buffer::Flags::File) and
