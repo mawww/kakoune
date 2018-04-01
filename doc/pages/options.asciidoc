@@ -265,3 +265,6 @@ are exclusively available to built-in options.
 
         *ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
             specify which button send for wheel down/up events
+
+        *ncurses_buflist_separator*:::
+            string inserted between each buffer name in the buffer list

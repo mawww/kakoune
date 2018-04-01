@@ -467,6 +467,54 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     m_dirty = true;
 }
 
+void NCursesUI::draw_buflist(ConstArrayView<DisplayLine> buffer_names, int idx_active_buffer,
+                             const Face& face_active_buffer, const Face& face_regular_buffer)
+{
+    DisplayLine line;
+    const int buflist_pos = m_status_on_top ? 1 : (int)m_dimensions.line;
+
+    wmove(m_window, buflist_pos, 0);
+    wbkgdset(m_window, COLOR_PAIR(get_color_pair(face_regular_buffer)));
+    wclrtoeol(m_window);
+
+    int i = 0;
+    ColumnCount width_to_current = 0;
+    for (auto& buffer_name : buffer_names)
+    {
+        if (i > 0)
+            line.push_back(DisplayAtom(m_buflist_separator.str()));
+
+        for (auto& atom : buffer_name.atoms())
+        {
+            const Face atom_face = i == idx_active_buffer ? face_active_buffer : face_regular_buffer;
+
+            kak_assert(atom.type() == DisplayAtom::Type::Text);
+
+            line.push_back(DisplayAtom(atom.content().str(), atom_face));
+        }
+
+        // save the length of the whole line up to and including the current buffer
+        if (i == idx_active_buffer)
+            width_to_current = line.length();
+
+        i++;
+    }
+
+    // if the line is wider than the terminal, bring back the current buffer into view
+    // also show the buffer following the current buffer for context (~1/4th of the terminal width)
+    while (line.length() > m_dimensions.column
+           and width_to_current > m_dimensions.column * 3 / 4
+           and line.atoms().size() > 2)
+    {
+        width_to_current -= line.atoms()[0].length() + line.atoms()[1].length();
+        line.erase(line.begin(), line.begin() + 2);
+    }
+
+    draw_line(m_window, line, 0, m_dimensions.column, face_regular_buffer);
+
+    m_dirty = true;
+}
+
 void NCursesUI::check_resize(bool force)
 {
     if (not force and not resize_pending)
@@ -557,7 +605,7 @@ Optional<Key> NCursesUI::get_next_key()
             };
 
             return Key{ get_modifiers(ev.bstate),
-                        encode_coord({ ev.y - (m_status_on_top ? 1 : 0), ev.x }) };
+                        encode_coord({ ev.y - (m_status_on_top ? 2 : 0), ev.x }) };
         }
     }
 
@@ -745,7 +793,7 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
                                             div_round_up(item_count, m_menu.columns));
 
     if (style != MenuStyle::Prompt and m_status_on_top)
-        anchor.line += 1;
+        anchor.line += 2;
 
     LineCount line = anchor.line + 1;
     if (is_prompt)
@@ -1103,6 +1151,12 @@ void NCursesUI::set_ui_options(const Options& options)
         auto wheel_down_it = options.find("ncurses_wheel_down_button"_sv);
         m_wheel_down_button = wheel_down_it != options.end() ?
             str_to_int_ifp(wheel_down_it->value).value_or(5) : 5;
+    }
+
+    {
+        auto it = options.find("ncurses_buflist_separator"_sv);
+        if (it != options.end())
+            m_buflist_separator = it->value;
     }
 }
 

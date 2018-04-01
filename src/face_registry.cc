@@ -152,6 +152,8 @@ FaceRegistry::FaceRegistry()
         { "MatchingChar", {Face{ Color::Default, Color::Default, Attribute::Bold }} },
         { "BufferPadding", {Face{ Color::Blue, Color::Default }} },
         { "Whitespace", {Face{ Color::Default, Color::Default }} },
+        { "BufferListActive", {Face{ Color::Default, Color::Default, Attribute::Bold }} },
+        { "BufferList", {Face{ Color::Default, Color::Default }} },
       }
 {}
 

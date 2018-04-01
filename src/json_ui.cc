@@ -190,6 +190,13 @@ void JsonUI::draw_status(const DisplayLine& status_line,
     rpc_call("draw_status", status_line, mode_line, default_face);
 }
 
+void JsonUI::draw_buflist(ConstArrayView<DisplayLine> buffer_names,
+                          int idx_active_buffer,
+                          const Face& face_active_buffer,
+                          const Face& face_regular_buffer)
+{
+    rpc_call("draw_buflist", buffer_names, idx_active_buffer, face_active_buffer, face_regular_buffer);
+}
 
 void JsonUI::menu_show(ConstArrayView<DisplayLine> items,
                        DisplayCoord anchor, Face fg, Face bg,

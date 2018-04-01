@@ -66,6 +66,11 @@ public:
                              const DisplayLine& mode_line,
                              const Face& default_face) = 0;
 
+    virtual void draw_buflist(ConstArrayView<DisplayLine> buffer_names,
+                              int idx_active_buffer,
+                              const Face& face_active_buffer,
+                              const Face& face_regular_buffer) = 0;
+
     virtual DisplayCoord dimensions() = 0;
 
     virtual void set_cursor(CursorMode mode, DisplayCoord coord) = 0;

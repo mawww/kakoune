@@ -36,6 +36,7 @@ enum class MessageType : uint8_t
     InfoHide,
     Draw,
     DrawStatus,
+    DrawBufList,
     SetCursor,
     Refresh,
     SetOptions,
@@ -338,6 +339,10 @@ public:
     void draw_status(const DisplayLine& status_line,
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
+    void draw_buflist(ConstArrayView<DisplayLine> buffer_names,
+                      int idx_active_buffer,
+                      const Face& face_active_buffer,
+                      const Face& face_regular_buffer) override;
 
     void set_cursor(CursorMode mode, DisplayCoord coord) override;
 
@@ -496,6 +501,19 @@ void RemoteUI::draw_status(const DisplayLine& status_line,
     msg.write(status_line);
     msg.write(mode_line);
     msg.write(default_face);
+    m_socket_watcher.events() |= FdEvents::Write;
+}
+
+void RemoteUI::draw_buflist(ConstArrayView<DisplayLine> buffer_names,
+                            int idx_active_buffer,
+                            const Face& face_active_buffer,
+                            const Face& face_regular_buffer)
+{
+    MsgWriter msg{m_send_buffer, MessageType::DrawBufList};
+    msg.write(buffer_names);
+    msg.write(idx_active_buffer);
+    msg.write(face_active_buffer);
+    msg.write(face_regular_buffer);
     m_socket_watcher.events() |= FdEvents::Write;
 }
 
