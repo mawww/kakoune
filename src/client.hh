@@ -85,6 +85,9 @@ private:
 
     DisplayLine generate_mode_line() const;
 
+    int m_active_buffer;
+    Vector<DisplayLine> generate_buflist(int* active_buffer) const;
+
     std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<Window> m_window;
 
@@ -97,6 +100,7 @@ private:
     InputHandler m_input_handler;
 
     DisplayLine m_status_line;
+    Vector<DisplayLine> m_buflist;
     DisplayLine m_mode_line;
 
     enum PendingUI : int
@@ -107,8 +111,9 @@ private:
         InfoShow   = 1 << 3,
         InfoHide   = 1 << 4,
         StatusLine = 1 << 5,
-        Draw       = 1 << 6,
-        Refresh    = 1 << 7,
+        BufList    = 1 << 6,
+        Draw       = 1 << 7,
+        Refresh    = 1 << 8,
     };
     int m_ui_pending = 0;
 

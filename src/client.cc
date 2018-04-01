@@ -156,6 +156,28 @@ DisplayLine Client::generate_mode_line() const
     return modeline;
 }
 
+Vector<DisplayLine> Client::generate_buflist(int* active_buffer) const
+{
+    Vector<DisplayLine> buflist;
+    int i;
+
+    i = 0;
+    *active_buffer = -1;
+    for (auto& buffer : BufferManager::instance())
+    {
+        buflist.push_back(buffer->display_name());
+
+        if (buffer.get() == &context().buffer())
+            *active_buffer = i;
+
+        i++;
+    }
+
+    kak_assert(*active_buffer > -1);
+
+    return buflist;
+}
+
 void Client::change_buffer(Buffer& buffer)
 {
     if (m_buffer_reload_dialog_opened)
@@ -198,10 +220,19 @@ void Client::redraw_ifn()
         m_ui_pending |= Draw;
 
     DisplayLine mode_line = generate_mode_line();
-    if (mode_line.atoms() != m_mode_line.atoms())
+    if (mode_line != m_mode_line)
     {
         m_ui_pending |= StatusLine;
         m_mode_line = std::move(mode_line);
+    }
+
+    int active_buffer;
+    Vector<DisplayLine> buflist = generate_buflist(&active_buffer);
+    if (buflist != m_buflist or active_buffer != m_active_buffer)
+    {
+        m_ui_pending |= BufList;
+        m_active_buffer = active_buffer;
+        m_buflist = std::move(buflist);
     }
 
     if (m_ui_pending == 0)
@@ -251,6 +282,9 @@ void Client::redraw_ifn()
     if (m_ui_pending & StatusLine)
         m_ui->draw_status(m_status_line, m_mode_line, get_face("StatusLine"));
 
+    if (m_ui_pending & BufList)
+        m_ui->draw_buflist(m_buflist, m_active_buffer, get_face("BufferListActive"), get_face("BufferList"));
+
     auto cursor = m_input_handler.get_cursor_info();
     m_ui->set_cursor(cursor.first, cursor.second);
 
@@ -260,7 +294,7 @@ void Client::redraw_ifn()
 
 void Client::force_redraw()
 {
-    m_ui_pending |= Refresh | Draw | StatusLine |
+    m_ui_pending |= Refresh | Draw | StatusLine | BufList |
         (m_menu.items.empty() ? MenuHide : MenuShow | MenuSelect) |
         (m_info.content.empty() ? InfoHide : InfoShow);
 }

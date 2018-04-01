@@ -317,16 +317,16 @@ void NCursesUI::Window::refresh()
 void NCursesUI::redraw()
 {
     pnoutrefresh(m_window, 0, 0, 0, 0,
-                 (int)m_dimensions.line + 1, (int)m_dimensions.column);
+                 (int)m_dimensions.line + 2, (int)m_dimensions.column);
 
     m_menu.refresh();
     m_info.refresh();
 
     if (m_cursor.mode == CursorMode::Prompt)
-        wmove(newscr, m_status_on_top ? 0 : (int)m_dimensions.line,
+        wmove(newscr, m_status_on_top ? 0 : (int)m_dimensions.line + 1,
               (int)m_cursor.coord.column);
     else
-        wmove(newscr, (int)m_cursor.coord.line + (m_status_on_top ? 1 : 0),
+        wmove(newscr, (int)m_cursor.coord.line + (m_status_on_top ? 2 : 0),
               (int)m_cursor.coord.column);
 
     doupdate();
@@ -390,7 +390,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
 
     check_resize();
 
-    LineCount line_index = m_status_on_top ? 1 : 0;
+    LineCount line_index = m_status_on_top ? 2 : 0;
     for (const DisplayLine& line : display_buffer.lines())
     {
         wmove(m_window, (int)line_index, 0);
@@ -402,7 +402,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     wbkgdset(m_window, COLOR_PAIR(get_color_pair(padding_face)));
     set_face(m_window, padding_face, default_face);
 
-    while (line_index < m_dimensions.line + (m_status_on_top ? 1 : 0))
+    while (line_index < m_dimensions.line + (m_status_on_top ? 2 : 0))
     {
         wmove(m_window, (int)line_index++, 0);
         wclrtoeol(m_window);
@@ -416,7 +416,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
                             const DisplayLine& mode_line,
                             const Face& default_face)
 {
-    const int status_line_pos = m_status_on_top ? 0 : (int)m_dimensions.line;
+    const int status_line_pos = m_status_on_top ? 0 : (int)m_dimensions.line + 1;
     wmove(m_window, status_line_pos, 0);
 
     wbkgdset(m_window, COLOR_PAIR(get_color_pair(default_face)));
@@ -467,6 +467,54 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     m_dirty = true;
 }
 
+void NCursesUI::draw_buflist(ConstArrayView<DisplayLine> buffer_names, int idx_active_buffer,
+                             const Face& face_active_buffer, const Face& face_regular_buffer)
+{
+    DisplayLine line;
+    const int buflist_pos = m_status_on_top ? 1 : (int)m_dimensions.line;
+
+    wmove(m_window, buflist_pos, 0);
+    wbkgdset(m_window, COLOR_PAIR(get_color_pair(face_regular_buffer)));
+    wclrtoeol(m_window);
+
+    int i = 0;
+    ColumnCount width_to_current = 0;
+    for (auto& buffer_name : buffer_names)
+    {
+        if (i > 0)
+            line.push_back(DisplayAtom(m_buflist_separator.str()));
+
+        for (auto& atom : buffer_name.atoms())
+        {
+            const Face atom_face = i == idx_active_buffer ? face_active_buffer : face_regular_buffer;
+
+            kak_assert(atom.type() == DisplayAtom::Type::Text);
+
+            line.push_back(DisplayAtom(atom.content().str(), atom_face));
+        }
+
+        // save the length of the whole line up to and including the current buffer
+        if (i == idx_active_buffer)
+            width_to_current = line.length();
+
+        i++;
+    }
+
+    // if the line is wider than the terminal, bring back the current buffer into view
+    // also show the buffer following the current buffer for context (~1/4th of the terminal width)
+    while (line.length() > m_dimensions.column
+           and width_to_current > m_dimensions.column * 3 / 4
+           and line.atoms().size() > 2)
+    {
+        width_to_current -= line.atoms()[0].length() + line.atoms()[1].length();
+        line.erase(line.begin(), line.begin() + 2);
+    }
+
+    draw_line(m_window, line, 0, m_dimensions.column, face_regular_buffer);
+
+    m_dirty = true;
+}
+
 void NCursesUI::check_resize(bool force)
 {
     if (not force and not resize_pending)
@@ -492,7 +540,7 @@ void NCursesUI::check_resize(bool force)
         keypad(m_window, true);
         meta(m_window, true);
 
-        m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
+        m_dimensions = DisplayCoord{ws.ws_row-2, ws.ws_col};
 
         if (char* csr = tigetstr((char*)"csr"))
             putp(tparm(csr, 0, ws.ws_row));
@@ -557,7 +605,7 @@ Optional<Key> NCursesUI::get_next_key()
             };
 
             return Key{ get_modifiers(ev.bstate),
-                        encode_coord({ ev.y - (m_status_on_top ? 1 : 0), ev.x }) };
+                        encode_coord({ ev.y - (m_status_on_top ? 2 : 0), ev.x }) };
         }
     }
 
@@ -745,11 +793,11 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
                                             div_round_up(item_count, m_menu.columns));
 
     if (style != MenuStyle::Prompt and m_status_on_top)
-        anchor.line += 1;
+        anchor.line += 2;
 
     LineCount line = anchor.line + 1;
     if (is_prompt)
-        line = m_status_on_top ? 1_line : m_dimensions.line - height;
+        line = m_status_on_top ? 1_line : m_dimensions.line - height + 1;
     else if (line + height > m_dimensions.line)
         line = anchor.line - height;
 
@@ -933,12 +981,12 @@ void NCursesUI::info_show(StringView title, StringView content,
     m_info.face = face;
     m_info.style = style;
 
-    const Rect rect = {m_status_on_top ? 1_line : 0_line, m_dimensions};
+    const Rect rect = {m_status_on_top ? 2_line : 0_line, m_dimensions};
     InfoBox info_box;
     if (style == InfoStyle::Prompt)
     {
         info_box = make_info_box(m_info.title, m_info.content, m_dimensions.column, m_assistant);
-        anchor = DisplayCoord{m_status_on_top ? 0 : m_dimensions.line, m_dimensions.column-1};
+        anchor = DisplayCoord{m_status_on_top ? 1 : m_dimensions.line, m_dimensions.column-1};
         anchor = compute_pos(anchor, info_box.size, rect, m_menu, style == InfoStyle::InlineAbove);
     }
     else if (style == InfoStyle::Modal)
@@ -1103,6 +1151,12 @@ void NCursesUI::set_ui_options(const Options& options)
         auto wheel_down_it = options.find("ncurses_wheel_down_button"_sv);
         m_wheel_down_button = wheel_down_it != options.end() ?
             str_to_int_ifp(wheel_down_it->value).value_or(5) : 5;
+    }
+
+    {
+        auto it = options.find("ncurses_buflist_separator"_sv);
+        if (it != options.end())
+            m_buflist_separator = it->value;
     }
 }
 

@@ -113,3 +113,9 @@ areas of the user interface:
 
 *Whitespace*::
     face used by the show_whitespaces highlighter
+
+*BufferList*::
+    face applied on the regular (not focused) buffer names in the buffer list
+
+*BufferListActive*::
+    face applied on the name of the currently focused buffer, in the buffer list

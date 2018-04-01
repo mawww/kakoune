@@ -31,6 +31,10 @@ public:
     void draw_status(const DisplayLine& status_line,
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
+    void draw_buflist(ConstArrayView<DisplayLine> buffer_names,
+                      int idx_active_buffer,
+                      const Face& face_active_buffer,
+                      const Face& face_regular_buffer) override;
 
     void menu_show(ConstArrayView<DisplayLine> items,
                    DisplayCoord anchor, Face fg, Face bg,
@@ -133,6 +137,8 @@ private:
 
     bool m_status_on_top = false;
     ConstArrayView<StringView> m_assistant;
+
+    StringView m_buflist_separator = "|";
 
     void enable_mouse(bool enabled);
 

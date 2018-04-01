@@ -406,6 +406,10 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
 
         void draw(const DisplayBuffer&, const Face&, const Face&) override {}
         void draw_status(const DisplayLine&, const DisplayLine&, const Face&) override {}
+        void draw_buflist(ConstArrayView<DisplayLine> buffer_names,
+                          int idx_active_buffer,
+                          const Face& face_active_buffer,
+                          const Face& face_regular_buffer) override {}
         DisplayCoord dimensions() override { return {24,80}; }
         void set_cursor(CursorMode, DisplayCoord) override {}
         void refresh(bool) override {}
