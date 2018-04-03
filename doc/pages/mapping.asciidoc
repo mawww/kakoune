@@ -6,7 +6,7 @@ Creating and removing shortcuts boils down to the following commands,
 respectively:
 
 ---------------------------------------
-map [flags] <scope> <mode> <key> <keys>
+map [switches] <scope> <mode> <key> <keys>
 unmap <scope> <mode> <key> [<expected>]
 ---------------------------------------
 
@@ -16,18 +16,25 @@ The *map* command makes *key* behave as if the *keys* sequence was typed.
 
     *insert*::
         insert mode
+
     *normal*::
         normal mode
+
     *prompt*::
         prompts, such as when entering a command through *:*, or a regex through */*
+
     *menu*::
         mode entered when a menu is displayed with the 'menu' command
+
     *user*::
         mode entered when the user prefix is hit (default: ',')
+
     *goto*::
         mode entered when the goto key is hit (default: 'g')
+
     *view*::
         mode entered when the view key is hit (default: 'v')
+
     *object*::
         mode entered when an object selection is triggered (e.g. '<a-i>')
 
@@ -74,7 +81,7 @@ be used:
     The *<* and *>* characters.
 
 *<plus>*, *<minus>*::
-    The *+* and *-* characters..
+    The *+* and *-* characters.
 
 *<ret>*::
     The Return or Enter key.
