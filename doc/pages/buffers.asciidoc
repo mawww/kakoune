@@ -32,15 +32,15 @@ A scratch buffer can be created by passing the `-debug` switch to the
 
 == FIFO Buffers
 
-The `:edit` command can take a `-fifo` parameter:
+The `:edit` command can take a `-fifo` switch:
 
 ---------------------------------------------
 :edit -fifo <filename> [-scroll] <buffername>
 ---------------------------------------------
 
 In this case, a buffer named `<buffername>` is created which reads
-its content from the fifo `<filename>`. When the fifo is written to,
-the buffer is automatically updated.
+its content from the fifo (also called "named pipe") `<filename>`.
+When the fifo is written to, the buffer is automatically updated.
 
 If the `-scroll` switch is specified, the window displaying the buffer
 will scroll so that the newest data is always visible.
