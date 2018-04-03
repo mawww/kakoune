@@ -22,9 +22,7 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
   for lang in ${languages}; do
     printf '%s    ```\h*%s\\b   ```   "" ' "${lang}" "${lang}"
   done
-  echo     'code  ```            ```   "" \
-            code  ``[^`]         ``    "" \
-            code  `[^`]          `     "" '
+  echo     'code  ```            ```   ""'
   for lang in ${languages}; do
     ref=$([ "${lang}" = kak ] && echo kakrc || echo "${lang}")
     printf '
@@ -46,6 +44,7 @@ add-highlighter shared/markdown/content regex ^(#+)(\h+)([^\n]+) 1:header
 
 add-highlighter shared/markdown/content regex ^\h?((?:[\s\t]+)?[-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*\n)*$ 0:list 1:bullet
 add-highlighter shared/markdown/content regex \B\+[^\n]+?\+\B 0:mono
+add-highlighter shared/markdown/content regex [^`](`([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))`)[^`] 1:mono
 add-highlighter shared/markdown/content regex [^`](``([^\s`]|([^\s`](\n?[^\n`])*[^\s`]))``)[^`] 1:mono
 add-highlighter shared/markdown/content regex [^*](\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*)[^*] 1:italic
 add-highlighter shared/markdown/content regex [^_](_([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))_)[^_] 1:italic
