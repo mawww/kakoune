@@ -4,6 +4,7 @@
 
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
+#include "command_manager.hh"
 #include "client.hh"
 #include "event_manager.hh"
 #include "face_registry.hh"
@@ -874,6 +875,18 @@ public:
             clear_completions();
             if (context().has_client())
                 context().client().menu_hide();
+        }
+        else if (key == alt('!'))
+        {
+            try
+            {
+                m_line_editor.reset(expand(m_line_editor.line(), context()), m_empty_text);
+            }
+            catch (std::runtime_error& error)
+            {
+                context().print_status({error.what(), get_face("Error")});
+                return;
+            }
         }
         else
         {

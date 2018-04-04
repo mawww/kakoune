@@ -707,3 +707,7 @@ The following keys are recognized by this mode to help edition.
 
 *<c-o>*::
     disable auto completion for this prompt
+
+*<a-!>*::
+    expand the typed expansions in currently entered text
+    (See <<expansions#typed-expansions,`:doc expansions typed-expansions`>>)
