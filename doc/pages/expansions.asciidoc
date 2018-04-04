@@ -4,9 +4,11 @@
 
 \'strings'::
     uninterpreted strings, use a backslash (\') to escape the separator
+
 "strings"::
     expanded strings, % strings (c.f. next section) contained are expended,
     use a backslash (\\%) to escape the separator
+
 %\{strings\}::
     these strings are very useful when entering commands
 +
@@ -34,16 +36,20 @@ parameter:
 *sh*::
     shell expansion, similar to posix shell '$(...)' construct (c.f. next
     section)
+
 *reg*::
     register expansion, will expand to the content of the register named
-    by *<content>*.
+    by *<content>*. See <<registers#,`:doc registers`>>
+
 *opt*::
     option expansion, will expand to the value of the option named by
-    *<content>*
+    *<content>*. See <<options#,`:doc options`>>
+
 *val*::
     value expansion, will expand to the value of the environment variables
     available to shell expansion. *<content>* shall be the name of that
     variable without the *kak_* prefix.
+
 *arg*::
     argument expansion, expand to the arguments of the current
     command, *<content>* can be a number, or @ for all arguments
@@ -56,76 +62,108 @@ informations about Kakoune's state:
 
 *kak_selection*::
     content of the main selection
+
 *kak_selections*::
     content of the selection separated by colons, colons in the selection
     contents are escaped with a backslash
+
 *kak_selection_desc*::
     range of the main selection, represented as anchor,cursor; anchor
     and cursor are in this format: line.column
+
 *kak_selections_desc*::
     range of the selections separated by colons
+
 *kak_bufname*::
     name of the current buffer
+
 *kak_buffile*::
     full path of the file or same as kak_bufname when there’s no
     associated file
+
 *kak_buflist*::
     the current buffer list, each buffer separated by a colon
+
 *kak_buf_line_count*::
     the current buffer line count
+
 *kak_timestamp*::
     timestamp of the current buffer, the timestamp is an integer value
     which is incremented each time the buffer is modified
+
 *kak_history_id*::
     history id of the current buffer, the history id is an integer value
     which is used to reference a specific buffer version in the undo tree
+
 *kak_runtime*::
     directory containing the kak support files, determined from kakoune's
     binary location.
+
 *kak_config*::
     directory containing the user configuration
+
 *kak_count*::
     count parameter passed to the command
+
 *kak_register*::
     register parameter passed to the command
+
 *kak_opt_<name>*::
     value of option *name*
+
 *kak_reg_<r>*::
     value of register *r*
+
 *kak_session*::
     name of the current session
+
 *kak_client*::
     name of the current client
+
 *kak_client_pid*::
     process id of the current client
+
 *kak_client_list*::
     list of clients connected to the current session
+
 *kak_source*::
     path of the file currently getting executed (through the source
     command)
+
 *kak_modified*::
     buffer has modifications not saved
+
 *kak_cursor_line*::
     line of the end of the main selection
+
 *kak_cursor_column*::
     column of the end of the main selection (in byte)
+
 *kak_cursor_char_value*::
     unicode value of the codepoint under the cursor
+
 *kak_cursor_char_column*::
     column of the end of the main selection (in character)
+
 *kak_cursor_byte_offset*::
     Offset of the main selection from the beginning of the buffer (in bytes).
+
 *kak_window_width*::
     width of the current kakoune window
+
 *kak_window_height*::
     height of the current kakoune window
+
 *kak_hook_param*::
     filtering text passed to the currently executing hook
+
 *kak_hook_param_capture_N*::
     text captured by the hook filter regex capture N
+
 *kak_client_env_<name>*::
     value of the *name* variable in the client environment
     (e.g. *$kak_client_env_SHELL* is the SHELL variable)
+
 *kak_user_modes*::
     the user modes list, each modes separated by a colon
 
