@@ -427,21 +427,21 @@ class LineEditor
 public:
     void handle_key(Key key)
     {
-        if (key == Key::Left or key == alt('h'))
+        if (key == Key::Left or key == ctrl('b'))
         {
             if (m_cursor_pos > 0)
                 --m_cursor_pos;
         }
-        else if (key == Key::Right or key == alt('l'))
+        else if (key == Key::Right or key == ctrl('f'))
         {
             if (m_cursor_pos < m_line.char_length())
                 ++m_cursor_pos;
         }
-        else if (key == Key::Home)
+        else if (key == Key::Home or key == ctrl('a'))
             m_cursor_pos = 0;
-        else if (key == Key::End)
+        else if (key == Key::End or key == ctrl('e'))
             m_cursor_pos = m_line.char_length();
-        else if (key == Key::Backspace or key == alt('x'))
+        else if (key == Key::Backspace)
         {
             if (m_cursor_pos != 0)
             {
@@ -451,30 +451,123 @@ public:
                 --m_cursor_pos;
             }
         }
-        else if (key == Key::Delete or key == alt('d'))
+        else if (key == Key::Delete or key == ctrl('d'))
         {
             if (m_cursor_pos != m_line.char_length())
                 m_line = m_line.substr(0, m_cursor_pos)
-                       + m_line.substr(m_cursor_pos+1);
+                         + m_line.substr(m_cursor_pos+1);
         }
-        else if (key == ctrl('w'))
+        else if (key == alt('f'))
             to_next_word_begin<Word>(m_cursor_pos, m_line);
-        else if (key == ctrlalt('w'))
-            to_next_word_begin<WORD>(m_cursor_pos, m_line);
-        else if (key == ctrl('b'))
+        else if (key == alt('b'))
             to_prev_word_begin<Word>(m_cursor_pos, m_line);
-        else if (key == ctrlalt('b'))
-            to_prev_word_begin<WORD>(m_cursor_pos, m_line);
-        else if (key == ctrl('e'))
+        else if (key == ctrl('t'))
+        {
+            if (m_line.char_length() > 1)
+            {
+                auto old_cursor_pos = m_cursor_pos;
+                if (m_cursor_pos > m_line.char_length() - 2)
+                    m_cursor_pos = m_line.char_length() - 2;
+
+                std::swap(m_line[m_line.byte_count_to(m_cursor_pos)],
+                            m_line[m_line.byte_count_to(m_cursor_pos + 1)]);
+                m_cursor_pos = old_cursor_pos;
+            }
+        }
+        else if (key == alt('t'))
+        {
+            CharCount word_begin, word_end;
+            std::pair<CharCount, CharCount> first_word_coords,
+                                            second_word_coords;
+
+            if (not is_horizontal_blank(m_line[m_cursor_pos]))
+                to_prev_word_begin<Word>(m_cursor_pos, m_line);
+            to_prev_word_begin<Word>(m_cursor_pos, m_line);
+            word_begin = m_cursor_pos;
+
             to_next_word_end<Word>(m_cursor_pos, m_line);
-        else if (key == ctrlalt('e'))
-            to_next_word_end<WORD>(m_cursor_pos, m_line);
+            word_end = m_cursor_pos;
+
+            first_word_coords = std::make_pair(word_begin, word_end);
+
+            to_next_word_end<Word>(m_cursor_pos, m_line);
+            word_end = m_cursor_pos;
+
+            to_prev_word_begin<Word>(m_cursor_pos, m_line);
+            word_begin = m_cursor_pos;
+
+            second_word_coords = std::make_pair(word_begin, word_end);
+
+            if (first_word_coords.first < second_word_coords.first
+                and first_word_coords.second < second_word_coords.first)
+            {
+                m_line = m_line.substr(0, first_word_coords.first)
+                         + m_line.substr(second_word_coords.first,
+                                         second_word_coords.second - second_word_coords.first + 1)
+                         + m_line.substr(first_word_coords.second + 1,
+                                         second_word_coords.first - first_word_coords.second - 1)
+                         + m_line.substr(first_word_coords.first,
+                                         first_word_coords.second - first_word_coords.first + 1)
+                         + m_line.substr(second_word_coords.second + 1);
+                to_next_word_end<Word>(m_cursor_pos, m_line);
+            }
+        }
+        else if (key == alt('u') || key == alt('l'))
+        {
+            const CharCount len = m_line.char_length();
+            const bool transform_upper = (key == alt('u'));
+
+            while (m_cursor_pos < len
+                   and is_horizontal_blank(m_line[m_cursor_pos]))
+                ++m_cursor_pos;
+
+            for (; m_cursor_pos < len
+                   and is_word<Word>(m_line[m_cursor_pos]);
+                   ++m_cursor_pos)
+                m_line[m_line.byte_count_to(m_cursor_pos)] =
+                    transform_upper ? to_upper(m_line[m_cursor_pos])
+                    : to_lower(m_line[m_cursor_pos]);
+        }
+        else if (key == alt('c'))
+        {
+            const CharCount len = m_line.char_length();
+
+            while (m_cursor_pos < len
+                   and is_horizontal_blank(m_line[m_cursor_pos]))
+                ++m_cursor_pos;
+
+            if (m_cursor_pos < len)
+                m_line[m_line.byte_count_to(m_cursor_pos)]
+                    = to_upper(m_line[m_cursor_pos]);
+
+            to_next_word_end<Word>(m_cursor_pos, m_line);
+        }
         else if (key == ctrl('k'))
-            m_line = m_line.substr(0_char, m_cursor_pos).str();
+        {
+            m_line = m_line.substr(0, m_cursor_pos).str();
+        }
         else if (key == ctrl('u'))
         {
             m_line = m_line.substr(m_cursor_pos).str();
             m_cursor_pos = 0;
+        }
+        else if (key == alt('d'))
+        {
+            auto old_cursor_pos = m_cursor_pos;
+
+            to_next_word_end<Word>(m_cursor_pos, m_line);
+            m_line = m_line.substr(0, old_cursor_pos)
+                + m_line.substr(m_cursor_pos + 1);
+
+            m_cursor_pos -= m_cursor_pos - old_cursor_pos;
+        }
+        else if (key == ctrl('w'))
+        {
+            auto old_cursor_pos = m_cursor_pos;
+
+            to_prev_word_begin<Word>(m_cursor_pos, m_line);
+            m_line = m_line.substr(0, m_cursor_pos)
+                + m_line.substr(old_cursor_pos);
         }
         else if (auto cp = key.codepoint())
             insert(*cp);
