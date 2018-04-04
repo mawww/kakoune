@@ -475,12 +475,13 @@ void NCursesUI::check_resize(bool force)
     resize_pending = 0;
 
     const int fd = open("/dev/tty", O_RDWR);
+    if (fd < 0)
+        return;
     auto close_fd = on_scope_end([fd]{ ::close(fd); });
-    winsize ws;
 
-    kak_assert(fd > -1);
+    winsize ws;
     if (::ioctl(fd, TIOCGWINSZ, &ws) != 0)
-        kak_assert(false);
+        return;
 
     const bool info = (bool)m_info;
     const bool menu = (bool)m_menu;
