@@ -43,7 +43,7 @@ void OptionManager::unregister_watcher(OptionManagerWatcher& watcher) const
 struct option_not_found : public runtime_error
 {
     option_not_found(StringView name)
-        : runtime_error("option not found: " + name) {}
+        : runtime_error(format("option not found: '{}'. Use declare-option first", name)) {}
 };
 
 Option& OptionManager::get_local_option(StringView name)
