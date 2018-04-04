@@ -291,7 +291,7 @@ struct HashMap
     constexpr bool empty() const { return m_items.empty(); }
     constexpr void reserve(size_t size)
     {
-        m_items.reserve(size); 
+        m_items.reserve(size);
         m_index.reserve(size);
     }
 

@@ -21,7 +21,7 @@ static WordList get_words(StringView content, ConstArrayView<Codepoint> extra_wo
     {
         if (is_word(*it))
         {
-            const char* word = it.base(); 
+            const char* word = it.base();
             while (++it != content.end() and is_word(*it))
             {}
             res.emplace_back(word, it.base());

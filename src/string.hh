@@ -191,7 +191,7 @@ public:
         const char* data() const { return is_long() ? l.ptr : s.string; }
         char* data() { return is_long() ? l.ptr : s.string; }
 
-	template<bool copy = true>
+        template<bool copy = true>
         void reserve(size_t new_capacity);
         void set_size(size_t size);
         void force_size(size_t new_size);

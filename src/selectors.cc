@@ -353,7 +353,7 @@ find_surrounding(const Container& container, Iterator pos,
             first = utf8::previous(first, container.begin());
 
         if (auto res = find_opening(first+1, container, opening, closing, level, nestable))
-            first = (flags & ObjectFlags::Inner) ? res->second : res->first; 
+            first = (flags & ObjectFlags::Inner) ? res->second : res->first;
         else
             return {};
     }
@@ -370,7 +370,7 @@ find_surrounding(const Container& container, Iterator pos,
 
         if (auto res = find_closing(last, container, opening, closing, level, nestable))
             last = (flags & ObjectFlags::Inner) ? utf8::previous(res->first, container.begin())
-                                                : utf8::previous(res->second, container.begin()); 
+                                                : utf8::previous(res->second, container.begin());
         else
             return {};
     }

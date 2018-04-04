@@ -173,7 +173,7 @@ public:
 
     uint32_t size() const
     {
-        kak_assert(m_write_pos >= header_size); 
+        kak_assert(m_write_pos >= header_size);
         uint32_t res;
         memcpy(&res, m_stream.data() + sizeof(MessageType), sizeof(uint32_t));
         return res;
@@ -181,7 +181,7 @@ public:
 
     MessageType type() const
     {
-        kak_assert(m_write_pos >= header_size); 
+        kak_assert(m_write_pos >= header_size);
         return *reinterpret_cast<const MessageType*>(m_stream.data());
     }
 

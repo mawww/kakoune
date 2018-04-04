@@ -105,7 +105,7 @@ DisplayLine::iterator DisplayLine::split(iterator it, ColumnCount count)
         return m_atoms.insert(it, std::move(atom));
     }
     auto pos = utf8::advance(get_iterator(it->buffer(), it->begin()),
-                             get_iterator(it->buffer(), it->end()), 
+                             get_iterator(it->buffer(), it->end()),
                              count).coord();
     return split(it, pos);
 }

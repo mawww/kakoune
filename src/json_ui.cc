@@ -75,7 +75,7 @@ String to_json(Color color)
 String to_json(Attribute attributes)
 {
     struct Attr { Attribute attr; StringView name; }
-    attrs[] { 
+    attrs[] {
         { Attribute::Exclusive, "exclusive" },
         { Attribute::Underline, "underline" },
         { Attribute::Reverse, "reverse" },

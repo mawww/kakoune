@@ -9,7 +9,7 @@
 #include "string_utils.hh"
 #include "vector.hh"
 
-#include <cstring> 
+#include <cstring>
 
 namespace Kakoune
 {
@@ -390,7 +390,7 @@ private:
         std::sort(ranges.begin(), ranges.end(),
                   [](auto& lhs, auto& rhs) { return lhs.min < rhs.min; });
 
-        // merge overlapping ranges 
+        // merge overlapping ranges
         auto pos = ranges.begin();
         for (auto next = pos+1; next != ranges.end(); ++next)
         {
