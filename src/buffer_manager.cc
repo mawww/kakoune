@@ -36,15 +36,14 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
             throw runtime_error{"buffer name is already in use"};
     }
 
-    m_buffers.emplace(m_buffers.begin(),
-                      new Buffer{std::move(name), flags, data, fs_timestamp});
-    auto& buffer = *m_buffers.front();
-    buffer.on_registered();
+    m_buffers.push_back(std::make_unique<Buffer>(std::move(name), flags, data, fs_timestamp));
+    auto* buffer = m_buffers.back().get();
+    buffer->on_registered();
 
-    if (contains(m_buffer_trash, &buffer))
+    if (contains(m_buffer_trash, buffer))
         throw runtime_error{"Buffer got removed during its creation"};
 
-    return &buffer;
+    return buffer;
 }
 
 void BufferManager::delete_buffer(Buffer& buffer)
@@ -86,7 +85,7 @@ Buffer& BufferManager::get_first_buffer()
     if (all_of(m_buffers, [](auto& b) { return (b->flags() & Buffer::Flags::Debug); }))
         create_buffer("*scratch*", Buffer::Flags::None);
 
-    return *m_buffers.front();
+    return *m_buffers.back();
 }
 
 void BufferManager::backup_modified_buffers()
