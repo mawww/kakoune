@@ -179,8 +179,10 @@ void Window::set_dimensions(DisplayCoord dimensions)
     }
 }
 
-DisplaySetup Window::compute_display_setup(const Context& context)
+DisplaySetup Window::compute_display_setup(const Context& context) const
 {
+    auto win_pos = m_position;
+
     DisplayCoord offset = options()["scrolloff"].get<DisplayCoord>();
     offset.line = std::min(offset.line, (m_dimensions.line + 1) / 2);
     offset.column = std::min(offset.column, (m_dimensions.column + 1) / 2);
@@ -189,16 +191,16 @@ DisplaySetup Window::compute_display_setup(const Context& context)
     const auto& cursor = context.selections().main().cursor();
 
     // Ensure cursor line is visible
-    if (cursor.line - offset.line < m_position.line)
-        m_position.line = std::max(0_line, cursor.line - offset.line);
-    if (cursor.line + offset.line >= m_position.line + m_dimensions.line)
-        m_position.line = std::min(buffer().line_count()-1, cursor.line + offset.line - m_dimensions.line + 1);
+    if (cursor.line - offset.line < win_pos.line)
+        win_pos.line = std::max(0_line, cursor.line - offset.line);
+    if (cursor.line + offset.line >= win_pos.line + m_dimensions.line)
+        win_pos.line = std::min(buffer().line_count()-1, cursor.line + offset.line - m_dimensions.line + 1);
 
     DisplaySetup setup{
-        m_position,
+        win_pos,
         m_dimensions,
-        {cursor.line - m_position.line,
-         get_column(buffer(), tabstop, cursor) - m_position.column},
+        {cursor.line - win_pos.line,
+         get_column(buffer(), tabstop, cursor) - win_pos.column},
         offset,
         false
     };

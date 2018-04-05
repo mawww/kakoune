@@ -727,7 +727,7 @@ struct WrapHighlighter : Highlighter
         }
     }
 
-    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) override
+    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
     {
         if (contains(context.disabled_ids, ms_id))
             return;
@@ -817,7 +817,7 @@ struct WrapHighlighter : Highlighter
         unique_ids.push_back(ms_id);
     }
 
-    BufferCoord next_split_coord(const Buffer& buffer,  ColumnCount wrap_column, int tabstop, BufferCoord coord)
+    BufferCoord next_split_coord(const Buffer& buffer,  ColumnCount wrap_column, int tabstop, BufferCoord coord) const
     {
         auto column = get_column(buffer, tabstop, coord);
         auto col = get_byte_to_column(
@@ -913,7 +913,7 @@ struct TabulationHighlighter : Highlighter
         }
     }
 
-    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) override
+    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
     {
         auto& buffer = context.context.buffer();
         // Ensure that a cursor on a tab character makes the full tab character visible
@@ -1069,7 +1069,7 @@ private:
         }
     }
 
-    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) override
+    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
     {
         if (contains(context.disabled_ids, ms_id))
             return;
@@ -1083,7 +1083,7 @@ private:
         unique_ids.push_back(ms_id);
     }
 
-    int compute_digit_count(const Context& context)
+    int compute_digit_count(const Context& context) const
     {
         int digit_count = 0;
         LineCount last_line = context.buffer().line_count();
@@ -1340,7 +1340,7 @@ private:
         }
     }
 
-    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) override
+    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
     {
         auto& line_flags = context.context.options()[m_option_name].get_mutable<LineAndSpecList>();
         auto& buffer = context.context.buffer();
@@ -1597,7 +1597,7 @@ private:
         {}
     }
 
-    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) override
+    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
     {
         try
         {

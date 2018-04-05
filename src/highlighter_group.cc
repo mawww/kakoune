@@ -12,7 +12,7 @@ void HighlighterGroup::do_highlight(HighlightContext context, DisplayBuffer& dis
         hl.value->highlight(context, display_buffer, range);
 }
 
-void HighlighterGroup::do_compute_display_setup(HighlightContext context, DisplaySetup& setup)
+void HighlighterGroup::do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const
 {
     for (auto& hl : m_highlighters)
         hl.value->compute_display_setup(context, setup);
@@ -84,7 +84,7 @@ void Highlighters::highlight(HighlightContext context, DisplayBuffer& display_bu
     m_group.highlight(context, display_buffer, range);
 }
 
-void Highlighters::compute_display_setup(HighlightContext context, DisplaySetup& setup)
+void Highlighters::compute_display_setup(HighlightContext context, DisplaySetup& setup) const
 {
     Vector<StringView> disabled_ids(context.disabled_ids.begin(), context.disabled_ids.end());
     m_group.fill_unique_ids(disabled_ids);

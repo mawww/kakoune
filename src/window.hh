@@ -52,7 +52,7 @@ private:
     Window(const Window&) = delete;
 
     void on_option_changed(const Option& option) override;
-    DisplaySetup compute_display_setup(const Context& context);
+    DisplaySetup compute_display_setup(const Context& context) const;
 
     void run_hook_in_own_context(StringView hook_name, StringView param,
                                  String client_name = "");

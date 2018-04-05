@@ -71,7 +71,7 @@ struct Highlighter
             do_highlight(context, display_buffer, range);
     }
 
-    void compute_display_setup(HighlightContext context, DisplaySetup& setup)
+    void compute_display_setup(HighlightContext context, DisplaySetup& setup) const
     {
         if (context.pass & m_passes)
             do_compute_display_setup(context, setup);
@@ -89,7 +89,7 @@ struct Highlighter
 
 private:
     virtual void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) = 0;
-    virtual void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) {}
+    virtual void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const {}
 
     const HighlightPass m_passes;
 };
