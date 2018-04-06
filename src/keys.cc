@@ -108,10 +108,10 @@ KeyList parse_keys(StringView str)
         else if (to_lower(desc[0_byte]) == 'f' and desc.length() <= 3)
         {
             int val = str_to_int(desc.substr(1_byte));
-            if (val >= 1 and val <= 12)
+            if (val >= 1 and val <= 63)
                 result.emplace_back(modifier, Key::F1 + (val - 1));
             else
-                throw runtime_error("Only F1 through F12 are supported");
+                throw runtime_error("Only F1 through F63 are supported");
         }
         else
             throw runtime_error("Failed to parse " +
@@ -157,7 +157,7 @@ String key_to_str(Key key)
         named = true;
         res = it->name;
     }
-    else if (key.key >= Key::F1 and key.key < Key::F12)
+    else if (key.key >= Key::F1 and key.key < Key::F63)
     {
         named = true;
         res = "F" + to_string((int)(key.key - Key::F1 + 1));

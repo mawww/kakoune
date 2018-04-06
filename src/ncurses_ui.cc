@@ -604,7 +604,7 @@ Optional<Key> NCursesUI::get_next_key()
             return ctrl(Codepoint(c) - 1 + 'a');
         }
 
-        for (int i = 0; i < 12; ++i)
+        for (int i = 0; i < 63; ++i)
         {
             if (c == KEY_F(i+1))
                 return {Key::F1 + i};
