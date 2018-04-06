@@ -73,3 +73,13 @@ month in register *3*, but select the entire date:
 --------------------
 (\w+) (\w+) (\d+) .+
 --------------------
+
+Uppercase registers
+-------------------
+
+When specifying uppercase registers before the *y*, *d* or *c* commands,
+it appends the current selections content to the contents already stored
+in the register.
+
+For example, if the *a* register already contains the value *foo* and you yank
+the text *bar* with *"Ay*, the new content of the *a* register is *foobar*.

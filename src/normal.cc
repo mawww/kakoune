@@ -622,23 +622,47 @@ void insert_output(Context& context, NormalParams)
         });
 }
 
-void yank(Context& context, NormalParams params)
+void set_or_append_to_register(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
-    RegisterManager::instance()[reg].set(context, context.selections_content());
-    context.print_status({ format("yanked {} selections to register {}",
-                                  context.selections().size(), reg),
-                           get_face("Information") });
+
+    // always at least 1 selection and 1 empty string in reg
+    auto sels_content = context.selections_content();
+    auto reg_strings = RegisterManager::instance()[reg].get(context);
+
+    if (is_upper(reg) and not reg_strings[0].empty())
+    {
+        auto min = std::min((int)sels_content.size(), (int)reg_strings.size());
+        Vector<String> results;
+        for (int i = 0; i < min; ++i)
+        {
+            results.push_back(reg_strings[i] + sels_content[i]);
+        }
+        RegisterManager::instance()[reg].set(context, results);
+        context.print_status({ format("appended {} selections to register {}",
+                                      min, to_lower(reg)),
+                               get_face("Information") });
+    }
+    else
+    {
+        RegisterManager::instance()[reg].set(context, sels_content);
+        context.print_status({ format("yanked {} selections to register {}",
+                                      context.selections().size(), to_lower(reg)),
+                               get_face("Information") });
+    }
+}
+
+void yank(Context& context, NormalParams params)
+{
+    set_or_append_to_register(context, params);
 }
 
 template<bool yank>
 void erase_selections(Context& context, NormalParams params)
 {
     if (yank)
-    {
-        const char reg = params.reg ? params.reg : '"';
-        RegisterManager::instance()[reg].set(context, context.selections_content());
-    }
+        set_or_append_to_register(context, params);
+
     ScopedEdition edition(context);
     context.selections().erase();
 }
@@ -647,10 +671,8 @@ template<bool yank>
 void change(Context& context, NormalParams params)
 {
     if (yank)
-    {
-        const char reg = params.reg ? params.reg : '"';
-        RegisterManager::instance()[reg].set(context, context.selections_content());
-    }
+        set_or_append_to_register(context, params);
+
     enter_insert_mode<InsertMode::Replace>(context, params);
 }
 
