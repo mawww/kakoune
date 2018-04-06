@@ -111,10 +111,10 @@ KeyList parse_keys(StringView str)
             if (val >= 1 and val <= 12)
                 result.emplace_back(modifier, Key::F1 + (val - 1));
             else
-                throw runtime_error("Only F1 through F12 are supported");
+                throw runtime_error("only F1 through F12 are supported");
         }
         else
-            throw runtime_error("Failed to parse " +
+            throw runtime_error("unable to parse " +
                                  StringView{it.base(), end_it.base()+1});
 
         it = end_it;

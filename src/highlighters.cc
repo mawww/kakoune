@@ -486,7 +486,7 @@ private:
 HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
 {
     if (params.size() < 2)
-        throw runtime_error("Wrong parameter count");
+        throw runtime_error("wrong parameter count");
 
     FacesSpec faces;
     for (auto& spec : params.subrange(1))
@@ -1030,7 +1030,7 @@ struct LineNumbersHighlighter : Highlighter
 
         StringView separator = parser.get_switch("separator").value_or("│");
         if (separator.length() > 10)
-            throw runtime_error("Separator length is limited to 10 bytes");
+            throw runtime_error("separator length is limited to 10 bytes");
 
         return {"number_lines", std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str())};
     }

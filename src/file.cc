@@ -289,14 +289,14 @@ void write_buffer_to_file(Buffer& buffer, StringView filename, bool force)
         if (::stat(zfilename, &st) == 0)
         {
             if (::chmod(zfilename, st.st_mode | S_IWUSR) < 0)
-                throw runtime_error("couldn't change file permissions");
+                throw runtime_error("unable to change file permissions");
         }
         else
             force = false;
     }
     auto restore_mode = on_scope_end([&]{
         if (force and ::chmod(zfilename, st.st_mode) < 0)
-            throw runtime_error("couldn't restore file permissions");
+            throw runtime_error("unable to restore file permissions");
     });
 
     int fd = open(zfilename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
@@ -372,7 +372,7 @@ void make_directory(StringView dir, mode_t mode)
         if (stat(dirname.zstr(), &st) == 0)
         {
             if (not S_ISDIR(st.st_mode))
-                throw runtime_error(format("Cannot make directory, '{}' exists but is not a directory", dirname));
+                throw runtime_error(format("cannot make directory, '{}' exists but is not a directory", dirname));
         }
         else
         {

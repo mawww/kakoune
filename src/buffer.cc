@@ -167,7 +167,7 @@ bool Buffer::set_name(String name)
 void Buffer::throw_if_read_only() const
 {
     if (m_flags & Flags::ReadOnly)
-        throw runtime_error("Buffer is read-only");
+        throw runtime_error("buffer is read-only");
 }
 
 void Buffer::update_display_name()

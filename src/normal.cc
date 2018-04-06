@@ -1442,7 +1442,7 @@ void start_or_end_macro_recording(Context& context, NormalParams params)
     {
         const char reg = to_lower(params.reg ? params.reg : '@');
         if (not is_basic_alpha(reg) and reg != '@')
-            throw runtime_error("Macros can only use the '@' and alphabetic registers");
+            throw runtime_error("macros can only use the '@' and alphabetic registers");
         context.input_handler().start_recording(reg);
     }
 }
@@ -1457,7 +1457,7 @@ void replay_macro(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '@');
     if (not is_basic_alpha(reg) and reg != '@')
-        throw runtime_error("Macros can only use the '@' and alphabetic registers");
+        throw runtime_error("macros can only use the '@' and alphabetic registers");
 
     static bool running_macros[27] = {};
     const size_t idx = reg != '@' ? (size_t)(reg - 'a') : 26;
@@ -1466,7 +1466,7 @@ void replay_macro(Context& context, NormalParams params)
 
     ConstArrayView<String> reg_val = RegisterManager::instance()[reg].get(context);
     if (reg_val.empty() or reg_val[0].empty())
-        throw runtime_error(format("Register '{}' is empty", reg));
+        throw runtime_error(format("register '{}' is empty", reg));
 
     running_macros[idx] = true;
     auto stop = on_scope_end([&]{ running_macros[idx] = false; });
@@ -1675,14 +1675,14 @@ SelectionList read_selections_from_register(char reg, Context& context)
     auto content = RegisterManager::instance()[reg].get(context);
 
     if (content.size() != 1)
-        throw runtime_error(format("Register {} does not contain a selections desc", reg));
+        throw runtime_error(format("register '{}' does not contain a selections desc", reg));
 
     StringView desc = content[0];
     auto arobase = find(desc, '@');
     auto percent = find(desc, '%');
 
     if (arobase == desc.end() or percent == desc.end())
-        throw runtime_error(format("Register {} does not contain a selections desc", reg));
+        throw runtime_error(format("register '{}' does not contain a selections desc", reg));
 
     Buffer& buffer = BufferManager::instance().get_buffer({arobase+1, percent});
     size_t timestamp = str_to_int({percent + 1, desc.end()});
@@ -1691,7 +1691,7 @@ SelectionList read_selections_from_register(char reg, Context& context)
                                                   | transform(selection_from_string)
                                                   | gather<Vector<Selection>>();
     if (sels.empty())
-        throw runtime_error(format("Register {} contains an empty selection list", reg));
+        throw runtime_error(format("register '{}' contains an empty selection list", reg));
 
     return {SelectionList::UnsortedTag{}, buffer, std::move(sels), timestamp};
 }
@@ -1719,7 +1719,7 @@ CombineOp key_to_combine_op(Key key)
         case '+': return CombineOp::SelectLongest;
         case '-': return CombineOp::SelectShortest;
     }
-    throw runtime_error{format("unknown combine operator '{}'", key.key)};
+    throw runtime_error{format("no such combine operator: '{}'", key.key)};
 }
 
 void combine_selection(const Buffer& buffer, Selection& sel, const Selection& other, CombineOp op)
@@ -1779,7 +1779,7 @@ void combine_selections(Context& context, SelectionList list, Func func)
                                  else
                                  {
                                      if (list.size() != sels.size())
-                                         throw runtime_error{format("The two selection lists don't have the same number of elements ({} vs {})",
+                                         throw runtime_error{format("the two selection lists don't have the same number of elements ({} vs {})",
                                                                     list.size(), sels.size())};
                                      for (int i = 0; i < list.size(); ++i)
                                          combine_selection(sels.buffer(), list[i], sels[i], op);
@@ -1994,7 +1994,7 @@ void remove_selection(Context& context, NormalParams p)
     if (index >= selections.size())
         throw runtime_error{format("invalid selection index: {}", index)};
     if (selections.size() == 1)
-        throw runtime_error{"Cannot remove the last selection"};
+        throw runtime_error{"cannot remove the last selection"};
 
     selections.remove(index);
     selections.check_invariant();
