@@ -108,6 +108,7 @@ auto filename_completer = make_completer(
                                             context.options()["ignored_files"].get<Regex>(),
                                             cursor_pos, FilenameFlags::Expand) }; });
 
+template<bool ignore_current = false>
 static Completions complete_buffer_name(const Context& context, CompletionFlags flags,
                                         StringView prefix, ByteCount cursor_pos)
 {
@@ -127,6 +128,9 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
     Vector<RankedMatchAndBuffer> matches;
     for (const auto& buffer : BufferManager::instance())
     {
+        if (ignore_current and buffer.get() == &context.buffer())
+            continue;
+
         StringView bufname = buffer->display_name();
         if (buffer->flags() & Buffer::Flags::File)
         {
@@ -151,7 +155,8 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
     return { 0, cursor_pos, res };
 }
 
-auto buffer_completer = make_completer(complete_buffer_name);
+auto buffer_completer = make_completer(complete_buffer_name<false>);
+auto other_buffer_completer = make_completer(complete_buffer_name<true>);
 
 const ParameterDesc no_params{ {}, ParameterDesc::Flags::None, 0, 0 };
 const ParameterDesc single_param{ {}, ParameterDesc::Flags::None, 1, 1 };
@@ -521,7 +526,7 @@ const CommandDesc buffer_cmd = {
     single_param,
     CommandFlags::None,
     CommandHelper{},
-    buffer_completer,
+    other_buffer_completer,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         Buffer& buffer = BufferManager::instance().get_buffer(parser[0]);
@@ -1788,7 +1793,7 @@ const CommandDesc prompt_cmd = {
                           ClientManager::instance().complete_client_name(prefix, cursor_pos) };
             };
         else if (parser.get_switch("buffer-completion"))
-            completer = complete_buffer_name;
+            completer = complete_buffer_name<false>;
         else if (parser.get_switch("command-completion"))
             completer = [](const Context& context, CompletionFlags flags,
                            StringView prefix, ByteCount cursor_pos) -> Completions {
