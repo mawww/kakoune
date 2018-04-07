@@ -24,25 +24,6 @@
 namespace Kakoune
 {
 
-enum class MessageType : uint8_t
-{
-    Unknown,
-    Connect,
-    Command,
-    MenuShow,
-    MenuSelect,
-    MenuHide,
-    InfoShow,
-    InfoHide,
-    Draw,
-    DrawStatus,
-    SetCursor,
-    Refresh,
-    SetOptions,
-    Exit,
-    Key,
-};
-
 class MsgWriter
 {
 public:
@@ -673,16 +654,29 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
     }});
 }
 
-void send_command(StringView session, StringView command)
+Optional<String> send_message(StringView session, StringView command, MessageType type)
 {
     int sock = connect_to(session);
     auto close_sock = on_scope_end([sock]{ close(sock); });
     RemoteBuffer buffer;
     {
-        MsgWriter msg{buffer, MessageType::Command};
+        MsgWriter msg{buffer, type};
         msg.write(command);
     }
-    write(sock, {buffer.data(), buffer.data() + buffer.size()});
+    send_data(sock, buffer);
+
+    Optional<String> data;
+    {
+        MsgReader msg_reader;
+
+        while (fd_readable(sock) and not msg_reader.ready())
+            msg_reader.read_available(sock);
+
+        if (msg_reader.type() == MessageType::String)
+            data = msg_reader.read<String>();
+    }
+
+    return data;
 }
 
 
@@ -748,6 +742,27 @@ private:
                     write_to_debug_buffer(format("error running command '{}': {}",
                                                  command, e.what()));
                 }
+                close(sock);
+                Server::instance().remove_accepter(this);
+                break;
+            }
+            case MessageType::Format:
+            {
+                RemoteBuffer buffer;
+                auto format_str = m_reader.read<String>();
+                if (not format_str.empty()) try
+                {
+                    MsgWriter writer{buffer, MessageType::String};
+                    Context context{Context::EmptyContextFlag{}};
+                    auto formatted = expand(format_str, context);
+                    writer.write(formatted);
+                }
+                catch (const runtime_error& e)
+                {
+                    write_to_debug_buffer(format("error expanding format '{}': {}",
+                                                 format_str, e.what()));
+                }
+                send_data(sock, buffer);
                 close(sock);
                 Server::instance().remove_accepter(this);
                 break;
