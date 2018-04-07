@@ -20,53 +20,53 @@
 
     echo "
         # code
-        face value              ${cyan}
-        face type               ${yellow}
-        face variable           ${blue}
-        face module             ${cyan}
-        face function           ${blue}
-        face string             ${cyan}
-        face keyword            ${green}
-        face operator           ${green}
-        face attribute          ${violet}
-        face comment            ${base1}
-        face meta               ${orange}
-        face builtin            default+b
+        face global value              ${cyan}
+        face global type               ${yellow}
+        face global variable           ${blue}
+        face global module             ${cyan}
+        face global function           ${blue}
+        face global string             ${cyan}
+        face global keyword            ${green}
+        face global operator           ${green}
+        face global attribute          ${violet}
+        face global comment            ${base1}
+        face global meta               ${orange}
+        face global builtin            default+b
 
         # markup
-        face title              ${blue}+b
-        face header             ${blue}
-        face bold               ${base01}+b
-        face italic             ${base01}+i
-        face mono               ${base1}
-        face block              ${cyan}
-        face link               ${base01}
-        face bullet             ${yellow}
-        face list               ${green}
+        face global title              ${blue}+b
+        face global header             ${blue}
+        face global bold               ${base01}+b
+        face global italic             ${base01}+i
+        face global mono               ${base1}
+        face global block              ${cyan}
+        face global link               ${base01}
+        face global bullet             ${yellow}
+        face global list               ${green}
 
         # builtin
-        face Default            ${base00},${base3}
-        face PrimarySelection   ${base3},${blue}
-        face SecondarySelection ${base1},${base01}
-        face PrimaryCursor      ${base3},${base00}
-        face SecondaryCursor    ${base3},${base1}
-        face PrimaryCursorEol   ${base3},${yellow}
-        face SecondaryCursorEol ${base3},${orange}
-        face LineNumbers        ${base1},${base2}
-        face LineNumberCursor   ${base01},${base2}
-        face LineNumbersWrapped ${base2},${base2}
-        face MenuForeground     ${base3},${yellow}
-        face MenuBackground     ${base01},${base2}
-        face MenuInfo           ${base1}
-        face Information        ${base2},${base1}
-        face Error              ${red},default+b
-        face StatusLine         ${base01},${base2}+b
-        face StatusLineMode     ${orange}
-        face StatusLineInfo     ${cyan}
-        face StatusLineValue    ${green}
-        face StatusCursor       ${base0},${base03}
-        face Prompt             ${yellow}+b
-        face MatchingChar       ${red},${base2}+b
-        face BufferPadding      ${base1},${base3}
+        face global Default            ${base00},${base3}
+        face global PrimarySelection   ${base3},${blue}
+        face global SecondarySelection ${base1},${base01}
+        face global PrimaryCursor      ${base3},${base00}
+        face global SecondaryCursor    ${base3},${base1}
+        face global PrimaryCursorEol   ${base3},${yellow}
+        face global SecondaryCursorEol ${base3},${orange}
+        face global LineNumbers        ${base1},${base2}
+        face global LineNumberCursor   ${base01},${base2}
+        face global LineNumbersWrapped ${base2},${base2}
+        face global MenuForeground     ${base3},${yellow}
+        face global MenuBackground     ${base01},${base2}
+        face global MenuInfo           ${base1}
+        face global Information        ${base2},${base1}
+        face global Error              ${red},default+b
+        face global StatusLine         ${base01},${base2}+b
+        face global StatusLineMode     ${orange}
+        face global StatusLineInfo     ${cyan}
+        face global StatusLineValue    ${green}
+        face global StatusCursor       ${base0},${base03}
+        face global Prompt             ${yellow}+b
+        face global MatchingChar       ${red},${base2}+b
+        face global BufferPadding      ${base1},${base3}
     "
 }

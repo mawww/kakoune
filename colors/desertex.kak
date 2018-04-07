@@ -1,79 +1,79 @@
 # desertex theme
 
 # Code
-face value      rgb:fa8072
-face type       rgb:dfdfbf
-face identifier rgb:87ceeb
-face string     rgb:fa8072
-face error      rgb:c3bf9f+b
-face keyword    rgb:eedc82
-face operator   rgb:87ceeb
-face attribute  rgb:eedc82
-face comment    rgb:7ccd7c+i
+face global value      rgb:fa8072
+face global type       rgb:dfdfbf
+face global identifier rgb:87ceeb
+face global string     rgb:fa8072
+face global error      rgb:c3bf9f+b
+face global keyword    rgb:eedc82
+face global operator   rgb:87ceeb
+face global attribute  rgb:eedc82
+face global comment    rgb:7ccd7c+i
 
 # #include <...>
-face meta rgb:ee799f
+face global meta rgb:ee799f
 
 # Markup
-face title  blue
-face header cyan
-face bold   red
-face italic yellow
-face mono   green
-face block  magenta
-face link   cyan
-face bullet cyan
-face list   yellow
+face global title  blue
+face global header cyan
+face global bold   red
+face global italic yellow
+face global mono   green
+face global block  magenta
+face global link   cyan
+face global bullet cyan
+face global list   yellow
 
 # Builtin
 # fg,bg+attributes
-# face Default default,rgb:262626 <- change the terminal bg color instead
-face Default default,default
+# face global Default default,rgb:262626 <- change the terminal bg color instead
+face global Default default,default
 
-face PrimarySelection   white,blue
-face SecondarySelection black,blue
+face global PrimarySelection   white,blue
+face global SecondarySelection black,blue
 
-face PrimaryCursor   black,white
-face SecondaryCursor black,white
+face global PrimaryCursor   black,white
+face global SecondaryCursor black,white
 
-face PrimaryCursorEol   black,rgb:7ccd7c
-face SecondaryCursorEol black,rgb:7ccd7c
+face global PrimaryCursorEol   black,rgb:7ccd7c
+face global SecondaryCursorEol black,rgb:7ccd7c
 
-face LineNumbers      rgb:605958
-face LineNumberCursor yellow,default+b
+face global LineNumbers      rgb:605958
+face global LineNumberCursor yellow,default+b
 
 # Bottom menu:
 # text + background
-face MenuBackground black,rgb:c2bfa5+b
+face global MenuBackground black,rgb:c2bfa5+b
 # selected entry in the menu (use 302028 when true color support is fixed)
-face MenuForeground rgb:f0a0c0,magenta
+face global MenuForeground rgb:f0a0c0,magenta
 
 # completion menu info
-face MenuInfo white,rgb:445599
+face global MenuInfo white,rgb:445599
 
 # assistant, [+]
-face Information black,yellow
+face global Information black,yellow
 
-face Error      white,red
-face StatusLine cyan,default
+face global Error      white,red
+face global StatusLine cyan,default
 
 # Status line modes and prompts:
 # insert, prompt, enter key...
-face StatusLineMode rgb:ffd75f,default
+face global StatusLineMode rgb:ffd75f,default
 
 # 1 sel
-face StatusLineInfo blue,default
+face global StatusLineInfo blue,default
 
 # param=value, reg=value. ex: "ey
-face StatusLineValue green,default
+face global StatusLineValue green,default
 
-face StatusCursor black,cyan
+face global StatusCursor black,cyan
 
 # :
-face Prompt blue
+face global Prompt blue
 
 # (), {}
-face MatchingChar cyan+b
+face global MatchingChar cyan+b
 
 # EOF tildas (~)
-face BufferPadding blue,default
+face global BufferPadding blue,default

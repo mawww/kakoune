@@ -71,63 +71,62 @@ String to_string(Face face)
     return format("{},{}{}", face.fg, face.bg, face.attributes);
 }
 
-Face FaceRegistry::operator[](StringView facedesc)
+Face FaceRegistry::operator[](StringView facedesc) const
 {
-    auto it = m_aliases.find(facedesc);
-    while (it != m_aliases.end())
+    auto it = m_faces.find(facedesc);
+    if (it != m_faces.end())
     {
         if (it->value.alias.empty())
             return it->value.face;
-        it = m_aliases.find(it->value.alias);
+        return operator[](it->value.alias);
     }
+    if (m_parent)
+        return (*m_parent)[facedesc];
     return parse_face(facedesc);
 }
 
-void FaceRegistry::register_alias(StringView name, StringView facedesc,
-                                  bool override)
+void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
 {
-    if (not override and m_aliases.find(name) != m_aliases.end())
-        throw runtime_error(format("alias '{}' already defined", name));
+    if (not override and m_faces.find(name) != m_faces.end())
+        throw runtime_error(format("face '{}' already defined", name));
 
     if (name.empty() or is_color_name(name) or
         std::any_of(name.begin(), name.end(),
                     [](char c){ return not isalnum(c); }))
-        throw runtime_error(format("invalid alias name: '{}'", name));
+        throw runtime_error(format("invalid face name: '{}'", name));
 
     if (name == facedesc)
         throw runtime_error(format("cannot alias face '{}' to itself", name));
 
-    FaceOrAlias& alias = m_aliases[name];
-    auto it = m_aliases.find(facedesc);
-    if (it != m_aliases.end())
+    FaceOrAlias& face = m_faces[name];
+    auto it = m_faces.find(facedesc);
+    if (it != m_faces.end())
     {
-        while (it != m_aliases.end())
+        while (it != m_faces.end())
         {
             if (it->value.alias.empty())
                 break;
             if (it->value.alias == name)
                 throw runtime_error("face cycle detected");
-            it = m_aliases.find(it->value.alias);
+            it = m_faces.find(it->value.alias);
         }
 
-        alias.alias = facedesc.str();
+        face.alias = facedesc.str();
     }
     else
     {
-        alias.alias = "";
-        alias.face = parse_face(facedesc);
+        face.alias = "";
+        face.face = parse_face(facedesc);
     }
 }
 
-CandidateList FaceRegistry::complete_alias_name(StringView prefix,
-                                                ByteCount cursor_pos) const
+void FaceRegistry::remove_face(StringView name)
 {
-    return complete(prefix, cursor_pos,
-                    m_aliases | transform(&AliasMap::Item::key));
+    m_faces.remove(name);
 }
 
 FaceRegistry::FaceRegistry()
-    : m_aliases{
+    : m_faces{
         { "Default", {Face{ Color::Default, Color::Default }} },
         { "PrimarySelection", {Face{ Color::White, Color::Blue }} },
         { "SecondarySelection", {Face{ Color::Black, Color::Blue }} },

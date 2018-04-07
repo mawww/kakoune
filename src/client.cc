@@ -96,7 +96,8 @@ bool Client::process_pending_inputs()
         catch (Kakoune::runtime_error& error)
         {
             write_to_debug_buffer(format("Error: {}", error.what()));
-            context().print_status({ fix_atom_text(error.what().str()), get_face("Error") });
+            context().print_status({ fix_atom_text(error.what().str()),
+                                     context().faces()["Error"] });
             context().hooks().run_hook("RuntimeError", error.what(), context());
         }
     }
@@ -142,15 +143,16 @@ DisplayLine Client::generate_mode_line() const
     {
         const String& modelinefmt = context().options()["modelinefmt"].get<String>();
         HashMap<String, DisplayLine> atoms{{ "mode_info", context().client().input_handler().mode_line() },
-                                           { "context_info", {generate_context_info(context()), get_face("Information")}}};
+                                           { "context_info", {generate_context_info(context()),
+                                                              context().faces()["Information"]}}};
         auto expanded = expand(modelinefmt, context(), ShellContext{},
                                [](String s) { return escape(s, '{', '\\'); });
-        modeline = parse_display_line(expanded, atoms);
+        modeline = parse_display_line(expanded, context().faces(), atoms);
     }
     catch (runtime_error& err)
     {
         write_to_debug_buffer(format("Error while parsing modelinefmt: {}", err.what()));
-        modeline.push_back({ "modelinefmt error, see *debug* buffer", get_face("Error") });
+        modeline.push_back({ "modelinefmt error, see *debug* buffer", context().faces()["Error"] });
     }
 
     return modeline;
@@ -207,9 +209,11 @@ void Client::redraw_ifn()
     if (m_ui_pending == 0)
         return;
 
+    auto& faces = context().faces();
+
     if (m_ui_pending & Draw)
         m_ui->draw(window.update_display_buffer(context()),
-                   get_face("Default"), get_face("BufferPadding"));
+                   faces["Default"], faces["BufferPadding"]);
 
     const bool update_menu_anchor = (m_ui_pending & Draw) and not (m_ui_pending & MenuHide) and
                                     not m_menu.items.empty() and m_menu.style == MenuStyle::Inline;
@@ -224,7 +228,7 @@ void Client::redraw_ifn()
 
     if (m_ui_pending & MenuShow and m_menu.ui_anchor)
         m_ui->menu_show(m_menu.items, *m_menu.ui_anchor,
-                        get_face("MenuForeground"), get_face("MenuBackground"),
+                        faces["MenuForeground"], faces["MenuBackground"],
                         m_menu.style);
     if (m_ui_pending & MenuSelect and m_menu.ui_anchor)
         m_ui->menu_select(m_menu.selected);
@@ -244,12 +248,12 @@ void Client::redraw_ifn()
 
     if (m_ui_pending & InfoShow and m_info.ui_anchor)
         m_ui->info_show(m_info.title, m_info.content, *m_info.ui_anchor,
-                        get_face("Information"), m_info.style);
+                        faces["Information"], m_info.style);
     if (m_ui_pending & InfoHide)
         m_ui->info_hide();
 
     if (m_ui_pending & StatusLine)
-        m_ui->draw_status(m_status_line, m_mode_line, get_face("StatusLine"));
+        m_ui->draw_status(m_status_line, m_mode_line, faces["StatusLine"]);
 
     auto cursor = m_input_handler.get_cursor_info();
     m_ui->set_cursor(cursor.first, cursor.second);
@@ -272,12 +276,12 @@ void Client::reload_buffer()
     {
         reload_file_buffer(buffer);
         context().print_status({ format("'{}' reloaded", buffer.display_name()),
-                                 get_face("Information") });
+                                 context().faces()["Information"] });
     }
     catch (runtime_error& error)
     {
         context().print_status({ format("error while reloading buffer: '{}'", error.what()),
-                                 get_face("Error") });
+                                 context().faces()["Error"] });
         buffer.set_fs_timestamp(get_fs_timestamp(buffer.name()));
     }
 }
@@ -305,14 +309,14 @@ void Client::on_buffer_reload_key(Key key)
         // reread timestamp in case the file was modified again
         buffer.set_fs_timestamp(get_fs_timestamp(buffer.name()));
         print_status({ format("'{}' kept", buffer.display_name()),
-                       get_face("Information") });
+                       context().faces()["Information"] });
         if (key == 'N')
             set_autoreload(Autoreload::No);
     }
     else
     {
         print_status({ format("'{}' is not a valid choice", key_to_str(key)),
-                       get_face("Error") });
+                       context().faces()["Error"] });
         m_input_handler.on_next_key(KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
         return;
     }

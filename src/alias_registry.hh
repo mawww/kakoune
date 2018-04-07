@@ -33,7 +33,7 @@ public:
 
 private:
     friend class Scope;
-    AliasRegistry() {}
+    AliasRegistry() = default;
 
     SafePtr<AliasRegistry> m_parent;
     using AliasMap = HashMap<String, String, MemoryDomain::Aliases>;

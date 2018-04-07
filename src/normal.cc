@@ -444,7 +444,7 @@ void command(Context& context, NormalParams params)
 
     context.input_handler().prompt(
         ":", {}, context.main_sel_register_value(':').str(),
-        get_face("Prompt"), PromptFlags::DropHistoryEntriesWithBlankPrefix,
+        context.faces()["Prompt"], PromptFlags::DropHistoryEntriesWithBlankPrefix,
         [](const Context& context, CompletionFlags flags,
            StringView cmd_line, ByteCount pos) {
                return CommandManager::instance().complete(context, flags, cmd_line, pos);
@@ -456,7 +456,7 @@ void command(Context& context, NormalParams params)
                 if (event == PromptEvent::Change)
                 {
                     auto info = CommandManager::instance().command_info(context, cmdline);
-                    context.input_handler().set_prompt_face(get_face(info ? "Prompt" : "Error"));
+                    context.input_handler().set_prompt_face(context.faces()[info ? "Prompt" : "Error"]);
 
                     auto autoinfo = context.options()["autoinfo"].get<AutoInfo>();
                     if (autoinfo & AutoInfo::Command)
@@ -524,7 +524,7 @@ void pipe(Context& context, NormalParams)
 {
     const char* prompt = replace ? "pipe:" : "pipe-to:";
     context.input_handler().prompt(
-        prompt, {}, context.main_sel_register_value("|").str(), get_face("Prompt"),
+        prompt, {}, context.main_sel_register_value("|").str(), context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix,
         shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context)
@@ -599,7 +599,7 @@ void insert_output(Context& context, NormalParams)
 {
     const char* prompt = mode == InsertMode::Insert ? "insert-output:" : "append-output:";
     context.input_handler().prompt(
-        prompt, {}, context.main_sel_register_value("|").str(), get_face("Prompt"),
+        prompt, {}, context.main_sel_register_value("|").str(), context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix,
         shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context)
@@ -628,7 +628,7 @@ void yank(Context& context, NormalParams params)
     RegisterManager::instance()[reg].set(context, context.selections_content());
     context.print_status({ format("yanked {} selections to register {}",
                                   context.selections().size(), reg),
-                           get_face("Information") });
+                           context.faces()["Information"] });
 }
 
 template<bool yank>
@@ -733,7 +733,7 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
     DisplayCoord position = context.has_window() ? context.window().position() : DisplayCoord{};
     SelectionList selections = context.selections();
     context.input_handler().prompt(
-        std::move(prompt), {}, default_regex, get_face("Prompt"),
+        std::move(prompt), {}, default_regex, context.faces()["Prompt"],
         PromptFlags::None, complete_nothing,
         [=](StringView str, PromptEvent event, Context& context) mutable {
             try
@@ -749,7 +749,7 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
                     if (context.has_window())
                         context.window().set_position(position);
 
-                    context.input_handler().set_prompt_face(get_face("Prompt"));
+                    context.input_handler().set_prompt_face(context.faces()["Prompt"]);
                 }
 
                 if (not incsearch and event == PromptEvent::Change)
@@ -766,7 +766,7 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
                 if (event == PromptEvent::Validate)
                     throw;
                 else
-                    context.input_handler().set_prompt_face(get_face("Error"));
+                    context.input_handler().set_prompt_face(context.faces()["Error"]);
             }
             catch (runtime_error&)
             {
@@ -852,7 +852,7 @@ void search_next(Context& context, NormalParams params)
         } while (--params.count > 0);
 
         if (main_wrapped)
-            context.print_status({"main selection search wrapped around buffer", get_face("Information")});
+            context.print_status({"main selection search wrapped around buffer", context.faces()["Information"]});
     }
     else
         throw runtime_error("no search pattern");
@@ -877,7 +877,7 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
 
     context.print_status({
         format("register '{}' set to '{}'", reg, fix_atom_text(patterns[sels.main_index()])),
-        get_face("Information") });
+        context.faces()["Information"] });
 
     RegisterManager::instance()[reg].set(context, patterns);
 
@@ -1059,7 +1059,7 @@ void keep(Context& context, NormalParams params)
 void keep_pipe(Context& context, NormalParams)
 {
     context.input_handler().prompt(
-        "keep pipe:", {}, {}, get_face("Prompt"),
+        "keep pipe:", {}, {}, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context) {
             if (event != PromptEvent::Validate)
@@ -1216,7 +1216,7 @@ void select_object(Context& context, NormalParams params)
                 AutoInfo::Command, context);
 
             context.input_handler().prompt(
-                "object desc:", {}, {}, get_face("Prompt"),
+                "object desc:", {}, {}, context.faces()["Prompt"],
                 PromptFlags::None, complete_nothing,
                 [count,info](StringView cmdline, PromptEvent event, Context& context) {
                     if (event != PromptEvent::Change)
@@ -1499,7 +1499,7 @@ void push_selections(Context& context, NormalParams)
 {
     context.push_jump();
     context.print_status({ format("saved {} selections", context.selections().size()),
-                           get_face("Information") });
+                           context.faces()["Information"] });
 }
 
 void align(Context& context, NormalParams)
@@ -1813,7 +1813,7 @@ void save_selections(Context& context, NormalParams params)
         RegisterManager::instance()[reg].set(context, desc);
         context.print_status({format("{} {} selections to register '{}'",
                                      combine ? "Combined" : "Saved", sels.size(), reg),
-                              get_face("Information")});
+                              context.faces()["Information"]});
     };
 
     if (combine and not empty)
@@ -1833,7 +1833,7 @@ void restore_selections(Context& context, NormalParams params)
         context.selections_write_only() = std::move(sels);
         context.print_status({format("{} {} selections from register '{}'",
                                      combine ? "Combined" : "Restored", size, reg),
-                              get_face("Information")});
+                              context.faces()["Information"]});
     };
 
     if (not combine)
@@ -1890,7 +1890,7 @@ void move_in_history(Context& context, NormalParams params)
 
         context.print_status({ format("moved to change #{} ({})",
                                history_id, max_history_id),
-                               get_face("Information") });
+                               context.faces()["Information"] });
     }
     else
         throw runtime_error(format("no such change: #{} ({})",

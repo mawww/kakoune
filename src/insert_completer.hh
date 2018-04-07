@@ -13,6 +13,7 @@ namespace Kakoune
 
 struct SelectionList;
 struct Key;
+class FaceRegistry;
 
 struct InsertCompleterDesc
 {
@@ -100,12 +101,15 @@ private:
 
     void menu_show();
 
-    Context&         m_context;
-    OptionManager&   m_options;
-    InsertCompletion m_completions;
-    int              m_current_candidate = -1;
+    Context&            m_context;
+    OptionManager&      m_options;
+    const FaceRegistry& m_faces;
+    InsertCompletion    m_completions;
+    int                 m_current_candidate = -1;
 
-    using CompleteFunc = InsertCompletion (const SelectionList& sels, const OptionManager& options);
+    using CompleteFunc = InsertCompletion (const SelectionList& sels,
+                                           const OptionManager& options,
+                                           const FaceRegistry& faces);
     CompleteFunc* m_explicit_completer = nullptr;
 };
 

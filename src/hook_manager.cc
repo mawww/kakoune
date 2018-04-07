@@ -133,7 +133,7 @@ void HookManager::run_hook(StringView hook_name, StringView param, Context& cont
     if (hook_error)
         context.print_status({
             format("Error running hooks for '{}' '{}', see *debug* buffer",
-                   hook_name, param), get_face("Error") });
+                   hook_name, param), context.faces()["Error"] });
 
     if (profile)
     {

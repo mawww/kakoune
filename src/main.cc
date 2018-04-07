@@ -50,7 +50,8 @@ static const char* startup_info =
 " * selections merging behaviour is now a bit more complex again\n"
 " * 'x' will only jump to next line if full line is already selected\n"
 " * WORD text object moved to <a-w> instead of W for consistency\n"
-" * rotate main selection moved to ), rotate content to <a-)>, ( for backward\n";
+" * rotate main selection moved to ), rotate content to <a-)>, ( for backward\n"
+" * faces are now scoped, set-face command takes an additional scope parameter\n";
 
 struct startup_error : runtime_error
 {
@@ -585,7 +586,6 @@ int run_server(StringView session, StringView server_init,
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
     DefinedHighlighters defined_highlighters;
-    FaceRegistry        face_registry;
     ClientManager       client_manager;
     BufferManager       buffer_manager;
 
@@ -667,7 +667,7 @@ int run_server(StringView session, StringView server_init,
             if (startup_error)
                 local_client->print_status({
                     "error during startup, see *debug* buffer for details",
-                    get_face("Error")
+                    local_client->context().faces()["Error"]
                 });
 
             if (flags & ServerFlags::StartupInfo)

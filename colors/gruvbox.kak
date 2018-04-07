@@ -24,52 +24,52 @@
 
     echo "
         # Code highlighting
-        face value     ${purple}
-        face type      ${yellow}
-        face variable  ${blue}
-        face module    ${green}
-        face function  default
-        face string    ${green}
-        face keyword   ${red}
-        face operator  default
-        face attribute ${orange}
-        face comment   ${gray}
-        face meta      ${aqua}
-        face builtin   default+b
+        face global value     ${purple}
+        face global type      ${yellow}
+        face global variable  ${blue}
+        face global module    ${green}
+        face global function  default
+        face global string    ${green}
+        face global keyword   ${red}
+        face global operator  default
+        face global attribute ${orange}
+        face global comment   ${gray}
+        face global meta      ${aqua}
+        face global builtin   default+b
 
         # Markdown highlighting
-        face title     ${green}+b
-        face header    ${orange}
-        face bold      ${fg}+b
-        face italic    ${fg3}
-        face mono      ${fg4}
-        face block     default
-        face link      default
-        face bullet    default
-        face list      default
+        face global title     ${green}+b
+        face global header    ${orange}
+        face global bold      ${fg}+b
+        face global italic    ${fg3}
+        face global mono      ${fg4}
+        face global block     default
+        face global link      default
+        face global bullet    default
+        face global list      default
 
-        face Default            ${fg},${bg}
-        face PrimarySelection   ${fg},${blue}
-        face SecondarySelection ${bg},${blue}
-        face PrimaryCursor      ${bg},${fg}
-        face SecondaryCursor    ${bg},${fg}
-        face PrimaryCursorEol   ${bg},${fg4}
-        face SecondaryCursorEol ${bg},${fg4}
-        face LineNumbers        ${bg4}
-        face LineNumberCursor   ${yellow},${bg1}
-        face MenuForeground     ${bg2},${blue}
-        face MenuBackground     default,${bg2}
-        face MenuInfo           ${bg}
-        face Information        ${bg},${fg}
-        face Error              default,${red}
-        face StatusLine         default
-        face StatusLineMode     ${yellow}+b
-        face StatusLineInfo     ${purple}
-        face StatusLineValue    ${red}
-        face StatusCursor       ${bg},${fg}
-        face Prompt             ${yellow}
-        face MatchingChar       default+b
-        face BufferPadding      ${bg2},${bg}
-        face Whitespace         ${bg2}
+        face global Default            ${fg},${bg}
+        face global PrimarySelection   ${fg},${blue}
+        face global SecondarySelection ${bg},${blue}
+        face global PrimaryCursor      ${bg},${fg}
+        face global SecondaryCursor    ${bg},${fg}
+        face global PrimaryCursorEol   ${bg},${fg4}
+        face global SecondaryCursorEol ${bg},${fg4}
+        face global LineNumbers        ${bg4}
+        face global LineNumberCursor   ${yellow},${bg1}
+        face global MenuForeground     ${bg2},${blue}
+        face global MenuBackground     default,${bg2}
+        face global MenuInfo           ${bg}
+        face global Information        ${bg},${fg}
+        face global Error              default,${red}
+        face global StatusLine         default
+        face global StatusLineMode     ${yellow}+b
+        face global StatusLineInfo     ${purple}
+        face global StatusLineValue    ${red}
+        face global StatusCursor       ${bg},${fg}
+        face global Prompt             ${yellow}
+        face global MatchingChar       default+b
+        face global BufferPadding      ${bg2},${bg}
+        face global Whitespace         ${bg2}
     "
 }

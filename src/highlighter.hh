@@ -65,25 +65,15 @@ struct Highlighter
     Highlighter(HighlightPass passes) : m_passes{passes} {}
     virtual ~Highlighter() = default;
 
-    void highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range)
-    {
-        if (context.pass & m_passes)
-            do_highlight(context, display_buffer, range);
-    }
+    void highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range);
+    void compute_display_setup(HighlightContext context, DisplaySetup& setup) const;
 
-    void compute_display_setup(HighlightContext context, DisplaySetup& setup) const
-    {
-        if (context.pass & m_passes)
-            do_compute_display_setup(context, setup);
-    }
-
-    virtual bool has_children() const { return false; }
-    virtual Highlighter& get_child(StringView path) { throw runtime_error("this highlighter do not hold children"); }
-    virtual void add_child(HighlighterAndId&& hl) { throw runtime_error("this highlighter do not hold children"); }
-    virtual void remove_child(StringView id) { throw runtime_error("this highlighter do not hold children"); }
-    virtual Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const { throw runtime_error("this highlighter do not hold children"); }
-
-    virtual void fill_unique_ids(Vector<StringView>& unique_ids) const {}
+    virtual bool has_children() const;
+    virtual Highlighter& get_child(StringView path);
+    virtual void add_child(HighlighterAndId&& hl);
+    virtual void remove_child(StringView id);
+    virtual Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const;
+    virtual void fill_unique_ids(Vector<StringView>& unique_ids) const;
 
     HighlightPass passes() const { return m_passes; }
 

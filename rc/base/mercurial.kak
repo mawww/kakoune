@@ -4,7 +4,7 @@
 # Faces
 # ‾‾‾‾‾
 
-set-face MercurialCommitComment cyan
+set-face global MercurialCommitComment cyan
 
 # Detection
 # ‾‾‾‾‾‾‾‾‾

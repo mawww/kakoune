@@ -3,6 +3,7 @@
 #include "assert.hh"
 #include "buffer.hh"
 #include "buffer_utils.hh"
+#include "face_registry.hh"
 #include "utf8.hh"
 
 #include "face_registry.hh"
@@ -241,7 +242,7 @@ void DisplayBuffer::optimize()
         line.optimize();
 }
 
-DisplayLine parse_display_line(StringView line, const HashMap<String, DisplayLine>& builtins)
+DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const HashMap<String, DisplayLine>& builtins)
 {
     DisplayLine res;
     bool was_antislash = false;
@@ -278,7 +279,7 @@ DisplayLine parse_display_line(StringView line, const HashMap<String, DisplayLin
                     ++closing;
                 }
                 else
-                    face = get_face({it+1, closing});
+                    face = faces[{it+1, closing}];
                 it = closing;
                 pos = closing + 1;
             }

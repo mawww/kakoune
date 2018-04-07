@@ -268,7 +268,7 @@ std::pair<String, int> ShellManager::eval(
 
             client.print_status({ format("waiting for shell command to finish ({}s)",
                                           duration_cast<seconds>(wait_duration).count()),
-                                    get_face("Information") });
+                                    context.faces()["Information"] });
             client.redraw_ifn();
         }
         timer.set_next_date(Clock::now() + wait_timeout);

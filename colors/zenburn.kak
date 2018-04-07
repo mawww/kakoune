@@ -31,52 +31,52 @@
 
     echo "
         # then we map them to code
-        face value ${zenconstant}
-        face type ${zentype}
-        face variable ${zenvariable}
-        face module ${zenstring}
-        face function ${zenfunction}
-        face string ${zenstring}
-        face keyword ${zenkeyword}
-        face operator ${zenfunction}
-        face attribute ${zenstatement}
-        face comment ${zencomment}
-        face meta ${zenspecial}
-        face builtin default+b
+        face global value ${zenconstant}
+        face global type ${zentype}
+        face global variable ${zenvariable}
+        face global module ${zenstring}
+        face global function ${zenfunction}
+        face global string ${zenstring}
+        face global keyword ${zenkeyword}
+        face global operator ${zenfunction}
+        face global attribute ${zenstatement}
+        face global comment ${zencomment}
+        face global meta ${zenspecial}
+        face global builtin default+b
 
         # and markup
-        face title ${zenkeyword}
-        face header ${zenconstant}
-        face bold ${zenstorageClass}
-        face italic ${zenfunction}
-        face mono ${zennumber}
-        face block ${zenstatement}
-        face link ${zenstring}
-        face bullet ${zenvariable}
-        face list ${zentype}
+        face global title ${zenkeyword}
+        face global header ${zenconstant}
+        face global bold ${zenstorageClass}
+        face global italic ${zenfunction}
+        face global mono ${zennumber}
+        face global block ${zenstatement}
+        face global link ${zenstring}
+        face global bullet ${zenvariable}
+        face global list ${zentype}
 
         # and built in faces
-        face Default ${zendefault}
-        face PrimarySelection ${zentext},${zenselectionbg}
-        face SecondarySelection ${zensecondaryfg},${zenselectionbg}
-        face PrimaryCursor ${zencursor}
-        face SecondaryCursor ${zencursor}
-        face PrimaryCursorEol ${zencursoreol}
-        face SecondaryCursorEol ${zencursoreol}
-        face LineNumbers ${zendefault}
-        face LineNumberCursor ${zenstatus}
-        face MenuForeground ${zenmenufg}
-        face MenuBackground ${zenmenubg}
-        face MenuInfo rgb:cc9393
-        face Information ${zeninfo}
-        face Error default,red
-        face StatusLine ${zenstatus}
-        face StatusLineMode ${zencomment}
-        face StatusLineInfo ${zenspecial}
-        face StatusLineValue ${zennumber}
-        face StatusCursor ${zenstatuscursor}
-        face Prompt ${zenconstant}
-        face MatchingChar default+b
-        face BufferPadding ${zenpadding}
+        face global Default ${zendefault}
+        face global PrimarySelection ${zentext},${zenselectionbg}
+        face global SecondarySelection ${zensecondaryfg},${zenselectionbg}
+        face global PrimaryCursor ${zencursor}
+        face global SecondaryCursor ${zencursor}
+        face global PrimaryCursorEol ${zencursoreol}
+        face global SecondaryCursorEol ${zencursoreol}
+        face global LineNumbers ${zendefault}
+        face global LineNumberCursor ${zenstatus}
+        face global MenuForeground ${zenmenufg}
+        face global MenuBackground ${zenmenubg}
+        face global MenuInfo rgb:cc9393
+        face global Information ${zeninfo}
+        face global Error default,red
+        face global StatusLine ${zenstatus}
+        face global StatusLineMode ${zencomment}
+        face global StatusLineInfo ${zenspecial}
+        face global StatusLineValue ${zennumber}
+        face global StatusCursor ${zenstatuscursor}
+        face global Prompt ${zenconstant}
+        face global MatchingChar default+b
+        face global BufferPadding ${zenpadding}
     "
 }

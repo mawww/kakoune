@@ -24,52 +24,52 @@
 
     echo "
         # then we map them to code
-        face value ${lucius_light_green}
-        face type ${lucius_blue}
-        face variable ${lucius_green}
-        face module ${lucius_green}
-        face function ${lucius_light_blue}
-        face string ${lucius_light_green}
-        face keyword ${lucius_light_blue}
-        face operator ${lucius_green}
-        face attribute ${lucius_light_blue}
-        face comment ${lucius_grey}
-        face meta ${lucius_purple}
-        face builtin default+b
+        face global value ${lucius_light_green}
+        face global type ${lucius_blue}
+        face global variable ${lucius_green}
+        face global module ${lucius_green}
+        face global function ${lucius_light_blue}
+        face global string ${lucius_light_green}
+        face global keyword ${lucius_light_blue}
+        face global operator ${lucius_green}
+        face global attribute ${lucius_light_blue}
+        face global comment ${lucius_grey}
+        face global meta ${lucius_purple}
+        face global builtin default+b
 
         # and markup
-        face title ${lucius_light_blue}
-        face header ${lucius_light_green}
-        face bold ${lucius_blue}
-        face italic ${lucius_green}
-        face mono ${lucius_light_green}
-        face block ${lucius_light_blue}
-        face link ${lucius_light_green}
-        face bullet ${lucius_green}
-        face list ${lucius_blue}
+        face global title ${lucius_light_blue}
+        face global header ${lucius_light_green}
+        face global bold ${lucius_blue}
+        face global italic ${lucius_green}
+        face global mono ${lucius_light_green}
+        face global block ${lucius_light_blue}
+        face global link ${lucius_light_green}
+        face global bullet ${lucius_green}
+        face global list ${lucius_blue}
 
         # and built in faces
-        face Default ${lucius_lighter_grey},${lucius_darker_grey}
-        face PrimarySelection ${lucius_darker_grey},${lucius_orange}
-        face SecondarySelection  ${lucius_lighter_grey},${lucius_dark_blue}
-        face PrimaryCursor ${lucius_darker_grey},${lucius_lighter_grey}
-        face SecondaryCursor ${lucius_darker_grey},${lucius_lighter_grey}
-        face PrimaryCursorEol ${lucius_darker_grey},${lucius_dark_green}
-        face SecondaryCursorEol ${lucius_darker_grey},${lucius_dark_green}
-        face LineNumbers ${lucius_grey},${lucius_dark_grey}
-        face LineNumberCursor ${lucius_grey},${lucius_dark_grey}+b
-        face MenuForeground ${lucius_blue},${lucius_dark_blue}
-        face MenuBackground ${lucius_darker_grey},${lucius_light_grey}
-        face MenuInfo ${lucius_grey}
-        face Information ${lucius_lighter_grey},${lucius_dark_green}
-        face Error ${lucius_light_red},${lucius_dark_red}
-        face StatusLine ${lucius_lighter_grey},${lucius_dark_grey}
-        face StatusLineMode ${lucius_lighter_grey},${lucius_dark_green}+b
-        face StatusLineInfo ${lucius_dark_grey},${lucius_lighter_grey}
-        face StatusLineValue ${lucius_lighter_grey}
-        face StatusCursor default,${lucius_blue}
-        face Prompt ${lucius_lighter_grey}
-        face MatchingChar ${lucius_lighter_grey},${lucius_bright_green}
-        face BufferPadding ${lucius_green},${lucius_darker_grey}
+        face global Default ${lucius_lighter_grey},${lucius_darker_grey}
+        face global PrimarySelection ${lucius_darker_grey},${lucius_orange}
+        face global SecondarySelection  ${lucius_lighter_grey},${lucius_dark_blue}
+        face global PrimaryCursor ${lucius_darker_grey},${lucius_lighter_grey}
+        face global SecondaryCursor ${lucius_darker_grey},${lucius_lighter_grey}
+        face global PrimaryCursorEol ${lucius_darker_grey},${lucius_dark_green}
+        face global SecondaryCursorEol ${lucius_darker_grey},${lucius_dark_green}
+        face global LineNumbers ${lucius_grey},${lucius_dark_grey}
+        face global LineNumberCursor ${lucius_grey},${lucius_dark_grey}+b
+        face global MenuForeground ${lucius_blue},${lucius_dark_blue}
+        face global MenuBackground ${lucius_darker_grey},${lucius_light_grey}
+        face global MenuInfo ${lucius_grey}
+        face global Information ${lucius_lighter_grey},${lucius_dark_green}
+        face global Error ${lucius_light_red},${lucius_dark_red}
+        face global StatusLine ${lucius_lighter_grey},${lucius_dark_grey}
+        face global StatusLineMode ${lucius_lighter_grey},${lucius_dark_green}+b
+        face global StatusLineInfo ${lucius_dark_grey},${lucius_lighter_grey}
+        face global StatusLineValue ${lucius_lighter_grey}
+        face global StatusCursor default,${lucius_blue}
+        face global Prompt ${lucius_lighter_grey}
+        face global MatchingChar ${lucius_lighter_grey},${lucius_bright_green}
+        face global BufferPadding ${lucius_green},${lucius_darker_grey}
     "
 }

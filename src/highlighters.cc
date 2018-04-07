@@ -225,12 +225,10 @@ static HighlighterAndId create_fill_highlighter(HighlighterParameters params)
         throw runtime_error("wrong parameter count");
 
     const String& facespec = params[0];
-    get_face(facespec); // validate param
-
-    auto func = [=](HighlightContext, DisplayBuffer& display_buffer, BufferRange range)
+    auto func = [facespec](HighlightContext context, DisplayBuffer& display_buffer, BufferRange range)
     {
         highlight_range(display_buffer, range.begin, range.end, false,
-                        apply_face(get_face(facespec)));
+                        apply_face(context.context.faces()[facespec]));
     };
     return {"fill_" + facespec, make_highlighter(std::move(func))};
 }
@@ -278,7 +276,7 @@ public:
         for (int f = 0; f < m_faces.size(); ++f)
         {
             if (not m_faces[f].second.empty())
-                faces[f] = get_face(m_faces[f].second);
+                faces[f] = context.context.faces()[m_faces[f].second];
         }
 
         auto& matches = get_matches(context.context.buffer(), display_buffer.range(), range);
@@ -314,7 +312,6 @@ public:
             auto colon = find(spec, ':');
             if (colon == spec.end())
                 throw runtime_error(format("wrong face spec: '{}' expected <capture>:<facespec>", spec));
-            get_face({colon+1, spec.end()}); // throw if wrong face spec
             int capture = str_to_int({spec.begin(), colon});
             faces.emplace_back(capture, String{colon+1, spec.end()});
         }
@@ -495,7 +492,6 @@ HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
         if (colon == spec.end())
             throw runtime_error("wrong face spec: '" + spec +
                                  "' expected <capture>:<facespec>");
-        get_face({colon+1, spec.end()}); // throw if wrong face spec
         int capture = str_to_int({spec.begin(), colon});
         faces.emplace_back(capture, String{colon+1, spec.end()});
     }
@@ -539,12 +535,8 @@ HighlighterAndId create_line_highlighter(HighlighterParameters params)
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    String facespec = params[1];
-    String line_expr = params[0];
-
-    get_face(facespec); // validate facespec
-
-    auto func = [=](HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
+    auto func = [line_expr=params[0], facespec=params[1]]
+                (HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
     {
         LineCount line = -1;
         try
@@ -566,7 +558,7 @@ HighlighterAndId create_line_highlighter(HighlighterParameters params)
         if (it == display_buffer.lines().end())
             return;
 
-        auto face = get_face(facespec);
+        auto face = context.context.faces()[facespec];
         ColumnCount column = 0;
         for (auto& atom : *it)
         {
@@ -590,12 +582,8 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    String facespec = params[1];
-    String col_expr = params[0];
-
-    get_face(facespec); // validate facespec
-
-    auto func = [=](HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
+    auto func = [col_expr=params[0], facespec=params[1]]
+                (HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
     {
         ColumnCount column = -1;
         try
@@ -611,7 +599,7 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
         if (column < 0)
             return;
 
-        auto face = get_face(facespec);
+        auto face = context.context.faces()[facespec];
         auto win_column = context.context.window().position().column;
         for (auto& line : display_buffer.lines())
         {
@@ -937,7 +925,7 @@ void show_whitespaces(HighlightContext context, DisplayBuffer& display_buffer, B
                       StringView spc, StringView lf, StringView nbsp)
 {
     const int tabstop = context.context.options()["tabstop"].get<int>();
-    auto whitespaceface = get_face("Whitespace");
+    auto whitespaceface = context.context.faces()["Whitespace"];
     auto& buffer = context.context.buffer();
     auto win_column = context.context.window().position().column;
     for (auto& line : display_buffer.lines())
@@ -1043,9 +1031,10 @@ private:
         if (contains(context.disabled_ids, ms_id))
             return;
 
-        const Face face = get_face("LineNumbers");
-        const Face face_wrapped = get_face("LineNumbersWrapped");
-        const Face face_absolute = get_face("LineNumberCursor");
+        auto& faces = context.context.faces();
+        const Face face = faces["LineNumbers"];
+        const Face face_wrapped = faces["LineNumbersWrapped"];
+        const Face face_absolute = faces["LineNumberCursor"];
         int digit_count = compute_digit_count(context.context);
 
         char format[16];
@@ -1102,7 +1091,7 @@ constexpr StringView LineNumbersHighlighter::ms_id;
 
 void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
-    const Face face = get_face("MatchingChar");
+    const Face face = context.context.faces()["MatchingChar"];
     using CodepointPair = std::pair<Codepoint, Codepoint>;
     static const CodepointPair matching_chars[] = { { '(', ')' }, { '{', '}' }, { '[', ']' }, { '<', '>' } };
     const auto range = display_buffer.range();
@@ -1162,10 +1151,11 @@ HighlighterAndId create_matching_char_highlighter(HighlighterParameters params)
 void highlight_selections(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
     const auto& buffer = context.context.buffer();
-    const Face faces[6] = {
-            get_face("PrimarySelection"), get_face("SecondarySelection"),
-            get_face("PrimaryCursor"),    get_face("SecondaryCursor"),
-            get_face("PrimaryCursorEol"), get_face("SecondaryCursorEol"),
+    const auto& faces = context.context.faces();
+    const Face sel_faces[6] = {
+            faces["PrimarySelection"], faces["SecondarySelection"],
+            faces["PrimaryCursor"],    faces["SecondaryCursor"],
+            faces["PrimaryCursorEol"], faces["SecondaryCursorEol"],
     };
 
     const auto& selections = context.context.selections();
@@ -1178,7 +1168,7 @@ void highlight_selections(HighlightContext context, DisplayBuffer& display_buffe
 
         const bool primary = (i == selections.main_index());
         highlight_range(display_buffer, begin, end, false,
-                        apply_face(faces[primary ? 0 : 1]));
+                        apply_face(sel_faces[primary ? 0 : 1]));
     }
     for (size_t i = 0; i < selections.size(); ++i)
     {
@@ -1187,14 +1177,14 @@ void highlight_selections(HighlightContext context, DisplayBuffer& display_buffe
         const bool primary = (i == selections.main_index());
         const bool eol = buffer[coord.line].length() - 1 == coord.column;
         highlight_range(display_buffer, coord, buffer.char_next(coord), false,
-                        apply_face(faces[2 + (eol ? 2 : 0) + (primary ? 0 : 1)]));
+                        apply_face(sel_faces[2 + (eol ? 2 : 0) + (primary ? 0 : 1)]));
     }
 }
 
 void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
     auto& buffer = context.context.buffer();
-    auto error = get_face("Error");
+    auto error = context.context.faces()["Error"];
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -1281,7 +1271,6 @@ struct FlagLinesHighlighter : Highlighter
 
         const String& option_name = params[1];
         const String& default_face = params[0];
-        get_face(default_face); // validate param
 
         // throw if wrong option type
         GlobalScope::instance().options()[option_name].get<LineAndSpecList>();
@@ -1296,14 +1285,14 @@ private:
         auto& buffer = context.context.buffer();
         update_line_specs_ifn(buffer, line_flags);
 
-        auto def_face = get_face(m_default_face);
+        auto def_face = context.context.faces()[m_default_face];
         Vector<DisplayLine> display_lines;
         auto& lines = line_flags.list;
         try
         {
             for (auto& line : lines)
             {
-                display_lines.push_back(parse_display_line(std::get<1>(line)));
+                display_lines.push_back(parse_display_line(std::get<1>(line), context.context.faces()));
                 for (auto& atom : display_lines.back())
                     atom.face = merge_faces(def_face, atom.face);
             }
@@ -1350,7 +1339,7 @@ private:
         try
         {
             for (auto& line : line_flags.list)
-                width = std::max(parse_display_line(std::get<1>(line)).length(), width);
+                width = std::max(parse_display_line(std::get<1>(line), context.context.faces()).length(), width);
         }
         catch (runtime_error& err)
         {
@@ -1471,7 +1460,7 @@ private:
                 auto& r = std::get<0>(range);
                 if (buffer.is_valid(r.first) and (buffer.is_valid(r.last) and not buffer.is_end(r.last)))
                     highlight_range(display_buffer, r.first, buffer.char_next(r.last), false,
-                                    apply_face(get_face(std::get<1>(range))));
+                                    apply_face(context.context.faces()[std::get<1>(range)]));
             }
             catch (runtime_error&)
             {}
@@ -1513,7 +1502,7 @@ private:
                 auto& r = std::get<0>(range);
                 if (buffer.is_valid(r.first) and buffer.is_valid(r.last))
                 {
-                    auto replacement = parse_display_line(std::get<1>(range));
+                    auto replacement = parse_display_line(std::get<1>(range), context.context.faces());
                     replace_range(display_buffer, r.first, buffer.char_next(r.last),
                                   [&](DisplayLine& line, int beg_idx, int end_idx){
                                       auto it = line.erase(line.begin() + beg_idx, line.begin() + end_idx);

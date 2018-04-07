@@ -20,8 +20,8 @@ hook -group git-status-highlight global WinSetOption filetype=(?!git-status).* %
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden line-specs git_diff_flags
 
-set-face GitBlame default,magenta
-set-face GitDiffFlags default,black
+set-face global GitBlame default,magenta
+set-face global GitDiffFlags default,black
 
 define-command -params 1.. \
   -docstring %sh{printf '%%{git [<arguments>]: git wrapping helper

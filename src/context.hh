@@ -92,9 +92,10 @@ public:
     Scope& scope() const;
 
     OptionManager& options() const { return scope().options(); }
-    HookManager& hooks()     const { return scope().hooks(); }
+    HookManager&   hooks()   const { return scope().hooks(); }
     KeymapManager& keymaps() const { return scope().keymaps(); }
     AliasRegistry& aliases() const { return scope().aliases(); }
+    FaceRegistry&  faces()   const { return scope().faces(); }
 
     void print_status(DisplayLine status) const;
 

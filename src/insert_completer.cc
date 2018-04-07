@@ -89,7 +89,9 @@ WordDB& get_word_db(const Buffer& buffer)
 }
 
 template<bool other_buffers>
-InsertCompletion complete_word(const SelectionList& sels, const OptionManager& options)
+InsertCompletion complete_word(const SelectionList& sels,
+                               const OptionManager& options,
+                               const FaceRegistry& faces)
 {
     ConstArrayView<Codepoint> extra_word_chars = options["extra_word_chars"].get<Vector<Codepoint, MemoryDomain::Options>>();
     auto is_word_pred = [extra_word_chars](Codepoint c) { return is_word(c, extra_word_chars); };
@@ -190,7 +192,7 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
                 const auto pad_len = longest + 1 - first->candidate().char_length();
                 menu_entry.push_back(first->candidate().str());
                 menu_entry.push_back(String{' ', pad_len});
-                menu_entry.push_back({ first->buffer->display_name(), get_face("MenuInfo") });
+                menu_entry.push_back({ first->buffer->display_name(), faces["MenuInfo"] });
             }
             else
                 menu_entry.push_back(first->candidate().str());
@@ -205,7 +207,8 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
 
 template<bool require_slash>
 InsertCompletion complete_filename(const SelectionList& sels,
-                                   const OptionManager& options)
+                                   const OptionManager& options,
+                                   const FaceRegistry&)
 {
     const Buffer& buffer = sels.buffer();
     auto pos = buffer.iterator_at(sels.main().cursor());
@@ -268,6 +271,7 @@ InsertCompletion complete_filename(const SelectionList& sels,
 
 InsertCompletion complete_option(const SelectionList& sels,
                                  const OptionManager& options,
+                                 const FaceRegistry& faces,
                                  StringView option_name)
 {
     const Buffer& buffer = sels.buffer();
@@ -323,7 +327,7 @@ InsertCompletion complete_option(const SelectionList& sels,
                     match.docstring = std::get<1>(candidate);
                     auto& menu = std::get<2>(candidate);
                     match.menu_entry = not menu.empty() ?
-                        parse_display_line(expand_tabs(menu, tabstop, column))
+                        parse_display_line(expand_tabs(menu, tabstop, column), faces)
                       : DisplayLine{ expand_tabs(menu, tabstop, column) };
 
                     matches.push_back(std::move(match));
@@ -353,7 +357,9 @@ InsertCompletion complete_option(const SelectionList& sels,
 }
 
 template<bool other_buffers>
-InsertCompletion complete_line(const SelectionList& sels, const OptionManager& options)
+InsertCompletion complete_line(const SelectionList& sels,
+                               const OptionManager& options,
+                               const FaceRegistry&)
 {
     const Buffer& buffer = sels.buffer();
     BufferCoord cursor_pos = sels.main().cursor();
@@ -403,7 +409,7 @@ InsertCompletion complete_line(const SelectionList& sels, const OptionManager& o
 }
 
 InsertCompleter::InsertCompleter(Context& context)
-    : m_context(context), m_options(context.options())
+    : m_context(context), m_options(context.options()), m_faces(context.faces())
 {
     m_options.register_watcher(*this);
 }
@@ -516,8 +522,10 @@ bool InsertCompleter::setup_ifn()
                 try_complete(complete_filename<true>))
                 return true;
             if (completer.mode == InsertCompleterDesc::Option and
-                try_complete([&](const SelectionList& sels, const OptionManager& options) {
-                   return complete_option(sels, options, *completer.param);
+                try_complete([&](const SelectionList& sels,
+                                 const OptionManager& options,
+                                 const FaceRegistry& faces) {
+                   return complete_option(sels, options, faces, *completer.param);
                 }))
                 return true;
             if (completer.mode == InsertCompleterDesc::Word and
@@ -583,7 +591,7 @@ bool InsertCompleter::try_complete(Func complete_func)
     auto& sels = m_context.selections();
     try
     {
-        m_completions = complete_func(sels, m_options);
+        m_completions = complete_func(sels, m_options, m_faces);
     }
     catch (runtime_error& e)
     {

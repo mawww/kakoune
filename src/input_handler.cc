@@ -251,7 +251,7 @@ public:
         {
             long long new_val = (long long)m_params.count * 10 + *cp - '0';
             if (new_val > std::numeric_limits<int>::max())
-                context().print_status({ "parameter overflowed", get_face("Error") });
+                context().print_status({ "parameter overflowed", context().faces()["Error"] });
             else
                 m_params.count = new_val;
         }
@@ -277,7 +277,7 @@ public:
                     else
                         context.print_status(
                             { format("invalid register '{}'", *cp),
-                              get_face("Error") });
+                              context.faces()["Error"] });
                 }, "enter target register", register_doc);
         }
         else
@@ -319,19 +319,19 @@ public:
         auto num_sel = context().selections().size();
         auto main_index = context().selections().main_index();
         if (num_sel == 1)
-            atoms.emplace_back(format("{} sel", num_sel), get_face("StatusLineInfo"));
+            atoms.emplace_back(format("{} sel", num_sel), context().faces()["StatusLineInfo"]);
         else
-            atoms.emplace_back(format("{} sels ({})", num_sel, main_index + 1), get_face("StatusLineInfo"));
+            atoms.emplace_back(format("{} sels ({})", num_sel, main_index + 1), context().faces()["StatusLineInfo"]);
 
         if (m_params.count != 0)
         {
-            atoms.emplace_back(" param=", get_face("StatusLineInfo"));
-            atoms.emplace_back(to_string(m_params.count), get_face("StatusLineValue"));
+            atoms.emplace_back(" param=", context().faces()["StatusLineInfo"]);
+            atoms.emplace_back(to_string(m_params.count), context().faces()["StatusLineValue"]);
         }
         if (m_params.reg)
         {
-            atoms.emplace_back(" reg=", get_face("StatusLineInfo"));
-            atoms.emplace_back(StringView(m_params.reg).str(), get_face("StatusLineValue"));
+            atoms.emplace_back(" reg=", context().faces()["StatusLineInfo"]);
+            atoms.emplace_back(StringView(m_params.reg).str(), context().faces()["StatusLineValue"]);
         }
         return atoms;
     }
@@ -425,6 +425,8 @@ void to_prev_word_begin(CharCount& pos, StringView line)
 class LineEditor
 {
 public:
+    LineEditor(const FaceRegistry& faces) : m_faces{faces} {}
+
     void handle_key(Key key)
     {
         if (key == Key::Left or key == alt('h'))
@@ -528,8 +530,8 @@ public:
         const bool empty = m_line.empty();
         StringView str = empty ? m_empty_text : m_line;
 
-        const Face line_face = get_face(empty ? "StatusLineInfo" : "StatusLine");
-        const Face cursor_face = get_face("StatusCursor");
+        const Face line_face = m_faces[empty ? "StatusLineInfo" : "StatusLine"];
+        const Face cursor_face = m_faces["StatusCursor"];
 
         if (m_cursor_pos == str.char_length())
             return DisplayLine{{ { fix_atom_text(str.substr(m_display_pos, width-1)), line_face },
@@ -545,6 +547,8 @@ private:
 
     String     m_line;
     StringView m_empty_text = {};
+
+    const FaceRegistry& m_faces;
 };
 
 class Menu : public InputMode
@@ -554,7 +558,8 @@ public:
          MenuCallback callback)
         : InputMode(input_handler),
           m_callback(std::move(callback)), m_choices(choices.begin(), choices.end()),
-          m_selected(m_choices.begin())
+          m_selected(m_choices.begin()),
+          m_filter_editor{context().faces()}
     {
         if (not context().has_client())
             return;
@@ -648,14 +653,14 @@ public:
             auto prompt = "filter:"_str;
             auto width = context().client().dimensions().column - prompt.column_length();
             auto display_line = m_filter_editor.build_display_line(width);
-            display_line.insert(display_line.begin(), { prompt, get_face("Prompt") });
+            display_line.insert(display_line.begin(), { prompt, context().faces()["Prompt"] });
             context().print_status(display_line);
         }
     }
 
     DisplayLine mode_line() const override
     {
-        return { "menu", get_face("StatusLineMode") };
+        return { "menu", context().faces()["StatusLineMode"] };
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Menu; }
@@ -714,7 +719,8 @@ public:
                                m_line_changed = false;
                            }
                            context().hooks().run_hook("PromptIdle", "", context());
-                       }}
+                       }},
+          m_line_editor{context().faces()}
     {
         m_history_it = ms_history[m_prompt].end();
         m_line_editor.reset(std::move(initstr), m_empty_text);
@@ -884,7 +890,7 @@ public:
             }
             catch (std::runtime_error& error)
             {
-                context().print_status({error.what(), get_face("Error")});
+                context().print_status({error.what(), context().faces()["Error"]});
                 return;
             }
         }
@@ -912,7 +918,7 @@ public:
 
     DisplayLine mode_line() const override
     {
-        return { "prompt", get_face("StatusLineMode") };
+        return { "prompt", context().faces()["StatusLineMode"] };
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Prompt; }
@@ -1046,7 +1052,7 @@ public:
 
     DisplayLine mode_line() const override
     {
-        return { "enter key", get_face("StatusLineMode") };
+        return { "enter key", context().faces()["StatusLineMode"] };
     }
 
     KeymapMode keymap_mode() const override { return m_keymap_mode; }
@@ -1257,7 +1263,7 @@ public:
             context().buffer().commit_undo_group();
             context().print_status({ format("committed change #{}",
                                             context().buffer().current_history_id()),
-                                     get_face("Information") });
+                                     context().faces()["Information"] });
         }
         else if (key == ctrl('v'))
         {
@@ -1291,9 +1297,10 @@ public:
     {
         auto num_sel = context().selections().size();
         auto main_index = context().selections().main_index();
-        return {AtomList{ { "insert", get_face("StatusLineMode") },
-                          { " ", get_face("StatusLine") },
-                          { format( "{} sels ({})", num_sel, main_index + 1), get_face("StatusLineInfo") } }};
+        return {AtomList{ { "insert", context().faces()["StatusLineMode"] },
+                          { " ", context().faces()["StatusLine"] },
+                          { format( "{} sels ({})", num_sel, main_index + 1),
+                             context().faces()["StatusLineInfo"] } }};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }

@@ -18,56 +18,56 @@
 
     ## code
     echo "
-        face value ${orange_dark}+b
-        face type ${orange_light}
-        face variable ${magenta_dark}
-        face module ${green_dark}
-        face function ${cyan_light}
-        face string ${green_dark}
-        face keyword ${purple_dark}+b
-        face operator ${cyan_light}
-        face attribute ${orange_dark}
-        face comment ${grey_dark}
-        face meta ${orange_light}
-        face builtin default+b
+        face global value ${orange_dark}+b
+        face global type ${orange_light}
+        face global variable ${magenta_dark}
+        face global module ${green_dark}
+        face global function ${cyan_light}
+        face global string ${green_dark}
+        face global keyword ${purple_dark}+b
+        face global operator ${cyan_light}
+        face global attribute ${orange_dark}
+        face global comment ${grey_dark}
+        face global meta ${orange_light}
+        face global builtin default+b
     "
 
     ## markup
     echo "
-        face title blue
-        face header ${cyan_light}
-        face bold ${orange_light}
-        face italic ${orange_dark}
-        face mono ${green_dark}
-        face block ${orange_dark}
-        face link blue
-        face bullet ${magenta_light}
-        face list ${magenta_dark}
+        face global title blue
+        face global header ${cyan_light}
+        face global bold ${orange_light}
+        face global italic ${orange_dark}
+        face global mono ${green_dark}
+        face global block ${orange_dark}
+        face global link blue
+        face global bullet ${magenta_light}
+        face global list ${magenta_dark}
     "
 
     ## builtin
     echo "
-        face Default ${grey_light},${black_lighter}
-        face PrimarySelection white,blue
-        face SecondarySelection black,blue
-        face PrimaryCursor black,white
-        face SecondaryCursor black,white
-        face PrimaryCursorEol black,${cyan_light}
-        face SecondaryCursorEol black,${cyan_light}
-        face LineNumbers ${grey_light},${black_lighter}
-        face LineNumberCursor ${grey_light},rgb:282828+b
-        face MenuForeground ${grey_light},blue
-        face MenuBackground blue,${grey_light}
-        face MenuInfo ${cyan_light}
-        face Information ${black_light},${cyan_light}
-        face Error ${grey_light},${magenta_light}
-        face StatusLine ${grey_light},${black_lighterer}
-        face StatusLineMode ${orange_dark}
-        face StatusLineInfo ${cyan_light}
-        face StatusLineValue ${green_dark}
-        face StatusCursor ${black_lighterer},${cyan_light}
-        face Prompt ${black_light},${cyan_light}
-        face MatchingChar ${cyan_light},${black_light}+b
-        face BufferPadding ${cyan_light},${black_lighter}
+        face global Default ${grey_light},${black_lighter}
+        face global PrimarySelection white,blue
+        face global SecondarySelection black,blue
+        face global PrimaryCursor black,white
+        face global SecondaryCursor black,white
+        face global PrimaryCursorEol black,${cyan_light}
+        face global SecondaryCursorEol black,${cyan_light}
+        face global LineNumbers ${grey_light},${black_lighter}
+        face global LineNumberCursor ${grey_light},rgb:282828+b
+        face global MenuForeground ${grey_light},blue
+        face global MenuBackground blue,${grey_light}
+        face global MenuInfo ${cyan_light}
+        face global Information ${black_light},${cyan_light}
+        face global Error ${grey_light},${magenta_light}
+        face global StatusLine ${grey_light},${black_lighterer}
+        face global StatusLineMode ${orange_dark}
+        face global StatusLineInfo ${cyan_light}
+        face global StatusLineValue ${green_dark}
+        face global StatusCursor ${black_lighterer},${cyan_light}
+        face global Prompt ${black_light},${cyan_light}
+        face global MatchingChar ${cyan_light},${black_light}+b
+        face global BufferPadding ${cyan_light},${black_lighter}
     "
 }

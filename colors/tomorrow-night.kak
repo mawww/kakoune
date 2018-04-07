@@ -23,56 +23,56 @@
 
     ## code
     echo "
-        face value ${orange}
-        face type ${yellow}
-        face variable ${magenta}
-        face module ${green}
-        face function ${aqua}
-        face string ${green_dark}
-        face keyword ${purple}
-        face operator ${aqua}
-        face attribute ${purple}
-        face comment ${comment}
-        face meta ${purple}
-        face builtin ${orange}
+        face global value ${orange}
+        face global type ${yellow}
+        face global variable ${magenta}
+        face global module ${green}
+        face global function ${aqua}
+        face global string ${green_dark}
+        face global keyword ${purple}
+        face global operator ${aqua}
+        face global attribute ${purple}
+        face global comment ${comment}
+        face global meta ${purple}
+        face global builtin ${orange}
     "
 
     ## markup
     echo "
-        face title blue
-        face header ${aqua}
-        face bold ${yellow}
-        face italic ${orange}
-        face mono ${green_dark}
-        face block ${orange}
-        face link blue
-        face bullet ${red}
-        face list ${red}
+        face global title blue
+        face global header ${aqua}
+        face global bold ${yellow}
+        face global italic ${orange}
+        face global mono ${green_dark}
+        face global block ${orange}
+        face global link blue
+        face global bullet ${red}
+        face global list ${red}
     "
 
     ## builtin
     echo "
-        face Default ${text},${background}
-        face PrimarySelection default,${selection}
-        face SecondarySelection default,${selection}
-        face PrimaryCursor black,${aqua}
-        face SecondaryCursor black,${aqua}
-        face PrimaryCursorEol black,${green_dark}
-        face SecondaryCursorEol black,${green_dark}
-        face LineNumbers ${text_light},${background}
-        face LineNumberCursor ${yellow},rgb:282828+b
-        face MenuForeground ${text_light},blue
-        face MenuBackground ${aqua},${window}
-        face MenuInfo ${aqua}
-        face Information white,${window}
-        face Error white,${red}
-        face StatusLine ${text},${window}
-        face StatusLineMode ${yellow}+b
-        face StatusLineInfo ${aqua}
-        face StatusLineValue ${green_dark}
-        face StatusCursor ${window},${aqua}
-        face Prompt ${background},${aqua}
-        face MatchingChar ${yellow},${background}+b
-        face BufferPadding ${aqua},${background}
+        face global Default ${text},${background}
+        face global PrimarySelection default,${selection}
+        face global SecondarySelection default,${selection}
+        face global PrimaryCursor black,${aqua}
+        face global SecondaryCursor black,${aqua}
+        face global PrimaryCursorEol black,${green_dark}
+        face global SecondaryCursorEol black,${green_dark}
+        face global LineNumbers ${text_light},${background}
+        face global LineNumberCursor ${yellow},rgb:282828+b
+        face global MenuForeground ${text_light},blue
+        face global MenuBackground ${aqua},${window}
+        face global MenuInfo ${aqua}
+        face global Information white,${window}
+        face global Error white,${red}
+        face global StatusLine ${text},${window}
+        face global StatusLineMode ${yellow}+b
+        face global StatusLineInfo ${aqua}
+        face global StatusLineValue ${green_dark}
+        face global StatusCursor ${window},${aqua}
+        face global Prompt ${background},${aqua}
+        face global MatchingChar ${yellow},${background}+b
+        face global BufferPadding ${aqua},${background}
     "
 }

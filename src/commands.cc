@@ -249,7 +249,7 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
                                                    : open_or_create_file_buffer(name, flags);
             if (buffer->flags() & Buffer::Flags::New)
                 context.print_status({ format("new file '{}'", name),
-                                       get_face("StatusLine") });
+                                       context.faces()["StatusLine"] });
         }
 
         buffer->flags() &= ~Buffer::Flags::NoHooks;
@@ -1102,9 +1102,9 @@ const CommandDesc echo_cmd = {
         if (parser.get_switch("debug"))
             write_to_debug_buffer(message);
         else if (parser.get_switch("markup"))
-            context.print_status(parse_display_line(message));
+            context.print_status(parse_display_line(message, context.faces()));
         else
-            context.print_status({ std::move(message), get_face("StatusLine") });
+            context.print_status({ std::move(message), context.faces()["StatusLine"] });
     }
 };
 
@@ -1192,7 +1192,7 @@ const CommandDesc debug_cmd = {
         else if (parser[0] == "faces")
         {
             write_to_debug_buffer("Faces:");
-            for (auto& face : FaceRegistry::instance().aliases())
+            for (auto& face : context.faces().flatten_faces())
                 write_to_debug_buffer(format(" * {}: {}", face.key, face.value.face));
         }
         else if (parser[0] == "mappings")
@@ -1809,7 +1809,7 @@ const CommandDesc prompt_cmd = {
 
         CapturedShellContext sc{shell_context};
         context.input_handler().prompt(
-            parser[0], initstr.str(), {}, get_face("Prompt"),
+            parser[0], initstr.str(), {}, context.faces()["Prompt"],
             flags, std::move(completer),
             [=](StringView str, PromptEvent event, Context& context) mutable
             {
@@ -1873,7 +1873,7 @@ const CommandDesc menu_cmd = {
         Vector<String> select_cmds;
         for (int i = 0; i < count; i += modulo)
         {
-            choices.push_back(markup ? parse_display_line(parser[i])
+            choices.push_back(markup ? parse_display_line(parser[i], context.faces())
                                      : DisplayLine{ parser[i], {} });
             commands.push_back(parser[i+1]);
             if (with_select_cmds)
@@ -1998,17 +1998,18 @@ const CommandDesc try_catch_cmd = {
     }
 };
 
-static Completions complete_face(const Context&, CompletionFlags flags,
+static Completions complete_face(const Context& context, CompletionFlags flags,
                                  const String& prefix, ByteCount cursor_pos)
 {
     return {0_byte, cursor_pos,
-            FaceRegistry::instance().complete_alias_name(prefix, cursor_pos)};
+            complete(prefix, cursor_pos, context.faces().flatten_faces() |
+                     transform([](auto& entry) -> const String& { return entry.key; }))};
 }
 
 const CommandDesc set_face_cmd = {
     "set-face",
     "face",
-    "set-face <name> <facespec>: set face <name> to refer to <facespec>\n"
+    "set-face <scope> <name> <facespec>: set face <name> to refer to <facespec> in <scope>\n"
     "\n"
     "facespec format is <fg color>[,<bg color>][+<attributes>]\n"
     "colors are either a color name, or rgb:###### values.\n"
@@ -2016,16 +2017,30 @@ const CommandDesc set_face_cmd = {
     "    u: underline, i: italic, b: bold, r: reverse,\n"
     "    B: blink, d: dim, e: exclusive\n"
     "facespec can as well just be the name of another face",
-    ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
+    ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_face, complete_face),
+    make_completer(complete_scope, complete_face, complete_face),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        FaceRegistry::instance().register_alias(parser[0], parser[1], true);
+        get_scope(parser[0], context).faces().add_face(parser[1], parser[2], true);
 
         for (auto& client : ClientManager::instance())
             client->force_redraw();
+    }
+};
+
+const CommandDesc unset_face_cmd = {
+    "unset-face",
+    nullptr,
+    "unset-face <scope> <name>: remove <face> from <scope>",
+    ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
+    CommandFlags::None,
+    CommandHelper{},
+    make_completer(complete_scope, complete_face),
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+       get_scope(parser[0], context).faces().remove_face(parser[1]);
     }
 };
 
@@ -2257,6 +2272,7 @@ void register_commands()
     register_command(info_cmd);
     register_command(try_catch_cmd);
     register_command(set_face_cmd);
+    register_command(unset_face_cmd);
     register_command(rename_client_cmd);
     register_command(set_register_cmd);
     register_command(select_cmd);

@@ -22,52 +22,52 @@
     # Base color definitions
     echo "
         # then we map them to code
-        face value      ${orange_light}+b
-        face type       ${orange}
-        face variable   default
-        face module     ${green}
-        face function   default
-        face string     ${green}
-        face keyword    ${brown_dark}
-        face operator   default
-        face attribute  ${green}
-        face comment    ${brown_light}
-        face meta       ${brown_dark}
-        face builtin   default+b
+        face global value      ${orange_light}+b
+        face global type       ${orange}
+        face global variable   default
+        face global module     ${green}
+        face global function   default
+        face global string     ${green}
+        face global keyword    ${brown_dark}
+        face global operator   default
+        face global attribute  ${green}
+        face global comment    ${brown_light}
+        face global meta       ${brown_dark}
+        face global builtin   default+b
 
         # and markup
-        face title      ${orange}+b
-        face header     ${orange}+b
-        face bold       default+b
-        face italic     default+i
-        face mono       ${green_light}
-        face block      ${green}
-        face link       ${orange}
-        face bullet     ${brown_dark}
-        face list       ${black}
+        face global title      ${orange}+b
+        face global header     ${orange}+b
+        face global bold       default+b
+        face global italic     default+i
+        face global mono       ${green_light}
+        face global block      ${green}
+        face global link       ${orange}
+        face global bullet     ${brown_dark}
+        face global list       ${black}
 
         # and built in faces
-        face Default            ${black_light},${white}
-        face PrimarySelection   ${black},${brown_lighter}
-        face SecondarySelection ${black_light},${grey_light}
-        face PrimaryCursor      ${black},${grey_dark}
-        face SecondaryCursor    ${black},${grey_dark}
-        face PrimaryCursorEol   ${black},${brown_dark}
-        face SecondaryCursorEol ${black},${brown_dark}
-        face LineNumbers        ${grey_dark},${white}
-        face LineNumberCursor   ${grey_dark},${brown_lighter}
-        face MenuForeground     ${orange},${brown_lighter}
-        face MenuBackground     ${black_light},${brown_lighter}
-        face MenuInfo           default,${black}
-        face Information        ${black_light},${brown_lighter}
-        face Error              default,${red}
-        face StatusLine         ${black},${grey_light}
-        face StatusLineMode     ${orange}
-        face StatusLineInfo     ${black}+b
-        face StatusLineValue    ${green_light}
-        face StatusCursor       ${orange},${white_light}
-        face Prompt             ${black_light}
-        face MatchingChar       default+b
-        face BufferPadding      ${grey_dark},${white}
+        face global Default            ${black_light},${white}
+        face global PrimarySelection   ${black},${brown_lighter}
+        face global SecondarySelection ${black_light},${grey_light}
+        face global PrimaryCursor      ${black},${grey_dark}
+        face global SecondaryCursor    ${black},${grey_dark}
+        face global PrimaryCursorEol   ${black},${brown_dark}
+        face global SecondaryCursorEol ${black},${brown_dark}
+        face global LineNumbers        ${grey_dark},${white}
+        face global LineNumberCursor   ${grey_dark},${brown_lighter}
+        face global MenuForeground     ${orange},${brown_lighter}
+        face global MenuBackground     ${black_light},${brown_lighter}
+        face global MenuInfo           default,${black}
+        face global Information        ${black_light},${brown_lighter}
+        face global Error              default,${red}
+        face global StatusLine         ${black},${grey_light}
+        face global StatusLineMode     ${orange}
+        face global StatusLineInfo     ${black}+b
+        face global StatusLineValue    ${green_light}
+        face global StatusCursor       ${orange},${white_light}
+        face global Prompt             ${black_light}
+        face global MatchingChar       default+b
+        face global BufferPadding      ${grey_dark},${white}
     "
 }

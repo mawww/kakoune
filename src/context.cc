@@ -96,7 +96,7 @@ const SelectionList& JumpList::forward(Context& context, int count)
         res.update();
         context.print_status({ format("jumped to #{} ({})",
                                m_current, m_jumps.size() - 1),
-                               get_face("Information") });
+                               context.faces()["Information"] });
         return res;
     }
     throw runtime_error("no next jump");
@@ -117,7 +117,7 @@ const SelectionList& JumpList::backward(Context& context, int count)
         res.update();
         context.print_status({ format("jumped to #{} ({})",
                                m_current, m_jumps.size() - 1),
-                               get_face("Information") });
+                               context.faces()["Information"] });
         return res;
     }
     if (m_current != 0)
@@ -133,7 +133,7 @@ const SelectionList& JumpList::backward(Context& context, int count)
         res.update();
         context.print_status({ format("jumped to #{} ({})",
                                m_current, m_jumps.size() - 1),
-                               get_face("Information") });
+                               context.faces()["Information"] });
         return res;
     }
     throw runtime_error("no previous jump");

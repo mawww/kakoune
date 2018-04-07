@@ -161,9 +161,12 @@ command *q!* has to be used). Aliases are mentionned below each commands.
     *-debug*:::
         print the given text to the *\*debug** buffer
 
-*set-face* <name> <facespec>::
+*set-face* <scope> <name> <facespec>::
     *alias* face +
-    define a face (See <<faces#,`:doc faces`>>)
+    define a face in *scope* (See <<faces#,`:doc faces`>>)
+
+*unset-face* <scope> <name>::
+    Remove a face definition from *scope* (See <<faces#,`:doc faces`>>)
 
 *colorscheme* <name>::
     load named colorscheme
