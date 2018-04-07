@@ -1012,27 +1012,37 @@ HighlighterAndId show_whitespaces_factory(HighlighterParameters params)
 
 struct LineNumbersHighlighter : Highlighter
 {
-    LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator)
+    LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator, String separator_up, String separator_down)
       : Highlighter{HighlightPass::Move},
         m_relative{relative},
         m_hl_cursor_line{hl_cursor_line},
-        m_separator{std::move(separator)} {}
+        m_separator{std::move(separator)},
+        m_separator_up{std::move(separator_up)},
+        m_separator_down{std::move(separator_down)} {}
 
     static HighlighterAndId create(HighlighterParameters params)
     {
         static const ParameterDesc param_desc{
             { { "relative", { false, "" } },
               { "separator", { true, "" } },
+              { "separator-up", { true, "" } },
+              { "separator-down", { true, "" } },
               { "hlcursor", { false, "" } } },
             ParameterDesc::Flags::None, 0, 0
         };
         ParametersParser parser(params, param_desc);
 
         StringView separator = parser.get_switch("separator").value_or("│");
+        StringView separator_up = parser.get_switch("separator-up").value_or(separator);
+        StringView separator_down = parser.get_switch("separator-down").value_or(separator);
+
         if (separator.length() > 10)
             throw runtime_error("Separator length is limited to 10 bytes");
+        if (separator.length() != separator_up.length() || separator.length() != separator_down.length())
+            throw runtime_error("Separators lengths must be the same");
 
-        return {"number_lines", std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str())};
+        return {"number_lines", std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"),
+                                                                         separator.str(), separator_up.str(), separator_down.str())};
     }
 
 private:
@@ -1063,7 +1073,10 @@ private:
             const auto atom_face = last_line == current_line ? face_wrapped :
                 ((m_hl_cursor_line and is_cursor_line) ? face_absolute : face);
             line.insert(line.begin(), {buffer, atom_face});
-            line.insert(line.begin() + 1, {m_separator, face});
+
+            const String separator = is_cursor_line ? m_separator :
+                current_line < main_line ? m_separator_up : m_separator_down;
+            line.insert(line.begin() + 1, {separator, face});
 
             last_line = current_line;
         }
@@ -1095,6 +1108,8 @@ private:
    const bool m_relative;
    const bool m_hl_cursor_line;
    const String m_separator;
+   const String m_separator_up;
+   const String m_separator_down;
 };
 
 constexpr StringView LineNumbersHighlighter::ms_id;
@@ -2028,7 +2043,7 @@ void register_highlighters()
         "number_lines",
         { LineNumbersHighlighter::create,
           "Display line numbers \n"
-          "Parameters: -relative, -hlcursor, -separator <separator text>\n" } });
+          "Parameters: -relative, -hlcursor, -separator <text> -separator-up <text> -separator-down <text>\n" } });
     registry.insert({
         "show_matching",
         { create_matching_char_highlighter,
