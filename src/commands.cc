@@ -191,7 +191,7 @@ Scope& get_scope(StringView scope, const Context& context)
 {
     if (auto s = get_scope_ifp(scope, context))
         return *s;
-    throw runtime_error(format("error: no such scope '{}'", scope));
+    throw runtime_error(format("no such scope: '{}'", scope));
 }
 
 struct CommandDesc
@@ -722,7 +722,7 @@ const CommandDesc add_highlighter_cmd = {
 
         auto it = registry.find(name);
         if (it == registry.end())
-            throw runtime_error(format("No such highlighter factory '{}'", name));
+            throw runtime_error(format("no such highlighter factory: '{}'", name));
         get_highlighter(context, path).add_child(it->value.factory(highlighter_params));
 
         // TODO: better, this will fail if we touch scopes highlighters that impact multiple windows
@@ -796,7 +796,7 @@ const CommandDesc add_hook_cmd = {
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (not contains(hooks, parser[1]))
-            throw runtime_error{format("Unknown hook '{}'", parser[1])};
+            throw runtime_error{format("no such hook: '{}'", parser[1])};
 
         Regex regex{parser[2], RegexCompileFlags::Optimize};
         const String& command = parser[3];
@@ -1053,7 +1053,7 @@ const CommandDesc alias_cmd = {
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (not CommandManager::instance().command_defined(parser[2]))
-            throw runtime_error(format("Command '{}' does not exist", parser[2]));
+            throw runtime_error(format("no such command: '{}'", parser[2]));
 
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
         aliases.add_alias(parser[1], parser[2]);
@@ -1116,7 +1116,7 @@ KeymapMode parse_keymap_mode(StringView str, const KeymapManager::UserModeList& 
 
     auto it = find(user_modes, str);
     if (it == user_modes.end())
-        throw runtime_error(format("unknown keymap mode '{}'", str));
+        throw runtime_error(format("no such keymap mode: '{}'", str));
 
     char offset = static_cast<char>(KeymapMode::FirstUserMode);
     return (KeymapMode)(std::distance(user_modes.begin(), it) + offset);
@@ -1207,7 +1207,7 @@ const CommandDesc debug_cmd = {
             }
         }
         else
-            throw runtime_error(format("unknown debug command '{}'", parser[0]));
+            throw runtime_error(format("no such debug command: '{}'", parser[0]));
     }
 };
 
@@ -1341,7 +1341,7 @@ const CommandDesc unset_option_cmd = {
     {
         auto& options = get_options(parser[0], context, parser[1]);
         if (&options == &GlobalScope::instance().options())
-            throw runtime_error("Cannot unset options in global scope");
+            throw runtime_error("cannot unset options in global scope");
         options.unset_option(parser[1]);
     }
 };
@@ -1423,7 +1423,7 @@ const CommandDesc declare_option_cmd = {
         else if (parser[0] == "range-specs")
             opt = &reg.declare_option<TimestampedList<RangeAndString>>(parser[1], docstring, {}, flags);
         else
-            throw runtime_error(format("unknown type {}", parser[0]));
+            throw runtime_error(format("no such option type: '{}'", parser[0]));
 
         if (parser.positional_count() == 3)
             opt->set_from_string(parser[2]);
@@ -1555,7 +1555,7 @@ public:
         }
         catch (runtime_error& e)
         {
-            write_to_debug_buffer(format("Could not restore register '{}': {}",
+            write_to_debug_buffer(format("could not restore register '{}': {}",
                                          m_name, e.what()));
         }
     }
@@ -1572,7 +1572,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     if ((int)(bool)parser.get_switch("buffer") +
         (int)(bool)parser.get_switch("client") +
         (int)(bool)parser.get_switch("try-client") > 1)
-        throw runtime_error{"Only one of -buffer, -client or -try-client can be specified"};
+        throw runtime_error{"only one of -buffer, -client or -try-client can be specified"};
 
     const bool no_hooks = parser.get_switch("no-hooks") or context.hooks_disabled();
     const bool no_keymaps = not parser.get_switch("with-maps");
@@ -1662,7 +1662,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             if (not draft)
             {
                 if (&sels.buffer() != &c.buffer())
-                    throw runtime_error("the buffer has changed while iterating on selections");
+                    throw runtime_error("buffer has changed while iterating on selections");
 
                 update_selections(new_sels, main, c.buffer(), timestamp);
                 timestamp = c.buffer().timestamp();
@@ -1952,7 +1952,7 @@ const CommandDesc info_cmd = {
                     else if (*placement == "below")
                         style = InfoStyle::InlineBelow;
                     else
-                        throw runtime_error(format("invalid placement '{}'", *placement));
+                        throw runtime_error(format("invalid placement: '{}'", *placement));
                 }
             }
             auto title = parser.get_switch("title").value_or(StringView{});
@@ -2036,7 +2036,7 @@ const CommandDesc rename_client_cmd = {
     {
         const String& name = parser[0];
         if (not all_of(name, is_identifier))
-            throw runtime_error{format("Invalid client name '{}'", name)};
+            throw runtime_error{format("invalid client name: '{}'", name)};
         else if (ClientManager::instance().client_name_exists(name) and
                  context.name() != name)
             throw runtime_error{format("client name '{}' is not unique", name)};
@@ -2094,7 +2094,7 @@ const CommandDesc change_directory_cmd = {
     {
         StringView target = parser.positional_count() == 1 ? StringView{parser[0]} : "~";
         if (chdir(parse_filename(target).c_str()) != 0)
-            throw runtime_error(format("cannot change to directory '{}'", target));
+            throw runtime_error(format("unable to change to directory: '{}'", target));
         for (auto& buffer : BufferManager::instance())
             buffer->update_display_name();
     }
@@ -2111,7 +2111,7 @@ const CommandDesc rename_session_cmd = {
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {
         if (not Server::instance().rename_session(parser[0]))
-            throw runtime_error(format("Cannot rename current session: '{}' may be already in use", parser[0]));
+            throw runtime_error(format("unable to rename current session: '{}' may be already in use", parser[0]));
     }
 };
 

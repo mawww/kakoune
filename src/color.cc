@@ -56,7 +56,7 @@ Color str_to_color(StringView color)
                  (unsigned char)(hval(color[6]) * 16 + hval(color[7])),
                  (unsigned char)(hval(color[8]) * 16 + hval(color[9])) };
 
-    throw runtime_error(format("Unable to parse color '{}'", color));
+    throw runtime_error(format("unable to parse color: '{}'", color));
     return Color::Default;
 }
 

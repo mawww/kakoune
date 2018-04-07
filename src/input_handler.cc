@@ -1127,7 +1127,7 @@ public:
         else if (key == Key::Escape or key == ctrl('c'))
         {
             if (m_in_end)
-                throw runtime_error("Asked to exit insert mode while running InsertEnd hook");
+                throw runtime_error("asked to exit insert mode while running InsertEnd hook");
             m_in_end = true;
             context().hooks().run_hook("InsertEnd", "", context());
 

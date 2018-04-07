@@ -900,7 +900,7 @@ Selection find_next_match(const Context& context, const Selection& sel, const Re
       : find_prev(buffer, pos, matches, regex, wrapped);
 
     if (not found or matches[0].first == buffer.end())
-        throw runtime_error(format("'{}': no matches found", regex.str()));
+        throw runtime_error(format("no matches found: '{}'", regex.str()));
 
     CaptureList captures;
     for (const auto& match : matches)

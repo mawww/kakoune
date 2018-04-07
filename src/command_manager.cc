@@ -382,7 +382,7 @@ String expand(StringView str, const Context& context,
 struct command_not_found : runtime_error
 {
     command_not_found(StringView name)
-        : runtime_error(name + " : no such command") {}
+        : runtime_error(format("no such command: '{}'", name)) {}
 };
 
 CommandManager::CommandMap::const_iterator

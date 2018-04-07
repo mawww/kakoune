@@ -287,13 +287,13 @@ void format_impl(StringView fmt, ArrayView<const StringView> params, AppendFunc 
             append(StringView{it, opening});
             auto closing = std::find(opening, end, '}');
             if (closing == end)
-                throw runtime_error("Format string error, unclosed '{'");
+                throw runtime_error("format string error, unclosed '{'");
 
             const int index = (closing == opening + 1) ?
                 implicitIndex : str_to_int({opening+1, closing});
 
             if (index >= params.size())
-                throw runtime_error("Format string parameter index too big");
+                throw runtime_error("format string parameter index too big");
 
             append(params[index]);
             implicitIndex = index+1;

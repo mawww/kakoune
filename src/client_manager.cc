@@ -191,7 +191,7 @@ Client& ClientManager::get_client(StringView name)
 {
     if (Client* client = get_client_ifp(name))
         return *client;
-    throw runtime_error(format("no client named '{}'", name));
+    throw runtime_error(format("no such client: '{}'", name));
 }
 
 void ClientManager::redraw_clients() const

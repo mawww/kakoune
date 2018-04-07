@@ -36,7 +36,7 @@ static Face parse_face(StringView facedesc)
                 case 'B': res.attributes |= Attribute::Blink; break;
                 case 'd': res.attributes |= Attribute::Dim; break;
                 case 'i': res.attributes |= Attribute::Italic; break;
-                default: throw runtime_error(format("unknown face attribute '{}'", StringView{*attr_it}));
+                default: throw runtime_error(format("no such face attribute: '{}'", StringView{*attr_it}));
             }
         }
     }

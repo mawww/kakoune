@@ -356,7 +356,7 @@ parse_json(const char* pos, const char* end)
                 throw runtime_error("unable to parse object, expected ',' or '}'");
         }
     }
-    throw runtime_error("Could not parse json");
+    throw runtime_error("unable to parse json");
 }
 
 std::tuple<Value, const char*>

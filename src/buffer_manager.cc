@@ -41,7 +41,7 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
     buffer->on_registered();
 
     if (contains(m_buffer_trash, buffer))
-        throw runtime_error{"Buffer got removed during its creation"};
+        throw runtime_error{"buffer got removed during its creation"};
 
     return buffer;
 }

@@ -535,7 +535,7 @@ static sockaddr_un session_addr(StringView session)
     addr.sun_family = AF_UNIX;
     auto slash_count = std::count(session.begin(), session.end(), '/');
     if (slash_count > 1)
-        throw runtime_error{"Session names are either <user>/<name> or <name>"};
+        throw runtime_error{"session names are either <user>/<name> or <name>"};
     else if (slash_count == 1)
         format_to(addr.sun_path, "{}/kakoune/{}", tmpdir(), session);
     else
@@ -753,7 +753,7 @@ private:
                 break;
             }
             default:
-                write_to_debug_buffer("Invalid introduction message received");
+                write_to_debug_buffer("invalid introduction message received");
                 close(sock);
                 Server::instance().remove_accepter(this);
             }
@@ -774,7 +774,7 @@ Server::Server(String session_name)
     : m_session{std::move(session_name)}
 {
     if (not all_of(m_session, is_identifier))
-        throw runtime_error{format("Invalid session name '{}'", session_name)};
+        throw runtime_error{format("invalid session name: '{}'", session_name)};
 
     int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
@@ -813,7 +813,7 @@ Server::Server(String session_name)
 bool Server::rename_session(StringView name)
 {
     if (not all_of(name, is_identifier))
-        throw runtime_error{format("Invalid session name '{}'", name)};
+        throw runtime_error{format("invalid session name: '{}'", name)};
 
     String old_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
                                     get_user_name(geteuid()), m_session);
