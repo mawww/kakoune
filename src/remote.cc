@@ -67,6 +67,7 @@ public:
     template<typename T>
     void write(const T& val)
     {
+        static_assert(std::is_trivially_copyable<T>::value, "");
         write((const char*)&val, sizeof(val));
     }
 
@@ -196,15 +197,10 @@ public:
     template<typename T>
     T read()
     {
-        union U
-        {
-            T object;
-            alignas(T) char data[sizeof(T)];
-            U() {}
-            ~U() { object.~T(); }
-        } u;
-        read(u.data, sizeof(T));
-        return u.object;
+        static_assert(std::is_trivially_copyable<T>::value, "");
+        T res;
+        read(reinterpret_cast<char*>(&res), sizeof(T));
+        return res;
     }
 
     template<typename T>
