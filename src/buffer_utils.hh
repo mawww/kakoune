@@ -80,6 +80,8 @@ Buffer* open_file_buffer(StringView filename,
                          Buffer::Flags flags = Buffer::Flags::None);
 Buffer* open_or_create_file_buffer(StringView filename,
                                    Buffer::Flags flags = Buffer::Flags::None);
+
+bool buffer_needs_reload(Buffer& buffer, StringView path);
 void reload_file_buffer(Buffer& buffer);
 
 void write_to_debug_buffer(StringView str);

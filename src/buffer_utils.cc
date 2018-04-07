@@ -81,6 +81,48 @@ Buffer* open_or_create_file_buffer(StringView filename, Buffer::Flags flags)
         {}, InvalidTime);
 }
 
+bool buffer_needs_reload(Buffer& buffer, StringView path)
+{
+    MappedFile fd{path};
+    StringView data{fd.data};
+    ByteOrderMark bom = ByteOrderMark::None;
+    EolFormat eolformat = EolFormat::Lf;
+    size_t hash = 0;
+
+    if (buffer.get_file_size() != fd.st.st_size)
+        return true;
+
+    const char* pos = data.begin();
+    if (data.substr(0, 3_byte) == "\xEF\xBB\xBF")
+    {
+        bom = ByteOrderMark::Utf8;
+        pos = data.begin() + 3;
+    }
+
+    bool has_crlf = false, has_lf = false;
+    for (auto it = pos; it != data.end(); ++it)
+    {
+        if (*it == '\n')
+            ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
+    }
+    const bool crlf = has_crlf and not has_lf;
+    eolformat = crlf ? EolFormat::Crlf : EolFormat::Lf;
+
+    while (pos < data.end())
+    {
+        const char* eol = std::find(pos, data.end(), '\n');
+        StringView line = {pos, eol - (crlf and eol != data.end() ? 1 : 0)};
+
+        hash = combine_hash(hash, hash_value(line));
+        pos = eol + 1;
+    }
+
+    hash = combine_hash(hash, hash_value(bom));
+    hash = combine_hash(hash, hash_value(eolformat));
+
+    return buffer.get_file_hash() != hash;
+}
+
 void reload_file_buffer(Buffer& buffer)
 {
     kak_assert(buffer.flags() & Buffer::Flags::File);

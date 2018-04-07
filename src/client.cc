@@ -350,7 +350,8 @@ void Client::check_if_buffer_needs_reloading()
 
     const String& filename = buffer.name();
     timespec ts = get_fs_timestamp(filename);
-    if (ts == InvalidTime or ts == buffer.fs_timestamp())
+    if (ts == InvalidTime or ts == buffer.fs_timestamp()
+        or not buffer_needs_reload(buffer, filename))
         return;
     if (reload == Autoreload::Ask)
     {

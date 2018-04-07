@@ -138,6 +138,8 @@ public:
     size_t         timestamp() const;
     timespec       fs_timestamp() const;
     void           set_fs_timestamp(timespec ts);
+    size_t         get_file_hash() const;
+    ByteCount      get_file_size() const;
 
     void           commit_undo_group();
     bool           undo(size_t count = 1);
@@ -280,7 +282,13 @@ private:
 
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 
-    timespec m_fs_timestamp;
+    struct FsStatus
+    {
+        timespec timestamp;
+        ByteCount file_size;
+        size_t file_hash;
+    };
+    FsStatus m_fs_status;
 
     // Values are just data holding by the buffer, they are not part of its
     // observable state

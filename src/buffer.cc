@@ -25,6 +25,7 @@ struct ParsedLines
     BufferLines lines;
     ByteOrderMark bom = ByteOrderMark::None;
     EolFormat eolformat = EolFormat::Lf;
+    size_t hash = 0;
 };
 
 static ParsedLines parse_lines(StringView data)
@@ -49,9 +50,15 @@ static ParsedLines parse_lines(StringView data)
     while (pos < data.end())
     {
         const char* eol = std::find(pos, data.end(), '\n');
-        res.lines.emplace_back(StringData::create({{pos, eol - (crlf and eol != data.end() ? 1 : 0)}, "\n"}));
+        StringView line = {pos, eol - (crlf and eol != data.end() ? 1 : 0)};
+
+        res.lines.emplace_back(StringData::create({line, "\n"}));
+        res.hash = combine_hash(res.hash, hash_value(line));
         pos = eol + 1;
     }
+
+    res.hash = combine_hash(res.hash, hash_value(res.bom));
+    res.hash = combine_hash(res.hash, hash_value(res.eolformat));
 
     return res;
 }
@@ -74,9 +81,11 @@ Buffer::Buffer(String name, Flags flags, StringView data,
       m_flags{flags | Flags::NoUndo},
       m_history{m_next_history_id++, nullptr}, m_history_cursor{&m_history},
       m_last_save_history_cursor{&m_history},
-      m_fs_timestamp{fs_timestamp.tv_sec, fs_timestamp.tv_nsec}
+      m_fs_status{{fs_timestamp.tv_sec, fs_timestamp.tv_nsec}, data.length(), 0}
 {
     ParsedLines parsed_lines = parse_lines(data);
+
+    m_fs_status.file_hash = parsed_lines.hash;
 
     if (parsed_lines.lines.empty())
         parsed_lines.lines.emplace_back(StringData::create({"\n"}));
@@ -121,7 +130,7 @@ void Buffer::on_registered()
             run_hook_in_own_context("BufNewFile", m_name);
         else
         {
-            kak_assert(m_fs_timestamp != InvalidTime);
+            kak_assert(m_fs_status.timestamp != InvalidTime);
             run_hook_in_own_context("BufOpenFile", m_name);
         }
     }
@@ -305,7 +314,9 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
     apply_options(options(), parsed_lines);
 
     m_last_save_history_cursor = m_history_cursor;
-    m_fs_timestamp = fs_timestamp;
+    m_fs_status.timestamp = fs_timestamp;
+    m_fs_status.file_size = data.length();
+    m_fs_status.file_hash = parsed_lines.hash;
 }
 
 void Buffer::commit_undo_group()
@@ -634,7 +645,7 @@ void Buffer::notify_saved()
 
     m_flags &= ~Flags::New;
     m_last_save_history_cursor = m_history_cursor;
-    m_fs_timestamp = get_fs_timestamp(m_name);
+    m_fs_status.timestamp = get_fs_timestamp(m_name);
 }
 
 BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
@@ -693,13 +704,25 @@ BufferCoord Buffer::char_prev(BufferCoord coord) const
 timespec Buffer::fs_timestamp() const
 {
     kak_assert(m_flags & Flags::File);
-    return m_fs_timestamp;
+    return m_fs_status.timestamp;
 }
 
 void Buffer::set_fs_timestamp(timespec ts)
 {
     kak_assert(m_flags & Flags::File);
-    m_fs_timestamp = ts;
+    m_fs_status.timestamp = ts;
+}
+
+size_t Buffer::get_file_hash() const
+{
+    kak_assert(m_flags & Flags::File);
+    return m_fs_status.file_hash;
+}
+
+ByteCount Buffer::get_file_size() const
+{
+    kak_assert(m_flags & Flags::File);
+    return m_fs_status.file_size;
 }
 
 void Buffer::on_option_changed(const Option& option)
