@@ -61,8 +61,7 @@ The following conventions apply as well:
   name, an underscore should be used to allow shell scopes to use them
 
 * *commands*: if a separator is needed, a hyphen is usually used to
-  differentiate a command name from an option's; this doesn't apply to
-  the leading underscore sign in case of a hidden command
+  differentiate a command name from an option's
 
 Documentation
 -------------
