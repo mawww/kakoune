@@ -37,6 +37,8 @@
 namespace Kakoune
 {
 
+extern const char* version;
+
 static const char* startup_info =
 "Kakoune recent breaking changes:\n"
 " * Highlighters have been refactored to be part of scopes\n"
@@ -122,6 +124,10 @@ static const EnvVarDesc builtin_env_vars[] = { {
         "config", false,
         [](StringView name, const Context& context)
         { return config_directory(); }
+    }, {
+        "version", false,
+        [](StringView name, const Context& context) -> String
+        { return version; }
     }, {
         "opt_", true,
         [](StringView name, const Context& context)
@@ -671,7 +677,7 @@ int run_server(StringView session, StringView server_init,
                 });
 
             if (flags & ServerFlags::StartupInfo)
-                local_client->info_show("Welcome to Kakoune", startup_info, {}, InfoStyle::Prompt);
+                local_client->info_show(format("Kakoune {}", version), startup_info, {}, InfoStyle::Prompt);
         }
 
         while (not terminate and

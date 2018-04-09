@@ -45,6 +45,8 @@
 namespace Kakoune
 {
 
+extern const char* version;
+
 namespace
 {
 
@@ -1146,6 +1148,7 @@ const CommandDesc debug_cmd = {
     {
         if (parser[0] == "info")
         {
+            write_to_debug_buffer(format("version: {}", version));
             write_to_debug_buffer(format("pid: {}", getpid()));
             write_to_debug_buffer(format("session: {}", Server::instance().session()));
             #ifdef KAK_DEBUG

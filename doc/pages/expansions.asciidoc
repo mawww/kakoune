@@ -102,6 +102,9 @@ informations about Kakoune's state:
 *kak_config*::
     directory containing the user configuration
 
+*kak_version*::
+    version of the current Kakoune server (git hash or release name)
+
 *kak_count*::
     count parameter passed to the command
 
