@@ -20,7 +20,7 @@ else
     endif
 endif
 
-version ?= $(shell if [ -f .version ]; then cat .version; elif  [ -d ../.git ]; then git rev-parse --short HEAD; else echo "unknown"; fi )
+version ?= $(shell if [ -f .version ]; then cat .version; elif  [ -d ../.git ]; then git rev-parse --short HEAD; else echo "unknown"; fi)
 
 sources := $(sort $(wildcard *.cc))
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
