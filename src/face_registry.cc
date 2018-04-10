@@ -98,26 +98,26 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
     if (name == facedesc)
         throw runtime_error(format("cannot alias face '{}' to itself", name));
 
-    FaceOrAlias& face = m_faces[name];
-    auto it = m_faces.find(facedesc);
-    if (it != m_faces.end())
+    for (auto it = m_faces.find(facedesc); 
+         it != m_faces.end() and not it->value.alias.empty();
+         it = m_faces.find(it->value.alias))
     {
-        while (it != m_faces.end())
-        {
-            if (it->value.alias.empty())
-                break;
-            if (it->value.alias == name)
-                throw runtime_error("face cycle detected");
-            it = m_faces.find(it->value.alias);
-        }
+        if (it->value.alias == name)
+            throw runtime_error("face cycle detected");
+    }
 
-        face.alias = facedesc.str();
-    }
-    else
+    FaceOrAlias& face = m_faces[name];
+
+    for (auto* registry = this; registry != nullptr; registry = registry->m_parent.get())
     {
-        face.alias = "";
-        face.face = parse_face(facedesc);
+        if (not registry->m_faces.contains(facedesc))
+            continue;
+        face.alias = facedesc.str(); // This is referencing another face
+        return;
     }
+
+    face.alias = "";
+    face.face = parse_face(facedesc);
 }
 
 void FaceRegistry::remove_face(StringView name)
