@@ -75,6 +75,14 @@ void Window::center_column(ColumnCount buffer_column)
     display_column_at(buffer_column, m_dimensions.column/2_col);
 }
 
+static uint32_t compute_faces_hash(const FaceRegistry& faces)
+{
+    uint32_t hash = 0;
+    for (auto&& face : faces.flatten_faces() | transform(&FaceRegistry::FaceMap::Item::value))
+        hash = combine_hash(hash, face.alias.empty() ? hash_value(face.face) : hash_value(face.alias));
+    return hash;
+}
+
 Window::Setup Window::build_setup(const Context& context) const
 {
     Vector<BufferRange, MemoryDomain::Display> selections;
@@ -83,6 +91,7 @@ Window::Setup Window::build_setup(const Context& context) const
 
     return { m_position, m_dimensions,
              context.buffer().timestamp(),
+             compute_faces_hash(context.faces()),
              context.selections().main_index(),
              std::move(selections) };
 }
@@ -95,7 +104,8 @@ bool Window::needs_redraw(const Context& context) const
         m_dimensions != m_last_setup.dimensions or
         context.buffer().timestamp() != m_last_setup.timestamp or
         selections.main_index() != m_last_setup.main_selection or
-        selections.size() != m_last_setup.selections.size())
+        selections.size() != m_last_setup.selections.size() or
+        compute_faces_hash(context.faces()) != m_last_setup.faces_hash)
         return true;
 
     for (int i = 0; i < selections.size(); ++i)

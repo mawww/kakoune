@@ -20,6 +20,13 @@ public:
     void add_face(StringView name, StringView facedesc, bool override = false);
     void remove_face(StringView name);
 
+    struct FaceOrAlias
+    {
+        Face face = {};
+        String alias = {};
+    };
+    using FaceMap = HashMap<String, FaceOrAlias, MemoryDomain::Faces>;
+
     auto flatten_faces() const
     {
         auto merge = [](auto&& first, const FaceMap& second) {
@@ -33,19 +40,11 @@ public:
         return merge(merge(grand_parent, parent), m_faces);
     }
 
-    struct FaceOrAlias
-    {
-        Face face = {};
-        String alias = {};
-    };
-
 private:
     friend class Scope;
     FaceRegistry();
 
     SafePtr<FaceRegistry> m_parent;
-
-    using FaceMap = HashMap<String, FaceOrAlias, MemoryDomain::Faces>;
     FaceMap m_faces;
 };
 

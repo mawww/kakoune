@@ -44,6 +44,11 @@ constexpr bool operator!=(const Face& lhs, const Face& rhs)
     return not (lhs == rhs);
 }
 
+constexpr size_t hash_value(const Face& val)
+{
+    return hash_values(val.fg, val.bg, val.attributes);
+}
+
 constexpr Face merge_faces(const Face& base, const Face& face)
 {
     return face.attributes & Attribute::Exclusive ?

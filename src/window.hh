@@ -72,6 +72,7 @@ private:
         DisplayCoord position;
         DisplayCoord dimensions;
         size_t timestamp;
+        size_t faces_hash;
         size_t main_selection;
         Vector<BufferRange, MemoryDomain::Display> selections;
     };
