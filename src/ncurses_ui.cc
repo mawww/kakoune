@@ -619,6 +619,10 @@ Optional<Key> NCursesUI::get_next_key()
         {
             if (c == KEY_F(i + 1))
                 return {Key::F1 + i};
+        }
+
+        for (int i = 0; i < 12; ++i)
+        {
             if (c == KEY_F(m_shift_function_key + i + 1))
                 return shift(Key::F1 + i);
         }
