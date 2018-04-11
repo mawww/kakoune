@@ -140,6 +140,9 @@ private:
     int m_wheel_up_button = 4;
     int m_wheel_down_button = 5;
 
+    static constexpr int default_shift_function_key = 12;
+    int m_shift_function_key = default_shift_function_key;
+
     bool m_set_title = true;
     bool m_change_colors = true;
 

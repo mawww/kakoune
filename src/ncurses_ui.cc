@@ -29,6 +29,8 @@ using std::max;
 
 struct NCursesWin : WINDOW {};
 
+constexpr int NCursesUI::default_shift_function_key;
+
 static constexpr StringView assistant_cat[] =
     { R"(  ___            )",
       R"( (__ \           )",
@@ -615,8 +617,10 @@ Optional<Key> NCursesUI::get_next_key()
 
         for (int i = 0; i < 12; ++i)
         {
-            if (c == KEY_F(i+1))
+            if (c == KEY_F(i + 1))
                 return {Key::F1 + i};
+            if (c == KEY_F(m_shift_function_key + i + 1))
+                return shift(Key::F1 + i);
         }
 
         if (c >= 0 and c < 256)
@@ -1080,6 +1084,13 @@ void NCursesUI::set_ui_options(const Options& options)
         auto it = options.find("ncurses_set_title"_sv);
         m_set_title = it == options.end() or
             (it->value == "yes" or it->value == "true");
+    }
+
+    {
+        auto it = options.find("ncurses_shift_function_key"_sv);
+        m_shift_function_key = it != options.end() ?
+            str_to_int_ifp(it->value).value_or(default_shift_function_key)
+          : default_shift_function_key;
     }
 
     {
