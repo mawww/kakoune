@@ -280,5 +280,5 @@ are exclusively available to built-in options.
             specify which button send for wheel down/up events
 
         *ncurses_shift_function_key*:::
-            Function key from which shifted function key start, if th
+            Function key from which shifted function key start, if the
             terminal sends F13 for <s-F1>, this should be set to 12.
