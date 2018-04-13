@@ -215,6 +215,18 @@ PREFIX=$HOME/.local make install
 ----------------------------------------------------------------
 ====
 
+[TIP]
+.FreeBSD
+====
+Kakoune is available in the official ports tree as
+https://www.freshports.org/editors/kakoune[editors/kakoune].
+
+A binary package is also available and can be installed with
+--------------------------------------------------
+pkg install kakoune
+--------------------------------------------------
+====
+
 Running
 ~~~~~~~
 
