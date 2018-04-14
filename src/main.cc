@@ -41,10 +41,6 @@ extern const char* version;
 
 static const char* startup_info =
 "Kakoune recent breaking changes:\n"
-" * Highlighters have been refactored to be part of scopes\n"
-"   the add-highlighter and remove-highlighter command syntax changed.\n"
-" * Regex implementation switched to a custom one, the syntax is slightly\n"
-"   less tolerant.\n"
 " * ModeChange hook has been introduced and is expected to replace\n"
 "   the various ${MODE}Begin/${MODE}End hooks, consider those deprecated.\n"
 " * '*' Does not strip whitespaces anymore, use built-in '_' to strip them\n"
@@ -54,7 +50,8 @@ static const char* startup_info =
 " * WORD text object moved to <a-w> instead of W for consistency\n"
 " * rotate main selection moved to ), rotate content to <a-)>, ( for backward\n"
 " * faces are now scoped, set-face command takes an additional scope parameter\n"
-" * <backtab> key is gone, use <s-tab> instead\n";
+" * <backtab> key is gone, use <s-tab> instead\n"
+" === Kakoune v2018.04.13 Released ===\n";
 
 struct startup_error : runtime_error
 {
