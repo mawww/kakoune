@@ -81,8 +81,6 @@ private:
     void close_buffer_reload_dialog();
     void reload_buffer();
 
-    Optional<Key> get_next_key(EventMode mode);
-
     DisplayLine generate_mode_line() const;
 
     std::unique_ptr<UserInterface> m_ui;

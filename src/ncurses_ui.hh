@@ -9,9 +9,12 @@
 #include "optional.hh"
 #include "string.hh"
 #include "user_interface.hh"
+#include "vector.hh"
 
 namespace Kakoune
 {
+
+using KeyList = Vector<Key, MemoryDomain::Mapping>;
 
 struct NCursesWin;
 
@@ -73,7 +76,7 @@ private:
                    ColumnCount col_index, ColumnCount max_column,
                    const Face& default_face);
 
-    Optional<Key> get_next_key();
+    KeyList get_next_keys();
 
     NCursesWin* m_window = nullptr;
 
