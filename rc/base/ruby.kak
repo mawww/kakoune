@@ -131,17 +131,24 @@ define-command -hidden ruby-indent-on-new-line %{
     }
 }
 
-define-command -hidden ruby-insert-on-new-line %{
-    evaluate-commands -no-hooks -draft -itersel %{
+define-command -hidden ruby-insert-on-new-line %[
+    evaluate-commands -no-hooks -draft -itersel %[
         # copy _#_ comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s '^\h*\K#\h*' <ret> y gh j P }
         # wisely add end structure
-        evaluate-commands -save-regs x %{
+        evaluate-commands -save-regs x %[
             try %{ execute-keys -draft k <a-x> s ^ \h + <ret> \" x y } catch %{ reg x '' }
-            try %{ execute-keys -draft k <a-x> <a-k> ^ <c-r> x (begin|case|class|def|do|for|if|module|unless|until|while) <ret> j <a-a> i X <a-\;> K <a-K> ^ <c-r> x (begin|case|class|def|do|for|if|module|unless|until|while) . * \n <c-r> x end $ <ret> j x y p j a end <esc> <a-lt> }
-        }
-    }
-}
+            try %[
+                evaluate-commands -draft %[
+                    execute-keys -draft k<a-x> <a-k>^<c-r>x(begin|case|class|def|do|for|if|module|unless|until|while)<ret> # Check if previous line opens a block
+                    # Check that we do not already have an end for this indent level, or that we have another block opening at that indent level first
+                    execute-keys -draft Ge <a-K>\A(^\n|^<c-r>x(?!begin)(?!case)(?!class)(?!def)(?!do)(?!for)(?!if)(?!module)(?!unless)(?!until)(?!while)[^\n]*\n)+<c-r>xend$<ret>
+                ]
+                execute-keys -draft o<c-r>xend<esc> # insert a new line with containing end
+            ]
+        ]
+    ]
+]
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
