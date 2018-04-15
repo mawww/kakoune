@@ -8,9 +8,6 @@
 
 #include <algorithm>
 
-#define NCURSES_OPAQUE 0
-#define NCURSES_INTERNALS
-
 #include <ncurses.h>
 
 #include <fcntl.h>
