@@ -22,6 +22,7 @@
 #include "user_interface.hh"
 #include "unit_tests.hh"
 #include "window.hh"
+#include "word_db.hh"
 
 namespace Kakoune
 {
@@ -734,7 +735,31 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
     SelectionList selections = context.selections();
     context.input_handler().prompt(
         std::move(prompt), {}, default_regex, context.faces()["Prompt"],
-        PromptFlags::None, complete_nothing,
+        PromptFlags::None,
+        [](const Context& context, CompletionFlags, StringView regex, ByteCount pos) -> Completions {
+            auto current_word = [](StringView s) {
+                auto it = s.end();
+                while (it != s.begin() and is_word(*(it-1)))
+                    --it;
+                StringView res{it, s.end()};
+                if (it == s.begin() or res.empty())
+                    return res;
+
+                int backslashes = 0;
+                for (auto bs = it; bs != s.begin() && *(bs-1) == '\\'; --bs)
+                    ++backslashes;
+                return (backslashes % 2 == 1) ? res.substr(1_byte) : res;
+            };
+
+            const auto word = current_word(regex.substr(0_byte, pos));
+            auto matches = get_word_db(context.buffer()).find_matching(word);
+            constexpr size_t max_count = 100;
+            CandidateList candidates;
+            candidates.reserve(std::min(matches.size(), max_count));
+            for_n_best(matches, max_count, [](auto& lhs, auto& rhs) { return rhs < lhs; },
+                       [&](auto&& m) { candidates.push_back(m.candidate().str()); return true; });
+            return {(int)(word.begin() - regex.begin()), pos,  std::move(candidates) };
+        },
         [=](StringView str, PromptEvent event, Context& context) mutable {
             try
             {
