@@ -48,6 +48,8 @@ private:
     Lines m_lines;
 };
 
+WordDB& get_word_db(const Buffer& buffer);
+
 }
 
 #endif // word_db_hh_INCLUDED
