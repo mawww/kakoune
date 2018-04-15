@@ -364,6 +364,20 @@ Init accumulate(Range&& c, Init&& init, BinOp&& op)
     return std::accumulate(begin(c), end(c), init, op);
 }
 
+template<typename Range, typename Compare, typename Func>
+void for_n_best(Range&& c, size_t count, Compare&& compare, Func&& func)
+{
+    using std::begin; using std::end;
+    auto b = begin(c), e = end(c);
+    std::make_heap(b, e, compare);
+    while (count > 0 and b != e)
+    {
+        if (func(*b))
+            --count;
+        std::pop_heap(b, e--, compare);
+    }
+}
+
 template<typename Container>
 auto gather()
 {

@@ -177,30 +177,27 @@ InsertCompletion complete_word(const SelectionList& sels,
 
     constexpr size_t max_count = 100;
     // Gather best max_count matches
-    auto greater = [](auto& lhs, auto& rhs) { return rhs < lhs; };
-    auto first = matches.begin(), last = matches.end();
-    std::make_heap(first, last, greater);
     InsertCompletion::CandidateList candidates;
     candidates.reserve(std::min(matches.size(), max_count));
-    while (candidates.size() < max_count and first != last)
-    {
-        if (candidates.empty() or candidates.back().completion != first->candidate())
-        {
-            DisplayLine menu_entry;
-            if (other_buffers && first->buffer)
-            {
-                const auto pad_len = longest + 1 - first->candidate().char_length();
-                menu_entry.push_back(first->candidate().str());
-                menu_entry.push_back(String{' ', pad_len});
-                menu_entry.push_back({ first->buffer->display_name(), faces["MenuInfo"] });
-            }
-            else
-                menu_entry.push_back(first->candidate().str());
 
-            candidates.push_back({first->candidate().str(), "", std::move(menu_entry)});
+    for_n_best(matches, max_count, [](auto& lhs, auto& rhs) { return rhs < lhs; },
+               [&](RankedMatchAndBuffer& m) {
+        if (not candidates.empty() and candidates.back().completion == m.candidate())
+            return false;
+        DisplayLine menu_entry;
+        if (other_buffers && m.buffer)
+        {
+            const auto pad_len = longest + 1 - m.candidate().char_length();
+            menu_entry.push_back(m.candidate().str());
+            menu_entry.push_back(String{' ', pad_len});
+            menu_entry.push_back({ m.buffer->display_name(), faces["MenuInfo"] });
         }
-        std::pop_heap(first, last--, greater);
-    }
+        else
+            menu_entry.push_back(m.candidate().str());
+
+        candidates.push_back({m.candidate().str(), "", std::move(menu_entry)});
+        return true;
+    });
 
     return { std::move(candidates), word_begin, cursor_pos, buffer.timestamp() };
 }

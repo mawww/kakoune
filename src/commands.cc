@@ -993,17 +993,15 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
             }
 
             constexpr size_t max_count = 100;
-            // Gather best max_count matches
-            auto greater = [](auto& lhs, auto& rhs) { return rhs < lhs; };
-            auto first = matches.begin(), last = matches.end();
-            std::make_heap(first, last, greater);
             CandidateList res;
-            while (res.size() < max_count and first != last)
-            {
-                if (res.empty() or res.back() != first->candidate())
-                    res.push_back(first->candidate().str());
-                std::pop_heap(first, last--, greater);
-            }
+            // Gather best max_count matches
+            for_n_best(matches, max_count, [](auto& lhs, auto& rhs) { return rhs < lhs; },
+                       [&] (RankedMatch& m) {
+                if (not res.empty() and res.back() == m.candidate())
+                    return false;
+                res.push_back(m.candidate().str());
+                return true;
+            });
 
             return Completions{ 0_byte, pos_in_token, std::move(res) };
         };
