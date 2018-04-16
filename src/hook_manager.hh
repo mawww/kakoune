@@ -11,13 +11,21 @@ namespace Kakoune
 class Context;
 class Regex;
 
+enum class HookFlags
+{
+    None = 0,
+    Always = 1 << 0
+};
+constexpr bool with_bit_ops(Meta::Type<HookFlags>) { return true; }
+
 class HookManager : public SafeCountable
 {
 public:
     HookManager(HookManager& parent);
     ~HookManager();
 
-    void add_hook(StringView hook_name, String group, Regex filter, String commands);
+    void add_hook(StringView hook_name, String group, HookFlags flags,
+                  Regex filter, String commands);
     void remove_hooks(StringView group);
     CandidateList complete_hook_group(StringView prefix, ByteCount pos_in_token);
     void run_hook(StringView hook_name, StringView param,

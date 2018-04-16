@@ -16,6 +16,7 @@ namespace Kakoune
 struct HookManager::Hook
 {
     String group;
+    HookFlags flags;
     Regex filter;
     String commands;
 };
@@ -24,10 +25,10 @@ HookManager::HookManager() : m_parent(nullptr) {}
 HookManager::HookManager(HookManager& parent) : SafeCountable{}, m_parent(&parent) {}
 HookManager::~HookManager() = default;
 
-void HookManager::add_hook(StringView hook_name, String group, Regex filter, String commands)
+void HookManager::add_hook(StringView hook_name, String group, HookFlags flags, Regex filter, String commands)
 {
     auto& hooks = m_hooks[hook_name];
-    hooks.emplace_back(new Hook{std::move(group), std::move(filter), std::move(commands)});
+    hooks.emplace_back(new Hook{std::move(group), flags, std::move(filter), std::move(commands)});
 }
 
 void HookManager::remove_hooks(StringView group)
@@ -63,8 +64,7 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
 
 void HookManager::run_hook(StringView hook_name, StringView param, Context& context) const
 {
-    if (context.hooks_disabled())
-        return;
+    const bool only_always = context.hooks_disabled();
 
     if (m_parent)
         m_parent->run_hook(hook_name, param, context);
@@ -98,7 +98,8 @@ void HookManager::run_hook(StringView hook_name, StringView param, Context& cont
     for (auto& hook : hook_list->value)
     {
         MatchResults<const char*> captures;
-        if ((hook->group.empty() or disabled_hooks.empty() or
+            if ((not only_always or (hook->flags & HookFlags::Always)) and
+            (hook->group.empty() or disabled_hooks.empty() or
              not regex_match(hook->group.begin(), hook->group.end(), disabled_hooks))
             and regex_match(param.begin(), param.end(), captures, hook->filter))
             hooks_to_run.push_back({ hook.get(), std::move(captures) });
