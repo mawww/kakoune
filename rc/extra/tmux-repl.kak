@@ -4,8 +4,8 @@
 hook global KakBegin .* %{
     %sh{
         if [ -n "$TMUX" ]; then
-            VERSION_TMUX=$(tmux -V)
-            VERSION_TMUX=$(expr "${VERSION_TMUX}" : 'tmux \([0-9]*\|master\)')
+            VERSION_TMUX=$(tmux -V | cut -d' ' -f2)
+            VERSION_TMUX=${VERSION_TMUX%%.*}
 
             if [ "${VERSION_TMUX}" = "master" ] \
                 || [ "${VERSION_TMUX}" -ge 2 ]; then
