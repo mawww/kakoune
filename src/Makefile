@@ -57,6 +57,10 @@ else ifeq ($(os),DragonFly)
     LIBS += -lncursesw
     CPPFLAGS += -I/usr/local/include
     LDFLAGS += -L/usr/local/lib
+else ifeq ($(os),OpenBSD)
+    LIBS += -lncursesw
+    CPPFLAGS += -I/usr/local/include
+    LDFLAGS += -L/usr/local/lib
 else ifneq (,$(findstring CYGWIN,$(os)))
     CPPFLAGS += -D_XOPEN_SOURCE=700
     LIBS += -lncursesw -ldbghelp
