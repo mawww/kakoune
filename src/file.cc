@@ -23,6 +23,9 @@
 #if defined(__FreeBSD__)
 #include <sys/sysctl.h>
 #endif
+#if defined(__OpenBSD__)
+#include <sys/sysctl.h>
+#endif
 
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
@@ -572,6 +575,8 @@ String get_kak_binary_path()
     kak_assert(res != -1);
     buffer[res] = '\0';
     return buffer;
+#elif defined(__OpenBSD__)
+    return "/usr/local/bin/";
 #else
 # error "finding executable path is not implemented on this platform"
 #endif
