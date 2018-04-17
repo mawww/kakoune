@@ -22,9 +22,6 @@
 #if defined(__FreeBSD__)
 #include <sys/sysctl.h>
 #endif
-#if defined(__OpenBSD__)
-#include <sys/sysctl.h>
-#endif
 
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
