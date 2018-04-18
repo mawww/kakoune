@@ -669,13 +669,13 @@ int run_server(StringView session, StringView server_init,
                  create_local_ui(ui_type), getpid(), {}, get_env_vars(), client_init, std::move(init_coord),
                  [](int status) { local_client_exit = status; });
 
-            if (startup_error)
+            if (startup_error and local_client)
                 local_client->print_status({
                     "error during startup, see *debug* buffer for details",
                     local_client->context().faces()["Error"]
                 });
 
-            if (flags & ServerFlags::StartupInfo)
+            if (flags & ServerFlags::StartupInfo and local_client)
                 local_client->info_show(format("Kakoune {}", version), startup_info, {}, InfoStyle::Prompt);
         }
 
@@ -691,7 +691,7 @@ int run_server(StringView session, StringView server_init,
             client_manager.clear_window_trash();
             buffer_manager.clear_buffer_trash();
 
-            if (sighup_raised)
+            if (sighup_raised and local_client)
             {
                 ClientManager::instance().remove_client(*local_client, false, 0);
                 if (not client_manager.empty() and fork_server_to_background())
@@ -700,6 +700,7 @@ int run_server(StringView session, StringView server_init,
             }
             else if (convert_to_client_pending)
             {
+                kak_assert(local_client);
                 const String client_name = local_client->context().name();
                 const String buffer_name = local_client->context().buffer().name();
                 const String selections = selection_list_to_string(local_client->context().selections());
