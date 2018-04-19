@@ -1,7 +1,7 @@
-# termcmd should be set-option such as the next argument is the whole
+# termcmd should be set such as the next argument is the whole
 # command line to execute
 declare-option -docstring %{shell command run to spawn a new terminal
-A shell command is appended to the one set-option in this option at runtime} \
+A shell command is appended to the one set in this option at runtime} \
     str termcmd %sh{
     for termcmd in 'alacritty      -e sh -c' \
                    'termite        -e      ' \
@@ -27,7 +27,7 @@ The optional arguments will be passed as arguments to the new client} \
     -command-completion \
     x11-new %{ %sh{
         if [ -z "${kak_opt_termcmd}" ]; then
-           echo "echo -markup '{Error}termcmd option is not set-option'"
+           echo "echo -markup '{Error}termcmd option is not set'"
            exit
         fi
         if [ $# -ne 0 ]; then kakoune_params="-e '$@'"; fi
