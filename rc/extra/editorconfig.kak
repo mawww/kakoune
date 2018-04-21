@@ -3,7 +3,7 @@
 
 declare-option -hidden bool editorconfig_trim_trailing_whitespace false
 
-define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file]: set-option formatting behavior according to editorconfig" %{
+define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file]: set formatting behavior according to editorconfig" %{
     remove-hooks buffer editorconfig-hooks
     %sh{
         command -v editorconfig >/dev/null 2>&1 || { echo 'echo -markup "{Error}editorconfig could not be found"'; exit 1; }
