@@ -363,7 +363,7 @@ the Shift modifier and moving will extend the selection instead.
     so the following command
 
 ----------
-    3<a-">
+    3<a-)>
 ----------
 
     rotate (1, 2, 3) and (3, 4, 6) independently
