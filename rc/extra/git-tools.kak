@@ -26,10 +26,17 @@ set-face global GitDiffFlags default,black
 define-command -params 1.. \
   -docstring %sh{printf '%%{git [<arguments>]: git wrapping helper
 All the optional arguments are forwarded to the git utility
-Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n-log\n-show\n-show-diff\n-status\n-update-diff}'} \
+Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  log\n  show\n  show-diff\n  status\n  update-diff}'} \
   -shell-candidates %{
-    [ $kak_token_to_complete -eq 0 ] &&
+    if [ $kak_token_to_complete -eq 0 ]; then
         printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nlog\nshow\nshow-diff\nstatus\nupdate-diff\n"
+    else
+        case "$1" in
+            commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
+            add) git ls-files -dmo --exclude-standard ;;
+            rm) git ls-files -c ;;
+        esac
+    fi
   } \
   git %{ %sh{
     show_git_cmd_output() {
@@ -43,7 +50,7 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
         mkfifo ${output}
         ( git "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
 
-        printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
+        printf %s "evaluate-commands -with-hooks -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
                   set-option buffer filetype '${filetype}'
                   hook -group fifo buffer BufCloseFifo .* %{
@@ -113,7 +120,7 @@ Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n
 
     commit() {
         # Handle case where message needs not to be edited
-        if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit"; then
+        if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit|--fixup.*|--squash.*"; then
             if git commit "$@" > /dev/null 2>&1; then
                 echo 'echo -markup "{Information}Commit succeeded"'
             else
