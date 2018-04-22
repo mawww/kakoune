@@ -53,10 +53,13 @@ else ifeq ($(os),FreeBSD)
     LDFLAGS += -L/usr/local/lib
 else ifeq ($(os),Haiku)
     LIBS += -lncursesw -lnetwork -lbe
+<<<<<<< HEAD
 else ifeq ($(os),DragonFly)
     LIBS += -lncursesw
     CPPFLAGS += -I/usr/local/include
     LDFLAGS += -L/usr/local/lib
+=======
+>>>>>>> 68beb6b2... remove dragonfly specific configs since pkg-config defaults now work fine.
 else ifneq (,$(findstring CYGWIN,$(os)))
     CPPFLAGS += -D_XOPEN_SOURCE=700
     LIBS += -lncursesw -ldbghelp
