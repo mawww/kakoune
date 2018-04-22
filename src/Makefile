@@ -53,10 +53,6 @@ else ifeq ($(os),FreeBSD)
     LDFLAGS += -L/usr/local/lib
 else ifeq ($(os),Haiku)
     LIBS += -lncursesw -lnetwork -lbe
-else ifeq ($(os),DragonFly)
-    LIBS += -lncursesw
-    CPPFLAGS += -I/usr/local/include
-    LDFLAGS += -L/usr/local/lib
 else ifneq (,$(findstring CYGWIN,$(os)))
     CPPFLAGS += -D_XOPEN_SOURCE=700
     LIBS += -lncursesw -ldbghelp
