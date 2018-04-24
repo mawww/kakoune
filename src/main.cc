@@ -229,6 +229,7 @@ void register_registers()
     register_manager.add_register('#', make_dyn_reg(
         [](const Context& context) {
             StringList res;
+            res.reserve(context.selections().size());
             for (size_t i = 1; i < context.selections().size()+1; ++i)
                 res.push_back(to_string((int)i));
             return res;
