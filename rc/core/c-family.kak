@@ -135,7 +135,7 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -draft %[
         printf %s\\n '
             add-highlighter shared/ regions -default code -match-capture FT \
                 string %{MAYBEAT(?<!QUOTE)(?<!QUOTE\\)"} %{(?<!\\)(?:\\\\)*"} "" \
-                string %{R"([^(]*)\(} %{\)([^"]*)"} "" \
+                string %{R"([^(]*)\(} %{\)([^")]*)"} "" \
                 comment /\* \*/ "" \
                 comment // $ "" \
                 disabled ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" "#\h*if(?:def)?" \
