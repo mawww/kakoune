@@ -551,7 +551,7 @@ private:
     NodeIndex new_node(ParsedRegex::Op op, Codepoint value = -1,
                           ParsedRegex::Quantifier quantifier = {ParsedRegex::Quantifier::One})
     {
-        constexpr auto max_nodes = std::numeric_limits<uint16_t>::max();
+        constexpr auto max_nodes = std::numeric_limits<int16_t>::max();
         const NodeIndex res = m_parsed_regex.nodes.size();
         if (res == max_nodes)
             parse_error(format("regex parsed to more than {} ast nodes", max_nodes));
@@ -837,7 +837,7 @@ private:
 
     uint32_t push_inst(CompiledRegex::Op op, uint32_t param = 0)
     {
-        constexpr auto max_instructions = std::numeric_limits<uint16_t>::max();
+        constexpr auto max_instructions = std::numeric_limits<int16_t>::max();
         const uint32_t res = m_program.instructions.size();
         if (res > max_instructions)
             throw regex_error(format("regex compiled to more than {} instructions", max_instructions));

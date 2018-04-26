@@ -220,8 +220,8 @@ public:
 
     ArrayView<const Iterator> captures() const
     {
-        if (m_captures)
-            return { m_captures->pos, m_program.save_count };
+        if (m_captures >= 0)
+            return { m_saves[m_captures]->pos, m_program.save_count };
         return {};
     }
 
@@ -231,25 +231,26 @@ private:
         union // ref count when in use, next_free when in free list
         {
             int refcount;
-            Saves* next_free;
+            int16_t next_free;
         };
         Iterator pos[1];
     };
 
     template<bool copy>
-    Saves* new_saves(Iterator* pos)
+    int16_t new_saves(Iterator* pos)
     {
         kak_assert(not copy or pos != nullptr);
         const auto count = m_program.save_count;
-        if (m_first_free != nullptr)
+        if (m_first_free >= 0)
         {
-            Saves* res = m_first_free;
-            m_first_free = res->next_free;
-            res->refcount = 1;
+            const int16_t res = m_first_free;
+            Saves* save = m_saves[res];
+            m_first_free = save->next_free;
+            save->refcount = 1;
             if (copy)
-                std::copy(pos, pos + count, res->pos);
+                std::copy(pos, pos + count, save->pos);
             else
-                std::fill(res->pos, res->pos + count, Iterator{});
+                std::fill(save->pos, save->pos + count, Iterator{});
 
             return res;
         }
@@ -259,22 +260,22 @@ private:
         for (size_t i = 1; i < count; ++i)
             new (&saves->pos[i]) Iterator{copy ? pos[i] : Iterator{}};
         m_saves.push_back(saves);
-        return saves;
+        return static_cast<int16_t>(m_saves.size() - 1);
     }
 
-    void release_saves(Saves* saves)
+    void release_saves(int16_t saves)
     {
-        if (saves and --saves->refcount == 0)
+        if (saves >= 0 and --m_saves[saves]->refcount == 0)
         {
-            saves->next_free = m_first_free;
+            m_saves[saves]->next_free = m_first_free;
             m_first_free = saves;
         }
     };
 
     struct Thread
     {
-        const CompiledRegex::Instruction* inst;
-        Saves* saves;
+        int16_t inst;
+        int16_t saves;
     };
 
     using Utf8It = utf8::iterator<Iterator>;
@@ -300,7 +301,7 @@ private:
         auto* instructions = m_program.instructions.data();
         while (true)
         {
-            auto& inst = *thread.inst++;
+            auto& inst = instructions[thread.inst++];
             // if this instruction was already executed for this step in another thread,
             // then this thread is redundant and can be dropped
             if (inst.last_step == current_step)
@@ -320,35 +321,35 @@ private:
                 case CompiledRegex::AnyChar:
                     return StepResult::Consumed;
                 case CompiledRegex::Jump:
-                    thread.inst = instructions + inst.param;
+                    thread.inst = static_cast<int16_t>(inst.param);
                     break;
                 case CompiledRegex::Split_PrioritizeParent:
                 {
-                    if (thread.saves)
-                        ++thread.saves->refcount;
-                    m_current_threads.push_back({instructions + inst.param, thread.saves});
+                    if (thread.saves >= 0)
+                        ++m_saves[thread.saves]->refcount;
+                    m_current_threads.push_back({static_cast<int16_t>(inst.param), thread.saves});
                     break;
                 }
                 case CompiledRegex::Split_PrioritizeChild:
                 {
-                    if (thread.saves)
-                        ++thread.saves->refcount;
+                    if (thread.saves >= 0)
+                        ++m_saves[thread.saves]->refcount;
                     m_current_threads.push_back({thread.inst, thread.saves});
-                    thread.inst = instructions + inst.param;
+                    thread.inst = static_cast<uint16_t>(inst.param);
                     break;
                 }
                 case CompiledRegex::Save:
                 {
                     if (no_saves)
                         break;
-                    if (not thread.saves)
+                    if (thread.saves < 0)
                         thread.saves = new_saves<false>(nullptr);
-                    else if (thread.saves->refcount > 1)
+                    else if (m_saves[thread.saves]->refcount > 1)
                     {
-                        --thread.saves->refcount;
-                        thread.saves = new_saves<true>(thread.saves->pos);
+                        --m_saves[thread.saves]->refcount;
+                        thread.saves = new_saves<true>(m_saves[thread.saves]->pos);
                     }
-                    thread.saves->pos[inst.param] = get_base(pos);
+                    m_saves[thread.saves]->pos[inst.param] = get_base(pos);
                     break;
                 }
                 case CompiledRegex::Class:
@@ -425,8 +426,8 @@ private:
     {
         kak_assert(m_current_threads.empty() and m_next_threads.empty());
         release_saves(m_captures);
-        m_captures = nullptr;
-        m_current_threads.push_back({config.instructions.begin(), nullptr});
+        m_captures = -1;
+        m_current_threads.push_back({static_cast<int16_t>(&config.instructions[0] - &m_program.instructions[0]), -1});
 
         const auto& start_desc = direction == MatchDirection::Forward ? m_program.forward_start_desc
                                                                       : m_program.backward_start_desc;
@@ -471,12 +472,12 @@ private:
                     release_saves(thread.saves);
                     break;
                 case StepResult::Consumed:
-                    if (thread.inst->scheduled)
+                    if (m_program.instructions[thread.inst].scheduled)
                     {
                         release_saves(thread.saves);
                         continue;
                     }
-                    thread.inst->scheduled = true;
+                    m_program.instructions[thread.inst].scheduled = true;
                     m_next_threads.push_back(thread);
                     break;
                 case StepResult::FindNextStart:
@@ -487,7 +488,7 @@ private:
             }
             kak_assert(m_current_threads.empty());
             for (auto& thread : m_next_threads)
-                thread.inst->scheduled = false;
+                m_program.instructions[thread.inst].scheduled = false;
 
             if (pos == config.end or m_next_threads.empty() or
                 (found_match and (config.flags & RegexExecFlags::AnyMatch)))
@@ -580,8 +581,8 @@ private:
     Vector<Thread, MemoryDomain::Regex> m_next_threads;
 
     Vector<Saves*, MemoryDomain::Regex> m_saves;
-    Saves* m_first_free = nullptr;
-    Saves* m_captures = nullptr;
+    int16_t m_first_free = -1;
+    int16_t m_captures = -1;
 };
 
 }
