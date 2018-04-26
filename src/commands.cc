@@ -1143,7 +1143,7 @@ const CommandDesc debug_cmd = {
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
                auto c = {"info", "buffers", "options", "memory", "shared-strings",
-                         "profile-hash-maps", "faces", "mappings"};
+                         "profile-hash-maps", "faces", "mappings", "regex"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
@@ -1215,6 +1215,14 @@ const CommandDesc debug_cmd = {
                                           mode, key_to_str(key),
                                           keymaps.get_mapping(key, m).docstring));
             }
+        }
+        else if (parser[0] == "regex")
+        {
+            if (parser.positional_count() != 2)
+                throw runtime_error("expected a regex");
+
+            write_to_debug_buffer(format(" * {}:\n{}",
+                                  parser[1], dump_regex(compile_regex(parser[1], RegexCompileFlags::None))));
         }
         else
             throw runtime_error(format("no such debug command: '{}'", parser[0]));

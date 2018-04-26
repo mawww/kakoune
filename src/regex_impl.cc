@@ -992,60 +992,63 @@ private:
     ParsedRegex& m_parsed_regex;
 };
 
-void dump_regex(const CompiledRegex& program)
+String dump_regex(const CompiledRegex& program)
 {
+    String res;
     int count = 0;
     for (auto& inst : program.instructions)
     {
-        printf(" %03d     ", count++);
+        char buf[10];
+        sprintf(buf, " %03d     ", count++);
+        res += buf;
         switch (inst.op)
         {
             case CompiledRegex::Literal:
-                printf("literal %lc\n", inst.param);
+                res += format("literal {}\n", inst.param);
                 break;
             case CompiledRegex::Literal_IgnoreCase:
-                printf("literal (ignore case) %lc\n", inst.param);
+                res += format("literal (ignore case) {}\n", inst.param);
                 break;
             case CompiledRegex::AnyChar:
-                printf("any char\n");
+                res += "any char\n";
                 break;
             case CompiledRegex::Jump:
-                printf("jump %u\n", inst.param);
+                res += format("jump {}\n", inst.param);
                 break;
             case CompiledRegex::Split_PrioritizeParent:
             case CompiledRegex::Split_PrioritizeChild:
             {
-                printf("split (prioritize %s) %u\n",
-                       inst.op == CompiledRegex::Split_PrioritizeParent ? "parent" : "child",
-                       inst.param);
+                res += format("split (prioritize {}) {}\n",
+                              inst.op == CompiledRegex::Split_PrioritizeParent ? "parent" : "child",
+                              inst.param);
                 break;
             }
             case CompiledRegex::Save:
-                printf("save %d\n", inst.param);
+                res += format("save {}\n", inst.param);
                 break;
             case CompiledRegex::Class:
-                printf("class %d\n", inst.param);
+                res += format("class {}\n", inst.param);
                 break;
             case CompiledRegex::CharacterType:
-                printf("character type %d\n", inst.param);
+                res += format("character type {}\n", inst.param);
                 break;
             case CompiledRegex::LineStart:
-                printf("line start\n");
+                res += "line start\n";
                 break;
             case CompiledRegex::LineEnd:
-                printf("line end\n");
+                res += "line end\n";
                 break;
             case CompiledRegex::WordBoundary:
-                printf("word boundary\n");
+                res += "word boundary\n";
                 break;
             case CompiledRegex::NotWordBoundary:
-                printf("not word boundary\n");
+                res += "not word boundary\n";
                 break;
             case CompiledRegex::SubjectBegin:
-                printf("subject begin\n");
+                res += "subject begin\n";
                 break;
             case CompiledRegex::SubjectEnd:
-                printf("subject end\n");
+                res += "subject end\n";
                 break;
             case CompiledRegex::LookAhead:
             case CompiledRegex::NegativeLookAhead:
@@ -1078,16 +1081,17 @@ void dump_regex(const CompiledRegex& program)
                 String str;
                 for (auto it = program.lookarounds.begin() + inst.param; *it != -1; ++it)
                     utf8::dump(std::back_inserter(str), *it);
-                printf("%s (%s)\n", name, str.c_str());
+                res += format("{} ({})\n", name, str);
                 break;
             }
             case CompiledRegex::FindNextStart:
-                printf("find next start\n");
+                res += "find next start\n";
                 break;
             case CompiledRegex::Match:
-                printf("match\n");
+                res += "match\n";
         }
     }
+    return res;
 }
 
 CompiledRegex compile_regex(StringView re, RegexCompileFlags flags)
@@ -1134,7 +1138,7 @@ struct TestVM : CompiledRegex, ThreadedRegexVM<const char*, dir>
         : CompiledRegex{compile_regex(re, dir == MatchDirection::Forward ?
                                           RegexCompileFlags::None : RegexCompileFlags::Backward)},
           VMType{(const CompiledRegex&)*this}
-    { if (dump) dump_regex(*this); }
+    { if (dump) printf(dump_regex(*this).c_str()); }
 
     bool exec(StringView re, RegexExecFlags flags = RegexExecFlags::AnyMatch)
     {

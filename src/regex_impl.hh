@@ -112,6 +112,8 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     std::unique_ptr<StartDesc> backward_start_desc;
 };
 
+String dump_regex(const CompiledRegex& program);
+
 enum class RegexCompileFlags
 {
     None     = 0,
