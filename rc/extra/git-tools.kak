@@ -50,7 +50,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         mkfifo ${output}
         ( git "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
 
-        printf %s "evaluate-commands -with-hooks -try-client '$kak_opt_docsclient' %{
+        printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
                   set-option buffer filetype '${filetype}'
                   hook -always -group fifo buffer BufCloseFifo .* %{
