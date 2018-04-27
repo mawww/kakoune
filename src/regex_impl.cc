@@ -998,7 +998,7 @@ String dump_regex(const CompiledRegex& program)
     int count = 0;
     for (auto& inst : program.instructions)
     {
-        char buf[10];
+        char buf[20];
         sprintf(buf, " %03d     ", count++);
         res += buf;
         switch (inst.op)
