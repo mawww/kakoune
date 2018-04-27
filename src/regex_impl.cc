@@ -1138,7 +1138,7 @@ struct TestVM : CompiledRegex, ThreadedRegexVM<const char*, dir>
         : CompiledRegex{compile_regex(re, dir == MatchDirection::Forward ?
                                           RegexCompileFlags::None : RegexCompileFlags::Backward)},
           VMType{(const CompiledRegex&)*this}
-    { if (dump) printf(dump_regex(*this).c_str()); }
+    { if (dump) puts(dump_regex(*this).c_str()); }
 
     bool exec(StringView re, RegexExecFlags flags = RegexExecFlags::AnyMatch)
     {
