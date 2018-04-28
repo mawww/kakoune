@@ -32,7 +32,7 @@ public:
     AliasRegistry&       aliases()            { return m_aliases; }
     const AliasRegistry& aliases()      const { return m_aliases; }
     FaceRegistry&        faces()              { return m_faces; }
-    const FaceRegistry&  faces()      const   { return m_faces; }
+    const FaceRegistry&  faces()        const { return m_faces; }
     Highlighters&        highlighters()       { return m_highlighters; }
     const Highlighters&  highlighters() const { return m_highlighters; }
 
@@ -44,7 +44,7 @@ private:
     HookManager   m_hooks;
     KeymapManager m_keymaps;
     AliasRegistry m_aliases;
-    FaceRegistry m_faces;
+    FaceRegistry  m_faces;
     Highlighters  m_highlighters;
 };
 
