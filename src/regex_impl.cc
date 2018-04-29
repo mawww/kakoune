@@ -907,7 +907,7 @@ private:
                 {
                     for (auto& range : character_class.ranges)
                     {
-                        constexpr auto clamp = [](Codepoint cp) { return std::min(CompiledRegex::StartDesc::count, cp); };
+                        const auto clamp = [](Codepoint cp) { return std::min(CompiledRegex::StartDesc::count, cp); };
                         for (auto cp = clamp(range.min), end = clamp(range.max + 1); cp < end; ++cp)
                             start_desc.map[cp] = true;
                         if (range.max >= CompiledRegex::StartDesc::count)
