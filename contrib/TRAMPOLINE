@@ -9,11 +9,11 @@
                   Mawww's experiment for a better code editor
 +=----------------------------------------------------------------------------=+
 
-This walk-through is an introduction to Kakoune's basic edition capabilities
+This walk-through is an introduction to Kakoune's basic editing capabilities
 to help new users transition over easily from another editor, or simply
 learn how to write and edit documents with style.
 
-In the first section, you will learn about the primitives of the edition
+In the first section, you will learn about the primitives of the editing
 language to be able to get to a level of knowledge of the editor that
 guarantees that you can work with it efficiently.
 
@@ -31,22 +31,23 @@ using the built-in `:doc` command.
 
                     =[ MODES
 
-                    Kakoune uses a paradigm called "modal edition" to allow
+                    Kakoune uses a paradigm called "modal editing" to allow
        .---,        users to either have every single key they type inserted
        | i |        into the file being edited (called "insert mode"),
        `---'        or execute commands that are triggered by the keys hit
                     (the "normal mode").  Aside from arrow keys, most keys
-       .---,        described in this document are "edition primitives" that
-       |esc|        have to be hit in command mode, which is the default mode
+       .---,        described in this document are "editing primitives" that
+       |esc|        have to be hit in normal mode, which is the default mode
        `---'        when you start the editor. To enter insert mode, hit the
-                    `i` key, and to leave it, hit the escape key.
+                    `i` key, and to leave it and return to normal mode, hit the 
+                    escape key.
 
 
                     =[ MOVEMENT
        .---,
-       | ^ |        Movement in a buffer (the representation of the contents
+       | ↑ |        Movement in a buffer (the representation of the contents
    .---'---'---,    of a file opened by Kakoune) can be achieved using the arrow
-   | < | v | > |    keys, which will move the cursor up one column/row into
+   | ← | ↓ | → |    keys, which will move the cursor up one column/row into
    `---'---'---`    a given direction.
 
                     However, furthering the tradition of mode-based editors,
@@ -55,7 +56,7 @@ using the built-in `:doc` command.
  `---'---'---'---`  left, down, up, right by one, when hit. Using those keys
    |   |   |   |    is the recommended way of moving around in a buffer.
  .---,---,---,---,  If you're not familiar with this concept, the proximity
- | < | V | ^ | > |  of those four keys with the rest of the lettered keys
+ | ← | ↓ | ↑ | → |  of those four keys with the rest of the lettered keys
  `---'---'---'---`  on a `qwerty` layout allows faster interaction with the
                     primitives than if the user had to moves their hand to
    .---,            reach the arrow keys.
@@ -124,7 +125,7 @@ using the built-in `:doc` command.
                     "cursor" by introducing selections, but it also allows
         .---,       multiple selections within the same buffer. This makes
         | % |       it very convenient to modify text in multiple locations
-        `---'       at once, as edition primitives apply to all the currently
+        `---'       at once, as editing primitives apply to all the currently
                     selected text.
         .---,
         | s |       Example: to remove all occurrences of the word "foo", one
@@ -341,7 +342,7 @@ using the built-in `:doc` command.
 
                     Despite the ability to select bits of data using regular
                     expressions, there are times when using them isn't enough,
-                    and additional manual edition of the selections is
+                    and additional manual editing of the selections is
         .---,       needed. In order to loop through all the selections and
         | ) |       remove the current one, two primitives are available:
         `---'       respectively the parenthesis (`)`), and the alt/space
