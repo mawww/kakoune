@@ -202,9 +202,8 @@ public:
         };
 
         EffectiveIt start{config.begin};
-        const auto& start_desc = direction == MatchDirection::Forward ? m_program.forward_start_desc
-                                                                      : m_program.backward_start_desc;
-        if (start_desc)
+        if (const auto& start_desc = direction == MatchDirection::Forward ?
+            m_program.forward_start_desc : m_program.backward_start_desc)
         {
             if (search)
             {
@@ -213,8 +212,7 @@ public:
                     return false;
             }
             else if (start != config.end and
-                     not start_desc->map[*start < CompiledRegex::StartDesc::count ?
-                                         *start : CompiledRegex::StartDesc::other])
+                     not start_desc->map[*start < StartDesc::count ? *start : StartDesc::other])
                 return false;
         }
 
@@ -281,6 +279,7 @@ private:
         int16_t saves;
     };
 
+    using StartDesc = CompiledRegex::StartDesc;
     using Utf8It = utf8::iterator<Iterator>;
     using EffectiveIt = std::conditional_t<direction == MatchDirection::Forward,
                                            Utf8It, std::reverse_iterator<Utf8It>>;
@@ -507,12 +506,11 @@ private:
         }
     }
 
-    void to_next_start(EffectiveIt& start, const EffectiveIt& end,
-                       const CompiledRegex::StartDesc& start_desc)
+    void to_next_start(EffectiveIt& start, const EffectiveIt& end, const StartDesc& start_desc)
     {
         Codepoint cp;
         while (start != end and (cp = *start) >= 0 and
-               not start_desc.map[cp < CompiledRegex::StartDesc::count ? cp : CompiledRegex::StartDesc::other])
+               not start_desc.map[cp < StartDesc::count ? cp : StartDesc::other])
             ++start;
     }
 
