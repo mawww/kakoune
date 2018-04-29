@@ -232,7 +232,7 @@ private:
     {
         union // ref count when in use, next_free when in free list
         {
-            int refcount;
+            int16_t refcount;
             int16_t next_free;
         };
         Iterator pos[1];
@@ -329,14 +329,14 @@ private:
                 {
                     if (thread.saves >= 0)
                         ++m_saves[thread.saves]->refcount;
-                    m_current_threads.push_back({static_cast<int16_t>(inst.param), thread.saves});
+                    m_threads.push_current({static_cast<int16_t>(inst.param), thread.saves});
                     break;
                 }
                 case CompiledRegex::Split_PrioritizeChild:
                 {
                     if (thread.saves >= 0)
                         ++m_saves[thread.saves]->refcount;
-                    m_current_threads.push_back({thread.inst, thread.saves});
+                    m_threads.push_current({thread.inst, thread.saves});
                     thread.inst = static_cast<uint16_t>(inst.param);
                     break;
                 }
@@ -413,8 +413,8 @@ private:
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::FindNextStart:
-                    kak_assert(m_current_threads.empty()); // search thread should by construction be the lower priority one
-                    if (m_next_threads.empty())
+                    kak_assert(m_threads.current_is_empty()); // search thread should by construction be the lower priority one
+                    if (m_threads.next_is_empty())
                         return StepResult::FindNextStart;
                     return StepResult::Consumed;
                 case CompiledRegex::Match:
@@ -426,10 +426,10 @@ private:
 
     bool exec_program(EffectiveIt pos, const ExecConfig& config)
     {
-        kak_assert(m_current_threads.empty() and m_next_threads.empty());
+        kak_assert(m_threads.current_is_empty() and m_threads.next_is_empty());
         release_saves(m_captures);
         m_captures = -1;
-        m_current_threads.push_back({static_cast<int16_t>(&config.instructions[0] - &m_program.instructions[0]), -1});
+        m_threads.push_current({static_cast<int16_t>(&config.instructions[0] - &m_program.instructions[0]), -1});
 
         const auto& start_desc = direction == MatchDirection::Forward ? m_program.forward_start_desc
                                                                       : m_program.backward_start_desc;
@@ -447,10 +447,9 @@ private:
             }
 
             bool find_next_start = false;
-            while (not m_current_threads.empty())
+            while (not m_threads.current_is_empty())
             {
-                auto thread = m_current_threads.back();
-                m_current_threads.pop_back();
+                auto thread = m_threads.pop_current();
                 switch (step(pos, current_step, thread, config))
                 {
                 case StepResult::Matched:
@@ -466,9 +465,8 @@ private:
                     found_match = true;
 
                     // remove this and lower priority threads
-                    for (auto& t : m_current_threads)
-                        release_saves(t.saves);
-                    m_current_threads.clear();
+                    while (not m_threads.current_is_empty())
+                        release_saves(m_threads.pop_current().saves);
                     break;
                 case StepResult::Failed:
                     release_saves(thread.saves);
@@ -480,29 +478,27 @@ private:
                         continue;
                     }
                     m_program.instructions[thread.inst].scheduled = true;
-                    m_next_threads.push_back(thread);
+                    m_threads.push_next(thread);
                     break;
                 case StepResult::FindNextStart:
-                    m_next_threads.push_back(thread);
+                    m_threads.push_next(thread);
                     find_next_start = true;
                     break;
                 }
             }
-            kak_assert(m_current_threads.empty());
-            for (auto& thread : m_next_threads)
+            for (auto& thread : m_threads.next_threads())
                 m_program.instructions[thread.inst].scheduled = false;
 
-            if (pos == config.end or m_next_threads.empty() or
+            if (pos == config.end or m_threads.next_is_empty() or
                 (found_match and (config.flags & RegexExecFlags::AnyMatch)))
             {
-                for (auto& t : m_next_threads)
+                for (auto& t : m_threads.next_threads())
                     release_saves(t.saves);
-                m_next_threads.clear();
+                m_threads.clear_next();
                 return found_match;
             }
 
-            std::swap(m_current_threads, m_next_threads);
-            std::reverse(m_current_threads.begin(), m_current_threads.end());
+            m_threads.swap_next();
             ++pos;
 
             if (find_next_start and start_desc)
@@ -579,9 +575,47 @@ private:
 
     const CompiledRegex& m_program;
 
-    Vector<Thread, MemoryDomain::Regex> m_current_threads;
-    Vector<Thread, MemoryDomain::Regex> m_next_threads;
+    struct DualThreadStack
+    {
+        bool current_is_empty() const { return m_current == 0; }
+        bool next_is_empty() const { return m_next == m_capacity; }
 
+        void push_current(Thread thread) { grow_ifn(); m_data[m_current++] = thread; }
+        Thread pop_current() { kak_assert(m_current > 0); return m_data[--m_current]; }
+
+        void push_next(Thread thread) { grow_ifn(); m_data[--m_next] = thread; }
+        void clear_next() { m_next = m_capacity; }
+        ConstArrayView<Thread> next_threads() const { return { m_data + m_next, m_data + m_capacity }; }
+
+        void swap_next()
+        {
+            for (; m_next < m_capacity; m_current++, m_next++)
+                m_data[m_current] = m_data[m_next];
+        }
+
+    private:
+        void grow_ifn()
+        {
+            if (m_current != m_next)
+                return;
+            const auto new_capacity = m_capacity ? m_capacity * 2 : 4;
+            Thread* new_data = new Thread[new_capacity];
+            std::copy(m_data, m_data + m_current, new_data);
+            const auto new_next = new_capacity - (m_capacity - m_next);
+            std::copy(m_data + m_next, m_data + m_capacity, new_data + new_next);
+            delete[] m_data;
+            m_capacity = new_capacity;
+            m_next = new_next;
+            m_data = new_data;
+        }
+
+        Thread* m_data = nullptr;
+        int16_t m_capacity = 0;
+        int16_t m_current = 0;
+        int16_t m_next = 0;
+    };
+
+    DualThreadStack m_threads;
     Vector<Saves*, MemoryDomain::Regex> m_saves;
     int16_t m_first_free = -1;
     int16_t m_captures = -1;
