@@ -686,9 +686,12 @@ int run_server(StringView session, StringView server_init,
             client_manager.clear_window_trash();
             buffer_manager.clear_buffer_trash();
 
-            if (local_client and not local_client->is_ui_ok())
+            if (local_client and not contains(client_manager, local_client))
+                local_client = nullptr;
+            else if (local_client and not local_client->is_ui_ok())
             {
                 ClientManager::instance().remove_client(*local_client, false, -1);
+                local_client = nullptr;
                 if (not client_manager.empty() and fork_server_to_background())
                     return 0;
             }
