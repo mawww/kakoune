@@ -628,7 +628,7 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
                 continue;
 
             if (target_col > 0)
-                line.push_back({String{' ', target_col}});
+                line.push_back({String{' ', target_col}, {}});
             line.push_back({" ", face});
         }
     };

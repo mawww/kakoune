@@ -37,7 +37,7 @@ public:
     DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end)
         : m_type(Range), m_buffer(&buffer), m_range{begin, end} {}
 
-    DisplayAtom(String str, Face face = Face{})
+    DisplayAtom(String str, Face face)
         : m_type(Text), m_text(std::move(str)), face(face) {}
 
     StringView content() const;
@@ -104,7 +104,7 @@ public:
 
     DisplayLine() = default;
     DisplayLine(AtomList atoms);
-    DisplayLine(String str, Face face = Face{})
+    DisplayLine(String str, Face face)
     { push_back({ std::move(str), face }); }
 
     iterator begin() { return m_atoms.begin(); }

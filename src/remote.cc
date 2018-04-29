@@ -290,15 +290,14 @@ Color MsgReader::read<Color>()
 template<>
 DisplayAtom MsgReader::read<DisplayAtom>()
 {
-    DisplayAtom atom(read<String>());
-    atom.face = read<Face>();
-    return atom;
+    String content = read<String>();
+    return {std::move(content), read<Face>()};
 }
 
 template<>
 DisplayLine MsgReader::read<DisplayLine>()
 {
-    return DisplayLine(read_vector<DisplayAtom>());
+    return {read_vector<DisplayAtom>()};
 }
 
 template<>

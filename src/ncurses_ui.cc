@@ -382,7 +382,7 @@ void NCursesUI::draw_line(NCursesWin* window, const DisplayLine& line,
     }
 }
 
-static const DisplayLine empty_line = String(" ");
+static const DisplayLine empty_line = { String(" "), {} };
 
 void NCursesUI::draw(const DisplayBuffer& display_buffer,
                      const Face& default_face,
@@ -438,7 +438,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     {
         DisplayLine trimmed_mode_line = mode_line;
         trimmed_mode_line.trim(mode_len + 2 - remaining, remaining - 2);
-        trimmed_mode_line.insert(trimmed_mode_line.begin(), { "…" });
+        trimmed_mode_line.insert(trimmed_mode_line.begin(), { "…", {} });
         kak_assert(trimmed_mode_line.length() == remaining - 1);
 
         ColumnCount col = m_dimensions.column - remaining + 1;

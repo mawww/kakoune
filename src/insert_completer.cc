@@ -179,12 +179,12 @@ InsertCompletion complete_word(const SelectionList& sels,
         if (other_buffers && m.buffer)
         {
             const auto pad_len = longest + 1 - m.candidate().char_length();
-            menu_entry.push_back(m.candidate().str());
-            menu_entry.push_back(String{' ', pad_len});
+            menu_entry.push_back({ m.candidate().str(), {} });
+            menu_entry.push_back({ String{' ', pad_len}, {} });
             menu_entry.push_back({ m.buffer->display_name(), faces["MenuInfo"] });
         }
         else
-            menu_entry.push_back(m.candidate().str());
+            menu_entry.push_back({ m.candidate().str(), {} });
 
         candidates.push_back({m.candidate().str(), "", std::move(menu_entry)});
         return true;
@@ -226,7 +226,7 @@ InsertCompletion complete_filename(const SelectionList& sels,
     {
         for (auto& filename : Kakoune::complete_filename(prefix,
                                                          options["ignored_files"].get<Regex>()))
-            candidates.push_back({ filename, "", filename });
+            candidates.push_back({ filename, "", {filename, {}} });
     }
     else
     {
@@ -246,7 +246,7 @@ InsertCompletion complete_filename(const SelectionList& sels,
                                                              options["ignored_files"].get<Regex>()))
             {
                 StringView candidate = filename.substr(dir.length());
-                candidates.push_back({ candidate.str(), "", candidate.str() });
+                candidates.push_back({ candidate.str(), "", {candidate.str(), {}} });
             }
 
             visited_dirs.push_back(std::move(dir));
@@ -316,7 +316,7 @@ InsertCompletion complete_option(const SelectionList& sels,
                     auto& menu = std::get<2>(candidate);
                     match.menu_entry = not menu.empty() ?
                         parse_display_line(expand_tabs(menu, tabstop, column), faces)
-                      : DisplayLine{ expand_tabs(menu, tabstop, column) };
+                      : DisplayLine{ expand_tabs(menu, tabstop, column), {} };
 
                     matches.push_back(std::move(match));
                 }
@@ -368,7 +368,7 @@ InsertCompletion complete_line(const SelectionList& sels,
             {
                 StringView candidate = line.substr(0_byte, line.length()-1);
                 candidates.push_back({candidate.str(), "",
-                                      expand_tabs(candidate, tabstop, column)});
+                                      {expand_tabs(candidate, tabstop, column), {}}});
                 // perf: it's unlikely the user intends to search among >10 candidates anyway
                 if (candidates.size() == 100)
                     break;
