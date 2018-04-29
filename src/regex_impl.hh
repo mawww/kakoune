@@ -103,9 +103,9 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
 
     struct StartDesc : UseMemoryDomain<MemoryDomain::Regex>
     {
-        static constexpr size_t count = 256;
-        static constexpr Codepoint other = 256;
-        bool map[count+1];
+        static constexpr Codepoint count = 128;
+        static constexpr Codepoint other = 0;
+        bool map[count];
     };
 
     std::unique_ptr<StartDesc> forward_start_desc;
@@ -213,7 +213,8 @@ public:
                     return false;
             }
             else if (start != config.end and
-                     not start_desc->map[std::min(*start, CompiledRegex::StartDesc::other)])
+                     not start_desc->map[*start < CompiledRegex::StartDesc::count ?
+                                         *start : CompiledRegex::StartDesc::other])
                 return false;
         }
 
@@ -509,8 +510,9 @@ private:
     void to_next_start(EffectiveIt& start, const EffectiveIt& end,
                        const CompiledRegex::StartDesc& start_desc)
     {
-        while (start != end and *start >= 0 and
-               not start_desc.map[std::min(*start, CompiledRegex::StartDesc::other)])
+        Codepoint cp;
+        while (start != end and (cp = *start) >= 0 and
+               not start_desc.map[cp < CompiledRegex::StartDesc::count ? cp : CompiledRegex::StartDesc::other])
             ++start;
     }
 

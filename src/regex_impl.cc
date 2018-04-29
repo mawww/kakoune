@@ -15,6 +15,7 @@ namespace Kakoune
 {
 
 constexpr Codepoint CompiledRegex::StartDesc::other;
+constexpr Codepoint CompiledRegex::StartDesc::count;
 
 struct ParsedRegex
 {
@@ -906,15 +907,16 @@ private:
                 {
                     for (auto& range : character_class.ranges)
                     {
-                        auto min = std::min(CompiledRegex::StartDesc::other, range.min);
-                        auto max = std::min(CompiledRegex::StartDesc::other, range.max);
-                        for (Codepoint cp = min; cp <= max; ++cp)
+                        constexpr auto clamp = [](Codepoint cp) { return std::min(CompiledRegex::StartDesc::count, cp); };
+                        for (auto cp = clamp(range.min), end = clamp(range.max + 1); cp < end; ++cp)
                             start_desc.map[cp] = true;
+                        if (range.max >= CompiledRegex::StartDesc::count)
+                            start_desc.map[CompiledRegex::StartDesc::other] = true;
                     }
                 }
                 else
                 {
-                    for (Codepoint cp = 0; cp < CompiledRegex::StartDesc::other; ++cp)
+                    for (Codepoint cp = 0; cp < CompiledRegex::StartDesc::count; ++cp)
                     {
                         if (start_desc.map[cp] or is_character_class(character_class, cp))
                             start_desc.map[cp] = true;
@@ -926,7 +928,7 @@ private:
             case ParsedRegex::CharacterType:
             {
                 const CharacterType ctype = (CharacterType)node.value;
-                for (Codepoint cp = 0; cp < CompiledRegex::StartDesc::other; ++cp)
+                for (Codepoint cp = 0; cp < CompiledRegex::StartDesc::count; ++cp)
                 {
                     if (is_ctype(ctype, cp))
                         start_desc.map[cp] = true;
