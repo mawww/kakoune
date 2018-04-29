@@ -20,7 +20,7 @@ namespace Kakoune
 template<typename T>
 String to_json(ArrayView<const T> array)
 {
-    return "[" + join(array | transform([](auto&& elem) { return to_json(elem); }), ',', false) + "]";
+    return "[" + join(array | transform([](auto&& elem) { return to_json(elem); }), ", ") + "]";
 }
 
 template<typename T, MemoryDomain D>

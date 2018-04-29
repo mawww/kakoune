@@ -1,3 +1,4 @@
+{ "jsonrpc": "2.0", "method": "set_ui_options", "params": [{}] }
 { "jsonrpc": "2.0", "method": "draw", "params": [[[{ "face": { "fg": "black", "bg": "white", "attributes": [] }, "contents": "\"" }, { "face": { "fg": "magenta", "bg": "default", "attributes": [] }, "contents": "\"\">>> " }, { "face": { "fg": "default", "bg": "default", "attributes": [] }, "contents": "\"\"\"\u000a" }]], { "fg": "default", "bg": "default", "attributes": [] }, { "fg": "blue", "bg": "default", "attributes": [] }] }
 { "jsonrpc": "2.0", "method": "menu_hide", "params": [] }
 { "jsonrpc": "2.0", "method": "info_hide", "params": [] }

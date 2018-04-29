@@ -38,6 +38,19 @@ String join(const Container& container, char joiner, bool esc_joiner = true)
     return res;
 }
 
+template<typename Container>
+String join(const Container& container, StringView joiner)
+{
+    String res;
+    for (const auto& str : container)
+    {
+        if (not res.empty())
+            res += joiner;
+        res += str;
+    }
+    return res;
+}
+
 inline bool prefix_match(StringView str, StringView prefix)
 {
     return str.substr(0_byte, prefix.length()) == prefix;
