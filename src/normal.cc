@@ -1982,7 +1982,7 @@ template<typename Type, Direction direction, SelectMode mode = SelectMode::Repla
 void move_cursor(Context& context, NormalParams params)
 {
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
-    const Type offset(direction * std::max(params.count,1));
+    const Type offset{direction * std::max(params.count,1)};
     const ColumnCount tabstop = context.options()["tabstop"].get<int>();
     auto& selections = context.selections();
     for (auto& sel : selections)

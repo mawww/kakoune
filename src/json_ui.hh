@@ -19,6 +19,8 @@ public:
     JsonUI(const JsonUI&) = delete;
     JsonUI& operator=(const JsonUI&) = delete;
 
+    bool is_ok() const override { return m_stdin_watcher.fd() != -1; }
+
     void draw(const DisplayBuffer& display_buffer,
               const Face& default_face,
               const Face& buffer_padding) override;

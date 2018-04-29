@@ -219,10 +219,12 @@ void NCursesUI::set_face(NCursesWin* window, Face face, const Face& default_face
 }
 
 static sig_atomic_t resize_pending = 0;
+static sig_atomic_t sighup_raised = 0;
 
-void on_term_resize(int)
+template<sig_atomic_t* signal_flag>
+static void signal_handler(int)
 {
-    resize_pending = 1;
+    *signal_flag = 1;
     EventManager::instance().force_signal(0);
 }
 
@@ -271,7 +273,8 @@ NCursesUI::NCursesUI()
 
     enable_mouse(true);
 
-    set_signal_handler(SIGWINCH, on_term_resize);
+    set_signal_handler(SIGWINCH, &signal_handler<&resize_pending>);
+    set_signal_handler(SIGHUP, &signal_handler<&sighup_raised>);
 
     check_resize(true);
 
@@ -516,18 +519,15 @@ void NCursesUI::check_resize(bool force)
     werase(curscr);
 }
 
-void NCursesUI::on_sighup()
-{
-    set_signal_handler(SIGWINCH, SIG_DFL);
-    set_signal_handler(SIGCONT, SIG_DFL);
-
-    m_window = nullptr;
-}
-
 Optional<Key> NCursesUI::get_next_key()
 {
-    if (not m_window)
+    if (sighup_raised)
+    {
+        set_signal_handler(SIGWINCH, SIG_DFL);
+        set_signal_handler(SIGCONT, SIG_DFL);
+        m_window = nullptr;
         return {};
+    }
 
     check_resize();
 

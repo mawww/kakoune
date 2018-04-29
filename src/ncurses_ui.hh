@@ -24,6 +24,8 @@ public:
     NCursesUI(const NCursesUI&) = delete;
     NCursesUI& operator=(const NCursesUI&) = delete;
 
+    bool is_ok() const override { return m_window != nullptr; }
+
     void draw(const DisplayBuffer& display_buffer,
               const Face& default_face,
               const Face& padding_face) override;
@@ -58,9 +60,6 @@ public:
         DisplayCoord pos;
         DisplayCoord size;
     };
-
-protected:
-    void on_sighup();
 
 private:
     void check_resize(bool force = false);

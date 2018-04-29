@@ -37,6 +37,8 @@ public:
 
     Client(Client&&) = delete;
 
+    bool is_ui_ok() const;
+
     bool process_pending_inputs();
     bool has_pending_inputs() const { return not m_pending_keys.empty(); }
 

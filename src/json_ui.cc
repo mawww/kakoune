@@ -411,7 +411,10 @@ void JsonUI::parse_requests(EventMode mode)
     {
         ssize_t size = ::read(0, buf, bufsize);
         if (size == -1 or size == 0)
+        {
+            m_stdin_watcher.close_fd();
             break;
+        }
 
         m_requests += StringView{buf, buf + size};
     }

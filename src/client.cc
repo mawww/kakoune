@@ -71,6 +71,11 @@ Client::~Client()
                                               context().selections());
 }
 
+bool Client::is_ui_ok() const
+{
+    return m_ui->is_ok();
+}
+
 bool Client::process_pending_inputs()
 {
     const bool debug_keys = (bool)(context().options()["debug"].get<DebugFlags>() & DebugFlags::Keys);

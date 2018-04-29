@@ -315,6 +315,7 @@ public:
     RemoteUI(int socket, DisplayCoord dimensions);
     ~RemoteUI() override;
 
+    bool is_ok() const override { return m_socket_watcher.fd() != -1; }
     void menu_show(ConstArrayView<DisplayLine> choices,
                    DisplayCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
@@ -345,9 +346,6 @@ public:
 
     void set_ui_options(const Options& options) override;
 
-    void set_client(Client* client) { m_client = client; }
-    Client* client() const { return m_client.get(); }
-
     void exit(int status);
 
 private:
@@ -356,8 +354,6 @@ private:
     DisplayCoord  m_dimensions;
     OnKeyCallback m_on_key;
     RemoteBuffer  m_send_buffer;
-
-    SafePtr<Client> m_client;
 };
 
 static bool send_data(int fd, RemoteBuffer& buffer)
@@ -390,8 +386,8 @@ RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
 
                    if (m_reader.type() != MessageType::Key)
                    {
-                      ClientManager::instance().remove_client(*m_client, false, -1);
-                      return;
+                       m_socket_watcher.close_fd();
+                       return;
                    }
 
                    auto key = m_reader.read<Key>();
@@ -404,7 +400,7 @@ RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
           catch (const disconnected& err)
           {
               write_to_debug_buffer(format("Error while transfering remote messages: {}", err.what()));
-              ClientManager::instance().remove_client(*m_client, false, -1);
+              m_socket_watcher.close_fd();
           }
       }),
       m_dimensions(dimensions)
@@ -725,11 +721,10 @@ private:
                 auto dimensions = m_reader.read<DisplayCoord>();
                 auto env_vars = m_reader.read_hash_map<String, String, MemoryDomain::EnvVars>();
                 auto* ui = new RemoteUI{sock, dimensions};
-                if (auto* client = ClientManager::instance().create_client(
-                                       std::unique_ptr<UserInterface>(ui), pid, std::move(name),
-                                       std::move(env_vars), init_cmds, init_coord,
-                                       [ui](int status) { ui->exit(status); }))
-                    ui->set_client(client);
+                ClientManager::instance().create_client(
+                    std::unique_ptr<UserInterface>(ui), pid, std::move(name),
+                    std::move(env_vars), init_cmds, init_coord,
+                    [ui](int status) { ui->exit(status); });
 
                 Server::instance().remove_accepter(this);
                 break;

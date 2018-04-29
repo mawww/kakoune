@@ -47,6 +47,8 @@ class UserInterface
 public:
     virtual ~UserInterface() = default;
 
+    virtual bool is_ok() const = 0;
+
     virtual void menu_show(ConstArrayView<DisplayLine> choices,
                            DisplayCoord anchor, Face fg, Face bg,
                            MenuStyle style) = 0;

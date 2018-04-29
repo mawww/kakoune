@@ -378,7 +378,6 @@ void register_options()
 
 static Client* local_client = nullptr;
 static int local_client_exit = 0;
-static sig_atomic_t sighup_raised = 0;
 static UserInterface* local_ui = nullptr;
 static bool convert_to_client_pending = false;
 
@@ -403,6 +402,7 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
     struct DummyUI : UserInterface
     {
         DummyUI() { set_signal_handler(SIGINT, SIG_DFL); }
+        bool is_ok() const override { return true; }
         void menu_show(ConstArrayView<DisplayLine>, DisplayCoord,
                        Face, Face, MenuStyle) override {}
         void menu_select(int) override {}
@@ -453,10 +453,6 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
         {
             kak_assert(not local_ui);
             local_ui = this;
-            m_old_sighup = set_signal_handler(SIGHUP, [](int) {
-                static_cast<LocalUI*>(local_ui)->on_sighup();
-                sighup_raised = 1;
-            });
 
             m_old_sigtstp = set_signal_handler(SIGTSTP, [](int) {
                 if (ClientManager::instance().count() == 1 and
@@ -482,7 +478,6 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 
         ~LocalUI() override
         {
-            set_signal_handler(SIGHUP, m_old_sighup);
             set_signal_handler(SIGTSTP, m_old_sigtstp);
             local_client = nullptr;
             local_ui = nullptr;
@@ -499,7 +494,6 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 
     private:
         using SigHandler = void (*)(int);
-        SigHandler m_old_sighup;
         SigHandler m_old_sigtstp;
     };
 
@@ -692,12 +686,11 @@ int run_server(StringView session, StringView server_init,
             client_manager.clear_window_trash();
             buffer_manager.clear_buffer_trash();
 
-            if (sighup_raised and local_client)
+            if (local_client and not local_client->is_ui_ok())
             {
-                ClientManager::instance().remove_client(*local_client, false, 0);
+                ClientManager::instance().remove_client(*local_client, false, -1);
                 if (not client_manager.empty() and fork_server_to_background())
                     return 0;
-                sighup_raised = 0;
             }
             else if (convert_to_client_pending)
             {
