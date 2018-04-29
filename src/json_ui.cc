@@ -20,18 +20,18 @@ namespace Kakoune
 template<typename T>
 String to_json(ArrayView<const T> array)
 {
-    String res;
-    for (auto& elem : array)
-    {
-        if (not res.empty())
-            res += ", ";
-        res += to_json(elem);
-    }
-    return "[" + res + "]";
+    return "[" + join(array | transform([](auto&& elem) { return to_json(elem); }), ',', false) + "]";
 }
 
 template<typename T, MemoryDomain D>
 String to_json(const Vector<T, D>& vec) { return to_json(ArrayView<const T>{vec}); }
+
+template<typename K, typename V, MemoryDomain D>
+String to_json(const HashMap<K, V, D>& map)
+{
+    return "{" + join(map | transform([](auto&& i) { return format("{}: {}", to_json(i.key), to_json(i.value)); }),
+                      ',', false) + "}";
+}
 
 String to_json(int i) { return to_string(i); }
 String to_json(bool b) { return b ? "true" : "false"; }
@@ -232,7 +232,7 @@ void JsonUI::refresh(bool force)
 
 void JsonUI::set_ui_options(const Options& options)
 {
-    // rpc_call("set_ui_options", options);
+    rpc_call("set_ui_options", options);
 }
 
 DisplayCoord JsonUI::dimensions()
