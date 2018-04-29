@@ -1979,7 +1979,7 @@ void repeated(Context& context, NormalParams params)
 }
 
 template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
-void move(Context& context, NormalParams params)
+void move_cursor(Context& context, NormalParams params)
 {
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     const Type offset(direction * std::max(params.count,1));
@@ -2072,25 +2072,25 @@ template<typename T, MemoryDomain domain>
 using KeymapBackend = Vector<T, domain>;
 
 static const HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> keymap = {
-    { {'h'}, {"move left", move<CharCount, Backward>} },
-    { {'j'}, {"move down", move<LineCount, Forward>} },
-    { {'k'}, {"move up",  move<LineCount, Backward>} },
-    { {'l'}, {"move right", move<CharCount, Forward>} },
+    { {'h'}, {"move left", move_cursor<CharCount, Backward>} },
+    { {'j'}, {"move down", move_cursor<LineCount, Forward>} },
+    { {'k'}, {"move up",  move_cursor<LineCount, Backward>} },
+    { {'l'}, {"move right", move_cursor<CharCount, Forward>} },
 
-    { {Key::Left}, { "move left", move<CharCount, Backward>} },
-    { {Key::Down}, { "move down", move<LineCount, Forward>} },
-    { {Key::Up}, {   "move up", move<LineCount, Backward>} },
-    { {Key::Right}, {"move right", move<CharCount, Forward>} },
+    { {Key::Left}, { "move left", move_cursor<CharCount, Backward>} },
+    { {Key::Down}, { "move down", move_cursor<LineCount, Forward>} },
+    { {Key::Up}, {   "move up", move_cursor<LineCount, Backward>} },
+    { {Key::Right}, {"move right", move_cursor<CharCount, Forward>} },
 
-    { {'H'}, {"extend left", move<CharCount, Backward, SelectMode::Extend>} },
-    { {'J'}, {"extend down", move<LineCount, Forward, SelectMode::Extend>} },
-    { {'K'}, {"extend up", move<LineCount, Backward, SelectMode::Extend>} },
-    { {'L'}, {"extend right", move<CharCount, Forward, SelectMode::Extend>} },
+    { {'H'}, {"extend left", move_cursor<CharCount, Backward, SelectMode::Extend>} },
+    { {'J'}, {"extend down", move_cursor<LineCount, Forward, SelectMode::Extend>} },
+    { {'K'}, {"extend up", move_cursor<LineCount, Backward, SelectMode::Extend>} },
+    { {'L'}, {"extend right", move_cursor<CharCount, Forward, SelectMode::Extend>} },
 
-    { shift(Key::Left), {"extend left", move<CharCount, Backward, SelectMode::Extend>} },
-    { shift(Key::Down), {"extend down", move<LineCount, Forward, SelectMode::Extend>} },
-    { shift(Key::Up), {"extend up", move<LineCount, Backward, SelectMode::Extend>} },
-    { shift(Key::Right), {"extend right", move<CharCount, Forward, SelectMode::Extend>} },
+    { shift(Key::Left), {"extend left", move_cursor<CharCount, Backward, SelectMode::Extend>} },
+    { shift(Key::Down), {"extend down", move_cursor<LineCount, Forward, SelectMode::Extend>} },
+    { shift(Key::Up), {"extend up", move_cursor<LineCount, Backward, SelectMode::Extend>} },
+    { shift(Key::Right), {"extend right", move_cursor<CharCount, Forward, SelectMode::Extend>} },
 
     { {'t'}, {"select to next character", select_to_next_char<SelectFlags::None>} },
     { {'f'}, {"select to next character included", select_to_next_char<SelectFlags::Inclusive>} },
