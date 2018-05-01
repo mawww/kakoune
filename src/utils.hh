@@ -65,11 +65,18 @@ class OnScopeEnd
 {
 public:
     [[gnu::always_inline]]
-    OnScopeEnd(T func) : m_func(std::move(func)) {}
+    OnScopeEnd(T func) : m_func{std::move(func)}, m_valid{true} {}
 
     [[gnu::always_inline]]
-    ~OnScopeEnd() { m_func(); }
+    OnScopeEnd(OnScopeEnd&& other)
+      : m_func{std::move(other.m_func)}, m_valid{other.m_valid}
+    { other.m_valid = false; }
+
+    [[gnu::always_inline]]
+    ~OnScopeEnd() { if (m_valid) m_func(); }
+
 private:
+    bool m_valid;
     T m_func;
 };
 
