@@ -1632,6 +1632,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     ScopedSetBool disable_hooks(c.hooks_disabled(), no_hooks);
     ScopedSetBool disable_keymaps(c.keymaps_disabled(), no_keymaps);
     ScopedSetBool disable_history(c.history_disabled());
+    ScopedEdition edition{c};
 
     if (parser.get_switch("itersel"))
     {
@@ -1639,7 +1640,6 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         Vector<Selection> new_sels;
         size_t main = 0;
         size_t timestamp = c.buffer().timestamp();
-        ScopedEdition edition{c};
         for (auto& sel : sels)
         {
             c.selections_write_only() = SelectionList{ sels.buffer(), sel, sels.timestamp() };
@@ -1700,7 +1700,6 @@ const CommandDesc exec_string_cmd = {
                 keys.insert(keys.end(), param_keys.begin(), param_keys.end());
             }
 
-            ScopedEdition edition(context);
             for (auto& key : keys)
                 context.input_handler().handle_key(key);
         });
@@ -1718,9 +1717,7 @@ const CommandDesc eval_string_cmd = {
     [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
         context_wrap(parser, context, [&](const ParametersParser& parser, Context& context) {
-            String command = join(parser, ' ', false);
-            ScopedEdition edition(context);
-            CommandManager::instance().execute(command, context, shell_context);
+            CommandManager::instance().execute(join(parser, ' ', false), context, shell_context);
         });
     }
 };
