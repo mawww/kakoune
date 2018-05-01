@@ -1549,41 +1549,6 @@ const ParameterDesc context_wrap_params = {
     ParameterDesc::Flags::SwitchesOnlyAtStart, 1
 };
 
-class RegisterRestorer
-{
-public:
-    RegisterRestorer(char name, Context& context)
-      : m_context{context}, m_name{name}
-    {
-        ConstArrayView<String> save = RegisterManager::instance()[name].get(context);
-        m_save = Vector<String>(save.begin(), save.end());
-    }
-
-    RegisterRestorer(RegisterRestorer&& other) noexcept
-        : m_context{other.m_context}, m_save{std::move(other.m_save)}, m_name{other.m_name}
-    {
-        other.m_name = 0;
-    }
-
-    ~RegisterRestorer()
-    {
-        if (m_name != 0) try
-        {
-            RegisterManager::instance()[m_name].set(m_context, m_save);
-        }
-        catch (runtime_error& e)
-        {
-            write_to_debug_buffer(format("could not restore register '{}': {}",
-                                         m_name, e.what()));
-        }
-    }
-
-private:
-    Vector<String> m_save;
-    Context&       m_context;
-    char           m_name;
-};
-
 template<typename Func>
 void context_wrap(const ParametersParser& parser, Context& context, Func func)
 {
@@ -1595,9 +1560,14 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     const bool no_hooks = parser.get_switch("no-hooks") or context.hooks_disabled();
     const bool no_keymaps = not parser.get_switch("with-maps");
 
-    Vector<RegisterRestorer> saved_registers;
-    for (auto& r : parser.get_switch("save-regs").value_or("/\"|^@"))
-        saved_registers.emplace_back(r, context);
+    auto& register_manager = RegisterManager::instance();
+    auto make_register_restorer = [&](char c) {
+        return on_scope_end([&, c, save=register_manager[c].get(context) | gather<Vector<String>>()] {
+            RegisterManager::instance()[c].set(context, save);
+        });
+    };
+    auto saved_registers = parser.get_switch("save-regs").value_or("/\"|^@") |
+        transform(make_register_restorer) | gather<Vector<decltype(make_register_restorer(0))>>();
 
     if (auto bufnames = parser.get_switch("buffer"))
     {
