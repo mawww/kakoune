@@ -1905,9 +1905,9 @@ void move_in_history(Context& context, NormalParams params)
     Buffer& buffer = context.buffer();
     size_t timestamp = buffer.timestamp();
     const int count = std::max(1, params.count);
-    const int history_id = (int)buffer.current_history_id() + direction * count;
+    const int history_id = (size_t)buffer.current_history_id() + direction * count;
     const int max_history_id = (int)buffer.next_history_id() - 1;
-    if (buffer.move_to((size_t)history_id))
+    if (buffer.move_to((Buffer::HistoryId)history_id))
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())

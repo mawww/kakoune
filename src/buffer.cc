@@ -62,8 +62,8 @@ static void apply_options(OptionManager& options, const ParsedLines& parsed_line
     options.get_local_option("BOM").set(parsed_lines.bom);
 }
 
-Buffer::HistoryNode::HistoryNode(size_t id, HistoryNode* parent)
-    : id{id}, parent(parent), timepoint{Clock::now()}
+Buffer::HistoryNode::HistoryNode(HistoryId parent)
+    : parent{parent}, timepoint{Clock::now()}
 {}
 
 Buffer::Buffer(String name, Flags flags, StringView data,
@@ -72,8 +72,9 @@ Buffer::Buffer(String name, Flags flags, StringView data,
       m_name{(flags & Flags::File) ? real_path(parse_filename(name)) : std::move(name)},
       m_display_name{(flags & Flags::File) ? compact_path(m_name) : m_name},
       m_flags{flags | Flags::NoUndo},
-      m_history{m_next_history_id++, nullptr}, m_history_cursor{&m_history},
-      m_last_save_history_cursor{&m_history},
+      m_history{{HistoryId::Invalid}},
+      m_history_id{HistoryId::First},
+      m_last_save_history_id{HistoryId::First},
       m_fs_timestamp{fs_timestamp.tv_sec, fs_timestamp.tv_nsec}
 {
     ParsedLines parsed_lines = parse_lines(data);
@@ -252,9 +253,9 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
     if (not record_undo)
     {
         // Erase history about to be invalidated history
-        m_history_cursor = &m_history;
-        m_last_save_history_cursor = &m_history;
-        m_history = HistoryNode{m_next_history_id++, nullptr};
+        m_history_id = HistoryId::First;
+        m_last_save_history_id = HistoryId::First;
+        m_history = {HistoryNode{HistoryId::Invalid}};
 
         m_changes.push_back({ Change::Erase, {0,0}, line_count() });
         static_cast<BufferLines&>(m_lines) = std::move(parsed_lines.lines);
@@ -304,7 +305,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
 
     apply_options(options(), parsed_lines);
 
-    m_last_save_history_cursor = m_history_cursor;
+    m_last_save_history_id = m_history_id;
     m_fs_timestamp = fs_timestamp;
 }
 
@@ -316,13 +317,12 @@ void Buffer::commit_undo_group()
     if (m_current_undo_group.empty())
         return;
 
-    auto* node = new HistoryNode{m_next_history_id++, m_history_cursor.get()};
-    node->undo_group = std::move(m_current_undo_group);
+    const HistoryId id = next_history_id();
+    m_history.push_back({m_history_id});
+    m_history.back().undo_group = std::move(m_current_undo_group);
     m_current_undo_group.clear();
-
-    m_history_cursor->childs.emplace_back(node);
-    m_history_cursor->redo_child = node;
-    m_history_cursor = node;
+    current_history_node().redo_child = id;
+    m_history_id = id;
 }
 
 bool Buffer::undo(size_t count)
@@ -331,15 +331,15 @@ bool Buffer::undo(size_t count)
 
     commit_undo_group();
 
-    if (not m_history_cursor->parent)
+    if (current_history_node().parent == HistoryId::Invalid)
         return false;
 
-    while (count-- != 0 and m_history_cursor->parent)
+    while (count-- != 0 and current_history_node().parent != HistoryId::Invalid)
     {
-        for (const Modification& modification : m_history_cursor->undo_group | reverse())
+        for (const Modification& modification : current_history_node().undo_group | reverse())
             apply_modification(modification.inverse());
 
-        m_history_cursor = m_history_cursor->parent;
+        m_history_id = current_history_node().parent;
     }
 
     return true;
@@ -349,106 +349,80 @@ bool Buffer::redo(size_t count)
 {
     throw_if_read_only();
 
-    if (not m_history_cursor->redo_child)
+    if (current_history_node().redo_child == HistoryId::Invalid)
         return false;
 
     kak_assert(m_current_undo_group.empty());
 
-    while (count-- != 0 and m_history_cursor->redo_child)
+    while (count-- != 0 and current_history_node().redo_child != HistoryId::Invalid)
     {
-        m_history_cursor = m_history_cursor->redo_child;
+        m_history_id = current_history_node().redo_child;
 
-        for (const Modification& modification : m_history_cursor->undo_group)
+        for (const Modification& modification : current_history_node().undo_group)
             apply_modification(modification);
     }
     return true;
 }
 
-void Buffer::move_to(HistoryNode* history_node)
+bool Buffer::move_to(HistoryId id)
 {
+    if (id >= next_history_id())
+        return false;
+
     throw_if_read_only();
 
     commit_undo_group();
 
-    auto find_lowest_common_parent = [](HistoryNode* a, HistoryNode* b) {
-        auto depth_of = [](HistoryNode* node) {
+    auto find_lowest_common_parent = [this](HistoryId a, HistoryId b) {
+        auto depth_of = [this](HistoryId id) {
             size_t depth = 0;
-            for (; node->parent; node = node->parent.get())
+            for (; history_node(id).parent != HistoryId::Invalid; id = history_node(id).parent)
                 ++depth;
             return depth;
         };
         auto depthA = depth_of(a), depthB = depth_of(b);
 
         for (; depthA > depthB; --depthA)
-            a = a->parent.get();
+            a = history_node(a).parent;
         for (; depthB > depthA; --depthB)
-            b = b->parent.get();
+            b = history_node(b).parent;
 
         while (a != b)
         {
-            a = a->parent.get();
-            b = b->parent.get();
+            a = history_node(a).parent;
+            b = history_node(b).parent;
         }
 
-        kak_assert(a == b and a != nullptr);
+        kak_assert(a == b and a != HistoryId::Invalid);
         return a;
     };
 
-    auto parent = find_lowest_common_parent(m_history_cursor.get(), history_node);
+    auto parent = find_lowest_common_parent(m_history_id, id);
 
     // undo up to common parent
-    for (auto it = m_history_cursor.get(); it != parent; it = it->parent.get())
+    for (auto id = m_history_id; id != parent; id = history_node(id).parent)
     {
-        for (const Modification& modification : it->undo_group | reverse())
+        for (const Modification& modification : history_node(id).undo_group | reverse())
             apply_modification(modification.inverse());
     }
 
-    static void (*apply_from_parent)(Buffer&, HistoryNode*, HistoryNode*) =
-    [](Buffer& buffer, HistoryNode* parent, HistoryNode* node) {
-        if (node == parent)
+    static void (*apply_from_parent)(Buffer&, HistoryId, HistoryId) =
+    [](Buffer& buffer, HistoryId parent, HistoryId id) {
+        if (id == parent)
             return;
 
-        apply_from_parent(buffer, parent, node->parent.get());
+        auto& node = buffer.history_node(id);
+        apply_from_parent(buffer, parent, node.parent);
 
-        node->parent->redo_child = node;
+        buffer.history_node(node.parent).redo_child = id;
 
-        for (const Modification& modification : node->undo_group)
+        for (const Modification& modification : node.undo_group)
             buffer.apply_modification(modification);
     };
 
-    apply_from_parent(*this, parent, history_node);
-    m_history_cursor = history_node;
-}
-
-template<typename Func>
-Buffer::HistoryNode* Buffer::find_history_node(HistoryNode* node, const Func& func)
-{
-    if (func(node))
-        return node;
-
-    for (auto&& child : node->childs)
-    {
-        if (auto res = find_history_node(child.get(), func))
-            return res;
-    }
-
-    return nullptr;
-}
-
-bool Buffer::move_to(size_t history_id)
-{
-    auto* target_node = find_history_node(&m_history, [history_id](auto* node)
-                                          { return node->id == history_id; });
-    if (not target_node)
-        return false;
-
-    move_to(target_node);
+    apply_from_parent(*this, parent, id);
+    m_history_id = id;
     return true;
-}
-
-size_t Buffer::current_history_id() const noexcept
-{
-    return m_history_cursor->id;
 }
 
 void Buffer::check_invariant() const
@@ -623,7 +597,7 @@ BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end, StringView conte
 bool Buffer::is_modified() const
 {
     return m_flags & Flags::File and
-           (m_history_cursor != m_last_save_history_cursor or
+           (m_history_id != m_last_save_history_id or
             not m_current_undo_group.empty());
 }
 
@@ -633,7 +607,7 @@ void Buffer::notify_saved()
         commit_undo_group();
 
     m_flags &= ~Flags::New;
-    m_last_save_history_cursor = m_history_cursor;
+    m_last_save_history_id = m_history_id;
     m_fs_timestamp = get_fs_timestamp(m_name);
 }
 
@@ -728,9 +702,9 @@ void Buffer::run_hook_in_own_context(StringView hook_name, StringView param, Str
 
 Optional<BufferCoord> Buffer::last_modification_coord() const
 {
-    if (m_history_cursor.get() == &m_history)
+    if (m_history_id == HistoryId::First)
         return {};
-    return m_history_cursor->undo_group.back().coord;
+    return current_history_node().undo_group.back().coord;
 }
 
 String Buffer::debug_description() const
@@ -739,14 +713,9 @@ String Buffer::debug_description() const
     for (auto& line : m_lines)
         content_size += (int)line->strview().length();
 
-    static size_t (*count_mem)(const HistoryNode&) = [](const HistoryNode& node) {
-        size_t size = node.undo_group.size() * sizeof(Modification);
-        for (auto& child : node.childs)
-            size += count_mem(*child);
-        return size;
-    };
-    const size_t additional_size = count_mem(m_history) +
-        m_changes.size() * sizeof(Change);
+    const size_t additional_size = accumulate(m_history, 0, [](size_t s, auto&& history) {
+            return sizeof(history) + history.undo_group.size() * sizeof(Modification) + s;
+        }) + m_changes.size() * sizeof(Change);
 
     return format("{}\nFlags: {}{}{}{}\nUsed mem: content={} additional={}\n",
                   display_name(),
@@ -860,7 +829,7 @@ UnitTest test_undo{[]()
     kak_assert(buffer[1_line] == "mais que fais la police\n");
     kak_assert(buffer[2_line] == "foo\n");
 
-    buffer.move_to(3);
+    buffer.move_to((Buffer::HistoryId)3);
     kak_assert((int)buffer.line_count() == 5);
     kak_assert(buffer[0_line] == "allo ?\n");
     kak_assert(buffer[1_line] == "mais que fais la police\n");
@@ -868,13 +837,27 @@ UnitTest test_undo{[]()
     kak_assert(buffer[3_line] == " hein ?\n");
     kak_assert(buffer[4_line] == " youpi\n");
 
-    buffer.move_to(4);
+    buffer.move_to((Buffer::HistoryId)4);
     kak_assert((int)buffer.line_count() == 5);
     kak_assert(buffer[0_line] == "allo ?\n");
     kak_assert(buffer[1_line] == "mais que fais la police\n");
     kak_assert(buffer[2_line] == "mutch\n");
     kak_assert(buffer[3_line] == " hein ?\n");
     kak_assert(buffer[4_line] == " youpi\n");
+
+    buffer.move_to(Buffer::HistoryId::First);
+    kak_assert((int)buffer.line_count() == 4);
+    kak_assert(buffer[0_line] == "allo ?\n");
+    kak_assert(buffer[1_line] == "mais que fais la police\n");
+    kak_assert(buffer[2_line] == " hein ?\n");
+    kak_assert(buffer[3_line] == " youpi\n");
+    kak_assert(not buffer.undo());
+
+    buffer.move_to((Buffer::HistoryId)5);
+    kak_assert(not buffer.redo());
+
+    buffer.move_to((Buffer::HistoryId)6);
+    kak_assert(not buffer.redo());
 }};
 
 }

@@ -104,7 +104,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
     }, {
         "history_id", false,
         [](StringView name, const Context& context) -> String
-        { return to_string(context.buffer().current_history_id()); }
+        { return to_string((size_t)context.buffer().current_history_id()); }
     }, {
         "selection", false,
         [](StringView name, const Context& context)

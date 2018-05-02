@@ -1262,7 +1262,7 @@ public:
         {
             context().buffer().commit_undo_group();
             context().print_status({ format("committed change #{}",
-                                            context().buffer().current_history_id()),
+                                            (size_t)context().buffer().current_history_id()),
                                      context().faces()["Information"] });
         }
         else if (key == ctrl('v'))
