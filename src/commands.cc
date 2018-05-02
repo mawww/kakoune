@@ -1566,8 +1566,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             RegisterManager::instance()[c].set(context, save);
         });
     };
-    auto saved_registers = parser.get_switch("save-regs").value_or("/\"|^@") |
-        transform(make_register_restorer) | gather<Vector<decltype(make_register_restorer(0))>>();
+    Vector<decltype(make_register_restorer(0))> saved_registers;
+    for (auto c : parser.get_switch("save-regs").value_or("/\"|^@"))
+        saved_registers.push_back(make_register_restorer(c));
 
     if (auto bufnames = parser.get_switch("buffer"))
     {
