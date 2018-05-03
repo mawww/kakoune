@@ -53,7 +53,7 @@ public:
         write((uint32_t)0); // message size, to be patched on write
     }
 
-    ~MsgWriter() noexcept(false)
+    ~MsgWriter()
     {
         uint32_t count = (uint32_t)m_buffer.size() - m_start;
         memcpy(m_buffer.data() + m_start + sizeof(MessageType), &count, sizeof(uint32_t));
