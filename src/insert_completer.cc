@@ -407,13 +407,13 @@ InsertCompleter::~InsertCompleter()
     m_options.unregister_watcher(*this);
 }
 
-void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
+void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
 {
     if (not setup_ifn())
         return;
 
     auto& buffer = m_context.buffer();
-    m_current_candidate = (m_current_candidate + offset) % (int)m_completions.candidates.size();
+    m_current_candidate = (relative ? m_current_candidate + index : index) % (int)m_completions.candidates.size();
     if (m_current_candidate < 0)
         m_current_candidate += m_completions.candidates.size();
     const InsertCompletion::Candidate& candidate = m_completions.candidates[m_current_candidate];

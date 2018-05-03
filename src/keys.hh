@@ -30,6 +30,7 @@ struct Key
                      MouseWheelDown | MouseWheelUp,
 
         Resize = 1 << 8,
+        MenuSelect = 1 << 9,
     };
     enum NamedKey : Codepoint
     {

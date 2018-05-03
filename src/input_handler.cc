@@ -837,9 +837,8 @@ public:
                 m_refresh_completion_pending = true;
             }
         }
-        else if (key == Key::Tab or key == shift(Key::Tab)) // tab completion
+        else if (key == Key::Tab or key == shift(Key::Tab) or key.modifiers == Key::Modifiers::MenuSelect) // completion
         {
-            const bool reverse = (key == shift(Key::Tab));
             CandidateList& candidates = m_completions.candidates;
             // first try, we need to ask our completer for completions
             if (candidates.empty())
@@ -853,7 +852,10 @@ public:
             if (candidates.empty())
                 return;
 
-            if (not reverse and ++m_current_completion >= candidates.size())
+            const bool reverse = (key == shift(Key::Tab));
+            if (key.modifiers == Key::Modifiers::MenuSelect)
+                m_current_completion = clamp<int>(key.key, 0, candidates.size() - 1);
+            else if (not reverse and ++m_current_completion >= candidates.size())
                 m_current_completion = 0;
             else if (reverse and --m_current_completion < 0)
                 m_current_completion = candidates.size()-1;
@@ -1222,13 +1224,19 @@ public:
         else if (key == ctrl('n'))
         {
             last_insert().keys.pop_back();
-            m_completer.select(1, last_insert().keys);
+            m_completer.select(1, true, last_insert().keys);
             update_completions = false;
         }
         else if (key == ctrl('p'))
         {
             last_insert().keys.pop_back();
-            m_completer.select(-1, last_insert().keys);
+            m_completer.select(-1, true, last_insert().keys);
+            update_completions = false;
+        }
+        else if (key.modifiers == Key::Modifiers::MenuSelect)
+        {
+            last_insert().keys.pop_back();
+            m_completer.select(key.key, false, last_insert().keys);
             update_completions = false;
         }
         else if (key == ctrl('x'))

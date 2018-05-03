@@ -60,3 +60,4 @@ The requests that the json ui can interpret on stdin are:
 * mouse(String type, int line, int column): mouse event, type
   can be: 'move', 'press', 'release', 'wheel_up', 'wheel_down',
   line, column is the cursor position.
+* menu_select(int index): explicit select of given menu entry

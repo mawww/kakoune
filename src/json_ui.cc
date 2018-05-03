@@ -410,6 +410,12 @@ void JsonUI::eval_json(const Value& json)
         else
             throw runtime_error(format("invalid mouse event type: {}", type));
     }
+    else if (method == "menu_select")
+    {
+        if (params.size() != 1)
+            throw runtime_error("menu_select needs the item index");
+        m_on_key({Key::Modifiers::MenuSelect, (Codepoint)params[0].as<int>()});
+    }
     else if (method == "resize")
     {
         if (params.size() != 2)
