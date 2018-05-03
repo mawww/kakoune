@@ -390,6 +390,26 @@ void JsonUI::eval_json(const Value& json)
                 m_on_key(key);
         }
     }
+    else if (method == "mouse")
+    {
+        if (params.size() != 3)
+            throw runtime_error("mouse type/coordinates not specified");
+
+        const StringView type = params[0].as<String>();
+        const Codepoint coord = encode_coord({params[1].as<int>(), params[2].as<int>()});
+        if (type == "move")
+            m_on_key({Key::Modifiers::MousePos, coord});
+        else if (type == "press")
+            m_on_key({Key::Modifiers::MousePress, coord});
+        else if (type == "release")
+            m_on_key({Key::Modifiers::MouseRelease, coord});
+        else if (type == "wheel_up")
+            m_on_key({Key::Modifiers::MouseWheelUp, coord});
+        else if (type == "wheel_down")
+            m_on_key({Key::Modifiers::MouseWheelDown, coord});
+        else
+            throw runtime_error(format("invalid mouse event type: {}", type));
+    }
     else if (method == "resize")
     {
         if (params.size() != 2)

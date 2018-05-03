@@ -57,3 +57,6 @@ The requests that the json ui can interpret on stdin are:
 
 * keys(String key1, String key2...): keystrokes
 * resize(int rows, int columns): notify ui resize
+* mouse(String type, int line, int column): mouse event, type
+  can be: 'move', 'press', 'release', 'wheel_up', 'wheel_down',
+  line, column is the cursor position.
