@@ -1563,7 +1563,14 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     auto& register_manager = RegisterManager::instance();
     auto make_register_restorer = [&](char c) {
         return on_scope_end([&, c, save=register_manager[c].get(context) | gather<Vector<String>>()] {
-            RegisterManager::instance()[c].set(context, save);
+            try
+            {
+                RegisterManager::instance()[c].set(context, save);
+            }
+            catch (runtime_error& err)
+            {
+                write_to_debug_buffer(format("failed to restore register '{}': {}", c, err.what()));
+            }
         });
     };
     Vector<decltype(make_register_restorer(0))> saved_registers;
