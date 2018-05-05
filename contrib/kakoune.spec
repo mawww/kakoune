@@ -1,11 +1,11 @@
 Name:           kakoune
-Version:        0
-Release:        208.20160511git84f62e6f%{?dist}
+Version:        2018.04.13
+Release:        1%{?dist}
 Summary:        Vim inspired editor
 
 License:        Unlicense
 URL:            http://kakoune.org/
-Source0:        kakoune-84f62e6f.tar
+Source0:        %{name}-%{version}.tar.bz2
 
 BuildRequires:  ncurses-devel >= 5.3
 BuildRequires:  asciidoc
@@ -15,7 +15,7 @@ Requires:       ncurses-libs >= 5.3
 Kakoune is a code editor heavily inspired by Vim
 
 %prep
-%setup -qn kakoune
+%setup -qn %{name}-%{version}
 
 %build
 cd src
@@ -37,6 +37,9 @@ cd src
 %{_datadir}/kak/*
 
 %changelog
+* Sat May 5 2018 Łukasz Jendrysik <scadu@disroot.org> - v2018.04.13
+- Use tagged release
+
 * Wed May 11 2016 jkonecny <jkonecny@redhat.com> - 0-208.20160511git84f62e6f
 - Add LANG=en_US.UTF-8 to fix tests
 - Update to git: 84f62e6f
