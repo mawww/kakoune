@@ -2,7 +2,7 @@
 ## Tomorrow-night, adapted by nicholastmosher
 ##
 
-%sh{
+evaluate-commands %sh{
     foreground="rgb:c5c8c6"
     background="rgb:272727"
     selection="rgb:373b41"

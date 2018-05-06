@@ -3,7 +3,7 @@
 ## a light theme inspired after https://github.com/hyspace/st2-reeder-theme
 ##
 
-%sh{
+evaluate-commands %sh{
     white="rgb:f9f8f6"
     white_light="rgb:f6f5f0"
     black="rgb:383838"

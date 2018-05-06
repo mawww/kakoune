@@ -1,6 +1,6 @@
 # Solarized Light
 
-%sh{
+evaluate-commands %sh{
 	base03='rgb:002b36'
 	base02='rgb:073642'
 	base01='rgb:586e75'

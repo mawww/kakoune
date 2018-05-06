@@ -10,12 +10,12 @@ Formats of language supported:
  - language code above followed by a dash or underscore with an ISO country code, e.g. 'en-US'} \
     spell %{
     try %{ add-highlighter window ranges 'spell_regions' }
-    %sh{
+    evaluate-commands %sh{
         file=$(mktemp -d "${TMPDIR:-/tmp}"/kak-spell.XXXXXXXX)/buffer
         printf 'eval -no-hooks write %s\n' "${file}"
         printf 'set-option buffer spell_tmp_file %s\n' "${file}"
     }
-    %sh{
+    evaluate-commands %sh{
         if [ $# -ge 1 ]; then
             if [ ${#1} -ne 2 ] && [ ${#1} -ne 5 ]; then
                 echo "echo -markup '{Error}Invalid language code (examples of expected format: en, en_US, en-US)'"
@@ -57,7 +57,7 @@ Formats of language supported:
     }
 }
 
-define-command spell-next %{ %sh{
+define-command spell-next %{ evaluate-commands %sh{
     anchor_line="${kak_selection_desc%%.*}"
     anchor_col="${kak_selection_desc%%,*}"
     anchor_col="${anchor_col##*.}"
@@ -101,7 +101,7 @@ define-command spell-next %{ %sh{
     fi
 } }
 
-define-command spell-replace %{ %sh{
+define-command spell-replace %{ evaluate-commands %sh{
     if [ -n "$kak_opt_spell_lang" ]; then
         options="-l '$kak_opt_spell_lang'"
     fi

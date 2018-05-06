@@ -6,7 +6,7 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
             printf %s\\n "${basename%.*}"
         done | sort -u
   } \
-  colorscheme %{ %sh{
+  colorscheme %{ evaluate-commands %sh{
     find_colorscheme() {
         find -L "${1}" -type f -name "${2}".kak | head -n 1
     }
@@ -25,7 +25,7 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     fi
 }}
 
-%sh{
+evaluate-commands %sh{
     autoload_directory() {
         find -L "$1" -type f -name '*\.kak' \
             -exec printf 'try %%{ source "%s" } catch %%{ echo -debug Autoload: could not load "%s" }\n' '{}' '{}' \;

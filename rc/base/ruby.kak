@@ -49,7 +49,7 @@ add-highlighter shared/ruby/literal fill meta
 
 add-highlighter shared/ruby/code regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|((?<!:):(([A-Za-z]\w*[=?!]?)|(\[\]=?)))|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:variable
 
-%sh{
+evaluate-commands %sh{
     # Grammar
     # Keywords are collected searching for keywords at
     # https://github.com/ruby/ruby/blob/trunk/parse.y
@@ -77,7 +77,7 @@ add-highlighter shared/ruby/code regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|(
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command ruby-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
+define-command ruby-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ evaluate-commands %sh{
     case $kak_buffile in
         *spec/*_spec.rb)
             altfile=$(eval echo $(echo $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))

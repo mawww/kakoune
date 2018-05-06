@@ -10,7 +10,7 @@ declare-option -hidden int make_current_error_line
 define-command -params .. \
     -docstring %{make [<arguments>]: make utility wrapper
 All the optional arguments are forwarded to the make utility} \
-    make %{ %sh{
+    make %{ evaluate-commands %sh{
      output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-make.XXXXXXXX)/fifo
      mkfifo ${output}
      ( eval ${kak_opt_makecmd} "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &

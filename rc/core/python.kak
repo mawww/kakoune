@@ -41,7 +41,7 @@ add-highlighter shared/python/docstring/py-docstring/docstring fill string
 
 add-highlighter shared/python/comment       fill comment
 
-%sh{
+evaluate-commands %sh{
     # Grammar
     values="True|False|None|self|inf"
     meta="import|from"

@@ -3,7 +3,7 @@ define-command -docstring %{x11-repl [<arguments>]: create a new window for repl
 All optional parameters are forwarded to the new window} \
     -params .. \
     -command-completion \
-    x11-repl %{ %sh{
+    x11-repl %{ evaluate-commands %sh{
         if [ -z "${kak_opt_termcmd}" ]; then
            echo "echo -markup '{Error}termcmd option is not set'"
            exit

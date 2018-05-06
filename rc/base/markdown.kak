@@ -11,7 +11,7 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-%sh{
+evaluate-commands %sh{
   languages="
     c cabal clojure coffee cpp css cucumber d diff dockerfile fish gas go
     haml haskell html ini java javascript json julia kak kickstart latex

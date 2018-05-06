@@ -27,7 +27,7 @@ add-highlighter shared/lua/code regex \b(and|break|do|else|elseif|end|false|for|
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command lua-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
+define-command lua-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ evaluate-commands %sh{
     case $kak_buffile in
         *spec/*_spec.lua)
             altfile=$(eval printf %s\\n $(printf %s\\n $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
