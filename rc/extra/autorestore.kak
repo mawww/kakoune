@@ -3,7 +3,7 @@ declare-option -docstring "remove backups once they've been restored" \
 
 ## Insert the content of the backup file into the current buffer, if a suitable one is found
 define-command autorestore-restore-buffer -docstring "Restore the backup for the current file if it exists" %{
-    %sh{
+    evaluate-commands %sh{
         buffer_basename="${kak_buffile##*/}"
         buffer_dirname=$(dirname "${kak_buffile}")
 
@@ -49,7 +49,7 @@ define-command autorestore-restore-buffer -docstring "Restore the backup for the
 
 ## Remove all the backups that have been created for the current buffer
 define-command autorestore-purge-backups -docstring "Remove all the backups of the current buffer" %{
-    %sh{
+    evaluate-commands %sh{
         [ ! -f "${kak_buffile}" ] && exit
 
         buffer_basename="${kak_bufname##*/}"

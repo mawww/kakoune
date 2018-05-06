@@ -18,7 +18,7 @@ add-highlighter shared/ regions -default code sql \
     comment '#' '$' '' \
     comment '/\*' '\*/' ''
 
-%sh{
+evaluate-commands %sh{
     # Keywords
     keywords="ALTER|AS|ASC|AUTO_INCREMENT|CHECK|CONSTRAINT|CREATE|DATABASE|DEFAULT|DELETE|DESC|DISTINCT|DROP"
     keywords="${keywords}|EXISTS|FOREIGN KEY|FROM|FULL JOIN|FULL OUTER JOIN|GROUP BY|HAVING|INDEX|INNER JOIN"

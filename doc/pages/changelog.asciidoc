@@ -5,6 +5,9 @@ released versions.
 
 == Development version
 
+* `%sh{...}` strings are not reparsed automatically anymore, they need
+  to go through an explicit `evaluate-commands`
+
 * The `-allow-override` switch from `define-command` has been renamed
   `-override`.
 

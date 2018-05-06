@@ -171,6 +171,7 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
 {
     kak_assert(*reader == '%');
     ++reader;
+
     const auto type_start = reader.pos;
     while (reader and iswalpha(*reader))
         ++reader;
@@ -441,26 +442,10 @@ void CommandManager::execute(StringView command_line,
                              Context& context, const ShellContext& shell_context)
 {
     CommandParser parser(command_line);
-    struct ShellParser {
-        ShellParser(String&& str) : output{std::move(str)}, parser{output} {}
-        String output;
-        CommandParser parser;
-    };
-    Vector<ShellParser> shell_parser_stack;
-
-    auto next_token = [&] {
-        while (not shell_parser_stack.empty())
-        {
-            if (auto shell_token = shell_parser_stack.back().parser.read_token(true))
-                return shell_token;
-            shell_parser_stack.pop_back();
-        }
-        return parser.read_token(true);
-    };
 
     BufferCoord command_coord;
-    Vector<String> params;
-    while (Optional<Token> token_opt = next_token())
+    Vector<String, MemoryDomain::Commands> params;
+    while (Optional<Token> token_opt = parser.read_token(true))
     {
         auto& token = *token_opt;
         if (params.empty())
@@ -471,9 +456,6 @@ void CommandManager::execute(StringView command_line,
             execute_single_command(params, context, shell_context, command_coord);
             params.clear();
         }
-        // Shell expand are retokenized
-        else if (token.type == Token::Type::ShellExpand)
-            shell_parser_stack.emplace_back(expand_token(token, context, shell_context));
         else if (token.type == Token::Type::ArgExpand and token.content == '@')
             params.insert(params.end(), shell_context.params.begin(),
                           shell_context.params.end());

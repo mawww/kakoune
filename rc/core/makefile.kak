@@ -18,7 +18,7 @@ add-highlighter shared/makefile/evaluate-commands fill value
 add-highlighter shared/makefile/content regex ^[\w.%-]+\h*:\s 0:variable
 add-highlighter shared/makefile/content regex [+?:]= 0:operator
 
-%sh{
+evaluate-commands %sh{
     # Grammar
     keywords="ifeq|ifneq|ifdef|ifndef|else|endif|define|endef"
 

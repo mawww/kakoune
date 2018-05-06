@@ -22,7 +22,7 @@ add-highlighter shared/pony/double_string fill string
 add-highlighter shared/pony/comment       fill comment
 
 
-%sh{
+evaluate-commands %sh{
     # Grammar
     values="true|false|None|this"
     meta='use'

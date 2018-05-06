@@ -4,13 +4,13 @@ declare-option -docstring "colon separated list of path added to `python`'s $PYT
     str-list jedi_python_path
 
 define-command jedi-complete -docstring "Complete the current selection" %{
-    %sh{
+    evaluate-commands %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-jedi.XXXXXXXX)
         mkfifo ${dir}/fifo
         printf %s\\n "set-option buffer jedi_tmp_dir ${dir}"
         printf %s\\n "evaluate-commands -no-hooks write ${dir}/buf"
     }
-    %sh{
+    evaluate-commands %sh{
         dir=${kak_opt_jedi_tmp_dir}
         printf %s\\n "evaluate-commands -draft %{ edit! -fifo ${dir}/fifo *jedi-output* }"
         (
