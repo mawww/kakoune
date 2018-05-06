@@ -5,7 +5,7 @@
 # Needs the following tools in the path:
 # - jq for json deserializaton
 
-%sh{
+evaluate-commands %sh{
     for dep in gocode goimports gogetdoc jq; do
         if ! command -v $dep > /dev/null 2>&1; then
             echo "echo -debug %{Dependency unmet: $dep, please install it to use go-tools}"
@@ -20,12 +20,12 @@ declare-option -hidden str go_complete_tmp_dir
 declare-option -hidden completions gocode_completions
 
 define-command go-complete -docstring "Complete the current selection with gocode" %{
-    %sh{
+    evaluate-commands %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-go.XXXXXXXX)
         printf %s\\n "set-option buffer go_complete_tmp_dir ${dir}"
         printf %s\\n "evaluate-commands -no-hooks write ${dir}/buf"
     }
-    %sh{
+    nop %sh{
         dir=${kak_opt_go_complete_tmp_dir}
         (
             gocode_data=$(gocode -f=godit --in=${dir}/buf autocomplete ${kak_cursor_byte_offset})
@@ -63,12 +63,12 @@ declare-option -hidden str go_format_tmp_dir
 
 define-command -params ..1 go-format \
     -docstring "go-format [-use-goimports]: custom formatter for go files" %{
-    %sh{
+    evaluate-commands %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-go.XXXXXXXX)
         printf %s\\n "set-option buffer go_format_tmp_dir ${dir}"
         printf %s\\n "evaluate-commands -no-hooks write ${dir}/buf"
     }
-    %sh{
+    evaluate-commands %sh{
         dir=${kak_opt_go_format_tmp_dir}
         if [ "$1" = "-use-goimports" ]; then
             fmt_cmd="goimports -srcdir '${kak_buffile}'"
@@ -94,12 +94,12 @@ declare-option -hidden str go_doc_tmp_dir
 
 # FIXME text escaping
 define-command -hidden -params 1..2 gogetdoc-cmd %{
-   %sh{
+   evaluate-commands %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-go.XXXXXXXX)
         printf %s\\n "set-option buffer go_doc_tmp_dir ${dir}"
         printf %s\\n "evaluate-commands -no-hooks write ${dir}/buf"
     }
-    %sh{
+    evaluate-commands %sh{
         dir=${kak_opt_go_doc_tmp_dir}
         (
             printf %s\\n "${kak_buffile}" > ${dir}/modified
@@ -172,7 +172,7 @@ define-command go-jump -docstring "Jump to the symbol definition" %{
     gogetdoc-cmd "jump" 1
 }
 
-define-command go-share-selection -docstring "Share the selection using the Go Playground" %{ %sh{
+define-command go-share-selection -docstring "Share the selection using the Go Playground" %{ evaluate-commands %sh{
     snippet_id=$(printf %s\\n "${kak_selection}" | curl -s https://play.golang.org/share --data-binary @-)
     printf "echo https://play.golang.org/p/%s" ${snippet_id}
 } }

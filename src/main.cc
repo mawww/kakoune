@@ -52,7 +52,8 @@ static const char* startup_info =
 " * faces are now scoped, set-face command takes an additional scope parameter\n"
 " * <backtab> key is gone, use <s-tab> instead\n"
 " === Kakoune v2018.04.13 Released ===\n"
-" * define-command -allow-override switch has been renamed -override\n";
+" * define-command -allow-override switch has been renamed -override\n"
+" %sh{...} strings are not automatically reparsed anymore, use evaluate-commands %sh{...}\n";
 
 struct startup_error : runtime_error
 {

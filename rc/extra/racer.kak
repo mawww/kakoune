@@ -2,12 +2,12 @@ declare-option -hidden str racer_tmp_dir
 declare-option -hidden completions racer_completions
 
 define-command racer-complete -docstring "Complete the current selection with racer" %{
-    %sh{
+    evaluate-commands %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-racer.XXXXXXXX)
         printf %s\\n "set-option buffer racer_tmp_dir ${dir}"
         printf %s\\n "evaluate-commands -no-hooks %{ write ${dir}/buf }"
     }
-    %sh{
+    nop %sh{
         dir=${kak_opt_racer_tmp_dir}
         (
             cursor="${kak_cursor_line} $((${kak_cursor_column} - 1))"
@@ -95,12 +95,12 @@ define-command racer-disable-autocomplete -docstring "Disable racer completion" 
 }
 
 define-command racer-go-definition -docstring "Jump to where the rust identifier below the cursor is defined" %{
-    %sh{
+    evaluate-commands %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-racer.XXXXXXXX)
         printf %s\\n "set-option buffer racer_tmp_dir ${dir}"
         printf %s\\n "evaluate-commands -no-hooks %{ write ${dir}/buf }"
     }
-    %sh{
+    evaluate-commands %sh{
         dir=${kak_opt_racer_tmp_dir}
         cursor="${kak_cursor_line} $((${kak_cursor_column} - 1))"
         racer_data=$(racer --interface tab-text  find-definition ${cursor} "${kak_buffile}" "${dir}/buf" | head -n 1)
@@ -122,12 +122,12 @@ define-command racer-go-definition -docstring "Jump to where the rust identifier
 }
 
 define-command racer-show-doc -docstring "Show the documentation about the rust identifier below the cursor" %{
-    %sh{
+    evaluate-commands %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-racer.XXXXXXXX)
         printf %s\\n "set-option buffer racer_tmp_dir ${dir}"
         printf %s\\n "evaluate-commands -no-hooks %{ write ${dir}/buf }"
     }
-    %sh{
+    evaluate-commands %sh{
         dir=${kak_opt_racer_tmp_dir}
         cursor="${kak_cursor_line} ${kak_cursor_column}"
         racer_data=$(racer --interface tab-text  complete-with-snippet  ${cursor} "${kak_buffile}" "${dir}/buf" | sed -n 2p )

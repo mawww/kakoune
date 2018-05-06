@@ -55,7 +55,7 @@ The common pattern to do that is to use a fifo buffer:
 
 [source,bash]
 -----
-%sh{
+evaluate-commands %sh{
      # Create a temporary fifo for communication
      output=$(mktemp -d -t kak-temp-XXXXXXXX)/fifo
      mkfifo ${output}
@@ -113,7 +113,7 @@ decl str plugin_completions
 hook global BufSetOption filetype=my_filetype %{
     set -add buff completers option=plugin_completions
 }
-%sh{
+evaluate-commands %sh{
     # ask Kakoune to write current buffer to temporary file
     filename=$(mktemp -t kak-temp.XXXXXXXX)
     echo "set buffer plugin_filename '$filename'

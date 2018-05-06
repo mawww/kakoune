@@ -30,7 +30,7 @@ add-highlighter shared/moon/code regex \b(and|break|catch|class|continue|do|else
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command moon-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
+define-command moon-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ evaluate-commands %sh{
     case $kak_buffile in
         *spec/*_spec.moon)
             altfile=$(eval printf %s\\n $(printf %s\\n $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))

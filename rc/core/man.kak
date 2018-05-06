@@ -27,7 +27,7 @@ hook global WinSetOption filetype=(?!man).* %{
     remove-hooks window man-hooks
 }
 
-define-command -hidden -params 2..3 man-impl %{ %sh{
+define-command -hidden -params 2..3 man-impl %{ evaluate-commands %sh{
     buffer_name="$1"
     shift
     manout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
@@ -57,7 +57,7 @@ define-command -params ..1 \
   -docstring %{man [<page>]: manpage viewer wrapper
 If no argument is passed to the command, the selection will be used as page
 The page can be a word, or a word directly followed by a section number between parenthesis, e.g. kak(1)} \
-    man %{ %sh{
+    man %{ evaluate-commands %sh{
     subject=${1-$kak_selection}
 
     ## The completion suggestions display the page number, strip them if present

@@ -7,7 +7,7 @@ declare-option -hidden int grep_current_line 0
 define-command -params .. -file-completion \
     -docstring %{grep [<arguments>]: grep utility wrapper
 All the optional arguments are forwarded to the grep utility} \
-    grep %{ %sh{
+    grep %{ evaluate-commands %sh{
      output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
      if [ $# -gt 0 ]; then

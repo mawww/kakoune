@@ -23,7 +23,7 @@ define-command -params ..1 \
     -docstring %{ctags-search [<symbol>]: jump to a symbol's definition
 If no symbol is passed then the current selection is used as symbol name} \
     ctags-search \
-    %{ %sh{
+    %{ evaluate-commands %sh{
         realpath() { ( path=$(readlink "$1"); cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
         export tagname=${1:-${kak_selection}}
         printf %s\\n "$kak_opt_ctagsfiles" | tr ':' '\n' |
@@ -47,7 +47,7 @@ If no symbol is passed then the current selection is used as symbol name} \
 
 define-command ctags-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ evaluate-commands -draft %{
     execute-keys <space>hb<a-k>^\w+$<ret>
-    %sh{ {
+    nop %sh{ {
         compl=$(readtags -p "$kak_selection" | cut -f 1 | sort | uniq | sed -e 's/:/\\:/g' | sed -e 's/\n/:/g' )
         compl="${kak_cursor_line}.${kak_cursor_column}+${#kak_selection}@${kak_timestamp}:${compl}"
         printf %s\\n "set-option buffer=$kak_bufname ctags_completions '${compl}'" | kak -p ${kak_session}
@@ -58,7 +58,7 @@ define-command ctags-funcinfo -docstring "Display ctags information about a sele
     evaluate-commands -draft %{
         try %{
             execute-keys -no-hooks '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
-            %sh{
+            evaluate-commands %sh{
                 sigs=$(readtags -e ${kak_selection%?} | grep kind:f | sed -re 's/^(\S+).*((class|struct|namespace):(\S+))?.*signature:(.*)$/\5 [\4::\1]/')
                 if [ -n "$sigs" ]; then
                     printf %s\\n "evaluate-commands -client ${kak_client} %{info -anchor $kak_cursor_line.$kak_cursor_column -placement above '$sigs'}"
@@ -81,7 +81,7 @@ declare-option -docstring "path to the directory in which the tags file will be 
 
 define-command ctags-generate -docstring 'Generate tag file asynchronously' %{
     echo -markup "{Information}launching tag generation in the background"
-    %sh{ {
+    nop %sh{ (
         while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
         trap 'rmdir .tags.kaklock' EXIT
 
@@ -93,11 +93,11 @@ define-command ctags-generate -docstring 'Generate tag file asynchronously' %{
         fi
 
         printf %s\\n "evaluate-commands -client $kak_client echo -markup '{Information}${msg}'" | kak -p ${kak_session}
-    } > /dev/null 2>&1 < /dev/null & }
+    ) > /dev/null 2>&1 < /dev/null & }
 }
 
 define-command ctags-update-tags -docstring 'Update tags for the given file' %{
-    %sh{ {
+    nop %sh{ (
         while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
             trap 'rmdir .tags.kaklock' EXIT
 
@@ -113,5 +113,5 @@ define-command ctags-update-tags -docstring 'Update tags for the given file' %{
         fi
 
         printf %s\\n "evaluate-commands -client $kak_client echo -markup '{Information}${msg}'" | kak -p ${kak_session}
-    } > /dev/null 2>&1 < /dev/null & }
+    ) > /dev/null 2>&1 < /dev/null & }
 }

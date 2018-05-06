@@ -37,7 +37,7 @@ add-highlighter shared/d/code regex "\b(this)\b\s*[^(]" 1:value
 add-highlighter shared/d/code regex "((?:~|\b)this)\b\s*\(" 1:function
 add-highlighter shared/d/code regex '#\s*line\b.*' 0:meta
 
-%sh{
+evaluate-commands %sh{
     # Grammar
 
     keywords="abstract|alias|align|asm|assert|auto|body|break|case|cast"

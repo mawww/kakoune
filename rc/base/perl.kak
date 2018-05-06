@@ -22,7 +22,7 @@ add-highlighter shared/perl/double_string fill string
 add-highlighter shared/perl/single_string fill string
 add-highlighter shared/perl/comment fill comment
 
-%sh{
+evaluate-commands %sh{
     # Grammar
     keywords="else|lock|qw|elsif|lt|qx|eq|exp|ne|sub|for|no|my|not|tr|goto|and|foreach|or|break|exit|unless|cmp|ge|package|until|continue|gt|while|if|qq|xor|do|le|qr|return"
     attributes="END|AUTOLOAD|BEGIN|CHECK|UNITCHECK|INIT|DESTROY"

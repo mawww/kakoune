@@ -16,7 +16,7 @@ A shell command is appended to the one set in this option at runtime} \
                    'xfce4-terminal -e      ' ; do
         terminal=${termcmd%% *}
         if command -v $terminal >/dev/null 2>&1; then
-            printf %s\\n "'$termcmd'"
+            printf %s\\n "$termcmd"
             exit
         fi
     done
@@ -26,7 +26,7 @@ define-command -docstring %{x11-new [<command>]: create a new kak client for the
 The optional arguments will be passed as arguments to the new client} \
     -params .. \
     -command-completion \
-    x11-new %{ %sh{
+    x11-new %{ evaluate-commands %sh{
         if [ -z "${kak_opt_termcmd}" ]; then
            echo "echo -markup '{Error}termcmd option is not set'"
            exit
@@ -38,7 +38,7 @@ The optional arguments will be passed as arguments to the new client} \
 define-command -docstring %{x11-focus [<client>]: focus a given client's window
 If no client is passed, then the current client is used} \
     -params ..1 -client-completion \
-    x11-focus %{ %sh{
+    x11-focus %{ evaluate-commands %sh{
         if [ $# -eq 1 ]; then
             printf %s\\n "evaluate-commands -client '$1' focus"
         else
