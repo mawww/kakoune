@@ -3,19 +3,17 @@
 
 ## The default behaviour for the `new` command is to open an vertical pane in
 ## an iTerm session if not in a tmux session.
-hook global KakBegin .* %{
-    %sh{
-        if [ "$TERM_PROGRAM" = "iTerm.app" -a -z "$TMUX" ]; then
-            echo "
-                alias global new iterm-new-vertical
-                alias global focus iterm-focus
-            "
-        fi
-    }
+hook global KakBegin .* %sh{
+    if [ "$TERM_PROGRAM" = "iTerm.app" -a -z "$TMUX" ]; then
+        echo "
+            alias global new iterm-new-vertical
+            alias global focus iterm-focus
+        "
+    fi
 }
 
 define-command -hidden -params 1.. iterm-new-split-impl %{
-    %sh{
+    nop %sh{
         direction="$1"
         shift
         if [ $# -gt 0 ]; then kakoune_params="-e \\\"$@\\\""; fi
@@ -41,7 +39,7 @@ define-command -params .. -command-completion \
     -docstring %{iterm-new-tab [<arguments>]: create a new tab
 All optional arguments are forwarded to the new kak client} \
     iterm-new-tab %{
-    %sh{
+    nop %sh{
         if [ $# -gt 0 ]; then kakoune_params="-e \\\"$@\\\""; fi
         cmd="env -P ${PATH} TMPDIR=${TMPDIR} kak -c ${kak_session} ${kakoune_params}"
         osascript                                                       \
@@ -57,7 +55,7 @@ define-command -params .. -command-completion \
     -docstring %{iterm-new-window [<arguments>]: create a new window
 All optional arguments are forwarded to the new kak client} \
     iterm-new-window %{
-    %sh{
+    nop %sh{
         if [ $# -gt 0 ]; then kakoune_params="-e \\\"$@\\\""; fi
         cmd="env -P ${PATH} TMPDIR=${TMPDIR} kak -c ${kak_session} ${kakoune_params}"
         osascript                                                      \
@@ -70,7 +68,7 @@ All optional arguments are forwarded to the new kak client} \
 define-command -params ..1 -client-completion \
     -docstring %{iterm-focus [<client>]: focus the given client
 If no client is passed then the current one is used} \
-    iterm-focus %{ %sh{
+    iterm-focus %{ evaluate-commands %sh{
         if [ $# -eq 1 ]; then
             printf %s\\n "evaluate-commands -client '$1' focus"
         else

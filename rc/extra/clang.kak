@@ -10,7 +10,7 @@ define-command -params ..1 \
     -docstring %{Parse the contents of the current buffer
 The syntaxic errors detected during parsing are shown when auto-diagnostics are enabled} \
     clang-parse %{
-    %sh{
+    evaluate-commands %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
         printf %s\\n "set-option buffer clang_tmp_dir ${dir}"
@@ -18,7 +18,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
     }
     # end the previous %sh{} so that its output gets interpreted by kakoune
     # before launching the following as a background task.
-    %sh{
+    evaluate-commands %sh{
         dir=${kak_opt_clang_tmp_dir}
         printf %s\\n "evaluate-commands -draft %{
                   edit! -fifo ${dir}/fifo -debug *clang-output*
@@ -106,7 +106,7 @@ define-command clang-complete -docstring "Complete the current selection" %{ cla
 define-command -hidden clang-show-completion-info %[ try %[
     evaluate-commands -draft %[
         execute-keys <space>{( <a-k> ^\( <ret> b <a-k> \A\w+\z <ret>
-        %sh[
+        evaluate-commands %sh[
             desc=$(printf %s\\n "${kak_opt_clang_completions}" | sed -e "{ s/\([^\\]\):/\1\n/g }" | sed -ne "/^${kak_selection}|/ { s/^[^|]\+|//; s/|.*$//; s/\\\:/:/g; p }")
             if [ -n "$desc" ]; then
                 printf %s\\n "evaluate-commands -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} -placement above %{${desc}}}"
@@ -135,7 +135,7 @@ define-command clang-disable-autocomplete -docstring "Disable automatic clang co
 
 define-command -hidden clang-show-error-info %{
     update-option buffer clang_errors # Ensure we are up to date with buffer changes
-    %sh{
+    evaluate-commands %sh{
         desc=$(printf %s\\n "${kak_opt_clang_errors}" |
                sed -e "s/\([^\\]\):/\1\n/g" |
                sed -ne "/^${kak_cursor_line}|.*/ { s/^[[:digit:]]\+|//g; s/'/\\\\'/g; s/\\\\:/:/g; p }")
@@ -159,7 +159,7 @@ define-command clang-disable-diagnostics -docstring "Disable automatic error rep
 
 define-command clang-diagnostics-next -docstring "Jump to the next line that contains an error" %{
     update-option buffer clang_errors # Ensure we are up to date with buffer changes
-    %sh{
+    evaluate-commands %sh{
         printf "%s\n" "${kak_opt_clang_errors}" | sed -e 's/\([^\\]\):/\1\n/g' | tail -n +2 | (
             while IFS='|' read candidate rest; do
                 first_line=${first_line-$candidate}

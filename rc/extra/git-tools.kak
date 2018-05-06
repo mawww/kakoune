@@ -24,9 +24,9 @@ set-face global GitBlame default,magenta
 set-face global GitDiffFlags default,black
 
 define-command -params 1.. \
-  -docstring %sh{printf '%%{git [<arguments>]: git wrapping helper
+  -docstring %sh{printf 'git [<arguments>]: git wrapping helper
 All the optional arguments are forwarded to the git utility
-Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  log\n  show\n  show-diff\n  status\n  update-diff}'} \
+Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  log\n  show\n  show-diff\n  status\n  update-diff'} \
   -shell-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
         printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nlog\nshow\nshow-diff\nstatus\nupdate-diff\n"
@@ -38,7 +38,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         esac
     fi
   } \
-  git %{ %sh{
+  git %{ evaluate-commands %sh{
     show_git_cmd_output() {
         local filetype
         case "$1" in
@@ -136,7 +136,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         GIT_EDITOR='' EDITOR='' git commit "$@" > /dev/null 2>&1
         msgfile="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
         printf %s "edit '$msgfile'
-              hook buffer BufWritePost '.*\Q$msgfile\E' %{ %sh{
+              hook buffer BufWritePost '.*\Q$msgfile\E' %{ evaluate-commands %sh{
                   if git commit -F '$msgfile' --cleanup=strip $@ > /dev/null; then
                      printf %s 'evaluate-commands -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
                   else

@@ -1,6 +1,6 @@
 # lucius theme
 
-%sh{
+evaluate-commands %sh{
     # first we define the lucius colors as named colors
     lucius_darker_grey="rgb:303030"
     lucius_dark_grey="rgb:444444"

@@ -5,7 +5,7 @@ declare-option -hidden bool editorconfig_trim_trailing_whitespace false
 
 define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file]: set formatting behavior according to editorconfig" %{
     remove-hooks buffer editorconfig-hooks
-    %sh{
+    evaluate-commands %sh{
         command -v editorconfig >/dev/null 2>&1 || { echo 'echo -markup "{Error}editorconfig could not be found"'; exit 1; }
         editorconfig "${1:-$kak_buffile}" | awk -F= -- '
             /indent_style=/            { indent_style = $2 }
@@ -39,7 +39,7 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
             }
         '
     }
-    hook buffer BufWritePre %val{buffile} -group editorconfig-hooks %{ %sh{
+    hook buffer BufWritePre %val{buffile} -group editorconfig-hooks %{ evaluate-commands %sh{
         if [ ${kak_opt_editorconfig_trim_trailing_whitespace} = "true" ]; then
             printf %s\\n "try %{ execute-keys -draft %{ %s\h+$<ret>d } }"
         fi

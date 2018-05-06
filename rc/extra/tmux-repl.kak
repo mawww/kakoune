@@ -1,30 +1,28 @@
 # http://tmux.github.io/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global KakBegin .* %{
-    %sh{
-        if [ -n "$TMUX" ]; then
-            VERSION_TMUX=$(tmux -V | cut -d' ' -f2)
-            VERSION_TMUX=${VERSION_TMUX%%.*}
+hook global KakBegin .* %sh{
+    if [ -n "$TMUX" ]; then
+        VERSION_TMUX=$(tmux -V | cut -d' ' -f2)
+        VERSION_TMUX=${VERSION_TMUX%%.*}
 
-            if [ "${VERSION_TMUX}" = "master" ] \
-                || [ "${VERSION_TMUX}" -ge 2 ]; then
-                echo "
-                    alias global repl tmux-repl-horizontal
-                    alias global send-text tmux-send-text
-                "
-            else
-                echo "
-                    alias global repl tmux-repl-disabled
-                    alias global send-text tmux-repl-disabled
-                "
-            fi
+        if [ "${VERSION_TMUX}" = "master" ] \
+            || [ "${VERSION_TMUX}" -ge 2 ]; then
+            echo "
+                alias global repl tmux-repl-horizontal
+                alias global send-text tmux-send-text
+            "
+        else
+            echo "
+                alias global repl tmux-repl-disabled
+                alias global send-text tmux-repl-disabled
+            "
         fi
-    }
+    fi
 }
 
 define-command -hidden -params 1..2 tmux-repl-impl %{
-    %sh{
+    evaluate-commands %sh{
         if [ -z "$TMUX" ]; then
             echo "echo -markup '{Error}This command is only available in a tmux session'"
             exit
@@ -68,7 +66,7 @@ define-command -hidden tmux-send-text -params 0..1 -docstring "tmux-send-text [t
     }
 }
 
-define-command -hidden tmux-repl-disabled %{ %sh{
+define-command -hidden tmux-repl-disabled %{ evaluate-commands %sh{
     VERSION_TMUX=$(tmux -V)
     printf %s "echo -markup %{{Error}The version of tmux is too old: got ${VERSION_TMUX}, expected >= 2.x}"
 } }

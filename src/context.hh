@@ -159,10 +159,11 @@ private:
 struct ScopedEdition
 {
     ScopedEdition(Context& context)
-        : m_context(context), m_buffer(&context.buffer())
-    { m_context.begin_edition(); }
+        : m_context{context},
+          m_buffer{context.has_buffer() ? &context.buffer() : nullptr}
+    { if (m_buffer) m_context.begin_edition(); }
 
-    ~ScopedEdition() { m_context.end_edition(); }
+    ~ScopedEdition() { if (m_buffer) m_context.end_edition(); }
 
     Context& context() const { return m_context; }
 private:

@@ -127,7 +127,7 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel 
 ] ]
 
 # Regions definition are the same between c++ and objective-c
-%sh{
+evaluate-commands %sh{
     for ft in c cpp objc; do
         if [ "${ft}" = "objc" ]; then
             maybe_at='@?'
@@ -155,7 +155,7 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel 
 
 # c specific
 add-highlighter shared/c/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
-%sh{
+evaluate-commands %sh{
     # Grammar
     keywords="asm break case continue default do else for goto if return
               sizeof switch while"
@@ -199,7 +199,7 @@ add-highlighter shared/cpp/code regex %{(?i)(?<!\.)\b0x([\da-f]('?[\da-f]+)*)?\.
 # character literals (no multi-character literals)
 add-highlighter shared/cpp/code regex %{(\b(u8|u|U|L)|\B)'((\\.)|[^'\\])'\B} 0:value
 
-%sh{
+evaluate-commands %sh{
     # Grammar
     keywords="alignas alignof and and_eq asm bitand bitor break case catch
               compl const_cast continue decltype default delete do dynamic_cast
@@ -231,7 +231,7 @@ add-highlighter shared/cpp/code regex %{(\b(u8|u|U|L)|\B)'((\\.)|[^'\\])'\B} 0:v
 }
 
 # c and c++ compiler macros
-%sh{
+evaluate-commands %sh{
     builtin_macros="__cplusplus|__STDC_HOSTED__|__FILE__|__LINE__|__DATE__|__TIME__|__STDCPP_DEFAULT_NEW_ALIGNMENT__"
 
     printf %s "
@@ -243,7 +243,7 @@ add-highlighter shared/cpp/code regex %{(\b(u8|u|U|L)|\B)'((\\.)|[^'\\])'\B} 0:v
 # objective-c specific
 add-highlighter shared/objc/code regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 
-%sh{
+evaluate-commands %sh{
     # Grammar
     keywords="break case continue default do else for goto if return switch
               while"
@@ -314,7 +314,7 @@ Can be one of the following:
     str c_include_guard_style "ifdef"
 
 define-command -hidden c-family-insert-include-guards %{
-    %sh{
+    evaluate-commands %sh{
         case "${kak_opt_c_include_guard_style}" in
             ifdef)
                 echo 'execute-keys ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>'
@@ -332,7 +332,7 @@ hook -group c-family-insert global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-inse
 declare-option -docstring "colon separated list of path in which header files will be looked for" \
     str-list alt_dirs ".:.."
 
-define-command c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
+define-command c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ evaluate-commands %sh{
     alt_dirs=$(printf %s\\n "${kak_opt_alt_dirs}" | tr ':' '\n')
     file="${kak_buffile##*/}"
     file_noext="${file%.*}"

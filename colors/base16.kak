@@ -2,7 +2,7 @@
 ## base16.kak by lenormf
 ##
 
-%sh{
+evaluate-commands %sh{
     black_lighterer='rgb:383838'
     black_lighter='rgb:2D2D2D'
     black_light='rgb:1C1C1C'

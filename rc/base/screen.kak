@@ -1,19 +1,17 @@
 # http://gnu.org/software/screen/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
  
-hook -group GNUscreen global KakBegin .* %{
-    %sh{
-        [ -z "${STY}" ] && exit
-        echo "
-            alias global focus screen-focus
-            alias global new screen-new-vertical
-        "
-    }
+hook -group GNUscreen global KakBegin .* %sh{
+    [ -z "${STY}" ] && exit
+    echo "
+        alias global focus screen-focus
+        alias global new screen-new-vertical
+    "
 }
 
 
 define-command screen-new-vertical -params .. -command-completion -docstring "Create a new vertical region" %{
-     %sh{
+     nop %sh{
         tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
         screen -X eval \
             'split -h' \
@@ -25,7 +23,7 @@ define-command screen-new-vertical -params .. -command-completion -docstring "Cr
 }
 
 define-command screen-new-horizontal -params .. -command-completion -docstring "Create a new horizontal region" %{
-     %sh{
+     nop %sh{
         tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
         screen -X eval \
             'split -v' \
@@ -37,7 +35,7 @@ define-command screen-new-horizontal -params .. -command-completion -docstring "
 }
 
 define-command screen-new-window -params .. -command-completion -docstring "Create a new window" %{
-    %sh{
+    nop %sh{
         tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
         screen -X screen kak -c "${kak_session}" -e "$*" < "/dev/$tty"
     }
@@ -46,7 +44,7 @@ define-command screen-new-window -params .. -command-completion -docstring "Crea
 define-command -docstring %{screen-focus [<client>]: focus the given client
 If no client is passed then the current one is used} \
     -params ..1 -client-completion \
-    screen-focus %{ %sh{
+    screen-focus %{ evaluate-commands %sh{
         if [ $# -eq 1 ]; then
             printf %s\\n "
                 evaluate-commands -client '$1' focus

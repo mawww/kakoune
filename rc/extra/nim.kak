@@ -23,7 +23,7 @@ add-highlighter shared/nim/code regex \b(0[xXocCbB])?[\d_]+('[iIuUfFdD](8|16|32|
 add-highlighter shared/nim/code regex \b\d+\.\d+\b 0:value
 add-highlighter shared/nim/code regex %{'[^'\n]'} 0:string
 
-%sh{
+evaluate-commands %sh{
     # Grammar
     keywords="addr|and|as|asm|atomic|bind|block|break|case|cast|concept|const"
     keywords="${keywords}|continue|converter|defer|discard|distinct|div|do|elif"

@@ -3,7 +3,7 @@
 
 define-command ranger-open-on-edit-directory \
     -docstring 'Start the ranger file system explorer when trying to edit a directory' %{
-        hook global RuntimeError "\d+:\d+: '\w+' (.*): is a directory" %{ %sh{
+        hook global RuntimeError "\d+:\d+: '\w+' (.*): is a directory" %{ evaluate-commands %sh{
             directory=$kak_hook_param_capture_1
             echo ranger $directory
     }}
@@ -13,7 +13,7 @@ define-command \
     -params .. -file-completion \
     -docstring %{ranger [<arguments>]: open the file system explorer to select buffers to open
     All the optional arguments are forwarded to the ranger utility} \
-    ranger %{ %sh{
+    ranger %{ evaluate-commands %sh{
     if [ -n "${TMUX}" ]; then
         tmux split-window -h \
             ranger $@ --cmd " \

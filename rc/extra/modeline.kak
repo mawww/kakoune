@@ -11,7 +11,7 @@ declare-option -docstring "amount of lines that will be checked at the beginning
     int modelines 5
 
 define-command -hidden modeline-parse-impl %{
-    %sh{
+    evaluate-commands %sh{
         # Translate a vim option into the corresponding kakoune one
         translate_opt_vim() {
             readonly key="$1"

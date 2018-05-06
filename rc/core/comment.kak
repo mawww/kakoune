@@ -111,7 +111,7 @@ hook global BufSetOption filetype=ruby %{
 }
 
 define-command comment-block -docstring '(un)comment selections using block comments' %{
-    %sh{
+    evaluate-commands %sh{
         if [ -z "${kak_opt_comment_block_begin}" ] || [ -z "${kak_opt_comment_block_end}" ]; then
             echo "fail \"The 'comment_block' options are empty, could not comment the selection\""
         fi
@@ -138,7 +138,7 @@ define-command comment-block -docstring '(un)comment selections using block comm
 }
 
 define-command comment-line -docstring '(un)comment selected lines using line comments' %{
-    %sh{
+    evaluate-commands %sh{
         if [ -z "${kak_opt_comment_line}" ]; then
             echo "fail \"The 'comment_line' option is empty, could not comment the line\""
         fi

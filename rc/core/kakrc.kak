@@ -15,16 +15,16 @@ add-highlighter shared/ regions -default code kakrc \
     comment (^|\h)\K# $ '' \
     double_string %{(^|\h)\K"} %{(?<!\\)(\\\\)*"} '' \
     single_string %{(^|\h)\K'} %{(?<!\\)(\\\\)*'} '' \
-    shell '(^|\h)\K%sh\{' '\}' '\{' \
-    shell '(^|\h)\K%sh\(' '\)' '\(' \
-    shell '(^|\h)\K%sh\[' '\]' '\[' \
-    shell '(^|\h)\K%sh<'  '>'  '<' \
+    shell '(^|\h)\K%?%sh\{' '\}' '\{' \
+    shell '(^|\h)\K%?%sh\(' '\)' '\(' \
+    shell '(^|\h)\K%?%sh\[' '\]' '\[' \
+    shell '(^|\h)\K%?%sh<'  '>'  '<' \
     shell '(^|\h)\K-shell-(completion|candidates)\h+%\{' '\}' '\{' \
     shell '(^|\h)\K-shell-(completion|candidates)\h+%\(' '\)' '\(' \
     shell '(^|\h)\K-shell-(completion|candidates)\h+%\[' '\]' '\[' \
     shell '(^|\h)\K-shell-(completion|candidates)\h+%<'  '>'  '<'
 
-%sh{
+evaluate-commands %sh{
     # Grammar
     keywords="edit write write-all kill quit write-quit write-all-quit map unmap alias unalias
               buffer buffer-next buffer-previous delete-buffer add-highlighter remove-highlighter

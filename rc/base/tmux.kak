@@ -2,20 +2,18 @@
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 ## The default behaviour for the `new` command is to open an horizontal pane in a tmux session
-hook global KakBegin .* %{
-    %sh{
-        if [ -n "$TMUX" ]; then
-            echo "
-                alias global focus tmux-focus
-                alias global new tmux-new-horizontal
-            "
-        fi
-    }
+hook global KakBegin .* %sh{
+    if [ -n "$TMUX" ]; then
+        echo "
+            alias global focus tmux-focus
+            alias global new tmux-new-horizontal
+        "
+    fi
 }
 
 ## Temporarily override the default client creation command
 define-command -hidden -params 1.. tmux-new-impl %{
-    %sh{
+    evaluate-commands %sh{
         tmux=${kak_client_env_TMUX:-$TMUX}
         if [ -z "$tmux" ]; then
             echo "echo -markup '{Error}This command is only available in a tmux session'"
@@ -43,7 +41,7 @@ define-command tmux-new-window -params .. -command-completion -docstring "Create
 define-command -docstring %{tmux-focus [<client>]: focus the given client
 If no client is passed then the current one is used} \
     -params ..1 -client-completion \
-    tmux-focus %{ %sh{
+    tmux-focus %{ evaluate-commands %sh{
     if [ $# -eq 1 ]; then
         printf %s\\n "evaluate-commands -client '$1' focus"
     elif [ -n "${kak_client_env_TMUX}" ]; then

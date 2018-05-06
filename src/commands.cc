@@ -1677,14 +1677,14 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     }
     else
     {
-        const bool transient = c.flags() & Context::Flags::Draft;
-        auto original_jump_list = transient ? Optional<JumpList>{} : c.jump_list();
-        auto jump = transient ? Optional<SelectionList>{} : c.selections();
+        const bool collapse_jumps = not (c.flags() & Context::Flags::Draft) and context.has_buffer();
+        auto original_jump_list = collapse_jumps ? c.jump_list() : Optional<JumpList>{};
+        auto jump = collapse_jumps ? c.selections() : Optional<SelectionList>{};
 
         func(parser, c);
 
         // If the jump list got mutated, collapse all jumps into a single one from original selections
-        if (not transient and c.jump_list() != *original_jump_list)
+        if (collapse_jumps and c.jump_list() != *original_jump_list)
         {
             original_jump_list->push(std::move(*jump));
             if (c.jump_list() != *original_jump_list)

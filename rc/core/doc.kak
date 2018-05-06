@@ -11,7 +11,7 @@ define-command -hidden -params 4 doc-render-regex %{
         execute-keys \%s %arg{1} <ret>
         execute-keys -draft s %arg{2} <ret> d
         execute-keys "%arg{3}"
-        %sh{
+        evaluate-commands %sh{
             ranges=$(echo "$kak_selections_desc" | sed -e "s/:/|$4:/g; s/\$/|$4/")
             echo "update-option buffer doc_render_ranges"
             echo "set-option -add buffer doc_render_ranges '$ranges'"
@@ -54,7 +54,7 @@ define-command -hidden doc-parse-anchors %{
 
 define-command doc-jump-to-anchor -params 1 %{
     update-option buffer doc_anchors
-    %sh{
+    evaluate-commands %sh{
         range=$(printf "%s" "$kak_opt_doc_anchors" | tr ':' '\n' | grep "$1" | head -n1)
         if [ -n "$range" ]; then
             printf '%s\n'  "select '${range%|*}'; execute-keys vv"
@@ -66,7 +66,7 @@ define-command doc-jump-to-anchor -params 1 %{
 
 define-command doc-follow-link %{
     update-option buffer doc_links
-    %sh{
+    evaluate-commands %sh{
         printf "%s" "$kak_opt_doc_links" | awk -v RS=':' -v FS='[.,|#]' '
             BEGIN {
                 l=ENVIRON["kak_cursor_line"];
@@ -136,7 +136,7 @@ define-command -params 1..2 \
     } \
     doc -docstring %{doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
 An optional keyword argument can be passed to the function, which will be automatically selected in the documentation} %{
-    %sh{
+    evaluate-commands %sh{
         readonly page="${kak_runtime}/doc/${1}.asciidoc"
         if [ -f "${page}" ]; then
             if [ $# -eq 2 ]; then

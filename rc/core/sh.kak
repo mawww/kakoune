@@ -13,7 +13,7 @@ add-highlighter shared/sh/single_string fill string
 add-highlighter shared/sh/comment fill comment
 add-highlighter shared/sh/heredoc fill string
 
-%sh{
+evaluate-commands %sh{
     # Grammar
     keywords="alias|bind|builtin|caller|case|cd|command|coproc|declare|do|done"
     keywords="${keywords}|echo|elif|else|enable|esac|exit|fi|for|function|help"
