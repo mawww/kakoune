@@ -344,6 +344,7 @@ find_surrounding(const Container& container, Iterator pos,
         pos = matches[0].second;
 
     auto first = pos;
+    auto last = pos;
     if (flags & ObjectFlags::ToBegin)
     {
         // When positionned onto opening and searching to opening, search the parent one
@@ -353,12 +354,17 @@ find_surrounding(const Container& container, Iterator pos,
             first = utf8::previous(first, container.begin());
 
         if (auto res = find_opening(first+1, container, opening, closing, level, nestable))
+        {
             first = (flags & ObjectFlags::Inner) ? res->second : res->first;
+            if (flags & ObjectFlags::ToEnd) // ensure we find the matching end
+            {
+                last = res->second;
+                level = 0;
+            }
+        }
         else
             return {};
     }
-
-    auto last = pos;
     if (flags & ObjectFlags::ToEnd)
     {
         // When positionned onto closing and searching to closing, search the parent one
@@ -1030,6 +1036,7 @@ UnitTest test_find_surrounding{[]()
 
     s = "begin foo begin bar end end";
     check_equal(s.begin() + 6, "begin", "end", ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, s);
+    check_equal(s.begin() + 22, "begin", "end", ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "begin bar end");
 }};
 
 }
