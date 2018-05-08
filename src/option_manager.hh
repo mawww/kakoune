@@ -78,7 +78,7 @@ public:
     virtual void on_option_changed(const Option& option) = 0;
 };
 
-class OptionManager : private OptionManagerWatcher
+class OptionManager final : private OptionManagerWatcher
 {
 public:
     OptionManager(OptionManager& parent);

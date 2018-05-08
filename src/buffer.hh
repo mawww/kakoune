@@ -103,7 +103,7 @@ using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;
 // The Buffer class permits to read and mutate this file
 // representation. It also manage modifications undo/redo and
 // provides tools to deal with the line/column nature of text.
-class Buffer : public SafeCountable, public OptionManagerWatcher, public Scope
+class Buffer final : public SafeCountable, public Scope, private OptionManagerWatcher
 {
 public:
     enum class Flags

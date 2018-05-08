@@ -13,7 +13,7 @@ namespace Kakoune
 {
 
 // A Window is a view onto a Buffer
-class Window : public SafeCountable, public OptionManagerWatcher, public Scope
+class Window final : public SafeCountable, public Scope, private OptionManagerWatcher
 {
 public:
     Window(Buffer& buffer);

@@ -22,7 +22,7 @@ enum class EventMode;
 enum class InfoStyle;
 enum class MenuStyle;
 
-class Client : public SafeCountable, public OptionManagerWatcher
+class Client final : public SafeCountable, public OptionManagerWatcher
 {
 public:
     using OnExitCallback = std::function<void (int status)>;
