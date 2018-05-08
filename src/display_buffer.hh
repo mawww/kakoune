@@ -163,9 +163,13 @@ public:
     // Optimize all lines, set DisplayLine::optimize
     void optimize();
 
+    void set_timestamp(size_t timestamp) { m_timestamp = timestamp; }
+    size_t timestamp() const { return m_timestamp; }
+
 private:
     LineList m_lines;
     BufferRange m_range;
+    size_t m_timestamp;
 };
 
 }

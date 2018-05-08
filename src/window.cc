@@ -126,6 +126,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     auto start_time = profile ? Clock::now() : Clock::time_point{};
 
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
+    m_display_buffer.set_timestamp(buffer().timestamp());
     lines.clear();
 
     if (m_dimensions == DisplayCoord{0,0})
@@ -283,6 +284,9 @@ BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
 
 Optional<DisplayCoord> Window::display_position(BufferCoord coord) const
 {
+    if (m_display_buffer.timestamp() != buffer().timestamp())
+        return {};
+
     LineCount l = 0;
     for (auto& line : m_display_buffer.lines())
     {
@@ -296,8 +300,9 @@ Optional<DisplayCoord> Window::display_position(BufferCoord coord) const
 
 BufferCoord Window::buffer_coord(DisplayCoord coord) const
 {
-    if (m_display_buffer.lines().empty())
-        return {0,0};
+    if (m_display_buffer.timestamp() != buffer().timestamp() or
+        m_display_buffer.lines().empty())
+        return {0, 0};
     if (coord <= 0_line)
         coord = {0,0};
     if ((size_t)coord.line >= m_display_buffer.lines().size())
