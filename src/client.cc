@@ -205,7 +205,7 @@ void Client::redraw_ifn()
         m_ui_pending |= Draw;
 
     DisplayLine mode_line = generate_mode_line();
-    if (mode_line.atoms() != m_mode_line.atoms())
+    if (mode_line != m_mode_line)
     {
         m_ui_pending |= StatusLine;
         m_mode_line = std::move(mode_line);

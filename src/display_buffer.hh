@@ -107,6 +107,9 @@ public:
     DisplayLine(String str, Face face)
     { push_back({ std::move(str), face }); }
 
+    bool operator==(const DisplayLine& other) const { return m_atoms == other.atoms(); }
+    bool operator!=(const DisplayLine& other) const { return m_atoms != other.atoms(); }
+
     iterator begin() { return m_atoms.begin(); }
     iterator end() { return m_atoms.end(); }
 
