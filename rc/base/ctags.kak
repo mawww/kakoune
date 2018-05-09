@@ -59,7 +59,7 @@ define-command ctags-funcinfo -docstring "Display ctags information about a sele
         try %{
             execute-keys -no-hooks '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
             %sh{
-                sigs=$(readtags -e ${kak_selection%(} | grep kind:f | sed -re 's/^(\S+).*((class|struct|namespace):(\S+))?.*signature:(.*)$/\5 [\4::\1]/')
+                sigs=$(readtags -e ${kak_selection%?} | grep kind:f | sed -re 's/^(\S+).*((class|struct|namespace):(\S+))?.*signature:(.*)$/\5 [\4::\1]/')
                 if [ -n "$sigs" ]; then
                     printf %s\\n "evaluate-commands -client ${kak_client} %{info -anchor $kak_cursor_line.$kak_cursor_column -placement above '$sigs'}"
                 fi
