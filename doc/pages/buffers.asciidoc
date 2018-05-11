@@ -27,7 +27,7 @@ A specific *\*debug*\* buffer is used by Kakoune to write errors or
 warnings.  This is also where the ouput of the `:debug` and the `:echo
 -debug` commands will land.
 
-A scratch buffer can be created by passing the `-debug` switch to the
+A debug buffer can be created by passing the `-debug` switch to the
 `:edit` command.
 
 == FIFO Buffers
