@@ -1581,7 +1581,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     {
         auto context_wrap_for_buffer = [&](Buffer& buffer) {
             InputHandler input_handler{{ buffer, Selection{} },
-                                       Context::Flags::Transient};
+                                       Context::Flags::Draft};
             Context& c = input_handler.context();
 
             ScopedSetBool disable_hooks(c.hooks_disabled(), no_hooks);
@@ -1621,7 +1621,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     if (draft)
     {
         input_handler.emplace(base_context->selections(),
-                              Context::Flags::Transient,
+                              Context::Flags::Draft,
                               base_context->name());
         effective_context = &input_handler->context();
 
@@ -1675,7 +1675,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     }
     else
     {
-        const bool transient = c.flags() & Context::Flags::Transient;
+        const bool transient = c.flags() & Context::Flags::Draft;
         auto original_jump_list = transient ? Optional<JumpList>{} : c.jump_list();
         auto jump = transient ? Optional<SelectionList>{} : c.selections();
 

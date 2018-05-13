@@ -163,12 +163,12 @@ public:
     Normal(InputHandler& input_handler, bool single_command = false)
         : InputMode(input_handler),
           m_idle_timer{TimePoint::max(),
-                       context().flags() & Context::Flags::Transient ?
+                       context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
               context().hooks().run_hook("NormalIdle", "", context());
           }},
           m_fs_check_timer{TimePoint::max(),
-                           context().flags() & Context::Flags::Transient ?
+                           context().flags() & Context::Flags::Draft ?
                             Timer::Callback{} : Timer::Callback{[this](Timer& timer) {
               if (context().has_client())
                   context().client().check_if_buffer_needs_reloading();
@@ -179,7 +179,7 @@ public:
 
     void on_enabled() override
     {
-        if (not (context().flags() & Context::Flags::Transient))
+        if (not (context().flags() & Context::Flags::Draft))
         {
             if (context().has_client())
                 context().client().check_if_buffer_needs_reloading();
@@ -234,7 +234,7 @@ public:
             }
         });
 
-        const bool transient = context().flags() & Context::Flags::Transient;
+        const bool transient = context().flags() & Context::Flags::Draft;
 
         auto cp = key.codepoint();
 
@@ -709,7 +709,7 @@ public:
           m_empty_text{std::move(emptystr)},
           m_flags(flags), m_completer(std::move(completer)), m_callback(std::move(callback)),
           m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()},
-          m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Transient ?
+          m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
                            if (m_autoshowcompl and m_refresh_completion_pending)
                                refresh_completions(CompletionFlags::Fast);
@@ -905,7 +905,7 @@ public:
 
         display();
         m_line_changed = true;
-        if (enabled() and not (context().flags() & Context::Flags::Transient)) // The callback might have disabled us
+        if (enabled() and not (context().flags() & Context::Flags::Draft)) // The callback might have disabled us
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
@@ -991,7 +991,7 @@ private:
         display();
         m_line_changed = true;
 
-        if (not (context().flags() & Context::Flags::Transient))
+        if (not (context().flags() & Context::Flags::Draft))
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
@@ -1076,7 +1076,7 @@ public:
           m_completer(context()),
           m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()},
           m_disable_hooks{context().hooks_disabled(), context().hooks_disabled()},
-          m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Transient ?
+          m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                        Timer::Callback{} : [this](Timer&) {
                            if (m_autoshowcompl)
                                m_completer.update();
@@ -1096,7 +1096,7 @@ public:
 
     void on_enabled() override
     {
-        if (not (context().flags() & Context::Flags::Transient))
+        if (not (context().flags() & Context::Flags::Draft))
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
@@ -1124,7 +1124,7 @@ public:
     {
         auto& buffer = context().buffer();
 
-        const bool transient = context().flags() & Context::Flags::Transient;
+        const bool transient = context().flags() & Context::Flags::Draft;
         bool update_completions = true;
         bool moved = false;
         if (m_mouse_handler.handle_key(key, context()))

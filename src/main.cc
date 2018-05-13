@@ -748,7 +748,7 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
             {
                 InputHandler input_handler{
                     { buffer, Selection{{0,0}, buffer.back_coord()} },
-                    Context::Flags::Transient
+                    Context::Flags::Draft
                 };
 
                 for (auto& key : keys)

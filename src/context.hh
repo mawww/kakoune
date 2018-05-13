@@ -50,8 +50,8 @@ class Context
 public:
     enum class Flags
     {
-        None = 0,
-        Transient = 1,
+        None  = 0,
+        Draft = 1,
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
@@ -121,7 +121,7 @@ public:
     JumpList& jump_list() { return m_jump_list; }
     void push_jump(bool force = false)
     {
-        if (force or not (m_flags & Flags::Transient))
+        if (force or not (m_flags & Flags::Draft))
             m_jump_list.push(selections());
     }
 

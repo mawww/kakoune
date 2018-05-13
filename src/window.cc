@@ -333,7 +333,7 @@ void Window::run_hook_in_own_context(StringView hook_name, StringView param,
         return;
 
     InputHandler hook_handler{{ *m_buffer, Selection{} },
-                              Context::Flags::Transient,
+                              Context::Flags::Draft,
                               std::move(client_name)};
     hook_handler.context().set_window(*this);
     if (m_client)
