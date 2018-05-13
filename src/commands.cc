@@ -1650,7 +1650,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         size_t timestamp = c.buffer().timestamp();
         for (auto& sel : sels)
         {
-            c.selections_write_only() = SelectionList{ sels.buffer(), sel, sels.timestamp() };
+            c.selections_write_only() = SelectionList{sels.buffer(), sel, sels.timestamp()};
             c.selections().update();
 
             func(parser, c);
@@ -1669,19 +1669,20 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
         if (not draft)
         {
-            c.selections_write_only() = SelectionList(c.buffer(), new_sels);
+            c.selections_write_only() = SelectionList(c.buffer(), std::move(new_sels));
             c.selections().sort_and_merge_overlapping();
         }
     }
     else
     {
-        auto original_jump_list = draft ? Optional<JumpList>{} : c.jump_list();
-        auto jump = draft ? Optional<SelectionList>{} : c.selections();
+        const bool transient = c.flags() & Context::Flags::Transient;
+        auto original_jump_list = transient ? Optional<JumpList>{} : c.jump_list();
+        auto jump = transient ? Optional<SelectionList>{} : c.selections();
 
         func(parser, c);
 
         // If the jump list got mutated, collapse all jumps into a single one from original selections
-        if (not draft and c.jump_list() != *original_jump_list)
+        if (not transient and c.jump_list() != *original_jump_list)
         {
             original_jump_list->push(std::move(*jump));
             if (c.jump_list() != *original_jump_list)

@@ -119,7 +119,11 @@ public:
     Flags flags() const { return m_flags; }
 
     JumpList& jump_list() { return m_jump_list; }
-    void push_jump() { m_jump_list.push(selections()); }
+    void push_jump(bool force = false)
+    {
+        if (force or not (m_flags & Flags::Transient))
+            m_jump_list.push(selections());
+    }
 
     template<typename Func>
     void set_last_select(Func&& last_select) { m_last_select = std::forward<Func>(last_select); }

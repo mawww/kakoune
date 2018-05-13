@@ -1522,7 +1522,7 @@ void jump(Context& context, NormalParams params)
 
 void push_selections(Context& context, NormalParams)
 {
-    context.push_jump();
+    context.push_jump(true);
     context.print_status({ format("saved {} selections", context.selections().size()),
                            context.faces()["Information"] });
 }
