@@ -1552,7 +1552,7 @@ const ParameterDesc context_wrap_params = {
 };
 
 template<typename Func>
-void context_wrap(const ParametersParser& parser, Context& context, Func func)
+void context_wrap(const ParametersParser& parser, Context& context, StringView default_saved_regs, Func func)
 {
     if ((int)(bool)parser.get_switch("buffer") +
         (int)(bool)parser.get_switch("client") +
@@ -1576,7 +1576,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         });
     };
     Vector<decltype(make_register_restorer(0))> saved_registers;
-    for (auto c : parser.get_switch("save-regs").value_or("/\"|^@"))
+    for (auto c : parser.get_switch("save-regs").value_or(default_saved_regs))
         saved_registers.push_back(make_register_restorer(c));
 
     if (auto bufnames = parser.get_switch("buffer"))
@@ -1703,7 +1703,7 @@ const CommandDesc exec_string_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        context_wrap(parser, context, [](const ParametersParser& parser, Context& context) {
+        context_wrap(parser, context, "/\"|^@", [](const ParametersParser& parser, Context& context) {
             KeyList keys;
             for (auto& param : parser)
             {
@@ -1727,7 +1727,7 @@ const CommandDesc eval_string_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
-        context_wrap(parser, context, [&](const ParametersParser& parser, Context& context) {
+        context_wrap(parser, context, {}, [&](const ParametersParser& parser, Context& context) {
             CommandManager::instance().execute(join(parser, ' ', false), context, shell_context);
         });
     }
