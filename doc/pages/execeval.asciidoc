@@ -15,8 +15,9 @@ evaluates its given parameters as if they were entered in the command prompt.
 By default, their execution happens within the context of the current client,
 and stops when the last key/command is reached, or an error is raised.
 
-These two commands also save the following registers, who are then restored
+*execute-keys* also save the following registers, who are then restored
 when the commands have been executed: */*, *"*, *|*, *^*, *@*.
+*evaluate-commands* does not save any registers by default.
 (See <<registers#,`:doc registers`>>)
 
 == Optional switches
