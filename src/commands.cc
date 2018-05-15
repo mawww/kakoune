@@ -1539,17 +1539,27 @@ const CommandDesc unmap_key_cmd = {
     }
 };
 
-const ParameterDesc context_wrap_params = {
-    { { "client",     { true,  "run in given client context" } },
-      { "try-client", { true,  "run in given client context if it exists, or else in the current one" } },
-      { "buffer",     { true,  "run in a disposable context for each given buffer in the comma separated list argument" } },
-      { "draft",      { false, "run in a disposable context" } },
-      { "no-hooks",   { false, "disable hooks" } },
-      { "with-maps",  { false, "use user defined key mapping when executing keys" } },
-      { "itersel",    { false, "run once for each selection with that selection as the only one" } },
-      { "save-regs",  { true, "restore all given registers after execution (defaults to '/\"|^@')" } } },
-    ParameterDesc::Flags::SwitchesOnlyAtStart, 1
-};
+template<size_t... P>
+ParameterDesc make_context_wrap_params_impl(std::array<HashItem<String, SwitchDesc>, sizeof...(P)>&& additional_params,
+                                            std::index_sequence<P...>)
+{
+    return { { { "client",     { true,  "run in given client context" } },
+               { "try-client", { true,  "run in given client context if it exists, or else in the current one" } },
+               { "buffer",     { true,  "run in a disposable context for each given buffer in the comma separated list argument" } },
+               { "draft",      { false, "run in a disposable context" } },
+               { "itersel",    { false, "run once for each selection with that selection as the only one" } },
+               { "no-hooks",   { false, "disable hooks" } },
+               { "save-regs",  { true, "restore all given registers after execution" } },
+               std::move(additional_params[P])...},
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 1
+    };
+}
+
+template<size_t N>
+ParameterDesc make_context_wrap_params(std::array<HashItem<String, SwitchDesc>, N>&& additional_params)
+{
+    return make_context_wrap_params_impl(std::move(additional_params), std::make_index_sequence<N>());
+}
 
 template<typename Func>
 void context_wrap(const ParametersParser& parser, Context& context, StringView default_saved_regs, Func func)
@@ -1560,7 +1570,6 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
         throw runtime_error{"only one of -buffer, -client or -try-client can be specified"};
 
     const bool no_hooks = parser.get_switch("no-hooks") or context.hooks_disabled();
-    const bool no_keymaps = not parser.get_switch("with-maps");
 
     auto& register_manager = RegisterManager::instance();
     auto make_register_restorer = [&](char c) {
@@ -1587,7 +1596,6 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
             Context& c = input_handler.context();
 
             ScopedSetBool disable_hooks(c.hooks_disabled(), no_hooks);
-            ScopedSetBool disable_keymaps(c.keymaps_disabled(), no_keymaps);
             ScopedSetBool disable_history(c.history_disabled());
 
             func(parser, c);
@@ -1640,7 +1648,6 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
     Context& c = *effective_context;
 
     ScopedSetBool disable_hooks(c.hooks_disabled(), no_hooks);
-    ScopedSetBool disable_keymaps(c.keymaps_disabled(), no_keymaps);
     ScopedSetBool disable_history(c.history_disabled());
     ScopedEdition edition{c};
 
@@ -1697,13 +1704,14 @@ const CommandDesc exec_string_cmd = {
     "execute-keys",
     "exec",
     "execute-keys [<switches>] <keys>: execute given keys as if entered by user",
-    context_wrap_params,
+    make_context_wrap_params<1>({{"with-maps",  {false, "use user defined key mapping when executing keys" }}}),
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         context_wrap(parser, context, "/\"|^@", [](const ParametersParser& parser, Context& context) {
+            ScopedSetBool disable_keymaps(context.keymaps_disabled(), not parser.get_switch("with-maps"));
             KeyList keys;
             for (auto& param : parser)
             {
@@ -1721,7 +1729,7 @@ const CommandDesc eval_string_cmd = {
     "evaluate-commands",
     "eval",
     "evaluate-commands [<switches>] <commands>...: execute commands as if entered by user",
-    context_wrap_params,
+    make_context_wrap_params<0>({}),
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
