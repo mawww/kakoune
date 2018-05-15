@@ -57,7 +57,7 @@ define-command ctags-complete -docstring "Insert completion candidates for the c
 define-command ctags-funcinfo -docstring "Display ctags information about a selected function" %{
     evaluate-commands -draft %{
         try %{
-            execute-keys -no-hooks '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
+            execute-keys '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
             evaluate-commands %sh{
                 sigs=$(readtags -e ${kak_selection%?} | grep kind:f | sed -re 's/^(\S+).*((class|struct|namespace):(\S+))?.*signature:(.*)$/\5 [\4::\1]/')
                 if [ -n "$sigs" ]; then
