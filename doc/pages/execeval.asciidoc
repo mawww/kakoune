@@ -44,16 +44,22 @@ when the commands have been executed: */*, *"*, *|*, *^*, *@*.
     execute in the context of each buffers in the comma separated list
     *names*. `*` as a name can be used to iterate on all buffers
 
-*-no-hooks*::
-    disable hook execution while executing the keys/commands
-    (See <<hooks#,`:doc hooks`>>)
-
 *-save-regs* <regs>::
     regs is a string of registers to be restored after execution (overwrites
     the list of registers saved by default, c.f. description)
+
+== evaluate-commands specific switches
+
+*-no-hooks*::
+    disable hook execution while executing the keys/commands
+    (See <<hooks#,`:doc hooks`>>)
 
 == execute-keys specific switches
 
 *-with-maps*::
     use user key mapping in instead of built in keys
     (See <<mapping#,`:doc mapping`>>)
+
+*-with-hooks*::
+    the execution of keys will trigger existing hooks
+    (See <<hooks#,`:doc hooks`>>)

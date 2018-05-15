@@ -1540,7 +1540,7 @@ const CommandDesc unmap_key_cmd = {
 };
 
 template<size_t... P>
-ParameterDesc make_context_wrap_params_impl(std::array<HashItem<String, SwitchDesc>, sizeof...(P)>&& additional_params,
+ParameterDesc make_context_wrap_params_impl(Array<HashItem<String, SwitchDesc>, sizeof...(P)>&& additional_params,
                                             std::index_sequence<P...>)
 {
     return { { { "client",     { true,  "run in given client context" } },
@@ -1548,7 +1548,6 @@ ParameterDesc make_context_wrap_params_impl(std::array<HashItem<String, SwitchDe
                { "buffer",     { true,  "run in a disposable context for each given buffer in the comma separated list argument" } },
                { "draft",      { false, "run in a disposable context" } },
                { "itersel",    { false, "run once for each selection with that selection as the only one" } },
-               { "no-hooks",   { false, "disable hooks" } },
                { "save-regs",  { true, "restore all given registers after execution" } },
                std::move(additional_params[P])...},
         ParameterDesc::Flags::SwitchesOnlyAtStart, 1
@@ -1556,7 +1555,7 @@ ParameterDesc make_context_wrap_params_impl(std::array<HashItem<String, SwitchDe
 }
 
 template<size_t N>
-ParameterDesc make_context_wrap_params(std::array<HashItem<String, SwitchDesc>, N>&& additional_params)
+ParameterDesc make_context_wrap_params(Array<HashItem<String, SwitchDesc>, N>&& additional_params)
 {
     return make_context_wrap_params_impl(std::move(additional_params), std::make_index_sequence<N>());
 }
@@ -1568,8 +1567,6 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
         (int)(bool)parser.get_switch("client") +
         (int)(bool)parser.get_switch("try-client") > 1)
         throw runtime_error{"only one of -buffer, -client or -try-client can be specified"};
-
-    const bool no_hooks = parser.get_switch("no-hooks") or context.hooks_disabled();
 
     auto& register_manager = RegisterManager::instance();
     auto make_register_restorer = [&](char c) {
@@ -1595,7 +1592,6 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
                                        Context::Flags::Draft};
             Context& c = input_handler.context();
 
-            ScopedSetBool disable_hooks(c.hooks_disabled(), no_hooks);
             ScopedSetBool disable_history(c.history_disabled());
 
             func(parser, c);
@@ -1647,7 +1643,6 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
 
     Context& c = *effective_context;
 
-    ScopedSetBool disable_hooks(c.hooks_disabled(), no_hooks);
     ScopedSetBool disable_history(c.history_disabled());
     ScopedEdition edition{c};
 
@@ -1704,7 +1699,10 @@ const CommandDesc exec_string_cmd = {
     "execute-keys",
     "exec",
     "execute-keys [<switches>] <keys>: execute given keys as if entered by user",
-    make_context_wrap_params<1>({{"with-maps",  {false, "use user defined key mapping when executing keys" }}}),
+    make_context_wrap_params<2>({{
+        {"with-maps",  {false, "use user defined key mapping when executing keys"}},
+        {"with-hooks", {false, "trigger hooks while executing keys"}}
+    }}),
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -1712,6 +1710,8 @@ const CommandDesc exec_string_cmd = {
     {
         context_wrap(parser, context, "/\"|^@", [](const ParametersParser& parser, Context& context) {
             ScopedSetBool disable_keymaps(context.keymaps_disabled(), not parser.get_switch("with-maps"));
+            ScopedSetBool disable_hoooks(context.hooks_disabled(), not parser.get_switch("with-hooks"));
+
             KeyList keys;
             for (auto& param : parser)
             {
@@ -1729,13 +1729,16 @@ const CommandDesc eval_string_cmd = {
     "evaluate-commands",
     "eval",
     "evaluate-commands [<switches>] <commands>...: execute commands as if entered by user",
-    make_context_wrap_params<0>({}),
+    make_context_wrap_params<1>({{{"no-hooks", { false, "disable hooks while executing commands" }}}}),
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
         context_wrap(parser, context, {}, [&](const ParametersParser& parser, Context& context) {
+            const bool no_hooks = context.hooks_disabled() or parser.get_switch("no-hooks");
+            ScopedSetBool disable_hoooks(context.hooks_disabled(), no_hooks);
+
             CommandManager::instance().execute(join(parser, ' ', false), context, shell_context);
         });
     }
