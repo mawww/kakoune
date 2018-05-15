@@ -896,6 +896,13 @@ public:
                 return;
             }
         }
+        else if (key == ctrl('f'))
+        {
+            m_line_editor.insert(m_empty_text);
+            display();
+            m_line_changed = true;
+            m_refresh_completion_pending = true;
+        }
         else
         {
             m_line_editor.handle_key(key);
