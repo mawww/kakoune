@@ -19,8 +19,8 @@ main() {
             eval -buffer *debug* write debug
             quit!
         }
-        try %{ exec -with-maps "%sh{cat cmd}" }
-        exec <c-l>
+        try %{ exec -with-maps -with-hooks "%sh{cat cmd}" }
+        exec -with-hooks <c-l>
         eval -buffer *debug* write debug
         nop %sh{
           printf %s\\n "$kak_selections"      > selections
