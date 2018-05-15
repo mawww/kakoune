@@ -48,10 +48,12 @@ when the commands have been executed: */*, *"*, *|*, *^*, *@*.
     disable hook execution while executing the keys/commands
     (See <<hooks#,`:doc hooks`>>)
 
-*-with-maps*::
-    use user key mapping in instead of built in keys (*execute-keys* only)
-    (See <<mapping#,`:doc mapping`>>)
-
 *-save-regs* <regs>::
     regs is a string of registers to be restored after execution (overwrites
     the list of registers saved by default, c.f. description)
+
+== execute-keys specific switches
+
+*-with-maps*::
+    use user key mapping in instead of built in keys
+    (See <<mapping#,`:doc mapping`>>)
