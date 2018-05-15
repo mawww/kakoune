@@ -86,7 +86,7 @@ public:
     EventManager();
     ~EventManager();
 
-    void handle_next_events(EventMode mode, sigset_t* sigmask = nullptr, bool block = true);
+    bool handle_next_events(EventMode mode, sigset_t* sigmask = nullptr, bool block = true);
 
     // force the watchers associated with fd to be executed
     // on next handle_next_events call.

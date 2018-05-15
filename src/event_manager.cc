@@ -69,7 +69,7 @@ EventManager::~EventManager()
     kak_assert(m_timers.empty());
 }
 
-void EventManager::handle_next_events(EventMode mode, sigset_t* sigmask, bool block)
+bool EventManager::handle_next_events(EventMode mode, sigset_t* sigmask, bool block)
 {
     int max_fd = 0;
     fd_set rfds, wfds, efds;
@@ -140,6 +140,8 @@ void EventManager::handle_next_events(EventMode mode, sigset_t* sigmask, bool bl
         if (contains(m_timers, timer) and timer->next_date() <= now)
             timer->run(mode);
     }
+
+    return res > 0;
 }
 
 void EventManager::force_signal(int fd)

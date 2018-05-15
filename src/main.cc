@@ -680,9 +680,14 @@ int run_server(StringView session, StringView server_init,
                 (flags & ServerFlags::Daemon)))
         {
             client_manager.redraw_clients();
-            event_manager.handle_next_events(EventMode::Normal, nullptr,
-                                             not client_manager.has_pending_inputs());
-            client_manager.process_pending_inputs();
+
+            // Loop a 
+            bool allow_blocking = not client_manager.has_pending_inputs();
+            while (event_manager.handle_next_events(EventMode::Normal, nullptr, allow_blocking))
+            {
+                client_manager.process_pending_inputs();
+                allow_blocking = false;
+            }
             client_manager.clear_client_trash();
             client_manager.clear_window_trash();
             buffer_manager.clear_buffer_trash();
