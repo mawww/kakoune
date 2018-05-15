@@ -80,7 +80,7 @@ define-command -hidden c-family-insert-on-closing-curly-brace %[
 define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel -draft %[
     execute-keys \;
     try %[
-        evaluate-commands -draft %[
+        evaluate-commands -draft -save-regs '/"' %[
             # copy the commenting prefix
             execute-keys -save-regs '' k <a-x>1s^\h*(//+\h*)<ret> y
             try %[
