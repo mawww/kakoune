@@ -460,7 +460,7 @@ void JsonUI::parse_requests(EventMode mode)
         }
         catch (runtime_error& error)
         {
-            write(2, format("error while handling requests '{}': '{}'",
+            write(2, format("error while handling requests '{}': '{}'\n",
                             m_requests, error.what()));
             // try to salvage request by dropping its first line
             pos = std::min(m_requests.end(), find(m_requests, '\n')+1);
