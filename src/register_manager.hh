@@ -29,7 +29,7 @@ class StaticRegister : public Register
 public:
     void set(Context&, ConstArrayView<String> values) override
     {
-        m_content = Vector<String, MemoryDomain::Registers>(values.begin(), values.end());
+        m_content.assign(values.begin(), values.end());
     }
 
     ConstArrayView<String> get(const Context&) override
