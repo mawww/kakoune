@@ -73,10 +73,13 @@ Vector<LineModification> compute_line_modifications(const Buffer& buffer, size_t
             }
             next = res.erase(next, delend);
 
-            for (auto it = next; it != res.end(); ++it)
-                it->new_line -= diff;
+            if (diff != 0)
+            {
+                for (auto it = next; it != res.end(); ++it)
+                    it->new_line -= diff;
+            }
         }
-        else
+        else if (diff != 0)
         {
             for (auto it = next; it != res.end(); ++it)
                 it->new_line += diff;
