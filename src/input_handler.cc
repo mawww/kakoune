@@ -125,13 +125,21 @@ struct MouseHandler
             return true;
 
         case Key::Modifiers::MouseWheelDown:
-            m_dragging = false;
             scroll_window(context, 3);
+            if (m_dragging) {
+                cursor = context.window().buffer_coord(key.coord());
+                selections.main() = {buffer.clamp(m_anchor), cursor};
+                selections.sort_and_merge_overlapping();
+            }
             return true;
 
         case Key::Modifiers::MouseWheelUp:
-            m_dragging = false;
             scroll_window(context, -3);
+            if (m_dragging) {
+                cursor = context.window().buffer_coord(key.coord());
+                selections.main() = {buffer.clamp(m_anchor), cursor};
+                selections.sort_and_merge_overlapping();
+            }
             return true;
 
         default: return false;
