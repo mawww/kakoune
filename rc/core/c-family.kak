@@ -23,10 +23,10 @@ hook global BufCreate .*\.m %{
     set-option buffer filetype objc
 }
 
-define-command -hidden c-family-trim-autoindent %[ evaluate-commands -draft -itersel %[
+define-command -hidden c-family-trim-autoindent %{
     # remove the line if it's empty when leaving the insert mode
-    try %[ execute-keys <a-x> 1s^(\h+)$<ret> d ]
-] ]
+    try %{ execute-keys -draft <a-x> 1s^(\h+)$<ret> d }
+}
 
 define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -itersel %<
     execute-keys \;
