@@ -29,7 +29,7 @@ interact with these tools.
 
 For example, sorting lines should be done using the Unix sort command, not
 with an internal implementation. Kakoune should make it easy to do that,
-hence the +|+ command for pipping selected text through a filter.
+hence the +|+ command for piping selected text through a filter.
 
 The modern Unix environment is not limited to text filters, most people use
 a graphical interface nowadays, and Kakoune should be able to take advantage
