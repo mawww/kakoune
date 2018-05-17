@@ -370,7 +370,7 @@ static bool send_data(int fd, RemoteBuffer& buffer)
 
 RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
     : m_socket_watcher(socket,  FdEvents::Read | FdEvents::Write,
-                       [this](FDWatcher& watcher, FdEvents events, EventMode mode) {
+                       [this](FDWatcher& watcher, FdEvents events, EventMode) {
           const int sock = watcher.fd();
           try
           {
@@ -790,7 +790,7 @@ Server::Server(String session_name)
        throw runtime_error(format("unable to listen on socket '{}': {}",
                                   addr.sun_path, strerror(errno)));
 
-    auto accepter = [this](FDWatcher& watcher, FdEvents, EventMode mode) {
+    auto accepter = [this](FDWatcher& watcher, FdEvents, EventMode) {
         sockaddr_un client_addr;
         socklen_t   client_addr_len = sizeof(sockaddr_un);
         int sock = accept(watcher.fd(), (sockaddr*) &client_addr,

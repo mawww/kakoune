@@ -251,7 +251,7 @@ default_colors = {
 
 NCursesUI::NCursesUI()
     : m_stdin_watcher{0, FdEvents::Read,
-                      [this](FDWatcher&, FdEvents, EventMode mode) {
+                      [this](FDWatcher&, FdEvents, EventMode) {
         if (not m_on_key)
             return;
 

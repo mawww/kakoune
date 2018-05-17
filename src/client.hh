@@ -18,7 +18,6 @@ class UserInterface;
 class String;
 struct Key;
 
-enum class EventMode;
 enum class InfoStyle;
 enum class MenuStyle;
 
@@ -82,8 +81,6 @@ private:
     void on_buffer_reload_key(Key key);
     void close_buffer_reload_dialog();
     void reload_buffer();
-
-    Optional<Key> get_next_key(EventMode mode);
 
     DisplayLine generate_mode_line() const;
 
