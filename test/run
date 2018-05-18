@@ -58,7 +58,7 @@ main() {
     touch in; cp in out
     session="kak-tests"
     rm -f $tmpdir/kakoune/$USER/$session
-    $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > display
+    $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > ui-out
     retval=$?
     failed=0
     if [ ! -e error ]; then # failure not expected
@@ -67,7 +67,7 @@ main() {
         echo "$indent  Kakoune returned error $retval"
         failed=1
       else
-        for file in out selections state display; do
+        for file in out selections state ui-out; do
           if [ -f $root/$dir/$file ] && ! cmp -s $root/$dir/$file $file; then
             if [ $failed -eq 0 ]; then
               echo "$indent$name" | colorize $red $none
