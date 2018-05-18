@@ -50,7 +50,8 @@ existing highlighters ids.
         a one character long separator that will be appended to tabulations to honor the *tabstop* option
 
 *number_lines* [options]::
-    show line numbers, with the following *options*:
+    show line numbers using the `LineNumbers`, `LineNumberCursor` and `LineNumbersWrapped` faces,
+    with the following *options*: 
 
     *-relative*:::
         show line numbers relative to the main cursor line
