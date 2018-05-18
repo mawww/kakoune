@@ -63,15 +63,6 @@ areas of the user interface:
 *SecondaryCursorEol*::
     cursor of the secondary selection when it lies on and end of line character
 
-*LineNumbers*::
-    face used by the number_lines highlighter
-
-*LineNumberCursor*::
-    face used to highlight the line number of the main selection
-
-*LineNumbersWrapped*::
-    face used to highlight the line number of wrapped lines
-
 *MenuForeground*::
     face for the selected element in menus
 
@@ -105,11 +96,25 @@ areas of the user interface:
 *Prompt*::
     face used prompt displayed on the status line
 
-*MatchingChar*::
-    face used by the show_matching highlighter
-
 *BufferPadding*::
     face applied on the characters that follow the last line of a buffer
 
+=== Builtin highlighters faces
+
+The following faces are used by builtin highlighters if enabled.
+(See <<highlighters#,`:doc highlighters`>>.
+
+*LineNumbers*::
+    face used by the `number_lines` highlighter
+
+*LineNumberCursor*::
+    face used to highlight the line number of the main selection
+
+*LineNumbersWrapped*::
+    face used to highlight the line number of wrapped lines
+
+*MatchingChar*::
+    face used by the `show_matching` highlighter
+
 *Whitespace*::
-    face used by the show_whitespaces highlighter
+    face used by the `show_whitespaces` highlighter
