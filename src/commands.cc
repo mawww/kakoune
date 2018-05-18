@@ -861,7 +861,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
         throw runtime_error(format("invalid command name: '{}'", cmd_name));
 
     if (cm.command_defined(cmd_name) and not parser.get_switch("allow-override"))
-        throw runtime_error(format("command '{}' already defined", cmd_name));
+        throw runtime_error(format("command '{}' already defined. Use the -allow-override switch to redefine it.", cmd_name));
 
     CommandFlags flags = CommandFlags::None;
     if (parser.get_switch("hidden"))
