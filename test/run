@@ -54,11 +54,14 @@ main() {
       continue
     fi
 
+    ui_in="${root}/${dir}/ui-in"
+    [ ! -f $ui_in ] && ui_in="/dev/tty"
+
     number_tests=$(($number_tests + 1))
     touch in; cp in out
     session="kak-tests"
     rm -f $tmpdir/kakoune/$USER/$session
-    $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > ui-out
+    $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > ui-out < "${ui_in}"
     retval=$?
     failed=0
     if [ ! -e error ]; then # failure not expected
