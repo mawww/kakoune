@@ -31,7 +31,10 @@ define-command -hidden c-family-trim-autoindent %{
 define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -itersel %<
     execute-keys \;
     try %<
-        # if previous line closed a paren, copy indent of the opening paren line
+        # if previous line is part of a comment, do nothing
+        execute-keys -draft <a-?>/\*<ret> <a-K>^\h*[^/*\h]<ret>
+    > catch %<
+        # else if previous line closed a paren, copy indent of the opening paren line
         execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?$<ret> m<a-\;>J <a-S> 1<a-&>
     > catch %<
         # else indent new lines with the same level as the previous one
@@ -74,7 +77,7 @@ define-command -hidden c-family-insert-on-closing-curly-brace %[
     try %[ execute-keys -itersel -draft hm<a-x>B<a-x><a-k>\A\h*(class|struct|union|enum)<ret> a\;<esc> ]
 ]
 
-define-command -hidden c-family-insert-on-newline %[ evaluate-commands -draft %[
+define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel -draft %[
     execute-keys \;
     try %[
         evaluate-commands -draft %[
@@ -99,7 +102,7 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -draft %[
         try %[
             # if the previous line is opening the comment, insert star preceeded by space
             execute-keys -draft k<a-x><a-k>^\h*/\*<ret>
-            execute-keys -draft i<space>*<space><esc>
+            execute-keys -draft i*<space><esc>
         ] catch %[
            try %[
                 # if the next line is a comment line insert a star
@@ -117,9 +120,9 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -draft %[
         ]
 
         # trim trailing whitespace on the previous line
-        try %[ execute-keys -draft 1s(\h+)$<ret>d ]
+        try %[ execute-keys -draft s\h+$<ret> d ]
         # align the new star with the previous one
-        execute-keys J<a-x>1s^[^*]*(\*)<ret>&
+        execute-keys K<a-x>1s^[^*]*(\*)<ret>&
     ]
 ] ]
 
