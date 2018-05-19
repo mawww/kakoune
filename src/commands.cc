@@ -1958,31 +1958,37 @@ const CommandDesc info_cmd = {
 const CommandDesc try_catch_cmd = {
     "try",
     nullptr,
-    "try <cmds> [catch <error_cmds>]: execute <cmds> in current context.\n"
-    "if an error is raised and <error_cmds> is specified, execute it; "
-    "The error is not propagated further.",
-    ParameterDesc{{}, ParameterDesc::Flags::None, 1, 3},
+    "try <cmds> [catch <error_cmds>]...: execute <cmds> in current context.\n"
+    "if an error is raised and <error_cmds> is specified, execute it and do\n"
+    "not propagate that error. If <error_cmds> raises an error and another\n"
+    "<error_cmds> is provided, execute this one and so-on\n",
+    ParameterDesc{{}, ParameterDesc::Flags::None, 1},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
-        if (parser.positional_count() == 2)
+        if ((parser.positional_count() % 2) != 1)
             throw wrong_argument_count();
 
-        const bool do_catch = parser.positional_count() == 3;
-        if (do_catch and parser[1] != "catch")
-            throw runtime_error("usage: try <commands> [catch <on error commands>]");
+        for (size_t i = 1; i < parser.positional_count(); i += 2)
+        {
+            if (parser[i] != "catch")
+                throw runtime_error("usage: try <commands> [catch <on error commands>]...");
+        }
 
         CommandManager& command_manager = CommandManager::instance();
-        try
+        for (size_t i = 0; i < parser.positional_count(); i += 2)
         {
-            command_manager.execute(parser[0], context, shell_context);
-        }
-        catch (Kakoune::runtime_error& e)
-        {
-            if (do_catch)
-                command_manager.execute(parser[2], context, shell_context);
+            if (i == 0 or i < parser.positional_count() - 1)
+            {
+                try {
+                    command_manager.execute(parser[i], context, shell_context);
+                    return;
+                } catch (runtime_error&) {}
+            }
+            else
+                command_manager.execute(parser[i], context, shell_context);
         }
     }
 };
