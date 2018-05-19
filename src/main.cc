@@ -51,7 +51,8 @@ static const char* startup_info =
 " * rotate main selection moved to ), rotate content to <a-)>, ( for backward\n"
 " * faces are now scoped, set-face command takes an additional scope parameter\n"
 " * <backtab> key is gone, use <s-tab> instead\n"
-" === Kakoune v2018.04.13 Released ===\n";
+" === Kakoune v2018.04.13 Released ===\n"
+" * define-command -allow-override switch has been renamed -override\n";
 
 struct startup_error : runtime_error
 {

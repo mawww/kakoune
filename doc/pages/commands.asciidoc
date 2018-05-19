@@ -304,7 +304,7 @@ New commands can be defined using the *define-command* command:
     - *kak_token_to_complete*::::
         Index of the token being completed in the command line.
 
-*-allow-override*:::
+*-override*:::
     allow the new command to replace an existing one with the same name
 
 *-hidden*:::

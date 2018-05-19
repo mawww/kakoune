@@ -860,7 +860,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     if (not all_of(cmd_name, is_identifier))
         throw runtime_error(format("invalid command name: '{}'", cmd_name));
 
-    if (cm.command_defined(cmd_name) and not parser.get_switch("allow-override"))
+    if (cm.command_defined(cmd_name) and not parser.get_switch("override"))
         throw runtime_error(format("command '{}' already defined", cmd_name));
 
     CommandFlags flags = CommandFlags::None;
@@ -1033,7 +1033,7 @@ const CommandDesc define_command_cmd = {
     ParameterDesc{
         { { "params",             { true, "take parameters, accessible to each shell escape as $0..$N\n"
                                           "parameter should take the form <count> or <min>..<max> (both omittable)" } },
-          { "allow-override",     { false, "allow overriding an existing command" } },
+          { "override",           { false, "allow overriding an existing command" } },
           { "hidden",             { false, "do not display the command in completion candidates" } },
           { "docstring",          { true,  "define the documentation string for command" } },
           { "file-completion",    { false, "complete parameters using filename completion" } },
