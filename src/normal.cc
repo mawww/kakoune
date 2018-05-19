@@ -804,6 +804,45 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
         });
 }
 
+template<MatchDirection direction>
+void select_next_matches(Context& context, const Regex& regex, int count)
+{
+     auto& selections = context.selections();
+     do {
+         bool wrapped = false;
+         for (auto& sel : selections)
+             sel = keep_direction(find_next_match<direction>(context, sel, regex, wrapped), sel);
+         selections.sort_and_merge_overlapping();
+     } while (--count > 0);
+}
+
+template<MatchDirection direction>
+void extend_to_next_matches(Context& context, const Regex& regex, int count)
+{
+     Vector<Selection> new_sels;
+     auto& selections = context.selections();
+     do {
+         bool wrapped = false;
+         size_t main_index = selections.main_index();
+         for (auto& sel : selections)
+         {
+             auto new_sel = find_next_match<direction>(context, sel, regex, wrapped);
+             if (not wrapped)
+             {
+                 new_sels.push_back(sel);
+                 merge_selections(new_sels.back(), new_sel);
+             }
+             else if (new_sels.size() <= main_index)
+                 --main_index;
+         }
+         if (new_sels.empty())
+             throw runtime_error{"All selections wrapped"}; 
+
+         selections.set(std::move(new_sels), main_index);
+         new_sels.clear();
+     } while (--count > 0);
+}
+
 template<SelectMode mode, MatchDirection direction>
 void search(Context& context, NormalParams params)
 {
@@ -831,19 +870,10 @@ void search(Context& context, NormalParams params)
                      if (regex.empty() or regex.str().empty())
                          return;
 
-                     int c = count;
-                     auto& selections = context.selections();
-                     do {
-                        bool wrapped = false;
-                        for (auto& sel : selections)
-                        {
-                            if (mode == SelectMode::Replace)
-                                sel = keep_direction(find_next_match<direction>(context, sel, regex, wrapped), sel);
-                            if (mode == SelectMode::Extend)
-                                merge_selections(sel, find_next_match<direction>(context, sel, regex, wrapped));
-                        }
-                        selections.sort_and_merge_overlapping();
-                     } while (--c > 0);
+                     if (mode == SelectMode::Extend)
+                         extend_to_next_matches<direction>(context, regex, count);
+                     else
+                         select_next_matches<direction>(context, regex, count);
                  });
 }
 
