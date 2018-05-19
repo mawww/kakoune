@@ -1,0 +1,16 @@
+= Changelog
+
+This changelog contains major and/or breaking changes to Kakoune between
+released versions.
+
+== Development version
+
+* The `-allow-override` switch from `define-command` has been renamed
+  `-override`.
+
+* The search prompt uses buffer word completion so that fuzzy completion
+  can be used to quickly search for a buffer word.
+
+== Kakoune 2018.04.13
+
+First official Kakoune release.
