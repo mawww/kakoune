@@ -190,6 +190,14 @@ void Window::set_dimensions(DisplayCoord dimensions)
     }
 }
 
+static void check_display_setup(const DisplaySetup& setup, const Window& window)
+{
+    kak_assert(setup.window_pos.line >= 0 and setup.window_pos.line < window.buffer().line_count());
+    kak_assert(setup.window_pos.column >= 0);
+    kak_assert(setup.window_range.column >= 0);
+    kak_assert(setup.window_range.line >= 0);
+}
+
 DisplaySetup Window::compute_display_setup(const Context& context) const
 {
     auto win_pos = m_position;
@@ -217,6 +225,7 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
     };
     for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
         m_builtin_highlighters.compute_display_setup({context, pass, {}}, setup);
+    check_display_setup(setup, *this);
 
     // now ensure the cursor column is visible
     {
@@ -233,6 +242,7 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
             setup.window_pos.column += overflow;
             setup.cursor_pos.column -= overflow;
         }
+        check_display_setup(setup, *this);
     }
 
     return setup;

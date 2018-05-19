@@ -1064,7 +1064,7 @@ private:
             return;
 
         ColumnCount width = compute_digit_count(context.context) + m_separator.column_length();
-        setup.window_range.column -= width;
+        setup.window_range.column -= std::min(width, setup.window_range.column);
     }
 
     void fill_unique_ids(Vector<StringView>& unique_ids) const override
@@ -1347,7 +1347,7 @@ private:
             return;
         }
 
-        setup.window_range.column -= width;
+        setup.window_range.column -= std::min(width, setup.window_range.column);
     }
 
     String m_option_name;
