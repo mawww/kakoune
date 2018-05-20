@@ -1396,8 +1396,8 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
                 anchor_line >= buffer.line_count() or cursor_line >= buffer.line_count())
                 continue;
 
-            ByteCount anchor_byte = get_byte_to_column(buffer, tabstop, {anchor_line, anchor_col});
-            ByteCount cursor_byte = get_byte_to_column(buffer, tabstop, {cursor_line, cursor_col});
+            const ByteCount anchor_byte = get_byte_to_column(buffer, tabstop, {anchor_line, anchor_col});
+            const ByteCount cursor_byte = get_byte_to_column(buffer, tabstop, {cursor_line, cursor_col});
 
             if (anchor_byte != buffer[anchor_line].length() and
                 cursor_byte != buffer[cursor_line].length())
