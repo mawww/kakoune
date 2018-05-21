@@ -127,7 +127,9 @@ void Buffer::on_registered()
         }
     }
 
-    for (auto& option : options().flatten_options())
+    for (auto& option : options().flatten_options()
+                      | transform(&std::unique_ptr<Option>::get)
+                      | gather<Vector<Option*>>())
         on_option_changed(*option);
 }
 
