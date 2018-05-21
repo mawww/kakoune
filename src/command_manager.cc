@@ -11,6 +11,7 @@
 #include "register_manager.hh"
 #include "shell_manager.hh"
 #include "utils.hh"
+#include "unit_tests.hh"
 
 #include <algorithm>
 
@@ -67,9 +68,63 @@ bool is_command_separator(Codepoint c)
     return c == ';' or c == '\n';
 }
 
-template<typename Func, typename UnescapeFunc>
-String get_until_delimiter(Reader& reader, Func is_delimiter,
-                           UnescapeFunc unescape = [](Codepoint) { return false; })
+struct QuotedResult
+{
+    String content;
+    bool terminated;
+};
+
+QuotedResult parse_quoted(Reader& reader, Codepoint delimiter)
+{
+    auto beg = reader.pos;
+    String str;
+
+    while (reader)
+    {
+        const Codepoint c = *reader;
+        if (c == delimiter)
+        {
+            str += reader.substr_from(beg);
+            ++reader;
+            if (reader and *reader == delimiter)
+            {
+                str += String{c};
+                beg = reader.pos+1;
+            }
+            else
+                return {str, true};
+        }
+        ++reader;
+    }
+    if (beg < reader.str.end())
+        str += reader.substr_from(beg);
+    return {str, false};
+}
+
+QuotedResult parse_quoted_balanced(Reader& reader, Codepoint opening_delimiter,
+                                   Codepoint closing_delimiter)
+{
+    kak_assert(utf8::codepoint(utf8::previous(reader.pos, reader.str.begin()),
+                               reader.str.end()) == opening_delimiter);
+    int level = 0;
+    auto start = reader.pos;
+    while (reader)
+    {
+        const Codepoint c = *reader;
+        if (c == opening_delimiter)
+            ++level;
+        else if (c == closing_delimiter and level-- == 0)
+        {
+            auto content = reader.substr_from(start);
+            ++reader;
+            return {content.str(), true};
+        }
+        ++reader;
+    }
+    return {reader.substr_from(start).str(), false};
+}
+
+String parse_unquoted(Reader& reader)
 {
     auto beg = reader.pos;
     String str;
@@ -78,7 +133,7 @@ String get_until_delimiter(Reader& reader, Func is_delimiter,
     while (reader)
     {
         const Codepoint c = *reader;
-        if (is_delimiter(c) or (was_antislash and unescape(c)))
+        if (is_command_separator(c) or is_horizontal_blank(c))
         {
             str += reader.substr_from(beg);
             if (was_antislash)
@@ -95,36 +150,6 @@ String get_until_delimiter(Reader& reader, Func is_delimiter,
     if (beg < reader.str.end())
         str += reader.substr_from(beg);
     return str;
-}
-
-[[gnu::always_inline]]
-inline String get_until_delimiter(Reader& reader, Codepoint c)
-{
-    return get_until_delimiter(reader, [c](Codepoint ch) { return c == ch; }, [](Codepoint) { return false; });
-}
-
-StringView get_until_closing_delimiter(Reader& reader, Codepoint opening_delimiter,
-                                       Codepoint closing_delimiter)
-{
-    kak_assert(utf8::codepoint(utf8::previous(reader.pos, reader.str.begin()),
-                               reader.str.end()) == opening_delimiter);
-    int level = 0;
-    auto start = reader.pos;
-    while (reader)
-    {
-        const Codepoint c = *reader;
-        if (c == opening_delimiter)
-            ++level;
-        else if (c == closing_delimiter)
-        {
-            if (level > 0)
-                --level;
-            else
-                break;
-        }
-        ++reader;
-    }
-    return reader.substr_from(start);
 }
 
 Token::Type token_type(StringView type_name, bool throw_on_invalid)
@@ -203,25 +228,24 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
     if (it != std::end(matching_pairs))
     {
         const Codepoint closing_delimiter = it->closing;
-        auto token = get_until_closing_delimiter(reader, opening_delimiter,
-                                                 closing_delimiter);
-        if (throw_on_unterminated and not reader)
+        auto quoted = parse_quoted_balanced(reader, opening_delimiter, closing_delimiter);
+        if (throw_on_unterminated and not quoted.terminated)
             throw parse_error{format("{}:{}: unterminated string '%{}{}...{}'",
                                      coord.line, coord.column, type_name,
                                      opening_delimiter, closing_delimiter)};
 
-        return {type, start - str_beg, coord, token.str()};
+        return {type, start - str_beg, coord, std::move(quoted.content)};
     }
     else
     {
-        String token = get_until_delimiter(reader, opening_delimiter);
+        auto quoted = parse_quoted(reader, opening_delimiter);
 
-        if (throw_on_unterminated and not reader)
+        if (throw_on_unterminated and not quoted.terminated)
             throw parse_error{format("{}:{}: unterminated string '%{}{}...{}'",
                                      coord.line, coord.column, type_name,
                                      opening_delimiter, opening_delimiter)};
 
-        return {type, start - str_beg, coord, std::move(token)};
+        return {type, start - str_beg, coord, std::move(quoted.content)};
     }
 }
 
@@ -297,20 +321,16 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
     if (c == '"' or c == '\'')
     {
         start = (++m_reader).pos;
-        String token = get_until_delimiter(m_reader, c);
-        if (throw_on_unterminated and not m_reader)
+        QuotedResult quoted = parse_quoted(m_reader, c);
+        if (throw_on_unterminated and not quoted.terminated)
             throw parse_error{format("unterminated string {0}...{0}", c)};
-        if (m_reader)
-            ++m_reader;
         return Token{c == '"' ? Token::Type::RawEval
                               : Token::Type::RawQuoted,
-                     start - line.begin(), coord, std::move(token)};
+                     start - line.begin(), coord, std::move(quoted.content)};
     }
     else if (c == '%')
     {
         auto token = parse_percent_token(m_reader, throw_on_unterminated);
-        if (m_reader)
-            ++m_reader;
         return token;
     }
     else if (is_command_separator(*m_reader))
@@ -321,11 +341,14 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
     }
     else
     {
-        String str = get_until_delimiter(m_reader, [](Codepoint c) {
-            return is_command_separator(c) or is_horizontal_blank(c);
-        }, [](Codepoint c) { return c == '%'; });
+        if (c == '\\')
+        {
+            auto next = utf8::codepoint(utf8::next(m_reader.pos, m_reader.str.end()), m_reader.str.end());
+            if (next == '%' or next == '\'' or next == '"')
+                ++m_reader;
+        }
         return Token{Token::Type::Raw, start - line.begin(),
-                     coord, std::move(str)};
+                     coord, parse_unquoted(m_reader)};
     }
     return {};
 }
@@ -350,7 +373,7 @@ String expand_impl(StringView str, const Context& context,
             {
                 res += reader.substr_from(beg);
                 res.back() = c;
-                beg = (++reader).pos;
+                beg = reader.pos;
             }
         }
         else if (c == '%')
@@ -358,7 +381,7 @@ String expand_impl(StringView str, const Context& context,
             res += reader.substr_from(beg);
             res += postprocess(expand_token(parse_percent_token(reader, true),
                                             context, shell_context));
-            beg = (++reader).pos;
+            beg = reader.pos;
         }
         else
             ++reader;
@@ -659,5 +682,45 @@ Completions CommandManager::complete(const Context& context,
     }
     return Completions{};
 }
+
+UnitTest test_command_parsing{[]
+{
+    auto check_quoted = [](StringView str, bool terminated, StringView content)
+    {
+        Reader reader{str};
+        const Codepoint delimiter = *reader;
+        auto quoted = parse_quoted(++reader, delimiter);
+        kak_assert(quoted.terminated == terminated);
+        kak_assert(quoted.content == content);
+    };
+
+    check_quoted("'abc'", true, "abc");
+    check_quoted("'abc''def", false, "abc'def");
+    check_quoted("'abc''def'''", true, "abc'def'");
+
+    auto check_balanced = [](StringView str, Codepoint opening, Codepoint closing, bool terminated, StringView content)
+    {
+        Reader reader{str};
+        auto quoted = parse_quoted_balanced(++reader, opening, closing);
+        kak_assert(quoted.terminated == terminated);
+        kak_assert(quoted.content == content);
+    };
+
+    check_balanced("{abc}", '{', '}', true, "abc");
+    check_balanced("{abc{def}}", '{', '}', true, "abc{def}");
+    check_balanced("{{abc}{def}", '{', '}', false, "{abc}{def}");
+
+    auto check_unquoted = [](StringView str, StringView content)
+    {
+        Reader reader{str};
+        auto res = parse_unquoted(reader);
+        kak_assert(res == content);
+    };
+
+    check_unquoted("abc def", "abc");
+    check_unquoted("abc; def", "abc");
+    check_unquoted("abc\\; def", "abc;");
+    check_unquoted("abc\\;\\ def", "abc; def");
+}};
 
 }
