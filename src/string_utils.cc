@@ -146,10 +146,10 @@ InplaceString<23> to_string(long long int val)
     return res;
 }
 
-InplaceString<23> to_string(size_t val)
+InplaceString<23> to_string(unsigned long val)
 {
     InplaceString<23> res;
-    res.m_length = sprintf(res.m_data, "%zu", val);
+    res.m_length = sprintf(res.m_data, "%lu", val);
     return res;
 }
 
