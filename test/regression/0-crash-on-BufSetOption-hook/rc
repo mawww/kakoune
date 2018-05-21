@@ -1,0 +1,2 @@
+declare-option str foo
+hook global BufSetOption 'indentwidth=(\d+)' %{set buffer foo bar}
