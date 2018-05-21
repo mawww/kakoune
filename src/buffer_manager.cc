@@ -13,11 +13,10 @@ namespace Kakoune
 
 BufferManager::~BufferManager()
 {
-    // Move buffers to m_buffer_trash to avoid running BufClose
-    // hook while clearing m_buffers
-    m_buffer_trash = std::move(m_buffers);
+    // Move buffers to avoid running BufClose with buffers remaining in that list
+    BufferList buffers = std::move(m_buffers);
 
-    for (auto& buffer : m_buffer_trash)
+    for (auto& buffer : buffers)
         buffer->on_unregistered();
 
     // Make sure not clients exists
