@@ -7,19 +7,19 @@ declare-option -docstring "colon separated list of paths to tag files to parse w
     str-list ctagsfiles 'tags'
 
 define-command -params ..1 \
-    -shell-candidates '
+    -shell-candidates %{
         realpath() { ( path=$(readlink "$1"); cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
-        printf %s\\n "$kak_opt_ctagsfiles" | tr \':\' \'\n\' |
+        printf %s\\n "$kak_opt_ctagsfiles" | tr ':' '\n' |
         while read -r candidate; do
             [ -f "$candidate" ] && realpath "$candidate"
-        done | awk \'!x[$0]++\' | # remove duplicates
+        done | awk '!x[$0]++' | # remove duplicates
         while read -r tags; do
             namecache="${tags%/*}/.kak.${tags##*/}.namecache"
             if [ -z "$(find "$namecache" -prune -newer "$tags")" ]; then
                 cut -f 1 "$tags" | uniq > "$namecache"
             fi
             cat "$namecache"
-        done' \
+        done} \
     -docstring %{ctags-search [<symbol>]: jump to a symbol's definition
 If no symbol is passed then the current selection is used as symbol name} \
     ctags-search \

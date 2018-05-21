@@ -12,7 +12,7 @@ hook global BufCreate .*[.](hs) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter shared/ regions -default code haskell \
-    string   '(?<!\'\\)(?<!\')"'            (?<!\\)(\\\\)*" ''   \
+    string   (?<!'\\)(?<!')"                (?<!\\)(\\\\)*" ''   \
     macro   ^\h*?\K#                        (?<!\\)\n       ''   \
     pragma  \{-#                            '#-\}'          \{-  \
     comment \{-                               -\}           \{-  \
