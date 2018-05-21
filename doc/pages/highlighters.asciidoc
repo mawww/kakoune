@@ -270,7 +270,7 @@ add-highlighter shared/<name> regex ...
 It can then be referenced in a window using the ref highlighter.
 
 --------------------------
-add-highlighter ref <name>
+add-highlighter window ref <name>
 --------------------------
 
 The ref can reference any named highlighter in the shared scope.
