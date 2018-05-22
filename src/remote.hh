@@ -34,6 +34,7 @@ public:
                  int pid, const EnvVarMap& env_vars, StringView init_command,
                  Optional<BufferCoord> init_coord);
 
+    bool is_ui_ok() const;
     const Optional<int>& exit_status() const { return m_exit_status; }
 private:
     std::unique_ptr<UserInterface> m_ui;

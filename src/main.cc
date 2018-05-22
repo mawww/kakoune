@@ -526,7 +526,7 @@ int run_client(StringView session, StringView name, StringView client_init,
                             client_init, std::move(init_coord)};
         if (suspend)
             raise(SIGTSTP);
-        while (not client.exit_status())
+        while (not client.exit_status() and client.is_ui_ok())
             event_manager.handle_next_events(EventMode::Normal);
         return *client.exit_status();
     }

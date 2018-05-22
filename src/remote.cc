@@ -668,6 +668,11 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
     }});
 }
 
+bool RemoteClient::is_ui_ok() const
+{
+    return m_ui->is_ok();
+}
+
 void send_command(StringView session, StringView command)
 {
     int sock = connect_to(session);
