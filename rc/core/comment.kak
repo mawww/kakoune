@@ -21,13 +21,13 @@ hook global BufSetOption filetype=(c|cpp|go|java|javascript|objc|php|rust|sass|s
 }
 
 hook global BufSetOption filetype=(cabal|haskell|moon|idris) %{
-    set-option buffer comment_line '-- '
+    set-option buffer comment_line '--'
     set-option buffer comment_block_begin '{-'
     set-option buffer comment_block_end '-}'
 }
 
 hook global BufSetOption filetype=clojure %{
-    set-option buffer comment_line '#_ '
+    set-option buffer comment_line '#_'
     set-option buffer comment_block_begin '(comment '
     set-option buffer comment_block_end ')'
 }
@@ -157,7 +157,7 @@ define-command comment-line -docstring '(un)comment selected lines using line co
                 execute-keys s<ret>d
             } catch %{
                 # Comment the line
-                set-register '"' "%opt{comment_line}"
+                set-register '"' "%opt{comment_line} "
                 execute-keys P
             }
         }
