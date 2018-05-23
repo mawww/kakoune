@@ -51,6 +51,11 @@ Codepoint Reader::operator*() const
     return utf8::codepoint(pos, str.end());
 }
 
+Codepoint Reader::peek_next() const
+{
+    return utf8::codepoint(utf8::next(pos, str.end()), str.end());
+}
+
 Reader& Reader::operator++()
 {
     kak_assert(pos < str.end());
@@ -84,15 +89,14 @@ QuotedResult parse_quoted(Reader& reader, Codepoint delimiter)
         const Codepoint c = *reader;
         if (c == delimiter)
         {
-            str += reader.substr_from(beg);
-            ++reader;
-            if (reader and *reader == delimiter)
+            if (reader.peek_next() != delimiter)
             {
-                str += String{c};
-                beg = reader.pos+1;
-            }
-            else
+                str += reader.substr_from(beg);
+                ++reader;
                 return {str, true};
+            }
+            str += (++reader).substr_from(beg);
+            beg = reader.pos+1;
         }
         ++reader;
     }
@@ -343,7 +347,7 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
     {
         if (c == '\\')
         {
-            auto next = utf8::codepoint(utf8::next(m_reader.pos, m_reader.str.end()), m_reader.str.end());
+            auto next = m_reader.peek_next();
             if (next == '%' or next == '\'' or next == '"')
                 ++m_reader;
         }
@@ -364,24 +368,20 @@ String expand_impl(StringView str, const Context& context,
     while (reader)
     {
         Codepoint c = *reader;
-        if (c == '\\')
+        if (c == '%')
         {
-            if (not (++reader))
-                throw parse_error{"unterminated escape"};
-            c = *reader;
-            if (c == '%' or c == '\\')
+            if (reader.peek_next() == '%')
+            {
+                res += (++reader).substr_from(beg);
+                beg = (++reader).pos;
+            }
+            else
             {
                 res += reader.substr_from(beg);
-                res.back() = c;
+                res += postprocess(expand_token(parse_percent_token(reader, true),
+                                                context, shell_context));
                 beg = reader.pos;
             }
-        }
-        else if (c == '%')
-        {
-            res += reader.substr_from(beg);
-            res += postprocess(expand_token(parse_percent_token(reader, true),
-                                            context, shell_context));
-            beg = reader.pos;
         }
         else
             ++reader;
@@ -693,7 +693,6 @@ UnitTest test_command_parsing{[]
         kak_assert(quoted.terminated == terminated);
         kak_assert(quoted.content == content);
     };
-
     check_quoted("'abc'", true, "abc");
     check_quoted("'abc''def", false, "abc'def");
     check_quoted("'abc''def'''", true, "abc'def'");
@@ -705,7 +704,6 @@ UnitTest test_command_parsing{[]
         kak_assert(quoted.terminated == terminated);
         kak_assert(quoted.content == content);
     };
-
     check_balanced("{abc}", '{', '}', true, "abc");
     check_balanced("{abc{def}}", '{', '}', true, "abc{def}");
     check_balanced("{{abc}{def}", '{', '}', false, "{abc}{def}");
@@ -716,11 +714,19 @@ UnitTest test_command_parsing{[]
         auto res = parse_unquoted(reader);
         kak_assert(res == content);
     };
-
     check_unquoted("abc def", "abc");
     check_unquoted("abc; def", "abc");
     check_unquoted("abc\\; def", "abc;");
     check_unquoted("abc\\;\\ def", "abc; def");
+
+    {
+        CommandParser parser(R"(foo 'bar' "baz" qux)");
+        kak_assert(parser.read_token(false)->content == "foo");
+        kak_assert(parser.read_token(false)->content == "bar");
+        kak_assert(parser.read_token(false)->content == "baz");
+        kak_assert(parser.read_token(false)->content == "qux");
+        kak_assert(not parser.read_token(false));
+    }
 }};
 
 }
