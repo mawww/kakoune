@@ -66,6 +66,7 @@ public:
     Reader(StringView s) : str{s}, pos{s.begin()}, line_start{s.begin()}, line{} {}
 
     Codepoint operator*() const;
+    Codepoint peek_next() const;
     Reader& operator++();
 
     explicit operator bool() const { return pos < str.end(); }
