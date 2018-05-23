@@ -1662,16 +1662,16 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
                 update_selections(new_sels, main, c.buffer(), timestamp);
                 timestamp = c.buffer().timestamp();
+                if (&sel == &sels.main())
+                    main = new_sels.size() + c.selections().main_index();
+
                 for (auto& sel : c.selections())
                     new_sels.push_back(sel);
             }
         }
 
         if (not draft)
-        {
-            c.selections_write_only() = SelectionList(c.buffer(), std::move(new_sels));
-            c.selections().sort_and_merge_overlapping();
-        }
+            c.selections_write_only().set(std::move(new_sels), main);
     }
     else
     {
