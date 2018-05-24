@@ -156,30 +156,6 @@ the Shift modifier and moving will extend each selection instead.
 *<a-l>*, *<end>*::
     select to line end
 
-*/*::
-    search (select next match)
-
-*<a-/>*::
-    search (select previous match)
-
-*?*::
-    search (extend to next match)
-
-*<a-?>*::
-    search (extend to previous match)
-
-*n*::
-    select next match
-
-*N*::
-    add a new selection with next match
-
-*<a-n>*::
-    select previous match
-
-*<a-N>*::
-    add a new selection with previous match
-
 *pageup, <c-b>*::
     scroll one page up
 
@@ -205,6 +181,8 @@ the Shift modifier and moving will extend each selection instead.
     repeat last object or *f*/*t* selection command
 
 == Changes
+
+Yanking (copying) and pasting use the *"* register by default (See <<registers#,`:doc registers`>>)
 
 *i*::
     enter insert mode before selections
@@ -296,24 +274,6 @@ the Shift modifier and moving will extend each selection instead.
     deindent selected lines, do not remove incomplete indent (3 leading
     spaces when indent is 4)
 
-*|*::
-    pipe each selection through the given external filter program and
-    replace the selection with its output. Shell expansions are available,
-    (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
-
-*<a-|>*::
-    pipe each selection through the given external filter program and
-    ignore its output. Shell expansions are available,
-    (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
-
-*!*::
-    insert command output before each selection. Shell expansions are available,
-    (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
-
-*<a-!>*::
-    append command output after each selection. Shell expansions are available,
-    (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
-
 *u*::
     undo last change
 
@@ -366,6 +326,61 @@ the Shift modifier and moving will extend each selection instead.
 
 *<a-(>*::
     rotate selections content backward
+
+== Changes through external programs
+
+Shell expansions are available, (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
+The default command comes from the *|* register by default (See <<registers#,`:doc registers`>>)
+
+*|*::
+    pipe each selection through the given external filter program and
+    replace the selection with its output.
+
+*<a-|>*::
+    pipe each selection through the given external filter program and
+    ignore its output.
+
+*!*::
+    insert command output before each selection.
+
+*<a-!>*::
+    append command output after each selection.
+
+== Searching
+
+Searches use the */* register by default (See <<registers#,`:doc registers`>>)
+
+*/*::
+    select next match after each selection
+
+*<a-/>*::
+    select previous match before each selection
+
+*?*::
+    extend to next match after each selection
+
+*<a-?>*::
+    extend to previous match before each selection
+
+*n*::
+    select next match after the main selection
+
+*N*::
+    add a new selection with next match after the main selection
+
+*<a-n>*::
+    select previous match before the main selection
+
+*<a-N>*::
+    add a new selection with previous match before the main selection
+
+***::
+    set the search pattern to the main selection (automatically
+    detects word boundaries)
+
+*<a-***>*::
+    set the search pattern to the main selection (verbatim, no smart
+    detection)
 
 == Goto commands
 
@@ -491,18 +506,6 @@ Macros use the *@* register by default (See <<registers#,`:doc registers`>>)
 *<esc>*::
     end macro recording
 
-== Searching
-
-Searches use the */* register by default (See <<registers#,`:doc registers`>>)
-
-***::
-    set the search pattern to the main selection (automatically
-    detects word boundaries)
-
-*<a-***>*::
-    set the search pattern to the main selection (verbatim, no smart
-    detection)
-
 == Jump list
 
 Some commands, like the goto commands, buffer switch or search commands,
@@ -519,6 +522,8 @@ to skim through the jump list using:
     save selections
 
 == Multiple selections
+
+*s*, *S*, *<a-k>* and *<a-K>* use the */* register by default (See <<registers#,`:doc registers`>>)
 
 *s*::
     create a selection for each match of the given regex
@@ -564,7 +569,7 @@ to skim through the jump list using:
 == Object Selection
 
 For nestable objects, a count can be used in order to specify which surrounding
-level to select.
+level to select. Object selections are repeatable using *<a-.>*.
 
 *<a-a>*::
     select the whole object
@@ -640,8 +645,9 @@ the wanted object:
 == Prompt commands
 
 When pressing `:` in normal mode, Kakoune will open a prompt to enter a command.
-The following keys are recognized by this mode to help edition.
-(See <<commands#,`:doc commands`>>)
+The executed command line is stored in the *:* register (See <<registers#,`:doc registers`>>).
+
+The following keys are recognized by this mode to help with editing (See <<commands#,`:doc commands`>>).
 
 *<ret>*::
     validate prompt
