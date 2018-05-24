@@ -28,28 +28,27 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
         printf '%s\n' "evaluate-commands -client $kak_client echo 'linting done'" | kak -p "$kak_session"
 
         # Flags for the gutter:
-        #   line3|{red}:line11|{yellow}
+        #   stamp:l3|{red}█:l11|{yellow}█
         # Contextual error messages:
-        #   l1,c1,err1
-        #   ln,cn,err2
+        #   stamp:l1.c1,l1.c1|kind\:message:l2.c2,l2.c2|kind\:message
         awk -F: -v file="$kak_buffile" -v stamp="$kak_timestamp" '
             /:[0-9]+:[0-9]+: ([Ff]atal )?[Ee]rror/ {
-                flags = flags $2 "|{red}█:"
+                flags = flags ":" $2 "|{red}█"
             }
             /:[0-9]+:[0-9]+:/ {
                 if ($4 !~ /[Ee]rror/) {
-                    flags = flags $2 "|{yellow}█:"
+                    flags = flags ":" $2 "|{yellow}█"
                 }
             }
             /:[0-9]+:[0-9]+:/ {
-                errors = errors ":" $2 "." $3 "," $2 "." $3 "|" substr($4,2)
-                # fix case where $5 is not the last field because of extra :s in the message
+                kind = substr($4, 2)
+                errors = errors ":" $2 "." $3 "," $2 "." $3 "|" kind
+                # fix case where $5 is not the last field because of extra colons in the message
                 for (i=5; i<=NF; i++) errors = errors "\\:" $i
-                errors = substr(errors, 1, length(errors)-1) " (col " $3 ")"
+                errors = errors " (col " $3 ")"
             }
             END {
-                print "set-option \"buffer=" file "\" lint_flags  %{" stamp ":" substr(flags,  1, length(flags)-1)  "}"
-                errors = substr(errors, 1, length(errors)-1)
+                print "set-option \"buffer=" file "\" lint_flags  %{" stamp flags "}"
                 gsub("~", "\\~", errors)
                 print "set-option \"buffer=" file "\" lint_errors %~" stamp errors "~"
             }
