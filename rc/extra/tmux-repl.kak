@@ -34,7 +34,7 @@ define-command -hidden -params 1..2 tmux-repl-impl %{
         tmux_cmd="$@"
         tmux $tmux_args $tmux_cmd
         tmux set-buffer -b kak_repl_window $(tmux display-message -p '#I')
-        tmux set-buffer -b kak_repl_pane $(tmux display-message -p '#P')
+        tmux set-buffer -b kak_repl_pane $(tmux display-message -p '#{pane_id}')
     }
 }
 
