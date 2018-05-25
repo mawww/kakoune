@@ -159,13 +159,9 @@ dnf install kakoune
 [TIP]
 .Arch Linux
 ====
-A PKGBUILD https://aur.archlinux.org/packages/kakoune-git[kakoune-git]
-to install Kakoune is available in the
-https://wiki.archlinux.org/index.php/Arch_User_Repository[AUR].
-
+Kakoune is found in the https://www.archlinux.org/packages/community/x86_64/kakoune/[repositories].
 --------------------------------------------------
-# For example build and install Kakoune via yaourt
-yaourt -Sy kakoune-git
+pacman -S kakoune
 --------------------------------------------------
 ====
 
