@@ -102,7 +102,7 @@ add-highlighter window regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
     This highlights all the current search matches in italic:
 
 ---------------------------------------------
-add-highlighter window dynregex '%reg{/}' 0:i
+add-highlighter window dynregex '%reg{/}' 0:+i
 ---------------------------------------------
 
 == Specs highlighters
