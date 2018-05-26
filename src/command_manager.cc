@@ -425,10 +425,15 @@ void CommandManager::execute_single_command(CommandParameters params,
                                           command_it->value.param_desc);
         command_it->value.func(parameter_parser, context, shell_context);
     }
+    catch (failure& error)
+    {
+        throw;
+    }
     catch (runtime_error& error)
     {
-        throw runtime_error(format("{}:{}: '{}' {}", pos.line+1, pos.column+1,
-                                   params[0], error.what()));
+        error.set_what(format("{}:{}: '{}' {}", pos.line+1, pos.column+1,
+                              params[0], error.what()));
+        throw;
     }
 }
 

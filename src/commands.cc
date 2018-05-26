@@ -2140,7 +2140,7 @@ const CommandDesc fail_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {
-        throw runtime_error(fix_atom_text(join(parser, ' ', false)));
+        throw failure{fix_atom_text(join(parser, " "))};
     }
 };
 

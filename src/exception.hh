@@ -18,9 +18,15 @@ struct runtime_error : exception
         : m_what(std::move(what)) {}
 
     StringView what() const override { return m_what; }
+    void set_what(String what) { m_what = std::move(what); }
 
 private:
     String m_what;
+};
+
+struct failure : runtime_error
+{
+    using runtime_error::runtime_error;
 };
 
 struct logic_error : exception
