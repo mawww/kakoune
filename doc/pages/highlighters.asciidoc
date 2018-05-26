@@ -75,6 +75,10 @@ existing highlighters ids.
     *-width <max_width>*:::
         wrap text at *max_width* if the window is wider.
 
+    *-marker <marker_text>*:::
+        prefix wrapped lines with *marker_text*; if *-indent* was given,
+        the marker_text is displayed into the indentation if possible.
+
 == General highlighters
 
 *fill* <face>::
