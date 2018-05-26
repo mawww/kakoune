@@ -6,6 +6,7 @@
 #include "context.hh"
 #include "flags.hh"
 #include "optional.hh"
+#include "option_types.hh"
 #include "ranges.hh"
 #include "register_manager.hh"
 #include "shell_manager.hh"

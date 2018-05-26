@@ -13,6 +13,7 @@
 #include "file.hh"
 #include "flags.hh"
 #include "option_manager.hh"
+#include "option_types.hh"
 #include "ranges.hh"
 #include "regex.hh"
 #include "register_manager.hh"

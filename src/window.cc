@@ -9,6 +9,7 @@
 #include "client.hh"
 #include "buffer_utils.hh"
 #include "option.hh"
+#include "option_types.hh"
 
 #include <algorithm>
 #include <sstream>

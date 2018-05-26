@@ -4,6 +4,7 @@
 #include "context.hh"
 #include "flags.hh"
 #include "optional.hh"
+#include "option_types.hh"
 #include "regex.hh"
 #include "string.hh"
 #include "unicode.hh"

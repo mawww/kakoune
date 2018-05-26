@@ -11,6 +11,7 @@
 #include "regex.hh"
 #include "window.hh"
 #include "word_db.hh"
+#include "option_types.hh"
 #include "utf8_iterator.hh"
 #include "user_interface.hh"
 

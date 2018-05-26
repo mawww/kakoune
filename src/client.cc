@@ -7,6 +7,7 @@
 #include "file.hh"
 #include "remote.hh"
 #include "option.hh"
+#include "option_types.hh"
 #include "client_manager.hh"
 #include "command_manager.hh"
 #include "event_manager.hh"

@@ -182,7 +182,8 @@ template<typename T> const T& Option::get() const
 {
     auto* typed_opt = dynamic_cast<const TypedOption<T>*>(this);
     if (not typed_opt)
-        throw runtime_error(format("option '{}' is not of type '{}'", name(), typeid(T).name()));
+        throw runtime_error(format("option '{}' is not of type '{}'", name(),
+                                   option_type_name(Meta::Type<T>{})));
     return typed_opt->get();
 }
 
@@ -195,7 +196,8 @@ template<typename T> void Option::set(const T& val, bool notify)
 {
     auto* typed_opt = dynamic_cast<TypedOption<T>*>(this);
     if (not typed_opt)
-        throw runtime_error(format("option '{}' is not of type '{}'", name(), typeid(T).name()));
+        throw runtime_error(format("option '{}' is not of type '{}'", name(),
+                                   option_type_name(Meta::Type<T>{})));
     return typed_opt->set(val, notify);
 }
 

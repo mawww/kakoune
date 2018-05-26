@@ -10,6 +10,7 @@
 #include "face_registry.hh"
 #include "insert_completer.hh"
 #include "normal.hh"
+#include "option_types.hh"
 #include "regex.hh"
 #include "register_manager.hh"
 #include "hash_map.hh"

@@ -10,6 +10,7 @@
 #include "highlighter_group.hh"
 #include "line_modification.hh"
 #include "option.hh"
+#include "option_types.hh"
 #include "parameters_parser.hh"
 #include "ranges.hh"
 #include "regex.hh"

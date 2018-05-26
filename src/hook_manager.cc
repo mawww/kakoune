@@ -7,6 +7,7 @@
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "option.hh"
+#include "option_types.hh"
 #include "ranges.hh"
 #include "regex.hh"
 
