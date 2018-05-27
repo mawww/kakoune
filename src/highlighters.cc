@@ -1379,7 +1379,7 @@ String option_to_string(InclusiveBufferRange range)
                   range.last.line+1, range.last.column+1);
 }
 
-void option_from_string(StringView str, InclusiveBufferRange& opt)
+InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, StringView str)
 {
     auto sep = find_if(str, [](char c){ return c == ',' or c == '+'; });
     auto dot_beg = find(StringView{str.begin(), sep}, '.');
@@ -1400,7 +1400,7 @@ void option_from_string(StringView str, InclusiveBufferRange& opt)
     if (first.line < 0 or first.column < 0 or last.line < 0 or last.column < 0)
         throw runtime_error("coordinates elements should be >= 1");
 
-    opt = { std::min(first, last), std::max(first, last) };
+    return { std::min(first, last), std::max(first, last) };
 }
 
 BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).first; }

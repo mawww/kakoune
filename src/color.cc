@@ -81,9 +81,9 @@ String option_to_string(Color color)
     return to_string(color);
 }
 
-void option_from_string(StringView str, Color& color)
+Color option_from_string(Meta::Type<Color>, StringView str)
 {
-    color = str_to_color(str);
+    return str_to_color(str);
 }
 
 }

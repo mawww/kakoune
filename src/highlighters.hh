@@ -17,7 +17,7 @@ inline bool operator==(const InclusiveBufferRange& lhs, const InclusiveBufferRan
     return lhs.first == rhs.first and lhs.last == rhs.last;
 }
 String option_to_string(InclusiveBufferRange range);
-void option_from_string(StringView str, InclusiveBufferRange& opt);
+InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, StringView str);
 
 using LineAndSpec = std::tuple<LineCount, String>;
 using LineAndSpecList = TimestampedList<LineAndSpec>;

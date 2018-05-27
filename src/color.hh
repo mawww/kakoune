@@ -2,6 +2,7 @@
 #define color_hh_INCLUDED
 
 #include "hash.hh"
+#include "meta.hh"
 
 namespace Kakoune
 {
@@ -59,7 +60,7 @@ Color str_to_color(StringView color);
 String to_string(Color color);
 
 String option_to_string(Color color);
-void option_from_string(StringView str, Color& color);
+Color option_from_string(Meta::Type<Color>, StringView str);
 
 bool is_color_name(StringView color);
 

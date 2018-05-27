@@ -38,7 +38,7 @@ struct InsertCompleterDesc
 using InsertCompleterDescList = Vector<InsertCompleterDesc, MemoryDomain::Options>;
 
 String option_to_string(const InsertCompleterDesc& opt);
-void option_from_string(StringView str, InsertCompleterDesc& opt);
+InsertCompleterDesc option_from_string(Meta::Type<InsertCompleterDesc>, StringView str);
 
 inline StringView option_type_name(Meta::Type<InsertCompleterDesc>)
 {

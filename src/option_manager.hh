@@ -147,9 +147,7 @@ public:
     }
     void set_from_string(StringView str) override
     {
-        T val;
-        option_from_string(str, val);
-        set(std::move(val));
+        set(option_from_string(Meta::Type<T>{}, str));
     }
     void add_from_string(StringView str) override
     {

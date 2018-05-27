@@ -161,7 +161,7 @@ bool backward_regex_search(It begin, It end, It subject_begin, It subject_end,
 }
 
 String option_to_string(const Regex& re);
-void option_from_string(StringView str, Regex& re);
+Regex option_from_string(Meta::Type<Regex>, StringView str);
 
 template<typename Iterator, MatchDirection direction = MatchDirection::Forward>
 struct RegexIterator

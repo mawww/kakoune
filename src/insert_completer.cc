@@ -40,39 +40,23 @@ String option_to_string(const InsertCompleterDesc& opt)
     return "";
 }
 
-void option_from_string(StringView str, InsertCompleterDesc& opt)
+InsertCompleterDesc option_from_string(Meta::Type<InsertCompleterDesc>, StringView str)
 {
     if (str.substr(0_byte, 7_byte) == "option=")
-    {
-        opt.mode = InsertCompleterDesc::Option;
-        opt.param = str.substr(7_byte).str();
-        return;
-    }
+        return {InsertCompleterDesc::Option, str.substr(7_byte).str()};
     else if (str.substr(0_byte, 5_byte) == "word=")
     {
         auto param = str.substr(5_byte);
         if (param == "all" or param == "buffer")
-        {
-            opt.mode = InsertCompleterDesc::Word;
-            opt.param = param.str();
-            return;
-        }
+            return {InsertCompleterDesc::Word, param.str()};
     }
     else if (str == "filename")
-    {
-        opt.mode = InsertCompleterDesc::Filename;
-        opt.param = Optional<String>{};
-        return;
-    }
+        return {InsertCompleterDesc::Filename, {}};
     else if (str.substr(0_byte, 5_byte) == "line=")
     {
         auto param = str.substr(5_byte);
         if (param == "all" or param == "buffer")
-        {
-            opt.mode = InsertCompleterDesc::Line;
-            opt.param = param.str();
-            return;
-        }
+            return {InsertCompleterDesc::Line, param.str()};
     }
     throw runtime_error(format("invalid completer description: '{}'", str));
 }

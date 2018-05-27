@@ -13,9 +13,9 @@ String option_to_string(const Regex& re)
     return re.str();
 }
 
-void option_from_string(StringView str, Regex& re)
+Regex option_from_string(Meta::Type<Regex>, StringView str)
 {
-    re = Regex{str};
+    return Regex{str};
 }
 
 }

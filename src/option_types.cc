@@ -9,8 +9,7 @@ UnitTest test_option_parsing{[]{
     {
         auto repr = option_to_string(value);
         kak_assert(repr == str);
-        std::decay_t<decltype(value)> parsed;
-        option_from_string(str, parsed);
+        auto parsed = option_from_string(Meta::Type<std::decay_t<decltype(value)>>{}, str);
         kak_assert(parsed == value);
     };
 
