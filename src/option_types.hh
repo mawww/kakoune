@@ -183,7 +183,7 @@ std::tuple<Types...> option_from_string_impl(Meta::Type<std::tuple<Types...>>, S
     auto elems = str | split<StringView>(tuple_separator, '\\')
                      | transform(unescape<tuple_separator, '\\'>)
                      | static_gather<error, sizeof...(Types)>();
-    return {option_from_string(Meta::Type<Types>{}, elems[I])...};
+    return std::tuple<Types...>{option_from_string(Meta::Type<Types>{}, elems[I])...};
 }
 
 template<typename... Types>
