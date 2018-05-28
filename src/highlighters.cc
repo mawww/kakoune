@@ -2116,7 +2116,7 @@ void register_highlighters()
           "The region <region name> starts at <begin> match, end at <end> match that does not\n"
           "close a <recurse> match. In between region is the <default group>.\n"
           "Highlighting a region is done by adding highlighters into the different <region name> subgroups.\n"
-          "If -match-capture is specified, then regions end/recurse matches are must have the same \1\n"
+          "If -match-capture is specified, then regions end/recurse matches must have the same \\1\n"
           "capture content as the begin to be considered"} });
 }
 
