@@ -1,3 +1,7 @@
+hook global BufCreate .*(sway|i3)/config %{
+    set buffer filetype i3
+}
+
 add-highlighter shared/ regions -default code i3 \
     string %{"} %{"} "" \
     string %{'} %{'} "" \
