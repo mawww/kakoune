@@ -2096,7 +2096,7 @@ void register_highlighters()
     registry.insert({
         "wrap",
         { WrapHighlighter::create,
-          "Parameters: [-word] [-indent] [-width <max_width>] [-marker <marker_text>\n"
+          "Parameters: [-word] [-indent] [-width <max_width>] [-marker <marker_text>]\n"
           "Wrap lines to window width, or max_width if given and window is wider,\n"
           "wrap at word boundaries instead of codepoint boundaries if -word is given\n"
           "insert marker_text at start of wrapped lines if given\n"
