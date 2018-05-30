@@ -54,9 +54,10 @@ public:
     template<typename T> bool is_of_type() const;
 
     virtual String get_as_string() const = 0;
-    virtual void   set_from_string(StringView str) = 0;
-    virtual void   add_from_string(StringView str) = 0;
-    virtual void   update(const Context& context) = 0;
+    virtual Vector<String> get_as_strings() const = 0;
+    virtual void set_from_strings(ConstArrayView<String> strs) = 0;
+    virtual void add_from_strings(ConstArrayView<String> strs) = 0;
+    virtual void update(const Context& context) = 0;
 
     virtual Option* clone(OptionManager& manager) const = 0;
     OptionManager& manager() const { return m_manager; }
@@ -141,19 +142,27 @@ public:
     const T& get() const { return m_value; }
     T& get_mutable() { return m_value; }
 
+    Vector<String> get_as_strings() const override
+    {
+        return option_to_strings(m_value);
+    }
+
     String get_as_string() const override
     {
         return option_to_string(m_value);
     }
-    void set_from_string(StringView str) override
+
+    void set_from_strings(ConstArrayView<String> strs) override
     {
-        set(option_from_string(Meta::Type<T>{}, str));
+        set(option_from_strings(Meta::Type<T>{}, strs));
     }
-    void add_from_string(StringView str) override
+
+    void add_from_strings(ConstArrayView<String> strs) override
     {
-        if (option_add(m_value, str))
+        if (option_add_from_strings(m_value, strs))
             m_manager.on_option_changed(*this);
     }
+
     void update(const Context& context) override
     {
         option_update(m_value, context);
