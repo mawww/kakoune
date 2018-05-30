@@ -253,9 +253,31 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
     }
 }
 
-String expand_token(const Token& token, const Context& context,
-                    const ShellContext& shell_context)
+auto expand_option(Option& opt, std::true_type)
 {
+    return opt.get_as_string();
+}
+
+auto expand_option(Option& opt, std::false_type)
+{
+    return opt.get_as_strings();
+}
+
+String expand_arobase(ConstArrayView<String> params, std::true_type)
+{
+    return join(params, ' ', false);
+}
+
+Vector<String> expand_arobase(ConstArrayView<String> params, std::false_type)
+{
+    return {params.begin(), params.end()};
+}
+
+template<bool single>
+std::conditional_t<single, String, Vector<String>>
+expand_token(const Token& token, const Context& context, const ShellContext& shell_context)
+{
+    using IsSingle = std::integral_constant<bool, single>;
     auto& content = token.content;
     switch (token.type)
     {
@@ -273,35 +295,35 @@ String expand_token(const Token& token, const Context& context,
             ++trailing_eol_count;
         }
         str.resize(str.length() - trailing_eol_count, 0);
-        return str;
+        return {str};
     }
     case Token::Type::RegisterExpand:
-        return context.main_sel_register_value(content).str();
+        return {context.main_sel_register_value(content).str()};
     case Token::Type::OptionExpand:
-        return context.options()[content].get_as_string();
+        return expand_option(context.options()[content], IsSingle{});
     case Token::Type::ValExpand:
     {
         auto it = shell_context.env_vars.find(content);
         if (it != shell_context.env_vars.end())
-            return it->value;
-        return ShellManager::instance().get_val(content, context);
+            return {it->value};
+        return {ShellManager::instance().get_val(content, context)};
     }
     case Token::Type::ArgExpand:
     {
         auto& params = shell_context.params;
         if (content == '@')
-            return join(params, ' ');
+            return expand_arobase(params, IsSingle{});
 
         const int arg = str_to_int(content)-1;
         if (arg < 0)
             throw runtime_error("invalid argument index");
-        return arg < params.size() ? params[arg] : String{};
+        return {arg < params.size() ? params[arg] : String{}};
     }
     case Token::Type::RawEval:
-        return expand(content, context, shell_context);
+        return {expand(content, context, shell_context)};
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
-        return content;
+        return {content};
     default: kak_assert(false);
     }
     return {};
@@ -378,8 +400,7 @@ String expand_impl(StringView str, const Context& context,
             else
             {
                 res += reader.substr_from(beg);
-                res += postprocess(expand_token(parse_percent_token(reader, true),
-                                                context, shell_context));
+                res += postprocess(expand_token<true>(parse_percent_token(reader, true), context, shell_context));
                 beg = reader.pos;
             }
         }
@@ -483,7 +504,12 @@ void CommandManager::execute(StringView command_line,
             params.insert(params.end(), shell_context.params.begin(),
                           shell_context.params.end());
         else
-            params.push_back(expand_token(token, context, shell_context));
+        {
+            auto tokens = expand_token<false>(token, context, shell_context);
+            params.insert(params.end(),
+                          std::make_move_iterator(tokens.begin()),
+                          std::make_move_iterator(tokens.end()));
+        }
     }
     execute_single_command(params, context, shell_context, command_coord);
 }
@@ -640,7 +666,7 @@ Completions CommandManager::complete(const Context& context,
             context, flags, params, tokens.size() - 2,
             cursor_pos_in_token), start);
 
-        if (token.type != Token::Type::RawQuoted)
+        if (not completions.quoted and token.type != Token::Type::RawQuoted)
         {
             StringView to_escape = token.type == Token::Type::Raw ? "% \t;" : "%";
             for (auto& candidate : completions.candidates)
