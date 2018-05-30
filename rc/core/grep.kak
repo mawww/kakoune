@@ -29,7 +29,7 @@ All the optional arguments are forwarded to the grep utility} \
 
 hook -group grep-highlight global WinSetOption filetype=grep %{
     add-highlighter window group grep
-    add-highlighter window/grep regex "^((?:\w:)?[^:]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
+    add-highlighter window/grep regex "^((?:\w:)?[^:\n]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
     add-highlighter window/grep line %{%opt{grep_current_line}} default+b
 }
 
