@@ -1318,7 +1318,7 @@ const CommandDesc set_option_cmd = {
     "scope the option is set in",
     ParameterDesc{
         { { "add", { false, "add to option rather than replacing it" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 3, 3
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 2, (size_t)-1
     },
     CommandFlags::None,
     option_doc_helper,
@@ -1337,13 +1337,11 @@ const CommandDesc set_option_cmd = {
         else if (token_to_complete == start + 1)
             return { 0_byte, params[start + 1].length(),
                      GlobalScope::instance().option_registry().complete_option_name(params[start + 1], pos_in_token) };
-        else if (not add and token_to_complete == start + 2  and
+        else if (not add and token_to_complete == start + 2  and params[start + 2].empty() and
                  GlobalScope::instance().option_registry().option_exists(params[start + 1]))
         {
             OptionManager& options = get_scope(params[start], context).options();
-            String val = options[params[start + 1]].get_as_string();
-            if (prefix_match(val, params[start + 2]))
-                return { 0_byte, params[start + 2].length(), { std::move(val) } };
+            return { 0_byte, params[start + 2].length(), { options[params[start + 1]].get_as_string() }, true };
         }
         return Completions{};
     },
@@ -1351,9 +1349,9 @@ const CommandDesc set_option_cmd = {
     {
         Option& opt = get_options(parser[0], context, parser[1]).get_local_option(parser[1]);
         if (parser.get_switch("add"))
-            opt.add_from_string(parser[2]);
+            opt.add_from_strings(parser.positionals_from(2));
         else
-            opt.set_from_string(parser[2]);
+            opt.set_from_strings(parser.positionals_from(2));
     }
 };
 
@@ -1427,7 +1425,7 @@ const CommandDesc declare_option_cmd = {
     ParameterDesc{
         { { "hidden",    { false, "do not display option name when completing" } },
           { "docstring", { true,  "specify option description" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 2, 3
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 2, (size_t)-1
     },
     CommandFlags::None,
     CommandHelper{},
@@ -1470,8 +1468,8 @@ const CommandDesc declare_option_cmd = {
         else
             throw runtime_error(format("no such option type: '{}'", parser[0]));
 
-        if (parser.positional_count() == 3)
-            opt->set_from_string(parser[2]);
+        if (parser.positional_count() > 2)
+            opt->set_from_strings(parser.positionals_from(2));
     }
 };
 
