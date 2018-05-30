@@ -70,14 +70,14 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                   function send_flags(text, flag, i) {
                       if (line == "") { return; }
                       text=substr(sha,1,8) " " dates[sha] " " authors[sha]
-                      gsub(":", "\\:", text)
                       # gsub("|", "\\|", text)
-                      flag=line "|" text
+                      gsub("~", "~~", text)
+                      flag="%~" line "|" text "~"
                       for ( i=1; i < count; i++ ) {
-                          flag=flag ":" line+i "|" text
+                          flag=flag " %~" line+i "|" text "~"
                       }
                       cmd = "kak -p " ENVIRON["kak_session"]
-                      print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags %{" flag "}" | cmd
+                      print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags " flag | cmd
                       close(cmd)
                   }
                   /^([0-9a-f]{40}) ([0-9]+) ([0-9]+) ([0-9]+)/ {
@@ -111,10 +111,10 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                  }
             }
             /^\+/ {
-                 flags=flags ":" line "|{green}+"
+                 flags=flags " " line "|{green}+"
                  line++
             }
-            /^\-/ { flags=flags ":" line "|{red}-" }
+            /^\-/ { flags=flags " " line "|{red}-" }
             END { print "set-option buffer git_diff_flags ", flags }
         '
     }
