@@ -5,6 +5,8 @@ The output returned by this command is expected to comply with the following for
 
 declare-option -hidden line-specs lint_flags
 declare-option -hidden range-specs lint_errors
+declare-option -hidden int lint_error_count
+declare-option -hidden int lint_warning_count
 
 define-command lint -docstring 'Parse the current buffer with a linter' %{
     %sh{
@@ -25,19 +27,24 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
         { # do the parsing in the background and when ready send to the session
 
         eval "$kak_opt_lintcmd '$dir'/buf" | sort -t: -k2,2 -n > "$dir"/stderr
-        printf '%s\n' "evaluate-commands -client $kak_client echo 'linting done'" | kak -p "$kak_session"
 
         # Flags for the gutter:
         #   stamp:l3|{red}█:l11|{yellow}█
         # Contextual error messages:
         #   stamp:l1.c1,l1.c1|kind\:message:l2.c2,l2.c2|kind\:message
-        awk -F: -v file="$kak_buffile" -v stamp="$kak_timestamp" '
+        awk -F: -v file="$kak_buffile" -v stamp="$kak_timestamp" -v client="$kak_client" '
+            BEGIN {
+                error_count = 0
+                warning_count = 0
+            }
             /:[0-9]+:[0-9]+: ([Ff]atal )?[Ee]rror/ {
                 flags = flags ":" $2 "|{red}█"
+                error_count++
             }
             /:[0-9]+:[0-9]+:/ {
                 if ($4 !~ /[Ee]rror/) {
                     flags = flags ":" $2 "|{yellow}█"
+                    warning_count++
                 }
             }
             /:[0-9]+:[0-9]+:/ {
@@ -51,6 +58,9 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
                 print "set-option \"buffer=" file "\" lint_flags  %{" stamp flags "}"
                 gsub("~", "\\~", errors)
                 print "set-option \"buffer=" file "\" lint_errors %~" stamp errors "~"
+                print "set-option \"buffer=" file "\" lint_error_count " error_count
+                print "set-option \"buffer=" file "\" lint_warning_count " warning_count
+                print "evaluate-commands -client " client " lint-show-counters"
             }
         ' "$dir"/stderr | kak -p "$kak_session"
 
@@ -69,6 +79,10 @@ define-command -hidden lint-show %{
             printf '%s\n' "info -anchor $kak_cursor_line.$kak_cursor_column '$desc'"
         fi
     } }
+
+define-command -hidden lint-show-counters %{
+    echo -markup linting results:{red} %opt{lint_error_count} error(s){yellow} %opt{lint_warning_count} warning(s)
+}
 
 define-command lint-enable -docstring "Activate automatic diagnostics of the code" %{
     add-highlighter window flag_lines default lint_flags
