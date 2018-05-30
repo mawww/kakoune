@@ -18,6 +18,12 @@
 namespace Kakoune
 {
 
+
+inline String quote(StringView s)
+{
+    return format("'{}'", replace(s, "'", "''"));
+}
+
 template<typename T>
 constexpr decltype(T::option_type_name) option_type_name(Meta::Type<T>)
 {
@@ -67,13 +73,16 @@ inline Codepoint option_from_string(Meta::Type<Codepoint>, StringView str)
 }
 constexpr StringView option_type_name(Meta::Type<Codepoint>) { return "codepoint"; }
 
-constexpr char list_separator = ':';
+template<typename T, MemoryDomain domain>
+Vector<String> option_to_strings(const Vector<T, domain>& opt)
+{
+    return opt | transform([](const T& t) { return option_to_string(t); }) | gather<Vector<String>>();
+}
 
 template<typename T, MemoryDomain domain>
 String option_to_string(const Vector<T, domain>& opt)
 {
-    return join(opt | transform([](const T& t) { return option_to_string(t); }),
-                list_separator);
+    return join(opt | transform([](const T& t) { return quote(option_to_string(t)); }), ' ', false);
 }
 
 template<typename T, MemoryDomain domain>
@@ -81,20 +90,18 @@ void option_list_postprocess(Vector<T, domain>& opt)
 {}
 
 template<typename T, MemoryDomain domain>
-Vector<T, domain> option_from_string(Meta::Type<Vector<T, domain>>, StringView str)
+Vector<T, domain> option_from_strings(Meta::Type<Vector<T, domain>>, ConstArrayView<String> strs)
 {
-    auto res =  str | split<StringView>(list_separator, '\\')
-                    | transform(unescape<list_separator, '\\'>)
-                    | transform([](auto&& s) { return option_from_string(Meta::Type<T>{}, s); })
-                    | gather<Vector<T, domain>>();
+    auto res =  strs | transform([](auto&& s) { return option_from_string(Meta::Type<T>{}, s); })
+                     | gather<Vector<T, domain>>();
     option_list_postprocess(res);
     return res;
 }
 
 template<typename T, MemoryDomain domain>
-bool option_add(Vector<T, domain>& opt, StringView str)
+bool option_add_from_strings(Vector<T, domain>& opt, ConstArrayView<String> strs)
 {
-    auto vec = option_from_string(Meta::Type<Vector<T, domain>>{}, str);
+    auto vec = option_from_strings(Meta::Type<Vector<T, domain>>{}, strs);
     opt.insert(opt.end(),
                std::make_move_iterator(vec.begin()),
                std::make_move_iterator(vec.end()));
@@ -109,31 +116,35 @@ String option_type_name(Meta::Type<Vector<T, D>>)
 }
 
 template<typename Key, typename Value, MemoryDomain domain>
-String option_to_string(const HashMap<Key, Value, domain>& opt)
+Vector<String> option_to_strings(const HashMap<Key, Value, domain>& opt)
 {
-    String res;
-    for (auto it = opt.begin(); it != opt.end(); ++it)
-    {
-        if (it != opt.begin())
-            res += list_separator;
-        String elem = escape(option_to_string(it->key), '=', '\\') + "=" +
-                      escape(option_to_string(it->value), '=', '\\');
-        res += escape(elem, list_separator, '\\');
-    }
-    return res;
+    return opt | transform([](auto&& item) {
+        return format("{}={}",
+                      escape(option_to_string(item.key), '=', '\\'),
+                      escape(option_to_string(item.value), '=', '\\'));
+    }) | gather<Vector<String>>();
 }
 
 template<typename Key, typename Value, MemoryDomain domain>
-bool option_add(HashMap<Key, Value, domain>& opt, StringView str)
+String option_to_string(const HashMap<Key, Value, domain>& opt)
+{
+    return join(opt | transform([](auto&& item) {
+        return quote(format("{}={}",
+                      escape(option_to_string(item.key), '=', '\\'),
+                      escape(option_to_string(item.value), '=', '\\')));
+    }), ' ', false);
+}
+
+template<typename Key, typename Value, MemoryDomain domain>
+bool option_add_from_strings(HashMap<Key, Value, domain>& opt, ConstArrayView<String> strs)
 {
     bool changed = false;
-    for (auto&& elem : str | split<StringView>(list_separator, '\\')
-                           | transform(unescape<list_separator, '\\'>))
+    for (auto&& str : strs)
     {
         struct error : runtime_error { error(size_t) : runtime_error{"map option expects key=value"} {} };
-        auto key_value = elem | split<StringView>('=', '\\')
-                              | transform(unescape<'=', '\\'>)
-                              | static_gather<error, 2>();
+        auto key_value = str | split<StringView>('=', '\\')
+                             | transform(unescape<'=', '\\'>)
+                             | static_gather<error, 2>();
 
         opt[option_from_string(Meta::Type<Key>{}, key_value[0])] = option_from_string(Meta::Type<Value>{}, key_value[1]);
         changed = true;
@@ -142,10 +153,10 @@ bool option_add(HashMap<Key, Value, domain>& opt, StringView str)
 }
 
 template<typename Key, typename Value, MemoryDomain domain>
-HashMap<Key, Value, domain> option_from_string(Meta::Type<HashMap<Key, Value, domain>>, StringView str)
+HashMap<Key, Value, domain> option_from_strings(Meta::Type<HashMap<Key, Value, domain>>, ConstArrayView<String> str)
 {
     HashMap<Key, Value, domain> res;
-    option_add(res, str);
+    option_add_from_strings(res, str);
     return res;
 }
 
@@ -305,28 +316,31 @@ EnableIfWithBitOps<Flags, bool> option_add(Flags& opt, StringView str)
 }
 
 template<typename P, typename T>
+inline Vector<String> option_to_strings(const PrefixedList<P, T>& opt)
+{
+    Vector<String> res{option_to_string(opt.prefix)};
+    auto list = option_to_strings(opt.list);
+    res.insert(res.end(), std::make_move_iterator(list.begin()), std::make_move_iterator(list.end()));
+    return res;
+}
+
+template<typename P, typename T>
 inline String option_to_string(const PrefixedList<P, T>& opt)
 {
-    if (opt.list.empty())
-        return format("{}", escape(option_to_string(opt.prefix), list_separator, '\\'));
-    else
-        return format("{}{}{}", escape(option_to_string(opt.prefix), list_separator, '\\'),
-                      list_separator, option_to_string(opt.list));
+    return option_to_string(opt.prefix) + " " + option_to_string(opt.list);
 }
 
 template<typename P, typename T>
-inline PrefixedList<P, T> option_from_string(Meta::Type<PrefixedList<P, T>>, StringView str)
+inline PrefixedList<P, T> option_from_strings(Meta::Type<PrefixedList<P, T>>, ConstArrayView<String> strs)
 {
-    using VecType = Vector<T, MemoryDomain::Options>;
-    auto it = find(str, list_separator);
-    return {option_from_string(Meta::Type<P>{}, StringView{str.begin(), it}), 
-            it != str.end() ? option_from_string(Meta::Type<VecType>{}, {it+1, str.end()}) : VecType{}};
+    return {option_from_string(Meta::Type<P>{}, strs[0]), 
+            option_from_strings(Meta::Type<Vector<T, MemoryDomain::Options>>{}, strs.subrange(1))};
 }
 
 template<typename P, typename T>
-inline bool option_add(PrefixedList<P, T>& opt, StringView str)
+inline bool option_add_from_strings(PrefixedList<P, T>& opt, ConstArrayView<String> str)
 {
-    return option_add(opt.list, str);
+    return option_add_from_strings(opt.list, str);
 }
 
 }

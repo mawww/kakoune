@@ -21,6 +21,7 @@ struct Completions
     CandidateList candidates;
     ByteCount start;
     ByteCount end;
+    bool quoted = false;
 
     Completions()
         : start(0), end(0) {}
@@ -28,8 +29,8 @@ struct Completions
     Completions(ByteCount start, ByteCount end)
         : start(start), end(end) {}
 
-    Completions(ByteCount start, ByteCount end, CandidateList candidates)
-        : candidates(std::move(candidates)), start(start), end(end) {}
+    Completions(ByteCount start, ByteCount end, CandidateList candidates, bool quoted = false)
+        : candidates(std::move(candidates)), start(start), end(end), quoted{quoted} {}
 };
 
 enum class CompletionFlags
@@ -56,7 +57,7 @@ Completions shell_complete(const Context& context, CompletionFlags,
 inline Completions offset_pos(Completions completion, ByteCount offset)
 {
     return { completion.start + offset, completion.end + offset,
-             std::move(completion.candidates) };
+             std::move(completion.candidates), completion.quoted };
 }
 
 template<typename Container>

@@ -6,6 +6,7 @@
 #include "meta.hh"
 #include "array_view.hh"
 #include "optional.hh"
+#include "flags.hh"
 #include "string.hh"
 #include "string_utils.hh"
 
@@ -113,6 +114,12 @@ struct ParametersParser
     {
         kak_assert(index < positional_count());
         return m_params[m_positional_indices[index]];
+    }
+
+    ConstArrayView<String> positionals_from(size_t first) const
+    {
+        kak_assert(m_desc.flags & (ParameterDesc::Flags::SwitchesOnlyAtStart | ParameterDesc::Flags::SwitchesAsPositional));
+        return m_params.subrange(m_positional_indices[first]);
     }
 
     iterator begin() const { return iterator(*this, 0); }
