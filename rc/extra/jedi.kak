@@ -1,7 +1,7 @@
 declare-option -hidden str jedi_tmp_dir
 declare-option -hidden completions jedi_completions
 declare-option -docstring "colon separated list of path added to `python`'s $PYTHONPATH environment variable" \
-    str-list jedi_python_path
+    str jedi_python_path
 
 define-command jedi-complete -docstring "Complete the current selection" %{
     evaluate-commands %sh{
