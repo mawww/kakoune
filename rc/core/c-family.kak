@@ -330,17 +330,19 @@ define-command -hidden c-family-insert-include-guards %{
 hook -group c-family-insert global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
 
 declare-option -docstring "colon separated list of path in which header files will be looked for" \
-    str-list alt_dirs ".:.."
+    str-list alt_dirs '.' '..'
 
 define-command c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ evaluate-commands %sh{
-    alt_dirs=$(printf %s\\n "${kak_opt_alt_dirs}" | tr ':' '\n')
     file="${kak_buffile##*/}"
     file_noext="${file%.*}"
     dir=$(dirname "${kak_buffile}")
 
+    # Set $@ to alt_dirs
+    eval "set -- ${kak_opt_alt_dirs}"
+
     case ${file} in
         *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
-            for alt_dir in ${alt_dirs}; do
+            for alt_dir in "$@"; do
                 for ext in h hh hpp hxx H; do
                     altname="${dir}/${alt_dir}/${file_noext}.${ext}"
                     if [ -f ${altname} ]; then
@@ -351,7 +353,7 @@ define-command c-family-alternative-file -docstring "Jump to the alternate file 
             done
         ;;
         *.h|*.hh|*.hpp|*.hxx|*.H)
-            for alt_dir in ${alt_dirs}; do
+            for alt_dir in "$@"; do
                 for ext in c cc cpp cxx C m; do
                     altname="${dir}/${alt_dir}/${file_noext}.${ext}"
                     if [ -f ${altname} ]; then

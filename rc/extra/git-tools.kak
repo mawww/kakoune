@@ -70,14 +70,14 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                   function send_flags(text, flag, i) {
                       if (line == "") { return; }
                       text=substr(sha,1,8) " " dates[sha] " " authors[sha]
-                      gsub(":", "\\:", text)
                       # gsub("|", "\\|", text)
-                      flag=line "|" text
+                      gsub("~", "~~", text)
+                      flag="%~" line "|" text "~"
                       for ( i=1; i < count; i++ ) {
-                          flag=flag ":" line+i "|" text
+                          flag=flag " %~" line+i "|" text "~"
                       }
                       cmd = "kak -p " ENVIRON["kak_session"]
-                      print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags %{" flag "}" | cmd
+                      print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags " flag | cmd
                       close(cmd)
                   }
                   /^([0-9a-f]{40}) ([0-9]+) ([0-9]+) ([0-9]+)/ {
@@ -109,39 +109,39 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                     if ($from_count == 0 and $to_count > 0) {
                         for $i (0..$to_count - 1) {
                             $line = $to_line + $i;
-                            $flags .= ":$line|\{green\}+";
+                            $flags .= " $line|\{green\}+";
                         }
                     }
                     elsif ($from_count > 0 and $to_count == 0) {
                         if ($to_line == 0) {
-                            $flags .= ":1|\{red\}‾";
+                            $flags .= " 1|\{red\}‾";
                         } else {
-                            $flags .= ":$to_line|\{red\}_";
+                            $flags .= " $to_line|\{red\}_";
                         }
                     }
                     elsif ($from_count > 0 and $from_count == $to_count) {
                         for $i (0..$to_count - 1) {
                             $line = $to_line + $i;
-                            $flags .= ":$line|\{blue\}~";
+                            $flags .= " $line|\{blue\}~";
                         }
                     }
                     elsif ($from_count > 0 and $from_count < $to_count) {
                         for $i (0..$from_count - 1) {
                             $line = $to_line + $i;
-                            $flags .= ":$line|\{blue\}~";
+                            $flags .= " $line|\{blue\}~";
                         }
                         for $i ($from_count..$to_count - 1) {
                             $line = $to_line + $i;
-                            $flags .= ":$line|\{green\}+";
+                            $flags .= " $line|\{green\}+";
                         }
                     }
                     elsif ($to_count > 0 and $from_count > $to_count) {
                         for $i (0..$to_count - 2) {
                             $line = $to_line + $i;
-                            $flags .= ":$line|\{blue\}~";
+                            $flags .= " $line|\{blue\}~";
                         }
                         $last = $to_line + $to_count - 1;
-                        $flags .= ":$last|\{blue+u\}~";
+                        $flags .= " $last|\{blue+u\}~";
                     }
                 }
             }
