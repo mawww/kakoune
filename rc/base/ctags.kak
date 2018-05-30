@@ -3,14 +3,14 @@
 # This script requires the readtags command available in ctags source but
 # not installed by default
 
-declare-option -docstring "colon separated list of paths to tag files to parse when looking up a symbol" \
+declare-option -docstring "list of paths to tag files to parse when looking up a symbol" \
     str-list ctagsfiles 'tags'
 
 define-command -params ..1 \
     -shell-candidates %{
         realpath() { ( path=$(readlink "$1"); cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
-        printf %s\\n "$kak_opt_ctagsfiles" | tr ':' '\n' |
-        while read -r candidate; do
+        eval "set -- $kak_opt_ctagsfiles"
+        for candidate in "$@"; do
             [ -f "$candidate" ] && realpath "$candidate"
         done | awk '!x[$0]++' | # remove duplicates
         while read -r tags; do
@@ -26,8 +26,8 @@ If no symbol is passed then the current selection is used as symbol name} \
     %{ evaluate-commands %sh{
         realpath() { ( path=$(readlink "$1"); cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
         export tagname=${1:-${kak_selection}}
-        printf %s\\n "$kak_opt_ctagsfiles" | tr ':' '\n' |
-        while read -r candidate; do
+        eval "set -- $kak_opt_ctagsfiles"
+        for candidate in "$@"; do
             [ -f "$candidate" ] && realpath "$candidate"
         done | awk '!x[$0]++' | # remove duplicates
         while read -r tags; do
