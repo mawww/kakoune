@@ -477,7 +477,7 @@ String selection_list_to_string(const SelectionList& selections)
     auto main = beg + selections.main_index();
     using View = ConstArrayView<Selection>;
     return join(concatenated(View{main, end}, View{beg, main}) |
-                transform(selection_to_string), ':', false);
+                transform(selection_to_string), ' ', false);
 }
 
 Selection selection_from_string(StringView desc)
@@ -502,14 +502,13 @@ Selection selection_from_string(StringView desc)
     return Selection{anchor, cursor};
 }
 
-SelectionList selection_list_from_string(Buffer& buffer, StringView desc)
+SelectionList selection_list_from_string(Buffer& buffer, ConstArrayView<String> descs)
 {
-    if (desc.empty())
+    if (descs.empty())
         throw runtime_error{"empty selection description"};
 
-    auto sels = desc | split<StringView>(':')
-                     | transform([&](auto&& d) { auto s = selection_from_string(d); clamp(s, buffer); return s; })
-                     | gather<Vector<Selection>>();
+    auto sels = descs | transform([&](auto&& d) { auto s = selection_from_string(d); clamp(s, buffer); return s; })
+                      | gather<Vector<Selection>>();
     return {SelectionList::UnsortedTag{}, buffer, std::move(sels)};
 }
 
