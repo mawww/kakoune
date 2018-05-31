@@ -128,6 +128,11 @@ StringView format_to(ArrayView<char> buffer, StringView fmt, Types&&... params)
     return format_to(buffer, fmt, ArrayView<const StringView>{detail::format_param(std::forward<Types>(params))...});
 }
 
+inline String quote(StringView s)
+{
+    return format("'{}'", replace(s, "'", "''"));
+}
+
 }
 
 #endif // string_utils_hh_INCLUDED
