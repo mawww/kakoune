@@ -56,8 +56,7 @@ define-command -hidden tmux-send-text -params 0..1 -docstring "tmux-send-text [t
         if [ $# -eq 0 ]; then 
             tmux set-buffer -b kak_selection "${kak_selection}"
         else
-            tmux set-buffer -b kak_selection "$1
-"
+            tmux set-buffer -b kak_selection "$1"
         fi
         kak_orig_window=$(tmux display-message -p '#I')
         kak_orig_pane=$(tmux display-message -p '#P')
