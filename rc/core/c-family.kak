@@ -168,7 +168,7 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf '%s\n' "hook global WinSetOption filetype=c %{
-        set-option window static_words '$(join "${keywords}:${attributes}:${types}:${values}" ':')'
+        set-option window static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')
     }"
 
     # Highlight keywords
@@ -218,7 +218,7 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=cpp %{
-        set-option window static_words '$(join "${keywords}:${attributes}:${types}:${values}" ':')'
+        set-option window static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')
     }"
 
     # Highlight keywords
@@ -260,7 +260,7 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=objc %{
-        set-option window static_words '$(join "${keywords}:${attributes}:${types}:${values}:${decorators}" ':')'
+        set-option window static_words $(join "${keywords} ${attributes} ${types} ${values} ${decorators}" ' ')
     }"
 
     # Highlight keywords
