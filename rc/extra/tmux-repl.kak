@@ -50,8 +50,8 @@ define-command tmux-repl-window -params 0..1 -command-completion -docstring "Cre
     tmux-repl-impl 'new-window' %arg{@}
 }
 
-define-command -hidden tmux-send-text -params 0..1 -docstring "Send the selected text to the repl pane if no parameter.
-  Otherwise send parameter with new line" %{
+define-command -hidden tmux-send-text -params 0..1 -docstring "tmux-send-text [text]: Send text(append new line) to the REPL pane.
+  If no text is passed, then the selection is used" %{
     nop %sh{
         if [ $# -eq 0 ]; then 
             tmux set-buffer -b kak_selection "${kak_selection}"
