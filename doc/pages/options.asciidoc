@@ -9,13 +9,16 @@ scripts.
 [[set-option]]
 Options can be modified using the `set-option` command:
 
----------------------------------
-set-option [-add] <scope> <name> <value>
----------------------------------
+--------------------------------------------
+set-option [-add] <scope> <name> <values>...
+--------------------------------------------
 
 <scope> can be *global*, *buffer*, *window* or *current* (See
 <<scopes#,`:doc scopes`>>). *current* relates to the narrowest scope in
 which the option is already set.
+
+Multiple <values> can be given as separate arguments when the option is a
+list or map.
 
 If `-add` is specified, the new value is *added* to the current one
 instead of replacing it (the exact outcome depends on the type, see below).
@@ -34,9 +37,9 @@ hence options cannot be unset from the *global* scope.
 [[declare-option]]
 New options can be declared using the `declare-option` command:
 
-------------------------------------------------
-declare-option [-hidden] <type> <name> [<value>]
-------------------------------------------------
+---------------------------------------------------
+declare-option [-hidden] <type> <name> [<value>...]
+---------------------------------------------------
 
 If `-hidden` is specified, the option will not be displayed in completion
 suggestions.
@@ -76,35 +79,34 @@ are exclusively available to built-in options.
     a line, column pair (separated by a comma)
 
 *<type>-list*::
-    a list, elements are separated by a colon (:) if an element needs
-    to contain a colon, it can be escaped with a backslash.
+    a list, elements are specified as separate arguments to the command.
     `set -add` appends the new element to the list
 
 *range-specs*::
-    a `:` separated list of a pair of a buffer range (`<begin
-    line>.<begin column>,<end line>.<end column>` or `<begin line>.<begin
-    column>+<length>`) and a string (separated by `|`), except for the
-    first element which is just the timestamp of the buffer. When the
-    `update-option` is used on an option of this type, its ranges gets
-    updated according to all the buffer modifications that happened
-    since its timestamp.
+    a list of a pair of a buffer range (`<begin line>.<begin column>,
+    <end line>.<end column>` or `<begin line>.<begin column>+<length>`)
+    and a string (separated by `|`), except for the first element which
+    is just the timestamp of the buffer. When the `update-option` is
+    used on an option of this type, its ranges gets updated according
+    to all the buffer modifications that happened since its timestamp.
     See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
     `set -add` appends the new pair to the list
 
 *line-specs*::
-    a `:` separated list of a line number and a corresponding flag
-    (`<line>|<flag text>`), except for the first element which is just
-    the timestamp of the buffer. When the `update-option` is used on
-    an option of this type, its lines gets updated according to all the
-    buffer modifications that happened since its timestamp.
+    a list of a line number and a corresponding flag (`<line>|<flag
+    text>`), except for the first element which is just the timestamp
+    of the buffer. When the `update-option` is used on an option of this
+    type, its lines gets updated according to all the buffer modifications
+    that happened since its timestamp.
     See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
     `set -add` appends the new spec to the list
 
 *completions*::
-    a `:` separated list of `<text>|<docstring>|<menu text>`
-    candidates, except for the first element which follows the
+    a list of `<text>|<docstring>|<menu text>` candidates,
+    except for the first element which follows the
     `<line>.<column>[+<length>]@<timestamp>` format to define where the
     completion apply in the buffer. Markup can be used in the menu text.
+    `set -add` adds a new completion to the list
 
 *enum(value1|value2|...)*::
     an enum, taking one of the given values
@@ -115,7 +117,7 @@ are exclusively available to built-in options.
     `set -add` adds the new flag to the combination
 
 *<type>-to-<type>-map*::
-    a `:` separated list of `key=value` pairs.
+    a list of `key=value` pairs.
     `set -add` adds the new pair to the hashmap or replace an already
     existing key.
 
@@ -254,7 +256,7 @@ are exclusively available to built-in options.
     The default value is '%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]'
 
 *ui_options* `str-to-str-map`::
-    colon separated list of key=value pairs that are forwarded to the user
+    a list of `key=value` pairs that are forwarded to the user
     interface implementation. The NCurses UI support the following options:
 
         *ncurses_set_title*:::

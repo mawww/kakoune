@@ -64,15 +64,14 @@ informations about Kakoune's state:
     content of the main selection
 
 *kak_selections*::
-    content of the selection separated by colons, colons in the selection
-    contents are escaped with a backslash
+    quoted list of the contents of the selections.
 
 *kak_selection_desc*::
     range of the main selection, represented as anchor,cursor; anchor
     and cursor are in this format: line.column
 
 *kak_selections_desc*::
-    range of the selections separated by colons
+    unquoted list range of the selections.
 
 *kak_bufname*::
     name of the current buffer
@@ -82,7 +81,7 @@ informations about Kakoune's state:
     associated file
 
 *kak_buflist*::
-    the current buffer list, each buffer separated by a colon
+    quoted list of the currently opened buffer names
 
 *kak_buf_line_count*::
     the current buffer line count
@@ -127,7 +126,7 @@ informations about Kakoune's state:
     process id of the current client
 
 *kak_client_list*::
-    list of clients connected to the current session
+    unquoted list of the names of clients connected to the current session
 
 *kak_source*::
     path of the file currently getting executed (through the source
@@ -168,7 +167,11 @@ informations about Kakoune's state:
     (e.g. *$kak_client_env_SHELL* is the SHELL variable)
 
 *kak_user_modes*::
-    the user modes list, each modes separated by a colon
+    unquoted list of user modes.
+
+Quoted lists are separated by spaces, and each element is surrounded by
+`'` with contained `'` doubled. Unquoted lists are simply separated by
+spaces and is used for values that will not contain whitespaces.
 
 Note that in order for Kakoune to pass a value in the environment, the
 variable has to be spelled out within the body of the expansion.
