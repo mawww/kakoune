@@ -12,9 +12,11 @@ define-command -hidden -params 4 doc-render-regex %{
         execute-keys -draft s %arg{2} <ret> d
         execute-keys "%arg{3}"
         evaluate-commands %sh{
-            ranges=$(echo "$kak_selections_desc" | sed -e "s/:/|$4:/g; s/\$/|$4/")
+            face="$4"
+            eval "set -- $kak_selections_desc"
+            for desc in "$@"; do ranges="$ranges '$desc|$face'"; done
             echo "update-option buffer doc_render_ranges"
-            echo "set-option -add buffer doc_render_ranges '$ranges'"
+            echo "set-option -add buffer doc_render_ranges $ranges"
         }
     } }
 }
@@ -39,7 +41,7 @@ define-command -hidden doc-parse-anchors %{
         # Find sections as add them as imlicit anchors
         execute-keys \%s ^={2,}\h+([^\n]+)$ <ret>
         evaluate-commands -itersel %{
-            set-option -add buffer doc_anchors "%val{selection_desc}|%sh{printf '%s' \"$kak_reg_1\" | tr '[A-Z ]' '[a-z-]'}"
+            set-option -add buffer doc_anchors "%val{selection_desc}|%sh{printf '%s' ""$kak_reg_1"" | tr '[A-Z ]' '[a-z-]'}"
         }
 
         # Parse explicit anchors and remove their text
@@ -55,19 +57,25 @@ define-command -hidden doc-parse-anchors %{
 define-command doc-jump-to-anchor -params 1 %{
     update-option buffer doc_anchors
     evaluate-commands %sh{
-        range=$(printf "%s" "$kak_opt_doc_anchors" | tr ':' '\n' | grep "$1" | head -n1)
-        if [ -n "$range" ]; then
-            printf '%s\n'  "select '${range%|*}'; execute-keys vv"
-        else
-            printf '%s\n' "echo -markup %{{Error}No such anchor '$1'}"
-        fi
+        anchor="$1"
+        eval "set -- $kak_opt_doc_anchors"
+        for range in "$@"; do
+            if [ "${range#*|}" == "$anchor" ]; then
+                printf '%s\n'  "select '${range%|*}'; execute-keys vv"
+                exit
+            fi
+        done
+        printf '%s\n' "echo -markup %{{Error}No such anchor '$1'}"
     }
 }
 
 define-command doc-follow-link %{
     update-option buffer doc_links
     evaluate-commands %sh{
-        printf "%s" "$kak_opt_doc_links" | awk -v RS=':' -v FS='[.,|#]' '
+        eval "set -- $kak_opt_doc_links"
+        for link in "$@"; do
+            printf '%s\n' "$link"
+        done | awk -v FS='[.,|#]' '
             BEGIN {
                 l=ENVIRON["kak_cursor_line"];
                 c=ENVIRON["kak_cursor_column"];
