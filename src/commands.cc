@@ -2088,16 +2088,16 @@ const CommandDesc set_register_cmd = {
 const CommandDesc select_cmd = {
     "select",
     nullptr,
-    "select <selections_desc>: select given selections\n"
+    "select <selection_desc>...: select given selections\n"
     "\n"
-    "selections_desc format is <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>:...",
-    single_param,
+    "selection_desc format is <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>",
+    ParameterDesc{{}, ParameterDesc::Flags::SwitchesAsPositional, 1},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        context.selections_write_only() = selection_list_from_string(context.buffer(), parser[0]);
+        context.selections_write_only() = selection_list_from_string(context.buffer(), parser.positionals_from(0));
     }
 };
 
