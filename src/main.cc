@@ -94,7 +94,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
         "buflist", false,
         [](StringView name, const Context& context)
         { return join(BufferManager::instance() |
-                      transform(&Buffer::display_name), ':'); }
+                      transform(&Buffer::display_name) | transform(quote), ' ', false); }
     }, {
         "buf_line_count", false,
         [](StringView name, const Context& context) -> String
@@ -115,7 +115,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
     }, {
         "selections", false,
         [](StringView name, const Context& context)
-        { return join(context.selections_content(), ':'); }
+        { return join(context.selections_content() | transform(quote), ' ', false); }
     }, {
         "runtime", false,
         [](StringView name, const Context& context)
@@ -157,7 +157,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context) -> String
         { return join(ClientManager::instance() |
                       transform([](const std::unique_ptr<Client>& c) -> const String&
-                               { return c->context().name(); }), ':'); }
+                               { return c->context().name(); }), ' ', false); }
     }, {
         "modified", false,
         [](StringView name, const Context& context) -> String
@@ -205,7 +205,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
     }, {
         "user_modes", false,
         [](StringView name, const Context& context) -> String
-        { return join(context.keymaps().user_modes(), ':'); }
+        { return join(context.keymaps().user_modes(), ' ', false); }
     }
 };
 
