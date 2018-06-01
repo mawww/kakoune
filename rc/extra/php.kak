@@ -24,7 +24,7 @@ add-highlighter shared/php/comment       fill comment
 
 add-highlighter shared/php/code regex &?\$\w* 0:variable
 add-highlighter shared/php/code regex \b(false|null|parent|self|this|true)\b 0:value
-add-highlighter shared/php/code regex "-?[0-9]*\.?[0-9]+" 0:value
+add-highlighter shared/php/code regex "(\b|-)[0-9]*\.?[0-9]+\b" 0:value
 add-highlighter shared/php/code regex \b((string|int|bool)|[A-Z][a-z].*?)\b 0:type
 add-highlighter shared/php/code regex \B/[^\n/]+/[gimy]* 0:meta
 add-highlighter shared/php/code regex '<\?(php)?|\?>' 0:meta
