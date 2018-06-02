@@ -19,7 +19,16 @@ These scoped objects are:
 Scopes are named as follows:
 
 *window*::
-    context linked to the window displaying a buffer
+    context linked to the window displaying a buffer.
+
+    In Kakoune, the concept of a *window* must not be confused with
+    the concept of a window at the OS level.
+    In other terms, a window is *not* a client (like a terminal or GUI)
+    but one of many 'views' into a buffer.
+
+    There is a N:1 relationship between windows and buffers; once a 
+    window is linked to a buffer, the window's buffer never changes.
+    Windows store a set of selections and the scroll position.
 
 *buffer*::
     context linked directly to the buffer
@@ -51,14 +60,14 @@ Examples:
 
 *filetype*::
     A single buffer opened in two separate windows can have different
-    filetypes declared in the *window* scope with 'set'.
+    filetypes declared in the *window* scope with 'set-option'.
     (See <<options#,`:doc options`>>)
 
 *status line*::
     All the buffers of the current session can have the same information
     displayed in the status line, except for a specific buffer (the
     'modelinefmt' option can be declared in the *global* scope, and
-    customized in the *buffer* scope with 'set'.
+    customized in the *buffer* scope with 'set-option'.
     (See <<options#,`:doc options`>>)
 
 == Execution context
