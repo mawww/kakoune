@@ -685,21 +685,21 @@ void NCursesUI::draw_menu()
 
     const int item_count = (int)m_menu.items.size();
     const LineCount menu_lines = div_round_up(item_count, m_menu.columns);
-    const LineCount& win_height = m_menu.size.line;
+    const LineCount win_height = m_menu.size.line;
     kak_assert(win_height <= menu_lines);
 
     const ColumnCount column_width = (m_menu.size.column - 1) / m_menu.columns;
 
     const LineCount mark_height = min(div_round_up(sq(win_height), menu_lines),
                                       win_height);
-    const LineCount mark_line = (win_height - mark_height) * m_menu.top_line /
-                                max(1_line, menu_lines - win_height);
+    const LineCount top_line = m_menu.first_item / m_menu.columns;
+    const LineCount mark_line = (win_height - mark_height) * top_line / max(1_line, menu_lines - win_height);
     for (auto line = 0_line; line < win_height; ++line)
     {
         wmove(m_menu.win, (int)line, 0);
         for (int col = 0; col < m_menu.columns; ++col)
         {
-            const int item_idx = (int)(m_menu.top_line + line) * m_menu.columns
+            const int item_idx = (int)(top_line + line) * m_menu.columns
                                  + col;
             if (item_idx >= item_count)
                 break;
@@ -740,12 +740,16 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     const auto longest = accumulate(items | transform(&DisplayLine::length),
                                     1_col, [](auto&& lhs, auto&& rhs) { return std::max(lhs, rhs); });
 
-    const ColumnCount last_column = m_dimensions.column - 1;
-    const bool is_prompt = style == MenuStyle::Prompt;
-    m_menu.columns = is_prompt ? max((int)(last_column / (longest+1)), 1) : 1;
+    const ColumnCount max_width = m_dimensions.column - 1;
+    const bool is_inline = style == MenuStyle::Inline;
+    m_menu.columns = is_inline ? 1 : max((int)(max_width / (longest+1)), 1);
+
+    const LineCount max_height = std::max(anchor.line, m_dimensions.line - anchor.line - 1);
+    const LineCount height = min<LineCount>(min(10_line, max_height),
+                                            div_round_up(item_count, m_menu.columns));
 
     const ColumnCount maxlen = (m_menu.columns > 1 and item_count > 1) ?
-        last_column / m_menu.columns - 1 : last_column;
+        max_width / m_menu.columns - 1 : max_width;
 
     for (auto& item : items)
     {
@@ -754,25 +758,21 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
         kak_assert(m_menu.items.back().length() <= maxlen);
     }
 
-    const LineCount max_height = std::max(anchor.line, m_dimensions.line - anchor.line - 1);
-    const LineCount height = min<LineCount>(min(10_line, max_height),
-                                            div_round_up(item_count, m_menu.columns));
-
-    if (style != MenuStyle::Prompt and m_status_on_top)
+    if (is_inline and m_status_on_top)
         anchor.line += 1;
 
     LineCount line = anchor.line + 1;
-    if (is_prompt)
+    if (not is_inline)
         line = m_status_on_top ? 1_line : m_dimensions.line - height;
     else if (line + height > m_dimensions.line)
         line = anchor.line - height;
 
     const ColumnCount column = std::max(0_col, std::min(anchor.column, m_dimensions.column - longest - 1));
 
-    auto width = is_prompt ? m_dimensions.column : min(longest+1, m_dimensions.column);
+    auto width = is_inline ? min(longest+1, m_dimensions.column) : m_dimensions.column;
     m_menu.create({line, column}, {height, width});
     m_menu.selected_item = item_count;
-    m_menu.top_line = 0;
+    m_menu.first_item = 0;
 
     draw_menu();
 
@@ -788,18 +788,19 @@ void NCursesUI::menu_select(int selected)
     if (selected < 0 or selected >= item_count)
     {
         m_menu.selected_item = -1;
-        m_menu.top_line = 0;
+        m_menu.first_item = 0;
     }
     else
     {
         m_menu.selected_item = selected;
         const LineCount selected_line = m_menu.selected_item / m_menu.columns;
         const LineCount win_height = m_menu.size.line;
+        const LineCount top_line = m_menu.first_item / m_menu.columns;
         kak_assert(menu_lines >= win_height);
-        if (selected_line < m_menu.top_line)
-            m_menu.top_line = selected_line;
-        if (selected_line >= m_menu.top_line + win_height)
-            m_menu.top_line = min(selected_line, menu_lines - win_height);
+        if (selected_line < top_line)
+            m_menu.first_item = (int)selected_line * m_menu.columns;
+        if (selected_line >= top_line + win_height)
+            m_menu.first_item = (int)min(selected_line, menu_lines - win_height) * m_menu.columns;
     }
     draw_menu();
 }
