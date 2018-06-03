@@ -284,3 +284,10 @@ are exclusively available to built-in options.
         *ncurses_shift_function_key*:::
             Function key from which shifted function key start, if the
             terminal sends F13 for <s-F1>, this should be set to 12.
+
+[[startup-info]]
+*startup_info_version* `int`::
+    _default_ 0 +
+    Controls which messages will be displayed in the startup info box, only messages
+    relating to a Kakoune version greater than this value will be displayed. Versions
+    are written as a single number: Like `20180413` for version `2018.04.13`
