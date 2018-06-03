@@ -1,4 +1,4 @@
-foo
-bar:bar
-baz:qux
-foo
+'foo
+bar' 'bar
+baz' 'qux
+foo'
