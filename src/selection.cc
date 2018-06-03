@@ -212,6 +212,12 @@ static void clamp(Selection& sel, const Buffer& buffer)
     sel.cursor() = buffer.clamp(sel.cursor());
 }
 
+void clamp_selections(Vector<Selection>& selections, const Buffer& buffer)
+{
+    for (auto& sel : selections)
+        clamp(sel, buffer);
+}
+
 void update_selections(Vector<Selection>& selections, size_t& main, Buffer& buffer, size_t timestamp)
 {
     if (timestamp == buffer.timestamp())
@@ -286,30 +292,41 @@ void SelectionList::check_invariant() const
 #endif
 }
 
-void SelectionList::sort()
+void sort_selections(Vector<Selection>& selections, size_t& main_index)
 {
-    if (size() == 1)
+    if (selections.size() == 1)
         return;
 
-    const auto& main = this->main();
+    const auto& main = selections[main_index];
     const auto main_begin = main.min();
-    m_main = std::count_if(begin(), end(), [&](const Selection& sel) {
-                               auto begin = sel.min();
-                               if (begin == main_begin)
-                                   return &sel < &main;
-                               else
-                                   return begin < main_begin;
-                           });
-    std::stable_sort(begin(), end(), compare_selections);
+    main_index = std::count_if(selections.begin(), selections.end(),
+                               [&](const Selection& sel) {
+        auto begin = sel.min();
+        if (begin == main_begin)
+            return &sel < &main;
+        else
+            return begin < main_begin;
+    });
+    std::stable_sort(selections.begin(), selections.end(), compare_selections);
+}
+
+void merge_overlapping_selections(Vector<Selection>& selections, size_t& main_index)
+{
+    if (selections.size() == 1)
+        return;
+
+    selections.erase(Kakoune::merge_overlapping(selections.begin(), selections.end(),
+                                                main_index, overlaps), selections.end());
+}
+
+void SelectionList::sort()
+{
+    sort_selections(m_selections, m_main);
 }
 
 void SelectionList::merge_overlapping()
 {
-    if (size() == 1)
-        return;
-
-    m_selections.erase(Kakoune::merge_overlapping(begin(), end(),
-                                                  m_main, overlaps), end());
+    merge_overlapping_selections(m_selections, m_main);
 }
 
 void SelectionList::merge_consecutive()
