@@ -122,7 +122,7 @@ its source directory, type *make install*, you can specify the `PREFIX` and
 `DESTDIR` if needed.
 
 [TIP]
-.Homebrew (macOS)
+.Homebrew (macOS) or Linuxbrew
 ====
 ---------------------------------
 brew install kakoune
