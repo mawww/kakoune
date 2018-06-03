@@ -39,21 +39,48 @@ namespace Kakoune
 
 extern const char* version;
 
-static const char* startup_info =
-"Kakoune recent breaking changes:\n"
-" * ModeChange hook has been introduced and is expected to replace\n"
-"   the various ${MODE}Begin/${MODE}End hooks, consider those deprecated.\n"
-" * '*' Does not strip whitespaces anymore, use built-in '_' to strip them\n"
-" * 'l' on eol will go to next line, 'h' on first char will go to previous\n"
-" * selections merging behaviour is now a bit more complex again\n"
-" * 'x' will only jump to next line if full line is already selected\n"
-" * WORD text object moved to <a-w> instead of W for consistency\n"
-" * rotate main selection moved to ), rotate content to <a-)>, ( for backward\n"
-" * faces are now scoped, set-face command takes an additional scope parameter\n"
-" * <backtab> key is gone, use <s-tab> instead\n"
-" === Kakoune v2018.04.13 Released ===\n"
-" * Big breaking refactoring of various Kakoune features, see `:doc changelog` for details\n"
-" * define-command -allow-override switch has been renamed -override\n";
+struct {
+    int version;
+    const char* notes;
+} constexpr version_notes[] = { {
+        99999999,
+        "• Big breaking refactoring of various Kakoune features,\n"
+        "  configuration might need to be updated see `:doc changelog` for details\n"
+        "• define-command -allow-override switch has been renamed -override\n"
+    }, {
+        20180413,
+        "• ModeChange hook has been introduced and is expected to replace\n"
+        "  the various ${MODE}Begin/${MODE}End hooks, consider those deprecated.\n"
+        "• '*' Does not strip whitespaces anymore, use built-in '_' to strip them\n"
+        "• 'l' on eol will go to next line, 'h' on first char will go to previous\n"
+        "• selections merging behaviour is now a bit more complex again\n"
+        "• 'x' will only jump to next line if full line is already selected\n"
+        "• WORD text object moved to <a-w> instead of W for consistency\n"
+        "• rotate main selection moved to ), rotate content to <a-)>, ( for backward\n"
+        "• faces are now scoped, set-face command takes an additional scope parameter\n"
+        "• <backtab> key is gone, use <s-tab> instead\n"
+} };
+
+void show_startup_info(Client* local_client, int last_version)
+{
+    String info;
+    for (auto note : version_notes)
+    {
+        if (note.version > last_version)
+        {
+            const auto year = note.version / 10000;
+            const auto month = (note.version / 100) % 100;
+            const auto day = note.version % 100;
+            info += format("● Kakoune v{}.{}{}.{}{}\n{}\n",
+                           year, month < 10 ? "0" : "", month, day < 10 ? "0" : "", day, note.notes);
+        }
+    }
+    if (not info.empty())
+    {
+        info += "See the `:doc options startup-info` to control this message\n";
+        local_client->info_show(format("Kakoune {}", version), info, {}, InfoStyle::Prompt);
+    }
+}
 
 struct startup_error : runtime_error
 {
@@ -381,6 +408,7 @@ void register_options()
         "matching_pairs",
         "set of pair of characters to be considered as matching pairs",
         { '(', ')', '{', '}', '[', ']', '<', '>' });
+    reg.declare_option<int>("startup_info_version", "version up to which startup info changes should be hidden", 0);
 }
 
 static Client* local_client = nullptr;
@@ -678,7 +706,7 @@ int run_server(StringView session, StringView server_init,
                 });
 
             if (flags & ServerFlags::StartupInfo and local_client)
-                local_client->info_show(format("Kakoune {}", version), startup_info, {}, InfoStyle::Prompt);
+                show_startup_info(local_client, global_scope.options()["startup_info_version"].get<int>());
         }
 
         while (not terminate and
