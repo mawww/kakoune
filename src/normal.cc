@@ -1730,19 +1730,16 @@ SelectionList read_selections_from_register(char reg, Context& context)
     if (content.size() != 1)
         throw runtime_error(format("register '{}' does not contain a selections desc", reg));
 
-    StringView desc = content[0];
-    auto arobase = find(desc, '@');
-    auto percent = find(desc, '%');
-
-    if (arobase == desc.end() or percent == desc.end())
+    auto splitted = content[0] | split<StringView>(' ');
+    if (splitted.begin() == splitted.end())
         throw runtime_error(format("register '{}' does not contain a selections desc", reg));
 
-    Buffer& buffer = BufferManager::instance().get_buffer({arobase+1, percent});
-    size_t timestamp = str_to_int({percent + 1, desc.end()});
+    struct error : runtime_error { error(size_t) : runtime_error{"expected <buffer>@<timestamp>"} {} };
+    const auto buffer_desc = *splitted.begin() | split<StringView>('@') | static_gather<error, 2>();
+    Buffer& buffer = BufferManager::instance().get_buffer(buffer_desc[0]);
+    const size_t timestamp = str_to_int(buffer_desc[1]);
 
-    auto sels = StringView{desc.begin(), arobase} | split<StringView>(':')
-                                                  | transform(selection_from_string)
-                                                  | gather<Vector<Selection>>();
+    auto sels = splitted | skip(1) | transform(selection_from_string) | gather<Vector<Selection>>();
     if (sels.empty())
         throw runtime_error(format("register '{}' contains an empty selection list", reg));
 
@@ -1860,9 +1857,9 @@ void save_selections(Context& context, NormalParams params)
     const bool empty = content.size() == 1 and content[0].empty();
 
     auto save_to_reg = [reg](Context& context, const SelectionList& sels) {
-        String desc = format("{}@{}%{}", selection_list_to_string(sels),
-                             context.buffer().name(),
-                             context.buffer().timestamp());
+        String desc = format("{}@{} {}", context.buffer().name(),
+                             context.buffer().timestamp(),
+                             selection_list_to_string(sels));
         RegisterManager::instance()[reg].set(context, desc);
         context.print_status({format("{} {} selections to register '{}'",
                                      combine ? "Combined" : "Saved", sels.size(), reg),
