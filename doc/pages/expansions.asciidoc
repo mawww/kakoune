@@ -11,17 +11,18 @@
 
 %\{strings\}::
     these strings are very useful when entering commands
-+
+
     * the '{' and '}' delimiters are configurable, any non alphanumeric
-    character can be used
-+
+      character can be used
+
 ----------------------------------------------------------
 e.g. %[string], %<string>, %(string), %~string~, %!string!
 ----------------------------------------------------------
+
     * if the character following '%' is one of '{[(<', then the closing
-    one is the matching '}])>' and the delimiters are not escapable but
-    are nestable
-+
+      one is the matching '}])>' and the delimiters are not escapable but
+      are nestable
+
 -----------------------------------------------------------
 e.g. %{ roger {}; } is a valid string, %{ marcel \} as well
 -----------------------------------------------------------
