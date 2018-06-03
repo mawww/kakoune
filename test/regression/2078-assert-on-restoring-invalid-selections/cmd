@@ -1,0 +1,1 @@
+ifoo<esc>ibar<esc>:set-register ^ <c-r>%@1@0 100.100,100.100<ret>z
