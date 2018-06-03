@@ -727,6 +727,18 @@ void NCursesUI::draw_menu()
     m_dirty = true;
 }
 
+static LineCount height_limit(MenuStyle style)
+{
+    switch (style)
+    {
+        case MenuStyle::Inline: return 10_line;
+        case MenuStyle::Prompt: return 10_line;
+        case MenuStyle::Search: return 3_line;
+    }
+    kak_assert(false);
+    return 0_line;
+}
+
 void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
                           DisplayCoord anchor, Face fg, Face bg,
                           MenuStyle style)
@@ -757,9 +769,8 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     const bool is_inline = style == MenuStyle::Inline;
     m_menu.columns = is_inline ? 1 : max((int)(max_width / (longest+1)), 1);
 
-    const LineCount max_height = std::max(anchor.line, m_dimensions.line - anchor.line - 1);
-    const LineCount height = min<LineCount>(min(10_line, max_height),
-                                            div_round_up(item_count, m_menu.columns));
+    const LineCount max_height = min(height_limit(style), max(anchor.line, m_dimensions.line - anchor.line - 1));
+    const LineCount height = min<LineCount>(max_height, div_round_up(item_count, m_menu.columns));
 
     const ColumnCount maxlen = (m_menu.columns > 1 and item_count > 1) ?
         max_width / m_menu.columns - 1 : max_width;
