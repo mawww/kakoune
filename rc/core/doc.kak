@@ -41,7 +41,7 @@ define-command -hidden doc-parse-anchors %{
         # Find sections as add them as imlicit anchors
         execute-keys \%s ^={2,}\h+([^\n]+)$ <ret>
         evaluate-commands -itersel %{
-            set-option -add buffer doc_anchors "%val{selection_desc}|%sh{printf '%s' ""$kak_reg_1"" | tr '[A-Z ]' '[a-z-]'}"
+            set-option -add buffer doc_anchors "%val{selection_desc}|%sh{printf '%s' ""$kak_main_reg_1"" | tr '[A-Z ]' '[a-z-]'}"
         }
 
         # Parse explicit anchors and remove their text
