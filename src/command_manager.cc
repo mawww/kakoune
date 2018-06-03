@@ -265,7 +265,7 @@ auto expand_option(Option& opt, std::false_type)
 
 auto expand_register(StringView reg, const Context& context, std::true_type)
 {
-    return join(RegisterManager::instance()[reg].get(context) | transform(quote), ' ', false);
+    return context.main_sel_register_value(reg).str();
 }
 
 auto expand_register(StringView reg, const Context& context, std::false_type)
