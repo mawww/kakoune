@@ -88,8 +88,7 @@ struct SelectionList
     SelectionList(Buffer& buffer, Vector<Selection> s, size_t timestamp);
 
     struct UnsortedTag {};
-    SelectionList(UnsortedTag, Buffer& buffer, Vector<Selection> s);
-    SelectionList(UnsortedTag, Buffer& buffer, Vector<Selection> s, size_t timestamp);
+    SelectionList(UnsortedTag, Buffer& buffer, Vector<Selection> s, size_t timestamp, size_t main);
 
     void update();
 
