@@ -2074,14 +2074,14 @@ const CommandDesc rename_client_cmd = {
 const CommandDesc set_register_cmd = {
     "set-register",
     "reg",
-    "set-register <name> <value>: set register <name> to <value>",
-    ParameterDesc{{}, ParameterDesc::Flags::SwitchesAsPositional, 2, 2},
+    "set-register <name> <values>...: set register <name> to <values>",
+    ParameterDesc{{}, ParameterDesc::Flags::SwitchesAsPositional, 2},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        RegisterManager::instance()[parser[0]].set(context, {parser[1]});
+        RegisterManager::instance()[parser[0]].set(context, parser.positionals_from(1));
     }
 };
 
