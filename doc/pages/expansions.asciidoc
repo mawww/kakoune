@@ -38,8 +38,8 @@ parameter:
     section)
 
 *reg*::
-    register expansion, will expand to the content of the register named
-    by *<content>*. See <<registers#,`:doc registers`>>
+    register expansion, will expand to the strings stored in the register
+    named by *<content>*. See <<registers#,`:doc registers`>>
 
 *opt*::
     option expansion, will expand to the value of the option named by
@@ -114,7 +114,10 @@ informations about Kakoune's state:
     value of option *name*
 
 *kak_reg_<r>*::
-    value of register *r*
+    quoted list of value of register *r*
+
+*kak_main_reg_<r>*::
+    content of register *r* associated with the main selection.
 
 *kak_session*::
     name of the current session
