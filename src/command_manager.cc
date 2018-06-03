@@ -263,6 +263,16 @@ auto expand_option(Option& opt, std::false_type)
     return opt.get_as_strings();
 }
 
+auto expand_register(StringView reg, const Context& context, std::true_type)
+{
+    return join(RegisterManager::instance()[reg].get(context) | transform(quote), ' ', false);
+}
+
+auto expand_register(StringView reg, const Context& context, std::false_type)
+{
+    return RegisterManager::instance()[reg].get(context) | gather<Vector<String>>();
+}
+
 String expand_arobase(ConstArrayView<String> params, std::true_type)
 {
     return join(params, ' ', false);
@@ -298,7 +308,7 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
         return {str};
     }
     case Token::Type::RegisterExpand:
-        return {context.main_sel_register_value(content).str()};
+        return expand_register(content, context, IsSingle{});
     case Token::Type::OptionExpand:
         return expand_option(context.options()[content], IsSingle{});
     case Token::Type::ValExpand:
