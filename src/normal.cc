@@ -1734,11 +1734,22 @@ SelectionList read_selections_from_register(char reg, Context& context)
     const auto desc = content[0] | split<StringView>('@') | static_gather<error, 3>();
     Buffer& buffer = BufferManager::instance().get_buffer(desc[0]);
     const size_t timestamp = str_to_int(desc[1]);
-    const size_t main = str_to_int(desc[2]);
+    size_t main = str_to_int(desc[2]);
+
+    if (timestamp > buffer.timestamp())
+        throw runtime_error{"register '{}' refers to an invalid timestamp"};
 
     auto sels = content | skip(1) | transform(selection_from_string) | gather<Vector<Selection>>();
+    sort_selections(sels, main);
+    merge_overlapping_selections(sels, main);
+    if (timestamp < buffer.timestamp())
+        update_selections(sels, main, buffer, timestamp);
+    else
+        clamp_selections(sels, buffer);
 
-    return {SelectionList::UnsortedTag{}, buffer, std::move(sels), timestamp, main};
+    SelectionList res{buffer, std::move(sels)};
+    res.set_main_index(main);
+    return res;
 }
 
 enum class CombineOp
@@ -2012,9 +2023,7 @@ void move_cursor(Context& context, NormalParams params)
         sel.anchor() = mode == SelectMode::Extend ? sel.anchor() : cursor;
         sel.cursor() = cursor;
     }
-    selections.sort();
-
-    selections.merge_overlapping();
+    selections.sort_and_merge_overlapping();
 }
 
 void select_whole_buffer(Context& context, NormalParams)
