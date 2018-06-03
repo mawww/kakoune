@@ -27,10 +27,7 @@ SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list, size_t time
 SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list)
     : SelectionList(buffer, std::move(list), buffer.timestamp()) {}
 
-SelectionList::SelectionList(SelectionList::UnsortedTag, Buffer& buffer, Vector<Selection> list)
-    : SelectionList(UnsortedTag{}, buffer, std::move(list), buffer.timestamp()) {}
-
-SelectionList::SelectionList(SelectionList::UnsortedTag, Buffer& buffer, Vector<Selection> list, size_t timestamp)
+SelectionList::SelectionList(SelectionList::UnsortedTag, Buffer& buffer, Vector<Selection> list, size_t timestamp, size_t main)
     : m_buffer(&buffer), m_selections(std::move(list)), m_timestamp(timestamp)
 {
     sort_and_merge_overlapping();
@@ -509,7 +506,7 @@ SelectionList selection_list_from_string(Buffer& buffer, ConstArrayView<String> 
 
     auto sels = descs | transform([&](auto&& d) { auto s = selection_from_string(d); clamp(s, buffer); return s; })
                       | gather<Vector<Selection>>();
-    return {SelectionList::UnsortedTag{}, buffer, std::move(sels)};
+    return {SelectionList::UnsortedTag{}, buffer, std::move(sels), buffer.timestamp(), 0};
 }
 
 }
