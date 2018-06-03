@@ -1727,23 +1727,18 @@ SelectionList read_selections_from_register(char reg, Context& context)
 
     auto content = RegisterManager::instance()[reg].get(context);
 
-    if (content.size() != 1)
+    if (content.size() < 2)
         throw runtime_error(format("register '{}' does not contain a selections desc", reg));
 
-    auto splitted = content[0] | split<StringView>(' ');
-    if (splitted.begin() == splitted.end())
-        throw runtime_error(format("register '{}' does not contain a selections desc", reg));
+    struct error : runtime_error { error(size_t) : runtime_error{"expected <buffer>@<timestamp>@main_index"} {} };
+    const auto desc = content[0] | split<StringView>('@') | static_gather<error, 3>();
+    Buffer& buffer = BufferManager::instance().get_buffer(desc[0]);
+    const size_t timestamp = str_to_int(desc[1]);
+    const size_t main = str_to_int(desc[2]);
 
-    struct error : runtime_error { error(size_t) : runtime_error{"expected <buffer>@<timestamp>"} {} };
-    const auto buffer_desc = *splitted.begin() | split<StringView>('@') | static_gather<error, 2>();
-    Buffer& buffer = BufferManager::instance().get_buffer(buffer_desc[0]);
-    const size_t timestamp = str_to_int(buffer_desc[1]);
+    auto sels = content | skip(1) | transform(selection_from_string) | gather<Vector<Selection>>();
 
-    auto sels = splitted | skip(1) | transform(selection_from_string) | gather<Vector<Selection>>();
-    if (sels.empty())
-        throw runtime_error(format("register '{}' contains an empty selection list", reg));
-
-    return {SelectionList::UnsortedTag{}, buffer, std::move(sels), timestamp};
+    return {SelectionList::UnsortedTag{}, buffer, std::move(sels), timestamp, main};
 }
 
 enum class CombineOp
@@ -1857,10 +1852,11 @@ void save_selections(Context& context, NormalParams params)
     const bool empty = content.size() == 1 and content[0].empty();
 
     auto save_to_reg = [reg](Context& context, const SelectionList& sels) {
-        String desc = format("{}@{} {}", context.buffer().name(),
-                             context.buffer().timestamp(),
-                             selection_list_to_string(sels));
-        RegisterManager::instance()[reg].set(context, desc);
+        auto& buffer = context.buffer();
+        auto descs = concatenated(ConstArrayView<String>{format("{}@{}@{}", buffer.name(), buffer.timestamp(), sels.main_index())},
+                                  sels | transform(selection_to_string)) | gather<Vector<String>>();
+        RegisterManager::instance()[reg].set(context, descs);
+
         context.print_status({format("{} {} selections to register '{}'",
                                      combine ? "Combined" : "Saved", sels.size(), reg),
                               context.faces()["Information"]});
