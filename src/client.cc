@@ -128,7 +128,8 @@ String generate_context_info(const Context& context)
     if (context.buffer().is_modified())
         s += "[+]";
     if (context.client().input_handler().is_recording())
-        s += format("[recording ({})]", context.client().input_handler().recording_reg());
+        s += format("[recording ({}): {}]", context.client().input_handler().recording_reg(),
+                                            context.client().input_handler().recorded_keys());
     if (context.hooks_disabled())
         s += "[no-hooks]";
     if (not(context.buffer().flags() & (Buffer::Flags::File | Buffer::Flags::Debug)))

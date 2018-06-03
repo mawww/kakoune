@@ -86,6 +86,7 @@ public:
     bool is_recording() const;
     void stop_recording();
     char recording_reg() const { return m_recording_reg; }
+    StringView recorded_keys() const { return m_recorded_keys; }
 
     void reset_normal_mode();
 
