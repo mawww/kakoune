@@ -133,9 +133,13 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context)
         { return context.options()[name.substr(4_byte)].get_as_string(); }
     }, {
+        "main_reg_", true,
+        [](StringView name, const Context& context)
+        { return context.main_sel_register_value(name.substr(9_byte)).str(); }
+    }, {
         "reg_", true,
         [](StringView name, const Context& context)
-        { return context.main_sel_register_value(name.substr(4_byte)).str(); }
+        { return join(RegisterManager::instance()[name.substr(4_byte)].get(context) | transform(quote), ' ', false); }
     }, {
         "client_env_", true,
         [](StringView name, const Context& context)

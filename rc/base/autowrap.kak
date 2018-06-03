@@ -31,7 +31,7 @@ define-command -hidden autowrap-cursor %{ evaluate-commands -save-regs '/"|^@m' 
                             execute-keys '<a-]>p<a-x><a-j>|${format_cmd}<ret>'
                             try %{ execute-keys s\h+$<ret> d }
                         }
-                        select '${kak_reg_m}'
+                        select '${kak_main_reg_m}'
                     "
                 fi
             }
