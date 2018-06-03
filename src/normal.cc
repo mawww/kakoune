@@ -736,7 +736,7 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
     SelectionList selections = context.selections();
     context.input_handler().prompt(
         std::move(prompt), {}, default_regex, context.faces()["Prompt"],
-        PromptFlags::None,
+        PromptFlags::Search,
         [](const Context& context, CompletionFlags, StringView regex, ByteCount pos) -> Completions {
             auto current_word = [](StringView s) {
                 auto it = s.end();

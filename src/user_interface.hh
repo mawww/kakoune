@@ -19,6 +19,7 @@ struct Key;
 enum class MenuStyle
 {
     Prompt,
+    Search,
     Inline
 };
 

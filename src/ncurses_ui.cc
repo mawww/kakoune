@@ -228,6 +228,12 @@ static void signal_handler(int)
     EventManager::instance().force_signal(0);
 }
 
+static void do_ungetch(int ch)
+{
+    ungetch(ch);
+    EventManager::instance().force_signal(0);
+}
+
 static const std::initializer_list<HashMap<Kakoune::Color, int>::Item>
 default_colors = {
     { Color::Default,       -1 },
@@ -331,7 +337,7 @@ void NCursesUI::redraw()
         wmove(newscr, m_status_on_top ? 0 : (int)m_dimensions.line,
               (int)m_cursor.coord.column);
     else
-        wmove(newscr, (int)m_cursor.coord.line + (m_status_on_top ? 1 : 0),
+        wmove(newscr, (int)(m_cursor.coord.line + content_line_offset()),
               (int)m_cursor.coord.column);
 
     doupdate();
@@ -395,7 +401,8 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
 
     check_resize();
 
-    LineCount line_index = m_status_on_top ? 1 : 0;
+    const LineCount line_offset = content_line_offset();
+    LineCount line_index = line_offset;
     for (const DisplayLine& line : display_buffer.lines())
     {
         wmove(m_window, (int)line_index, 0);
@@ -407,7 +414,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     wbkgdset(m_window, COLOR_PAIR(get_color_pair(padding_face)));
     set_face(m_window, padding_face, default_face);
 
-    while (line_index < m_dimensions.line + (m_status_on_top ? 1 : 0))
+    while (line_index < m_dimensions.line + line_offset)
     {
         wmove(m_window, (int)line_index++, 0);
         wclrtoeol(m_window);
@@ -514,7 +521,7 @@ void NCursesUI::check_resize(bool force)
     if (info)
         info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
 
-    ungetch(KEY_RESIZE);
+    do_ungetch(KEY_RESIZE);
     clearok(curscr, true);
     werase(curscr);
 }
@@ -560,7 +567,7 @@ Optional<Key> NCursesUI::get_next_key()
             };
 
             return Key{ get_modifiers(ev.bstate),
-                        encode_coord({ ev.y - (m_status_on_top ? 1 : 0), ev.x }) };
+                        encode_coord({ ev.y - content_line_offset(), ev.x }) };
         }
     }
 
@@ -590,7 +597,7 @@ Optional<Key> NCursesUI::get_next_key()
         case KEY_END: return {Key::End};
         case KEY_SEND: return shift(Key::End);
         case KEY_BTAB: return shift(Key::Tab);
-        case KEY_RESIZE: return resize(m_dimensions);
+        case KEY_RESIZE: return resize(dimensions());
         }
 
         if (c > 0 and c < 27)
@@ -724,7 +731,13 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
                           DisplayCoord anchor, Face fg, Face bg,
                           MenuStyle style)
 {
-    menu_hide();
+    const LineCount previous_height = m_menu ? m_menu.size.line : 0;
+    if (m_menu)
+    {
+        mark_dirty(m_menu);
+        m_menu.destroy();
+        m_dirty = true;
+    }
 
     m_menu.fg = fg;
     m_menu.bg = bg;
@@ -758,8 +771,8 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
         kak_assert(m_menu.items.back().length() <= maxlen);
     }
 
-    if (is_inline and m_status_on_top)
-        anchor.line += 1;
+    if (is_inline)
+        anchor.line += content_line_offset();
 
     LineCount line = anchor.line + 1;
     if (not is_inline)
@@ -773,6 +786,9 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     m_menu.create({line, column}, {height, width});
     m_menu.selected_item = item_count;
     m_menu.first_item = 0;
+
+    if (style == MenuStyle::Search and previous_height != height)
+        do_ungetch(KEY_RESIZE);
 
     draw_menu();
 
@@ -809,6 +825,10 @@ void NCursesUI::menu_hide()
 {
     if (not m_menu)
         return;
+
+    if (m_menu.style == MenuStyle::Search)
+        do_ungetch(KEY_RESIZE);
+
     m_menu.items.clear();
     mark_dirty(m_menu);
     m_menu.destroy();
@@ -948,7 +968,7 @@ void NCursesUI::info_show(StringView title, StringView content,
     m_info.face = face;
     m_info.style = style;
 
-    const Rect rect = {m_status_on_top ? 1_line : 0_line, m_dimensions};
+    const Rect rect = {content_line_offset(), m_dimensions};
     InfoBox info_box;
     if (style == InfoStyle::Prompt)
     {
@@ -989,8 +1009,7 @@ void NCursesUI::info_show(StringView title, StringView content,
         info_box = make_simple_info_box(m_info.content, max_width);
         anchor = compute_pos(anchor, info_box.size, rect, m_menu, style == InfoStyle::InlineAbove);
 
-        if (m_status_on_top)
-            anchor.line += 1;
+        anchor.line += content_line_offset();
     }
 
     // The info box does not fit
@@ -1025,11 +1044,20 @@ void NCursesUI::mark_dirty(const Window& win)
 void NCursesUI::set_on_key(OnKeyCallback callback)
 {
     m_on_key = std::move(callback);
+    EventManager::instance().force_signal(0);
 }
 
 DisplayCoord NCursesUI::dimensions()
 {
-    return m_dimensions;
+    auto res = m_dimensions;
+    if (m_menu and m_menu.style == MenuStyle::Search)
+        res.line -= m_menu.size.line;
+    return res;
+}
+
+LineCount NCursesUI::content_line_offset() const
+{
+    return (m_status_on_top ? 1 + (m_menu.style == MenuStyle::Search ? m_menu.size.line : 0) : 0);
 }
 
 void NCursesUI::abort()

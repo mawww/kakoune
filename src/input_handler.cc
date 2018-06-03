@@ -954,7 +954,9 @@ private:
                 Vector<DisplayLine> items;
                 for (auto& candidate : m_completions.candidates)
                     items.push_back({ candidate, {} });
-                context().client().menu_show(items, {}, MenuStyle::Prompt);
+
+                const auto menu_style = (m_flags & PromptFlags::Search) ? MenuStyle::Search : MenuStyle::Prompt;
+                context().client().menu_show(items, {}, menu_style);
 
                 auto prefix = line.substr(m_completions.start, m_completions.end - m_completions.start);
                 if (not contains(m_completions.candidates, prefix))

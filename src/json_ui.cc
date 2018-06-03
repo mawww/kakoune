@@ -117,6 +117,7 @@ String to_json(MenuStyle style)
     switch (style)
     {
         case MenuStyle::Prompt: return R"("prompt")";
+        case MenuStyle::Search: return R"("search")";
         case MenuStyle::Inline: return R"("inline")";
     }
     return "";

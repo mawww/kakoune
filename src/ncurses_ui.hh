@@ -106,11 +106,13 @@ private:
         DisplayCoord anchor;
         MenuStyle style;
         int selected_item = 0;
+        int first_item = 0;
         int columns = 1;
-        LineCount top_line = 0;
     } m_menu;
 
     void draw_menu();
+
+    LineCount content_line_offset() const;
 
     struct Info : Window
     {
