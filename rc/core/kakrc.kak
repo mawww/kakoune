@@ -28,7 +28,7 @@ add-highlighter shared/ regions -default code kakrc \
     # Grammar
     keywords="edit write write-all kill quit write-quit write-all-quit map unmap alias unalias
               buffer buffer-next buffer-previous delete-buffer add-highlighter remove-highlighter
-              hook remove-hooks define-command echo debug source try fail
+              hook remove-hooks define-command echo debug source try fail nop
               set-option unset-option update-option declare-option execute-keys evaluate-commands
               prompt menu on-key info set-face unset-face rename-client set-register select
               change-directory rename-session colorscheme declare-user-mode enter-user-mode"
