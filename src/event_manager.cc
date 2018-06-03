@@ -91,6 +91,9 @@ bool EventManager::handle_next_events(EventMode mode, sigset_t* sigmask, bool bl
     }
 
     bool with_timeout = false;
+    if (m_has_forced_fd)
+        block = false;
+
     timespec ts{};
     if (block and not m_timers.empty())
     {
@@ -113,6 +116,7 @@ bool EventManager::handle_next_events(EventMode mode, sigset_t* sigmask, bool bl
 
     // copy forced fds *after* select, so that signal handlers can write to
     // m_forced_fd, interupt select, and directly be serviced.
+    m_has_forced_fd = false;
     fd_set forced = m_forced_fd;
     FD_ZERO(&m_forced_fd);
 
@@ -147,6 +151,7 @@ bool EventManager::handle_next_events(EventMode mode, sigset_t* sigmask, bool bl
 void EventManager::force_signal(int fd)
 {
     FD_SET(fd, &m_forced_fd);
+    m_has_forced_fd = true;
 }
 
 SignalHandler set_signal_handler(int signum, SignalHandler handler)

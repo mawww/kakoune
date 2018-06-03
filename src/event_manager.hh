@@ -98,6 +98,7 @@ private:
     Vector<FDWatcher*, MemoryDomain::Events> m_fd_watchers;
     Vector<Timer*, MemoryDomain::Events>     m_timers;
     fd_set m_forced_fd;
+    bool   m_has_forced_fd = false;
 
     TimePoint m_last;
 };
