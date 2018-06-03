@@ -31,22 +31,22 @@ bool Highlighter::has_children() const
 
 Highlighter& Highlighter::get_child(StringView path)
 {
-    throw runtime_error("this highlighter do not hold children");
+    throw runtime_error("this highlighter does not hold children");
 }
 
 void Highlighter::add_child(HighlighterAndId&& hl)
 {
-    throw runtime_error("this highlighter do not hold children");
+    throw runtime_error("this highlighter does not hold children");
 }
 
 void Highlighter::remove_child(StringView id)
 {
-    throw runtime_error("this highlighter do not hold children");
+    throw runtime_error("this highlighter does not hold children");
 }
 
 Completions Highlighter::complete_child(StringView path, ByteCount cursor_pos, bool group) const
 {
-    throw runtime_error("this highlighter do not hold children");
+    throw runtime_error("this highlighter does not hold children");
 }
 
 void Highlighter::fill_unique_ids(Vector<StringView>& unique_ids) const
