@@ -56,6 +56,24 @@ using IteratorOf = decltype(std::begin(std::declval<Range>()));
 template<typename Range>
 using ValueOf = typename Range::value_type;
 
+template<typename Range>
+struct SkipView
+{
+    auto begin() const { return std::next(std::begin(m_range), m_skip_count); }
+    auto end()   const { return std::end(m_range); }
+
+    Range m_range;
+    size_t m_skip_count;
+};
+
+inline auto skip(size_t count)
+{
+    return make_view_factory([count](auto&& range) {
+        using Range = decltype(range);
+        return SkipView<decay_range<Range>>{std::forward<Range>(range), count};
+    });
+}
+
 template<typename Range, typename Filter>
 struct FilterView
 {
