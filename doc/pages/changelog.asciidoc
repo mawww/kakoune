@@ -5,6 +5,10 @@ released versions.
 
 == Development version
 
+This version contains a significant overhaul of various Kakoune
+features that can break user configuration. This was a necessary
+change to make Kakoune command model cleaner and more robust.
+
 * `%sh{...}` strings are not reparsed automatically anymore, they need
   to go through an explicit `evaluate-commands`
 
@@ -15,6 +19,19 @@ released versions.
   can be used to quickly search for a buffer word.
 
 * The `wrap` highlighter can accept a new `-marker <marker_text>` switch.
+
+* The command line syntax has changed to support robust escaping, see
+  <<command-parsing#,`:doc command-parsing`>>.
+
+* Various lists (options, registers...) in Kakoune are now written using
+  the command line syntax:
+
+  - `set-register` now take an arbitrary number of parameters and sets
+    the register to multiple strings. `%reg` expands to a list of strings.
+
+  - `%opt` expands list options as list of strings.
+
+  - selection descs are whitespaces separated instead of `:` separated
 
 == Kakoune 2018.04.13
 
