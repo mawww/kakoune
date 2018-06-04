@@ -1131,6 +1131,8 @@ KeymapMode parse_keymap_mode(StringView str, const KeymapManager::UserModeList& 
     return (KeymapMode)(std::distance(user_modes.begin(), it) + offset);
 }
 
+static constexpr auto modes = { "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" };
+
 const CommandDesc debug_cmd = {
     "debug",
     nullptr,
@@ -1203,8 +1205,6 @@ const CommandDesc debug_cmd = {
         else if (parser[0] == "mappings")
         {
             auto& keymaps = context.keymaps();
-            auto modes = {"normal", "insert", "prompt", "menu",
-                          "goto", "view", "user", "object"};
             auto user_modes = keymaps.user_modes();
             write_to_debug_buffer("Mappings:");
             for (auto& mode : concatenated(modes, user_modes) | gather<Vector<String>>())
@@ -1448,7 +1448,8 @@ const CommandDesc declare_option_cmd = {
     }
 };
 
-auto map_key_completer =
+template<bool unmap>
+static auto map_key_completer =
     [](const Context& context, CompletionFlags flags,
        CommandParameters params, size_t token_to_complete,
        ByteCount pos_in_token) -> Completions
@@ -1456,13 +1457,22 @@ auto map_key_completer =
         if (token_to_complete == 0)
             return { 0_byte, params[0].length(),
                      complete(params[0], pos_in_token, scopes) };
-
         if (token_to_complete == 1)
         {
-            static constexpr auto modes = { "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" };
             auto& user_modes = get_scope(params[0], context).keymaps().user_modes();
             return { 0_byte, params[1].length(),
                      complete(params[1], pos_in_token, concatenated(modes, user_modes) | gather<Vector<String>>()) };
+        }
+        if (unmap and token_to_complete == 2)
+        {
+            KeymapManager& keymaps = get_scope(params[0], context).keymaps();
+            KeymapMode keymap_mode = parse_keymap_mode(params[1], keymaps.user_modes());
+            KeyList keys = keymaps.get_mapped_keys(keymap_mode);
+
+            return { 0_byte, params[2].length(),
+                     complete(params[2], pos_in_token,
+                              keys | transform([](Key k) { return key_to_str(k); })
+                                   | gather<Vector<String>>()) };
         }
         return {};
     };
@@ -1486,7 +1496,7 @@ const CommandDesc map_key_cmd = {
     },
     CommandFlags::None,
     CommandHelper{},
-    map_key_completer,
+    map_key_completer<false>,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
@@ -1519,7 +1529,7 @@ const CommandDesc unmap_key_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 3, 4},
     CommandFlags::None,
     CommandHelper{},
-    map_key_completer,
+    map_key_completer<true>,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
