@@ -13,8 +13,8 @@ hook global BufCreate (.*/)?(kakrc|.*.kak) %{
 
 add-highlighter shared/ regions -default code kakrc \
     comment (^|\h)\K# $ '' \
-    double_string %{(^|\h)\K"} %{(?<!\\)(\\\\)*"} '' \
-    single_string %{(^|\h)\K'} %{(?<!\\)(\\\\)*'} '' \
+    double_string %{(^|\h)\K"} %{(?<!")("")*"(?!")} '' \
+    single_string %{(^|\h)\K'} %{(?<!')('')*'(?!")} '' \
     shell '(^|\h)\K%?%sh\{' '\}' '\{' \
     shell '(^|\h)\K%?%sh\(' '\)' '\(' \
     shell '(^|\h)\K%?%sh\[' '\]' '\[' \
@@ -57,7 +57,9 @@ evaluate-commands %sh{
 add-highlighter shared/kakrc/code regex \brgb:[0-9a-fA-F]{6}\b 0:value
 
 add-highlighter shared/kakrc/double_string fill string
+add-highlighter shared/kakrc/double_string regex '""' 0:default+b
 add-highlighter shared/kakrc/single_string fill string
+add-highlighter shared/kakrc/single_string regex "''" 0:default+b
 add-highlighter shared/kakrc/comment fill comment
 add-highlighter shared/kakrc/shell ref sh
 
