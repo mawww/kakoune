@@ -201,12 +201,21 @@ private:
         auto it = m_pos.base();
         if (m_regex.end() - it >= 4 and *it++ == '(' and *it++ == '?')
         {
-            auto m = *it++;
-            if ((m != 'i' and m != 'I') or *it++ != ')')
-                return false;
-            m_ignore_case = (m == 'i');
-            m_pos = Iterator{it, m_regex};
-            return true;
+            while (true)
+            {
+                auto m = *it++;
+                if (m == 'i' or m == 'I')
+                    m_ignore_case = (m == 'i');
+                else if (m == 's' or m == 'S')
+                    m_dot_maches_newline = (m == 's');
+                else if (m == ')')
+                {
+                    m_pos = Iterator{it, m_regex};
+                    return true;
+                }
+                else
+                    return false;
+            }
         }
         return false;
     }
@@ -274,7 +283,19 @@ private:
 
         switch (const Codepoint cp = *m_pos)
         {
-            case '.': ++m_pos; return new_node(ParsedRegex::AnyChar);
+            case '.':
+                ++m_pos;
+                if (m_dot_maches_newline)
+                    return new_node(ParsedRegex::AnyChar);
+                else
+                {
+                    CharacterClass c;
+                    c.negative = true;
+                    c.ranges.push_back({ '\n', '\n' });
+                    auto class_id = m_parsed_regex.character_classes.size();
+                    m_parsed_regex.character_classes.push_back(std::move(c));
+                    return new_node(ParsedRegex::Class, class_id);
+                }
             case '(':
             {
                 auto captures = [this, it = (++m_pos).base()]() mutable {
@@ -594,6 +615,7 @@ private:
     StringView m_regex;
     Iterator m_pos;
     bool m_ignore_case = false;
+    bool m_dot_maches_newline = true;
 
     static constexpr struct CharacterClassEscape {
         Codepoint cp;

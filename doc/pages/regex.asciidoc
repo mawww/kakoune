@@ -156,7 +156,9 @@ Some modifiers can control the matching behavior of the atoms following
 them:
 
 * `(?i)` enables case-insensitive matching
-* `(?I)` disables case-insensitive matching
+* `(?I)` disables case-insensitive matching (default)
+* `(?s)` enables dot-matches-newline (default)
+* `(?S)` disables dot-matches-newline
 
 == Quoting
 
