@@ -25,7 +25,7 @@ public:
     const DisplayCoord& range() const { return m_range; }
 
     const DisplayCoord& dimensions() const { return m_dimensions; }
-    void set_dimensions(DisplayCoord dimensions);
+    void set_dimensions(DisplayCoord dimensions, bool offset_pos = false);
 
     void scroll(LineCount offset);
     void center_line(LineCount buffer_line);
@@ -61,6 +61,7 @@ private:
     SafePtr<Client> m_client;
 
     DisplayCoord m_position;
+    DisplayCoord m_position_offset;
     DisplayCoord m_range;
     DisplayCoord m_dimensions;
     DisplayBuffer m_display_buffer;

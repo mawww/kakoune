@@ -148,6 +148,11 @@ private:
     bool m_change_colors = true;
 
     bool m_dirty = false;
+
+    enum class ResizePending { No, Yes, OffsetPos };
+    ResizePending m_resize_pending = ResizePending::No;
+
+    void set_resize_pending(ResizePending resize_pending);
 };
 
 }

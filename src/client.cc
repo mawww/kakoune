@@ -48,9 +48,9 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
     m_ui->set_on_key([this](Key key) {
         if (key == ctrl('c'))
             killpg(getpgrp(), SIGINT);
-        else if (key.modifiers == Key::Modifiers::Resize)
+        else if (key.modifiers & Key::Modifiers::Resize)
         {
-            m_window->set_dimensions(m_ui->dimensions());
+            m_window->set_dimensions(key.coord(), key.modifiers & Key::Modifiers::OffsetPos);
             force_redraw();
         }
         else

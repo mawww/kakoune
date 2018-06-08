@@ -30,7 +30,8 @@ struct Key
                      MouseWheelDown | MouseWheelUp,
 
         Resize = 1 << 8,
-        MenuSelect = 1 << 9,
+        OffsetPos = 1 << 9,
+        MenuSelect = 1 << 10,
     };
     enum NamedKey : Codepoint
     {
@@ -112,7 +113,7 @@ constexpr Key ctrl(Key key)
 
 constexpr Codepoint encode_coord(DisplayCoord coord) { return (Codepoint)(((int)coord.line << 16) | ((int)coord.column & 0x0000FFFF)); }
 
-constexpr Key resize(DisplayCoord dim) { return { Key::Modifiers::Resize, encode_coord(dim) }; }
+constexpr Key resize(DisplayCoord dim, Key::Modifiers additional = Key::Modifiers::None) { return { Key::Modifiers::Resize | additional, encode_coord(dim) }; }
 
 constexpr size_t hash_value(const Key& key) { return hash_values(key.modifiers, key.key); }
 

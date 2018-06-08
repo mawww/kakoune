@@ -90,7 +90,7 @@ Window::Setup Window::build_setup(const Context& context) const
     for (auto& sel : context.selections())
         selections.push_back({sel.cursor(), sel.anchor()});
 
-    return { m_position, m_dimensions,
+    return { m_position + m_position_offset, m_dimensions,
              context.buffer().timestamp(),
              compute_faces_hash(context.faces()),
              context.selections().main_index(),
@@ -101,7 +101,7 @@ bool Window::needs_redraw(const Context& context) const
 {
     auto& selections = context.selections();
 
-    if (m_position != m_last_setup.position or
+    if (m_position + m_position_offset != m_last_setup.position or
         m_dimensions != m_last_setup.dimensions or
         context.buffer().timestamp() != m_last_setup.timestamp or
         selections.main_index() != m_last_setup.main_selection or
@@ -136,19 +136,16 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     kak_assert(&buffer() == &context.buffer());
     const DisplaySetup setup = compute_display_setup(context);
 
-    m_position = setup.window_pos;
-    m_range = setup.window_range;
-
     const int tabstop = context.options()["tabstop"].get<int>();
-    for (LineCount line = 0; line < m_range.line; ++line)
+    for (LineCount line = 0; line < setup.window_range.line; ++line)
     {
-        LineCount buffer_line = m_position.line + line;
+        LineCount buffer_line = setup.window_pos.line + line;
         if (buffer_line >= buffer().line_count())
             break;
-        auto beg_byte = get_byte_to_column(buffer(), tabstop, {buffer_line, m_position.column});
+        auto beg_byte = get_byte_to_column(buffer(), tabstop, {buffer_line, setup.window_pos.column});
         auto end_byte = setup.full_lines ?
             buffer()[buffer_line].length()
-          : get_byte_to_column(buffer(), tabstop, {buffer_line, m_position.column + m_range.column});
+          : get_byte_to_column(buffer(), tabstop, {buffer_line, setup.window_pos.column + setup.window_range.column});
 
         // The display buffer always has at least one buffer atom, which might be empty if
         // beg_byte == end_byte
@@ -163,6 +160,10 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     m_display_buffer.optimize();
 
     m_last_setup = build_setup(context);
+
+    m_position.line = clamp(setup.window_pos.line - m_position_offset.line, 0_line, buffer().line_count()-1);
+    m_position.column = std::max(0_col, setup.window_pos.column - m_position_offset.column);
+    m_range = setup.window_range;
 
     if (profile and not (buffer().flags() & Buffer::Flags::Debug))
     {
@@ -181,10 +182,13 @@ void Window::set_position(DisplayCoord position)
     m_position.column = std::max(0_col, position.column);
 }
 
-void Window::set_dimensions(DisplayCoord dimensions)
+void Window::set_dimensions(DisplayCoord dimensions, bool offset_pos)
 {
     if (m_dimensions != dimensions)
     {
+        if (offset_pos)
+            m_position_offset += m_dimensions - dimensions;
+
         m_dimensions = dimensions;
         run_hook_in_own_context("WinResize", format("{}.{}", dimensions.line,
                                                     dimensions.column));
@@ -201,7 +205,7 @@ static void check_display_setup(const DisplaySetup& setup, const Window& window)
 
 DisplaySetup Window::compute_display_setup(const Context& context) const
 {
-    auto win_pos = m_position;
+    auto win_pos = m_position + m_position_offset;
 
     DisplayCoord offset = options()["scrolloff"].get<DisplayCoord>();
     offset.line = std::min(offset.line, (m_dimensions.line + 1) / 2);

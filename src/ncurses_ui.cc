@@ -228,12 +228,6 @@ static void signal_handler(int)
     EventManager::instance().force_signal(0);
 }
 
-static void do_ungetch(int ch)
-{
-    ungetch(ch);
-    EventManager::instance().force_signal(0);
-}
-
 static const std::initializer_list<HashMap<Kakoune::Color, int>::Item>
 default_colors = {
     { Color::Default,       -1 },
@@ -401,20 +395,21 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
 
     check_resize();
 
+    const DisplayCoord dim = dimensions();
     const LineCount line_offset = content_line_offset();
     LineCount line_index = line_offset;
     for (const DisplayLine& line : display_buffer.lines())
     {
         wmove(m_window, (int)line_index, 0);
         wclrtoeol(m_window);
-        draw_line(m_window, line, 0, m_dimensions.column, default_face);
+        draw_line(m_window, line, 0, dim.column, default_face);
         ++line_index;
     }
 
     wbkgdset(m_window, COLOR_PAIR(get_color_pair(padding_face)));
     set_face(m_window, padding_face, default_face);
 
-    while (line_index < m_dimensions.line + line_offset)
+    while (line_index < dim.line + line_offset)
     {
         wmove(m_window, (int)line_index++, 0);
         wclrtoeol(m_window);
@@ -521,7 +516,7 @@ void NCursesUI::check_resize(bool force)
     if (info)
         info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
 
-    do_ungetch(KEY_RESIZE);
+    set_resize_pending(ResizePending::Yes);
     clearok(curscr, true);
     werase(curscr);
 }
@@ -537,6 +532,14 @@ Optional<Key> NCursesUI::get_next_key()
     }
 
     check_resize();
+
+    if (m_resize_pending != ResizePending::No)
+    {
+        const auto modifiers = (m_resize_pending == ResizePending::OffsetPos) ?
+                               Key::Modifiers::OffsetPos : Key::Modifiers::None;
+        m_resize_pending = ResizePending::No;
+        return resize(dimensions(), modifiers);
+    }
 
     wtimeout(m_window, 0);
     const int c = wgetch(m_window);
@@ -799,7 +802,8 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     m_menu.first_item = 0;
 
     if (style == MenuStyle::Search and previous_height != height)
-        do_ungetch(KEY_RESIZE);
+        set_resize_pending(m_status_on_top ?
+                           ResizePending::OffsetPos : ResizePending::Yes);
 
     draw_menu();
 
@@ -838,7 +842,8 @@ void NCursesUI::menu_hide()
         return;
 
     if (m_menu.style == MenuStyle::Search)
-        do_ungetch(KEY_RESIZE);
+        set_resize_pending(m_status_on_top ?
+                           ResizePending::OffsetPos : ResizePending::Yes);
 
     m_menu.items.clear();
     mark_dirty(m_menu);
@@ -1069,6 +1074,12 @@ DisplayCoord NCursesUI::dimensions()
 LineCount NCursesUI::content_line_offset() const
 {
     return (m_status_on_top ? 1 + (m_menu.style == MenuStyle::Search ? m_menu.size.line : 0) : 0);
+}
+
+void NCursesUI::set_resize_pending(ResizePending resize_pending)
+{
+    m_resize_pending = resize_pending;
+    EventManager::instance().force_signal(0);
 }
 
 void NCursesUI::abort()
