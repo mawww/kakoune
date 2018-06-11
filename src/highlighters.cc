@@ -601,7 +601,7 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
             return;
 
         auto face = context.context.faces()[facespec];
-        auto win_column = context.context.window().position().column;
+        auto win_column = context.setup.window_pos.column;
         for (auto& line : display_buffer.lines())
         {
             auto target_col = column - win_column;
@@ -651,7 +651,7 @@ struct WrapHighlighter : Highlighter
         if (contains(context.disabled_ids, ms_id))
             return;
 
-        const ColumnCount wrap_column = std::min(m_max_width, context.context.window().range().column);
+        const ColumnCount wrap_column = std::min(m_max_width, context.setup.window_range.column);
         if (wrap_column <= 0)
             return;
 
@@ -889,7 +889,7 @@ struct TabulationHighlighter : Highlighter
     {
         const ColumnCount tabstop = context.context.options()["tabstop"].get<int>();
         auto& buffer = context.context.buffer();
-        auto win_column = context.context.window().position().column;
+        auto win_column = context.setup.window_pos.column;
         for (auto& line : display_buffer.lines())
         {
             for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -945,7 +945,7 @@ void show_whitespaces(HighlightContext context, DisplayBuffer& display_buffer, B
     const int tabstop = context.context.options()["tabstop"].get<int>();
     auto whitespaceface = context.context.faces()["Whitespace"];
     auto& buffer = context.context.buffer();
-    auto win_column = context.context.window().position().column;
+    auto win_column = context.setup.window_pos.column;
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)

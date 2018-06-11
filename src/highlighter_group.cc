@@ -80,7 +80,7 @@ void Highlighters::highlight(HighlightContext context, DisplayBuffer& display_bu
     m_group.fill_unique_ids(disabled_ids);
 
     if (m_parent)
-        m_parent->highlight({context.context, context.pass, disabled_ids}, display_buffer, range);
+        m_parent->highlight({context.context, context.setup, context.pass, disabled_ids}, display_buffer, range);
     m_group.highlight(context, display_buffer, range);
 }
 
@@ -90,7 +90,7 @@ void Highlighters::compute_display_setup(HighlightContext context, DisplaySetup&
     m_group.fill_unique_ids(disabled_ids);
 
     if (m_parent)
-        m_parent->compute_display_setup({context.context, context.pass, disabled_ids}, setup);
+        m_parent->compute_display_setup({context.context, context.setup, context.pass, disabled_ids}, setup);
     m_group.compute_display_setup(context, setup);
 }
 

@@ -56,6 +56,7 @@ using HighlighterIdList = ConstArrayView<StringView>;
 struct HighlightContext
 {
     const Context& context;
+    const DisplaySetup& setup;
     HighlightPass pass;
     HighlighterIdList disabled_ids;
 };
