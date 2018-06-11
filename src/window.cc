@@ -126,6 +126,16 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
 
     auto start_time = profile ? Clock::now() : Clock::time_point{};
 
+    if (m_display_buffer.timestamp() != -1)
+    {
+        for (auto&& change : buffer().changes_since(m_display_buffer.timestamp()))
+        {
+            if (change.begin.line < m_position.line)
+                m_position.line += (change.type == Buffer::Change::Insert ? 1 : -1) *
+                    (change.end.line - change.begin.line);
+        }
+    }
+
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     m_display_buffer.set_timestamp(buffer().timestamp());
     lines.clear();

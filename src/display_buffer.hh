@@ -169,7 +169,7 @@ public:
 private:
     LineList m_lines;
     BufferRange m_range;
-    size_t m_timestamp;
+    size_t m_timestamp = -1;
 };
 
 }
