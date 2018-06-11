@@ -1406,31 +1406,6 @@ InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, String
 BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).first; }
 BufferCoord& get_last(RangeAndString& r) { return std::get<0>(r).last; }
 
-static void update_ranges_ifn(const Buffer& buffer, RangeAndStringList& range_and_faces)
-{
-    if (range_and_faces.prefix == buffer.timestamp())
-        return;
-
-    auto changes = buffer.changes_since(range_and_faces.prefix);
-    for (auto change_it = changes.begin(); change_it != changes.end(); )
-    {
-        auto forward_end = forward_sorted_until(change_it, changes.end());
-        auto backward_end = backward_sorted_until(change_it, changes.end());
-
-        if (forward_end >= backward_end)
-        {
-            update_forward({ change_it, forward_end }, range_and_faces.list);
-            change_it = forward_end;
-        }
-        else
-        {
-            update_backward({ change_it, backward_end }, range_and_faces.list);
-            change_it = backward_end;
-        }
-    }
-    range_and_faces.prefix = buffer.timestamp();
-}
-
 void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt)
 {
     std::sort(opt.begin(), opt.end(),
@@ -1443,7 +1418,7 @@ void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt)
 
 void option_update(RangeAndStringList& opt, const Context& context)
 {
-    update_ranges_ifn(context.buffer(), opt);
+    update_ranges(context.buffer(), opt.prefix, opt.list);
 }
 
 struct RangesHighlighter : Highlighter
@@ -1469,7 +1444,7 @@ private:
     {
         auto& buffer = context.context.buffer();
         auto& range_and_faces = context.context.options()[m_option_name].get_mutable<RangeAndStringList>();
-        update_ranges_ifn(buffer, range_and_faces);
+        update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
 
         for (auto& range : range_and_faces.list)
         {
@@ -1511,7 +1486,7 @@ private:
     {
         auto& buffer = context.context.buffer();
         auto& range_and_faces = context.context.options()[m_option_name].get_mutable<RangeAndStringList>();
-        update_ranges_ifn(buffer, range_and_faces);
+        update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
 
         for (auto& range : range_and_faces.list)
         {

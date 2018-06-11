@@ -80,6 +80,32 @@ void update_backward(ConstArrayView<Buffer::Change> changes, RangeContainer& ran
     }
 }
 
+template<typename RangeContainer>
+void update_ranges(Buffer& buffer, size_t& timestamp, RangeContainer& ranges)
+{
+    if (timestamp == buffer.timestamp())
+        return;
+
+    auto changes = buffer.changes_since(timestamp);
+    for (auto change_it = changes.begin(); change_it != changes.end(); )
+    {
+        auto forward_end = forward_sorted_until(change_it, changes.end());
+        auto backward_end = backward_sorted_until(change_it, changes.end());
+
+        if (forward_end >= backward_end)
+        {
+            update_forward({ change_it, forward_end }, ranges);
+            change_it = forward_end;
+        }
+        else
+        {
+            update_backward({ change_it, backward_end }, ranges);
+            change_it = backward_end;
+        }
+    }
+    timestamp = buffer.timestamp();
+}
+
 }
 
 #endif // changes_hh_INCLUDED
