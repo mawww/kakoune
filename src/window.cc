@@ -170,10 +170,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     m_display_buffer.optimize();
 
     m_last_setup = build_setup(context);
-
-    m_position.line = clamp(setup.window_pos.line - m_position_offset.line, 0_line, buffer().line_count()-1);
-    m_position.column = std::max(0_col, setup.window_pos.column - m_position_offset.column);
-    m_range = setup.window_range;
+    set_position(setup.window_pos - m_position_offset);
 
     if (profile and not (buffer().flags() & Buffer::Flags::Debug))
     {
@@ -188,7 +185,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
 
 void Window::set_position(DisplayCoord position)
 {
-    m_position.line = std::max(0_line, position.line);
+    m_position.line = clamp(position.line, 0_line, buffer().line_count()-1);
     m_position.column = std::max(0_col, position.column);
 }
 

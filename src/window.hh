@@ -22,8 +22,6 @@ public:
     const DisplayCoord& position() const { return m_position; }
     void set_position(DisplayCoord position);
 
-    const DisplayCoord& range() const { return m_range; }
-
     const DisplayCoord& dimensions() const { return m_dimensions; }
     void set_dimensions(DisplayCoord dimensions, bool offset_pos = false);
 
@@ -62,7 +60,6 @@ private:
 
     DisplayCoord m_position;
     DisplayCoord m_position_offset;
-    DisplayCoord m_range;
     DisplayCoord m_dimensions;
     DisplayBuffer m_display_buffer;
 
