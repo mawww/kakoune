@@ -266,7 +266,9 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
     if (buffer != current_buffer)
         context.change_buffer(*buffer);
 
-    if (param_count > 1 and not parser[1].empty())
+    if (parser.get_switch("fifo") and not parser.get_switch("scroll"))
+        context.selections_write_only() = { *buffer, Selection{} };
+    else if (param_count > 1 and not parser[1].empty())
     {
         int line = std::max(0, str_to_int(parser[1]) - 1);
         int column = param_count > 2 and not parser[2].empty() ?
