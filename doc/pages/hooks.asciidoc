@@ -106,6 +106,10 @@ of the given *group*.
 *BufWritePost* `filename`::
     executed just after a buffer is written
 
+*BufReload* `filename`::
+    executed after a buffer reload has been triggered by an external
+    modification to its file
+
 *BufClose* `buffer name`::
     executed when a buffer is deleted, while it is still valid
 
