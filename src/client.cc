@@ -283,6 +283,8 @@ void Client::reload_buffer()
         reload_file_buffer(buffer);
         context().print_status({ format("'{}' reloaded", buffer.display_name()),
                                  context().faces()["Information"] });
+
+        m_window->hooks().run_hook("BufReload", buffer.name(), context());
     }
     catch (runtime_error& error)
     {
