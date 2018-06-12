@@ -130,9 +130,10 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     {
         for (auto&& change : buffer().changes_since(m_display_buffer.timestamp()))
         {
-            if (change.begin.line < m_position.line)
-                m_position.line += (change.type == Buffer::Change::Insert ? 1 : -1) *
-                    (change.end.line - change.begin.line);
+            if (change.type == Buffer::Change::Insert and change.begin.line < m_position.line)
+                m_position.line += change.end.line - change.begin.line;
+            if (change.type == Buffer::Change::Erase and change.begin.line < m_position.line)
+                m_position.line = std::max(m_position.line - (change.end.line - change.begin.line), change.begin.line);
         }
     }
 
