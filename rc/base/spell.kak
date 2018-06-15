@@ -109,7 +109,7 @@ define-command spell-replace %{ %sh{
     menu=$(printf %s "${suggestions#?}" | awk -F', ' '
         {
             for (i=1; i<=NF; i++)
-                printf "%s", "%{"$i"}" "%{execute-keys -itersel c"$i"<esc>be}"
+                printf "%s", "%{"$i"}" "%{execute-keys -itersel %{c"$i"<esc>be}}"
         }
     ')
     printf 'try %%{ menu -auto-single %s }' "${menu}"
