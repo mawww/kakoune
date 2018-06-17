@@ -35,11 +35,11 @@ evaluate-commands %sh{
 
 
     # Add the language's grammar to the static completion list
-    static_words="${values}:${meta}:${keywords}:${types_decl}:${capabilities}"
-    static_words="${static_words}::${struct}"
+    static_words="${values} ${meta} ${keywords} ${types_decl} ${capabilities}"
+    static_words="${static_words} ${struct}"
     printf %s\\n "hook global WinSetOption filetype=pony %{
-        set-option window static_words '${static_words}'
-    }" | tr '|' ':'
+        set-option window static_words ${static_words}
+    }" | tr '|' ' '
 
     # Highlight keywords
     printf %s "
