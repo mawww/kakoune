@@ -68,8 +68,8 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=d %{
-        set-option window static_words '${keywords}:${attributes}:${types}:${values}:${decorators}:${properties}'
-    }" | tr '|' ':'
+        set-option window static_words ${keywords} ${attributes} ${types} ${values} ${decorators} ${properties}
+    }" | tr '|' ' '
 
     # Highlight keywords
     printf %s "

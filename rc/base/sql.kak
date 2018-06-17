@@ -80,8 +80,8 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=sql %{
-        set-option window static_words '${keywords}:${operators}:${functions}:${data_types}:${data_types_fn}:NULL'
-    }" | tr '|' ':'
+        set-option window static_words ${keywords} ${operators} ${functions} ${data_types} ${data_types_fn} NULL
+    }" | tr '|' ' '
 
     # Highlight keywords
     printf %s "
