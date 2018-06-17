@@ -103,8 +103,8 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=python %{
-        set-option window static_words '${values}:${meta}:${attributes}:${methods}:${exceptions}:${keywords}:${types}:${functions}'
-    }" | tr '|' ':'
+        set-option window static_words ${values} ${meta} ${attributes} ${methods} ${exceptions} ${keywords} ${types} ${functions}
+    }" | tr '|' ' '
 
     # Highlight keywords
     printf %s "

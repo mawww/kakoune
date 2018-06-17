@@ -25,8 +25,8 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=dockerfile %{
-        set window static_words 'ONBUILD|${keywords}'
-    }" | tr '|' ':'
+        set window static_words ONBUILD|${keywords}
+    }" | tr '|' ' '
 
     # Highlight keywords
     printf %s "

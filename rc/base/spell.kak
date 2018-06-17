@@ -42,14 +42,14 @@ Formats of language supported:
                             fi
                             word=$(printf %s\\n "$line" | cut -d ' ' -f 2)
                             len=$(printf %s "$word" | wc -c)
-                            regions="$regions:$line_num.$pos+${len}|Error"
+                            regions="$regions $line_num.$pos+${len}|Error"
                             ;;
                         '') line_num=$((line_num + 1));;
                         \*) ;;
                         *) printf 'echo -markup %%{{Error}%s}\n' "${line}" | kak -p "${kak_session}";;
                     esac
                 done
-                printf 'set-option "buffer=%s" spell_regions %%{%s}' "${kak_bufname}" "${regions}" \
+                printf 'set-option "buffer=%s" spell_regions %s' "${kak_bufname}" "${regions}" \
                     | kak -p "${kak_session}"
             }
             rm -rf $(dirname "$kak_opt_spell_tmp_file")
@@ -62,15 +62,16 @@ define-command spell-next %{ evaluate-commands %sh{
     anchor_col="${kak_selection_desc%%,*}"
     anchor_col="${anchor_col##*.}"
 
-    start_first="${kak_opt_spell_regions#*:}"
+    start_first="${kak_opt_spell_regions#* }"
     start_first="${start_first%%|*}"
+    start_first="${start_first#'}"
 
     find_next_word_desc() {
         ## XXX: the `spell` command adds sorted selection descriptions to the range
         printf %s\\n "${1}" \
-            | sed -e 's/^[0-9]*://' -e 's/|[^:]*//g' -e 's/,/ /g' \
-            | tr ':' '\n' \
-            | while read -r start end; do
+            | sed -e "s/'//g" -e 's/^[0-9]* //' -e 's/|[^ ]*//g' \
+            | tr ' ' '\n' \
+            | while IFS=, read -r start end; do
                 start_line="${start%.*}"
                 start_col="${start#*.}"
                 end_line="${end%.*}"

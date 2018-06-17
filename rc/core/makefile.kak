@@ -24,8 +24,8 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=makefile %{
-        set-option window static_words '${keywords}'
-    }" | tr '|' ':'
+        set-option window static_words ${keywords}
+    }" | tr '|' ' '
 
     # Highlight keywords
     printf %s "add-highlighter shared/makefile/content regex \b(${keywords})\b 0:keyword"
