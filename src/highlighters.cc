@@ -1709,7 +1709,7 @@ struct RegionMatches
                 return end_it;
 
             while (rec_it != recurse_matches.end() and
-                   rec_it->end_coord() <= end_it->begin_coord())
+                   rec_it->end_coord() <= end_it->end_coord())
             {
                 if (not capture or rec_it->capture == *capture)
                     ++recurse_level;
