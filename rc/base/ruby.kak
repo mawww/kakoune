@@ -62,8 +62,8 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=ruby %{
-        set-option window static_words '${keywords}:${attributes}:${values}:${meta}'
-    }" | tr '|' ':'
+        set-option window static_words ${keywords} ${attributes} ${values} ${meta}
+    }" | tr '|' ' '
 
     # Highlight keywords
     printf %s "
