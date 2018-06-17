@@ -153,6 +153,14 @@ private:
         Codepoint operator()(Codepoint cp) { throw regex_error{"Invalid utf8 in regex"}; }
     };
 
+    enum class Flags
+    {
+        None              = 0,
+        IgnoreCase        = 1 << 0,
+        DotMatchesNewLine = 1 << 1,
+    };
+    friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
+
     using Iterator = utf8::iterator<const char*, Codepoint, int, InvalidPolicy>;
     using NodeIndex = ParsedRegex::NodeIndex;
 
@@ -204,17 +212,17 @@ private:
             while (true)
             {
                 auto m = *it++;
-                if (m == 'i' or m == 'I')
-                    m_ignore_case = (m == 'i');
-                else if (m == 's' or m == 'S')
-                    m_dot_maches_newline = (m == 's');
-                else if (m == ')')
+                switch (m)
                 {
-                    m_pos = Iterator{it, m_regex};
-                    return true;
+                    case 'i': m_flags |= Flags::IgnoreCase; break;
+                    case 'I': m_flags &= ~Flags::IgnoreCase; break;
+                    case 's': m_flags |= Flags::DotMatchesNewLine; break;
+                    case 'S': m_flags &= ~Flags::DotMatchesNewLine; break;
+                    case ')':
+                        m_pos = Iterator{it, m_regex};
+                        return true;
+                    default: return false;
                 }
-                else
-                    return false;
             }
         }
         return false;
@@ -285,7 +293,7 @@ private:
         {
             case '.':
                 ++m_pos;
-                if (m_dot_maches_newline)
+                if (m_flags & Flags::DotMatchesNewLine)
                     return new_node(ParsedRegex::AnyChar);
                 else
                 {
@@ -431,7 +439,7 @@ private:
     {
         CharacterClass character_class;
 
-        character_class.ignore_case = m_ignore_case;
+        character_class.ignore_case = (m_flags & Flags::IgnoreCase);
         character_class.negative = m_pos != m_regex.end() and *m_pos == '^';
         if (character_class.negative)
             ++m_pos;
@@ -492,7 +500,7 @@ private:
             parse_error("unclosed character class");
         ++m_pos;
 
-        if (m_ignore_case)
+        if (character_class.ignore_case)
         {
             for (auto& range : character_class.ranges)
             {
@@ -578,7 +586,7 @@ private:
         if (res == max_nodes)
             parse_error(format("regex parsed to more than {} ast nodes", max_nodes));
         const NodeIndex next = res+1;
-        m_parsed_regex.nodes.push_back({op, m_ignore_case, next, value, quantifier});
+        m_parsed_regex.nodes.push_back({op, m_flags & Flags::IgnoreCase, next, value, quantifier});
         return res;
     }
 
@@ -614,8 +622,8 @@ private:
     ParsedRegex m_parsed_regex;
     StringView m_regex;
     Iterator m_pos;
-    bool m_ignore_case = false;
-    bool m_dot_maches_newline = true;
+
+    Flags m_flags = Flags::DotMatchesNewLine;
 
     static constexpr struct CharacterClassEscape {
         Codepoint cp;
