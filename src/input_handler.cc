@@ -961,6 +961,7 @@ private:
                 auto prefix = line.substr(m_completions.start, m_completions.end - m_completions.start);
                 if (not contains(m_completions.candidates, prefix))
                 {
+                    m_current_completion = m_completions.candidates.size();
                     m_completions.candidates.push_back(prefix.str());
                     m_prefix_in_completions = true;
                 }
