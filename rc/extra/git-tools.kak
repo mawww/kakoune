@@ -90,6 +90,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                   /^author-time ([0-9]*)/ {
                        cmd = "date -d @" $2 " +\"%F %T\""
                        cmd | getline dates[sha]
+                       close(cmd)
                   }
                   END { send_flags(); }'
         ) > /dev/null 2>&1 < /dev/null &
