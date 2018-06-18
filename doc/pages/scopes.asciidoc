@@ -7,12 +7,12 @@ values depending on the group the value was declared in.
 
 These scoped objects are:
 
-- aliases (See <<commands#, `:doc commands`>>)
-- faces (See <<faces#, `:doc faces`>>)
-- highlighters (See <<highlighters#, `:doc highlighters`>>)
-- hooks (See <<hooks#, `:doc hooks`>>)
-- keymaps (See <<mapping#, `:doc mapping`>>)
-- options (See <<options#, `:doc options`>>)
+- aliases (See <<commands#,`:doc commands`>>)
+- faces (See <<faces#,`:doc faces`>>)
+- highlighters (See <<highlighters#,`:doc highlighters`>>)
+- hooks (See <<hooks#,`:doc hooks`>>)
+- keymaps (See <<mapping#,`:doc mapping`>>)
+- options (See <<options#,`:doc options`>>)
 
 == Names and hierarchy
 
