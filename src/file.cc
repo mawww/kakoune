@@ -573,7 +573,7 @@ String get_kak_binary_path()
     buffer[res] = '\0';
     return buffer;
 #elif defined(__OpenBSD__)
-    return "/usr/local/bin/";
+    return KAK_BIN_PATH;
 #else
 # error "finding executable path is not implemented on this platform"
 #endif

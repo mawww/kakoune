@@ -55,7 +55,7 @@ else ifeq ($(os),Haiku)
     LIBS += -lncursesw -lnetwork -lbe
 else ifeq ($(os),OpenBSD)
     LIBS += -lncursesw
-    CPPFLAGS += -I/usr/local/include
+    CPPFLAGS += -D'KAK_BIN_PATH="$(bindir)/kak"' -I/usr/local/include
     LDFLAGS += -L/usr/local/lib
 else ifneq (,$(findstring CYGWIN,$(os)))
     CPPFLAGS += -D_XOPEN_SOURCE=700
