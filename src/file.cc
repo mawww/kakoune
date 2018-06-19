@@ -545,19 +545,21 @@ timespec get_fs_timestamp(StringView filename)
 
 String get_kak_binary_path()
 {
-    char buffer[2048];
 #if defined(__linux__) or defined(__CYGWIN__)
-    ssize_t res = readlink("/proc/self/exe", buffer, 2048);
+    char buffer[2048];
+    ssize_t res = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
     kak_assert(res != -1);
     buffer[res] = '\0';
     return buffer;
 #elif defined(__FreeBSD__)
+    char buffer[2048];
     int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
     size_t res = sizeof(buffer);
     sysctl(mib, 4, buffer, &res, NULL, 0);
     return buffer;
 #elif defined(__APPLE__)
-    uint32_t bufsize = 2048;
+    char buffer[2048];
+    uint32_t bufsize = sizeof(buffer);
     _NSGetExecutablePath(buffer, &bufsize);
     char* canonical_path = realpath(buffer, nullptr);
     String path = canonical_path;
@@ -571,7 +573,8 @@ String get_kak_binary_path()
     BPath path(&info.ref);
     return path.Path();
 #elif defined(__DragonFly__)
-    ssize_t res = readlink("/proc/curproc/file", buffer, 2048);
+    char buffer[2048];
+    ssize_t res = readlink("/proc/curproc/file", buffer, sizeof(buffer) - 1);
     kak_assert(res != -1);
     buffer[res] = '\0';
     return buffer;

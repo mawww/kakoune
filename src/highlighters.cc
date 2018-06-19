@@ -1085,7 +1085,8 @@ private:
             const int line_to_format = (m_relative and not is_cursor_line) ?
                                        current_line - main_line : current_line;
             char buffer[16];
-            snprintf(buffer, 16, format, std::abs(line_to_format));
+            int res = snprintf(buffer, sizeof(buffer), format, std::abs(line_to_format));
+            kak_assert(0 <= res && res < sizeof(buffer));
             const auto atom_face = last_line == current_line ? face_wrapped :
                 ((m_hl_cursor_line and is_cursor_line) ? face_absolute : face);
             line.insert(line.begin(), {buffer, atom_face});

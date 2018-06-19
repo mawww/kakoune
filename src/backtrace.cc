@@ -62,7 +62,8 @@ String Backtrace::desc() const
     {
         SymFromAddr(process, (DWORD64)stackframes[i], 0, symbol_info);
         char desc[276];
-        snprintf(desc, 276, "0x%0llx (%s)\n", symbol_info->Address, symbol_info->Name);
+        int result = snprintf(desc, sizeof(desc), "0x%0llx (%s)\n", symbol_info->Address, symbol_info->Name);
+        kak_assert(0 <= result && result < sizeof(desc));
         res += desc;
     }
     return res;

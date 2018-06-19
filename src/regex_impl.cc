@@ -1038,7 +1038,8 @@ String dump_regex(const CompiledRegex& program)
     for (auto& inst : program.instructions)
     {
         char buf[20];
-        sprintf(buf, " %03d     ", count++);
+        int result = snprintf(buf, sizeof(buf), " %03d     ", count++);
+        kak_assert(0 <= result && result < sizeof(buf));
         res += buf;
         switch (inst.op)
         {

@@ -52,7 +52,10 @@ String to_json(StringView str)
 
         char buf[7] = {'\\', *next, 0};
         if (*next >= 0 and *next <= 0x1F)
-            sprintf(buf, "\\u%04x", *next);
+        {
+            int result = snprintf(buf, sizeof(buf), "\\u%04x", *next);
+            kak_assert(0 <= result && result < sizeof(buf));
+        }
 
         res += buf;
         it = next+1;
@@ -66,7 +69,8 @@ String to_json(Color color)
     if (color.color == Kakoune::Color::RGB)
     {
         char buffer[10];
-        sprintf(buffer, R"("#%02x%02x%02x")", color.r, color.g, color.b);
+        int res = snprintf(buffer, sizeof(buffer), R"("#%02x%02x%02x")", color.r, color.g, color.b);
+        kak_assert(0 <= res && res < sizeof(buffer));
         return buffer;
     }
     return to_json(to_string(color));

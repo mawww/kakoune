@@ -78,7 +78,7 @@ struct InplaceString
     constexpr operator StringView() const { return {m_data, ByteCount{m_length}}; }
     operator String() const { return {m_data, ByteCount{m_length}}; }
 
-    unsigned char m_length;
+    unsigned char m_length = N - 1;
     char m_data[N];
 };
 

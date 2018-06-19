@@ -121,49 +121,63 @@ int str_to_int(StringView str)
 InplaceString<15> to_string(int val)
 {
     InplaceString<15> res;
-    res.m_length = sprintf(res.m_data, "%i", val);
+    int result = snprintf(res.m_data, res.m_length + 1, "%i", val);
+    kak_assert(0 <= result && result <= res.m_length);
+    res.m_length = result;
     return res;
 }
 
 InplaceString<15> to_string(unsigned val)
 {
     InplaceString<15> res;
-    res.m_length = sprintf(res.m_data, "%u", val);
+    int result = snprintf(res.m_data, res.m_length + 1, "%u", val);
+    kak_assert(0 <= result && result <= res.m_length);
+    res.m_length = result;
     return res;
 }
 
 InplaceString<23> to_string(long int val)
 {
     InplaceString<23> res;
-    res.m_length = sprintf(res.m_data, "%li", val);
+    int result = snprintf(res.m_data, res.m_length + 1, "%li", val);
+    kak_assert(0 <= result && result <= res.m_length);
+    res.m_length = result;
     return res;
 }
 
 InplaceString<23> to_string(long long int val)
 {
     InplaceString<23> res;
-    res.m_length = sprintf(res.m_data, "%lli", val);
+    int result = snprintf(res.m_data, res.m_length + 1, "%lli", val);
+    kak_assert(0 <= result && result <= res.m_length);
+    res.m_length = result;
     return res;
 }
 
 InplaceString<23> to_string(unsigned long val)
 {
     InplaceString<23> res;
-    res.m_length = sprintf(res.m_data, "%lu", val);
+    int result = snprintf(res.m_data, res.m_length + 1, "%lu", val);
+    kak_assert(0 <= result && result <= res.m_length);
+    res.m_length = result;
     return res;
 }
 
 InplaceString<23> to_string(Hex val)
 {
     InplaceString<23> res;
-    res.m_length = sprintf(res.m_data, "%zx", val.val);
+    int result = snprintf(res.m_data, res.m_length + 1, "%zx", val.val);
+    kak_assert(0 <= result && result <= res.m_length);
+    res.m_length = result;
     return res;
 }
 
 InplaceString<23> to_string(float val)
 {
     InplaceString<23> res;
-    res.m_length = sprintf(res.m_data, "%f", val);
+    int result = snprintf(res.m_data, res.m_length + 1, "%f", val);
+    kak_assert(0 <= result && result <= res.m_length);
+    res.m_length = result;
     return res;
 }
 
