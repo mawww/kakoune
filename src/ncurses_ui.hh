@@ -149,10 +149,8 @@ private:
 
     bool m_dirty = false;
 
-    enum class ResizePending { No, Yes, OffsetPos };
-    ResizePending m_resize_pending = ResizePending::No;
-
-    void set_resize_pending(ResizePending resize_pending);
+    bool m_resize_pending = false;
+    void set_resize_pending();
 };
 
 }

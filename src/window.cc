@@ -90,7 +90,7 @@ Window::Setup Window::build_setup(const Context& context) const
     for (auto& sel : context.selections())
         selections.push_back({sel.cursor(), sel.anchor()});
 
-    return { m_position + m_position_offset, m_dimensions,
+    return { m_position, m_dimensions,
              context.buffer().timestamp(),
              compute_faces_hash(context.faces()),
              context.selections().main_index(),
@@ -101,7 +101,7 @@ bool Window::needs_redraw(const Context& context) const
 {
     auto& selections = context.selections();
 
-    if (m_position + m_position_offset != m_last_setup.position or
+    if (m_position != m_last_setup.position or
         m_dimensions != m_last_setup.dimensions or
         context.buffer().timestamp() != m_last_setup.timestamp or
         selections.main_index() != m_last_setup.main_selection or
@@ -171,7 +171,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     m_display_buffer.optimize();
 
     m_last_setup = build_setup(context);
-    set_position(setup.window_pos - m_position_offset);
+    set_position(setup.window_pos);
 
     if (profile and not (buffer().flags() & Buffer::Flags::Debug))
     {
@@ -190,13 +190,10 @@ void Window::set_position(DisplayCoord position)
     m_position.column = std::max(0_col, position.column);
 }
 
-void Window::set_dimensions(DisplayCoord dimensions, bool offset_pos)
+void Window::set_dimensions(DisplayCoord dimensions)
 {
     if (m_dimensions != dimensions)
     {
-        if (offset_pos)
-            m_position_offset += m_dimensions - dimensions;
-
         m_dimensions = dimensions;
         run_hook_in_own_context("WinResize", format("{}.{}", dimensions.line,
                                                     dimensions.column));
@@ -213,7 +210,7 @@ static void check_display_setup(const DisplaySetup& setup, const Window& window)
 
 DisplaySetup Window::compute_display_setup(const Context& context) const
 {
-    auto win_pos = m_position + m_position_offset;
+    auto win_pos = m_position;
 
     DisplayCoord offset = options()["scrolloff"].get<DisplayCoord>();
     offset.line = std::min(offset.line, (m_dimensions.line + 1) / 2);

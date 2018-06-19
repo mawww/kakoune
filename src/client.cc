@@ -50,7 +50,7 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
             killpg(getpgrp(), SIGINT);
         else if (key.modifiers & Key::Modifiers::Resize)
         {
-            m_window->set_dimensions(key.coord(), key.modifiers & Key::Modifiers::OffsetPos);
+            m_window->set_dimensions(key.coord());
             force_redraw();
         }
         else
