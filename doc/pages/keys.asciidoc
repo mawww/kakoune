@@ -132,6 +132,9 @@ the Shift modifier and moving will extend each selection instead.
 *<a-[ft]>*::
     same as [ft] but in the other direction
 
+*<a-.>*::
+    repeat last object or *f*/*t* selection command
+
 *m*::
     select to matching character, see the `matching_pairs` option
     in <<options#,`:doc options`>>
@@ -176,9 +179,6 @@ the Shift modifier and moving will extend each selection instead.
 
 *<a-:>*::
     ensure selections are in forward direction (cursor after anchor)
-
-*<a-.>*::
-    repeat last object or *f*/*t* selection command
 
 == Changes
 
@@ -571,28 +571,52 @@ to skim through the jump list using:
 For nestable objects, a count can be used in order to specify which surrounding
 level to select. Object selections are repeatable using *<a-.>*.
 
+=== Whole object
+
+A 'whole object' is an object *including* its surrounding characters.
+For example, for a quoted string this will select the quotes, and
+for a word this will select trailing spaces.
+
 *<a-a>*::
     select the whole object
 
-*<a-i>*::
-    select the inner object, that is the object excluding its surrounder.
-    For example, for a quoted string, this will not select the quote, and
-    for a word this will not select trailing spaces.
-
 *[*::
-    select to object start
+    select to the whole object start
 
 *]*::
-    select to object end
+    select to the whole object end
 
 *{*::
-    extend selections to object start
+    extend selections to the whole object start
 
 *}*::
-    extend selections to object end
+    extend selections to the whole object end
 
-After these keys, a second key needs to be entered in order to specify
-the wanted object:
+=== Inner object
+
+An 'inner object' is an object *excluding* its surrounding characters.
+For example, for a quoted string this will *not* select the quotes, and
+for a word this will *not* select trailing spaces.
+
+*<a-i>*::
+    select the inner object
+
+*<a-[>*::
+    select to the inner object start
+
+*<a-]>*::
+    select to the inner object end
+
+*<a-{>*::
+    extend selections to the inner object start
+
+*<a-}>*::
+    extend selections to the inner object end
+
+=== Objects types
+
+After the keys described above, a second key needs to be entered
+in order to specify the wanted object:
 
 *b*, *(*, *)*::
     select the enclosing parenthesis
