@@ -1158,7 +1158,7 @@ void NCursesUI::enable_mouse(bool enabled)
     fflush(stdout);
 }
 
-void NCursesUI::set_ui_options(const Options& options)
+void NCursesUI::set_ui_options(const Options& options) // TODO: no add operation for type str-to-str-map
 {
     {
         auto it = options.find("ncurses_assistant"_sv);
@@ -1170,6 +1170,20 @@ void NCursesUI::set_ui_options(const Options& options)
             m_assistant = assistant_dilbert;
         else if (it->value == "none" or it->value == "off")
             m_assistant = ConstArrayView<StringView>{};
+    }
+
+    {
+        auto cursor_blink_it = options.find("ncurses_cursor_blink"_sv);
+        int blink = cursor_blink_it == options.end() or
+            (cursor_blink_it->value == "yes" or cursor_blink_it->value == "true") ?
+            1 : 0;
+        auto it = options.find("ncurses_cursor"_sv);
+        if (it == options.end() or it->value == "block")
+            printf("\x1b[%u q", 2 - blink); // TODO: try and reset when quitting kak
+        else if (it->value == "ibeam")
+            printf("\x1b[%u q", 6 - blink);
+        else if (it->value == "underline")
+            printf("\x1b[%u q", 4 - blink); // TODO: m_status_on_top = false, cursor not visible
     }
 
     {
