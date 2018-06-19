@@ -151,6 +151,8 @@ private:
 
     bool m_resize_pending = false;
     void set_resize_pending();
+
+    ColumnCount m_status_len = 0;
 };
 
 }

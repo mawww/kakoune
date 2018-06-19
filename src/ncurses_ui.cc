@@ -324,7 +324,9 @@ void NCursesUI::redraw()
     pnoutrefresh(m_window, 0, 0, 0, 0,
                  (int)m_dimensions.line + 1, (int)m_dimensions.column);
 
-    m_menu.refresh();
+    if (m_menu.columns != 0 or m_menu.pos.column > m_status_len)
+        m_menu.refresh();
+
     m_info.refresh();
 
     if (m_cursor.mode == CursorMode::Prompt)
@@ -432,7 +434,8 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     draw_line(m_window, status_line, 0, m_dimensions.column, default_face);
 
     const auto mode_len = mode_line.length();
-    const auto remaining = m_dimensions.column - status_line.length();
+    m_status_len = status_line.length();
+    const auto remaining = m_dimensions.column - m_status_len;
     if (mode_len < remaining)
     {
         ColumnCount col = m_dimensions.column - mode_len;
