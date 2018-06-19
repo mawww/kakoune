@@ -289,7 +289,7 @@ find_opening(Iterator pos, const Container& container,
     {
         if (nestable)
         {
-            for (auto m : RegexIt{match[0].second, pos, container.begin(), container.end(), closing})
+            for (auto m [[gnu::unused]] : RegexIt{match[0].second, pos, container.begin(), container.end(), closing})
                 ++level;
         }
 
@@ -317,7 +317,7 @@ find_closing(Iterator pos, const Container& container,
     {
         if (nestable)
         {
-            for (auto m : RegexIt{pos, match[0].first, container.begin(), container.end(), opening})
+            for (auto m [[gnu::unused]] : RegexIt{pos, match[0].first, container.begin(), container.end(), opening})
                 ++level;
         }
 
