@@ -1435,23 +1435,20 @@ void rotate_selections_content(Context& context, NormalParams params)
     if (group == 0 or group > (int)strings.size())
         group = (int)strings.size();
     count = count % group;
+    auto& selections = context.selections();
+    auto main = strings.begin() + selections.main_index();
     for (auto it = strings.begin(); it != strings.end(); )
     {
         auto end = std::min(strings.end(), it + group);
-        if (direction == Direction::Forward)
-            std::rotate(it, end-count, end);
-        else
-            std::rotate(it, it+count, end);
+        auto new_beg = (direction == Direction::Forward) ? end - count : it + count;
+        std::rotate(it, new_beg, end);
+
+        if (it <= main and main < end)
+            main = main < new_beg ? end - (new_beg - main) : it + (main - new_beg);
         it = end;
     }
-    auto& selections = context.selections();
     selections.insert(strings, InsertMode::Replace);
-    const size_t index = selections.main_index();
-    const size_t index_in_group = index % group;
-    selections.set_main_index(index - index_in_group +
-                              ((direction == Forward) ?
-                                 (index_in_group + count) % group
-                               : (index_in_group + group - count % group) % group));
+    selections.set_main_index(main - strings.begin());
 }
 
 enum class SelectFlags
