@@ -697,7 +697,7 @@ void NCursesUI::draw_menu()
     const int item_count = (int)m_menu.items.size();
     if (m_menu.columns == 0)
     {
-        const auto win_width = m_menu.size.column - 3;
+        const auto win_width = m_menu.size.column - 4;
         kak_assert(m_menu.size.line == 1);
         ColumnCount pos = 0;
 
@@ -705,22 +705,26 @@ void NCursesUI::draw_menu()
         add_str(m_menu.win, m_menu.first_item > 0 ? "< " : "  ");
 
         int i = m_menu.first_item;
-        for (; i < item_count; ++i)
+        for (; i < item_count and pos < win_width; ++i)
         {
             const DisplayLine& item = m_menu.items[i];
-            const ColumnCount item_width = item.length() + 1 ;
-            if (pos + item_width > win_width)
-                break;
-
+            const ColumnCount item_width = item.length();
             draw_line(m_menu.win, item, 0, win_width - pos,
                       i == m_menu.selected_item ? m_menu.fg : m_menu.bg);
-            wattron(m_menu.win, COLOR_PAIR(menu_bg));
-            add_str(m_menu.win, String{" "});
-            pos += item_width;
+
+            if (item_width > win_width - pos)
+                add_str(m_menu.win, "…");
+            else
+            {
+                wattron(m_menu.win, COLOR_PAIR(menu_bg));
+                add_str(m_menu.win, String{" "});
+            }
+            pos += item_width + 1;
         }
 
         set_face(m_menu.win, m_menu.bg, m_menu.bg);
-        add_str(m_menu.win, String{' ', win_width - pos});
+        if (pos <= win_width)
+            add_str(m_menu.win, String{' ', win_width - pos + 1});
         add_str(m_menu.win, i == item_count ? " " : ">");
         m_dirty = true;
         return;
