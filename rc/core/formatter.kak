@@ -1,7 +1,7 @@
 declare-option -docstring "shell command to which the contents of the current buffer is piped" \
     str formatcmd
 
-define-command format -docstring "Format the contents of the current buffer" %{ evaluate-commands -draft %{
+define-command format -docstring "Format the contents of the current buffer" %{ evaluate-commands -draft -no-hooks %{
     %sh{
         if [ -n "${kak_opt_formatcmd}" ]; then
             path_file_tmp=$(mktemp "${TMPDIR:-/tmp}"/kak-formatter-XXXXXX)
