@@ -21,17 +21,17 @@ define-command jedi-complete -docstring "Complete the current selection" %{
             compl=$(python 2> "${dir}/fifo" <<-END
 		import jedi
 		script=jedi.Script(open('$dir/buf', 'r').read(), $kak_cursor_line, $kak_cursor_column - 1, '$kak_buffile')
-		print(':'.join([(str(c.name).replace("|", "\\|") + "|" + str(c.docstring()).replace("|", "\\|")).replace(":", "\\:") + "|" + str(c.name).replace("|", "\\|") for c in script.completions()]).replace("'", r"\\\\'"))
+		print(' '.join(["'" + (str(c.name).replace("|", "\\|") + "|" + str(c.docstring()).replace("|", "\\|") + "|" + str(c.name).replace("|", "\\|")).replace("~", "~~").replace("'", "''") + "'" for c in script.completions()]))
 		END
             )
-            printf %s\\n "evaluate-commands -client ${kak_client} 'echo completed; set-option %{buffer=${kak_buffile}} jedi_completions \'${header}:${compl}\''" | kak -p ${kak_session}
+            printf %s\\n "evaluate-commands -client ${kak_client} %~echo completed; set-option %{buffer=${kak_buffile}} jedi_completions ${header} ${compl}~" | kak -p ${kak_session}
             rm -r ${dir}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
 
 define-command jedi-enable-autocomplete -docstring "Add jedi completion candidates to the completer" %{
-    set-option window completers "option=jedi_completions:%opt{completers}"
+    set-option window completers option=jedi_completions %opt{completers}
     hook window -group jedi-autocomplete InsertIdle .* %{ try %{
         execute-keys -draft <a-h><a-k>\..\z<ret>
         echo 'completing...'
