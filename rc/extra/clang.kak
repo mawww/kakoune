@@ -138,7 +138,7 @@ define-command -hidden clang-show-error-info %{
         eval "set -- ${kak_opt_clang_errors}"
         shift # skip timestamp
         for error in "$@"; do
-            if [ "${error%%|*}" == "$kak_cursor_line" ]; then
+            if [ "${error%%|*}" = "$kak_cursor_line" ]; then
                 desc=$(printf '%s%s\n' "$desc" "${error##*|}")
             fi
         done
