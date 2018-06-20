@@ -20,9 +20,7 @@ before_install:
 
 install:
   - if [ $TRAVIS_OS_NAME = linux ]; then
-      if [ "$CXX" = "clang++" ]; then
-        export CXX=clang++-3.9;
-      elif [ "$CXX" = "g++" ]; then
+      if [ "$CXX" = "g++" ]; then
         export CXX=g++-5;
       fi;
     elif [ $TRAVIS_OS_NAME = osx ]; then
