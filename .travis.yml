@@ -1,5 +1,6 @@
 language: cpp
 
+dist: trusty
 sudo: false
 
 os:
@@ -35,9 +36,7 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.9
     packages:
-      - clang-3.9
       - libstdc++-5-dev
       - g++-5
       - libncursesw5-dev
