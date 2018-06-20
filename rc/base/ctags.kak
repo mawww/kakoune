@@ -16,7 +16,7 @@ define-command -params ..1 \
         while read -r tags; do
             namecache="${tags%/*}/.kak.${tags##*/}.namecache"
             if [ -z "$(find "$namecache" -prune -newer "$tags")" ]; then
-                cut -f 1 "$tags" | uniq > "$namecache"
+                cut -f 1 "$tags" | grep -v '^!' | uniq > "$namecache"
             fi
             cat "$namecache"
         done} \
