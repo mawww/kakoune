@@ -29,35 +29,37 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
         eval "$kak_opt_lintcmd '$dir'/buf" | sort -t: -k2,2 -n > "$dir"/stderr
 
         # Flags for the gutter:
-        #   stamp:l3|{red}█:l11|{yellow}█
+        #   stamp l3|{red}█ l11|{yellow}█
         # Contextual error messages:
-        #   stamp:l1.c1,l1.c1|kind\:message:l2.c2,l2.c2|kind\:message
+        #   stamp 'l1.c1,l1.c1|kind:message' 'l2.c2,l2.c2|kind:message'
         awk -F: -v file="$kak_buffile" -v stamp="$kak_timestamp" -v client="$kak_client" '
             BEGIN {
                 error_count = 0
                 warning_count = 0
             }
             /:[0-9]+:[0-9]+: ([Ff]atal )?[Ee]rror/ {
-                flags = flags ":" $2 "|{red}█"
+                flags = flags " " $2 "|{red}█"
                 error_count++
             }
             /:[0-9]+:[0-9]+:/ {
                 if ($4 !~ /[Ee]rror/) {
-                    flags = flags ":" $2 "|{yellow}█"
+                    flags = flags " " $2 "|{yellow}█"
                     warning_count++
                 }
             }
             /:[0-9]+:[0-9]+:/ {
                 kind = substr($4, 2)
-                errors = errors ":" $2 "." $3 "," $2 "." $3 "|" kind
+                error = $2 "." $3 "," $2 "." $3 "|" kind
                 # fix case where $5 is not the last field because of extra colons in the message
-                for (i=5; i<=NF; i++) errors = errors "\\:" $i
-                errors = errors " (col " $3 ")"
+                for (i=5; i<=NF; i++) error = error "\\:" $i
+                error = error " (col " $3 ")"
+                gsub("'\''", "'"''"'", error)
+                errors = errors " '\''" error "'\''"
             }
             END {
-                print "set-option \"buffer=" file "\" lint_flags  %{" stamp flags "}"
+                print "set-option \"buffer=" file "\" lint_flags " stamp flags
                 gsub("~", "\\~", errors)
-                print "set-option \"buffer=" file "\" lint_errors %~" stamp errors "~"
+                print "set-option \"buffer=" file "\" lint_errors " stamp errors
                 print "set-option \"buffer=" file "\" lint_error_count " error_count
                 print "set-option \"buffer=" file "\" lint_warning_count " warning_count
                 print "evaluate-commands -client " client " lint-show-counters"
