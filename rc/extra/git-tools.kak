@@ -145,6 +145,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
               } }"
     }
 
+    cd "$(dirname "$kak_buffile")"
     case "$1" in
        show|log|diff|status) show_git_cmd_output "$@" ;;
        blame) shift; run_git_blame "$@" ;;
