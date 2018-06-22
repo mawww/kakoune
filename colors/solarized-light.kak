@@ -21,13 +21,13 @@
     echo "
         # code
         face global value              ${cyan}
-        face global type               ${yellow}
+        face global type               ${red}
         face global variable           ${blue}
         face global module             ${cyan}
         face global function           ${blue}
         face global string             ${cyan}
         face global keyword            ${green}
-        face global operator           ${green}
+        face global operator           ${yellow}
         face global attribute          ${violet}
         face global comment            ${base1}
         face global meta               ${orange}
