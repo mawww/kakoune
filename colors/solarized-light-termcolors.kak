@@ -12,6 +12,7 @@ face global keyword            green
 face global operator           yellow
 face global attribute          bright-magenta
 face global comment            bright-cyan
+face global documentation      comment
 face global meta               bright-red
 face global builtin            default+b
 

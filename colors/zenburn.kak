@@ -41,6 +41,7 @@ evaluate-commands %sh{
         face global operator ${zenfunction}
         face global attribute ${zenstatement}
         face global comment ${zencomment}
+        face global documentation comment
         face global meta ${zenspecial}
         face global builtin default+b
 

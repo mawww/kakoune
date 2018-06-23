@@ -9,6 +9,7 @@ face global keyword default
 face global operator default
 face global attribute default
 face global comment blue
+face global documentation comment
 face global meta default
 face global builtin default
 

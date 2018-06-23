@@ -11,6 +11,7 @@ face global keyword blue
 face global operator yellow
 face global attribute green
 face global comment cyan
+face global documentation comment
 face global meta magenta
 face global builtin default+b
 

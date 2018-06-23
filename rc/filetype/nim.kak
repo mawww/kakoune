@@ -38,8 +38,10 @@ add-highlighter shared/nim/code default-region group
 add-highlighter shared/nim/triple_string region '([A-Za-z](_?\w)*)?"""' '"""(?!")' fill string
 add-highlighter shared/nim/raw_string region [A-Za-z](_?[A-Za-z])*" (?<!")"(?!") fill string
 add-highlighter shared/nim/string region (?<!'\\)" ((?<!\\)(\\\\)*"|$) group
-add-highlighter shared/nim/comment region '#?#\[' '\]##?' group
-add-highlighter shared/nim/comment_line region (?<![^'].')#?#(?!'\[) $ group
+add-highlighter shared/nim/inline_documentation region '##' $ fill documentation
+add-highlighter shared/nim/documentation region '##\[' '\]##' fill documentation
+add-highlighter shared/nim/comment region '#\[' '\]#' group
+add-highlighter shared/nim/comment_line region (?<![^'].')#(?!'\[) $ group
 
 add-highlighter shared/nim/string/fill fill string
 add-highlighter shared/nim/comment/fill fill comment

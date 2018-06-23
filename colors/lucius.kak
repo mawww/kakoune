@@ -34,6 +34,7 @@ evaluate-commands %sh{
         face global operator ${lucius_green}
         face global attribute ${lucius_light_blue}
         face global comment ${lucius_grey}
+        face global documentation comment
         face global meta ${lucius_purple}
         face global builtin default+b
 

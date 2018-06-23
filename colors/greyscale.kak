@@ -24,6 +24,7 @@ evaluate-commands %sh{
     set-face global builtin ${grey}+b
     set-face global module ${grey_dark_1}
     set-face global comment ${grey}+i
+    set-face global documentation comment
     set-face global function Default
     set-face global operator Default
     set-face global variable Default

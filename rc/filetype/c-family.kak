@@ -198,6 +198,10 @@ evaluate-commands %sh{
             add-highlighter shared/$ft/code default-region group
             add-highlighter shared/$ft/string region %{$maybe_at(?<!')(?<!'\\\\)"} %{(?<!\\\\)(?:\\\\\\\\)*"} fill string
             add-highlighter shared/$ft/raw_string region -match-capture %{R"([^(]*)\\(} %{\\)([^")]*)"} fill string
+            add-highlighter shared/$ft/javadoc region /\*\* \*/ fill documentation
+            add-highlighter shared/$ft/qtdoc region /\*! \*/ fill documentation
+            add-highlighter shared/$ft/inline_doc region /// $ fill documentation
+            add-highlighter shared/$ft/inline_qtdoc region //! $ fill documentation
             add-highlighter shared/$ft/comment region /\\* \\*/ fill comment
             add-highlighter shared/$ft/line_comment region // (?<!\\\\)(?=\\n) fill comment
             add-highlighter shared/$ft/disabled region -recurse "#\\h*if(?:def)?" ^\\h*?#\\h*if\\h+(?:0|FALSE)\\b "#\\h*(?:else|elif|endif)" fill comment

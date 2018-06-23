@@ -1,15 +1,16 @@
 # desertex theme
 
 # Code
-face global value      rgb:fa8072
-face global type       rgb:dfdfbf
-face global identifier rgb:87ceeb
-face global string     rgb:fa8072
-face global error      rgb:c3bf9f+b
-face global keyword    rgb:eedc82
-face global operator   rgb:87ceeb
-face global attribute  rgb:eedc82
-face global comment    rgb:7ccd7c+i
+face global value         rgb:fa8072
+face global type          rgb:dfdfbf
+face global identifier    rgb:87ceeb
+face global string        rgb:fa8072
+face global error         rgb:c3bf9f+b
+face global keyword       rgb:eedc82
+face global operator      rgb:87ceeb
+face global attribute     rgb:eedc82
+face global comment       rgb:7ccd7c+i
+face global documentation comment
 
 # #include <...>
 face global meta rgb:ee799f
