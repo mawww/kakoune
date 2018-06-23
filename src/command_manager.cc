@@ -676,11 +676,10 @@ Completions CommandManager::complete(const Context& context,
             context, flags, params, tokens.size() - 2,
             cursor_pos_in_token), start);
 
-        if (not completions.quoted and token.type != Token::Type::RawQuoted)
+        if (not completions.quoted and token.type == Token::Type::Raw)
         {
-            StringView to_escape = token.type == Token::Type::Raw ? "% \t;" : "%";
-            for (auto& candidate : completions.candidates)
-                candidate = escape(candidate, to_escape, '\\');
+            for (auto& c : completions.candidates)
+                c = (not c.empty() and contains("%'\"", c[0]) ? "\\" : "") + escape(c, "; \t", '\\');
         }
 
         return completions;
