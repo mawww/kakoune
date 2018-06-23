@@ -61,7 +61,7 @@
         face global MenuBackground     default,${bg2}
         face global MenuInfo           ${bg}
         face global Information        ${bg},${fg}
-        face global Error              default,${red}
+        face global Error              ${bg},${red}
         face global StatusLine         default
         face global StatusLineMode     ${yellow}+b
         face global StatusLineInfo     ${purple}
