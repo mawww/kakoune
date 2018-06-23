@@ -128,9 +128,11 @@ StringView format_to(ArrayView<char> buffer, StringView fmt, Types&&... params)
     return format_to(buffer, fmt, ArrayView<const StringView>{detail::format_param(std::forward<Types>(params))...});
 }
 
+String double_up(StringView s, StringView characters);
+
 inline String quote(StringView s)
 {
-    return format("'{}'", replace(s, "'", "''"));
+    return format("'{}'", double_up(s, "'"));
 }
 
 }

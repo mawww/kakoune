@@ -339,6 +339,23 @@ String format(StringView fmt, ArrayView<const StringView> params)
     return res;
 }
 
+String double_up(StringView s, StringView characters)
+{
+    String res;
+    auto pos = s.begin();
+    for (auto it = s.begin(), end = s.end(); it != end; ++it)
+    {
+        if (contains(characters, *it))
+        {
+            res += StringView{pos, it+1};
+            res += *it;
+            pos = it+1;
+        }
+    }
+    res += StringView{pos, s.end()};
+    return res;
+}
+
 UnitTest test_string{[]()
 {
     kak_assert(String("youpi ") + "matin" == "youpi matin");
@@ -381,6 +398,8 @@ UnitTest test_string{[]()
     kak_assert(str_to_int(to_string(INT_MIN)) == INT_MIN);
     kak_assert(str_to_int("00") == 0);
     kak_assert(str_to_int("-0") == 0);
+
+    kak_assert(double_up(R"('foo%"bar"')", "'\"%") == R"(''foo%%""bar""'')");
 
     kak_assert(replace("tchou/tcha/tchi", "/", "!!") == "tchou!!tcha!!tchi");
 }};
