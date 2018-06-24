@@ -59,6 +59,7 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
         Literal,
         Literal_IgnoreCase,
         AnyChar,
+        AnyCharExceptNewLine,
         Class,
         CharacterType,
         Jump,
@@ -322,6 +323,10 @@ private:
                     return StepResult::Failed;
                 case CompiledRegex::AnyChar:
                     return StepResult::Consumed;
+                case CompiledRegex::AnyCharExceptNewLine:
+                    if (pos != config.end and *pos != '\n')
+                        return StepResult::Consumed;
+                    return StepResult::Failed;
                 case CompiledRegex::Jump:
                     thread.inst = static_cast<int16_t>(inst.param);
                     break;
@@ -529,6 +534,11 @@ private:
             const Codepoint ref = *it;
             if (ref == 0xF000)
             {} // any character matches
+            else if (ref == 0xF001)
+            {
+                if (cp == '\n')
+                    return false;
+            }
             else if (ref > 0xF0000 and ref < 0xF8000)
             {
                 if (not is_character_class(m_program.character_classes[ref - 0xF0001], cp))

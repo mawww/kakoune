@@ -23,6 +23,7 @@ struct ParsedRegex
     {
         Literal,
         AnyChar,
+        AnyCharExceptNewLine,
         Class,
         CharacterType,
         Sequence,
@@ -296,14 +297,7 @@ private:
                 if (m_flags & Flags::DotMatchesNewLine)
                     return new_node(ParsedRegex::AnyChar);
                 else
-                {
-                    CharacterClass c;
-                    c.negative = true;
-                    c.ranges.push_back({ '\n', '\n' });
-                    auto class_id = m_parsed_regex.character_classes.size();
-                    m_parsed_regex.character_classes.push_back(std::move(c));
-                    return new_node(ParsedRegex::Class, class_id);
-                }
+                    return new_node(ParsedRegex::AnyCharExceptNewLine);
             case '(':
             {
                 auto captures = [this, it = (++m_pos).base()]() mutable {
@@ -611,7 +605,8 @@ private:
         ForEachChild<>::apply(m_parsed_regex, index, [this](NodeIndex child_index) {
             auto& child = get_node(child_index);
             if (child.op != ParsedRegex::Literal and child.op != ParsedRegex::Class and
-                child.op != ParsedRegex::CharacterType and child.op != ParsedRegex::AnyChar)
+                child.op != ParsedRegex::CharacterType and child.op != ParsedRegex::AnyChar and
+                child.op != ParsedRegex::AnyCharExceptNewLine)
                 parse_error("Lookaround can only contain literals, any chars or character classes");
             if (child.quantifier.type != ParsedRegex::Quantifier::One)
                 parse_error("Quantifiers cannot be used in lookarounds");
@@ -713,6 +708,9 @@ private:
                 break;
             case ParsedRegex::AnyChar:
                 push_inst(CompiledRegex::AnyChar);
+                break;
+            case ParsedRegex::AnyCharExceptNewLine:
+                push_inst(CompiledRegex::AnyCharExceptNewLine);
                 break;
             case ParsedRegex::Class:
                 push_inst(CompiledRegex::Class, node.value);
@@ -887,6 +885,8 @@ private:
                                                                 : character.value);
                 else if (character.op == ParsedRegex::AnyChar)
                     m_program.lookarounds.push_back(0xF000);
+                else if (character.op == ParsedRegex::AnyCharExceptNewLine)
+                    m_program.lookarounds.push_back(0xF001);
                 else if (character.op == ParsedRegex::Class)
                     m_program.lookarounds.push_back(0xF0001 + character.value);
                 else if (character.op == ParsedRegex::CharacterType)
@@ -929,6 +929,13 @@ private:
             case ParsedRegex::AnyChar:
                 for (auto& b : start_desc.map)
                     b = true;
+               return node.quantifier.allows_none();
+            case ParsedRegex::AnyCharExceptNewLine:
+                for (Codepoint cp = 0; cp < CompiledRegex::StartDesc::count; ++cp)
+                {
+                    if (cp != '\n')
+                        start_desc.map[cp] = true;
+                }
                return node.quantifier.allows_none();
             case ParsedRegex::Class:
             {
@@ -1043,6 +1050,9 @@ String dump_regex(const CompiledRegex& program)
                 break;
             case CompiledRegex::AnyChar:
                 res += "any char\n";
+                break;
+            case CompiledRegex::AnyCharExceptNewLine:
+                res += "anything but newline\n";
                 break;
             case CompiledRegex::Jump:
                 res += format("jump {}\n", inst.param);
