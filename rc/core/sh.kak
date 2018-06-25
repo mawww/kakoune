@@ -2,16 +2,16 @@ hook global BufCreate .*\.(z|ba|c|k|mk)?sh(rc|_profile)? %{
     set-option buffer filetype sh
 }
 
-add-highlighter shared/ regions -default code -match-capture sh \
+add-highlighter shared/sh regions -default code -match-capture \
     double_string  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)(?:\\\\)*"} '' \
     single_string %{(?<!\\)(?:\\\\)*\K'} %{'} '' \
     comment '(?<!\$)#' '$' '' \
     heredoc '<<-?(\w+)' '^\t*(\w+)$' ''
 
-add-highlighter shared/sh/double_string fill string
-add-highlighter shared/sh/single_string fill string
-add-highlighter shared/sh/comment fill comment
-add-highlighter shared/sh/heredoc fill string
+add-highlighter shared/sh/double_string/fill fill string
+add-highlighter shared/sh/single_string/fill fill string
+add-highlighter shared/sh/comment/fill fill comment
+add-highlighter shared/sh/heredoc/fill fill string
 
 evaluate-commands %sh{
     # Grammar
@@ -27,15 +27,15 @@ evaluate-commands %sh{
     }" | tr '|' ' '
 
     # Highlight keywords
-    printf %s "add-highlighter shared/sh/code regex \b(${keywords})\b 0:keyword"
+    printf %s "add-highlighter shared/sh/code/keywords regex \b(${keywords})\b 0:keyword"
 }
 
-add-highlighter shared/sh/code regex [\[\]\(\)&|]{1,2} 0:operator
-add-highlighter shared/sh/code regex (\w+)= 1:variable
-add-highlighter shared/sh/code regex ^\h*(\w+)\h*\(\) 1:variable
+add-highlighter shared/sh/code/operators regex [\[\]\(\)&|]{1,2} 0:operator
+add-highlighter shared/sh/code/variable regex (\w+)= 1:variable
+add-highlighter shared/sh/code/function regex ^\h*(\w+)\h*\(\) 1:function
 
-add-highlighter shared/sh/code regex \$(\w+|\{.+?\}|#|@|\?|\$|!|-|\*) 0:value
-add-highlighter shared/sh/double_string regex \$(\w+|\{.+?\}) 0:value
+add-highlighter shared/sh/code/expansion regex \$(\w+|\{.+?\}|#|@|\?|\$|!|-|\*) 0:value
+add-highlighter shared/sh/double_string/expansion regex \$(\w+|\{.+?\}) 0:value
 
-hook -group sh-highlight global WinSetOption filetype=sh %{ add-highlighter window ref sh }
+hook -group sh-highlight global WinSetOption filetype=sh %{ add-highlighter window/sh ref sh }
 hook -group sh-highlight global WinSetOption filetype=(?!sh).* %{ remove-highlighter window/sh }

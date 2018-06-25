@@ -220,7 +220,7 @@ auto apply_face = [](const Face& face)
     };
 };
 
-static HighlighterAndId create_fill_highlighter(HighlighterParameters params)
+static std::unique_ptr<Highlighter> create_fill_highlighter(HighlighterParameters params)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
@@ -231,7 +231,7 @@ static HighlighterAndId create_fill_highlighter(HighlighterParameters params)
         highlight_range(display_buffer, range.begin, range.end, false,
                         apply_face(context.context.faces()[facespec]));
     };
-    return {"fill_" + facespec, make_highlighter(std::move(func))};
+    return make_highlighter(std::move(func));
 }
 
 template<typename T>
@@ -302,7 +302,7 @@ public:
         ++m_regex_version;
     }
 
-    static HighlighterAndId create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
     {
         if (params.size() < 2)
             throw runtime_error("wrong parameter count");
@@ -317,12 +317,9 @@ public:
             faces.emplace_back(capture, String{colon+1, spec.end()});
         }
 
-        String id = format("hlregex'{}'", params[0]);
-
         Regex ex{params[0], RegexCompileFlags::Optimize};
 
-        return {id, std::make_unique<RegexHighlighter>(std::move(ex),
-                                                       std::move(faces))};
+        return std::make_unique<RegexHighlighter>(std::move(ex), std::move(faces));
     }
 
 private:
@@ -481,7 +478,7 @@ private:
     RegexHighlighter m_highlighter;
 };
 
-HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
+std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParameters params)
 {
     if (params.size() < 2)
         throw runtime_error("wrong parameter count");
@@ -513,7 +510,7 @@ HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
         auto get_regex = [option_name = token->content](const Context& context) {
             return context.options()[option_name].get<Regex>();
         };
-        return {format("dynregex_{}", params[0]), make_hl(get_regex, get_face)};
+        return make_hl(get_regex, get_face);
     }
 
     auto get_regex = [expr = params[0]](const Context& context){
@@ -528,10 +525,10 @@ HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
             return Regex{};
         }
     };
-    return {format("dynregex_{}", params[0]), make_hl(get_regex, get_face)};
+    return make_hl(get_regex, get_face);
 }
 
-HighlighterAndId create_line_highlighter(HighlighterParameters params)
+std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters params)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -575,10 +572,10 @@ HighlighterAndId create_line_highlighter(HighlighterParameters params)
             it->push_back({ String{' ', remaining}, face });
     };
 
-    return {"hlline_" + params[0], make_highlighter(std::move(func))};
+    return make_highlighter(std::move(func));
 }
 
-HighlighterAndId create_column_highlighter(HighlighterParameters params)
+std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters params)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -634,7 +631,7 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
         }
     };
 
-    return {"hlcol_" + params[0], make_highlighter(std::move(func))};
+    return make_highlighter(std::move(func));
 }
 
 struct WrapHighlighter : Highlighter
@@ -853,7 +850,7 @@ struct WrapHighlighter : Highlighter
         return get_column(buffer, tabstop, {line, col});
     }
 
-    static HighlighterAndId create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
     {
         static const ParameterDesc param_desc{
             { { "word", { false, "" } },
@@ -868,9 +865,9 @@ struct WrapHighlighter : Highlighter
         if (auto width = parser.get_switch("width"))
             max_width = str_to_int(*width);
 
-        return {"wrap", std::make_unique<WrapHighlighter>(max_width, (bool)parser.get_switch("word"),
-                                                          (bool)parser.get_switch("indent"),
-                                                          parser.get_switch("marker").value_or("").str())};
+        return std::make_unique<WrapHighlighter>(max_width, (bool)parser.get_switch("word"),
+                                                 (bool)parser.get_switch("indent"),
+                                                 parser.get_switch("marker").value_or("").str());
     }
 
     const bool m_word_wrap;
@@ -987,7 +984,7 @@ void show_whitespaces(HighlightContext context, DisplayBuffer& display_buffer, B
     }
 }
 
-HighlighterAndId show_whitespaces_factory(HighlighterParameters params)
+std::unique_ptr<Highlighter> show_whitespaces_factory(HighlighterParameters params)
 {
     static const ParameterDesc param_desc{
         { { "tab", { true, "" } },
@@ -1013,7 +1010,7 @@ HighlighterAndId show_whitespaces_factory(HighlighterParameters params)
                           get_param("lf", "¬"),
                           get_param("nbsp", "⍽"));
 
-    return {"show_whitespaces", make_highlighter(std::move(func), HighlightPass::Move)};
+    return make_highlighter(std::move(func), HighlightPass::Move);
 }
 
 struct LineNumbersHighlighter : Highlighter
@@ -1024,7 +1021,7 @@ struct LineNumbersHighlighter : Highlighter
         m_hl_cursor_line{hl_cursor_line},
         m_separator{std::move(separator)} {}
 
-    static HighlighterAndId create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
     {
         static const ParameterDesc param_desc{
             { { "relative", { false, "" } },
@@ -1038,7 +1035,7 @@ struct LineNumbersHighlighter : Highlighter
         if (separator.length() > 10)
             throw runtime_error("separator length is limited to 10 bytes");
 
-        return {"number_lines", std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str())};
+        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str());
     }
 
 private:
@@ -1161,9 +1158,9 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
     }
 }
 
-HighlighterAndId create_matching_char_highlighter(HighlighterParameters params)
+std::unique_ptr<Highlighter> create_matching_char_highlighter(HighlighterParameters params)
 {
-    return {"show_matching", make_highlighter(show_matching_char)};
+    return make_highlighter(show_matching_char);
 }
 
 void highlight_selections(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
@@ -1282,7 +1279,7 @@ struct FlagLinesHighlighter : Highlighter
           m_option_name{std::move(option_name)},
           m_default_face{std::move(default_face)} {}
 
-    static HighlighterAndId create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
     {
         if (params.size() != 2)
             throw runtime_error("wrong parameter count");
@@ -1293,7 +1290,7 @@ struct FlagLinesHighlighter : Highlighter
         // throw if wrong option type
         GlobalScope::instance().options()[option_name].get<LineAndSpecList>();
 
-        return {"hlflags_" + params[1], std::make_unique<FlagLinesHighlighter>(option_name, default_face) };
+        return std::make_unique<FlagLinesHighlighter>(option_name, default_face);
     }
 
 private:
@@ -1427,7 +1424,7 @@ struct RangesHighlighter : Highlighter
         : Highlighter{HighlightPass::Colorize}
         , m_option_name{std::move(option_name)} {}
 
-    static HighlighterAndId create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
     {
         if (params.size() != 1)
             throw runtime_error("wrong parameter count");
@@ -1436,7 +1433,7 @@ struct RangesHighlighter : Highlighter
         // throw if wrong option type
         GlobalScope::instance().options()[option_name].get<RangeAndStringList>();
 
-        return {"hlranges_" + params[0], std::make_unique<RangesHighlighter>(option_name)};
+        return std::make_unique<RangesHighlighter>(option_name);
     }
 
 private:
@@ -1469,7 +1466,7 @@ struct ReplaceRangesHighlighter : Highlighter
         : Highlighter{HighlightPass::Colorize}
         , m_option_name{std::move(option_name)} {}
 
-    static HighlighterAndId create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
     {
         if (params.size() != 1)
             throw runtime_error("wrong parameter count");
@@ -1478,7 +1475,7 @@ struct ReplaceRangesHighlighter : Highlighter
         // throw if wrong option type
         GlobalScope::instance().options()[option_name].get<RangeAndStringList>();
 
-        return {"replace_ranges_" + params[0], std::make_unique<ReplaceRangesHighlighter>(option_name)};
+        return std::make_unique<ReplaceRangesHighlighter>(option_name);
     }
 
 private:
@@ -1532,16 +1529,16 @@ HighlightPass parse_passes(StringView str)
     return passes;
 }
 
-HighlighterAndId create_highlighter_group(HighlighterParameters params)
+std::unique_ptr<Highlighter> create_highlighter_group(HighlighterParameters params)
 {
     static const ParameterDesc param_desc{
         { { "passes", { true, "" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 0
     };
     ParametersParser parser{params, param_desc};
     HighlightPass passes = parse_passes(parser.get_switch("passes").value_or("colorize"));
 
-    return HighlighterAndId(parser[0], std::make_unique<HighlighterGroup>(passes));
+    return std::make_unique<HighlighterGroup>(passes);
 }
 
 struct ReferenceHighlighter : Highlighter
@@ -1549,7 +1546,7 @@ struct ReferenceHighlighter : Highlighter
     ReferenceHighlighter(HighlightPass passes, String name)
         : Highlighter{passes}, m_name{std::move(name)} {}
 
-    static HighlighterAndId create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
     {
         static const ParameterDesc param_desc{
             { { "passes", { true, "" } } },
@@ -1557,7 +1554,7 @@ struct ReferenceHighlighter : Highlighter
         };
         ParametersParser parser{params, param_desc};
         HighlightPass passes = parse_passes(parser.get_switch("passes").value_or("colorize"));
-        return {parser[0], std::make_unique<ReferenceHighlighter>(passes, parser[0])};
+        return std::make_unique<ReferenceHighlighter>(passes, parser[0]);
     }
 
 private:
@@ -1855,7 +1852,7 @@ public:
         return { 0, 0, complete(path, cursor_pos, container) };
     }
 
-    static HighlighterAndId create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
     {
         static const ParameterDesc param_desc{
             { { "default", { true, "" } }, { "match-capture", { false, "" } } },
@@ -1863,12 +1860,12 @@ public:
         };
 
         ParametersParser parser{params, param_desc};
-        if ((parser.positional_count() % 4) != 1)
-            throw runtime_error("wrong parameter count, expected <id> (<group name> <begin> <end> <recurse>)+");
+        if ((parser.positional_count() % 4) != 0)
+            throw runtime_error("wrong parameter count, expected (<group name> <begin> <end> <recurse>)+");
 
         const bool match_capture = (bool)parser.get_switch("match-capture");
         RegionsHighlighter::RegionDescList regions;
-        for (size_t i = 1; i < parser.positional_count(); i += 4)
+        for (size_t i = 0; i < parser.positional_count(); i += 4)
         {
             if (parser[i].empty() or parser[i+1].empty() or parser[i+2].empty())
                 throw runtime_error("group id, begin and end must not be empty");
@@ -1883,7 +1880,7 @@ public:
         }
 
         auto default_group = parser.get_switch("default").value_or(StringView{}).str();
-        return {parser[0], std::make_unique<RegionsHighlighter>(std::move(regions), default_group)};
+        return std::make_unique<RegionsHighlighter>(std::move(regions), default_group);
     }
 
 private:
@@ -1997,9 +1994,9 @@ private:
 
 void setup_builtin_highlighters(HighlighterGroup& group)
 {
-    group.add_child({"tabulations"_str, std::make_unique<TabulationHighlighter>()});
-    group.add_child({"unprintable"_str, make_highlighter(expand_unprintable)});
-    group.add_child({"selections"_str,  make_highlighter(highlight_selections)});
+    group.add_child("tabulations"_str, std::make_unique<TabulationHighlighter>());
+    group.add_child("unprintable"_str, make_highlighter(expand_unprintable));
+    group.add_child("selections"_str,  make_highlighter(highlight_selections));
 }
 
 void register_highlighters()

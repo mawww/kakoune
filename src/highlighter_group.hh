@@ -21,7 +21,7 @@ public:
     HighlighterGroup(HighlightPass passes) : Highlighter{passes} {}
 
     bool has_children() const override { return true; }
-    void add_child(HighlighterAndId&& hl) override;
+    void add_child(String name, std::unique_ptr<Highlighter>&& hl) override;
     void remove_child(StringView id) override;
 
     Highlighter& get_child(StringView path) override;

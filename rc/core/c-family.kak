@@ -136,7 +136,7 @@ evaluate-commands %sh{
         fi
 
         printf %s\\n '
-            add-highlighter shared/ regions -default code -match-capture FT \
+            add-highlighter shared/FT regions -default code -match-capture \
                 string %{MAYBEAT(?<!QUOTE)(?<!QUOTE\\)"} %{(?<!\\)(?:\\\\)*"} "" \
                 string %{R"([^(]*)\(} %{\)([^")]*)"} "" \
                 comment /\* \*/ "" \
@@ -144,17 +144,17 @@ evaluate-commands %sh{
                 disabled ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" "#\h*if(?:def)?" \
                 macro %{^\h*?\K#} %{(?<!\\)\n} ""
 
-            add-highlighter shared/FT/string fill string
-            add-highlighter shared/FT/comment fill comment
-            add-highlighter shared/FT/disabled fill rgb:666666
-            add-highlighter shared/FT/macro fill meta
-            add-highlighter shared/FT/macro regex ^\h*#include\h+(\S*) 1:module
+            add-highlighter shared/FT/string/fill fill string
+            add-highlighter shared/FT/comment/fill fill comment
+            add-highlighter shared/FT/disabled/fill fill rgb:666666
+            add-highlighter shared/FT/macro/fill fill meta
+            add-highlighter shared/FT/macro/include regex ^\h*#include\h+(\S*) 1:module
             ' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g; s/MAYBEAT/${maybe_at}/;"
     done
 }
 
 # c specific
-add-highlighter shared/c/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+add-highlighter shared/c/code/numbers regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 evaluate-commands %sh{
     # Grammar
     keywords="asm break case continue default do else for goto if return
@@ -173,31 +173,31 @@ evaluate-commands %sh{
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/c/code regex \b($(join "${keywords}" '|'))\b 0:keyword
-        add-highlighter shared/c/code regex \b($(join "${attributes}" '|'))\b 0:attribute
-        add-highlighter shared/c/code regex \b($(join "${types}" '|'))\b 0:type
-        add-highlighter shared/c/code regex \b($(join "${values}" '|'))\b 0:value
+        add-highlighter shared/c/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
+        add-highlighter shared/c/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
+        add-highlighter shared/c/code/types regex \b($(join "${types}" '|'))\b 0:type
+        add-highlighter shared/c/code/values regex \b($(join "${values}" '|'))\b 0:value
     "
 }
 
 # c++ specific
 
 # integer literals
-add-highlighter shared/cpp/code regex %{(?i)(?<!\.)\b[1-9]('?\d+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
-add-highlighter shared/cpp/code regex %{(?i)(?<!\.)\b0b[01]('?[01]+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
-add-highlighter shared/cpp/code regex %{(?i)(?<!\.)\b0('?[0-7]+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
-add-highlighter shared/cpp/code regex %{(?i)(?<!\.)\b0x[\da-f]('?[\da-f]+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
+add-highlighter shared/cpp/code/integer1 regex %{(?i)(?<!\.)\b[1-9]('?\d+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
+add-highlighter shared/cpp/code/integer2 regex %{(?i)(?<!\.)\b0b[01]('?[01]+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
+add-highlighter shared/cpp/code/integer3 regex %{(?i)(?<!\.)\b0('?[0-7]+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
+add-highlighter shared/cpp/code/integer4 regex %{(?i)(?<!\.)\b0x[\da-f]('?[\da-f]+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
 
 # floating point literals
-add-highlighter shared/cpp/code regex %{(?i)(?<!\.)\b\d('?\d+)*\.([fl]\b|\B)(?!\.)} 0:value
-add-highlighter shared/cpp/code regex %{(?i)(?<!\.)\b\d('?\d+)*\.?e[+-]?\d('?\d+)*[fl]?\b(?!\.)} 0:value
-add-highlighter shared/cpp/code regex %{(?i)(?<!\.)(\b(\d('?\d+)*)|\B)\.\d('?[\d]+)*(e[+-]?\d('?\d+)*)?[fl]?\b(?!\.)} 0:value
-add-highlighter shared/cpp/code regex %{(?i)(?<!\.)\b0x[\da-f]('?[\da-f]+)*\.([fl]\b|\B)(?!\.)} 0:value
-add-highlighter shared/cpp/code regex %{(?i)(?<!\.)\b0x[\da-f]('?[\da-f]+)*\.?p[+-]?\d('?\d+)*)?[fl]?\b(?!\.)} 0:value
-add-highlighter shared/cpp/code regex %{(?i)(?<!\.)\b0x([\da-f]('?[\da-f]+)*)?\.\d('?[\d]+)*(p[+-]?\d('?\d+)*)?[fl]?\b(?!\.)} 0:value
+add-highlighter shared/cpp/code/float1 regex %{(?i)(?<!\.)\b\d('?\d+)*\.([fl]\b|\B)(?!\.)} 0:value
+add-highlighter shared/cpp/code/float2 regex %{(?i)(?<!\.)\b\d('?\d+)*\.?e[+-]?\d('?\d+)*[fl]?\b(?!\.)} 0:value
+add-highlighter shared/cpp/code/float3 regex %{(?i)(?<!\.)(\b(\d('?\d+)*)|\B)\.\d('?[\d]+)*(e[+-]?\d('?\d+)*)?[fl]?\b(?!\.)} 0:value
+add-highlighter shared/cpp/code/float4 regex %{(?i)(?<!\.)\b0x[\da-f]('?[\da-f]+)*\.([fl]\b|\B)(?!\.)} 0:value
+add-highlighter shared/cpp/code/float5 regex %{(?i)(?<!\.)\b0x[\da-f]('?[\da-f]+)*\.?p[+-]?\d('?\d+)*)?[fl]?\b(?!\.)} 0:value
+add-highlighter shared/cpp/code/float6 regex %{(?i)(?<!\.)\b0x([\da-f]('?[\da-f]+)*)?\.\d('?[\d]+)*(p[+-]?\d('?\d+)*)?[fl]?\b(?!\.)} 0:value
 
 # character literals (no multi-character literals)
-add-highlighter shared/cpp/code regex %{(\b(u8|u|U|L)|\B)'((\\.)|[^'\\])'\B} 0:value
+add-highlighter shared/cpp/code/char regex %{(\b(u8|u|U|L)|\B)'((\\.)|[^'\\])'\B} 0:value
 
 evaluate-commands %sh{
     # Grammar
@@ -223,10 +223,10 @@ evaluate-commands %sh{
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/cpp/code regex \b($(join "${keywords}" '|'))\b 0:keyword
-        add-highlighter shared/cpp/code regex \b($(join "${attributes}" '|'))\b 0:attribute
-        add-highlighter shared/cpp/code regex \b($(join "${types}" '|'))\b 0:type
-        add-highlighter shared/cpp/code regex \b($(join "${values}" '|'))\b 0:value
+        add-highlighter shared/cpp/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
+        add-highlighter shared/cpp/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
+        add-highlighter shared/cpp/code/types regex \b($(join "${types}" '|'))\b 0:type
+        add-highlighter shared/cpp/code/values regex \b($(join "${values}" '|'))\b 0:value
     "
 }
 
@@ -235,13 +235,13 @@ evaluate-commands %sh{
     builtin_macros="__cplusplus|__STDC_HOSTED__|__FILE__|__LINE__|__DATE__|__TIME__|__STDCPP_DEFAULT_NEW_ALIGNMENT__"
 
     printf %s "
-        add-highlighter shared/c/code regex \b(${builtin_macros})\b 0:builtin
-        add-highlighter shared/cpp/code regex \b(${builtin_macros})\b 0:builtin
+        add-highlighter shared/c/code/macros regex \b(${builtin_macros})\b 0:builtin
+        add-highlighter shared/cpp/code/macros regex \b(${builtin_macros})\b 0:builtin
     "
 }
 
 # objective-c specific
-add-highlighter shared/objc/code regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+add-highlighter shared/objc/code/number regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 
 evaluate-commands %sh{
     # Grammar
@@ -265,11 +265,11 @@ evaluate-commands %sh{
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/objc/code regex \b($(join "${keywords}" '|'))\b 0:keyword
-        add-highlighter shared/objc/code regex \b($(join "${attributes}" '|'))\b 0:attribute
-        add-highlighter shared/objc/code regex \b($(join "${types}" '|'))\b 0:type
-        add-highlighter shared/objc/code regex \b($(join "${values}" '|'))\b 0:value
-        add-highlighter shared/objc/code regex  @($(join "${decorators}" '|'))\b 0:attribute
+        add-highlighter shared/objc/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
+        add-highlighter shared/objc/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
+        add-highlighter shared/objc/code/types regex \b($(join "${types}" '|'))\b 0:type
+        add-highlighter shared/objc/code/values regex \b($(join "${values}" '|'))\b 0:value
+        add-highlighter shared/objc/code/decorators regex  @($(join "${decorators}" '|'))\b 0:attribute
     "
 }
 
@@ -298,13 +298,13 @@ hook global WinSetOption filetype=(?!c)(?!cpp)(?!objc).* %[
     unalias window alt c-family-alternative-file
 ]
 
-hook -group c-highlight global WinSetOption filetype=c %[ add-highlighter window ref c ]
+hook -group c-highlight global WinSetOption filetype=c %[ add-highlighter window/c ref c ]
 hook -group c-highlight global WinSetOption filetype=(?!c).* %[ remove-highlighter window/c ]
 
-hook -group cpp-highlight global WinSetOption filetype=cpp %[ add-highlighter window ref cpp ]
+hook -group cpp-highlight global WinSetOption filetype=cpp %[ add-highlighter window/cpp ref cpp ]
 hook -group cpp-highlight global WinSetOption filetype=(?!cpp).* %[ remove-highlighter window/cpp ]
 
-hook -group objc-highlight global WinSetOption filetype=objc %[ add-highlighter window ref objc ]
+hook -group objc-highlight global WinSetOption filetype=objc %[ add-highlighter window/objc ref objc ]
 hook -group objc-highlight global WinSetOption filetype=(?!objc).* %[ remove-highlighter window/objc ]
 
 declare-option -docstring %{control the type of include guard to be inserted in empty headers

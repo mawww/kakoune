@@ -757,7 +757,13 @@ const CommandDesc add_highlighter_cmd = {
         auto it = registry.find(name);
         if (it == registry.end())
             throw runtime_error(format("no such highlighter factory: '{}'", name));
-        get_highlighter(context, path).add_child(it->value.factory(highlighter_params));
+
+        auto slash = find(path | reverse(), '/');
+        if (slash == path.rend())
+            throw runtime_error("expected name in path");
+
+        get_highlighter(context, {path.begin(), slash.base() - 1}).add_child(
+            {slash.base(), path.end()}, it->value.factory(highlighter_params));
 
         // TODO: better, this will fail if we touch scopes highlighters that impact multiple windows
         if (context.has_window())

@@ -11,7 +11,7 @@ hook global BufCreate (.*/)?(kakrc|.*.kak) %{
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code kakrc \
+add-highlighter shared/kakrc regions -default code \
     comment (^|\h)\K# $ '' \
     double_string %{(^|\h)\K"} %{"(?!")} %{(?<!")("")+(?!")} \
     single_string %{(^|\h)\K'} %{'(?!')} %{(?<!')('')+(?!')} \
@@ -48,20 +48,21 @@ evaluate-commands %sh{
     }"
 
     # Highlight keywords (which are always surrounded by whitespace)
-    printf '%s\n' "add-highlighter shared/kakrc/code regex (?:\s|\A)\K($(join "${keywords}" '|'))(?:(?=\s)|\z) 0:keyword
-                   add-highlighter shared/kakrc/code regex (?:\s|\A)\K($(join "${attributes}" '|'))(?:(?=\s)|\z) 0:attribute
-                   add-highlighter shared/kakrc/code regex (?:\s|\A)\K($(join "${types}" '|'))(?:(?=\s)|\z) 0:type
-                   add-highlighter shared/kakrc/code regex (?:\s|\A)\K($(join "${values}" '|'))(?:(?=\s)|\z) 0:value"
+    printf '%s\n' "add-highlighter shared/kakrc/code/keywords regex (?:\s|\A)\K($(join "${keywords}" '|'))(?:(?=\s)|\z) 0:keyword
+                   add-highlighter shared/kakrc/code/attributes regex (?:\s|\A)\K($(join "${attributes}" '|'))(?:(?=\s)|\z) 0:attribute
+                   add-highlighter shared/kakrc/code/types regex (?:\s|\A)\K($(join "${types}" '|'))(?:(?=\s)|\z) 0:type
+                   add-highlighter shared/kakrc/code/values regex (?:\s|\A)\K($(join "${values}" '|'))(?:(?=\s)|\z) 0:value"
 }
 
-add-highlighter shared/kakrc/code regex \brgb:[0-9a-fA-F]{6}\b 0:value
+add-highlighter shared/kakrc/code/colors regex \brgb:[0-9a-fA-F]{6}\b 0:value
+add-highlighter shared/kakrc/code/scopes regex \b(global|shared|buffer|window)(?:\b|/) 0:value
 
-add-highlighter shared/kakrc/double_string fill string
-add-highlighter shared/kakrc/double_string regex '""' 0:default+b
-add-highlighter shared/kakrc/single_string fill string
-add-highlighter shared/kakrc/single_string regex "''" 0:default+b
-add-highlighter shared/kakrc/comment fill comment
-add-highlighter shared/kakrc/shell ref sh
+add-highlighter shared/kakrc/double_string/fill fill string
+add-highlighter shared/kakrc/double_string/escape regex '""' 0:default+b
+add-highlighter shared/kakrc/single_string/fill fill string
+add-highlighter shared/kakrc/single_string/escape regex "''" 0:default+b
+add-highlighter shared/kakrc/comment/fill fill comment
+add-highlighter shared/kakrc/shell/sh ref sh
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -82,7 +83,7 @@ define-command -hidden kak-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group kak-highlight global WinSetOption filetype=kak %{ add-highlighter window ref kakrc }
+hook -group kak-highlight global WinSetOption filetype=kak %{ add-highlighter window/kakrc ref kakrc }
 
 hook global WinSetOption filetype=kak %{
     hook window InsertChar \n -group kak-indent kak-indent-on-new-line

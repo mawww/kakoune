@@ -24,17 +24,17 @@ void HighlighterGroup::fill_unique_ids(Vector<StringView>& unique_ids) const
         hl.value->fill_unique_ids(unique_ids);
 }
 
-void HighlighterGroup::add_child(HighlighterAndId&& hl)
+void HighlighterGroup::add_child(String name, std::unique_ptr<Highlighter>&& hl)
 {
-    if ((hl.second->passes() & passes()) != hl.second->passes())
+    if ((hl->passes() & passes()) != hl->passes())
         throw runtime_error{"cannot add that highlighter to this group, passes don't match"};
 
-    hl.first = replace(hl.first, "/", "<slash>");
+    name = replace(name, "/", "<slash>");
 
-    if (m_highlighters.contains(hl.first))
-        throw runtime_error(format("duplicate id: '{}'", hl.first));
+    if (m_highlighters.contains(name))
+        throw runtime_error(format("duplicate id: '{}'", name));
 
-    m_highlighters.insert({std::move(hl.first), std::move(hl.second)});
+    m_highlighters.insert({std::move(name), std::move(hl)});
 }
 
 void HighlighterGroup::remove_child(StringView id)

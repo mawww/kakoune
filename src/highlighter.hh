@@ -35,8 +35,6 @@ constexpr bool with_bit_ops(Meta::Type<HighlightPass>) { return true; }
 
 struct Highlighter;
 
-using HighlighterAndId = std::pair<String, std::unique_ptr<Highlighter>>;
-
 struct DisplaySetup
 {
     // Window position relative to the buffer origin
@@ -71,7 +69,7 @@ struct Highlighter
 
     virtual bool has_children() const;
     virtual Highlighter& get_child(StringView path);
-    virtual void add_child(HighlighterAndId&& hl);
+    virtual void add_child(String name, std::unique_ptr<Highlighter>&& hl);
     virtual void remove_child(StringView id);
     virtual Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const;
     virtual void fill_unique_ids(Vector<StringView>& unique_ids) const;
@@ -86,7 +84,7 @@ private:
 };
 
 using HighlighterParameters = ConstArrayView<String>;
-using HighlighterFactory = std::function<HighlighterAndId (HighlighterParameters params)>;
+using HighlighterFactory = std::function<std::unique_ptr<Highlighter> (HighlighterParameters params)>;
 
 struct HighlighterFactoryAndDocstring
 {
