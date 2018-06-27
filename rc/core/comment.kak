@@ -150,15 +150,18 @@ define-command comment-line -docstring '(un)comment selected lines using line co
         try %{
             # Keep non-empty lines
             execute-keys <a-K>\A\s*\z<ret>
+            set-register / "\A\Q%opt{comment_line}\E\h?"
 
             try %{
-                # Select the comment characters and remove them
-                set-register / "\A\Q%opt{comment_line}\E\h*"
-                execute-keys s<ret>d
-            } catch %{
-                # Comment the line
+                # See if there are any uncommented lines in the selection
+                execute-keys -draft <a-K><ret>
+
+                # There are uncommented lines, so comment everything
                 set-register '"' "%opt{comment_line} "
                 execute-keys P
+            } catch %{
+                # All lines were commented, so uncomment everything
+                execute-keys s<ret>d
             }
         }
     }
