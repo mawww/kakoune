@@ -617,10 +617,26 @@ void insert_output(Context& context, NormalParams)
             if (cmdline.empty())
                 return;
 
-            auto str = ShellManager::instance().eval(
-                cmdline, context, {}, ShellManager::Flags::WaitForStdout).first;
             ScopedEdition edition(context);
-            context.selections().insert(str, mode);
+            Buffer& buffer = context.buffer();
+            auto& shell_manager = ShellManager::instance();
+            auto& selections = context.selections();
+            Vector<String> ins;
+            const size_t old_main = selections.main_index();
+
+            for (size_t i = 0; i < selections.size(); i++)
+            {
+                selections.set_main_index(i);
+
+                auto& sel = selections.main();
+                auto str = shell_manager.eval(cmdline, context, content(buffer, sel),
+                                       ShellManager::Flags::WaitForStdout).first;
+
+                ins.emplace_back(str);
+            }
+
+            selections.set_main_index(old_main);
+            selections.insert(ins, mode);
         });
 }
 
