@@ -150,16 +150,32 @@ define-command comment-line -docstring '(un)comment selected lines using line co
         try %{
             # Keep non-empty lines
             execute-keys <a-K>\A\s*\z<ret>
+        } catch %{
+        }
+
+        try %{
+            set-register / "\A\Q%opt{comment_line}\E\h?"
 
             try %{
-                # Select the comment characters and remove them
-                set-register / "\A\Q%opt{comment_line}\E\h*"
-                execute-keys s<ret>d
-            } catch %{
-                # Comment the line
+                # See if there are any uncommented lines in the selection
+                execute-keys -draft <a-K><ret>
+
+                # There are uncommented lines, so comment everything
                 set-register '"' "%opt{comment_line} "
+                align-cursors-left
                 execute-keys P
+            } catch %{
+                # All lines were commented, so uncomment everything
+                execute-keys s<ret>d
             }
         }
+    }
+}
+
+define-command align-cursors-left -docstring 'set all cursor (and anchor) columns to the column of the leftmost cursor' %{
+    %sh{
+        leftmost_column=$(echo "$kak_selections_desc" | tr ':' '\n' | cut -d',' -f1 | cut -d'.' -f2 | sort -n | head -n1)
+        aligned_selections=$(echo "$kak_selections_desc" | sed "s/\.[0-9]\+,/.$leftmost_column,/g")
+        echo "select $aligned_selections"
     }
 }
