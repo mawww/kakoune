@@ -33,6 +33,24 @@ change to make Kakoune command model cleaner and more robust.
 
   - selection descs are whitespaces separated instead of `:` separated
 
+* Highlighters syntax has changed to permit explicit naming and remove
+  highlighter specific name parameters (such as for the group highlighter)
+  `add-highlighter <path>/<name> <type> <params>` is the new syntax.
+
+* Regions highlighters have been overhauled and are now specified with
+  a sequence of commands instead of a single one:
+
+  ------------------------------------------------------------------
+  add-highlighter <path>/<name> regions
+  add-highlighter <path>/<name>/<region name> region <begin> <end> \
+  <recurse> <type> <params>
+  ------------------------------------------------------------------
+
+  They also are not necessarily groups anymore, a region can directly
+  apply any other highlighter
+
+  See <<highlighters#,`:doc highlighters`>>
+
 == Kakoune 2018.04.13
 
 First official Kakoune release.
