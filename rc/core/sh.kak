@@ -27,7 +27,7 @@ evaluate-commands %sh{
     }"
 
     # Highlight keywords
-    printf %s "add-highlighter shared/sh/code/keywords regex \b($(join ${keywords} '|'))\b 0:keyword"
+    printf %s "add-highlighter shared/sh/code/ regex \b($(join "${keywords}" '|'))\b 0:keyword"
 }
 
 add-highlighter shared/sh/code/operators regex [\[\]\(\)&|]{1,2} 0:operator

@@ -8,15 +8,14 @@ hook global BufCreate .*/?[mM]akefile %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default content makefile \
-   comment '#' '$' '' \
-   evaluate-commands '\$\(' '\)' '\('
+add-highlighter shared/makefile regions
 
-add-highlighter shared/makefile/comment fill comment
-add-highlighter shared/makefile/evaluate-commands fill value
+add-highlighter shared/makefile/content default-region group
+add-highlighter shared/makefile/comment region '#' '$' '' fill comment
+add-highlighter shared/makefile/evaluate-commands region '\$\(' '\)' '\(' fill value
 
-add-highlighter shared/makefile/content regex ^[\w.%-]+\h*:\s 0:variable
-add-highlighter shared/makefile/content regex [+?:]= 0:operator
+add-highlighter shared/makefile/content/ regex ^[\w.%-]+\h*:\s 0:variable
+add-highlighter shared/makefile/content/ regex [+?:]= 0:operator
 
 evaluate-commands %sh{
     # Grammar
@@ -50,7 +49,7 @@ define-command -hidden makefile-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group makefile-highlight global WinSetOption filetype=makefile %{ add-highlighter window ref makefile }
+hook -group makefile-highlight global WinSetOption filetype=makefile %{ add-highlighter window/makefile ref makefile }
 
 hook global WinSetOption filetype=makefile %{
     hook window InsertChar \n -group makefile-indent makefile-indent-on-new-line

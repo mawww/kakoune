@@ -122,9 +122,9 @@ define-command -params 1 -hidden doc-render %{
     try %{ execute-keys -draft \%s \\((?=\*)|(?=`)) <ret> d }
 
     set-option buffer readonly true
-    add-highlighter buffer ranges doc_render_ranges
-    add-highlighter buffer ranges doc_render_links
-    add-highlighter buffer wrap -word -indent
+    add-highlighter buffer/ ranges doc_render_ranges
+    add-highlighter buffer/ ranges doc_render_links
+    add-highlighter buffer/ wrap -word -indent
     map buffer normal <ret> :doc-follow-link<ret>
 }
 
