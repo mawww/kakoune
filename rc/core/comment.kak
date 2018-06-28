@@ -150,7 +150,6 @@ define-command comment-line -docstring '(un)comment selected lines using line co
         try %{
             # Keep non-empty lines
             execute-keys <a-K>\A\s*\z<ret>
-        } catch %{
         }
 
         try %{
