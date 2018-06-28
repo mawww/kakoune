@@ -2,17 +2,17 @@ declare-option -docstring "name of the client in which documentation is to be di
     str docsclient
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
-    add-highlighter window group git-log-highlight
-    add-highlighter window/git-log-highlight regex '^(commit) ([0-9a-f]+)$' 1:yellow 2:red
-    add-highlighter window/git-log-highlight regex '^([a-zA-Z_-]+:) (.*?)$' 1:green 2:magenta
-    add-highlighter window/git-log-highlight ref diff # highlight potential diffs from the -p option
+    add-highlighter window/git-log-highlight group 
+    add-highlighter window/git-log-highlight/ regex '^(commit) ([0-9a-f]+)$' 1:yellow 2:red
+    add-highlighter window/git-log-highlight/ regex '^([a-zA-Z_-]+:) (.*?)$' 1:green 2:magenta
+    add-highlighter window/git-log-highlight/ ref diff # highlight potential diffs from the -p option
 }
 
 hook -group git-log-highlight global WinSetOption filetype=(?!git-log).* %{ remove-highlighter window/git-log-highlight }
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
-    add-highlighter window group git-status-highlight
-    add-highlighter window/git-status-highlight regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
+    add-highlighter window/git-status-highlight group 
+    add-highlighter window/git-status-highlight/ regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
 }
 
 hook -group git-status-highlight global WinSetOption filetype=(?!git-status).* %{ remove-highlighter window/git-status-highlight }
@@ -63,7 +63,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     run_git_blame() {
         (
             printf %s "evaluate-commands -client '$kak_client' %{
-                      try %{ add-highlighter window flag_lines GitBlame git_blame_flags }
+                      try %{ add-highlighter window/git-blame flag_lines GitBlame git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
                   git blame "$@" --incremental ${kak_buffile} | awk '
@@ -181,7 +181,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
        hide-blame)
             printf %s "try %{
                 set-option buffer=$kak_bufname git_blame_flags ''
-                remove-highlighter window/hlflags_git_blame_flags
+                remove-highlighter window/git-blame
             }"
             ;;
        show-diff)
