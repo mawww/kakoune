@@ -766,10 +766,10 @@ const CommandDesc add_highlighter_cmd = {
             return join(params | transform([](StringView s) { return replace(s, "/", "_"); }), "_");
         };
 
-        const StringView parent{path.begin(), slash.base() - 1};
         String name{slash.base(), path.end()};
-        get_highlighter(context, parent).add_child(name.empty() ? auto_name(parser.positionals_from(1)) : std::move(name),
-                                                   it->value.factory(highlighter_params));
+        Highlighter& parent = get_highlighter(context, {path.begin(), slash.base() - 1});
+        parent.add_child(name.empty() ? auto_name(parser.positionals_from(1)) : std::move(name),
+                            it->value.factory(highlighter_params, &parent));
 
         // TODO: better, this will fail if we touch scopes highlighters that impact multiple windows
         if (context.has_window())

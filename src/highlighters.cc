@@ -220,7 +220,7 @@ auto apply_face = [](const Face& face)
     };
 };
 
-static std::unique_ptr<Highlighter> create_fill_highlighter(HighlighterParameters params)
+static std::unique_ptr<Highlighter> create_fill_highlighter(HighlighterParameters params, Highlighter*)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
@@ -302,7 +302,7 @@ public:
         ++m_regex_version;
     }
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         if (params.size() < 2)
             throw runtime_error("wrong parameter count");
@@ -478,7 +478,7 @@ private:
     RegexHighlighter m_highlighter;
 };
 
-std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParameters params)
+std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParameters params, Highlighter*)
 {
     if (params.size() < 2)
         throw runtime_error("wrong parameter count");
@@ -528,7 +528,7 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
     return make_hl(get_regex, get_face);
 }
 
-std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters params)
+std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters params, Highlighter*)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -575,7 +575,7 @@ std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters param
     return make_highlighter(std::move(func));
 }
 
-std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters params)
+std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters params, Highlighter*)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -850,7 +850,7 @@ struct WrapHighlighter : Highlighter
         return get_column(buffer, tabstop, {line, col});
     }
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         static const ParameterDesc param_desc{
             { { "word", { false, "" } },
@@ -984,7 +984,7 @@ void show_whitespaces(HighlightContext context, DisplayBuffer& display_buffer, B
     }
 }
 
-std::unique_ptr<Highlighter> show_whitespaces_factory(HighlighterParameters params)
+std::unique_ptr<Highlighter> show_whitespaces_factory(HighlighterParameters params, Highlighter*)
 {
     static const ParameterDesc param_desc{
         { { "tab", { true, "" } },
@@ -1021,7 +1021,7 @@ struct LineNumbersHighlighter : Highlighter
         m_hl_cursor_line{hl_cursor_line},
         m_separator{std::move(separator)} {}
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         static const ParameterDesc param_desc{
             { { "relative", { false, "" } },
@@ -1158,7 +1158,7 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
     }
 }
 
-std::unique_ptr<Highlighter> create_matching_char_highlighter(HighlighterParameters params)
+std::unique_ptr<Highlighter> create_matching_char_highlighter(HighlighterParameters params, Highlighter*)
 {
     return make_highlighter(show_matching_char);
 }
@@ -1279,7 +1279,7 @@ struct FlagLinesHighlighter : Highlighter
           m_option_name{std::move(option_name)},
           m_default_face{std::move(default_face)} {}
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         if (params.size() != 2)
             throw runtime_error("wrong parameter count");
@@ -1424,7 +1424,7 @@ struct RangesHighlighter : Highlighter
         : Highlighter{HighlightPass::Colorize}
         , m_option_name{std::move(option_name)} {}
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         if (params.size() != 1)
             throw runtime_error("wrong parameter count");
@@ -1466,7 +1466,7 @@ struct ReplaceRangesHighlighter : Highlighter
         : Highlighter{HighlightPass::Colorize}
         , m_option_name{std::move(option_name)} {}
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         if (params.size() != 1)
             throw runtime_error("wrong parameter count");
@@ -1529,7 +1529,7 @@ HighlightPass parse_passes(StringView str)
     return passes;
 }
 
-std::unique_ptr<Highlighter> create_highlighter_group(HighlighterParameters params)
+std::unique_ptr<Highlighter> create_highlighter_group(HighlighterParameters params, Highlighter*)
 {
     static const ParameterDesc param_desc{
         { { "passes", { true, "" } } },
@@ -1546,7 +1546,7 @@ struct ReferenceHighlighter : Highlighter
     ReferenceHighlighter(HighlightPass passes, String name)
         : Highlighter{passes}, m_name{std::move(name)} {}
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         static const ParameterDesc param_desc{
             { { "passes", { true, "" } } },
@@ -1837,15 +1837,27 @@ public:
         return { 0, 0, complete(path, cursor_pos, container) };
     }
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         if (not params.empty())
             throw runtime_error{"unexpected parameters"};
         return std::make_unique<RegionsHighlighter>();
     }
 
-    static std::unique_ptr<Highlighter> create_region(HighlighterParameters params)
+    static bool is_regions(Highlighter* parent)
     {
+        if (dynamic_cast<RegionsHighlighter*>(parent))
+            return true;
+        if (auto* region = dynamic_cast<RegionHighlighter*>(parent))
+            return is_regions(&region->delegate());
+        return false;
+    }
+
+    static std::unique_ptr<Highlighter> create_region(HighlighterParameters params, Highlighter* parent)
+    {
+        if (not is_regions(parent))
+            throw runtime_error{"region highlighter can only be added to a regions parent"};
+
         static const ParameterDesc param_desc{
             { { "match-capture", { false, "" } } },
             ParameterDesc::Flags::SwitchesOnlyAtStart, 4
@@ -1860,16 +1872,19 @@ public:
         const RegexCompileFlags flags = match_capture ?
             RegexCompileFlags::Optimize : RegexCompileFlags::NoSubs | RegexCompileFlags::Optimize;
 
-        auto delegate = HighlighterRegistry::instance()[parser[3]].factory(parser.positionals_from(4));
+        auto delegate = HighlighterRegistry::instance()[parser[3]].factory(parser.positionals_from(4), nullptr);
         return std::make_unique<RegionHighlighter>(std::move(delegate), Regex{parser[0], flags}, Regex{parser[1], flags}, parser[2].empty() ? Regex{} : Regex{parser[2], flags}, match_capture);
     }
 
-    static std::unique_ptr<Highlighter> create_default_region(HighlighterParameters params)
+    static std::unique_ptr<Highlighter> create_default_region(HighlighterParameters params, Highlighter* parent)
     {
+        if (not is_regions(parent))
+            throw runtime_error{"default-region highlighter can only be added to a regions parent"};
+
         static const ParameterDesc param_desc{ {}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 };
         ParametersParser parser{params, param_desc};
 
-        auto delegate = HighlighterRegistry::instance()[parser[0]].factory(parser.positionals_from(1));
+        auto delegate = HighlighterRegistry::instance()[parser[0]].factory(parser.positionals_from(1), nullptr);
         return std::make_unique<RegionHighlighter>(std::move(delegate));
     }
 
@@ -2057,6 +2072,8 @@ private:
 
         bool match_capture() const { return m_match_capture; }
         bool is_default() const { return m_default; }
+
+        Highlighter& delegate() { return *m_delegate; }
 
     private:
         std::unique_ptr<Highlighter> m_delegate;

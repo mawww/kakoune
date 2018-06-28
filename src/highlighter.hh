@@ -84,7 +84,7 @@ private:
 };
 
 using HighlighterParameters = ConstArrayView<String>;
-using HighlighterFactory = std::function<std::unique_ptr<Highlighter> (HighlighterParameters params)>;
+using HighlighterFactory = std::function<std::unique_ptr<Highlighter> (HighlighterParameters params, Highlighter* parent)>;
 
 struct HighlighterFactoryAndDocstring
 {
