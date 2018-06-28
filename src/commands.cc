@@ -749,21 +749,27 @@ const CommandDesc add_highlighter_cmd = {
 
         auto begin = parser.begin();
         StringView path = *begin++;
-        StringView name = *begin++;
+        StringView type = *begin++;
         Vector<String> highlighter_params;
         for (; begin != parser.end(); ++begin)
             highlighter_params.push_back(*begin);
 
-        auto it = registry.find(name);
+        auto it = registry.find(type);
         if (it == registry.end())
-            throw runtime_error(format("no such highlighter factory: '{}'", name));
+            throw runtime_error(format("no such highlighter type: '{}'", type));
 
         auto slash = find(path | reverse(), '/');
         if (slash == path.rend())
-            throw runtime_error("expected name in path");
+            throw runtime_error("no parent in path");
 
-        get_highlighter(context, {path.begin(), slash.base() - 1}).add_child(
-            {slash.base(), path.end()}, it->value.factory(highlighter_params));
+        auto auto_name = [](ConstArrayView<String> params) {
+            return join(params | transform([](StringView s) { return replace(s, "/", "_"); }), "_");
+        };
+
+        const StringView parent{path.begin(), slash.base() - 1};
+        String name{slash.base(), path.end()};
+        get_highlighter(context, parent).add_child(name.empty() ? auto_name(parser.positionals_from(1)) : std::move(name),
+                                                   it->value.factory(highlighter_params));
 
         // TODO: better, this will fail if we touch scopes highlighters that impact multiple windows
         if (context.has_window())
