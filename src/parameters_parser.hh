@@ -119,7 +119,7 @@ struct ParametersParser
     ConstArrayView<String> positionals_from(size_t first) const
     {
         kak_assert(m_desc.flags & (ParameterDesc::Flags::SwitchesOnlyAtStart | ParameterDesc::Flags::SwitchesAsPositional));
-        return m_params.subrange(m_positional_indices[first]);
+        return m_params.subrange(first < m_positional_indices.size() ? m_positional_indices[first] : -1);
     }
 
     iterator begin() const { return iterator(*this, 0); }
