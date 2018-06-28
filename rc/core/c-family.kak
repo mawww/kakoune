@@ -136,17 +136,15 @@ evaluate-commands %sh{
         fi
 
         printf %s\\n '
-            add-highlighter shared/FT regions -default code -match-capture \
-                string %{MAYBEAT(?<!QUOTE)(?<!QUOTE\\)"} %{(?<!\\)(?:\\\\)*"} "" \
-                string %{R"([^(]*)\(} %{\)([^")]*)"} "" \
-                comment /\* \*/ "" \
-                comment // $ "" \
-                disabled ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" "#\h*if(?:def)?" \
-                macro %{^\h*?\K#} %{(?<!\\)\n} ""
+            add-highlighter shared/FT regions
+            add-highlighter shared/FT/code default-region group
+            add-highlighter shared/FT/string region %{MAYBEAT(?<!QUOTE)(?<!QUOTE\\)"} %{(?<!\\)(?:\\\\)*"} "" fill string
+            add-highlighter shared/FT/raw_string region %{R"([^(]*)\(} %{\)([^")]*)"} "" fill string
+            add-highlighter shared/FT/comment region /\* \*/ "" fill comment
+            add-highlighter shared/FT/line_comment region // $ "" fill comment
+            add-highlighter shared/FT/disabled region ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" "#\h*if(?:def)?" fill rgb:666666
+            add-highlighter shared/FT/macro region %{^\h*?\K#} %{(?<!\\)\n} "" group
 
-            add-highlighter shared/FT/string/fill fill string
-            add-highlighter shared/FT/comment/fill fill comment
-            add-highlighter shared/FT/disabled/fill fill rgb:666666
             add-highlighter shared/FT/macro/fill fill meta
             add-highlighter shared/FT/macro/include regex ^\h*#include\h+(\S*) 1:module
             ' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g; s/MAYBEAT/${maybe_at}/;"

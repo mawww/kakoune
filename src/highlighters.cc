@@ -1728,60 +1728,17 @@ struct RegionMatches
     }
 };
 
-struct RegionDesc
-{
-    String m_name;
-    Regex m_begin;
-    Regex m_end;
-    Regex m_recurse;
-    bool  m_match_capture;
-
-    RegionMatches find_matches(const Buffer& buffer) const
-    {
-        RegionMatches res;
-        Kakoune::find_matches(buffer, res.begin_matches, m_begin, m_match_capture);
-        Kakoune::find_matches(buffer, res.end_matches, m_end, m_match_capture);
-        if (not m_recurse.empty())
-            Kakoune::find_matches(buffer, res.recurse_matches, m_recurse, m_match_capture);
-        return res;
-    }
-
-    void update_matches(const Buffer& buffer,
-                        ConstArrayView<LineModification> modifs,
-                        RegionMatches& matches) const
-    {
-        Kakoune::update_matches(buffer, modifs, matches.begin_matches, m_begin, m_match_capture);
-        Kakoune::update_matches(buffer, modifs, matches.end_matches, m_end, m_match_capture);
-        if (not m_recurse.empty())
-            Kakoune::update_matches(buffer, modifs, matches.recurse_matches, m_recurse, m_match_capture);
-    }
-};
-
 struct RegionsHighlighter : public Highlighter
 {
 public:
-    using RegionDescList = Vector<RegionDesc, MemoryDomain::Highlight>;
-
-    RegionsHighlighter(RegionDescList regions, String default_group)
-        : Highlighter{HighlightPass::Colorize},
-          m_regions{std::move(regions)},
-          m_default_group{std::move(default_group)}
-    {
-        if (m_regions.empty())
-            throw runtime_error("at least one region must be defined");
-
-        for (auto& region : m_regions)
-        {
-            m_groups.insert({region.m_name, HighlighterGroup{HighlightPass::Colorize}});
-            if (region.m_begin.empty() or region.m_end.empty())
-                throw runtime_error("invalid regex for region highlighter");
-        }
-        if (not m_default_group.empty())
-            m_groups.insert({m_default_group, HighlighterGroup{HighlightPass::Colorize}});
-    }
+    RegionsHighlighter()
+        : Highlighter{HighlightPass::Colorize} {}
 
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
     {
+        if (m_regions.empty())
+            return;
+
         auto display_range = display_buffer.range();
         const auto& buffer = context.context.buffer();
         auto& regions = get_regions_for_range(buffer, range);
@@ -1796,8 +1753,8 @@ public:
             return c;
         };
 
-        auto default_group_it = m_groups.find(m_default_group);
-        const bool apply_default = default_group_it != m_groups.end();
+        auto default_region_it = m_regions.find(m_default_region);
+        const bool apply_default = default_region_it != m_regions.end();
 
         auto last_begin = (begin == regions.begin()) ?
                              BufferCoord{0,0} : (begin-1)->end;
@@ -1807,20 +1764,20 @@ public:
             if (apply_default and last_begin < begin->begin)
                 apply_highlighter(context, display_buffer,
                                   correct(last_begin), correct(begin->begin),
-                                  default_group_it->value);
+                                  *default_region_it->value);
 
-            auto it = m_groups.find(begin->group);
-            if (it == m_groups.end())
+            auto it = m_regions.find(begin->region);
+            if (it == m_regions.end())
                 continue;
             apply_highlighter(context, display_buffer,
                               correct(begin->begin), correct(begin->end),
-                              it->value);
+                              *it->value);
             last_begin = begin->end;
         }
         if (apply_default and last_begin < display_range.end)
             apply_highlighter(context, display_buffer,
                               correct(last_begin), range.end,
-                              default_group_it->value);
+                              *default_region_it->value);
     }
 
     bool has_children() const override { return true; }
@@ -1829,13 +1786,31 @@ public:
     {
         auto sep_it = find(path, '/');
         StringView id(path.begin(), sep_it);
-        auto it = m_groups.find(id);
-        if (it == m_groups.end())
+        auto it = m_regions.find(id);
+        if (it == m_regions.end())
             throw child_not_found(format("no such id: {}", id));
         if (sep_it == path.end())
-            return it->value;
+            return *it->value;
         else
-            return it->value.get_child({sep_it+1, path.end()});
+            return it->value->get_child({sep_it+1, path.end()});
+    }
+
+    void add_child(String name, std::unique_ptr<Highlighter>&& hl) override
+    {
+        if (not dynamic_cast<RegionHighlighter*>(hl.get()))
+            throw runtime_error{"only region highlighter can be added as child of a regions highlighter"};
+        if (m_regions.contains(name))
+            throw runtime_error{format("duplicate id: '{}'", name)};
+
+        std::unique_ptr<RegionHighlighter> region_hl{dynamic_cast<RegionHighlighter*>(hl.release())};
+        if (region_hl->is_default())
+        {
+            if (not m_default_region.empty())
+                throw runtime_error{"default region already defined"};
+            m_default_region = name;
+        }
+
+        m_regions.insert({std::move(name), std::move(region_hl)});
     }
 
     Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override
@@ -1848,51 +1823,146 @@ public:
             return offset_pos(hl.complete_child(path.substr(offset), cursor_pos - offset, group), offset);
         }
 
-        auto container = m_groups | transform(&decltype(m_groups)::Item::key);
+        auto container = m_regions | transform(&decltype(m_regions)::Item::key);
         return { 0, 0, complete(path, cursor_pos, container) };
     }
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params)
     {
+        if (not params.empty())
+            throw runtime_error{"unexpected parameters"};
+        return std::make_unique<RegionsHighlighter>();
+    }
+
+    static std::unique_ptr<Highlighter> create_region(HighlighterParameters params)
+    {
         static const ParameterDesc param_desc{
-            { { "default", { true, "" } }, { "match-capture", { false, "" } } },
-            ParameterDesc::Flags::SwitchesOnlyAtStart, 5
+            { { "match-capture", { false, "" } } },
+            ParameterDesc::Flags::SwitchesOnlyAtStart, 4
         };
 
         ParametersParser parser{params, param_desc};
-        if ((parser.positional_count() % 4) != 0)
-            throw runtime_error("wrong parameter count, expected (<group name> <begin> <end> <recurse>)+");
 
         const bool match_capture = (bool)parser.get_switch("match-capture");
-        RegionsHighlighter::RegionDescList regions;
-        for (size_t i = 0; i < parser.positional_count(); i += 4)
-        {
-            if (parser[i].empty() or parser[i+1].empty() or parser[i+2].empty())
-                throw runtime_error("group id, begin and end must not be empty");
+        if (parser[0].empty() or parser[1].empty())
+            throw runtime_error("begin and end must not be empty");
 
-            const RegexCompileFlags flags = match_capture ?
-                RegexCompileFlags::Optimize : RegexCompileFlags::NoSubs | RegexCompileFlags::Optimize;
+        const RegexCompileFlags flags = match_capture ?
+            RegexCompileFlags::Optimize : RegexCompileFlags::NoSubs | RegexCompileFlags::Optimize;
 
-            regions.push_back({ parser[i],
-                                Regex{parser[i+1], flags}, Regex{parser[i+2], flags},
-                                parser[i+3].empty() ? Regex{} : Regex{parser[i+3], flags},
-                                match_capture });
-        }
+        auto delegate = HighlighterRegistry::instance()[parser[3]].factory(parser.positionals_from(4));
+        return std::make_unique<RegionHighlighter>(std::move(delegate), Regex{parser[0], flags}, Regex{parser[1], flags}, parser[2].empty() ? Regex{} : Regex{parser[2], flags}, match_capture);
+    }
 
-        auto default_group = parser.get_switch("default").value_or(StringView{}).str();
-        return std::make_unique<RegionsHighlighter>(std::move(regions), default_group);
+    static std::unique_ptr<Highlighter> create_default_region(HighlighterParameters params)
+    {
+        static const ParameterDesc param_desc{ {}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 };
+        ParametersParser parser{params, param_desc};
+
+        auto delegate = HighlighterRegistry::instance()[parser[0]].factory(parser.positionals_from(1));
+        return std::make_unique<RegionHighlighter>(std::move(delegate));
     }
 
 private:
-    const RegionDescList m_regions;
-    const String m_default_group;
-    HashMap<String, HighlighterGroup, MemoryDomain::Highlight> m_groups;
+    struct RegionHighlighter : public Highlighter
+    {
+        RegionHighlighter(std::unique_ptr<Highlighter>&& delegate,
+                          Regex begin, Regex end, Regex recurse,
+                          bool match_capture)
+            : Highlighter{delegate->passes()},
+              m_delegate{std::move(delegate)},
+              m_begin{std::move(begin)}, m_end{std::move(end)}, m_recurse{std::move(recurse)},
+              m_match_capture{match_capture}
+       {
+       }
+
+        RegionHighlighter(std::unique_ptr<Highlighter>&& delegate)
+            : Highlighter{delegate->passes()}, m_delegate{std::move(delegate)}, m_default{true}
+       {
+       }
+
+        bool has_children() const override
+        {
+            return m_delegate->has_children();
+        }
+
+        Highlighter& get_child(StringView path) override
+        {
+            return m_delegate->get_child(path);
+        }
+
+        void add_child(String name, std::unique_ptr<Highlighter>&& hl) override
+        {
+            return m_delegate->add_child(name, std::move(hl));
+        }
+
+        void remove_child(StringView id) override
+        {
+            return m_delegate->remove_child(id);
+        }
+
+        Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override
+        {
+            return m_delegate->complete_child(path, cursor_pos, group);
+        }
+
+        void fill_unique_ids(Vector<StringView>& unique_ids) const override
+        {
+            return m_delegate->fill_unique_ids(unique_ids);
+        }
+
+        void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
+        {
+            return m_delegate->highlight(context, display_buffer, range);
+        }
+
+        RegionMatches find_matches(const Buffer& buffer) const
+        {
+            RegionMatches res;
+            if (m_default)
+                return res;
+
+            Kakoune::find_matches(buffer, res.begin_matches, m_begin, m_match_capture);
+            Kakoune::find_matches(buffer, res.end_matches, m_end, m_match_capture);
+            if (not m_recurse.empty())
+                Kakoune::find_matches(buffer, res.recurse_matches, m_recurse, m_match_capture);
+            return res;
+        }
+
+        void update_matches(const Buffer& buffer,
+                            ConstArrayView<LineModification> modifs,
+                            RegionMatches& matches) const
+        {
+            if (m_default)
+                return;
+
+            Kakoune::update_matches(buffer, modifs, matches.begin_matches, m_begin, m_match_capture);
+            Kakoune::update_matches(buffer, modifs, matches.end_matches, m_end, m_match_capture);
+            if (not m_recurse.empty())
+                Kakoune::update_matches(buffer, modifs, matches.recurse_matches, m_recurse, m_match_capture);
+        }
+
+        bool match_capture() const { return m_match_capture; }
+        bool is_default() const { return m_default; }
+
+    private:
+        std::unique_ptr<Highlighter> m_delegate;
+
+        Regex m_begin;
+        Regex m_end;
+        Regex m_recurse;
+        bool  m_match_capture = false;
+        bool  m_default = false;
+    };
+
+    HashMap<String, std::unique_ptr<RegionHighlighter>, MemoryDomain::Highlight> m_regions;
+    String m_default_region;
 
     struct Region
     {
         BufferCoord begin;
         BufferCoord end;
-        StringView group;
+        StringView region;
     };
     using RegionList = Vector<Region, MemoryDomain::Highlight>;
 
@@ -1932,13 +2002,13 @@ private:
             {
                 cache.matches.resize(m_regions.size());
                 for (size_t i = 0; i < m_regions.size(); ++i)
-                    cache.matches[i] = m_regions[i].find_matches(buffer);
+                    cache.matches[i] = m_regions.item(i).value->find_matches(buffer);
             }
             else
             {
                 auto modifs = compute_line_modifications(buffer, cache.timestamp);
                 for (size_t i = 0; i < m_regions.size(); ++i)
-                    m_regions[i].update_matches(buffer, modifs, cache.matches[i]);
+                    m_regions.item(i).value->update_matches(buffer, modifs, cache.matches[i]);
             }
 
             cache.regions.clear();
@@ -1955,24 +2025,23 @@ private:
              begin != end; )
         {
             const RegionMatches& matches = cache.matches[begin.first];
-            auto& region = m_regions[begin.first];
+            auto& region = m_regions.item(begin.first);
             auto beg_it = begin.second;
             auto end_it = matches.find_matching_end(beg_it->end_coord(),
-                                                    region.m_match_capture ? beg_it->capture
-                                                                           : Optional<StringView>{});
+                                                    region.value->match_capture() ? beg_it->capture : Optional<StringView>{});
 
             if (end_it == matches.end_matches.end() or end_it->end_coord() >= range.end)
             {
                 regions.push_back({ {beg_it->line, beg_it->begin},
                                     range.end,
-                                    region.m_name });
+                                    region.key });
                 break;
             }
             else
             {
                 regions.push_back({ beg_it->begin_coord(),
                                    end_it->end_coord(),
-                                   region.m_name });
+                                   region.key });
                 auto end_coord = end_it->end_coord();
 
                 // With empty begin and end matches (for example if the regexes
@@ -2034,8 +2103,8 @@ void register_highlighters()
     registry.insert({
         "group",
         { create_highlighter_group,
-          "Parameters: [-passes <passes>] <group name>\n"
-          "Creates a named group that can contain other highlighters,\n"
+          "Parameters: [-passes <passes>]\n"
+          "Creates a group that can contain other highlighters,\n"
           "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
           "which specify what kind of highlighters can be put in the group" } });
     registry.insert({
@@ -2083,13 +2152,26 @@ void register_highlighters()
     registry.insert({
         "regions",
         { RegionsHighlighter::create,
-          "Parameters: [-default <default group>] [-match-capture] <name> {<region name> <begin> <end> <recurse>}..."
-          "Split the highlighting into regions defined by the <begin>, <end> and <recurse> regex\n"
-          "The region <region name> starts at <begin> match, end at <end> match that does not\n"
-          "close a <recurse> match. In between region is the <default group>.\n"
-          "Highlighting a region is done by adding highlighters into the different <region name> subgroups.\n"
-          "If -match-capture is specified, then regions end/recurse matches must have the same \\1\n"
-          "capture content as the begin to be considered"} });
+          "Parameters: None"
+          "Holds child region highlighters and segments the buffer in ranges based on those regions\n"
+          "definitions. The regions highlighter finds the next region to start by finding which\n"
+          "of its child region has the leftmost starting point from current position. In between\n"
+          "regions, the default-region child highlighter is applied (if such a child exists)" } });
+    registry.insert({
+        "region",
+        { RegionsHighlighter::create_region,
+          "Parameters: [-match-capture] <begin> <end> <recurse> <type> <params>...\n."
+          "Define a region for a regions highlighter, and apply the given delegate\n"
+          "highlighter as defined by <type> and eventual <params>...\n"
+          "The region starts at <begin> match and ends at the first <end> match that\n"
+          "does not close a <recurse> match.\n"
+          "If -match-capture is specified, then regions end/recurse matches must have\n"
+          "the same \\1 capture content as the begin match to be considered"} });
+    registry.insert({
+        "default-region",
+        { RegionsHighlighter::create_default_region,
+          "Parameters: <delegate_type> <delegate_params>...\n"
+          "Define the default region of a regions highlighter" } });
 }
 
 }

@@ -2,32 +2,32 @@ hook global BufCreate .*\.(z|ba|c|k|mk)?sh(rc|_profile)? %{
     set-option buffer filetype sh
 }
 
-add-highlighter shared/sh regions -default code -match-capture \
-    double_string  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)(?:\\\\)*"} '' \
-    single_string %{(?<!\\)(?:\\\\)*\K'} %{'} '' \
-    comment '(?<!\$)#' '$' '' \
-    heredoc '<<-?(\w+)' '^\t*(\w+)$' ''
+add-highlighter shared/sh regions
+add-highlighter shared/sh/code default-region group
+add-highlighter shared/sh/double_string region  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)(?:\\\\)*"} '' group
+add-highlighter shared/sh/single_string region %{(?<!\\)(?:\\\\)*\K'} %{'} '' fill string
+add-highlighter shared/sh/comment region '(?<!\$)#' '$' '' fill comment
+add-highlighter shared/sh/heredoc region -match-capture '<<-?(\w+)' '^\t*(\w+)$' '' fill string
 
 add-highlighter shared/sh/double_string/fill fill string
-add-highlighter shared/sh/single_string/fill fill string
-add-highlighter shared/sh/comment/fill fill comment
-add-highlighter shared/sh/heredoc/fill fill string
 
 evaluate-commands %sh{
     # Grammar
-    keywords="alias|bind|builtin|caller|case|cd|command|coproc|declare|do|done"
-    keywords="${keywords}|echo|elif|else|enable|esac|exit|fi|for|function|help"
-    keywords="${keywords}|if|in|let|local|logout|mapfile|printf|read|readarray"
-    keywords="${keywords}|readonly|return|select|set|shift|source|test|then"
-    keywords="${keywords}|time|type|typeset|ulimit|unalias|until|while|break|continue"
+    keywords="alias bind builtin caller case cd command coproc declare do done
+              echo elif else enable esac exit fi for function help
+              if in let local logout mapfile printf read readarray
+              readonly return select set shift source test then
+              time type typeset ulimit unalias until while break continue"
+
+    join() { printf "%s" "$1" | tr -s ' \n' "$2"; }
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=sh %{
-        set-option window static_words ${keywords}
-    }" | tr '|' ' '
+        set-option window static_words $(join "${keywords}" ' ')
+    }"
 
     # Highlight keywords
-    printf %s "add-highlighter shared/sh/code/keywords regex \b(${keywords})\b 0:keyword"
+    printf %s "add-highlighter shared/sh/code/keywords regex \b($(join ${keywords} '|'))\b 0:keyword"
 }
 
 add-highlighter shared/sh/code/operators regex [\[\]\(\)&|]{1,2} 0:operator

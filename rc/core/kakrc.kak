@@ -11,18 +11,19 @@ hook global BufCreate (.*/)?(kakrc|.*.kak) %{
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/kakrc regions -default code \
-    comment (^|\h)\K# $ '' \
-    double_string %{(^|\h)\K"} %{"(?!")} %{(?<!")("")+(?!")} \
-    single_string %{(^|\h)\K'} %{'(?!')} %{(?<!')('')+(?!')} \
-    shell '(^|\h)\K%?%sh\{' '\}' '\{' \
-    shell '(^|\h)\K%?%sh\(' '\)' '\(' \
-    shell '(^|\h)\K%?%sh\[' '\]' '\[' \
-    shell '(^|\h)\K%?%sh<'  '>'  '<' \
-    shell '(^|\h)\K-shell-(completion|candidates)\h+%\{' '\}' '\{' \
-    shell '(^|\h)\K-shell-(completion|candidates)\h+%\(' '\)' '\(' \
-    shell '(^|\h)\K-shell-(completion|candidates)\h+%\[' '\]' '\[' \
-    shell '(^|\h)\K-shell-(completion|candidates)\h+%<'  '>'  '<'
+add-highlighter shared/kakrc regions
+add-highlighter shared/kakrc/code default-region group
+add-highlighter shared/kakrc/comment region (^|\h)\K# $ '' fill comment
+add-highlighter shared/kakrc/double_string region %{(^|\h)\K"} %{"(?!")} %{(?<!")("")+(?!")} group
+add-highlighter shared/kakrc/single_string region %{(^|\h)\K'} %{'(?!')} %{(?<!')('')+(?!')} group
+add-highlighter shared/kakrc/shell1 region '(^|\h)\K%?%sh\{' '\}' '\{' ref sh
+add-highlighter shared/kakrc/shell2 region '(^|\h)\K%?%sh\(' '\)' '\(' ref sh
+add-highlighter shared/kakrc/shell3 region '(^|\h)\K%?%sh\[' '\]' '\[' ref sh
+add-highlighter shared/kakrc/shell4 region '(^|\h)\K%?%sh<'  '>'  '<' ref sh
+add-highlighter shared/kakrc/shell5 region '(^|\h)\K-shell-(completion|candidates)\h+%\{' '\}' '\{' ref sh
+add-highlighter shared/kakrc/shell6 region '(^|\h)\K-shell-(completion|candidates)\h+%\(' '\)' '\(' ref sh
+add-highlighter shared/kakrc/shell7 region '(^|\h)\K-shell-(completion|candidates)\h+%\[' '\]' '\[' ref sh
+add-highlighter shared/kakrc/shell8 region '(^|\h)\K-shell-(completion|candidates)\h+%<'  '>'  '<' ref sh
 
 evaluate-commands %sh{
     # Grammar
@@ -61,8 +62,6 @@ add-highlighter shared/kakrc/double_string/fill fill string
 add-highlighter shared/kakrc/double_string/escape regex '""' 0:default+b
 add-highlighter shared/kakrc/single_string/fill fill string
 add-highlighter shared/kakrc/single_string/escape regex "''" 0:default+b
-add-highlighter shared/kakrc/comment/fill fill comment
-add-highlighter shared/kakrc/shell/sh ref sh
 
 # Commands
 # ‾‾‾‾‾‾‾‾
