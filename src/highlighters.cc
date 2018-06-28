@@ -1860,7 +1860,8 @@ public:
 
         static const ParameterDesc param_desc{
             { { "match-capture", { false, "" } } },
-            ParameterDesc::Flags::SwitchesOnlyAtStart, 4
+            ParameterDesc::Flags::SwitchesOnlyAtStart | ParameterDesc::Flags::IgnoreUnknownSwitches,
+            4
         };
 
         ParametersParser parser{params, param_desc};

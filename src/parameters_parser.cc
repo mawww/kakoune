@@ -25,22 +25,33 @@ String generate_switches_doc(const SwitchMap& switches)
     return res;
 }
 
-ParametersParser::ParametersParser(ParameterList params,
-                                   const ParameterDesc& desc)
+ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& desc)
     : m_params(params),
       m_desc(desc)
 {
+    const bool switches_only_at_start = desc.flags & ParameterDesc::Flags::SwitchesOnlyAtStart;
+    const bool ignore_unknown_switches = desc.flags & ParameterDesc::Flags::IgnoreUnknownSwitches;
     bool only_pos = desc.flags & ParameterDesc::Flags::SwitchesAsPositional;
+
     Vector<bool> switch_seen(desc.switches.size(), false);
     for (size_t i = 0; i < params.size(); ++i)
     {
-        if (not only_pos and params[i] == "--")
+        if (not only_pos and not ignore_unknown_switches and params[i] == "--")
             only_pos = true;
         else if (not only_pos and not params[i].empty() and params[i][0_byte] == '-')
         {
             auto it = m_desc.switches.find(params[i].substr(1_byte));
             if (it == m_desc.switches.end())
+            {
+                if (ignore_unknown_switches)
+                {
+                    m_positional_indices.push_back(i);
+                    if (switches_only_at_start)
+                        only_pos = true;
+                    continue;
+                }
                 throw unknown_option(params[i]);
+            }
 
             auto switch_index = it - m_desc.switches.begin();
             if (switch_seen[switch_index])
@@ -52,7 +63,7 @@ ParametersParser::ParametersParser(ParameterList params,
         }
         else // positional
         {
-            if (desc.flags & ParameterDesc::Flags::SwitchesOnlyAtStart)
+            if (switches_only_at_start)
                 only_pos = true;
             m_positional_indices.push_back(i);
         }

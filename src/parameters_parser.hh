@@ -52,8 +52,9 @@ struct ParameterDesc
     enum class Flags
     {
         None = 0,
-        SwitchesOnlyAtStart = 1,
-        SwitchesAsPositional = 2,
+        SwitchesOnlyAtStart   = 0b0001,
+        SwitchesAsPositional  = 0b0010,
+        IgnoreUnknownSwitches = 0b0100
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 

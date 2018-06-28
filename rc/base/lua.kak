@@ -15,9 +15,9 @@ add-highlighter shared/lua regions
 add-highlighter shared/lua/code default-region group
 add-highlighter shared/lua/double_string region '"'   (?<!\\)(?:\\\\)*" '' fill string
 add-highlighter shared/lua/single_string region "'"   (?<!\\)(?:\\\\)*' '' fill string
-add-highlighter shared/lua/comment       region -- '--'  $                 '' fill comment
+add-highlighter shared/lua/comment       region '--'  $                 '' fill comment
 add-highlighter shared/lua/raw_string  region -match-capture '\[(=*)\['   '\](=*)\]'       '' fill string
-add-highlighter shared/lua/raw_comment region -match-capture -- '--\[(=*)\[' '\](=*)\]'       '' fill comment
+add-highlighter shared/lua/raw_comment region -match-capture '--\[(=*)\[' '\](=*)\]'       '' fill comment
 
 add-highlighter shared/lua/code/ regex \b(and|break|do|else|elseif|end|false|for|function|goto|if|in|local|nil|not|or|repeat|return|then|true|until|while)\b 0:keyword
 
