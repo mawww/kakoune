@@ -153,7 +153,7 @@ define-command comment-line -docstring '(un)comment selected lines using line co
 
             try %{
                 # Select the comment characters and remove them
-                set-register / "\A\Q%opt{comment_line}\E\h*"
+                set-register / "\A\Q%opt{comment_line}\E\h?"
                 execute-keys s<ret>d
             } catch %{
                 # Comment the line
