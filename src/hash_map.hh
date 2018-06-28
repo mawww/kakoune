@@ -272,6 +272,8 @@ struct HashMap
     constexpr const_iterator begin() const { return m_items.begin(); }
     constexpr const_iterator end() const { return m_items.end(); }
 
+    const Item& item(size_t index) const { return m_items[index]; }
+
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
     constexpr iterator find(const KeyType& key)
     {
