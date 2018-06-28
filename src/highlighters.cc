@@ -1814,6 +1814,15 @@ public:
         ++m_regions_timestamp;
     }
 
+    void remove_child(StringView id)
+    {
+        if (id == m_default_region)
+            m_default_region = String{};
+
+        m_regions.remove(id);
+        ++m_regions_timestamp;
+    }
+
     Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override
     {
         auto sep_it = find(path, '/');
