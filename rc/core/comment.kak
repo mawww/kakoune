@@ -162,7 +162,7 @@ define-command comment-line -docstring '(un)comment selected lines using line co
 
                 # There are uncommented lines, so comment everything
                 set-register '"' "%opt{comment_line} "
-                align-cursors-left
+                align-selections-left
                 execute-keys P
             } catch %{
                 # All lines were commented, so uncomment everything
@@ -172,10 +172,10 @@ define-command comment-line -docstring '(un)comment selected lines using line co
     }
 }
 
-define-command align-cursors-left -docstring 'set all cursor (and anchor) columns to the column of the leftmost cursor' %{
+define-command align-selections-left -docstring 'extend selections to the left to align with the leftmost selected column' %{
     %sh{
         leftmost_column=$(echo "$kak_selections_desc" | tr ':' '\n' | cut -d',' -f1 | cut -d'.' -f2 | sort -n | head -n1)
-        aligned_selections=$(echo "$kak_selections_desc" | sed "s/\.[0-9]\+,/.$leftmost_column,/g")
+        aligned_selections=$(echo "$kak_selections_desc" | sed -r "s/\.[0-9]+,/.$leftmost_column,/g")
         echo "select $aligned_selections"
     }
 }
