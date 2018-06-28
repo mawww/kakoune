@@ -1,5 +1,5 @@
-add-highlighter window number_lines
+add-highlighter window/ number_lines
 set window tabstop 4
-add-highlighter window column 3 default,red
-add-highlighter window column 7 default,green
-add-highlighter window column 5 default,blue
+add-highlighter window/ column 3 default,red
+add-highlighter window/ column 7 default,green
+add-highlighter window/ column 5 default,blue

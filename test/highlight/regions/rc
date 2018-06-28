@@ -1,7 +1,4 @@
-add-highlighter window regions -default code regions_test \
-    string %{"} %{(?<!\\)(\\\\)*"} '' \
-    shell '\$\{' '\}' '\{'
-
-add-highlighter window/regions_test/code fill yellow
-add-highlighter window/regions_test/string fill green
-add-highlighter window/regions_test/shell fill red
+add-highlighter window/regions_test regions
+add-highlighter window/regions_test/code default-region fill yellow
+add-highlighter window/regions_test/string region %{"} %{(?<!\\)(\\\\)*"} '' fill green
+add-highlighter window/regions_test/shell region '\$\{' '\}' '\{' fill red

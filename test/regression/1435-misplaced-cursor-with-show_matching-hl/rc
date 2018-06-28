@@ -1,1 +1,1 @@
-add-highlighter window show_whitespaces
+add-highlighter window/ show_whitespaces

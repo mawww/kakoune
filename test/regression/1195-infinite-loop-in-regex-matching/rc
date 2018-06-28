@@ -1,2 +1,3 @@
-add-highlighter window regions -default code -match-capture sh \
-    heredoc '<<-?(\w+)' '^\t*(\w+)$' ''
+add-highlighter window/sh regions
+add-highlighter window/sh/code default-region group
+add-highlighter window/sh/heredoc region -match-capture '<<-?(\w+)' '^\t*(\w+)$' '' group

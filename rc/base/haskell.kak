@@ -11,24 +11,20 @@ hook global BufCreate .*[.](hs) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code haskell \
-    string   (?<!'\\)(?<!')"                (?<!\\)(\\\\)*" ''   \
-    macro   ^\h*?\K#                        (?<!\\)\n       ''   \
-    pragma  \{-#                            '#-\}'          \{-  \
-    comment \{-                               -\}           \{-  \
-    comment --(?:[^!#$%&*+./<>?@\\\^|~=]|$) $               ''
+add-highlighter shared/haskell regions
+add-highlighter shared/haskell/code default-region group
+add-highlighter shared/haskell/string       region (?<!'\\)(?<!')"                 (?<!\\)(\\\\)*" ''  fill string
+add-highlighter shared/haskell/macro        region ^\h*?\K#                        (?<!\\)\n       ''  fill meta
+add-highlighter shared/haskell/pragma       region \{-#                            '#-\}'          \{- fill meta
+add-highlighter shared/haskell/comment      region \{-                               -\}           \{- fill comment
+add-highlighter shared/haskell/line_comment region -- --(?:[^!#$%&*+./<>?@\\\^|~=]|$) $               ''  fill comment
 
-add-highlighter shared/haskell/string  fill string
-add-highlighter shared/haskell/comment fill comment
-add-highlighter shared/haskell/pragma  fill meta
-add-highlighter shared/haskell/macro   fill meta
-
-add-highlighter shared/haskell/code regex (?<!')\b0x+[A-Fa-f0-9]+ 0:value
-add-highlighter shared/haskell/code regex (?<!')\b\d+([.]\d+)? 0:value
-add-highlighter shared/haskell/code regex (?<!')\b(import|hiding|qualified|module)(?!')\b 0:keyword
-add-highlighter shared/haskell/code regex (?<!')\b(import)(?!')\b[^\n]+(?<!')\b(as)(?!')\b 2:keyword
-add-highlighter shared/haskell/code regex (?<!')\b(class|data|default|deriving|infix|infixl|infixr|instance|module|newtype|pattern|type|where)(?!')\b 0:keyword
-add-highlighter shared/haskell/code regex (?<!')\b(case|do|else|if|in|let|mdo|of|proc|rec|then)(?!')\b 0:attribute
+add-highlighter shared/haskell/code/ regex (?<!')\b0x+[A-Fa-f0-9]+ 0:value
+add-highlighter shared/haskell/code/ regex (?<!')\b\d+([.]\d+)? 0:value
+add-highlighter shared/haskell/code/ regex (?<!')\b(import|hiding|qualified|module)(?!')\b 0:keyword
+add-highlighter shared/haskell/code/ regex (?<!')\b(import)(?!')\b[^\n]+(?<!')\b(as)(?!')\b 2:keyword
+add-highlighter shared/haskell/code/ regex (?<!')\b(class|data|default|deriving|infix|infixl|infixr|instance|module|newtype|pattern|type|where)(?!')\b 0:keyword
+add-highlighter shared/haskell/code/ regex (?<!')\b(case|do|else|if|in|let|mdo|of|proc|rec|then)(?!')\b 0:attribute
 
 # The complications below is because period has many uses:
 # As function composition operator (possibly without spaces) like "." and "f.g"
@@ -39,32 +35,32 @@ add-highlighter shared/haskell/code regex (?<!')\b(case|do|else|if|in|let|mdo|of
 
 # matches uppercase identifiers:  Monad Control.Monad
 # not non-space separated dot:    Just.const
-add-highlighter shared/haskell/code regex \b([A-Z]['\w]*\.)*[A-Z]['\w]*(?!['\w])(?![.a-z]) 0:variable
+add-highlighter shared/haskell/code/ regex \b([A-Z]['\w]*\.)*[A-Z]['\w]*(?!['\w])(?![.a-z]) 0:variable
 
 # matches infix identifier: `mod` `Apa._T'M`
-add-highlighter shared/haskell/code regex `\b([A-Z]['\w]*\.)*[\w]['\w]*` 0:operator
+add-highlighter shared/haskell/code/ regex `\b([A-Z]['\w]*\.)*[\w]['\w]*` 0:operator
 # matches imported operators: M.! M.. Control.Monad.>>
 # not operator keywords:      M... M.->
-add-highlighter shared/haskell/code regex \b[A-Z]['\w]*\.[~<=>|:!?/.@$*&#%+\^\-\\]+ 0:operator
+add-highlighter shared/haskell/code/ regex \b[A-Z]['\w]*\.[~<=>|:!?/.@$*&#%+\^\-\\]+ 0:operator
 # matches dot: .
 # not possibly incomplete import:  a.
 # not other operators:             !. .!
-add-highlighter shared/haskell/code regex (?<![\w~<=>|:!?/.@$*&#%+\^\-\\])\.(?![~<=>|:!?/.@$*&#%+\^\-\\]) 0:operator
+add-highlighter shared/haskell/code/ regex (?<![\w~<=>|:!?/.@$*&#%+\^\-\\])\.(?![~<=>|:!?/.@$*&#%+\^\-\\]) 0:operator
 # matches other operators: ... > < <= ^ <*> <$> etc
 # not dot: .
 # not operator keywords:  @ .. -> :: ~
-add-highlighter shared/haskell/code regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])[~<=>|:!?/.@$*&#%+\^\-\\]+ 0:operator
+add-highlighter shared/haskell/code/ regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])[~<=>|:!?/.@$*&#%+\^\-\\]+ 0:operator
 
 # matches operator keywords: @ ->
-add-highlighter shared/haskell/code regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])(@|~|<-|->|=>|::|=|:|[|])(?![~<=>|:!?/.@$*&#%+\^\-\\]) 1:keyword
+add-highlighter shared/haskell/code/ regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])(@|~|<-|->|=>|::|=|:|[|])(?![~<=>|:!?/.@$*&#%+\^\-\\]) 1:keyword
 # matches: forall [..variables..] .
 # not the variables
-add-highlighter shared/haskell/code regex \b(forall)\b[^.\n]*?(\.) 1:keyword 2:keyword
+add-highlighter shared/haskell/code/ regex \b(forall)\b[^.\n]*?(\.) 1:keyword 2:keyword
 
 # matches 'x' '\\' '\'' '\n' '\0'
 # not incomplete literals: '\'
 # not valid identifiers:   w' _'
-add-highlighter shared/haskell/code regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
+add-highlighter shared/haskell/code/ regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
 # this has to come after operators so '-' etc is correct
 
 # Commands
@@ -95,7 +91,7 @@ define-command -hidden haskell-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group haskell-highlight global WinSetOption filetype=haskell %{ add-highlighter window ref haskell }
+hook -group haskell-highlight global WinSetOption filetype=haskell %{ add-highlighter window/haskell ref haskell }
 
 hook global WinSetOption filetype=haskell %{
     set-option window extra_word_chars "'"

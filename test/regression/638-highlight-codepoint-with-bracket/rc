@@ -1,1 +1,1 @@
-add-highlighter window regex '[“”]' 0:red
+add-highlighter window/ regex '[“”]' 0:red

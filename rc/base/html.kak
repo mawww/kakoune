@@ -15,26 +15,19 @@ hook global BufCreate .*\.xml %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions html                  \
-    comment <!--     -->                  '' \
-    tag     <          >                  '' \
-    style   <style\b.*?>\K  (?=</style>)  '' \
-    script  <script\b.*?>\K (?=</script>) ''
+add-highlighter shared/html regions
+add-highlighter shared/html/comment region <!--     -->                  '' fill comment
+add-highlighter shared/html/tag     region <          >                  '' regions
+add-highlighter shared/html/style   region <style\b.*?>\K  (?=</style>)  '' ref css
+add-highlighter shared/html/script  region <script\b.*?>\K (?=</script>) '' ref javascript
 
-add-highlighter shared/html/comment fill comment
+add-highlighter shared/html/tag/base default-region group
+add-highlighter shared/html/tag/ region '"' (?<!\\)(\\\\)*"      '' fill string
+add-highlighter shared/html/tag/ region "'" "'"                  '' fill string
 
-add-highlighter shared/html/style  ref css
-add-highlighter shared/html/script ref javascript
-
-add-highlighter shared/html/tag regex \b([a-zA-Z0-9_-]+)=? 1:attribute
-add-highlighter shared/html/tag regex </?(\w+) 1:keyword
-add-highlighter shared/html/tag regex <(!DOCTYPE(\h+\w+)+) 1:meta
-
-add-highlighter shared/html/tag regions content \
-    string '"' (?<!\\)(\\\\)*"      '' \
-    string "'" "'"                  ''
-
-add-highlighter shared/html/tag/content/string fill string
+add-highlighter shared/html/tag/base/ regex \b([a-zA-Z0-9_-]+)=? 1:attribute
+add-highlighter shared/html/tag/base/ regex </?(\w+) 1:keyword
+add-highlighter shared/html/tag/base/ regex <(!DOCTYPE(\h+\w+)+) 1:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -65,7 +58,7 @@ define-command -hidden html-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group html-highlight global WinSetOption filetype=(?:html|xml) %{ add-highlighter window ref html }
+hook -group html-highlight global WinSetOption filetype=(?:html|xml) %{ add-highlighter window/html ref html }
 
 hook global WinSetOption filetype=(?:html|xml) %{
     hook window ModeChange insert:.* -group html-hooks  html-filter-around-selections

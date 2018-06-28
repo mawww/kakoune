@@ -1,2 +1,2 @@
-add-highlighter window wrap
+add-highlighter window/ wrap
 set global scrolloff 1,0

@@ -11,18 +11,15 @@ hook global BufCreate .*[.](lua) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code -match-capture lua \
-    string  '"'           (?<!\\)(?:\\\\)*" '' \
-    string  "'"          (?<!\\)(?:\\\\)*'  '' \
-    string  '\[(=*)\['   '\](=*)\]'       '' \
-    comment '--\[(=*)\[' '\](=*)\]'       '' \
-    comment '--'         '$'              '' \
+add-highlighter shared/lua regions
+add-highlighter shared/lua/code default-region group
+add-highlighter shared/lua/double_string region '"'   (?<!\\)(?:\\\\)*" '' fill string
+add-highlighter shared/lua/single_string region "'"   (?<!\\)(?:\\\\)*' '' fill string
+add-highlighter shared/lua/comment       region -- '--'  $                 '' fill comment
+add-highlighter shared/lua/raw_string  region -match-capture '\[(=*)\['   '\](=*)\]'       '' fill string
+add-highlighter shared/lua/raw_comment region -match-capture -- '--\[(=*)\[' '\](=*)\]'       '' fill comment
 
-add-highlighter shared/lua/string fill string
-
-add-highlighter shared/lua/comment fill comment
-
-add-highlighter shared/lua/code regex \b(and|break|do|else|elseif|end|false|for|function|goto|if|in|local|nil|not|or|repeat|return|then|true|until|while)\b 0:keyword
+add-highlighter shared/lua/code/ regex \b(and|break|do|else|elseif|end|false|for|function|goto|if|in|local|nil|not|or|repeat|return|then|true|until|while)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -87,7 +84,7 @@ define-command -hidden lua-insert-on-new-line %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group lua-highlight global WinSetOption filetype=lua %{ add-highlighter window ref lua }
+hook -group lua-highlight global WinSetOption filetype=lua %{ add-highlighter window/lua ref lua }
 
 hook global WinSetOption filetype=lua %{
     hook window InsertChar .* -group lua-indent lua-indent-on-char

@@ -11,43 +11,34 @@ hook global BufCreate .*(([.](rb))|(irbrc)|(pryrc)|(Capfile|[.]cap)|(Gemfile|[.]
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code -match-capture ruby       \
-    double_string '"' (?<!\\)(\\\\)*"        '' \
-    single_string "'" (?<!\\)(\\\\)*'        '' \
-    backtick      '`' (?<!\\)(\\\\)*`        '' \
-    regex         '/' (?<!\\)(\\\\)*/[imox]* '' \
-    comment       '#' '$'                    '' \
-    comment       ^begin= ^=end              '' \
-    literal       '%[iqrswxIQRSWX]\(' \)     \( \
-    literal       '%[iqrswxIQRSWX]\{' \}     \{ \
-    literal       '%[iqrswxIQRSWX]\[' \]     \[ \
-    literal       '%[iqrswxIQRSWX]<'   >      < \
-    heredoc '<<[-~]?(\w+)'      '^\h*(\w+)$' '' \
-    division '[\w\)\]](/|(\h+/\h+))' '\w' '' # Help Kakoune to better detect /…/ literals
+add-highlighter shared/ruby regions
+add-highlighter shared/ruby/code default-region group
+add-highlighter shared/ruby/double_string region '"' (?<!\\)(\\\\)*"        '' regions
+add-highlighter shared/ruby/single_string region "'" (?<!\\)(\\\\)*'        '' fill string
+add-highlighter shared/ruby/backtick      region '`' (?<!\\)(\\\\)*`        '' regions
+add-highlighter shared/ruby/regex         region '/' (?<!\\)(\\\\)*/[imox]* '' regions
+add-highlighter shared/ruby/              region '#' '$'                    '' fill comment
+add-highlighter shared/ruby/              region ^begin= ^=end              '' fill comment
+add-highlighter shared/ruby/              region '%[iqrswxIQRSWX]\(' \)     \( fill meta
+add-highlighter shared/ruby/              region '%[iqrswxIQRSWX]\{' \}     \{ fill meta
+add-highlighter shared/ruby/              region '%[iqrswxIQRSWX]\[' \]     \[ fill meta
+add-highlighter shared/ruby/              region '%[iqrswxIQRSWX]<'   >      < fill meta
+add-highlighter shared/ruby/heredoc region '<<[-~]?(\w+)'      '^\h*(\w+)$' '' fill string
+add-highlighter shared/ruby/division region '[\w\)\]](/|(\h+/\h+))' '\w' '' group # Help Kakoune to better detect /…/ literals
 
 # Regular expression flags are: i → ignore case, m → multi-lines, o → only interpolate #{} blocks once, x → extended mode (ignore white spaces)
 # Literals are: i → array of symbols, q → string, r → regular expression, s → symbol, w → array of words, x → capture shell result
 
-add-highlighter shared/ruby/double_string fill string
-add-highlighter shared/ruby/double_string regions regions interpolation \Q#{ \} \{
-add-highlighter shared/ruby/double_string/regions/interpolation fill meta
+add-highlighter shared/ruby/double_string/ default-region fill string
+add-highlighter shared/ruby/double_string/interpolation region \Q#{ \} \{ fill meta
 
-add-highlighter shared/ruby/single_string fill string
-add-highlighter shared/ruby/heredoc fill string
+add-highlighter shared/ruby/backtick/ default-region fill meta
+add-highlighter shared/ruby/backtick/interpolation region  \Q#{ \} \{ fill meta
 
-add-highlighter shared/ruby/backtick fill meta
-add-highlighter shared/ruby/backtick regions regions interpolation \Q#{ \} \{
-add-highlighter shared/ruby/backtick/regions/interpolation fill meta
+add-highlighter shared/ruby/regex/ default-region fill meta
+add-highlighter shared/ruby/regex/interpolation region \Q#{ \} \{ fill meta
 
-add-highlighter shared/ruby/regex fill meta
-add-highlighter shared/ruby/regex regions regions interpolation \Q#{ \} \{
-add-highlighter shared/ruby/regex/regions/interpolation fill meta
-
-add-highlighter shared/ruby/comment fill comment
-
-add-highlighter shared/ruby/literal fill meta
-
-add-highlighter shared/ruby/code regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|((?<!:):(([A-Za-z]\w*[=?!]?)|(\[\]=?)))|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:variable
+add-highlighter shared/ruby/code/ regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|((?<!:):(([A-Za-z]\w*[=?!]?)|(\[\]=?)))|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:variable
 
 evaluate-commands %sh{
     # Grammar
@@ -67,10 +58,10 @@ evaluate-commands %sh{
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/ruby/code regex \b(${keywords})\b 0:keyword
-        add-highlighter shared/ruby/code regex \b(${attributes})\b 0:attribute
-        add-highlighter shared/ruby/code regex \b(${values})\b 0:value
-        add-highlighter shared/ruby/code regex \b(${meta})\b 0:meta
+        add-highlighter shared/ruby/code/ regex \b(${keywords})\b 0:keyword
+        add-highlighter shared/ruby/code/ regex \b(${attributes})\b 0:attribute
+        add-highlighter shared/ruby/code/ regex \b(${values})\b 0:value
+        add-highlighter shared/ruby/code/ regex \b(${meta})\b 0:meta
     "
 }
 
@@ -153,7 +144,7 @@ define-command -hidden ruby-insert-on-new-line %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group ruby-highlight global WinSetOption filetype=ruby %{ add-highlighter window ref ruby }
+hook -group ruby-highlight global WinSetOption filetype=ruby %{ add-highlighter window/ruby ref ruby }
 
 hook global WinSetOption filetype=ruby %{
     hook window InsertChar .* -group ruby-indent ruby-indent-on-char

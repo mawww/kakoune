@@ -1,1 +1,1 @@
-add-highlighter window wrap -word
+add-highlighter window/ wrap -word
