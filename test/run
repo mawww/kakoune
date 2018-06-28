@@ -55,7 +55,7 @@ main() {
     fi
 
     ui_in="${root}/${dir}/ui-in"
-    [ ! -f $ui_in ] && ui_in="/dev/tty"
+    [ ! -f $ui_in ] && ui_in="/dev/null"
 
     number_tests=$(($number_tests + 1))
     touch in; cp in out
