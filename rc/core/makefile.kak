@@ -27,7 +27,7 @@ evaluate-commands %sh{
     }" | tr '|' ' '
 
     # Highlight keywords
-    printf %s "add-highlighter shared/makefile/content regex \b(${keywords})\b 0:keyword"
+    printf %s "add-highlighter shared/makefile/content/ regex \b(${keywords})\b 0:keyword"
 }
 
 # Commands

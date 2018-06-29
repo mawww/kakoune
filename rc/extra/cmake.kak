@@ -2,21 +2,20 @@ hook global BufCreate .+\.cmake|.*/CMakeLists.txt %{
     set-option buffer filetype cmake
 }
 
-add-highlighter shared/ regions -match-capture -default code cmake \
-   comment '#' '$' '' \
-   argument '\w+\h*\(\K' '(?=\))' '\(' \
+add-highlighter shared/cmake regions
+add-highlighter shared/cmake/code default-region group
+add-highlighter shared/cmake/comment  region '#' '$' '' fill comment
+add-highlighter shared/cmake/argument region '\w+\h*\(\K' '(?=\))' '\(' regions
 
-add-highlighter shared/cmake/argument regions -match-capture -default args argument \
-   quoted '"' '(?<!\\)(\\\\)*"' '' \
-   quoted '\[(=*)\[' '\](=*)\]' ''
+add-highlighter shared/cmake/code/ regex '\w+\h*(?=\()' 0:meta
 
-add-highlighter shared/cmake/comment fill comment
-add-highlighter shared/cmake/code regex '\w+\h*(?=\()' 0:meta
+add-highlighter shared/cmake/argument/args default-region regex '\$\{\w+\}' 0:variable
+add-highlighter shared/cmake/argument/quoted region '"' '(?<!\\)(\\\\)*"' '' group
+add-highlighter shared/cmake/argument/raw-quoted region '\[(=*)\[' '\](=*)\]' '' ref cmake/argument/quoted
 
-add-highlighter shared/cmake/argument/argument/args regex '\$\{\w+\}' 0:variable
-add-highlighter shared/cmake/argument/argument/quoted fill string
-add-highlighter shared/cmake/argument/argument/quoted regex '\$\{\w+\}' 0:variable
-add-highlighter shared/cmake/argument/argument/quoted regex '\w+\h*(?=\()' 0:function
+add-highlighter shared/cmake/argument/quoted/ fill string
+add-highlighter shared/cmake/argument/quoted/ regex '\$\{\w+\}' 0:variable
+add-highlighter shared/cmake/argument/quoted/ regex '\w+\h*(?=\()' 0:function
 
-hook -group cmake-highlight global WinSetOption filetype=cmake %{ add-highlighter window ref cmake }
+hook -group cmake-highlight global WinSetOption filetype=cmake %{ add-highlighter window/cmake ref cmake }
 hook -group cmake-highlight global WinSetOption filetype=(?!cmake).* %{ remove-highlighter window/cmake }

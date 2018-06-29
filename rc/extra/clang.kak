@@ -127,7 +127,7 @@ define-command clang-enable-autocomplete -docstring "Enable automatic clang comp
 }
 
 define-command clang-disable-autocomplete -docstring "Disable automatic clang completion" %{
-    evaluate-commands %sh{ printf "set-option window completers "; printf %s\\n "'${kak_opt_completers}'" | sed -e "s/'option=clang_completions'//g" }
+    evaluate-commands %sh{ printf "set-option window completers %s\n" $(printf %s "${kak_opt_completers}" | sed -e "s/'option=clang_completions'//g") }
     remove-hooks window clang-autocomplete
     unalias window complete clang-complete
 }
@@ -150,13 +150,13 @@ define-command -hidden clang-show-error-info %{
 define-command clang-enable-diagnostics -docstring %{Activate automatic error reporting and diagnostics
 Information about the analysis are showned after the buffer has been parsed with the clang-parse function} \
 %{
-    add-highlighter window flag_lines default clang_flags
+    add-highlighter window/clang_flags flag_lines default clang_flags
     hook window -group clang-diagnostics NormalIdle .* %{ clang-show-error-info }
     hook window -group clang-diagnostics WinSetOption ^clang_errors=.* %{ info; clang-show-error-info }
 }
 
 define-command clang-disable-diagnostics -docstring "Disable automatic error reporting and diagnostics" %{
-    remove-highlighter window/hlflags_clang_flags
+    remove-highlighter window/clang_flags
     remove-hooks window clang-diagnostics
 }
 

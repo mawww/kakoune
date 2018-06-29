@@ -36,7 +36,7 @@ evaluate-commands %sh{
     attributes="global buffer window current
                 normal insert menu prompt goto view user object
                 number_lines show_matching show_whitespaces fill regex dynregex group flag_lines
-                ranges line column wrap ref regions replace-ranges"
+                ranges line column wrap ref regions region default-region replace-ranges"
     types="int bool str regex int-list str-list completions line-specs range-specs"
     values="default black red green yellow blue magenta cyan white yes no false true"
 

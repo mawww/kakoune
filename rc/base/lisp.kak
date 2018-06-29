@@ -11,17 +11,15 @@ hook global BufCreate .*[.](lisp) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code lisp \
-    string  '"' (?<!\\)(\\\\)*"        '' \
-    comment ';' '$'                    ''
+add-highlighter shared/lisp regions
+add-highlighter shared/lisp/code default-region group
+add-highlighter shared/lisp/string  '"' (?<!\\)(\\\\)*" '' fill string
+add-highlighter shared/lisp/comment ';' '$'             '' fill comment
 
-add-highlighter shared/lisp/string  fill string
-add-highlighter shared/lisp/comment fill comment
-
-add-highlighter shared/lisp/code regex \b(nil|true|false)\b 0:value
-add-highlighter shared/lisp/code regex (((\Q***\E)|(///)|(\Q+++\E)){1,3})|(1[+-])|(<|>|<=|=|>=) 0:operator
-add-highlighter shared/lisp/code regex \b(([':]\w+)|([*]\H+[*]))\b 0:variable
-add-highlighter shared/lisp/code regex \b(def[a-z]+|if|do|let|lambda|catch|and|assert|while|def|do|fn|finally|let|loop|new|quote|recur|set!|throw|try|var|case|if-let|if-not|when|when-first|when-let|when-not|(cond(->|->>)?))\b 0:keyword
+add-highlighter shared/lisp/code/ regex \b(nil|true|false)\b 0:value
+add-highlighter shared/lisp/code/ regex (((\Q***\E)|(///)|(\Q+++\E)){1,3})|(1[+-])|(<|>|<=|=|>=) 0:operator
+add-highlighter shared/lisp/code/ regex \b(([':]\w+)|([*]\H+[*]))\b 0:variable
+add-highlighter shared/lisp/code/ regex \b(def[a-z]+|if|do|let|lambda|catch|and|assert|while|def|do|fn|finally|let|loop|new|quote|recur|set!|throw|try|var|case|if-let|if-not|when|when-first|when-let|when-not|(cond(->|->>)?))\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -43,7 +41,7 @@ define-command -hidden lisp-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group lisp-highlight global WinSetOption filetype=lisp %{ add-highlighter window ref lisp }
+hook -group lisp-highlight global WinSetOption filetype=lisp %{ add-highlighter window/lisp ref lisp }
 
 hook global WinSetOption filetype=lisp %{
     hook window ModeChange insert:.* -group lisp-hooks  lisp-filter-around-selections

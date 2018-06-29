@@ -13,10 +13,11 @@ hook global BufCreate .*/?Dockerfile(\.\w+)?$ %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code dockerfile \
-    string '"' '(?<!\\)(\\\\)*"' '' \
-    string "'" "'"               '' \
-    comment '#' $ ''
+add-highlighter shared/dockerfile regions
+add-highlighter shared/dockerfile/code default-region group
+add-highlighter shared/dockerfile/double_string region '"' '(?<!\\)(\\\\)*"' '' fill string
+add-highlighter shared/dockerfile/single_string region "'" "'"               '' fill string
+add-highlighter shared/dockerfile/comment region '#' $ '' fill comment
 
 evaluate-commands %sh{
     # Grammar
@@ -30,19 +31,16 @@ evaluate-commands %sh{
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/dockerfile/code regex '^(?i)(ONBUILD\h+)?(${keywords})\b' 2:keyword
-        add-highlighter shared/dockerfile/code regex '^(?i)(ONBUILD)\h+' 1:keyword
+        add-highlighter shared/dockerfile/code/ regex '^(?i)(ONBUILD\h+)?(${keywords})\b' 2:keyword
+        add-highlighter shared/dockerfile/code/ regex '^(?i)(ONBUILD)\h+' 1:keyword
     "
 }
 
-add-highlighter shared/dockerfile/code regex '\$\{[\w_]+\}' 0:value
-add-highlighter shared/dockerfile/code regex '\$[\w_]+' 0:value
-
-add-highlighter shared/dockerfile/string fill string
-add-highlighter shared/dockerfile/comment fill comment
+add-highlighter shared/dockerfile/code/ regex '\$\{[\w_]+\}' 0:value
+add-highlighter shared/dockerfile/code/ regex '\$[\w_]+' 0:value
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group dockerfile-highlight global WinSetOption filetype=dockerfile %{ add-highlighter window ref dockerfile }
+hook -group dockerfile-highlight global WinSetOption filetype=dockerfile %{ add-highlighter window/dockerfile ref dockerfile }
 hook -group dockerfile-highlight global WinSetOption filetype=(?!dockerfile).* %{ remove-highlighter window/dockerfile }
