@@ -28,11 +28,11 @@ define-command -hidden -params 1.. tmux-new-impl %{
     }
 }
 
-define-command tmux-new-vertical -params .. -command-completion -docstring "Create a new vertical pane" %{
+define-command tmux-new-vertical -params .. -command-completion -docstring "Split the current pane into two, top and bottom" %{
     tmux-new-impl 'split-window -v' %arg{@}
 }
 
-define-command tmux-new-horizontal -params .. -command-completion -docstring "Create a new horizontal pane" %{
+define-command tmux-new-horizontal -params .. -command-completion -docstring "Split the current pane into two, left and right" %{
     tmux-new-impl 'split-window -h' %arg{@}
 }
 

@@ -29,11 +29,11 @@ define-command -hidden -params 1.. iterm-new-split-impl %{
     }
 }
 
-define-command iterm-new-vertical -params .. -command-completion -docstring "Create a new vertical pane" %{
+define-command iterm-new-vertical -params .. -command-completion -docstring "Split the current pane into two, top and bottom" %{
     iterm-new-split-impl 'vertically' %arg{@}
 }
 
-define-command iterm-new-horizontal -params .. -command-completion -docstring "Create a new horizontal pane" %{
+define-command iterm-new-horizontal -params .. -command-completion -docstring "Split the current pane into two, left and right" %{
     iterm-new-split-impl 'horizontally' %arg{@}
 }
 
