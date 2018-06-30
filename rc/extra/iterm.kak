@@ -5,7 +5,7 @@
 ## an iTerm session if not in a tmux session.
 hook global KakBegin .* %{
     %sh{
-        if [ "$TERM_PROGRAM" = "iTerm.app" -a -z "$TMUX" ]; then
+        if [ "$TERM_PROGRAM" = "iTerm.app" ] && [ -z "$TMUX" ]; then
             echo "
                 alias global new iterm-new-vertical
                 alias global focus iterm-focus
@@ -18,8 +18,8 @@ define-command -hidden -params 1.. iterm-new-split-impl %{
     %sh{
         direction="$1"
         shift
-        if [ $# -gt 0 ]; then kakoune_params="-e \\\"$@\\\""; fi
-        cmd="env -P ${PATH} TMPDIR=${TMPDIR} kak -c ${kak_session} ${kakoune_params}"
+        if [ $# -gt 0 ]; then kakoune_params="-e \\\"$*\\\""; fi
+        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' kak -c '${kak_session}' ${kakoune_params}"
         osascript                                                                             \
         -e "tell application \"iTerm\""                                                       \
         -e "    tell current session of current window"                                       \
@@ -42,8 +42,8 @@ define-command -params .. -command-completion \
 All optional arguments are forwarded to the new kak client} \
     iterm-new-tab %{
     %sh{
-        if [ $# -gt 0 ]; then kakoune_params="-e \\\"$@\\\""; fi
-        cmd="env -P ${PATH} TMPDIR=${TMPDIR} kak -c ${kak_session} ${kakoune_params}"
+        if [ $# -gt 0 ]; then kakoune_params="-e \\\"$*\\\""; fi
+        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' kak -c '${kak_session}' ${kakoune_params}"
         osascript                                                       \
         -e "tell application \"iTerm\""                                 \
         -e "    tell current window"                                    \
@@ -58,8 +58,8 @@ define-command -params .. -command-completion \
 All optional arguments are forwarded to the new kak client} \
     iterm-new-window %{
     %sh{
-        if [ $# -gt 0 ]; then kakoune_params="-e \\\"$@\\\""; fi
-        cmd="env -P ${PATH} TMPDIR=${TMPDIR} kak -c ${kak_session} ${kakoune_params}"
+        if [ $# -gt 0 ]; then kakoune_params="-e \\\"$*\\\""; fi
+        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' kak -c '${kak_session}' ${kakoune_params}"
         osascript                                                      \
         -e "tell application \"iTerm\""                                \
         -e "    create window with default profile command \"${cmd}\"" \
