@@ -1386,9 +1386,11 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
             main_index = result.size();
         result.push_back(std::move(sel));
         const LineCount height = std::max(anchor.line, cursor.line) - std::min(anchor.line, cursor.line) + 1;
-        for (int i = 0; i < std::max(params.count, 1); ++i)
+        const size_t max_lines = std::max(params.count, 1);
+
+        for (size_t i = 0, nb_sels = 0; nb_sels < max_lines; ++i)
         {
-            LineCount offset =  direction * (i + 1) * height;
+            LineCount offset = direction * (i + 1) * height;
 
             const LineCount anchor_line = anchor.line + offset;
             const LineCount cursor_line = cursor.line + offset;
@@ -1407,6 +1409,8 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
                     main_index = result.size();
                 result.emplace_back(BufferCoord{anchor_line, anchor_byte},
                                     BufferCoordAndTarget{cursor_line, cursor_byte, cursor.target});
+
+                nb_sels++;
             }
         }
     }
