@@ -97,7 +97,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     }
 
     update_diff() {
-        git --no-pager diff -U0 $kak_buffile | perl -e '
+        git --no-pager diff -U0 "$kak_buffile" 2>/dev/null | perl -e '
             $flags = $ENV{"kak_timestamp"};
             foreach $line (<STDIN>) {
                 if ($line =~ /@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))?/) {
