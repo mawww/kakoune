@@ -97,25 +97,55 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     }
 
     update_diff() {
-        git diff -U0 $kak_buffile | awk '
-            BEGIN {
-                line=0
-                flags=ENVIRON["kak_timestamp"]
+        git --no-pager diff -U0 $kak_buffile | perl -e '
+            $flags = $ENV{"kak_timestamp"};
+            foreach $line (<STDIN>) {
+                if ($line =~ /@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))?/) {
+                    $from_line = $1;
+                    $from_count = ($2 eq "" ? 1 : $2);
+                    $to_line = $3;
+                    $to_count = ($4 eq "" ? 1 : $4);
+
+                    if ($from_count == 0 and $to_count > 0) {
+                        for $i (0..$to_count - 1) {
+                            $line = $to_line + $i;
+                            $flags .= ":$line|\{green\}+";
+                        }
+                    }
+                    elsif ($from_count > 0 and $to_count == 0) {
+                        if ($to_line == 0) {
+                            $flags .= ":1|\{red\}‾";
+                        } else {
+                            $flags .= ":$to_line|\{red\}_";
+                        }
+                    }
+                    elsif ($from_count > 0 and $from_count == $to_count) {
+                        for $i (0..$to_count - 1) {
+                            $line = $to_line + $i;
+                            $flags .= ":$line|\{blue\}~";
+                        }
+                    }
+                    elsif ($from_count > 0 and $from_count < $to_count) {
+                        for $i (0..$from_count - 1) {
+                            $line = $to_line + $i;
+                            $flags .= ":$line|\{blue\}~";
+                        }
+                        for $i ($from_count..$to_count - 1) {
+                            $line = $to_line + $i;
+                            $flags .= ":$line|\{green\}+";
+                        }
+                    }
+                    elsif ($to_count > 0 and $from_count > $to_count) {
+                        for $i (0..$to_count - 2) {
+                            $line = $to_line + $i;
+                            $flags .= ":$line|\{blue\}~";
+                        }
+                        $last = $to_line + $to_count - 1;
+                        $flags .= ":$last|\{blue\}~_";
+                    }
+                }
             }
-            /^---.*/ {}
-            /^@@ -[0-9]+(,[0-9]+)? \+[0-9]+(,[0-9]+)? @@.*/ {
-                 if ((x=index($3, ",")) > 0) {
-                     line=substr($3, 2, x-2)
-                 } else {
-                     line=substr($3, 2)
-                 }
-            }
-            /^\+/ {
-                 flags=flags ":" line "|{green}+"
-                 line++
-            }
-            /^\-/ { flags=flags ":" line "|{red}-" }
-            END { print "set-option buffer git_diff_flags ", flags }
+            print "set-option buffer git_diff_flags $flags"
         '
     }
 
