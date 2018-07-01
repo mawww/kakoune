@@ -33,7 +33,7 @@ add-highlighter shared/rust/code regex \b(?:u8|u16|u32|u64|u128|usize|i8|i16|i32
 add-highlighter shared/rust/code regex \b(?:mod|crate|use|extern)\b 0:module
 add-highlighter shared/rust/code regex \$\w+\b 0:variable
 add-highlighter shared/rust/code regex "'\\\\?.'" 0:value
-add-highlighter shared/rust/code regex "'\w+[^']" 0:meta
+add-highlighter shared/rust/code regex "('\w+)[^']" 1:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
