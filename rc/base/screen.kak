@@ -12,7 +12,7 @@ hook -group GNUscreen global KakBegin .* %{
 }
 
 
-define-command screen-new-vertical -params .. -command-completion -docstring "Create a new vertical region" %{
+define-command screen-new-vertical -params .. -command-completion -docstring "Split the current pane into two, left and right" %{
      %sh{
         tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
         screen -X eval \
@@ -24,7 +24,7 @@ define-command screen-new-vertical -params .. -command-completion -docstring "Cr
     }
 }
 
-define-command screen-new-horizontal -params .. -command-completion -docstring "Create a new horizontal region" %{
+define-command screen-new-horizontal -params .. -command-completion -docstring "Split the current pane into two, top and bottom" %{
      %sh{
         tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
         screen -X eval \
