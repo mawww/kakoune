@@ -11,16 +11,12 @@ hook global BufCreate .*\.p[lm] %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code perl \
-    command       (?<!\$)(?<!\\)`   (?<!\\)(\\\\)*` '' \
-    double_string (?<!\$)(?<!\\)"   (?<!\\)(\\\\)*" '' \
-    single_string (?<!\$)(?<!\\\\)' (?<!\\)(\\\\)*' '' \
-    comment       (?<!\$)(?<!\\)#   $               ''
-
-add-highlighter shared/perl/command fill magenta
-add-highlighter shared/perl/double_string fill string
-add-highlighter shared/perl/single_string fill string
-add-highlighter shared/perl/comment fill comment
+add-highlighter shared/perl regions
+add-highlighter shared/perl/code default-region group
+add-highlighter shared/perl/command       region (?<!\$)(?<!\\)`   (?<!\\)(\\\\)*` '' fill magenta
+add-highlighter shared/perl/double_string region (?<!\$)(?<!\\)"   (?<!\\)(\\\\)*" '' fill string
+add-highlighter shared/perl/single_string region (?<!\$)(?<!\\\\)' (?<!\\)(\\\\)*' '' fill string
+add-highlighter shared/perl/comment       region (?<!\$)(?<!\\)#   $               '' fill comment
 
 evaluate-commands %sh{
     # Grammar
@@ -46,26 +42,26 @@ evaluate-commands %sh{
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/perl/code regex \b(${keywords})\b 0:keyword
-        add-highlighter shared/perl/code regex \b(${attributes})\b 0:attribute
-        add-highlighter shared/perl/code regex \b(${values})\b 0:value
+        add-highlighter shared/perl/code/ regex \b(${keywords})\b 0:keyword
+        add-highlighter shared/perl/code/ regex \b(${attributes})\b 0:attribute
+        add-highlighter shared/perl/code/ regex \b(${values})\b 0:value
     "
 }
 
-add-highlighter shared/perl/code regex (?!\$)-?([0-9]*\.(?!0[xXbB]))?\b([0-9]+|0[xX][0-9a-fA-F]+|0[bb][01_]+)\.?([eE][+-]?[0-9]+)?i?\b 0:value
-add-highlighter shared/perl/code regex %{\$!|\$"|\$#|\$\$|\$%|\$&|\$'|\$\(|\$\)|\$\*|\$\+|\$,|\$_|\$-|\$`|\$\.|\$/|\$:|\$;|\$<|\$=|\$>|\$\?|\$@|\$\[|\$\\|\$\]|\$\^|\$\||\$~|%!|@\+|@-|@_} 0:value
-add-highlighter shared/perl/code regex (%ENV|%INC|%OVERLOAD|%SIG|@ARGV|@INC|@LAST_MATCH_START) 0:value
-add-highlighter shared/perl/code regex %{%\^(H)\b} 0:value
-add-highlighter shared/perl/code regex \$\^(S|T|V|W|X|A|C|D|E|F|H|I|L|M|N|O|P|R)\b 0:value
-add-highlighter shared/perl/code regex \$\^(RE_TRIE_MAXBUF|TAINT|UNICODE|UTF8LOCALE|WARNING_BITS|WIDE_SYSTEM_CALLS|CHILD_ERROR_NATIVE|ENCODING|OPEN|RE_DEBUG_FLAGS)\b 0:value
+add-highlighter shared/perl/code/ regex (?!\$)-?([0-9]*\.(?!0[xXbB]))?\b([0-9]+|0[xX][0-9a-fA-F]+|0[bb][01_]+)\.?([eE][+-]?[0-9]+)?i?\b 0:value
+add-highlighter shared/perl/code/ regex %{\$!|\$"|\$#|\$\$|\$%|\$&|\$'|\$\(|\$\)|\$\*|\$\+|\$,|\$_|\$-|\$`|\$\.|\$/|\$:|\$;|\$<|\$=|\$>|\$\?|\$@|\$\[|\$\\|\$\]|\$\^|\$\||\$~|%!|@\+|@-|@_} 0:value
+add-highlighter shared/perl/code/ regex (%ENV|%INC|%OVERLOAD|%SIG|@ARGV|@INC|@LAST_MATCH_START) 0:value
+add-highlighter shared/perl/code/ regex %{%\^(H)\b} 0:value
+add-highlighter shared/perl/code/ regex \$\^(S|T|V|W|X|A|C|D|E|F|H|I|L|M|N|O|P|R)\b 0:value
+add-highlighter shared/perl/code/ regex \$\^(RE_TRIE_MAXBUF|TAINT|UNICODE|UTF8LOCALE|WARNING_BITS|WIDE_SYSTEM_CALLS|CHILD_ERROR_NATIVE|ENCODING|OPEN|RE_DEBUG_FLAGS)\b 0:value
 
-add-highlighter shared/perl/code regex \$[0-9]+ 0:attribute
-add-highlighter shared/perl/code regex \b-(B|b|C|c|d|e|f|g|k|l|M|O|o|p|r|R|S|s|T|t|u|w|W|X|x|z)\b 0:attribute
+add-highlighter shared/perl/code/ regex \$[0-9]+ 0:attribute
+add-highlighter shared/perl/code/ regex \b-(B|b|C|c|d|e|f|g|k|l|M|O|o|p|r|R|S|s|T|t|u|w|W|X|x|z)\b 0:attribute
 
-add-highlighter shared/perl/code regex \$[a-zA-Z_][a-zA-Z0-9_]* 0:variable
+add-highlighter shared/perl/code/ regex \$[a-zA-Z_][a-zA-Z0-9_]* 0:variable
 
-add-highlighter shared/perl/code regex \$(a|b|LAST_REGEXP_CODE_RESULT|LIST_SEPARATOR|MATCH|MULTILINE_MATCHING|NR|OFMT|OFS|ORS|OS_ERROR|OSNAME|OUTPUT_AUTO_FLUSH|OUTPUT_FIELD_SEPARATOR|OUTPUT_RECORD_SEPARATOR)\b 0:value
-add-highlighter shared/perl/code regex \$(LAST_REGEXP_CODE_RESULT|LIST_SEPARATOR|MATCH|MULTILINE_MATCHING|NR|OFMT|OFS|ORS|OS_ERROR|OSNAME|OUTPUT_AUTO_FLUSH|OUTPUT_FIELD_SEPARATOR|OUTPUT_RECORD_SEPARATOR|PERL_VERSION|ACCUMULATOR|PERLDB|ARG|PID|ARGV|POSTMATCH|PREMATCH|BASETIME|PROCESS_ID|CHILD_ERROR|PROGRAM_NAME|COMPILING|REAL_GROUP_ID|DEBUGGING|REAL_USER_ID|EFFECTIVE_GROUP_ID|RS|EFFECTIVE_USER_ID|SUBSCRIPT_SEPARATOR|EGID|SUBSEP|ERRNO|SYSTEM_FD_MAX|EUID|UID|EVAL_ERROR|WARNING|EXCEPTIONS_BEING_CAUGHT|EXECUTABLE_NAME|EXTENDED_OS_ERROR|FORMAT_FORMFEED|FORMAT_LINE_BREAK_CHARACTERS|FORMAT_LINES_LEFT|FORMAT_LINES_PER_PAGE|FORMAT_NAME|FORMAT_PAGE_NUMBER|FORMAT_TOP_NAME|GID|INPLACE_EDIT|INPUT_LINE_NUMBER|INPUT_RECORD_SEPARATOR|LAST_MATCH_END|LAST_PAREN_MATCH)\b 0:value
+add-highlighter shared/perl/code/ regex \$(a|b|LAST_REGEXP_CODE_RESULT|LIST_SEPARATOR|MATCH|MULTILINE_MATCHING|NR|OFMT|OFS|ORS|OS_ERROR|OSNAME|OUTPUT_AUTO_FLUSH|OUTPUT_FIELD_SEPARATOR|OUTPUT_RECORD_SEPARATOR)\b 0:value
+add-highlighter shared/perl/code/ regex \$(LAST_REGEXP_CODE_RESULT|LIST_SEPARATOR|MATCH|MULTILINE_MATCHING|NR|OFMT|OFS|ORS|OS_ERROR|OSNAME|OUTPUT_AUTO_FLUSH|OUTPUT_FIELD_SEPARATOR|OUTPUT_RECORD_SEPARATOR|PERL_VERSION|ACCUMULATOR|PERLDB|ARG|PID|ARGV|POSTMATCH|PREMATCH|BASETIME|PROCESS_ID|CHILD_ERROR|PROGRAM_NAME|COMPILING|REAL_GROUP_ID|DEBUGGING|REAL_USER_ID|EFFECTIVE_GROUP_ID|RS|EFFECTIVE_USER_ID|SUBSCRIPT_SEPARATOR|EGID|SUBSEP|ERRNO|SYSTEM_FD_MAX|EUID|UID|EVAL_ERROR|WARNING|EXCEPTIONS_BEING_CAUGHT|EXECUTABLE_NAME|EXTENDED_OS_ERROR|FORMAT_FORMFEED|FORMAT_LINE_BREAK_CHARACTERS|FORMAT_LINES_LEFT|FORMAT_LINES_PER_PAGE|FORMAT_NAME|FORMAT_PAGE_NUMBER|FORMAT_TOP_NAME|GID|INPLACE_EDIT|INPUT_LINE_NUMBER|INPUT_RECORD_SEPARATOR|LAST_MATCH_END|LAST_PAREN_MATCH)\b 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -102,7 +98,7 @@ define-command -hidden perl-indent-on-closing-curly-brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group perl-highlight global WinSetOption filetype=perl %{ add-highlighter window ref perl }
+hook -group perl-highlight global WinSetOption filetype=perl %{ add-highlighter window/perl ref perl }
 
 hook global WinSetOption filetype=perl %{
     # cleanup trailing whitespaces when exiting insert mode

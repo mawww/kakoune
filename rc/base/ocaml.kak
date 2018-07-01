@@ -13,12 +13,10 @@ hook global BufCreate .*\.mli? %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code ocaml \
-  string '"' (?<!\\)(\\\\)*" '' \
-  comment \Q(* \Q*) '' \
-
-add-highlighter shared/ocaml/string fill string
-add-highlighter shared/ocaml/comment fill comment
+add-highlighter shared/ocaml regions
+add-highlighter shared/ocaml/code default-region group
+add-highlighter shared/ocaml/string region '"' (?<!\\)(\\\\)*" '' fill string
+add-highlighter shared/ocaml/comment region \Q(* \Q*) '' fill comment
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -32,7 +30,7 @@ define-command -hidden ocaml-indent-on-char %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group ocaml-highlight global WinSetOption filetype=ocaml %{ add-highlighter window ref ocaml }
+hook -group ocaml-highlight global WinSetOption filetype=ocaml %{ add-highlighter window/ocaml ref ocaml }
 
 hook global WinSetOption filetype=ocaml %{
   hook window InsertChar [|\n] -group ocaml-indent ocaml-indent-on-char
@@ -50,7 +48,7 @@ hook global WinSetOption filetype=(?!ocaml).* %{
 evaluate-commands %sh{
   keywords=and:as:asr:assert:begin:class:constraint:do:done:downto:else:end:exception:external:false:for:fun:function:functor:if:in:include:inherit:initializer:land:lazy:let:lor:lsl:lsr:lxor:match:method:mod:module:mutable:new:nonrec:object:of:open:or:private:rec:sig:struct:then:to:true:try:type:val:virtual:when:while:with
   echo "
-    add-highlighter shared/ocaml/code regex \b($(printf $keywords | tr : '|'))\b 0:keyword
+    add-highlighter shared/ocaml/code/ regex \b($(printf $keywords | tr : '|'))\b 0:keyword
     hook global WinSetOption filetype=ocaml %{
       set-option window static_words $keywords
     }

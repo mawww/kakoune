@@ -11,25 +11,24 @@ hook global BufCreate .*[.](hbs) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default html hbs  \
-    comment          \{\{!-- --\}\} '' \
-    comment          \{\{!   \}\}   '' \
-    block-expression \{\{    \}\}   '' 
+add-highlighter shared/hbs regions
+add-highlighter shared/hbs/html  default-region ref html
+add-highlighter shared/hbs/comment          region \{\{!-- --\}\} ' ' fill comment
+add-highlighter shared/hbs/comment_alt      region \{\{!   \}\}   '' fill comment
+add-highlighter shared/hbs/block-expression region \{\{    \}\}   '' group
 
-add-highlighter shared/hbs/html ref html
-add-highlighter shared/hbs/comment fill comment
-add-highlighter shared/hbs/block-expression regex \{\{((#|/|)(\w|-)+) 1:meta
+add-highlighter shared/hbs/block-expression/ regex \{\{((#|/|)(\w|-)+) 1:meta
 
 # some hbs tags have a special meaning
-add-highlighter shared/hbs/block-expression regex \{\{((#|/|)(if|else|unless|with|lookup|log)) 1:keyword
+add-highlighter shared/hbs/block-expression/ regex \{\{((#|/|)(if|else|unless|with|lookup|log)) 1:keyword
 
 # 'each' is special as it really is two words 'each' and 'as'
-add-highlighter shared/hbs/block-expression regex \{\{((#|/|)((each).*(as))) 2:keyword 4:keyword 5:keyword
+add-highlighter shared/hbs/block-expression/ regex \{\{((#|/|)((each).*(as))) 2:keyword 4:keyword 5:keyword
 
-add-highlighter shared/hbs/block-expression regex ((\w|-)+)= 1:attribute
+add-highlighter shared/hbs/block-expression/ regex ((\w|-)+)= 1:attribute
 
 # highlight the string values of attributes as a bonus
-add-highlighter shared/hbs/block-expression regex ((\w|-)+)=(('|").*?('|")) 1:attribute 3:value
+add-highlighter shared/hbs/block-expression/ regex ((\w|-)+)=(('|").*?('|")) 1:attribute 3:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -56,7 +55,7 @@ define-command -hidden hbs-indent-on-new-line %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook -group hbs-highlight global WinSetOption filetype=hbs %{
-    add-highlighter window ref hbs
+    add-highlighter window/hbs ref hbs
 }
 
 hook global WinSetOption filetype=hbs %{

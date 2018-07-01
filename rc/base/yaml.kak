@@ -11,19 +11,16 @@ hook global BufCreate .*[.](ya?ml) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code yaml      \
-    double_string '"' (?<!\\)(\\\\)*"       '' \
-    single_string "'" "'"                   '' \
-    comment       '#' '$'                   ''
+add-highlighter shared/yaml regions
+add-highlighter shared/yaml/code      default-region group
+add-highlighter shared/yaml/double_string region '"' (?<!\\)(\\\\)*"       '' fill string
+add-highlighter shared/yaml/single_string region "'" "'"                   '' fill string
+add-highlighter shared/yaml/comment       region '#' '$'                   '' fill comment
 
-add-highlighter shared/yaml/double_string fill string
-add-highlighter shared/yaml/single_string fill string
-add-highlighter shared/yaml/comment       fill comment
-
-add-highlighter shared/yaml/code regex ^(---|\.\.\.)$ 0:meta
-add-highlighter shared/yaml/code regex ^(\h*:\w*) 0:keyword
-add-highlighter shared/yaml/code regex \b(true|false|null)\b 0:value
-add-highlighter shared/yaml/code regex ^\h*-?\h*(\S+): 1:attribute
+add-highlighter shared/yaml/code/ regex ^(---|\.\.\.)$ 0:meta
+add-highlighter shared/yaml/code/ regex ^(\h*:\w*) 0:keyword
+add-highlighter shared/yaml/code/ regex \b(true|false|null)\b 0:value
+add-highlighter shared/yaml/code/ regex ^\h*-?\h*(\S+): 1:attribute
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -49,7 +46,7 @@ define-command -hidden yaml-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group yaml-highlight global WinSetOption filetype=yaml %{ add-highlighter window ref yaml }
+hook -group yaml-highlight global WinSetOption filetype=yaml %{ add-highlighter window/yaml ref yaml }
 
 hook global WinSetOption filetype=yaml %{
     hook window ModeChange insert:.* -group yaml-hooks  yaml-filter-around-selections

@@ -11,21 +11,17 @@ hook global BufCreate .*[.](moon) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code moon \
-    double_string '"'  (?<!\\)(\\\\)*" '' \
-    single_string "'"  (?<!\\)(\\\\)*' '' \
-    comment       '--' '$'             '' \
+add-highlighter shared/moon regions
+add-highlighter shared/moon/code default-region group
+add-highlighter shared/moon/double_string region '"'  (?<!\\)(\\\\)*" '' regions
+add-highlighter shared/moon/single_string region "'"  (?<!\\)(\\\\)*' '' fill string
+add-highlighter shared/moon/comment       region '--' '$'             '' fill comment
 
-add-highlighter shared/moon/double_string fill string
-add-highlighter shared/moon/double_string regions regions interpolation \Q#{ \} \{
-add-highlighter shared/moon/double_string/regions/interpolation fill meta
+add-highlighter shared/moon/double_string/base default-region fill string
+add-highlighter shared/moon/double_string/interpolation region \Q#{ \} \{ fill meta
 
-add-highlighter shared/moon/single_string fill string
-
-add-highlighter shared/moon/comment fill comment
-
-add-highlighter shared/moon/code regex ([.\\](?=[A-Za-z]))|(\b[A-Za-z]\w*:)|(\b[A-Za-z]\w*\K!+)|(\W\K[@:][A-Za-z]\w*) 0:variable
-add-highlighter shared/moon/code regex \b(and|break|catch|class|continue|do|else(if)?|export|extends|false|finally|for|from|if|import|in|local|nil|not|or|return|super|switch|then|true|try|unless|using|when|while|with)\b 0:keyword
+add-highlighter shared/moon/code/ regex ([.\\](?=[A-Za-z]))|(\b[A-Za-z]\w*:)|(\b[A-Za-z]\w*\K!+)|(\W\K[@:][A-Za-z]\w*) 0:variable
+add-highlighter shared/moon/code/ regex \b(and|break|catch|class|continue|do|else(if)?|export|extends|false|finally|for|from|if|import|in|local|nil|not|or|return|super|switch|then|true|try|unless|using|when|while|with)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -92,7 +88,7 @@ define-command -hidden moon-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group moon-highlight global WinSetOption filetype=moon %{ add-highlighter window ref moon }
+hook -group moon-highlight global WinSetOption filetype=moon %{ add-highlighter window/moon ref moon }
 
 hook global WinSetOption filetype=moon %{
     hook window ModeChange insert:.* -group moon-hooks  moon-filter-around-selections

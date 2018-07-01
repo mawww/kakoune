@@ -13,9 +13,9 @@ hook global BufCreate .*[.](fish) %{
 
 add-highlighter shared/fish regions
 add-highlighter shared/fish/code default-region group
-add-highlighter shared/fish/double_string '"' (?<!\\)(\\\\)*"  '' group
-add-highlighter shared/fish/single_string "'" "'"              '' fill string
-add-highlighter shared/fish/comment       '#' '$'              '' fill comment
+add-highlighter shared/fish/double_string region '"' (?<!\\)(\\\\)*"  '' group
+add-highlighter shared/fish/single_string region "'" "'"              '' fill string
+add-highlighter shared/fish/comment       region '#' '$'              '' fill comment
 
 add-highlighter shared/fish/double_string/ fill string
 add-highlighter shared/fish/double_string/ regex (\$\w+)|(\{\$\w+\}) 0:variable

@@ -11,19 +11,15 @@ hook global BufCreate .*\.go %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code go \
-    back_string '`' '`' '' \
-    double_string '"' (?<!\\)(\\\\)*" '' \
-    single_string "'" (?<!\\)(\\\\)*' '' \
-    comment /\* \*/ '' \
-    comment '//' $ ''
+add-highlighter shared/go regions
+add-highlighter shared/go/code default-region group
+add-highlighter shared/go/back_string region '`' '`' '' fill string
+add-highlighter shared/go/double_string region '"' (?<!\\)(\\\\)*" '' fill string
+add-highlighter shared/go/single_string region "'" (?<!\\)(\\\\)*' '' fill string
+add-highlighter shared/go/comment region /\* \*/ '' fill comment
+add-highlighter shared/go/comment_line region '//' $ '' fill comment
 
-add-highlighter shared/go/back_string fill string
-add-highlighter shared/go/double_string fill string
-add-highlighter shared/go/single_string fill string
-add-highlighter shared/go/comment fill comment
-
-add-highlighter shared/go/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\b} 0:value
+add-highlighter shared/go/code/ regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\b} 0:value
 
 evaluate-commands %sh{
     # Grammar
@@ -42,11 +38,11 @@ evaluate-commands %sh{
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/go/code regex \b(${keywords})\b 0:keyword
-        add-highlighter shared/go/code regex \b(${attributes})\b 0:attribute
-        add-highlighter shared/go/code regex \b(${types})\b 0:type
-        add-highlighter shared/go/code regex \b(${values})\b 0:value
-        add-highlighter shared/go/code regex \b(${functions})\b 0:builtin
+        add-highlighter shared/go/code/ regex \b(${keywords})\b 0:keyword
+        add-highlighter shared/go/code/ regex \b(${attributes})\b 0:attribute
+        add-highlighter shared/go/code/ regex \b(${types})\b 0:type
+        add-highlighter shared/go/code/ regex \b(${values})\b 0:value
+        add-highlighter shared/go/code/ regex \b(${functions})\b 0:builtin
     "
 }
 
@@ -85,7 +81,7 @@ define-command -hidden go-indent-on-closing-curly-brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group go-highlight global WinSetOption filetype=go %{ add-highlighter window ref go }
+hook -group go-highlight global WinSetOption filetype=go %{ add-highlighter window/go ref go }
 
 hook global WinSetOption filetype=go %{
     # cleanup trailing whitespaces when exiting insert mode

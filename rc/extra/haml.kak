@@ -11,24 +11,19 @@ hook global BufCreate .*[.](haml) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code haml                                                         \
-    comment ^\h*/                                                                $             '' \
-    eval    ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)?\{\K|#\{\K (?=\})        \{ \
-    eval    ^\h*[=-]\K                                                           (?<!\|)(?=\n) '' \
-    coffee  ^\h*:coffee\K                                                        ^\h*[%=-]\K   '' \
-    sass    ^\h*:sass\K                                                          ^\h*[%=-]\K   ''
+add-highlighter shared/haml regions
+add-highlighter shared/haml/code    default-region group
+add-highlighter shared/haml/comment region ^\h*/                                                                $             '' fill comment
 
 # Filters
 # http://haml.info/docs/yardoc/file.REFERENCE.html#filters
+add-highlighter shared/haml/eval1   region ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)?\{\K|#\{\K (?=\})        \{ ref ruby
+add-highlighter shared/haml/eval2   region ^\h*[=-]\K                                                           (?<!\|)(?=\n) '' ref ruby
+add-highlighter shared/haml/coffee  region ^\h*:coffee\K                                                        ^\h*[%=-]\K   '' ref coffee
+add-highlighter shared/haml/sass    region ^\h*:sass\K                                                          ^\h*[%=-]\K   '' ref sass
 
-add-highlighter shared/haml/comment fill comment
-
-add-highlighter shared/haml/eval   ref ruby
-add-highlighter shared/haml/coffee ref coffee
-add-highlighter shared/haml/sass   ref sass
-
-add-highlighter shared/haml/code regex ^\h*(:[a-z]+|-|=)|^(!!!)$ 0:meta
-add-highlighter shared/haml/code regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)? 1:keyword 2:variable
+add-highlighter shared/haml/code/ regex ^\h*(:[a-z]+|-|=)|^(!!!)$ 0:meta
+add-highlighter shared/haml/code/ regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)? 1:keyword 2:variable
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -54,7 +49,7 @@ define-command -hidden haml-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group haml-highlight global WinSetOption filetype=haml %{ add-highlighter window ref haml }
+hook -group haml-highlight global WinSetOption filetype=haml %{ add-highlighter window/haml ref haml }
 
 hook global WinSetOption filetype=haml %{
     hook window ModeChange insert:.* -group haml-hooks  haml-filter-around-selections

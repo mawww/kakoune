@@ -11,29 +11,26 @@ hook global BufCreate .*[.](css) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default selector css \
-    declaration [{] [}]                   '' \
-    comment    /[*] [*]/                  ''
+add-highlighter shared/css regions
+add-highlighter shared/css/selector default-region group
+add-highlighter shared/css/declaration region [{] [}]  '' regions
+add-highlighter shared/css/comment    region /[*] [*]/ '' fill comment
 
-add-highlighter shared/css/comment fill comment
-
-add-highlighter shared/css/declaration regions content \
-    string '"' (?<!\\)(\\\\)*"             '' \
-    string "'" "'"                         ''
-
-add-highlighter shared/css/declaration/content/string fill string
+add-highlighter shared/css/declaration/base default-region group
+add-highlighter shared/css/declaration/double_string region '"' (?<!\\)(\\\\)*" '' fill string
+add-highlighter shared/css/declaration/single_string region "'" "'"             '' fill string
 
 # https://developer.mozilla.org/en-US/docs/Web/CSS/length
-add-highlighter shared/css/declaration regex (#[0-9A-Fa-f]+)|((\d*\.)?\d+(ch|cm|em|ex|mm|pc|pt|px|rem|vh|vmax|vmin|vw)) 0:value
+add-highlighter shared/css/declaration/base/ regex (#[0-9A-Fa-f]+)|((\d*\.)?\d+(ch|cm|em|ex|mm|pc|pt|px|rem|vh|vmax|vmin|vw)) 0:value
 
-add-highlighter shared/css/declaration regex ([A-Za-z][A-Za-z0-9_-]*)\h*: 1:keyword
-add-highlighter shared/css/declaration regex :(before|after) 0:attribute
-add-highlighter shared/css/declaration regex !important 0:keyword
+add-highlighter shared/css/declaration/base/ regex ([A-Za-z][A-Za-z0-9_-]*)\h*: 1:keyword
+add-highlighter shared/css/declaration/base/ regex :(before|after) 0:attribute
+add-highlighter shared/css/declaration/base/ regex !important 0:keyword
 
 # element#id element.class
 # universal selector
-add-highlighter shared/css/selector regex         [A-Za-z][A-Za-z0-9_-]* 0:keyword
-add-highlighter shared/css/selector regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:variable
+add-highlighter shared/css/selector/ regex         [A-Za-z][A-Za-z0-9_-]* 0:keyword
+add-highlighter shared/css/selector/ regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:variable
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -64,7 +61,7 @@ define-command -hidden css-indent-on-closing-curly-brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group css-highlight global WinSetOption filetype=css %{ add-highlighter window ref css }
+hook -group css-highlight global WinSetOption filetype=css %{ add-highlighter window/css ref css }
 
 hook global WinSetOption filetype=css %[
     hook window ModeChange insert:.* -group css-hooks  css-filter-around-selections

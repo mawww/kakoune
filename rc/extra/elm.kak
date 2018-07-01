@@ -11,18 +11,16 @@ hook global BufCreate .*[.](elm) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/ regions -default code elm \
-    string   '"'     (?<!\\)(\\\\)*"      '' \
-    comment  (--) $                       '' \
-    comment \{-   -\}                    \{- \
+add-highlighter shared/elm regions
+add-highlighter shared/elm/code default-region group
+add-highlighter shared/elm/string        region '"'     (?<!\\)(\\\\)*"      ''  fill string
+add-highlighter shared/elm/line_comment  region (--) $                       ''  fill comment
+add-highlighter shared/elm/comment       region \{-   -\}                    \{- fill comment
 
-add-highlighter shared/elm/string  fill string
-add-highlighter shared/elm/comment fill comment
-
-add-highlighter shared/elm/code regex \b(import|exposing|as|module|where)\b 0:meta
-add-highlighter shared/elm/code regex \b(True|False)\b 0:value
-add-highlighter shared/elm/code regex \b(if|then|else|case|of|let|in|type|port|alias)\b 0:keyword
-add-highlighter shared/elm/code regex \b(Array|Bool|Char|Float|Int|String)\b 0:type
+add-highlighter shared/elm/code/ regex \b(import|exposing|as|module|where)\b 0:meta
+add-highlighter shared/elm/code/ regex \b(True|False)\b 0:value
+add-highlighter shared/elm/code/ regex \b(if|then|else|case|of|let|in|type|port|alias)\b 0:keyword
+add-highlighter shared/elm/code/ regex \b(Array|Bool|Char|Float|Int|String)\b 0:type
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -56,7 +54,7 @@ define-command -hidden elm-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group elm-highlight global WinSetOption filetype=elm %{ add-highlighter window ref elm }
+hook -group elm-highlight global WinSetOption filetype=elm %{ add-highlighter window/elm ref elm }
 
 hook global WinSetOption filetype=elm %{
     hook window ModeChange insert:.* -group elm-hooks  elm-filter-around-selections

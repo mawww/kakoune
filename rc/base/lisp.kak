@@ -13,8 +13,8 @@ hook global BufCreate .*[.](lisp) %{
 
 add-highlighter shared/lisp regions
 add-highlighter shared/lisp/code default-region group
-add-highlighter shared/lisp/string  '"' (?<!\\)(\\\\)*" '' fill string
-add-highlighter shared/lisp/comment ';' '$'             '' fill comment
+add-highlighter shared/lisp/string  region '"' (?<!\\)(\\\\)*" '' fill string
+add-highlighter shared/lisp/comment region ';' '$'             '' fill comment
 
 add-highlighter shared/lisp/code/ regex \b(nil|true|false)\b 0:value
 add-highlighter shared/lisp/code/ regex (((\Q***\E)|(///)|(\Q+++\E)){1,3})|(1[+-])|(<|>|<=|=|>=) 0:operator

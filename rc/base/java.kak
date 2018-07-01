@@ -2,19 +2,17 @@ hook global BufCreate .*\.java %{
     set-option buffer filetype java
 }
 
-add-highlighter shared/ regions -default code java \
-    string %{(?<!')"} %{(?<!\\)(\\\\)*"} '' \
-    comment /\* \*/ '' \
-    comment // $ ''
+add-highlighter shared/java regions
+add-highlighter shared/java/code default-region group
+add-highlighter shared/java/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} '' fill string
+add-highlighter shared/java/comment region /\* \*/ '' fill comment
+add-highlighter shared/java/line_comment region // $ '' fill comment
 
-add-highlighter shared/java/string fill string
-add-highlighter shared/java/comment fill comment
-
-add-highlighter shared/java/code regex %{\b(this|true|false|null)\b} 0:value
-add-highlighter shared/java/code regex "\b(void|int|char|unsigned|float|boolean|double)\b" 0:type
-add-highlighter shared/java/code regex "\b(while|for|if|else|do|static|switch|case|default|class|interface|enum|goto|break|continue|return|import|try|catch|throw|new|package|extends|implements|throws|instanceof)\b" 0:keyword
-add-highlighter shared/java/code regex "\b(final|public|protected|private|abstract|synchronized|native|transient|volatile)\b" 0:attribute
-add-highlighter shared/java/code regex "(?<!\w)@\w+\b" 0:meta
+add-highlighter shared/java/code/ regex %{\b(this|true|false|null)\b} 0:value
+add-highlighter shared/java/code/ regex "\b(void|int|char|unsigned|float|boolean|double)\b" 0:type
+add-highlighter shared/java/code/ regex "\b(while|for|if|else|do|static|switch|case|default|class|interface|enum|goto|break|continue|return|import|try|catch|throw|new|package|extends|implements|throws|instanceof)\b" 0:keyword
+add-highlighter shared/java/code/ regex "\b(final|public|protected|private|abstract|synchronized|native|transient|volatile)\b" 0:attribute
+add-highlighter shared/java/code/ regex "(?<!\w)@\w+\b" 0:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -62,5 +60,5 @@ hook global WinSetOption filetype=(?!java).* %{
     remove-hooks window java-hooks
     remove-hooks window java-indent
 }
-hook -group java-highlight global WinSetOption filetype=java %{ add-highlighter window ref java }
+hook -group java-highlight global WinSetOption filetype=java %{ add-highlighter window/java ref java }
 hook -group java-highlight global WinSetOption filetype=(?!java).* %{ remove-highlighter window/java }
