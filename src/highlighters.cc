@@ -1873,7 +1873,13 @@ public:
         const RegexCompileFlags flags = match_capture ?
             RegexCompileFlags::Optimize : RegexCompileFlags::NoSubs | RegexCompileFlags::Optimize;
 
-        auto delegate = HighlighterRegistry::instance()[parser[3]].factory(parser.positionals_from(4), nullptr);
+        const auto& type = parser[3];
+        auto& registry = HighlighterRegistry::instance();
+        auto it = registry.find(type);
+        if (it == registry.end())
+            throw runtime_error(format("no such highlighter type: '{}'", type));
+
+        auto delegate = it->value.factory(parser.positionals_from(4), nullptr);
         return std::make_unique<RegionHighlighter>(std::move(delegate), Regex{parser[0], flags}, Regex{parser[1], flags}, parser[2].empty() ? Regex{} : Regex{parser[2], flags}, match_capture);
     }
 
