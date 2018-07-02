@@ -763,7 +763,7 @@ const CommandDesc add_highlighter_cmd = {
             throw runtime_error("no parent in path");
 
         auto auto_name = [](ConstArrayView<String> params) {
-            return join(params | transform([](StringView s) { return replace(s, "/", "_"); }), "_");
+            return join(params | transform([](StringView s) { return replace(s, "/", "<slash>"); }), "<slash>");
         };
 
         String name{slash.base(), path.end()};

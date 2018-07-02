@@ -29,8 +29,6 @@ void HighlighterGroup::add_child(String name, std::unique_ptr<Highlighter>&& hl)
     if ((hl->passes() & passes()) != hl->passes())
         throw runtime_error{"cannot add that highlighter to this group, passes don't match"};
 
-    name = replace(name, "/", "<slash>");
-
     if (m_highlighters.contains(name))
         throw runtime_error(format("duplicate id: '{}'", name));
 
