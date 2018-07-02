@@ -97,7 +97,8 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     }
 
     update_diff() {
-        git --no-pager diff -U0 "$kak_buffile" 2>/dev/null | perl -e '
+        git rev-parse --show-toplevel >/dev/null 2>&1 || return
+        git --no-pager diff -U0 "$kak_buffile" | perl -e '
             $flags = $ENV{"kak_timestamp"};
             foreach $line (<STDIN>) {
                 if ($line =~ /@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))?/) {
@@ -141,7 +142,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                             $flags .= ":$line|\{blue\}~";
                         }
                         $last = $to_line + $to_count - 1;
-                        $flags .= ":$last|\{blue\}~_";
+                        $flags .= ":$last|\{blue+u\}~";
                     }
                 }
             }
