@@ -1,11 +1,11 @@
-hook global KakBegin .* %{ %sh{
+hook global KakBegin .* %sh{
     if [ "$TERM" = "xterm-kitty" ] && [ -z "$TMUX" ]; then
         echo "
             alias global new kitty-new
             alias global focus kitty-focus
         "
     fi
-} }
+}
 
 define-command -params .. kitty-new %{
     nop %sh{ kitty @ new-window "$(command -v kak 2>/dev/null)" -c "${kak_session}" -e "$*" }
