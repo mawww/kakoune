@@ -1,0 +1,3 @@
+add-highlighter window/regions_test regions
+add-highlighter window/regions_test/code default-region fill yellow
+add-highlighter window/regions_test/argument region '\w+\h*\(\K' '(?=\))' '\(' fill red

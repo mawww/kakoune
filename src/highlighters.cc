@@ -1722,8 +1722,7 @@ struct RegionMatches
 
             if (beg_pos != end_it->end_coord())
                 beg_pos = end_it->end_coord();
-            else
-                ++end_it;
+            ++end_it;
         }
     }
 };
