@@ -11,7 +11,7 @@ add-highlighter shared/cmake/code/ regex '\w+\h*(?=\()' 0:meta
 
 add-highlighter shared/cmake/argument/args default-region regex '\$\{\w+\}' 0:variable
 add-highlighter shared/cmake/argument/quoted region '"' '(?<!\\)(\\\\)*"' '' group
-add-highlighter shared/cmake/argument/raw-quoted region '\[(=*)\[' '\](=*)\]' '' ref cmake/argument/quoted
+add-highlighter shared/cmake/argument/raw-quoted region -match-capture '\[(=*)\[' '\](=*)\]' '' ref cmake/argument/quoted
 
 add-highlighter shared/cmake/argument/quoted/ fill string
 add-highlighter shared/cmake/argument/quoted/ regex '\$\{\w+\}' 0:variable
