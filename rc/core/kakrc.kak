@@ -13,17 +13,17 @@ hook global BufCreate (.*/)?(kakrc|.*.kak) %{
 
 add-highlighter shared/kakrc regions
 add-highlighter shared/kakrc/code default-region group
-add-highlighter shared/kakrc/comment region (^|\h)\K# $ '' fill comment
-add-highlighter shared/kakrc/double_string region %{(^|\h)\K"} %{"(?!")} %{(?<!")("")+(?!")} group
-add-highlighter shared/kakrc/single_string region %{(^|\h)\K'} %{'(?!')} %{(?<!')('')+(?!')} group
-add-highlighter shared/kakrc/shell1 region '(^|\h)\K%?%sh\{' '\}' '\{' ref sh
-add-highlighter shared/kakrc/shell2 region '(^|\h)\K%?%sh\(' '\)' '\(' ref sh
-add-highlighter shared/kakrc/shell3 region '(^|\h)\K%?%sh\[' '\]' '\[' ref sh
-add-highlighter shared/kakrc/shell4 region '(^|\h)\K%?%sh<'  '>'  '<' ref sh
-add-highlighter shared/kakrc/shell5 region '(^|\h)\K-shell-(completion|candidates)\h+%\{' '\}' '\{' ref sh
-add-highlighter shared/kakrc/shell6 region '(^|\h)\K-shell-(completion|candidates)\h+%\(' '\)' '\(' ref sh
-add-highlighter shared/kakrc/shell7 region '(^|\h)\K-shell-(completion|candidates)\h+%\[' '\]' '\[' ref sh
-add-highlighter shared/kakrc/shell8 region '(^|\h)\K-shell-(completion|candidates)\h+%<'  '>'  '<' ref sh
+add-highlighter shared/kakrc/comment region (^|\h)\K# $ fill comment
+add-highlighter shared/kakrc/double_string region -recurse %{(?<!")("")+(?!")} %{(^|\h)\K"} %{"(?!")} group
+add-highlighter shared/kakrc/single_string region -recurse %{(?<!')('')+(?!')} %{(^|\h)\K'} %{'(?!')} group
+add-highlighter shared/kakrc/shell1 region -recurse '\{' '(^|\h)\K%?%sh\{' '\}' ref sh
+add-highlighter shared/kakrc/shell2 region -recurse '\(' '(^|\h)\K%?%sh\(' '\)' ref sh
+add-highlighter shared/kakrc/shell3 region -recurse '\[' '(^|\h)\K%?%sh\[' '\]' ref sh
+add-highlighter shared/kakrc/shell4 region -recurse '<'  '(^|\h)\K%?%sh<'  '>'  ref sh
+add-highlighter shared/kakrc/shell5 region -recurse '\{' '(^|\h)\K-shell-(completion|candidates)\h+%\{' '\}' ref sh
+add-highlighter shared/kakrc/shell6 region -recurse '\(' '(^|\h)\K-shell-(completion|candidates)\h+%\(' '\)' ref sh
+add-highlighter shared/kakrc/shell7 region -recurse '\[' '(^|\h)\K-shell-(completion|candidates)\h+%\[' '\]' ref sh
+add-highlighter shared/kakrc/shell8 region -recurse '<'  '(^|\h)\K-shell-(completion|candidates)\h+%<'  '>'  ref sh
 
 evaluate-commands %sh{
     # Grammar

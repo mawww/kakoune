@@ -17,14 +17,14 @@ hook global BufCreate .*[.](pug|jade) %{
 
 add-highlighter shared/pug regions
 add-highlighter shared/pug/code          default-region group
-add-highlighter shared/pug/text          region ^\h*\|\s     $                      '' regex   \h*(\|) 1:meta
-add-highlighter shared/pug/text2         region '^\h*([A-Za-z][A-Za-z0-9_-]*)?(#[A-Za-z][A-Za-z0-9_-]*)?((?:\.[A-Za-z][A-Za-z0-9_-]*)*)?(?<!\t)(?<! )(?<!\n)\h+\K.*' $ '' regex   \h*(\|) 1:meta
-add-highlighter shared/pug/javascript    region ^\h*[-=!]    $                      '' ref javascript
-add-highlighter shared/pug/double_string region '"'          (?:(?<!\\)(\\\\)*"|$)  '' fill string
-add-highlighter shared/pug/single_string region "'"          (?:(?<!\\)(\\\\)*'|$)  '' fill string
-add-highlighter shared/pug/comment       region //           $                      '' fill comment
-add-highlighter shared/pug/attribute     region \(            \)                     \( group
-add-highlighter shared/pug/puglang       region ^\h*\b(\block|extends|include|append|prepend|if|unless|else|case|when|default|each|while|mixin)\b $ '' group
+add-highlighter shared/pug/text          region ^\h*\|\s     $                      regex   \h*(\|) 1:meta
+add-highlighter shared/pug/text2         region '^\h*([A-Za-z][A-Za-z0-9_-]*)?(#[A-Za-z][A-Za-z0-9_-]*)?((?:\.[A-Za-z][A-Za-z0-9_-]*)*)?(?<!\t)(?<! )(?<!\n)\h+\K.*' $ regex   \h*(\|) 1:meta
+add-highlighter shared/pug/javascript    region ^\h*[-=!]    $                      ref javascript
+add-highlighter shared/pug/double_string region '"'          (?:(?<!\\)(\\\\)*"|$)  fill string
+add-highlighter shared/pug/single_string region "'"          (?:(?<!\\)(\\\\)*'|$)  fill string
+add-highlighter shared/pug/comment       region //           $                      fill comment
+add-highlighter shared/pug/attribute     region -recurse \( \(            \)        group
+add-highlighter shared/pug/puglang       region ^\h*\b(\block|extends|include|append|prepend|if|unless|else|case|when|default|each|while|mixin)\b $ group
 
 # Filters
 # ‾‾‾‾‾‾‾

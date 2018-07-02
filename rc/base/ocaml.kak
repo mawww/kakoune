@@ -15,8 +15,8 @@ hook global BufCreate .*\.mli? %{
 
 add-highlighter shared/ocaml regions
 add-highlighter shared/ocaml/code default-region group
-add-highlighter shared/ocaml/string region '"' (?<!\\)(\\\\)*" '' fill string
-add-highlighter shared/ocaml/comment region \Q(* \Q*) '' fill comment
+add-highlighter shared/ocaml/string region '"' (?<!\\)(\\\\)*" fill string
+add-highlighter shared/ocaml/comment region \Q(* \Q*) fill comment
 
 # Commands
 # ‾‾‾‾‾‾‾‾

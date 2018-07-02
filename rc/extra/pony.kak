@@ -13,10 +13,10 @@ hook global BufCreate .*[.](pony) %{
 
 add-highlighter shared/pony regions
 add-highlighter shared/pony/code default-region group
-add-highlighter shared/pony/triple_string region '"""' '"""'            '' fill string
-add-highlighter shared/pony/double_string region '"'   (?<!\\)(\\\\)*"  '' fill string
-add-highlighter shared/pony/comment       region '/\*'   '\*/'          '' fill comment
-add-highlighter shared/pony/line_comment  region '//'   '$'             '' fill comment
+add-highlighter shared/pony/triple_string region '"""' '"""'            fill string
+add-highlighter shared/pony/double_string region '"'   (?<!\\)(\\\\)*"  fill string
+add-highlighter shared/pony/comment       region '/\*'   '\*/'          fill comment
+add-highlighter shared/pony/line_comment  region '//'   '$'             fill comment
 
 evaluate-commands %sh{
     # Grammar

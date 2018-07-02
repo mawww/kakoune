@@ -16,14 +16,14 @@ hook global BufCreate .*\.xml %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter shared/html regions
-add-highlighter shared/html/comment region <!--     -->                  '' fill comment
-add-highlighter shared/html/tag     region <          >                  '' regions
-add-highlighter shared/html/style   region <style\b.*?>\K  (?=</style>)  '' ref css
-add-highlighter shared/html/script  region <script\b.*?>\K (?=</script>) '' ref javascript
+add-highlighter shared/html/comment region <!--     -->                  fill comment
+add-highlighter shared/html/tag     region <          >                  regions
+add-highlighter shared/html/style   region <style\b.*?>\K  (?=</style>)  ref css
+add-highlighter shared/html/script  region <script\b.*?>\K (?=</script>) ref javascript
 
 add-highlighter shared/html/tag/base default-region group
-add-highlighter shared/html/tag/ region '"' (?<!\\)(\\\\)*"      '' fill string
-add-highlighter shared/html/tag/ region "'" "'"                  '' fill string
+add-highlighter shared/html/tag/ region '"' (?<!\\)(\\\\)*"      fill string
+add-highlighter shared/html/tag/ region "'" "'"                  fill string
 
 add-highlighter shared/html/tag/base/ regex \b([a-zA-Z0-9_-]+)=? 1:attribute
 add-highlighter shared/html/tag/base/ regex </?(\w+) 1:keyword

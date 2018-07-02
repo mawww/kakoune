@@ -43,8 +43,10 @@ change to make Kakoune command model cleaner and more robust.
   ------------------------------------------------------------------
   add-highlighter <path>/<name> regions
   add-highlighter <path>/<name>/<region name> region <begin> <end> \
-  <recurse> <type> <params>
+  <type> <params>
   ------------------------------------------------------------------
+
+  The recursion regex is opt-in through a `-recurse <recurse>` flag.
 
   They also are not necessarily groups anymore, a region can directly
   apply any other highlighter

@@ -4,9 +4,9 @@ hook global BufCreate .*\.java %{
 
 add-highlighter shared/java regions
 add-highlighter shared/java/code default-region group
-add-highlighter shared/java/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} '' fill string
-add-highlighter shared/java/comment region /\* \*/ '' fill comment
-add-highlighter shared/java/line_comment region // $ '' fill comment
+add-highlighter shared/java/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} fill string
+add-highlighter shared/java/comment region /\* \*/ fill comment
+add-highlighter shared/java/line_comment region // $ fill comment
 
 add-highlighter shared/java/code/ regex %{\b(this|true|false|null)\b} 0:value
 add-highlighter shared/java/code/ regex "\b(void|int|char|unsigned|float|boolean|double)\b" 0:type

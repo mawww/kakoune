@@ -15,9 +15,9 @@ hook global BufCreate .*[.](ragel|rl) %{
 
 add-highlighter shared/ragel regions
 add-highlighter shared/ragel/code default-region group
-add-highlighter shared/ragel/double_string region '"' (?<!\\)(\\\\)*"         '' fill string
-add-highlighter shared/ragel/single_string region "'" "'"                     '' fill string
-add-highlighter shared/ragel/comment region '#' '$'                     '' fill comment
+add-highlighter shared/ragel/double_string region '"' (?<!\\)(\\\\)*"         fill string
+add-highlighter shared/ragel/single_string region "'" "'"                     fill string
+add-highlighter shared/ragel/comment region '#' '$'                     fill comment
 
 add-highlighter shared/ragel/code/ regex \b(true|false)\b 0:value
 add-highlighter shared/ragel/code/ regex '%%\{|\}%%|<\w+>' 0:variable

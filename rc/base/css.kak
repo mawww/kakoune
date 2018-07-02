@@ -13,12 +13,12 @@ hook global BufCreate .*[.](css) %{
 
 add-highlighter shared/css regions
 add-highlighter shared/css/selector default-region group
-add-highlighter shared/css/declaration region [{] [}]  '' regions
-add-highlighter shared/css/comment    region /[*] [*]/ '' fill comment
+add-highlighter shared/css/declaration region [{] [}]  regions
+add-highlighter shared/css/comment    region /[*] [*]/ fill comment
 
 add-highlighter shared/css/declaration/base default-region group
-add-highlighter shared/css/declaration/double_string region '"' (?<!\\)(\\\\)*" '' fill string
-add-highlighter shared/css/declaration/single_string region "'" "'"             '' fill string
+add-highlighter shared/css/declaration/double_string region '"' (?<!\\)(\\\\)*" fill string
+add-highlighter shared/css/declaration/single_string region "'" "'"             fill string
 
 # https://developer.mozilla.org/en-US/docs/Web/CSS/length
 add-highlighter shared/css/declaration/base/ regex (#[0-9A-Fa-f]+)|((\d*\.)?\d+(ch|cm|em|ex|mm|pc|pt|px|rem|vh|vmax|vmin|vw)) 0:value

@@ -13,8 +13,8 @@ hook global BufCreate .*\.(jl) %{
 
 add-highlighter shared/julia regions
 add-highlighter shared/julia/code default-region group
-add-highlighter shared/julia/string  region '"' (?<!\\)(\\\\)*"         '' fill string
-add-highlighter shared/julia/comment region '#' '$'                     '' fill comment
+add-highlighter shared/julia/string  region '"' (?<!\\)(\\\\)*"         fill string
+add-highlighter shared/julia/comment region '#' '$'                     fill comment
 
 # taken from https://github.com/JuliaLang/julia/blob/master/contrib/julia-mode.el
 add-highlighter shared/julia/code/ regex %{\b(true|false|C_NULL|Inf|NaN|Inf32|NaN32|nothing|\b-?\d+[fdiu]?)\b} 0:value

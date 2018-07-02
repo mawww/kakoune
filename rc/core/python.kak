@@ -13,10 +13,10 @@ hook global BufCreate .*[.](py) %{
 
 add-highlighter shared/python regions
 add-highlighter shared/python/code default-region group
-add-highlighter shared/python/docstring     region -match-capture ("""|''') ("""|''') '' regions
-add-highlighter shared/python/double_string region '"'   (?<!\\)(\\\\)*"  '' fill string
-add-highlighter shared/python/single_string region "'"   (?<!\\)(\\\\)*'  '' fill string
-add-highlighter shared/python/comment       region '#'   '$'              '' fill comment
+add-highlighter shared/python/docstring     region -match-capture ("""|''') ("""|''') regions
+add-highlighter shared/python/double_string region '"'   (?<!\\)(\\\\)*"  fill string
+add-highlighter shared/python/single_string region "'"   (?<!\\)(\\\\)*'  fill string
+add-highlighter shared/python/comment       region '#'   '$'              fill comment
 
 # Integer formats
 add-highlighter shared/python/code/ regex '(?i)\b0b[01]+l?\b' 0:value
@@ -31,8 +31,8 @@ add-highlighter shared/python/code/ regex '\b\d+\.' 0:value
 add-highlighter shared/python/code/ regex '\b\d+\+\d+[jJ]\b' 0:value
 
 add-highlighter shared/python/docstring/ default-region fill string
-add-highlighter shared/python/docstring/ region '>>> \K'    '\z' '' ref python
-add-highlighter shared/python/docstring/ region '\.\.\. \K'    '\z' '' ref python
+add-highlighter shared/python/docstring/ region '>>> \K'    '\z' ref python
+add-highlighter shared/python/docstring/ region '\.\.\. \K'    '\z' ref python
 
 evaluate-commands %sh{
     # Grammar

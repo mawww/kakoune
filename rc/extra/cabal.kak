@@ -13,8 +13,8 @@ hook global BufCreate .*[.](cabal) %{
 
 add-highlighter shared/cabal regions
 add-highlighter shared/cabal/code default-region group
-add-highlighter shared/cabal/line_comment region (--) $ '' fill comment
-add-highlighter shared/cabal/comment region \{-   -\}   \{- fill comment
+add-highlighter shared/cabal/line_comment region (--) $ fill comment
+add-highlighter shared/cabal/comment region -recurse \{- \{- -\} fill comment
 
 add-highlighter shared/cabal/code/ regex \b(true|false)\b|(([<>]?=?)?\d+(\.\d+)+) 0:value
 add-highlighter shared/cabal/code/ regex \b(if|else)\b 0:keyword

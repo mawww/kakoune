@@ -24,11 +24,11 @@ define-command -hidden just-indent-on-new-line %{
 
 add-highlighter shared/justfile regions
 add-highlighter shared/justfile/content default-region group
-add-highlighter shared/justfile/comment  region '#' '$'  '' fill comment
-add-highlighter shared/justfile/double_string region '"' (?<!\\)(\\\\)*" '' fill string
-add-highlighter shared/justfile/single_string region "'" (?<!\\)(\\\\)*' '' fill string
-add-highlighter shared/justfile/inline   region '`' '`' '' ref sh
-add-highlighter shared/justfile/shell    region '^\h+' '^[^\h]' '' group
+add-highlighter shared/justfile/comment  region '#' '$'  fill comment
+add-highlighter shared/justfile/double_string region '"' (?<!\\)(\\\\)*" fill string
+add-highlighter shared/justfile/single_string region "'" (?<!\\)(\\\\)*' fill string
+add-highlighter shared/justfile/inline   region '`' '`' ref sh
+add-highlighter shared/justfile/shell    region '^\h+' '^[^\h]' group
 
 add-highlighter shared/justfile/shell/ ref sh
 

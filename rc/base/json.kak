@@ -13,7 +13,7 @@ hook global BufCreate .*[.](json) %{
 
 add-highlighter shared/json regions
 add-highlighter shared/json/code default-region group
-add-highlighter shared/json/string region '"' (?<!\\)(\\\\)*" '' fill string
+add-highlighter shared/json/string region '"' (?<!\\)(\\\\)*" fill string
 
 add-highlighter shared/json/code/ regex \b(true|false|null|\d+(?:\.\d+)?(?:[eE][+-]?\d*)?)\b 0:value
 

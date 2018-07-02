@@ -10,13 +10,13 @@ hook global BufCreate .*[.](php) %{
 
 add-highlighter shared/php regions
 add-highlighter shared/php/code  default-region group
-add-highlighter shared/php/double_string region '"'    (?<!\\)(\\\\)*" '' group
-add-highlighter shared/php/single_string region "'"    (?<!\\)(\\\\)*' '' fill string
-add-highlighter shared/php/doc_comment   region ///    '$'             '' group
-add-highlighter shared/php/doc_comment2  region /\*\*  \*/             '' ref php/doc_comment
-add-highlighter shared/php/comment1      region //     '$'             '' fill comment
-add-highlighter shared/php/comment2      region /\*    \*/             '' fill comment
-add-highlighter shared/php/comment3      region '#'    '$'             '' fill comment
+add-highlighter shared/php/double_string region '"'    (?<!\\)(\\\\)*" group
+add-highlighter shared/php/single_string region "'"    (?<!\\)(\\\\)*' fill string
+add-highlighter shared/php/doc_comment   region ///    '$'             group
+add-highlighter shared/php/doc_comment2  region /\*\*  \*/             ref php/doc_comment
+add-highlighter shared/php/comment1      region //     '$'             fill comment
+add-highlighter shared/php/comment2      region /\*    \*/             fill comment
+add-highlighter shared/php/comment3      region '#'    '$'             fill comment
 
 
 
@@ -43,7 +43,7 @@ add-highlighter shared/php/code/ regex \b(__halt_compiler|abstract|and|array|as|
 # Highlighter for html with php tags in it, i.e. the structure of conventional php files
 add-highlighter shared/php-file regions
 add-highlighter shared/php-file/html default-region ref html
-add-highlighter shared/php-file/php  region '<\?(php)?'     '\?>'      '' ref php
+add-highlighter shared/php-file/php  region '<\?(php)?'     '\?>'      ref php
 
 # Commands
 # ‾‾‾‾‾‾‾‾

@@ -13,10 +13,10 @@ hook global BufCreate .*\.p[lm] %{
 
 add-highlighter shared/perl regions
 add-highlighter shared/perl/code default-region group
-add-highlighter shared/perl/command       region (?<!\$)(?<!\\)`   (?<!\\)(\\\\)*` '' fill magenta
-add-highlighter shared/perl/double_string region (?<!\$)(?<!\\)"   (?<!\\)(\\\\)*" '' fill string
-add-highlighter shared/perl/single_string region (?<!\$)(?<!\\\\)' (?<!\\)(\\\\)*' '' fill string
-add-highlighter shared/perl/comment       region (?<!\$)(?<!\\)#   $               '' fill comment
+add-highlighter shared/perl/command       region (?<!\$)(?<!\\)`   (?<!\\)(\\\\)*` fill magenta
+add-highlighter shared/perl/double_string region (?<!\$)(?<!\\)"   (?<!\\)(\\\\)*" fill string
+add-highlighter shared/perl/single_string region (?<!\$)(?<!\\\\)' (?<!\\)(\\\\)*' fill string
+add-highlighter shared/perl/comment       region (?<!\$)(?<!\\)#   $               fill comment
 
 evaluate-commands %sh{
     # Grammar

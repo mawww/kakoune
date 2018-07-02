@@ -13,9 +13,9 @@ hook global BufCreate .*[.](elm) %{
 
 add-highlighter shared/elm regions
 add-highlighter shared/elm/code default-region group
-add-highlighter shared/elm/string        region '"'     (?<!\\)(\\\\)*"      ''  fill string
-add-highlighter shared/elm/line_comment  region (--) $                       ''  fill comment
-add-highlighter shared/elm/comment       region \{-   -\}                    \{- fill comment
+add-highlighter shared/elm/string        region '"'     (?<!\\)(\\\\)*"       fill string
+add-highlighter shared/elm/line_comment  region (--) $                        fill comment
+add-highlighter shared/elm/comment       region -recurse \{- \{-   -\}        fill comment
 
 add-highlighter shared/elm/code/ regex \b(import|exposing|as|module|where)\b 0:meta
 add-highlighter shared/elm/code/ regex \b(True|False)\b 0:value

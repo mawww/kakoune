@@ -4,9 +4,9 @@ hook global BufCreate .*\.(swift) %{
 
 add-highlighter shared/swift regions
 add-highlighter shared/swift/code default-region group
-add-highlighter shared/swift/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} '' fill string
-add-highlighter shared/swift/comment region /\* \*/ '' group
-add-highlighter shared/swift/line_comment region // $ '' ref swift/comment
+add-highlighter shared/swift/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} fill string
+add-highlighter shared/swift/comment region /\* \*/ group
+add-highlighter shared/swift/line_comment region // $ ref swift/comment
 
 add-highlighter shared/swift/comment/ fill comment
 add-highlighter shared/swift/comment/ regex "\b(TODO|XXX|MARK)\b" 0:red

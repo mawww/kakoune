@@ -13,22 +13,22 @@ hook global BufCreate .*[.](coffee) %{
 
 add-highlighter shared/coffee regions
 add-highlighter shared/coffee/code     default-region group
-add-highlighter shared/coffee/single_string     region "'" "'"                    '' fill string
-add-highlighter shared/coffee/single_string_alt region "'''" "'''"                '' fill string
-add-highlighter shared/coffee/double_string     region '"' (?<!\\)(\\\\)*"        '' regions
-add-highlighter shared/coffee/double_string_alt region '"""' '"""'                '' ref shared/coffee/double_string
-add-highlighter shared/coffee/regex             region '/' (?<!\\)(\\\\)*/[gimy]* '' regions
-add-highlighter shared/coffee/regex_alt         region '///' ///[gimy]*           '' ref shared/coffee/regex
-add-highlighter shared/coffee/comment1          region '#' '$'                    '' fill comment
-add-highlighter shared/coffee/comment2          region '###' '###'                '' fill comment
+add-highlighter shared/coffee/single_string     region "'" "'"                    fill string
+add-highlighter shared/coffee/single_string_alt region "'''" "'''"                fill string
+add-highlighter shared/coffee/double_string     region '"' (?<!\\)(\\\\)*"        regions
+add-highlighter shared/coffee/double_string_alt region '"""' '"""'                ref shared/coffee/double_string
+add-highlighter shared/coffee/regex             region '/' (?<!\\)(\\\\)*/[gimy]* regions
+add-highlighter shared/coffee/regex_alt         region '///' ///[gimy]*           ref shared/coffee/regex
+add-highlighter shared/coffee/comment1          region '#' '$'                    fill comment
+add-highlighter shared/coffee/comment2          region '###' '###'                fill comment
 
 # Regular expression flags are: g → global match, i → ignore case, m → multi-lines, y → sticky
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
 
 add-highlighter shared/coffee/double_string/base default-region fill string
-add-highlighter shared/coffee/double_string/interpolation region \Q#{ \} \{ fill meta
+add-highlighter shared/coffee/double_string/interpolation region -recurse \{ \Q#{ \} fill meta
 add-highlighter shared/coffee/regex/base default-region fill meta
-add-highlighter shared/coffee/regex/interpolation region \Q#{ \} \{ fill meta
+add-highlighter shared/coffee/regex/interpolation region -recurse \{ \Q#{ \} fill meta
 
 # Keywords are collected at
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords

@@ -11,8 +11,8 @@ hook global BufCreate .*/?[mM]akefile %{
 add-highlighter shared/makefile regions
 
 add-highlighter shared/makefile/content default-region group
-add-highlighter shared/makefile/comment region '#' '$' '' fill comment
-add-highlighter shared/makefile/evaluate-commands region '\$\(' '\)' '\(' fill value
+add-highlighter shared/makefile/comment region '#' '$' fill comment
+add-highlighter shared/makefile/evaluate-commands region -recurse '\(' '\$\(' '\)' fill value
 
 add-highlighter shared/makefile/content/ regex ^[\w.%-]+\h*:\s 0:variable
 add-highlighter shared/makefile/content/ regex [+?:]= 0:operator

@@ -13,14 +13,14 @@ hook global BufCreate .*[.](haml) %{
 
 add-highlighter shared/haml regions
 add-highlighter shared/haml/code    default-region group
-add-highlighter shared/haml/comment region ^\h*/                                                                $             '' fill comment
+add-highlighter shared/haml/comment region ^\h*/          $             fill comment
 
 # Filters
 # http://haml.info/docs/yardoc/file.REFERENCE.html#filters
-add-highlighter shared/haml/eval1   region ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)?\{\K|#\{\K (?=\})        \{ ref ruby
-add-highlighter shared/haml/eval2   region ^\h*[=-]\K                                                           (?<!\|)(?=\n) '' ref ruby
-add-highlighter shared/haml/coffee  region ^\h*:coffee\K                                                        ^\h*[%=-]\K   '' ref coffee
-add-highlighter shared/haml/sass    region ^\h*:sass\K                                                          ^\h*[%=-]\K   '' ref sass
+add-highlighter shared/haml/eval1   region -recurse \{ ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)?\{\K|#\{\K (?=\}) ref ruby
+add-highlighter shared/haml/eval2   region ^\h*[=-]\K     (?<!\|)(?=\n) ref ruby
+add-highlighter shared/haml/coffee  region ^\h*:coffee\K  ^\h*[%=-]\K   ref coffee
+add-highlighter shared/haml/sass    region ^\h*:sass\K    ^\h*[%=-]\K   ref sass
 
 add-highlighter shared/haml/code/ regex ^\h*(:[a-z]+|-|=)|^(!!!)$ 0:meta
 add-highlighter shared/haml/code/ regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-z][A-Za-z0-9_-]*)? 1:keyword 2:variable

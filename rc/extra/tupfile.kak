@@ -13,8 +13,8 @@ hook global BufCreate .*/?Tup(file|rules)(\.\w+)?$ %{
 
 add-highlighter shared/tupfile regions
 add-highlighter shared/tupfile/code default-region group
-add-highlighter shared/tupfile/string region '"' (?<!\\)(\\\\)*" '' fill string
-add-highlighter shared/tupfile/comment region '#' $ '' fill comment
+add-highlighter shared/tupfile/string region '"' (?<!\\)(\\\\)*" fill string
+add-highlighter shared/tupfile/comment region '#' $ fill comment
 
 add-highlighter shared/tupfile/code/ regex '%[fbBeoOdg]\b' 0:value
 add-highlighter shared/tupfile/code/ regex '[$@]\([\w_]+\)' 0:value

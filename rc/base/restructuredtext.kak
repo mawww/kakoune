@@ -10,7 +10,7 @@ hook global BufCreate .*[.](rst) %{
 
 add-highlighter shared/restructuredtext regions
 add-highlighter shared/restructuredtext/content default-region group
-add-highlighter shared/restructuredtext/code region ::\h*\n ^[^\s]  '' fill meta
+add-highlighter shared/restructuredtext/code region ::\h*\n ^[^\s]  fill meta
 
 evaluate-commands %sh{
     for ft in c cabal clojure coffee cpp css cucumber ddiff dockerfile \
@@ -19,7 +19,7 @@ evaluate-commands %sh{
               perl pug python ragel ruby rust sass scala scss sh swift \
               tupfile yaml; do
         ref=$(if [ "$ft" = kak ]; then echo "kakrc"; else echo "$ft"; fi)
-        printf 'add-highlighter shared/restructuredtext/%s region %s %s "" ref %s\n' "$ft" '\.\.\h*'$ft'::\h*c\h*\n' '^\S' "$ref"
+        printf 'add-highlighter shared/restructuredtext/%s region %s %s ref %s\n' "$ft" '\.\.\h*'$ft'::\h*c\h*\n' '^\S' "$ref"
     done
 }
 

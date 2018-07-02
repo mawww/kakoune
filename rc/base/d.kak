@@ -13,16 +13,16 @@ hook global BufCreate .*\.di? %{
 
 add-highlighter shared/d regions
 add-highlighter shared/d/code default-region group
-add-highlighter shared/d/string region %{(?<!')(?<!'\\)"} %{(?<!\\)(?:\\\\)*"} "" group
-add-highlighter shared/d/verbatim_string1 region ` ` '' fill magenta
-add-highlighter shared/d/verbatim_string2 region %{(?<!')(?<!'\\)`} %{(?<!\\)(?:\\\\)*`} "" fill magenta
-add-highlighter shared/d/verbatim_string_prefixed region %{r`([^(]*)\(} %{\)([^)]*)`} "" fill magenta
-add-highlighter shared/d/disabled region '/\+[^+]?' '\+/' '' fill rgb:777777
-add-highlighter shared/d/comment1 region '/\*[^*]?' '\*/' '' fill comment
-add-highlighter shared/d/comment2 region '//[^/]?' $ '' fill comment
-add-highlighter shared/d/docstring1 region '/\+\+' '\+/' '' fill blue
-add-highlighter shared/d/docstring2 region '/\*\*' '\*/' '' fill blue
-add-highlighter shared/d/docstring3 region /// $ '' fill blue
+add-highlighter shared/d/string region %{(?<!')(?<!'\\)"} %{(?<!\\)(?:\\\\)*"} group
+add-highlighter shared/d/verbatim_string1 region ` ` fill magenta
+add-highlighter shared/d/verbatim_string2 region %{(?<!')(?<!'\\)`} %{(?<!\\)(?:\\\\)*`} fill magenta
+add-highlighter shared/d/verbatim_string_prefixed region %{r`([^(]*)\(} %{\)([^)]*)`} fill magenta
+add-highlighter shared/d/disabled region '/\+[^+]?' '\+/' fill rgb:777777
+add-highlighter shared/d/comment1 region '/\*[^*]?' '\*/' fill comment
+add-highlighter shared/d/comment2 region '//[^/]?' $ fill comment
+add-highlighter shared/d/docstring1 region '/\+\+' '\+/' fill blue
+add-highlighter shared/d/docstring2 region '/\*\*' '\*/' fill blue
+add-highlighter shared/d/docstring3 region /// $ fill blue
 
 add-highlighter shared/d/string/ fill string
 add-highlighter shared/d/string/ regex %{\\(x[0-9a-fA-F]{2}|[0-7]{1,3}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})\b} 0:value

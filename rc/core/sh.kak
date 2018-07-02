@@ -4,10 +4,10 @@ hook global BufCreate .*\.(z|ba|c|k|mk)?sh(rc|_profile)? %{
 
 add-highlighter shared/sh regions
 add-highlighter shared/sh/code default-region group
-add-highlighter shared/sh/double_string region  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)(?:\\\\)*"} '' group
-add-highlighter shared/sh/single_string region %{(?<!\\)(?:\\\\)*\K'} %{'} '' fill string
-add-highlighter shared/sh/comment region '(?<!\$)#' '$' '' fill comment
-add-highlighter shared/sh/heredoc region -match-capture '<<-?(\w+)' '^\t*(\w+)$' '' fill string
+add-highlighter shared/sh/double_string region  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)(?:\\\\)*"} group
+add-highlighter shared/sh/single_string region %{(?<!\\)(?:\\\\)*\K'} %{'} fill string
+add-highlighter shared/sh/comment region '(?<!\$)#' '$' fill comment
+add-highlighter shared/sh/heredoc region -match-capture '<<-?(\w+)' '^\t*(\w+)$' fill string
 
 add-highlighter shared/sh/double_string/fill fill string
 

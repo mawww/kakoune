@@ -13,9 +13,9 @@ hook global BufCreate .*[.](sass) %{
 
 add-highlighter shared/sass regions
 add-highlighter shared/sass/code default-region group
-add-highlighter shared/sass/single_string  region '"' (?<!\\)(\\\\)*" '' fill string
-add-highlighter shared/sass/double_string  region "'" "'"             '' fill string
-add-highlighter shared/sass/comment        region '/' '$'             '' fill comment
+add-highlighter shared/sass/single_string  region '"' (?<!\\)(\\\\)*" fill string
+add-highlighter shared/sass/double_string  region "'" "'"             fill string
+add-highlighter shared/sass/comment        region '/' '$'             fill comment
 
 add-highlighter shared/sass/code/ regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:variable
 add-highlighter shared/sass/code/ regex &|@[A-Za-z][A-Za-z0-9_-]* 0:meta

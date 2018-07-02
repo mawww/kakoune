@@ -13,7 +13,7 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
 
 add-highlighter shared/markdown regions
 add-highlighter shared/markdown/content default-region group
-add-highlighter shared/markdown/code region ``` ``` '' fill meta
+add-highlighter shared/markdown/code region ``` ``` fill meta
 
 evaluate-commands %sh{
   languages="
@@ -23,10 +23,10 @@ evaluate-commands %sh{
     sass scala scss sh swift tupfile typescript yaml
   "
   for lang in ${languages}; do
-    printf 'add-highlighter shared/markdown/%s region ```\h*%s\\b   ```   "" regions\n' "${lang}" "${lang}"
+    printf 'add-highlighter shared/markdown/%s region ```\h*%s\\b   ``` regions\n' "${lang}" "${lang}"
     printf 'add-highlighter shared/markdown/%s/ default-region fill meta\n' "${lang}"
     ref=$([ "${lang}" = kak ] && echo kakrc || echo "${lang}")
-    printf 'add-highlighter shared/markdown/%s/inner region \A```[^\\n]*\K (?=```) "" ref %s\n' "${lang}" "${ref}"
+    printf 'add-highlighter shared/markdown/%s/inner region \A```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${ref}"
   done
 }
 

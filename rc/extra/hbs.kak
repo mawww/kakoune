@@ -13,9 +13,9 @@ hook global BufCreate .*[.](hbs) %{
 
 add-highlighter shared/hbs regions
 add-highlighter shared/hbs/html  default-region ref html
-add-highlighter shared/hbs/comment          region \{\{!-- --\}\} ' ' fill comment
-add-highlighter shared/hbs/comment_alt      region \{\{!   \}\}   '' fill comment
-add-highlighter shared/hbs/block-expression region \{\{    \}\}   '' group
+add-highlighter shared/hbs/comment          region -recurse ' ' \{\{!-- --\}\} fill comment
+add-highlighter shared/hbs/comment_alt      region \{\{!   \}\}   fill comment
+add-highlighter shared/hbs/block-expression region \{\{    \}\}   group
 
 add-highlighter shared/hbs/block-expression/ regex \{\{((#|/|)(\w|-)+) 1:meta
 

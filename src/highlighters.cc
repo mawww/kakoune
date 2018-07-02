@@ -1858,9 +1858,9 @@ public:
             throw runtime_error{"region highlighter can only be added to a regions parent"};
 
         static const ParameterDesc param_desc{
-            { { "match-capture", { false, "" } } },
+            { { "match-capture", { false, "" } }, { "recurse", { true, "" } } },
             ParameterDesc::Flags::SwitchesOnlyAtStart | ParameterDesc::Flags::IgnoreUnknownSwitches,
-            4
+            3
         };
 
         ParametersParser parser{params, param_desc};
@@ -1872,14 +1872,18 @@ public:
         const RegexCompileFlags flags = match_capture ?
             RegexCompileFlags::Optimize : RegexCompileFlags::NoSubs | RegexCompileFlags::Optimize;
 
-        const auto& type = parser[3];
+        const auto& type = parser[2];
         auto& registry = HighlighterRegistry::instance();
         auto it = registry.find(type);
         if (it == registry.end())
             throw runtime_error(format("no such highlighter type: '{}'", type));
 
-        auto delegate = it->value.factory(parser.positionals_from(4), nullptr);
-        return std::make_unique<RegionHighlighter>(std::move(delegate), Regex{parser[0], flags}, Regex{parser[1], flags}, parser[2].empty() ? Regex{} : Regex{parser[2], flags}, match_capture);
+        Regex recurse;
+        if (auto recurse_switch = parser.get_switch("recurse"))
+            recurse = Regex{*recurse_switch, flags};
+
+        auto delegate = it->value.factory(parser.positionals_from(3), nullptr);
+        return std::make_unique<RegionHighlighter>(std::move(delegate), Regex{parser[0], flags}, Regex{parser[1], flags}, recurse, match_capture);
     }
 
     static std::unique_ptr<Highlighter> create_default_region(HighlighterParameters params, Highlighter* parent)

@@ -13,8 +13,8 @@ hook global BufCreate .*[.](feature|story) %{
 
 add-highlighter shared/cucumber regions
 add-highlighter shared/cucumber/code default-region group
-add-highlighter shared/cucumber/language region ^\h*#\h*language: $ '' group
-add-highlighter shared/cucumber/comment  region ^\h*#             $ '' fill comment
+add-highlighter shared/cucumber/language region ^\h*#\h*language: $ group
+add-highlighter shared/cucumber/comment  region ^\h*#             $ fill comment
 
 add-highlighter shared/cucumber/language/ fill meta
 add-highlighter shared/cucumber/language/ regex \S+$ 0:value

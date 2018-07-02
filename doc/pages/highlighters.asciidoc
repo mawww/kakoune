@@ -188,7 +188,8 @@ Individual region definitions can then be added to that highlighter
 
 ----------------------------------------------------
 add-highlighter <path>/<name>/<region_name> region \
-    <opening> <closing> <recurse> <type> <params>...
+    [-match-capture] [-recurse <recurse>]          \
+    <opening> <closing> <type> <params>...
 ----------------------------------------------------
 
 *opening*::
@@ -199,7 +200,8 @@ add-highlighter <path>/<name>/<region_name> region \
 
 *recurse*::
     regex that defines the text that matches recursively an end token
-    into the region
+    into the region, every match of *recurse* will consume a following
+    match of *end*, preventing it from closing the region.
 
 *type* and *params*::
     An highlighter type, and associated params, as they would be passed
@@ -224,9 +226,9 @@ accepts nested braces scopes ('{ ... }') so the following string is valid:
 
 This region can be defined with:
 
-------------------------
-shell_expand %sh\{ \} \{
-------------------------
+---------------------------------
+shell_expand -recurse \{ %sh\{ \}
+---------------------------------
 
 Regions are matched using the left-most rule: the left-most region opening
 starts a new region. When a region closes, the closest next opening start
@@ -247,8 +249,8 @@ highlighter as root:
 
 -----------------------------------------------------------------
 add-highlighter <path>/<lang> regions
-add-highlighter <path>/<lang>/string '"' '"' '' fill string
-add-highlighter <path>/<lang>/comment '//' '$' '' fill comment
+add-highlighter <path>/<lang>/string '"' '"' fill string
+add-highlighter <path>/<lang>/comment '//' '$' fill comment
 add-highlighter <path>/<lang>/code default-region group
 add-highlighter <path>/<lang>/code/variable regex ...
 add-highlighter <path>/<lang>/code/function regex ...

@@ -7,10 +7,10 @@ hook global BufCreate .*\.(s|S|asm)$ %{
 
 add-highlighter shared/gas regions
 add-highlighter shared/gas/code default-region group
-add-highlighter shared/gas/string         region '"' (?<!\\)(\\\\)*"        '' fill string
-add-highlighter shared/gas/commentMulti   region /\*       \*/              '' fill comment
-add-highlighter shared/gas/commentSingle1 region '#'       '$'              '' fill comment
-add-highlighter shared/gas/commentSingle2 region ';'       '$'              '' fill comment
+add-highlighter shared/gas/string         region '"' (?<!\\)(\\\\)*"        fill string
+add-highlighter shared/gas/commentMulti   region /\*       \*/              fill comment
+add-highlighter shared/gas/commentSingle1 region '#'       '$'              fill comment
+add-highlighter shared/gas/commentSingle2 region ';'       '$'              fill comment
 
 # Constant
 add-highlighter shared/gas/code/ regex (0[xX][0-9]+|\b[0-9]+)\b 0:value

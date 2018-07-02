@@ -4,7 +4,7 @@ hook global BufCreate .*\.(repo|service|target|socket|ini|cfg|properties) %{
 
 add-highlighter shared/ini regions
 add-highlighter shared/ini/code default-region group
-add-highlighter shared/ini/comment region '(^|\h)\K[#;]' $ '' fill comment
+add-highlighter shared/ini/comment region '(^|\h)\K[#;]' $ fill comment
 
 add-highlighter shared/ini/code/ regex "^\h*\[[^\]]*\]" 0:title
 add-highlighter shared/ini/code/ regex "^\h*([^\[][^=\n]*)=([^\n]*)" 1:variable 2:value

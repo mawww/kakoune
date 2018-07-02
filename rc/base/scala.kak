@@ -13,10 +13,10 @@ hook global BufCreate .*[.](scala) %{
 
 add-highlighter shared/scala regions
 add-highlighter shared/scala/code default-region group
-add-highlighter shared/scala/string       region '"' (?<!\\)(\\\\)*" ''   fill string
-add-highlighter shared/scala/literal      region `    `             ''    fill variable
-add-highlighter shared/scala/comment      region /[*] [*]/           /[*] fill comment
-add-highlighter shared/scala/line_comment region //   $             ''    fill comment
+add-highlighter shared/scala/string       region '"' (?<!\\)(\\\\)*"   fill string
+add-highlighter shared/scala/literal      region `    `                fill variable
+add-highlighter shared/scala/comment      region -recurse /[*] /[*] [*]/  fill comment
+add-highlighter shared/scala/line_comment region //   $                fill comment
 
 # Keywords are collected at
 # http://tutorialspoint.com/scala/scala_basic_syntax.htm

@@ -15,9 +15,9 @@ hook global BufCreate .*/?Dockerfile(\.\w+)?$ %{
 
 add-highlighter shared/dockerfile regions
 add-highlighter shared/dockerfile/code default-region group
-add-highlighter shared/dockerfile/double_string region '"' '(?<!\\)(\\\\)*"' '' fill string
-add-highlighter shared/dockerfile/single_string region "'" "'"               '' fill string
-add-highlighter shared/dockerfile/comment region '#' $ '' fill comment
+add-highlighter shared/dockerfile/double_string region '"' '(?<!\\)(\\\\)*"' fill string
+add-highlighter shared/dockerfile/single_string region "'" "'"               fill string
+add-highlighter shared/dockerfile/comment region '#' $ fill comment
 
 evaluate-commands %sh{
     # Grammar

@@ -14,13 +14,13 @@ hook global BufCreate .*[.](ex|exs) %{
 
 add-highlighter shared/elixir regions
 add-highlighter shared/elixir/code default-region group
-add-highlighter shared/elixir/double_string region '"'   (?<!\\)(\\\\)*"   '' regions
-add-highlighter shared/elixir/triple_string region '"""' (?<!\\)(\\\\)*""" '' ref shared/elixir/double_string
-add-highlighter shared/elixir/single_string region "'"   (?<!\\)(\\\\)*'   '' fill string
-add-highlighter shared/elixir/comment       region '#'   '$'               '' fill comment
+add-highlighter shared/elixir/double_string region '"'   (?<!\\)(\\\\)*"   regions
+add-highlighter shared/elixir/triple_string region '"""' (?<!\\)(\\\\)*""" ref shared/elixir/double_string
+add-highlighter shared/elixir/single_string region "'"   (?<!\\)(\\\\)*'   fill string
+add-highlighter shared/elixir/comment       region '#'   '$'               fill comment
 
 add-highlighter shared/elixir/double_string/base default-region fill string
-add-highlighter shared/elixir/double_string/interpolation region  \Q#{ \} \{ fill builtin
+add-highlighter shared/elixir/double_string/interpolation region -recurse \{ \Q#{ \} fill builtin
 
 add-highlighter shared/elixir/code/ regex ':[\w_]+\b' 0:type
 add-highlighter shared/elixir/code/ regex '[\w_]+:' 0:type

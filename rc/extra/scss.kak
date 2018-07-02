@@ -15,7 +15,7 @@ hook global BufCreate .*[.](scss) %{
 
 add-highlighter shared/scss regions
 add-highlighter shared/scss/core default-region group
-add-highlighter shared/scss/comment region // $ '' fill comment
+add-highlighter shared/scss/comment region // $ fill comment
 
 add-highlighter shared/scss/core/ ref css
 add-highlighter shared/scss/core/ regex @[A-Za-z][A-Za-z0-9_-]* 0:meta

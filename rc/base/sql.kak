@@ -13,11 +13,11 @@ hook global BufCreate .*/?(?i)sql %{
 
 add-highlighter shared/sql regions
 add-highlighter shared/sql/code default-region group
-add-highlighter shared/sql/double_string region '"' (?<!\\)(\\\\)*" '' fill string
-add-highlighter shared/sql/single_string region "'" (?<!\\)(\\\\)*' '' fill string
-add-highlighter shared/sql/comment1 region '--' '$' '' fill comment
-add-highlighter shared/sql/comment2 region '#' '$' '' fill comment
-add-highlighter shared/sql/comment3 region '/\*' '\*/' '' fill comment
+add-highlighter shared/sql/double_string region '"' (?<!\\)(\\\\)*" fill string
+add-highlighter shared/sql/single_string region "'" (?<!\\)(\\\\)*' fill string
+add-highlighter shared/sql/comment1 region '--' '$' fill comment
+add-highlighter shared/sql/comment2 region '#' '$' fill comment
+add-highlighter shared/sql/comment3 region '/\*' '\*/' fill comment
 
 evaluate-commands %sh{
     # Keywords

@@ -13,9 +13,9 @@ hook global BufCreate .*[.](rust|rs) %{
 
 add-highlighter shared/rust regions
 add-highlighter shared/rust/code default-region group
-add-highlighter shared/rust/string       region %{(?<!')"} (?<!\\)(\\\\)*"  '' fill string
-add-highlighter shared/rust/comment      region /\*        \*/             /\* fill comment
-add-highlighter shared/rust/line_comment region //          $               '' fill comment
+add-highlighter shared/rust/string       region %{(?<!')"} (?<!\\)(\\\\)*"  fill string
+add-highlighter shared/rust/comment      region -recurse /\* /\*        \*/ fill comment
+add-highlighter shared/rust/line_comment region //          $               fill comment
 
 add-highlighter shared/rust/code/ regex \b[A-z0-9_]+! 0:meta
 # the number literals syntax is defined here:

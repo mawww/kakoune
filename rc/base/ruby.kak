@@ -13,30 +13,30 @@ hook global BufCreate .*(([.](rb))|(irbrc)|(pryrc)|(Capfile|[.]cap)|(Gemfile|[.]
 
 add-highlighter shared/ruby regions
 add-highlighter shared/ruby/code default-region group
-add-highlighter shared/ruby/double_string region '"' (?<!\\)(\\\\)*"        '' regions
-add-highlighter shared/ruby/single_string region "'" (?<!\\)(\\\\)*'        '' fill string
-add-highlighter shared/ruby/backtick      region '`' (?<!\\)(\\\\)*`        '' regions
-add-highlighter shared/ruby/regex         region '/' (?<!\\)(\\\\)*/[imox]* '' regions
-add-highlighter shared/ruby/              region '#' '$'                    '' fill comment
-add-highlighter shared/ruby/              region ^begin= ^=end              '' fill comment
-add-highlighter shared/ruby/              region '%[iqrswxIQRSWX]\(' \)     \( fill meta
-add-highlighter shared/ruby/              region '%[iqrswxIQRSWX]\{' \}     \{ fill meta
-add-highlighter shared/ruby/              region '%[iqrswxIQRSWX]\[' \]     \[ fill meta
-add-highlighter shared/ruby/              region '%[iqrswxIQRSWX]<'   >      < fill meta
-add-highlighter shared/ruby/heredoc region '<<[-~]?(\w+)'      '^\h*(\w+)$' '' fill string
-add-highlighter shared/ruby/division region '[\w\)\]](/|(\h+/\h+))' '\w' '' group # Help Kakoune to better detect /…/ literals
+add-highlighter shared/ruby/double_string region '"' (?<!\\)(\\\\)*"        regions
+add-highlighter shared/ruby/single_string region "'" (?<!\\)(\\\\)*'        fill string
+add-highlighter shared/ruby/backtick      region '`' (?<!\\)(\\\\)*`        regions
+add-highlighter shared/ruby/regex         region '/' (?<!\\)(\\\\)*/[imox]* regions
+add-highlighter shared/ruby/              region '#' '$'                    fill comment
+add-highlighter shared/ruby/              region ^begin= ^=end              fill comment
+add-highlighter shared/ruby/              region -recurse \( '%[iqrswxIQRSWX]\(' \) fill meta
+add-highlighter shared/ruby/              region -recurse \{ '%[iqrswxIQRSWX]\{' \} fill meta
+add-highlighter shared/ruby/              region -recurse \[ '%[iqrswxIQRSWX]\[' \] fill meta
+add-highlighter shared/ruby/              region -recurse  < '%[iqrswxIQRSWX]<'   > fill meta
+add-highlighter shared/ruby/heredoc region '<<[-~]?(\w+)'      '^\h*(\w+)$' fill string
+add-highlighter shared/ruby/division region '[\w\)\]](/|(\h+/\h+))' '\w' group # Help Kakoune to better detect /…/ literals
 
 # Regular expression flags are: i → ignore case, m → multi-lines, o → only interpolate #{} blocks once, x → extended mode (ignore white spaces)
 # Literals are: i → array of symbols, q → string, r → regular expression, s → symbol, w → array of words, x → capture shell result
 
 add-highlighter shared/ruby/double_string/ default-region fill string
-add-highlighter shared/ruby/double_string/interpolation region \Q#{ \} \{ fill meta
+add-highlighter shared/ruby/double_string/interpolation region -recurse \{ \Q#{ \} fill meta
 
 add-highlighter shared/ruby/backtick/ default-region fill meta
-add-highlighter shared/ruby/backtick/interpolation region  \Q#{ \} \{ fill meta
+add-highlighter shared/ruby/backtick/interpolation region -recurse \{ \Q#{ \} fill meta
 
 add-highlighter shared/ruby/regex/ default-region fill meta
-add-highlighter shared/ruby/regex/interpolation region \Q#{ \} \{ fill meta
+add-highlighter shared/ruby/regex/interpolation region -recurse \{ \Q#{ \} fill meta
 
 add-highlighter shared/ruby/code/ regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|((?<!:):(([A-Za-z]\w*[=?!]?)|(\[\]=?)))|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:variable
 
