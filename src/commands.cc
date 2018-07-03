@@ -434,30 +434,44 @@ static void ensure_all_buffers_are_saved()
     throw runtime_error(message);
 }
 
+template<bool force>
+void kill(const ParametersParser& parser, Context& context, const ShellContext&)
+{
+    auto& client_manager = ClientManager::instance();
+
+    if (not force and client_manager.count() == 1)
+        ensure_all_buffers_are_saved();
+
+    const int status = parser.positional_count() > 0 ? str_to_int(parser[0]) : 0;
+    while (not client_manager.empty())
+        client_manager.remove_client(**client_manager.begin(), true, status);
+
+    throw kill_session{};
+}
+
 const CommandDesc kill_cmd = {
     "kill",
     nullptr,
-    "kill current session, quit all clients and server",
-    no_params,
+    "kill [exit_code]: terminate the current session, the server and all clients connected"
+    "; the given integer will be used as exit code by the server and client processes",
+    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser&, Context&, const ShellContext&){
-        ensure_all_buffers_are_saved();
-        throw kill_session{};
-    }
+    kill<false>
 };
 
 
 const CommandDesc force_kill_cmd = {
     "kill!",
     nullptr,
-    "kill current session, quit all clients and server, do not check for unsaved buffers",
-    no_params,
+    "kill [exit_code]: force the termination of the current session, the server and all clients connected"
+    "; the given integer will be used as exit code by the server and client processes",
+    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser&, Context&, const ShellContext&){ throw kill_session{}; }
+    kill<true>
 };
 
 template<bool force>
