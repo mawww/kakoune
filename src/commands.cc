@@ -255,6 +255,8 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
         }
 
         buffer->flags() &= ~Buffer::Flags::NoHooks;
+        if (parser.get_switch("readonly"))
+            buffer->flags() |= Buffer::Flags::ReadOnly;
     }
 
     Buffer* current_buffer = context.has_buffer() ? &context.buffer() : nullptr;
@@ -286,6 +288,7 @@ ParameterDesc edit_params{
       { "scratch",  { false, "create a scratch buffer, not linked to a file" } },
       { "debug",    { false, "create buffer as debug output" } },
       { "fifo",     { true,  "create a buffer reading its content from a named fifo" } },
+      { "readonly", { false, "create a buffer in readonly mode" } },
       { "scroll",   { false, "place the initial cursor so that the fifo will scroll to show new data" } } },
       ParameterDesc::Flags::None, 0, 3
 };
