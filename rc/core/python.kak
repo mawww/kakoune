@@ -87,7 +87,7 @@ add-highlighter shared/python/comment       fill comment
 
     # Keyword list is collected using `keyword.kwlist` from `keyword`
     keywords="and|as|assert|break|class|continue|def|del|elif|else|except|exec"
-    keywords="${keywords}|finally|for|global|if|in|is|lambda|not|or|pass|print"
+    keywords="${keywords}|finally|for|global|if|in|is|lambda|nonlocal|not|or|pass|print"
     keywords="${keywords}|raise|return|try|while|with|yield"
 
     types="bool|buffer|bytearray|bytes|complex|dict|file|float|frozenset|int"
