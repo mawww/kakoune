@@ -357,11 +357,7 @@ BufferCoord get_insert_pos(const Buffer& buffer, const Selection& sel,
     case InsertMode::InsertCursor:
         return sel.cursor();
     case InsertMode::Append:
-    {
-        // special case for end of lines, append to current line instead
-        auto pos = sel.max();
-        return buffer.byte_at(pos) == '\n' ? pos : buffer.char_next(pos);
-    }
+        return buffer.char_next(sel.max());
     case InsertMode::InsertAtLineBegin:
         return sel.min().line;
     case InsertMode::AppendAtLineEnd:

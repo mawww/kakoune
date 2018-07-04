@@ -1117,7 +1117,7 @@ public:
             {
                 for (auto& sel : selections)
                 {
-                    if (sel.cursor() > sel.anchor() and sel.cursor().column > 0)
+                    if (sel.cursor() > sel.anchor() and sel.cursor() > BufferCoord{0, 0})
                         sel.cursor() = context().buffer().char_prev(sel.cursor());
                 }
             }
@@ -1362,11 +1362,9 @@ private:
         case InsertMode::Append:
             for (auto& sel : selections)
             {
-                sel.set(sel.min(), sel.max());
-                auto& cursor = sel.cursor();
-                // special case for end of lines, append to current line instead
-                if (cursor.column != buffer[cursor.line].length() - 1)
-                    cursor = buffer.char_next(cursor);
+                sel.set(sel.min(),  buffer.char_next(sel.max()));
+                if (sel.cursor() == buffer.end_coord())
+                    buffer.insert(buffer.end_coord(), "\n");
             }
             break;
         case InsertMode::AppendAtLineEnd:
@@ -1434,7 +1432,7 @@ private:
 
     ScopedEdition   m_edition;
     InsertCompleter m_completer;
-    bool            m_restore_cursor;
+    const bool      m_restore_cursor;
     bool            m_autoshowcompl;
     Timer           m_idle_timer;
     bool            m_in_end = false;
