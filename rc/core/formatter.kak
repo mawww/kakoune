@@ -6,7 +6,7 @@ define-command format -docstring "Format the contents of the current buffer" %{ 
         if [ -n "${kak_opt_formatcmd}" ]; then
             path_file_tmp=$(mktemp "${TMPDIR:-/tmp}"/kak-formatter-XXXXXX)
             printf %s\\n "
-                write \"${path_file_tmp}\"
+                write -sync \"${path_file_tmp}\"
 
                 %sh{
                     readonly path_file_out=\$(mktemp \"${TMPDIR:-/tmp}\"/kak-formatter-XXXXXX)

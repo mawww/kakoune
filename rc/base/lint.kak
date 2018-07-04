@@ -12,7 +12,7 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
     %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-lint.XXXXXXXX)
         mkfifo "$dir"/fifo
-        printf '%s\n' "evaluate-commands -no-hooks write $dir/buf"
+        printf '%s\n' "evaluate-commands -no-hooks write -sync $dir/buf"
 
         printf '%s\n' "evaluate-commands -draft %{
                   edit! -fifo $dir/fifo -debug *lint-output*

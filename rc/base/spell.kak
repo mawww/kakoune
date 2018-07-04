@@ -12,7 +12,7 @@ Formats of language supported:
     try %{ add-highlighter window ranges 'spell_regions' }
     %sh{
         file=$(mktemp -d "${TMPDIR:-/tmp}"/kak-spell.XXXXXXXX)/buffer
-        printf 'eval -no-hooks write %s\n' "${file}"
+        printf 'eval -no-hooks write -sync %s\n' "${file}"
         printf 'set-option buffer spell_tmp_file %s\n' "${file}"
     }
     %sh{

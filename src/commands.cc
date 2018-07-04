@@ -326,20 +326,25 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
         and (parser.positional_count() == 0 or real_path(parser[0]) == buffer.name()))
         throw runtime_error("cannot overwrite the buffer when in readonly mode");
 
+    const bool sync_file = (bool)parser.get_switch("sync");
     auto filename = parser.positional_count() == 0 ?
                     buffer.name() : parse_filename(parser[0]);
 
     context.hooks().run_hook("BufWritePre", filename, context);
-    write_buffer_to_file(buffer, filename, force);
+    write_buffer_to_file(buffer, filename, force, sync_file);
     context.hooks().run_hook("BufWritePost", filename, context);
 }
 
 const CommandDesc write_cmd = {
     "write",
     "w",
-    "write [filename]: write the current buffer to its file "
-    "or to [filename] if specified",
-    single_optional_param,
+    "write [-sync] [filename]: write the current buffer to its file "
+    "or to [filename] if specified; the underlying file can be"
+    "synchronized with the filesystem with the -sync switch",
+    ParameterDesc{
+        { { "sync", { false, "force the synchronization of the file onto the filesystem" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
+    },
     CommandFlags::None,
     CommandHelper{},
     filename_completer,
@@ -349,16 +354,20 @@ const CommandDesc write_cmd = {
 const CommandDesc force_write_cmd = {
     "write!",
     "w!",
-    "write [filename]: write the current buffer to its file "
-    "or to [filename] if specified, even when the file is write protected",
-    single_optional_param,
+    "write [-sync] [filename]: write the current buffer to its file "
+    "or to [filename] if specified, even when the file is write protected;"
+    "the underlying file can be synchronized with the filesystem with the -sync switch",
+    ParameterDesc{
+        { { "sync", { false, "force the synchronization of the file onto the filesystem" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
+    },
     CommandFlags::None,
     CommandHelper{},
     filename_completer,
     write_buffer<true>,
 };
 
-void write_all_buffers(Context& context)
+void write_all_buffers(Context& context, bool sync = false)
 {
     // Copy buffer list because hooks might be creating/deleting buffers
     Vector<SafePtr<Buffer>> buffers;
@@ -373,7 +382,7 @@ void write_all_buffers(Context& context)
             and !(buffer->flags() & Buffer::Flags::ReadOnly))
         {
             buffer->run_hook_in_own_context("BufWritePre", buffer->name(), context.name());
-            write_buffer_to_file(*buffer, buffer->name());
+            write_buffer_to_file(*buffer, buffer->name(), sync);
             buffer->run_hook_in_own_context("BufWritePost", buffer->name(), context.name());
         }
     }
@@ -382,12 +391,18 @@ void write_all_buffers(Context& context)
 const CommandDesc write_all_cmd = {
     "write-all",
     "wa",
-    "write all buffers that are associated to a file",
-    no_params,
+    "write-all [-sync]: write all buffers that are associated to a file;"
+    "all open files can be synchronized with the filesystem with the -sync switch",
+    ParameterDesc{
+        { { "sync", { false, "force the synchronization of the file onto the filesystem" } } },
+        ParameterDesc::Flags::None, 0, 0
+    },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser&, Context& context, const ShellContext&){ write_all_buffers(context); }
+    [](const ParametersParser& parser, Context& context, const ShellContext&){
+        write_all_buffers(context, (bool)parser.get_switch("sync"));
+    }
 };
 
 static void ensure_all_buffers_are_saved()
@@ -486,9 +501,12 @@ void write_quit(const ParametersParser& parser, Context& context,
 const CommandDesc write_quit_cmd = {
     "write-quit",
     "wq",
-    "write current buffer and quit current client. An optional integer "
-    "parameter can set the client exit status",
-    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
+    "write-quit [-sync] [exit_code]: write current buffer and quit current client. An optional integer parameter can set the client exit status;"
+    "all open files can be synchronized with the filesystem with the -sync switch",
+    ParameterDesc{
+        { { "sync", { false, "force the synchronization of the file onto the filesystem" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
+    },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -510,15 +528,19 @@ const CommandDesc force_write_quit_cmd = {
 const CommandDesc write_all_quit_cmd = {
     "write-all-quit",
     "waq",
-    "write all buffers associated to a file and quit current client. An "
-    "optional integer parameter can set the client exit status",
-    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
+    "write-all-quit [-sync] [exit_code]: write all buffers associated to a file and quit current client."
+    "An optional integer parameter can set the client exit status;"
+    "all open files can be synchronized with the filesystem with the -sync switch",
+    ParameterDesc{
+        { { "sync", { false, "force the synchronization of the file onto the filesystem" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 0
+    },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
-        write_all_buffers(context);
+        write_all_buffers(context, (bool)parser.get_switch("sync"));
         quit<false>(parser, context, shell_context);
     }
 };
