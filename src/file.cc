@@ -257,7 +257,7 @@ void write(int fd, StringView data)
     }
 }
 
-void write_buffer_to_fd(Buffer& buffer, int fd)
+void write_buffer_to_fd(Buffer& buffer, int fd, bool sync)
 {
     auto eolformat = buffer.options()["eolformat"].get<EolFormat>();
     StringView eoldata;
@@ -278,9 +278,12 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
         write(fd, linedata.substr(0, linedata.length()-1));
         write(fd, eoldata);
     }
+
+    if (sync)
+        ::fsync(fd);
 }
 
-void write_buffer_to_file(Buffer& buffer, StringView filename, bool force)
+void write_buffer_to_file(Buffer& buffer, StringView filename, bool force, bool sync)
 {
     struct stat st;
     auto zfilename = filename.zstr();
@@ -306,7 +309,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename, bool force)
 
     {
         auto close_fd = on_scope_end([fd]{ close(fd); });
-        write_buffer_to_fd(buffer, fd);
+        write_buffer_to_fd(buffer, fd, sync);
     }
 
     if ((buffer.flags() & Buffer::Flags::File) and
