@@ -14,7 +14,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
         printf %s\\n "set-option buffer clang_tmp_dir ${dir}"
-        printf %s\\n "evaluate-commands -no-hooks write ${dir}/buf"
+        printf %s\\n "evaluate-commands -no-hooks write -sync ${dir}/buf"
     }
     # end the previous %sh{} so that its output gets interpreted by kakoune
     # before launching the following as a background task.
