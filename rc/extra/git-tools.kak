@@ -167,7 +167,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         msgfile="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
         printf %s "edit '$msgfile'
               hook buffer BufWritePost '.*\Q$msgfile\E' %{ %sh{
-                  if git commit -F '$msgfile' --cleanup=strip $@ > /dev/null; then
+                  if git commit -F '$msgfile' --cleanup=strip $* > /dev/null; then
                      printf %s 'evaluate-commands -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
                   else
                      printf %s 'evaluate-commands -client $kak_client echo -markup %{{Error}Commit failed}'
