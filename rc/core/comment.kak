@@ -138,12 +138,12 @@ define-command comment-block -docstring '(un)comment selections using block comm
 }
 
 define-command comment-line -docstring '(un)comment selected lines using line comments' %{
-    %sh{
+    evaluate-commands %sh{
         if [ -z "${kak_opt_comment_line}" ]; then
             echo "fail \"The 'comment_line' option is empty, could not comment the line\""
         fi
     }
-    evaluate-commands -draft %{
+    evaluate-commands -save-regs '"/' -draft %{
         # Select the content of the lines, without indentation
         execute-keys <a-s>gi<a-l>
 
@@ -172,7 +172,7 @@ define-command comment-line -docstring '(un)comment selected lines using line co
 }
 
 define-command align-selections-left -docstring 'extend selections to the left to align with the leftmost selected column' %{
-    %sh{
+    evaluate-commands %sh{
         leftmost_column=$(echo "$kak_selections_desc" | tr ':' '\n' | cut -d',' -f1 | cut -d'.' -f2 | sort -n | head -n1)
         aligned_selections=$(echo "$kak_selections_desc" | sed -E "s/\.[0-9]+,/.$leftmost_column,/g")
         echo "select $aligned_selections"
