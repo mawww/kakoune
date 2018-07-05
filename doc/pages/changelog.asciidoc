@@ -20,8 +20,22 @@ change to make Kakoune command model cleaner and more robust.
 
 * The `wrap` highlighter can accept a new `-marker <marker_text>` switch.
 
-* The command line syntax has changed to support robust escaping, see
-  <<command-parsing#,`:doc command-parsing`>>.
+* The command line syntax has changed to support robust escaping.
+
+  - `%sh{...}` is not expanded to multiple tokens automatically anymore,
+    to evaluate its output as multiple tokens/commands, use the
+    `evaluate-commands` command:
+
+   -------------------------------------------------------------
+   evaluate-commands %sh{ echo "first command; second command" }
+   -------------------------------------------------------------
+
+  - Escaping of `'` in `'...'` and `"` and `%` in `"..."` strings is done
+    by doubling up (`''`, `""` and `%%`) instead of using a backslash
+
+  - Bare words escaping has been tweaked.
+
+  See <<command-parsing#,`:doc command-parsing`>>.
 
 * Various lists (options, registers...) in Kakoune are now written using
   the command line syntax:
