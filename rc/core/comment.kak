@@ -173,7 +173,7 @@ define-command comment-line -docstring '(un)comment selected lines using line co
 
 define-command align-selections-left -docstring 'extend selections to the left to align with the leftmost selected column' %{
     evaluate-commands %sh{
-        leftmost_column=$(echo "$kak_selections_desc" | tr ':' '\n' | cut -d',' -f1 | cut -d'.' -f2 | sort -n | head -n1)
+        leftmost_column=$(echo "$kak_selections_desc" | tr ' ' '\n' | cut -d',' -f1 | cut -d'.' -f2 | sort -n | head -n1)
         aligned_selections=$(echo "$kak_selections_desc" | sed -E "s/\.[0-9]+,/.$leftmost_column,/g")
         echo "select $aligned_selections"
     }
