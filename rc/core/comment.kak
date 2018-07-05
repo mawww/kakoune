@@ -116,7 +116,7 @@ define-command comment-block -docstring '(un)comment selections using block comm
             echo "fail \"The 'comment_block' options are empty, could not comment the selection\""
         fi
     }
-    evaluate-commands -draft %{
+    evaluate-commands -save-regs '"/' -draft %{
         # Keep non-empty selections
         execute-keys <a-K>\A\s*\z<ret>
 
@@ -143,7 +143,7 @@ define-command comment-line -docstring '(un)comment selected lines using line co
             echo "fail \"The 'comment_line' option is empty, could not comment the line\""
         fi
     }
-    evaluate-commands -draft %{
+    evaluate-commands -save-regs '"/' -draft %{
         # Select the content of the lines, without indentation
         execute-keys <a-s>gi<a-l>
 
