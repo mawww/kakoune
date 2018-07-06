@@ -181,7 +181,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
        hide-blame)
             printf %s "try %{
                 set-option buffer=$kak_bufname git_blame_flags ''
-                remove-highlighter window/git-blame
+                remove-highlighter window/git-blame-highlight
             }"
             ;;
        show-diff)
