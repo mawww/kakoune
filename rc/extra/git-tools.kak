@@ -63,7 +63,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     run_git_blame() {
         (
             printf %s "evaluate-commands -client '$kak_client' %{
-                      try %{ add-highlighter window/git-blame flag_lines GitBlame git_blame_flags }
+                      try %{ add-highlighter window/git-blame-highlight flag_lines GitBlame git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
                   git blame "$@" --incremental ${kak_buffile} | awk '
@@ -185,7 +185,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
             }"
             ;;
        show-diff)
-           echo 'try %{ add-highlighter window flag_lines GitDiffFlags git_diff_flags }'
+           echo 'try %{ add-highlighter window/git-diff-highlight flag_lines GitDiffFlags git_diff_flags }'
            update_diff
            ;;
        update-diff) update_diff ;;
