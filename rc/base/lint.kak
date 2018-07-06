@@ -87,13 +87,13 @@ define-command -hidden lint-show-counters %{
 }
 
 define-command lint-enable -docstring "Activate automatic diagnostics of the code" %{
-    add-highlighter window/lint-highlighter flag_lines default lint_flags
+    add-highlighter window/lint flag_lines default lint_flags
     hook window -group lint-diagnostics NormalIdle .* %{ lint-show }
     hook window -group lint-diagnostics WinSetOption lint_flags=.* %{ info; lint-show }
 }
 
 define-command lint-disable -docstring "Disable automatic diagnostics of the code" %{
-    remove-highlighter window/lint-highlighter
+    remove-highlighter window/lint
     remove-hooks window lint-diagnostics
 }
 
