@@ -25,11 +25,11 @@ from the remaining parameters.
 
 == Convenient highlighters
 
-*show_matching*::
+*show-matching*::
     highlight matching char of the character under the selections' cursor
     using `MatchingChar` face
 
-*show_whitespaces* [options]::
+*show-whitespaces* [options]::
     display symbols on top of whitespaces to make them more explicit
     using the `Whitespace` face, with the following *options*:
 
@@ -48,7 +48,7 @@ from the remaining parameters.
     *-tabpad* <separator>:::
         a one character long separator that will be appended to tabulations to honor the *tabstop* option
 
-*number_lines* [options]::
+*number-lines* [options]::
     show line numbers using the `LineNumbers`, `LineNumberCursor` and `LineNumbersWrapped` faces,
     with the following *options*: 
 
@@ -115,7 +115,7 @@ git blame output or spelling typos.
 See <<options#types,`:doc options types`>> for the format of `line-specs`
 and `range-specs`.
 
-*flag_lines* <face> <option_name>::
+*flag-lines* <face> <option_name>::
     add columns in front of the buffer, and display the flags specified
     in `line-specs` option, using <face>.
     In this example two words will be added in the gutter: a blue Foo at
@@ -124,7 +124,7 @@ and `range-specs`.
 ----------------------------------------------------------------------
 declare-option line-specs my_flags
 set-option window my_flags "%val{timestamp}:1|Foo:3|{red,yellow+b}Bar"
-add-highlighter window/ flag_lines blue my_flags
+add-highlighter window/ flag-lines blue my_flags
 ----------------------------------------------------------------------
 
 *ranges* <option_name>::

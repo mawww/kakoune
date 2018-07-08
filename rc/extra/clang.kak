@@ -150,7 +150,7 @@ define-command -hidden clang-show-error-info %{
 define-command clang-enable-diagnostics -docstring %{Activate automatic error reporting and diagnostics
 Information about the analysis are showned after the buffer has been parsed with the clang-parse function} \
 %{
-    add-highlighter window/clang_flags flag_lines default clang_flags
+    add-highlighter window/clang_flags flag-lines default clang_flags
     hook window -group clang-diagnostics NormalIdle .* %{ clang-show-error-info }
     hook window -group clang-diagnostics WinSetOption ^clang_errors=.* %{ info; clang-show-error-info }
 }

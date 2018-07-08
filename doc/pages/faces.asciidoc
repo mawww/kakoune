@@ -105,7 +105,7 @@ The following faces are used by builtin highlighters if enabled.
 (See <<highlighters#,`:doc highlighters`>>.
 
 *LineNumbers*::
-    face used by the `number_lines` highlighter
+    face used by the `number-lines` highlighter
 
 *LineNumberCursor*::
     face used to highlight the line number of the main selection
@@ -114,7 +114,7 @@ The following faces are used by builtin highlighters if enabled.
     face used to highlight the line number of wrapped lines
 
 *MatchingChar*::
-    face used by the `show_matching` highlighter
+    face used by the `show-matching` highlighter
 
 *Whitespace*::
-    face used by the `show_whitespaces` highlighter
+    face used by the `show-whitespaces` highlighter

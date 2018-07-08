@@ -1061,7 +1061,7 @@ struct LineNumbersHighlighter : Highlighter
     }
 
 private:
-    static constexpr StringView ms_id = "line_numbers";
+    static constexpr StringView ms_id = "line-numbers";
 
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
@@ -2136,16 +2136,16 @@ void register_highlighters()
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     registry.insert({
-        "number_lines",
+        "number-lines",
         { LineNumbersHighlighter::create,
           "Display line numbers \n"
           "Parameters: -relative, -hlcursor, -separator <separator text>\n" } });
     registry.insert({
-        "show_matching",
+        "show-matching",
         { create_matching_char_highlighter,
           "Apply the MatchingChar face to the char matching the one under the cursor" } });
     registry.insert({
-        "show_whitespaces",
+        "show-whitespaces",
         { show_whitespaces_factory,
           "Display whitespaces using symbols \n"
           "Parameters: -tab <separator> -tabpad <separator> -lf <separator> -spc <separator> -nbsp <separator>\n" } });
@@ -2171,7 +2171,7 @@ void register_highlighters()
           "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
           "which specify what kind of highlighters can be put in the group" } });
     registry.insert({
-        "flag_lines",
+        "flag-lines",
         { FlagLinesHighlighter::create,
           "Parameters: <face> <option name>\n"
           "Display flags specified in the line-spec option <option name> with <face>"} });

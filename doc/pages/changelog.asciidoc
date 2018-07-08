@@ -67,6 +67,10 @@ change to make Kakoune command model cleaner and more robust.
 
   See <<highlighters#,`:doc highlighters`>>
 
+* Highlighter type names have been unified, types that used `_` as
+  word separators, such as `show_whitespaces` are now using `-`
+  (`show-whitespace`).
+
 * `a` on end of line is not treated specially anymore, it will start
   inserting on the next character, which will be the first character
   of the next line.
