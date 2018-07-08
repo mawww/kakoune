@@ -531,6 +531,7 @@ Optional<Key> NCursesUI::get_next_key()
         set_signal_handler(SIGWINCH, SIG_DFL);
         set_signal_handler(SIGCONT, SIG_DFL);
         m_window = nullptr;
+        m_stdin_watcher.disable();
         return {};
     }
 
