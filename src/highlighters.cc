@@ -643,6 +643,8 @@ struct WrapHighlighter : Highlighter
 
     static constexpr StringView ms_id = "wrap";
 
+    struct SplitPos{ ByteCount byte; ColumnCount column; };
+
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
         if (contains(context.disabled_ids, ms_id))
@@ -665,58 +667,59 @@ struct WrapHighlighter : Highlighter
             const ByteCount line_length = buffer[buf_line].length();
             const ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col;
 
-            auto coord = next_split_coord(buffer, wrap_column, tabstop, buf_line);
-            if (buffer.is_valid(coord) and not buffer.is_end(coord))
+            auto pos = next_split_pos(buffer, wrap_column, tabstop, buf_line, {0, 0});
+            if (pos.byte == line_length)
+                continue;
+
+            for (auto atom_it = it->begin();
+                 pos.byte != line_length and atom_it != it->end(); )
             {
-                for (auto atom_it = it->begin();
-                     coord.column != line_length and atom_it != it->end(); )
+                const BufferCoord coord{buf_line, pos.byte};
+                if (!atom_it->has_buffer_range() or
+                    coord < atom_it->begin() or coord >= atom_it->end())
                 {
-                    if (!atom_it->has_buffer_range() or
-                        coord < atom_it->begin() or coord >= atom_it->end())
-                    {
-                        ++atom_it;
-                        continue;
-                    }
-
-                    auto& line = *it;
-
-                    if (coord > atom_it->begin())
-                        atom_it = ++line.split(atom_it, coord);
-
-                    DisplayLine new_line{ AtomList{ atom_it, line.end() } };
-                    line.erase(atom_it, line.end());
-
-                    ColumnCount prefix_len = 0;
-                    if (marker_len != 0 and marker_len < wrap_column)
-                    {
-                        new_line.insert(new_line.begin(), {m_marker, face_marker});
-                        prefix_len = marker_len;
-                    }
-                    if (indent > marker_len and indent < wrap_column)
-                    {
-                        auto it = new_line.insert(new_line.begin() + (marker_len > 0), {buffer, coord, coord});
-                        it->replace(String{' ', indent - marker_len});
-                        prefix_len = indent;
-                    }
-
-                    if (it+1 - display_buffer.lines().begin() == win_height)
-                    {
-                        if (cursor >= new_line.range().begin) // strip first lines if cursor is not visible
-                        {
-                            display_buffer.lines().erase(display_buffer.lines().begin(), display_buffer.lines().begin()+1);
-                            --it;
-                        }
-                        else
-                        {
-                            display_buffer.lines().erase(it+1, display_buffer.lines().end());
-                            return;
-                        }
-                    }
-                    it = display_buffer.lines().insert(it+1, new_line);
-
-                    coord = next_split_coord(buffer, wrap_column - prefix_len, tabstop, coord);
-                    atom_it = it->begin();
+                    ++atom_it;
+                    continue;
                 }
+
+                auto& line = *it;
+
+                if (coord > atom_it->begin())
+                    atom_it = ++line.split(atom_it, coord);
+
+                DisplayLine new_line{ AtomList{ atom_it, line.end() } };
+                line.erase(atom_it, line.end());
+
+                ColumnCount prefix_len = 0;
+                if (marker_len != 0 and marker_len < wrap_column)
+                {
+                    new_line.insert(new_line.begin(), {m_marker, face_marker});
+                    prefix_len = marker_len;
+                }
+                if (indent > marker_len and indent < wrap_column)
+                {
+                    auto it = new_line.insert(new_line.begin() + (marker_len > 0), {buffer, coord, coord});
+                    it->replace(String{' ', indent - marker_len});
+                    prefix_len = indent;
+                }
+
+                if (it+1 - display_buffer.lines().begin() == win_height)
+                {
+                    if (cursor >= new_line.range().begin) // strip first lines if cursor is not visible
+                    {
+                        display_buffer.lines().erase(display_buffer.lines().begin(), display_buffer.lines().begin()+1);
+                        --it;
+                    }
+                    else
+                    {
+                        display_buffer.lines().erase(it+1, display_buffer.lines().end());
+                        return;
+                    }
+                }
+                it = display_buffer.lines().insert(it+1, new_line);
+
+                pos = next_split_pos(buffer, wrap_column - prefix_len, tabstop, buf_line, pos);
+                atom_it = it->begin();
             }
         }
     }
@@ -736,13 +739,13 @@ struct WrapHighlighter : Highlighter
 
         auto line_wrap_count = [&](LineCount line, ColumnCount indent) {
             LineCount count = 0;
-            BufferCoord coord{line};
             const ByteCount line_length = buffer[line].length();
+            SplitPos pos{0, 0};
             while (true)
             {
-                coord = next_split_coord(buffer, wrap_column - (coord.column == 0 ? 0_col : indent),
-                                         tabstop, coord);
-                if (coord.column == line_length)
+                pos = next_split_pos(buffer, wrap_column - (pos.byte == 0 ? 0_col : indent),
+                                     tabstop, line, pos);
+                if (pos.byte == line_length)
                     break;
                 ++count;
             }
@@ -776,22 +779,21 @@ struct WrapHighlighter : Highlighter
 
             if (buf_line == cursor.line)
             {
-                BufferCoord coord{buf_line};
+                SplitPos pos{0, 0};
                 for (LineCount count = 0; true; ++count)
                 {
-                    auto split_coord = next_split_coord(buffer, wrap_column - (coord.column != 0 ? prefix_len : 0_col),
-                                                        tabstop, coord);
-                    if (split_coord.column > cursor.column)
+                    auto next_pos = next_split_pos(buffer, wrap_column - (pos.byte != 0 ? prefix_len : 0_col),
+                                                   tabstop, buf_line, pos);
+                    if (next_pos.byte > cursor.column)
                     {
                         setup.cursor_pos = DisplayCoord{
                             win_line + count,
                             get_column(buffer, tabstop, cursor) -
-                            get_column(buffer, tabstop, coord) +
-                            (coord.column != 0 ? indent : 0_col)
+                            pos.column + (pos.byte != 0 ? indent : 0_col)
                         };
                         break;
                     }
-                    coord = split_coord;
+                    pos = next_pos;
                 }
                 kak_assert(setup.cursor_pos.column >= 0 and setup.cursor_pos.column < setup.window_range.column);
             }
@@ -817,28 +819,48 @@ struct WrapHighlighter : Highlighter
         unique_ids.push_back(ms_id);
     }
 
-    BufferCoord next_split_coord(const Buffer& buffer,  ColumnCount wrap_column, int tabstop, BufferCoord coord) const
+    SplitPos next_split_pos(const Buffer& buffer,  ColumnCount wrap_column, int tabstop, LineCount line, SplitPos current) const
     {
-        auto column = get_column(buffer, tabstop, coord);
-        auto col = get_byte_to_column(
-            buffer, tabstop, {coord.line, column + wrap_column});
-        StringView line = buffer[coord.line];
-        if (col == coord.column) // Can happen if we try to wrap on a tab char
-            col = line.byte_count_to(line.char_count_to(coord.column)+1);
+        const ColumnCount target_column = current.column + wrap_column;
+        StringView content = buffer[line];
 
-        BufferCoord split_coord{coord.line, col};
-
-        if (m_word_wrap)
+        SplitPos pos = current;
+        while (pos.byte < content.length() and pos.column < target_column)
         {
-            utf8::iterator<const char*> it{&line[col], line};
-            while (it != line.end() and it != line.begin() and is_word<WORD>(*it))
+            if (content[pos.byte] == '\t')
+            {
+                const ColumnCount next_column = (pos.column / tabstop + 1) * tabstop;
+                if (next_column > target_column and pos.byte != current.byte) // the target column was in the tab
+                    break;
+                pos.column = next_column;
+                ++pos.byte;
+            }
+            else
+            {
+                const char* it = &content[pos.byte];
+                const ColumnCount width = codepoint_width(utf8::read_codepoint(it, content.end()));
+                if (pos.column + width > target_column and pos.byte != current.byte) // the target column was in the char
+                    break;
+                pos.column += width;
+                pos.byte = (int)(it - content.begin());
+            }
+        }
+
+        if (m_word_wrap and pos.byte < content.length()) // find a word boundary before current position
+        {
+            utf8::iterator<const char*> it{&content[pos.byte], content};
+            while (it != content.begin() and is_word<WORD>(*it))
                 --it;
 
-            if (it != line.begin() and it != &line[col] and
-                (it+1) > &line[coord.column])
-                split_coord.column = (it+1).base() - line.begin();
+            if (it != content.begin() and it != &content[pos.byte] and
+                (it+1) > &content[current.byte])
+            {
+                const ByteCount word_split = (it+1).base() - content.begin();
+                pos.column -= content.substr(word_split, pos.byte - word_split).column_length();
+                pos.byte = word_split;
+            }
         }
-        return split_coord;
+        return pos;
     };
 
     ColumnCount line_indent(const Buffer& buffer, int tabstop, LineCount line) const
