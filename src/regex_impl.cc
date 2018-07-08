@@ -903,8 +903,8 @@ private:
     }
 
     // Mutate start_desc with informations on which Codepoint could start a match.
-    // Returns true if the node can not consume the char, in which case the next node
-    // would still be relevant for the parent node start chars computation.
+    // Returns true if the node possibly does not consume the char, in which case
+    // the next node would still be relevant for the parent node start chars computation.
     template<MatchDirection direction>
     bool compute_start_desc(ParsedRegex::NodeIndex index,
                              CompiledRegex::StartDesc& start_desc) const
