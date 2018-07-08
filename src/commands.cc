@@ -1281,7 +1281,7 @@ const CommandDesc source_cmd = {
         auto start_time = profile ? Clock::now() : Clock::time_point{};
 
         String path = real_path(parse_filename(parser[0]));
-        String file_content = read_file(path, true);
+        MappedFile file_content{path};
         try
         {
             CommandManager::instance().execute(file_content, context,
