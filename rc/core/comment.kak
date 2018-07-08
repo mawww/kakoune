@@ -116,7 +116,7 @@ define-command comment-block -docstring '(un)comment selections using block comm
             echo "fail \"The 'comment_block' options are empty, could not comment the selection\""
         fi
     }
-    evaluate-commands -draft %{
+    evaluate-commands -save-regs '"/' -draft %{
         # Keep non-empty selections
         execute-keys <a-K>\A\s*\z<ret>
 
