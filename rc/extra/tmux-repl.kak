@@ -48,7 +48,7 @@ define-command tmux-repl-window -params 0..1 -command-completion -docstring "Cre
     tmux-repl-impl 'new-window' %arg{@}
 }
 
-define-command -hidden tmux-send-text -params 0..1 -docstring "tmux-send-text [text]: Send text(append new line) to the REPL pane.
+define-command -hidden tmux-send-text -params 0..1 -docstring "tmux-send-text [text]: Send text to the REPL pane.
   If no text is passed, then the selection is used" %{
     nop %sh{
         if [ $# -eq 0 ]; then 
