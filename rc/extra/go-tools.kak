@@ -51,7 +51,7 @@ define-command go-enable-autocomplete -docstring "Add gocode completion candidat
 }
 
 define-command go-disable-autocomplete -docstring "Disable gocode completion" %{
-    set-option window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed 's/option=gocode_completions://g' }
+    set-option window completers %sh{ printf %s\\n "${kak_opt_completers}" | sed "s/'option=gocode_completions'//g" }
     remove-hooks window go-autocomplete
     unalias window complete go-complete
 }
