@@ -128,7 +128,7 @@ define-command -hidden python-indent-on-new-line %{
         # cleanup trailing whitespaces from previous line
         try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with :
-        try %{ execute-keys -draft <space> k x <a-k> :$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> :$ <ret> j <a-gt> }
     }
 }
 
