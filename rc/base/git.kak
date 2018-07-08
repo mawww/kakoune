@@ -2,6 +2,10 @@ hook global BufCreate .*(COMMIT_EDITMSG|MERGE_MSG) %{
     set-option buffer filetype git-commit
 }
 
+hook global BufCreate .*(\.gitconfig|git/config) %{
+    set-option buffer filetype ini
+}
+
 hook -group git-commit-highlight global WinSetOption filetype=git-commit %{
     add-highlighter window/git-commit-highlight group
     add-highlighter window/git-commit-highlight/ regex "^\h*#[^\n]*\n" 0:cyan,default
