@@ -733,6 +733,9 @@ The following keys are recognized by this mode to help with editing (See <<comma
 *<c-v>*::
     insert next keystroke without interpreting it
 
+*<c-f>*::
+    insert the default value for this prompt
+
 *<c-o>*::
     disable auto completion for this prompt
 
