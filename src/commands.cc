@@ -1955,7 +1955,7 @@ const CommandDesc on_key_cmd = {
 const CommandDesc info_cmd = {
     "info",
     nullptr,
-    "info [<switches>] <params>...: display an info box with the params as content",
+    "info [<switches>] <text>: display an info box containing <text>",
     ParameterDesc{
         { { "anchor",    { true, "set info anchoring <line>.<column>" } },
           { "placement", { true, "set placement relative to anchor (above, below)" } },
