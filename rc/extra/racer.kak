@@ -7,7 +7,7 @@ define-command racer-complete -docstring "Complete the current selection with ra
         printf %s\\n "set-option buffer racer_tmp_dir ${dir}"
         printf %s\\n "evaluate-commands -no-hooks %{ write ${dir}/buf }"
     }
-    nop %sh{
+    evaluate-commands %sh{
         dir=${kak_opt_racer_tmp_dir}
         (
             cursor="${kak_cursor_line} $((${kak_cursor_column} - 1))"
@@ -16,7 +16,7 @@ define-command racer-complete -docstring "Complete the current selection with ra
                 BEGIN { FS = "\t"; ORS = ":" }
                 /^PREFIX/ {
                     column = ENVIRON["kak_cursor_column"] + $2 - $3
-                    print ENVIRON["kak_cursor_line"] "." column "\\@" ENVIRON["kak_timestamp"]
+                    print ENVIRON["kak_cursor_line"] "." column "@@" ENVIRON["kak_timestamp"]
                 }
                 /^MATCH/ {
                     word = $2
@@ -80,7 +80,7 @@ define-command racer-complete -docstring "Complete the current selection with ra
 }
 
 define-command racer-enable-autocomplete -docstring "Add racer completion candidates to the completer" %{
-    set-option window completers "option=racer_completions:%opt{completers}"
+    set-option window completers option=racer_completions %opt{completers}
     hook window -group racer-autocomplete InsertIdle .* %{ try %{
         execute-keys -draft <a-h><a-k>([\w\.]|::).\z<ret>
         racer-complete
@@ -89,7 +89,7 @@ define-command racer-enable-autocomplete -docstring "Add racer completion candid
 }
 
 define-command racer-disable-autocomplete -docstring "Disable racer completion" %{
-    set-option window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed 's/option=racer_completions://g' }
+    evaluate-commands %sh{ printf "set-option window completers %s\n" $(printf %s "${kak_opt_completers}" | sed -e "s/'option=racer_completions'//g") }
     remove-hooks window racer-autocomplete
     unalias window complete racer-complete
 }
