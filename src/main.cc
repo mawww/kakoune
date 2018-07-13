@@ -381,7 +381,7 @@ void register_options()
         "fs_check_timeout", "timeout, in milliseconds, between file system buffer modification checks",
         500);
     reg.declare_option("ui_options",
-                       "colon separated list of <key>=<value> options that are "
+                       "space separated list of <key>=<value> options that are "
                        "passed to and interpreted by the user interface\n"
                        "\n"
                        "The ncurses ui supports the following options:\n"
