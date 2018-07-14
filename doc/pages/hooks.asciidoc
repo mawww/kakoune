@@ -19,7 +19,7 @@ For example to automatically use line numbering with .cc files, use the
 following command:
 
 ----------------------------------------------------
-hook global WinCreate .*\.cc %{ add-highlighter number_lines }
+hook global WinCreate .*\.cc %{ add-highlighter number-lines }
 ----------------------------------------------------
 
 If *group* is given, make this hook part of the named group. Groups are used
