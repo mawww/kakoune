@@ -43,6 +43,9 @@ change to make Kakoune command model cleaner and more robust.
   - `set-register` now take an arbitrary number of parameters and sets
     the register to multiple strings. `%reg` expands to a list of strings.
 
+  - the `$kak_reg_*` environment variable is now a list, `$kak_main_reg_*`
+    provides the previous behaviour.
+
   - `%opt` expands list options as list of strings.
 
   - selection descs are whitespaces separated instead of `:` separated
