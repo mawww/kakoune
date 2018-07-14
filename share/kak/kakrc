@@ -28,7 +28,7 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
 evaluate-commands %sh{
     autoload_directory() {
         find -L "$1" -type f -name '*\.kak' \
-            -exec printf 'try %%{ source "%s" } catch %%{ echo -debug Autoload: could not load "%s" }\n' '{}' '{}' \;
+            | sed 's/.*/try %{ source "&" } catch %{ echo -debug Autoload: could not load "&" }/'
     }
 
     echo "colorscheme default"
