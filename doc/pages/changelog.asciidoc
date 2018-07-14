@@ -78,6 +78,11 @@ change to make Kakoune command model cleaner and more robust.
   inserting on the next character, which will be the first character
   of the next line.
 
+- `autoshowcompl` options has been renames `auto_complete` and is
+  now a `flags(insert|prompt)` option, allowing more granular
+  configuration of when the completions should be displayed
+  automatically.
+
 == Kakoune 2018.04.13
 
 First official Kakoune release.

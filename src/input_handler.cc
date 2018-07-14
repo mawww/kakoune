@@ -709,10 +709,10 @@ public:
         : InputMode(input_handler), m_prompt(prompt.str()), m_prompt_face(face),
           m_empty_text{std::move(emptystr)},
           m_flags(flags), m_completer(std::move(completer)), m_callback(std::move(callback)),
-          m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()},
+          m_auto_complete{context().options()["auto_complete"].get<AutoComplete>() & AutoComplete::Prompt},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
-                           if (m_autoshowcompl and m_refresh_completion_pending)
+                           if (m_auto_complete and m_refresh_completion_pending)
                                refresh_completions(CompletionFlags::Fast);
                            if (m_line_changed)
                            {
@@ -880,7 +880,7 @@ public:
         }
         else if (key == ctrl('o'))
         {
-            m_autoshowcompl = false;
+            m_auto_complete = false;
             clear_completions();
             if (context().has_client())
                 context().client().menu_hide();
@@ -1019,7 +1019,7 @@ private:
     LineEditor     m_line_editor;
     bool           m_line_changed = false;
     PromptFlags    m_flags;
-    bool           m_autoshowcompl;
+    bool           m_auto_complete;
     bool           m_refresh_completion_pending = true;
     Timer          m_idle_timer;
 
@@ -1078,11 +1078,11 @@ public:
           m_restore_cursor(mode == InsertMode::Append),
           m_edition(context()),
           m_completer(context()),
-          m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()},
+          m_auto_complete{context().options()["auto_complete"].get<AutoComplete>() & AutoComplete::Insert},
           m_disable_hooks{context().hooks_disabled(), context().hooks_disabled()},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                        Timer::Callback{} : [this](Timer&) {
-                           if (m_autoshowcompl)
+                           if (m_auto_complete)
                                m_completer.update();
                            context().hooks().run_hook("InsertIdle", "", context());
                        }}
@@ -1267,7 +1267,7 @@ public:
         }
         else if (key == ctrl('o'))
         {
-            m_autoshowcompl = false;
+            m_auto_complete = false;
             m_completer.reset();
         }
         else if (key == ctrl('u'))
@@ -1433,7 +1433,7 @@ private:
     ScopedEdition   m_edition;
     InsertCompleter m_completer;
     const bool      m_restore_cursor;
-    bool            m_autoshowcompl;
+    bool            m_auto_complete;
     Timer           m_idle_timer;
     bool            m_in_end = false;
     MouseHandler    m_mouse_handler;

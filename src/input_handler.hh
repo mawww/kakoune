@@ -152,6 +152,22 @@ constexpr auto enum_desc(Meta::Type<AutoInfo>)
     });
 }
 
+enum class AutoComplete
+{
+    None = 0,
+    Insert = 0b01,
+    Prompt = 0b10
+};
+constexpr bool with_bit_ops(Meta::Type<AutoComplete>) { return true; }
+
+constexpr auto enum_desc(Meta::Type<AutoComplete>)
+{
+    return make_array<EnumDesc<AutoComplete>, 3>({
+        { AutoComplete::Insert, "insert"},
+        { AutoComplete::Prompt, "prompt" }
+    });
+}
+
 bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context);
 void hide_auto_info_ifn(const Context& context, bool hide);
 

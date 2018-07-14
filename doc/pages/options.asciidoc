@@ -166,9 +166,9 @@ are exclusively available to built-in options.
     _default_ command|onkey +
     display automatic information box in the enabled contexts
 
-*autoshowcompl* `bool`::
-    _default_ true +
-    automatically display possible completions when editing a prompt
+*auto_complete* `flags(insert|prompt)`::
+    _default_ insert|prompt +
+    automatically display possible completions in the enabled modes.
 
 *ignored_files* `regex`::
     filenames matching this regex won't be considered as candidates
