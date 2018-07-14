@@ -13,6 +13,9 @@ This walk-through is an introduction to Kakoune's basic editing capabilities
 to help new users transition over easily from another editor, or simply
 learn how to write and edit documents with style.
 
+During the learning period it is useful to activate an automatically displayed
+contextual help for commands in normal mode: `:set -add global autoinfo normal`
+
 In the first section, you will learn about the primitives of the editing
 language to be able to get to a level of knowledge of the editor that
 guarantees that you can work with it efficiently.
