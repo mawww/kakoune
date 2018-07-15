@@ -459,13 +459,14 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
     }
 }
 
-void InsertCompleter::update()
+void InsertCompleter::update(bool allow_implicit)
 {
     if (m_explicit_completer and try_complete(m_explicit_completer))
         return;
 
     reset();
-    setup_ifn();
+    if (allow_implicit)
+        setup_ifn();
 }
 
 void InsertCompleter::reset()

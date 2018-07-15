@@ -83,7 +83,7 @@ public:
     ~InsertCompleter();
 
     void select(int index, bool relative, Vector<Key>& keystrokes);
-    void update();
+    void update(bool allow_implicit);
     void reset();
 
     void explicit_file_complete();

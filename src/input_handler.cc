@@ -1096,8 +1096,7 @@ public:
           m_disable_hooks{context().hooks_disabled(), context().hooks_disabled()},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                        Timer::Callback{} : [this](Timer&) {
-                           if (m_auto_complete)
-                               m_completer.update();
+                           m_completer.update(m_auto_complete);
                            context().hooks().run_hook("InsertIdle", "", context());
                        }}
     {
