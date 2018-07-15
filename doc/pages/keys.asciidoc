@@ -739,3 +739,6 @@ The following keys are recognized by this mode to help with editing (See <<comma
 *<a-!>*::
     expand the typed expansions in currently entered text
     (See <<expansions#typed-expansions,`:doc expansions typed-expansions`>>)
+
+*<a-;>*::
+    escape to normal mode for a single command

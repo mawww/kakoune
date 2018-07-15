@@ -175,11 +175,14 @@ public:
                   context().client().check_if_buffer_needs_reloading();
               timer.set_next_date(Clock::now() + get_fs_check_timeout(context()));
           }}},
-          m_single_command(single_command)
+          m_state(single_command ? State::SingleCommand : State::Normal)
     {}
 
     void on_enabled() override
     {
+        if (m_state == State::PopOnEnabled)
+            return pop_mode();
+
         if (not (context().flags() & Context::Flags::Draft))
         {
             if (context().has_client())
@@ -214,6 +217,7 @@ public:
 
     void on_key(Key key) override
     {
+        kak_assert(m_state != State::PopOnEnabled);
         ScopedSetBool set_in_on_key{m_in_on_key};
 
         // Hack to parse keys sent by terminals using the 8th bit to mark the
@@ -283,11 +287,12 @@ public:
         }
         else
         {
-            // Preserve hooks disabled for the whole execution prior to pop_mode
-            ScopedSetBool disable_hooks{context().hooks_disabled(),
-                                        m_single_command and m_hooks_disabled};
-            if (m_single_command)
-                pop_mode();
+            auto pop_if_single_command = on_scope_end([this] {
+                if (m_state == State::SingleCommand and enabled())
+                     pop_mode(); 
+                else if (m_state == State::SingleCommand)
+                     m_state = State::PopOnEnabled;
+            });
 
             context().print_status({});
             if (context().has_client())
@@ -350,7 +355,9 @@ private:
     Timer m_idle_timer;
     Timer m_fs_check_timer;
     MouseHandler m_mouse_handler;
-    const bool m_single_command;
+
+    enum class State { Normal, SingleCommand, PopOnEnabled };
+    State m_state;
 };
 
 template<WordType word_type>
@@ -897,6 +904,11 @@ public:
                 return;
             }
         }
+        else if (key == alt(';'))
+        {
+            push_mode(new Normal(context().input_handler(), true));
+            return;
+        }
         else
         {
             m_line_editor.handle_key(key);
@@ -999,9 +1011,11 @@ private:
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
-    void on_disabled(bool) override
+    void on_disabled(bool temporary) override
     {
-        context().print_status({});
+        if (not temporary)
+            context().print_status({});
+
         m_idle_timer.set_next_date(TimePoint::max());
         if (context().has_client())
             context().client().menu_hide();
