@@ -9,6 +9,7 @@ Source0:        %{name}-%{version}.tar.bz2
 
 BuildRequires:  ncurses-devel >= 5.3
 BuildRequires:  asciidoc
+BuildRequires:  gcc-c++
 Requires:       ncurses-libs >= 5.3
 
 %description
