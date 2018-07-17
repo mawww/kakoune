@@ -1354,6 +1354,7 @@ private:
     void insert(Codepoint key)
     {
         String str{key};
+        context().hooks().run_hook("InsertCharPre", str, context());
         context().selections().insert(str, InsertMode::InsertCursor);
         context().hooks().run_hook("InsertChar", str, context());
     }
@@ -1389,6 +1390,7 @@ private:
             Vector<Selection> new_sels;
             count = count > 0 ? count : 1;
             LineCount inserted_count = 0;
+            context().hooks().run_hook("InsertCharPre", "\n", context());
             for (auto sel : selections)
             {
                 buffer.insert(sel.max().line + inserted_count + 1,
@@ -1407,6 +1409,7 @@ private:
             Vector<Selection> new_sels;
             count = count > 0 ? count : 1;
             LineCount inserted_count = 0;
+            context().hooks().run_hook("InsertCharPre", "\n", context());
             for (auto sel : selections)
             {
                 buffer.insert(sel.min().line + inserted_count,
