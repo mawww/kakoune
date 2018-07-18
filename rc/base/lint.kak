@@ -10,6 +10,11 @@ declare-option -hidden int lint_warning_count
 
 define-command lint -docstring 'Parse the current buffer with a linter' %{
     evaluate-commands %sh{
+        if [ -z "${kak_opt_lintcmd}" ]; then
+            printf %s\\n 'echo -markup {Error}The `lintcmd` option is not set'
+            exit 1
+        fi
+
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-lint.XXXXXXXX)
         mkfifo "$dir"/fifo
         printf '%s\n' "evaluate-commands -no-hooks write -sync $dir/buf"
