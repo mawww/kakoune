@@ -80,12 +80,25 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
 define-command -hidden lint-show %{
     update-option buffer lint_errors
     evaluate-commands %sh{
-        desc=$(printf '%s\n' "$kak_opt_lint_errors" | sed -e 's/\([^\\]\):/\1\n/g' | tail -n +2 |
-               sed -ne "/^$kak_cursor_line\.[^|]\+|.*/ { s/^[^|]\+|//g; s/'/\\\\'/g; s/\\\\:/:/g; p; }")
-        if [ -n "$desc" ]; then
-            printf '%s\n' "info -anchor $kak_cursor_line.$kak_cursor_column '$desc'"
-        fi
-    } }
+        eval "set -- ${kak_opt_lint_errors}"
+        shift
+
+        s=""
+        for i in "$@"; do
+            s="${s}
+${i}"
+        done
+
+        printf %s\\n "${s}" | awk -v line="${kak_cursor_line}" \
+                                  -v column="${kak_cursor_column}" \
+            "/^${kak_cursor_line}\./"' {
+                gsub(/"/, "\"\"")
+                msg = substr($0, index($0, "|"))
+                sub(/^[^ \t]+[ \t]+/, "", msg)
+                printf "info -anchor %d.%d \"%s\"\n", line, column, msg
+            }'
+    }
+}
 
 define-command -hidden lint-show-counters %{
     echo -markup linting results:{red} %opt{lint_error_count} error(s){yellow} %opt{lint_warning_count} warning(s)
