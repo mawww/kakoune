@@ -104,42 +104,52 @@ define-command lint-disable -docstring "Disable automatic diagnostics of the cod
 
 define-command lint-next-error -docstring "Jump to the next line that contains an error" %{
     update-option buffer lint_errors
+
     evaluate-commands %sh{
-        printf '%s\n' "$kak_opt_lint_errors" | sed -e 's/\([^\\]\):/\1\n/g' | tail -n +2 | {
-            while IFS='|' read -r candidate rest
-            do
-                first_range=${first_range-$candidate}
-                if [ "${candidate%%.*}" -gt "$kak_cursor_line" ]; then
-                    range=$candidate
-                    break
-                fi
-            done
-            range=${range-$first_range}
-            if [ -n "$range" ]; then
-                printf '%s\n' "select $range"
-            else
-                printf 'echo -markup "{Error}no lint diagnostics"\n'
+        eval "set -- ${kak_opt_lint_errors}"
+        shift
+
+        for i in "$@"; do
+            candidate="${i%%|*}"
+            if [ "${candidate%%.*}" -gt "${kak_cursor_line}" ]; then
+                range="${candidate}"
+                break
             fi
-        }
-    }}
+        done
+
+        range="${range-${1%%|*}}"
+        if [ -n "${range}" ]; then
+            printf 'select %s\n' "${range}"
+        else
+            printf 'echo -markup "{Error}no lint diagnostics"\n'
+        fi
+    }
+}
 
 define-command lint-previous-error -docstring "Jump to the previous line that contains an error" %{
     update-option buffer lint_errors
+
     evaluate-commands %sh{
-        printf '%s\n' "$kak_opt_lint_errors" | sed -e 's/\([^\\]\):/\1\n/g' | tail -n +2 | sort -t. -k1,1 -rn | {
-            while IFS='|' read -r candidate rest
-            do
-                first_range=${first_range-$candidate}
-                if [ "${candidate%%.*}" -lt "$kak_cursor_line" ]; then
-                    range=$candidate
-                    break
-                fi
-            done
-            range=${range-$first_range}
-            if [ -n "$range" ]; then
-                printf '%s\n' "select $range"
-            else
-                printf 'echo -markup "{Error}no lint diagnostics"\n'
+        eval "set -- ${kak_opt_lint_errors}"
+        shift
+
+        for i in "$@"; do
+            candidate="${i%%|*}"
+
+            if [ "${candidate%%.*}" -ge "${kak_cursor_line}" ]; then
+                range="${last_candidate}"
+                break
             fi
-        }
-    }}
+
+            last_candidate="${candidate}"
+        done
+
+        if [ $# -ge 1 ]; then
+            shift $(($# - 1))
+            range="${range:-${1%%|*}}"
+            printf 'select %s\n' "${range}"
+        else
+            printf 'echo -markup "{Error}no lint diagnostics"\n'
+        fi
+    }
+}
