@@ -9,7 +9,7 @@ main() {
   kak_commands='
         set global autoreload yes
         set global autoinfo ""
-        set global auto_complete ""
+        set global autocomplete ""
         try %{
             exec -save-regs / %{%s%\(\K[^)]+\)<ret>a<backspace><esc>i<backspace><backspace><c-u><esc><a-;>}
         } catch %{ exec gg }
