@@ -590,7 +590,7 @@ constexpr bool with_bit_ops(Meta::Type<ServerFlags>) { return true; }
 
 int run_server(StringView session, StringView server_init,
                StringView client_init, Optional<BufferCoord> init_coord,
-               ServerFlags flags, UIType ui_type,
+               ServerFlags flags, UIType ui_type, DebugFlags debug_flags,
                ConstArrayView<StringView> files)
 {
     static bool terminate = false;
@@ -628,6 +628,8 @@ int run_server(StringView session, StringView server_init,
     register_registers();
     register_commands();
     register_highlighters();
+
+    global_scope.options()["debug"].set(debug_flags);
 
     UnitTest::run_all_tests();
 
@@ -910,6 +912,7 @@ int main(int argc, char* argv[])
                    { "ui", { true, "set the type of user interface to use (ncurses, dummy, or json)" } },
                    { "l", { false, "list existing sessions" } },
                    { "clear", { false, "clear dead sessions" } },
+                   { "debug", { true, "initial debug option value" } },
                    { "ro", { false, "readonly mode" } },
                    { "help", { false, "display a help message and quit" } } }
     };
@@ -1045,7 +1048,8 @@ int main(int argc, char* argv[])
                              (parser.get_switch("d") ? ServerFlags::Daemon : ServerFlags::None) |
                              (parser.get_switch("ro") ? ServerFlags::ReadOnly : ServerFlags::None) |
                              (argc == 1 and isatty(0) ? ServerFlags::StartupInfo : ServerFlags::None);
-                return run_server(session, server_init, client_init, init_coord, flags, ui_type, files);
+                auto debug_flags = option_from_string(Meta::Type<DebugFlags>{}, parser.get_switch("debug").value_or(""));
+                return run_server(session, server_init, client_init, init_coord, flags, ui_type, debug_flags, files);
             }
             catch (convert_to_client_mode& convert)
             {
