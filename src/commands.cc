@@ -446,7 +446,7 @@ void kill(const ParametersParser& parser, Context& context, const ShellContext&)
     while (not client_manager.empty())
         client_manager.remove_client(**client_manager.begin(), true, status);
 
-    throw kill_session{};
+    throw kill_session{status};
 }
 
 const CommandDesc kill_cmd = {

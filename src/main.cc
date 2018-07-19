@@ -760,7 +760,10 @@ int run_server(StringView session, StringView server_init,
             }
         }
     }
-    catch (const kill_session&) {}
+    catch (const kill_session& kill)
+    {
+        local_client_exit = kill.exit_status;
+    }
 
     {
         Context empty_context{Context::EmptyContextFlag{}};
