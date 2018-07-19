@@ -120,8 +120,8 @@ enum class RegexCompileFlags
     None     = 0,
     NoSubs   = 1 << 0,
     Optimize = 1 << 1,
-    Backward = 1 << 1,
-    NoForward = 1 << 2,
+    Backward = 1 << 2,
+    NoForward = 1 << 3,
 };
 constexpr bool with_bit_ops(Meta::Type<RegexCompileFlags>) { return true; }
 
