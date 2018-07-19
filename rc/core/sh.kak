@@ -19,7 +19,7 @@ evaluate-commands %sh{
               readonly return select set shift source test then
               time type typeset ulimit unalias until while break continue"
 
-    join() { printf "%s" "$1" | tr -s ' \n' "$2"; }
+    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=sh %{

@@ -40,7 +40,7 @@ evaluate-commands %sh{
     types="int bool str regex int-list str-list completions line-specs range-specs"
     values="default black red green yellow blue magenta cyan white yes no false true"
 
-    join() { printf "%s" "$1" | tr -s ' \n' "$2"; }
+    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammar to the static completion list
     printf '%s\n' "hook global WinSetOption filetype=kak %{

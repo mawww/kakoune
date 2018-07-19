@@ -162,7 +162,7 @@ evaluate-commands %sh{
     types="char double float int long short signed size_t unsigned void"
     values="NULL"
 
-    join() { printf "%s" "$1" | tr -s ' \n' "$2"; }
+    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammar to the static completion list
     printf '%s\n' "hook global WinSetOption filetype=c %{
@@ -212,7 +212,7 @@ evaluate-commands %sh{
            nullptr_t ptrdiff_t short signed size_t unsigned void wchar_t"
     values="NULL false nullptr this true"
 
-    join() { printf "%s" "$1" | tr -s ' \n' "$2"; }
+    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=cpp %{
@@ -254,7 +254,7 @@ evaluate-commands %sh{
     decorators="autoreleasepool catch class end implementation interface
                 property protocol selector synchronized synthesize try"
 
-    join() { printf "%s" "$1" | tr -s ' \n' "$2"; }
+    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=objc %{

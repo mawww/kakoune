@@ -25,7 +25,7 @@ evaluate-commands %sh{
   for lang in ${languages}; do
     printf 'add-highlighter shared/markdown/%s region ```\h*%s\\b   ``` regions\n' "${lang}" "${lang}"
     printf 'add-highlighter shared/markdown/%s/ default-region fill meta\n' "${lang}"
-    ref=$([ "${lang}" = kak ] && echo kakrc || echo "${lang}")
+    [ "${lang}" = kak ] && ref=kakrc || ref="${lang}"
     printf 'add-highlighter shared/markdown/%s/inner region \A```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${ref}"
   done
 }
