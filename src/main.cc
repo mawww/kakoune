@@ -396,6 +396,7 @@ void register_options()
                        "The ncurses ui supports the following options:\n"
                        "    <key>:                        <value>:\n"
                        "    ncurses_assistant             clippy|cat|dilbert|none|off\n"
+                       "    ncurses_menu_layout           horizontal|vertical\n"
                        "    ncurses_status_on_top         bool\n"
                        "    ncurses_set_title             bool\n"
                        "    ncurses_enable_mouse          bool\n"
