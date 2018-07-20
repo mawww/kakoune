@@ -40,10 +40,10 @@ namespace Kakoune
 extern const char* version;
 
 struct {
-    int version;
+    unsigned int version;
     const char* notes;
 } constexpr version_notes[] = { {
-        99999999,
+        0,
         "• Big breaking refactoring of various Kakoune features,\n"
         "  configuration might need to be updated see `:doc changelog` for details\n"
         "• define-command -allow-override switch has been renamed -override\n"
@@ -66,7 +66,9 @@ void show_startup_info(Client* local_client, int last_version)
     String info;
     for (auto note : version_notes)
     {
-        if (note.version > last_version)
+        if (not note.version)
+            info += format("● Development version\n{}\n", note.notes);
+        else if (note.version > last_version)
         {
             const auto year = note.version / 10000;
             const auto month = (note.version / 100) % 100;
