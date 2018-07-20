@@ -79,6 +79,12 @@ String option_to_string(const Vector<T, domain>& opt)
     return join(opt | transform([](const T& t) { return quote(option_to_string(t)); }), ' ', false);
 }
 
+template<MemoryDomain domain>
+String option_to_string(const Vector<int, domain>& opt)
+{
+    return join(opt | transform([](const int& t) { return option_to_string(t); }), ' ', false);
+}
+
 template<typename T, MemoryDomain domain>
 void option_list_postprocess(Vector<T, domain>& opt)
 {}
