@@ -167,6 +167,7 @@ std::pair<String, int> ShellManager::eval(
     Pipe child_stdin{not input.empty()}, child_stdout, child_stderr;
     pid_t pid = spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env,
                             [&child_stdin, &child_stdout, &child_stderr] {
+        set_signal_handler(SIGPIPE, SIG_DFL);
         auto move = [](int oldfd, int newfd)
         {
             if (oldfd == newfd)
