@@ -18,6 +18,20 @@
 namespace Kakoune
 {
 
+template<typename T, typename... Rest>
+constexpr bool option_needs_quoting(Meta::Type<T> type, Meta::Type<Rest>... rest)
+{
+    return option_needs_quoting(type) or option_needs_quoting(rest...);
+}
+
+template<typename... Ts>
+String quote_ifn(String str)
+{
+    if (option_needs_quoting(Meta::Type<Ts>{}...))
+        return quote(std::move(str));
+    return str;
+}
+
 template<typename T>
 constexpr decltype(T::option_type_name) option_type_name(Meta::Type<T>)
 {
@@ -66,6 +80,7 @@ inline Codepoint option_from_string(Meta::Type<Codepoint>, StringView str)
     return str[0_char];
 }
 constexpr StringView option_type_name(Meta::Type<Codepoint>) { return "codepoint"; }
+constexpr bool option_needs_quoting(Meta::Type<Codepoint>) { return true; }
 
 template<typename T, MemoryDomain domain>
 Vector<String> option_to_strings(const Vector<T, domain>& opt)
@@ -76,7 +91,7 @@ Vector<String> option_to_strings(const Vector<T, domain>& opt)
 template<typename T, MemoryDomain domain>
 String option_to_string(const Vector<T, domain>& opt)
 {
-    return join(opt | transform([](const T& t) { return quote(option_to_string(t)); }), ' ', false);
+    return join(opt | transform([](const T& t) { return quote_ifn<T>(option_to_string(t)); }), ' ', false);
 }
 
 template<typename T, MemoryDomain domain>
@@ -123,9 +138,10 @@ template<typename Key, typename Value, MemoryDomain domain>
 String option_to_string(const HashMap<Key, Value, domain>& opt)
 {
     return join(opt | transform([](auto&& item) {
-        return quote(format("{}={}",
-                      escape(option_to_string(item.key), '=', '\\'),
-                      escape(option_to_string(item.value), '=', '\\')));
+        return quote_ifn<Key, Value>(
+            format("{}={}",
+                   escape(option_to_string(item.key), '=', '\\'),
+                   escape(option_to_string(item.value), '=', '\\')));
     }), ' ', false);
 }
 

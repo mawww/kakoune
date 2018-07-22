@@ -42,6 +42,11 @@ option_add_from_strings(T& opt, ConstArrayView<String> strs)
     return option_add(opt, strs[0]);
 }
 
+template<typename T>
+constexpr bool option_needs_quoting(Meta::Type<T>)
+{
+    return false;
+}
 
 template<typename P, typename T>
 struct PrefixedList
