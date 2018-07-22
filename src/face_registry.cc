@@ -92,7 +92,7 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
 
     if (name.empty() or is_color_name(name) or
         std::any_of(name.begin(), name.end(),
-                    [](char c){ return not isalnum(c); }))
+                    [](char c){ return not is_word(c); }))
         throw runtime_error(format("invalid face name: '{}'", name));
 
     if (name == facedesc)
