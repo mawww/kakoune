@@ -55,10 +55,12 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
             /:[0-9]+:[0-9]+:/ {
                 kind = substr($4, 2)
                 error = $2 "." $3 "," $2 "." $3 "|" kind
+                msg = ""
                 # fix case where $5 is not the last field because of extra colons in the message
-                for (i=5; i<=NF; i++) error = error "\\:" $i
-                error = error " (col " $3 ")"
-                gsub("'\''", "'"''"'", error)
+                for (i=5; i<=NF; i++) msg = msg ":" $i
+                gsub(/\|/, "\\|", msg)
+                gsub("'\''", "'"''"'", msg)
+                error = error msg " (col " $3 ")"
                 errors = errors " '\''" error "'\''"
             }
             END {
