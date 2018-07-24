@@ -45,7 +45,7 @@ option_add_from_strings(T& opt, ConstArrayView<String> strs)
 template<typename T>
 constexpr bool option_needs_quoting(Meta::Type<T>)
 {
-    return false;
+    return not std::is_integral<T>::value;
 }
 
 template<typename P, typename T>

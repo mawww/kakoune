@@ -68,7 +68,6 @@ Optional<int> str_to_int_ifp(StringView str);
 inline String option_to_string(StringView opt) { return opt.str(); }
 inline String option_from_string(Meta::Type<String>, StringView str) { return str.str(); }
 inline bool option_add(String& opt, StringView val) { opt += val; return not val.empty(); }
-constexpr bool option_needs_quoting(Meta::Type<String>) { return true; }
 
 template<size_t N>
 struct InplaceString
