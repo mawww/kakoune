@@ -175,10 +175,10 @@ void Client::change_buffer(Buffer& buffer)
     auto& client_manager = ClientManager::instance();
     m_window->options().unregister_watcher(*this);
     m_window->set_client(nullptr);
+
+    WindowAndSelections ws = client_manager.get_free_window(buffer);
     client_manager.add_free_window(std::move(m_window),
                                    std::move(context().selections()));
-    WindowAndSelections ws = client_manager.get_free_window(buffer);
-
     m_window = std::move(ws.window);
     m_window->set_client(this);
     m_window->options().register_watcher(*this);
