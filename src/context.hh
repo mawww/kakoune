@@ -137,7 +137,7 @@ private:
 
     friend struct ScopedEdition;
 
-    Flags m_flags;
+    Flags m_flags = Flags::None;
 
     SafePtr<InputHandler> m_input_handler;
     SafePtr<Window>       m_window;
