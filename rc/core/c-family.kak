@@ -126,150 +126,159 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel 
     ]
 ] ]
 
-# Regions definition are the same between c++ and objective-c
-evaluate-commands %sh{
-    for ft in c cpp objc; do
-        if [ "${ft}" = "objc" ]; then
-            maybe_at='@?'
-        else
-            maybe_at=''
-        fi
+define-command c-family-init %[
 
-        printf %s\\n '
-            add-highlighter shared/FT regions
-            add-highlighter shared/FT/code default-region group
-            add-highlighter shared/FT/string region %{MAYBEAT(?<!QUOTE)(?<!QUOTE\\)"} %{(?<!\\)(?:\\\\)*"} fill string
-            add-highlighter shared/FT/raw_string region %{R"([^(]*)\(} %{\)([^")]*)"} fill string
-            add-highlighter shared/FT/comment region /\* \*/ fill comment
-            add-highlighter shared/FT/line_comment region // $ fill comment
-            add-highlighter shared/FT/disabled region -recurse "#\h*if(?:def)?" ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" fill rgb:666666
-            add-highlighter shared/FT/macro region %{^\h*?\K#} %{(?<!\\)\n} group
+    # Regions definition are the same between c++ and objective-c
+    evaluate-commands %sh{
+        for ft in c cpp objc; do
+            if [ "${ft}" = "objc" ]; then
+                maybe_at='@?'
+            else
+                maybe_at=''
+            fi
 
-            add-highlighter shared/FT/macro/ fill meta
-            add-highlighter shared/FT/macro/ regex ^\h*#include\h+(\S*) 1:module
-            ' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g; s/MAYBEAT/${maybe_at}/;"
-    done
-}
+            printf %s\\n '
+                add-highlighter shared/FT regions
+                add-highlighter shared/FT/code default-region group
+                add-highlighter shared/FT/string region %{MAYBEAT(?<!QUOTE)(?<!QUOTE\\)"} %{(?<!\\)(?:\\\\)*"} fill string
+                add-highlighter shared/FT/raw_string region %{R"([^(]*)\(} %{\)([^")]*)"} fill string
+                add-highlighter shared/FT/comment region /\* \*/ fill comment
+                add-highlighter shared/FT/line_comment region // $ fill comment
+                add-highlighter shared/FT/disabled region -recurse "#\h*if(?:def)?" ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" fill rgb:666666
+                add-highlighter shared/FT/macro region %{^\h*?\K#} %{(?<!\\)\n} group
 
-# c specific
-add-highlighter shared/c/code/numbers regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
-evaluate-commands %sh{
-    # Grammar
-    keywords="asm break case continue default do else for goto if return
-              sizeof switch while"
-    attributes="auto const enum extern inline register restrict static struct
-                typedef union volatile"
-    types="char double float int long short signed size_t unsigned void"
-    values="NULL"
+                add-highlighter shared/FT/macro/ fill meta
+                add-highlighter shared/FT/macro/ regex ^\h*#include\h+(\S*) 1:module
+                ' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g; s/MAYBEAT/${maybe_at}/;"
+        done
+    }
 
-    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
+    # c specific
+    add-highlighter shared/c/code/numbers regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+    evaluate-commands %sh{
+        # Grammar
+        keywords="asm break case continue default do else for goto if return
+                  sizeof switch while"
+        attributes="auto const enum extern inline register restrict static struct
+                    typedef union volatile"
+        types="char double float int long short signed size_t unsigned void"
+        values="NULL"
 
-    # Add the language's grammar to the static completion list
-    printf '%s\n' "hook global WinSetOption filetype=c %{
-        set-option window static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')
-    }"
+        join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
-    # Highlight keywords
-    printf %s "
-        add-highlighter shared/c/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
-        add-highlighter shared/c/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
-        add-highlighter shared/c/code/types regex \b($(join "${types}" '|'))\b 0:type
-        add-highlighter shared/c/code/values regex \b($(join "${values}" '|'))\b 0:value
-    "
-}
+        # Add the language's grammar to the static completion list
+        printf '%s\n' "hook global WinSetOption filetype=c %{
+            set-option window static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')
+        }"
 
-# c++ specific
+        # Highlight keywords
+        printf %s "
+            add-highlighter shared/c/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
+            add-highlighter shared/c/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
+            add-highlighter shared/c/code/types regex \b($(join "${types}" '|'))\b 0:type
+            add-highlighter shared/c/code/values regex \b($(join "${values}" '|'))\b 0:value
+        "
+    }
 
-# integer literals
-add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b[1-9]('?\d+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
-add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0b[01]('?[01]+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
-add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0('?[0-7]+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
-add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0x[\da-f]('?[\da-f]+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
+    # c++ specific
 
-# floating point literals
-add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b\d('?\d+)*\.([fl]\b|\B)(?!\.)} 0:value
-add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b\d('?\d+)*\.?e[+-]?\d('?\d+)*[fl]?\b(?!\.)} 0:value
-add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)(\b(\d('?\d+)*)|\B)\.\d('?[\d]+)*(e[+-]?\d('?\d+)*)?[fl]?\b(?!\.)} 0:value
-add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0x[\da-f]('?[\da-f]+)*\.([fl]\b|\B)(?!\.)} 0:value
-add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0x[\da-f]('?[\da-f]+)*\.?p[+-]?\d('?\d+)*)?[fl]?\b(?!\.)} 0:value
-add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0x([\da-f]('?[\da-f]+)*)?\.\d('?[\d]+)*(p[+-]?\d('?\d+)*)?[fl]?\b(?!\.)} 0:value
+    # integer literals
+    add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b[1-9]('?\d+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
+    add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0b[01]('?[01]+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
+    add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0('?[0-7]+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
+    add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0x[\da-f]('?[\da-f]+)*(ul?l?|ll?u?)?\b(?!\.)} 0:value
 
-# character literals (no multi-character literals)
-add-highlighter shared/cpp/code/char regex %{(\b(u8|u|U|L)|\B)'((\\.)|[^'\\])'\B} 0:value
+    # floating point literals
+    add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b\d('?\d+)*\.([fl]\b|\B)(?!\.)} 0:value
+    add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b\d('?\d+)*\.?e[+-]?\d('?\d+)*[fl]?\b(?!\.)} 0:value
+    add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)(\b(\d('?\d+)*)|\B)\.\d('?[\d]+)*(e[+-]?\d('?\d+)*)?[fl]?\b(?!\.)} 0:value
+    add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0x[\da-f]('?[\da-f]+)*\.([fl]\b|\B)(?!\.)} 0:value
+    add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0x[\da-f]('?[\da-f]+)*\.?p[+-]?\d('?\d+)*)?[fl]?\b(?!\.)} 0:value
+    add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0x([\da-f]('?[\da-f]+)*)?\.\d('?[\d]+)*(p[+-]?\d('?\d+)*)?[fl]?\b(?!\.)} 0:value
 
-evaluate-commands %sh{
-    # Grammar
-    keywords="alignas alignof and and_eq asm bitand bitor break case catch
-              compl const_cast continue decltype default delete do dynamic_cast
-              else explicit for goto if new not not_eq operator or or_eq
-              reinterpret_cast return sizeof static_assert static_cast switch
-              throw try typeid using while xor xor_eq"
-    attributes="auto class const constexpr enum extern final friend inline
-                mutable namespace noexcept override private protected public
-                register static struct template thread_local typedef typename
-                union virtual volatile"
-    types="bool byte char char16_t char32_t double float int long max_align_t
-           nullptr_t ptrdiff_t short signed size_t unsigned void wchar_t"
-    values="NULL false nullptr this true"
+    # character literals (no multi-character literals)
+    add-highlighter shared/cpp/code/char regex %{(\b(u8|u|U|L)|\B)'((\\.)|[^'\\])'\B} 0:value
 
-    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
+    evaluate-commands %sh{
+        # Grammar
+        keywords="alignas alignof and and_eq asm bitand bitor break case catch
+                  compl const_cast continue decltype default delete do dynamic_cast
+                  else explicit for goto if new not not_eq operator or or_eq
+                  reinterpret_cast return sizeof static_assert static_cast switch
+                  throw try typeid using while xor xor_eq"
+        attributes="auto class const constexpr enum extern final friend inline
+                    mutable namespace noexcept override private protected public
+                    register static struct template thread_local typedef typename
+                    union virtual volatile"
+        types="bool byte char char16_t char32_t double float int long max_align_t
+               nullptr_t ptrdiff_t short signed size_t unsigned void wchar_t"
+        values="NULL false nullptr this true"
 
-    # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=cpp %{
-        set-option window static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')
-    }"
+        join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
-    # Highlight keywords
-    printf %s "
-        add-highlighter shared/cpp/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
-        add-highlighter shared/cpp/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
-        add-highlighter shared/cpp/code/types regex \b($(join "${types}" '|'))\b 0:type
-        add-highlighter shared/cpp/code/values regex \b($(join "${values}" '|'))\b 0:value
-    "
-}
+        # Add the language's grammar to the static completion list
+        printf %s\\n "hook global WinSetOption filetype=cpp %{
+            set-option window static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')
+        }"
 
-# c and c++ compiler macros
-evaluate-commands %sh{
-    builtin_macros="__cplusplus|__STDC_HOSTED__|__FILE__|__LINE__|__DATE__|__TIME__|__STDCPP_DEFAULT_NEW_ALIGNMENT__"
+        # Highlight keywords
+        printf %s "
+            add-highlighter shared/cpp/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
+            add-highlighter shared/cpp/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
+            add-highlighter shared/cpp/code/types regex \b($(join "${types}" '|'))\b 0:type
+            add-highlighter shared/cpp/code/values regex \b($(join "${values}" '|'))\b 0:value
+        "
+    }
 
-    printf %s "
-        add-highlighter shared/c/code/macros regex \b(${builtin_macros})\b 0:builtin
-        add-highlighter shared/cpp/code/macros regex \b(${builtin_macros})\b 0:builtin
-    "
-}
+    # c and c++ compiler macros
+    evaluate-commands %sh{
+        builtin_macros="__cplusplus|__STDC_HOSTED__|__FILE__|__LINE__|__DATE__|__TIME__|__STDCPP_DEFAULT_NEW_ALIGNMENT__"
 
-# objective-c specific
-add-highlighter shared/objc/code/number regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+        printf %s "
+            add-highlighter shared/c/code/macros regex \b(${builtin_macros})\b 0:builtin
+            add-highlighter shared/cpp/code/macros regex \b(${builtin_macros})\b 0:builtin
+        "
+    }
 
-evaluate-commands %sh{
-    # Grammar
-    keywords="break case continue default do else for goto if return switch
-              while"
-    attributes="IBAction IBOutlet __block assign auto const copy enum extern
-                inline nonatomic readonly retain static strong struct typedef
-                union volatile weak"
-    types="BOOL CGFloat NSInteger NSString NSUInteger bool char float
-           instancetype int long short signed size_t unsigned void"
-    values="FALSE NO NULL TRUE YES id nil self super"
-    decorators="autoreleasepool catch class end implementation interface
-                property protocol selector synchronized synthesize try"
+    # objective-c specific
+    add-highlighter shared/objc/code/number regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 
-    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
+    evaluate-commands %sh{
+        # Grammar
+        keywords="break case continue default do else for goto if return switch
+                  while"
+        attributes="IBAction IBOutlet __block assign auto const copy enum extern
+                    inline nonatomic readonly retain static strong struct typedef
+                    union volatile weak"
+        types="BOOL CGFloat NSInteger NSString NSUInteger bool char float
+               instancetype int long short signed size_t unsigned void"
+        values="FALSE NO NULL TRUE YES id nil self super"
+        decorators="autoreleasepool catch class end implementation interface
+                    property protocol selector synchronized synthesize try"
 
-    # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=objc %{
-        set-option window static_words $(join "${keywords} ${attributes} ${types} ${values} ${decorators}" ' ')
-    }"
+        join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
-    # Highlight keywords
-    printf %s "
-        add-highlighter shared/objc/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
-        add-highlighter shared/objc/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
-        add-highlighter shared/objc/code/types regex \b($(join "${types}" '|'))\b 0:type
-        add-highlighter shared/objc/code/values regex \b($(join "${values}" '|'))\b 0:value
-        add-highlighter shared/objc/code/decorators regex  @($(join "${decorators}" '|'))\b 0:attribute
-    "
-}
+        # Add the language's grammar to the static completion list
+        printf %s\\n "hook global WinSetOption filetype=objc %{
+            set-option window static_words $(join "${keywords} ${attributes} ${types} ${values} ${decorators}" ' ')
+        }"
+
+        # Highlight keywords
+        printf %s "
+            add-highlighter shared/objc/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
+            add-highlighter shared/objc/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
+            add-highlighter shared/objc/code/types regex \b($(join "${types}" '|'))\b 0:type
+            add-highlighter shared/objc/code/values regex \b($(join "${values}" '|'))\b 0:value
+            add-highlighter shared/objc/code/decorators regex  @($(join "${decorators}" '|'))\b 0:attribute
+        "
+    }
+
+]
+
+hook -group c-family-init global WinSetOption filetype=(c|cpp|objc) %[
+    c-family-init
+    remove-hooks global c-family-init
+]
 
 hook global WinSetOption filetype=(c|cpp|objc) %[
     try %{ # we might be switching from one c-family language to another
