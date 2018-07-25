@@ -105,8 +105,8 @@ QuotedResult parse_quoted(Reader& reader, Codepoint delimiter)
     return {str, false};
 }
 
-QuotedResult parse_quoted_balanced(Reader& reader, Codepoint opening_delimiter,
-                                   Codepoint closing_delimiter)
+QuotedResult parse_quoted_balanced(Reader& reader, char opening_delimiter,
+                                   char closing_delimiter)
 {
     kak_assert(utf8::codepoint(utf8::previous(reader.pos, reader.str.begin()),
                                reader.str.end()) == opening_delimiter);
@@ -114,16 +114,16 @@ QuotedResult parse_quoted_balanced(Reader& reader, Codepoint opening_delimiter,
     auto start = reader.pos;
     while (reader)
     {
-        const Codepoint c = *reader;
+        const char c = *reader.pos;
         if (c == opening_delimiter)
             ++level;
         else if (c == closing_delimiter and level-- == 0)
         {
             auto content = reader.substr_from(start);
-            ++reader;
+            ++reader.pos;
             return {content.str(), true};
         }
-        ++reader;
+        ++reader.pos;
     }
     return {reader.substr_from(start).str(), false};
 }
@@ -132,15 +132,14 @@ String parse_unquoted(Reader& reader)
 {
     auto beg = reader.pos;
     String str;
-    bool was_antislash = false;
 
     while (reader)
     {
-        const Codepoint c = *reader;
+        const char c = *reader.pos;
         if (is_command_separator(c) or is_horizontal_blank(c))
         {
             str += reader.substr_from(beg);
-            if (was_antislash)
+            if (reader.pos != reader.str.begin() and *(reader.pos - 1) == '\\')
             {
                 str.back() = c;
                 beg = reader.pos+1;
@@ -148,8 +147,7 @@ String parse_unquoted(Reader& reader)
             else
                 return str;
         }
-        was_antislash = c == '\\';
-        ++reader;
+        ++reader.pos;
     }
     if (beg < reader.str.end())
         str += reader.substr_from(beg);
