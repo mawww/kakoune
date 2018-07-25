@@ -1,4 +1,4 @@
-hook global BufCreate .*\.(repo|service|timer|target|socket|ini|cfg|properties) %{
+hook global BufCreate .+\.(repo|ini|cfg|properties) %{
     set-option buffer filetype ini
 }
 
