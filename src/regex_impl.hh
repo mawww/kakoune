@@ -595,7 +595,7 @@ private:
 
         void push_next(Thread thread) { grow_ifn(); m_data[--m_next] = thread; }
         void clear_next() { m_next = m_capacity; }
-        ConstArrayView<Thread> next_threads() const { return { m_data + m_next, m_data + m_capacity }; }
+        ConstArrayView<Thread> next_threads() const { return { m_data.get() + m_next, m_data.get() + m_capacity }; }
 
         void swap_next()
         {
@@ -610,16 +610,16 @@ private:
                 return;
             const auto new_capacity = m_capacity ? m_capacity * 2 : 4;
             Thread* new_data = new Thread[new_capacity];
-            std::copy(m_data, m_data + m_current, new_data);
+            Thread* data = m_data.get();
+            std::copy(data, data + m_current, new_data);
             const auto new_next = new_capacity - (m_capacity - m_next);
-            std::copy(m_data + m_next, m_data + m_capacity, new_data + new_next);
-            delete[] m_data;
+            std::copy(data + m_next, data + m_capacity, new_data + new_next);
             m_capacity = new_capacity;
             m_next = new_next;
-            m_data = new_data;
+            m_data.reset(new_data);
         }
 
-        Thread* m_data = nullptr;
+        std::unique_ptr<Thread[]> m_data = nullptr;
         int16_t m_capacity = 0;
         int16_t m_current = 0;
         int16_t m_next = 0;
