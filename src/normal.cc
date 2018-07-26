@@ -167,7 +167,7 @@ String build_autoinfo_for_mapping(Context& context, KeymapMode mode,
     {
         String keys = join(built_in.keys |
                            filter([&](Key k){ return not keymaps.is_mapped(k, mode); }) |
-                           transform([](Key k) { return key_to_str(k); }),
+                           transform(key_to_str),
                            ',', false);
         if (not keys.empty())
             descs.emplace_back(std::move(keys), built_in.docstring);

@@ -899,10 +899,6 @@ int main(int argc, char* argv[])
     set_signal_handler(SIGINT, [](int){});
     set_signal_handler(SIGCHLD, [](int){});
 
-    Vector<String> params;
-    for (int i = 1; i < argc; ++i)
-        params.emplace_back(argv[i]);
-
     const ParameterDesc param_desc{
         SwitchMap{ { "c", { true,  "connect to given session" } },
                    { "e", { true,  "execute argument on client initialisation" } },
@@ -936,7 +932,11 @@ int main(int argc, char* argv[])
             return 0;
         };
 
-        if (contains(ConstArrayView<char*>{argv+1, (size_t)argc-1}, "--help"_sv))
+        const auto params = ArrayView<char*>{argv+1, argv + argc}
+                          | transform([](auto* s) { return String{s}; })
+                          | gather<Vector<String>>();
+
+        if (contains(params, "--help"_sv))
             return show_usage();
 
         ParametersParser parser{params, param_desc};

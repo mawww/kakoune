@@ -273,12 +273,9 @@ public:
         if (not overlaps(display_buffer.range(), range))
             return;
 
-        Vector<Face> faces(m_faces.size());
-        for (int f = 0; f < m_faces.size(); ++f)
-        {
-            if (not m_faces[f].second.empty())
-                faces[f] = context.context.faces()[m_faces[f].second];
-        }
+        const auto faces = m_faces | transform([&faces = context.context.faces()](auto&& spec) {
+                return spec.second.empty() ? Face{} : faces[spec.second];
+            }) | gather<Vector<Face>>();
 
         auto& matches = get_matches(context.context.buffer(), display_buffer.range(), range);
         kak_assert(matches.size() % m_faces.size() == 0);
