@@ -343,7 +343,7 @@ inline String option_to_string(const PrefixedList<P, T>& opt)
 template<typename P, typename T>
 inline PrefixedList<P, T> option_from_strings(Meta::Type<PrefixedList<P, T>>, ConstArrayView<String> strs)
 {
-    return {option_from_string(Meta::Type<P>{}, strs[0]), 
+    return {option_from_string(Meta::Type<P>{}, strs[0]),
             option_from_strings(Meta::Type<Vector<T, MemoryDomain::Options>>{}, strs.subrange(1))};
 }
 

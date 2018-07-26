@@ -98,7 +98,7 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
     if (name == facedesc)
         throw runtime_error(format("cannot alias face '{}' to itself", name));
 
-    for (auto it = m_faces.find(facedesc); 
+    for (auto it = m_faces.find(facedesc);
          it != m_faces.end() and not it->value.alias.empty();
          it = m_faces.find(it->value.alias))
     {

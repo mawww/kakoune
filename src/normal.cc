@@ -837,7 +837,7 @@ void extend_to_next_matches(Context& context, const Regex& regex, int count)
                  --main_index;
          }
          if (new_sels.empty())
-             throw runtime_error{"All selections wrapped"}; 
+             throw runtime_error{"All selections wrapped"};
 
          selections.set(std::move(new_sels), main_index);
          new_sels.clear();

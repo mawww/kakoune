@@ -368,7 +368,7 @@ private:
                     if (pos == config.end)
                         return StepResult::Failed;
                     return is_ctype((CharacterType)inst.param, *pos) ?
-                        StepResult::Consumed : StepResult::Failed;;
+                        StepResult::Consumed : StepResult::Failed;
                 case CompiledRegex::LineStart:
                     if (not is_line_start(pos, config))
                         return StepResult::Failed;

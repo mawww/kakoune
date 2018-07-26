@@ -289,7 +289,7 @@ public:
         {
             auto pop_if_single_command = on_scope_end([this] {
                 if (m_state == State::SingleCommand and enabled())
-                     pop_mode(); 
+                     pop_mode();
                 else if (m_state == State::SingleCommand)
                      m_state = State::PopOnEnabled;
             });

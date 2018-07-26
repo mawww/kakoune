@@ -497,7 +497,7 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
                                                         std::decay_t<decltype(face_getter)>>>(
             std::move(regex_getter), std::move(face_getter));
     };
-    auto get_face = [faces](const Context& context){ return faces;; };
+    auto get_face = [faces](const Context& context){ return faces; };
 
     CommandParser parser{params[0]};
     auto token = parser.read_token(true);
