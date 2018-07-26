@@ -1835,7 +1835,7 @@ public:
         ++m_regions_timestamp;
     }
 
-    void remove_child(StringView id)
+    void remove_child(StringView id) override
     {
         if (id == m_default_region)
             m_default_region = String{};
