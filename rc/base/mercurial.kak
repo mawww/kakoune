@@ -21,6 +21,6 @@ hook -group hg-commit-highlight global WinSetOption filetype=(?!hg-commit).* %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook -group hg-commit-highlight global WinSetOption filetype=hg-commit %{
-    add-highlighter window group hg-commit-highlight
+    add-highlighter window/ group hg-commit-highlight
     add-highlighter window/hg-commit-highlight regex '^HG:[^\n]*' 0:MercurialCommitComment
 }
