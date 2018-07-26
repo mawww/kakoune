@@ -9,7 +9,7 @@ Formats of language supported:
  - ISO language code, e.g. 'en'
  - language code above followed by a dash or underscore with an ISO country code, e.g. 'en-US'} \
     spell %{
-    try %{ add-highlighter window ranges 'spell_regions' }
+    try %{ add-highlighter window/ ranges 'spell_regions' }
     evaluate-commands %sh{
         file=$(mktemp -d "${TMPDIR:-/tmp}"/kak-spell.XXXXXXXX)/buffer
         printf 'eval -no-hooks write -sync %s\n' "${file}"
@@ -64,7 +64,7 @@ define-command spell-next %{ evaluate-commands %sh{
 
     start_first="${kak_opt_spell_regions#* }"
     start_first="${start_first%%|*}"
-    start_first="${start_first#'}"
+    start_first="${start_first#\'}"
 
     find_next_word_desc() {
         ## XXX: the `spell` command adds sorted selection descriptions to the range
