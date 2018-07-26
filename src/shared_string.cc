@@ -49,7 +49,7 @@ void StringData::Registry::debug_stats() const
     size_t count = m_strings.size();
     for (auto& st : m_strings)
     {
-        total_refcount += st.value->refcount - 1;
+        total_refcount += (st.value->refcount & refcount_mask) - 1;
         total_size += (int)st.value->length;
     }
     write_to_debug_buffer(format("  data size: {}, mean: {}", total_size, (float)total_size/count));
