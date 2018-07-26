@@ -82,8 +82,8 @@ struct FilterView
     struct Iterator : std::iterator<std::forward_iterator_tag,
                                     typename std::iterator_traits<RangeIt>::value_type>
     {
-        Iterator(const FilterView& view, RangeIt it, RangeIt end)
-            : m_it{std::move(it)}, m_end{std::move(end)}, m_view{&view}
+        Iterator(Filter& filter, RangeIt it, RangeIt end)
+            : m_it{std::move(it)}, m_end{std::move(end)}, m_filter{&filter}
         {
             do_filter();
         }
@@ -107,17 +107,17 @@ struct FilterView
     private:
         void do_filter()
         {
-            while (m_it != m_end and not m_view->m_filter(*m_it))
+            while (m_it != m_end and not (*m_filter)(*m_it))
                 ++m_it;
         }
 
         RangeIt m_it;
         RangeIt m_end;
-        const FilterView* m_view;
+        Filter* m_filter;
     };
 
-    Iterator begin() const { return {*this, std::begin(m_range), std::end(m_range)}; }
-    Iterator end()   const { return {*this, std::end(m_range), std::end(m_range)}; }
+    Iterator begin() const { return {m_filter, std::begin(m_range), std::end(m_range)}; }
+    Iterator end()   const { return {m_filter, std::end(m_range), std::end(m_range)}; }
 
     Range m_range;
     mutable Filter m_filter;
@@ -138,34 +138,45 @@ struct TransformView
     using RangeIt = IteratorOf<Range>;
     using ResType = decltype(std::declval<Transform>()(*std::declval<RangeIt>()));
 
-    struct Iterator : std::iterator<std::forward_iterator_tag, std::remove_reference_t<ResType>>
+    struct Iterator
     {
-        Iterator(const TransformView& view, RangeIt it)
-            : m_it{std::move(it)}, m_view{&view} {}
+        using iterator_category = typename std::iterator_traits<RangeIt>::iterator_category;
+        using value_type = std::remove_reference_t<ResType>;
+        using difference_type = typename std::iterator_traits<RangeIt>::difference_type;
+        using pointer = value_type*;
+        using reference = value_type&;
 
-        decltype(auto) operator*() { return m_view->m_transform(*m_it); }
+        Iterator(Transform& transform, RangeIt it)
+            : m_it{std::move(it)}, m_transform{&transform} {}
+
+        decltype(auto) operator*() { return (*m_transform)(*m_it); }
+        decltype(auto) operator[](difference_type i) const { return (*m_transform)(m_it[i]); }
+
         Iterator& operator++() { ++m_it; return *this; }
         Iterator operator++(int) { auto copy = *this; ++m_it; return copy; }
 
-        friend bool operator==(const Iterator& lhs, const Iterator& rhs)
-        {
-            return lhs.m_it == rhs.m_it;
-        }
+        Iterator& operator--() { --m_it; return *this; }
+        Iterator operator--(int) { auto copy = *this; --m_it; return copy; }
 
-        friend bool operator!=(const Iterator& lhs, const Iterator& rhs)
-        {
-            return not (lhs == rhs);
-        }
+        Iterator& operator+=(difference_type diff) { m_it += diff; return *this; }
+        Iterator& operator-=(difference_type diff) { m_it -= diff; return *this; }
+
+        Iterator operator+(difference_type diff) { return {*m_transform, m_it + diff}; }
+        Iterator operator-(difference_type diff) { return {*m_transform, m_it - diff}; }
+
+        friend bool operator==(const Iterator& lhs, const Iterator& rhs) { return lhs.m_it == rhs.m_it; }
+        friend bool operator!=(const Iterator& lhs, const Iterator& rhs) { return not (lhs == rhs); }
+        friend difference_type operator-(const Iterator& lhs, const Iterator& rhs) { return lhs.m_it - rhs.m_it; }
 
         RangeIt base() const { return m_it; }
 
     private:
         RangeIt m_it;
-        const TransformView* m_view;
+        Transform* m_transform;
     };
 
-    Iterator begin() const { return {*this, std::begin(m_range)}; }
-    Iterator end()   const { return {*this, std::end(m_range)}; }
+    Iterator begin() const { return {m_transform, std::begin(m_range)}; }
+    Iterator end()   const { return {m_transform, std::end(m_range)}; }
 
     Range m_range;
     mutable Transform m_transform;
