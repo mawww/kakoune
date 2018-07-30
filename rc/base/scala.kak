@@ -33,19 +33,12 @@ add-highlighter shared/scala/code/ regex (\[|\]|=>|<:|:>|=:=|::|&&|\|\|) 0:opera
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden scala-filter-around-selections %{
-    # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
-}
-
 define-command -hidden scala-indent-on-new-line %[
     evaluate-commands -draft -itersel %[
         # copy // comments prefix and following white spaces
         try %[ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P ]
         # preserve previous line indent
         try %[ execute-keys -draft \; K <a-&> ]
-        # filter previous line
-        try %[ execute-keys -draft k : scala-filter-around-selections <ret> ]
         # indent after lines ending with {
         try %[ execute-keys -draft k <a-x> <a-k> \{$ <ret> j <a-gt> ]
     ]
@@ -64,7 +57,6 @@ define-command -hidden scala-indent-on-closing-curly-brace %[
 hook -group scala-highlight global WinSetOption filetype=scala %{ add-highlighter window/scala ref scala }
 
 hook global WinSetOption filetype=scala %[
-    hook window ModeChange insert:.* -group scala-hooks  scala-filter-around-selections
     hook window InsertChar \n -group scala-indent scala-indent-on-new-line
     hook window InsertChar \} -group scala-indent scala-indent-on-closing-curly-brace
 ]

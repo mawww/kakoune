@@ -6,7 +6,7 @@
 
 hook global BufCreate .*\.taskpaper %{
     set-option buffer filetype taskpaper
-} 
+}
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -28,8 +28,6 @@ define-command -hidden taskpaper-indent-on-new-line %{
         try %{ execute-keys -draft \;K<a-&> }
         ## If the line above is a project indent with a tab
         try %{ execute-keys -draft Z k<a-x> <a-k>^\h*([^:\n]+):<ret> z i<tab> }
-        # cleanup trailing white spaces on previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
     }
 }
 

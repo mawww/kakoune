@@ -55,8 +55,6 @@ define-command -hidden go-indent-on-new-line %~
         try %{ execute-keys -draft \;K<a-&> }
         # indent after lines ending with { or (
         try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
-        # cleanup trailing white spaces on the previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
         # align to opening paren of previous line
         try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
         # copy // comments prefix
@@ -84,8 +82,6 @@ define-command -hidden go-indent-on-closing-curly-brace %[
 hook -group go-highlight global WinSetOption filetype=go %{ add-highlighter window/go ref go }
 
 hook global WinSetOption filetype=go %{
-    # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group go-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group go-indent go-indent-on-new-line
     hook window InsertChar \{ -group go-indent go-indent-on-opening-curly-brace
     hook window InsertChar \} -group go-indent go-indent-on-closing-curly-brace

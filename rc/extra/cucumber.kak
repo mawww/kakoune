@@ -55,19 +55,12 @@ add-highlighter shared/cucumber/code/ regex \b(Feature|Business\h+Need|Ability|B
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden cucumber-filter-around-selections %{
-    # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
-}
-
 define-command -hidden cucumber-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # filter previous line
-        try %{ execute-keys -draft k : cucumber-filter-around-selections <ret> }
         # indent after lines containing :
         try %{ execute-keys -draft <space> k x <a-k> : <ret> j <a-gt> }
     }
@@ -79,7 +72,6 @@ define-command -hidden cucumber-indent-on-new-line %{
 hook -group cucumber-highlight global WinSetOption filetype=cucumber %{ add-highlighter window/cucumber ref cucumber }
 
 hook global WinSetOption filetype=cucumber %{
-    hook window ModeChange insert:.* -group cucumber-hooks  cucumber-filter-around-selections
     hook window InsertChar \n -group cucumber-indent cucumber-indent-on-new-line
 }
 

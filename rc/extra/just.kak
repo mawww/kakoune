@@ -12,8 +12,6 @@ define-command -hidden just-indent-on-new-line %{
      evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft \;K<a-&> }
-        # cleanup trailing white spaces on previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>"_d }
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*//\h* <ret> y jgh P }
     }

@@ -28,13 +28,6 @@ add-highlighter shared/fish/code/ regex \b(and|begin|bg|bind|block|break|breakpo
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden fish-filter-around-selections %{
-    evaluate-commands -no-hooks -draft -itersel %{
-        # remove trailing white spaces
-        try %{ execute-keys -draft <a-x>s\h+$<ret>d }
-    }
-}
-
 define-command -hidden fish-indent-on-char %{
     evaluate-commands -no-hooks -draft -itersel %{
         # align middle and end structures to start and indent when necessary
@@ -48,8 +41,6 @@ define-command -hidden fish-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <space>K<a-&> }
-        # filter previous line
-        try %{ execute-keys -draft k:fish-filter-around-selections<ret> }
         # indent after start structure
         try %{ execute-keys -draft k<a-x><a-k>^\h*(begin|case|else|for|function|if|switch|while)\b<ret>j<a-gt> }
     }

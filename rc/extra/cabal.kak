@@ -23,19 +23,12 @@ add-highlighter shared/cabal/code/ regex ^\h*([A-Za-z][A-Za-z0-9_-]*)\h*: 1:vari
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden cabal-filter-around-selections %{
-    # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
-}
-
 define-command -hidden cabal-indent-on-new-line %[
     evaluate-commands -draft -itersel %[
         # copy '#' comment prefix and following white spaces
         try %[ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P ]
         # preserve previous line indent
         try %[ execute-keys -draft \; K <a-&> ]
-        # filter previous line
-        try %[ execute-keys -draft k : cabal-filter-around-selections <ret> ]
         # indent after lines ending with { or :
         try %[ execute-keys -draft <space> k <a-x> <a-k> [:{]$ <ret> j <a-gt> ]
     ]
@@ -61,7 +54,6 @@ define-command -hidden cabal-indent-on-closing-curly-brace %[
 hook -group cabal-highlight global WinSetOption filetype=cabal %{ add-highlighter window/cabal ref cabal }
 
 hook global WinSetOption filetype=cabal %[
-    hook window ModeChange insert:.* -group cabal-hooks  cabal-filter-around-selections
     hook window InsertChar \n -group cabal-indent cabal-indent-on-new-line
     hook window InsertChar \{ -group cabal-indent cabal-indent-on-opening-curly-brace
     hook window InsertChar \} -group cabal-indent cabal-indent-on-closing-curly-brace

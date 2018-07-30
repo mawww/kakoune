@@ -1,6 +1,6 @@
 # http://gnu.org/software/screen/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
- 
+
 hook -group GNUscreen global KakBegin .* %sh{
     [ -z "${STY}" ] && exit
     echo "

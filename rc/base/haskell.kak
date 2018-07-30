@@ -68,11 +68,6 @@ add-highlighter shared/haskell/code/ regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
 
 # http://en.wikibooks.org/wiki/Haskell/Indentation
 
-define-command -hidden haskell-filter-around-selections %{
-    # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
-}
-
 define-command -hidden haskell-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comments prefix and following white spaces
@@ -81,8 +76,6 @@ define-command -hidden haskell-indent-on-new-line %{
         try %{ execute-keys -draft \; K <a-&> }
         # align to first clause
         try %{ execute-keys -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|do|let|where)\h+\K.* <ret> s \A|.\z <ret> & }
-        # filter previous line
-        try %{ execute-keys -draft k : haskell-filter-around-selections <ret> }
         # indent after lines beginning with condition or ending with expression or =(
         try %{ execute-keys -draft \; k x <a-k> ^\h*(if)|(case\h+[\w']+\h+of|do|let|where|[=(])$ <ret> j <a-gt> }
     }
@@ -95,7 +88,6 @@ hook -group haskell-highlight global WinSetOption filetype=haskell %{ add-highli
 
 hook global WinSetOption filetype=haskell %{
     set-option window extra_word_chars "'"
-    hook window ModeChange insert:.* -group haskell-hooks  haskell-filter-around-selections
     hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
 }
 

@@ -72,8 +72,6 @@ define-command -hidden kak-indent-on-new-line %{
         try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with %[\W\S]
         try %{ execute-keys -draft k <a-x> <a-k> \%[\W\S]$ <ret> j <a-gt> }
     }
@@ -86,8 +84,6 @@ hook -group kak-highlight global WinSetOption filetype=kak %{ add-highlighter wi
 
 hook global WinSetOption filetype=kak %{
     hook window InsertChar \n -group kak-indent kak-indent-on-new-line
-    # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group kak-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
     set-option buffer extra_word_chars '-'
 }
 

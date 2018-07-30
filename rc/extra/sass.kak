@@ -27,19 +27,12 @@ add-highlighter shared/sass/code/ regex !important 0:keyword
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden sass-filter-around-selections %{
-    # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
-}
-
 define-command -hidden sass-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '/' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # filter previous line
-        try %{ execute-keys -draft k : sass-filter-around-selections <ret> }
         # avoid indent after properties and comments
         try %{ execute-keys -draft k <a-x> <a-K> [:/] <ret> j <a-gt> }
     }
@@ -51,7 +44,6 @@ define-command -hidden sass-indent-on-new-line %{
 hook -group sass-highlight global WinSetOption filetype=sass %{ add-highlighter window/sass ref sass }
 
 hook global WinSetOption filetype=sass %{
-    hook window ModeChange insert:.* -group sass-hooks  sass-filter-around-selections
     hook window InsertChar \n -group sass-indent sass-indent-on-new-line
     set-option buffer extra_word_chars '-'
 }

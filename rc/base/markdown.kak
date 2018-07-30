@@ -59,8 +59,6 @@ define-command -hidden markdown-indent-on-new-line %{
         try %{ execute-keys -draft k <a-x> s ^\h*\K((>\h*)+([*+-]\h)?|(>\h*)*[*+-]\h)\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # remove trailing white spaces
-        try %{ execute-keys -draft -itersel %{ k<a-x> s \h+$ <ret> d } }
     }
 }
 

@@ -60,8 +60,6 @@ def -hidden nim-indent-on-new-line %{
         try %{ exec -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
         try %{ exec -draft \; K <a-&> }
-        # cleanup trailing whitespaces from previous line
-        try %{ exec -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with const, let, var, ':' or '='
         try %{ exec -draft <space> k x <a-k> (:|=|const|let|var)$ <ret> j <a-gt> }
     }
@@ -74,8 +72,6 @@ hook -group nim-highlight global WinSetOption filetype=nim %{ add-highlighter wi
 
 hook global WinSetOption filetype=nim %{
     hook window InsertChar \n -group nim-indent nim-indent-on-new-line
-    # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group nim-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
 }
 
 hook -group nim-highlight global WinSetOption filetype=(?!nim).* %{ remove-highlighter window/nim }

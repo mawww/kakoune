@@ -31,19 +31,12 @@ add-highlighter shared/toml/code/ regex \
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden toml-filter-around-selections %{
-    # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
-}
-
 define-command -hidden toml-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # filter previous line
-        try %{ execute-keys -draft k : toml-filter-around-selections <ret> }
     }
 }
 
@@ -55,7 +48,6 @@ hook -group toml-highlight global WinSetOption filetype=toml %{
 }
 
 hook global WinSetOption filetype=toml %{
-    hook window ModeChange insert:.* -group toml-hooks toml-filter-around-selections
     hook window InsertChar \n -group toml-indent toml-indent-on-new-line
 }
 

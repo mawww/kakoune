@@ -32,11 +32,6 @@ add-highlighter shared/html/tag/base/ regex <(!DOCTYPE(\h+\w+)+) 1:meta
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden html-filter-around-selections %{
-    # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
-}
-
 define-command -hidden html-indent-on-greater-than %[
     evaluate-commands -draft -itersel %[
         # align closing tag to opening when alone on a line
@@ -48,8 +43,6 @@ define-command -hidden html-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # filter previous line
-        try %{ execute-keys -draft k : html-filter-around-selections <ret> }
         # indent after lines ending with opening tag
         try %{ execute-keys -draft k <a-x> <a-k> <[^/][^>]+>$ <ret> j <a-gt> }
     }
@@ -61,7 +54,6 @@ define-command -hidden html-indent-on-new-line %{
 hook -group html-highlight global WinSetOption filetype=(?:html|xml) %{ add-highlighter window/html ref html }
 
 hook global WinSetOption filetype=(?:html|xml) %{
-    hook window ModeChange insert:.* -group html-hooks  html-filter-around-selections
     hook window InsertChar '>' -group html-indent html-indent-on-greater-than
     hook window InsertChar \n -group html-indent html-indent-on-new-line
 }

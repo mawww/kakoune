@@ -27,11 +27,6 @@ add-highlighter shared/ragel/code/ regex \b(action|alnum|alpha|any|ascii|case|cn
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden ragel-filter-around-selections %{
-    # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
-}
-
 define-command -hidden ragel-indent-on-char %<
     evaluate-commands -draft -itersel %<
         # align closer token to its opener when alone on a line
@@ -46,8 +41,6 @@ define-command -hidden ragel-indent-on-new-line %<
         try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # filter previous line
-        try %{ execute-keys -draft k : ragel-filter-around-selections <ret> }
         # indent after lines ending with opener token
         try %< execute-keys -draft k <a-x> <a-k> [[{(*]$ <ret> j <a-gt> >
     >
@@ -59,7 +52,6 @@ define-command -hidden ragel-indent-on-new-line %<
 hook -group ragel-highlight global WinSetOption filetype=ragel %{ add-highlighter window/ragel ref ragel }
 
 hook global WinSetOption filetype=ragel %{
-    hook window ModeChange insert:.* -group ragel-hooks  ragel-filter-around-selections
     hook window InsertChar .* -group ragel-indent ragel-indent-on-char
     hook window InsertChar \n -group ragel-indent ragel-indent-on-new-line
 }

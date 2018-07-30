@@ -61,8 +61,6 @@ define-command -hidden lua-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <space>K<a-&> }
-        # remove trailing white spaces from previous line
-        try %{ execute-keys -draft k<a-x>s\h+$<ret>d }
         # indent after start structure
         try %{ execute-keys -draft k<a-x><a-k>^\h*(else|elseif|for|function|if|while)\b<ret>j<a-gt> }
     }
