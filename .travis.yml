@@ -21,7 +21,7 @@ before_install:
 install:
   - if [ $TRAVIS_OS_NAME = linux ]; then
       if [ "$CXX" = "g++" ]; then
-        export CXX=g++-6;
+        export CXX=g++-5;
       fi;
     elif [ $TRAVIS_OS_NAME = osx ]; then
       brew outdated gcc || brew upgrade gcc;
@@ -35,8 +35,8 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - libstdc++-6-dev
-      - g++-6
+      - libstdc++-5-dev
+      - g++-5
       - libncursesw5-dev
   coverity_scan:
     project:

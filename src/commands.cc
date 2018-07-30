@@ -1498,33 +1498,32 @@ const CommandDesc declare_option_cmd = {
 };
 
 template<bool unmap>
-static auto map_key_completer =
-    [](const Context& context, CompletionFlags flags,
-       CommandParameters params, size_t token_to_complete,
-       ByteCount pos_in_token) -> Completions
+static Completions map_key_completer(const Context& context, CompletionFlags flags,
+                                     CommandParameters params, size_t token_to_complete,
+                                     ByteCount pos_in_token)
+{
+    if (token_to_complete == 0)
+        return { 0_byte, params[0].length(),
+                 complete(params[0], pos_in_token, scopes) };
+    if (token_to_complete == 1)
     {
-        if (token_to_complete == 0)
-            return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, scopes) };
-        if (token_to_complete == 1)
-        {
-            auto& user_modes = get_scope(params[0], context).keymaps().user_modes();
-            return { 0_byte, params[1].length(),
-                     complete(params[1], pos_in_token, concatenated(modes, user_modes) | gather<Vector<String>>()) };
-        }
-        if (unmap and token_to_complete == 2)
-        {
-            KeymapManager& keymaps = get_scope(params[0], context).keymaps();
-            KeymapMode keymap_mode = parse_keymap_mode(params[1], keymaps.user_modes());
-            KeyList keys = keymaps.get_mapped_keys(keymap_mode);
+        auto& user_modes = get_scope(params[0], context).keymaps().user_modes();
+        return { 0_byte, params[1].length(),
+                 complete(params[1], pos_in_token, concatenated(modes, user_modes) | gather<Vector<String>>()) };
+    }
+    if (unmap and token_to_complete == 2)
+    {
+        KeymapManager& keymaps = get_scope(params[0], context).keymaps();
+        KeymapMode keymap_mode = parse_keymap_mode(params[1], keymaps.user_modes());
+        KeyList keys = keymaps.get_mapped_keys(keymap_mode);
 
-            return { 0_byte, params[2].length(),
-                     complete(params[2], pos_in_token,
-                              keys | transform([](Key k) { return key_to_str(k); })
-                                   | gather<Vector<String>>()) };
-        }
-        return {};
-    };
+        return { 0_byte, params[2].length(),
+                 complete(params[2], pos_in_token,
+                          keys | transform([](Key k) { return key_to_str(k); })
+                               | gather<Vector<String>>()) };
+    }
+    return {};
+}
 
 const CommandDesc map_key_cmd = {
     "map",
