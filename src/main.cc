@@ -563,7 +563,7 @@ int run_client(StringView session, StringView name, StringView client_init,
             raise(SIGTSTP);
         while (not client.exit_status() and client.is_ui_ok())
             event_manager.handle_next_events(EventMode::Normal);
-        return *client.exit_status();
+        return client.exit_status().value_or(-1);
     }
     catch (disconnected& e)
     {
