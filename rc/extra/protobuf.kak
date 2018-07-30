@@ -51,8 +51,6 @@ define-command -hidden protobuf-indent-on-newline %~
         try %{ execute-keys -draft \;K<a-&> }
         # indent after lines ending with {
         try %[ execute-keys -draft k<a-x> <a-k> \{\h*$ <ret> j<a-gt> ]
-        # cleanup trailing white spaces on the previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
         # copy // comments prefix
         try %{ execute-keys -draft \;<c-s>k<a-x> s ^\h*\K/{2,}(\h*(?=\S))? <ret> y<c-o>P<esc> }
     ]
@@ -74,8 +72,6 @@ define-command -hidden protobuf-indent-on-closing-curly-brace %[
 hook -group protobuf-highlight global WinSetOption filetype=protobuf %{ add-highlighter window/protobuf ref protobuf }
 
 hook global WinSetOption filetype=protobuf %[
-    # cleanup trailing whitespaces when exiting insert mode
-    hook -group protobuf-hooks  window ModeChange insert:.* %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook -group protobuf-indent window InsertChar \n protobuf-indent-on-newline
     hook -group protobuf-indent window InsertChar \{ protobuf-indent-on-opening-curly-brace
     hook -group protobuf-indent window InsertChar \} protobuf-indent-on-closing-curly-brace
