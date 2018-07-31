@@ -502,6 +502,7 @@ void NCursesUI::check_resize(bool force)
     resize_term(ws.ws_row, ws.ws_col);
 
     m_window = (NCursesWin*)newpad(ws.ws_row, ws.ws_col);
+    kak_assert(m_window);
     intrflush(m_window, false);
     keypad(m_window, true);
     meta(m_window, true);
