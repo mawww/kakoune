@@ -27,11 +27,6 @@ add-highlighter shared/elm/code/ regex \b(Array|Bool|Char|Float|Int|String)\b 0:
 
 # http://elm-lang.org/docs/style-guide
 
-define-command -hidden elm-filter-around-selections %{
-    # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
-}
-
 define-command -hidden elm-indent-after "
  execute-keys -draft \\; k x <a-k> ^\\h*(if)|(case\\h+[\\w']+\\h+of|let|in|\\{\\h+\\w+|\\w+\\h+->|[=(])$ <ret> j <a-gt>
 "
@@ -44,8 +39,6 @@ define-command -hidden elm-indent-on-new-line %{
         try %{ execute-keys -draft \; K <a-&> }
         # align to first clause
         try %{ execute-keys -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|let)\h+\K.* <ret> s \A|.\z <ret> & }
-        # filter previous line
-        try %{ execute-keys -draft k : elm-filter-around-selections <ret> }
         # indent after lines beginning with condition or ending with expression or =(
         try %{ elm-indent-after }
     }
@@ -57,7 +50,6 @@ define-command -hidden elm-indent-on-new-line %{
 hook -group elm-highlight global WinSetOption filetype=elm %{ add-highlighter window/elm ref elm }
 
 hook global WinSetOption filetype=elm %{
-    hook window ModeChange insert:.* -group elm-hooks  elm-filter-around-selections
     hook window InsertChar \n -group elm-indent elm-indent-on-new-line
 }
 

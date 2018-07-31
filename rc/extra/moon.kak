@@ -51,14 +51,6 @@ define-command moon-alternative-file -docstring 'Jump to the alternate file (imp
     printf %s\\n "edit $altfile"
 }}
 
-define-command -hidden moon-filter-around-selections %{
-    evaluate-commands -draft -itersel %{
-        execute-keys <a-x>
-        # remove trailing white spaces
-        try %{ execute-keys -draft s \h + $ <ret> d }
-    }
-}
-
 define-command -hidden moon-indent-on-char %{
     evaluate-commands -draft -itersel %{
         # align _else_ statements to start
@@ -76,8 +68,6 @@ define-command -hidden moon-indent-on-new-line %{
         try %{ execute-keys -draft k <a-x> s ^ \h * \K -- \h * <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # filter previous line
-        try %{ execute-keys -draft k : moon-filter-around-selections <ret> }
         # indent after start structure
         try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (class|else(if)?|for|if|switch|unless|when|while|with) \b | ([:=]|[-=]>) $ <ret> j <a-gt> }
         # deindent after return statements
@@ -91,7 +81,6 @@ define-command -hidden moon-indent-on-new-line %{
 hook -group moon-highlight global WinSetOption filetype=moon %{ add-highlighter window/moon ref moon }
 
 hook global WinSetOption filetype=moon %{
-    hook window ModeChange insert:.* -group moon-hooks  moon-filter-around-selections
     hook window InsertChar .* -group moon-indent moon-indent-on-char
     hook window InsertChar \n -group moon-indent moon-indent-on-new-line
 

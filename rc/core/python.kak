@@ -125,8 +125,6 @@ define-command -hidden python-indent-on-new-line %{
         try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with :
         try %{ execute-keys -draft <space> k <a-x> <a-k> :$ <ret> j <a-gt> }
     }
@@ -139,8 +137,6 @@ hook -group python-highlight global WinSetOption filetype=python %{ add-highligh
 
 hook global WinSetOption filetype=python %{
     hook window InsertChar \n -group python-indent python-indent-on-new-line
-    # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group python-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
 }
 
 hook -group python-highlight global WinSetOption filetype=(?!python).* %{ remove-highlighter window/python }

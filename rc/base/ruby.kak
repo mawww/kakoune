@@ -93,14 +93,6 @@ define-command ruby-alternative-file -docstring 'Jump to the alternate file (imp
     echo "edit $altfile"
 }}
 
-define-command -hidden ruby-filter-around-selections %{
-    evaluate-commands -no-hooks -draft -itersel %{
-        execute-keys <a-x>
-        # remove trailing white spaces
-        try %{ execute-keys -draft s \h + $ <ret> d }
-    }
-}
-
 define-command -hidden ruby-indent-on-char %{
     evaluate-commands -no-hooks -draft -itersel %{
         # align middle and end structures to start
@@ -115,8 +107,6 @@ define-command -hidden ruby-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft K <a-&> }
-        # filter previous line
-        try %{ execute-keys -draft k : ruby-filter-around-selections <ret> }
         # indent after start structure
         try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (begin|case|class|def|do|else|elsif|ensure|for|if|module|rescue|unless|until|when|while) \b <ret> j <a-gt> }
     }

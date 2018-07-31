@@ -23,11 +23,6 @@ hook global BufCreate .*\.m %{
     set-option buffer filetype objc
 }
 
-define-command -hidden c-family-trim-autoindent %{
-    # remove the line if it's empty when leaving the insert mode
-    try %{ execute-keys -draft <a-x> 1s^(\h+)$<ret> d }
-}
-
 define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -itersel %<
     execute-keys \;
     try %<
@@ -40,8 +35,6 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
         # else indent new lines with the same level as the previous one
         execute-keys -draft K <a-&>
     >
-    # remove previous empty lines resulting from the automatic indent
-    try %< execute-keys -draft k <a-x> <a-k>^\h+$<ret> Hd >
     # indent after an opening brace or parenthesis at end of line
     try %< execute-keys -draft k <a-x> s[{(]\h*$<ret> j <a-gt> >
     # indent after a label
@@ -119,8 +112,6 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel 
             ]
         ]
 
-        # trim trailing whitespace on the previous line
-        try %[ execute-keys -draft s\h+$<ret> d ]
         # align the new star with the previous one
         execute-keys K<a-x>1s^[^*]*(\*)<ret>&
     ]
@@ -278,7 +269,6 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
         remove-hooks window c-family-insert
     }
 
-    hook -group c-family-indent window ModeChange insert:.* c-family-trim-autoindent
     hook -group c-family-insert window InsertChar \n c-family-insert-on-newline
     hook -group c-family-indent window InsertChar \n c-family-indent-on-newline
     hook -group c-family-indent window InsertChar \{ c-family-indent-on-opening-curly-brace

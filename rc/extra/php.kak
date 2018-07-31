@@ -48,11 +48,6 @@ add-highlighter shared/php-file/php  region '<\?(php)?'     '\?>'      ref php
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden php-filter-around-selections %{
-    # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
-}
-
 define-command -hidden php-indent-on-char %<
     evaluate-commands -draft -itersel %<
         # align closer token to its opener when alone on a line
@@ -66,8 +61,6 @@ define-command -hidden php-indent-on-new-line %<
         try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # filter previous line
-        try %{ execute-keys -draft k : php-filter-around-selections <ret> }
         # indent after lines beginning / ending with opener token
         try %_ execute-keys -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
     >
@@ -79,7 +72,6 @@ define-command -hidden php-indent-on-new-line %<
 hook -group php-highlight global WinSetOption filetype=php %{ add-highlighter window/php-file ref php-file }
 
 hook global WinSetOption filetype=php %{
-    hook window ModeChange insert:.* -group php-hooks  php-filter-around-selections
     hook window InsertChar .* -group php-indent php-indent-on-char
     hook window InsertChar \n -group php-indent php-indent-on-new-line
 }

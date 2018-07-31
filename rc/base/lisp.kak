@@ -24,11 +24,6 @@ add-highlighter shared/lisp/code/ regex \b(def[a-z]+|if|do|let|lambda|catch|and|
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden lisp-filter-around-selections %{
-    # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
-}
-
 define-command -hidden lisp-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # preserve previous line indent
@@ -44,7 +39,6 @@ define-command -hidden lisp-indent-on-new-line %{
 hook -group lisp-highlight global WinSetOption filetype=lisp %{ add-highlighter window/lisp ref lisp }
 
 hook global WinSetOption filetype=lisp %{
-    hook window ModeChange insert:.* -group lisp-hooks  lisp-filter-around-selections
     hook window InsertChar \n -group lisp-indent lisp-indent-on-new-line
 }
 
