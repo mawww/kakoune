@@ -509,8 +509,8 @@ A multiselection can also be obtained with `S`, which splits the current
 selection according to the regex entered. To split a comma separated list,
 use `S` then ', *'
 
-The regex syntax supported by Kakoune is the Perl one and is described
-here <<Regex syntax>>.
+The regex syntax supported by Kakoune is the based on the ECMAScript script
+syntax and is described at <<doc/pages/regex#,`:doc regex`>>.
 
 `s` and `S` share the search pattern with `/`, and hence entering an empty
 pattern uses the last one.

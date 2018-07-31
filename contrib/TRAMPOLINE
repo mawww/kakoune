@@ -102,7 +102,7 @@ using the built-in `:doc` command.
                     this behavior is only a preview, exiting prompt mode with
                     the `<esc>` (escape) key will leave the current position
         .---,       of the cursor unchanged. Note that you can also use a
-        | n |       Perl regular expression as input.  By default the search
+        | n |       regular expression as input.  By default the search
         `---'       function will look for results forward, starting from
                     the current location of the cursor, but you can search
      .---, .---,    backwards using `<a-/>` (alt + `/`).
