@@ -4,6 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .+\.(automount|conf|link|mount|network|path|service|slice|socket|target|timer) %{
+hook global BufCreate .*/systemd/.+\.(automount|conf|link|mount|network|path|service|slice|socket|target|timer) %{
     set-option buffer filetype ini
 }
