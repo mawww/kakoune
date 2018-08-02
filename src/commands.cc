@@ -2246,7 +2246,7 @@ void enter_user_mode(Context& context, const String mode_name, KeymapMode mode, 
             context.input_handler().handle_key(key);
 
         if (lock)
-            enter_user_mode(context, std::move(mode_name), mode, true);
+            return enter_user_mode(context, std::move(mode_name), mode, true);
     }, lock ? format("{} (lock)", mode_name) : mode_name,
     build_autoinfo_for_mapping(context, mode, {}));
 }
