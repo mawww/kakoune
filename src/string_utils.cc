@@ -100,6 +100,8 @@ Optional<int> str_to_int_ifp(StringView str)
     bool negative = not str.empty() and str[0] == '-';
     if (negative)
         str = str.substr(1_byte);
+    if (str.empty())
+        return {};
 
     unsigned int res = 0;
     for (auto c : str)
