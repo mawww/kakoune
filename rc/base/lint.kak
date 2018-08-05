@@ -47,17 +47,17 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
                 error_count = 0
                 warning_count = 0
             }
-            /:[0-9]+:[0-9]+: ([Ff]atal )?[Ee]rror/ {
+            /:[1-9][0-9]*:[1-9][0-9]*: ([Ff]atal )?[Ee]rror/ {
                 flags = flags " " $2 "|{red}█"
                 error_count++
             }
-            /:[0-9]+:[0-9]+:/ {
+            /:[1-9][0-9]*:[1-9][0-9]*:/ {
                 if ($4 !~ /[Ee]rror/) {
                     flags = flags " " $2 "|{yellow}█"
                     warning_count++
                 }
             }
-            /:[0-9]+:[0-9]+:/ {
+            /:[1-9][0-9]*:[1-9][0-9]*:/ {
                 kind = substr($4, 2)
                 error = $2 "." $3 "," $2 "." $3 "|" kind
                 msg = ""
@@ -78,7 +78,11 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
             }
         ' "$dir"/stderr | kak -p "$kak_session"
 
-        cut -d: -f2- "$dir"/stderr | sed "s@^@$kak_bufname:@" > "$dir"/fifo
+        cut -d: -f2- "$dir"/stderr | awk -v bufname="${kak_bufname}" '
+            /^[1-9][0-9]*:[1-9][0-9]*:/ {
+                print bufname ":" $0
+            }
+            ' > "$dir"/fifo
 
         } >/dev/null 2>&1 </dev/null &
     }
