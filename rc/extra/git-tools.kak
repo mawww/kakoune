@@ -20,9 +20,6 @@ hook -group git-status-highlight global WinSetOption filetype=(?!git-status).* %
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden line-specs git_diff_flags
 
-set-face global GitBlame default,magenta
-set-face global GitDiffFlags default,black
-
 define-command -params 1.. \
   -docstring %sh{printf 'git [<arguments>]: git wrapping helper
 All the optional arguments are forwarded to the git utility
@@ -63,7 +60,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     run_git_blame() {
         (
             printf %s "evaluate-commands -client '$kak_client' %{
-                      try %{ add-highlighter window/git-blame flag-lines GitBlame git_blame_flags }
+                      try %{ add-highlighter window/git-blame flag-lines Information git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
                   git blame "$@" --incremental ${kak_buffile} | awk '
@@ -185,7 +182,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
             }"
             ;;
        show-diff)
-           echo 'try %{ add-highlighter window/git-diff flag-lines GitDiffFlags git_diff_flags }'
+           echo 'try %{ add-highlighter window/git-diff flag-lines Default git_diff_flags }'
            update_diff
            ;;
        update-diff) update_diff ;;
