@@ -914,6 +914,7 @@ int main(int argc, char* argv[])
                    { "l", { false, "list existing sessions" } },
                    { "clear", { false, "clear dead sessions" } },
                    { "debug", { true, "initial debug option value" } },
+                   { "version", { false, "display kakoune version and exit" } },
                    { "ro", { false, "readonly mode" } },
                    { "help", { false, "display a help message and quit" } } }
     };
@@ -944,6 +945,12 @@ int main(int argc, char* argv[])
         const bool show_help_message = (bool)parser.get_switch("help");
         if (show_help_message)
             return show_usage();
+
+        if (parser.get_switch("version"))
+        {
+            write_stdout(format("Kakoune {}\n", Kakoune::version));
+            return 0;
+        }
 
         const bool list_sessions = (bool)parser.get_switch("l");
         const bool clear_sessions = (bool)parser.get_switch("clear");
