@@ -39,7 +39,7 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
         eval "$kak_opt_lintcmd '$dir'/buf${extension}" | sort -t: -k2,2 -n > "$dir"/stderr
 
         # Flags for the gutter:
-        #   stamp l3|{red}█ l11|{yellow}█
+        #   stamp l3|{error}█ l11|{warning}█
         # Contextual error messages:
         #   stamp 'l1.c1,l1.c1|kind:message' 'l2.c2,l2.c2|kind:message'
         awk -F: -v file="$kak_buffile" -v stamp="$kak_timestamp" -v client="$kak_client" '
@@ -48,12 +48,12 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
                 warning_count = 0
             }
             /:[1-9][0-9]*:[1-9][0-9]*: ([Ff]atal )?[Ee]rror/ {
-                flags = flags " " $2 "|{red}█"
+                flags = flags " " $2 "|{error}█"
                 error_count++
             }
             /:[1-9][0-9]*:[1-9][0-9]*:/ {
                 if ($4 !~ /[Ee]rror/) {
-                    flags = flags " " $2 "|{yellow}█"
+                    flags = flags " " $2 "|{warning}█"
                     warning_count++
                 }
             }
@@ -112,7 +112,7 @@ ${i}"
 }
 
 define-command -hidden lint-show-counters %{
-    echo -markup linting results:{red} %opt{lint_error_count} error(s){yellow} %opt{lint_warning_count} warning(s)
+    echo -markup linting results:{error} %opt{lint_error_count} error(s){warning} %opt{lint_warning_count} warning(s)
 }
 
 define-command lint-enable -docstring "Activate automatic diagnostics of the code" %{

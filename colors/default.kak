@@ -14,6 +14,11 @@ face global comment cyan
 face global meta magenta
 face global builtin default+b
 
+# For configurations
+face global error red
+face global warning yellow
+face global information blue
+
 # For markup
 face global title blue
 face global header cyan

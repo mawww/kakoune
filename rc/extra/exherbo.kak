@@ -63,7 +63,7 @@ add-highlighter shared/paludis-options-conf/ regex [\s\t]+(\S+(?:[\s\t]+))*$ 0:a
 add-highlighter shared/paludis-options-conf/ regex (?::)(?:[\s\t]+)(.*?$) 1:attribute
 add-highlighter shared/paludis-options-conf/ regex [\s\t]+(\S+=)(\S+) 1:attribute 2:value
 add-highlighter shared/paludis-options-conf/ regex [\s\t](\S+:) 0:keyword
-add-highlighter shared/paludis-options-conf/ regex [\s\t](-\S+)(.*?) 1:red
+add-highlighter shared/paludis-options-conf/ regex [\s\t](-\S+)(.*?) 1:error
 add-highlighter shared/paludis-options-conf/ regex ^(\S+/\S+) 0:type
 add-highlighter shared/paludis-options-conf/ regex ^#.*?$ 0:comment
 
