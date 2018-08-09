@@ -2,7 +2,7 @@ declare-option -docstring "name of the client in which documentation is to be di
     str docsclient
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
-    add-highlighter window/git-log group 
+    add-highlighter window/git-log group
     add-highlighter window/git-log/ regex '^(commit) ([0-9a-f]+)$' 1:yellow 2:red
     add-highlighter window/git-log/ regex '^([a-zA-Z_-]+:) (.*?)$' 1:green 2:magenta
     add-highlighter window/git-log/ ref diff # highlight potential diffs from the -p option
@@ -11,7 +11,7 @@ hook -group git-log-highlight global WinSetOption filetype=git-log %{
 hook -group git-log-highlight global WinSetOption filetype=(?!git-log).* %{ remove-highlighter window/git-log }
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
-    add-highlighter window/git-status group 
+    add-highlighter window/git-status group
     add-highlighter window/git-status/ regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
 }
 
@@ -180,7 +180,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
        blame) shift; run_git_blame "$@" ;;
        hide-blame)
             printf %s "try %{
-                set-option buffer=$kak_bufname git_blame_flags ''
+                set-option buffer=$kak_bufname git_blame_flags $kak_timestamp
                 remove-highlighter window/git-blame
             }"
             ;;
