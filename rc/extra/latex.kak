@@ -20,7 +20,7 @@ add-highlighter shared/latex/content/ regex '\\(?!_)\w+\b' 0:keyword
 # Options passed to scopes, between brackets
 add-highlighter shared/latex/content/ regex '\\(?!_)\w+\b\[([^\]]+)\]' 1:value
 # Content between dollar signs/pairs
-add-highlighter shared/latex/content/ regex '(\$(\\\$|[^$])+\$)|(\$\$(\\\$|[^$])+\$\$)' 0:magenta
+add-highlighter shared/latex/content/ regex '(\$(\\\$|[^$])+\$)|(\$\$(\\\$|[^$])+\$\$)' 0:meta
 # Emphasized text
 add-highlighter shared/latex/content/ regex '\\(emph|textit)\{([^}]+)\}' 2:default+i
 # Bold text

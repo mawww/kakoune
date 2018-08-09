@@ -3,8 +3,8 @@ declare-option -docstring "name of the client in which documentation is to be di
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
     add-highlighter window/git-log group
-    add-highlighter window/git-log/ regex '^(commit) ([0-9a-f]+)$' 1:yellow 2:red
-    add-highlighter window/git-log/ regex '^([a-zA-Z_-]+:) (.*?)$' 1:green 2:magenta
+    add-highlighter window/git-log/ regex '^(commit) ([0-9a-f]+)$' 1:keyword 2:meta
+    add-highlighter window/git-log/ regex '^([a-zA-Z_-]+:) (.*?)$' 1:variable 2:value
     add-highlighter window/git-log/ ref diff # highlight potential diffs from the -p option
 
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-log }
@@ -21,9 +21,6 @@ hook -group git-status-highlight global WinSetOption filetype=git-status %{
 
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden line-specs git_diff_flags
-
-set-face global GitBlame default,magenta
-set-face global GitDiffFlags default,black
 
 define-command -params 1.. \
   -docstring %sh{printf 'git [<arguments>]: git wrapping helper
@@ -62,7 +59,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     run_git_blame() {
         (
             printf %s "evaluate-commands -client '$kak_client' %{
-                      try %{ add-highlighter window/git-blame flag-lines GitBlame git_blame_flags }
+                      try %{ add-highlighter window/git-blame flag-lines Information git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
                   git blame "$@" --incremental ${kak_buffile} | awk '
@@ -184,7 +181,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
             }"
             ;;
        show-diff)
-           echo 'try %{ add-highlighter window/git-diff flag-lines GitDiffFlags git_diff_flags }'
+           echo 'try %{ add-highlighter window/git-diff flag-lines Default git_diff_flags }'
            update_diff
            ;;
        hide-diff)
