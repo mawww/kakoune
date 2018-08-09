@@ -10,9 +10,13 @@ hook -group git-log-highlight global WinSetOption filetype=git-log %{
 
 hook -group git-log-highlight global WinSetOption filetype=(?!git-log).* %{ remove-highlighter window/git-log }
 
+set-face global diffadd green
+set-face global diffremove red
+set-face global diffmeta cyan
+
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
     add-highlighter window/git-status group
-    add-highlighter window/git-status/ regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
+    add-highlighter window/git-status/ regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed|copied):)(?:.*?)$' 1:keyword 2:diffadd 3:diffremove 4:diffmeta 5:meta
 }
 
 hook -group git-status-highlight global WinSetOption filetype=(?!git-status).* %{ remove-highlighter window/git-status }
@@ -106,39 +110,39 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                     if ($from_count == 0 and $to_count > 0) {
                         for $i (0..$to_count - 1) {
                             $line = $to_line + $i;
-                            $flags .= " $line|\{green\}+";
+                            $flags .= " $line|\{diffadd\}+";
                         }
                     }
                     elsif ($from_count > 0 and $to_count == 0) {
                         if ($to_line == 0) {
-                            $flags .= " 1|\{red\}‾";
+                            $flags .= " 1|\{diffremove\}‾";
                         } else {
-                            $flags .= " $to_line|\{red\}_";
+                            $flags .= " $to_line|\{diffremove\}_";
                         }
                     }
                     elsif ($from_count > 0 and $from_count == $to_count) {
                         for $i (0..$to_count - 1) {
                             $line = $to_line + $i;
-                            $flags .= " $line|\{blue\}~";
+                            $flags .= " $line|\{diffmeta\}~";
                         }
                     }
                     elsif ($from_count > 0 and $from_count < $to_count) {
                         for $i (0..$from_count - 1) {
                             $line = $to_line + $i;
-                            $flags .= " $line|\{blue\}~";
+                            $flags .= " $line|\{diffmeta\}~";
                         }
                         for $i ($from_count..$to_count - 1) {
                             $line = $to_line + $i;
-                            $flags .= " $line|\{green\}+";
+                            $flags .= " $line|\{diffadd\}+";
                         }
                     }
                     elsif ($to_count > 0 and $from_count > $to_count) {
                         for $i (0..$to_count - 2) {
                             $line = $to_line + $i;
-                            $flags .= " $line|\{blue\}~";
+                            $flags .= " $line|\{diffmeta\}~";
                         }
                         $last = $to_line + $to_count - 1;
-                        $flags .= " $last|\{blue+u\}~";
+                        $flags .= " $last|\{diffmeta+u\}~";
                     }
                 }
             }

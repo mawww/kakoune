@@ -6,10 +6,14 @@ hook global BufCreate .*(\.gitconfig|git/config) %{
     set-option buffer filetype ini
 }
 
+set-face global diffadd green
+set-face global diffremove red
+set-face global diffmeta cyan
+
 hook -group git-commit-highlight global WinSetOption filetype=git-commit %{
     add-highlighter window/git-commit-highlight group
     add-highlighter window/git-commit-highlight/ regex "^\h*#[^\n]*\n" 0:comment
-    add-highlighter window/git-commit-highlight/ regex "\b(?:(modified)|(deleted)|(new file)|(renamed|copied)):([^\n]*)\n" 1:yellow 2:red 3:green 4:blue 5:magenta
+    add-highlighter window/git-commit-highlight/ regex "\b(?:(modified)|(deleted)|(new file)|(renamed|copied)):([^\n]*)\n" 1:keyword 2:diffremove 3:diffadd 4:diffmeta 5:meta
     add-highlighter window/git-commit-highlight/ ref diff # highlight potential diffs from the -v option
 }
 
