@@ -21,7 +21,7 @@ hook global BufCreate .*git-rebase-todo %{
 
 hook -group git-rebase-highlight global WinSetOption filetype=git-rebase %{
     add-highlighter window/git-rebase-highlight group
-    add-highlighter window/git-rebase-highlight/ regex "#[^\n]*\n" 0:cyan,default
+    add-highlighter window/git-rebase-highlight/ regex "#[^\n]*\n" 0:comment
     add-highlighter window/git-rebase-highlight/ regex "^(pick|edit|reword|squash|fixup|exec|delete|[persfx]) (\w+)" 1:green 2:magenta
 }
 
