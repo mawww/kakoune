@@ -147,8 +147,6 @@ private:
     bool m_set_title = true;
     bool m_change_colors = true;
 
-    bool m_menu_vertical = false;
-
     bool m_dirty = false;
 
     bool m_resize_pending = false;
