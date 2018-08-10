@@ -482,7 +482,7 @@ Current selections position can be saved in a register and restored later on.
 
 See <<doc/pages/keys#marks,`:doc keys marks`>>.
 
-Jump list
+Jump list / navigation / navigate forward / backward
 ~~~~~~~~~
 
 Some commands, like the goto commands, buffer switch or search commands,
