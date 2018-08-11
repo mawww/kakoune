@@ -333,7 +333,7 @@ declare-option -docstring "list of paths in which header files will be looked fo
 define-command c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ evaluate-commands %sh{
     file="${kak_buffile##*/}"
     file_noext="${file%.*}"
-    dir=$(dirname "${kak_buffile}")
+    dir="${kak_buffile%/*}"
 
     eval "set -- ${kak_opt_altdirs}"
 
