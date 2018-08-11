@@ -327,16 +327,15 @@ define-command -hidden c-family-insert-include-guards %{
 
 hook -group c-family-insert global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
 
-declare-option -docstring "colon separated list of path in which header files will be looked for" \
-    str-list alt_dirs '.' '..'
+declare-option -docstring "list of paths in which header files will be looked for" \
+    str-list altdirs '.' '..'
 
 define-command c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ evaluate-commands %sh{
     file="${kak_buffile##*/}"
     file_noext="${file%.*}"
     dir=$(dirname "${kak_buffile}")
 
-    # Set $@ to alt_dirs
-    eval "set -- ${kak_opt_alt_dirs}"
+    eval "set -- ${kak_opt_altdirs}"
 
     case ${file} in
         *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
