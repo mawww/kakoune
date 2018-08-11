@@ -18,7 +18,7 @@ add-highlighter shared/lisp/comment region ';' '$'             fill comment
 
 add-highlighter shared/lisp/code/ regex \b(nil|true|false)\b 0:value
 add-highlighter shared/lisp/code/ regex (((\Q***\E)|(///)|(\Q+++\E)){1,3})|(1[+-])|(<|>|<=|=|>=) 0:operator
-add-highlighter shared/lisp/code/ regex \b(([':]\w+)|([*]\H+[*]))\b 0:variable
+add-highlighter shared/lisp/code/ regex [':]\w+|\*\S+\* 0:variable
 add-highlighter shared/lisp/code/ regex \b(def[a-z]+|if|do|let|lambda|catch|and|assert|while|def|do|fn|finally|let|loop|new|quote|recur|set!|throw|try|var|case|if-let|if-not|when|when-first|when-let|when-not|(cond(->|->>)?))\b 0:keyword
 
 # Commands
