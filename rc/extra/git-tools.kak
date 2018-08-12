@@ -39,6 +39,14 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     fi
   } \
   git %{ evaluate-commands %sh{
+    cd_bufdir() {
+        dirname_buffer="${kak_buffile%/*}"
+        cd "${dirname_buffer}" 2>/dev/null || {
+            printf 'echo -markup {Error}Unable to change the current working directory to: %s' "${dirname_buffer}"
+            exit 1
+        }
+    }
+
     show_git_cmd_output() {
         local filetype
         case "$1" in
@@ -61,12 +69,13 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     }
 
     run_git_blame() {
+        cd_bufdir
         (
             printf %s "evaluate-commands -client '$kak_client' %{
                       try %{ add-highlighter window/git-blame flag-lines GitBlame git_blame_flags }
-                      set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
-                  }" | kak -p ${kak_session}
-                  git blame "$@" --incremental ${kak_buffile} | awk '
+                      set-option 'buffer=${kak_bufname}' git_blame_flags '$kak_timestamp'
+                  }" | kak -p "${kak_session}"
+                  git blame "$@" --incremental "${kak_buffile}" | awk '
                   function send_flags(text, flag, i) {
                       if (line == "") { return; }
                       text=substr(sha,1,8) " " dates[sha] " " authors[sha]
@@ -97,6 +106,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     }
 
     update_diff() {
+        cd_bufdir
         git --no-pager diff -U0 "$kak_buffile" | perl -e '
             $flags = $ENV{"kak_timestamp"};
             foreach $line (<STDIN>) {
