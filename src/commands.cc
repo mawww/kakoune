@@ -1931,6 +1931,9 @@ const CommandDesc menu_cmd = {
         Vector<String> select_cmds;
         for (int i = 0; i < count; i += modulo)
         {
+            if (parser[i].empty())
+                throw runtime_error(format("entry #{} is empty", i+1));
+
             choices.push_back(markup ? parse_display_line(parser[i], context.faces())
                                      : DisplayLine{ parser[i], {} });
             commands.push_back(parser[i+1]);
