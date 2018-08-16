@@ -126,10 +126,7 @@ void HookManager::run_hook(StringView hook_name, StringView param, Context& cont
 
             if (to_run.hook->flags & HookFlags::Once)
             {
-                auto it = std::find_if(hook_list->value.begin(), hook_list->value.end(),
-                                       [&](const std::unique_ptr<Hook>& h)
-                                       { return h.get() == to_run.hook; });
-
+                auto it = find(hook_list->value, to_run.hook);
                 m_hooks_trash.push_back(std::move(*it));
                 hook_list->value.erase(it);
             }

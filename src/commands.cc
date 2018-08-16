@@ -861,8 +861,8 @@ const CommandDesc add_hook_cmd = {
         Regex regex{parser[2], RegexCompileFlags::Optimize};
         const String& command = parser[3];
         auto group = parser.get_switch("group").value_or(StringView{});
-        const auto flags = (parser.get_switch("always") ? HookFlags::Always : HookFlags::None) \
-                            | (parser.get_switch("once") ? HookFlags::Once : HookFlags::None);
+        const auto flags = (parser.get_switch("always") ? HookFlags::Always : HookFlags::None) |
+                           (parser.get_switch("once")   ? HookFlags::Once   : HookFlags::None);
         get_scope(parser[0], context).hooks().add_hook(parser[1], group.str(), flags,
                                                        std::move(regex), command);
     }
