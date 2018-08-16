@@ -208,6 +208,17 @@ pkg install kakoune
 --------------------------------------------------
 ====
 
+[TIP]
+.Solus
+====
+Kakoune is available in the Solus stable repository.
+
+It can be installed with
+---------------------
+eopkg install kakoune
+---------------------
+====
+
 Running
 ~~~~~~~
 
