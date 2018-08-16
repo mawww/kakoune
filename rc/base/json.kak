@@ -49,7 +49,6 @@ define-command -hidden json-indent-on-new-line %<
 hook -group json-highlight global WinSetOption filetype=json %{ add-highlighter window/json ref json }
 
 hook global WinSetOption filetype=json %{
-    hook window ModeChange insert:.* -group json-hooks  json-filter-around-selections
     hook window InsertChar .* -group json-indent json-indent-on-char
     hook window InsertChar \n -group json-indent json-indent-on-new-line
 }

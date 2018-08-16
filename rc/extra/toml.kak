@@ -55,7 +55,6 @@ hook -group toml-highlight global WinSetOption filetype=toml %{
 }
 
 hook global WinSetOption filetype=toml %{
-    hook window ModeChange insert:.* -group toml-hooks toml-filter-around-selections
     hook window InsertChar \n -group toml-indent toml-indent-on-new-line
 }
 

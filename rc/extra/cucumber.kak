@@ -79,7 +79,6 @@ define-command -hidden cucumber-indent-on-new-line %{
 hook -group cucumber-highlight global WinSetOption filetype=cucumber %{ add-highlighter window/cucumber ref cucumber }
 
 hook global WinSetOption filetype=cucumber %{
-    hook window ModeChange insert:.* -group cucumber-hooks  cucumber-filter-around-selections
     hook window InsertChar \n -group cucumber-indent cucumber-indent-on-new-line
 }
 

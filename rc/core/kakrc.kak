@@ -66,14 +66,19 @@ add-highlighter shared/kakrc/single_string/escape regex "''" 0:default+b
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden kak-filter-around-selections %{
+    # remove trailing white spaces
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+}
+
 define-command -hidden kak-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
+        # filter previous line
+        try %{ execute-keys -draft k : kak-filter-around-selections <ret> }
         # indent after line ending with %[\W\S]
         try %{ execute-keys -draft k <a-x> <a-k> \%[\W\S]$ <ret> j <a-gt> }
     }
@@ -86,8 +91,6 @@ hook -group kak-highlight global WinSetOption filetype=kak %{ add-highlighter wi
 
 hook global WinSetOption filetype=kak %{
     hook window InsertChar \n -group kak-indent kak-indent-on-new-line
-    # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group kak-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
     set-option buffer extra_word_chars '-'
 }
 

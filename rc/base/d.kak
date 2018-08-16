@@ -84,6 +84,11 @@ add-highlighter shared/d/code/ regex "\bmodule\s+([\w_-]+)\b" 1:module
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden d-filter-around-selections %{
+    # remove trailing whitespaces
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+}
+
 define-command -hidden d-indent-on-new-line %~
     evaluate-commands -draft -itersel %=
         # preserve previous line indent
@@ -91,7 +96,7 @@ define-command -hidden d-indent-on-new-line %~
         # indent after lines ending with { or (
         try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
+        try %{ execute-keys -draft k : d-filter-around-selections <ret> }
         # align to opening paren of previous line
         try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
         # copy // comments prefix
@@ -119,8 +124,6 @@ define-command -hidden d-indent-on-closing-curly-brace %[
 hook -group d-highlight global WinSetOption filetype=d %{ add-highlighter window/d ref d }
 
 hook global WinSetOption filetype=d %{
-    # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group d-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group d-indent d-indent-on-new-line
     hook window InsertChar \{ -group d-indent d-indent-on-opening-curly-brace
     hook window InsertChar \} -group d-indent d-indent-on-closing-curly-brace

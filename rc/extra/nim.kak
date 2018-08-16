@@ -54,16 +54,21 @@ add-highlighter shared/nim/code/ regex '#[^\n]+' 0:comment
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden nim-indent-on-new-line %{
-    eval -draft -itersel %{
+define-command -hidden nim-filter-around-selections %{
+    # remove trailing whitespaces
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+}
+
+define-command -hidden nim-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
+        try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
-        # cleanup trailing whitespaces from previous line
-        try %{ exec -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft \; K <a-&> }
+        # filter previous line
+        try %{ execute-keys -draft k : nim-filter-around-selections <ret> }
         # indent after line ending with const, let, var, ':' or '='
-        try %{ exec -draft <space> k x <a-k> (:|=|const|let|var)$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> (:|=|const|let|var)$ <ret> j <a-gt> }
     }
 }
 
@@ -74,8 +79,6 @@ hook -group nim-highlight global WinSetOption filetype=nim %{ add-highlighter wi
 
 hook global WinSetOption filetype=nim %{
     hook window InsertChar \n -group nim-indent nim-indent-on-new-line
-    # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group nim-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
 }
 
 hook -group nim-highlight global WinSetOption filetype=(?!nim).* %{ remove-highlighter window/nim }

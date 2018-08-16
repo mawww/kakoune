@@ -119,14 +119,19 @@ add-highlighter shared/python/code/ regex (?<=[\w\s\d'"_])((?<![=<>!])=(?![=])|[
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden python-filter-around-selections %{
+    # remove trailing whitespaces
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+}
+
 define-command -hidden python-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
+        # filter previous line
+        try %{ execute-keys -draft k : python-filter-around-selections <ret> }
         # indent after line ending with :
         try %{ execute-keys -draft <space> k <a-x> <a-k> :$ <ret> j <a-gt> }
     }
@@ -139,8 +144,6 @@ hook -group python-highlight global WinSetOption filetype=python %{ add-highligh
 
 hook global WinSetOption filetype=python %{
     hook window InsertChar \n -group python-indent python-indent-on-new-line
-    # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group python-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
 }
 
 hook -group python-highlight global WinSetOption filetype=(?!python).* %{ remove-highlighter window/python }

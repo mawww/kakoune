@@ -51,7 +51,6 @@ define-command -hidden sass-indent-on-new-line %{
 hook -group sass-highlight global WinSetOption filetype=sass %{ add-highlighter window/sass ref sass }
 
 hook global WinSetOption filetype=sass %{
-    hook window ModeChange insert:.* -group sass-hooks  sass-filter-around-selections
     hook window InsertChar \n -group sass-indent sass-indent-on-new-line
     set-option buffer extra_word_chars '-'
 }
