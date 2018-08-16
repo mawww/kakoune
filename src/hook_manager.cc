@@ -63,7 +63,7 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
     return res;
 }
 
-void HookManager::run_hook(StringView hook_name, StringView param, Context& context) const
+void HookManager::run_hook(StringView hook_name, StringView param, Context& context)
 {
     const bool only_always = context.hooks_disabled();
 
@@ -99,7 +99,7 @@ void HookManager::run_hook(StringView hook_name, StringView param, Context& cont
     for (auto& hook : hook_list->value)
     {
         MatchResults<const char*> captures;
-            if ((not only_always or (hook->flags & HookFlags::Always)) and
+        if ((not only_always or (hook->flags & HookFlags::Always)) and
             (hook->group.empty() or disabled_hooks.empty() or
              not regex_match(hook->group.begin(), hook->group.end(), disabled_hooks))
             and regex_match(param.begin(), param.end(), captures, hook->filter))
@@ -123,6 +123,16 @@ void HookManager::run_hook(StringView hook_name, StringView param, Context& cont
 
             CommandManager::instance().execute(to_run.hook->commands, context,
                                                { {}, std::move(env_vars) });
+
+            if (to_run.hook->flags & HookFlags::Once)
+            {
+                auto it = std::find_if(hook_list->value.begin(), hook_list->value.end(),
+                                       [&](const std::unique_ptr<Hook>& h)
+                                       { return h.get() == to_run.hook; });
+
+                m_hooks_trash.push_back(std::move(*it));
+                hook_list->value.erase(it);
+            }
         }
         catch (runtime_error& err)
         {

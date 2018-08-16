@@ -14,7 +14,8 @@ class Regex;
 enum class HookFlags
 {
     None = 0,
-    Always = 1 << 0
+    Always = 1 << 0,
+    Once = 1 << 1
 };
 constexpr bool with_bit_ops(Meta::Type<HookFlags>) { return true; }
 
@@ -29,7 +30,7 @@ public:
     void remove_hooks(StringView group);
     CandidateList complete_hook_group(StringView prefix, ByteCount pos_in_token);
     void run_hook(StringView hook_name, StringView param,
-                  Context& context) const;
+                  Context& context);
 
 private:
     HookManager();
