@@ -28,7 +28,7 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
                   edit! -fifo $dir/fifo -debug *lint-output*
                   set-option buffer filetype make
                   set-option buffer make_current_error_line 0
-                  hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r '$dir' } }
+                  hook -no-disabled -once buffer BufCloseFifo .* %{ nop %sh{ rm -r '$dir' } }
               }"
 
         { # do the parsing in the background and when ready send to the session

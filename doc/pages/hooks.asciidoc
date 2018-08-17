@@ -189,5 +189,5 @@ Finally, hook execution can be disabled while using the `execute-keys` or
 `evaluate-commands` commands by using the `-no-hooks` switch.
 (See <<execeval#,`:doc execeval`>>)
 
-As an exception to these rules, hooks declared with the `-always` switch
+As an exception to these rules, hooks declared with the `-no-disabled` switch
 are triggered no matter what. A good use case is doing some cleanup on `BufCloseFifo`.

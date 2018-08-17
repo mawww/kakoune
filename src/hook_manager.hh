@@ -13,9 +13,9 @@ class Regex;
 
 enum class HookFlags
 {
-    None = 0,
-    Always = 1 << 0,
-    Once = 1 << 1
+    None       = 0,
+    NoDisabled = 1 << 0,
+    Once       = 1 << 1
 };
 constexpr bool with_bit_ops(Meta::Type<HookFlags>) { return true; }
 

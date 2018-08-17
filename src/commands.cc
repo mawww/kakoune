@@ -841,9 +841,9 @@ const CommandDesc add_hook_cmd = {
     "            (and any window for that buffer)\n"
     "  * window: hook is executed only for the current window\n",
     ParameterDesc{
-        { { "group", { true, "set hook group, see remove-hooks" } },
-          { "always", { false, "run hook even if hooks are disabled" } },
-          { "once", { false, "run the hook only once" } } },
+        { { "group",       { true, "set hook group, see remove-hooks" } },
+          { "no-disabled", { false, "run hook even if hooks are disabled" } },
+          { "once",        { false, "run the hook only once" } } },
         ParameterDesc::Flags::None, 4, 4
     },
     CommandFlags::None,
@@ -861,8 +861,8 @@ const CommandDesc add_hook_cmd = {
         Regex regex{parser[2], RegexCompileFlags::Optimize};
         const String& command = parser[3];
         auto group = parser.get_switch("group").value_or(StringView{});
-        const auto flags = (parser.get_switch("always") ? HookFlags::Always : HookFlags::None) |
-                           (parser.get_switch("once")   ? HookFlags::Once   : HookFlags::None);
+        const auto flags = (parser.get_switch("no-disabled") ? HookFlags::NoDisabled : HookFlags::None) |
+                           (parser.get_switch("once")        ? HookFlags::Once       : HookFlags::None);
         get_scope(parser[0], context).hooks().add_hook(parser[1], group.str(), flags,
                                                        std::move(regex), command);
     }

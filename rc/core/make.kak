@@ -19,7 +19,7 @@ All the optional arguments are forwarded to the make utility} \
                edit! -fifo ${output} -scroll *make*
                set-option buffer filetype make
                set-option buffer make_current_error_line 0
-               hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+               hook -no-disabled -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
            }"
 }}
 

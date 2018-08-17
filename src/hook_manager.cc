@@ -99,7 +99,7 @@ void HookManager::run_hook(StringView hook_name, StringView param, Context& cont
     for (auto& hook : hook_list->value)
     {
         MatchResults<const char*> captures;
-        if ((not only_always or (hook->flags & HookFlags::Always)) and
+        if ((not only_always or (hook->flags & HookFlags::NoDisabled)) and
             (hook->group.empty() or disabled_hooks.empty() or
              not regex_match(hook->group.begin(), hook->group.end(), disabled_hooks))
             and regex_match(param.begin(), param.end(), captures, hook->filter))
