@@ -27,9 +27,12 @@ All the optional arguments are forwarded to the grep utility} \
            }"
 }}
 
+set-face global filename cyan
+set-face global colrow green
+
 hook -group grep-highlight global WinSetOption filetype=grep %{
     add-highlighter window/grep group
-    add-highlighter window/grep/ regex "^((?:\w:)?[^:\n]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
+    add-highlighter window/grep/ regex "^((?:\w:)?[^:\n]+):(\d+):(\d+)?" 1:filename 2:colrow 3:colrow
     add-highlighter window/grep/ line %{%opt{grep_current_line}} default+b
 }
 

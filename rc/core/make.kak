@@ -26,9 +26,12 @@ All the optional arguments are forwarded to the make utility} \
            }"
 }}
 
+set-face global filename cyan
+set-face global colrow green
+
 add-highlighter shared/make group
-add-highlighter shared/make/ regex "^((?:\w:)?[^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
-add-highlighter shared/make/ regex "^\h*(~*(?:(\^)~*)?)$" 1:green 2:cyan+b
+add-highlighter shared/make/ regex "^((?:\w:)?[^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:filename 2:colrow 3:colrow 4:error 5:warning 6:information 7:keyword
+add-highlighter shared/make/ regex "^\h*(~*(?:(\^)~*)?)$" 1:colrow 2:filename+b
 add-highlighter shared/make/ line '%opt{make_current_error_line}' default+b
 
 hook -group make-highlight global WinSetOption filetype=make %{ add-highlighter window/make ref make }

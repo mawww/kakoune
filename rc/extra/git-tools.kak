@@ -3,25 +3,26 @@ declare-option -docstring "name of the client in which documentation is to be di
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
     add-highlighter window/git-log group
-    add-highlighter window/git-log/ regex '^(commit) ([0-9a-f]+)$' 1:yellow 2:red
-    add-highlighter window/git-log/ regex '^([a-zA-Z_-]+:) (.*?)$' 1:green 2:magenta
+    add-highlighter window/git-log/ regex '^(commit) ([0-9a-f]+)$' 1:keyword 2:meta
+    add-highlighter window/git-log/ regex '^([a-zA-Z_-]+:) (.*?)$' 1:variable 2:value
     add-highlighter window/git-log/ ref diff # highlight potential diffs from the -p option
 }
 
 hook -group git-log-highlight global WinSetOption filetype=(?!git-log).* %{ remove-highlighter window/git-log }
 
+set-face global diffadd green
+set-face global diffremove red
+set-face global diffmeta cyan
+
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
     add-highlighter window/git-status group
-    add-highlighter window/git-status/ regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
+    add-highlighter window/git-status/ regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed|copied):)(?:.*?)$' 1:keyword 2:diffadd 3:diffremove 4:diffmeta 5:meta
 }
 
 hook -group git-status-highlight global WinSetOption filetype=(?!git-status).* %{ remove-highlighter window/git-status }
 
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden line-specs git_diff_flags
-
-set-face global GitBlame default,magenta
-set-face global GitDiffFlags default,black
 
 define-command -params 1.. \
   -docstring %sh{printf 'git [<arguments>]: git wrapping helper
@@ -63,7 +64,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     run_git_blame() {
         (
             printf %s "evaluate-commands -client '$kak_client' %{
-                      try %{ add-highlighter window/git-blame flag-lines GitBlame git_blame_flags }
+                      try %{ add-highlighter window/git-blame flag-lines Information git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
                   git blame "$@" --incremental ${kak_buffile} | awk '
@@ -109,39 +110,39 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                     if ($from_count == 0 and $to_count > 0) {
                         for $i (0..$to_count - 1) {
                             $line = $to_line + $i;
-                            $flags .= " $line|\{green\}+";
+                            $flags .= " $line|\{diffadd\}+";
                         }
                     }
                     elsif ($from_count > 0 and $to_count == 0) {
                         if ($to_line == 0) {
-                            $flags .= " 1|\{red\}‾";
+                            $flags .= " 1|\{diffremove\}‾";
                         } else {
-                            $flags .= " $to_line|\{red\}_";
+                            $flags .= " $to_line|\{diffremove\}_";
                         }
                     }
                     elsif ($from_count > 0 and $from_count == $to_count) {
                         for $i (0..$to_count - 1) {
                             $line = $to_line + $i;
-                            $flags .= " $line|\{blue\}~";
+                            $flags .= " $line|\{diffmeta\}~";
                         }
                     }
                     elsif ($from_count > 0 and $from_count < $to_count) {
                         for $i (0..$from_count - 1) {
                             $line = $to_line + $i;
-                            $flags .= " $line|\{blue\}~";
+                            $flags .= " $line|\{diffmeta\}~";
                         }
                         for $i ($from_count..$to_count - 1) {
                             $line = $to_line + $i;
-                            $flags .= " $line|\{green\}+";
+                            $flags .= " $line|\{diffadd\}+";
                         }
                     }
                     elsif ($to_count > 0 and $from_count > $to_count) {
                         for $i (0..$to_count - 2) {
                             $line = $to_line + $i;
-                            $flags .= " $line|\{blue\}~";
+                            $flags .= " $line|\{diffmeta\}~";
                         }
                         $last = $to_line + $to_count - 1;
-                        $flags .= " $last|\{blue+u\}~";
+                        $flags .= " $last|\{diffmeta+u\}~";
                     }
                 }
             }
@@ -185,7 +186,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
             }"
             ;;
        show-diff)
-           echo 'try %{ add-highlighter window/git-diff flag-lines GitDiffFlags git_diff_flags }'
+           echo 'try %{ add-highlighter window/git-diff flag-lines Default git_diff_flags }'
            update_diff
            ;;
        update-diff) update_diff ;;
