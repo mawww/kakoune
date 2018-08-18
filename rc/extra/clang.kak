@@ -24,10 +24,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                   edit! -fifo ${dir}/fifo -debug *clang-output*
                   set-option buffer filetype make
                   set-option buffer make_current_error_line 0
-                  hook -always -group fifo buffer BufCloseFifo .* %{
-                      nop %sh{ rm -r ${dir} }
-                      remove-hooks buffer fifo
-                  }
+                  hook -once -always buffer BufCloseFifo .* %{ nop %sh{ rm -r ${dir} } }
               }"
         # this runs in a detached shell, asynchronously, so that kakoune does
         # not hang while clang is running. As completions references a cursor

@@ -53,10 +53,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
                   set-option buffer filetype '${filetype}'
-                  hook -always -group fifo buffer BufCloseFifo .* %{
-                      nop %sh{ rm -r $(dirname ${output}) }
-                      remove-hooks buffer fifo
-                  }
+                  hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
               }"
     }
 
