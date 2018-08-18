@@ -17,6 +17,11 @@
 namespace Kakoune
 {
 
+struct invalid_rpc_request : runtime_error {
+    invalid_rpc_request(String message)
+        : runtime_error(format("invalid json rpc request ({})", message)) {}
+};
+
 template<typename T>
 String to_json(ArrayView<const T> array)
 {
@@ -366,27 +371,38 @@ parse_json(StringView json) { return parse_json(json.begin(), json.end()); }
 void JsonUI::eval_json(const Value& json)
 {
     if (not json.is_a<JsonObject>())
-        throw runtime_error("json request is not an object");
+        throw invalid_rpc_request("request is not an object");
 
     const JsonObject& object = json.as<JsonObject>();
     auto json_it = object.find("jsonrpc"_sv);
-    if (json_it == object.end() or json_it->value.as<String>() != "2.0")
-        throw runtime_error("invalid json rpc request");
+    if (json_it == object.end() or
+        not json_it->value.is_a<String>() or
+        json_it->value.as<String>() != "2.0")
+        throw invalid_rpc_request("only protocol '2.0' is supported");
+    else if (not json_it->value.is_a<String>())
+        throw invalid_rpc_request("'jsonrpc' is not a string");
 
     auto method_it = object.find("method"_sv);
     if (method_it == object.end())
-        throw runtime_error("invalid json rpc request (method missing)");
+        throw invalid_rpc_request("method missing");
+    else if (not method_it->value.is_a<String>())
+        throw invalid_rpc_request("'method' is not a string");
     StringView method = method_it->value.as<String>();
 
     auto params_it = object.find("params"_sv);
     if (params_it == object.end())
-        throw runtime_error("invalid json rpc request (params missing)");
+        throw invalid_rpc_request("params missing");
+    else if (not params_it->value.is_a<JsonArray>())
+        throw invalid_rpc_request("'params' is not an array");
     const JsonArray& params = params_it->value.as<JsonArray>();
 
     if (method == "keys")
     {
         for (auto& key_val : params)
         {
+            if (not key_val.is_a<String>())
+                throw invalid_rpc_request("'keys' is not an array of strings");
+
             for (auto& key : parse_keys(key_val.as<String>()))
                 m_on_key(key);
         }
@@ -394,7 +410,13 @@ void JsonUI::eval_json(const Value& json)
     else if (method == "mouse")
     {
         if (params.size() != 3)
-            throw runtime_error("mouse type/coordinates not specified");
+            throw invalid_rpc_request("mouse type/coordinates not specified");
+
+        if (not params[0].is_a<String>())
+            throw invalid_rpc_request("mouse type is not a string");
+        else if (not params[1].is_a<int>() or
+                 not params[2].is_a<int>())
+            throw invalid_rpc_request("mouse coordinates are not integers");
 
         const StringView type = params[0].as<String>();
         const Codepoint coord = encode_coord({params[1].as<int>(), params[2].as<int>()});
@@ -409,25 +431,31 @@ void JsonUI::eval_json(const Value& json)
         else if (type == "wheel_down")
             m_on_key({Key::Modifiers::MouseWheelDown, coord});
         else
-            throw runtime_error(format("invalid mouse event type: {}", type));
+            throw invalid_rpc_request(format("invalid mouse event type: {}", type));
     }
     else if (method == "menu_select")
     {
         if (params.size() != 1)
-            throw runtime_error("menu_select needs the item index");
+            throw invalid_rpc_request("menu_select needs the item index");
+        else if (not params[0].is_a<int>())
+            throw invalid_rpc_request("menu index is not an integer");
+
         m_on_key({Key::Modifiers::MenuSelect, (Codepoint)params[0].as<int>()});
     }
     else if (method == "resize")
     {
         if (params.size() != 2)
             throw runtime_error("resize expects 2 parameters");
+        else if (not params[0].is_a<int>() or
+                 not params[1].is_a<int>())
+            throw invalid_rpc_request("width and height are not integers");
 
         DisplayCoord dim{params[0].as<int>(), params[1].as<int>()};
         m_dimensions = dim;
         m_on_key(resize(dim));
     }
     else
-        throw runtime_error("unknown method");
+        throw invalid_rpc_request(format("unknown method: {}", method));
 }
 
 void JsonUI::parse_requests(EventMode mode)
