@@ -52,7 +52,7 @@ when the commands have been executed: */*, *"*, *|*, *^*, *@*.
 
 *-no-hooks*::
     disable hook execution while executing the keys/commands
-    (See <<hooks#,`:doc hooks`>>)
+    (See <<hooks#disabling-hooks,`:doc hooks`>>)
 
 == execute-keys specific switches
 

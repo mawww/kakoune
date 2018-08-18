@@ -177,7 +177,8 @@ are exclusively available to built-in options.
 
 *disabled_hooks* `regex`::
     hooks whose group matches this regex won't be executed. For example
-    indentation hooks can be disabled with `.*-indent`
+    indentation hooks can be disabled with `.*-indent`.
+    (See <<hooks#disabling-hooks,`:doc hooks`>>)
 
 *filetype* `str`::
     arbitrary string defining the type of the file filetype dependant

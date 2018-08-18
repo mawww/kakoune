@@ -18,19 +18,21 @@ is called.
 For example to automatically use line numbering with .cc files, use the
 following command:
 
-----------------------------------------------------
+--------------------------------------------------------------
 hook global WinCreate .*\.cc %{ add-highlighter number-lines }
-----------------------------------------------------
+--------------------------------------------------------------
 
 If *group* is given, make this hook part of the named group. Groups are used
 for removing hooks with the following command:
 
------------------------
+----------------------------
 remove-hooks <scope> <group>
------------------------
+----------------------------
 
 A call to the command above will remove every hooks in *scope* that are part
 of the given *group*.
+
+Hooks declared with the `-once` switch are automatically removed after running.
 
 == Default hooks
 
@@ -152,7 +154,7 @@ of the given *group*.
 *InsertCompletionSelect* `selected completion`::
     Triggered when an entry is selected in the insert completion
     menu. The filtering text is the selected completion text or
-    the empty string if the original text was selected back.
+    the empty string if the original text was selected back
 
 *RawKey* `key`::
     Triggered whenever a key is pressed by the user
@@ -186,3 +188,6 @@ For example indentation hooks can be disabled with '.*-indent'.
 Finally, hook execution can be disabled while using the `execute-keys` or
 `evaluate-commands` commands by using the `-no-hooks` switch.
 (See <<execeval#,`:doc execeval`>>)
+
+As an exception to these rules, hooks declared with the `-always` switch
+are triggered no matter what. A good use case is doing some cleanup on `BufCloseFifo`.
