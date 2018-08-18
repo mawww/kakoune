@@ -7,7 +7,7 @@ kak - a vim inspired, selection oriented code editor
 
 SYNOPSIS
 --------
-*kak* [-help] [-q] [-n] [-l] [-ro] [-clear] [-ui ui_type] [-e command] [-E command] [-f keys] [-p session_id] [-c session_id|[[-d] -s session_id] [+line[:column]|+:] file ...
+*kak* [-help] [-version] [-q] [-n] [-l] [-ro] [-clear] [-ui ui_type] [-e command] [-E command] [-f keys] [-p session_id] [-c session_id|[[-d] -s session_id] [+line[:column]|+:] file ...
 
 DESCRIPTION
 -----------
@@ -28,6 +28,9 @@ OPTIONS
 -------
 -help::
 	display a help message and quit
+
+-version::
+	display kakoune version and quit
 
 -n::
 	do not load resource files on startup ('kakrc', 'autoload', 'rc' etc)
