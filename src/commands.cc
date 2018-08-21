@@ -439,7 +439,7 @@ void kill(const ParametersParser& parser, Context& context, const ShellContext&)
 {
     auto& client_manager = ClientManager::instance();
 
-    if (not force and client_manager.count() == 1)
+    if (not force)
         ensure_all_buffers_are_saved();
 
     const int status = parser.positional_count() > 0 ? str_to_int(parser[0]) : 0;
