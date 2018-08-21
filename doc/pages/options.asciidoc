@@ -77,10 +77,13 @@ are exclusively available to built-in options.
 
 *coord*::
     a line, column pair (separated by a comma)
+    Cannot be used with `declare-option`
 
 *<type>-list*::
     a list, elements are specified as separate arguments to the command.
     `set -add` appends the new element to the list
+    Only `int-list` and `str-list` options can be created with
+    `declare-option`.
 
 *range-specs*::
     a list of a pair of a buffer range (`<begin line>.<begin column>,
@@ -110,11 +113,13 @@ are exclusively available to built-in options.
 
 *enum(value1|value2|...)*::
     an enum, taking one of the given values
+    Cannot be used with `declare-option`
 
 *flags(value1|value2|...)*::
     a set of flags, taking a combination of the given values joined by a
     '|' character.
     `set -add` adds the new flag to the combination
+    Cannot be used with `declare-option`
 
 *<type>-to-<type>-map*::
     a list of `key=value` pairs.
