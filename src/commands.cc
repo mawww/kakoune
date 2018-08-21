@@ -1446,7 +1446,8 @@ const CommandDesc declare_option_cmd = {
     "    str-list: list of character strings\n"
     "    completions: list of completion candidates\n"
     "    line-specs: list of line specs\n"
-    "    range-specs: list of range specs\n",
+    "    range-specs: list of range specs\n"
+    "    str-to-str-map: map from strings to strings\n",
     ParameterDesc{
         { { "hidden",    { false, "do not display option name when completing" } },
           { "docstring", { true,  "specify option description" } } },
@@ -1457,7 +1458,7 @@ const CommandDesc declare_option_cmd = {
     make_completer(
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
-               auto c = {"int", "bool", "str", "regex", "int-list", "str-list", "completions", "line-specs", "range-specs"};
+               auto c = {"int", "bool", "str", "regex", "int-list", "str-list", "completions", "line-specs", "range-specs", "str-to-str-map"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
@@ -1490,6 +1491,8 @@ const CommandDesc declare_option_cmd = {
             opt = &reg.declare_option<TimestampedList<LineAndSpec>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "range-specs")
             opt = &reg.declare_option<TimestampedList<RangeAndString>>(parser[1], docstring, {}, flags);
+        else if (parser[0] == "str-to-str-map")
+            opt = &reg.declare_option<HashMap<String, String, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
         else
             throw runtime_error(format("no such option type: '{}'", parser[0]));
 

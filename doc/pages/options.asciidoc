@@ -120,6 +120,7 @@ are exclusively available to built-in options.
     a list of `key=value` pairs.
     `set -add` adds the new pair to the hashmap or replace an already
     existing key.
+    Only `str-to-str-map` options can be created with `declare-option`.
 
 == Builtin options
 
