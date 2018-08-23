@@ -32,11 +32,16 @@ command *q!* has to be used). Aliases are mentionned below each commands.
     *alias* wa +
     write all buffers that are associated to a file
 
-*quit!* [<exit status>]::
+*quit[!]* [<exit status>]::
     *alias* q +
     exit Kakoune, use quit! to force quitting even if there is some
     unsaved buffers remaining. If specified, the client exit status
     will be set to <exit status>
+
+*write-quit[!]* [<exit status>]::
+    *alias* wq +
+    write current buffer and quit current client. If specified, the client
+    exit status will be set to <exit status>
 
 *write-all-quit* [<exit status>]::
     *alias* waq +
