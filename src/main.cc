@@ -956,7 +956,7 @@ int main(int argc, char* argv[])
         const bool clear_sessions = (bool)parser.get_switch("clear");
         if (list_sessions or clear_sessions)
         {
-            const String username = get_user_name(geteuid());
+            const String username = get_user_name();
             const StringView tmp_dir = tmpdir();
             for (auto& session : list_files(format("{}/kakoune/{}/", tmp_dir,
                                                    username)))

@@ -44,7 +44,7 @@ private:
 };
 
 void send_command(StringView session, StringView command);
-String get_user_name(int uid);
+String get_user_name();
 
 struct Server : public Singleton<Server>
 {
