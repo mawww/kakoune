@@ -185,12 +185,12 @@ are exclusively available to built-in options.
     actions should hook on this option changing for activation/deactivation
 
 *path* `str-list`::
-    _default_ ./:%/:/usr/include +
+    _default_ ./ %/ /usr/include +
     directories to search for *gf* command and filenames completion
     `%/` represents the current buffer directory
 
 *completers* `completer-list`::
-    _default_ filename:word=all +
+    _default_ filename word=all +
     completion engines to use for insert mode completion (they are tried
     in order until one generates candidates). Existing completers are:
 
@@ -218,7 +218,7 @@ are exclusively available to built-in options.
     as word character.
 
 *matching_pairs* `codepoint-list`::
-    _default_ `(:):{:}:[:]:<:>`
+    _default_ ( ) { } [ ] < > +
     a list of codepoints that are to be treated as matching pairs
     for the *m* command.
 
