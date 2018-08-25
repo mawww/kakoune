@@ -2,7 +2,7 @@ Interfacing Kakoune with external programs
 ==========================================
 
 In order to interact with the external world, Kakoune uses the shell, mainly
-through the +%sh{ ... }+ string type, and it's control socket.
+through the +%sh{ ... }+ string type, and its control socket.
 
 Basic interaction
 -----------------
@@ -10,7 +10,7 @@ Basic interaction
 For synchronous operations, +%sh{ ... }+ blocks are easy to use, they behave
 similarly to +$( ... )+ shell construct.
 
-For example, one can echo the current time in Kakoune status line using:
+For example, one can echo the current time in Kakoune's status line using:
 
 [source,bash]
 ----
@@ -18,7 +18,7 @@ For example, one can echo the current time in Kakoune status line using:
 ----
 
 For asynchronous operations, the Kakoune Unix stream socket can be used. This
-is the same socket that Kakoune clients connect to. It is available through
+is the same socket that Kakoune clients connect to. It is available through the
 +kak_session+ environment variable: the socket is
 +/tmp/kakoune/${username}/${kak_session}+
 
@@ -26,11 +26,11 @@ For example, we can echo a message in Kakoune in 10 seconds with:
 
 [source,bash]
 ----
-:nop %sh{ (
+:nop %sh{ {
     sleep 10
     echo "eval -client '$kak_client' 'echo sleep ended'" |
         kak -p ${kak_session}
-) > /dev/null 2>&1 < /dev/null & }
+} > /dev/null 2>&1 < /dev/null & }
 ----
 
  * The +nop+ command is used so that any eventual output from the
@@ -39,9 +39,9 @@ For example, we can echo a message in Kakoune in 10 seconds with:
    client's context the command should be evaluated. A temporary
    context is used, which does not have any user interface, so if we want
    to interact with the user, we need to use the +eval+ command, with
-   it's +-client+ option to send commands to a specific client.
+   its +-client+ option to send commands to a specific client.
  * For the command to run asynchronously, we wrap it in a sub shell
-   with parenthesis, redirect it's +std{in,err,out}+ to +/dev/null+, and
+   with braces, redirect its +std{in,err,out}+ to +/dev/null+, and
    run it in background with +&+. Using this pattern, the shell does
    not wait for this sub shell to finish before quitting.
 
@@ -60,7 +60,7 @@ evaluate-commands %sh{
      output=$(mktemp -d -t kak-temp-XXXXXXXX)/fifo
      mkfifo ${output}
      # run command detached from the shell
-     ( run command here > ${output} ) > /dev/null 2>&1 < /dev/null &
+     { run command here > ${output} } > /dev/null 2>&1 < /dev/null &
      # Open the file in Kakoune and add a hook to remove the fifo
      echo "edit! -fifo ${output} *buffer-name*
            hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output})} }"
@@ -68,7 +68,7 @@ evaluate-commands %sh{
 -----
 
 This is a very simple example, most of the time, the echo command will as
-well contains
+well contain
 
 -----
 set buffer filetype <...>
@@ -85,7 +85,7 @@ External completions are provided using an option to store completion, which
 have the following format.
 
 ----
-line.column[+len]@timestamp:candidate1|desc1|menu1:candidate2|desc2|menu2:...
+line.column[+len]@timestamp candidate1|desc1|menu1 candidate2|desc2|menu2 ...
 ----
 
 the first element of this string list specify where and when this completion
@@ -97,7 +97,7 @@ To effectively use that completion option, it should get added to the completers
 option.
 
 ---
-set buffer completers "option=my_option_name:%opt{completers}"
+set -add buffer completers option=my_option_name
 ---
 
 As a completion program may take some time to compute the candidates, it should
@@ -108,10 +108,10 @@ run asynchronously. In order to do that, the following pattern may be used:
 # Declare the option which will store the temporary filename
 decl str plugin_filename
 # Declare the completion option
-decl str plugin_completions
+decl completions plugin_completions
 # Add plugin_completions to completers for files of good filetype
 hook global BufSetOption filetype=my_filetype %{
-    set -add buff completers option=plugin_completions
+    set -add buffer completers option=plugin_completions
 }
 evaluate-commands %sh{
     # ask Kakoune to write current buffer to temporary file
@@ -119,20 +119,20 @@ evaluate-commands %sh{
     echo "set buffer plugin_filename '$filename'
           write '$filename'"
 }
-# End the %sh{} so that it's output gets executed by Kakoune.
+# End the %sh{} so that its output gets executed by Kakoune.
 # Use a nop so that any eventual output of this %sh does not get interpreted.
-nop %sh{ ( # launch a detached shell
+nop %sh{ { # launch a detached shell
     buffer="${kak_opt_plugin_filename}"
     line="${kak_cursor_line}"
     column="${kak_cursor_column}"
-    # run completer program and put output in colon separated format
+    # run completer program and format the output in a list of completions
     candidates=$(completer $buffer $line $column | completer_filter)
     # remove temporary file
     rm $buffer
     # generate completion option value
-    completions="$line.$column@$kak_timestamp:$candidates"
+    completions="$line.$column@$kak_timestamp $candidates"
     # write to Kakoune socket for the buffer that triggered the completion
-    echo "set buffer=${kak_bufname} plugin_completions '$completions'" |
+    echo "set buffer=${kak_bufname} plugin_completions $completions" |
         kak -p ${kak_session}
-) > /dev/null 2>&1 < /dev/null & }
+} > /dev/null 2>&1 < /dev/null & }
 -----
