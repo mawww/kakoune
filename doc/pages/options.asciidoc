@@ -181,7 +181,7 @@ are exclusively available to built-in options.
     (See <<hooks#disabling-hooks,`:doc hooks`>>)
 
 *filetype* `str`::
-    arbitrary string defining the type of the file filetype dependant
+    arbitrary string defining the type of the file. Filetype dependent
     actions should hook on this option changing for activation/deactivation
 
 *path* `str-list`::
