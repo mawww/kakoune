@@ -663,9 +663,19 @@ Completions CommandManager::complete(const Context& context,
         }
 
         auto command_it = find_command(context, command_name);
-        if (command_it == m_commands.end() or
-            not command_it->value.completer)
-            return Completions();
+        if (command_it == m_commands.end())
+            return Completions{};
+
+        if (token.content.substr(0_byte, 1_byte) == "-")
+        {
+            auto switches = Kakoune::complete(token.content.substr(1_byte), cursor_pos_in_token,
+                                              command_it->value.param_desc.switches |
+                                              transform(&SwitchMap::Item::key));
+            if (not switches.empty())
+                return Completions{start+1, cursor_pos, std::move(switches)};
+        }
+        if (not command_it->value.completer)
+            return Completions{};
 
         Vector<String> params;
         for (auto it = tokens.begin() + 1; it != tokens.end(); ++it)
