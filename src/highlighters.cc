@@ -954,83 +954,87 @@ struct TabulationHighlighter : Highlighter
     }
 };
 
-void show_whitespaces(HighlightContext context, DisplayBuffer& display_buffer, BufferRange,
-                      StringView tab, StringView tabpad,
-                      StringView spc, StringView lf, StringView nbsp)
+struct ShowWhitespacesHighlighter : Highlighter
 {
-    const int tabstop = context.context.options()["tabstop"].get<int>();
-    auto whitespaceface = context.context.faces()["Whitespace"];
-    auto& buffer = context.context.buffer();
-    auto win_column = context.setup.window_pos.column;
-    for (auto& line : display_buffer.lines())
+    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp)
+      : Highlighter{HighlightPass::Move}, m_tab{std::move(tab)}, m_tabpad{std::move(tabpad)},
+        m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}
+    {}
+
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
-        for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
+        static const ParameterDesc param_desc{
+            { { "tab", { true, "" } },
+              { "tabpad", { true, "" } },
+              { "spc", { true, "" } },
+              { "lf", { true, "" } },
+              { "nbsp", { true, "" } } },
+            ParameterDesc::Flags::None, 0, 0
+        };
+        ParametersParser parser(params, param_desc);
+
+        auto get_param = [&](StringView param,  StringView fallback) {
+            StringView value = parser.get_switch(param).value_or(fallback);
+            if (value.char_length() != 1)
+                throw runtime_error{format("-{} expects a single character parameter", param)};
+            return value.str();
+        };
+
+        return std::make_unique<ShowWhitespacesHighlighter>(
+            get_param("tab", "→"), get_param("tabpad", " "), get_param("spc", "·"),
+            get_param("lf", "¬"), get_param("nbsp", "⍽"));
+    }
+
+private:
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
+    {
+        const int tabstop = context.context.options()["tabstop"].get<int>();
+        auto whitespaceface = context.context.faces()["Whitespace"];
+        auto& buffer = context.context.buffer();
+        auto win_column = context.setup.window_pos.column;
+        for (auto& line : display_buffer.lines())
         {
-            if (atom_it->type() != DisplayAtom::Range)
-                continue;
-
-            auto begin = get_iterator(buffer, atom_it->begin());
-            auto end = get_iterator(buffer, atom_it->end());
-            for (BufferIterator it = begin; it != end; )
+            for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
             {
-                auto coord = it.coord();
-                Codepoint cp = utf8::read_codepoint(it, end);
-                if (cp == '\t' or cp == ' ' or cp == '\n' or cp == 0xA0)
-                {
-                    if (coord != begin.coord())
-                        atom_it = ++line.split(atom_it, coord);
-                    if (it != end)
-                        atom_it = line.split(atom_it, it.coord());
+                if (atom_it->type() != DisplayAtom::Range)
+                    continue;
 
-                    if (cp == '\t')
+                auto begin = get_iterator(buffer, atom_it->begin());
+                auto end = get_iterator(buffer, atom_it->end());
+                for (BufferIterator it = begin; it != end; )
+                {
+                    auto coord = it.coord();
+                    Codepoint cp = utf8::read_codepoint(it, end);
+                    if (cp == '\t' or cp == ' ' or cp == '\n' or cp == 0xA0)
                     {
-                        const ColumnCount column = get_column(buffer, tabstop, coord);
-                        const ColumnCount count = tabstop - (column % tabstop) -
-                                                  std::max(win_column - column, 0_col);
-                        atom_it->replace(tab + String(tabpad[(CharCount)0], count - tab.column_length()));
+                        if (coord != begin.coord())
+                            atom_it = ++line.split(atom_it, coord);
+                        if (it != end)
+                            atom_it = line.split(atom_it, it.coord());
+
+                        if (cp == '\t')
+                        {
+                            const ColumnCount column = get_column(buffer, tabstop, coord);
+                            const ColumnCount count = tabstop - (column % tabstop) -
+                                                      std::max(win_column - column, 0_col);
+                            atom_it->replace(m_tab + String(m_tabpad[(CharCount)0], count - m_tab.column_length()));
+                        }
+                        else if (cp == ' ')
+                            atom_it->replace(m_spc);
+                        else if (cp == '\n')
+                            atom_it->replace(m_lf);
+                        else if (cp == 0xA0)
+                            atom_it->replace(m_nbsp);
+                        atom_it->face = merge_faces(atom_it->face, whitespaceface);
+                        break;
                     }
-                    else if (cp == ' ')
-                        atom_it->replace(spc.str());
-                    else if (cp == '\n')
-                        atom_it->replace(lf.str());
-                    else if (cp == 0xA0)
-                        atom_it->replace(nbsp.str());
-                    atom_it->face = merge_faces(atom_it->face, whitespaceface);
-                    break;
                 }
             }
         }
     }
-}
 
-std::unique_ptr<Highlighter> show_whitespaces_factory(HighlighterParameters params, Highlighter*)
-{
-    static const ParameterDesc param_desc{
-        { { "tab", { true, "" } },
-          { "tabpad", { true, "" } },
-          { "spc", { true, "" } },
-          { "lf", { true, "" } },
-          { "nbsp", { true, "" } } },
-        ParameterDesc::Flags::None, 0, 0
-    };
-    ParametersParser parser(params, param_desc);
-
-    auto get_param = [&](StringView param,  StringView fallback) {
-        StringView value = parser.get_switch(param).value_or(fallback);
-        if (value.char_length() != 1)
-            throw runtime_error{format("-{} expects a single character parameter", param)};
-        return value.str();
-    };
-
-    using namespace std::placeholders;
-    auto func = std::bind(show_whitespaces, _1, _2, _3,
-                          get_param("tab", "→"), get_param("tabpad", " "),
-                          get_param("spc", "·"),
-                          get_param("lf", "¬"),
-                          get_param("nbsp", "⍽"));
-
-    return make_highlighter(std::move(func), HighlightPass::Move);
-}
+    const String m_tab, m_tabpad, m_spc, m_lf, m_nbsp;
+};
 
 struct LineNumbersHighlighter : Highlighter
 {
@@ -2143,7 +2147,7 @@ void register_highlighters()
           "Apply the MatchingChar face to the char matching the one under the cursor" } });
     registry.insert({
         "show-whitespaces",
-        { show_whitespaces_factory,
+        { ShowWhitespacesHighlighter::create,
           "Display whitespaces using symbols \n"
           "Parameters: -tab <separator> -tabpad <separator> -lf <separator> -spc <separator> -nbsp <separator>\n" } });
     registry.insert({
