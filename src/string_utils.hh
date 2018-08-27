@@ -135,6 +135,23 @@ inline String quote(StringView s)
     return format("'{}'", double_up(s, "'"));
 }
 
+inline String shell_quote(StringView s)
+{
+    return format("'{}'", replace(s, "'", R"('\'')"));
+}
+
+enum class Quoting
+{
+    Kakoune,
+    Shell
+};
+
+inline auto quoter(Quoting quoting)
+{
+    return quoting == Quoting::Kakoune ? &quote : &shell_quote;
+}
+
+
 }
 
 #endif // string_utils_hh_INCLUDED

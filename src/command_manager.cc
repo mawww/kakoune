@@ -253,7 +253,7 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
 
 auto expand_option(Option& opt, std::true_type)
 {
-    return opt.get_as_string();
+    return opt.get_as_string(Quoting::Kakoune);
 }
 
 auto expand_option(Option& opt, std::false_type)
@@ -314,7 +314,7 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
         auto it = shell_context.env_vars.find(content);
         if (it != shell_context.env_vars.end())
             return {it->value};
-        return {ShellManager::instance().get_val(content, context)};
+        return {ShellManager::instance().get_val(content, context, Quoting::Kakoune)};
     }
     case Token::Type::ArgExpand:
     {

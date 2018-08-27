@@ -18,6 +18,13 @@
 namespace Kakoune
 {
 
+template<typename T>
+std::enable_if_t<std::is_same<decltype(option_to_string(std::declval<T>())), String>::value, String>
+option_to_string(const T& value, Quoting)
+{
+    return option_to_string(value);
+}
+
 template<typename T, typename... Rest>
 constexpr bool option_needs_quoting(Meta::Type<T> type, Meta::Type<Rest>... rest)
 {
@@ -25,10 +32,10 @@ constexpr bool option_needs_quoting(Meta::Type<T> type, Meta::Type<Rest>... rest
 }
 
 template<typename... Ts>
-String quote_ifn(String str)
+String quote_ifn(String str, Quoting quoting)
 {
     if (option_needs_quoting(Meta::Type<Ts>{}...))
-        return quote(std::move(str));
+        return quoter(quoting)(std::move(str));
     return str;
 }
 
@@ -89,9 +96,9 @@ Vector<String> option_to_strings(const Vector<T, domain>& opt)
 }
 
 template<typename T, MemoryDomain domain>
-String option_to_string(const Vector<T, domain>& opt)
+String option_to_string(const Vector<T, domain>& opt, Quoting quoting)
 {
-    return join(opt | transform([](const T& t) { return quote_ifn<T>(option_to_string(t)); }), ' ', false);
+    return join(opt | transform([=](const T& t) { return quote_ifn<T>(option_to_string(t), quoting); }), ' ', false);
 }
 
 template<typename T, MemoryDomain domain>
@@ -135,13 +142,13 @@ Vector<String> option_to_strings(const HashMap<Key, Value, domain>& opt)
 }
 
 template<typename Key, typename Value, MemoryDomain domain>
-String option_to_string(const HashMap<Key, Value, domain>& opt)
+String option_to_string(const HashMap<Key, Value, domain>& opt, Quoting quoting)
 {
-    return join(opt | transform([](auto&& item) {
+    return join(opt | transform([=](auto&& item) {
         return quote_ifn<Key, Value>(
             format("{}={}",
                    escape(option_to_string(item.key), '=', '\\'),
-                   escape(option_to_string(item.value), '=', '\\')));
+                   escape(option_to_string(item.value), '=', '\\')), quoting);
     }), ' ', false);
 }
 
@@ -335,9 +342,9 @@ inline Vector<String> option_to_strings(const PrefixedList<P, T>& opt)
 }
 
 template<typename P, typename T>
-inline String option_to_string(const PrefixedList<P, T>& opt)
+inline String option_to_string(const PrefixedList<P, T>& opt, Quoting quoting)
 {
-    return option_to_string(opt.prefix) + " " + option_to_string(opt.list);
+    return option_to_string(opt.prefix, quoting) + " " + option_to_string(opt.list, quoting);
 }
 
 template<typename P, typename T>

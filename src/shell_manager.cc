@@ -138,7 +138,7 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
         try
         {
             const String& value = var_it != shell_context.env_vars.end() ?
-                var_it->value : ShellManager::instance().get_val(name, context);
+                var_it->value : ShellManager::instance().get_val(name, context, Quoting::Shell);
 
             kak_env.push_back(format("kak_{}={}", name, value));
         } catch (runtime_error&) {}
@@ -312,7 +312,7 @@ std::pair<String, int> ShellManager::eval(
     return { std::move(stdout_contents), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
 }
 
-String ShellManager::get_val(StringView name, const Context& context) const
+String ShellManager::get_val(StringView name, const Context& context, Quoting quoting) const
 {
     auto env_var = find_if(m_env_vars, [name](const EnvVarDesc& desc) {
         return desc.prefix ? prefix_match(name, desc.str) : name == desc.str;
@@ -321,7 +321,7 @@ String ShellManager::get_val(StringView name, const Context& context) const
     if (env_var == m_env_vars.end())
         throw runtime_error("no such env var: " + name);
 
-    return env_var->func(name, context);
+    return env_var->func(name, context, quoting);
 }
 
 CandidateList ShellManager::complete_env_var(StringView prefix,

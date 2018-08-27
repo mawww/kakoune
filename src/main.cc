@@ -113,131 +113,132 @@ String config_directory()
 
 static const EnvVarDesc builtin_env_vars[] = { {
         "bufname", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return context.buffer().display_name(); }
     }, {
         "buffile", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return context.buffer().name(); }
     }, {
         "buflist", false,
-        [](StringView name, const Context& context)
+        [](StringView name, const Context& context, Quoting quoting)
         { return join(BufferManager::instance() |
-                      transform(&Buffer::display_name) | transform(quote), ' ', false); }
+                      transform(&Buffer::display_name) | transform(quoter(quoting)), ' ', false); }
     }, {
         "buf_line_count", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.buffer().line_count()); }
     }, {
         "timestamp", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.buffer().timestamp()); }
     }, {
         "history_id", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string((size_t)context.buffer().current_history_id()); }
     }, {
         "selection", false,
-        [](StringView name, const Context& context)
+        [](StringView name, const Context& context, Quoting quoting)
         { const Selection& sel = context.selections().main();
           return content(context.buffer(), sel); }
     }, {
         "selections", false,
-        [](StringView name, const Context& context)
-        { return join(context.selections_content() | transform(quote), ' ', false); }
+        [](StringView name, const Context& context, Quoting quoting)
+        { return join(context.selections_content() | transform(quoter(quoting)), ' ', false); }
     }, {
         "runtime", false,
-        [](StringView name, const Context& context)
+        [](StringView name, const Context& context, Quoting quoting)
         { return runtime_directory(); }
     }, {
         "config", false,
-        [](StringView name, const Context& context)
+        [](StringView name, const Context& context, Quoting quoting)
         { return config_directory(); }
     }, {
         "version", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return version; }
     }, {
         "opt_", true,
-        [](StringView name, const Context& context)
-        { return context.options()[name.substr(4_byte)].get_as_string(); }
+        [](StringView name, const Context& context, Quoting quoting)
+        { return context.options()[name.substr(4_byte)].get_as_string(quoting); }
     }, {
         "main_reg_", true,
-        [](StringView name, const Context& context)
+        [](StringView name, const Context& context, Quoting quoting)
         { return context.main_sel_register_value(name.substr(9_byte)).str(); }
     }, {
         "reg_", true,
-        [](StringView name, const Context& context)
-        { return join(RegisterManager::instance()[name.substr(4_byte)].get(context) | transform(quote), ' ', false); }
+        [](StringView name, const Context& context, Quoting quoting)
+        { return join(RegisterManager::instance()[name.substr(4_byte)].get(context) |
+                      transform(quoter(quoting)), ' ', false); }
     }, {
         "client_env_", true,
-        [](StringView name, const Context& context)
+        [](StringView name, const Context& context, Quoting quoting)
         { return context.client().get_env_var(name.substr(11_byte)).str(); }
     }, {
         "session", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return Server::instance().session(); }
     }, {
         "client", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return context.name(); }
     }, {
         "client_pid", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.client().pid()); }
     }, {
         "client_list", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return join(ClientManager::instance() |
                       transform([](const std::unique_ptr<Client>& c) -> const String&
                                { return c->context().name(); }), ' ', false); }
     }, {
         "modified", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return context.buffer().is_modified() ? "true" : "false"; }
     }, {
         "cursor_line", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.selections().main().cursor().line + 1); }
     }, {
         "cursor_column", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.selections().main().cursor().column + 1); }
     }, {
         "cursor_char_value", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { auto coord = context.selections().main().cursor();
           auto& buffer = context.buffer();
           return to_string((size_t)utf8::codepoint(buffer.iterator_at(coord), buffer.end())); }
     }, {
         "cursor_char_column", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { auto coord = context.selections().main().cursor();
           return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
     }, {
         "cursor_byte_offset", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { auto cursor = context.selections().main().cursor();
           return to_string(context.buffer().distance({0,0}, cursor)); }
     }, {
         "selection_desc", false,
-        [](StringView name, const Context& context)
+        [](StringView name, const Context& context, Quoting quoting)
         { return selection_to_string(context.selections().main()); }
     }, {
         "selections_desc", false,
-        [](StringView name, const Context& context)
+        [](StringView name, const Context& context, Quoting quoting)
         { return selection_list_to_string(context.selections()); }
     }, {
         "window_width", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.window().dimensions().column); }
     }, {
         "window_height", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.window().dimensions().line); }
     }, {
         "user_modes", false,
-        [](StringView name, const Context& context) -> String
+        [](StringView name, const Context& context, Quoting quoting) -> String
         { return join(context.keymaps().user_modes(), ' ', false); }
     }
 };

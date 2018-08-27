@@ -53,7 +53,7 @@ public:
     template<typename T> void set(const T& val, bool notify=true);
     template<typename T> bool is_of_type() const;
 
-    virtual String get_as_string() const = 0;
+    virtual String get_as_string(Quoting quoting) const = 0;
     virtual Vector<String> get_as_strings() const = 0;
     virtual void set_from_strings(ConstArrayView<String> strs) = 0;
     virtual void add_from_strings(ConstArrayView<String> strs) = 0;
@@ -147,9 +147,9 @@ public:
         return option_to_strings(m_value);
     }
 
-    String get_as_string() const override
+    String get_as_string(Quoting quoting) const override
     {
-        return option_to_string(m_value);
+        return option_to_string(m_value, quoting);
     }
 
     void set_from_strings(ConstArrayView<String> strs) override

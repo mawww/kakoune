@@ -1223,7 +1223,8 @@ const CommandDesc debug_cmd = {
         {
             write_to_debug_buffer("Options:");
             for (auto& option : context.options().flatten_options())
-                write_to_debug_buffer(format(" * {}: {}", option->name(), option->get_as_string()));
+                write_to_debug_buffer(format(" * {}: {}", option->name(),
+                                             option->get_as_string(Quoting::Kakoune)));
         }
         else if (parser[0] == "memory")
         {
@@ -1366,7 +1367,7 @@ const CommandDesc set_option_cmd = {
                  GlobalScope::instance().option_registry().option_exists(params[start + 1]))
         {
             OptionManager& options = get_scope(params[start], context).options();
-            return { 0_byte, params[start + 2].length(), { options[params[start + 1]].get_as_string() }, true };
+            return { 0_byte, params[start + 2].length(), { options[params[start + 1]].get_as_string(Quoting::Kakoune) }, true };
         }
         return Completions{};
     },

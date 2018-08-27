@@ -18,10 +18,11 @@ struct ShellContext
     EnvVarMap env_vars;
 };
 
+enum class Quoting;
 
 struct EnvVarDesc
 {
-    using Retriever = String (*)(StringView name, const Context&);
+    using Retriever = String (*)(StringView name, const Context&, Quoting quoting);
 
     StringView str;
     bool prefix;
@@ -45,7 +46,7 @@ public:
                                 Flags flags = Flags::WaitForStdout,
                                 const ShellContext& shell_context = {});
 
-    String get_val(StringView name, const Context& context) const;
+    String get_val(StringView name, const Context& context, Quoting quoting) const;
 
     CandidateList complete_env_var(StringView prefix, ByteCount cursor_pos) const;
 
