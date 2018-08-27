@@ -132,12 +132,12 @@ errors on the go.
 Kakoune tries hard to fix one of the big problems with the vi model: its
 lack of interactivity. Because of the *verb* followed by *object* grammar,
 vi changes are made in the dark, we dont see their effect until the whole
-editing *sentence* is finished. `dtf` will delete to next *f*, if you then
-realize that was one *f* before the one you targeted, you need to undo,
-go back to your initial position, and try again with `d2tf`. In Kakoune, you
-would do `tf`, see immediately that that is not the *f* you were looking for,
-type `Tf` to extend the selection until the correct *f*, then `d` to delete.
-At each step you get visual feedback, and have the opportunity to correct it.
+editing *sentence* is finished. `5dw` will delete to next five words, if
+you then realize that was one word too many, you need to undo, go back to
+your initial position, and try again with `4dw`. In Kakoune, you would do
+`5W`, see immediately that one more word than expected was selected, type
+`BH` to remove that word from the selection, then `d` to delete.  At each
+step you get visual feedback, and have the opportunity to correct it.
 
 At the lower level, the problem is that vi treats moving around and selecting
 an object as two different things. Kakoune unifies that, moving *is* selecting.
