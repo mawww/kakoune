@@ -49,7 +49,7 @@ The `completers` option controls automatic completion, which kicks in when
 the value specified in the `idle_timeout` option is reached.
 
 *<c-o>*::
-    disable automatic completion for this insert session
+    toggle automatic completion
 
 *<c-n>*::
     select next completion candidate
@@ -734,7 +734,7 @@ The following keys are recognized by this mode to help with editing (See <<comma
     insert next keystroke without interpreting it
 
 *<c-o>*::
-    disable auto completion for this prompt
+    toggle automatic completion
 
 *<a-!>*::
     expand the typed expansions in currently entered text
