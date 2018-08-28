@@ -822,6 +822,8 @@ struct WrapHighlighter : Highlighter
         StringView content = buffer[line];
 
         SplitPos pos = current;
+        SplitPos last_boundary = {0, 0};
+
         while (pos.byte < content.length() and pos.column < target_column)
         {
             if (content[pos.byte] == '\t')
@@ -831,32 +833,30 @@ struct WrapHighlighter : Highlighter
                     break;
                 pos.column = next_column;
                 ++pos.byte;
+                last_boundary = pos;
             }
             else
             {
                 const char* it = &content[pos.byte];
-                const ColumnCount width = codepoint_width(utf8::read_codepoint(it, content.end()));
+                const Codepoint cp = utf8::read_codepoint(it, content.end());
+                const ColumnCount width = codepoint_width(cp);
                 if (pos.column + width > target_column and pos.byte != current.byte) // the target column was in the char
+                {
+                    if (!is_word<WORD>(cp))
+                        last_boundary = pos;
                     break;
+                }
                 pos.column += width;
                 pos.byte = (int)(it - content.begin());
+                if (!is_word<WORD>(cp))
+                    last_boundary = pos;
             }
         }
 
         if (m_word_wrap and pos.byte < content.length()) // find a word boundary before current position
-        {
-            utf8::iterator<const char*> it{&content[pos.byte], content};
-            while (it != content.begin() and is_word<WORD>(*it))
-                --it;
+            if (last_boundary.byte > 0)
+                pos = last_boundary;
 
-            if (it != content.begin() and it != &content[pos.byte] and
-                (it+1) > &content[current.byte])
-            {
-                const ByteCount word_split = (it+1).base() - content.begin();
-                pos.column -= content.substr(word_split, pos.byte - word_split).column_length();
-                pos.byte = word_split;
-            }
-        }
         return pos;
     };
 
