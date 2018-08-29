@@ -17,14 +17,18 @@ add-highlighter shared/java/code/ regex "(?<!\w)@\w+\b" 0:meta
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden java-filter-around-selections %{
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+}
+
 define-command -hidden java-indent-on-new-line %~
     evaluate-commands -draft -itersel %=
         # preserve previous line indent
         try %{ execute-keys -draft \;K<a-&> }
         # indent after lines ending with { or (
         try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
-        # cleanup trailing white spaces on the previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
+        # filter previous line
+        try %{ execute-keys -draft k : java-filter-around-selections <ret> }
         # align to opening paren of previous line
         try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
         # copy // comments prefix
@@ -49,8 +53,6 @@ define-command -hidden java-indent-on-closing-curly-brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 hook global WinSetOption filetype=java %{
-    # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group java-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group java-indent java-indent-on-new-line
     hook window InsertChar \{ -group java-indent java-indent-on-opening-curly-brace
     hook window InsertChar \} -group java-indent java-indent-on-closing-curly-brace

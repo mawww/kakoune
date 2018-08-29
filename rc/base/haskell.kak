@@ -95,7 +95,6 @@ hook -group haskell-highlight global WinSetOption filetype=haskell %{ add-highli
 
 hook global WinSetOption filetype=haskell %{
     set-option window extra_word_chars "'"
-    hook window ModeChange insert:.* -group haskell-hooks  haskell-filter-around-selections
     hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
 }
 

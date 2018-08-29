@@ -60,12 +60,17 @@ evaluate-commands %sh{
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden pony-filter-around-selections %{
+    # remove trailing whitespaces
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+}
+
 define-command -hidden pony-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <space> K <a-&> }
-        # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
+        # filter previous line
+        try %{ execute-keys -draft k : pony-filter-around-selections <ret> }
         # copy '//' comment prefix and following white spaces
         # try %{ execute-keys -draft k x s ^\h*//\h* <ret> y jgh P }
         # indent after line ending with :
@@ -82,8 +87,6 @@ hook -group pony-highlight global WinSetOption filetype=pony %{ add-highlighter 
 
 hook global WinSetOption filetype=pony %{
     hook window InsertChar \n -group pony-indent pony-indent-on-new-line
-    # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group pony-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
 }
 
 hook -group pony-highlight global WinSetOption filetype=(?!pony).* %{ remove-highlighter pony }

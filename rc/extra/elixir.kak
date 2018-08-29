@@ -48,11 +48,11 @@ define-command -hidden elixir-filter-around-selections %{
 
 define-command -hidden elixir-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
-        # copy -- comments prefix and following white spaces 
+        # copy -- comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # indent after line ending with: 
+        # indent after line ending with:
 	# try %{ execute-keys -draft k x <a-k> (do|else|->)$ <ret> & }
 	# filter previous line
         try %{ execute-keys -draft k : elixir-filter-around-selections <ret> }
@@ -67,7 +67,6 @@ define-command -hidden elixir-indent-on-new-line %{
 hook -group elixir-highlight global WinSetOption filetype=elixir %{ add-highlighter window/elixir ref elixir }
 
 hook global WinSetOption filetype=elixir %{
-    hook window ModeChange insert:.* -group elixir-hooks  elixir-filter-around-selections
     hook window InsertChar \n -group elixir-indent elixir-indent-on-new-line
 }
 

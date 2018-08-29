@@ -59,7 +59,6 @@ define-command -hidden ragel-indent-on-new-line %<
 hook -group ragel-highlight global WinSetOption filetype=ragel %{ add-highlighter window/ragel ref ragel }
 
 hook global WinSetOption filetype=ragel %{
-    hook window ModeChange insert:.* -group ragel-hooks  ragel-filter-around-selections
     hook window InsertChar .* -group ragel-indent ragel-indent-on-char
     hook window InsertChar \n -group ragel-indent ragel-indent-on-new-line
 }

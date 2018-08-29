@@ -49,7 +49,6 @@ define-command -hidden yaml-indent-on-new-line %{
 hook -group yaml-highlight global WinSetOption filetype=yaml %{ add-highlighter window/yaml ref yaml }
 
 hook global WinSetOption filetype=yaml %{
-    hook window ModeChange insert:.* -group yaml-hooks  yaml-filter-around-selections
     hook window InsertChar \n -group yaml-indent yaml-indent-on-new-line
 }
 
