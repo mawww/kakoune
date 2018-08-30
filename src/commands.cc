@@ -352,7 +352,7 @@ const CommandDesc write_cmd = {
     "write",
     "w",
     "write [-sync] [filename]: write the current buffer to its file "
-    "or to [filename] if specified; the underlying file can be"
+    "or to [filename] if specified; the underlying file can be "
     "synchronized with the filesystem with the -sync switch",
     write_params,
     CommandFlags::None,
