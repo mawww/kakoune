@@ -67,8 +67,9 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 *rename-buffer* <name>::
     set current buffer name
 
-*source* <filename>::
+*source* <filename> <param>...::
     execute commands in <filename>
+    parameters are avilable in the sourced script through the `arg` values
 
 == Clients and Sessions
 

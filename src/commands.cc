@@ -1285,8 +1285,8 @@ const CommandDesc debug_cmd = {
 const CommandDesc source_cmd = {
     "source",
     nullptr,
-    "source <filename>: execute commands contained in <filename>",
-    single_param,
+    "source <filename> <params>...: execute commands contained in <filename>",
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 1, (size_t)-1 },
     CommandFlags::None,
     CommandHelper{},
     filename_completer,
@@ -1300,8 +1300,9 @@ const CommandDesc source_cmd = {
         MappedFile file_content{path};
         try
         {
+            auto params = parser | skip(1) | gather<Vector<String>>();
             CommandManager::instance().execute(file_content, context,
-                                               {{}, {{"source", path}}});
+                                               {params, {{"source", path}}});
         }
         catch (Kakoune::runtime_error& err)
         {
