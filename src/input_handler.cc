@@ -887,10 +887,14 @@ public:
         }
         else if (key == ctrl('o'))
         {
-            m_auto_complete = false;
-            clear_completions();
-            if (context().has_client())
+            m_auto_complete = not m_auto_complete;
+            if (m_auto_complete)
+                refresh_completions(CompletionFlags::Fast);
+            else if (context().has_client())
+            {
+                clear_completions();
                 context().client().menu_hide();
+            }
         }
         else if (key == alt('!'))
         {
@@ -1280,7 +1284,7 @@ public:
         }
         else if (key == ctrl('o'))
         {
-            m_auto_complete = false;
+            m_auto_complete = not m_auto_complete;
             m_completer.reset();
         }
         else if (key == ctrl('u'))
