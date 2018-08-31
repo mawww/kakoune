@@ -177,6 +177,10 @@ static const EnvVarDesc builtin_env_vars[] = { {
         { return join(RegisterManager::instance()[name.substr(4_byte)].get(context) |
                       transform(quoter(quoting)), ' ', false); }
     }, {
+        "env_", true,
+        [](StringView name, const Context& context, Quoting quoting)
+        { return String(name.length() > 4 ? std::getenv(name.substr(4_byte).zstr()) : ""); }
+    }, {
         "client_env_", true,
         [](StringView name, const Context& context, Quoting quoting)
         { return context.client().get_env_var(name.substr(11_byte)).str(); }
