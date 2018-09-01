@@ -232,9 +232,9 @@ There are two directories containing Kakoune's scripts:
 
 * `runtime`: located in `../share/kak/` relative to the `kak` binary
   contains the system scripts, installed with Kakoune.
-* `userconf`: located in `$XDG_CONFIG_HOME/kak/`, which defaults
-  to `$HOME/.config/kak/` on most systems, containing the user
-  configuration.
+* `userconf`: located in `$XDG_CONFIG_HOME/kak/`, which will fallback
+  to `$HOME/.config/kak/` if `$XDG_CONFIG_HOME` is not set, containing
+  the user configuration.
 
 Unless `-n` is specified, Kakoune will load its startup script located
 at `${runtime}/kakrc` relative to the `kak` binary. This startup script
