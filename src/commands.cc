@@ -351,9 +351,8 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
 const CommandDesc write_cmd = {
     "write",
     "w",
-    "write [-sync] [filename]: write the current buffer to its file "
-    "or to [filename] if specified; the underlying file can be "
-    "synchronized with the filesystem with the -sync switch",
+    "write [-sync] [<filename>]: write the current buffer to its file "
+    "or to <filename> if specified",
     write_params,
     CommandFlags::None,
     CommandHelper{},
@@ -364,9 +363,8 @@ const CommandDesc write_cmd = {
 const CommandDesc force_write_cmd = {
     "write!",
     "w!",
-    "write [-sync] [filename]: write the current buffer to its file "
-    "or to [filename] if specified, even when the file is write protected;"
-    "the underlying file can be synchronized with the filesystem with the -sync switch",
+    "write! [-sync] [<filename>]: write the current buffer to its file "
+    "or to <filename> if specified, even when the file is write protected",
     write_params,
     CommandFlags::None,
     CommandHelper{},
@@ -398,8 +396,7 @@ void write_all_buffers(Context& context, bool sync = false)
 const CommandDesc write_all_cmd = {
     "write-all",
     "wa",
-    "write-all [-sync]: write all buffers that are associated to a file;"
-    "all open files can be synchronized with the filesystem with the -sync switch",
+    "write-all [-sync]: write all buffers that are associated to a file",
     ParameterDesc{
         { { "sync", { false, "force the synchronization of the file onto the filesystem" } } },
         ParameterDesc::Flags::None, 0, 0
@@ -452,8 +449,8 @@ void kill(const ParametersParser& parser, Context& context, const ShellContext&)
 const CommandDesc kill_cmd = {
     "kill",
     nullptr,
-    "kill [exit_code]: terminate the current session, the server and all clients connected"
-    "; the given integer will be used as exit code by the server and client processes",
+    "kill [<exit status>]: terminate the current session, the server and all clients connected. "
+    "An optional integer parameter can set the server and client processes exit status",
     { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
     CommandFlags::None,
     CommandHelper{},
@@ -465,8 +462,8 @@ const CommandDesc kill_cmd = {
 const CommandDesc force_kill_cmd = {
     "kill!",
     nullptr,
-    "kill [exit_code]: force the termination of the current session, the server and all clients connected"
-    "; the given integer will be used as exit code by the server and client processes",
+    "kill! [<exit status>]: force the termination of the current session, the server and all clients connected. "
+    "An optional integer parameter can set the server and client processes exit status",
     { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
     CommandFlags::None,
     CommandHelper{},
@@ -487,9 +484,9 @@ void quit(const ParametersParser& parser, Context& context, const ShellContext&)
 const CommandDesc quit_cmd = {
     "quit",
     "q",
-    "quit current client, and the kakoune session if the client is the last "
-    "(if not running in daemon mode). An optional integer parameter can set "
-    "the client exit status",
+    "quit [<exit status>]: quit current client, and the kakoune session if the client is the last "
+    "(if not running in daemon mode). "
+    "An optional integer parameter can set the client exit status",
     { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
     CommandFlags::None,
     CommandHelper{},
@@ -500,10 +497,10 @@ const CommandDesc quit_cmd = {
 const CommandDesc force_quit_cmd = {
     "quit!",
     "q!",
-    "quit current client, and the kakoune session if the client is the last "
-    "(if not running in daemon mode). force quit even if the client is the "
-    "last and some buffers are not saved. An optional integer parameter can "
-    "set the client exit status",
+    "quit! [<exit status>]: quit current client, and the kakoune session if the client is the last "
+    "(if not running in daemon mode). Force quit even if the client is the "
+    "last and some buffers are not saved. "
+    "An optional integer parameter can set the client exit status",
     { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
     CommandFlags::None,
     CommandHelper{},
@@ -522,8 +519,8 @@ void write_quit(const ParametersParser& parser, Context& context,
 const CommandDesc write_quit_cmd = {
     "write-quit",
     "wq",
-    "write-quit [-sync] [exit_code]: write current buffer and quit current client. An optional integer parameter can set the client exit status;"
-    "all open files can be synchronized with the filesystem with the -sync switch",
+    "write-quit [-sync] [<exit status>]: write current buffer and quit current client. "
+    "An optional integer parameter can set the client exit status",
     write_params,
     CommandFlags::None,
     CommandHelper{},
@@ -534,8 +531,8 @@ const CommandDesc write_quit_cmd = {
 const CommandDesc force_write_quit_cmd = {
     "write-quit!",
     "wq!",
-    "write current buffer and quit current client, even if other buffers are "
-    "not saved. An optional integer parameter can set the client exit status",
+    "write-quit! [-sync] [<exit status>] write: current buffer and quit current client, even if other buffers are not saved. "
+    "An optional integer parameter can set the client exit status",
     write_params,
     CommandFlags::None,
     CommandHelper{},
@@ -546,9 +543,8 @@ const CommandDesc force_write_quit_cmd = {
 const CommandDesc write_all_quit_cmd = {
     "write-all-quit",
     "waq",
-    "write-all-quit [-sync] [exit_code]: write all buffers associated to a file and quit current client."
-    "An optional integer parameter can set the client exit status;"
-    "all open files can be synchronized with the filesystem with the -sync switch",
+    "write-all-quit [-sync] [<exit status>]: write all buffers associated to a file and quit current client. "
+    "An optional integer parameter can set the client exit status.",
     write_params,
     CommandFlags::None,
     CommandHelper{},
@@ -1820,7 +1816,7 @@ struct CapturedShellContext
 const CommandDesc prompt_cmd = {
     "prompt",
     nullptr,
-    "prompt <prompt> <command>: prompt the user to enter a text string "
+    "prompt [<switches>] <prompt> <command>: prompt the user to enter a text string "
     "and then executes <command>, entered text is available in the 'text' value",
     ParameterDesc{
         { { "init", { true, "set initial prompt content" } },

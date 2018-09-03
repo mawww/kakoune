@@ -11,6 +11,9 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 
 == Files and Buffers
 
+For the following *write* commands, the *-sync* switch forces the synchronization
+of the file onto the filesystem
+
 *change-directory* [<directory>]::
     *alias* cd +
     change the current directory to *directory*, or the home directory if
@@ -21,14 +24,14 @@ command *q!* has to be used). Aliases are mentionned below each commands.
     open buffer on file, go to given line and column. If file is already
     opened, just switch to this file. Use edit! to force reloading
 
-*write[!]* [<filename>]::
+*write[!]* [-sync] [<filename>]::
     *alias* w +
     write buffer to <filename> or use its name if filename is not
     given. If the file is write-protected, its permissions are temporarily
     changed to allow saving the buffer and restored afterwards when
     the write! command is used.
 
-*write-all*::
+*write-all* [-sync]::
     *alias* wa +
     write all buffers that are associated to a file
 
@@ -38,12 +41,12 @@ command *q!* has to be used). Aliases are mentionned below each commands.
     unsaved buffers remaining. If specified, the client exit status
     will be set to <exit status>
 
-*write-quit[!]* [<exit status>]::
+*write-quit[!]* [-sync] [<exit status>]::
     *alias* wq +
     write current buffer and quit current client. If specified, the client
     exit status will be set to <exit status>
 
-*write-all-quit* [<exit status>]::
+*write-all-quit* [-sync] [<exit status>]::
     *alias* waq +
     write all buffers and quit. If specified, the client exit status
     will be set to <exit status>
@@ -62,7 +65,7 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 
 *delete-buffer[!]* [<name>]::
     *alias* db +
-    delete the buffer <name>
+    delete current buffer or the buffer <name> if specified
 
 *rename-buffer* <name>::
     set current buffer name
@@ -80,8 +83,9 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 *rename-session* <name>::
     set current session name
 
-*kill[!]*::
-    terminate the current session, all the clients as well as the server
+*kill[!]* [<exit status>]::
+    terminate the current session, all the clients as well as the server.
+    If specified, the server and clients exit status will be set to <exit status>
 
 == Options
 
