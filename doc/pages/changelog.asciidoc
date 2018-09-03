@@ -3,7 +3,7 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development version
+== Kakoune 2018.09.04
 
 This version contains a significant overhaul of various Kakoune
 features that can break user configuration. This was a necessary

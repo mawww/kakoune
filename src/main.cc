@@ -43,7 +43,7 @@ struct {
     unsigned int version;
     const char* notes;
 } constexpr version_notes[] = { {
-        0,
+        20180904,
         "» Big breaking refactoring of various Kakoune features,\n"
         "  configuration might need to be updated see `:doc changelog` for details\n"
         "» define-command -allow-override switch has been renamed -override\n"
