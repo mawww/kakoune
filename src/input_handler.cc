@@ -437,6 +437,15 @@ public:
 
     void handle_key(Key key)
     {
+        auto erase_move = [this](auto&& move_func) {
+            auto old_pos = m_cursor_pos;
+            move_func(m_cursor_pos, m_line);
+            if (m_cursor_pos > old_pos)
+                std::swap(m_cursor_pos, old_pos);
+            m_clipboard = m_line.substr(m_cursor_pos, old_pos - m_cursor_pos).str();
+            m_line = m_line.substr(0, m_cursor_pos) + m_line.substr(old_pos);
+        };
+
         if (key == Key::Left or key == ctrl('b'))
         {
             if (m_cursor_pos > 0)
@@ -480,11 +489,28 @@ public:
         else if (key == alt('E'))
             to_next_word_end<WORD>(m_cursor_pos, m_line);
         else if (key == ctrl('k'))
-            m_line = m_line.substr(0_char, m_cursor_pos).str();
+        {
+            m_clipboard = m_line.substr(m_cursor_pos).str();
+            m_line = m_line.substr(0, m_cursor_pos).str();
+        }
         else if (key == ctrl('u'))
         {
+            m_clipboard = m_line.substr(0, m_cursor_pos).str();
             m_line = m_line.substr(m_cursor_pos).str();
             m_cursor_pos = 0;
+        }
+        else if (key == ctrl('w') or key == alt(Key::Backspace))
+            erase_move(&to_prev_word_begin<Word>);
+        else if (key == ctrl('W'))
+            erase_move(&to_prev_word_begin<Word>);
+        else if (key == alt('d'))
+            erase_move(&to_next_word_begin<Word>);
+        else if (key == alt('D'))
+            erase_move(&to_next_word_begin<WORD>);
+        else if (key == ctrl('y'))
+        {
+            m_line = m_line.substr(0, m_cursor_pos) + m_clipboard + m_line.substr(m_cursor_pos);
+            m_cursor_pos += m_clipboard.char_length();
         }
         else if (auto cp = key.codepoint())
             insert(*cp);
@@ -555,6 +581,7 @@ private:
 
     String     m_line;
     StringView m_empty_text = {};
+    String     m_clipboard;
 
     const FaceRegistry& m_faces;
 };
