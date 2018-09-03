@@ -679,40 +679,40 @@ The following keys are recognized by this mode to help with editing (See <<comma
 *<esc>*::
     abandon without
 
-*<left>*, *<a-h>*::
+*<left>*, *<c-b>*::
     move cursor to previous character
 
-*<right>*, *<a-l>*::
+*<right>*, *<c-f>*::
     move cursor to next character
 
-*<home>*::
+*<home>*, *<c-a>*::
     move cursor to first character
 
-*<end>*::
+*<end>*, *<c-e>::
     move cursor past the last character
 
-*<backspace>*, *<a-x>*::
+*<backspace>*, *<c-h>*::
     erase character before cursor
 
-*<del>*, *<a-d>*::
+*<del>*, *<c-d>*::
     erase character under cursor
 
-*<c-w>*::
+*<a-f>*::
     advance to next word begin
 
-*<c-a-w>*::
+*<a-F>*::
     advance to next WORD begin
 
-*<c-b>*::
+*<a-b>*::
     go back to previous word begin
 
-*<c-a-b>*::
+*<a-B>*::
     go back to previous WORD begin
 
-*<c-e>*::
+*<a-e>*::
     advance to next word end
 
-*<c-a-e>*::
+*<a-E>*::
     advance to next word end
 
 *<up>*, *<c-p>*::

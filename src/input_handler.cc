@@ -437,21 +437,21 @@ public:
 
     void handle_key(Key key)
     {
-        if (key == Key::Left or key == alt('h'))
+        if (key == Key::Left or key == ctrl('b'))
         {
             if (m_cursor_pos > 0)
                 --m_cursor_pos;
         }
-        else if (key == Key::Right or key == alt('l'))
+        else if (key == Key::Right or key == ctrl('f'))
         {
             if (m_cursor_pos < m_line.char_length())
                 ++m_cursor_pos;
         }
-        else if (key == Key::Home)
+        else if (key == Key::Home or key == ctrl('a'))
             m_cursor_pos = 0;
-        else if (key == Key::End)
+        else if (key == Key::End or key == ctrl('e'))
             m_cursor_pos = m_line.char_length();
-        else if (key == Key::Backspace or key == alt('x'))
+        else if (key == Key::Backspace or key == ctrl('h'))
         {
             if (m_cursor_pos != 0)
             {
@@ -461,23 +461,23 @@ public:
                 --m_cursor_pos;
             }
         }
-        else if (key == Key::Delete or key == alt('d'))
+        else if (key == Key::Delete or key == ctrl('d'))
         {
             if (m_cursor_pos != m_line.char_length())
                 m_line = m_line.substr(0, m_cursor_pos)
                        + m_line.substr(m_cursor_pos+1);
         }
-        else if (key == ctrl('w'))
+        else if (key == alt('f'))
             to_next_word_begin<Word>(m_cursor_pos, m_line);
-        else if (key == ctrl(alt('w')))
+        else if (key == alt('W'))
             to_next_word_begin<WORD>(m_cursor_pos, m_line);
-        else if (key == ctrl('b'))
+        else if (key == alt('b'))
             to_prev_word_begin<Word>(m_cursor_pos, m_line);
-        else if (key == ctrl(alt('b')))
+        else if (key == alt('B'))
             to_prev_word_begin<WORD>(m_cursor_pos, m_line);
-        else if (key == ctrl('e'))
+        else if (key == alt('e'))
             to_next_word_end<Word>(m_cursor_pos, m_line);
-        else if (key == ctrl(alt('e')))
+        else if (key == alt('E'))
             to_next_word_end<WORD>(m_cursor_pos, m_line);
         else if (key == ctrl('k'))
             m_line = m_line.substr(0_char, m_cursor_pos).str();
