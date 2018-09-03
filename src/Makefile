@@ -118,12 +118,13 @@ clean:
 dist:
 	@if ! [ -d ../.git ]; then echo "make dist can only run from a git repo";  false; fi
 	@if git status -s | grep -qEv '^\?\?'; then echo "working tree is not clean";  false; fi
-	cd ../;                                                                               \
-	git archive --format=tar --prefix=kakoune-$(version)/ HEAD -o kakoune-$(version).tar; \
-	echo "$(version)" > src/.version;                                                     \
-	tar --transform "s,^,kakoune-$(version)/," -rf kakoune-$(version).tar src/.version;   \
-	rm src/.version;                                                                      \
-	bzip2 kakoune-$(version).tar;
+	cd ../;                                                                   \
+	basename="kakoune-$$(echo "$(version)" | sed -e s/^v//)";                 \
+	git archive --format=tar --prefix=$${basename}/ HEAD -o $${basename}.tar; \
+	echo "$(version)" > src/.version;                                         \
+	tar --transform "s,^,$${basename}/," -rf $${basename}.tar src/.version;   \
+	rm src/.version;                                                          \
+	bzip2 $${basename}.tar;
 
 distclean: clean
 	rm -f kak kak$(suffix)
