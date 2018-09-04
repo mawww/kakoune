@@ -33,9 +33,9 @@ define-command go-complete -docstring "Complete the current selection with gocod
             column_offset=$(echo "${gocode_data}" | head -n1 | cut -d, -f1)
 
             header="${kak_cursor_line}.$((${kak_cursor_column} - $column_offset))@${kak_timestamp}"
-            compl=$(echo "${gocode_data}" | sed 1d | awk -F ",," '{print $2 "||" $1}' | paste -s -d: -)
+            compl=$(echo "${gocode_data}" | sed 1d | awk -F ",," '{print "%~" $2 "||" $1 "~"}' | paste -s -)
             printf %s\\n "evaluate-commands -client '${kak_client}' %{
-                set-option buffer=${kak_bufname} gocode_completions '${header}' '${compl}'
+                set-option 'buffer=${kak_bufname}' gocode_completions ${header} ${compl}
             }" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
     }
