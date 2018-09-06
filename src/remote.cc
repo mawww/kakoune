@@ -583,12 +583,11 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
         m_socket_watcher->events() |= FdEvents::Write;
      });
 
-    MsgReader reader;
     m_socket_watcher.reset(new FDWatcher{sock, FdEvents::Read | FdEvents::Write,
-                           [this, reader](FDWatcher& watcher, FdEvents events, EventMode) mutable {
+                           [this, reader = MsgReader{}](FDWatcher& watcher, FdEvents events, EventMode) mutable {
         const int sock = watcher.fd();
         if (events & FdEvents::Write and send_data(sock, m_send_buffer))
-            m_socket_watcher->events() &= ~FdEvents::Write;
+            watcher.events() &= ~FdEvents::Write;
 
         while (events & FdEvents::Read and
                not reader.ready() and fd_readable(sock))
@@ -661,9 +660,8 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
                 break;
             case MessageType::Exit:
                 m_exit_status = reader.read<int>();
-                m_socket_watcher->close_fd();
-                m_socket_watcher.reset();
-                return; // This lambda is now dead
+                watcher.close_fd();
+                return;
             default:
                 kak_assert(false);
             }
