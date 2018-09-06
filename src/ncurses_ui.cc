@@ -891,7 +891,7 @@ void NCursesUI::menu_select(int selected)
         if (selected_line < top_line)
             m_menu.first_item = (int)selected_line * m_menu.columns;
         if (selected_line >= top_line + win_height)
-            m_menu.first_item = (int)min(selected_line, menu_lines - win_height) * m_menu.columns;
+            m_menu.first_item = (int)(selected_line + 1 - win_height) * m_menu.columns;
     }
     draw_menu();
 }
