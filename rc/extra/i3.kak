@@ -42,5 +42,42 @@ add-highlighter shared/i3/single_string/ regex "#[0-9a-fA-F]{6}" 0:value
 add-highlighter shared/i3/code/ regex "client\.(background|statusline|background|separator|statusline)" 1:attribute
 add-highlighter shared/i3/code/ regex "client\.(focused_inactive|focused|unfocused|urgent|inactive_workspace|urgent_workspace|focused_workspace|active_workspace|placeholder)" 1:attribute
 
+# Commands
+# ‾‾‾‾‾‾‾‾
+
+define-command -hidden i3-indent-on-new-line %~
+    evaluate-commands -draft -itersel %=
+        # copy # comments prefix
+        try %{ execute-keys -draft k<a-x> s ^\h*#\h* <ret> y jgh P }
+        # preserve previous line indent
+        try %{ execute-keys -draft \;K<a-&> }
+        # indent after lines ending with {
+        try %[ execute-keys -draft k<a-x> <a-k> \{\h*$ <ret> j<a-gt> ]
+        # cleanup trailing white spaces on the previous line
+        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
+    =
+~
+
+define-command -hidden i3-indent-on-closing-curly-brace %[
+    # align to opening curly brace when alone on a line
+    try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
+]
+
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
 hook -group i3-highlight global WinSetOption filetype=i3 %{ add-highlighter window/i3 ref i3 }
+
+hook global WinSetOption filetype=i3 %[
+    # cleanup trailing whitespaces when exiting insert mode
+    hook window ModeChange insert:.* -group i3-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group i3-indent i3-indent-on-new-line
+    hook window InsertChar \} -group i3-indent i3-indent-on-closing-curly-brace
+]
+
 hook -group i3-highlight global WinSetOption filetype=(?!i3).* %{ remove-highlighter window/i3 }
+
+hook global WinSetOption filetype=(?!i3).* %{
+    remove-hooks window i3-hooks
+    remove-hooks window i3-indent
+}
