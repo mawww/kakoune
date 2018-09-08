@@ -3,25 +3,25 @@
 == Strings
 
 \'strings'::
-    uninterpreted strings, use a backslash (\') to escape the separator
+    uninterpreted strings, use a backslash (\') to escape the separator.
 
 "strings"::
-    expanded strings, % strings (c.f. next section) contained are expended,
-    use a backslash (\\%) to escape the separator
+    expanded strings, `%` strings (c.f. next section) contained are expended,
+    use a backslash (\\%) to escape the separator.
 
 %\{strings\}::
-    these strings are very useful when entering commands
+    these strings are very useful when entering commands.
 
-    * the '{' and '}' delimiters are configurable, any non alphanumeric
+    * the `{` and `}` delimiters are configurable, any non alphanumeric
       character can be used
 
 ----------------------------------------------------------
 e.g. %[string], %<string>, %(string), %~string~, %!string!
 ----------------------------------------------------------
 
-    * if the character following '%' is one of '{[(<', then the closing
-      one is the matching '}])>' and the delimiters are not escapable but
-      are nestable
+    * if the character following `%` is one of `{[(<`, then the closing
+      delimiter has to be the matching `}])>` character.
+      The delimiters are not escapable but are nestable
 
 -----------------------------------------------------------
 e.g. %{ roger {}; } is a valid string, %{ marcel \} as well
@@ -29,167 +29,166 @@ e.g. %{ roger {}; } is a valid string, %{ marcel \} as well
 
 == Typed expansions
 
-%\{strings\} can have an expansion type between the *%* and the opening
-character. They will be written *%<type>\{<content>\}*. They will be
-expanded according to the given *<type>* using *<content>* as its
-parameter:
-
-*sh*::
-    shell expansion, similar to posix shell '$(...)' construct (c.f. next
-    section)
-
-*reg*::
-    register expansion, will expand to the strings stored in the register
-    named by *<content>*. See <<registers#,`:doc registers`>>
-
-*opt*::
-    option expansion, will expand to the value of the option named by
-    *<content>*. See <<options#,`:doc options`>>
-
-*val*::
-    value expansion, will expand to the value of the environment variables
-    available to shell expansion. *<content>* shall be the name of that
-    variable without the *kak_* prefix.
+`%` strings can have an expansion type between the `%` character and the
+opening delimiter. They will be written as `%<type>\{<content>\}` and will
+be expanded according to the given *type* using *content* as its parameter:
 
 *arg*::
     argument expansion, expand to the arguments of the current
-    command, *<content>* can be a number, or @ for all arguments
+    command, *content* can be a number, or `@` for all arguments.
+
+*opt*::
+    option expansion, will expand to the value of the option named by
+    *content* (see <<options#,`:doc options`>>).
+
+*reg*::
+    register expansion that expands to the strings stored in the register
+    named after *content* (see <<registers#,`:doc registers`>>).
+
+*sh*::
+    shell expansion, similar to the POSIX shell `$(...)` construct (c.f. next
+    section)
+
+*val*::
+    value expansion, will expand to the value of the environment variables
+    available to shell expansion. *content* shall be the name of that
+    variable without the *kak_* prefix.
 
 == Shell expansions
 
-The '%sh{...}' expansion replaces its content with the output of the
+The `%sh{...}` expansion replaces its content with the output of the
 shell commands in it. The following environment variables are used to pass
-informations about Kakoune's state:
+information about Kakoune's state:
+
+*kak_buf_line_count*::
+    the current buffer line count.
+
+*kak_buffile*::
+    full path of the file or same as *kak_bufname* when there’s no
+    associated file.
+
+*kak_buflist*::
+    quoted list of the currently opened buffer names.
+
+*kak_bufname*::
+    name of the current buffer.
+
+*kak_client*::
+    name of the current client.
+
+*kak_client_env_<name>*::
+    value of the *name* variable in the client environment
+    (e.g. *$kak_client_env_SHELL* is the *SHELL* variable).
+
+*kak_client_pid*::
+    process id of the current client.
+
+*kak_client_list*::
+    unquoted list of the names of clients connected to the current session.
+
+*kak_config*::
+    directory containing the user configuration.
+
+*kak_count*::
+    count parameter passed to the command, defaults to 0 if no count given.
+
+*kak_cursor_byte_offset*::
+    offset of the main selection from the beginning of the buffer (in bytes).
+
+*kak_cursor_column*::
+    column of the end of the main selection (in bytes).
+
+*kak_cursor_line*::
+    line of the end of the main selection.
+
+*kak_cursor_char_column*::
+    column of the end of the main selection (in characters).
+
+*kak_cursor_char_value*::
+    unicode value of the codepoint under the cursor.
+
+*kak_history_id*::
+    history id of the current buffer, the history id is an integer value
+    which is used to reference a specific buffer version in the undo tree.
+
+*kak_hook_param*::
+    filtering text passed to the currently executing hook.
+
+*kak_hook_param_capture_<N>*::
+    text captured by the hook filter regex capture *N*.
+
+*kak_modified*::
+    boolean that indicates whether the buffer has unsaved modifications.
+
+*kak_opt_<name>*::
+    value of option *name*.
+
+*kak_reg_<r>*::
+    quoted list of value of register *r*.
+
+*kak_register*::
+    register parameter passed to the command.
+
+*kak_main_reg_<r>*::
+    content of register *r* associated with the main selection.
+
+*kak_runtime*::
+    directory containing the kak support files, determined from kakoune's
+    binary location.
 
 *kak_selection*::
-    content of the main selection
+    content of the main selection.
 
 *kak_selections*::
     quoted list of the contents of the selections.
 
 *kak_selection_desc*::
     range of the main selection, represented as anchor,cursor; anchor
-    and cursor are in this format: line.column
+    and cursor are in this format: `line.column`.
 
 *kak_selections_desc*::
     unquoted list range of the selections.
 
-*kak_bufname*::
-    name of the current buffer
-
-*kak_buffile*::
-    full path of the file or same as kak_bufname when there’s no
-    associated file
-
-*kak_buflist*::
-    quoted list of the currently opened buffer names
-
-*kak_buf_line_count*::
-    the current buffer line count
-
-*kak_timestamp*::
-    timestamp of the current buffer, the timestamp is an integer value
-    which is incremented each time the buffer is modified
-
-*kak_history_id*::
-    history id of the current buffer, the history id is an integer value
-    which is used to reference a specific buffer version in the undo tree
-
-*kak_runtime*::
-    directory containing the kak support files, determined from kakoune's
-    binary location.
-
-*kak_config*::
-    directory containing the user configuration
-
-*kak_version*::
-    version of the current Kakoune server (git hash or release name)
-
-*kak_count*::
-    count parameter passed to the command, defaults to 0 if no count given
-
-*kak_register*::
-    register parameter passed to the command
-
-*kak_opt_<name>*::
-    value of option *name*
-
-*kak_reg_<r>*::
-    quoted list of value of register *r*
-
-*kak_main_reg_<r>*::
-    content of register *r* associated with the main selection.
-
 *kak_session*::
-    name of the current session
-
-*kak_client*::
-    name of the current client
-
-*kak_client_pid*::
-    process id of the current client
-
-*kak_client_list*::
-    unquoted list of the names of clients connected to the current session
+    name of the current session.
 
 *kak_source*::
     path of the file currently getting executed (through the source
-    command)
+    command).
 
-*kak_modified*::
-    buffer has modifications not saved
-
-*kak_cursor_line*::
-    line of the end of the main selection
-
-*kak_cursor_column*::
-    column of the end of the main selection (in byte)
-
-*kak_cursor_char_value*::
-    unicode value of the codepoint under the cursor
-
-*kak_cursor_char_column*::
-    column of the end of the main selection (in character)
-
-*kak_cursor_byte_offset*::
-    Offset of the main selection from the beginning of the buffer (in bytes).
-
-*kak_window_width*::
-    width of the current kakoune window
-
-*kak_window_height*::
-    height of the current kakoune window
-
-*kak_hook_param*::
-    filtering text passed to the currently executing hook
-
-*kak_hook_param_capture_N*::
-    text captured by the hook filter regex capture N
-
-*kak_client_env_<name>*::
-    value of the *name* variable in the client environment
-    (e.g. *$kak_client_env_SHELL* is the SHELL variable)
+*kak_timestamp*::
+    timestamp of the current buffer, the timestamp is an integer value
+    which is incremented each time the buffer is modified.
 
 *kak_user_modes*::
     unquoted list of user modes.
 
+*kak_version*::
+    version of the current Kakoune server (`git` hash or release name).
+
+*kak_window_height*::
+    height of the current kakoune window.
+
+*kak_window_width*::
+    width of the current kakoune window.
+
 Quoted lists are separated by spaces, and each element is surrounded by
 `'` with contained `'` doubled. Unquoted lists are simply separated by
-spaces and is used for values that will not contain whitespaces.
+spaces and are used for values that will not contain whitespace.
 
 Note that in order for Kakoune to pass a value in the environment, the
 variable has to be spelled out within the body of the expansion.
 
 Those environment variables are available in every context where
 Kakoune use a shell command, such as the `|`, `!` or `$` normal
-mode commands (See <<keys#,`:doc keys`>>).
+mode commands (see <<keys#,`:doc keys`>>).
 
 == Markup strings
 
-In certain contexts, Kakoune can take a markup string, which is a string
-containing formatting informations. In these strings, the {facename}
-syntax will enable the face facename until another face gets activated,
-or the end of the string is reached.
+In certain contexts, Kakoune can expand a markup string, which is a string
+containing formatting information. In these strings, the `{facename}`
+syntax enables the face *facename* until another face is enabled, or the
+end of the string is reached.
 
-Literal '{' characters shall be written '\{', and a literal backslash ('\')
-that precedes a '{' character shall be escaped as well ('\\').
+Literal `{` characters shall be written `\{`, and a literal backslash (`\`)
+that precedes a `{` character shall be escaped as well (`\\`).

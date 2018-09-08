@@ -5,9 +5,9 @@
 Manipulation of the displayed text is done through highlighters, which can
 be added or removed with the following commands:
 
------------------------------------------------------
-add-highlighter <path>/<name> <type> <parameters> ...
------------------------------------------------------
+-------------------------------------------------------
+add-highlighter <path>/[<name>] <type> <parameters> ...
+-------------------------------------------------------
 
 and
 
@@ -15,22 +15,35 @@ and
 remove-highlighter <path>/<name>
 --------------------------------
 
-*path* is the name of an highlighter group, it is expressed as a */*
+*path* is the name of a highlighter group, it is expressed as a `/`
 separated path starting with a scope. Scopes are *global*, *buffer*,
-*window* and *shared*
+*window* and *shared*.
 
-*name* is the name of the highlighter, if name is omitted in
+*name* is the name of the highlighter, if *name* is omitted in
 `add-highlighter` (the path ends with a `/`), it will be auto-generated
-from the remaining parameters.
+according to the remaining parameters.
 
 == Convenient highlighters
 
+*number-lines* [options]::
+    display line numbers (wrapped lines have their line number highlighted with `LineNumbersWrapped`), with the following *options*:
+
+    *-relative*:::
+        show line numbers relative to the main cursor line, highlighted with the `LineNumbers` face
+
+    *-hlcursor*:::
+        highlight the cursor line with the `LineNumberCursor` face
+
+    *-separator* <separator text>:::
+        specify a string to separate the line numbers column with
+        the rest of the buffer (default is `|`)
+
 *show-matching*::
-    highlight matching char of the character under the selections' cursor
-    using `MatchingChar` face
+    highlight the matching delimiter of the character under each selection's
+    cursor using the `MatchingChar` face.
 
 *show-whitespaces* [options]::
-    display symbols on top of whitespaces to make them more explicit
+    highlight whitespace by replacing them with characters highlighted
     using the `Whitespace` face, with the following *options*:
 
     *-lf* <separator>:::
@@ -48,78 +61,69 @@ from the remaining parameters.
     *-tabpad* <separator>:::
         a one character long separator that will be appended to tabulations to honor the *tabstop* option
 
-*number-lines* [options]::
-    show line numbers using the `LineNumbers`, `LineNumberCursor` and `LineNumbersWrapped` faces,
-    with the following *options*: 
-
-    *-relative*:::
-        show line numbers relative to the main cursor line
-
-    *-hlcursor*:::
-        highlight the cursor line with a separate face
-
-    *-separator* <separator text>:::
-        specify a string to separate the line numbers column with
-        the rest of the buffer (default is '|')
-
 *wrap* [options]::
     soft wrap buffer text at window width, with the following *options*:
 
     *-word*:::
-        wrap at word boundaries instead of codepoint boundaries.
+        wrap at word boundaries instead of codepoint boundaries
 
     *-indent*:::
-        preserve line indent when wrapping.
+        preserve line indent when wrapping
 
     *-width <max_width>*:::
-        wrap text at *max_width* if the window is wider.
+        wrap text at *max_width* if the window is wider
 
     *-marker <marker_text>*:::
         prefix wrapped lines with *marker_text*; if *-indent* was given,
-        the marker_text is displayed into the indentation if possible.
+        *marker_text* is displayed at indent level if possible
 
 == General highlighters
-
-*fill* <face>::
-    fill using the given *face*, mostly useful with regions highlighters
 
 *column* <number> <face>::
     highlight column *number* with face *face*
 
-*line* <number> <face>::
-    highlight line *number* with face *face*
-
-*regex* <regex> <capture_id>:<face> ...::
-    highlight a regex, takes the regex as first parameter, followed by
-    any number of face parameters.
-    This highlights C++ style comments in cyan, with an eventual 'TODO:'
-    in yellow on red background:
-
---------------------------------------------------------------------
-add-highlighter window/ regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
---------------------------------------------------------------------
-
 *dynregex* <expression> <capture_id>:<face> ...::
-    similar to regex, but expand (like a command parameter would) the
-    given expression before building a regex from the result.
-    This highlights all the current search matches in italic:
+    similar to regex, but expand (like a command parameter would) the given
+    expression before building a regex from the result.
+
+    The following highlights all the current search matches in italic:
 
 -----------------------------------------------
 add-highlighter window/ dynregex '%reg{/}' 0:+i
 -----------------------------------------------
 
+*fill* <face>::
+    fill using the given *face*, mostly useful with regions highlighters
+
+*line* <number> <face>::
+    highlight line *number* with face *face*
+
+*regex* <regex> <capture_id>:<face> ...::
+    highlight text that matches the regex, with the faces that follow
+    it. *capture_id* arguments refer to the 0-based index of the capture
+    groups declared in *regex*.
+
+    The following highlights C++ style comments in cyan, with an eventual
+    'TODO:' in yellow on red background:
+
+--------------------------------------------------------------------
+add-highlighter window/ regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
+--------------------------------------------------------------------
+
 == Specs highlighters
 
-The following highlighters are useful to add indicators like lint warnings,
-git blame output or spelling typos.
-See <<options#types,`:doc options types`>> for the format of `line-specs`
-and `range-specs`.
+The following highlighters are useful to add indicators like linting warnings,
+`git blame` output or spelling typos.
+
+See <<options#types,`:doc options types`>> for a description of the format of
+`line-specs` and `range-specs` options.
 
 *flag-lines* <face> <option_name>::
-    add columns in front of the buffer, and display the flags specified
-    in `line-specs` option, using <face>.
-    In this example two words will be added in the gutter: a blue Foo at
-    line 1 and a bold red/yellow Bar on line 3:
+    add columns in front of the buffer, and display the flags specified in
+    *option_name* (of type `line-specs`), highlighted with *face*.
+
+    The following example adds two words in the gutter: a blue 'Foo' at
+    line 1 and a bold red/yellow 'Bar' on line 3:
 
 ------------------------------------------------------------------------
 declare-option line-specs my_flags
@@ -128,10 +132,14 @@ add-highlighter window/ flag-lines blue my_flags
 ------------------------------------------------------------------------
 
 *ranges* <option_name>::
-    use the data in the `range-specs` option of the given name to highlight
-    the buffer. The string part of each tuple of the range-specs is
-    interpreted as a *face* to apply to the range.
-    In this example the 3 first chars of the buffer will be colored in red:
+    highlight the buffer at the coordinates stored in option *option_name*
+    (of type `range-specs`).
+
+    The string part of each tuple of *option_name* is interpreted as a _face_
+    to apply to the range.
+
+    The following example highlights the first three characters of the
+    buffer in red:
 
 --------------------------------------------------------
 declare-option range-specs my_range
@@ -140,10 +148,14 @@ add-highlighter window/ ranges my_range
 --------------------------------------------------------
 
 *replace-ranges* <option_name>::
-    use the data in the `range-specs` option of the given name to highlight
-    the buffer. The string part of each tuple of the range-specs is
-    interpreted as a *display line* to display in place of the range.
-    Here, the 3 first chars of the buffer will be replaced by the word 'red':
+    highlight the buffer at the coordinates stored in option *option_name*
+    (of type `range-specs`).
+
+    The string part of each tuple of *option_name* is interpreted as a
+    _display line_ to display in place of the range.
+
+    The following example replaces the first three characters of the buffer
+    with the word 'red':
 
 --------------------------------------------------------
 declare-option range-specs my_range
@@ -157,7 +169,7 @@ The *group* highlighter is a container for other highlighters. A subgroup
 can be added to an existing group or scope using:
 
 -----------------------------------
-add-highlighter <path>/<name> group 
+add-highlighter <path>/<name> group
 -----------------------------------
 
 Other highlighters can then be added to that group
@@ -193,10 +205,10 @@ add-highlighter <path>/<name>/<region_name> region \
 ----------------------------------------------------
 
 *opening*::
-    regex that defines the region start text
+    regex that defines the region start text.
 
 *closing*::
-    regex that defines the region end text
+    regex that defines the region end text.
 
 *recurse*::
     regex that defines the text that matches recursively an end token
@@ -204,14 +216,14 @@ add-highlighter <path>/<name>/<region_name> region \
     match of *end*, preventing it from closing the region.
 
 *type* and *params*::
-    An highlighter type, and associated params, as they would be passed
-    to `add-highlighter` if they were not applied as a region.
+    a highlighter *type*, and associated *params*, as they would be passed to
+    `add-highlighter` if they were not applied as a region.
 
 If the *-match-capture* switch is passed, then region closing and recurse
 matches are considered valid for a given region opening match only if they
-matched the same content for the capture 1.
+matched the same content for the first capture group.
 
-The *recurse* option is useful for regions that can be nested, for example
+The *-recurse* option is useful for regions that can be nested, for example
 the following contruct:
 
 ----------
@@ -236,7 +248,7 @@ another region.
 
 That matches the rule governing most programming language parsing.
 
-A default region, that will apply its given highlighter for segments of the
+A default region, which will apply its given highlighter for segments of the
 buffer that are not in any defined region, can be added with the *default-region*
 highlighter type.
 
@@ -259,26 +271,26 @@ add-highlighter <path>/<lang>/code/function regex ...
 == Shared Highlighters
 
 Highlighters are often defined for a specific filetype, and it makes then
-sense to share the highlighters between all the windows on the same filetypes.
+sense to share the highlighters between all the windows of the same filetype.
 
-Highlighters can be put in the shared scope in order to make them reusable.
+Highlighters can be put in the *shared* scope in order to make them reusable.
 
 ---------------------------------
 add-highlighter shared/<name> ...
 ---------------------------------
 
-The common case would be to create a named shared group, or regions and then
-fill it with highlighters:
+A common usecase would be to create a named shared group (or regions) and then
+assign more highlighters to it:
 
 ---------------------------------------
 add-highlighter shared/ group <name>
 add-highlighter shared/<name> regex ...
 ---------------------------------------
 
-It can then be referenced in a window using the ref highlighter.
+It can then be referenced in a window using the `ref` highlighter.
 
 ----------------------------------
 add-highlighter window/ ref <name>
 ----------------------------------
 
-The ref can reference any named highlighter in the shared scope.
+*name* can refer to any named highlighter in the *shared* scope.

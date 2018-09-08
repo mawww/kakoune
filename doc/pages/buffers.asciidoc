@@ -2,7 +2,7 @@
 
 == Commands
 
-To open buffers or navigate through the buffers list see
+To open buffers or navigate through the buffers list, see
 <<commands#files-and-buffers,`:doc commands files-and-buffers`>>.
 
 == Scratch Buffers
@@ -15,7 +15,7 @@ created when there are no other buffers left in the current
 session. (which is also the case at Kakoune's startup when no files to
 open have been provided)
 
-A scratch buffer can be created by passing the `-scratch` switch to the
+A scratch buffer can be created by passing the *-scratch* switch to the
 `:edit` command.
 
 == Debug Buffers
@@ -24,25 +24,25 @@ Debug buffers are used to gather diagnostics. They are not accessible
 while cycling over the buffers list.
 
 A specific *\*debug*\* buffer is used by Kakoune to write errors or
-warnings.  This is also where the ouput of the `:debug` and the `:echo
--debug` commands will land.
+warnings.  This is also where the output of the `:debug` and the
+`:echo -debug` commands will land.
 
-A debug buffer can be created by passing the `-debug` switch to the
+A debug buffer can be created by passing the *-debug* switch to the
 `:edit` command.
 
 == FIFO Buffers
 
-The `:edit` command can take a `-fifo` switch:
+The `:edit` command can take a *-fifo* switch:
 
 ---------------------------------------------
 :edit -fifo <filename> [-scroll] <buffername>
 ---------------------------------------------
 
-In this case, a buffer named `<buffername>` is created which reads
-its content from the fifo (also called "named pipe") `<filename>`.
+In this case, a buffer named *buffername* is created which reads
+its content from the fifo (also called "named pipe") *filename*.
 When the fifo is written to, the buffer is automatically updated.
 
-If the `-scroll` switch is specified, the window displaying the buffer
+If the *-scroll* switch is specified, the window displaying the buffer
 will scroll so that the newest data is always visible.
 
 This is very useful for running some commands asynchronously while
@@ -50,5 +50,5 @@ displaying their result in a buffer. See `rc/make.kak` and `rc/grep.kak`
 for examples.
 
 When the buffer is deleted, the fifo will be closed, so any program
-writing to it will receive `SIGPIPE`. This is useful as it permits to
-stop the writing program when the buffer is deleted.
+writing to it will receive `SIGPIPE`. This is useful as it allows
+stopping the writing program when the buffer is deleted.

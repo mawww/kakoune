@@ -3,75 +3,74 @@
 Kakoune commands, either loaded from a script, or written in the command
 prompt are parsed according to the following rules:
 
-== Basic parsing
+== Basic Parsing
 
-- Commands are separated by `;` or end of lines
+- Commands are separated by `;` or new line characters.
 
-- Words (command names and parameters) are separated by whitespaces
+- Words (command names and parameters) are separated by whitespace characters.
 
 == Quoted Strings
 
-If a word starts with `'`, `"` or `%X` with `X` a non nestable
-punctuation character it is parsed as a quoted string whose delimiter is,
-respectively, `'`, `"` or `X`.
+If a word starts with `'`, `"` or `%X`, with `X` being a non nestable
+punctuation character, then it is parsed as a quoted string whose delimiter
+is, respectively, `'`, `"` or `X`.
 
-A quoted string contains every characters (including whitespaces) until
-its closing delimiter. If its closing delimiter is doubled, then it is
-considered to be part of the string content as a single delimiter.
+A quoted string contains every character (including whitespace) up to
+its closing delimiter. If the closing delimiter is doubled, then it is
+considered to be part of the string content as a single character.
 
 No other escaping takes place in quoted strings.
 
 === Quoted Strings Examples
 
-- `'foo'` contents is *foo*
+- `'foo'` is a string whose content is *foo*.
 
-- `'foo''bar'` is a single word whose content is *foo'bar*
+- `'foo''bar'` is a single word whose content is *foo'bar*.
 
 - `"baz"""` is a single word whose content is *baz"*.
 
-== Balanced Strings
+== Symmetrical Strings
 
-If a word starts with `%X` with `X` a nestable punctuation character (one
-of `(`, `[`, `{` and `<`), it is parsed as a balanced string whose closing
-delimiter is the matching character of its opening delimiter (respectively
-`)`, `]`, `}` and `>`).
+If a word starts with `%X`, with `X` being a nestable punctuation character
+(one of `(`, `[`, `{` or `<`), then it is parsed as a symmetrical string
+whose closing delimiter is the character matching its opening delimiter
+(respectively `)`, `]`, `}` and `>`).
 
-A balanced string contains every character (including whitespaces) until
-a closing delimiter is found, and opening and closing delimiters are
-balanced inside the string (each opening delimiter appearing inside the
-string have been closed by a matching closing delimiter).
+A symmetrical string contains every character (including whitespace)
+until a closing delimiter is found; opening and closing delimiters are
+symmetrical within the string (each opening delimiter appearing within the
+string has been closed by a matching closing delimiter).
 
-No other escaping takes place in balanced strings.
+No other type of escaping takes place in symmetrical strings.
 
-=== Balanced Strings Examples
+=== Symmetrical Strings Examples
 
-- `%{foo}` contents is *foo*
+- `%{foo}` is string whose content is *foo*.
 
-- `%{foo\{bar}}` contents is *foo\{bar}*
+- `%{foo\{bar}}` is a string whose content is *foo\{bar}*.
 
-== Non Quoted words
+== Unquoted Words
 
-Other words are non-quoted. Non-quoted words end either on a whitespaces
-or a `;`.
+Other words are unquoted. Unquoted words end either with a whitespace
+character or `;`.
 
 If they start with `\\` followed by `%`, `'` or `"`, then that leading
-`\\` is discarded.
+`\\` character is discarded.
 
-If a whitespace or `;` is preceeded by `\\`, then the `\\` is discarded
-and the whitespace or `;` becomes part of the word. Any other `\\`
-is treated as a literal `\\`.
+If a whitespace character or `;` is preceded by `\\`, then the `\\` character
+is discarded and the whitespace character or `;` becomes part of the
+word. Any other `\\` is treated as a literal `\\`.
 
 == Typed Expansions
 
-Quoted and Balanced strings startings with `%` might have an optional
-alphabetic *expansion type* between the `%` and their delimiter (which
-is always a punctuation character). This *expansion type* defines how the
-string content is going to be expanded.
+Quoted and symmetrical strings starting with `%` may have an optional
+alphabetic _expansion type_ between the `%` character and their delimiter
+(which is always a punctuation character). This _expansion type_ defines
+how the string content is going to be expanded.
 
-- If the *expansion type* is empty, the string content is used verbatim.
+- If the _expansion type_ is empty, the string content is used verbatim.
 
-- If the *expansion type* is one of `sh`, `reg`, `opt`, `val` or `arg`,
-  The string is expanded according as described in
-  <<expansions#typed-expansions,`:doc expansion typed-expansions`>>
+- If the _expansion type_ is one of `sh`, `reg`, `opt`, `val` or `arg`,
+  the string is expanded as described in <<expansions#typed-expansions,`:doc expansion typed-expansions`>>
 
-- For any other *expansion type* a parsing error is raised.
+- For any other _expansion type_ a parsing error is raised.

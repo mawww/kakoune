@@ -7,12 +7,12 @@ values depending on the group the value was declared in.
 
 These scoped objects are:
 
-- aliases (See <<commands#,`:doc commands`>>)
-- faces (See <<faces#,`:doc faces`>>)
-- highlighters (See <<highlighters#,`:doc highlighters`>>)
-- hooks (See <<hooks#,`:doc hooks`>>)
-- keymaps (See <<mapping#,`:doc mapping`>>)
-- options (See <<options#,`:doc options`>>)
+- aliases (see <<commands#,`:doc commands`>>)
+- faces (see <<faces#,`:doc faces`>>)
+- highlighters (see <<highlighters#,`:doc highlighters`>>)
+- hooks (see <<hooks#,`:doc hooks`>>)
+- keymaps (see <<mapping#,`:doc mapping`>>)
+- options (see <<options#,`:doc options`>>)
 
 == Names and hierarchy
 
@@ -21,20 +21,20 @@ Scopes are named as follows:
 *window*::
     context linked to the window displaying a buffer.
 
-    In Kakoune, the concept of a *window* must not be confused with
-    the concept of a window at the OS level.
+    In Kakoune, the concept of *window* must not be confused with the
+    concept of window at the OS level.
     In other terms, a window is *not* a client (like a terminal or GUI)
     but one of many 'views' into a buffer.
 
-    There is a N:1 relationship between windows and buffers; once a 
+    There is a N:1 relationship between windows and buffers; once a
     window is linked to a buffer, the window's buffer never changes.
     Windows store a set of selections and the scroll position.
 
 *buffer*::
-    context linked directly to the buffer
+    context linked directly to the buffer.
 
 *global*::
-    global context linked to the instance of Kakoune
+    global context linked to the instance of Kakoune.
 
 The following order of priority applies to the above scopes:
 
@@ -42,12 +42,12 @@ The following order of priority applies to the above scopes:
 window ]> buffer ]> global
 --------------------------
 
-The above priority line implies that objects can have individual values that
-will be resolved first in the *window* scope (highest priority), then in
-the *buffer* scope, and finally in the *global* scope (lowest priority).
+The above priority line implies that objects can have individual values
+that will be resolved first in the *window* scope (highest priority), then
+in the *buffer* scope, and finally in the *global* scope (lowest priority).
 
-The `set-option` and `unset-option` commands also accept *current* as 
-a valid scope name. It refers to the narrowest scope the option is set in.
+The `set-option` and `unset-option` commands also accept *current* as a
+valid scope name. It refers to the narrowest scope the option is set in.
 
 == Uses
 
@@ -60,15 +60,15 @@ Examples:
 
 *filetype*::
     A single buffer opened in two separate windows can have different
-    filetypes declared in the *window* scope with 'set-option'.
-    (See <<options#,`:doc options`>>)
+    filetypes declared in the *window* scope with 'set-option'
+    (see <<options#,`:doc options`>>).
 
 *status line*::
     All the buffers of the current session can have the same information
     displayed in the status line, except for a specific buffer (the
     'modelinefmt' option can be declared in the *global* scope, and
-    customized in the *buffer* scope with 'set-option'.
-    (See <<options#,`:doc options`>>)
+    customized in the *buffer* scope with 'set-option'
+    (see <<options#,`:doc options`>>).
 
 == Execution context
 

@@ -5,46 +5,47 @@
 Creating and removing shortcuts boils down to the following commands,
 respectively:
 
----------------------------------------
+------------------------------------------
 map [switches] <scope> <mode> <key> <keys>
 unmap <scope> <mode> <key> [<expected>]
----------------------------------------
+------------------------------------------
 
 The *map* command makes *key* behave as if the *keys* sequence was typed.
 
 *mode* dictates in what context the mapping will be available:
 
+    *goto*::
+        when the goto key is hit (default: `g`)
+
     *insert*::
         insert mode
+
+    *menu*::
+        menus displayed with the `:menu` command
 
     *normal*::
         normal mode
 
-    *prompt*::
-        prompts, such as when entering a command through *:*, or a regex through */*
+    *object*::
+        when an object selection is triggered (e.g. `<a-i>`, see
+        <<keys#object-selection,`:doc keys object-selection`>>)
 
-    *menu*::
-        mode entered when a menu is displayed with the 'menu' command
+    *prompt*::
+        prompts, such as when entering a command after hitting *:*, or a
+        regex after hitting */*
 
     *user*::
-        mode entered when the user prefix is hit (default: ',')
-
-    *goto*::
-        mode entered when the goto key is hit (default: 'g')
+        when the user prefix is hit (default: `,`)
 
     *view*::
-        mode entered when the view key is hit (default: 'v')
-
-    *object*::
-        mode entered when an object selection is triggered (e.g. '<a-i>')
+        when the view key is hit (default: `v`)
 
 The context of execution of the above modes is always the current one at the
 time of execution of the mapping, except for *user* mode (always executed
-in a 'normal' context). Refer to <<modes#,`:doc modes`>> for more details.
+in a *normal* context). Refer to <<modes#,`:doc modes`>> for more details.
 
-An optional *-docstring* switch followed by a string can be used
-to describe what the mapping does. This docstring will be used
-in autoinfo boxes.
+An optional *-docstring* switch followed by a string can be used to describe
+what the mapping does. This docstring will be used in autoinfo boxes.
 
 The *unmap* command removes a mapping of *key* in the given *scope* and
 *mode*. If *expected* is specified, the mapping is removed only if it is
@@ -55,63 +56,61 @@ For more information about the values of the *scope* parameter, refer to
 
 == Mappable keys
 
-See <<keys#,`:doc keys`>> to discover the list of default bindings.
+See <<keys#,`:doc keys`>> for a list of all default bindings.
 
-For *key* and *keys* in the *map* command, the following key names can
-be used:
+The *key* and *keys* arguments to the *map* command can be any of the
+following:
 
 *x*, *<x>*::
-    Most keys, especially alphabetic keys, represent themselves.
-    Keys can also be wrapped in angle-brackets for consistency
-    with the non-alphabetic keys below.
+    regular keys, written in their ASCII form. Keys can also be wrapped
+    in angle-brackets for consistency with the other keys described below.
 
 *<c-x>*::
-    Holding down Control while pressing the *x* key.
+    holding down Control while hitting the *x* key (see
+    <<keys#key-syntax,`:doc keys key-syntax`>>).
 
 *<a-x>*::
-    Holding down Alt while pressing the *x* key.
+    holding down Alt while hitting the *x* key (see <<keys#key-syntax,`:doc
+    keys key-syntax`>>).
 
 *<s-x>*, *X*, *<X>*, *<s-X>*::
-    Holding down Shift while pressing the *x* key.
-    *<s-x>*, *<s-X>* and *<X>* are treated as the same key. The *s-* modifier
-    only works with ASCII letters and cannot be used with other printable keys
-    (non-ASCII letters, digits, punctuation) because their shift behaviour
-    depends on your keyboard layout. The *s-* modifier _can_ be used with
-    special keys like *<up>* and *<tab>*.
+    holding down Shift while hitting the *x* key (see <<keys#key-syntax,`:doc
+    keys key-syntax`>>).
 
 *<c-a-x>*::
-    Holding down Control and Alt while pressing the *x* key.
+    holding down Control and Alt while hitting the *x* key (see <<keys#key-syntax,`:doc
+    keys key-syntax`>>).
 
 *<lt>*, *<gt>*::
-    The *<* and *>* characters.
+    the *<* and *>* characters.
 
 *<plus>*, *<minus>*::
-    The *+* and *-* characters.
+    the *+* and *-* characters.
 
 *<ret>*::
-    The Return or Enter key.
+    the Return or Enter key.
 
 *<space>*::
-    The space bar.
+    the Space bar.
 
 *<tab>*::
-    The Tab key.
+    the Tab key.
 
 *<backspace>*::
-    The Backspace (delete to the left) key.
+    the Backspace (delete to the left) key.
 
 *<del>*::
-    The Delete (to the right) key.
+    the Delete (to the right) key.
 
 *<esc>*::
-    The Escape key.
+    the Escape key.
 
 *<up>*, *<down>*, *<left>*, *<right>*::
 *<pageup>*, *<pagedown>*, *<home>*, *<end>*::
-    The usual cursor-movement keys.
+    the usual cursor-movement keys.
 
 *<f1>*, *<f2>*, ...*<f12>*::
-    Function keys.
+    function keys.
 
 NOTE: Although Kakoune allows many key combinations to be mapped, not every
 possible combination can be triggered. For example, due to limitations in

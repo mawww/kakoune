@@ -2,385 +2,428 @@
 
 == Key Syntax
 
-Usual keys are written using their ascii character, including capital
-keys. Non printable keys use an alternate name, written between *<*
-and *>*, such as *<esc>* or *<del>*. Modified keys are written between
-*<* and *>* as well, with the modifier specified as either *c* for
-Control, *a* for Alt, or *s* for Shift, followed by a *-* and the key (either
-its name or ascii character), for example *<c-x>*, *<a-space>*, *<c-a-w>*.
+Regular keys are written using their ASCII character, including capital
+keys. Non printable keys use an alternate name, enclosed
+between *<* and *>*, such as *<esc>* or *<del>*.
 
-In order to bind some keys to arbitrary ones, refer to <<mapping#,`:doc mapping`>>
+Modifiers can be prepended to the keys, and can be one of the following:
+
+    *c*::
+        control modifier
+
+    *a*::
+        alt modifier
+
+    *s*::
+        shift modifier
+
+Modifiers and keys are comma separated (*-*) and enclosed in
+brackets (*<*, *>*) like other keys, e.g. *<c-x>*, *<a-space>*, *<c-a-w>*.
+
+*<s-x>*, *<s-X>* and *<X>* are treated as the same key. The *s-* modifier
+only works with ASCII letters and cannot be used with other printable keys
+(non-ASCII letters, digits, punctuation) because their shift behaviour
+depends on your keyboard layout. The *s-* modifier _can_ be used with
+special keys like *<up>* and *<tab>*.
+
+In order to bind some keys to arbitrary ones, see <<mapping#,`:doc mapping`>>.
 
 == Insert mode
 
 *<esc>*::
-    leave insert mode
+    leave insert mode.
 
 *<backspace>*::
-    delete characters before cursors
+    delete characters before the cursor.
 
 *<del>*::
-    delete characters under cursors
+    delete characters under the cursor.
 
 *<left>*, *<right>*, *<up>*, *<down>*::
-    move the cursors in given direction
+    move the cursor in the given direction.
 
 *<home>*::
-    move cursors to line begin
+    move the cursor to the beginning of the line.
 
 *<end>*::
-    move cursors to end of line
+    move the cursor to the end of the line.
 
 *<c-r>*::
-    insert contents of the register given by next key
+    insert the contents of the register given by next key hit.
 
 *<c-v>*::
-    insert next keystroke directly into the buffer, without interpreting it
+    insert the next keystroke directly into the buffer, without interpreting
+    it.
 
 *<c-u>*::
-    commit changes up to now as a single undo group
+    commit changes up to now as a single undo group.
 
 *<a-;>*::
-    escape to normal mode for a single command
+    escape to normal mode to allow for a single command to be executed with
+    `:`.
 
 == Insert mode completion
 
-The `completers` option controls automatic completion, which kicks in when
+The `completers` option controls automatic completion, which is triggered when
 the value specified in the `idle_timeout` option is reached.
 
 *<c-o>*::
-    toggle automatic completion
+    toggle automatic completion.
 
 *<c-n>*::
-    select next completion candidate
+    select the next completion candidate.
 
 *<c-p>*::
-    select previous completion candidate
+    select the previous completion candidate.
 
 *<c-x>*::
     explicit insert completion query, followed by:
 
     *f*:::
-        explicit file completion
+        file completion
 
     *w*:::
-        explicit word completion (current buffer)
+        word completion (current buffer)
 
     *W*:::
-        explicit word completion (all buffers)
+        word completion (all buffers)
 
     *l*:::
-        explicit line completion (current buffer)
+        line completion (current buffer)
 
     *L*:::
-        explicit line completion (all buffers)
+        line completion (all buffers)
 
 == Using Counts
 
-In normal mode, commands can be prefixed with a numeric count, which can control
-the command behaviour.
+In normal mode, some primitives can be prefixed with a numeric _count_,
+which can affect its behaviour. With most primitives whose side effect is
+quantifiable, the _count_ will simply repeat the same action a given amount
+of times.
 
-For example, *3W* selects 3 consecutive words and *3w* select the third word on
-the right of the end of each selection.
+For example, `3W` selects 3 'WORD's consecutively, while `3w` selects the
+third 'word' located after the right-most boundary of each selection.
 
 == Disabling Hooks
 
-Any normal mode command can be prefixed with *\* which will disable hook execution
-for the duration for the command (including the duration of modes the command could
-move to, so *\i* will disable hooks for the whole insert session).
+Any normal mode primitive can be prefixed with `\` in order to disable hook
+execution for as long as the new mode entered into is enabled.
 
-As autoindentation is implemented in terms of hooks, this can be used to disable
-it when pasting text.
+As autoindentation is implemented with hooks, this mechanism can be used
+to disable it when pasting text.
 
 == Movement
 
 'word' is a sequence of alphanumeric characters or underscore, and 'WORD'
-is a sequence of non whitespace characters. Generally, a movement on it own
+is a sequence of non whitespace characters. Generally, a movement on its own
 will move each selection to cover the text moved over, while holding down
 the Shift modifier and moving will extend each selection instead.
 
 *h*, *<left>*::
-    select the character on the left of the end of each selection
+    select the character on the left of the end of each selection.
 
 *j*, *<down>*::
-    select the character below the end of each selection
+    select the character below the end of each selection.
 
 *k*, *<up>*::
-    select the character above the end of each selection
+    select the character above the end of each selection.
 
 *l*, *<right>*::
-    select the character on the right of the end of each selection
+    select the character on the right of the end of each selection.
 
 *w*::
-    select the word and following whitespaces on the right of the end of each selection
+    select the word and following whitespace characters on the right of the end of each selection.
 
 *b*::
-    select preceding whitespaces and the word on the left of the end of each selection
+    select the preceding whitespace characters and the word on the left of the end of each selection.
 
 *e*::
-    select preceding whitespaces and the word on the right of the end of each selection
+    select the preceding whitespace characters and the word on the right of the end of each selection.
 
 *<a-[wbe]>*::
-    same as [wbe] but select WORD instead of word
+    same as *[wbe]* but select 'WORD' instead of 'word'.
 
-*f*::
-    select to the next occurrence of given character
+*f* `character`::
+    select up to the next occurrence of *character*.
 
-*t*::
-    select until the next occurrence of given character
+*t* `character`::
+    select up to the character preceding the next occurrence of *character*.
 
 *<a-[ft]>*::
-    same as [ft] but in the other direction
+    same as *[ft]* but backwards.
 
 *<a-.>*::
-    repeat last object or *f*/*t* selection command
+    repeat last object or *f*/*t* selection command.
 
 *m*::
-    select to matching character, see the `matching_pairs` option
-    in <<options#,`:doc options`>>
+    select up to delimiter matching the character under the cursor, see the
+    `matching_pairs` option in <<options#,`:doc options`>>.
 
 *x*::
-    select line on which the end of each selection lies (or next line when end lies
-    on an end-of-line)
+    select the line on which the end of each selection lies, or the next
+    line when its end lies on a newline character.
 
 *<a-x>*::
-    expand selections to contain full lines (including end-of-lines)
+    expand the current selections to contain full lines (including newline
+    characters).
 
 *<a-X>*::
-    trim selections to only contain full lines (not including last
-    end-of-line)
+    trim the current selections to only contain full lines (not including
+    the last newline character).
 
 *%*::
-    select whole buffer
+    select whole buffer.
 
 *<a-h>*, *<home>*::
-    select to line begin
+    select all characters from the cursor up to the beginning of the line.
 
 *<a-l>*, *<end>*::
-    select to line end
+    select all characters from the cursor up to the end of the line.
 
 *pageup, <c-b>*::
-    scroll one page up
+    scroll one page up.
 
 *pagedown, <c-f>*::
-    scroll one page down
+    scroll one page down.
 
 *<c-u>*::
-    scroll half a page up
+    scroll half a page up.
 
 *<c-d>*::
-    scroll half a page down
+    scroll half a page down.
 
 *;*::
-    reduce selections to their cursor
+    collapse selections down to the character beneath the cursor.
 
 *<a-;>*::
-    flip the direction of each selection
+    invert the direction of each selection, by placing the cursor onto the anchor.
 
 *<a-:>*::
-    ensure selections are in forward direction (cursor after anchor)
+    make all selections have their cursor placed after their anchor.
 
 == Changes
 
-Yanking (copying) and pasting use the *"* register by default (See <<registers#,`:doc registers`>>)
+Yanking (copying) and pasting use the *"* register by default (see <<registers#,`:doc registers`>>).
 
 *i*::
-    enter insert mode before selections
+    enter insert mode on the left-most boundary of each selection.
 
 *a*::
-    enter insert mode after selections
+    enter insert mode after the right-most boundary of each selection.
 
 *d*::
-    yank and delete selections
+    yank and delete all selections.
 
 *c*::
-    yank and delete selections and enter insert mode
+    yank and delete selections, then enter insert mode.
 
 *.*::
-    repeat last insert mode change (*i*, *a*, or *c*, including the
-    inserted text)
+    repeat the last modification made in insert mode (i.e. text inserted
+    with *i*, *a*, or *c*).
 
 *<a-d>*::
-    delete selections (not yanking)
+    delete selections without yanking them.
 
 *<a-c>*::
-    delete selections and enter insert mode (not yanking)
+    delete selections without yanking them and enter insert mode.
 
 *I*::
-    enter insert mode at the beginning of the lines containing
-    the start of each selection
+    enter insert mode on the beginning of the line containing the left-most boundary of each selection.
 
 *A*::
-    enter insert mode at the end of the lines containing
-    the end of each selection
+    enter insert mode after the end of the line containing the right-most
+    boundary of each selection.
 
 *o*::
-    enter insert mode in a new line (or in a given count of new lines)
-    below the end of each selection
+    create a new line beneath each selection and enter insert mode.
 
 *O*::
-    enter insert mode in a new line (or in a given count of new lines)
-    above the beginning of each selection
+    create a new line above each selection and enter insert mode.
 
 *<a-o>*::
-    add an empty line below cursor
+    create a new line beneath each selection.
 
 *<a-O>*::
-    add an empty line above cursor
+    create a new line above each selection.
 
 *y*::
-    yank selections
+    yank all selections.
 
 *p*::
-    paste after the end of each selection
+    paste after the right-most boundary of each selection.
 
 *P*::
-    paste before the beginning of each selection
+    paste before the left-most boundary of each selection.
 
 *<a-p>*::
-    paste all after the end of each selection, and select each pasted string
+    paste after the right-most boundary of each selection and select the inserted text.
 
 *<a-P>*::
-    paste all before the start of each selection, and select each pasted string
+    paste before the right-most boundary of each selection, and select the inserted text.
 
 *R*::
-    replace selections with yanked text
+    replace each selection with its corresponding item in the copy register.
 
 *<a-R>*::
-    replace selections with every yanked text
+    replace each selection with the entire content of the copy register.
 
-*r*::
-    replace each character with the next entered one
+*r* `character`::
+    replace evert character of each selection with *character*.
 
 *<a-j>*::
-    join selected lines
+    join all individual lines in each selection into the same line and
+    separate them with a space character. If only a single line (or part
+    of one) is selected, the following line is used for joining.
 
 *<a-J>*::
-    join selected lines and select spaces inserted in place of line breaks
+    perform a line join, as described by *<a-j>*, and select all newly
+    inserted joining space characters.
 
 *<a-m>*::
-    merge contiguous selections together (works across lines as well)
+    merge contiguous selections together.
 
 *>*::
-    indent selected lines
+    indent all non-empty lines that contain each selection (see the
+    *indentwidth* option in <<options#builtin-options, `:doc options
+    builtin-options`>>).
 
 *<a\->>*::
-    indent selected lines, including empty lines
+    indent all lines that contain each selection (see the *indentwidth*
+    option in <<options#builtin-options, `:doc options builtin-options`>>).
 
 *<*::
-    deindent selected lines
+    deindent all lines that contain each selection (see the *indentwidth*
+    option in <<options#builtin-options, `:doc options builtin-options`>>).
 
 *<a-<>*::
-    deindent selected lines, do not remove incomplete indent (3 leading
-    spaces when indent is 4)
+    deindent all fully indented lines that contain each selection. For
+    example, if indentation settings use 4 space characters, lines
+    indented with a lesser amount won't be shifted (see the *indentwidth*
+    option in <<options#builtin-options, `:doc options builtin-options`>>).
 
 *u*::
-    undo last change
+    undo last insert mode change.
 
 *<a-u>*::
-    move backward in history
+    move backward in the undo history.
 
 *U*::
-    redo last change
+    redo the last canceled change.
 
 *<a-U>*::
-    move forward in history
+    move forward in the undo history.
 
 *&*::
-    align selections, align the cursor of each selection by inserting spaces
-    before the first character of each selection
+    align the cursors of each selection vertically by inserting spaces
+    before their left-most boundary.
 
 *<a-&>*::
-    copy indent, copy the indentation of the main selection (or the
-    count one if a count is given) to all other ones
+    _count_ index of the selection whose indentation level is to be applied +
+    apply the indentation level of the main selection to all other ones.
 
 *`*::
-    to lower case
+    convert letters in all selections to lower-case.
 
 *~*::
-    to upper case
+    convert letters in all selections to upper-case.
 
 *<a-`>*::
-    swap case
+    invert the case of letters in all selections (lower-case to upper-case,
+    and vice-versa).
 
 *@*::
-    convert tabs to spaces in each selection, uses the buffer tabstop
-    option or the count parameter for tabstop
+    _count_ amount of spaces that make up a tab +
+    convert tabulation characters to space characters in all
+    selections. If no _count_ is given, the *tabstop* option is used (see
+    <<options#builtin-options, `:doc options builtin-options`>>).
 
 *<a-@>*::
-    convert spaces to tabs in each selection, uses the buffer tabstop
-    option or the count parameter for tabstop
+    _count_ amount of spaces that make up a tab +
+    convert space characters to tabulation characters in all selections. If
+    no _count_ is given, the *tabstop* option is used (see <<options#builtin-options,
+    `:doc options builtin-options`>>).
 
 *_*::
-    trim selections
+    un-select all whitespace characters that each selection starts and
+    ends with.
 
 *<a-)>*::
-    rotate selections content, if specified, the count groups selections,
-    so the following command
+    _count_ amount to group consecutive selections by +
+    rotate forward the contents of each selection with the next.
 
-----------
-    3<a-)>
-----------
-
-    rotate (1, 2, 3) and (3, 4, 6) independently
+    For example, `3<a-)>` would perform a rotation within each group of
+    three consecutive selections, as opposed to rotating each of all current
+    selections with the next, when no count is given.
 
 *<a-(>*::
-    rotate selections content backward
+    perform the same rotation operation described by *<a-)>*, but backwards.
 
 == Changes through external programs
 
-Shell expansions are available, (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
-The default command comes from the *|* register by default (See <<registers#,`:doc registers`>>)
+Each of the following primitives supports shell expansions
+(see <<expansions#shell-expansions,`:doc expansions shell-expansions`>>).
+
+The last command executed is stored in the *|* register (see
+<<registers#,`:doc registers`>>), and is used by default when no command
+is given upon executing those primitives.
 
 *|*::
-    pipe each selection through the given external filter program and
-    replace the selection with its output.
+    pipe each selection to the given command and replace them with the output.
 
 *<a-|>*::
-    pipe each selection through the given external filter program and
-    ignore its output.
+    pipe each selection to the given command (and ignore its output).
 
 *!*::
-    insert command output before each selection.
+    insert the command's output before the left-most boundary of each
+    selection.
 
 *<a-!>*::
-    append command output after each selection.
+    insert the command's output after the right-most boundary of each
+    selection.
 
 == Searching
 
-Searches use the */* register by default (See <<registers#,`:doc registers`>>)
+Searches use the */* register by default (see <<registers#,`:doc registers`>>).
 
 */*::
-    select next match after each selection
+    select the matching text located after the right-most boundary of
+    each selection.
 
 *<a-/>*::
-    select previous match before each selection
+    select the matching text located before the left-most boundary of
+    each selection.
 
 *?*::
-    extend to next match after each selection
+    extend each selection up to and including the matching text located after
+    their right-most boundary.
 
 *<a-?>*::
-    extend to previous match before each selection
+    extend each selection up to and including the matching text located before
+    their left-most boundary.
 
 *n*::
-    select next match after the main selection
+    select the matching text located after the right-most boundary of
+    the main selection.
 
 *N*::
-    add a new selection with next match after the main selection
+    create an additional selection containing the matching text located
+    after the right-most boundary of the main selection.
 
 *<a-n>*::
-    select previous match before the main selection
+    select the matching text located before the left-most boundary of the
+    main selection.
 
 *<a-N>*::
-    add a new selection with previous match before the main selection
+    create an additional selection containing the matching text located
+    before the left-most boundary of the main selection.
 
 ***::
-    set the search pattern to the main selection (automatically
-    detects word boundaries)
+    set the search pattern to the contents of the main selection. Word
+    boundaries are automatically detected, and integrated into the search
+    pattern.
 
 *<a-***>*::
-    set the search pattern to the main selection (verbatim, no smart
-    detection)
+    set the search pattern to the contents of the main selection.
 
 == Goto commands
 
@@ -458,14 +501,16 @@ Searches use the */* register by default (See <<registers#,`:doc registers`>>)
 
 == Marks
 
-Current selections position can be saved in a register and restored later on.
-Marks use the *^* register by default (See <<registers#,`:doc registers`>>)
+The coordinates of the current selections can be saved in a register
+and restored later on, with marks.
+
+Marks use the *^* register by default (see <<registers#,`:doc registers`>>).
 
 *Z*::
-    save selections to the register
+    save the coordinates of all selections.
 
 *z*::
-    restore selections from the register
+    restore all selections.
 
 *<a-z>*, *<a-Z>*::
     *<a-z>* combines selections from the register with the current ones, whereas
@@ -495,276 +540,298 @@ Marks use the *^* register by default (See <<registers#,`:doc registers`>>)
 
 == Macros
 
-Macros use the *@* register by default (See <<registers#,`:doc registers`>>)
+Macros allow storing a combination of keys in the same order as they were
+hit, and later easily replay them.
+
+Macros use the *@* register by default (see <<registers#,`:doc registers`>>).
 
 *Q*::
-    start or end macro recording
+    start or end macro recording.
 
 *q*::
-    play a recorded macro
+    play a recorded macro.
 
 *<esc>*::
-    end macro recording
+    end macro recording.
 
 == Jump list
 
 Some commands, like the goto commands, buffer switch or search commands,
 push the previous selections to the client's jump list. It is possible
-to skim through the jump list using:
+to cycle through the jump list using:
 
 *<c-i>*::
-    jump forward
+    jump forward.
 
 *<c-o>*::
-    jump backward
+    jump backward.
 
 *<c-s>*::
-    save selections
+    save selections.
 
 == Multiple selections
 
-*s*, *S*, *<a-k>* and *<a-K>* use the */* register by default (See <<registers#,`:doc registers`>>)
+*s*, *S*, *<a-k>* and *<a-K>* use the */* register by default (see <<registers#,`:doc registers`>>).
 
 *s*::
-    create a selection for each match of the given regex
+    select each matching text in all current selections.
 
 *S*::
-    split selections with the given regex
+    split all current selections according to the matching text (used as
+    a delimiter).
 
 *<a-s>*::
-    split selections on line boundaries
+    split all current selections using line boundaries for delimiter.
 
 *<a-S>*::
-    select first and last characters of each selection
+    select the first and last character of each selection.
 
 *C*::
-    copy the main selection to the next line
+    create an additional selection with the same dimensions as the main
+    one, on the next line that can hold it.
 
 *<a-C>*::
-    copy the main selection to the previous line
+    create additional selection as described by *C*, but backwards.
 
 *<space>*::
-    clear selections to only keep the main one
+    un-select all secondary selections.
 
 *<a-space>*::
-    clear the main selection
+    un-select the main selection, making the previous selection the new
+    main one.
 
 *<a-k>*::
-    keep selections that match the given regex
+    un-select all selections that do not contain matching text.
 
 *<a-K>*::
-    clear selections that match the given regex
+    un-select all selections that contain matching text.
 
 *$*::
     pipe each selection to the given shell command and keep the ones
     for which the shell returned 0. Shell expansions are available,
-    (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
+    (see <<expansions#shell-expansions,`:doc expansions shell-expansions`>>).
 
 *)*::
-    rotate main selection (the main selection becomes the next one)
+    demote the main selection to a secondary one, and promote the following
+    secondary selection to a primary one.
 
 *(*::
-    rotate main selection backward (the main selection becomes the previous one)
+    promote a secondary selection to a primary one as described by *)*,
+    but backwards.
 
 == Object Selection
 
-For nestable objects, a count can be used in order to specify which surrounding
-level to select. Object selections are repeatable using *<a-.>*.
+For nestable objects, a count can be used in order to specify the depth of
+the surrounding nesting level to select.
+
+Selecting an object is a two-step operation that requires picking the
+_whole_ or _inner_ targeted object, then picking the type of the object. The
+following sections describe how to do both, in the same order.
+
+Object selections are repeatable using *<a-.>*.
 
 === Whole object
 
-A 'whole object' is an object *including* its surrounding characters.
-For example, for a quoted string this will select the quotes, and
-for a word this will select trailing spaces.
+A _whole object_ is an object *including* its surrounding delimiters.
+
+For example, the _whole object_ associated with a quoted string is the
+contents of the string itself, along with the quotes. For a regular word,
+the _whole object_ will be comprised of surrounding whitespace characters,
+for lack of delimiters.
 
 *<a-a>*::
-    select the whole object
+    select the whole object.
 
 *[*::
-    select to the whole object start
+    select from the cursor up to the beginning of the whole object.
 
 *]*::
-    select to the whole object end
+    select from the cursor up to the end of the whole object.
 
 *{*::
-    extend selections to the whole object start
+    extend the selection from the cursor up to the beginning of the whole
+    object.
 
 *}*::
-    extend selections to the whole object end
+    extend the selection from the cursor up to the end of the whole object.
 
 === Inner object
 
-An 'inner object' is an object *excluding* its surrounding characters.
-For example, for a quoted string this will *not* select the quotes, and
-for a word this will *not* select trailing spaces.
+An _inner object_ is an object *excluding* its surrounding delimiters.
+
+For example, the _inner object_ associated with a quoted string is merely
+the contents of the string itself, without any surrounding quotes.
 
 *<a-i>*::
-    select the inner object
+    select the inner object.
 
 *<a-[>*::
-    select to the inner object start
+    select from the cursor up to the beginning of the inner object.
 
 *<a-]>*::
-    select to the inner object end
+    select from the cursor up to the end of the inner object.
 
 *<a-{>*::
-    extend selections to the inner object start
+    extend the selection from the cursor up to the beginning of the inner
+    object.
 
 *<a-}>*::
-    extend selections to the inner object end
+    extend the selection from the cursor up to the end of the inner object.
 
 === Objects types
 
-After the keys described above, a second key needs to be entered
-in order to specify the wanted object:
+After the _whole_ or _inner_ object has been chosen, its type has to
+be picked and is described by one of the following:
 
 *b*, *(*, *)*::
-    select the enclosing parenthesis
+    select the enclosing parenthesis.
 
 *B*, *{*, *}*::
-    select the enclosing {} block
+    select the enclosing {} block.
 
 *r*, *[*, *]*::
-    select the enclosing [] block
+    select the enclosing [] block.
 
 *a*, *<*, *>*::
-    select the enclosing <> block
+    select the enclosing <> block.
 
 *Q*, *"*::
-    select the enclosing double quoted string
+    select the enclosing double quoted string.
 
 *q*, *'*::
-    select the enclosing single quoted string
+    select the enclosing single quoted string.
 
 *g*, *`*::
-    select the enclosing grave quoted string
+    select the enclosing grave quoted string.
 
 *w*::
-    select the whole word
+    select the whole 'word'.
 
 *<a-w>*::
-    select the whole WORD
+    select the whole 'WORD'.
 
 *s*::
-    select the sentence
+    select the sentence.
 
 *p*::
-    select the paragraph
+    select the paragraph.
 
 *␣*::
-    select the whitespaces
+    select whitespace characters.
 
 *i*::
-    select the current indentation block
+    select the current indentation block.
 
 *n*::
-    select the number
+    select the number.
 
 *u*::
-    select the argument
+    select the function argument (comma separated).
 
 *c*::
-    select user defined object, will prompt for open and close text
+    select user defined object, will prompt for open and close text.
 
 == Prompt commands
 
-When pressing `:` in normal mode, Kakoune will open a prompt to enter
-a command.  The executed command line is stored in the *:* register
-(See <<registers#,`:doc registers`>>).
+Upon hitting `:` in normal mode, Kakoune will prompt the user for a
+command. The last executed command is stored in the *:* register (see
+<<registers#,`:doc registers`>>).
 
-During edition, a transient *clipboard* is available, its content is
-empty at the start of prompt edition, and is not preserved afterwards.
+During edition, a transient *clipboard* is available, it is empty when the
+prompt is spawned, and is not preserved afterwards. Erased data is
+automatically copied to this *clipboard*, in prompt mode.
 
 The following keys are recognized by this mode to help with editing
-(See <<commands#,`:doc commands`>>).
+(see <<commands#,`:doc commands`>>).
 
 *<ret>*::
-    validate prompt
+    validate the prompt and execute the command.
 
 *<esc>*::
-    abandon without
+    exit the prompt.
 
 *<left>*, *<c-b>*::
-    move cursor to previous character
+    move the cursor to the previous character.
 
 *<right>*, *<c-f>*::
-    move cursor to next character
+    move the cursor to the next character.
 
 *<home>*, *<c-a>*::
-    move cursor to first character
+    move the cursor to the first character.
 
-*<end>*, *<c-e>::
-    move cursor past the last character
+*<end>*, *<c-e>*::
+    move the cursor past the last character.
 
 *<backspace>*, *<c-h>*::
-    erase character before cursor
+    erase the character before the cursor.
 
 *<del>*, *<c-d>*::
-    erase character under cursor
+    erase the character under the cursor.
 
 *<a-f>*::
-    advance to next word begin
+    move the cursor to the beginning of the next 'word'.
 
 *<a-F>*::
-    advance to next WORD begin
+    move the cursor to the beginning of the next 'WORD'.
 
 *<a-b>*::
-    go back to previous word begin
+    move the cursor to the beginning of the previous 'word'.
 
 *<a-B>*::
-    go back to previous WORD begin
+    move the cursor to the beginning of the previous 'WORD'.
 
 *<a-e>*::
-    advance to next word end
+    move the cursor to the end of the next 'word'.
 
 *<a-E>*::
-    advance to next word end
+    move the cursor to the end of the next 'WORD'.
 
 *<c-w>*::
-    erase to previous word begin, save erased content to *clipboard*
+    erase from the cursor to the begining of the previous 'word'.
 
 *<c-W>*::
-    erase to previous WORD begin, save erased content to *clipboard*
+    erase from the cursor to the begining of the previous 'WORD'.
 
 *<a-d>*::
-    erase to previous word end, save erased content to *clipboard*
+    erase from the cursor to the end of the previous 'word'.
 
 *<a-D>*::
-    erase to previous WORD end, save erased content to *clipboard*
+    erase from the cursor to the end of the previous 'WORD'.
 
 *<c-k>*::
-    erase to end of line, save erased content to *clipboard*
+    erase from the cursor to the end of the command.
 
 *<c-u>*::
-    erase to begin of line, save erased content to *clipboard*
+    erase from the cursor to the begin of the command.
 
 *<c-y>*::
-    insert *clipboard* content before cursor
+    insert the contents of the *clipboard* before the cursor.
 
 *<up>*, *<c-p>*::
-    select previous entry in history
+    select the previous command in the history.
 
 *<down>*, *<c-n>*::
-    select next entry in history
+    select the next command in the history.
 
 *<tab>*::
-    select next completion candidate
+    select the next completion candidate.
 
 *<s-tab>*::
-    select previous completion candidate
+    select the previous completion candidate.
 
-*<c-r>*::
-    insert then content of the register given by next key
+*<c-r>* `register`::
+    insert the contents of *register*.
 
-*<c-v>*::
-    insert next keystroke without interpreting it
+*<c-v>* `key`::
+    insert *key* without interpreting it.
 
 *<c-o>*::
-    toggle automatic completion
+    toggle automatic completion.
 
 *<a-!>*::
-    expand the typed expansions in currently entered text
-    (See <<expansions#typed-expansions,`:doc expansions typed-expansions`>>)
+    expand all typed expansions in the currently entered command (see
+    <<expansions#typed-expansions,`:doc expansions typed-expansions`>>).
 
 *<a-;>*::
-    escape to normal mode for a single command
+    escape to normal mode to allow for a single command to be executed with
+    `:`.
