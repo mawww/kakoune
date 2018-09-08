@@ -6,7 +6,7 @@ add-highlighter shared/i3 regions
 add-highlighter shared/i3/code default-region group
 add-highlighter shared/i3/double_string region %{"} %{"} group
 add-highlighter shared/i3/single_string region %{'} %{'} group
-add-highlighter shared/i3/exec region %{(?<=exec)} "$" fill string
+add-highlighter shared/i3/exec region %{((?<=exec )|(?<=--no-startup-id ))(?!--no-startup-id)} "$" fill string
 add-highlighter shared/i3/comment region "#" "$" fill comment
 
 add-highlighter shared/i3/double_string/ fill string
