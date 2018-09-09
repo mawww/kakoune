@@ -693,7 +693,7 @@ The following keys are recognized by this mode to help with editing
 *<home>*, *<c-a>*::
     move cursor to first character
 
-*<end>*, *<c-e>::
+*<end>*, *<c-e>*::
     move cursor past the last character
 
 *<backspace>*, *<c-h>*::
@@ -718,7 +718,7 @@ The following keys are recognized by this mode to help with editing
     advance to next word end
 
 *<a-E>*::
-    advance to next word end
+    advance to next WORD end
 
 *<c-w>*::
     erase to previous word begin, save erased content to *clipboard*

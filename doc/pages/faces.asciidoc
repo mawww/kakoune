@@ -97,12 +97,12 @@ areas of the user interface:
     face used prompt displayed on the status line
 
 *BufferPadding*::
-    face applied on the characters that follow the last line of a buffer
+    face applied on the `~` characters that follow the last line of a buffer
 
 === Builtin highlighters faces
 
 The following faces are used by builtin highlighters if enabled.
-(See <<highlighters#,`:doc highlighters`>>.
+(See <<highlighters#,`:doc highlighters`>>).
 
 *LineNumbers*::
     face used by the `number-lines` highlighter
