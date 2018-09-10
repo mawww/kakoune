@@ -140,7 +140,7 @@ define-command -hidden clang-show-error-info %{
             fi
         done
         if [ -n "$desc" ]; then
-            printf %s\\n "info -anchor ${kak_cursor_line}.${kak_cursor_column} '$desc'"
+            printf %s\\n "info -anchor ${kak_cursor_line}.${kak_cursor_column} \"$desc\""
         fi
     } }
 
