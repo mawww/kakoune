@@ -73,19 +73,23 @@ Hooks declared with the `-once` switch are automatically removed after running.
     a certain duration has passed since last key was pressed in prompt mode
 
 *WinCreate* `buffer name`::
-    a window was created
+    a window was created. This hook is executed in draft context, so any a
+    changes to selections or input state will be discarded.
 
 *WinClose* `buffer name`::
-    a window was destroyed
+    a window was destroyed. This hook is executed in a draft context, so any
+    changes to selections or input state will be discarded.
 
 *WinResize* `<line>.<column>`::
-    a window was resized
+    a window was resized. This hook is executed in a draft context, so any
+    changes to selections or input state will be discarded.
 
 *WinDisplay* `buffer name`::
-    a window was bound a client
+    a client switched to displaying the given buffer.
 
 *WinSetOption* `<option_name>=<new_value>`::
-    an option was set in a window context
+    an option was set in a window context. This hook is executed in a draft
+    acontext, so any changes to selections or input state will be discarded.
 
 *GlobalSetOption* `<option_name>=<new_value>`::
     an option was set at the global scope
