@@ -127,8 +127,11 @@ void HookManager::run_hook(StringView hook_name, StringView param, Context& cont
             if (to_run.hook->flags & HookFlags::Once)
             {
                 auto it = find(hook_list->value, to_run.hook);
-                m_hooks_trash.push_back(std::move(*it));
-                hook_list->value.erase(it);
+                if (it != hook_list->value.end())
+                {
+                    m_hooks_trash.push_back(std::move(*it));
+                    hook_list->value.erase(it);
+                }
             }
         }
         catch (runtime_error& err)
