@@ -27,7 +27,7 @@ public:
 
     void add_hook(StringView hook_name, String group, HookFlags flags,
                   Regex filter, String commands);
-    void remove_hooks(StringView group);
+    void remove_hooks(const Regex& regex);
     CandidateList complete_hook_group(StringView prefix, ByteCount pos_in_token);
     void run_hook(StringView hook_name, StringView param,
                   Context& context);

@@ -30,7 +30,7 @@ remove-hooks <scope> <group>
 ----------------------------
 
 A call to the command above will remove every hooks in *scope* that are part
-of the given *group*.
+of whose group match the given *group* regex.
 
 Hooks declared with the `-once` switch are automatically removed after running.
 

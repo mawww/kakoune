@@ -867,7 +867,7 @@ const CommandDesc add_hook_cmd = {
 const CommandDesc remove_hook_cmd = {
     "remove-hooks",
     "rmhooks",
-    "remove-hooks <scope> <group>: remove all hooks whose group is <group>",
+    "remove-hooks <scope> <group>: remove all hooks whose group matches the regex <group>",
     ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
     CommandHelper{},
@@ -888,7 +888,7 @@ const CommandDesc remove_hook_cmd = {
     },
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        get_scope(parser[0], context).hooks().remove_hooks(parser[1]);
+        get_scope(parser[0], context).hooks().remove_hooks(Regex{parser[1]});
     }
 };
 

@@ -32,15 +32,13 @@ void HookManager::add_hook(StringView hook_name, String group, HookFlags flags, 
     hooks.emplace_back(new Hook{std::move(group), flags, std::move(filter), std::move(commands)});
 }
 
-void HookManager::remove_hooks(StringView group)
+void HookManager::remove_hooks(const Regex& regex)
 {
-    if (group.empty())
-        throw runtime_error("invalid id");
     for (auto& list : m_hooks)
     {
         auto it = std::remove_if(list.value.begin(), list.value.end(),
                                  [&](const std::unique_ptr<Hook>& h)
-                                 { return h->group == group; });
+                                 { return regex_match(h->group.begin(), h->group.end(), regex); });
         if (not m_running_hooks.empty()) // we are running some hooks, defer deletion
             m_hooks_trash.insert(m_hooks_trash.end(), std::make_move_iterator(it),
                                  std::make_move_iterator(list.value.end()));
