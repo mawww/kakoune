@@ -70,23 +70,29 @@ else
     LDFLAGS += -rdynamic
 endif
 
-CXXFLAGS += -pedantic -std=gnu++14 -g -Wall -Wextra -Wno-unused-parameter -Wno-reorder -Wno-sign-compare -Wno-address -Wno-noexcept-type -Wno-unknown-attributes -Wno-unknown-warning-option
+CXXFLAGS += -pedantic -std=gnu++14 -g -Wall -Wextra -Wno-unused-parameter -Wno-reorder -Wno-sign-compare -Wno-address
 
 all : kak
 
 kak : kak$(suffix)
 	ln -sf $< $@
 
-kak$(suffix) : $(objects) .version.o
-	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) .version.o $(LIBS) -o $@
+kak$(suffix) : print_flags $(objects) .version.o
+	@echo [LD] " " $@
+	@$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) .version.o $(LIBS) -o $@
+
+print_flags :
+	@printf '[Compile options]\nCXX: %s\ndefines: %s\nflags: %s\nld flags: %s\nlibs %s\n' "$(CXX)" "$(CPPFLAGS)" "$(CXXFLAGS)" "$(LDFLAGS)" "$(LIBS)"
 
 -include $(deps)
 
 .%$(suffix).o: %.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
+	@echo [CXX] $<
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
 
 .version.o: .version.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+	@echo [CXX] $<
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 .version.cc: FORCE
 	@printf "%s" 'namespace Kakoune { const char* version = "$(version)"; }' > .version.cc.tmp
