@@ -359,7 +359,7 @@ find_surrounding(const Container& container, Iterator pos,
             first = (flags & ObjectFlags::Inner) ? res->second : res->first;
             if (flags & ObjectFlags::ToEnd) // ensure we find the matching end
             {
-                last = res->second;
+                last = res->first;
                 level = 0;
             }
         }
