@@ -211,7 +211,11 @@ Vector<String> Context::selections_content() const
 void Context::begin_edition()
 {
     if (m_edition_level >= 0)
+    {
+        if (m_edition_level == 0)
+            m_edition_timestamp = buffer().timestamp();
         ++m_edition_level;
+    }
 }
 
 void Context::end_edition()
@@ -220,7 +224,8 @@ void Context::end_edition()
         return;
 
     kak_assert(m_edition_level != 0);
-    if (m_edition_level == 1)
+    if (m_edition_level == 1 and
+        buffer().timestamp() != m_edition_timestamp)
         buffer().commit_undo_group();
 
     --m_edition_level;
