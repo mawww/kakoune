@@ -225,9 +225,9 @@ eopkg install kakoune
 Kakoune is available in the repositories.
 
 It can be installed with
----------------------
+-----------------------
 xbps-install -S kakoune
----------------------
+-----------------------
 ====
 
 [TIP]
@@ -236,9 +236,9 @@ xbps-install -S kakoune
 Kakoune is available in the repositories.
 
 It can be installed with
----------------------
+-------------------
 pkg install kakoune
----------------------
+-------------------
 ====
 
 Running
