@@ -219,6 +219,28 @@ eopkg install kakoune
 ---------------------
 ====
 
+[TIP]
+.Void
+====
+Kakoune is available in the repositories.
+
+It can be installed with
+---------------------
+xbps-install -S kakoune
+---------------------
+====
+
+[TIP]
+.Termux
+====
+Kakoune is available in the repositories.
+
+It can be installed with
+---------------------
+pkg install kakoune
+---------------------
+====
+
 Running
 ~~~~~~~
 
