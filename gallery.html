@@ -3,79 +3,99 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        <title>Kakoune - Official site</title>
+        <title>Kakoune - Gallery</title>
 
-        <meta name="description" content="The official website of Kakoune, a vim inspired code editor">
+        <meta name="description" content="The official website of Kakoune, a selection-first modal code editor">
         <meta name="author" content="@lenormf">
         <link rel="icon" type="image/png" href="img/favicon16.png">
 
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-        <link rel="stylesheet" href="css/font-gafata.css">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link href="https://fonts.googleapis.com/css?family=Gafata" rel="stylesheet">
         <link rel="stylesheet" href="css/default.css">
     </head>
 
     <body>
-        <nav class="navbar navbar-default navbar-fixed-top">
-            <div class="container-fluid">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="/">
-                        <img alt="kakoune logo" src="img/kakoune_logo_32.png">
-                    </a>
-                    <p class="navbar-text"><b>Kakoune</b></p>
-                </div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top border-bottom">
+            <a class="navbar-brand" href="/">
+                <img alt="kakoune logo" src="img/kakoune_logo_32.png"> Kakoune
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                    <ul class="nav navbar-nav">
-                        <li><a href="https://github.com/mawww/kakoune#2-getting-started"><i class="fa fa-fw fa-flag"></i>&nbsp;Get started!</a></li>
-                        <li><a href="https://github.com/mawww/kakoune/blob/master/README.asciidoc#3-basic-interaction"><i class="fa fa-fw fa-list-alt"></i>&nbsp;Documentation</a></li>
-                        <li><a href="https://github.com/mawww/kakoune/issues"><i class="fa fa-fw fa-bug"></i>&nbsp;Issue Tracker</a></li>
-                        <li><a href="https://github.com/mawww/kakoune/wiki"><i class="fa fa-fw fa-group"></i>&nbsp;Wiki</a></li>
-                        <li><a href="https://github.com/mawww/kakoune/blob/master/doc/design.asciidoc"><i class="fa fa-fw fa-book"></i>&nbsp;Design Notes</a></li>
-                        <li><a href="gallery.html"><i class="fa fa-fw fa-camera"></i>&nbsp;Gallery</a></li>
-                        <li><a href="plugins.html"><i class="fa fa-fw fa-plug"></i>&nbsp;Plugins</a></li>
-                    </ul>
-
-                    <ul id="translation-flags" class="nav navbar-nav navbar-right">
-                        <li><a href="gallery.html"><img alt="english flag" src="img/flags/shiny/24/United-Kingdom.png"></a></li>
-                        <li><a href="gallery_fr.html"><img alt="french flag" src="img/flags/shiny/24/France.png"></a></li>
-                    </ul>
-                </div>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune#2-getting-started">
+                            <i class="fa fa-fw fa-flag"></i> Get started!
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/blob/master/README.asciidoc#3-basic-interaction">
+                            <i class="fa fa-fw fa-list-alt"></i> Documentation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/issues">
+                            <i class="fa fa-fw fa-bug"></i> Issue Tracker
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/wiki">
+                            <i class="fa fa-fw fa-group"></i> Wiki
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/blob/master/doc/design.asciidoc">
+                            <i class="fa fa-fw fa-book"></i> Design Notes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="gallery.html">
+                            <i class="fa fa-fw fa-camera"></i> Gallery
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="plugins.html">
+                            <i class="fa fa-fw fa-plug"></i> Plugins
+                        </a>
+                    </li>
+                </ul>
             </div>
         </nav>
 
         <div class="container-fluid">
             <div class="row">
-                <div class="col-sm-10 col-sm-offset-1">
-                    <h2 class="page-header">Gallery</h2>
+                <div class="col-sm-10 offset-sm-1 pt-4">
+                    <h2>Gallery</h2>
+                    <hr>
 
                     <div class="row">
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/fzf-delapouite.png">
-                                    <img src="img/screenshots/fzf-delapouite.png">
+                                    <img class="card-img-top" src="img/screenshots/fzf-delapouite.png">
                                 </a>
-                                <div class="caption">
-                                    <p>Opening buffers using the <a href="https://github.com/junegunn/fzf">fzf</a> utility</p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Opening buffers using the <a href="https://github.com/junegunn/fzf">fzf</a> utility
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/haskell-ide-gspia.png">
-                                    <img src="img/screenshots/haskell-ide-gspia.png">
+                                    <img class="card-img-top" src="img/screenshots/haskell-ide-gspia.png">
                                 </a>
-                                <div class="caption">
-                                    <p>Working on Haskell code in a <a href="https://github.com/tmux/tmux">tmux</a>-based IDE</p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Working on Haskell code in a <a href="https://github.com/tmux/tmux">tmux</a>-based IDE
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -83,23 +103,27 @@
 
                     <div class="row">
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/cpp-edition-topisani1.png">
-                                    <img src="img/screenshots/cpp-edition-topisani1.png">
+                                    <img class="card-img-top" src="img/screenshots/cpp-edition-topisani1.png">
                                 </a>
-                                <div class="caption">
-                                    <p>Editing some C++ code using multiple windows</p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Editing some C++ code using multiple windows
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/cpp-edition-topisani2.png">
-                                    <img src="img/screenshots/cpp-edition-topisani2.png">
+                                    <img class="card-img-top" src="img/screenshots/cpp-edition-topisani2.png">
                                 </a>
-                                <div class="caption">
-                                    <p>Editing some C++ code using multiple windows</p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Editing some C++ code using multiple windows
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -107,23 +131,27 @@
 
                     <div class="row">
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/bufferlist-francesco.png">
-                                    <img src="img/screenshots/bufferlist-francesco.png">
+                                    <img class="card-img-top" src="img/screenshots/bufferlist-francesco.png">
                                 </a>
-                                <div class="caption">
-                                    <p>Simple buffer list presented by the Clippy assistant</p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Simple buffer list presented by the Clippy assistant
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/cargo-make-screwtape.png">
-                                    <img src="img/screenshots/cargo-make-screwtape.png">
+                                    <img class="card-img-top" src="img/screenshots/cargo-make-screwtape.png">
                                 </a>
-                                <div class="caption">
-                                    <p>Onboard building of Rust code with <a href="https://github.com/rust-lang/cargo">cargo</a></p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Onboard building of Rust code with <a href="https://github.com/rust-lang/cargo">cargo</a>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -131,23 +159,27 @@
 
                     <div class="row">
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/go-documentation-pauldub.png">
-                                    <img src="img/screenshots/go-documentation-pauldub.png">
+                                    <img class="card-img-top" src="img/screenshots/go-documentation-pauldub.png">
                                 </a>
-                                <div class="caption">
-                                    <p>On-display documentation about Go symbols</p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        On-display documentation about Go symbols
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/nim-edition-solitudesf.png">
-                                    <img src="img/screenshots/nim-edition-solitudesf.png">
+                                    <img class="card-img-top" src="img/screenshots/nim-edition-solitudesf.png">
                                 </a>
-                                <div class="caption">
-                                    <p>Simple edition of Nim code</p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Simple edition of Nim code
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -155,23 +187,27 @@
 
                     <div class="row">
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/relativenumbering-FreeFull.gif">
-                                    <img src="img/screenshots/relativenumbering-FreeFull.gif">
+                                    <img class="card-img-top" src="img/screenshots/relativenumbering-FreeFull.gif">
                                 </a>
-                                <div class="caption">
-                                    <p>Editing some Rust code using relative line numbering</p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Editing some Rust code using relative line numbering
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/ccode-Xiaoman.gif">
-                                    <img src="img/screenshots/ccode-Xiaoman.gif">
+                                    <img class="card-img-top" src="img/screenshots/ccode-Xiaoman.gif">
                                 </a>
-                                <div class="caption">
-                                    <p>Simple selection of C code</p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Simple selection of C code
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -179,23 +215,27 @@
 
                     <div class="row">
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/fzf-lenormf.gif">
-                                    <img src="img/screenshots/fzf-lenormf.gif">
+                                    <img class="card-img-top" src="img/screenshots/fzf-lenormf.gif">
                                 </a>
-                                <div class="caption">
-                                    <p>Opening multiple buffers using <a href="https://github.com/junegunn/fzf">fzf</a></p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Opening multiple buffers using <a href="https://github.com/junegunn/fzf">fzf</a>
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/multiselections-victoroux.gif">
-                                    <img src="img/screenshots/multiselections-victoroux.gif">
+                                    <img class="card-img-top" src="img/screenshots/multiselections-victoroux.gif">
                                 </a>
-                                <div class="caption">
-                                    <p>Editing some Python code using multiple selections</p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Editing some Python code using multiple selections
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -203,23 +243,27 @@
 
                     <div class="row">
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/multiclients_casimir.gif">
-                                    <img src="img/screenshots/multiclients_casimir.gif">
+                                    <img class="card-img-top" src="img/screenshots/multiclients_casimir.gif">
                                 </a>
-                                <div class="caption">
-                                    <p>Multiple <i>Kakoune</i> clients within the same session</p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Multiple <i>Kakoune</i> clients within the same session
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/multiselections-jkonecny.gif">
-                                    <img src="img/screenshots/multiselections-jkonecny.gif">
+                                    <img class="card-img-top" src="img/screenshots/multiselections-jkonecny.gif">
                                 </a>
-                                <div class="caption">
-                                    <p>Multiple selection in a <i>Kakoune</i> client</p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        Multiple selection in a <i>Kakoune</i> client
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -228,13 +272,14 @@
             </div>
 
             <div class="row-fluid">
-                <div id="footer" class="col-sm-8 col-sm-offset-2">
+                <div id="footer" class="col-sm-8 offset-sm-2 text-center mb-2">
+                    <hr>
                     2012-2018 · <a href="https://github.com/mawww/kakoune"><i>kakoune</i></a>
                 </div>
             </div>
         </div>
 
-        <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
     </body>
 </html>

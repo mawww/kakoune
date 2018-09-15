@@ -3,75 +3,74 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        <title>Kakoune - Official site</title>
+        <title>Kakoune - Plugins</title>
 
         <meta name="description" content="The official website of Kakoune, a selection-first modal code editor">
         <meta name="author" content="@lenormf">
         <link rel="icon" type="image/png" href="img/favicon16.png">
 
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-        <link rel="stylesheet" href="css/font-gafata.css">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link href="https://fonts.googleapis.com/css?family=Gafata" rel="stylesheet">
         <link rel="stylesheet" href="css/default.css">
 
         <style>
-            body {
-                padding-top: 65px;
-            }
-
             .media .media-object {
                 width: 64px;
                 height: 64px;
-                border: 1px solid #EEE;
-            }
-
-            .panel {
-                box-shadow: 0 1px 2px #DDD;
-            }
-
-            @media only screen and (min-width: 1280px) {
-                #pluginsList > .col-lg-4:nth-child(3n+1) {
-                    clear: both;
-                }
-            }
-
-            @media only screen and (max-width: 1279px) {
-                #pluginsList > .col-md-6:nth-child(2n+1) {
-                    clear: both;
-                }
             }
         </style>
     </head>
 
-    <body>
-        <nav class="navbar navbar-default navbar-fixed-top">
-            <div class="container-fluid">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="/">
-                        <img alt="kakoune logo" src="img/kakoune_logo_32.png">
-                    </a>
-                    <p class="navbar-text"><b>Kakoune</b></p>
-                </div>
+    <body class="pt-2">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top border-bottom">
+            <a class="navbar-brand" href="/">
+                <img alt="kakoune logo" src="img/kakoune_logo_32.png"> Kakoune
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                    <ul class="nav navbar-nav">
-                        <li><a href="https://github.com/mawww/kakoune#2-getting-started"><i class="fa fa-fw fa-flag"></i>&nbsp;Get started!</a></li>
-                        <li><a href="https://github.com/mawww/kakoune/blob/master/README.asciidoc#3-basic-interaction"><i class="fa fa-fw fa-list-alt"></i>&nbsp;Documentation</a></li>
-                        <li><a href="https://github.com/mawww/kakoune/issues"><i class="fa fa-fw fa-bug"></i>&nbsp;Issue Tracker</a></li>
-                        <li><a href="https://github.com/mawww/kakoune/wiki"><i class="fa fa-fw fa-group"></i>&nbsp;Wiki</a></li>
-                        <li><a href="https://github.com/mawww/kakoune/blob/master/doc/design.asciidoc"><i class="fa fa-fw fa-book"></i>&nbsp;Design Notes</a></li>
-                        <li><a href="gallery.html"><i class="fa fa-fw fa-camera"></i>&nbsp;Gallery</a></li>
-                        <li><a href="plugins.html"><i class="fa fa-fw fa-plug"></i>&nbsp;Plugins</a></li>
-                    </ul>
-                </div>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune#2-getting-started">
+                            <i class="fa fa-fw fa-flag"></i> Get started!
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/blob/master/README.asciidoc#3-basic-interaction">
+                            <i class="fa fa-fw fa-list-alt"></i> Documentation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/issues">
+                            <i class="fa fa-fw fa-bug"></i> Issue Tracker
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/wiki">
+                            <i class="fa fa-fw fa-group"></i> Wiki
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/blob/master/doc/design.asciidoc">
+                            <i class="fa fa-fw fa-book"></i> Design Notes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="gallery.html">
+                            <i class="fa fa-fw fa-camera"></i> Gallery
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="plugins.html">
+                            <i class="fa fa-fw fa-plug"></i> Plugins
+                        </a>
+                    </li>
+                </ul>
             </div>
         </nav>
 
@@ -89,44 +88,48 @@
             </div>
 
             <!-- NOTE: we split the list and its container in order to be able to get the row's height, which remains at 0 when all of its content is floating -->
-            <div class="row" id="pluginsListContainer">
-                <div id="pluginsList"></div>
+            <div id="pluginsListContainer">
+                <div class="row" id="pluginsList"></div>
             </div>
 
             <div class="row-fluid">
-                <div id="footer" class="col-sm-8 col-sm-offset-2">
+                <div id="footer" class="col-sm-8 offset-sm-2 text-center mb-2">
+                    <hr>
                     2012-2018 · <a href="https://github.com/mawww/kakoune"><i>kakoune</i></a>
                 </div>
             </div>
         </div>
 
-        <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
         <script type="text/javascript" src="vendor/jquery-template/1.5.10/jquery.loadTemplate.min.js"></script>
-        <script type="text/javascript" src="js/app.js"></script>
 
         <script type="text/html" id="pluginTmpl">
-            <div class="col-sm-12 col-lg-4 col-md-6">
-                <div class="panel panel-default">
-                    <div class="panel-body">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body p-3">
                         <div class="media">
-                            <div class="media-left">
+                            <div class="mr-3">
                                 <a data-href="owner.profile_url">
-                                    <img class="media-object" data-src="owner.avatar_url" data-alt="owner.username">
+                                    <img class="media-object border" data-src="owner.avatar_url" data-alt="owner.username">
                                 </a>
                             </div>
 
                             <div class="media-body">
-                                <h4 class="media-heading">
-                                    <a data-href="plugin.repository_url" data-content="plugin.name"></a>
+                                <div class="row justify-items-between">
+                                    <div class="col">
+                                        <a data-href="plugin.repository_url" data-content="plugin.name"></a>
+                                    </div>
 
-                                    <small class="pull-right">
-                                        <i class="fa fa-fw fa-star"></i>
-                                        <span data-content="plugin.stars"></span>
-                                    </small>
-                                </h4>
+                                    <div class="col text-right text-secondary">
+                                        <span class="text-nowrap">
+                                            <i class="fa fa-fw fa-star"></i>
+                                            <span data-content="plugin.stars"></span>
+                                        </span>
+                                    </div>
+                                </div>
 
-                                <span data-content="plugin.description"></span>
+                                <span class="text-justify" data-content="plugin.description"></span>
                             </div>
                         </div>
                     </div>

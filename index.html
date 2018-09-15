@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
         <title>Kakoune - Official site</title>
 
@@ -11,124 +11,135 @@
         <meta name="author" content="@lenormf">
         <link rel="icon" type="image/png" href="img/favicon16.png">
 
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-        <link rel="stylesheet" href="css/font-gafata.css">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link href="https://fonts.googleapis.com/css?family=Gafata" rel="stylesheet">
         <link rel="stylesheet" href="css/default.css">
     </head>
 
     <body>
-        <nav class="navbar navbar-default navbar-fixed-top">
-            <div class="container-fluid">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="/">
-                        <img alt="kakoune logo" src="img/kakoune_logo_32.png">
-                    </a>
-                    <p class="navbar-text"><b>Kakoune</b></p>
-                </div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top border-bottom">
+            <a class="navbar-brand" href="/">
+                <img alt="kakoune logo" src="img/kakoune_logo_32.png"> Kakoune
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                    <ul class="nav navbar-nav">
-                        <li><a href="https://github.com/mawww/kakoune#2-getting-started"><i class="fa fa-fw fa-flag"></i>&nbsp;Get started!</a></li>
-                        <li><a href="https://github.com/mawww/kakoune/blob/master/README.asciidoc#3-basic-interaction"><i class="fa fa-fw fa-list-alt"></i>&nbsp;Documentation</a></li>
-                        <li><a href="https://github.com/mawww/kakoune/issues"><i class="fa fa-fw fa-bug"></i>&nbsp;Issue Tracker</a></li>
-                        <li><a href="https://github.com/mawww/kakoune/wiki"><i class="fa fa-fw fa-group"></i>&nbsp;Wiki</a></li>
-                        <li><a href="https://github.com/mawww/kakoune/blob/master/doc/design.asciidoc"><i class="fa fa-fw fa-book"></i>&nbsp;Design Notes</a></li>
-                        <li><a href="gallery.html"><i class="fa fa-fw fa-camera"></i>&nbsp;Gallery</a></li>
-                        <li><a href="plugins.html"><i class="fa fa-fw fa-plug"></i>&nbsp;Plugins</a></li>
-                    </ul>
-
-                    <ul id="translation-flags" class="nav navbar-nav navbar-right">
-                        <li><a href="index.html"><img alt="english flag" src="img/flags/shiny/24/United-Kingdom.png"></a></li>
-                        <li><a href="index_fr.html"><img alt="french flag" src="img/flags/shiny/24/France.png"></a></li>
-                    </ul>
-                </div>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune#2-getting-started">
+                            <i class="fa fa-fw fa-flag"></i> Get started!
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/blob/master/README.asciidoc#3-basic-interaction">
+                            <i class="fa fa-fw fa-list-alt"></i> Documentation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/issues">
+                            <i class="fa fa-fw fa-bug"></i> Issue Tracker
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/wiki">
+                            <i class="fa fa-fw fa-group"></i> Wiki
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/blob/master/doc/design.asciidoc">
+                            <i class="fa fa-fw fa-book"></i> Design Notes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="gallery.html">
+                            <i class="fa fa-fw fa-camera"></i> Gallery
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-nowrap" href="plugins.html">
+                            <i class="fa fa-fw fa-plug"></i> Plugins
+                        </a>
+                    </li>
+                </ul>
             </div>
         </nav>
 
         <div class="container-fluid">
-            <div class="row-fluid">
-                <div id="kak-preview" class="col-sm-12">
-                    <div class="row-fluid">
-                        <div class="col-sm-10 col-sm-offset-1">
-                            <div id="kak-preview-logo"><img src="img/kakoune_logo_full.png"></div>
-                        </div>
-                    </div>
-                    <div class="row-fluid">
-                        <div class="col-sm-8 col-sm-offset-2">
-                            <div id="kak-title">Kakoune code editor</div>
-                            <div id="kak-preview-pitch">Modal editor · Faster as in less keystrokes · Multiple selections · Orthogonal design</div>
-                        </div>
-                    </div>
+            <div id="kak-preview" class="row-fluid pt-3 pb-4">
+                <div class="col-12 text-center">
+                    <img src="img/kakoune_logo_full.png">
+                </div>
+
+                <div class="col-12 text-center">
+                    <div id="kak-title" class="mb-2">Kakoune code editor</div>
+                    <div id="kak-preview-pitch">Modal editor · Faster as in less keystrokes · Multiple selections · Orthogonal design</div>
                 </div>
             </div>
 
             <div class="row-fluid">
-                <div id="kak-features" class="col-sm-10 col-sm-offset-1">
-                    <div class="col-sm-12">
-                        <h2 class="page-header">Features</h2>
+                <div id="kak-features" class="col-10 offset-1 pt-4">
+                    <div class="col-12">
+                        <h2>Features</h2>
+                        <hr>
                     </div>
 
-                    <div class="row-fluid">
-                        <div class="col-sm-6 col-lg-4">
-                            <div class="feature-title">
-                                <i class="fa fa-fw fa-object-group"></i>&nbsp;Multiple selections
+                    <div class="row">
+                        <div class="col-12 col-sm-6 col-lg-4">
+                            <div class="feature-title text-nowrap">
+                                <i class="fa fa-fw fa-object-group"></i> Multiple selections
                             </div>
 
-                            <div class="feature-text">
+                            <div class="mb-3 text-justify">
                                 Multiple selections are the central way
                                 of interacting in <i>Kakoune</i>, with powerful handling primitives (regex
                                 matches, filtering, splitting, aligning, text objects etc).
                             </div>
                         </div>
 
-                        <div class="col-sm-6 col-lg-4">
-                            <div class="feature-title">
-                                <i class="fa fa-fw fa-magic"></i>&nbsp;Text editing tools
+                        <div class="col-12 col-sm-6 col-lg-4">
+                            <div class="feature-title text-nowrap">
+                                <i class="fa fa-fw fa-magic"></i> Text editing tools
                             </div>
 
-                            <div class="feature-text">
+                            <div class="mb-3 text-justify">
                                 <i>Kakoune</i> implements several tools to help
                                 editing/writing text: contextual help, as-you-type completion, syntax
                                 highlighting for several programming languages…
                             </div>
                         </div>
 
-                        <div class="col-sm-6 col-lg-4">
-                            <div class="feature-title">
-                                <i class="fa fa-fw fa-filter"></i>&nbsp;Advanced text manipulation primitives
+                        <div class="col-12 col-sm-6 col-lg-4">
+                            <div class="feature-title text-nowrap">
+                                <i class="fa fa-fw fa-filter"></i> Advanced text manipulation primitives
                             </div>
 
-                            <div class="feature-text">
+                            <div class="mb-3 text-justify">
                                 Text can be selected and modified at
                                 will in multiple ways, thanks to several primitives: selection rotation,
                                 case manipulation, indentation leveling…
                             </div>
                         </div>
 
-                        <div class="col-sm-6 col-lg-4">
-                            <div class="feature-title">
-                                <i class="fa fa-fw fa-gears"></i>&nbsp;Customization
+                        <div class="col-12 col-sm-6 col-lg-4">
+                            <div class="feature-title text-nowrap">
+                                <i class="fa fa-fw fa-gears"></i> Customization
                             </div>
 
-                            <div class="feature-text">
+                            <div class="mb-3 text-justify">
                                 Users can extend the features of <i>Kakoune</i>
                                 or customize them to their liking with macros or hooks.
                             </div>
                         </div>
 
-                        <div class="col-sm-6 col-lg-4">
-                            <div class="feature-title">
-                                <i class="fa fa-fw fa-sitemap"></i>&nbsp;Client/Server architecture
+                        <div class="col-12 col-sm-6 col-lg-4">
+                            <div class="feature-title text-nowrap">
+                                <i class="fa fa-fw fa-sitemap"></i> Client/Server architecture
                             </div>
 
-                            <div class="feature-text">
+                            <div class="mb-3 text-justify">
                                 With <i>Kakoune</i>, you can collaboratively edit the same file: all
                                 new windows created by the editor are clients, and can simultaneously
                                 modify the content of a file. As such, windows are fully under the
@@ -138,12 +149,12 @@
                             </div>
                         </div>
 
-                        <div class="col-sm-6 col-lg-4">
-                            <div class="feature-title">
-                                <i class="fa fa-fw fa-tachometer"></i>&nbsp;Active development & support
+                        <div class="col-12 col-sm-6 col-lg-4">
+                            <div class="feature-title text-nowrap">
+                                <i class="fa fa-fw fa-tachometer"></i> Active development & support
                             </div>
 
-                            <div class="feature-text">
+                            <div class="mb-3 text-justify">
                                 The project is actively developed, regularly implements new features,
                                 and integrates pull requests proposed by the contributors. Users can
                                 also ask their questions and share their remark with the rest of the
@@ -152,18 +163,16 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-12">
-                      <p class="text-center">
-                          <a class="btn btn-default feature-more" href="why-kakoune/why-kakoune.html">
-                            Learn more about Kakoune philosophy
-                          </a>
-                      </p>
+                    <div class="col-12 text-center">
+                        <a class="btn btn-outline-secondary mb-4" href="why-kakoune/why-kakoune.html">
+                            Learn more about the Kakoune philosophy
+                        </a>
                     </div>
                 </div>
             </div>
 
             <div class="row-fluid">
-                <div id="kak-demos" class="col-sm-10 col-sm-offset-1">
+                <div id="kak-demos" class="col-sm-10 offset-sm-1 p-4 text-center">
                     <div id="carousel-demos" class="carousel slide" data-ride="carousel" data-interval="false">
                         <ol class="carousel-indicators">
                             <li data-target="#carousel-demos" data-slide-to="0" class="active"></li>
@@ -175,7 +184,7 @@
                         </ol>
 
                         <div class="carousel-inner" role="listbox">
-                            <div class="item active">
+                            <div class="carousel-item active">
                                 <video autoplay loop>
                                     <source src="video/align.webm" type="video/webm">
                                     <source src="video/align.mp4" type="video/mp4">
@@ -187,7 +196,7 @@
                                 </div>
                             </div>
 
-                            <div class="item">
+                            <div class="carousel-item">
                                 <video autoplay loop>
                                     <source src="video/gather.webm" type="video/webm">
                                     <source src="video/gather.mp4" type="video/mp4">
@@ -199,7 +208,7 @@
                                 </div>
                             </div>
 
-                            <div class="item">
+                            <div class="carousel-item">
                                 <video autoplay loop>
                                     <source src="video/rename.webm" type="video/webm">
                                     <source src="video/rename.mp4" type="video/mp4">
@@ -211,7 +220,7 @@
                                 </div>
                             </div>
 
-                            <div class="item">
+                            <div class="carousel-item">
                                 <video autoplay loop>
                                     <source src="video/swap.webm" type="video/webm">
                                     <source src="video/swap.mp4" type="video/mp4">
@@ -223,7 +232,7 @@
                                 </div>
                             </div>
 
-                            <div class="item">
+                            <div class="carousel-item">
                                 <video autoplay loop>
                                     <source src="video/multiwin.webm" type="video/webm">
                                     <source src="video/multiwin.mp4" type="video/mp4">
@@ -234,7 +243,8 @@
                                     Client server design, use your X11 window manager, run make/grep in the background
                                 </div>
                             </div>
-                            <div class="item">
+
+                            <div class="carousel-item">
                                 <video autoplay loop>
                                     <source src="video/fold.webm" type="video/webm">
                                     <source src="video/fold.mp4" type="video/mp4">
@@ -247,44 +257,48 @@
                             </div>
                         </div>
 
-                        <a class="left carousel-control" href="#carousel-demos" role="button" data-slide="prev">
-                            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                        <a class="carousel-control-prev" href="#carousel-demos" role="button" data-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                             <span class="sr-only">Previous</span>
                         </a>
-                        <a class="right carousel-control" href="#carousel-demos" role="button" data-slide="next">
-                            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                        <a class="carousel-control-next" href="#carousel-demos" role="button" data-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
                             <span class="sr-only">Next</span>
                         </a>
-                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="row-fluid">
-                <div class="col-sm-10 col-sm-offset-1">
-                    <div class="col-sm-12">
-                        <h2 class="page-header">Screenshots</h2>
+                <div class="col-sm-10 offset-sm-1 pt-4">
+                    <div class="col-12">
+                        <h2>Screenshots</h2>
+                        <hr>
                     </div>
 
-                    <div class="row-fluid">
+                    <div class="row">
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/screenshot-i3.gif">
-                                    <img src="img/screenshots/screenshot-i3.gif">
+                                    <img class="card-img-top" src="img/screenshots/screenshot-i3.gif">
                                 </a>
-                                <div class="caption">
-                                    <p><i>Kakoune</i> in <a href="http://i3wm.org/">i3</a></p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        <i>Kakoune</i> in <a href="http://i3wm.org/">i3</a>
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-sm-6">
-                            <div class="thumbnail">
+                            <div class="card shadow-sm mb-4">
                                 <a href="img/screenshots/screenshot-tmux.gif">
-                                    <img src="img/screenshots/screenshot-tmux.gif">
+                                    <img class="card-img-top" src="img/screenshots/screenshot-tmux.gif">
                                 </a>
-                                <div class="caption">
-                                    <p><i>Kakoune</i> in <a href="https://tmux.github.io/">tmux</a></p>
+                                <div class="card-body py-2">
+                                    <p class="card-text text-center">
+                                        <i>Kakoune</i> in <a href="https://tmux.github.io/">tmux</a>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -293,14 +307,15 @@
             </div>
 
             <div class="row-fluid">
-                <div id="footer" class="col-sm-8 col-sm-offset-2">
+                <div id="footer" class="col-sm-8 offset-sm-2 text-center mb-2">
+                    <hr>
                     2012-2018 · <a href="https://github.com/mawww/kakoune"><i>kakoune</i></a>
                 </div>
             </div>
         </div>
 
-        <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
         <script type="text/javascript" src="js/app.js"></script>
     </body>
 </html>
