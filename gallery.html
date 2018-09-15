@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        <title>Kakoune - Gallery</title>
+        <title tid="head:galleryPageTitle">Kakoune - Gallery</title>
 
         <meta name="description" content="The official website of Kakoune, a selection-first modal code editor">
         <meta name="author" content="@lenormf">
@@ -30,38 +30,57 @@
                 <ul class="navbar-nav">
                     <li class="nav-item">
                         <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune#2-getting-started">
-                            <i class="fa fa-fw fa-flag"></i> Get started!
+                            <span tid="navbar:getStarted">Get started!</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/blob/master/README.asciidoc#3-basic-interaction">
-                            <i class="fa fa-fw fa-list-alt"></i> Documentation
+                            <i class="fa fa-fw fa-list-alt"></i>
+                            <span tid="navbar:documentation">Documentation</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/issues">
-                            <i class="fa fa-fw fa-bug"></i> Issue Tracker
+                            <i class="fa fa-fw fa-bug"></i>
+                            <span tid="navbar:issueTracker">Issue Tracker</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/wiki">
-                            <i class="fa fa-fw fa-group"></i> Wiki
+                            <i class="fa fa-fw fa-group"></i>
+                            <span tid="navbar:wiki">Wiki</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-nowrap" href="https://github.com/mawww/kakoune/blob/master/doc/design.asciidoc">
-                            <i class="fa fa-fw fa-book"></i> Design Notes
+                            <i class="fa fa-fw fa-book"></i>
+                            <span tid="navbar:designNotes">Design Notes</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-nowrap" href="gallery.html">
-                            <i class="fa fa-fw fa-camera"></i> Gallery
+                            <i class="fa fa-fw fa-camera"></i>
+                            <span tid="navbar:gallery">Gallery</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-nowrap" href="plugins.html">
-                            <i class="fa fa-fw fa-plug"></i> Plugins
+                            <i class="fa fa-fw fa-plug"></i>
+                            <span tid="navbar:plugins">Plugins</span>
                         </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="javascript:void(0)" id="navbarLanguages" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-flag"></i>
+                            <span tid="navbar:translation">Translation</span>
+                        </a>
+
+                        <div class="dropdown-menu" aria-labelledby="navbarLanguages">
+                            <a class="dropdown-item text-nowrap" href="javascript:void(0)" translate="en"><img src="img/flags/shiny/24/United-Kingdom.png">
+                            <span tid="navbar:translation:english">English</span></a>
+                            <a class="dropdown-item text-nowrap" href="javascript:void(0)" translate="fr"><img src="img/flags/shiny/24/France.png">
+                            <span tid="navbar:translation:french">French</span></a>
+                        </div>
                     </li>
                 </ul>
             </div>
@@ -69,8 +88,8 @@
 
         <div class="container-fluid">
             <div class="row">
-                <div class="col-sm-10 offset-sm-1 pt-4">
-                    <h2>Gallery</h2>
+                <div class="col-sm-10 offset-sm-1 pt-2 pt-md-4">
+                    <h2 tid="menu:gallery">Gallery</h2>
                     <hr>
 
                     <div class="row">
@@ -80,9 +99,12 @@
                                     <img class="card-img-top" src="img/screenshots/fzf-delapouite.png">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:0">
                                         Opening buffers using the <a href="https://github.com/junegunn/fzf">fzf</a> utility
                                     </p>
+                                    <span tid-fr="gallery:0" class="d-none">
+                                        Ouverture de fichiers avec l'outil <a href="https://github.com/junegunn/fzf">fzf</a>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -93,9 +115,12 @@
                                     <img class="card-img-top" src="img/screenshots/haskell-ide-gspia.png">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:1">
                                         Working on Haskell code in a <a href="https://github.com/tmux/tmux">tmux</a>-based IDE
                                     </p>
+                                    <span tid-fr="gallery:1" class="d-none">
+                                        Code en Haskell dans un EDI basé sur <a href="https://github.com/tmux/tmux">tmux</a>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -108,9 +133,12 @@
                                     <img class="card-img-top" src="img/screenshots/cpp-edition-topisani1.png">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:2">
                                         Editing some C++ code using multiple windows
                                     </p>
+                                    <span tid-fr="gallery:2" class="d-none">
+                                        Edition de code C++ dans plusieurs fenêtres
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -121,9 +149,12 @@
                                     <img class="card-img-top" src="img/screenshots/cpp-edition-topisani2.png">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:3">
                                         Editing some C++ code using multiple windows
                                     </p>
+                                    <span tid-fr="gallery:3" class="d-none">
+                                        Edition de code C++ dans plusieurs fenêtres
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -136,9 +167,12 @@
                                     <img class="card-img-top" src="img/screenshots/bufferlist-francesco.png">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:4">
                                         Simple buffer list presented by the Clippy assistant
                                     </p>
+                                    <span tid-fr="gallery:4" class="d-none">
+                                        Liste de fichiers simple, présentée par l'assistant Clippy
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -149,9 +183,12 @@
                                     <img class="card-img-top" src="img/screenshots/cargo-make-screwtape.png">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:5">
                                         Onboard building of Rust code with <a href="https://github.com/rust-lang/cargo">cargo</a>
                                     </p>
+                                    <span tid-fr="gallery:5" class="d-none">
+                                        Compilation de code Rust intégrée, avec <a href="https://github.com/rust-lang/cargo">cargo</a>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -164,9 +201,12 @@
                                     <img class="card-img-top" src="img/screenshots/go-documentation-pauldub.png">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:6">
                                         On-display documentation about Go symbols
                                     </p>
+                                    <span tid-fr="gallery:6" class="d-none">
+                                        Documentation intégrée à propos de symboles Go
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -177,9 +217,12 @@
                                     <img class="card-img-top" src="img/screenshots/nim-edition-solitudesf.png">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:7">
                                         Simple edition of Nim code
                                     </p>
+                                    <span tid-fr="gallery:7" class="d-none">
+                                        Edition simple de code Nim
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -192,9 +235,12 @@
                                     <img class="card-img-top" src="img/screenshots/relativenumbering-FreeFull.gif">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:8">
                                         Editing some Rust code using relative line numbering
                                     </p>
+                                    <span tid-fr="gallery:8" class="d-none">
+                                        Edition de code Rust grâce aux indices de lignes relatifs
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -205,9 +251,12 @@
                                     <img class="card-img-top" src="img/screenshots/ccode-Xiaoman.gif">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:9">
                                         Simple selection of C code
                                     </p>
+                                    <span tid-fr="gallery:9" class="d-none">
+                                        Sélection simple de code C
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -220,9 +269,12 @@
                                     <img class="card-img-top" src="img/screenshots/fzf-lenormf.gif">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:10">
                                         Opening multiple buffers using <a href="https://github.com/junegunn/fzf">fzf</a>
                                     </p>
+                                    <span tid-fr="gallery:10" class="d-none">
+                                        Ouverture de multiples fichiers grâce à <a href="https://github.com/junegunn/fzf">fzf</a>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -233,9 +285,12 @@
                                     <img class="card-img-top" src="img/screenshots/multiselections-victoroux.gif">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:11">
                                         Editing some Python code using multiple selections
                                     </p>
+                                    <span tid-fr="gallery:11" class="d-none">
+                                        Edition de code Python grâce aux sélections multiples
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -248,9 +303,12 @@
                                     <img class="card-img-top" src="img/screenshots/multiclients_casimir.gif">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:12">
                                         Multiple <i>Kakoune</i> clients within the same session
                                     </p>
+                                    <span tid-fr="gallery:12" class="d-none">
+                                        Différents clients <i>Kakoune</i> au sein de la même session
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -261,9 +319,12 @@
                                     <img class="card-img-top" src="img/screenshots/multiselections-jkonecny.gif">
                                 </a>
                                 <div class="card-body py-2">
-                                    <p class="card-text text-center">
+                                    <p class="card-text text-center mb-0" tid="gallery:13">
                                         Multiple selection in a <i>Kakoune</i> client
                                     </p>
+                                    <span tid-fr="gallery:13" class="d-none">
+                                        Sélections multiples dans un client <i>Kakoune</i>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -273,7 +334,7 @@
 
             <div class="row-fluid">
                 <div id="footer" class="col-sm-8 offset-sm-2 text-center mb-2">
-                    <hr>
+                    <hr class="mt-0 mb-1">
                     2012-2018 · <a href="https://github.com/mawww/kakoune"><i>kakoune</i></a>
                 </div>
             </div>
@@ -281,5 +342,6 @@
 
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+        <script type="text/javascript" src="js/translate.js"></script>
     </body>
 </html>
