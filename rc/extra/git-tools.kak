@@ -26,10 +26,10 @@ set-face global GitDiffFlags default,black
 define-command -params 1.. \
   -docstring %sh{printf 'git [<arguments>]: git wrapping helper
 All the optional arguments are forwarded to the git utility
-Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  log\n  show\n  show-diff\n  status\n  update-diff'} \
+Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  log\n  show\n  show-diff\n  status\n  update-diff\n  hide-diff'} \
   -shell-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
-        printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nlog\nshow\nshow-diff\nstatus\nupdate-diff\n"
+        printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nlog\nshow\nshow-diff\nstatus\nupdate-diff\nhide-diff\n"
     else
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
@@ -184,6 +184,9 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
        show-diff)
            echo 'try %{ add-highlighter window/git-diff flag-lines GitDiffFlags git_diff_flags }'
            update_diff
+           ;;
+       hide-diff)
+           echo 'try %{ remove-highlighter window/git-diff }'
            ;;
        update-diff) update_diff ;;
        commit) shift; commit "$@" ;;
