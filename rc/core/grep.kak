@@ -20,7 +20,7 @@ All the optional arguments are forwarded to the grep utility} \
                edit! -fifo ${output} -scroll *grep*
                set-option buffer filetype grep
                set-option buffer grep_current_line 0
-               hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+               hook -no-disabled -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
            }"
 }}
 
