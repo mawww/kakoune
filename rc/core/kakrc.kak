@@ -81,12 +81,12 @@ define-command -hidden kak-indent-on-new-line %{
 
 define-command -hidden kak-indent-on-closing-matching %~
     # align to opening matching brace when alone on a line
-    try %= execute-keys -draft -itersel <a-h><a-k>\h*\Q %val{hook_param} \E$<ret> mGi s \A|.\z<ret> 1<a-&> =
+    try %= execute-keys -draft -itersel <a-h><a-k>^\h*\Q %val{hook_param} \E$<ret> mGi s \A|.\z<ret> 1<a-&> =
 ~
 
 define-command -hidden kak-indent-on-closing-char %{
     # align to opening matching character when alone on a line
-    try %{ execute-keys -draft -itersel <a-h><a-k>\h*\Q %val{hook_param} \E$<ret>gi<a-f> %val{hook_param} <a-T>%<a-k>\w*\Q %val{hook_param} \E$<ret> s \A|.\z<ret> gi 1<a-&> }
+    try %{ execute-keys -draft -itersel <a-h><a-k>^\h*\Q %val{hook_param} \E$<ret>gi<a-f> %val{hook_param} <a-T>%<a-k>\w*\Q %val{hook_param} \E$<ret> s \A|.\z<ret> gi 1<a-&> }
 }
 
 # Initialization
