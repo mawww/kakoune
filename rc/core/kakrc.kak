@@ -97,7 +97,7 @@ hook -group kak-highlight global WinSetOption filetype=kak %{ add-highlighter wi
 hook global WinSetOption filetype=kak %~
     hook window InsertChar \n -group kak-indent kak-indent-on-new-line
     hook window InsertChar [>)}\]] -group kak-indent kak-indent-on-closing-matching
-    hook window InsertChar (?![>)}\]])[^\s\w] -group kak-indent kak-indent-on-closing-char
+    hook window InsertChar (?![[{(<>)}\]])[^\s\w] -group kak-indent kak-indent-on-closing-char
     # cleanup trailing whitespaces on current line insert end
     hook window ModeChange insert:.* -group kak-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
     set-option buffer extra_word_chars '-'
