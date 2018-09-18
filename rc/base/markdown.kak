@@ -13,7 +13,6 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
 
 add-highlighter shared/markdown regions
 add-highlighter shared/markdown/content default-region group
-add-highlighter shared/markdown/code region ``` ``` fill meta
 
 evaluate-commands %sh{
   languages="
@@ -23,12 +22,18 @@ evaluate-commands %sh{
     sass scala scss sh swift tupfile typescript yaml
   "
   for lang in ${languages}; do
-    printf 'add-highlighter shared/markdown/%s region ```\h*%s\\b   ``` regions\n' "${lang}" "${lang}"
+    printf 'add-highlighter shared/markdown/%s region -match-capture ^(\h*)```\h*%s\\b   ^(\h*)``` regions\n' "${lang}" "${lang}"
     printf 'add-highlighter shared/markdown/%s/ default-region fill meta\n' "${lang}"
     [ "${lang}" = kak ] && ref=kakrc || ref="${lang}"
     printf 'add-highlighter shared/markdown/%s/inner region \A```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${ref}"
   done
 }
+
+add-highlighter shared/markdown/codeblock region -match-capture \
+    ^(\h*)```\h* \
+    ^(\h*)```\h*$ \
+    fill meta
+add-highlighter shared/markdown/codespan region -match-capture (`+) (`+) fill mono
 
 # Setext-style header
 add-highlighter shared/markdown/content/ regex (\A|\n\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
@@ -39,8 +44,6 @@ add-highlighter shared/markdown/content/ regex ^(#+)(\h+)([^\n]+) 1:header
 
 add-highlighter shared/markdown/content/ regex ^\h?((?:[\s\t]+)?[-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*\n)*$ 0:list 1:bullet
 add-highlighter shared/markdown/content/ regex \B\+[^\n]+?\+\B 0:mono
-add-highlighter shared/markdown/content/ regex [^`](`([^\s`]|([^\s`](\n?[^\n`])*[^\s`]))`)[^`] 1:mono
-add-highlighter shared/markdown/content/ regex [^`](``([^\s`]|([^\s`](\n?[^\n`])*[^\s`]))``)[^`] 1:mono
 add-highlighter shared/markdown/content/ regex [^*](\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*)[^*] 1:italic
 add-highlighter shared/markdown/content/ regex [^_](_([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))_)[^_] 1:italic
 add-highlighter shared/markdown/content/ regex [^*](\*\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*\*)[^*] 1:bold
