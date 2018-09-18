@@ -44,10 +44,10 @@ add-highlighter shared/markdown/content/ regex ^(#+)(\h+)([^\n]+) 1:header
 
 add-highlighter shared/markdown/content/ regex ^\h?((?:[\s\t]+)?[-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*\n)*$ 0:list 1:bullet
 add-highlighter shared/markdown/content/ regex \B\+[^\n]+?\+\B 0:mono
-add-highlighter shared/markdown/content/ regex [^*](\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*)[^*] 1:italic
-add-highlighter shared/markdown/content/ regex [^_](_([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))_)[^_] 1:italic
-add-highlighter shared/markdown/content/ regex [^*](\*\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*\*)[^*] 1:bold
-add-highlighter shared/markdown/content/ regex [^_](__([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))__)[^_] 1:bold
+add-highlighter shared/markdown/content/ regex (?<!\*)(\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*)(?!\*) 1:italic
+add-highlighter shared/markdown/content/ regex (?<!_)(_([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))_)(?!_) 1:italic
+add-highlighter shared/markdown/content/ regex (?<!\*)(\*\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*\*)(?!\*) 1:bold
+add-highlighter shared/markdown/content/ regex (?<!_)(__([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))__)(?!_) 1:bold
 add-highlighter shared/markdown/content/ regex <(([a-z]+://.*?)|((mailto:)?[\w+-]+@[a-z]+[.][a-z]+))> 0:link
 add-highlighter shared/markdown/content/ regex ^\[[^\]\n]*\]:\h*([^\n]*) 1:link
 add-highlighter shared/markdown/content/ regex ^\h*(>\h*)+ 0:comment
