@@ -4,11 +4,16 @@
 }
 
 body {
-    padding-top: 50px;
+    margin-top: 57px;
 }
 
-a {
+a,
+a.btn-outline-secondary {
     color: #fa5300;
+}
+
+a.btn-outline-secondary {
+    border-color: #fa5300;
 }
 
 a:focus,
@@ -16,17 +21,7 @@ a:hover {
     color: #f52500;
 }
 
-#translation-flags > li > a {
-    padding: 10px 7px;
-}
-
-#translation-flags > li:last-child > a {
-    padding-right: 25px;
-}
-
 #kak-preview {
-    padding-top: 1.3em;
-    padding-bottom: 1.3em;
     background: #6c8646;
     background: -moz-linear-gradient(top, #6c8646 0%, #6c8646 47%, #3f763f 100%);
     background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#6c8646), color-stop(47%,#6c8646), color-stop(100%,#3f763f));
@@ -40,35 +35,15 @@ a:hover {
 #kak-preview-pitch {
     color: #EAEAEA;
     font-size: 1.3em;
-    text-align: center;
-    margin-bottom: .5em;
 }
 
 #kak-title {
     color: #EAEAEA;
     font-size: 1.5em;
-    text-align: center;
-    margin-bottom: .5em;
-}
-
-#kak-preview-logo {
-    text-align: center;
 }
 
 #kak-features {
     background-color: #FAFAFA;
-}
-
-@media only screen and (min-width: 1280px) {
-    #kak-features > .row-fluid > .col-lg-4:nth-child(3n+1) {
-        clear: both;
-    }
-}
-
-@media only screen and (max-width: 1279px) {
-    #kak-features > .row-fluid > .col-sm-6:nth-child(2n+1) {
-        clear: both;
-    }
 }
 
 #kak-demos {
@@ -77,69 +52,26 @@ a:hover {
 }
 
 #footer {
-    margin-top: 1em;
-    padding: .5em;
     font-size: .9em;
     color: #ACACAC;
-    border-top: 1px solid #CCC;
-    text-align: center;
 }
 
-#table-scripts {
-    margin-bottom: 0;
-}
-
-#table-scripts tr > td:nth-child(3),
-#table-scripts tr > th:nth-child(3),
-#table-scripts tr > td:nth-child(4),
-#table-scripts tr > th:nth-child(4),
-#table-scripts tr > td:nth-child(5),
-#table-scripts tr > th:nth-child(5) {
-    text-align: center;
-}
-
-#table-scripts tr > td:nth-child(3),
-#table-scripts tr > th:nth-child(3) {
-    font-weight: bold;
-}
-
-#carousel-demos .carousel-inner .item > video {
-    display: block;
-    margin: 1em auto;
+#carousel-demos .carousel-inner .carousel-item > video {
     box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.5);
 }
 
-#carousel-demos .carousel-control.left,
-#carousel-demos .carousel-control.right {
-    background-image: none;
-}
-
-#carousel-demos ul.carousel-indicators,
-#carousel-demos ol.carousel-indicators {
-    margin-bottom: 5%;
-}
-
-#carousel-demos ul.carousel-indicators li.active,
-#carousel-demos ol.carousel-indicators li.active {
-    border: none;
-    border-radius: none;
+#carousel-demos ol.carousel-indicators li {
     width: 16px;
     height: 16px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15);
+    margin-bottom: 38px;
+}
+
+#carousel-demos ol.carousel-indicators li.active {
     background-image: url(../img/kakoune_logo_32.png);
     background-size: cover;
-}
-
-.navbar-default {
-    border-color: #ACACAC;
-}
-
-.navbar-brand {
-    padding: 10px 0 10px 10px;
-}
-
-.navbar > .container .navbar-brand,
-.navbar > .container-fluid .navbar-brand {
-    margin-left: 0;
+    background-color: rgba(255, 255, 255, 0.75);
 }
 
 .container-fluid {
@@ -152,35 +84,7 @@ a:hover {
     color: #fa5300;
 }
 
-.feature-text {
-    text-align: justify;
-    margin-bottom: 1em;
-}
-
-.feature-more {
-    background: white;
-    border: #fa5300 1px solid;
-    color: #fa5300;
-    font-size: 1.2em;
-    margin: 1em 0;
-}
-
 .demo-caption {
     font-size: 1.1em;
     font-style: italic;
-    text-align: center;
-    margin-bottom: 1em;
-}
-
-.thumbnail .caption {
-    font-size: 1.2em;
-    text-align: center;
-}
-
-.thumbnail .caption p {
-    margin: 0;
-}
-
-.thumbnail {
-    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
 }
