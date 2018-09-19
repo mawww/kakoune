@@ -71,6 +71,5 @@ hook global WinSetOption filetype=pug %{
 hook -group pug-highlight global WinSetOption filetype=(?!pug).* %{ remove-highlighter window/pug }
 
 hook global WinSetOption filetype=(?!pug).* %{
-    remove-hooks window pug-indent
-    remove-hooks window pug-hooks
+    remove-hooks window pug-.+
 }

@@ -157,8 +157,7 @@ hook global WinSetOption filetype=ruby %{
 hook -group ruby-highlight global WinSetOption filetype=(?!ruby).* %{ remove-highlighter window/ruby }
 
 hook global WinSetOption filetype=(?!ruby).* %{
-    remove-hooks window ruby-indent
-    remove-hooks window ruby-insert
+    remove-hooks window ruby-.+
 
     unalias window alt ruby-alternative-file
 }

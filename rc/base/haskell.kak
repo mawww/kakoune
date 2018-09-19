@@ -102,6 +102,5 @@ hook global WinSetOption filetype=haskell %{
 hook -group haskell-highlight global WinSetOption filetype=(?!haskell).* %{ remove-highlighter window/haskell }
 
 hook global WinSetOption filetype=(?!haskell).* %{
-    remove-hooks window haskell-indent
-    remove-hooks window haskell-hooks
+    remove-hooks window haskell-.+
 }

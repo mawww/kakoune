@@ -94,6 +94,5 @@ hook global WinSetOption filetype=go %{
 hook -group go-highlight global WinSetOption filetype=(?!go).* %{ remove-highlighter window/go }
 
 hook global WinSetOption filetype=(?!go).* %{
-    remove-hooks window go-hooks
-    remove-hooks window go-indent
+    remove-hooks window go-.+
 }

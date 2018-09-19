@@ -111,6 +111,5 @@ hook global WinSetOption filetype=perl %{
 hook -group perl-highlight global WinSetOption filetype=(?!perl).* %{ remove-highlighter window/perl }
 
 hook global WinSetOption filetype=(?!perl).* %{
-    remove-hooks window perl-hooks
-    remove-hooks window perl-indent
+    remove-hooks window perl-.+
 }

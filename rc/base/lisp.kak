@@ -53,6 +53,5 @@ hook global WinSetOption filetype=lisp %{
 hook -group lisp-highlight global WinSetOption filetype=(?!lisp).* %{ remove-highlighter window/lisp }
 
 hook global WinSetOption filetype=(?!lisp).* %{
-    remove-hooks window lisp-indent
-    remove-hooks window lisp-hooks
+    remove-hooks window lisp-.+
 }

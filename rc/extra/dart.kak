@@ -103,6 +103,5 @@ hook global WinSetOption filetype=dart %{
 hook -group dart-highlight global WinSetOption filetype=(?!dart).* %{ remove-highlighter window/dart }
 
 hook global WinSetOption filetype=(?!dart).* %{
-    remove-hooks window dart-hooks
-    remove-hooks window dart-indent
+    remove-hooks window dart-.+
 }

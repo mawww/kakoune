@@ -97,8 +97,7 @@ hook global WinSetOption filetype=lua %{
 hook -group lua-highlight global WinSetOption filetype=(?!lua).* %{ remove-highlighter window/lua }
 
 hook global WinSetOption filetype=(?!lua).* %{
-    remove-hooks window lua-indent
-    remove-hooks window lua-insert
+    remove-hooks window lua-.+
 
     unalias window alt lua-alternative-file
 }

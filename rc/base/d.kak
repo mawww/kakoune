@@ -129,6 +129,5 @@ hook global WinSetOption filetype=d %{
 hook -group d-highlight global WinSetOption filetype=(?!d).* %{ remove-highlighter window/d }
 
 hook global WinSetOption filetype=(?!d).* %{
-    remove-hooks window d-hooks
-    remove-hooks window d-indent
+    remove-hooks window d-.+
 }

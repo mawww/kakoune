@@ -68,6 +68,5 @@ hook -group hbs-highlight global WinSetOption filetype=(?!hbs).* %{
 }
 
 hook global WinSetOption filetype=(?!hbs).* %{
-    remove-hooks window hbs-indent
-    remove-hooks window hbs-hooks
+    remove-hooks window hbs-.+
 }

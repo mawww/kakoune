@@ -67,6 +67,5 @@ hook global WinSetOption filetype=ragel %{
 hook -group ragel-highlight global WinSetOption filetype=(?!ragel).* %{ remove-highlighter window/ragel }
 
 hook global WinSetOption filetype=(?!ragel).* %{
-    remove-hooks window ragel-indent
-    remove-hooks window ragel-hooks
+    remove-hooks window ragel-.+
 }

@@ -87,6 +87,5 @@ hook global WinSetOption filetype=php %{
 hook -group php-highlight global WinSetOption filetype=(?!php).* %{ remove-highlighter window/php-file }
 
 hook global WinSetOption filetype=(?!php).* %{
-    remove-hooks window php-indent
-    remove-hooks window php-hooks
+    remove-hooks window php-.+
 }

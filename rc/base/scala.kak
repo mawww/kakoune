@@ -72,6 +72,5 @@ hook global WinSetOption filetype=scala %[
 hook -group scala-highlight global WinSetOption filetype=(?!scala).* %{ remove-highlighter window/scala }
 
 hook global WinSetOption filetype=(?!scala).* %{
-    remove-hooks window scala-indent
-    remove-hooks window scala-hooks
+    remove-hooks window scala-.+
 }

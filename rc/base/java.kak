@@ -57,8 +57,7 @@ hook global WinSetOption filetype=java %{
 }
 
 hook global WinSetOption filetype=(?!java).* %{
-    remove-hooks window java-hooks
-    remove-hooks window java-indent
+    remove-hooks window java-.+
 }
 hook -group java-highlight global WinSetOption filetype=java %{ add-highlighter window/java ref java }
 hook -group java-highlight global WinSetOption filetype=(?!java).* %{ remove-highlighter window/java }

@@ -70,6 +70,5 @@ hook global WinSetOption filetype=cabal %[
 hook -group cabal-highlight global WinSetOption filetype=(?!cabal).* %{ remove-highlighter window/cabal }
 
 hook global WinSetOption filetype=(?!cabal).* %{
-    remove-hooks window cabal-indent
-    remove-hooks window cabal-hooks
+    remove-hooks window cabal-.+
 }

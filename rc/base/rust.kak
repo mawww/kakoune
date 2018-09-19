@@ -86,6 +86,5 @@ hook global WinSetOption filetype=rust %[
 hook -group rust-highlight global WinSetOption filetype=(?!rust).* %{ remove-highlighter window/rust }
 
 hook global WinSetOption filetype=(?!rust).* %{
-    remove-hooks window rust-indent
-    remove-hooks window rust-hooks
+    remove-hooks window rust-.+
 }

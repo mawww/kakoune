@@ -73,6 +73,5 @@ hook global WinSetOption filetype=css %[
 hook -group css-highlight global WinSetOption filetype=(?!css).* %{ remove-highlighter window/css }
 
 hook global WinSetOption filetype=(?!css).* %{
-    remove-hooks window css-indent
-    remove-hooks window css-hooks
+    remove-hooks window css-.+
 }

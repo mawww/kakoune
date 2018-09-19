@@ -56,6 +56,5 @@ hook global WinSetOption filetype=yaml %{
 hook -group yaml-highlight global WinSetOption filetype=(?!yaml).* %{ remove-highlighter window/yaml }
 
 hook global WinSetOption filetype=(?!yaml).* %{
-    remove-hooks window yaml-indent
-    remove-hooks window yaml-hooks
+    remove-hooks window yaml-.+
 }
