@@ -127,6 +127,5 @@ hook global WinSetOption filetype=scheme %{
 }
 
 hook global WinSetOption filetype=(?!scheme).* %{
-    remove-hooks window scheme-indent
-    remove-hooks window scheme-hooks
+    remove-hooks window scheme-.+
 }

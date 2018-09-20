@@ -76,6 +76,5 @@ hook global WinSetOption filetype=coffee %{
 hook -group coffee-highlight global WinSetOption filetype=(?!coffee).* %{ remove-highlighter window/coffee }
 
 hook global WinSetOption filetype=(?!coffee).* %{
-    remove-hooks window coffee-indent
-    remove-hooks window coffee-hooks
+    remove-hooks window coffee-.+
 }

@@ -64,7 +64,6 @@ hook -group toml-highlight global WinSetOption filetype=(?!toml).* %{
 }
 
 hook global WinSetOption filetype=(?!toml).* %{
-    remove-hooks window toml-indent
-    remove-hooks window toml-hooks
+    remove-hooks window toml-.+
 }
 

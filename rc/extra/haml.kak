@@ -59,6 +59,5 @@ hook global WinSetOption filetype=haml %{
 hook -group haml-highlight global WinSetOption filetype=(?!haml).* %{ remove-highlighter window/haml }
 
 hook global WinSetOption filetype=(?!haml).* %{
-    remove-hooks window haml-indent
-    remove-hooks window haml-hooks
+    remove-hooks window haml-.+
 }

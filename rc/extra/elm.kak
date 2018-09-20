@@ -64,6 +64,5 @@ hook global WinSetOption filetype=elm %{
 hook -group elm-highlight global WinSetOption filetype=(?!elm).* %{ remove-highlighter window/elm }
 
 hook global WinSetOption filetype=(?!elm).* %{
-    remove-hooks window elm-indent
-    remove-hooks window elm-hooks
+    remove-hooks window elm-.+
 }

@@ -81,6 +81,5 @@ hook global WinSetOption filetype=fish %{
 hook -group fish-highlight global WinSetOption filetype=(?!fish).* %{ remove-highlighter window/fish }
 
 hook global WinSetOption filetype=(?!fish).* %{
-    remove-hooks window fish-indent
-    remove-hooks window fish-insert
+    remove-hooks window fish-.+
 }

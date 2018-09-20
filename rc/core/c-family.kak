@@ -276,9 +276,7 @@ evaluate-commands %sh{
 
 hook global WinSetOption filetype=(c|cpp|objc) %[
     try %{ # we might be switching from one c-family language to another
-        remove-hooks window c-family-hooks
-        remove-hooks window c-family-indent
-        remove-hooks window c-family-insert
+        remove-hooks window c-family-.+
     }
 
     hook -group c-family-indent window ModeChange insert:.* c-family-trim-autoindent
@@ -292,9 +290,7 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
 ]
 
 hook global WinSetOption filetype=(?!c)(?!cpp)(?!objc).* %[
-    remove-hooks window c-family-hooks
-    remove-hooks window c-family-indent
-    remove-hooks window c-family-insert
+    remove-hooks window c-family-.+
 
     unalias window alt c-family-alternative-file
 ]

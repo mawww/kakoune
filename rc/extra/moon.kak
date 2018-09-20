@@ -101,8 +101,7 @@ hook global WinSetOption filetype=moon %{
 hook -group moon-highlight global WinSetOption filetype=(?!moon).* %{ remove-highlighter window/moon }
 
 hook global WinSetOption filetype=(?!moon).* %{
-    remove-hooks window moon-indent
-    remove-hooks window moon-hooks
+    remove-hooks window moon-.+
 
     unalias window alt moon-alternative-file
 }

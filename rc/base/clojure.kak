@@ -170,6 +170,5 @@ hook global WinSetOption filetype=clojure %[
 hook -group clojure-highlight global WinSetOption filetype=(?!clojure).* %{ remove-highlighter window/clojure }
 
 hook global WinSetOption filetype=(?!clojure).* %{
-    remove-hooks window clojure-indent
-    remove-hooks window clojure-hooks
+    remove-hooks window clojure-.+
 }

@@ -57,6 +57,5 @@ hook global WinSetOption filetype=json %{
 hook -group json-highlight global WinSetOption filetype=(?!json).* %{ remove-highlighter window/json }
 
 hook global WinSetOption filetype=(?!json).* %{
-    remove-hooks window json-indent
-    remove-hooks window json-hooks
+    remove-hooks window json-.+
 }

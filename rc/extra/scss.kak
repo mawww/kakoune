@@ -42,6 +42,5 @@ hook global WinSetOption filetype=scss %[
 hook -group scss-highlight global WinSetOption filetype=(?!scss).* %{ remove-highlighter window/scss }
 
 hook global WinSetOption filetype=(?!scss).* %{
-    remove-hooks window scss-indent
-    remove-hooks window scss-hooks
+    remove-hooks window scss-.+
 }

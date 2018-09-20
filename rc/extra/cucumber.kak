@@ -86,6 +86,5 @@ hook global WinSetOption filetype=cucumber %{
 hook -group cucumber-highlight global WinSetOption filetype=(?!cucumber).* %{ remove-highlighter window/cucumber }
 
 hook global WinSetOption filetype=(?!cucumber).* %{
-    remove-hooks window cucumber-indent
-    remove-hooks window cucumber-hooks
+    remove-hooks window cucumber-.+
 }

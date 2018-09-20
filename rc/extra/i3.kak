@@ -78,6 +78,5 @@ hook global WinSetOption filetype=i3 %[
 hook -group i3-highlight global WinSetOption filetype=(?!i3).* %{ remove-highlighter window/i3 }
 
 hook global WinSetOption filetype=(?!i3).* %{
-    remove-hooks window i3-hooks
-    remove-hooks window i3-indent
+    remove-hooks window i3-.+
 }

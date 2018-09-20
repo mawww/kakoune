@@ -59,6 +59,5 @@ hook global WinSetOption filetype=sass %{
 hook -group sass-highlight global WinSetOption filetype=(?!sass).* %{ remove-highlighter window/sass }
 
 hook global WinSetOption filetype=(?!sass).* %{
-    remove-hooks window sass-indent
-    remove-hooks window sass-hooks
+    remove-hooks window sass-.+
 }

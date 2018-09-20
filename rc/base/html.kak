@@ -69,6 +69,5 @@ hook global WinSetOption filetype=(?:html|xml) %{
 hook -group html-highlight global WinSetOption filetype=(?!html)(?!xml).* %{ remove-highlighter window/html }
 
 hook global WinSetOption filetype=(?!html)(?!xml).* %{
-    remove-hooks window html-indent
-    remove-hooks window html-hooks
+    remove-hooks window html-.+
 }

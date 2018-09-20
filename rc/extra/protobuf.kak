@@ -82,6 +82,5 @@ hook global WinSetOption filetype=protobuf %[
 hook -group protobuf-highlight global WinSetOption filetype=(?!protobuf).* %{ remove-highlighter window/protobuf }
 
 hook global WinSetOption filetype=(?!protobuf).* %{
-    remove-hooks window protobuf-hooks
-    remove-hooks window protobuf-indent
+    remove-hooks window protobuf-.+
 }
