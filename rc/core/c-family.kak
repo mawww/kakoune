@@ -143,12 +143,13 @@ evaluate-commands %sh{
             add-highlighter shared/FT/string region %{MAYBEAT(?<!QUOTE)(?<!QUOTE\\)"} %{(?<!\\)(?:\\\\)*"} fill string
             add-highlighter shared/FT/raw_string region %{R"([^(]*)\(} %{\)([^")]*)"} fill string
             add-highlighter shared/FT/comment region /\* \*/ fill comment
-            add-highlighter shared/FT/line_comment region // $ fill comment
+            add-highlighter shared/FT/line_comment region // (?<!\\)(?=\n) fill comment
             add-highlighter shared/FT/disabled region -recurse "#\h*if(?:def)?" ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" fill rgb:666666
-            add-highlighter shared/FT/macro region %{^\h*?\K#} %{(?<!\\)\n} group
+            add-highlighter shared/FT/macro region %{^\h*?\K#} %{(?<!\\)(?=\n)|(?=//)} group
 
             add-highlighter shared/FT/macro/ fill meta
             add-highlighter shared/FT/macro/ regex ^\h*#include\h+(\S*) 1:module
+            add-highlighter shared/FT/macro/ regex /\*.*?\*/ 0:comment
             ' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g; s/MAYBEAT/${maybe_at}/;"
     done
 }
