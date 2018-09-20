@@ -166,6 +166,10 @@ informations about Kakoune's state:
 *kak_hook_param_capture_N*::
     text captured by the hook filter regex capture N
 
+*kak_text*::
+    the text entered by the user at a `prompt` command, not available in other
+    contexts
+
 *kak_client_env_<name>*::
     value of the *name* variable in the client environment
     (e.g. *$kak_client_env_SHELL* is the SHELL variable)
