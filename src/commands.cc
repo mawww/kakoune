@@ -866,6 +866,11 @@ const CommandDesc add_hook_cmd = {
         Regex regex{parser[2], RegexCompileFlags::Optimize};
         const String& command = parser[3];
         auto group = parser.get_switch("group").value_or(StringView{});
+
+        if (any_of(group, [](char c) { return not is_word(c, { '-' }); }) or
+            (not group.empty() and not is_word(group[0])))
+            throw runtime_error{format("invalid group name '{}'", group)};
+
         const auto flags = (parser.get_switch("always") ? HookFlags::Always : HookFlags::None) |
                            (parser.get_switch("once")   ? HookFlags::Once   : HookFlags::None);
         get_scope(parser[0], context).hooks().add_hook(parser[1], group.str(), flags,
