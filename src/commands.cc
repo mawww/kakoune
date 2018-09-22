@@ -157,6 +157,15 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
     return { 0, cursor_pos, res };
 }
 
+auto make_single_word_completer(std::function<String (const Context&)> func)
+{
+    return make_completer(
+        [func](const Context& context, CompletionFlags flags,
+               const String& prefix, ByteCount cursor_pos) -> Completions {
+            auto candidate = { func(context) };
+            return { 0_byte, cursor_pos, complete(prefix, cursor_pos, candidate) }; });
+}
+
 auto buffer_completer = make_completer(complete_buffer_name<false>);
 auto other_buffer_completer = make_completer(complete_buffer_name<true>);
 
@@ -673,7 +682,7 @@ const CommandDesc rename_buffer_cmd = {
     single_param,
     CommandFlags::None,
     CommandHelper{},
-    CommandCompleter{},
+    make_single_word_completer([](const Context& context){ return context.buffer().display_name(); }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (not context.buffer().set_name(parser[0]))
@@ -2120,7 +2129,7 @@ const CommandDesc rename_client_cmd = {
     single_param,
     CommandFlags::None,
     CommandHelper{},
-    CommandCompleter{},
+    make_single_word_completer([](const Context& context){ return context.name(); }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         const String& name = parser[0];
@@ -2196,7 +2205,7 @@ const CommandDesc rename_session_cmd = {
     single_param,
     CommandFlags::None,
     CommandHelper{},
-    CommandCompleter{},
+    make_single_word_completer([](const Context&){ return Server::instance().session(); }),
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {
         if (not Server::instance().rename_session(parser[0]))
