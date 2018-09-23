@@ -343,9 +343,23 @@ void do_write_buffer(Context& context, Optional<String> filename, bool sync_file
 template<bool force = false>
 void write_buffer(const ParametersParser& parser, Context& context, const ShellContext&)
 {
-    return do_write_buffer(context,
-                           parser.positional_count() > 0 ? parser[0] : Optional<String>{},
-                           (bool)parser.get_switch("sync"), force);
+    do_write_buffer(context,
+                    parser.positional_count() > 0 ? parser[0] : Optional<String>{},
+                    (bool)parser.get_switch("sync"), force);
+
+    if (parser.positional_count() > 0
+        and not (context.buffer().flags() & (Buffer::Flags::File | Buffer::Flags::Debug)))
+    {
+        auto& name = parser[0];
+        Buffer* buffer = BufferManager::instance().get_buffer_ifp(name);
+
+        if (not buffer)
+            buffer = open_file_buffer(name, Buffer::Flags::File);
+        else
+            reload_file_buffer(*buffer);
+
+        context.change_buffer(*buffer);
+    }
 }
 
 const CommandDesc write_cmd = {
