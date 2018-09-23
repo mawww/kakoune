@@ -1544,16 +1544,7 @@ static Completions map_key_completer(const Context& context, CompletionFlags fla
 const CommandDesc map_key_cmd = {
     "map",
     nullptr,
-    "map [<switches>] <scope> <mode> <key> <keys>: map <key> to <keys> in given mode in <scope>.\n"
-    "<mode> can be:\n"
-    "    normal\n"
-    "    insert\n"
-    "    menu\n"
-    "    prompt\n"
-    "    goto\n"
-    "    view\n"
-    "    user\n"
-    "    object\n",
+    "map [<switches>] <scope> <mode> <key> <keys>: map <key> to <keys> in given <mode> in <scope>",
     ParameterDesc{
         { { "docstring", { true,  "specify mapping description" } } },
         ParameterDesc::Flags::None, 4, 4
@@ -1579,18 +1570,10 @@ const CommandDesc map_key_cmd = {
 const CommandDesc unmap_key_cmd = {
     "unmap",
     nullptr,
-    "unmap <scope> <mode> <key> [<expected-keys>]: unmap <key> from given mode in <scope>.\n"
-    "If <expected> is specified, remove the mapping only if its value is <expected>\n"
-    "<mode> can be:\n"
-    "    normal\n"
-    "    insert\n"
-    "    menu\n"
-    "    prompt\n"
-    "    goto\n"
-    "    view\n"
-    "    user\n"
-    "    object\n",
-    ParameterDesc{{}, ParameterDesc::Flags::None, 3, 4},
+    "unmap <scope> <mode> [<key> [<expected-keys>]]: unmap <key> from given <mode> in <scope>.\n"
+    "If <expected-keys> is specified, remove the mapping only if its value is <expected-keys>.\n"
+    "If only <scope> and <mode> are specified remove all mappings",
+    ParameterDesc{{}, ParameterDesc::Flags::None, 2, 4},
     CommandFlags::None,
     CommandHelper{},
     map_key_completer<true>,
@@ -1599,9 +1582,15 @@ const CommandDesc unmap_key_cmd = {
         KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
         KeymapMode keymap_mode = parse_keymap_mode(parser[1], keymaps.user_modes());
 
+        if (parser.positional_count() == 2)
+        {
+            keymaps.unmap_keys(keymap_mode);
+            return;
+        }
+
         KeyList key = parse_keys(parser[2]);
         if (key.size() != 1)
-            throw runtime_error("only a single key can be mapped");
+            throw runtime_error("only a single key can be unmapped");
 
         if (keymaps.is_mapped(key[0], keymap_mode) and
             (parser.positional_count() < 4 or
