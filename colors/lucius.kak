@@ -50,12 +50,12 @@ evaluate-commands %sh{
 
         # and built in faces
         face global Default ${lucius_lighter_grey},${lucius_darker_grey}
-        face global PrimarySelection ${lucius_darker_grey},${lucius_orange}
-        face global SecondarySelection  ${lucius_lighter_grey},${lucius_dark_blue}
-        face global PrimaryCursor ${lucius_darker_grey},${lucius_lighter_grey}
-        face global SecondaryCursor ${lucius_darker_grey},${lucius_lighter_grey}
-        face global PrimaryCursorEol ${lucius_darker_grey},${lucius_dark_green}
-        face global SecondaryCursorEol ${lucius_darker_grey},${lucius_dark_green}
+        face global PrimarySelection ${lucius_darker_grey},${lucius_orange}+fg
+        face global SecondarySelection  ${lucius_lighter_grey},${lucius_dark_blue}+fg
+        face global PrimaryCursor ${lucius_darker_grey},${lucius_lighter_grey}+fg
+        face global SecondaryCursor ${lucius_darker_grey},${lucius_lighter_grey}+fg
+        face global PrimaryCursorEol ${lucius_darker_grey},${lucius_dark_green}+fg
+        face global SecondaryCursorEol ${lucius_darker_grey},${lucius_dark_green}+fg
         face global LineNumbers ${lucius_grey},${lucius_dark_grey}
         face global LineNumberCursor ${lucius_grey},${lucius_dark_grey}+b
         face global MenuForeground ${lucius_blue},${lucius_dark_blue}

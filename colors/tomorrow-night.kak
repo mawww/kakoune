@@ -53,12 +53,12 @@ evaluate-commands %sh{
     ## builtin
     echo "
         face global Default ${text},${background}
-        face global PrimarySelection default,${selection}
-        face global SecondarySelection default,${selection}
-        face global PrimaryCursor black,${aqua}
-        face global SecondaryCursor black,${aqua}
-        face global PrimaryCursorEol black,${green_dark}
-        face global SecondaryCursorEol black,${green_dark}
+        face global PrimarySelection default,${selection}+fg
+        face global SecondarySelection default,${selection}+fg
+        face global PrimaryCursor black,${aqua}+fg
+        face global SecondaryCursor black,${aqua}+fg
+        face global PrimaryCursorEol black,${green_dark}+fg
+        face global SecondaryCursorEol black,${green_dark}+fg
         face global LineNumbers ${text_light},${background}
         face global LineNumberCursor ${yellow},rgb:282828+b
         face global MenuForeground ${text_light},blue

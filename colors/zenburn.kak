@@ -57,12 +57,12 @@ evaluate-commands %sh{
 
         # and built in faces
         face global Default ${zendefault}
-        face global PrimarySelection ${zentext},${zenselectionbg}
-        face global SecondarySelection ${zensecondaryfg},${zenselectionbg}
-        face global PrimaryCursor ${zencursor}
-        face global SecondaryCursor ${zencursor}
-        face global PrimaryCursorEol ${zencursoreol}
-        face global SecondaryCursorEol ${zencursoreol}
+        face global PrimarySelection ${zentext},${zenselectionbg}+fg
+        face global SecondarySelection ${zensecondaryfg},${zenselectionbg}+fg
+        face global PrimaryCursor ${zencursor}+fg
+        face global SecondaryCursor ${zencursor}+fg
+        face global PrimaryCursorEol ${zencursoreol}+fg
+        face global SecondaryCursorEol ${zencursoreol}+fg
         face global LineNumbers ${zendefault}
         face global LineNumberCursor ${zenstatus}
         face global MenuForeground ${zenmenufg}

@@ -30,14 +30,14 @@ face global list   yellow
 # face global Default default,rgb:262626 <- change the terminal bg color instead
 face global Default default,default
 
-face global PrimarySelection   white,blue
-face global SecondarySelection black,blue
+face global PrimarySelection   white,blue+fg
+face global SecondarySelection black,blue+fg
 
-face global PrimaryCursor   black,white
-face global SecondaryCursor black,white
+face global PrimaryCursor   black,white+fg
+face global SecondaryCursor black,white+fg
 
-face global PrimaryCursorEol   black,rgb:7ccd7c
-face global SecondaryCursorEol black,rgb:7ccd7c
+face global PrimaryCursorEol   black,rgb:7ccd7c+fg
+face global SecondaryCursorEol black,rgb:7ccd7c+fg
 
 face global LineNumbers      rgb:605958
 face global LineNumberCursor yellow,default+b

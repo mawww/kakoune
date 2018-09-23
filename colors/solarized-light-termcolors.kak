@@ -28,12 +28,12 @@ face global list               green
 
 # builtin
 face global Default            bright-yellow,bright-white
-face global PrimarySelection   bright-white,blue
-face global SecondarySelection bright-cyan,bright-green
-face global PrimaryCursor      bright-white,bright-yellow
-face global SecondaryCursor    bright-white,bright-cyan
-face global PrimaryCursorEol   bright-white,yellow
-face global SecondaryCursorEol bright-white,bright-red
+face global PrimarySelection   bright-white,blue+fg
+face global SecondarySelection bright-cyan,bright-green+fg
+face global PrimaryCursor      bright-white,bright-yellow+fg
+face global SecondaryCursor    bright-white,bright-cyan+fg
+face global PrimaryCursorEol   bright-white,yellow+fg
+face global SecondaryCursorEol bright-white,bright-red+fg
 face global LineNumbers        bright-cyan,white
 face global LineNumberCursor   bright-green,white
 face global LineNumbersWrapped white,white

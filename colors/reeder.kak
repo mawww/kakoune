@@ -48,12 +48,12 @@ evaluate-commands %sh{
 
         # and built in faces
         face global Default            ${black_light},${white}
-        face global PrimarySelection   ${black},${brown_lighter}
-        face global SecondarySelection ${black_light},${grey_light}
-        face global PrimaryCursor      ${black},${grey_dark}
-        face global SecondaryCursor    ${black},${grey_dark}
-        face global PrimaryCursorEol   ${black},${brown_dark}
-        face global SecondaryCursorEol ${black},${brown_dark}
+        face global PrimarySelection   ${black},${brown_lighter}+fg
+        face global SecondarySelection ${black_light},${grey_light}+fg
+        face global PrimaryCursor      ${black},${grey_dark}+fg
+        face global SecondaryCursor    ${black},${grey_dark}+fg
+        face global PrimaryCursorEol   ${black},${brown_dark}+fg
+        face global SecondaryCursorEol ${black},${brown_dark}+fg
         face global LineNumbers        ${grey_dark},${white}
         face global LineNumberCursor   ${grey_dark},${brown_lighter}
         face global MenuForeground     ${orange},${brown_lighter}
