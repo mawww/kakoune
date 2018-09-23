@@ -7,10 +7,11 @@ hook global BufCreate .*(\.gitconfig|git/config) %{
 }
 
 hook -group git-commit-highlight global WinSetOption filetype=git-commit %{
-    add-highlighter window/git-commit-highlight group
-    add-highlighter window/git-commit-highlight/ regex "^\h*#[^\n]*\n" 0:cyan,default
-    add-highlighter window/git-commit-highlight/ regex "\b(?:(modified)|(deleted)|(new file)|(renamed|copied)):([^\n]*)\n" 1:yellow 2:red 3:green 4:blue 5:magenta
-    add-highlighter window/git-commit-highlight/ ref diff # highlight potential diffs from the -v option
+    add-highlighter window/git-commit-highlight regions
+    add-highlighter window/git-commit-highlight/diff region '^diff --git' '^(?=diff --git)' ref diff # highlight potential diffs from the -v option
+    add-highlighter window/git-commit-highlight/comments region '^\h*#' '$' group 
+    add-highlighter window/git-commit-highlight/comments/ fill cyan,default
+    add-highlighter window/git-commit-highlight/comments/ regex "\b(?:(modified)|(deleted)|(new file)|(renamed|copied)):([^\n]*)$" 1:yellow 2:red 3:green 4:blue 5:magenta
 }
 
 hook -group git-commit-highlight global WinSetOption filetype=(?!git-commit).* %{ remove-highlighter window/git-commit-highlight }
