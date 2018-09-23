@@ -102,7 +102,7 @@ define-command -params 1 -hidden doc-render %{
     doc-parse-anchors
 
     # Join paragraphs together
-    try %{ execute-keys -draft \%S \n{2,}|(?<=\+)\n|^[^\n]+::\n|\n\h*[-*] <ret> <a-K>^-{2,}(\n|\z)<ret> S\n\z<ret> <a-k>\n<ret> <a-j> }
+    try %{ execute-keys -draft \%S \n{2,}|(?<=\+)\n|^[^\n]+::\n <ret> <a-K>^\h*-{2,}(\n|\z)<ret> S\n\z<ret> <a-k>\n<ret> <a-j> }
 
     # Remove some line end markers
     try %{ execute-keys -draft \%s \h*(\+|:{2,})$ <ret> d }
