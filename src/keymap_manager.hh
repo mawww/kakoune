@@ -33,6 +33,7 @@ public:
     using KeyList = Vector<Key, MemoryDomain::Mapping>;
     void map_key(Key key, KeymapMode mode, KeyList mapping, String docstring);
     void unmap_key(Key key, KeymapMode mode);
+    void unmap_keys(KeymapMode mode);
 
     bool is_mapped(Key key, KeymapMode mode) const;
     KeyList get_mapped_keys(KeymapMode mode) const;

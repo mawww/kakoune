@@ -21,6 +21,18 @@ void KeymapManager::unmap_key(Key key, KeymapMode mode)
     m_mapping.remove(KeyAndMode{key, mode});
 }
 
+void KeymapManager::unmap_keys(KeymapMode mode)
+{
+    auto it = m_mapping.begin();
+    while (it != m_mapping.end())
+    {
+        auto& map = *it;
+        if (map.key.second == mode)
+            unmap_key(map.key.first, map.key.second);
+        else
+            ++it;
+    }
+}
 
 bool KeymapManager::is_mapped(Key key, KeymapMode mode) const
 {
