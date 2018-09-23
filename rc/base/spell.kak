@@ -57,6 +57,10 @@ Formats of language supported:
     }
 }
 
+define-command spell-clear %{
+    unset-option buffer spell_regions
+}
+
 define-command spell-next %{ evaluate-commands %sh{
     anchor_line="${kak_selection_desc%%.*}"
     anchor_col="${kak_selection_desc%%,*}"
