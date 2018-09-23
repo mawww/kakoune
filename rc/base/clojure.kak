@@ -22,11 +22,6 @@ add-highlighter shared/clojure/code/ regex \b(nil|true|false)\b 0:value
 add-highlighter shared/clojure/code/ regex \
     \\(?:space|tab|newline|return|backspace|formfeed|u[0-9a-fA-F]{4}|o[0-3]?[0-7]{1,2}|.)\b 0:string
 
-# Numbers
-add-highlighter shared/clojure/code/ regex [-+]?(?:0[0-7]*|0[xX][0-9a-fA-F]+|[1-9]+)N? 0:value
-add-highlighter shared/clojure/code/ regex [-+]?(?:0|[1-9]\d*|(?:0|[1-9]\d*)\.\d*)(?:M|[eE][-+]?\d+)? 0:value
-add-highlighter shared/clojure/code/ regex [-+]?(?:0|[1-9]\d*)/(?:0|[1-9]\d*) 0:value
-
 hook global WinSetOption filetype=clojure %{
     set-option window extra_word_chars . / * ? + - < > ! : "'"
 }
@@ -142,7 +137,14 @@ evaluate-commands %sh{
     static_words="$(join "$static_words" ' ')"
 
     printf %s "
+        # Keywords
         add-highlighter shared/clojure/code/ regex ::?(${symbol_char}+/)?${symbol_char}+ 0:value
+
+        # Numbers
+        add-highlighter shared/clojure/code/ regex (?<!${symbol_char})[-+]?(?:0(?:[xX][0-9a-fA-F]+|[0-7]*)|[1-9]+)N? 0:value
+        add-highlighter shared/clojure/code/ regex (?<!${symbol_char})[-+]?(?:0|[1-9]\d*)(?:\.\d*)(?:M|[eE][-+]?\d+)? 0:value
+        add-highlighter shared/clojure/code/ regex (?<!${symbol_char})[-+]?(?:0|[1-9]\d*)/(?:0|[1-9]\d*) 0:value
+
         $(keywords "${keywords}" keyword)
         $(keywords "${core_fns}" function)
         $(keywords "${core_vars}" variable)
