@@ -908,7 +908,7 @@ int main(int argc, char* argv[])
                    { "s", { true,  "set session name" } },
                    { "d", { false, "run as a headless session (requires -s)" } },
                    { "p", { true,  "just send stdin as commands to the given session" } },
-                   { "f", { true,  "act as a filter, executing given keys on given files" } },
+                   { "f", { true,  "filter: for each file, select the entire buffer and execute the given keys" } },
                    { "i", { true, "backup the files on which a filter is applied using the given suffix" } },
                    { "q", { false, "in filter mode, be quiet about errors applying keys" } },
                    { "ui", { true, "set the type of user interface to use (ncurses, dummy, or json)" } },

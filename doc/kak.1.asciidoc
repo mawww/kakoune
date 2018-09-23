@@ -48,7 +48,7 @@ OPTIONS
 	execute *command* after the server initialization phase
 
 -f <keys>::
-	enter in 'filter mode' and execute *keys* on the files passed as arguments
+	enter in 'filter mode': select the whole file, then execute *keys*
 
 -i <suffix>::
 	backup the files on which a filter is applied using the given suffix
