@@ -114,7 +114,7 @@ define-command -params 1 -hidden doc-render %{
     doc-render-regex \B(?<!\\)`(?=\S)[^\n]+?(?<=\S)(?<!\\)`\B \A|.\z 'H' mono
     doc-render-regex ^=\h+[^\n]+ ^=\h+ '~' title
     doc-render-regex ^={2,}\h+[^\n]+ ^={2,}\h+ '' header
-    doc-render-regex ^-{2,}\n.*?^-{2,}\n ^-{2,}\n '' block
+    doc-render-regex ^\h*-{2,}\n\h*.*?^\h*-{2,}\n ^\h*-{2,}\n '' block
 
     doc-parse-links
 
