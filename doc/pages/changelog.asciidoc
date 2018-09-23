@@ -8,6 +8,13 @@ released versions.
 * `remove-hooks` <group> argument is now a regex and removes all
   hooks whose group matches it.
 
+* `exclusive` face attribute (e) has been replaced with more
+  granular `final foreground` (f), `final background` (g), and `final
+  attributes` (a), or the three combined as `final` (F).  Semantics
+  changed slightly as those attributes apply to the existing face as
+  well (a final face will not get modified by a following face if that
+  following face does not have the final attribute itself.
+
 == Kakoune 2018.09.04
 
 This version contains a significant overhaul of various Kakoune

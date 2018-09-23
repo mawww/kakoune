@@ -81,13 +81,15 @@ String to_json(Attribute attributes)
 {
     struct Attr { Attribute attr; StringView name; }
     attrs[] {
-        { Attribute::Exclusive, "exclusive" },
         { Attribute::Underline, "underline" },
         { Attribute::Reverse, "reverse" },
         { Attribute::Blink, "blink" },
         { Attribute::Bold, "bold" },
         { Attribute::Dim, "dim" },
         { Attribute::Italic, "italic" },
+        { Attribute::FinalFg, "final_fg" },
+        { Attribute::FinalBg, "final_bg" },
+        { Attribute::FinalAttr, "final_attr" },
     };
 
     return "[" + join(attrs |

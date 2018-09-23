@@ -33,9 +33,19 @@ fg_color[,bg_color][+attributes]
             dim
         *i*:::
             italic
-        *e*:::
-            exclusive, override previous faces instead of merging
-            with them
+        *F*:::
+            final, override the previous face instead of merging with it
+            an will only be replaced if another face with the final
+            attribute is applied
+        *f*:::
+            final foreground, as final but only applies to face's
+            foreground color
+        *g*:::
+            final background, as final but only applies to face's
+            background color
+        *a*:::
+            final attributes, as final but only applies to face's
+            attributes
 
 == Builtin faces
 

@@ -14,7 +14,7 @@ Kakoune won't be able to parse named parameters in requests.
 Here are the data structures used:
 
 * Color: a string, either a named color, or #rrggbb, or 'default'
-* Attribute: one of {exclusive, underline, reverse, blink, bold, dim, italic}
+* Attribute: one of {underline, reverse, blink, bold, dim, italic, final_fg, final_bg, final_attr}
 * Face { Color fg; Color bg; Array<Attribute> attributes; }
 * Atom { Face face; String contents; }
 * Line : Array of Atom

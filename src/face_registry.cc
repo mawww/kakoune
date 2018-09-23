@@ -29,13 +29,16 @@ static Face parse_face(StringView facedesc)
         {
             switch (*attr_it)
             {
-                case 'e': res.attributes |= Attribute::Exclusive; break;
                 case 'u': res.attributes |= Attribute::Underline; break;
                 case 'r': res.attributes |= Attribute::Reverse; break;
                 case 'b': res.attributes |= Attribute::Bold; break;
                 case 'B': res.attributes |= Attribute::Blink; break;
                 case 'd': res.attributes |= Attribute::Dim; break;
                 case 'i': res.attributes |= Attribute::Italic; break;
+                case 'f': res.attributes |= Attribute::FinalFg; break;
+                case 'g': res.attributes |= Attribute::FinalBg; break;
+                case 'a': res.attributes |= Attribute::FinalAttr; break;
+                case 'F': res.attributes |= Attribute::Final; break;
                 default: throw runtime_error(format("no such face attribute: '{}'", StringView{*attr_it}));
             }
         }
@@ -50,13 +53,16 @@ String to_string(Attribute attributes)
 
     struct Attr { Attribute attr; StringView name; }
     attrs[] {
-        { Attribute::Exclusive, "e" },
         { Attribute::Underline, "u" },
         { Attribute::Reverse, "r" },
         { Attribute::Blink, "B" },
         { Attribute::Bold, "b" },
         { Attribute::Dim, "d" },
         { Attribute::Italic, "i" },
+        { Attribute::Final, "F" },
+        { Attribute::FinalFg, "f" },
+        { Attribute::FinalBg, "b" },
+        { Attribute::FinalAttr, "a" },
     };
 
     auto filteredAttrs = attrs |
@@ -150,7 +156,7 @@ FaceRegistry::FaceRegistry()
         { "Prompt", {Face{ Color::Yellow, Color::Default }} },
         { "MatchingChar", {Face{ Color::Default, Color::Default, Attribute::Bold }} },
         { "BufferPadding", {Face{ Color::Blue, Color::Default }} },
-        { "Whitespace", {Face{ Color::Default, Color::Default }} },
+        { "Whitespace", {Face{ Color::Default, Color::Default, Attribute::FinalFg }} },
       }
 {}
 

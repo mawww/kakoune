@@ -10,13 +10,16 @@ namespace Kakoune
 enum class Attribute : int
 {
     Normal    = 0,
-    Exclusive = 1 << 1,
-    Underline = 1 << 2,
-    Reverse   = 1 << 3,
-    Blink     = 1 << 4,
-    Bold      = 1 << 5,
-    Dim       = 1 << 6,
-    Italic    = 1 << 7,
+    Underline = 1 << 1,
+    Reverse   = 1 << 2,
+    Blink     = 1 << 3,
+    Bold      = 1 << 4,
+    Dim       = 1 << 5,
+    Italic    = 1 << 6,
+    FinalFg   = 1 << 7,
+    FinalBg   = 1 << 8,
+    FinalAttr = 1 << 8,
+    Final     = FinalFg | FinalBg | FinalAttr
 };
 
 constexpr bool with_bit_ops(Meta::Type<Attribute>) { return true; }
@@ -49,12 +52,23 @@ constexpr size_t hash_value(const Face& val)
     return hash_values(val.fg, val.bg, val.attributes);
 }
 
-constexpr Face merge_faces(const Face& base, const Face& face)
+inline Face merge_faces(const Face& base, const Face& face)
 {
-    return face.attributes & Attribute::Exclusive ?
-       face : Face{ face.fg == Color::Default ? base.fg : face.fg,
-                    face.bg == Color::Default ? base.bg : face.bg,
-                    face.attributes | base.attributes };
+    auto choose = [&](Color Face::*color, Attribute final_attr) {
+        if (face.attributes & final_attr)
+            return face.*color;
+        if (base.attributes & final_attr)
+            return base.*color;
+        if (face.*color == Color::Default)
+            return base.*color;
+        return face.*color;
+    };
+
+    return Face{ choose(&Face::fg, Attribute::FinalFg),
+                 choose(&Face::bg, Attribute::FinalBg),
+                 face.attributes & Attribute::FinalAttr ? face.attributes :
+                 base.attributes & Attribute::FinalAttr ? base.attributes :
+                 face.attributes | base.attributes };
 }
 
 }
