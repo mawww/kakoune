@@ -1711,17 +1711,32 @@ void spaces_to_tabs(Context& context, NormalParams params)
 void trim_selections(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
-    for (auto& sel : context.selections())
+    auto& selections = context.selections();
+    Vector<int> to_remove;
+
+    for (int i = 0; i < (int)selections.size(); ++i)
     {
+        auto& sel = selections[i];
         auto beg = buffer.iterator_at(sel.min());
         auto end = buffer.iterator_at(sel.max());
         while (beg != end and is_blank(*beg))
             ++beg;
         while (beg != end and is_blank(*end))
             --end;
-        sel.min() = beg.coord();
-        sel.max() = end.coord();
+
+        if (beg == end and is_blank(*beg))
+            to_remove.push_back(i);
+        else
+        {
+            sel.min() = beg.coord();
+            sel.max() = end.coord();
+        }
     }
+
+    if (to_remove.size() == selections.size())
+        throw runtime_error{"no selections remaining"};
+    for (auto& i : to_remove | reverse())
+        selections.remove(i);
 }
 
 SelectionList read_selections_from_register(char reg, Context& context)
