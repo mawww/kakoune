@@ -18,7 +18,7 @@ enum class Attribute : int
     Italic    = 1 << 6,
     FinalFg   = 1 << 7,
     FinalBg   = 1 << 8,
-    FinalAttr = 1 << 8,
+    FinalAttr = 1 << 9,
     Final     = FinalFg | FinalBg | FinalAttr
 };
 

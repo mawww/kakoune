@@ -61,7 +61,7 @@ String to_string(Attribute attributes)
         { Attribute::Italic, "i" },
         { Attribute::Final, "F" },
         { Attribute::FinalFg, "f" },
-        { Attribute::FinalBg, "b" },
+        { Attribute::FinalBg, "g" },
         { Attribute::FinalAttr, "a" },
     };
 
