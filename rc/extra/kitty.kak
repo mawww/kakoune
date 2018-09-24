@@ -35,8 +35,7 @@ If no client is passed then the current one is used} \
         if [ $# -eq 1 ]; then
             printf %s\\n "evaluate-commands -client '$1' focus"
         else
-            # need the no-response switch to get added to focus-tab first
-            # kitty @ focus-tab --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
+            kitty @ focus-tab --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
             kitty @ focus-window --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
         fi
 }}
