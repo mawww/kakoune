@@ -51,7 +51,7 @@ define-command -hidden html-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : html-filter-around-selections <ret> }
         # indent after lines ending with opening tag
-        try %{ execute-keys -draft k <a-x> <a-k> <[^/][^>]+>$ <ret> j <a-gt> }
+        try %{ execute-keys -draft k <a-x> <a-k> <lt>[^/][^>]+>$ <ret> j <a-gt> }
     }
 }
 
