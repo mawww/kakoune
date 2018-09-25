@@ -128,3 +128,21 @@ The following faces are used by builtin highlighters if enabled.
 
 *Whitespace*::
     face used by the `show-whitespaces` highlighter
+
+== Markup strings
+
+In certain contexts, Kakoune can take a markup string, which is a string
+containing formatting informations. In these strings, the {facename}
+syntax will enable the face facename until another face gets activated,
+or the end of the string is reached.
+
+For example, the following command displays the text "default" in the
+Default face, and "error" in the Error face:
+
+----
+echo -markup 'default {Error}error{Default} default'
+----
+
+Inside a markup string, a literal `{` character is written `\{`, and a
+literal backslash (`\`) that precedes a '{' character is escaped as well
+(`\\`).

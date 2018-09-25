@@ -1,199 +1,294 @@
 = Expansions
 
-== Strings
+While parsing a command (see <<command-parsing#,`:doc command-parsing`>>),
+Kakoune recognises certain patterns and will replace them with their
+associated value before executing the command. These patterns are called
+expansions.
 
-\'strings'::
-    uninterpreted strings, use a backslash (\') to escape the separator
+Every expansion consists of a `%`, followed by the expansion _type_ (one
+or more alphabetic characters), a nestable punctuation character (`(`, `[`,
+`{`, or `<`), and then all the text up to and including its matching opposite
+(`)`, `]`, `}`, or `>`). It doesn't matter which character is used, but
+`{}` are most common. For example, the command `echo %val{session}` will
+echo the ID of the current Kakoune session.
 
-"strings"::
-    expanded strings, % strings (c.f. next section) contained are expended,
-    use a backslash (\\%) to escape the separator
+Expansions are processed when unquoted and anywhere inside double-quoted or
+%-strings, but not inside unquoted words, inside single-quoted strings, or
+inside other expansions. So:
 
-%\{strings\}::
-    these strings are very useful when entering commands
+* `echo %val{session}` echoes the current session ID
 
-    * the '{' and '}' delimiters are configurable, any non alphanumeric
-      character can be used
+* `echo x%val{session}x` echoes the literal text `x%val{session}x`
 
-----------------------------------------------------------
-e.g. %[string], %<string>, %(string), %~string~, %!string!
-----------------------------------------------------------
+* `echo '%val{session}'` echoes the literal text `%val{session}`
 
-    * if the character following '%' is one of '{[(<', then the closing
-      one is the matching '}])>' and the delimiters are not escapable but
-      are nestable
+* `echo "x%val{session}x"` echoes the current session ID, surrounded by `x`
 
------------------------------------------------------------
-e.g. %{ roger {}; } is a valid string, %{ marcel \} as well
------------------------------------------------------------
+* `echo %{x%val{session}x}"` echoes the current session ID, surrounded by `x`
 
-== Typed expansions
+* `echo %sh{ echo %val{session} }"` echoes the literal text `%val{session}`
 
-%\{strings\} can have an expansion type between the *%* and the opening
-character. They will be written *%<type>\{<content>\}*. They will be
-expanded according to the given *<type>* using *<content>* as its
-parameter:
+When processing an expansion, Kakoune ensures the result is properly quoted so
+that any special characters do not interfere with the rest of the command. If
+an expansion expands to multiple values, each value is individually quoted.
 
-*sh*::
-    shell expansion, similar to posix shell '$(...)' construct (c.f. next
-    section)
+== Argument expansions
 
-*reg*::
-    register expansion, will expand to the strings stored in the register
-    named by *<content>*. See <<registers#,`:doc registers`>>
+Expansions with the type `arg` can only be used inside the "commands" parameter
+of the `define-command` command (See <<commands#declaring-new-commands,`:doc
+commands declaring-new-commands`>>).
 
-*opt*::
-    option expansion, will expand to the value of the option named by
-    *<content>*. See <<options#,`:doc options`>>
+The following expansions are available:
 
-*val*::
-    value expansion, will expand to the value of the environment variables
-    available to shell expansion. *<content>* shall be the name of that
-    variable without the *kak_* prefix.
+*%arg{n}*::
+     (where _n_ is a decimal number) +
+     expands to argument number _n_ of the current command
 
-*arg*::
-    argument expansion, expand to the arguments of the current
-    command, *<content>* can be a number, or @ for all arguments
+*%arg{@}*::
+    expands to all the arguments of the current command, individually quoted
+
+== Option expansions
+
+Expansions with the type `opt` expand to the value associated with the named
+option in the current scope (See <<options#,`:doc options`>>).
+
+For example, `%opt{BOM}` expands to `utf8` or to `none`, according to the
+current state of the `BOM` option.
+
+== Register expansions
+
+Expansions with the type `reg` expand to the contents of the named
+register. For registers named after symbols (like the search register
+`/`), the expansion can use either the symbol or the alphabetic name (See
+<<registers#,`:doc registers`>>).
+
+For example, `%reg{/}` expands to the content of the `/` register, and so does
+`%reg{slash}`.
 
 == Shell expansions
 
-The '%sh{...}' expansion replaces its content with the output of the
-shell commands in it. The following environment variables are used to pass
-informations about Kakoune's state:
+Expansions with the type `sh` are executed as shell-scripts, and whatever
+the script prints to standard output replaces the expansion. For example,
+the command `echo %sh{date}` will echo the output of the `date` command.
 
-*kak_selection*::
-    content of the main selection
+TIP: If a shell expansion writes to standard error, that output is appended to
+Kakoune's `\*debug*` buffer. If you're trying to debug a shell expansion,
+check the debug buffer with `:buffer \*debug*` to see if anything shows up.
 
-*kak_selections*::
-    quoted list of the contents of the selections.
+Because Kakoune does not expand expansions inside the text of an expansion,
+you can't use normal expansions inside `%sh{}`. Instead, Kakoune can export
+expansions as environment variables to make them available to the shell.
+Here's how expansion patterns map to variable names:
 
-*kak_selection_desc*::
-    range of the main selection, represented as anchor,cursor; anchor
-    and cursor are in this format: line.column
+*%arg{n}*::
+    (where _n_ is a decimal number) +
+    becomes `$_n_`. For example, `%arg{3}` becomes `$3`.
 
-*kak_selections_desc*::
-    unquoted list range of the selections.
+*%arg{@}*::
+    becomes `$@`
 
-*kak_bufname*::
-    name of the current buffer
+*%opt{x}*::
+    becomes `$kak_opt_x`
 
-*kak_buffile*::
-    full path of the file or same as kak_bufname when there’s no
+*%reg{x}*::
+    (where _x_ is the alphabetic name of a register) +
+    `$kak_reg_x` contains all the selections in register _x_ +
+    `$kak_main_reg_x` contains only the main selection
+
+*%val{x}*::
+    becomes `$kak_x`
+
+When turned into environment variables, list-type options, `$kak_reg_x`, and
+"quoted list" values will be shell-quoted so the shell doesn't get confused
+about how many items the list contains. You will need to apply `eval` to get
+back the original values. For example, if you want to process the contents
+of each selection, you can do something like:
+
+----
+eval set -- $kak_selections
+while [ $# -gt 0 ]; do
+    # ...do a thing with $1...
+    shift
+done
+----
+
+The `eval` command will take the expanded `$kak_selections` and unquote them,
+then execute the resulting `set` command, which sets the shell's argument
+variables to the items from `$kak_selections`. The `while` loop with `shift`
+iterates through the arguments one by one.
+
+Only variables actually mentioned in the body of the shell expansion will
+be exported into the shell's environment. For example:
+
+----
+echo %sh{ env | grep ^kak_ }
+----
+
+...will find none of Kakoune's special environment variables, but:
+
+----
+echo %sh{ env | grep ^kak_ # $kak_session }
+----
+
+...will find the `$kak_session` variable because it was mentioned inside the
+shell script, even just in a comment.
+
+TIP: These environment variables are also available in other contexts where
+Kakoune uses a shell command, such as the `|`, `!` or `$` normal mode commands
+(See <<keys#,`:doc keys`>>).
+
+== Value expansions
+
+Expansions with the type `val` can be used in various places, depending on the
+specific value.
+
+The following expansions are supported:
+
+*%val{buffile}*::
+    _in buffer scope_ +
+    full path of the file or same as `%val{bufname}` when there’s no
     associated file
 
-*kak_buflist*::
-    quoted list of the currently opened buffer names
+*%val{buf_line_count}*::
+    _in buffer scope_ +
+    number of lines in the current buffer
 
-*kak_buf_line_count*::
-    the current buffer line count
+*%val{buflist}*::
+    quoted list of the names of currently-open buffers (as seen in
+    `%val{bufname}`)
 
-*kak_timestamp*::
-    timestamp of the current buffer, the timestamp is an integer value
-    which is incremented each time the buffer is modified
+*%val{bufname}*::
+    _in buffer scope_ +
+    name of the current buffer
 
-*kak_history_id*::
-    history id of the current buffer, the history id is an integer value
-    which is used to reference a specific buffer version in the undo tree
+*%val{client_env_X}*::
+    _in window scope_ +
+    value of the `$X` environment variable in the client displaying the current
+    window (e.g. `%val{client_env_SHELL}` is `$SHELL` in the client's
+    environment)
 
-*kak_runtime*::
-    directory containing the kak support files, determined from kakoune's
-    binary location.
+*%val{client_list}*::
+    unquoted list of the names of clients (as seen in `%val{client}`)
+    connected to the current session
 
-*kak_config*::
+*%val{client}*::
+    _in window scope_ +
+    name of the client displaying the current window
+
+*%val{client_pid}*::
+    _in window scope_ +
+    process id of the client displaying the current window
+
+*%val{config}*::
     directory containing the user configuration
 
-*kak_version*::
-    version of the current Kakoune server (git hash or release name)
+*%val{count}*::
+    _in `map` command <keys> parameter_ +
+    current count when the mapping was triggered, defaults to 0 if no
+    count given
 
-*kak_count*::
-    count parameter passed to the command, defaults to 0 if no count given
+*%val{cursor_byte_offset}*::
+    _in window scope_ +
+    offset of the main cursor from the beginning of the buffer (in bytes)
 
-*kak_register*::
-    register parameter passed to the command
+*%val{cursor_char_column}*::
+    _in window scope_ +
+    column of the main cursor (in characters), the fourth component of
+    `%val{selection_desc}`
 
-*kak_opt_<name>*::
-    value of option *name*
+*%val{cursor_char_value}*::
+    _in window scope_ +
+    unicode value of the codepoint under the main cursor
 
-*kak_reg_<r>*::
-    quoted list of value of register *r*
+*%val{cursor_column}*::
+    _in window scope_ +
+    column of the main cursor (in bytes)
 
-*kak_main_reg_<r>*::
-    content of register *r* associated with the main selection.
+*%val{cursor_line}*::
+    _in window scope_ +
+    line of the main cursor, the third component of `%val{selection_desc}`
 
-*kak_session*::
+*%val{history_id}*::
+    _in buffer scope_ +
+    history id of the current buffer, an integer value which refers to a
+    specific buffer version in the undo tree (see also `%val{timestamp}`)
+
+*%val{hook_param_capture_n}*::
+    _in `hook` command <command> parameter_ +
+    text captured by capture group _n_, if the executing hook's filter regex
+    used capture groups
+
+*%val{hook_param}*::
+    _in `hook` command <command> parameter_ +
+    the complete parameter string of the executing hook
+
+*%val{modified}*::
+    _in buffer scope_ +
+    `true` if the buffer has modifications not saved, otherwise `false`
+
+*%val{register}*::
+    _in `map` command <keys> parameter_ +
+    current register when the mapping was triggered
+
+*%val{runtime}*::
+    directory containing the kak support files, determined from Kakoune's
+    binary location
+
+*%val{selection}*::
+    _in window scope_ +
+    content of the main selection
+
+*%val{selections}*::
+    _in window scope_ +
+    quoted list of the contents of all selections
+
+*%val{selection_desc}*::
+    _in window scope_ +
+    range of the main selection, represented as `a.b,c.d` where _a_
+    is the anchor line, _b_ is the anchor column, _c_ is the cursor
+    line (like `%val{cursor_line}`), _d_ is the cursor column (like
+    `%val{cursor_char_column}`), and all are 1-based decimal integers
+
+*%val{selections_desc}*::
+    _in window scope_ +
+    unquoted list of the ranges of all selections, in the same format as
+    `%val{selection_desc}`
+
+*%val{session}*::
     name of the current session
 
-*kak_client*::
-    name of the current client
+*%val{source}*::
+    _in `.kak` file_ +
+    path of the file currently getting executed (through the source command)
 
-*kak_client_pid*::
-    process id of the current client
+*%val{text}*::
+    _in `prompt` command <command> parameter_ +
+    the text entered by the user in response to the `prompt` command
 
-*kak_client_list*::
-    unquoted list of the names of clients connected to the current session
+*%val{timestamp}*::
+    _in buffer scope_ +
+    timestamp of the current buffer, an integer that increments each time the
+    buffer is modified, including undoing and redoing previous modifications
+    (see also `%val{history_id}`)
 
-*kak_source*::
-    path of the file currently getting executed (through the source
-    command)
-
-*kak_modified*::
-    buffer has modifications not saved
-
-*kak_cursor_line*::
-    line of the end of the main selection
-
-*kak_cursor_column*::
-    column of the end of the main selection (in byte)
-
-*kak_cursor_char_value*::
-    unicode value of the codepoint under the cursor
-
-*kak_cursor_char_column*::
-    column of the end of the main selection (in character)
-
-*kak_cursor_byte_offset*::
-    Offset of the main selection from the beginning of the buffer (in bytes).
-
-*kak_window_width*::
-    width of the current kakoune window
-
-*kak_window_height*::
-    height of the current kakoune window
-
-*kak_hook_param*::
-    filtering text passed to the currently executing hook
-
-*kak_hook_param_capture_N*::
-    text captured by the hook filter regex capture N
-
-*kak_text*::
-    the text entered by the user at a `prompt` command, not available in other
-    contexts
-
-*kak_client_env_<name>*::
-    value of the *name* variable in the client environment
-    (e.g. *$kak_client_env_SHELL* is the SHELL variable)
-
-*kak_user_modes*::
+*%val{user_modes}*::
     unquoted list of user modes.
 
-Quoted lists are separated by spaces, and each element is surrounded by
-`'` with contained `'` doubled. Unquoted lists are simply separated by
-spaces and is used for values that will not contain whitespaces.
+*%val{version}*::
+    version of the current Kakoune server (git hash or release name)
 
-Note that in order for Kakoune to pass a value in the environment, the
-variable has to be spelled out within the body of the expansion.
+*%val{window_height}*::
+    _in window scope_ +
+    height of the current Kakoune window
 
-Those environment variables are available in every context where
-Kakoune use a shell command, such as the `|`, `!` or `$` normal
-mode commands (See <<keys#,`:doc keys`>>).
+*%val{window_width}*::
+    _in window scope_ +
+    width of the current Kakoune window
 
-== Markup strings
+Values in the above list that do not mention a context are available
+everywhere. Values that mention "buffer scope" are also available in window
+scope.
 
-In certain contexts, Kakoune can take a markup string, which is a string
-containing formatting informations. In these strings, the {facename}
-syntax will enable the face facename until another face gets activated,
-or the end of the string is reached.
-
-Literal '{' characters shall be written '\{', and a literal backslash ('\')
-that precedes a '{' character shall be escaped as well ('\\').
+A value described as a "quoted list" will follow the rules of Kakoune string
+quoting (See <<command-parsing#,`:doc command-parsing`>>). An "unquoted list"
+cannot contain any special characters that would require quoting.
