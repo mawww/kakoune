@@ -54,7 +54,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                                  gsub(/#]/, " ", $3)
                                  gsub(/:: /, "::", $3)
                                  gsub(/ +$/, "", $3)
-                                 desc=$4 ? $3 "\\n" $4 : $3
+                                 desc=$4 ? $3 "\n" $4 : $3
 
                                  gsub(/~/, "~~", desc)
                                  gsub(/\|/, "\\|", desc)
@@ -134,13 +134,14 @@ define-command -hidden clang-show-error-info %{
     evaluate-commands %sh{
         eval "set -- ${kak_opt_clang_errors}"
         shift # skip timestamp
-        for error in "$@"; do
+        desc=$(for error in "$@"; do
             if [ "${error%%|*}" = "$kak_cursor_line" ]; then
-                desc=$(printf '%s%s\n' "$desc" "${error##*|}")
+                printf '%s\n' "${error##*|}"
             fi
-        done
+        done)
         if [ -n "$desc" ]; then
-            printf %s\\n "info -anchor ${kak_cursor_line}.${kak_cursor_column} \"$desc\""
+            desc=$(printf %s "${desc}" | sed "s/'/''/g")
+            printf "info -anchor %d.%d '%s'\n" "${kak_cursor_line}" "${kak_cursor_column}" "${desc}"
         fi
     } }
 
