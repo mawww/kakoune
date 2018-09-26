@@ -997,7 +997,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
              return complete_buffer_name(context, flags, params[token_to_complete], pos_in_token);
         };
     }
-    else if (auto shell_cmd_opt = parser.get_switch("shell-completion"))
+    else if (auto shell_cmd_opt = parser.get_switch("shell-script-completion"))
     {
         String shell_cmd = shell_cmd_opt->str();
         completer = [=](const Context& context, CompletionFlags flags,
@@ -1022,7 +1022,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
             return Completions{ 0_byte, pos_in_token, std::move(candidates) };
         };
     }
-    else if (auto shell_cmd_opt = parser.get_switch("shell-candidates"))
+    else if (auto shell_cmd_opt = parser.get_switch("shell-script-candidates"))
     {
         String shell_cmd = shell_cmd_opt->str();
         Vector<std::pair<String, UsedLetters>, MemoryDomain::Completion> candidates;
@@ -1082,6 +1082,15 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
                 context, flags, params, token_to_complete, pos_in_token);
         };
     }
+    else if (parser.get_switch("shell-completion"))
+    {
+        completer = [](const Context& context, CompletionFlags flags,
+                       CommandParameters params,
+                       size_t token_to_complete, ByteCount pos_in_token)
+        {
+            return shell_complete(context, flags, params[token_to_complete], pos_in_token);
+        };
+    }
 
     auto docstring = trim_whitespaces(parser.get_switch("docstring").value_or(StringView{}));
 
@@ -1093,17 +1102,18 @@ const CommandDesc define_command_cmd = {
     "def",
     "define-command [<switches>] <name> <cmds>: define a command <name> executing <cmds>",
     ParameterDesc{
-        { { "params",             { true, "take parameters, accessible to each shell escape as $0..$N\n"
-                                          "parameter should take the form <count> or <min>..<max> (both omittable)" } },
-          { "override",           { false, "allow overriding an existing command" } },
-          { "hidden",             { false, "do not display the command in completion candidates" } },
-          { "docstring",          { true,  "define the documentation string for command" } },
-          { "file-completion",    { false, "complete parameters using filename completion" } },
-          { "client-completion",  { false, "complete parameters using client name completion" } },
-          { "buffer-completion",  { false, "complete parameters using buffer name completion" } },
-          { "command-completion", { false, "complete parameters using kakoune command completion" } },
-          { "shell-completion",   { true,  "complete parameters using the given shell-script" } },
-          { "shell-candidates",   { true,  "get the parameter candidates using the given shell-script" } } },
+        { { "params",                   { true,  "take parameters, accessible to each shell escape as $0..$N\n"
+                                                 "parameter should take the form <count> or <min>..<max> (both omittable)" } },
+          { "override",                 { false, "allow overriding an existing command" } },
+          { "hidden",                   { false, "do not display the command in completion candidates" } },
+          { "docstring",                { true,  "define the documentation string for command" } },
+          { "file-completion",          { false, "complete parameters using filename completion" } },
+          { "client-completion",        { false, "complete parameters using client name completion" } },
+          { "buffer-completion",        { false, "complete parameters using buffer name completion" } },
+          { "command-completion",       { false, "complete parameters using kakoune command completion" } },
+          { "shell-completion",         { false, "complete parameters using shell command completion" } },
+          { "shell-script-completion",  { true,  "complete parameters using the given shell-script" } },
+          { "shell-script-candidates",  { true,  "get the parameter candidates using the given shell-script" } } },
         ParameterDesc::Flags::None,
         2, 2
     },
@@ -1828,6 +1838,7 @@ const CommandDesc prompt_cmd = {
           { "client-completion", { false, "use client completion for prompt" } },
           { "buffer-completion", { false, "use buffer completion for prompt" } },
           { "command-completion", { false, "use command completion for prompt" } },
+          { "shell-completion", { false, "use shell command completion for prompt" } },
           { "on-change", { true, "command to execute whenever the prompt changes" } },
           { "on-abort", { true, "command to execute whenever the prompt is canceled" } } },
         ParameterDesc::Flags::None, 2, 2
@@ -1863,6 +1874,8 @@ const CommandDesc prompt_cmd = {
                 return CommandManager::instance().complete(
                     context, flags, prefix, cursor_pos);
             };
+        else if (parser.get_switch("shell-completion"))
+            completer = shell_complete;
 
         const auto flags = parser.get_switch("password") ?
             PromptFlags::Password : PromptFlags::None;

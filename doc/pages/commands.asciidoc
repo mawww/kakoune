@@ -291,6 +291,9 @@ New commands can be defined using the *define-command* command:
     try command completion on any parameter passed to this command
 
 *-shell-completion*:::
+    try shell command completion on any parameter passed to this command
+
+*-shell-script-completion*:::
     following string is a shell command which takes parameters as
     positional params and output one completion candidate per line.
     The provided shell command will run after each keypress
@@ -305,7 +308,7 @@ New commands can be defined using the *define-command* command:
         Position of the cursor inside the token being completed, in bytes
         from token start.
 
-*-shell-candidates*:::
+*-shell-script-candidates*:::
     following string is a shell command which takes parameters as
     positional params and output one completion candidate per line.
     The provided shell command will run once at the beginning of each

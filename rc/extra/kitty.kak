@@ -43,9 +43,7 @@ If no client is passed then the current one is used} \
 define-command -docstring %{kitty-repl [<arguments>]: create a new window for repl interaction
 All optional parameters are forwarded to the new window} \
     -params .. \
-    -shell-candidates %{
-        find $(echo $PATH | tr ':' ' ') -mindepth 1 -maxdepth 1 -executable -printf "%f\n"
-    } \
+    -shell-completion \
     kitty-repl %{ evaluate-commands %sh{
         if [ $# -eq 0 ]; then cmd="${SHELL:-/bin/sh}"; else cmd="$*"; fi
         kitty @ new-window --no-response --window-type $kak_opt_kitty_window_type --title kak_repl_window $cmd < /dev/null > /dev/null 2>&1 &
