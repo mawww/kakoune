@@ -12,9 +12,9 @@ or more alphabetic characters), a nestable punctuation character (`(`, `[`,
 `{}` are most common. For example, the command `echo %val{session}` will
 echo the ID of the current Kakoune session.
 
-Expansions are processed when unquoted and anywhere inside double-quoted or
-%-strings, but not inside unquoted words, inside single-quoted strings, or
-inside other expansions. So:
+Expansions are processed when unquoted and anywhere inside double-quoted
+strings, but not inside unquoted words, inside single-quoted strings, or
+inside %-strings or other expansions. So:
 
 * `echo %val{session}` echoes the current session ID
 
@@ -24,13 +24,17 @@ inside other expansions. So:
 
 * `echo "x%val{session}x"` echoes the current session ID, surrounded by `x`
 
-* `echo %{x%val{session}x}"` echoes the current session ID, surrounded by `x`
+* `echo %{%val{session}}"` echoes the the literal text `%val{session}`
 
 * `echo %sh{ echo %val{session} }"` echoes the literal text `%val{session}`
 
-When processing an expansion, Kakoune ensures the result is properly quoted so
-that any special characters do not interfere with the rest of the command. If
-an expansion expands to multiple values, each value is individually quoted.
+Like "variable expansion" and "command substitution" in shell programming,
+Kakoune expansions can expand to multiple "words" - that is, separate
+arguments on the resulting command-line. However, unlike shell programming,
+Kakoune expansions cannot _accidentally_ expand to multiple words, even if
+the expansion contains whitespace or other special characters. While in
+shell-programming it's good practice to always wrap expansions in
+double-quotes, in Kakoune it's perfectly safe to leave expansions unquoted.
 
 == Argument expansions
 
@@ -45,7 +49,7 @@ The following expansions are available:
      expands to argument number _n_ of the current command
 
 *%arg{@}*::
-    expands to all the arguments of the current command, individually quoted
+    expands to all the arguments of the current command, as individual words
 
 == Option expansions
 
@@ -127,11 +131,11 @@ echo %sh{ env | grep ^kak_ }
 ...will find none of Kakoune's special environment variables, but:
 
 ----
-echo %sh{ env | grep ^kak_ # $kak_session }
+echo %sh{ env | grep ^kak_ # kak_session }
 ----
 
-...will find the `$kak_session` variable because it was mentioned inside the
-shell script, even just in a comment.
+...will find the `$kak_session` variable because it was mentioned by name
+in a comment, even though it wasn't directly used.
 
 TIP: These environment variables are also available in other contexts where
 Kakoune uses a shell command, such as the `|`, `!` or `$` normal mode commands
@@ -139,10 +143,12 @@ Kakoune uses a shell command, such as the `|`, `!` or `$` normal mode commands
 
 == Value expansions
 
-Expansions with the type `val` can be used in various places, depending on the
-specific value.
+Expansions with the type `val` give access to Kakoune internal data that is
+not stored in an option or a register. Some value expansions can only be used
+in certain contexts, like `%val{hook_param}` that expands to the parameter
+string of the currently-executing hook, and is not available outside a hook.
 
-The following expansions are supported:
+The following expansions are supported (with required context _in italics_):
 
 *%val{buffile}*::
     _in buffer scope_ +
