@@ -13,6 +13,7 @@ hook global BufCreate .*\.nim(s|ble)? %{
 
 add-highlighter shared/nim regions
 add-highlighter shared/nim/code default-region group
+add-highlighter shared/nim/single_string region "'"   (?<!\\)(\\\\)*'  fill string
 add-highlighter shared/nim/double_string region '"' (?<!\\)(\\\\)*" fill string
 add-highlighter shared/nim/triple_string region '"""' '"""' fill string
 add-highlighter shared/nim/comment region '#?#\[' '\]##?' fill comment
