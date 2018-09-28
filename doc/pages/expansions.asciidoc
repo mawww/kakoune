@@ -111,7 +111,7 @@ of each selection, you can do something like:
 ----
 eval set -- $kak_selections
 while [ $# -gt 0 ]; do
-    # ...do a thing with $1...
+    # ... do a thing with $1 ...
     shift
 done
 ----
@@ -128,13 +128,13 @@ be exported into the shell's environment. For example:
 echo %sh{ env | grep ^kak_ }
 ----
 
-...will find none of Kakoune's special environment variables, but:
+... will find none of Kakoune's special environment variables, but:
 
 ----
 echo %sh{ env | grep ^kak_ # kak_session }
 ----
 
-...will find the `$kak_session` variable because it was mentioned by name
+... will find the `$kak_session` variable because it was mentioned by name
 in a comment, even though it wasn't directly used.
 
 TIP: These environment variables are also available in other contexts where
