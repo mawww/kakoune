@@ -151,12 +151,12 @@ string of the currently-executing hook, and is not available outside a hook.
 The following expansions are supported (with required context _in italics_):
 
 *%val{buffile}*::
-    _in buffer scope_ +
+    _in buffer, window scope_ +
     full path of the file or same as `%val{bufname}` when there’s no
     associated file
 
 *%val{buf_line_count}*::
-    _in buffer scope_ +
+    _in buffer, window scope_ +
     number of lines in the current buffer
 
 *%val{buflist}*::
@@ -164,7 +164,7 @@ The following expansions are supported (with required context _in italics_):
     `%val{bufname}`)
 
 *%val{bufname}*::
-    _in buffer scope_ +
+    _in buffer, window scope_ +
     name of the current buffer
 
 *%val{client_env_X}*::
@@ -215,7 +215,7 @@ The following expansions are supported (with required context _in italics_):
     line of the main cursor, the third component of `%val{selection_desc}`
 
 *%val{history_id}*::
-    _in buffer scope_ +
+    _in buffer, window scope_ +
     history id of the current buffer, an integer value which refers to a
     specific buffer version in the undo tree (see also `%val{timestamp}`)
 
@@ -229,7 +229,7 @@ The following expansions are supported (with required context _in italics_):
     the complete parameter string of the executing hook
 
 *%val{modified}*::
-    _in buffer scope_ +
+    _in buffer, window scope_ +
     `true` if the buffer has modifications not saved, otherwise `false`
 
 *%val{register}*::
@@ -272,7 +272,7 @@ The following expansions are supported (with required context _in italics_):
     the text entered by the user in response to the `prompt` command
 
 *%val{timestamp}*::
-    _in buffer scope_ +
+    _in buffer, window scope_ +
     timestamp of the current buffer, an integer that increments each time the
     buffer is modified, including undoing and redoing previous modifications
     (see also `%val{history_id}`)
@@ -292,8 +292,7 @@ The following expansions are supported (with required context _in italics_):
     width of the current Kakoune window
 
 Values in the above list that do not mention a context are available
-everywhere. Values that mention "buffer scope" are also available in window
-scope.
+everywhere.
 
 A value described as a "quoted list" will follow the rules of Kakoune string
 quoting (See <<command-parsing#,`:doc command-parsing`>>). An "unquoted list"
