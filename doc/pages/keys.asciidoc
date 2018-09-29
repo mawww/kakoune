@@ -258,7 +258,7 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
 *<a-J>*::
     join selected lines and select spaces inserted in place of line breaks
 
-*<a-m>*::
+*<a-_>*::
     merge contiguous selections together (works across lines as well)
 
 *>*::
