@@ -163,21 +163,25 @@ evaluate-commands %sh{
     attributes="auto const enum extern inline register restrict static struct
                 typedef union volatile"
     types="char double float int long short signed size_t unsigned void"
+    stdint_types="int8_t int16_t int32_t int64_t uint8_t uint16_t uint32_t uint64_t intptr_t intmax_t uintmax_t"
+    unistd_types="ssize_t gid_t uid_t off_t off64_t useconds_t pid_t socklen_t"
+    unistd_macros="R_OK W_OK X_OK F_OK SEEK_SET SEEK_CUR SEEK_END F_ULOCK F_LOCK F_TLOCK F_TEST"
+    stdint_macros="INT8_MIN INT16_MIN INT32_MIN INT64_MIN UINT8_MIN UINT16_MIN UINT32_MIN UINT64_MIN INT8_MAX INT16_MAX INT32_MAX INT64_MAX UINT8_MAX UINT16_MAX UINT32_MAX UINT64_MAX INTPTR_MIN INTPTR_MAX UINTPTR_MAX INTMAX_MIN INTMAX_MAX UINTMAX_MAX PTRDIFF_MIN PTRDIFF_MAX"
     values="NULL"
 
     join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammar to the static completion list
     printf '%s\n' "hook global WinSetOption filetype=c %{
-        set-option window static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')
+        set-option window static_words $(join "${keywords} ${attributes} ${types} ${stdint_types} ${unistd_types} ${stdint_macros} ${unistd_macros} ${values}" ' ')
     }"
 
     # Highlight keywords
     printf %s "
         add-highlighter shared/c/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
         add-highlighter shared/c/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
-        add-highlighter shared/c/code/types regex \b($(join "${types}" '|'))\b 0:type
-        add-highlighter shared/c/code/values regex \b($(join "${values}" '|'))\b 0:value
+        add-highlighter shared/c/code/types regex \b($(join "${types} ${stdint_types} ${unistd_types}" '|'))\b 0:type
+        add-highlighter shared/c/code/values regex \b($(join "${values} ${stdint_macros} ${unistd_macros}" '|'))\b 0:value
     "
 }
 
