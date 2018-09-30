@@ -23,10 +23,10 @@ declare-option -hidden line-specs git_diff_flags
 define-command -params 1.. \
   -docstring %sh{printf 'git [<arguments>]: git wrapping helper
 All the optional arguments are forwarded to the git utility
-Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  hide-diff\n init\n log\n  show\n  show-diff\n  status\n  update-diff'} \
+Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  hide-diff\n init\n log\n  next-hunk\n  previous-hunk\n  show\n  show-diff\n  status\n  update-diff'} \
   -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
-        printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nshow\nshow-diff\ninit\nstatus\nupdate-diff\n"
+        printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprevious-hunk\nshow\nshow-diff\ninit\nstatus\nupdate-diff\n"
     else
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
@@ -143,7 +143,79 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         '
     }
 
-   
+    jump_next_hunk() {
+        eval "set -- ${kak_opt_git_diff_flags}"
+
+        shift
+
+        if [ $# -lt 1 ]; then
+            exit
+        fi
+
+        first_line="${1%%|*}"
+
+        current_line="${kak_selection_desc#*,}"
+        current_line="${current_line%.*}"
+
+        next_line=""
+        prev_line="${current_line}"
+        for line in "$@"; do
+            line="${line%%|*}"
+
+            if [ "${line}" -lt "${current_line}" ]; then
+                continue
+            fi
+
+            offset=$((line - prev_line))
+            if [ "${offset}" -gt 1 ]; then
+                next_line="${line}"
+                break
+            else
+                prev_line="${line}"
+            fi
+        done
+
+        : "${next_line:=${first_line}}"
+        printf 'select %d.1,%d.1\n' "${next_line}" "${next_line}"
+    }
+
+    jump_previous_hunk() {
+        eval "set -- ${kak_opt_git_diff_flags}"
+
+        shift
+
+        if [ $# -lt 1 ]; then
+            exit
+        fi
+
+        current_line="${kak_selection_desc#*,}"
+        current_line="${current_line%.*}"
+
+        next_line=""
+        last_next_line=""
+        prev_line="0"
+        for line in "$@"; do
+            line="${line%%|*}"
+
+            if [ "${line}" -ge "${current_line}" ]; then
+                if [ "${prev_line}" -eq 0 ]; then
+                    last_next_line="y"
+                elif [ -z "${last_next_line}" ]; then
+                    break
+                fi
+            fi
+
+            offset=$((line - prev_line))
+            if [ "${offset}" -gt 1 ]; then
+                next_line="${line}"
+            fi
+
+            prev_line="${line}"
+        done
+
+        printf 'select %d.1,%d.1\n' "${next_line}" "${next_line}"
+    }
+
     commit() {
         # Handle case where message needs not to be edited
         if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit|--fixup.*|--squash.*"; then
@@ -187,6 +259,8 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
            echo 'try %{ remove-highlighter window/git-diff }'
            ;;
        update-diff) update_diff ;;
+       next-hunk) jump_next_hunk ;;
+       previous-hunk) jump_previous_hunk ;;
        commit) shift; commit "$@" ;;
        init) shift; git init "$@" > /dev/null 2>&1 ;;
        checkout)
