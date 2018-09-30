@@ -2215,8 +2215,10 @@ static const HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> key
     { {alt('x')}, {"extend selections to whole lines", select<SelectMode::Replace, select_lines>} },
     { {alt('X')}, {"crop selections to whole lines", select<SelectMode::Replace, trim_partial_lines>} },
 
-    { {'m'}, {"select to matching character", select<SelectMode::Replace, select_matching>} },
-    { {'M'}, {"extend to matching character", select<SelectMode::Extend, select_matching>} },
+    { {'m'}, {"select to matching character", select<SelectMode::Replace, select_matching<true>>} },
+    { {alt('m')}, {"backward select to matching character", select<SelectMode::Replace, select_matching<false>>} },
+    { {'M'}, {"extend to matching character", select<SelectMode::Extend, select_matching<true>>} },
+    { {alt('M')}, {"backward extend to matching character", select<SelectMode::Extend, select_matching<false>>} },
 
     { {'/'}, {"select next given regex match", search<SelectMode::Replace, MatchDirection::Forward>} },
     { {'?'}, {"extend with next given regex match", search<SelectMode::Extend, MatchDirection::Forward>} },
