@@ -1,5 +1,4 @@
-#ifndef word_db_hh_INCLUDED
-#define word_db_hh_INCLUDED
+#pragma once
 
 #include "buffer.hh"
 #include "shared_string.hh"
@@ -51,5 +50,3 @@ private:
 WordDB& get_word_db(const Buffer& buffer);
 
 }
-
-#endif // word_db_hh_INCLUDED

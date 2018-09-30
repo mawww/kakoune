@@ -1,5 +1,4 @@
-#ifndef utf8_iterator_hh_INCLUDED
-#define utf8_iterator_hh_INCLUDED
+#pragma once
 
 #include "utf8.hh"
 
@@ -144,4 +143,3 @@ private:
 }
 
 }
-#endif // utf8_iterator_hh_INCLUDED

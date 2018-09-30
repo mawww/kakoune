@@ -1,5 +1,4 @@
-#ifndef buffer_manager_hh_INCLUDED
-#define buffer_manager_hh_INCLUDED
+#pragma once
 
 #include "buffer.hh"
 #include "vector.hh"
@@ -41,5 +40,3 @@ private:
 };
 
 }
-
-#endif // buffer_manager_hh_INCLUDED

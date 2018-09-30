@@ -1,5 +1,4 @@
-#ifndef alias_registry_hh_INCLUDED
-#define alias_registry_hh_INCLUDED
+#pragma once
 
 #include "safe_ptr.hh"
 #include "string.hh"
@@ -41,5 +40,3 @@ private:
 };
 
 }
-
-#endif // alias_registry_hh_INCLUDED

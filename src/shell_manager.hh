@@ -1,5 +1,4 @@
-#ifndef shell_manager_hh_INCLUDED
-#define shell_manager_hh_INCLUDED
+#pragma once
 
 #include "array_view.hh"
 #include "env_vars.hh"
@@ -57,5 +56,3 @@ private:
 };
 
 }
-
-#endif // shell_manager_hh_INCLUDED

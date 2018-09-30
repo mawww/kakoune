@@ -1,5 +1,4 @@
-#ifndef file_hh_INCLUDED
-#define file_hh_INCLUDED
+#pragma once
 
 #include "array_view.hh"
 #include "meta.hh"
@@ -89,5 +88,3 @@ CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,
 CandidateList complete_command(StringView prefix, ByteCount cursor_pos = -1);
 
 }
-
-#endif // file_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef commands_hh_INCLUDED
-#define commands_hh_INCLUDED
+#pragma once
 
 namespace Kakoune
 {
@@ -12,5 +11,3 @@ struct kill_session
 };
 
 }
-
-#endif // commands_hh_INCLUDED

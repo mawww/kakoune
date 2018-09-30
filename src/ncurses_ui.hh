@@ -1,5 +1,4 @@
-#ifndef ncurses_hh_INCLUDED
-#define ncurses_hh_INCLUDED
+#pragma once
 
 #include "array_view.hh"
 #include "coord.hh"
@@ -156,5 +155,3 @@ private:
 };
 
 }
-
-#endif // ncurses_hh_INCLUDED

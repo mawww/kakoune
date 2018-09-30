@@ -1,5 +1,4 @@
-#ifndef face_registry_hh_INCLUDED
-#define face_registry_hh_INCLUDED
+#pragma once
 
 #include "face.hh"
 #include "utils.hh"
@@ -51,5 +50,3 @@ private:
 String to_string(Face face);
 
 }
-
-#endif // face_registry_hh_INCLUDED

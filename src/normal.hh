@@ -1,5 +1,4 @@
-#ifndef normal_hh_INCLUDED
-#define normal_hh_INCLUDED
+#pragma once
 
 #include "context.hh"
 #include "optional.hh"
@@ -36,5 +35,3 @@ String build_autoinfo_for_mapping(Context& context, KeymapMode mode,
                                   ConstArrayView<KeyInfo> built_ins);
 
 }
-
-#endif // normal_hh_INCLUDED

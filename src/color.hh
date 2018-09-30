@@ -1,5 +1,4 @@
-#ifndef color_hh_INCLUDED
-#define color_hh_INCLUDED
+#pragma once
 
 #include "hash.hh"
 #include "meta.hh"
@@ -72,5 +71,3 @@ constexpr size_t hash_value(const Color& val)
 }
 
 }
-
-#endif // color_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef constexpr_utils_hh_INCLUDED
-#define constexpr_utils_hh_INCLUDED
+#pragma once
 
 #include <utility>
 #include <initializer_list>
@@ -79,5 +78,3 @@ struct ConstexprVector
 };
 
 }
-
-#endif // constexpr_utils_hh_INCLUDED

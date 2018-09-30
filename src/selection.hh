@@ -1,5 +1,4 @@
-#ifndef selection_hh_INCLUDED
-#define selection_hh_INCLUDED
+#pragma once
 
 #include "buffer.hh"
 
@@ -161,5 +160,3 @@ Selection selection_from_string(StringView desc);
 SelectionList selection_list_from_string(Buffer& buffer, ConstArrayView<String> descs);
 
 }
-
-#endif // selection_hh_INCLUDED

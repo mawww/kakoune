@@ -1,5 +1,4 @@
-#ifndef hash_hh_INCLUDED
-#define hash_hh_INCLUDED
+#pragma once
 
 #include <type_traits>
 #include <functional>
@@ -76,5 +75,3 @@ template<typename Lhs, typename Rhs>
 constexpr bool IsHashCompatible = HashCompatible<Lhs, Rhs>::value;
 
 }
-
-#endif // hash_hh_INCLUDED

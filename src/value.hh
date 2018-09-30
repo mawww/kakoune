@@ -1,5 +1,4 @@
-#ifndef value_hh_INCLUDED
-#define value_hh_INCLUDED
+#pragma once
 
 #include "hash_map.hh"
 #include "units.hh"
@@ -79,5 +78,3 @@ inline ValueId get_free_value_id()
 using ValueMap = HashMap<ValueId, Value, MemoryDomain::Values>;
 
 }
-
-#endif // value_hh_INCLUDED

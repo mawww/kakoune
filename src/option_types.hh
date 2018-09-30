@@ -1,5 +1,4 @@
-#ifndef option_types_hh_INCLUDED
-#define option_types_hh_INCLUDED
+#pragma once
 
 #include "array_view.hh"
 #include "coord.hh"
@@ -364,5 +363,3 @@ inline bool option_add_from_strings(PrefixedList<P, T>& opt, ConstArrayView<Stri
 }
 
 }
-
-#endif // option_types_hh_INCLUDED

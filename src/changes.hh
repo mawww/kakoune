@@ -1,5 +1,4 @@
-#ifndef changes_hh_INCLUDED
-#define changes_hh_INCLUDED
+#pragma once
 
 #include "buffer.hh"
 #include "coord.hh"
@@ -107,5 +106,3 @@ void update_ranges(Buffer& buffer, size_t& timestamp, RangeContainer& ranges)
 }
 
 }
-
-#endif // changes_hh_INCLUDED

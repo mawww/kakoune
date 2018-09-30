@@ -1,5 +1,4 @@
-#ifndef completion_hh_INCLUDED
-#define completion_hh_INCLUDED
+#pragma once
 
 #include <functional>
 #include <algorithm>
@@ -83,4 +82,3 @@ CandidateList complete(StringView query, ByteCount cursor_pos,
 }
 
 }
-#endif // completion_hh_INCLUDED

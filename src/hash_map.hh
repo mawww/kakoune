@@ -1,5 +1,4 @@
-#ifndef hash_map_hh_INCLUDED
-#define hash_map_hh_INCLUDED
+#pragma once
 
 #include "hash.hh"
 #include "memory.hh"
@@ -322,5 +321,3 @@ private:
 void profile_hash_maps();
 
 }
-
-#endif // hash_map_hh_INCLUDED

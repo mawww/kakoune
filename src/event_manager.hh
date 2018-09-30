@@ -1,5 +1,4 @@
-#ifndef event_manager_hh_INCLUDED
-#define event_manager_hh_INCLUDED
+#pragma once
 
 #include "clock.hh"
 #include "meta.hh"
@@ -108,5 +107,3 @@ using SignalHandler = void(*)(int);
 SignalHandler set_signal_handler(int signum, SignalHandler handler);
 
 }
-
-#endif // event_manager_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef highlighter_hh_INCLUDED
-#define highlighter_hh_INCLUDED
+#pragma once
 
 #include "coord.hh"
 #include "completion.hh"
@@ -97,5 +96,3 @@ struct HighlighterRegistry : HashMap<String, HighlighterFactoryAndDocstring, Mem
 {};
 
 }
-
-#endif // highlighter_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef ranked_match_hh_INCLUDED
-#define ranked_match_hh_INCLUDED
+#pragma once
 
 #include "string.hh"
 #include "meta.hh"
@@ -54,5 +53,3 @@ private:
 };
 
 }
-
-#endif // ranked_match_hh_INCLUDED

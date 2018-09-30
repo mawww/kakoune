@@ -1,5 +1,4 @@
-#ifndef buffer_utils_hh_INCLUDED
-#define buffer_utils_hh_INCLUDED
+#pragma once
 
 #include "buffer.hh"
 #include "selection.hh"
@@ -85,5 +84,3 @@ void reload_file_buffer(Buffer& buffer);
 void write_to_debug_buffer(StringView str);
 
 }
-
-#endif // buffer_utils_hh_INCLUDED

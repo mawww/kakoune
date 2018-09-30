@@ -1,5 +1,4 @@
-#ifndef parameters_parser_hh_INCLUDED
-#define parameters_parser_hh_INCLUDED
+#pragma once
 
 #include "exception.hh"
 #include "hash_map.hh"
@@ -133,5 +132,3 @@ private:
 };
 
 }
-
-#endif // parameters_parser_hh_INCLUDED

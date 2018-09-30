@@ -1,5 +1,4 @@
-#ifndef display_buffer_hh_INCLUDED
-#define display_buffer_hh_INCLUDED
+#pragma once
 
 #include "face.hh"
 #include "hash.hh"
@@ -173,5 +172,3 @@ private:
 };
 
 }
-
-#endif // display_buffer_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef highlighter_group_hh_INCLUDED
-#define highlighter_group_hh_INCLUDED
+#pragma once
 
 #include "exception.hh"
 #include "hash_map.hh"
@@ -64,5 +63,3 @@ struct DefinedHighlighters : public HighlighterGroup,
 };
 
 }
-
-#endif // highlighter_group_hh_INCLUDED

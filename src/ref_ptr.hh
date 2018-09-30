@@ -1,5 +1,4 @@
-#ifndef ref_ptr_hh_INCLUDED
-#define ref_ptr_hh_INCLUDED
+#pragma once
 
 #include <utility>
 
@@ -118,5 +117,3 @@ private:
 };
 
 }
-
-#endif // ref_ptr_hh_INCLUDED

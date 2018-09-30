@@ -1,5 +1,4 @@
-#ifndef input_handler_hh_INCLUDED
-#define input_handler_hh_INCLUDED
+#pragma once
 
 #include "completion.hh"
 #include "constexpr_utils.hh"
@@ -186,5 +185,3 @@ void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode, C
 void scroll_window(Context& context, LineCount offset);
 
 }
-
-#endif // input_handler_hh_INCLUDED

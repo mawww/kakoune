@@ -1,5 +1,4 @@
-#ifndef register_manager_hh_INCLUDED
-#define register_manager_hh_INCLUDED
+#pragma once
 
 #include "array_view.hh"
 #include "exception.hh"
@@ -107,5 +106,3 @@ protected:
 };
 
 }
-
-#endif // register_manager_hh_INCLUDED

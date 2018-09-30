@@ -1,5 +1,4 @@
-#ifndef buffer_inl_h_INCLUDED
-#define buffer_inl_h_INCLUDED
+#pragma once
 
 #include "assert.hh"
 
@@ -217,4 +216,3 @@ inline BufferIterator BufferIterator::operator--(int)
 }
 
 }
-#endif // buffer_inl_h_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef face_hh_INCLUDED
-#define face_hh_INCLUDED
+#pragma once
 
 #include "color.hh"
 #include "flags.hh"
@@ -72,5 +71,3 @@ inline Face merge_faces(const Face& base, const Face& face)
 }
 
 }
-
-#endif // face_hh_INCLUDED

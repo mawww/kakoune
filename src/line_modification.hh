@@ -1,5 +1,4 @@
-#ifndef line_change_watcher_hh_INCLUDED
-#define line_change_watcher_hh_INCLUDED
+#pragma once
 
 #include "units.hh"
 #include "utils.hh"
@@ -23,5 +22,3 @@ struct LineModification
 Vector<LineModification> compute_line_modifications(const Buffer& buffer, size_t timestamp);
 
 }
-
-#endif // line_change_watcher_hh_INCLUDED

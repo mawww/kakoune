@@ -1,5 +1,4 @@
-#ifndef optional_hh_INCLUDED
-#define optional_hh_INCLUDED
+#pragma once
 
 #include "assert.hh"
 
@@ -99,5 +98,3 @@ private:
 };
 
 }
-
-#endif // optional_hh_INCLUDED

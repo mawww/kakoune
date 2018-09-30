@@ -1,5 +1,4 @@
-#ifndef option_hh_INCLUDED
-#define option_hh_INCLUDED
+#pragma once
 
 #include "enum.hh"
 #include "meta.hh"
@@ -92,5 +91,3 @@ constexpr auto enum_desc(Meta::Type<DebugFlags>)
 }
 
 }
-
-#endif // option_hh_INCLUDED

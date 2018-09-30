@@ -1,5 +1,4 @@
-#ifndef context_hh_INCLUDED
-#define context_hh_INCLUDED
+#pragma once
 
 #include "selection.hh"
 #include "optional.hh"
@@ -173,4 +172,3 @@ private:
 };
 
 }
-#endif // context_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef string_hh_INCLUDED
-#define string_hh_INCLUDED
+#pragma once
 
 #include "memory.hh"
 #include "hash.hh"
@@ -329,5 +328,3 @@ inline StringView operator"" _sv(const char* str, size_t)
 }
 
 }
-
-#endif // string_hh_INCLUDED

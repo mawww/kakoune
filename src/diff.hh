@@ -1,5 +1,4 @@
-#ifndef diff_hh_INCLUDED
-#define diff_hh_INCLUDED
+#pragma once
 
 // Implementation of the linear space variant of the algorithm described in
 // "An O(ND) Difference Algorithm and Its Variations"
@@ -185,5 +184,3 @@ Vector<Diff> find_diff(Iterator a, int N, Iterator b, int M, Equal eq = Equal{})
 }
 
 }
-
-#endif // diff_hh_INCLUDED

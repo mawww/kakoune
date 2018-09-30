@@ -1,5 +1,4 @@
-#ifndef memory_hh_INCLUDED
-#define memory_hh_INCLUDED
+#pragma once
 
 #include <cstddef>
 #include <new>
@@ -155,5 +154,3 @@ struct UseMemoryDomain
 };
 
 }
-
-#endif // memory_hh_INCLUDED

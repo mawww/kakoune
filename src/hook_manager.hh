@@ -1,5 +1,4 @@
-#ifndef hook_manager_hh_INCLUDED
-#define hook_manager_hh_INCLUDED
+#pragma once
 
 #include "hash_map.hh"
 #include "completion.hh"
@@ -47,5 +46,3 @@ private:
 };
 
 }
-
-#endif // hook_manager_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef regex_hh_INCLUDED
-#define regex_hh_INCLUDED
+#pragma once
 
 #include "string.hh"
 #include "regex_impl.hh"
@@ -248,5 +247,3 @@ private:
 };
 
 }
-
-#endif // regex_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef selectors_hh_INCLUDED
-#define selectors_hh_INCLUDED
+#pragma once
 
 #include "selection.hh"
 
@@ -114,5 +113,3 @@ select_surrounding(const Context& context, const Selection& selection,
                    ObjectFlags flags);
 
 }
-
-#endif // selectors_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef option_manager_hh_INCLUDED
-#define option_manager_hh_INCLUDED
+#pragma once
 
 #include "completion.hh"
 #include "exception.hh"
@@ -262,5 +261,3 @@ private:
 };
 
 }
-
-#endif // option_manager_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef string_utils_hh_INCLUDED
-#define string_utils_hh_INCLUDED
+#pragma once
 
 #include "string.hh"
 #include "vector.hh"
@@ -153,5 +152,3 @@ inline auto quoter(Quoting quoting)
 
 
 }
-
-#endif // string_utils_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef units_hh_INCLUDED
-#define units_hh_INCLUDED
+#pragma once
 
 #include "assert.hh"
 #include "hash.hh"
@@ -181,5 +180,3 @@ inline constexpr ColumnCount operator"" _col(unsigned long long int value)
 }
 
 }
-
-#endif // units_hh_INCLUDED

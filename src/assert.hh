@@ -1,5 +1,4 @@
-#ifndef assert_hh_INCLUDED
-#define assert_hh_INCLUDED
+#pragma once
 
 namespace Kakoune
 {
@@ -33,6 +32,3 @@ void on_assert_failed(const char* message);
     #define kak_assert(...) do { (void)sizeof(__VA_ARGS__); } while(false)
     #define kak_expect_throw(_, ...) do { (void)sizeof(__VA_ARGS__); } while(false)
 #endif
-
-
-#endif // assert_hh_INCLUDED
