@@ -59,13 +59,15 @@ define-command doc-jump-to-anchor -params 1 %{
     evaluate-commands %sh{
         anchor="$1"
         eval "set -- $kak_opt_doc_anchors"
+
+        shift
         for range in "$@"; do
             if [ "${range#*|}" == "$anchor" ]; then
                 printf '%s\n'  "select '${range%|*}'; execute-keys vv"
                 exit
             fi
         done
-        printf '%s\n' "echo -markup %{{Error}No such anchor '$1'}"
+        printf "echo -markup {Error}No such anchor '%s'" "${anchor}"
     }
 }
 
