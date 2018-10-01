@@ -62,7 +62,7 @@ define-command doc-jump-to-anchor -params 1 %{
 
         shift
         for range in "$@"; do
-            if [ "${range#*|}" == "$anchor" ]; then
+            if [ "${range#*|}" = "$anchor" ]; then
                 printf '%s\n'  "select '${range%|*}'; execute-keys vv"
                 exit
             fi
