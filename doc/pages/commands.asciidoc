@@ -166,7 +166,7 @@ of the file onto the filesystem
 
     *-markup*:::
         expand the markup strings in *text* (See
-        <<expansions#markup-strings,`:doc expansions markup-strings`>>)
+        <<faces#markup-strings,`:doc faces markup-strings`>>)
 
     *-debug*:::
         print the given text to the *\*debug** buffer

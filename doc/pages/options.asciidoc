@@ -108,7 +108,9 @@ are exclusively available to built-in options.
     a list of `<text>|<docstring>|<menu text>` candidates,
     except for the first element which follows the
     `<line>.<column>[+<length>]@<timestamp>` format to define where the
-    completion apply in the buffer. Markup can be used in the menu text.
+    completion apply in the buffer. Markup (see
+    <<faces#markup-strings,`:doc faces markup-strings`>>) can be used in the
+    menu text.
     `set -add` adds a new completion to the list
 
 *enum(value1|value2|...)*::
@@ -248,7 +250,8 @@ are exclusively available to built-in options.
 *modelinefmt* `string`::
     A format string used to generate the mode line, that string is
     first expanded as a command line would be (expanding '%...{...}'
-    strings), then markup tags are applied (See <<expansions#,`:doc expansions`>>)
+    strings), then markup tags are applied (see
+    <<faces#markup-strings,`:doc faces markup-strings`>>)
     Two special atoms are available as markup:
 
         *`{{mode_info}}`*:::

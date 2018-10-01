@@ -91,7 +91,8 @@ line.column[+len]@timestamp candidate1|desc1|menu1 candidate2|desc2|menu2 ...
 the first element of this string list specify where and when this completion
 applies, the others are a triplet `<completion text>|<docstring>|<menu text>`
 
-The menu text is a markup string, so it can contain `{face}` directives.
+The menu text is a markup string (see <<faces#markup-strings,`:doc faces
+markup-strings`>>), so it can contain `{face}` directives.
 
 To effectively use that completion option, it should get added to the completers
 option.
