@@ -27,6 +27,13 @@ released versions.
 * `asciidoc` is not a dependency anymore, the last file that requiered
   it (Kakoune's manpage) has been converted to troff format.
 
+* Kakoune will use "bracketed paste" mode in terminals that support it,
+  allowing pasted text to be treated differently than typed text. You can
+  map the `<paste:begin>` and `<paste:end>` "keys" to control exactly what
+  happens. By default, pasting in normal or insert mode will insert the
+  pasted text with hooks disabled, so it won't get messed up by
+  auto-indenting.
+
 == Kakoune 2018.09.04
 
 This version contains a significant overhaul of various Kakoune
