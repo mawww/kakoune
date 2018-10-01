@@ -77,6 +77,8 @@ static constexpr KeyAndName keynamemap[] = {
     { "del", Key::Delete },
     { "plus", '+' },
     { "minus", '-' },
+    { "paste:begin", Key::PasteBegin },
+    { "paste:end", Key::PasteEnd },
 };
 
 KeyList parse_keys(StringView str)
@@ -201,6 +203,8 @@ UnitTest test_keys{[]()
          { ' ' },
          { 'c' },
          { Key::Up },
+         { Key::PasteBegin },
+         { Key::PasteEnd },
          alt('j'),
          ctrl('r'),
          shift(Key::Up),

@@ -62,6 +62,8 @@ struct Key
         F12,
         FocusIn,
         FocusOut,
+        PasteBegin,
+        PasteEnd,
         Invalid,
     };
 

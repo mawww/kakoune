@@ -661,12 +661,27 @@ Optional<Key> NCursesUI::get_next_key()
         const int new_c = wgetch(m_window);
         if (new_c == '[') // potential CSI
         {
-            const Codepoint csi_val = wgetch(m_window);
-            switch (csi_val)
-            {
-                case 'I': return {Key::FocusIn};
-                case 'O': return {Key::FocusOut};
-                default: break; // nothing
+            int keycode = 0;
+            Codepoint csi_val;
+
+            while ((csi_val = wgetch(m_window)) != ERR) {
+                if ('0' <= csi_val && csi_val <= '9')
+                {
+                    keycode *= 10;
+                    keycode += (csi_val - '0');
+                }
+                if (csi_val == 'I')
+                    return {Key::FocusIn};
+                if (csi_val == 'O')
+                    return {Key::FocusOut};
+                if (csi_val == '~')
+                {
+                    if (keycode == 200)
+                        return {Key::PasteBegin};
+                    if (keycode == 201)
+                        return {Key::PasteEnd};
+                }
+
             }
         }
         wtimeout(m_window, -1);
@@ -1154,10 +1169,13 @@ void NCursesUI::enable_mouse(bool enabled)
         fputs("\033[?1002h", stdout);
         // force enable report focus events
         fputs("\033[?1004h", stdout);
+        // force enable bracketed-paste events
+        fputs("\033[?2004h", stdout);
     }
     else
     {
         mousemask(0, nullptr);
+        fputs("\033[?2004l", stdout);
         fputs("\033[?1004l", stdout);
         fputs("\033[?1002l", stdout);
     }
