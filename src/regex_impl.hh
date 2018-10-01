@@ -1,5 +1,4 @@
-#ifndef regex_impl_hh_INCLUDED
-#define regex_impl_hh_INCLUDED
+#pragma once
 
 #include "exception.hh"
 #include "flags.hh"
@@ -632,5 +631,3 @@ private:
 };
 
 }
-
-#endif // regex_impl_hh_INCLUDED

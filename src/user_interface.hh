@@ -1,5 +1,4 @@
-#ifndef user_interface_hh_INCLUDED
-#define user_interface_hh_INCLUDED
+#pragma once
 
 #include "array_view.hh"
 #include "hash_map.hh"
@@ -82,5 +81,3 @@ public:
 };
 
 }
-
-#endif // user_interface_hh_INCLUDED

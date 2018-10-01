@@ -1,5 +1,4 @@
-#ifndef window_hh_INCLUDED
-#define window_hh_INCLUDED
+#pragma once
 
 #include "client.hh"
 #include "display_buffer.hh"
@@ -78,5 +77,3 @@ private:
 };
 
 }
-
-#endif // window_hh_INCLUDED

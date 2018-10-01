@@ -1,5 +1,4 @@
-#ifndef unicode_hh_INCLUDED
-#define unicode_hh_INCLUDED
+#pragma once
 
 #include <cwctype>
 #include <cwchar>
@@ -105,5 +104,3 @@ inline bool is_lower(char c) noexcept { return c >= 'a' and c <= 'z'; }
 inline bool is_upper(char c) noexcept { return c >= 'A' and c <= 'Z'; }
 
 }
-
-#endif // unicode_hh_INCLUDED

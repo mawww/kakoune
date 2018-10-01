@@ -1,5 +1,4 @@
-#ifndef highlighters_hh_INCLUDED
-#define highlighters_hh_INCLUDED
+#pragma once
 
 #include "color.hh"
 #include "highlighter.hh"
@@ -40,5 +39,3 @@ void option_update(RangeAndStringList& opt, const Context& context);
 void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt);
 
 }
-
-#endif // highlighters_hh_INCLUDED

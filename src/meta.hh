@@ -1,5 +1,4 @@
-#ifndef meta_hh_INCLUDED
-#define meta_hh_INCLUDED
+#pragma once
 
 namespace Kakoune
 {
@@ -11,5 +10,3 @@ template<typename T> struct Type : AnyType {};
 
 }
 }
-
-#endif // meta_hh_INCLUDED

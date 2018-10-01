@@ -1,5 +1,4 @@
-#ifndef insert_completer_hh_INCLUDED
-#define insert_completer_hh_INCLUDED
+#pragma once
 
 #include "option_manager.hh"
 #include "option.hh"
@@ -114,5 +113,3 @@ private:
 };
 
 }
-
-#endif // insert_completer_hh_INCLUDED

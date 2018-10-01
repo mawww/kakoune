@@ -1,5 +1,4 @@
-#ifndef client_hh_INCLUDED
-#define client_hh_INCLUDED
+#pragma once
 
 #include "constexpr_utils.hh"
 #include "display_buffer.hh"
@@ -155,5 +154,3 @@ constexpr auto enum_desc(Meta::Type<Autoreload>)
 }
 
 }
-
-#endif // client_hh_INCLUDED

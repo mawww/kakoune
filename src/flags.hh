@@ -1,5 +1,4 @@
-#ifndef flags_hh_INCLUDED
-#define flags_hh_INCLUDED
+#pragma once
 
 #include <type_traits>
 
@@ -78,5 +77,3 @@ constexpr Flags& operator^=(Flags& lhs, Flags rhs)
 }
 
 }
-
-#endif // flags_hh_INCLUDED

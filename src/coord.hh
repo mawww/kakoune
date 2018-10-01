@@ -1,5 +1,4 @@
-#ifndef coord_hh_INCLUDED
-#define coord_hh_INCLUDED
+#pragma once
 
 #include "units.hh"
 #include "hash.hh"
@@ -122,5 +121,3 @@ constexpr size_t hash_value(const BufferCoordAndTarget& val)
 }
 
 }
-
-#endif // coord_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef buffer_hh_INCLUDED
-#define buffer_hh_INCLUDED
+#pragma once
 
 #include "clock.hh"
 #include "coord.hh"
@@ -290,5 +289,3 @@ private:
 }
 
 #include "buffer.inl.hh"
-
-#endif // buffer_hh_INCLUDED

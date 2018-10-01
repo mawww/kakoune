@@ -1,5 +1,4 @@
-#ifndef env_vars_hh_INCLUDED
-#define env_vars_hh_INCLUDED
+#pragma once
 
 #include "hash_map.hh"
 
@@ -12,5 +11,3 @@ using EnvVarMap = HashMap<String, String, MemoryDomain::EnvVars>;
 EnvVarMap get_env_vars();
 
 }
-
-#endif // env_vars_hh_INCLUDED

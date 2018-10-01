@@ -1,5 +1,4 @@
-#ifndef remote_hh_INCLUDED
-#define remote_hh_INCLUDED
+#pragma once
 
 #include "env_vars.hh"
 #include "exception.hh"
@@ -69,5 +68,3 @@ private:
 bool check_session(StringView session);
 
 }
-
-#endif // remote_hh_INCLUDED

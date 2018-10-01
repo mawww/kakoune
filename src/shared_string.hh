@@ -1,5 +1,4 @@
-#ifndef shared_string_hh_INCLUDED
-#define shared_string_hh_INCLUDED
+#pragma once
 
 #include "string.hh"
 #include "ref_ptr.hh"
@@ -68,5 +67,3 @@ inline StringDataPtr intern(StringView str)
 }
 
 }
-
-#endif // shared_string_hh_INCLUDED

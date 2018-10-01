@@ -1,5 +1,4 @@
-#ifndef exception_hh_INCLUDED
-#define exception_hh_INCLUDED
+#pragma once
 
 #include "string.hh"
 
@@ -34,5 +33,3 @@ struct logic_error : exception
 };
 
 }
-
-#endif // exception_hh_INCLUDED

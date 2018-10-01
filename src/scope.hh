@@ -1,5 +1,4 @@
-#ifndef scope_hh_INCLUDED
-#define scope_hh_INCLUDED
+#pragma once
 
 #include "alias_registry.hh"
 #include "face_registry.hh"
@@ -63,5 +62,3 @@ class GlobalScope : public Scope, public OptionManagerWatcher, public Singleton<
 };
 
 }
-
-#endif // scope_hh_INCLUDED

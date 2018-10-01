@@ -1,5 +1,4 @@
-#ifndef client_manager_hh_INCLUDED
-#define client_manager_hh_INCLUDED
+#pragma once
 
 #include "client.hh"
 #include "completion.hh"
@@ -64,5 +63,3 @@ private:
 };
 
 }
-
-#endif // client_manager_hh_INCLUDED

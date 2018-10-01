@@ -1,5 +1,4 @@
-#ifndef utf8_hh_INCLUDED
-#define utf8_hh_INCLUDED
+#pragma once
 
 #include "assert.hh"
 #include "unicode.hh"
@@ -285,5 +284,3 @@ void dump(OutputIterator&& it, Codepoint cp)
 }
 
 }
-
-#endif // utf8_hh_INCLUDED

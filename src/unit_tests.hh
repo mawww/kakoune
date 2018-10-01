@@ -1,5 +1,4 @@
-#ifndef unit_tests_hh_INCLUDED
-#define unit_tests_hh_INCLUDED
+#pragma once
 
 namespace Kakoune
 {
@@ -15,5 +14,3 @@ struct UnitTest
 };
 
 }
-
-#endif // unit_tests_hh_INCLUDED

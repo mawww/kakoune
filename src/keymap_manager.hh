@@ -1,5 +1,4 @@
-#ifndef keymap_manager_hh_INCLUDED
-#define keymap_manager_hh_INCLUDED
+#pragma once
 
 #include "array_view.hh"
 #include "keys.hh"
@@ -67,5 +66,3 @@ private:
 };
 
 }
-
-#endif // keymap_manager_hh_INCLUDED

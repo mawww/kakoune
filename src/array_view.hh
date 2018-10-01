@@ -1,5 +1,4 @@
-#ifndef array_view_hh_INCLUDED
-#define array_view_hh_INCLUDED
+#pragma once
 
 #include <vector>
 #include <initializer_list>
@@ -91,5 +90,3 @@ bool operator!=(ArrayView<T> lhs, ArrayView<T> rhs)
 }
 
 }
-
-#endif // array_view_hh_INCLUDED

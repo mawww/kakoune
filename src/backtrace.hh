@@ -1,5 +1,4 @@
-#ifndef backtrace_hh_INCLUDED
-#define backtrace_hh_INCLUDED
+#pragma once
 
 namespace Kakoune
 {
@@ -17,6 +16,3 @@ struct Backtrace
 };
 
 }
-
-#endif // backtrace_hh_INCLUDED
-

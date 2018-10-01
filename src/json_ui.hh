@@ -1,5 +1,4 @@
-#ifndef json_ui_hh_INCLUDED
-#define json_ui_hh_INCLUDED
+#pragma once
 
 #include "user_interface.hh"
 #include "event_manager.hh"
@@ -60,5 +59,3 @@ private:
 };
 
 }
-
-#endif // json_ui_hh_INCLUDED

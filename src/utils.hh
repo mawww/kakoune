@@ -1,5 +1,4 @@
-#ifndef utils_hh_INCLUDED
-#define utils_hh_INCLUDED
+#pragma once
 
 #include "assert.hh"
 
@@ -149,5 +148,3 @@ bool skip_while_reverse(Iterator& it, const BeginIterator& begin, T condition)
 }
 
 }
-
-#endif // utils_hh_INCLUDED

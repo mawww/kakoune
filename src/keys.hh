@@ -1,5 +1,4 @@
-#ifndef keys_hh_INCLUDED
-#define keys_hh_INCLUDED
+#pragma once
 
 #include "coord.hh"
 #include "flags.hh"
@@ -117,5 +116,3 @@ constexpr Key resize(DisplayCoord dim) { return { Key::Modifiers::Resize, encode
 constexpr size_t hash_value(const Key& key) { return hash_values(key.modifiers, key.key); }
 
 }
-
-#endif // keys_hh_INCLUDED

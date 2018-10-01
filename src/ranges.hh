@@ -1,5 +1,4 @@
-#ifndef ranges_hh_INCLUDED
-#define ranges_hh_INCLUDED
+#pragma once
 
 #include <algorithm>
 #include <utility>
@@ -449,5 +448,3 @@ auto static_gather()
 }
 
 }
-
-#endif // ranges_hh_INCLUDED

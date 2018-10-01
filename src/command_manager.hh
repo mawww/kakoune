@@ -1,5 +1,4 @@
-#ifndef command_manager_hh_INCLUDED
-#define command_manager_hh_INCLUDED
+#pragma once
 
 #include "coord.hh"
 #include "completion.hh"
@@ -154,5 +153,3 @@ String expand(StringView str, const Context& context,
               const std::function<String (String)>& postprocess);
 
 }
-
-#endif // command_manager_hh_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef safe_ptr_hh_INCLUDED
-#define safe_ptr_hh_INCLUDED
+#pragma once
 
 // #define SAFE_PTR_TRACK_CALLSTACKS
 
@@ -98,5 +97,3 @@ template<typename T>
 using SafePtr = RefPtr<T, SafeCountablePolicy>;
 
 }
-
-#endif // safe_ptr_hh_INCLUDED
