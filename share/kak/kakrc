@@ -39,8 +39,8 @@ evaluate-commands %sh{
         autoload_directory ${kak_runtime}/autoload
     fi
 
-    if [ -f "${kak_runtime}/kakrc.local" ]; then
-        echo "source '${kak_runtime}/kakrc.local'"
+    if [ -f "kakrc.local" ]; then
+        echo "source 'kakrc.local'"
     fi
 
     if [ -f "${kak_config}/kakrc" ]; then
