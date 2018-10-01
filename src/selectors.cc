@@ -220,6 +220,7 @@ select_to_first_non_blank(const Context& context, const Selection& selection)
     return {it.coord()};
 }
 
+template<bool forward>
 Optional<Selection>
 select_matching(const Context& context, const Selection& selection)
 {
@@ -227,13 +228,23 @@ select_matching(const Context& context, const Selection& selection)
     auto& matching_pairs = context.options()["matching_pairs"].get<Vector<Codepoint, MemoryDomain::Options>>();
     Utf8Iterator it{buffer.iterator_at(selection.cursor()), buffer};
     auto match = matching_pairs.end();
-    while (it != buffer.end())
+
+    if (forward) while (it != buffer.end())
     {
         match = find(matching_pairs, *it);
         if (match != matching_pairs.end())
             break;
         ++it;
     }
+    else while (true)
+    {
+        match = find(matching_pairs, *it);
+        if (match != matching_pairs.end()
+            or it == buffer.begin())
+            break;
+        --it;
+    }
+
     if (match == matching_pairs.end())
         return {};
 
@@ -271,6 +282,10 @@ select_matching(const Context& context, const Selection& selection)
     }
     return {};
 }
+template Optional<Selection>
+select_matching<true>(const Context& context, const Selection& selection);
+template Optional<Selection>
+select_matching<false>(const Context& context, const Selection& selection);
 
 template<typename Iterator, typename Container>
 Optional<std::pair<Iterator, Iterator>>

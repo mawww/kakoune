@@ -139,6 +139,18 @@ the Shift modifier and moving will extend each selection instead.
     select to the next sequence enclosed by matching character, see the
     `matching_pairs` option in <<options#,`:doc options`>>
 
+*M*::
+    extend the current selection to the next sequence enclosed by matching
+    character, see the `matching_pairs` option in <<options#,`:doc options`>>
+
+*<a-m>*::
+    select to the previous sequence enclosed by matching character, see the
+    `matching_pairs` option in <<options#,`:doc options`>>
+
+*<a-M>*::
+    extend the current selection to the previous sequence enclosed by matching
+    character, see the `matching_pairs` option in <<options#,`:doc options`>>
+
 *x*::
     select line on which the end of each selection lies (or next line when end lies
     on an end-of-line)
@@ -258,7 +270,7 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
 *<a-J>*::
     join selected lines and select spaces inserted in place of line breaks
 
-*<a-m>*::
+*<a-_>*::
     merge contiguous selections together (works across lines as well)
 
 *>*::

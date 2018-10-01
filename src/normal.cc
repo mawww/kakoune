@@ -2185,7 +2185,7 @@ static const HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> key
     { {';'}, {"reduce selections to their cursor", clear_selections} },
     { {alt(';')}, {"swap selections cursor and anchor", flip_selections} },
     { {alt(':')}, {"ensure selection cursor is after anchor", ensure_forward} },
-    { {alt('m')}, {"merge consecutive selections", merge_consecutive} },
+    { {alt('_')}, {"merge consecutive selections", merge_consecutive} },
 
     { {'w'}, {"select to next word start", repeated<&select<SelectMode::Replace, select_to_next_word<Word>>>} },
     { {'e'}, {"select to next word end", repeated<select<SelectMode::Replace, select_to_next_word_end<Word>>>} },
@@ -2215,8 +2215,10 @@ static const HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> key
     { {alt('x')}, {"extend selections to whole lines", select<SelectMode::Replace, select_lines>} },
     { {alt('X')}, {"crop selections to whole lines", select<SelectMode::Replace, trim_partial_lines>} },
 
-    { {'m'}, {"select to matching character", select<SelectMode::Replace, select_matching>} },
-    { {'M'}, {"extend to matching character", select<SelectMode::Extend, select_matching>} },
+    { {'m'}, {"select to matching character", select<SelectMode::Replace, select_matching<true>>} },
+    { {alt('m')}, {"backward select to matching character", select<SelectMode::Replace, select_matching<false>>} },
+    { {'M'}, {"extend to matching character", select<SelectMode::Extend, select_matching<true>>} },
+    { {alt('M')}, {"backward extend to matching character", select<SelectMode::Extend, select_matching<false>>} },
 
     { {'/'}, {"select next given regex match", search<SelectMode::Replace, MatchDirection::Forward>} },
     { {'?'}, {"extend with next given regex match", search<SelectMode::Extend, MatchDirection::Forward>} },
