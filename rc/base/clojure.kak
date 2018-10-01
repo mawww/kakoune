@@ -158,7 +158,32 @@ evaluate-commands %sh{
 # ‾‾‾‾‾‾‾‾
 
 define-command -hidden clojure-filter-around-selections lisp-filter-around-selections
-define-command -hidden clojure-indent-on-new-line       lisp-indent-on-new-line
+
+declare-option \
+    -docstring 'regex matching the head of forms which have options *and* indented bodies' \
+    regex clojure_special_indent_forms \
+    '(?:def.*|doseq|for|fn\*?|if(-.*|)|let.*|loop|ns|testing|with-.*|when(-.*|))'
+
+define-command -hidden clojure-indent-on-new-line %{
+    # registers: i = best align point so far; w = start of first word of form
+    evaluate-commands -draft -save-regs '/"|^@iw' -itersel %{
+        execute-keys -draft 'gk"iZ'
+        try %{
+            execute-keys -draft '[bl"i<a-Z><gt>"wZ'
+
+            try %{
+                # If a special form, indent another space
+                execute-keys -draft '"wze<a-k>\A' %opt{clojure_special_indent_forms} '\z<ret><a-L>s.\K.*<ret><a-;>;"i<a-Z><gt>'
+            } catch %{
+                # If not special and parameter appears on line 1, indent to parameter
+                execute-keys -draft '"wze<a-l>s\h\K[^\s].*<ret><a-;>;"i<a-Z><gt>'
+            }
+        }
+        try %{ execute-keys -draft '[rl"i<a-Z><gt>' }
+        try %{ execute-keys -draft '[Bl"i<a-Z><gt>' }
+        execute-keys -draft '"i<a-z>a&<space>'
+    }
+}
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾

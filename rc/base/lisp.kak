@@ -31,12 +31,26 @@ define-command -hidden lisp-filter-around-selections %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
+declare-option \
+    -docstring 'regex matching the head of forms which have options *and* indented bodies' \
+    regex lisp_special_indent_forms \
+    '(?:def.*|if(-.*|)|let.*|lambda|with-.*|when(-.*|))'
+
 define-command -hidden lisp-indent-on-new-line %{
-    evaluate-commands -draft -itersel %{
-        # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
-        # indent when matches opening paren
-        try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> <a-\;> \; <a-gt> }
+    # registers: i = best align point so far; w = start of first word of form
+    evaluate-commands -draft -save-regs '/"|^@iw' -itersel %{
+        execute-keys -draft 'gk"iZ'
+        try %{
+            execute-keys -draft '[bl"i<a-Z><gt>"wZ'
+
+            try %{ execute-keys -draft '"wz<a-l>s.\K.*<ret><a-;>;"i<a-Z><gt>' }
+
+            # If not "special" form and parameter appears on line 1, indent to parameter
+            execute-keys -draft '"wze<a-K>\A' %opt{lisp_special_indent_forms} '\z<ret>' '<a-l>s\h\K[^\s].*<ret><a-;>;"i<a-Z><gt>'
+        }
+        try %{ execute-keys -draft '[rl"i<a-Z><gt>' }
+        try %{ execute-keys -draft '[Bl"i<a-Z><gt>' }
+        execute-keys -draft '"i<a-z>a&<space>'
     }
 }
 
