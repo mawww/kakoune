@@ -665,7 +665,7 @@ Optional<Key> NCursesUI::get_next_key()
             Codepoint csi_val;
 
             while ((csi_val = wgetch(m_window)) != ERR) {
-                if ('0' <= csi_val && csi_val <= '9')
+                if (is_basic_digit(csi_val))
                 {
                     keycode *= 10;
                     keycode += (csi_val - '0');
