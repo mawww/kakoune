@@ -25,6 +25,10 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     fi
 }}
 
+map global normal <paste:begin> '\i'
+map global insert <paste:begin> '<a-;>\i'
+map global insert <paste:end>   <esc>
+
 evaluate-commands %sh{
     autoload_directory() {
         find -L "$1" -type f -name '*\.kak' \
