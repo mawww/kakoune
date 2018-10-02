@@ -26,6 +26,8 @@
 namespace Kakoune
 {
 
+using Utf8Iterator = utf8::iterator<BufferIterator>;
+
 template<typename Func>
 std::unique_ptr<Highlighter> make_highlighter(Func func, HighlightPass pass = HighlightPass::Colorize)
 {
@@ -1130,8 +1132,7 @@ constexpr StringView LineNumbersHighlighter::ms_id;
 void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
     const Face face = context.context.faces()["MatchingChar"];
-    using CodepointPair = std::pair<Codepoint, Codepoint>;
-    static const CodepointPair matching_chars[] = { { '(', ')' }, { '{', '}' }, { '[', ']' }, { '<', '>' } };
+    const auto& matching_pairs = context.context.options()["matching_pairs"].get<Vector<Codepoint, MemoryDomain::Options>>();
     const auto range = display_buffer.range();
     const auto& buffer = context.context.buffer();
     for (auto& sel : context.context.selections())
@@ -1139,43 +1140,48 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
         auto pos = sel.cursor();
         if (pos < range.begin or pos >= range.end)
             continue;
-        auto c = buffer.byte_at(pos);
-        for (auto& pair : matching_chars)
+
+        Utf8Iterator it{buffer.iterator_at(pos), buffer};
+        auto match = find(matching_pairs, *it);
+
+        if (match == matching_pairs.end())
+            continue;
+
+        int level = 0;
+        if (((match - matching_pairs.begin()) % 2) == 0)
         {
-            int level = 1;
-            if (c == pair.first)
+            const Codepoint opening = *match;
+            const Codepoint closing = *(match+1);
+            while (it != buffer.end())
             {
-                for (auto it = get_iterator(buffer, pos)+1,
-                         end = get_iterator(buffer, range.end); it != end; ++it)
+                if (*it == opening)
+                    ++level;
+                else if (*it == closing and --level == 0)
                 {
-                    char c = *it;
-                    if (c == pair.first)
-                        ++level;
-                    else if (c == pair.second and --level == 0)
-                    {
-                        highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
-                                        apply_face(face));
-                        break;
-                    }
+                    highlight_range(display_buffer, it.base().coord(), (it+1).base().coord(),
+                                    false, apply_face(face));
+                    break;
                 }
+                ++it;
             }
-            else if (c == pair.second and pos > range.begin)
+        }
+        else if (pos > range.begin)
+        {
+            const Codepoint opening = *(match-1);
+            const Codepoint closing = *match;
+            while (true)
             {
-                for (auto it = get_iterator(buffer, pos)-1,
-                         end = get_iterator(buffer, range.begin); true; --it)
+                if (*it == closing)
+                    ++level;
+                else if (*it == opening and --level == 0)
                 {
-                    char c = *it;
-                    if (c == pair.second)
-                        ++level;
-                    else if (c == pair.first and --level == 0)
-                    {
-                        highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
-                                        apply_face(face));
-                        break;
-                    }
-                    if (it == end)
-                        break;
+                    highlight_range(display_buffer, it.base().coord(), (it+1).base().coord(),
+                                    false, apply_face(face));
+                    break;
                 }
+                if (it == buffer.begin())
+                    break;
+                --it;
             }
         }
     }
