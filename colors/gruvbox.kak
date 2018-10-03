@@ -28,48 +28,48 @@ evaluate-commands %sh{
         face global type      ${yellow}
         face global variable  ${blue}
         face global module    ${green}
-        face global function  default
+        face global function  ${fg}
         face global string    ${green}
         face global keyword   ${red}
-        face global operator  default
+        face global operator  ${fg}
         face global attribute ${orange}
         face global comment   ${gray}
         face global meta      ${aqua}
-        face global builtin   default+b
+        face global builtin   ${fg}+b
 
         # Markdown highlighting
         face global title     ${green}+b
         face global header    ${orange}
         face global bold      ${fg}+b
-        face global italic    ${fg3}
+        face global italic    ${fg}+i
         face global mono      ${fg4}
-        face global block     default
-        face global link      default
-        face global bullet    default
-        face global list      default
+        face global block     ${aqua}
+        face global link      ${blue}+u
+        face global bullet    ${yellow}
+        face global list      ${fg}
 
         face global Default            ${fg},${bg}
         face global PrimarySelection   ${fg},${blue}+fg
         face global SecondarySelection ${bg},${blue}+fg
         face global PrimaryCursor      ${bg},${fg}+fg
-        face global SecondaryCursor    ${bg},${fg}+fg
+        face global SecondaryCursor    ${bg},${bg4}+fg
         face global PrimaryCursorEol   ${bg},${fg4}+fg
-        face global SecondaryCursorEol ${bg},${fg4}+fg
+        face global SecondaryCursorEol ${bg},${bg2}+fg
         face global LineNumbers        ${bg4}
         face global LineNumberCursor   ${yellow},${bg1}
         face global LineNumbersWrapped ${bg1}
         face global MenuForeground     ${bg2},${blue}
-        face global MenuBackground     default,${bg2}
+        face global MenuBackground     ${fg},${bg2}
         face global MenuInfo           ${bg}
         face global Information        ${bg},${fg}
         face global Error              ${bg},${red}
-        face global StatusLine         default
+        face global StatusLine         ${fg},${bg1}
         face global StatusLineMode     ${yellow}+b
         face global StatusLineInfo     ${purple}
         face global StatusLineValue    ${red}
         face global StatusCursor       ${bg},${fg}
         face global Prompt             ${yellow}
-        face global MatchingChar       default+b
+        face global MatchingChar       ${fg},${bg3}+b
         face global BufferPadding      ${bg2},${bg}
         face global Whitespace         ${bg2}+f
     "
