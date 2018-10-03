@@ -15,6 +15,10 @@ released versions.
   well (a final face will not get modified by a following face if that
   following face does not have the final attribute itself.
 
+* `<a-m>` aka "merge consecutive selections" has been moved to `<a-_>`.
+  The new `<a-m>` and `<a-M>` are now symmetrical with `m` and `M`.
+  Those commands select (or extend) to the matching char backwards.
+
 == Kakoune 2018.09.04
 
 This version contains a significant overhaul of various Kakoune
