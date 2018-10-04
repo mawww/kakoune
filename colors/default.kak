@@ -47,4 +47,5 @@ face global StatusLineValue green,default
 face global StatusCursor black,cyan
 face global Prompt yellow,default
 face global MatchingChar default,default+b
+face global Whitespace default,default+f
 face global BufferPadding blue,default

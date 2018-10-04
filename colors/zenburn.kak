@@ -78,5 +78,6 @@ evaluate-commands %sh{
         face global Prompt ${zenconstant}
         face global MatchingChar default+b
         face global BufferPadding ${zenpadding}
+        face global Whitespace ${zensecondaryfg}+f
     "
 }
