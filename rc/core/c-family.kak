@@ -155,7 +155,7 @@ evaluate-commands %sh{
 }
 
 # c specific
-add-highlighter shared/c/code/numbers regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+add-highlighter shared/c/code/numbers regex %{\b-?(0x[0-9a-fA-F]+|\d+)([uU][lL]{0,2}|[lL]{1,2}[uU]?|[fFdDiI])?|'((\\.)?|[^'\\])'} 0:value
 evaluate-commands %sh{
     # Grammar
     keywords="asm break case continue default do else for goto if return
