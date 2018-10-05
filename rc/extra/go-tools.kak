@@ -148,8 +148,7 @@ define-command -hidden -params 1..2 gogetdoc-cmd %{
                         line=$(printf %s "${pos}" | cut -d: -f2)
                         col=$(printf %s "${pos}" | cut -d: -f3)
                         printf %s\\n "evaluate-commands -client '${kak_client}' %{
-                            evaluate-commands -try-client '${kak_opt_jumpclient}' edit -existing ${file} ${line} ${col}
-                            try %{ focus '${kak_opt_jumpclient}' }
+                            jump -existing ${file} ${line} ${col}
                         }" | kak -p ${kak_session}
                     fi
                     ;;
