@@ -164,7 +164,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     }
 
     m_display_buffer.compute_range();
-    BufferRange range{{0,0}, buffer().end_coord()};
+    const BufferRange range{{0,0}, buffer().end_coord()};
     for (auto pass : { HighlightPass::Wrap, HighlightPass::Move, HighlightPass::Colorize })
         m_builtin_highlighters.highlight({context, setup, pass, {}}, m_display_buffer, range);
 
