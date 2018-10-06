@@ -77,3 +77,6 @@ face global MatchingChar cyan+b
 
 # EOF tildas (~)
 face global BufferPadding blue,default
+
+# Whitespace characters
+face global Whitespace default+f

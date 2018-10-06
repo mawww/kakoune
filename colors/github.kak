@@ -48,3 +48,4 @@ face global Prompt rgb:F8F8FF,rgb:4078C0
 face global MatchingChar rgb:F8F8FF,rgb:4078C0+b
 face global Search default,default+u
 face global BufferPadding rgb:A0A0A0,rgb:F8F8FF
+face global Whitespace rgb:A0A0A0+f

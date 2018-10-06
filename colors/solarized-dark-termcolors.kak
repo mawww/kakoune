@@ -50,3 +50,4 @@ face global StatusCursor       bright-yellow,bright-white
 face global Prompt             yellow+b
 face global MatchingChar       red,bright-green+b
 face global BufferPadding      bright-green,bright-black
+face global Whitespace         blue+f

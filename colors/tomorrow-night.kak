@@ -74,5 +74,6 @@ evaluate-commands %sh{
         face global Prompt ${background},${aqua}
         face global MatchingChar ${yellow},${background}+b
         face global BufferPadding ${aqua},${background}
+        face global Whitespace ${text_light}+f
     "
 }
