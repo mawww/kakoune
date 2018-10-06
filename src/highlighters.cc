@@ -1623,10 +1623,18 @@ struct RegexMatch
     LineCount line;
     ByteCount begin;
     ByteCount end;
-    StringView capture;
+    uint16_t capture_pos;
+    uint16_t capture_len;
 
     BufferCoord begin_coord() const { return { line, begin }; }
     BufferCoord end_coord() const { return { line, end }; }
+
+    StringView capture(const Buffer& buffer) const
+    {
+        if (capture_len == 0)
+            return {};
+        return buffer[line].substr(begin + capture_pos, ByteCount{capture_len});
+    }
 };
 using RegexMatchList = Vector<RegexMatch, MemoryDomain::Highlight>;
 
@@ -1639,10 +1647,15 @@ void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& re
         for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
         {
             auto& m = *it;
-            ByteCount b = (int)(m[0].first - l.begin());
-            ByteCount e = (int)(m[0].second - l.begin());
-            auto cap = (capture and m[1].matched) ? StringView{m[1].first, m[1].second} : StringView{};
-            matches.push_back({ line, b, e, cap });
+            const bool with_capture = capture and m[1].matched and
+                                      m[0].second - m[0].first > std::numeric_limits<uint16_t>::max();
+            matches.push_back({
+                line,
+                (int)(m[0].first - l.begin()),
+                (int)(m[0].second - l.begin()),
+                (uint16_t)(with_capture ? m[1].first - m[0].first : 0),
+                (uint16_t)(with_capture ? m[1].second - m[1].first : 0)
+            });
         }
     }
 }
@@ -1689,10 +1702,15 @@ void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modif
             for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
             {
                 auto& m = *it;
-                ByteCount b = (int)(m[0].first - l.begin());
-                ByteCount e = (int)(m[0].second - l.begin());
-                auto cap = (capture and m[1].matched) ? StringView{m[1].first, m[1].second} : StringView{};
-                matches.push_back({ line, b, e, cap });
+                const bool with_capture = capture and m[1].matched and
+                                          m[0].second - m[0].first > std::numeric_limits<uint16_t>::max();
+                matches.push_back({
+                    line,
+                    (int)(m[0].first - l.begin()),
+                    (int)(m[0].second - l.begin()),
+                    (uint16_t)(with_capture ? m[1].first - m[0].first : 0),
+                    (uint16_t)(with_capture ? m[1].second - m[1].first : 0)
+                });
             }
         }
     }
@@ -1719,7 +1737,7 @@ struct RegionMatches
                                 pos, compare_to_begin);
     }
 
-    RegexMatchList::const_iterator find_matching_end(BufferCoord beg_pos, Optional<StringView> capture) const
+    RegexMatchList::const_iterator find_matching_end(const Buffer& buffer, BufferCoord beg_pos, Optional<StringView> capture) const
     {
         auto end_it = end_matches.begin();
         auto rec_it = recurse_matches.begin();
@@ -1737,12 +1755,12 @@ struct RegionMatches
             while (rec_it != recurse_matches.end() and
                    rec_it->end_coord() <= end_it->end_coord())
             {
-                if (not capture or rec_it->capture == *capture)
+                if (not capture or rec_it->capture(buffer) == *capture)
                     ++recurse_level;
                 ++rec_it;
             }
 
-            if (not capture or *capture == end_it->capture)
+            if (not capture or *capture == end_it->capture(buffer))
             {
                 if (recurse_level == 0)
                     return end_it;
@@ -1997,8 +2015,8 @@ private:
             const RegionMatches& matches = cache.matches[begin.first];
             auto& region = m_regions.item(begin.first);
             auto beg_it = begin.second;
-            auto end_it = matches.find_matching_end(beg_it->end_coord(),
-                                                    region.value->match_capture() ? beg_it->capture : Optional<StringView>{});
+            auto end_it = matches.find_matching_end(buffer, beg_it->end_coord(),
+                                                    region.value->match_capture() ? beg_it->capture(buffer) : Optional<StringView>{});
 
             if (end_it == matches.end_matches.end() or end_it->end_coord() >= range.end)
             {
