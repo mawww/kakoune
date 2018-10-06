@@ -6,6 +6,12 @@ The name of the project is pronounced "Kak-oon", and is a word taken from a
 New Caledonian dialect based on french. It means a hard blow, usually a punch,
 but generally refers to a blow into which all of one's strength went.
 
+== Who made the Kakoune logo?
+
+The https://github.com/mawww/kakoune/blob/master/doc/kakoune_logo.svg[Kakoune logo]
+has been proposed by https://github.com/p0nce[p0nce]
+in https://github.com/mawww/kakoune/pull/253[#253] – merged on _2015-03-22_.
+
 == Is there going to be a Windows port of Kakoune ?
 
 As many features provided by UNIX systems would be missing, or if anything
