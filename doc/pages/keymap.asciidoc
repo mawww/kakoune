@@ -1,3 +1,6 @@
+= Keymap
+
+---
 ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┲━━━━━━━━━━━━━━┓
 │  upper│ cmdout│convtab│       │selpipe│sel all│       │  align│pattern│ rotate│ rotate│   trim│       ┃ ⇤            ┃
 ├┄┄CASE┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┨              ┃
@@ -27,3 +30,4 @@
  ᵍ: the g key prefix different goto location functionalities, such as going
     to begin/end of the file, opening the file whose name is selected, etc…
  ᵛ: the v key prefix different view related functionalities, such as scrolling
+---
