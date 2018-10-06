@@ -34,6 +34,8 @@ bool notify_fatal_error(StringView msg)
     auto cmd = format("xmessage -buttons 'quit:0,ignore:1' '{}'", msg);
     int status = system(cmd.c_str());
     return (WIFEXITED(status)) ? (WEXITSTATUS(status)) == 1 : false;
+#else
+    return false;
 #endif
 }
 
