@@ -43,6 +43,12 @@ struct {
     unsigned int version;
     const char* notes;
 } constexpr version_notes[] = { {
+        0,
+        "» define-commands -shell-completion and -shell-candidates has been renamed\n"
+        "» exclusive face attributes is replaced with final (fg/bg/attr)\n"
+        "» <a-M> (merge consecutive) moved to <a-_> to make <a-M> backward <a-m>\n"
+        "» remove-hooks now takes a regex parameter\n"
+    }, {
         20180904,
         "» Big breaking refactoring of various Kakoune features,\n"
         "  configuration might need to be updated see `:doc changelog` for details\n"

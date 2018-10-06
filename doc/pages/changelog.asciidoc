@@ -19,6 +19,11 @@ released versions.
   The new `<a-m>` and `<a-M>` are now symmetrical with `m` and `M`.
   Those commands select (or extend) to the matching char backwards.
 
+* `define-command` switches `-shell-completion` and `-shell-candidates`
+  have been renamed to `-shell-script-completion` and
+  `-shell-script-candidates` to make way for a new `-shell-completion`
+  which completes like the shell (shell command name then filename).
+
 == Kakoune 2018.09.04
 
 This version contains a significant overhaul of various Kakoune
