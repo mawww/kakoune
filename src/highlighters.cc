@@ -1628,6 +1628,7 @@ struct RegexMatch
 
     BufferCoord begin_coord() const { return { line, begin }; }
     BufferCoord end_coord() const { return { line, end }; }
+    bool empty() const { return begin == end; }
 
     StringView capture(const Buffer& buffer) const
     {
@@ -1636,12 +1637,18 @@ struct RegexMatch
         return buffer[line].substr(begin + capture_pos, ByteCount{capture_len});
     }
 };
-using RegexMatchList = Vector<RegexMatch, MemoryDomain::Highlight>;
 
-void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex, bool capture)
+using RegexMatchList = Vector<RegexMatch, MemoryDomain::Highlight>;
+struct LineRange
+{
+    LineCount begin;
+    LineCount end;
+};
+
+void append_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex, bool capture, LineRange range)
 {
     capture = capture and regex.mark_count() > 0;
-    for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
+    for (auto line = range.begin; line < range.end; ++line)
     {
         auto l = buffer[line];
         for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
@@ -1658,6 +1665,11 @@ void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& re
             });
         }
     }
+}
+
+void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex, bool capture)
+{
+    return append_matches(buffer, matches, regex, capture, {0_line, buffer.line_count()});
 }
 
 void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modifs,
@@ -1696,23 +1708,7 @@ void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modif
     capture = capture and regex.mark_count() > 0;
     for (auto& modif : modifs)
     {
-        for (auto line = modif.new_line; line < modif.new_line + modif.num_added; ++line)
-        {
-            auto l = buffer[line];
-            for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
-            {
-                auto& m = *it;
-                const bool with_capture = capture and m[1].matched and
-                                          m[0].second - m[0].first > std::numeric_limits<uint16_t>::max();
-                matches.push_back({
-                    line,
-                    (int)(m[0].first - l.begin()),
-                    (int)(m[0].second - l.begin()),
-                    (uint16_t)(with_capture ? m[1].first - m[0].first : 0),
-                    (uint16_t)(with_capture ? m[1].second - m[1].first : 0)
-                });
-            }
-        }
+        append_matches(buffer, matches, regex, capture, {modif.new_line, modif.new_line + modif.num_added});
     }
     std::inplace_merge(matches.begin(), matches.begin() + pivot, matches.end(),
                        [](const RegexMatch& lhs, const RegexMatch& rhs) {
@@ -1720,7 +1716,7 @@ void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modif
                        });
 }
 
-struct RegionMatches
+struct RegionMatches : UseMemoryDomain<MemoryDomain::Highlight>
 {
     RegexMatchList begin_matches;
     RegexMatchList end_matches;
@@ -1956,9 +1952,9 @@ private:
 
     struct Cache
     {
-        size_t timestamp = 0;
+        size_t buffer_timestamp = 0;
         size_t regions_timestamp = 0;
-        Vector<RegionMatches, MemoryDomain::Highlight> matches;
+        std::unique_ptr<RegionMatches[]> matches;
         HashMap<BufferRange, RegionList, MemoryDomain::Highlight> regions;
     };
 
@@ -1968,7 +1964,7 @@ private:
     RegionAndMatch find_next_begin(const Cache& cache, BufferCoord pos) const
     {
         RegionAndMatch res{0, cache.matches[0].find_next_begin(pos)};
-        for (size_t i = 1; i < cache.matches.size(); ++i)
+        for (size_t i = 1; i < m_regions.size(); ++i)
         {
             const auto& matches = cache.matches[i];
             auto it = matches.find_next_begin(pos);
@@ -1983,18 +1979,20 @@ private:
     const RegionList& get_regions_for_range(const Buffer& buffer, BufferRange range)
     {
         Cache& cache = m_cache.get(buffer);
-        const size_t buf_timestamp = buffer.timestamp();
-        if (cache.timestamp != buf_timestamp or cache.regions_timestamp != m_regions_timestamp)
+        const size_t buffer_timestamp = buffer.timestamp();
+        if (cache.buffer_timestamp != buffer_timestamp or
+            cache.regions_timestamp != m_regions_timestamp)
         {
-            if (cache.timestamp == 0 or cache.regions_timestamp != m_regions_timestamp)
+            if (cache.buffer_timestamp == 0 or
+                cache.regions_timestamp != m_regions_timestamp)
             {
-                cache.matches.resize(m_regions.size());
+                cache.matches.reset(new RegionMatches[m_regions.size()]);
                 for (size_t i = 0; i < m_regions.size(); ++i)
                     cache.matches[i] = m_regions.item(i).value->find_matches(buffer);
             }
             else
             {
-                auto modifs = compute_line_modifications(buffer, cache.timestamp);
+                auto modifs = compute_line_modifications(buffer, cache.buffer_timestamp);
                 for (size_t i = 0; i < m_regions.size(); ++i)
                     m_regions.item(i).value->update_matches(buffer, modifs, cache.matches[i]);
             }
@@ -2025,26 +2023,21 @@ private:
                                     region.key });
                 break;
             }
-            else
-            {
-                regions.push_back({ beg_it->begin_coord(),
-                                   end_it->end_coord(),
-                                   region.key });
-                auto end_coord = end_it->end_coord();
 
-                // With empty begin and end matches (for example if the regexes
-                // are /"\K/ and /(?=")/), that case can happen, and would
-                // result in an infinite loop.
-                if (end_coord == beg_it->begin_coord())
-                {
-                    kak_assert(beg_it->begin_coord() == beg_it->end_coord() and
-                               end_it->begin_coord() == end_it->end_coord());
-                    ++end_coord.column;
-                }
-                begin = find_next_begin(cache, end_coord);
+            auto end_coord = end_it->end_coord();
+            regions.push_back({ beg_it->begin_coord(), end_coord, region.key });
+
+            // With empty begin and end matches (for example if the regexes
+            // are /"\K/ and /(?=")/), that case can happen, and would
+            // result in an infinite loop.
+            if (end_coord == beg_it->begin_coord())
+            {
+                kak_assert(beg_it->empty() and end_it->empty());
+                ++end_coord.column;
             }
+            begin = find_next_begin(cache, end_coord);
         }
-        cache.timestamp = buf_timestamp;
+        cache.buffer_timestamp = buffer_timestamp;
         cache.regions_timestamp = m_regions_timestamp;
         return regions;
     }
