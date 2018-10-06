@@ -80,29 +80,8 @@ define-command -hidden maybe-add-hbs-to-html %{ evaluate-commands %sh{
     fi
 } }
 
-define-command -hidden remove-hbs-from-html %{
-    remove-highlighter shared/html/hbs
-    remove-highlighter shared/html/tag/hbs
-    set-option global hbs_highlighters_enabled false
-}
-
-# The two hooks below are wrapped in this "-once" so that they only get enabled
-# when atleast one .hbs file is opened.  This way people who don't edit .hbs files
-# aren't paying a performance penality of these hooks always executing.
-hook -once global BufCreate .*\.(hbs) %{
-    
-    hook -group hbs-highlight global WinDisplay .*\.(hbs) %{ evaluate-commands %sh{
-        if [ "$kak_opt_filetype" = "hbs" ]; then
-            printf %s "maybe-add-hbs-to-html"
-        fi
-    } }
-
-    hook -group hbs-highlight global WinDisplay .*\.(?!hbs).* %{ 
-        remove-hbs-from-html
-    } 
-}
-
 hook -group hbs-highlight global WinSetOption filetype=hbs %{
+    maybe-add-hbs-to-html
     add-highlighter window/hbs-file ref hbs-file
 }
 
