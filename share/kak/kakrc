@@ -1,5 +1,5 @@
 def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
-    -shell-candidates %{
+    -shell-script-candidates %{
     find -L "${kak_runtime}/colors" "${kak_config}/colors" -type f -name '*\.kak' \
         | while read -r filename; do
             basename="${filename##*/}"

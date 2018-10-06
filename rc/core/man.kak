@@ -51,8 +51,8 @@ define-command -hidden -params 2..3 man-impl %{ evaluate-commands %sh{
 } }
 
 define-command -params ..1 \
-  -shell-candidates %{
-      find /usr/share/man/ -name '*.[1-8]*' | sed 's,^.*/\(.*\)\.\([1-8][a-zA-Z]*\).*$,\1(\2),' 
+  -shell-script-candidates %{
+      find /usr/share/man/ -name '*.[1-8]*' | sed 's,^.*/\(.*\)\.\([1-8][a-zA-Z]*\).*$,\1(\2),'
   } \
   -docstring %{man [<page>]: manpage viewer wrapper
 If no argument is passed to the command, the selection will be used as page

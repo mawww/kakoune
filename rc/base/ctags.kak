@@ -7,7 +7,7 @@ declare-option -docstring "list of paths to tag files to parse when looking up a
     str-list ctagsfiles 'tags'
 
 define-command -params ..1 \
-    -shell-candidates %{
+    -shell-script-candidates %{
         realpath() { ( path=$(readlink "$1"); cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
         eval "set -- $kak_opt_ctagsfiles"
         for candidate in "$@"; do

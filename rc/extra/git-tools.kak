@@ -27,7 +27,7 @@ define-command -params 1.. \
   -docstring %sh{printf 'git [<arguments>]: git wrapping helper
 All the optional arguments are forwarded to the git utility
 Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  hide-diff\n  log\n  show\n  show-diff\n  status\n  update-diff'} \
-  -shell-candidates %{
+  -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
         printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nshow\nshow-diff\nstatus\nupdate-diff\n"
     else

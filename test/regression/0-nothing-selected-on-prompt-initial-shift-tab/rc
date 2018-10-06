@@ -1,1 +1,1 @@
-def my-command -params 0..1 -shell-candidates %{ printf "aaa\nbbb\nccc" } %{ exec i %arg{1} <esc> }
+def my-command -params 0..1 -shell-script-candidates %{ printf "aaa\nbbb\nccc" } %{ exec i %arg{1} <esc> }

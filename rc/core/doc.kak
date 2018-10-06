@@ -131,7 +131,7 @@ define-command -params 1 -hidden doc-render %{
 }
 
 define-command -params 1..2 \
-    -shell-candidates %{
+    -shell-script-candidates %{
         if [ "$kak_token_to_complete" -eq 0 ]; then
             find "${kak_runtime}/doc/" -type f -name "*.asciidoc" | sed 's,.*/,,; s/\.[^/]*$//'
         elif [ "$kak_token_to_complete" -eq 1 ]; then
