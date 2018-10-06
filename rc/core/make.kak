@@ -40,15 +40,9 @@ hook global WinSetOption filetype=(?!make).* %{
     remove-hooks buffer make-hooks
 }
 
-declare-option -docstring "name of the client in which all source code jumps will be executed" \
-    str jumpclient
-
 define-command -hidden make-open-error -params 4 %{
-    evaluate-commands -try-client %opt{jumpclient} %{
-        edit -existing "%arg{1}" %arg{2} %arg{3}
-        echo -markup "{Information}%arg{4}"
-        try %{ focus }
-    }
+    jump -existing "%arg{1}" %arg{2} %arg{3}
+    echo -markup "{Information}%arg{4}"
 }
 
 define-command -hidden make-jump %{
