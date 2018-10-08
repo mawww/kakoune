@@ -620,9 +620,9 @@ private:
         }
 
         std::unique_ptr<Thread[]> m_data = nullptr;
-        int16_t m_capacity = 0;
-        int16_t m_current = 0;
-        int16_t m_next = 0;
+        int32_t m_capacity = 0; // Maximum capacity should be 2*instruction count, so 65536
+        int32_t m_current = 0;
+        int32_t m_next = 0;
     };
 
     DualThreadStack m_threads;
