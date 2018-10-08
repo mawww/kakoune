@@ -63,7 +63,7 @@ inline bool is_bow(const Buffer& buffer, BufferCoord coord)
 inline bool is_eow(const Buffer& buffer, BufferCoord coord)
 {
     if (buffer.is_end(coord) or coord == BufferCoord{0,0})
-        return true;
+        return false;
 
     auto it = utf8::iterator<BufferIterator>(buffer.iterator_at(coord), buffer);
     return is_word(*(it-1)) and not is_word(*it);
