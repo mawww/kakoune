@@ -20,6 +20,7 @@ enum class MemoryDomain
     BufferMeta,
     Options,
     Highlight,
+    Regions,
     Display,
     Mapping,
     Commands,
@@ -51,6 +52,7 @@ inline const char* domain_name(MemoryDomain domain)
         case MemoryDomain::BufferMeta: return "BufferMeta";
         case MemoryDomain::Options: return "Options";
         case MemoryDomain::Highlight: return "Highlight";
+        case MemoryDomain::Regions: return "Regions";
         case MemoryDomain::Display: return "Display";
         case MemoryDomain::Mapping: return "Mapping";
         case MemoryDomain::Commands: return "Commands";

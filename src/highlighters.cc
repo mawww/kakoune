@@ -16,6 +16,7 @@
 #include "regex.hh"
 #include "register_manager.hh"
 #include "string.hh"
+#include "unit_tests.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
 #include "window.hh"
@@ -1638,42 +1639,57 @@ struct RegexMatch
     }
 };
 
-using RegexMatchList = Vector<RegexMatch, MemoryDomain::Highlight>;
+using RegexMatchList = Vector<RegexMatch, MemoryDomain::Regions>;
 struct LineRange
 {
     LineCount begin;
     LineCount end;
+
+    friend bool operator==(LineRange lhs, LineRange rhs)
+    {
+        return lhs.begin == rhs.begin and lhs.end == rhs.end;
+    }
+    friend bool operator!=(LineRange lhs, LineRange rhs)
+    {
+        return not (lhs == rhs);
+    }
 };
 
-void append_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex, bool capture, LineRange range)
+void append_matches(const Buffer& buffer, LineCount line, RegexMatchList& matches, const Regex& regex, bool capture)
 {
-    capture = capture and regex.mark_count() > 0;
-    for (auto line = range.begin; line < range.end; ++line)
+    auto l = buffer[line];
+    for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
     {
-        auto l = buffer[line];
-        for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
-        {
-            auto& m = *it;
-            const bool with_capture = capture and m[1].matched and
-                                      m[0].second - m[0].first > std::numeric_limits<uint16_t>::max();
-            matches.push_back({
-                line,
-                (int)(m[0].first - l.begin()),
-                (int)(m[0].second - l.begin()),
-                (uint16_t)(with_capture ? m[1].first - m[0].first : 0),
-                (uint16_t)(with_capture ? m[1].second - m[1].first : 0)
-            });
-        }
+        auto& m = *it;
+        const bool with_capture = capture and m[1].matched and
+                                  m[0].second - m[0].first > std::numeric_limits<uint16_t>::max();
+        matches.push_back({
+            line,
+            (int)(m[0].first - l.begin()),
+            (int)(m[0].second - l.begin()),
+            (uint16_t)(with_capture ? m[1].first - m[0].first : 0),
+            (uint16_t)(with_capture ? m[1].second - m[1].first : 0)
+        });
     }
 }
 
-void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex, bool capture)
+void insert_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex, bool capture, LineRange range)
 {
-    return append_matches(buffer, matches, regex, capture, {0_line, buffer.line_count()});
+    size_t pivot = matches.size();
+    capture = capture and regex.mark_count() > 0;
+    for (auto line = range.begin; line < range.end; ++line)
+        append_matches(buffer, line, matches, regex, capture);
+
+    auto pos = std::lower_bound(matches.begin(), matches.begin() + pivot, range.begin,
+                                [](const RegexMatch& m, LineCount l) { return m.line < l; });
+    kak_assert(pos == matches.begin() + pivot or pos->line >= range.end); // We should not have had matches for range
+
+    // Move new matches into position.
+    std::rotate(pos, matches.begin() + pivot, matches.end());
 }
 
 void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modifs,
-                    RegexMatchList& matches, const Regex& regex, bool capture)
+                    RegexMatchList& matches)
 {
     // remove out of date matches and update line for others
     auto ins_pos = matches.begin();
@@ -1702,18 +1718,6 @@ void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modif
         ++ins_pos;
     }
     matches.erase(ins_pos, matches.end());
-    size_t pivot = matches.size();
-
-    // try to find new matches in each updated lines
-    capture = capture and regex.mark_count() > 0;
-    for (auto& modif : modifs)
-    {
-        append_matches(buffer, matches, regex, capture, {modif.new_line, modif.new_line + modif.num_added});
-    }
-    std::inplace_merge(matches.begin(), matches.begin() + pivot, matches.end(),
-                       [](const RegexMatch& lhs, const RegexMatch& rhs) {
-                           return lhs.begin_coord() < rhs.begin_coord();
-                       });
 }
 
 struct RegionMatches : UseMemoryDomain<MemoryDomain::Highlight>
@@ -1766,6 +1770,123 @@ struct RegionMatches : UseMemoryDomain<MemoryDomain::Highlight>
             if (beg_pos != end_it->end_coord())
                 beg_pos = end_it->end_coord();
             ++end_it;
+        }
+    }
+};
+
+struct LineRangeSet : private Vector<LineRange, MemoryDomain::Highlight>
+{
+    using Base = Vector<LineRange, MemoryDomain::Highlight>;
+    using Base::operator[];
+    using Base::begin;
+    using Base::end;
+
+    ConstArrayView<LineRange> view() const { return {data(), data() + size()}; }
+
+    void reset(LineRange range) { Base::operator=({range}); }
+
+    void update(ConstArrayView<LineModification> modifs)
+    {
+        if (modifs.empty())
+            return;
+
+        for (auto it = begin(); it != end(); ++it)
+        {
+            auto modif_beg = std::lower_bound(modifs.begin(), modifs.end(), it->begin,
+                                              [](const LineModification& c, const LineCount& l)
+                                              { return c.old_line + c.num_removed < l; });
+            auto modif_end = std::upper_bound(modifs.begin(), modifs.end(), it->end,
+                                              [](const LineCount& l, const LineModification& c)
+                                              { return l < c.old_line; });
+
+            if (modif_beg == modifs.end())
+            {
+                const auto diff = (modif_beg-1)->diff();
+                it->begin += diff;
+                it->end += diff;
+                break;
+            }
+
+            const auto diff = modif_beg->new_line - modif_beg->old_line;
+            it->begin += diff;
+            it->end += diff;
+
+            while (modif_beg != modif_end)
+            {
+                auto& m = *modif_beg++;
+                if (m.num_removed > 0)
+                {
+                    if (m.new_line < it->begin)
+                        it->begin = std::max(m.new_line, it->begin - m.num_removed);
+                    it->end = std::max(m.new_line, std::max(it->begin, it->end - m.num_removed));
+                }
+                if (m.num_added > 0)
+                {
+                    if (it->begin >= m.new_line)
+                        it->begin += m.num_added;
+                    else
+                    {
+                        it = insert(it, {it->begin, m.new_line}) + 1;
+                        it->begin = m.new_line + m.num_added;
+                    }
+                    it->end += m.num_added;
+                }
+            }
+        };
+        erase(std::remove_if(begin(), end(), [](auto& r) { return r.begin >= r.end; }), end());
+    }
+
+    template<typename Func>
+    void add_range(LineRange range, Func&& func)
+    {
+        auto it = std::lower_bound(begin(), end(), range.begin,
+                                   [](LineRange range, LineCount line) { return range.end < line; });
+        if (it == end() or it->begin > range.end)
+            func(range);
+        else 
+        {
+            auto pos = range.begin;
+            while (it != end() and it->begin <= range.end)
+            {
+                if (pos < it->begin)
+                    func({pos, it->begin});
+
+                range = LineRange{std::min(range.begin, it->begin), std::max(range.end, it->end)};
+                pos = it->end;
+                it = erase(it);
+            }
+            if (pos < range.end)
+                func({pos, range.end});
+        }
+        insert(it, range);
+    }
+
+    void remove_range(LineRange range)
+    {
+        auto inside = [](LineCount line, LineRange range) {
+            return range.begin <= line and line < range.end;
+        };
+
+        auto it = std::lower_bound(begin(), end(), range.begin,
+                                   [](LineRange range, LineCount line) { return range.end < line; });
+        if (it == end() or it->begin > range.end)
+            return;
+        else while (it != end() and it->begin <= range.end)
+        {
+            if (it->begin < range.begin and range.end <= it->end)
+            {
+                it = insert(it, {it->begin, range.begin}) + 1;
+                it->begin = range.end;
+            }
+            if (inside(it->begin, range))
+                it->begin = range.end;
+            if (inside(it->end, range))
+                it->end = range.begin;
+
+            if (it->end <= it->begin)
+                it = erase(it);
+            else
+                ++it;
         }
     }
 };
@@ -1954,6 +2075,7 @@ private:
     {
         size_t buffer_timestamp = 0;
         size_t regions_timestamp = 0;
+        LineRangeSet ranges;
         std::unique_ptr<RegionMatches[]> matches;
         HashMap<BufferRange, RegionList, MemoryDomain::Highlight> regions;
     };
@@ -1976,29 +2098,57 @@ private:
         return res;
     }
 
-    const RegionList& get_regions_for_range(const Buffer& buffer, BufferRange range)
+    bool update_matches(Cache& cache, const Buffer& buffer, LineRange range)
     {
-        Cache& cache = m_cache.get(buffer);
         const size_t buffer_timestamp = buffer.timestamp();
-        if (cache.buffer_timestamp != buffer_timestamp or
+        if (cache.buffer_timestamp == 0 or
             cache.regions_timestamp != m_regions_timestamp)
         {
-            if (cache.buffer_timestamp == 0 or
-                cache.regions_timestamp != m_regions_timestamp)
+            cache.matches.reset(new RegionMatches[m_regions.size()]);
+            for (size_t i = 0; i < m_regions.size(); ++i)
             {
-                cache.matches.reset(new RegionMatches[m_regions.size()]);
-                for (size_t i = 0; i < m_regions.size(); ++i)
-                    cache.matches[i] = m_regions.item(i).value->find_matches(buffer);
+                cache.matches[i] = RegionMatches{};
+                m_regions.item(i).value->add_matches(buffer, range, cache.matches[i]);
             }
-            else
+            cache.ranges.reset(range);
+            cache.buffer_timestamp = buffer_timestamp;
+            cache.regions_timestamp = m_regions_timestamp;
+            return true;
+        }
+        else
+        {
+            bool modified = false;
+            if (cache.buffer_timestamp != buffer_timestamp)
             {
                 auto modifs = compute_line_modifications(buffer, cache.buffer_timestamp);
                 for (size_t i = 0; i < m_regions.size(); ++i)
-                    m_regions.item(i).value->update_matches(buffer, modifs, cache.matches[i]);
+                {
+                    Kakoune::update_matches(buffer, modifs, cache.matches[i].begin_matches);
+                    Kakoune::update_matches(buffer, modifs, cache.matches[i].end_matches);
+                    Kakoune::update_matches(buffer, modifs, cache.matches[i].recurse_matches);
+                }
+
+                cache.ranges.update(modifs);
+                cache.buffer_timestamp = buffer_timestamp;
+                modified = true;
             }
 
-            cache.regions.clear();
+            cache.ranges.add_range(range, [&, this](const LineRange& range) {
+                if (range.begin == range.end)
+                    return;
+                for (size_t i = 0; i < m_regions.size(); ++i)
+                    m_regions.item(i).value->add_matches(buffer, range, cache.matches[i]);
+                modified = true;
+            });
+            return modified;
         }
+    }
+
+    const RegionList& get_regions_for_range(const Buffer& buffer, BufferRange range)
+    {
+        Cache& cache = m_cache.get(buffer);
+        if (update_matches(cache, buffer, {range.begin.line, std::min(buffer.line_count(), range.end.line + 1)}))
+            cache.regions.clear();
 
         auto it = cache.regions.find(range);
         if (it != cache.regions.end())
@@ -2037,8 +2187,6 @@ private:
             }
             begin = find_next_begin(cache, end_coord);
         }
-        cache.buffer_timestamp = buffer_timestamp;
-        cache.regions_timestamp = m_regions_timestamp;
         return regions;
     }
 
@@ -2094,30 +2242,15 @@ private:
             return m_delegate->highlight(context, display_buffer, range);
         }
 
-        RegionMatches find_matches(const Buffer& buffer) const
-        {
-            RegionMatches res;
-            if (m_default)
-                return res;
-
-            Kakoune::find_matches(buffer, res.begin_matches, m_begin, m_match_capture);
-            Kakoune::find_matches(buffer, res.end_matches, m_end, m_match_capture);
-            if (not m_recurse.empty())
-                Kakoune::find_matches(buffer, res.recurse_matches, m_recurse, m_match_capture);
-            return res;
-        }
-
-        void update_matches(const Buffer& buffer,
-                            ConstArrayView<LineModification> modifs,
-                            RegionMatches& matches) const
+        void add_matches(const Buffer& buffer, LineRange range, RegionMatches& matches) const
         {
             if (m_default)
                 return;
 
-            Kakoune::update_matches(buffer, modifs, matches.begin_matches, m_begin, m_match_capture);
-            Kakoune::update_matches(buffer, modifs, matches.end_matches, m_end, m_match_capture);
+            Kakoune::insert_matches(buffer, matches.begin_matches, m_begin, m_match_capture, range);
+            Kakoune::insert_matches(buffer, matches.end_matches, m_end, m_match_capture, range);
             if (not m_recurse.empty())
-                Kakoune::update_matches(buffer, modifs, matches.recurse_matches, m_recurse, m_match_capture);
+                Kakoune::insert_matches(buffer, matches.recurse_matches, m_recurse, m_match_capture, range);
         }
 
         bool match_capture() const { return m_match_capture; }
@@ -2255,5 +2388,68 @@ void register_highlighters()
           "Parameters: <delegate_type> <delegate_params>...\n"
           "Define the default region of a regions highlighter" } });
 }
+
+UnitTest test_line_range_set{[]{
+    auto expect = [](ConstArrayView<LineRange> ranges) {
+        return [it = ranges.begin(), end = ranges.end()](LineRange r) mutable {
+            kak_assert(it != end);
+            kak_assert(r == *it++);
+        };
+    };
+
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 5}, expect({{0, 5}}));
+        ranges.add_range({10, 15}, expect({{10, 15}}));
+        ranges.add_range({5, 10}, expect({{5, 10}}));
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 15}}));
+        ranges.add_range({5, 10}, expect({}));
+        ranges.remove_range({3, 8});
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 3}, {8, 15}}));
+    }
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 7}, expect({{0, 7}}));
+        ranges.add_range({9, 15}, expect({{9, 15}}));
+        ranges.add_range({5, 10}, expect({{7, 9}}));
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 15}}));
+    }
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 7}, expect({{0, 7}}));
+        ranges.add_range({11, 15}, expect({{11, 15}}));
+        ranges.add_range({5, 10}, expect({{7, 10}}));
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 10}, {11, 15}}));
+        ranges.remove_range({8, 13});
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 8}, {13, 15}}));
+    }
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 5}, expect({{0, 5}}));
+        ranges.add_range({10, 15}, expect({{10, 15}}));
+        ranges.update(ConstArrayView<LineModification>{{3, 3, 3, 1}, {11, 9, 2, 4}});
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 3}, {8, 9}, {13, 15}}));
+    }
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 5}, expect({{0, 5}}));
+        ranges.update(ConstArrayView<LineModification>{{2, 2, 2, 0}});
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 3}}));
+    }
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 5}, expect({{0, 5}}));
+        ranges.update(ConstArrayView<LineModification>{{2, 2, 0, 2}});
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 2}, {4, 7}}));
+    }
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 1}, expect({{0, 1}}));
+        ranges.add_range({5, 10}, expect({{5, 10}}));
+        ranges.add_range({15, 20}, expect({{15, 20}}));
+        ranges.update(ConstArrayView<LineModification>{{2, 2, 3, 0}});
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 1}, {2, 7}, {12, 17}}));
+    }
+}};
 
 }
