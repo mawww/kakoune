@@ -86,13 +86,19 @@ are exclusively available to built-in options.
     `declare-option`.
 
 *range-specs*::
-    a list of a pair of a buffer range (`<begin line>.<begin column>,
-    <end line>.<end column>` or `<begin line>.<begin column>+<length>`)
-    and a string (separated by `|`), except for the first element which
-    is just the timestamp of the buffer. When the `update-option` is
-    used on an option of this type, its ranges gets updated according
-    to all the buffer modifications that happened since its timestamp.
-    See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
+    a timestamp (like `%val{timestamp}`,
+    see <<expansions#value-expansions,`:doc expansions value-expansions`>>)
+    followed by a list of range descriptors. Each range descriptor must use
+    the syntax `a.b,c.d|string` or `a.b+length|string`, where _a_ is the line
+    containing the first character, _b_ is the number of bytes from the start
+    of the line to the first byte of the first character, _c_ is the line
+    containing the last character, _d_ is the number of bytes from the start of
+    the line to the first byte of the last character, _length_ is the length of
+    the range in bytes and _string_ is an arbitrary string which is associated
+    with the range. All numeric fields are 1-based. When the `update-option` is
+    used on an option of this type, its ranges gets updated according to all the
+    buffer modifications that happened since its timestamp. See
+    <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
     `set -add` appends the new pair to the list
 
 *line-specs*::
