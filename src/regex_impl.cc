@@ -8,6 +8,7 @@
 #include "utf8_iterator.hh"
 #include "string_utils.hh"
 #include "vector.hh"
+#include "utils.hh"
 
 #include <cstring>
 
@@ -602,12 +603,17 @@ private:
 
     void validate_lookaround(NodeIndex index)
     {
+        using Lookaround = CompiledRegex::Lookaround;
         ForEachChild<>::apply(m_parsed_regex, index, [this](NodeIndex child_index) {
             auto& child = get_node(child_index);
             if (child.op != ParsedRegex::Literal and child.op != ParsedRegex::Class and
                 child.op != ParsedRegex::CharacterType and child.op != ParsedRegex::AnyChar and
                 child.op != ParsedRegex::AnyCharExceptNewLine)
                 parse_error("Lookaround can only contain literals, any chars or character classes");
+            if (child.op == ParsedRegex::Literal and
+                to_underlying(Lookaround::OpBegin) <= child.value and
+                child.value < to_underlying(Lookaround::OpEnd))
+                parse_error("Lookaround does not support literals codepoint between 0xF0000 and 0xFFFFD");
             if (child.quantifier.type != ParsedRegex::Quantifier::One)
                 parse_error("Quantifiers cannot be used in lookarounds");
             return true;
@@ -877,20 +883,22 @@ private:
     template<MatchDirection direction>
     uint32_t push_lookaround(ParsedRegex::NodeIndex index, bool ignore_case)
     {
+        using Lookaround = CompiledRegex::Lookaround;
+
         const uint32_t res = m_program.lookarounds.size();
         auto write_matcher = [this, ignore_case](ParsedRegex::NodeIndex  child) {
                 auto& character = get_node(child);
                 if (character.op == ParsedRegex::Literal)
-                    m_program.lookarounds.push_back(ignore_case ? to_lower(character.value)
-                                                                : character.value);
+                    m_program.lookarounds.push_back(
+                        static_cast<Lookaround>(ignore_case ? to_lower(character.value) : character.value));
                 else if (character.op == ParsedRegex::AnyChar)
-                    m_program.lookarounds.push_back(0xF000);
+                    m_program.lookarounds.push_back(Lookaround::AnyChar);
                 else if (character.op == ParsedRegex::AnyCharExceptNewLine)
-                    m_program.lookarounds.push_back(0xF001);
+                    m_program.lookarounds.push_back(Lookaround::AnyCharExceptNewLine);
                 else if (character.op == ParsedRegex::Class)
-                    m_program.lookarounds.push_back(0xF0001 + character.value);
+                    m_program.lookarounds.push_back(static_cast<Lookaround>(to_underlying(Lookaround::CharacterClass) + character.value));
                 else if (character.op == ParsedRegex::CharacterType)
-                    m_program.lookarounds.push_back(0xF8000 | character.value);
+                    m_program.lookarounds.push_back(static_cast<Lookaround>(to_underlying(Lookaround::CharacterType) | character.value));
                 else
                     kak_assert(false);
                 return true;
@@ -898,7 +906,7 @@ private:
 
         ForEachChild<direction>::apply(m_parsed_regex, index, write_matcher);
 
-        m_program.lookarounds.push_back((Codepoint)-1);
+        m_program.lookarounds.push_back(Lookaround::EndOfLookaround);
         return res;
     }
 
@@ -1121,8 +1129,9 @@ String dump_regex(const CompiledRegex& program)
                     name = "negative look behind (ignore case)";
 
                 String str;
-                for (auto it = program.lookarounds.begin() + inst.param; *it != -1; ++it)
-                    utf8::dump(std::back_inserter(str), *it);
+                for (auto it = program.lookarounds.begin() + inst.param;
+                     *it != CompiledRegex::Lookaround::EndOfLookaround; ++it)
+                    utf8::dump(std::back_inserter(str), to_underlying(*it));
                 res += format("{} ({})\n", name, str);
                 break;
             }

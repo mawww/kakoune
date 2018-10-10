@@ -148,6 +148,12 @@ bool skip_while_reverse(Iterator& it, const BeginIterator& begin, T condition)
     return condition(*it);
 }
 
+template<typename E>
+auto to_underlying(E value)
+{
+    return static_cast<std::underlying_type_t<E>>(value);
+}
+
 }
 
 #endif // utils_hh_INCLUDED

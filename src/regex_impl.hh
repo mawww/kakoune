@@ -8,6 +8,7 @@
 #include "utf8.hh"
 #include "utf8_iterator.hh"
 #include "vector.hh"
+#include "utils.hh"
 
 namespace Kakoune
 {
@@ -82,6 +83,17 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
         NegativeLookBehind_IgnoreCase,
     };
 
+    enum class Lookaround : Codepoint
+    {
+        OpBegin              = 0xF0000,
+        AnyChar              = 0xF0000,
+        AnyCharExceptNewLine = 0xF0001,
+        CharacterClass       = 0xF0002,
+        CharacterType        = 0xF8000,
+        OpEnd                = 0xFFFFF,
+        EndOfLookaround      = static_cast<Codepoint>(-1)
+    };
+
     struct Instruction
     {
         Op op;
@@ -98,7 +110,7 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
 
     Vector<Instruction, MemoryDomain::Regex> instructions;
     Vector<CharacterClass, MemoryDomain::Regex> character_classes;
-    Vector<Codepoint, MemoryDomain::Regex> lookarounds;
+    Vector<Lookaround, MemoryDomain::Regex> lookarounds;
     uint32_t first_backward_inst; // -1 if no backward support, 0 if only backward, >0 if both forward and backward
     uint32_t save_count;
 
@@ -522,8 +534,10 @@ private:
     template<MatchDirection look_direction, bool ignore_case>
     bool lookaround(uint32_t index, EffectiveIt pos, const ExecConfig& config) const
     {
+        using Lookaround = CompiledRegex::Lookaround;
+
         const auto end = (look_direction == MatchDirection::Forward ? config.subject_end : config.subject_begin);
-        for (auto it = m_program.lookarounds.begin() + index; *it != -1; ++it)
+        for (auto it = m_program.lookarounds.begin() + index; *it != Lookaround::EndOfLookaround; ++it)
         {
             if (pos == end)
                 return false;
@@ -531,25 +545,27 @@ private:
             if (ignore_case)
                 cp = to_lower(cp);
 
-            const Codepoint ref = *it;
-            if (ref == 0xF000)
+            const Lookaround op = *it;
+            if (op == Lookaround::AnyChar)
             {} // any character matches
-            else if (ref == 0xF001)
+            else if (op == Lookaround::AnyCharExceptNewLine)
             {
                 if (cp == '\n')
                     return false;
             }
-            else if (ref > 0xF0000 and ref < 0xF8000)
+            else if (op >= Lookaround::CharacterClass and op < Lookaround::CharacterType)
             {
-                if (not is_character_class(m_program.character_classes[ref - 0xF0001], cp))
+                auto index = to_underlying(op) - to_underlying(Lookaround::CharacterClass);
+                if (not is_character_class(m_program.character_classes[index], cp))
                     return false;
             }
-            else if (ref >= 0xF8000 and ref <= 0xFFFFD)
+            else if (op >= Lookaround::CharacterType and op < Lookaround::OpEnd)
             {
-                if (not is_ctype((CharacterType)(ref & 0xFF), cp))
+                auto ctype = static_cast<CharacterType>(to_underlying(op) & 0xFF);
+                if (not is_ctype(ctype, cp))
                     return false;
             }
-            else if (ref != cp)
+            else if (static_cast<Codepoint>(op) != cp)
                 return false;
 
             (look_direction == MatchDirection::Forward) ? ++pos : --pos;
