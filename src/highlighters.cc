@@ -280,7 +280,7 @@ public:
                 return spec.second.empty() ? Face{} : faces[spec.second];
             }) | gather<Vector<Face>>();
 
-        auto& matches = get_matches(context.context.buffer(), display_buffer.range(), range);
+        const auto& matches = get_matches(context.context.buffer(), display_buffer.range(), range);
         kak_assert(matches.size() % m_faces.size() == 0);
         for (size_t m = 0; m < matches.size(); ++m)
         {
@@ -352,8 +352,7 @@ private:
             m_faces.emplace(m_faces.begin(), 0, String{});
     }
 
-    void add_matches(const Buffer& buffer, MatchList& matches,
-                     BufferRange range)
+    void add_matches(const Buffer& buffer, MatchList& matches, BufferRange range)
     {
         kak_assert(matches.size() % m_faces.size() == 0);
         using RegexIt = RegexIterator<BufferIterator>;
@@ -375,26 +374,27 @@ private:
         }
     }
 
-    MatchList& get_matches(const Buffer& buffer, BufferRange display_range,
-                           BufferRange buffer_range)
+    const MatchList& get_matches(const Buffer& buffer, BufferRange display_range, BufferRange buffer_range)
     {
         Cache& cache = m_cache.get(buffer);
         auto& matches = cache.m_matches;
 
         if (cache.m_regex_version != m_regex_version or
-            cache.m_timestamp != buffer.timestamp())
+            cache.m_timestamp != buffer.timestamp() or
+            matches.size() > 1000)
         {
             matches.clear();
             cache.m_timestamp = buffer.timestamp();
             cache.m_regex_version = m_regex_version;
         }
+
         const LineCount line_offset = 3;
         BufferRange range{std::max<BufferCoord>(buffer_range.begin, display_range.begin.line - line_offset),
                           std::min<BufferCoord>(buffer_range.end, display_range.end.line + line_offset)};
 
-        auto it = std::upper_bound(matches.begin(), matches.end(), range,
-                                   [](const BufferRange& lhs, const Cache::RangeAndMatches& rhs)
-                                   { return lhs.begin < rhs.range.end; });
+        auto it = std::upper_bound(matches.begin(), matches.end(), range.begin,
+                                   [](const BufferCoord& lhs, const Cache::RangeAndMatches& rhs)
+                                   { return lhs < rhs.range.end; });
 
         if (it == matches.end() or it->range.begin > range.end)
         {
@@ -423,14 +423,12 @@ private:
             // add regex matches from new begin to old first match end
             if (range.begin < old_range.begin)
             {
-                old_range.begin = range.begin;
-                MatchList new_matches;
-                add_matches(buffer, new_matches, {range.begin, first_end});
                 matches.erase(matches.begin(), matches.begin() + m_faces.size());
+                size_t pivot = matches.size();
+                old_range.begin = range.begin;
+                add_matches(buffer, matches, {range.begin, first_end});
 
-                std::copy(std::make_move_iterator(new_matches.begin()),
-                          std::make_move_iterator(new_matches.end()),
-                          std::inserter(matches, matches.begin()));
+                std::rotate(matches.begin(), matches.begin() + pivot, matches.end());
             }
             // add regex matches from old last match begin to new end
             if (old_range.end < range.end)
