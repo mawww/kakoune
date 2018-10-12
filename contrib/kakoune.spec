@@ -1,5 +1,5 @@
 Name:           kakoune
-Version:        2018.04.13
+Version:        2018.09.04
 Release:        1%{?dist}
 Summary:        Vim inspired editor
 
@@ -38,6 +38,9 @@ cd src
 %{_datadir}/kak/*
 
 %changelog
+* Fri Oct 12 2018 Jiri Konecny <jkonecny@redhat.com> - v2018.09.04
+- Update spec file to a new release
+
 * Sat May 5 2018 Łukasz Jendrysik <scadu@disroot.org> - v2018.04.13
 - Use tagged release
 
