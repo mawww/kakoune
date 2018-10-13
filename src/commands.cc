@@ -1141,6 +1141,14 @@ const CommandDesc alias_cmd = {
     }
 };
 
+static Completions complete_alias(const Context& context, CompletionFlags flags,
+                                 const String& prefix, ByteCount cursor_pos)
+{
+    return {0_byte, cursor_pos,
+            complete(prefix, cursor_pos, context.aliases().flatten_aliases() |
+                     transform([](auto& entry) -> const String& { return entry.key; }))};
+}
+
 const CommandDesc unalias_cmd = {
     "unalias",
     nullptr,
@@ -1149,7 +1157,7 @@ const CommandDesc unalias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_scope, complete_nothing, complete_command_name),
+    make_completer(complete_scope, complete_alias, complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
