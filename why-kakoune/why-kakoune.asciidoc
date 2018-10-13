@@ -181,7 +181,7 @@ video::video/camel.webm[align="center", options="autoplay,loop"]
 
 Another example would be parameter swapping, if you had `func(arg2, arg1);`
 you could select the contents of the parenthesis with `<a-i>(`, split the
-selection on comma with `S, <ret>`, and swap selection contents with `<a-">`.
+selection on comma with `S, <ret>`, and swap selection contents with `<a-)>`.
 
 .Swapping arguments
 video::video/args-swap.webm[align="center", options="autoplay,loop"]
