@@ -199,8 +199,10 @@ The following expansions are supported (with required context _in italics_):
 
 *%val{cursor_char_column}*::
     _in window scope_ +
-    column of the main cursor (in characters), the fourth component of
-    `%val{selection_desc}`
+    1-based offset from the start of the line to the cursor position in
+    Unicode codepoints, which may differ from visible columns if the document
+    contains full-width codepoints (which occupy two columns) or zero-width
+    codepoints
 
 *%val{cursor_char_value}*::
     _in window scope_ +
@@ -208,7 +210,9 @@ The following expansions are supported (with required context _in italics_):
 
 *%val{cursor_column}*::
     _in window scope_ +
-    column of the main cursor (in bytes)
+    1-based offset from the start of the line to the first byte of the
+    character under the main cursor (in bytes), the fourth component of
+    `%val{selection_desc}`
 
 *%val{cursor_line}*::
     _in window scope_ +
@@ -250,10 +254,11 @@ The following expansions are supported (with required context _in italics_):
 
 *%val{selection_desc}*::
     _in window scope_ +
-    range of the main selection, represented as `a.b,c.d` where _a_
-    is the anchor line, _b_ is the anchor column, _c_ is the cursor
-    line (like `%val{cursor_line}`), _d_ is the cursor column (like
-    `%val{cursor_char_column}`), and all are 1-based decimal integers
+    range of the main selection, represented as `a.b,c.d` where _a_ is the
+    anchor line, _b_ is the number of bytes from the start of the line to the
+    anchor, _c_ is the cursor line (like `%val{cursor_line}`), _d_ is
+    the number of bytes from the start of the line to the cursor (like
+    `%val{cursor_column}`), and all are 1-based decimal integers
 
 *%val{selections_desc}*::
     _in window scope_ +
