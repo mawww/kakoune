@@ -1,4 +1,4 @@
-= image:{logo}[K,30,30,link="{website}"] Kakoune image:{travis-img}[link="{travis-url}"] image:{irc-img}[link="{irc-url}"]
+= image:{logo}[K,30,30,link="{website}",title="Kakoune logo by p0nce"] Kakoune image:{travis-img}[link="{travis-url}"] image:{irc-img}[link="{irc-url}"]
 ifdef::env-github,env-browser[:outfilesuffix: .asciidoc]
 :logo: https://rawgit.com/mawww/kakoune/master/doc/kakoune_logo.svg
 :website: http://kakoune.org
@@ -831,3 +831,14 @@ entry, and `k`, `<c-p>` or `<shift-tab>` to select the previous one.
 
 Using the `/` key, you can enter some regex in order to restrict available choices
 to the matching ones.
+
+Credits
+-------
+
+Thanks to https://github.com/p0nce[p0nce] for designing the
+https://github.com/mawww/kakoune/blob/master/doc/kakoune_logo.svg[Kakoune
+logo].
+
+And thanks to all the
+https://github.com/mawww/kakoune/graphs/contributors[contributors] who help
+move the project forward!
