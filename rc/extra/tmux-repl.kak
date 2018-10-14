@@ -1,6 +1,8 @@
 # http://tmux.github.io/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+declare-option str repl_pane_id
+
 hook global KakBegin .* %sh{
     if [ -n "$TMUX" ]; then
         VERSION_TMUX=$(tmux -V | cut -d' ' -f2)
@@ -22,7 +24,7 @@ hook global KakBegin .* %sh{
 }
 
 define-command -hidden -params 1..2 tmux-repl-impl %{
-    evaluate-commands %sh{
+    set-option global repl_pane_id %sh{
         if [ -z "$TMUX" ]; then
             echo "echo -markup '{Error}This command is only available in a tmux session'"
             exit
@@ -31,15 +33,14 @@ define-command -hidden -params 1..2 tmux-repl-impl %{
         shift
         tmux_cmd="$@"
         tmux $tmux_args $tmux_cmd
-        tmux set-buffer -b kak_repl_window $(tmux display-message -p '#I')
-        tmux set-buffer -b kak_repl_pane $(tmux display-message -p '#{pane_id}')
+        tmux display-message -p '#{pane_id}'
     }
 }
+
 
 define-command tmux-repl-vertical -params 0..1 -command-completion -docstring "Create a new vertical pane for repl interaction" %{
     tmux-repl-impl 'split-window -v' %arg{@}
 }
-
 define-command tmux-repl-horizontal -params 0..1 -command-completion -docstring "Create a new horizontal pane for repl interaction" %{
     tmux-repl-impl 'split-window -h' %arg{@}
 }
@@ -56,13 +57,7 @@ define-command -hidden tmux-send-text -params 0..1 -docstring "tmux-send-text [t
         else
             tmux set-buffer -b kak_selection "$1"
         fi
-        kak_orig_window=$(tmux display-message -p '#I')
-        kak_orig_pane=$(tmux display-message -p '#P')
-        tmux select-window -t:$(tmux show-buffer -b kak_repl_window)
-        tmux select-pane -t:.$(tmux show-buffer -b kak_repl_pane)
-        tmux paste-buffer -b kak_selection
-        tmux select-window -t:${kak_orig_window}
-        tmux select-pane -t:.${kak_orig_pane}
+        tmux paste-buffer -b kak_selection -t:.$kak_opt_repl_pane_id
     }
 }
 
