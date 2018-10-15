@@ -1660,7 +1660,7 @@ void append_matches(const Buffer& buffer, LineCount line, RegexMatchList& matche
     {
         auto& m = *it;
         const bool with_capture = capture and m[1].matched and
-                                  m[0].second - m[0].first > std::numeric_limits<uint16_t>::max();
+                                  m[0].second - m[0].first < std::numeric_limits<uint16_t>::max();
         matches.push_back({
             line,
             (int)(m[0].first - l.begin()),

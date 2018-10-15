@@ -2,3 +2,4 @@ add-highlighter window/regions_test regions
 add-highlighter window/regions_test/code default-region fill yellow
 add-highlighter window/regions_test/string region %{"} %{(?<!\\)(\\\\)*"} fill green
 add-highlighter window/regions_test/shell region -recurse '\{' '\$\{' '\}' fill red
+add-highlighter window/regions_test/tag region -match-capture '<(\w+)>' '</(\w+)>' fill blue
