@@ -1,3 +1,5 @@
+declare-option str colorscheme
+
 def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     -shell-script-candidates %{
     find -L "${kak_runtime}/colors" "${kak_config}/colors" -type f -name '*\.kak' \
@@ -19,7 +21,8 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     fi
 
     if [ -n "${filename}" ]; then
-        printf 'source %%{%s}' "${filename}"
+        printf 'source %%{%s};' "${filename}"
+        printf 'set-option global colorscheme %%{%s}' "${1}"
     else
         echo "echo -markup '{Error}No such colorscheme'"
     fi
