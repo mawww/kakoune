@@ -71,7 +71,7 @@ public:
     Buffer* last_buffer() const { return m_last_buffer.get(); }
     void set_last_buffer(Buffer* last_buffer) { m_last_buffer = last_buffer; }
 
-    void exit(int status) { m_on_exit(status); }
+    void exit(int status);
 
     int pid() const { return m_pid; }
 

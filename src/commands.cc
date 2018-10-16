@@ -826,7 +826,7 @@ static constexpr auto hooks = {
     "InsertMove", "InsertCompletionHide", "InsertCompletionShow", "InsertCompletionSelect",
     "KakBegin", "KakEnd", "FocusIn", "FocusOut", "GlobalSetOption", "RuntimeError", "PromptIdle",
     "NormalBegin", "NormalEnd", "NormalIdle", "NormalKey", "ModeChange", "RawKey",
-    "WinClose", "WinCreate", "WinDisplay", "WinResize", "WinSetOption",
+    "WinClose", "WinCreate", "WinDisplay", "WinResize", "WinSetOption", "ClientCreate", "ClientClose"
 };
 
 static Completions complete_hooks(const Context&, CompletionFlags,

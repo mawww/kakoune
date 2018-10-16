@@ -57,6 +57,7 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
             m_pending_keys.push_back(key);
     });
 
+    m_window->hooks().run_hook("ClientCreate", context().name(), context());
     m_window->hooks().run_hook("WinDisplay", m_window->buffer().name(), context());
 
     force_redraw();
@@ -75,6 +76,11 @@ Client::~Client()
 bool Client::is_ui_ok() const
 {
     return m_ui->is_ok();
+}
+
+void Client::exit(int status) { 
+    m_window->hooks().run_hook("ClientClose", context().name(), context());
+    m_on_exit(status);
 }
 
 bool Client::process_pending_inputs()

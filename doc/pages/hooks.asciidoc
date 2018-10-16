@@ -172,6 +172,13 @@ name. Hooks with no description will always use an empty string.
 *RawKey* `key`::
     Triggered whenever a key is pressed by the user
 
+*ClientCreate* `client name`::
+    Triggered when a new client is created, just before WinDisplay is called.
+
+*ClientClose* `client name`::
+    Triggered just before a client is closed. At this point the client is still in
+    a valid state, and is present in the `$kak_client_list` variable.
+
 Note that some hooks will not consider underlying scopes depending on what
 context they are bound to be run into, e.g. the `BufWritePost` hook is a buffer
 hook, and will not consider the `window` scope.
