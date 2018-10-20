@@ -265,6 +265,14 @@ The following expansions are supported (with required context _in italics_):
     unquoted list of the ranges of all selections, in the same format as
     `%val{selection_desc}`
 
+*%val{selection_length}*::
+    _in window scope_ +
+    length (in codepoints) of the main selection
+
+*%val{selections_length}*::
+    _in window scope_ +
+    unquoted list of the lengths (in codepoints) of the selections
+
 *%val{session}*::
     name of the current session
 
