@@ -189,8 +189,8 @@ Building on Ubuntu 16.04.
 Make sure you have .local/bin in your path to make the kak binary available from your shell.
 
 ----------------------------------------------------------------
-sudo apt install libncursesw5-dev asciidoc
-git clone https://github.com/mawww/kakoune.git && cd kakoune/src
+sudo apt install libncursesw5-dev asciidoc pkg-config
+git clone https://github.com/mawww/kakoune.git --depth=1 && cd kakoune/src
 make
 PREFIX=$HOME/.local make install
 ----------------------------------------------------------------
