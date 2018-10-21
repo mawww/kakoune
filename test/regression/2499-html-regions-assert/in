@@ -1,0 +1,16 @@
+<html>
+	<head></head>
+	<body>
+		<div>
+			<input name="bar"/>
+		</div>
+
+		<div id="foo" class="bar">
+			Test 1
+		</div>
+
+		<div id="baz" class="fiz">
+			Test 2
+		</div>
+	</body>
+</html>

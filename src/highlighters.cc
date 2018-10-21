@@ -1802,7 +1802,7 @@ struct LineRangeSet : private Vector<LineRange, MemoryDomain::Highlight>
                 const auto diff = (modif_beg-1)->diff();
                 it->begin += diff;
                 it->end += diff;
-                break;
+                continue;
             }
 
             const auto diff = modif_beg->new_line - modif_beg->old_line;
@@ -2445,8 +2445,9 @@ UnitTest test_line_range_set{[]{
         ranges.add_range({0, 1}, expect({{0, 1}}));
         ranges.add_range({5, 10}, expect({{5, 10}}));
         ranges.add_range({15, 20}, expect({{15, 20}}));
+        ranges.add_range({25, 30}, expect({{25, 30}}));
         ranges.update(ConstArrayView<LineModification>{{2, 2, 3, 0}});
-        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 1}, {2, 7}, {12, 17}}));
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 1}, {2, 7}, {12, 17}, {22, 27}}));
     }
 }};
 
