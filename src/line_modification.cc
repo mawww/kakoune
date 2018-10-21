@@ -94,6 +94,111 @@ bool operator==(const LineModification& lhs, const LineModification& rhs)
            std::tie(rhs.old_line, rhs.new_line, rhs.num_removed, rhs.num_added);
 }
 
+void LineRangeSet::update(ConstArrayView<LineModification> modifs)
+{
+    if (modifs.empty())
+        return;
+
+    for (auto it = begin(); it != end(); ++it)
+    {
+        auto modif_beg = std::lower_bound(modifs.begin(), modifs.end(), it->begin,
+                                          [](const LineModification& c, const LineCount& l)
+                                          { return c.old_line + c.num_removed < l; });
+        auto modif_end = std::upper_bound(modifs.begin(), modifs.end(), it->end,
+                                          [](const LineCount& l, const LineModification& c)
+                                          { return l < c.old_line; });
+
+        if (modif_beg == modifs.end())
+        {
+            const auto diff = (modif_beg-1)->diff();
+            it->begin += diff;
+            it->end += diff;
+            continue;
+        }
+
+        const auto diff = modif_beg->new_line - modif_beg->old_line;
+        it->begin += diff;
+        it->end += diff;
+
+        while (modif_beg != modif_end)
+        {
+            auto& m = *modif_beg++;
+            if (m.num_removed > 0)
+            {
+                if (m.new_line < it->begin)
+                    it->begin = std::max(m.new_line, it->begin - m.num_removed);
+                it->end = std::max(m.new_line, std::max(it->begin, it->end - m.num_removed));
+            }
+            if (m.num_added > 0)
+            {
+                if (it->begin >= m.new_line)
+                    it->begin += m.num_added;
+                else
+                {
+                    it = insert(it, {it->begin, m.new_line}) + 1;
+                    it->begin = m.new_line + m.num_added;
+                }
+                it->end += m.num_added;
+            }
+        }
+    };
+    erase(std::remove_if(begin(), end(), [](auto& r) { return r.begin >= r.end; }), end());
+}
+
+void LineRangeSet::add_range(LineRange range, std::function<void (LineRange)> on_new_range)
+{
+    auto it = std::lower_bound(begin(), end(), range.begin,
+                               [](LineRange range, LineCount line) { return range.end < line; });
+    if (it == end() or it->begin > range.end)
+        on_new_range(range);
+    else 
+    {
+        auto pos = range.begin;
+        while (it != end() and it->begin <= range.end)
+        {
+            if (pos < it->begin)
+                on_new_range({pos, it->begin});
+
+            range = LineRange{std::min(range.begin, it->begin), std::max(range.end, it->end)};
+            pos = it->end;
+            it = erase(it);
+        }
+        if (pos < range.end)
+            on_new_range({pos, range.end});
+    }
+    insert(it, range);
+}
+
+void LineRangeSet::remove_range(LineRange range)
+{
+    auto inside = [](LineCount line, LineRange range) {
+        return range.begin <= line and line < range.end;
+    };
+
+    auto it = std::lower_bound(begin(), end(), range.begin,
+                               [](LineRange range, LineCount line) { return range.end < line; });
+    if (it == end() or it->begin > range.end)
+        return;
+    else while (it != end() and it->begin <= range.end)
+    {
+        if (it->begin < range.begin and range.end <= it->end)
+        {
+            it = insert(it, {it->begin, range.begin}) + 1;
+            it->begin = range.end;
+        }
+        if (inside(it->begin, range))
+            it->begin = range.end;
+        if (inside(it->end, range))
+            it->end = range.begin;
+
+        if (it->end <= it->begin)
+            it = erase(it);
+        else
+            ++it;
+    }
+}
+
+
 UnitTest test_line_modifications{[]()
 {
     {
@@ -152,6 +257,70 @@ UnitTest test_line_modifications{[]()
         buffer.insert({0,2}, "w");
         auto modifs = compute_line_modifications(buffer, ts);
         kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 0, 0, 1, 1 });
+    }
+}};
+
+UnitTest test_line_range_set{[]{
+    auto expect = [](ConstArrayView<LineRange> ranges) {
+        return [it = ranges.begin(), end = ranges.end()](LineRange r) mutable {
+            kak_assert(it != end);
+            kak_assert(r == *it++);
+        };
+    };
+
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 5}, expect({{0, 5}}));
+        ranges.add_range({10, 15}, expect({{10, 15}}));
+        ranges.add_range({5, 10}, expect({{5, 10}}));
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 15}}));
+        ranges.add_range({5, 10}, expect({}));
+        ranges.remove_range({3, 8});
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 3}, {8, 15}}));
+    }
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 7}, expect({{0, 7}}));
+        ranges.add_range({9, 15}, expect({{9, 15}}));
+        ranges.add_range({5, 10}, expect({{7, 9}}));
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 15}}));
+    }
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 7}, expect({{0, 7}}));
+        ranges.add_range({11, 15}, expect({{11, 15}}));
+        ranges.add_range({5, 10}, expect({{7, 10}}));
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 10}, {11, 15}}));
+        ranges.remove_range({8, 13});
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 8}, {13, 15}}));
+    }
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 5}, expect({{0, 5}}));
+        ranges.add_range({10, 15}, expect({{10, 15}}));
+        ranges.update(ConstArrayView<LineModification>{{3, 3, 3, 1}, {11, 9, 2, 4}});
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 3}, {8, 9}, {13, 15}}));
+    }
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 5}, expect({{0, 5}}));
+        ranges.update(ConstArrayView<LineModification>{{2, 2, 2, 0}});
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 3}}));
+    }
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 5}, expect({{0, 5}}));
+        ranges.update(ConstArrayView<LineModification>{{2, 2, 0, 2}});
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 2}, {4, 7}}));
+    }
+    {
+        LineRangeSet ranges;
+        ranges.add_range({0, 1}, expect({{0, 1}}));
+        ranges.add_range({5, 10}, expect({{5, 10}}));
+        ranges.add_range({15, 20}, expect({{15, 20}}));
+        ranges.add_range({25, 30}, expect({{25, 30}}));
+        ranges.update(ConstArrayView<LineModification>{{2, 2, 3, 0}});
+        kak_assert((ranges.view() == ConstArrayView<LineRange>{{0, 1}, {2, 7}, {12, 17}, {22, 27}}));
     }
 }};
 

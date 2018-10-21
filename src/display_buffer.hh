@@ -4,6 +4,7 @@
 #include "face.hh"
 #include "hash.hh"
 #include "coord.hh"
+#include "range.hh"
 #include "string.hh"
 #include "vector.hh"
 #include "hash_map.hh"
@@ -12,18 +13,7 @@ namespace Kakoune
 {
 
 class Buffer;
-struct BufferRange{ BufferCoord begin, end; };
-
-inline bool operator==(const BufferRange& lhs, const BufferRange& rhs)
-{
-    return lhs.begin == rhs.begin and lhs.end == rhs.end;
-}
-
-inline
-size_t hash_value(const BufferRange& range)
-{
-    return hash_values(range.begin, range.end);
-}
+using BufferRange = Range<BufferCoord>;
 
 class BufferIterator;
 // Return a buffer iterator to the coord, tolerating one past end of line coords
