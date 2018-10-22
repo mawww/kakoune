@@ -25,7 +25,6 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     fi
 }}
 
-map global normal <paste:begin> '\i'
 map global insert <paste:begin> '<a-;>\i'
 
 evaluate-commands %sh{

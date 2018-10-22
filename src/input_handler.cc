@@ -285,6 +285,19 @@ public:
                               context.faces()["Error"] });
                 }, "enter target register", register_doc);
         }
+        else if (key == Key::PasteBegin)
+        {
+            if (not m_hooks_disabled)
+            {
+                m_hooks_disabled = true;
+                context().hooks_disabled().set();
+            }
+
+            NormalParams params = m_params;
+            m_params = { 0, 0 };
+
+            context().input_handler().insert(InsertMode::Insert, params.count);
+        }
         else
         {
             auto pop_if_single_command = on_scope_end([this] {
