@@ -67,7 +67,7 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
     {
         client->context().print_status({ fix_atom_text(error.what().str()),
                                          client->context().faces()["Error"] });
-        client->context().hooks().run_hook("RuntimeError", error.what(),
+        client->context().hooks().run_hook(Hook::RuntimeError, error.what(),
                                            client->context());
     }
 

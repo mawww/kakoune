@@ -57,7 +57,7 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
             m_pending_keys.push_back(key);
     });
 
-    m_window->hooks().run_hook("WinDisplay", m_window->buffer().name(), context());
+    m_window->hooks().run_hook(Hook::WinDisplay, m_window->buffer().name(), context());
 
     force_redraw();
 }
@@ -91,20 +91,20 @@ bool Client::process_pending_inputs()
                                              context().name(), key_to_str(key)));
 
             if (key == Key::FocusIn)
-                context().hooks().run_hook("FocusIn", context().name(), context());
+                context().hooks().run_hook(Hook::FocusIn, context().name(), context());
             else if (key == Key::FocusOut)
-                context().hooks().run_hook("FocusOut", context().name(), context());
+                context().hooks().run_hook(Hook::FocusOut, context().name(), context());
             else
                 m_input_handler.handle_key(key);
 
-            context().hooks().run_hook("RawKey", key_to_str(key), context());
+            context().hooks().run_hook(Hook::RawKey, key_to_str(key), context());
         }
         catch (Kakoune::runtime_error& error)
         {
             write_to_debug_buffer(format("Error: {}", error.what()));
             context().print_status({ fix_atom_text(error.what().str()),
                                      context().faces()["Error"] });
-            context().hooks().run_hook("RuntimeError", error.what(), context());
+            context().hooks().run_hook(Hook::RuntimeError, error.what(), context());
         }
     }
     return not keys.empty();
@@ -188,7 +188,7 @@ void Client::change_buffer(Buffer& buffer)
     context().set_window(*m_window);
     m_window->set_dimensions(m_ui->dimensions());
 
-    m_window->hooks().run_hook("WinDisplay", buffer.name(), context());
+    m_window->hooks().run_hook(Hook::WinDisplay, buffer.name(), context());
     force_redraw();
 }
 
@@ -284,7 +284,7 @@ void Client::reload_buffer()
         context().print_status({ format("'{}' reloaded", buffer.display_name()),
                                  context().faces()["Information"] });
 
-        m_window->hooks().run_hook("BufReload", buffer.name(), context());
+        m_window->hooks().run_hook(Hook::BufReload, buffer.name(), context());
     }
     catch (runtime_error& error)
     {

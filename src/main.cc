@@ -674,7 +674,7 @@ int run_server(StringView session, StringView server_init,
 
     {
         Context empty_context{Context::EmptyContextFlag{}};
-        global_scope.hooks().run_hook("KakBegin", session, empty_context);
+        global_scope.hooks().run_hook(Hook::KakBegin, session, empty_context);
     }
 
     if (not files.empty()) try
@@ -776,7 +776,7 @@ int run_server(StringView session, StringView server_init,
 
     {
         Context empty_context{Context::EmptyContextFlag{}};
-        global_scope.hooks().run_hook("KakEnd", "", empty_context);
+        global_scope.hooks().run_hook(Hook::KakEnd, "", empty_context);
     }
 
     return local_client_exit;

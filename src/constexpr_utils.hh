@@ -18,6 +18,10 @@ struct Array
     constexpr const T* begin() const { return m_data; }
     constexpr const T* end() const { return m_data+N; }
 
+    constexpr T& operator[](int i) { return m_data[i]; }
+    constexpr T* begin() { return m_data; }
+    constexpr T* end() { return m_data+N; }
+
     constexpr operator ArrayView<T>() { return {m_data, N}; }
     constexpr operator ConstArrayView<T>() const { return {m_data, N}; }
 

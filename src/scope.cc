@@ -18,7 +18,7 @@ GlobalScope::~GlobalScope()
 void GlobalScope::on_option_changed(const Option& option)
 {
     Context empty_context{Context::EmptyContextFlag{}};
-    hooks().run_hook("GlobalSetOption",
+    hooks().run_hook(Hook::GlobalSetOption,
                      format("{}={}", option.name(), option.get_as_string(Quoting::Kakoune)),
                      empty_context);
 }
