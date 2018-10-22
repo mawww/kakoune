@@ -27,7 +27,6 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
 
 map global normal <paste:begin> '\i'
 map global insert <paste:begin> '<a-;>\i'
-map global insert <paste:end>   <esc>
 
 evaluate-commands %sh{
     autoload_directory() {

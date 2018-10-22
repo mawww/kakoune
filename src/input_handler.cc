@@ -1180,7 +1180,7 @@ public:
             if (not transient)
                 m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
         }
-        else if (key == Key::Escape or key == ctrl('c'))
+        else if (key == Key::Escape or key == ctrl('c') or key == Key::PasteEnd)
         {
             if (m_in_end)
                 throw runtime_error("asked to exit insert mode while running InsertEnd hook");
