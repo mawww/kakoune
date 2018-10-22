@@ -24,6 +24,9 @@ released versions.
   `-shell-script-candidates` to make way for a new `-shell-completion`
   which completes like the shell (shell command name then filename).
 
+* `asciidoc` is not a dependency anymore, the last file that requiered
+  it (Kakoune's manpage) has been converted to troff format.
+
 == Kakoune 2018.09.04
 
 This version contains a significant overhaul of various Kakoune
