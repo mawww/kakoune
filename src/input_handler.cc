@@ -1353,6 +1353,12 @@ public:
             push_mode(new Normal(context().input_handler(), true));
             return;
         }
+        else if (key == Key::PasteBegin)
+        {
+            push_mode(new Normal(context().input_handler(), true));
+            context().hooks_disabled().set();
+            context().input_handler().insert(InsertMode::Insert, 0);
+        }
 
         context().hooks().run_hook(Hook::InsertKey, key_to_str(key), context());
         if (moved)
