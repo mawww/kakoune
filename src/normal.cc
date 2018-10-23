@@ -1469,10 +1469,10 @@ template<SelectFlags flags>
 void select_to_next_char(Context& context, NormalParams params)
 {
     auto get_title = [] {
-        return format("{}{} {} next char",
-                      flags & SelectFlags::Reverse ? "reverse " : "",
+        return format("{} {} {} char",
                       flags & SelectFlags::Extend ? "extend" : "select",
-                      flags & SelectFlags::Inclusive ? "onto" : "to");
+                      flags & SelectFlags::Inclusive ? "onto" : "to",
+                      flags & SelectFlags::Reverse ? "previous" : "next");
     };
 
     on_next_key_with_autoinfo(context, KeymapMode::None,
