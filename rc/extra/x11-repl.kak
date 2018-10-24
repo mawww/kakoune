@@ -9,7 +9,7 @@ All optional parameters are forwarded to the new window} \
            exit
         fi
         if [ $# -eq 0 ]; then cmd="${SHELL:-sh}"; else cmd="$@"; fi
-        setsid ${kak_opt_termcmd} ${cmd} -t kak_repl_window < /dev/null > /dev/null 2>&1 &
+        { eval "${kak_opt_termcmd} ${cmd} -t kak_repl_window"; } </dev/null >/dev/null 2>&1 &
 }}
 
 define-command x11-send-text -docstring "send the selected text to the repl window" %{

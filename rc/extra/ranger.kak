@@ -47,13 +47,13 @@ EOF
         < "/dev/$tty"
 
     elif [ -n "$WINDOWID" ]; then
-        setsid $kak_opt_termcmd " \
-            ranger $@ --cmd "'"'" \
+        { eval "$kak_opt_termcmd \" \
+            ranger $@ --cmd \"'\"'\" \
                 map <return> eval \
                     fm.execute_console('shell \
                         echo evaluate-commands -client ' + ranger.ext.shell_escape.shell_escape('$kak_client') + ' edit {file} | \
                         kak -p '.format(file=fm.thisfile.path) + ranger.ext.shell_escape.shell_escape('$kak_session') + '; \
                         xdotool windowactivate $kak_client_env_WINDOWID') \
-                    if fm.thisfile.is_file else fm.execute_console('move right=1')"'"' < /dev/null > /dev/null 2>&1 &
+                    if fm.thisfile.is_file else fm.execute_console('move right=1')\"'\"'"; } </dev/null >/dev/null 2>&1 &
     fi
 }}
