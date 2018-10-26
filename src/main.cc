@@ -43,7 +43,7 @@ struct {
     unsigned int version;
     const char* notes;
 } constexpr version_notes[] = { {
-        0,
+        20181027,
         "» define-commands -shell-completion and -shell-candidates has been renamed\n"
         "» exclusive face attributes is replaced with final (fg/bg/attr)\n"
         "» <a-M> (merge consecutive) moved to <a-_> to make <a-M> backward <a-m>\n"
