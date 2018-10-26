@@ -28,14 +28,14 @@ define-command racer-complete -docstring "Complete the current selection with ra
                     sub(/^pub /, "", menu)
                     gsub(/\|/, "\\|", menu)
                     if (type == "Function") {
-                        sub(word, "{default+e}" word "{default+d}", menu)
+                        sub(word, "{default+F}" word "{default+d}", menu)
                         gsub(/^fn /, "    fn ", menu)                            # The extra spaces are there to vertically align
                                                                                  # the type of element on the menu to make it easy
                                                                                  # to read
                         menu = "{default+d}" menu
                     } else if (type == "Enum") {
                         menu = substr(menu, 0, length(menu) - 2)
-                        sub(word, "{default+e}" word "{default+d}", menu)
+                        sub(word, "{default+F}" word "{default+d}", menu)
                         gsub(/^enum /, "  enum ", menu)                          # The extra spaces are there to vertically align
                                                                                  # the type of element on the menu to make it easy
                                                                                  # to read
@@ -47,24 +47,24 @@ define-command racer-complete -docstring "Complete the current selection with ra
                           menu = substr(menu, length(menu) - 29, 30)             # ... trimming it, so the completion menu
                                                                                  # doesn''t get distorted if it''s too long
                         }
-                        menu = "   mod {default+e}" word "{default+d}   .." menu # The extra spaces are there to vertically align
+                        menu = "   mod {default+F}" word "{default+d}   .." menu # The extra spaces are there to vertically align
                                                                                  # the type of element on the menu to make it easy
                                                                                  # to read
                     } else if (type == "Trait") {
-                        sub(word, "{default+e}" word "{default+d}", menu)
+                        sub(word, "{default+F}" word "{default+d}", menu)
                         gsub(/^trait /, " trait ", menu)                         # The extra spaces are there to vertically align
                                                                                  # the type of element on the menu to make it easy
                                                                                  # to read
                     } else if (type == "Type") {
-                        sub(word, "{default+e}" word "{default+d}", menu)
+                        sub(word, "{default+F}" word "{default+d}", menu)
                         gsub(/^type /, "  type ", menu)                          # The extra spaces are there to vertically align
                                                                                  # the type of element on the menu to make it easy
                                                                                  # to read
                     } else if (type == "Struct") {
-                        sub(word, "{default+e}" word "{default+d}", menu)        # Struct doesn''t have extra spaces because it''s
+                        sub(word, "{default+F}" word "{default+d}", menu)        # Struct doesn''t have extra spaces because it''s
                                                                                  # the longest keyword
                     } else {
-                        menu = "{default+e}" word "{default+d} " menu
+                        menu = "{default+F}" word "{default+d} " menu
                     }
                     candidate = word "|" desc "|" menu
                     gsub(/:/, "\\:", candidate)

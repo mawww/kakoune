@@ -83,7 +83,7 @@ define-command -hidden init-javascript-filetype -params 1 %~
     add-highlighter "shared/%arg{1}/jsx/tag/base/" regex </?([\w-$]+) 1:keyword
     add-highlighter "shared/%arg{1}/jsx/tag/base/" regex (</?|/?>) 0:meta
 
-    add-highlighter "shared/%arg{1}/jsx/tag/expr/"   fill default,default+e
+    add-highlighter "shared/%arg{1}/jsx/tag/expr/"   fill default,default+F
     add-highlighter "shared/%arg{1}/jsx/tag/expr/"   ref %arg{1}
 
     # Keywords are collected at
