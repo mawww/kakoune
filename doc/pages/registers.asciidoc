@@ -22,25 +22,28 @@ in contexts where only alphanumeric identifiers are possible.
 
 == Default registers
 
-Most commands using a register default to a specific one if not specified:
+All normal-mode commands using a register default to a specific one if not specified:
 
 *"* (dquote)::
-    default copy register, used by yanking and pasting commands like *y*, *p*
-    and *R*
+    default delete / copy / paste / replace register, used by:
+    *c*, *d*, *y*, *p*, *<a-p>*, *<P>*, *<a-P>*, *R* and *<a-R>*
 
 */* (slash)::
-    default search register, used by regex based commands like *s*, ***,
-    */* or *<a-k>*.
+    default search / regex register, used by:
+    */*, *<a-/>*, *?*, *<a-?>*, *n*, *<a-n>*, *N*, *<a-N>*, ***, *<a-*>*,
+    *s*, *S*, *<a-k>* and *<a-K>*
 
 *@* (arobase)::
-    default macro register, used by *q* and *Q*
+    default macro register, used by:
+    *q* and *Q*
 
 *^* (caret)::
-    default mark register, used by *z* and *Z*
+    default mark register, used by:
+    *z*, *<a-z>*, *Z* and *<a-Z>*
 
 *|* (pipe)::
-    default shell command register, used by command that spawn a subshell such as
-    *|*, *<a-|>*, *!* or *<a-!>*
+    default shell command register, used by commands that spawn a subshell:
+    *|*, *<a-|>*, *!* and *<a-!>*
 
 == Special registers
 
