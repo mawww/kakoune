@@ -19,6 +19,7 @@
             "navbar:translation": "Traduction",
             "navbar:translation:english": "Anglais",
             "navbar:translation:french": "Français",
+            "navbar:translation:hungarian": "Hongrois",
 
             "banner:title": "Kakoune : l'éditeur de code",
             "banner:pitch": "Editeur modal · Plus rapide via moins de touches · Sélections multiples · Conception orthogonale",
@@ -73,6 +74,77 @@
 
             "plugins:malwareWarning": $("[tid-fr='plugins:malwareWarning']").html(),
             "plugins:infoContribute": $("[tid-fr='plugins:infoContribute']").html(),
+        },
+        "hu": {
+            "head:indexPageTitle": "Kakoune - Hivatalos oldal",
+            "head:galleryPageTitle": "Kakoune - Galéria",
+            "head:pluginsPageTitle": "Kakoune - Kiegészítők",
+
+            "navbar:getStarted": "Kezdj neki!",
+            "navbar:documentation": "Dokumentáció",
+            "navbar:issueTracker": "Hibakövető",
+            "navbar:wiki": "Wiki",
+            "navbar:designNotes": "Felépítési elvek",
+            "navbar:gallery": "Galéria",
+            "navbar:plugins": "Kiegészítők",
+            "navbar:translation": "Fordítás",
+            "navbar:translation:english": "Angol",
+            "navbar:translation:french": "Francia",
+            "navbar:translation:hungarian": "Magyar",
+
+            "banner:title": "Kakoune kódszerkesztő",
+            "banner:pitch": "Modális szerkesztés · Több eredmény, kevesebb billentyűleütésből · Több kijelölés egyszerre · Egyszerű felépítés",
+
+            "menu:features": "Képességek",
+            "menu:screenshots": "Képernyőképek",
+            "menu:gallery": "Galéria",
+
+            "feature:multipleSelections": "Több kijelölés",
+            "feature:multipleSelectionsText": $("[tid-hu='feature:multipleSelectionsText']").html(),
+            "feature:textEditingTools": "Eszközök",
+            "feature:textEditingToolsText": $("[tid-hu='feature:textEditingToolsText']").html(),
+            "feature:advancedTextManipulation": "Fejlett szövegszerkesztési műveletek",
+            "feature:advancedTextManipulationText": $("[tid-hu='feature:advancedTextManipulationText']").html(),
+            "feature:customization": "Személyre szabás",
+            "feature:customizationText": $("[tid-hu='feature:customizationText']").html(),
+            "feature:clientServerArchitecture": "Kliens/szerver felépítés",
+            "feature:clientServerArchitectureText": $("[tid-hu='feature:clientServerArchitectureText']").html(),
+            "feature:activeDevelopmentSupport": "Aktív fejlesztés és terméktámogatás",
+            "feature:activeDevelopmentSupportText": $("[tid-hu='feature:activeDevelopmentSupportText']").html(),
+            "feature:learnMore": "A Kakoune elveinek felfedezése (angolul)",
+
+            "error:noVideoTag": "A böngésződ nem támogatja a <code>video</code> elemeket.",
+
+            "demo:labelNext": "Következő",
+            "demo:labelPrevious": "Előző",
+
+            "demo:0": "A szövegrészek automatikus igazítása, a kijelölések igazítása által",
+            "demo:1": "A szöveg kijelölése egy feltétel alapján, és mentés egy belső bufferbe a későbbi módosításhoz",
+            "demo:2": "Szavak kicserélése a kijelölésen belül, látható és interaktív módon",
+            "demo:3": "Paraméterek egyszerű megcserélése a 'kijelölések tartalmának cseréje' parancs használatával",
+            "demo:4": "Kliens-szerver felépítés: használd az X11 ablakkezelődet; futtasd a `make` vagy `grep` parancsokat a háttérben",
+            "demo:5": "Sorok szélességének szerkesztése az olyan szövegrészeken, amik nem kérdések, a GYIK szövegében",
+
+            "screenshot:0": $("[tid-hu='screenshot:0']").html(),
+            "screenshot:1": $("[tid-hu='screenshot:1']").html(),
+
+            "gallery:0": $("[tid-hu='gallery:0']").html(),
+            "gallery:1": $("[tid-hu='gallery:1']").html(),
+            "gallery:2": $("[tid-hu='gallery:2']").html(),
+            "gallery:3": $("[tid-hu='gallery:3']").html(),
+            "gallery:4": $("[tid-hu='gallery:4']").html(),
+            "gallery:5": $("[tid-hu='gallery:5']").html(),
+            "gallery:6": $("[tid-hu='gallery:6']").html(),
+            "gallery:7": $("[tid-hu='gallery:7']").html(),
+            "gallery:8": $("[tid-hu='gallery:8']").html(),
+            "gallery:9": $("[tid-hu='gallery:9']").html(),
+            "gallery:10": $("[tid-hu='gallery:10']").html(),
+            "gallery:11": $("[tid-hu='gallery:11']").html(),
+            "gallery:12": $("[tid-hu='gallery:12']").html(),
+            "gallery:13": $("[tid-hu='gallery:13']").html(),
+
+            "plugins:malwareWarning": $("[tid-hu='plugins:malwareWarning']").html(),
+            "plugins:infoContribute": $("[tid-hu='plugins:infoContribute']").html(),
         },
     }
 
