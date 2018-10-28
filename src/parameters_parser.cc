@@ -16,7 +16,7 @@ String generate_switches_doc(const SwitchMap& switches)
     const ColumnCount maxlen = *std::max_element(switches_len.begin(), switches_len.end());
 
     for (auto& sw : switches) {
-        res += format("  -{} {}{}{}\n",
+        res += format("-{} {}{}{}\n",
                       sw.key,
                       sw.value.takes_arg ? "<arg>" : "",
                       String{' ', maxlen - switch_len(sw) + 1},
