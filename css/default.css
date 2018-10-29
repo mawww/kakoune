@@ -1,6 +1,10 @@
+@font-face {
+    font-family: "Noto Sans Light";
+    src: url(../font/NotoSans-Light.ttf);
+}
 
 * {
-    font-family: "Gafata", sans-serif;
+    font-family: "Noto Sans Light";
 }
 
 body {
