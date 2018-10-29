@@ -294,7 +294,9 @@ find_opening(Iterator pos, const Container& container,
              int level, bool nestable)
 {
     MatchResults<Iterator> res;
-    if (backward_regex_search(container.begin(), pos,
+    // When on the token of a non-nestable block, we want to consider it opening
+    if (nestable and
+        backward_regex_search(container.begin(), pos,
                               container.begin(), container.end(), res, closing) and
         res[0].second == pos)
         pos = res[0].first;
@@ -351,24 +353,10 @@ find_surrounding(const Container& container, Iterator pos,
                  ObjectFlags flags, int level)
 {
     const bool nestable = opening != closing;
-
-    // When onto the token of a non nestable block, consider it as an opening.
-    MatchResults<Iterator> matches;
-    if (not nestable and regex_search(pos, container.end(), container.begin(),
-                                      container.end(), matches, opening) and
-        matches[0].first == pos)
-        pos = matches[0].second;
-
     auto first = pos;
     auto last = pos;
     if (flags & ObjectFlags::ToBegin)
     {
-        // When positionned onto opening and searching to opening, search the parent one
-        if (nestable and first != container.begin() and not (flags & ObjectFlags::ToEnd) and
-            regex_search(first, container.end(), container.begin(), container.end(),
-                         matches, opening) and matches[0].first == first)
-            first = utf8::previous(first, container.begin());
-
         if (auto res = find_opening(first+1, container, opening, closing, level, nestable))
         {
             first = (flags & ObjectFlags::Inner) ? res->second : res->first;
@@ -383,13 +371,6 @@ find_surrounding(const Container& container, Iterator pos,
     }
     if (flags & ObjectFlags::ToEnd)
     {
-        // When positionned onto closing and searching to closing, search the parent one
-        auto next = utf8::next(last, container.end());
-        if (nestable and next != container.end() and not (flags & ObjectFlags::ToBegin) and
-            backward_regex_search(container.begin(), next, container.begin(), container.end(),
-                                  matches, closing) and matches[0].second == next)
-            last = next;
-
         if (auto res = find_closing(last, container, opening, closing, level, nestable))
             last = (flags & ObjectFlags::Inner) ? utf8::previous(res->first, container.begin())
                                                 : utf8::previous(res->second, container.begin());
@@ -412,9 +393,10 @@ select_surrounding(const Context& context, const Selection& selection,
 
     auto res = find_surrounding(buffer, pos, opening, closing, flags, level);
 
-    // When we already had the full object selected, select its parent
-    if (res and flags == (ObjectFlags::ToBegin | ObjectFlags::ToEnd) and
-        res->first.coord() == selection.min() and res->second.coord() == selection.max())
+    // If the ends we're changing didn't move, find the parent
+    if (res and not (flags & ObjectFlags::Inner) and
+        (res->first.coord() == selection.min() or not (flags & ObjectFlags::ToBegin)) and
+        (res->second.coord() == selection.max() or not (flags & ObjectFlags::ToEnd)))
         res = find_surrounding(buffer, pos, opening, closing, flags, level+1);
 
     if (res)
