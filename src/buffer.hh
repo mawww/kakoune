@@ -92,7 +92,6 @@ public:
 private:
     SafePtr<const Buffer> m_buffer;
     BufferCoord m_coord;
-    LineCount m_line_count;
     StringView m_line;
 };
 
