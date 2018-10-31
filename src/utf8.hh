@@ -43,8 +43,8 @@ struct Pass
 // returns the codepoint of the character whose first byte
 // is pointed by it
 template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
-         typename Iterator>
-Codepoint read_codepoint(Iterator& it, const Iterator& end)
+         typename Iterator, typename Sentinel>
+Codepoint read_codepoint(Iterator& it, const Sentinel& end)
     noexcept(noexcept(InvalidPolicy{}(0)))
 {
     if (it == end)
@@ -83,8 +83,8 @@ Codepoint read_codepoint(Iterator& it, const Iterator& end)
 }
 
 template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
-         typename Iterator>
-Codepoint codepoint(Iterator it, const Iterator& end)
+         typename Iterator, typename Sentinel>
+Codepoint codepoint(Iterator it, const Sentinel& end)
     noexcept(noexcept(read_codepoint<InvalidPolicy>(it, end)))
 {
     return read_codepoint<InvalidPolicy>(it, end);
@@ -125,8 +125,8 @@ inline ByteCount codepoint_size(Codepoint cp)
         throw invalid_codepoint{};
 }
 
-template<typename Iterator>
-void to_next(Iterator& it, const Iterator& end) noexcept
+template<typename Iterator, typename Sentinel>
+void to_next(Iterator& it, const Sentinel& end) noexcept
 {
     if (it != end)
         ++it;
@@ -135,8 +135,8 @@ void to_next(Iterator& it, const Iterator& end) noexcept
 }
 
 // returns an iterator to next character first byte
-template<typename Iterator>
-Iterator next(Iterator it, const Iterator& end) noexcept
+template<typename Iterator, typename Sentinel>
+Iterator next(Iterator it, const Sentinel& end) noexcept
 {
     to_next(it, end);
     return it;
@@ -144,16 +144,16 @@ Iterator next(Iterator it, const Iterator& end) noexcept
 
 // returns it's parameter if it points to a character first byte,
 // or else returns next character first byte
-template<typename Iterator>
-Iterator finish(Iterator it, const Iterator& end) noexcept
+template<typename Iterator, typename Sentinel>
+Iterator finish(Iterator it, const Sentinel& end) noexcept
 {
     while (it != end and (*(it) & 0xC0) == 0x80)
         ++it;
     return it;
 }
 
-template<typename Iterator>
-void to_previous(Iterator& it, const Iterator& begin) noexcept
+template<typename Iterator, typename Sentinel>
+void to_previous(Iterator& it, const Sentinel& begin) noexcept
 {
     if (it != begin)
         --it;
@@ -161,8 +161,8 @@ void to_previous(Iterator& it, const Iterator& begin) noexcept
         --it;
 }
 // returns an iterator to the previous character first byte
-template<typename Iterator>
-Iterator previous(Iterator it, const Iterator& begin) noexcept
+template<typename Iterator, typename Sentinel>
+Iterator previous(Iterator it, const Sentinel& begin) noexcept
 {
     to_previous(it, begin);
     return it;
@@ -171,8 +171,8 @@ Iterator previous(Iterator it, const Iterator& begin) noexcept
 // returns an iterator pointing to the first byte of the
 // dth character after (or before if d < 0) the character
 // pointed by it
-template<typename Iterator>
-Iterator advance(Iterator it, const Iterator& end, CharCount d) noexcept
+template<typename Iterator, typename Sentinel>
+Iterator advance(Iterator it, const Sentinel& end, CharCount d) noexcept
 {
     if (it == end)
         return it;
@@ -193,8 +193,8 @@ Iterator advance(Iterator it, const Iterator& end, CharCount d) noexcept
 // returns an iterator pointing to the first byte of the
 // character at the dth column after (or before if d < 0)
 // the character pointed by it
-template<typename Iterator>
-Iterator advance(Iterator it, const Iterator& end, ColumnCount d) noexcept
+template<typename Iterator, typename Sentinel>
+Iterator advance(Iterator it, const Sentinel& end, ColumnCount d) noexcept
 {
     if (it == end)
         return it;
@@ -222,8 +222,8 @@ Iterator advance(Iterator it, const Iterator& end, ColumnCount d) noexcept
 }
 
 // returns the character count between begin and end
-template<typename Iterator>
-CharCount distance(Iterator begin, const Iterator& end) noexcept
+template<typename Iterator, typename Sentinel>
+CharCount distance(Iterator begin, const Sentinel& end) noexcept
 {
     CharCount dist = 0;
 
@@ -236,8 +236,8 @@ CharCount distance(Iterator begin, const Iterator& end) noexcept
 }
 
 // returns the column count between begin and end
-template<typename Iterator>
-ColumnCount column_distance(Iterator begin, const Iterator& end) noexcept
+template<typename Iterator, typename Sentinel>
+ColumnCount column_distance(Iterator begin, const Sentinel& end) noexcept
 {
     ColumnCount dist = 0;
 
@@ -247,8 +247,8 @@ ColumnCount column_distance(Iterator begin, const Iterator& end) noexcept
 }
 
 // returns an iterator to the first byte of the character it is into
-template<typename Iterator>
-Iterator character_start(Iterator it, const Iterator& begin) noexcept
+template<typename Iterator, typename Sentinel>
+Iterator character_start(Iterator it, const Sentinel& begin) noexcept
 {
     while (it != begin and not is_character_start(*it))
         --it;
