@@ -130,6 +130,11 @@ public:
         return get_value();
     }
 
+    CodepointType read() noexcept(noexcept_policy)
+    {
+        return (CodepointType)utf8::read_codepoint<InvalidPolicy>(m_it, m_end);
+    }
+
     const BaseIt& base() const noexcept(noexcept_policy) { return m_it; }
 
 private:

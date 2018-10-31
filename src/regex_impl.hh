@@ -525,10 +525,15 @@ private:
 
     void to_next_start(EffectiveIt& start, const EffectiveIt& end, const StartDesc& start_desc)
     {
-        Codepoint cp;
-        while (start != end and (cp = *start) >= 0 and
-               not start_desc.map[cp < StartDesc::count ? cp : StartDesc::other])
-            ++start;
+        while (start != end)
+        {
+            const Codepoint cp = read(start);
+            if (start_desc.map[(cp >= 0 and cp < StartDesc::count) ? cp : StartDesc::other])
+            {
+                --start;
+                return;
+            }
+        }
     }
 
     template<MatchDirection look_direction, bool ignore_case>
@@ -595,6 +600,9 @@ private:
             return not (config.flags & RegexExecFlags::NotEndOfWord);
         return is_word(*(pos-1)) != is_word(*pos);
     }
+
+    static Codepoint read(Utf8It& it) { return it.read(); }
+    static Codepoint read(std::reverse_iterator<Utf8It>& it) { Codepoint cp = *it; ++it; return cp; }
 
     static const Iterator& get_base(const Utf8It& it) { return it.base(); }
     static Iterator get_base(const std::reverse_iterator<Utf8It>& it) { return it.base().base(); }
