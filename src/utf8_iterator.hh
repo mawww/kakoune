@@ -38,7 +38,6 @@ public:
     iterator& operator++() noexcept
     {
         utf8::to_next(m_it, m_end);
-        invalidate_value();
         return *this;
     }
 
@@ -52,7 +51,6 @@ public:
     iterator& operator--() noexcept
     {
         utf8::to_previous(m_it, m_begin);
-        invalidate_value();
         return *this;
     }
 
@@ -127,7 +125,7 @@ public:
 
     CodepointType operator*() const noexcept(noexcept_policy)
     {
-        return get_value();
+        return (CodepointType)utf8::codepoint<InvalidPolicy>(m_it, m_end);
     }
 
     CodepointType read() noexcept(noexcept_policy)
@@ -138,18 +136,9 @@ public:
     const BaseIt& base() const noexcept(noexcept_policy) { return m_it; }
 
 private:
-    void invalidate_value() noexcept { m_value = -1; }
-    CodepointType get_value() const noexcept(noexcept_policy)
-    {
-        if (m_value == (CodepointType)-1)
-            m_value = (CodepointType)utf8::codepoint<InvalidPolicy>(m_it, m_end);
-        return m_value;
-    }
-
     BaseIt m_it;
     Sentinel m_begin;
     Sentinel m_end;
-    mutable CodepointType m_value = -1;
 };
 
 }
