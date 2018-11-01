@@ -133,7 +133,7 @@ public:
         return (CodepointType)utf8::read_codepoint<InvalidPolicy>(m_it, m_end);
     }
 
-    const BaseIt& base() const noexcept(noexcept_policy) { return m_it; }
+    const BaseIt& base() const noexcept { return m_it; }
 
 private:
     BaseIt m_it;
