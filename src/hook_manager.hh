@@ -50,6 +50,8 @@ enum class Hook
     NormalIdle,
     NormalKey,
     ModeChange,
+    ModePop,
+    ModePush,
     RawKey,
     WinClose,
     WinCreate,
@@ -60,7 +62,7 @@ enum class Hook
 
 constexpr auto enum_desc(Meta::Type<Hook>)
 {
-    return make_array<EnumDesc<Hook>, 39>({
+    return make_array<EnumDesc<Hook>, 41>({
         {Hook::BufCreate, "BufCreate"},
         {Hook::BufNewFile, "BufNewFile"},
         {Hook::BufOpenFile, "BufOpenFile"},
@@ -94,6 +96,8 @@ constexpr auto enum_desc(Meta::Type<Hook>)
         {Hook::NormalIdle, "NormalIdle"},
         {Hook::NormalKey, "NormalKey"},
         {Hook::ModeChange, "ModeChange"},
+        {Hook::ModePop, "ModePop"},
+        {Hook::ModePush, "ModePush"},
         {Hook::RawKey, "RawKey"},
         {Hook::WinClose, "WinClose"},
         {Hook::WinCreate, "WinCreate"},

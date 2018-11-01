@@ -1516,6 +1516,7 @@ void InputHandler::push_mode(InputMode* new_mode)
     new_mode->on_enabled();
 
     context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, new_mode->name()), context());
+    context().hooks().run_hook(Hook::ModePush, format("{}:{}", prev_name, new_mode->name()), context());
 }
 
 void InputHandler::pop_mode(InputMode* mode)
@@ -1530,6 +1531,7 @@ void InputHandler::pop_mode(InputMode* mode)
     current_mode().on_enabled();
 
     context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()), context());
+    context().hooks().run_hook(Hook::ModePop, format("{}:{}", prev_name, current_mode().name()), context());
 }
 
 void InputHandler::reset_normal_mode()
@@ -1538,12 +1540,19 @@ void InputHandler::reset_normal_mode()
     if (m_mode_stack.size() == 1)
         return;
 
-    StringView prev_name = current_mode().name();
-    current_mode().on_disabled(false);
-    m_mode_stack.resize(1);
-    current_mode().on_enabled();
+    StringView initial_name = current_mode().name();
 
-    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()), context());
+    while (m_mode_stack.size() > 1)
+    {
+        StringView prev_name = current_mode().name();
+        current_mode().on_disabled(false);
+        m_mode_stack.pop_back();
+        current_mode().on_enabled();
+
+        context().hooks().run_hook(Hook::ModePop, format("{}:{}", prev_name, current_mode().name()), context());
+    }
+
+    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", initial_name, current_mode().name()), context());
 }
 
 void InputHandler::insert(InsertMode mode, int count)
