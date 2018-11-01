@@ -47,9 +47,9 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
     # indent after a label
     try %< execute-keys -draft k <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> >
     # indent after a statement not followed by an opening brace
-    try %< execute-keys -draft k <a-x> <a-k>\b(if|else|for|while)\h*(\(.+?\)\h*)?$<ret> j <a-gt> >
+    try %< execute-keys -draft k <a-x> <a-k>\b(if|else|for|while)\h*(\(.*?\)\h*)?$<ret> j <a-gt> >
     # deindent after a single line statement end
-    try %< execute-keys -draft K <a-x> <a-k>\;\h*$<ret> K <a-x> s\b(if|else|for|while)\h*(\(.+?\)\h*)?$|.\z<ret> 1<a-&> >
+    try %< execute-keys -draft K <a-x> <a-k>\;\h*$<ret> K <a-x> s\b(if|else|for|while)\h*(\(.*?\)\h*)?$|.\z<ret> 1<a-&> >
     # align to the opening parenthesis or opening brace (whichever is first)
     # on a previous line if its followed by text on the same line
     try %< evaluate-commands -draft %<
