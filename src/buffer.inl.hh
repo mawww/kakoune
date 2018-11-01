@@ -136,6 +136,16 @@ inline bool BufferIterator::operator>=(const BufferIterator& iterator) const noe
     return (m_coord >= iterator.m_coord);
 }
 
+inline bool BufferIterator::operator==(const BufferCoord& coord) const noexcept
+{
+    return m_coord == coord;
+}
+
+inline bool BufferIterator::operator!=(const BufferCoord& coord) const noexcept
+{
+    return m_coord != coord;
+}
+
 [[gnu::always_inline]]
 inline const char& BufferIterator::operator*() const noexcept
 {

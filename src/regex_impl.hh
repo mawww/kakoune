@@ -154,6 +154,12 @@ enum class RegexExecFlags
 
 constexpr bool with_bit_ops(Meta::Type<RegexExecFlags>) { return true; }
 
+template<typename It, typename=void>
+struct SentinelType { using Type = It; };
+
+template<typename It>
+struct SentinelType<It, void_t<typename It::Sentinel>> { using Type = typename It::Sentinel; };
+
 template<typename Iterator, MatchDirection direction>
 class ThreadedRegexVM
 {
@@ -206,25 +212,30 @@ public:
 
 
         const ExecConfig config{
-            EffectiveIt{Utf8It{forward ? begin : end, subject_begin, subject_end}},
-            EffectiveIt{Utf8It{forward ? end : begin, subject_begin, subject_end}},
-            EffectiveIt{Utf8It{forward ? subject_begin : subject_end, subject_begin, subject_end}},
-            EffectiveIt{Utf8It{forward ? subject_end : subject_begin, subject_begin, subject_end}},
+            Sentinel{forward ? begin : end},
+            Sentinel{forward ? end : begin},
+            Sentinel{forward ? subject_begin : subject_end},
+            Sentinel{forward ? subject_end : subject_begin},
             flags,
             instructions
         };
 
-        EffectiveIt start{config.begin};
+        EffectiveIt start{Utf8It{
+            forward ? begin : end,
+            Sentinel{subject_begin},
+            Sentinel{subject_end}
+        }};
+
         if (const auto& start_desc = direction == MatchDirection::Forward ?
             m_program.forward_start_desc : m_program.backward_start_desc)
         {
             if (search)
             {
                 to_next_start(start, config.end, *start_desc);
-                if (start == config.end) // If start_desc is not null, it means we consume at least one char
+                if (base(start) == config.end) // If start_desc is not null, it means we consume at least one char
                     return false;
             }
-            else if (start != config.end and
+            else if (base(start) != config.end and
                      not start_desc->map[*start < StartDesc::count ? *start : StartDesc::other])
                 return false;
         }
@@ -293,16 +304,17 @@ private:
     };
 
     using StartDesc = CompiledRegex::StartDesc;
-    using Utf8It = utf8::iterator<Iterator>;
+    using Sentinel = typename SentinelType<Iterator>::Type;
+    using Utf8It = utf8::iterator<Iterator, Sentinel>;
     using EffectiveIt = std::conditional_t<direction == MatchDirection::Forward,
                                            Utf8It, std::reverse_iterator<Utf8It>>;
 
     struct ExecConfig
     {
-        const EffectiveIt begin;
-        const EffectiveIt end;
-        const EffectiveIt subject_begin;
-        const EffectiveIt subject_end;
+        const Sentinel begin;
+        const Sentinel end;
+        const Sentinel subject_begin;
+        const Sentinel subject_end;
         const RegexExecFlags flags;
         ConstArrayView<CompiledRegex::Instruction> instructions;
     };
@@ -326,17 +338,17 @@ private:
             switch (inst.op)
             {
                 case CompiledRegex::Literal:
-                    if (pos != config.end and inst.param == *pos)
+                    if (base(pos) != config.end and inst.param == *pos)
                         return StepResult::Consumed;
                     return StepResult::Failed;
                 case CompiledRegex::Literal_IgnoreCase:
-                    if (pos != config.end and inst.param == to_lower(*pos))
+                    if (base(pos) != config.end and inst.param == to_lower(*pos))
                         return StepResult::Consumed;
                     return StepResult::Failed;
                 case CompiledRegex::AnyChar:
                     return StepResult::Consumed;
                 case CompiledRegex::AnyCharExceptNewLine:
-                    if (pos != config.end and *pos != '\n')
+                    if (base(pos) != config.end and *pos != '\n')
                         return StepResult::Consumed;
                     return StepResult::Failed;
                 case CompiledRegex::Jump:
@@ -368,16 +380,16 @@ private:
                         --m_saves[thread.saves]->refcount;
                         thread.saves = new_saves<true>(m_saves[thread.saves]->pos);
                     }
-                    m_saves[thread.saves]->pos[inst.param] = get_base(pos);
+                    m_saves[thread.saves]->pos[inst.param] = base(pos);
                     break;
                 }
                 case CompiledRegex::Class:
-                    if (pos == config.end)
+                    if (base(pos) == config.end)
                         return StepResult::Failed;
                     return is_character_class(m_program.character_classes[inst.param], *pos) ?
                         StepResult::Consumed : StepResult::Failed;
                 case CompiledRegex::CharacterType:
-                    if (pos == config.end)
+                    if (base(pos) == config.end)
                         return StepResult::Failed;
                     return is_ctype((CharacterType)inst.param, *pos) ?
                         StepResult::Consumed : StepResult::Failed;
@@ -398,11 +410,11 @@ private:
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::SubjectBegin:
-                    if (pos != config.subject_begin)
+                    if (base(pos) != config.subject_begin)
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::SubjectEnd:
-                    if (pos != config.subject_end)
+                    if (base(pos) != config.subject_end)
                         return StepResult::Failed;
                     break;
                 case CompiledRegex::LookAhead:
@@ -470,8 +482,8 @@ private:
                 switch (step(pos, current_step, thread, config))
                 {
                 case StepResult::Matched:
-                    if ((pos != config.end and not (config.flags & RegexExecFlags::Search)) or
-                        (config.flags & RegexExecFlags::NotInitialNull and pos == config.begin))
+                    if ((base(pos) != config.end and not (config.flags & RegexExecFlags::Search)) or
+                        (config.flags & RegexExecFlags::NotInitialNull and base(pos) == config.begin))
                     {
                         release_saves(thread.saves);
                         continue;
@@ -506,7 +518,7 @@ private:
             for (auto& thread : m_threads.next_threads())
                 m_program.instructions[thread.inst].scheduled = false;
 
-            if (pos == config.end or m_threads.next_is_empty() or
+            if (base(pos) == config.end or m_threads.next_is_empty() or
                 (found_match and (config.flags & RegexExecFlags::AnyMatch)))
             {
                 for (auto& t : m_threads.next_threads())
@@ -523,9 +535,9 @@ private:
         }
     }
 
-    void to_next_start(EffectiveIt& start, const EffectiveIt& end, const StartDesc& start_desc)
+    void to_next_start(EffectiveIt& start, const Sentinel& end, const StartDesc& start_desc)
     {
-        while (start != end)
+        while (base(start) != end)
         {
             const Codepoint cp = read(start);
             if (start_desc.map[(cp >= 0 and cp < StartDesc::count) ? cp : StartDesc::other])
@@ -544,7 +556,7 @@ private:
         const auto end = (look_direction == MatchDirection::Forward ? config.subject_end : config.subject_begin);
         for (auto it = m_program.lookarounds.begin() + index; *it != Lookaround::EndOfLookaround; ++it)
         {
-            if (pos == end)
+            if (base(pos) == end)
                 return false;
             Codepoint cp = (look_direction == MatchDirection::Forward ? *pos : *(pos-1));
             if (ignore_case)
@@ -580,23 +592,23 @@ private:
 
     static bool is_line_start(const EffectiveIt& pos, const ExecConfig& config)
     {
-        if (pos == config.subject_begin)
+        if (base(pos) == config.subject_begin)
             return not (config.flags & RegexExecFlags::NotBeginOfLine);
         return *(pos-1) == '\n';
     }
 
     static bool is_line_end(const EffectiveIt& pos, const ExecConfig& config)
     {
-        if (pos == config.subject_end)
+        if (base(pos) == config.subject_end)
             return not (config.flags & RegexExecFlags::NotEndOfLine);
         return *pos == '\n';
     }
 
     static bool is_word_boundary(const EffectiveIt& pos, const ExecConfig& config)
     {
-        if (pos == config.subject_begin)
+        if (base(pos) == config.subject_begin)
             return not (config.flags & RegexExecFlags::NotBeginOfWord);
-        if (pos == config.subject_end)
+        if (base(pos) == config.subject_end)
             return not (config.flags & RegexExecFlags::NotEndOfWord);
         return is_word(*(pos-1)) != is_word(*pos);
     }
@@ -604,8 +616,8 @@ private:
     static Codepoint read(Utf8It& it) { return it.read(); }
     static Codepoint read(std::reverse_iterator<Utf8It>& it) { Codepoint cp = *it; ++it; return cp; }
 
-    static const Iterator& get_base(const Utf8It& it) { return it.base(); }
-    static Iterator get_base(const std::reverse_iterator<Utf8It>& it) { return it.base().base(); }
+    static const Iterator& base(const Utf8It& it) { return it.base(); }
+    static Iterator base(const std::reverse_iterator<Utf8It>& it) { return it.base().base(); }
 
     const CompiledRegex& m_program;
 

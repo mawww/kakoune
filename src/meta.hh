@@ -9,6 +9,8 @@ inline namespace Meta
 struct AnyType{};
 template<typename T> struct Type : AnyType {};
 
+template<typename T> using void_t = void;
+
 }
 }
 

@@ -71,6 +71,9 @@ public:
     bool operator>  (const BufferIterator& iterator) const noexcept;
     bool operator>= (const BufferIterator& iterator) const noexcept;
 
+    bool operator== (const BufferCoord& coord) const noexcept;
+    bool operator!= (const BufferCoord& coord) const noexcept;
+
     const char& operator* () const noexcept;
     const char& operator[](size_t n) const noexcept;
     size_t operator- (const BufferIterator& iterator) const;
@@ -88,6 +91,8 @@ public:
     BufferIterator operator-- (int);
 
     const BufferCoord& coord() const noexcept { return m_coord; }
+    explicit operator BufferCoord() const noexcept { return m_coord; }
+    using Sentinel = BufferCoord;
 
 private:
     SafePtr<const Buffer> m_buffer;
