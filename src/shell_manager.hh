@@ -51,10 +51,10 @@ public:
     CandidateList complete_env_var(StringView prefix, ByteCount cursor_pos) const;
 
 private:
-    String m_shell;
-
     ConstArrayView<EnvVarDesc> m_env_vars;
 };
+
+String find_shell();
 
 }
 

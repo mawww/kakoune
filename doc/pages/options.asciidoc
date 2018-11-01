@@ -307,3 +307,8 @@ are exclusively available to built-in options.
     Controls which messages will be displayed in the startup info box, only messages
     relating to a Kakoune version greater than this value will be displayed. Versions
     are written as a single number: Like `20180413` for version `2018.04.13`
+
+*shell* `str`::
+    path to a POSIX shell to use for shell expansion.  On startup, Kakoune sets this
+    to an appropriately executable `sh` found in a minimal path where "all standard
+    POSIX utilities can be found" -- _not_ the user's `$PATH`.

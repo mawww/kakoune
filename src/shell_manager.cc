@@ -28,31 +28,6 @@ namespace Kakoune
 ShellManager::ShellManager(ConstArrayView<EnvVarDesc> builtin_env_vars)
     : m_env_vars{builtin_env_vars}
 {
-    // Get a guaranteed to be POSIX shell binary
-    {
-        auto size = confstr(_CS_PATH, nullptr, 0);
-        String path; path.resize(size-1, 0);
-        confstr(_CS_PATH, path.data(), size);
-        for (auto dir : StringView{path} | split<StringView>(':'))
-        {
-            String candidate = format("{}/sh", dir);
-            struct stat st;
-            if (stat(candidate.c_str(), &st))
-                continue;
-
-            bool executable = (st.st_mode & S_IXUSR)
-                            | (st.st_mode & S_IXGRP)
-                            | (st.st_mode & S_IXOTH);
-            if (S_ISREG(st.st_mode) and executable)
-            {
-                m_shell = std::move(candidate);
-                break;
-            }
-        }
-        if (m_shell.empty())
-            throw runtime_error{format("unable to find a posix shell in {}", path)};
-    }
-
     // Add Kakoune binary location to the path to guarantee that %sh{ ... }
     // have access to the kak command regardless of if the user installed it
     {
@@ -60,6 +35,28 @@ ShellManager::ShellManager(ConstArrayView<EnvVarDesc> builtin_env_vars)
         auto new_path = format("{}:{}", path, split_path(get_kak_binary_path()).first);
         setenv("PATH", new_path.c_str(), 1);
     }
+}
+
+String find_shell()
+{
+    // Get a guaranteed to be POSIX shell binary
+    auto size = confstr(_CS_PATH, nullptr, 0);
+    String path; path.resize(size-1, 0);
+    confstr(_CS_PATH, path.data(), size);
+    for (auto dir : StringView{path} | split<StringView>(':'))
+    {
+        String candidate = format("{}/sh", dir);
+        struct stat st;
+        if (stat(candidate.c_str(), &st))
+            continue;
+
+        bool executable = (st.st_mode & S_IXUSR)
+                        | (st.st_mode & S_IXGRP)
+                        | (st.st_mode & S_IXOTH);
+        if (S_ISREG(st.st_mode) and executable)
+            return candidate;
+    }
+    throw runtime_error{format("unable to find a posix shell in {}", path)};
 }
 
 namespace
@@ -165,7 +162,8 @@ std::pair<String, int> ShellManager::eval(
     auto spawn_time = profile ? Clock::now() : Clock::time_point{};
 
     Pipe child_stdin{not input.empty()}, child_stdout, child_stderr;
-    pid_t pid = spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env,
+    pid_t pid = spawn_shell(context.options()["shell"].get<String>().c_str(),
+                            cmdline, shell_context.params, kak_env,
                             [&child_stdin, &child_stdout, &child_stderr] {
         set_signal_handler(SIGPIPE, SIG_DFL);
         auto move = [](int oldfd, int newfd)
