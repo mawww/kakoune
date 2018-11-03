@@ -192,14 +192,6 @@ public:
         if (flags & RegexExecFlags::NotInitialNull and begin == end)
             return false;
 
-        constexpr bool forward = direction == MatchDirection::Forward;
-
-
-        if (not forward) // Flip line begin/end flags as we flipped the instructions on compilation.
-            flags = (RegexExecFlags)(flags & ~(RegexExecFlags::NotEndOfLine | RegexExecFlags::NotBeginOfLine)) |
-                ((flags & RegexExecFlags::NotEndOfLine) ? RegexExecFlags::NotBeginOfLine : RegexExecFlags::None) |
-                ((flags & RegexExecFlags::NotBeginOfLine) ? RegexExecFlags::NotEndOfLine : RegexExecFlags::None);
-
         const bool search = (flags & RegexExecFlags::Search);
 
         ConstArrayView<CompiledRegex::Instruction> instructions{m_program.instructions};
@@ -210,12 +202,13 @@ public:
         if (not search)
             instructions = instructions.subrange(CompiledRegex::search_prefix_size);
 
+        constexpr bool forward = direction == MatchDirection::Forward;
 
         const ExecConfig config{
             Sentinel{forward ? begin : end},
             Sentinel{forward ? end : begin},
-            Sentinel{forward ? subject_begin : subject_end},
-            Sentinel{forward ? subject_end : subject_begin},
+            Sentinel{subject_begin},
+            Sentinel{subject_end},
             flags,
             instructions
         };
@@ -226,8 +219,7 @@ public:
             Sentinel{subject_end}
         }};
 
-        if (const auto& start_desc = direction == MatchDirection::Forward ?
-            m_program.forward_start_desc : m_program.backward_start_desc)
+        if (const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc)
         {
             if (search)
             {
@@ -525,7 +517,7 @@ private:
             }
 
             m_threads.swap_next();
-            next(pos);
+            (direction == MatchDirection::Forward) ? ++pos : --pos;
 
             if (find_next_start and start_desc)
                 to_next_start(pos, config.end, *start_desc);
@@ -536,10 +528,10 @@ private:
     {
         while (start != end)
         {
-            const Codepoint cp = read(start);
+            const Codepoint cp = read_codepoint(start);
             if (start_desc.map[(cp >= 0 and cp < StartDesc::count) ? cp : StartDesc::other])
             {
-                prev(start);
+                (direction == MatchDirection::Forward) ? --start : ++start;
                 return;
             }
         }
@@ -550,12 +542,19 @@ private:
     {
         using Lookaround = CompiledRegex::Lookaround;
 
-        const auto end = (look_direction == MatchDirection::Forward ? config.subject_end : config.subject_begin);
+        if (look_direction == MatchDirection::Backward) 
+        {
+            if (pos == config.subject_begin)
+                return m_program.lookarounds[index] == Lookaround::EndOfLookaround;
+            --pos;
+        }
+
         for (auto it = m_program.lookarounds.begin() + index; *it != Lookaround::EndOfLookaround; ++it)
         {
-            if (pos == end)
+            if (look_direction == MatchDirection::Forward and pos == config.subject_end)
                 return false;
-            Codepoint cp = (look_direction == MatchDirection::Forward ? codepoint(pos) : prev_codepoint(pos));
+
+            Codepoint cp = *pos;
             if (ignore_case)
                 cp = to_lower(cp);
 
@@ -582,7 +581,10 @@ private:
             else if (static_cast<Codepoint>(op) != cp)
                 return false;
 
-            (look_direction == MatchDirection::Forward) ? next(pos) : prev(pos);
+            if (look_direction == MatchDirection::Backward and pos == config.subject_begin)
+                return *++it == Lookaround::EndOfLookaround;
+
+            (look_direction == MatchDirection::Forward) ? ++pos : --pos;
         }
         return true;
     }
@@ -591,14 +593,14 @@ private:
     {
         if (pos == config.subject_begin)
             return not (config.flags & RegexExecFlags::NotBeginOfLine);
-        return prev_codepoint(pos) == '\n';
+        return *(pos-1) == '\n';
     }
 
     static bool is_line_end(const Utf8It& pos, const ExecConfig& config)
     {
         if (pos == config.subject_end)
             return not (config.flags & RegexExecFlags::NotEndOfLine);
-        return codepoint(pos) == '\n';
+        return *pos == '\n';
     }
 
     static bool is_word_boundary(const Utf8It& pos, const ExecConfig& config)
@@ -607,10 +609,10 @@ private:
             return not (config.flags & RegexExecFlags::NotBeginOfWord);
         if (pos == config.subject_end)
             return not (config.flags & RegexExecFlags::NotEndOfWord);
-        return is_word(prev_codepoint(pos)) != is_word(codepoint(pos));
+        return is_word(*(pos-1)) != is_word(*pos);
     }
 
-    static Codepoint read(Utf8It& it)
+    static Codepoint read_codepoint(Utf8It& it)
     {
         if (direction == MatchDirection::Forward)
             return it.read();
@@ -618,10 +620,7 @@ private:
             return *--it;
     }
 
-    static constexpr Codepoint codepoint(const Utf8It& it) { return (direction == MatchDirection::Forward) ? *it : *(it - 1); }
-    static constexpr Utf8It& next(Utf8It& it) { return (direction == MatchDirection::Forward) ? ++it : --it; }
-    static constexpr Utf8It& prev(Utf8It& it) { return (direction == MatchDirection::Forward) ? --it : ++it; }
-    static constexpr Codepoint prev_codepoint(Utf8It it) { return codepoint(prev(it)); }
+    static Codepoint codepoint(const Utf8It& it) { return (direction == MatchDirection::Forward) ? *it : *(it - 1); }
 
     const CompiledRegex& m_program;
 

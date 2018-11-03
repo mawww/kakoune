@@ -755,40 +755,30 @@ private:
                 break;
             }
             case ParsedRegex::LookAhead:
-                push_inst(forward ? (ignore_case ? CompiledRegex::LookAhead_IgnoreCase
-                                                 : CompiledRegex::LookAhead)
-                                  : (ignore_case ? CompiledRegex::LookBehind_IgnoreCase
-                                                 : CompiledRegex::LookBehind),
+                push_inst(ignore_case ? CompiledRegex::LookAhead_IgnoreCase
+                                      : CompiledRegex::LookAhead,
                           push_lookaround<MatchDirection::Forward>(index, ignore_case));
                 break;
             case ParsedRegex::NegativeLookAhead:
-                push_inst(forward ? (ignore_case ? CompiledRegex::NegativeLookAhead_IgnoreCase
-                                                 : CompiledRegex::NegativeLookAhead)
-                                  : (ignore_case ? CompiledRegex::NegativeLookBehind_IgnoreCase
-                                                 : CompiledRegex::NegativeLookBehind),
+                push_inst(ignore_case ? CompiledRegex::NegativeLookAhead_IgnoreCase
+                                      : CompiledRegex::NegativeLookAhead,
                           push_lookaround<MatchDirection::Forward>(index, ignore_case));
                 break;
             case ParsedRegex::LookBehind:
-                push_inst(forward ? (ignore_case ? CompiledRegex::LookBehind_IgnoreCase
-                                                 : CompiledRegex::LookBehind)
-                                  : (ignore_case ? CompiledRegex::LookAhead_IgnoreCase
-                                                 : CompiledRegex::LookAhead),
+                push_inst(ignore_case ? CompiledRegex::LookBehind_IgnoreCase
+                                      : CompiledRegex::LookBehind,
                           push_lookaround<MatchDirection::Backward>(index, ignore_case));
                 break;
             case ParsedRegex::NegativeLookBehind:
-                push_inst(forward ? (ignore_case ? CompiledRegex::NegativeLookBehind_IgnoreCase
-                                                 : CompiledRegex::NegativeLookBehind)
-                                  : (ignore_case ? CompiledRegex::NegativeLookAhead_IgnoreCase
-                                                 : CompiledRegex::NegativeLookAhead),
+                push_inst(ignore_case ? CompiledRegex::NegativeLookBehind_IgnoreCase
+                                      : CompiledRegex::NegativeLookBehind,
                           push_lookaround<MatchDirection::Backward>(index, ignore_case));
                 break;
             case ParsedRegex::LineStart:
-                push_inst(forward ? CompiledRegex::LineStart
-                                  : CompiledRegex::LineEnd);
+                push_inst(CompiledRegex::LineStart);
                 break;
             case ParsedRegex::LineEnd:
-                push_inst(forward ? CompiledRegex::LineEnd
-                                  : CompiledRegex::LineStart);
+                push_inst(CompiledRegex::LineEnd);
                 break;
             case ParsedRegex::WordBoundary:
                 push_inst(CompiledRegex::WordBoundary);
@@ -797,12 +787,10 @@ private:
                 push_inst(CompiledRegex::NotWordBoundary);
                 break;
             case ParsedRegex::SubjectBegin:
-                push_inst(forward ? CompiledRegex::SubjectBegin
-                                  : CompiledRegex::SubjectEnd);
+                push_inst(CompiledRegex::SubjectBegin);
                 break;
             case ParsedRegex::SubjectEnd:
-                push_inst(forward ? CompiledRegex::SubjectEnd
-                                  : CompiledRegex::SubjectBegin);
+                push_inst(CompiledRegex::SubjectEnd);
                 break;
             case ParsedRegex::ResetStart:
                 push_inst(CompiledRegex::Save, 0);
@@ -1443,6 +1431,28 @@ auto test_regex = UnitTest{[]{
         TestVM<MatchDirection::Backward> vm{R"($)"};
         kak_assert(vm.exec("foo\nbar\nbaz\nqux", RegexExecFlags::Search | RegexExecFlags::NotEndOfLine));
         kak_assert(StringView{vm.captures()[0]}  == "\nqux");
+        kak_assert(vm.exec("foo\nbar\nbaz\nqux", RegexExecFlags::Search));
+        kak_assert(StringView{vm.captures()[0]}  == "");
+    }
+
+    {
+        TestVM<MatchDirection::Backward> vm{R"(^)"};
+        kak_assert(not vm.exec("foo", RegexExecFlags::Search | RegexExecFlags::NotBeginOfLine));
+        kak_assert(vm.exec("foo", RegexExecFlags::Search));
+        kak_assert(vm.exec("foo\nbar", RegexExecFlags::Search));
+        kak_assert(StringView{vm.captures()[0]}  == "bar");
+    }
+
+    {
+        TestVM<MatchDirection::Backward> vm{R"(\A\w+)"};
+        kak_assert(vm.exec("foo\nbar\nbaz", RegexExecFlags::Search));
+        kak_assert(StringView{vm.captures()[0], vm.captures()[1]}  == "foo");
+    }
+
+    {
+        TestVM<MatchDirection::Backward> vm{R"(\b\w+\z)"};
+        kak_assert(vm.exec("foo\nbar\nbaz", RegexExecFlags::Search));
+        kak_assert(StringView{vm.captures()[0], vm.captures()[1]}  == "baz");
     }
 
     {
