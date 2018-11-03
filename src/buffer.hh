@@ -92,7 +92,6 @@ public:
 private:
     SafePtr<const Buffer> m_buffer;
     BufferCoord m_coord;
-    LineCount m_line_count;
     StringView m_line;
 };
 
@@ -199,7 +198,7 @@ public:
 
     ValueMap& values() const { return m_values; }
 
-    void run_hook_in_own_context(StringView hook_name, StringView param,
+    void run_hook_in_own_context(Hook hook, StringView param,
                                  String client_name = {});
 
     void reload(StringView data, timespec fs_timestamp = InvalidTime);

@@ -94,13 +94,10 @@ kak$(suffix) : $(objects) .version.o
 
 # Generate the man page
 ifeq ($(gzip_man),yes)
-../doc/kak.1.gz: ../doc/kak.1.asciidoc
-	a2x --no-xmllint -f manpage $<
-	gzip -n -9 -f $(basename $<)
+../doc/kak.1.gz: ../doc/kak.1
+	gzip -n -9 -f -k $<
 man: ../doc/kak.1.gz
 else
-../doc/kak.1: ../doc/kak.1.asciidoc
-	a2x --no-xmllint -f manpage $<
 man: ../doc/kak.1
 endif
 

@@ -14,7 +14,7 @@
 namespace Kakoune
 {
 
-struct HookManager::Hook
+struct HookManager::HookData
 {
     String group;
     HookFlags flags;
@@ -26,23 +26,23 @@ HookManager::HookManager() : m_parent(nullptr) {}
 HookManager::HookManager(HookManager& parent) : SafeCountable{}, m_parent(&parent) {}
 HookManager::~HookManager() = default;
 
-void HookManager::add_hook(StringView hook_name, String group, HookFlags flags, Regex filter, String commands)
+void HookManager::add_hook(Hook hook, String group, HookFlags flags, Regex filter, String commands)
 {
-    auto& hooks = m_hooks[hook_name];
-    hooks.emplace_back(new Hook{std::move(group), flags, std::move(filter), std::move(commands)});
+    auto& hooks = m_hooks[to_underlying(hook)];
+    hooks.emplace_back(new HookData{std::move(group), flags, std::move(filter), std::move(commands)});
 }
 
 void HookManager::remove_hooks(const Regex& regex)
 {
     for (auto& list : m_hooks)
     {
-        auto it = std::remove_if(list.value.begin(), list.value.end(),
-                                 [&](const std::unique_ptr<Hook>& h)
+        auto it = std::remove_if(list.begin(), list.end(),
+                                 [&](const std::unique_ptr<HookData>& h)
                                  { return regex_match(h->group.begin(), h->group.end(), regex); });
         if (not m_running_hooks.empty()) // we are running some hooks, defer deletion
             m_hooks_trash.insert(m_hooks_trash.end(), std::make_move_iterator(it),
-                                 std::make_move_iterator(list.value.end()));
-        list.value.erase(it, list.value.end());
+                                 std::make_move_iterator(list.end()));
+        list.erase(it, list.end());
     }
 }
 
@@ -51,7 +51,7 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
     CandidateList res;
     for (auto& list : m_hooks)
     {
-        auto container = list.value | transform([](const std::unique_ptr<Hook>& h) -> const String& { return h->group; });
+        auto container = list | transform([](const std::unique_ptr<HookData>& h) -> const String& { return h->group; });
         for (auto& c : complete(prefix, pos_in_token, container))
         {
             if (!contains(res, c))
@@ -61,25 +61,23 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
     return res;
 }
 
-void HookManager::run_hook(StringView hook_name, StringView param, Context& context)
+void HookManager::run_hook(Hook hook, StringView param, Context& context)
 {
     const bool only_always = context.hooks_disabled();
 
     if (m_parent)
-        m_parent->run_hook(hook_name, param, context);
+        m_parent->run_hook(hook, param, context);
 
-    auto hook_list = m_hooks.find(hook_name);
-    if (hook_list == m_hooks.end())
-        return;
-
-    if (contains(m_running_hooks, std::make_pair(hook_name, param)))
+    auto& hook_list = m_hooks[to_underlying(hook)];
+    auto hook_name = enum_desc(Meta::Type<Hook>{})[to_underlying(hook)].name;
+    if (contains(m_running_hooks, std::make_pair(hook, param)))
     {
         auto error = format("recursive call of hook {}/{}, not executing", hook_name, param);
         write_to_debug_buffer(error);
         return;
     }
 
-    m_running_hooks.emplace_back(hook_name, param);
+    m_running_hooks.emplace_back(hook, param);
     auto pop_running_hook = on_scope_end([this]{
         m_running_hooks.pop_back();
         if (m_running_hooks.empty())
@@ -92,9 +90,9 @@ void HookManager::run_hook(StringView hook_name, StringView param, Context& cont
 
     auto& disabled_hooks = context.options()["disabled_hooks"].get<Regex>();
 
-    struct ToRun { Hook* hook; MatchResults<const char*> captures; };
+    struct ToRun { HookData* hook; MatchResults<const char*> captures; };
     Vector<ToRun> hooks_to_run; // The m_hooks_trash vector ensure hooks wont die during this method
-    for (auto& hook : hook_list->value)
+    for (auto& hook : hook_list)
     {
         MatchResults<const char*> captures;
         if ((not only_always or (hook->flags & HookFlags::Always)) and
@@ -124,11 +122,11 @@ void HookManager::run_hook(StringView hook_name, StringView param, Context& cont
 
             if (to_run.hook->flags & HookFlags::Once)
             {
-                auto it = find(hook_list->value, to_run.hook);
-                if (it != hook_list->value.end())
+                auto it = find(hook_list, to_run.hook);
+                if (it != hook_list.end())
                 {
                     m_hooks_trash.push_back(std::move(*it));
-                    hook_list->value.erase(it);
+                    hook_list.erase(it);
                 }
             }
         }
@@ -136,7 +134,7 @@ void HookManager::run_hook(StringView hook_name, StringView param, Context& cont
         {
             hook_error = true;
             write_to_debug_buffer(format("error running hook {}({})/{}: {}",
-                               hook_name, param, to_run.hook->group, err.what()));
+                                         hook_name, param, to_run.hook->group, err.what()));
         }
     }
 

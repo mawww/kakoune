@@ -25,7 +25,7 @@ Window::Window(Buffer& buffer)
       m_buffer(&buffer),
       m_builtin_highlighters{highlighters()}
 {
-    run_hook_in_own_context("WinCreate", buffer.name());
+    run_hook_in_own_context(Hook::WinCreate, buffer.name());
 
     options().register_watcher(*this);
 
@@ -40,7 +40,7 @@ Window::Window(Buffer& buffer)
 
 Window::~Window()
 {
-    run_hook_in_own_context("WinClose", buffer().name());
+    run_hook_in_own_context(Hook::WinClose, buffer().name());
     options().unregister_watcher(*this);
 }
 
@@ -195,7 +195,7 @@ void Window::set_dimensions(DisplayCoord dimensions)
     if (m_dimensions != dimensions)
     {
         m_dimensions = dimensions;
-        run_hook_in_own_context("WinResize", format("{}.{}", dimensions.line,
+        run_hook_in_own_context(Hook::WinResize, format("{}.{}", dimensions.line,
                                                     dimensions.column));
     }
 }
@@ -339,15 +339,14 @@ void Window::clear_display_buffer()
 
 void Window::on_option_changed(const Option& option)
 {
-    run_hook_in_own_context("WinSetOption", format("{}={}", option.name(),
+    run_hook_in_own_context(Hook::WinSetOption, format("{}={}", option.name(),
                                                    option.get_as_string(Quoting::Kakoune)));
     // an highlighter might depend on the option, so we need to redraw
     force_redraw();
 }
 
 
-void Window::run_hook_in_own_context(StringView hook_name, StringView param,
-                                     String client_name)
+void Window::run_hook_in_own_context(Hook hook, StringView param, String client_name)
 {
     if (m_buffer->flags() & Buffer::Flags::NoHooks)
         return;
@@ -359,6 +358,6 @@ void Window::run_hook_in_own_context(StringView hook_name, StringView param,
     if (m_client)
         hook_handler.context().set_client(*m_client);
 
-    hooks().run_hook(hook_name, param, hook_handler.context());
+    hooks().run_hook(hook, param, hook_handler.context());
 }
 }

@@ -14,6 +14,7 @@ namespace utf8
 // adapter for an iterator on bytes which permits to iterate
 // on unicode codepoints instead.
 template<typename BaseIt,
+         typename Sentinel = BaseIt,
          typename CodepointType = Codepoint,
          typename DifferenceType = CharCount,
          typename InvalidPolicy = utf8::InvalidPolicy::Pass>
@@ -25,7 +26,7 @@ public:
     iterator() = default;
     constexpr static bool noexcept_policy = noexcept(InvalidPolicy{}(0));
 
-    iterator(BaseIt it, BaseIt begin, BaseIt end) noexcept
+    iterator(BaseIt it, Sentinel begin, Sentinel end) noexcept
         : m_it{std::move(it)}, m_begin{std::move(begin)}, m_end{std::move(end)}
     {}
 
@@ -105,8 +106,13 @@ public:
     bool operator> (const iterator& other) const noexcept { return m_it > other.m_it; }
     bool operator>= (const iterator& other) const noexcept { return m_it >= other.m_it; }
 
-    bool operator==(const BaseIt& other) const noexcept { return m_it == other; }
-    bool operator!=(const BaseIt& other) const noexcept { return m_it != other; }
+    template<typename T>
+    std::enable_if_t<std::is_same<T, BaseIt>::value or std::is_same<T, Sentinel>::value, bool>
+    operator==(const T& other) const noexcept { return m_it == other; }
+
+    template<typename T>
+    std::enable_if_t<std::is_same<T, BaseIt>::value or std::is_same<T, Sentinel>::value, bool>
+    operator!=(const T& other) const noexcept { return m_it != other; }
 
     bool operator< (const BaseIt& other) const noexcept { return m_it < other; }
     bool operator<= (const BaseIt& other) const noexcept { return m_it <= other; }
@@ -124,6 +130,11 @@ public:
         return get_value();
     }
 
+    CodepointType read() noexcept(noexcept_policy)
+    {
+        return (CodepointType)utf8::read_codepoint<InvalidPolicy>(m_it, m_end);
+    }
+
     const BaseIt& base() const noexcept(noexcept_policy) { return m_it; }
 
 private:
@@ -136,8 +147,8 @@ private:
     }
 
     BaseIt m_it;
-    BaseIt m_begin;
-    BaseIt m_end;
+    Sentinel m_begin;
+    Sentinel m_end;
     mutable CodepointType m_value = -1;
 };
 

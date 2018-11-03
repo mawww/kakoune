@@ -163,7 +163,7 @@ private:
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
-    using Iterator = utf8::iterator<const char*, Codepoint, int, InvalidPolicy>;
+    using Iterator = utf8::iterator<const char*, const char*, Codepoint, int, InvalidPolicy>;
     using NodeIndex = ParsedRegex::NodeIndex;
 
     NodeIndex disjunction(unsigned capture = -1)

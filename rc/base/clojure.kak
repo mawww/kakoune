@@ -6,7 +6,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](clj|cljc|cljs|cljx) %{
+hook global BufCreate .*[.](clj|cljc|cljs|cljx|edn) %{
     set-option buffer filetype clojure
 }
 

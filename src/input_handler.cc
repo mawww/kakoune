@@ -166,7 +166,7 @@ public:
           m_idle_timer{TimePoint::max(),
                        context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
-              context().hooks().run_hook("NormalIdle", "", context());
+              context().hooks().run_hook(Hook::NormalIdle, "", context());
           }},
           m_fs_check_timer{TimePoint::max(),
                            context().flags() & Context::Flags::Draft ?
@@ -198,7 +198,7 @@ public:
             m_hooks_disabled = false;
         }
 
-        context().hooks().run_hook("NormalBegin", "", context());
+        context().hooks().run_hook(Hook::NormalBegin, "", context());
     }
 
     void on_disabled(bool temporary) override
@@ -212,7 +212,7 @@ public:
             m_hooks_disabled = false;
         }
 
-        context().hooks().run_hook("NormalEnd", "", context());
+        context().hooks().run_hook(Hook::NormalEnd, "", context());
     }
 
     void on_key(Key key) override
@@ -314,7 +314,7 @@ public:
             }
         }
 
-        context().hooks().run_hook("NormalKey", key_to_str(key), context());
+        context().hooks().run_hook(Hook::NormalKey, key_to_str(key), context());
         if (enabled() and not transient) // The hook might have changed mode
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
@@ -753,7 +753,7 @@ public:
                                m_callback(m_line_editor.line(), PromptEvent::Change, context());
                                m_line_changed = false;
                            }
-                           context().hooks().run_hook("PromptIdle", "", context());
+                           context().hooks().run_hook(Hook::PromptIdle, "", context());
                        }},
           m_line_editor{context().faces()}
     {
@@ -1128,7 +1128,7 @@ public:
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                        Timer::Callback{} : [this](Timer&) {
                            m_completer.update(m_auto_complete);
-                           context().hooks().run_hook("InsertIdle", "", context());
+                           context().hooks().run_hook(Hook::InsertIdle, "", context());
                        }}
     {
         context().buffer().throw_if_read_only();
@@ -1138,7 +1138,7 @@ public:
         last_insert().keys.clear();
         last_insert().disable_hooks = context().hooks_disabled();
         last_insert().count = count;
-        context().hooks().run_hook("InsertBegin", "", context());
+        context().hooks().run_hook(Hook::InsertBegin, "", context());
         prepare(mode, count);
     }
 
@@ -1185,7 +1185,7 @@ public:
             if (m_in_end)
                 throw runtime_error("asked to exit insert mode while running InsertEnd hook");
             m_in_end = true;
-            context().hooks().run_hook("InsertEnd", "", context());
+            context().hooks().run_hook(Hook::InsertEnd, "", context());
 
             m_completer.reset();
             pop_mode();
@@ -1209,7 +1209,7 @@ public:
                 SelectionList{buffer, std::move(sels)}.erase();
 
             if (not main_char.empty())
-                context().hooks().run_hook("InsertDelete", main_char, context());
+                context().hooks().run_hook(Hook::InsertDelete, main_char, context());
         }
         else if (key == Key::Delete)
         {
@@ -1328,7 +1328,7 @@ public:
                     if (auto cp = get_raw_codepoint(key))
                     {
                         insert(*cp);
-                        context().hooks().run_hook("InsertKey", key_to_str(key), context());
+                        context().hooks().run_hook(Hook::InsertKey, key_to_str(key), context());
                         if (enabled() and not transient)
                             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
                     }
@@ -1341,9 +1341,9 @@ public:
             return;
         }
 
-        context().hooks().run_hook("InsertKey", key_to_str(key), context());
+        context().hooks().run_hook(Hook::InsertKey, key_to_str(key), context());
         if (moved)
-            context().hooks().run_hook("InsertMove", key_to_str(key), context());
+            context().hooks().run_hook(Hook::InsertMove, key_to_str(key), context());
 
         if (update_completions and enabled() and not transient) // Hooks might have disabled us
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
@@ -1386,7 +1386,7 @@ private:
     {
         String str{key};
         context().selections().insert(str, InsertMode::InsertCursor);
-        context().hooks().run_hook("InsertChar", str, context());
+        context().hooks().run_hook(Hook::InsertChar, str, context());
     }
 
     void prepare(InsertMode mode, int count)
@@ -1430,7 +1430,7 @@ private:
             }
             selections.set(std::move(new_sels),
                            selections.main_index() * count + count - 1);
-            context().hooks().run_hook("InsertChar", "\n", context());
+            context().hooks().run_hook(Hook::InsertChar, "\n", context());
             break;
         }
         case InsertMode::OpenLineAbove:
@@ -1448,7 +1448,7 @@ private:
             }
             selections.set(std::move(new_sels),
                            selections.main_index() * count + count - 1);
-            context().hooks().run_hook("InsertChar", "\n", context());
+            context().hooks().run_hook(Hook::InsertChar, "\n", context());
             break;
         }
         case InsertMode::InsertAtLineBegin:
@@ -1503,7 +1503,7 @@ void InputHandler::push_mode(InputMode* new_mode)
     m_mode_stack.emplace_back(new_mode);
     new_mode->on_enabled();
 
-    context().hooks().run_hook("ModeChange", format("{}:{}", prev_name, new_mode->name()), context());
+    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, new_mode->name()), context());
 }
 
 void InputHandler::pop_mode(InputMode* mode)
@@ -1517,7 +1517,7 @@ void InputHandler::pop_mode(InputMode* mode)
     m_mode_stack.pop_back();
     current_mode().on_enabled();
 
-    context().hooks().run_hook("ModeChange", format("{}:{}", prev_name, current_mode().name()), context());
+    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()), context());
 }
 
 void InputHandler::reset_normal_mode()
@@ -1531,7 +1531,7 @@ void InputHandler::reset_normal_mode()
     m_mode_stack.resize(1);
     current_mode().on_enabled();
 
-    context().hooks().run_hook("ModeChange", format("{}:{}", prev_name, current_mode().name()), context());
+    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()), context());
 }
 
 void InputHandler::insert(InsertMode mode, int count)

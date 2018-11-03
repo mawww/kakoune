@@ -12,6 +12,8 @@
 namespace Kakoune
 {
 
+enum class Hook;
+
 // A Window is a view onto a Buffer
 class Window final : public SafeCountable, public Scope, private OptionManagerWatcher
 {
@@ -52,7 +54,7 @@ private:
     void on_option_changed(const Option& option) override;
     DisplaySetup compute_display_setup(const Context& context) const;
 
-    void run_hook_in_own_context(StringView hook_name, StringView param,
+    void run_hook_in_own_context(Hook hook, StringView param,
                                  String client_name = "");
 
     SafePtr<Buffer> m_buffer;

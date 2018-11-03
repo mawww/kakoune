@@ -3,7 +3,7 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development version
+== Kakoune 2018.10.27
 
 * `remove-hooks` <group> argument is now a regex and removes all
   hooks whose group matches it.
@@ -23,6 +23,9 @@ released versions.
   have been renamed to `-shell-script-completion` and
   `-shell-script-candidates` to make way for a new `-shell-completion`
   which completes like the shell (shell command name then filename).
+
+* `asciidoc` is not a dependency anymore, the last file that requiered
+  it (Kakoune's manpage) has been converted to troff format.
 
 == Kakoune 2018.09.04
 

@@ -107,7 +107,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
     auto watcher_deleter = [buffer](FDWatcher* watcher) {
         kak_assert(buffer->flags() & Buffer::Flags::Fifo);
         watcher->close_fd();
-        buffer->run_hook_in_own_context("BufCloseFifo", "");
+        buffer->run_hook_in_own_context(Hook::BufCloseFifo, "");
         buffer->flags() &= ~(Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
         delete watcher;
     };
@@ -157,12 +157,12 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
         }
         while (--loops and fd_readable(fifo));
 
-        buffer->run_hook_in_own_context("BufReadFifo", buffer->name());
+        buffer->run_hook_in_own_context(Hook::BufReadFifo, buffer->name());
     }), std::move(watcher_deleter));
 
     buffer->values()[fifo_watcher_id] = Value(std::move(watcher));
     buffer->flags() = flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo;
-    buffer->run_hook_in_own_context("BufOpenFifo", buffer->name());
+    buffer->run_hook_in_own_context(Hook::BufOpenFifo, buffer->name());
 
     return buffer;
 }

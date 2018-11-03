@@ -43,7 +43,7 @@ struct {
     unsigned int version;
     const char* notes;
 } constexpr version_notes[] = { {
-        0,
+        20181027,
         "» define-commands -shell-completion and -shell-candidates has been renamed\n"
         "» exclusive face attributes is replaced with final (fg/bg/attr)\n"
         "» <a-M> (merge consecutive) moved to <a-_> to make <a-M> backward <a-m>\n"
@@ -674,7 +674,7 @@ int run_server(StringView session, StringView server_init,
 
     {
         Context empty_context{Context::EmptyContextFlag{}};
-        global_scope.hooks().run_hook("KakBegin", session, empty_context);
+        global_scope.hooks().run_hook(Hook::KakBegin, session, empty_context);
     }
 
     if (not files.empty()) try
@@ -776,7 +776,7 @@ int run_server(StringView session, StringView server_init,
 
     {
         Context empty_context{Context::EmptyContextFlag{}};
-        global_scope.hooks().run_hook("KakEnd", "", empty_context);
+        global_scope.hooks().run_hook(Hook::KakEnd, "", empty_context);
     }
 
     return local_client_exit;

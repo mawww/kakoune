@@ -33,7 +33,7 @@ evaluate-commands %sh{
         face global keyword   ${red}
         face global operator  ${fg}
         face global attribute ${orange}
-        face global comment   ${gray}
+        face global comment   ${gray}+i
         face global meta      ${aqua}
         face global builtin   ${fg}+b
 

@@ -740,17 +740,20 @@ void NCursesUI::draw_menu()
 
     const LineCount mark_height = min(div_round_up(sq(win_height), menu_lines),
                                       win_height);
-    const LineCount top_line = m_menu.first_item / m_menu.columns;
-    const LineCount mark_line = (win_height - mark_height) * top_line / max(1_line, menu_lines - win_height);
+
+    const int menu_cols = div_round_up(item_count, (int)m_menu.size.line);
+    const int first_col = m_menu.first_item / (int)m_menu.size.line;
+
+    const LineCount mark_line = (win_height - mark_height) * first_col / max(1, menu_cols - m_menu.columns);
+
     for (auto line = 0_line; line < win_height; ++line)
     {
         wmove(m_menu.win, (int)line, 0);
         for (int col = 0; col < m_menu.columns; ++col)
         {
-            const int item_idx = (int)(top_line + line) * m_menu.columns
-                                 + col;
+            int item_idx = (first_col + col) * (int)m_menu.size.line + (int)line;
             if (item_idx >= item_count)
-                break;
+                continue;
 
             const DisplayLine& item = m_menu.items[item_idx];
             draw_line(m_menu.win, item, 0, column_width,
@@ -883,15 +886,13 @@ void NCursesUI::menu_select(int selected)
     else
     {
         m_menu.selected_item = selected;
-        const LineCount win_height = m_menu.size.line;
-        const LineCount top_line = m_menu.first_item / m_menu.columns;
-        const LineCount menu_lines = div_round_up(item_count, m_menu.columns);
-        const LineCount selected_line = m_menu.selected_item / m_menu.columns;
-        kak_assert(menu_lines >= win_height);
-        if (selected_line < top_line)
-            m_menu.first_item = (int)selected_line * m_menu.columns;
-        if (selected_line >= top_line + win_height)
-            m_menu.first_item = (int)min(selected_line, menu_lines - win_height) * m_menu.columns;
+        const int menu_cols = div_round_up(item_count, (int)m_menu.size.line);
+        const int first_col = m_menu.first_item / (int)m_menu.size.line;
+        const int selected_col = m_menu.selected_item / (int)m_menu.size.line;
+        if (selected_col < first_col)
+            m_menu.first_item = selected_col * (int)m_menu.size.line;
+        if (selected_col >= first_col + m_menu.columns)
+            m_menu.first_item = min(selected_col, menu_cols - m_menu.columns) * (int)m_menu.size.line;
     }
     draw_menu();
 }

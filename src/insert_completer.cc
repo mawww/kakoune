@@ -455,7 +455,7 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
     {
         const auto param = (m_current_candidate == m_completions.candidates.size() - 1) ?
             StringView{} : candidate.completion;
-        m_context.hooks().run_hook("InsertCompletionSelect", param, m_context);
+        m_context.hooks().run_hook(Hook::InsertCompletionSelect, param, m_context);
     }
 }
 
@@ -479,7 +479,7 @@ void InsertCompleter::reset()
         {
             m_context.client().menu_hide();
             m_context.client().info_hide();
-            m_context.hooks().run_hook("InsertCompletionHide", "", m_context);
+            m_context.hooks().run_hook(Hook::InsertCompletionHide, "", m_context);
         }
     }
 }
@@ -536,7 +536,7 @@ void InsertCompleter::menu_show()
     m_context.client().menu_show(std::move(menu_entries), m_completions.begin,
                                  MenuStyle::Inline);
     m_context.client().menu_select(m_current_candidate);
-    m_context.hooks().run_hook("InsertCompletionShow", "", m_context);
+    m_context.hooks().run_hook(Hook::InsertCompletionShow, "", m_context);
 }
 
 void InsertCompleter::on_option_changed(const Option& opt)

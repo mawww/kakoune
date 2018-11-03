@@ -344,9 +344,9 @@ void do_write_buffer(Context& context, Optional<String> filename, bool sync_file
 
     auto effective_filename = not filename ? buffer.name() : parse_filename(*filename);
 
-    context.hooks().run_hook("BufWritePre", effective_filename, context);
+    context.hooks().run_hook(Hook::BufWritePre, effective_filename, context);
     write_buffer_to_file(buffer, effective_filename, force, sync_file);
-    context.hooks().run_hook("BufWritePost", effective_filename, context);
+    context.hooks().run_hook(Hook::BufWritePost, effective_filename, context);
 }
 
 template<bool force = false>
@@ -395,9 +395,9 @@ void write_all_buffers(Context& context, bool sync = false)
              buffer->is_modified())
             and !(buffer->flags() & Buffer::Flags::ReadOnly))
         {
-            buffer->run_hook_in_own_context("BufWritePre", buffer->name(), context.name());
+            buffer->run_hook_in_own_context(Hook::BufWritePre, buffer->name(), context.name());
             write_buffer_to_file(*buffer, buffer->name(), sync);
-            buffer->run_hook_in_own_context("BufWritePost", buffer->name(), context.name());
+            buffer->run_hook_in_own_context(Hook::BufWritePost, buffer->name(), context.name());
         }
     }
 }
@@ -819,20 +819,10 @@ const CommandDesc remove_highlighter_cmd = {
     }
 };
 
-static constexpr auto hooks = {
-    "BufCreate", "BufNewFile", "BufOpenFile", "BufClose", "BufWritePost", "BufReload",
-    "BufWritePre", "BufOpenFifo", "BufCloseFifo", "BufReadFifo", "BufSetOption",
-    "InsertBegin", "InsertChar", "InsertDelete", "InsertEnd", "InsertIdle", "InsertKey",
-    "InsertMove", "InsertCompletionHide", "InsertCompletionShow", "InsertCompletionSelect",
-    "KakBegin", "KakEnd", "FocusIn", "FocusOut", "GlobalSetOption", "RuntimeError", "PromptIdle",
-    "NormalBegin", "NormalEnd", "NormalIdle", "NormalKey", "ModeChange", "RawKey",
-    "WinClose", "WinCreate", "WinDisplay", "WinResize", "WinSetOption", "ClientCreate", "ClientClose"
-};
-
 static Completions complete_hooks(const Context&, CompletionFlags,
                                   const String& prefix, ByteCount cursor_pos)
 {
-    return { 0_byte, cursor_pos, complete(prefix, cursor_pos, hooks) };
+    return { 0_byte, cursor_pos, complete(prefix, cursor_pos, enum_desc(Meta::Type<Hook>{}) | transform(&EnumDesc<Hook>::name)) };
 }
 
 const CommandDesc add_hook_cmd = {
@@ -860,7 +850,9 @@ const CommandDesc add_hook_cmd = {
                          context, flags, prefix, cursor_pos); }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        if (not contains(hooks, parser[1]))
+        auto descs = enum_desc(Meta::Type<Hook>{});
+        auto it = find_if(descs, [&](const EnumDesc<Hook>& desc) { return desc.name == parser[1]; });
+        if (it == descs.end())
             throw runtime_error{format("no such hook: '{}'", parser[1])};
 
         Regex regex{parser[2], RegexCompileFlags::Optimize};
@@ -873,7 +865,7 @@ const CommandDesc add_hook_cmd = {
 
         const auto flags = (parser.get_switch("always") ? HookFlags::Always : HookFlags::None) |
                            (parser.get_switch("once")   ? HookFlags::Once   : HookFlags::None);
-        get_scope(parser[0], context).hooks().add_hook(parser[1], group.str(), flags,
+        get_scope(parser[0], context).hooks().add_hook(it->value, group.str(), flags,
                                                        std::move(regex), command);
     }
 };

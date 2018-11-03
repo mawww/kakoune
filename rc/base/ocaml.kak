@@ -1,8 +1,6 @@
 # http://ocaml.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# require ocp-indent
-
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -18,29 +16,12 @@ add-highlighter shared/ocaml/code default-region group
 add-highlighter shared/ocaml/string region '"' (?<!\\)(\\\\)*" fill string
 add-highlighter shared/ocaml/comment region \Q(* \Q*) fill comment
 
-# Commands
-# ‾‾‾‾‾‾‾‾
-
-define-command -hidden ocaml-indent-on-char %{
-  evaluate-commands -no-hooks -draft -itersel %{
-    execute-keys ";i<space><esc>Gg|ocp-indent --config base=%opt{indentwidth} --indent-empty --lines %val{cursor_line}<ret>"
-  }
-}
-
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook -group ocaml-highlight global WinSetOption filetype=ocaml %{ add-highlighter window/ocaml ref ocaml }
 
-hook global WinSetOption filetype=ocaml %{
-  hook window InsertChar [|\n] -group ocaml-indent ocaml-indent-on-char
-}
-
 hook -group ocaml-highlight global WinSetOption filetype=(?!ocaml).* %{ remove-highlighter window/ocaml }
-
-hook global WinSetOption filetype=(?!ocaml).* %{
-  remove-hooks window ocaml-indent
-}
 
 # Macro
 # ‾‾‾‾‾
