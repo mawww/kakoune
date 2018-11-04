@@ -6,7 +6,6 @@
 #include "ref_ptr.hh"
 #include "unicode.hh"
 #include "utf8.hh"
-#include "utf8_iterator.hh"
 #include "vector.hh"
 #include "utils.hh"
 
@@ -167,7 +166,7 @@ public:
     ThreadedRegexVM(const CompiledRegex& program)
       : m_program{program}
     {
-        kak_assert((direction == MatchDirection::Forward and program.first_backward_inst != 0) or
+        kak_assert((forward and program.first_backward_inst != 0) or
                    (direction == MatchDirection::Backward and program.first_backward_inst != -1));
     }
 
@@ -195,14 +194,12 @@ public:
         const bool search = (flags & RegexExecFlags::Search);
 
         ConstArrayView<CompiledRegex::Instruction> instructions{m_program.instructions};
-        if (direction == MatchDirection::Forward)
+        if (forward)
             instructions = instructions.subrange(0, m_program.first_backward_inst);
         else
             instructions = instructions.subrange(m_program.first_backward_inst);
         if (not search)
             instructions = instructions.subrange(CompiledRegex::search_prefix_size);
-
-        constexpr bool forward = direction == MatchDirection::Forward;
 
         const ExecConfig config{
             Sentinel{forward ? begin : end},
@@ -213,23 +210,21 @@ public:
             instructions
         };
 
-        Utf8It start{Utf8It{
-            forward ? begin : end,
-            Sentinel{subject_begin},
-            Sentinel{subject_end}
-        }};
-
+        Iterator start = forward ? begin : end;
         if (const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc)
         {
             if (search)
             {
-                to_next_start(start, config.end, *start_desc);
+                to_next_start(start, config, *start_desc);
                 if (start == config.end) // If start_desc is not null, it means we consume at least one char
                     return false;
             }
-            else if (start != config.end and
-                     not start_desc->map[codepoint(start) < StartDesc::count ? codepoint(start) : StartDesc::other])
-                return false;
+            else if (start != config.end)
+            {
+                const Codepoint cp = codepoint(start, config);
+                 if (not start_desc->map[cp < StartDesc::count ? cp : StartDesc::other])
+                    return false;
+            }
         }
 
         return exec_program(std::move(start), config);
@@ -297,7 +292,6 @@ private:
 
     using StartDesc = CompiledRegex::StartDesc;
     using Sentinel = typename SentinelType<Iterator>::Type;
-    using Utf8It = utf8::iterator<Iterator, Sentinel>;
     struct ExecConfig
     {
         const Sentinel begin;
@@ -311,7 +305,7 @@ private:
     enum class StepResult { Consumed, Matched, Failed, FindNextStart };
 
     // Steps a thread until it consumes the current character, matches or fail
-    StepResult step_thread(const Utf8It& pos, uint16_t current_step, Thread& thread, const ExecConfig& config)
+    StepResult step_thread(const Iterator& pos, uint16_t current_step, Thread& thread, const ExecConfig& config)
     {
         const bool no_saves = (config.flags & RegexExecFlags::NoSaves);
         auto* instructions = m_program.instructions.data();
@@ -327,17 +321,17 @@ private:
             switch (inst.op)
             {
                 case CompiledRegex::Literal:
-                    if (pos != config.end and inst.param == codepoint(pos))
+                    if (pos != config.end and inst.param == codepoint(pos, config))
                         return StepResult::Consumed;
                     return StepResult::Failed;
                 case CompiledRegex::Literal_IgnoreCase:
-                    if (pos != config.end and inst.param == to_lower(codepoint(pos)))
+                    if (pos != config.end and inst.param == to_lower(codepoint(pos, config)))
                         return StepResult::Consumed;
                     return StepResult::Failed;
                 case CompiledRegex::AnyChar:
                     return StepResult::Consumed;
                 case CompiledRegex::AnyCharExceptNewLine:
-                    if (pos != config.end and codepoint(pos) != '\n')
+                    if (pos != config.end and codepoint(pos, config) != '\n')
                         return StepResult::Consumed;
                     return StepResult::Failed;
                 case CompiledRegex::Jump:
@@ -369,18 +363,18 @@ private:
                         --m_saves[thread.saves]->refcount;
                         thread.saves = new_saves<true>(m_saves[thread.saves]->pos);
                     }
-                    m_saves[thread.saves]->pos[inst.param] = pos.base();
+                    m_saves[thread.saves]->pos[inst.param] = pos;
                     break;
                 }
                 case CompiledRegex::Class:
                     if (pos == config.end)
                         return StepResult::Failed;
-                    return is_character_class(m_program.character_classes[inst.param], codepoint(pos)) ?
+                    return is_character_class(m_program.character_classes[inst.param], codepoint(pos, config)) ?
                         StepResult::Consumed : StepResult::Failed;
                 case CompiledRegex::CharacterType:
                     if (pos == config.end)
                         return StepResult::Failed;
-                    return is_ctype((CharacterType)inst.param, codepoint(pos)) ?
+                    return is_ctype((CharacterType)inst.param, codepoint(pos, config)) ?
                         StepResult::Consumed : StepResult::Failed;
                 case CompiledRegex::LineStart:
                     if (not is_line_start(pos, config))
@@ -442,15 +436,14 @@ private:
         return StepResult::Failed;
     }
 
-    bool exec_program(Utf8It pos, const ExecConfig& config)
+    bool exec_program(Iterator pos, const ExecConfig& config)
     {
         kak_assert(m_threads.current_is_empty() and m_threads.next_is_empty());
         release_saves(m_captures);
         m_captures = -1;
         m_threads.push_current({static_cast<int16_t>(&config.instructions[0] - &m_program.instructions[0]), -1});
 
-        const auto& start_desc = direction == MatchDirection::Forward ? m_program.forward_start_desc
-                                                                      : m_program.backward_start_desc;
+        const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc;
 
         uint16_t current_step = -1;
         bool found_match = false;
@@ -517,28 +510,30 @@ private:
             }
 
             m_threads.swap_next();
-            (direction == MatchDirection::Forward) ? ++pos : --pos;
+            forward ? utf8::to_next(pos, config.subject_end)
+                    : utf8::to_previous(pos, config.subject_begin);
 
             if (find_next_start and start_desc)
-                to_next_start(pos, config.end, *start_desc);
+                to_next_start(pos, config, *start_desc);
         }
     }
 
-    void to_next_start(Utf8It& start, const Sentinel& end, const StartDesc& start_desc)
+    void to_next_start(Iterator& start, const ExecConfig& config, const StartDesc& start_desc)
     {
-        while (start != end)
+        while (start != config.end)
         {
-            const Codepoint cp = read_codepoint(start);
+            const Codepoint cp = read_codepoint(start, config);
             if (start_desc.map[(cp >= 0 and cp < StartDesc::count) ? cp : StartDesc::other])
             {
-                (direction == MatchDirection::Forward) ? --start : ++start;
+                forward ? utf8::to_previous(start, config.subject_begin)
+                        : utf8::to_next(start, config.subject_end);
                 return;
             }
         }
     }
 
     template<MatchDirection look_direction, bool ignore_case>
-    bool lookaround(uint32_t index, Utf8It pos, const ExecConfig& config) const
+    bool lookaround(uint32_t index, Iterator pos, const ExecConfig& config) const
     {
         using Lookaround = CompiledRegex::Lookaround;
 
@@ -546,7 +541,7 @@ private:
         {
             if (pos == config.subject_begin)
                 return m_program.lookarounds[index] == Lookaround::EndOfLookaround;
-            --pos;
+            utf8::to_previous(pos, config.subject_begin);
         }
 
         for (auto it = m_program.lookarounds.begin() + index; *it != Lookaround::EndOfLookaround; ++it)
@@ -554,7 +549,7 @@ private:
             if (look_direction == MatchDirection::Forward and pos == config.subject_end)
                 return false;
 
-            Codepoint cp = *pos;
+            Codepoint cp = utf8::codepoint(pos, config.subject_end);
             if (ignore_case)
                 cp = to_lower(cp);
 
@@ -584,43 +579,52 @@ private:
             if (look_direction == MatchDirection::Backward and pos == config.subject_begin)
                 return *++it == Lookaround::EndOfLookaround;
 
-            (look_direction == MatchDirection::Forward) ? ++pos : --pos;
+            (look_direction == MatchDirection::Forward) ? utf8::to_next(pos, config.subject_end)
+                                                        : utf8::to_previous(pos, config.subject_begin);
         }
         return true;
     }
 
-    static bool is_line_start(const Utf8It& pos, const ExecConfig& config)
+    static bool is_line_start(const Iterator& pos, const ExecConfig& config)
     {
         if (pos == config.subject_begin)
             return not (config.flags & RegexExecFlags::NotBeginOfLine);
-        return *(pos-1) == '\n';
+        return utf8::codepoint(utf8::previous(pos, config.subject_begin), config.subject_end) == '\n';
     }
 
-    static bool is_line_end(const Utf8It& pos, const ExecConfig& config)
+    static bool is_line_end(const Iterator& pos, const ExecConfig& config)
     {
         if (pos == config.subject_end)
             return not (config.flags & RegexExecFlags::NotEndOfLine);
-        return *pos == '\n';
+        return utf8::codepoint(pos, config.subject_end) == '\n';
     }
 
-    static bool is_word_boundary(const Utf8It& pos, const ExecConfig& config)
+    static bool is_word_boundary(const Iterator& pos, const ExecConfig& config)
     {
         if (pos == config.subject_begin)
             return not (config.flags & RegexExecFlags::NotBeginOfWord);
         if (pos == config.subject_end)
             return not (config.flags & RegexExecFlags::NotEndOfWord);
-        return is_word(*(pos-1)) != is_word(*pos);
+        return is_word(utf8::codepoint(utf8::previous(pos, config.subject_begin), config.subject_end)) !=
+               is_word(utf8::codepoint(pos, config.subject_end));
     }
 
-    static Codepoint read_codepoint(Utf8It& it)
+    static Codepoint read_codepoint(Iterator& it, const ExecConfig& config)
     {
-        if (direction == MatchDirection::Forward)
-            return it.read();
+        if (forward)
+            return utf8::read_codepoint(it, config.subject_end);
         else
-            return *--it;
+        {
+            utf8::to_previous(it, config.subject_begin);
+            return utf8::codepoint(it, config.subject_end);
+        }
     }
 
-    static Codepoint codepoint(const Utf8It& it) { return (direction == MatchDirection::Forward) ? *it : *(it - 1); }
+    static Codepoint codepoint(const Iterator& it, const ExecConfig& config)
+    {
+        return utf8::codepoint(forward ? it : utf8::previous(it, config.subject_begin),
+                               config.subject_end);
+    }
 
     const CompiledRegex& m_program;
 
@@ -663,6 +667,8 @@ private:
         int32_t m_current = 0;
         int32_t m_next = 0;
     };
+
+    static constexpr bool forward = direction == MatchDirection::Forward;
 
     DualThreadStack m_threads;
     Vector<Saves*, MemoryDomain::Regex> m_saves;
