@@ -1130,6 +1130,24 @@ String dump_regex(const CompiledRegex& program)
                 res += "match\n";
         }
     }
+    auto dump_start_desc = [&](CompiledRegex::StartDesc& desc, StringView name) {
+        res += name + " start desc: [";
+        for (size_t c = 0; c < CompiledRegex::StartDesc::count; ++c)
+        {
+            if (desc.map[c])
+            {
+                if (c < 32)
+                    res += format("<0x{}>", Hex{c});
+                else
+                    res += (char)c;
+            }
+        }
+        res += "]\n";
+    };
+    if (program.forward_start_desc)
+        dump_start_desc(*program.forward_start_desc, "forward");
+    if (program.backward_start_desc)
+        dump_start_desc(*program.backward_start_desc, "backward");
     return res;
 }
 
