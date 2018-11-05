@@ -464,6 +464,7 @@ private:
         kak_assert(m_threads.current_is_empty() and m_threads.next_is_empty());
         release_saves(m_captures);
         m_captures = -1;
+        m_threads.grow_ifn();
         m_threads.push_current({static_cast<int16_t>(&config.instructions[0] - &m_program.instructions[0]), -1});
 
         const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc;
@@ -624,10 +625,10 @@ private:
         bool current_is_empty() const { return m_current == 0; }
         bool next_is_empty() const { return m_next == m_capacity; }
 
-        void push_current(Thread thread) { grow_ifn(); m_data[m_current++] = thread; }
+        void push_current(Thread thread) { kak_assert(m_current < m_next); m_data[m_current++] = thread; grow_ifn(); }
         Thread pop_current() { kak_assert(m_current > 0); return m_data[--m_current]; }
 
-        void push_next(Thread thread) { grow_ifn(); m_data[--m_next] = thread; }
+        void push_next(Thread thread) { kak_assert(m_current < m_next);  m_data[--m_next] = thread; }
         void clear_next() { m_next = m_capacity; }
         ConstArrayView<Thread> next_threads() const { return { m_data + m_next, m_data + m_capacity }; }
 
@@ -641,7 +642,6 @@ private:
             while (m_next < m_capacity);
         }
 
-    private:
         void grow_ifn()
         {
             if (m_current != m_next)
@@ -656,6 +656,7 @@ private:
             m_next = new_next;
         }
 
+    private:
         Thread* m_data = nullptr;
         int32_t m_capacity = 0; // Maximum capacity should be 2*instruction count, so 65536
         int32_t m_current = 0;
