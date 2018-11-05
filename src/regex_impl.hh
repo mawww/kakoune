@@ -302,12 +302,19 @@ private:
         ConstArrayView<CompiledRegex::Instruction> instructions;
     };
 
-    enum class StepResult { Consumed, Matched, Failed, FindNextStart };
-
     // Steps a thread until it consumes the current character, matches or fail
-    StepResult step_thread(const Iterator& pos, uint16_t current_step, Thread& thread, const ExecConfig& config)
+    void step_thread(const Iterator& pos, uint16_t current_step, Thread thread, const ExecConfig& config)
     {
-        const bool no_saves = (config.flags & RegexExecFlags::NoSaves);
+        auto failed = [this](const Thread& thread) {
+            release_saves(thread.saves);
+        };
+        auto consumed = [this](const Thread& thread) {
+            if (m_program.instructions[thread.inst].scheduled)
+                return release_saves(thread.saves);
+            m_program.instructions[thread.inst].scheduled = true;
+            m_threads.push_next(thread);
+        };
+
         auto* instructions = m_program.instructions.data();
         while (true)
         {
@@ -315,25 +322,25 @@ private:
             // if this instruction was already executed for this step in another thread,
             // then this thread is redundant and can be dropped
             if (inst.last_step == current_step)
-                return StepResult::Failed;
+                return failed(thread);
             inst.last_step = current_step;
 
             switch (inst.op)
             {
                 case CompiledRegex::Literal:
                     if (pos != config.end and inst.param == codepoint(pos, config))
-                        return StepResult::Consumed;
-                    return StepResult::Failed;
+                        return consumed(thread);
+                    return failed(thread);
                 case CompiledRegex::Literal_IgnoreCase:
                     if (pos != config.end and inst.param == to_lower(codepoint(pos, config)))
-                        return StepResult::Consumed;
-                    return StepResult::Failed;
+                        return consumed(thread);
+                    return failed(thread);
                 case CompiledRegex::AnyChar:
-                    return StepResult::Consumed;
+                    return consumed(thread);
                 case CompiledRegex::AnyCharExceptNewLine:
                     if (pos != config.end and codepoint(pos, config) != '\n')
-                        return StepResult::Consumed;
-                    return StepResult::Failed;
+                        return consumed(thread);
+                    return failed(thread);
                 case CompiledRegex::Jump:
                     thread.inst = static_cast<int16_t>(inst.param);
                     break;
@@ -354,7 +361,7 @@ private:
                 }
                 case CompiledRegex::Save:
                 {
-                    if (no_saves)
+                    if (config.flags & RegexExecFlags::NoSaves)
                         break;
                     if (thread.saves < 0)
                         thread.saves = new_saves<false>(nullptr);
@@ -368,72 +375,86 @@ private:
                 }
                 case CompiledRegex::Class:
                     if (pos == config.end)
-                        return StepResult::Failed;
+                        return failed(thread);
                     return is_character_class(m_program.character_classes[inst.param], codepoint(pos, config)) ?
-                        StepResult::Consumed : StepResult::Failed;
+                        consumed(thread) : failed(thread);
                 case CompiledRegex::CharacterType:
                     if (pos == config.end)
-                        return StepResult::Failed;
+                        return failed(thread);
                     return is_ctype((CharacterType)inst.param, codepoint(pos, config)) ?
-                        StepResult::Consumed : StepResult::Failed;
+                        consumed(thread) : failed(thread);
                 case CompiledRegex::LineStart:
                     if (not is_line_start(pos, config))
-                        return StepResult::Failed;
+                        return failed(thread);
                     break;
                 case CompiledRegex::LineEnd:
                     if (not is_line_end(pos, config))
-                        return StepResult::Failed;
+                        return failed(thread);
                     break;
                 case CompiledRegex::WordBoundary:
                     if (not is_word_boundary(pos, config))
-                        return StepResult::Failed;
+                        return failed(thread);
                     break;
                 case CompiledRegex::NotWordBoundary:
                     if (is_word_boundary(pos, config))
-                        return StepResult::Failed;
+                        return failed(thread);
                     break;
                 case CompiledRegex::SubjectBegin:
                     if (pos != config.subject_begin)
-                        return StepResult::Failed;
+                        return failed(thread);
                     break;
                 case CompiledRegex::SubjectEnd:
                     if (pos != config.subject_end)
-                        return StepResult::Failed;
+                        return failed(thread);
                     break;
                 case CompiledRegex::LookAhead:
                 case CompiledRegex::NegativeLookAhead:
                     if (lookaround<MatchDirection::Forward, false>(inst.param, pos, config) !=
                         (inst.op == CompiledRegex::LookAhead))
-                        return StepResult::Failed;
+                        return failed(thread);
                     break;
                 case CompiledRegex::LookAhead_IgnoreCase:
                 case CompiledRegex::NegativeLookAhead_IgnoreCase:
                     if (lookaround<MatchDirection::Forward, true>(inst.param, pos, config) !=
                         (inst.op == CompiledRegex::LookAhead_IgnoreCase))
-                        return StepResult::Failed;
+                        return failed(thread);
                     break;
                 case CompiledRegex::LookBehind:
                 case CompiledRegex::NegativeLookBehind:
                     if (lookaround<MatchDirection::Backward, false>(inst.param, pos, config) !=
                         (inst.op == CompiledRegex::LookBehind))
-                        return StepResult::Failed;
+                        return failed(thread);
                     break;
                 case CompiledRegex::LookBehind_IgnoreCase:
                 case CompiledRegex::NegativeLookBehind_IgnoreCase:
                     if (lookaround<MatchDirection::Backward, true>(inst.param, pos, config) !=
                         (inst.op == CompiledRegex::LookBehind_IgnoreCase))
-                        return StepResult::Failed;
+                        return failed(thread);
                     break;
                 case CompiledRegex::FindNextStart:
-                    kak_assert(m_threads.current_is_empty()); // search thread should by construction be the lower priority one
-                    if (m_threads.next_is_empty())
-                        return StepResult::FindNextStart;
-                    return StepResult::Consumed;
+                    // search thread should by construction be the lowest priority thread
+                    kak_assert(m_threads.current_is_empty());
+                    if (not m_threads.next_is_empty())
+                        return consumed(thread);
+                    m_threads.push_next(thread);
+                    m_find_next_start = true;
+                    return;
                 case CompiledRegex::Match:
-                    return StepResult::Matched;
+                    if ((pos != config.end and not (config.flags & RegexExecFlags::Search)) or
+                        (config.flags & RegexExecFlags::NotInitialNull and pos == config.begin))
+                        return failed(thread);
+
+                    release_saves(m_captures);
+                    m_captures = thread.saves;
+                    m_found_match = true;
+
+                    // remove lower priority threads
+                    while (not m_threads.current_is_empty())
+                        release_saves(m_threads.pop_current().saves);
+                    return;
             }
         }
-        return StepResult::Failed;
+        return failed(thread);
     }
 
     bool exec_program(Iterator pos, const ExecConfig& config)
@@ -446,7 +467,7 @@ private:
         const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc;
 
         uint16_t current_step = -1;
-        bool found_match = false;
+        m_found_match = false;
         while (true) // Iterate on all codepoints and once at the end
         {
             if (++current_step == 0)
@@ -457,63 +478,27 @@ private:
                 current_step = 1; // step 0 is never valid
             }
 
-            bool find_next_start = false;
+            m_find_next_start = false;
             while (not m_threads.current_is_empty())
-            {
-                auto thread = m_threads.pop_current();
-                switch (step_thread(pos, current_step, thread, config))
-                {
-                case StepResult::Matched:
-                    if ((pos != config.end and not (config.flags & RegexExecFlags::Search)) or
-                        (config.flags & RegexExecFlags::NotInitialNull and pos == config.begin))
-                    {
-                        release_saves(thread.saves);
-                        continue;
-                    }
+                step_thread(pos, current_step, m_threads.pop_current(), config);
 
-                    release_saves(m_captures);
-                    m_captures = thread.saves;
-                    found_match = true;
-
-                    // remove this and lower priority threads
-                    while (not m_threads.current_is_empty())
-                        release_saves(m_threads.pop_current().saves);
-                    break;
-                case StepResult::Failed:
-                    release_saves(thread.saves);
-                    break;
-                case StepResult::Consumed:
-                    if (m_program.instructions[thread.inst].scheduled)
-                    {
-                        release_saves(thread.saves);
-                        continue;
-                    }
-                    m_program.instructions[thread.inst].scheduled = true;
-                    m_threads.push_next(thread);
-                    break;
-                case StepResult::FindNextStart:
-                    m_threads.push_next(thread);
-                    find_next_start = true;
-                    break;
-                }
-            }
             for (auto& thread : m_threads.next_threads())
                 m_program.instructions[thread.inst].scheduled = false;
 
             if (pos == config.end or m_threads.next_is_empty() or
-                (found_match and (config.flags & RegexExecFlags::AnyMatch)))
+                (m_found_match and (config.flags & RegexExecFlags::AnyMatch)))
             {
                 for (auto& t : m_threads.next_threads())
                     release_saves(t.saves);
                 m_threads.clear_next();
-                return found_match;
+                return m_found_match;
             }
 
             m_threads.swap_next();
             forward ? utf8::to_next(pos, config.subject_end)
                     : utf8::to_previous(pos, config.subject_begin);
 
-            if (find_next_start and start_desc)
+            if (m_find_next_start and start_desc)
                 to_next_start(pos, config, *start_desc);
         }
     }
@@ -674,6 +659,8 @@ private:
     Vector<Saves*, MemoryDomain::Regex> m_saves;
     int16_t m_first_free = -1;
     int16_t m_captures = -1;
+    bool m_found_match = false;
+    bool m_find_next_start = false;
 };
 
 }
