@@ -240,11 +240,8 @@ public:
 private:
     struct Saves
     {
-        union // ref count when in use, next_free when in free list
-        {
-            int16_t refcount;
-            int16_t next_free;
-        };
+        int16_t refcount;
+        int16_t next_free;
         Iterator pos[1];
     };
 
@@ -256,32 +253,37 @@ private:
         if (m_first_free >= 0)
         {
             const int16_t res = m_first_free;
-            Saves* save = m_saves[res];
-            m_first_free = save->next_free;
-            save->refcount = 1;
+            Saves& saves = *m_saves[res];
+            m_first_free = saves.next_free;
+            kak_assert(saves.refcount == 1);
             if (copy)
-                std::copy(pos, pos + count, save->pos);
+                std::copy_n(pos, count, saves.pos);
             else
-                std::fill(save->pos, save->pos + count, Iterator{});
+                std::fill_n(saves.pos, count, Iterator{});
 
             return res;
         }
 
         void* ptr = operator new (sizeof(Saves) + (count-1) * sizeof(Iterator));
-        Saves* saves = new (ptr) Saves{{1}, {copy ? pos[0] : Iterator{}}};
+        Saves* saves = new (ptr) Saves{1, 0, {copy ? pos[0] : Iterator{}}};
         for (size_t i = 1; i < count; ++i)
             new (&saves->pos[i]) Iterator{copy ? pos[i] : Iterator{}};
         m_saves.push_back(saves);
         return static_cast<int16_t>(m_saves.size() - 1);
     }
 
-    void release_saves(int16_t saves)
+    void release_saves(int16_t index)
     {
-        if (saves >= 0 and --m_saves[saves]->refcount == 0)
+        if (index < 0)
+            return;
+        auto& saves = *m_saves[index];
+        if (saves.refcount == 1)
         {
-            m_saves[saves]->next_free = m_first_free;
-            m_first_free = saves;
+            saves.next_free = m_first_free;
+            m_first_free = index;
         }
+        else
+            --saves.refcount;
     };
 
     struct Thread
@@ -466,6 +468,7 @@ private:
 
         const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc;
 
+        const bool any_match = config.flags & RegexExecFlags::AnyMatch;
         uint16_t current_step = -1;
         m_found_match = false;
         while (true) // Iterate on all codepoints and once at the end
@@ -485,8 +488,7 @@ private:
             for (auto& thread : m_threads.next_threads())
                 m_program.instructions[thread.inst].scheduled = false;
 
-            if (pos == config.end or m_threads.next_is_empty() or
-                (m_found_match and (config.flags & RegexExecFlags::AnyMatch)))
+            if (pos == config.end or m_threads.next_is_empty() or (m_found_match and any_match))
             {
                 for (auto& t : m_threads.next_threads())
                     release_saves(t.saves);
@@ -615,6 +617,10 @@ private:
 
     struct DualThreadStack
     {
+        DualThreadStack() = default;
+        DualThreadStack(const DualThreadStack&) = delete;
+        ~DualThreadStack() { delete[] m_data; }
+
         bool current_is_empty() const { return m_current == 0; }
         bool next_is_empty() const { return m_next == m_capacity; }
 
@@ -623,12 +629,16 @@ private:
 
         void push_next(Thread thread) { grow_ifn(); m_data[--m_next] = thread; }
         void clear_next() { m_next = m_capacity; }
-        ConstArrayView<Thread> next_threads() const { return { m_data.get() + m_next, m_data.get() + m_capacity }; }
+        ConstArrayView<Thread> next_threads() const { return { m_data + m_next, m_data + m_capacity }; }
 
         void swap_next()
         {
-            for (; m_next < m_capacity; m_current++, m_next++)
-                m_data[m_current] = m_data[m_next];
+            kak_assert(m_next < m_capacity);
+            do
+            {
+                m_data[m_current++] = m_data[m_next++];
+            }
+            while (m_next < m_capacity);
         }
 
     private:
@@ -638,16 +648,15 @@ private:
                 return;
             const auto new_capacity = m_capacity ? m_capacity * 2 : 4;
             Thread* new_data = new Thread[new_capacity];
-            Thread* data = m_data.get();
-            std::copy(data, data + m_current, new_data);
+            std::copy(m_data, m_data + m_current, new_data);
             const auto new_next = new_capacity - (m_capacity - m_next);
-            std::copy(data + m_next, data + m_capacity, new_data + new_next);
+            std::copy(m_data + m_next, m_data + m_capacity, new_data + new_next);
+            m_data = new_data;
             m_capacity = new_capacity;
             m_next = new_next;
-            m_data.reset(new_data);
         }
 
-        std::unique_ptr<Thread[]> m_data = nullptr;
+        Thread* m_data = nullptr;
         int32_t m_capacity = 0; // Maximum capacity should be 2*instruction count, so 65536
         int32_t m_current = 0;
         int32_t m_next = 0;
