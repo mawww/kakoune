@@ -1208,8 +1208,7 @@ static constexpr auto modes = { "normal", "insert", "menu", "prompt", "goto", "v
 const CommandDesc debug_cmd = {
     "debug",
     nullptr,
-    "debug <command>: write some debug information to the debug buffer\n"
-    "existing commands: info, buffers, options, memory, shared-strings, profile-hash-maps, faces",
+    "debug <command>: write some debug information to the *debug* buffer",
     ParameterDesc{{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1},
     CommandFlags::None,
     CommandHelper{},
