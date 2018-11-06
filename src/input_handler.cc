@@ -1515,8 +1515,10 @@ void InputHandler::push_mode(InputMode* new_mode)
     m_mode_stack.emplace_back(new_mode);
     new_mode->on_enabled();
 
+    size_t height = m_mode_stack.size();
+
     context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, new_mode->name()), context());
-    context().hooks().run_hook(Hook::ModePush, format("{}:{}", prev_name, new_mode->name()), context());
+    context().hooks().run_hook(Hook::ModePush, format("{}:{}:{}", prev_name, new_mode->name(), height), context());
 }
 
 void InputHandler::pop_mode(InputMode* mode)
@@ -1525,13 +1527,14 @@ void InputHandler::pop_mode(InputMode* mode)
     kak_assert(m_mode_stack.size() > 1);
 
     StringView prev_name = mode->name();
+    size_t height = m_mode_stack.size();
 
     current_mode().on_disabled(false);
     m_mode_stack.pop_back();
     current_mode().on_enabled();
 
     context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()), context());
-    context().hooks().run_hook(Hook::ModePop, format("{}:{}", prev_name, current_mode().name()), context());
+    context().hooks().run_hook(Hook::ModePop, format("{}:{}:{}", prev_name, current_mode().name(), height), context());
 }
 
 void InputHandler::reset_normal_mode()
@@ -1545,11 +1548,12 @@ void InputHandler::reset_normal_mode()
     while (m_mode_stack.size() > 1)
     {
         StringView prev_name = current_mode().name();
+        size_t height = m_mode_stack.size();
         current_mode().on_disabled(false);
         m_mode_stack.pop_back();
         current_mode().on_enabled();
 
-        context().hooks().run_hook(Hook::ModePop, format("{}:{}", prev_name, current_mode().name()), context());
+        context().hooks().run_hook(Hook::ModePop, format("{}:{}:{}", prev_name, current_mode().name(), height), context());
     }
 
     context().hooks().run_hook(Hook::ModeChange, format("{}:{}", initial_name, current_mode().name()), context());
