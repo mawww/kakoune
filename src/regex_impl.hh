@@ -286,7 +286,7 @@ private:
             --saves.refcount;
     };
 
-    struct Thread
+    struct alignas(int32_t) Thread
     {
         int16_t inst;
         int16_t saves;
