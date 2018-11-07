@@ -647,10 +647,12 @@ private:
             if (m_current != m_next)
                 return;
             const auto new_capacity = m_capacity ? m_capacity * 2 : 4;
+            const auto next_count = m_capacity - m_next;
+            const auto new_next = new_capacity - next_count;
             Thread* new_data = new Thread[new_capacity];
-            std::copy(m_data, m_data + m_current, new_data);
-            const auto new_next = new_capacity - (m_capacity - m_next);
-            std::copy(m_data + m_next, m_data + m_capacity, new_data + new_next);
+            std::copy_n(m_data, m_current, new_data);
+            std::copy_n(m_data + m_next, next_count, new_data + new_next);
+            delete[] m_data;
             m_data = new_data;
             m_capacity = new_capacity;
             m_next = new_next;
