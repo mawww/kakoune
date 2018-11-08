@@ -12,7 +12,8 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter shared/markdown regions
-add-highlighter shared/markdown/content default-region group
+add-highlighter shared/markdown/inline default-region regions
+add-highlighter shared/markdown/inline/text default-region group
 
 evaluate-commands %sh{
   languages="
@@ -33,25 +34,31 @@ add-highlighter shared/markdown/codeblock region -match-capture \
     ^(\h*)```\h* \
     ^(\h*)```\h*$ \
     fill meta
-add-highlighter shared/markdown/codespan region -match-capture (`+) (`+) fill mono
+
+add-highlighter shared/markdown/listblock region -match-capture ^\h*[-*]\s ^\h*(?=[-*\n]) ref markdown/inline
+
+add-highlighter shared/markdown/inline/code region -match-capture (`+) (`+) fill mono
 
 # Setext-style header
-add-highlighter shared/markdown/content/ regex (\A|\n\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
-add-highlighter shared/markdown/content/ regex (\A|\n\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
+add-highlighter shared/markdown/inline/text/ regex (\A|\n\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
+add-highlighter shared/markdown/inline/text/ regex (\A|\n\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
 
 # Atx-style header
-add-highlighter shared/markdown/content/ regex ^(#+)(\h+)([^\n]+) 1:header
+add-highlighter shared/markdown/inline/text/ regex ^(#+)(\h+)([^\n]+) 1:header
 
-add-highlighter shared/markdown/content/ regex ^\h?((?:[\s\t]+)?[-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*\n)*$ 0:list 1:bullet
-add-highlighter shared/markdown/content/ regex \B\+[^\n]+?\+\B 0:mono
-add-highlighter shared/markdown/content/ regex (?<!\*)(\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*)(?!\*) 1:italic
-add-highlighter shared/markdown/content/ regex (?<!_)(_([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))_)(?!_) 1:italic
-add-highlighter shared/markdown/content/ regex (?<!\*)(\*\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*\*)(?!\*) 1:bold
-add-highlighter shared/markdown/content/ regex (?<!_)(__([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))__)(?!_) 1:bold
-add-highlighter shared/markdown/content/ regex <(([a-z]+://.*?)|((mailto:)?[\w+-]+@[a-z]+[.][a-z]+))> 0:link
-add-highlighter shared/markdown/content/ regex ^\[[^\]\n]*\]:\h*([^\n]*) 1:link
-add-highlighter shared/markdown/content/ regex ^\h*(>\h*)+ 0:comment
-add-highlighter shared/markdown/content/ regex \H\K\h\h$ 0:PrimarySelection
+# This is kind of redundant since there is already a listblock highlighter but
+# that can't just highlight the list marker
+add-highlighter shared/markdown/inline/text/ regex ^\h*[-*]\s 0:bullet
+
+add-highlighter shared/markdown/inline/text/ regex \B\+[^\n]+?\+\B 0:mono
+add-highlighter shared/markdown/inline/text/ regex (?<!\*)(\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*)(?!\*) 1:italic
+add-highlighter shared/markdown/inline/text/ regex (?<!_)(_([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))_)(?!_) 1:italic
+add-highlighter shared/markdown/inline/text/ regex (?<!\*)(\*\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*\*)(?!\*) 1:bold
+add-highlighter shared/markdown/inline/text/ regex (?<!_)(__([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))__)(?!_) 1:bold
+add-highlighter shared/markdown/inline/text/ regex <(([a-z]+://.*?)|((mailto:)?[\w+-]+@[a-z]+[.][a-z]+))> 0:link
+add-highlighter shared/markdown/inline/text/ regex ^\[[^\]\n]*\]:\h*([^\n]*) 1:link
+add-highlighter shared/markdown/inline/text/ regex ^\h*(>\h*)+ 0:comment
+add-highlighter shared/markdown/inline/text/ regex \H\K\h\h$ 0:PrimarySelection
 
 # Commands
 # ‾‾‾‾‾‾‾‾
