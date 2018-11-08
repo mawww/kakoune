@@ -159,29 +159,63 @@ add-highlighter shared/c/code/numbers regex %{\b-?(0x[0-9a-fA-F]+|\d+)([uU][lL]{
 evaluate-commands %sh{
     # Grammar
     keywords="asm break case continue default do else for goto if return
-              sizeof switch while"
+              sizeof switch while offsetof alignas alignof"
     attributes="auto const enum extern inline register restrict static struct
-                typedef union volatile"
-    types="char double float int long short signed size_t unsigned void"
-    stdint_types="int8_t int16_t int32_t int64_t uint8_t uint16_t uint32_t uint64_t intptr_t intmax_t uintmax_t"
-    unistd_types="ssize_t gid_t uid_t off_t off64_t useconds_t pid_t socklen_t"
-    unistd_macros="R_OK W_OK X_OK F_OK SEEK_SET SEEK_CUR SEEK_END F_ULOCK F_LOCK F_TLOCK F_TEST"
-    stdint_macros="INT8_MIN INT16_MIN INT32_MIN INT64_MIN UINT8_MIN UINT16_MIN UINT32_MIN UINT64_MIN INT8_MAX INT16_MAX INT32_MAX INT64_MAX UINT8_MAX UINT16_MAX UINT32_MAX UINT64_MAX INTPTR_MIN INTPTR_MAX UINTPTR_MAX INTMAX_MIN INTMAX_MAX UINTMAX_MAX PTRDIFF_MIN PTRDIFF_MAX"
-    values="NULL"
+                typedef union volatile thread_local"
+    types="char double float int long short signed unsigned void"
+    complex_types="complex imaginary"
+    fenv_types=$(echo f{env,except}_t)
+    inttypes_types="imaxdiv_t"
+    locale_types="lconv"
+    math_types=$(echo {float,double}_t)
+    setjmp_types="jmp_buf"
+    signal_types="sig_atomic_t"
+    stdarg_types="va_list"
+    stdatomic_types=$(echo memory_order atomic_{bool,{,s,u,w}char,{,u}short,{,u}int,{,u}{,l}long,char{16,32}_t,{,u}int{ptr,max,{,_{least,fast}}{8,16,32,64}}_t,{size,ptrdiff}_t})
+    stddef_types=$(echo {ptrdiff,size,max_align,wchar}_t)
+    stdint_types=$(echo {,u}int{ptr,max,{,_{least,fast}}{8,16,32,64}}_t)
+    stdio_types="FILE fpos_t"
+    stdlib_types=$(echo {,{,l}l}div_t)
+    threads_types=$(echo {cnd,thrd{,_start},tss{,_dtor},mtx}_t once_flag)
+    wchar_types=$(echo {mbstate,wint}_t tm)
+    unistd_types=$(echo {ssize,gid,uid,off{,64},useconds,pid,socklen}_t)
+
+    assert_macros=$(echo {,static_}assert NDEBUG)
+    complex_macros="I"
+    error_macros=$(echo E{DOM,ILSEQ,RANGE} errno)
+    fenv_macros=$(echo FE_{DIVBYZERO,INEXACT,INVALID,{OVER,UNDER}FLOW,ALL_EXCEPT,DOWNWARD,TONEAREST,TOWARDZERO,UPWARD,DFL_ENV})
+    inttypes_macros=$(echo PRI{d,i,o,u,x,X}{MAX,PTR,{,LEAST,FAST}{8,16,32,64}} SCN{d,i,o,u,x}{MAX,PTR,{,LEAST,FAST}{8,16,32,64}})
+    iso646_macros=$(echo and{,_eq} bit{and,or} compl not{,_eq} or{,_eq}, xor{,_eq})
+    limits_macros=$(echo {{,S,W}CHAR,SHRT,INT,{,L}LONG}_{MIN,MAX} {MB_LEN,U{CHAR,SHRT,INT,{,L}LONG}}_MAX CHAR_BIT)
+    locale_macros=$(echo LC_{ALL,COLLATE,CTYPE,MONETARY,NUMERIC,TIME})
+    math_macros=$(echo HUGE_VAL{,F,L} INFINITY NAN FP_{INFINITE,NAN,NORMAL,SUBNORMAL,ZERO,FAST_FMA{,F,L},ILOGB{0,NAN}} MATH_ERR{NO,EXCEPT} math_errhandling is{greater{,equal},less{,equal},lessgreater,unordered})
+    setjmp_macros="setjmp"
+    signal_macros=$(echo SIG{_{DFL,ERR,IGN},ABRT,FPE,ILL,INT,SEGV,TERM})
+    stdarg_macros=$(echo va_{start,arg,end,copy})
+    stdatomic_macros=$(echo ATOMIC_{BOOL,CHAR{,{16,32}_T},WCHAR_T,SHORT,INT,{,L}LONG,POINTER}_LOCK_FREE ATOMIC_{FLAG,VAR}_INIT memory_order_{relaxed,consume,acquire,release,acq_rel,seq_cst} kill_dependency)
+    stdbool_macros="true false"
+    stddef_macros="NULL"
+    stdio_macros=$(echo _IO{FB,LB,NB}F BUFSIZ EOF {FOPEN,FILENAME,TMP}_MAX L_tmpnam SEEK_{CUR,END,SET} std{err,in,out})
+    stdlib_macros=$(echo EXIT_{FAILURE,SUCCESS} {MB_CUR,RAND}_MAX)
+    stdint_macros=$(echo {PTRDIFF,SIG_ATOMIC,WINT,INT{MAX,PTR,{,_{LEAST,FAST}}{8,16,32,64}}}_{MIN,MAX} UINT{MAX,PTR,{,_{LEAST,FAST}}{8,16,32,64}}_MAX {,U}INT{MAX,{8,16,32,64}}_C)
+    threads_macros=$(echo mtx_{plain,recursive,timed} thrd_{timedout,success,busy,error,nomem} ONCE_FLAG_INIT TSS_DTOR_ITERATION)
+    wchar_macros="WEOF"
+    misc_macros="noreturn"
+    unistd_macros=$(echo {R,W,X,F}_OK F_{{,U,T}LOCK,TEST})
 
     join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammar to the static completion list
     printf '%s\n' "hook global WinSetOption filetype=c %{
-        set-option window static_words $(join "${keywords} ${attributes} ${types} ${stdint_types} ${unistd_types} ${stdint_macros} ${unistd_macros} ${values}" ' ')
+        set-option window static_words $(join "${keywords} ${attributes} ${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${wchar_types} ${unistd_types} ${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdlib_macros} ${stdint_macros} ${threads_macros} ${wchar_macros} ${misc_macros} ${unistd_macros} ${values}" ' ')
     }"
 
     # Highlight keywords
     printf %s "
         add-highlighter shared/c/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
         add-highlighter shared/c/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
-        add-highlighter shared/c/code/types regex \b($(join "${types} ${stdint_types} ${unistd_types}" '|'))\b 0:type
-        add-highlighter shared/c/code/values regex \b($(join "${values} ${stdint_macros} ${unistd_macros}" '|'))\b 0:value
+        add-highlighter shared/c/code/types regex \b($(join "${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${wchar_types} ${unistd_types}" '|'))\b 0:type
+        add-highlighter shared/c/code/values regex \b($(join "${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdint_macros} ${threads_macros} ${wchar_macros} ${misc_macros} ${unistd_macros}" '|'))\b 0:value
     "
 }
 
