@@ -184,6 +184,7 @@ evaluate-commands %sh{
     complex_macros="I"
     error_macros=$(echo E{DOM,ILSEQ,RANGE} errno)
     fenv_macros=$(echo FE_{DIVBYZERO,INEXACT,INVALID,{OVER,UNDER}FLOW,ALL_EXCEPT,DOWNWARD,TONEAREST,TOWARDZERO,UPWARD,DFL_ENV})
+    float_macros=$(echo DECIMAL_DIG FLT_{ROUNDS,EVAL_METHOD,RADIX} {FLT,DBL,LDBL}{{{,_{MANT,DECIMAL}}_DIG,_{MIN_{,10_},MAX_}EXP},_{MAX,EPSILON,TRUE_MIN,HAS_SUBNORM}})
     inttypes_macros=$(echo PRI{d,i,o,u,x,X}{MAX,PTR,{,LEAST,FAST}{8,16,32,64}} SCN{d,i,o,u,x}{MAX,PTR,{,LEAST,FAST}{8,16,32,64}})
     iso646_macros=$(echo and{,_eq} bit{and,or} compl not{,_eq} or{,_eq}, xor{,_eq})
     limits_macros=$(echo {{,S,W}CHAR,SHRT,INT,{,L}LONG}_{MIN,MAX} {MB_LEN,U{CHAR,SHRT,INT,{,L}LONG}}_MAX CHAR_BIT)
@@ -207,7 +208,7 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf '%s\n' "hook global WinSetOption filetype=c %{
-        set-option window static_words $(join "${keywords} ${attributes} ${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${wchar_types} ${unistd_types} ${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdlib_macros} ${stdint_macros} ${threads_macros} ${wchar_macros} ${misc_macros} ${unistd_macros} ${values}" ' ')
+        set-option window static_words $(join "${keywords} ${attributes} ${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${wchar_types} ${unistd_types} ${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdlib_macros} ${stdint_macros} ${threads_macros} ${wchar_macros} ${misc_macros} ${unistd_macros} ${values}" ' ')
     }"
 
     # Highlight keywords
@@ -215,7 +216,7 @@ evaluate-commands %sh{
         add-highlighter shared/c/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
         add-highlighter shared/c/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
         add-highlighter shared/c/code/types regex \b($(join "${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${wchar_types} ${unistd_types}" '|'))\b 0:type
-        add-highlighter shared/c/code/values regex \b($(join "${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdint_macros} ${threads_macros} ${wchar_macros} ${misc_macros} ${unistd_macros}" '|'))\b 0:value
+        add-highlighter shared/c/code/values regex \b($(join "${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdint_macros} ${threads_macros} ${wchar_macros} ${misc_macros} ${unistd_macros}" '|'))\b 0:value
     "
 }
 
