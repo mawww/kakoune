@@ -35,7 +35,9 @@ add-highlighter shared/markdown/codeblock region -match-capture \
     ^(\h*)```\h*$ \
     fill meta
 
-add-highlighter shared/markdown/listblock region -match-capture ^\h*[-*]\s ^\h*(?=[-*\n]) ref markdown/inline
+add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^\h*((?=[-*])|$) regions
+add-highlighter shared/markdown/listblock/marker region \A [-*]\s fill bullet
+add-highlighter shared/markdown/listblock/content default-region ref markdown/inline
 
 add-highlighter shared/markdown/inline/code region -match-capture (`+) (`+) fill mono
 
@@ -45,10 +47,6 @@ add-highlighter shared/markdown/inline/text/ regex (\A|\n\n)[^\n]+\n-{2,}\h*\n\h
 
 # Atx-style header
 add-highlighter shared/markdown/inline/text/ regex ^(#+)(\h+)([^\n]+) 1:header
-
-# This is kind of redundant since there is already a listblock highlighter but
-# that can't just highlight the list marker
-add-highlighter shared/markdown/inline/text/ regex ^\h*[-*]\s 0:bullet
 
 add-highlighter shared/markdown/inline/text/ regex \B\+[^\n]+?\+\B 0:mono
 add-highlighter shared/markdown/inline/text/ regex (?<!\*)(\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*)(?!\*) 1:italic
