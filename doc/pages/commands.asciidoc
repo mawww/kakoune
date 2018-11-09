@@ -72,7 +72,7 @@ of the file onto the filesystem
 
 *source* <filename> <param>...::
     execute commands in <filename>
-    parameters are avilable in the sourced script through the `arg` values
+    parameters are available in the sourced script as `%arg{0}`, `%arg{1}`, …
 
 == Clients and Sessions
 
