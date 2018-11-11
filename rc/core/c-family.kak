@@ -177,7 +177,9 @@ evaluate-commands %sh{
     stdio_types="FILE fpos_t"
     stdlib_types="div_t ldiv_t lldiv_t"
     threads_types="cnd_t thrd_t thrd_start_t tss_t tss_dtor_t mtx_t once_flag"
-    wchar_types="mbstate_t wint_t tm"
+    time_types="clock_t time_t timespec tm"
+    wchar_types="mbstate_t wint_t"
+    wctype_types="wctrans_t wctype_t"
     unistd_types="ssize_t gid_t uid_t off_t off64_t useconds_t pid_t socklen_t"
 
     assert_macros="assert static_assert NDEBUG"
@@ -200,6 +202,7 @@ evaluate-commands %sh{
     stdlib_macros="EXIT_FAILURE EXIT_SUCCESS MB_CUR_MAX RAND_MAX"
     stdint_macros="PTRDIFF_MIN PTRDIFF_MAX SIG_ATOMIC_MIN SIG_ATOMIC_MAX WINT_MIN WINT_MAX INTMAX_MIN INTMAX_MAX INTPTR_MIN INTPTR_MAX INT8_MIN INT8_MAX INT16_MIN INT16_MAX INT32_MIN INT32_MAX INT64_MIN INT64_MAX INT_LEAST8_MIN INT_LEAST8_MAX INT_LEAST16_MIN INT_LEAST16_MAX INT_LEAST32_MIN INT_LEAST32_MAX INT_LEAST64_MIN INT_LEAST64_MAX INT_FAST8_MIN INT_FAST8_MAX INT_FAST16_MIN INT_FAST16_MAX INT_FAST32_MIN INT_FAST32_MAX INT_FAST64_MIN INT_FAST64_MAX UINTMAX_MAX UINTPTR_MAX UINT8_MAX UINT16_MAX UINT32_MAX UINT64_MAX UINT_LEAST8_MAX UINT_LEAST16_MAX UINT_LEAST32_MAX UINT_LEAST64_MAX UINT_FAST8_MAX UINT_FAST16_MAX UINT_FAST32_MAX UINT_FAST64_MAX INTMAX_C INT8_C INT16_C INT32_C INT64_C UINTMAX_C UINT8_C UINT16_C UINT32_C UINT64_C"
     threads_macros="mtx_plain mtx_recursive mtx_timed thrd_timedout thrd_success thrd_busy thrd_error thrd_nomem ONCE_FLAG_INIT TSS_DTOR_ITERATION"
+    time_macros="CLOCKS_PER_SEC TIME_UTC"
     wchar_macros="WEOF"
     misc_macros="noreturn"
     unistd_macros="R_OK W_OK X_OK F_OK F_LOCK F_ULOCK F_TLOCK F_TEST"
@@ -208,15 +211,15 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf '%s\n' "hook global WinSetOption filetype=c %{
-        set-option window static_words $(join "${keywords} ${attributes} ${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${wchar_types} ${unistd_types} ${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdlib_macros} ${stdint_macros} ${threads_macros} ${wchar_macros} ${misc_macros} ${unistd_macros} ${values}" ' ')
+        set-option window static_words $(join "${keywords} ${attributes} ${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${time_types} ${wchar_types} ${wctype_types} ${unistd_types} ${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdlib_macros} ${stdint_macros} ${threads_macros} ${time_macros} ${wchar_macros} ${misc_macros} ${unistd_macros} ${values}" ' ')
     }"
 
     # Highlight keywords
     printf %s "
         add-highlighter shared/c/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
         add-highlighter shared/c/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
-        add-highlighter shared/c/code/types regex \b($(join "${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${wchar_types} ${unistd_types}" '|'))\b 0:type
-        add-highlighter shared/c/code/values regex \b($(join "${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdint_macros} ${threads_macros} ${wchar_macros} ${misc_macros} ${unistd_macros}" '|'))\b 0:value
+        add-highlighter shared/c/code/types regex \b($(join "${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${time_types} ${wchar_types} ${wctype_types} ${unistd_types}" '|'))\b 0:type
+        add-highlighter shared/c/code/values regex \b($(join "${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdint_macros} ${threads_macros} ${time_macros} ${wchar_macros} ${misc_macros} ${unistd_macros}" '|'))\b 0:value
     "
 }
 
