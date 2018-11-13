@@ -1,10 +1,3 @@
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](php) %{
-    set-option buffer filetype php
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

@@ -1,13 +1,6 @@
 # http://elm-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](elm) %{
-    set-option buffer filetype elm
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

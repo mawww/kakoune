@@ -3,13 +3,6 @@
 
 # ragel.kak does not try to detect host language.
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](ragel|rl) %{
-    set-option buffer filetype ragel
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

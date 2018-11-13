@@ -1,10 +1,3 @@
-# Detection
-# ---------
-hook global BufCreate .*\.(s|S|asm)$ %{
-    set-option buffer filetype gas
-}
-
-
 add-highlighter shared/gas regions
 add-highlighter shared/gas/code default-region group
 add-highlighter shared/gas/string         region '"' (?<!\\)(\\\\)*"        fill string

@@ -1,13 +1,6 @@
 # http://lua.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](lua) %{
-    set-option buffer filetype lua
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

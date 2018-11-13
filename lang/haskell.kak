@@ -1,13 +1,6 @@
 # http://haskell.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](hs) %{
-    set-option buffer filetype haskell
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

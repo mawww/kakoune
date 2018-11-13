@@ -1,13 +1,6 @@
 # https://www.perl.org/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*\.p[lm] %{
-    set-option buffer filetype perl
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

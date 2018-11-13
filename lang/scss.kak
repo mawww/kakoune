@@ -3,13 +3,6 @@
 
 # require css.kak
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](scss) %{
-    set-option buffer filetype scss
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

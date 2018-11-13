@@ -1,7 +1,3 @@
-hook global BufCreate .*\.(swift) %{
-    set-option buffer filetype swift
-}
-
 add-highlighter shared/swift regions
 add-highlighter shared/swift/code default-region group
 add-highlighter shared/swift/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} fill string

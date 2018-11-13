@@ -1,13 +1,6 @@
 # http://ocaml.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*\.mli? %{
-  set-option buffer filetype ocaml
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

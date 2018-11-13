@@ -1,7 +1,3 @@
-hook global BufCreate .+\.(repo|ini|cfg|properties) %{
-    set-option buffer filetype ini
-}
-
 add-highlighter shared/ini regions
 add-highlighter shared/ini/code default-region group
 add-highlighter shared/ini/comment region '(^|\h)\K[#;]' $ fill comment

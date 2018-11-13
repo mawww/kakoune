@@ -1,13 +1,6 @@
 # https://dartlang.org/
 #
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*\.dart %{
-    set-option buffer filetype dart
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

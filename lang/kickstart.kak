@@ -1,7 +1,3 @@
-hook global BufCreate .*\.ks %{
-    set-option buffer filetype kickstart
-}
-
 add-highlighter shared/kickstart regions
 add-highlighter shared/kickstart/code default-region group
 add-highlighter shared/kickstart/comment region '(^|\h)\K#' $ fill comment

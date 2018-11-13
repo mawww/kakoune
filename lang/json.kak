@@ -1,13 +1,6 @@
 # http://json.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](json) %{
-    set-option buffer filetype json
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

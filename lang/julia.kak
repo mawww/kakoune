@@ -1,13 +1,6 @@
 # http://julialang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*\.(jl) %{
-    set-option buffer filetype julia
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

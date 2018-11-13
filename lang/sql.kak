@@ -1,13 +1,6 @@
 # https://www.w3schools.com/sql/default.asp
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*/?(?i)sql %{
-    set-option buffer filetype sql
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

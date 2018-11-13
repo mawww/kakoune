@@ -1,7 +1,3 @@
-hook global BufCreate .*\.(z|ba|c|k|mk)?sh(rc|_profile)? %{
-    set-option buffer filetype sh
-}
-
 add-highlighter shared/sh regions
 add-highlighter shared/sh/code default-region group
 add-highlighter shared/sh/double_string region  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)(?:\\\\)*"} group

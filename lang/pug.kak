@@ -5,13 +5,6 @@
 # http://jade-lang.com (will be http://pug-lang.com)
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](pug|jade) %{
-    set-option buffer filetype pug
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

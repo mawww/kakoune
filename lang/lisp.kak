@@ -1,13 +1,6 @@
 # http://common-lisp.net
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](lisp) %{
-    set-option buffer filetype lisp
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

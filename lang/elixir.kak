@@ -1,14 +1,6 @@
 # http://elixir-lang.org
 # ----------------------
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](ex|exs) %{
-    set-option buffer filetype elixir
-}
-
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

@@ -1,13 +1,6 @@
 # https://www.taskpaper.com
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*\.taskpaper %{
-    set-option buffer filetype taskpaper
-} 
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

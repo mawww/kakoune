@@ -3,13 +3,6 @@
 
 # require lisp.kak
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate (.*/)?(.*\.(scm|ss|sld)) %{
-    set-option buffer filetype scheme
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

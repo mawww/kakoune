@@ -1,13 +1,6 @@
 # http://w3.org/Style/CSS
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](css) %{
-    set-option buffer filetype css
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

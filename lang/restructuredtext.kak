@@ -1,10 +1,3 @@
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](rst) %{
-    set-option buffer filetype restructuredtext
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

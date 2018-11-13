@@ -1,13 +1,6 @@
 # https://www.latex-project.org/
 #
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*\.tex %{
-    set-option buffer filetype latex
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

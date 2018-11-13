@@ -1,13 +1,6 @@
 # http://dlang.org/
 #
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*\.di? %{
-    set-option buffer filetype d
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

@@ -1,13 +1,6 @@
 # http://moonscript.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](moon) %{
-    set-option buffer filetype moon
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

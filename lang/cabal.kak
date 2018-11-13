@@ -1,13 +1,6 @@
 # http://haskell.org/cabal
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](cabal) %{
-    set-option buffer filetype cabal
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

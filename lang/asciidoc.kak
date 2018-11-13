@@ -1,13 +1,6 @@
 # http://asciidoc.org/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .+\.(a(scii)?doc|asc) %{
-    set-option buffer filetype asciidoc
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

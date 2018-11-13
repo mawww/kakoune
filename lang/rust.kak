@@ -1,13 +1,6 @@
 # http://rust-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](rust|rs) %{
-    set-option buffer filetype rust
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

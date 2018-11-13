@@ -1,13 +1,6 @@
 # http://sass-lang.com
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](sass) %{
-    set-option buffer filetype sass
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

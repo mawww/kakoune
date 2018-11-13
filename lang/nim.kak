@@ -1,13 +1,6 @@
 # https://nim-lang.org/
 #
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*\.nim(s|ble)? %{
-    set-option buffer filetype nim
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

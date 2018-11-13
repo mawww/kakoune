@@ -3,13 +3,6 @@
 
 # require lisp.kak
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](clj|cljc|cljs|cljx|edn) %{
-    set-option buffer filetype clojure
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

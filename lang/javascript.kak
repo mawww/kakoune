@@ -1,14 +1,3 @@
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](js)x? %{
-    set-option buffer filetype javascript
-}
-
-hook global BufCreate .*[.](ts)x? %{
-    set-option buffer filetype typescript
-}
-
 # Commands
 # ‾‾‾‾‾‾‾‾
 

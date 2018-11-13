@@ -1,13 +1,6 @@
 # https://golang.org/
 #
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*\.go %{
-    set-option buffer filetype go
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

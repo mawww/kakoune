@@ -1,13 +1,6 @@
 # http://scala-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](scala) %{
-    set-option buffer filetype scala
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

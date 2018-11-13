@@ -1,13 +1,6 @@
 # http://handlebarsjs.com/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](hbs) %{
-    set-option buffer filetype hbs
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

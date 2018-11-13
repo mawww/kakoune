@@ -1,9 +1,6 @@
 # http://yaml.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

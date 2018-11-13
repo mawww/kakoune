@@ -1,13 +1,6 @@
 # http://w3.org/html
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*\.html %{
-    set-option buffer filetype html
-}
-
 hook global BufCreate .*\.xml %{
     set-option buffer filetype xml
 }

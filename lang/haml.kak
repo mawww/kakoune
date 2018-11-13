@@ -1,13 +1,6 @@
 # http://haml.info
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](haml) %{
-    set-option buffer filetype haml
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

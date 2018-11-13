@@ -1,12 +1,5 @@
 # https://developers.google.com/protocol-buffers/
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*\.proto$ %{
-    set-option buffer filetype protobuf
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

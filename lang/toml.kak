@@ -1,13 +1,6 @@
 # https://github.com/toml-lang/toml/tree/v0.4.0
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*\.(toml) %{
-    set-option buffer filetype toml
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

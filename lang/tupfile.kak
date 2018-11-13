@@ -1,13 +1,6 @@
 # http://gittup.org/tup/
 #
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*/?Tup(file|rules)(\.\w+)?$ %{
-    set-option buffer filetype tupfile
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

@@ -3,13 +3,6 @@
 
 # See https://docs.docker.com/reference/builder
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*/?Dockerfile(\.\w+)?$ %{
-    set-option buffer filetype dockerfile
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

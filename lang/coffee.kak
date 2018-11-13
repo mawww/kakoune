@@ -1,13 +1,6 @@
 # http://coffeescript.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](coffee) %{
-    set-option buffer filetype coffee
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

@@ -1,13 +1,6 @@
 # http://fishshell.com
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](fish) %{
-    set-option buffer filetype fish
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

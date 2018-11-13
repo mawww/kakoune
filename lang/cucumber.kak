@@ -1,13 +1,6 @@
 # http://cukes.info
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.](feature|story) %{
-    set-option buffer filetype cucumber
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

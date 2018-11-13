@@ -1,11 +1,3 @@
-hook global BufCreate .+\.cmake|.*/CMakeLists.txt %{
-    set-option buffer filetype cmake
-}
-
-hook global BufCreate .*/CMakeCache.txt %{
-    set-option buffer filetype ini
-}
-
 add-highlighter shared/cmake regions
 add-highlighter shared/cmake/code default-region group
 add-highlighter shared/cmake/comment  region '#' '$' fill comment

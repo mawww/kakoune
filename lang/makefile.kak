@@ -1,10 +1,3 @@
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*/?[mM]akefile %{
-    set-option buffer filetype makefile
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 

@@ -1,10 +1,3 @@
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*/?[jJ]ustfile %{
-    set-option buffer filetype justfile
-}
-
 # Indentation
 # ‾‾‾‾‾‾‾‾‾‾‾
 

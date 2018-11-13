@@ -1,7 +1,3 @@
-hook global BufCreate .*\.java %{
-    set-option buffer filetype java
-}
-
 add-highlighter shared/java regions
 add-highlighter shared/java/code default-region group
 add-highlighter shared/java/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} fill string

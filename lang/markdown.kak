@@ -1,10 +1,6 @@
 # http://daringfireball.net/projects/markdown
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
