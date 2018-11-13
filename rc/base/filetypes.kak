@@ -66,6 +66,7 @@ hook global BufCreate .*\.(diff|patch) %{
 set-option -add global filetype_map 'kak=kakrc.kak'
 
 hook global BufCreate (.*/)?(kakrc|.*.kak) %{
+    lazy-load sh
     set-option buffer filetype kak
 }
 
@@ -179,6 +180,8 @@ hook global BufCreate .*[.](hs) %{
 set-option -add global filetype_map 'html=html.kak'
 
 hook global BufCreate .*\.html %{
+    lazy-load css
+    lazy-load javascript
     set-option buffer filetype html
 }
 
@@ -438,6 +441,9 @@ hook global BufCreate .*/etc/paludis(-.*)?/suggestions(\.conf.d/.*.conf|\.conf) 
 set-option -add global filetype_map 'haml=haml.kak'
 
 hook global BufCreate .*[.](haml) %{
+    lazy-load ruby
+    lazy-load coffee
+    lazy-load sass
     set-option buffer filetype haml
 }
 
@@ -445,6 +451,7 @@ hook global BufCreate .*[.](haml) %{
 set-option -add global filetype_map 'hbs=hbs.kak'
 
 hook global BufCreate .*[.](hbs) %{
+    lazy-load html
     set-option buffer filetype hbs
 }
 
@@ -452,6 +459,7 @@ hook global BufCreate .*[.](hbs) %{
 set-option -add global filetype_map 'justfile=just.kak'
 
 hook global BufCreate .*/?[jJ]ustfile %{
+    lazy-load sh
     set-option buffer filetype justfile
 }
 
@@ -459,6 +467,7 @@ hook global BufCreate .*/?[jJ]ustfile %{
 set-option -add global filetype_map 'kickstart=kickstart.kak'
 
 hook global BufCreate .*\.ks %{
+    lazy-load sh
     set-option buffer filetype kickstart
 }
 
@@ -487,6 +496,7 @@ hook global BufCreate .*\.nim(s|ble)? %{
 set-option -add global filetype_map 'php=php.kak'
 
 hook global BufCreate .*[.](php) %{
+    lazy-load html
     set-option buffer filetype php
 }
 
@@ -508,6 +518,7 @@ hook global BufCreate .*\.proto %{
 set-option -add global filetype_map 'pug=pug.kak'
 
 hook global BufCreate .*[.](pug|jade) %{
+    lazy-load javascript
     set-option buffer filetype pug
 }
 
