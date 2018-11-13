@@ -1,4 +1,4 @@
 source "%val{runtime}/colors/default.kak"
-source "%val{runtime}/rc/base/yaml.kak"
+source "%val{runtime}/lang/yaml.kak"
 source "%val{runtime}/rc/core/comment.kak"
 set buffer filetype yaml
