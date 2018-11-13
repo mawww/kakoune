@@ -451,6 +451,8 @@ hook global BufCreate .*[.](haml) %{
 set-option -add global filetype_map 'hbs=hbs.kak'
 
 hook global BufCreate .*[.](hbs) %{
+    lazy-load css
+    lazy-load javascript
     lazy-load html
     set-option buffer filetype hbs
 }
@@ -496,6 +498,8 @@ hook global BufCreate .*\.nim(s|ble)? %{
 set-option -add global filetype_map 'php=php.kak'
 
 hook global BufCreate .*[.](php) %{
+    lazy-load css
+    lazy-load javascript
     lazy-load html
     set-option buffer filetype php
 }
