@@ -1,28 +1,3 @@
-hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H)$ %{
-    set-option buffer filetype cpp
-}
-
-hook global BufSetOption filetype=c\+\+ %{
-    set-option buffer filetype cpp
-}
-
-hook global BufCreate .*\.c$ %{
-    set-option buffer filetype c
-}
-
-hook global BufCreate .*\.h$ %{
-    try %{
-        execute-keys -draft %{%s\b::\b|\btemplate\h*<lt>|\bclass\h+\w+|\b(typename|namespace)\b|\b(public|private|protected)\h*:<ret>}
-        set-option buffer filetype cpp
-    } catch %{
-        set-option buffer filetype c
-    }
-}
-
-hook global BufCreate .*\.m %{
-    set-option buffer filetype objc
-}
-
 define-command -hidden c-family-trim-autoindent %{
     # remove the line if it's empty when leaving the insert mode
     try %{ execute-keys -draft <a-x> 1s^(\h+)$<ret> d }
@@ -330,44 +305,44 @@ define-command -hidden c-family-insert-include-guards %{
 
 hook -group c-family-insert global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
 
-declare-option -docstring "colon separated list of path in which header files will be looked for" \
-    str-list alt_dirs '.' '..'
+# declare-option -docstring "colon separated list of path in which header files will be looked for" \
+#     str-list alt_dirs '.' '..'
 
-define-command c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ evaluate-commands %sh{
-    file="${kak_buffile##*/}"
-    file_noext="${file%.*}"
-    dir=$(dirname "${kak_buffile}")
+# define-command c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ evaluate-commands %sh{
+#     file="${kak_buffile##*/}"
+#     file_noext="${file%.*}"
+#     dir=$(dirname "${kak_buffile}")
 
-    # Set $@ to alt_dirs
-    eval "set -- ${kak_opt_alt_dirs}"
+#     # Set $@ to alt_dirs
+#     eval "set -- ${kak_opt_alt_dirs}"
 
-    case ${file} in
-        *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
-            for alt_dir in "$@"; do
-                for ext in h hh hpp hxx H; do
-                    altname="${dir}/${alt_dir}/${file_noext}.${ext}"
-                    if [ -f ${altname} ]; then
-                        printf 'edit %%{%s}\n' "${altname}"
-                        exit
-                    fi
-                done
-            done
-        ;;
-        *.h|*.hh|*.hpp|*.hxx|*.H)
-            for alt_dir in "$@"; do
-                for ext in c cc cpp cxx C m; do
-                    altname="${dir}/${alt_dir}/${file_noext}.${ext}"
-                    if [ -f ${altname} ]; then
-                        printf 'edit %%{%s}\n' "${altname}"
-                        exit
-                    fi
-                done
-            done
-        ;;
-        *)
-            echo "echo -markup '{Error}extension not recognized'"
-            exit
-        ;;
-    esac
-    echo "echo -markup '{Error}alternative file not found'"
-}}
+#     case ${file} in
+#         *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
+#             for alt_dir in "$@"; do
+#                 for ext in h hh hpp hxx H; do
+#                     altname="${dir}/${alt_dir}/${file_noext}.${ext}"
+#                     if [ -f ${altname} ]; then
+#                         printf 'edit %%{%s}\n' "${altname}"
+#                         exit
+#                     fi
+#                 done
+#             done
+#         ;;
+#         *.h|*.hh|*.hpp|*.hxx|*.H)
+#             for alt_dir in "$@"; do
+#                 for ext in c cc cpp cxx C m; do
+#                     altname="${dir}/${alt_dir}/${file_noext}.${ext}"
+#                     if [ -f ${altname} ]; then
+#                         printf 'edit %%{%s}\n' "${altname}"
+#                         exit
+#                     fi
+#                 done
+#             done
+#         ;;
+#         *)
+#             echo "echo -markup '{Error}extension not recognized'"
+#             exit
+#         ;;
+#     esac
+#     echo "echo -markup '{Error}alternative file not found'"
+# }}

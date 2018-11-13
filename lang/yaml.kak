@@ -4,10 +4,6 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](ya?ml) %{
-    set-option buffer filetype yaml
-}
-
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
