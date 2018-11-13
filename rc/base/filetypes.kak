@@ -3,7 +3,7 @@ declare-option str-list       loaded_lang_files
 
 define-command -hidden -params 1 lazy-load %{ evaluate-commands %sh{
     if [ -n "$1" ]; then
-        lang_file=$(printf '%s' "$kak_opt_filetype_map" | grep -o "${1}=[^ ]*" | tr -d \' | cut -d '=' -f 2)
+        lang_file=$(printf '%s' "$kak_opt_filetype_map" | grep -o "\b${1}=[^ ]*" | tr -d \' | cut -d '=' -f 2)
         if [ -n "$lang_file" -a -z "$(printf '%s' "$kak_opt_loaded_lang_files" | grep -o "$lang_file")" ]; then
             printf 'set-option -add global loaded_lang_files %s\n' "$lang_file"
             printf 'source %s/lang/%s\n' "$kak_runtime" "$lang_file"
@@ -66,7 +66,7 @@ hook global BufCreate .*\.(diff|patch) %{
 set-option -add global filetype_map 'kak=kakrc.kak'
 
 hook global BufCreate (.*/)?(kakrc|.*.kak) %{
-    lazy-load sh
+    # lazy-load sh
     set-option buffer filetype kak
 }
 
