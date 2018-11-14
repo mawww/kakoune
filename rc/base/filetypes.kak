@@ -457,6 +457,13 @@ hook global BufCreate .*[.](hbs) %{
     set-option buffer filetype hbs
 }
 
+# i3
+set-option -add global filetype_map 'i3=i3.kak'
+
+hook global BufCreate .*(sway|i3)/config %{
+    set buffer filetype i3
+}
+
 # just
 set-option -add global filetype_map 'justfile=just.kak'
 
