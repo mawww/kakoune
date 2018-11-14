@@ -635,11 +635,10 @@ private:
         void swap_next()
         {
             kak_assert(m_next < m_capacity);
-            do
-            {
-                m_data[m_current++] = m_data[m_next++];
-            }
-            while (m_next < m_capacity);
+            const int32_t count = m_capacity - m_next;
+            std::copy_n(m_data + m_next, count, m_data);
+            m_current = count;
+            m_next = m_capacity;
         }
 
         void grow_ifn()
