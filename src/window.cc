@@ -170,8 +170,8 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
 
     m_display_buffer.optimize();
 
-    m_last_setup = build_setup(context);
     set_position(setup.window_pos);
+    m_last_setup = build_setup(context);
 
     if (profile and not (buffer().flags() & Buffer::Flags::Debug))
     {
