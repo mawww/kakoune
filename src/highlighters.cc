@@ -595,36 +595,37 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
         if (column < 0)
             return;
 
-        auto face = context.context.faces()[facespec];
-        auto win_column = context.setup.window_pos.column;
+        const auto face = context.context.faces()[facespec];
+        const auto win_column = context.setup.window_pos.column;
+        const auto target_col = column - win_column;
+        if (target_col < 0 or target_col >= context.setup.window_range.column)
+            return;
+
         for (auto& line : display_buffer.lines())
         {
-            auto target_col = column - win_column;
-            if (target_col < 0)
-                return;
-
+            auto remaining_col = target_col;
             bool found = false;
             auto first_buf = find_if(line, [](auto& atom) { return atom.has_buffer_range(); });
             for (auto atom_it = first_buf; atom_it != line.end(); ++atom_it)
             {
                 const auto atom_len = atom_it->length();
-                if (target_col < atom_len)
+                if (remaining_col < atom_len)
                 {
-                    if (target_col > 0)
-                        atom_it = ++line.split(atom_it, target_col);
+                    if (remaining_col > 0)
+                        atom_it = ++line.split(atom_it, remaining_col);
                     if (atom_it->length() > 1)
                         atom_it = line.split(atom_it, 1_col);
                     atom_it->face = merge_faces(atom_it->face, face);
                     found = true;
                     break;
                 }
-                target_col -= atom_len;
+                remaining_col -= atom_len;
             }
             if (found)
                 continue;
 
-            if (target_col > 0)
-                line.push_back({String{' ', target_col}, {}});
+            if (remaining_col > 0)
+                line.push_back({String{' ', remaining_col}, {}});
             line.push_back({" ", face});
         }
     };
