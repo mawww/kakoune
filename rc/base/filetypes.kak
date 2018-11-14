@@ -66,7 +66,7 @@ hook global BufCreate .*\.(diff|patch) %{
 set-option -add global filetype_map 'kak=kakrc.kak'
 
 hook global BufCreate (.*/)?(kakrc|.*.kak) %{
-    # lazy-load sh
+    lazy-load sh
     set-option buffer filetype kak
 }
 
