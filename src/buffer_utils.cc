@@ -3,6 +3,7 @@
 #include "buffer_manager.hh"
 #include "event_manager.hh"
 #include "file.hh"
+#include "selection.hh"
 
 #include <unistd.h>
 
@@ -127,8 +128,10 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
         // if we read data slower than it arrives in the fifo, limiting the
         // iteration number allows us to go back go back to the event loop and
         // handle other events sources (such as input)
-        size_t loops = 16;
+        constexpr size_t max_loop = 16;
+        size_t loop = 0;
         char data[buffer_size];
+        BufferCoord insert_coord;
         const int fifo = watcher.fd();
         do
         {
@@ -144,6 +147,8 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
             if (prevent_scrolling)
                 pos = buffer->next(pos);
 
+            if (loop == 0)
+                insert_coord = pos;
             buffer->insert(pos, StringView(data, data+count));
 
             if (prevent_scrolling)
@@ -155,9 +160,10 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
                     buffer->insert(buffer->end_coord(), "\n");
             }
         }
-        while (--loops and fd_readable(fifo));
+        while (++loop < max_loop  and fd_readable(fifo));
 
-        buffer->run_hook_in_own_context(Hook::BufReadFifo, buffer->name());
+        buffer->run_hook_in_own_context(Hook::BufReadFifo,
+                                        selection_to_string({insert_coord, buffer->back_coord()}));
     }), std::move(watcher_deleter));
 
     buffer->values()[fifo_watcher_id] = Value(std::move(watcher));
