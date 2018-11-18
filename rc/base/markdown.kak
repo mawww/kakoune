@@ -40,7 +40,7 @@ add-highlighter shared/markdown/content/ regex (\A|\n\n)[^\n]+\n={2,}\h*\n\h*$ 0
 add-highlighter shared/markdown/content/ regex (\A|\n\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
 
 # Atx-style header
-add-highlighter shared/markdown/content/ regex ^(#+)(\h+)([^\n]+) 0:header
+add-highlighter shared/markdown/content/ regex ^#[^\n]* 0:header
 
 add-highlighter shared/markdown/content/ regex ^\h?((?:[\s\t]+)?[-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*\n)*$ 0:list 1:bullet
 add-highlighter shared/markdown/content/ regex \B\+[^\n]+?\+\B 0:mono
