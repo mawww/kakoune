@@ -1304,7 +1304,8 @@ const CommandDesc debug_cmd = {
 const CommandDesc source_cmd = {
     "source",
     nullptr,
-    "source <filename> <params>...: execute commands contained in <filename>",
+    "source <filename> <params>...: execute commands contained in <filename>\n"
+    "parameters are available in the sourced script as %arg{0}, %arg{1}, …",
     ParameterDesc{ {}, ParameterDesc::Flags::None, 1, (size_t)-1 },
     CommandFlags::None,
     CommandHelper{},

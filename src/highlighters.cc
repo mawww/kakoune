@@ -2241,7 +2241,7 @@ void register_highlighters()
     registry.insert({
         "region",
         { RegionsHighlighter::create_region,
-          "Parameters:  [-match-capture] [-recurse <recurse>] <opening> <closing> <type> <params>..."
+          "Parameters:  [-match-capture] [-recurse <recurse>] <opening> <closing> <type> <params>...\n"
           "Define a region for a regions highlighter, and apply the given delegate\n"
           "highlighter as defined by <type> and eventual <params>...\n"
           "The region starts at <begin> match and ends at the first <end>\n"
