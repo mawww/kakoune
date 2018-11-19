@@ -19,7 +19,7 @@ evaluate-commands %sh{
     c cabal clojure coffee cpp css cucumber d diff dockerfile fish gas go
     haml haskell html ini java javascript json julia kak kickstart latex
     lisp lua makefile markdown moon objc perl pug python ragel ruby rust
-    sass scala scss sh swift tupfile typescript yaml
+    sass scala scss sh swift tupfile typescript yaml sql
   "
   for lang in ${languages}; do
     printf 'add-highlighter shared/markdown/%s region -match-capture ^(\h*)```\h*%s\\b   ^(\h*)``` regions\n' "${lang}" "${lang}"
