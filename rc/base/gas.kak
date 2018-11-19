@@ -13,7 +13,7 @@ add-highlighter shared/gas/commentSingle1 region '#'       '$'              fill
 add-highlighter shared/gas/commentSingle2 region ';'       '$'              fill comment
 
 # Constant
-add-highlighter shared/gas/code/ regex (0[xX][0-9]+|\b[0-9]+)\b 0:value
+add-highlighter shared/gas/code/ regex (0[xX][0-9a-fA-F]+|\b[0-9]+)\b 0:value
 
 # Labels
 add-highlighter shared/gas/code/ regex ^\h*([A-Za-z0-9_.-]+): 0:operator
