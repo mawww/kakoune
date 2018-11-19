@@ -79,7 +79,7 @@ evaluate-commands %sh{
     exceptions="${exceptions}|ZeroDivisionError"
 
     # Keyword list is collected using `keyword.kwlist` from `keyword`
-    keywords="and|as|assert|break|class|continue|def|del|elif|else|except|exec"
+    keywords="and|as|assert|async|await|break|class|continue|def|del|elif|else|except|exec"
     keywords="${keywords}|finally|for|global|if|in|is|lambda|nonlocal|not|or|pass|print"
     keywords="${keywords}|raise|return|try|while|with|yield"
 
