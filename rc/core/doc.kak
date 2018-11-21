@@ -127,7 +127,7 @@ define-command -params 1 -hidden doc-render %{
     add-highlighter buffer/ ranges doc_render_ranges
     add-highlighter buffer/ ranges doc_render_links
     add-highlighter buffer/ wrap -word -indent
-    map buffer normal <ret> :doc-follow-link<ret>
+    map buffer normal <ret> ': doc-follow-link<ret>'
 }
 
 define-command -params 1..2 \
