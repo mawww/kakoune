@@ -2233,7 +2233,7 @@ void register_highlighters()
     registry.insert({
         "regions",
         { RegionsHighlighter::create,
-          "Parameters: None"
+          "Parameters: None\n"
           "Holds child region highlighters and segments the buffer in ranges based on those regions\n"
           "definitions. The regions highlighter finds the next region to start by finding which\n"
           "of its child region has the leftmost starting point from current position. In between\n"
