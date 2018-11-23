@@ -171,15 +171,17 @@ template Optional<Selection> select_word<WordType::Word>(const Context&, const S
 template Optional<Selection> select_word<WordType::WORD>(const Context&, const Selection&, int, ObjectFlags);
 
 Optional<Selection>
-select_line(const Context& context, const Selection& selection)
+select_line(Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
     auto line = selection.cursor().line;
     // Next line if line fully selected
-    if (selection.anchor() <= BufferCoord{line, 0_byte} and
-        selection.cursor() == BufferCoord{line, buffer[line].length() - 1} and
-        line != buffer.line_count() - 1)
+    if (context.is_line_editing()) {
         ++line;
+    }
+
+    context.enter_or_keep_line_editing();
+
     return target_eol({{line, 0_byte}, {line, buffer[line].length() - 1}});
 }
 
@@ -809,8 +811,10 @@ select_argument(const Context& context, const Selection& selection,
 }
 
 Optional<Selection>
-select_lines(const Context& context, const Selection& selection)
+select_lines(Context& context, const Selection& selection)
 {
+    context.enter_or_keep_line_editing();
+
     auto& buffer = context.buffer();
     BufferCoord anchor = selection.anchor();
     BufferCoord cursor  = selection.cursor();
@@ -824,13 +828,16 @@ select_lines(const Context& context, const Selection& selection)
 }
 
 Optional<Selection>
-trim_partial_lines(const Context& context, const Selection& selection)
+trim_partial_lines(Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
     BufferCoord anchor = selection.anchor();
     BufferCoord cursor  = selection.cursor();
     BufferCoord& to_line_start = anchor <= cursor ? anchor : cursor;
     BufferCoord& to_line_end = anchor <= cursor ? cursor : anchor;
+
+
+    context.enter_or_keep_line_editing();
 
     if (to_line_start.column != 0)
         to_line_start = to_line_start.line+1;

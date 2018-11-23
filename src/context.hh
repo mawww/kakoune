@@ -125,6 +125,19 @@ public:
             m_jump_list.push(selections());
     }
 
+    void enter_or_keep_line_editing() {
+        m_keep_line_mode = true;
+    }
+
+    bool is_line_editing() {
+        return m_line_mode;
+    }
+
+    void post_key_logic() {
+        m_line_mode = m_keep_line_mode;
+        m_keep_line_mode = false;
+    }
+
     template<typename Func>
     void set_last_select(Func&& last_select) { m_last_select = std::forward<Func>(last_select); }
 
@@ -135,6 +148,8 @@ private:
     void end_edition();
     int m_edition_level = 0;
     size_t m_edition_timestamp = 0;
+    bool m_line_mode = false;
+    bool m_keep_line_mode = false;
 
     friend struct ScopedEdition;
 
