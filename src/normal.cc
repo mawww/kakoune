@@ -732,7 +732,6 @@ constexpr RegexCompileFlags direction_flags(MatchDirection direction)
 template<MatchDirection direction = MatchDirection::Forward, typename T>
 void regex_prompt(Context& context, String prompt, String default_regex, T func)
 {
-    DisplayCoord position = context.has_window() ? context.window().position() : DisplayCoord{};
     SelectionList selections = context.selections();
     context.input_handler().prompt(
         std::move(prompt), {}, default_regex, context.faces()["Prompt"],
@@ -772,8 +771,6 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
                 {
                     selections.update();
                     context.selections_write_only() = selections;
-                    if (context.has_window())
-                        context.window().set_position(position);
 
                     context.input_handler().set_prompt_face(context.faces()["Prompt"]);
                 }
