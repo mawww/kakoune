@@ -171,7 +171,7 @@ template Optional<Selection> select_word<WordType::Word>(const Context&, const S
 template Optional<Selection> select_word<WordType::WORD>(const Context&, const Selection&, int, ObjectFlags);
 
 Optional<Selection>
-select_line(Context& context, const Selection& selection)
+select_line(const Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
     auto line = selection.cursor().line;
@@ -811,7 +811,7 @@ select_argument(const Context& context, const Selection& selection,
 }
 
 Optional<Selection>
-select_lines(Context& context, const Selection& selection)
+select_lines(const Context& context, const Selection& selection)
 {
     context.enter_or_keep_line_editing();
 
@@ -828,7 +828,7 @@ select_lines(Context& context, const Selection& selection)
 }
 
 Optional<Selection>
-trim_partial_lines(Context& context, const Selection& selection)
+trim_partial_lines(const Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
     BufferCoord anchor = selection.anchor();

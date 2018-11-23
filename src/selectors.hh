@@ -29,7 +29,7 @@ Optional<Selection>
 select_to_previous_word(const Context& context, const Selection& selection);
 
 Optional<Selection>
-select_line(Context& context, const Selection& selection);
+select_line(const Context& context, const Selection& selection);
 
 template<bool forward>
 Optional<Selection>
@@ -92,10 +92,10 @@ select_argument(const Context& context, const Selection& selection,
                 int level, ObjectFlags flags);
 
 Optional<Selection>
-select_lines(Context& context, const Selection& selection);
+select_lines(const Context& context, const Selection& selection);
 
 Optional<Selection>
-trim_partial_lines(Context& context, const Selection& selection);
+trim_partial_lines(const Context& context, const Selection& selection);
 
 void select_buffer(SelectionList& selections);
 
