@@ -311,6 +311,7 @@ public:
                 m_params = { 0, 0 };
 
                 command->func(context(), params);
+                context().post_movement_logic();
             }
         }
 
@@ -318,7 +319,6 @@ public:
         if (enabled() and not transient) // The hook might have changed mode
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
 
-        context().post_key_logic();
     }
 
     DisplayLine mode_line() const override

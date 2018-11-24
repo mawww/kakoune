@@ -133,7 +133,7 @@ public:
         return m_line_mode;
     }
 
-    void post_key_logic() const {
+    void post_movement_logic() const {
         m_line_mode = m_keep_line_mode;
         m_keep_line_mode = false;
     }

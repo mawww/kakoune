@@ -2001,7 +2001,12 @@ public:
     void operator() (Context& context, NormalParams params)
     {
         ScopedEdition edition(context);
-        do { m_func(context, {0, params.reg}); } while(--params.count > 0);
+        do {
+            m_func(context, {0, params.reg});
+            if (params.count > 1) {
+                context.post_movement_logic();
+            }
+        } while(--params.count > 0);
     }
 private:
     T m_func;
@@ -2011,7 +2016,12 @@ template<void (*func)(Context&, NormalParams)>
 void repeated(Context& context, NormalParams params)
 {
     ScopedEdition edition(context);
-    do { func(context, {0, params.reg}); } while(--params.count > 0);
+    do {
+        func(context, {0, params.reg});
+        if (params.count > 1) {
+            context.post_movement_logic();
+        }
+    } while(--params.count > 0);
 }
 
 template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
