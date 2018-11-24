@@ -1,0 +1,9 @@
+%clang
+%c -std=gnu11
+%cpp -std=gnu++14
+-pthread
+
+# Includes
+# -I/work/cquery/third_party
+# -I/work/cquery/another_third_party
+# -I space_is_not_allowed
