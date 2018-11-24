@@ -175,13 +175,16 @@ select_line(const Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
     auto line = selection.cursor().line;
-    // Next line if line fully selected
+
     if (context.is_line_editing()) {
         ++line;
     }
 
     context.enter_or_keep_line_editing();
 
+    if (line >= buffer.line_count()) {
+        return Optional<Selection>();
+    }
     return target_eol({{line, 0_byte}, {line, buffer[line].length() - 1}});
 }
 
