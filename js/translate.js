@@ -196,8 +196,12 @@
     });
 
     // Remember the language selected across page loads
+    // or auto-detect it according to the curently set browser language
+    var local_lang = (navigator.language || navigator.userLanguage).replace(/-.+$/, "");
     var stored_lang = window.localStorage.getItem("translation-lang");
     if (stored_lang in translations && stored_lang !== translation_lang) {
         translate_to_lang(stored_lang);
+    } else if (local_lang) {
+        translate_to_lang(local_lang);
     }
 })();
