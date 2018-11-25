@@ -743,7 +743,7 @@ public:
         : InputMode(input_handler), m_prompt(prompt.str()), m_prompt_face(face),
           m_empty_text{std::move(emptystr)},
           m_flags(flags), m_completer(std::move(completer)), m_callback(std::move(callback)),
-          m_auto_complete{context().options()["auto_complete"].get<AutoComplete>() & AutoComplete::Prompt},
+          m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Prompt},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
                            if (m_auto_complete and m_refresh_completion_pending)
@@ -1123,7 +1123,7 @@ public:
           m_restore_cursor(mode == InsertMode::Append),
           m_edition(context()),
           m_completer(context()),
-          m_auto_complete{context().options()["auto_complete"].get<AutoComplete>() & AutoComplete::Insert},
+          m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Insert},
           m_disable_hooks{context().hooks_disabled(), context().hooks_disabled()},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                        Timer::Callback{} : [this](Timer&) {

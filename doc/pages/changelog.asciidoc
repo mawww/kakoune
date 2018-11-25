@@ -3,6 +3,11 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development version
+
+* `auto_complete` has been renamed to `autocomplete` for more
+  consistency.
+
 == Kakoune 2018.10.27
 
 * `remove-hooks` <group> argument is now a regex and removes all

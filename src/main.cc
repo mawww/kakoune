@@ -369,7 +369,7 @@ void register_options()
     reg.declare_option("autoinfo",
                        "automatically display contextual help",
                        AutoInfo::Command | AutoInfo::OnKey);
-    reg.declare_option("auto_complete",
+    reg.declare_option("autocomplete",
                        "automatically display possible completions",
                        AutoComplete::Insert | AutoComplete::Prompt);
     reg.declare_option("aligntab",
