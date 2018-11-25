@@ -11,6 +11,17 @@ endif
 ifeq ($(debug),yes)
     CPPFLAGS += -DKAK_DEBUG
     suffix := .debug
+
+    ifeq ($(debug_asan),yes)
+        CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
+    else ifeq ($(debug_msan),yes)
+        CXXFLAGS += -fsanitize=memory -fsanitize-memory-track-origins
+        CXXFLAGS += -fno-omit-frame-pointer -fno-optimize-sibling-calls
+    else ifeq ($(debug_ubsan),yes)
+        CXXFLAGS += -fsanitize=undefined -fno-omit-frame-pointer
+    else ifeq ($(debug_leaksan),yes)
+        CXXFLAGS += -fsanitize=leak
+    endif
 else
     ifeq ($(debug),no)
         CXXFLAGS += -O3
