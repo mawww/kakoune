@@ -21,6 +21,7 @@
 
 #include <cstdio>
 #include <limits>
+#include <cmath>
 
 namespace Kakoune
 {
@@ -1742,6 +1743,200 @@ private:
     const String m_name;
 };
 
+
+struct ScrollbarHighlighter : Highlighter
+{
+    ScrollbarHighlighter(String foreground, String background)
+      : Highlighter{HighlightPass::Move},
+        m_foreground{std::move(foreground)},
+        m_background{std::move(background)}
+     {}
+
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    {
+        static const ParameterDesc param_desc{
+            { { "foreground", { true, "" } },
+              { "background", { true, "" } },
+            },
+            ParameterDesc::Flags::None, 0, 0
+        };
+        ParametersParser parser(params, param_desc);
+
+        auto get_param = [&](StringView param, StringView fallback) {
+            StringView value = parser.get_switch(param).value_or(fallback);
+            if (value.char_length() != 1)
+                throw runtime_error{format("-{} expects a single character parameter", param)};
+            return value.str();
+        };
+
+        return std::make_unique<ScrollbarHighlighter>(
+            get_param("foreground", "█"), get_param("background", "░"));
+    }
+
+    static std::unique_ptr<Highlighter> create_indicator(HighlighterParameters params, Highlighter* parent)
+    {
+        if (not dynamic_cast<ScrollbarHighlighter*>(parent))
+            throw runtime_error{"scrollbar indicator can only be added to a scrollbar parent"};
+
+        if (params.size() != 2)
+            throw runtime_error("wrong parameter count");
+
+        const String& face_name = params[0];
+        const String& option_name = params[1];
+
+        // throw if wrong option type
+        GlobalScope::instance().options()[option_name].get<LineAndSpecList>();
+
+        return std::make_unique<IndicatorHighlighter>(option_name, face_name);
+    }
+
+    bool has_children() const override { return true; }
+
+    Highlighter& get_child(StringView path) override
+    {
+        auto sep_it = find(path, '/');
+        StringView id(path.begin(), sep_it);
+        auto it = find_if(m_indicators, [&id](const auto& pair) { return pair.first == id; });
+        if (it == m_indicators.end())
+            throw child_not_found(format("no such id: {}", id));
+        return *it->second;
+    }
+
+    void add_child(String name, std::unique_ptr<Highlighter>&& hl, bool override) override
+    {
+        if (not dynamic_cast<IndicatorHighlighter*>(hl.get()))
+            throw runtime_error{"only indicator highlighter can be added as child of a scrollbar highlighter"};
+        auto it = find_if(m_indicators, [&name](const auto& pair) { return pair.first == name; });
+        if (it != m_indicators.end())
+            throw runtime_error{format("duplicate id: '{}'", name)};
+
+        std::unique_ptr<IndicatorHighlighter> indic{dynamic_cast<IndicatorHighlighter*>(hl.release())};
+        m_indicators.push_back({std::move(name), std::move(indic)});
+    }
+
+    void remove_child(StringView id) override
+    {
+        auto it = find_if(m_indicators, [&id](const auto& pair) { return pair.first == id; });
+        if (it == m_indicators.end())
+            return;
+        m_indicators.erase(it);
+    }
+
+    Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override
+    {
+        auto sep_it = find(path, '/');
+        if (sep_it != path.end())
+        {
+            ByteCount offset = sep_it+1 - path.begin();
+            Highlighter& hl = const_cast<ScrollbarHighlighter*>(this)->get_child({path.begin(), sep_it});
+            return offset_pos(hl.complete_child(path.substr(offset), cursor_pos - offset, group), offset);
+        }
+        auto container = m_indicators | transform([](const auto& pair) -> StringView { return pair.first; });
+        return { 0, 0, complete(path, cursor_pos, container) };
+    }
+
+private:
+    static constexpr StringView ms_id = "scrollbar";
+
+    struct IndicatorHighlighter : public Highlighter
+    {
+        IndicatorHighlighter(String option_name, String face_name)
+            : Highlighter{HighlightPass::Colorize},
+              m_option_name(option_name),
+              m_face_name(face_name)
+        {}
+
+        void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
+        {}
+
+        String m_option_name;
+        String m_face_name;
+    };
+
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
+    {
+        if (contains(context.disabled_ids, ms_id))
+            return;
+
+        auto& display_lines = display_buffer.lines();
+        auto buf_line_count = context.context.buffer().line_count();
+        auto disp_line_count = display_lines.size();
+
+        if (disp_line_count >= buf_line_count)
+            return;
+
+        auto buffer_to_display_line = [&](LineCount buffer_line) {
+            float percent = (float)(int)buffer_line /  (float)(int)(buf_line_count - 1);
+            return percent * (disp_line_count - 1);
+        };
+        const auto& disp_range = display_buffer.range();
+        // the first cell is only filled if the first line is visible (hence ceil)
+        int begin_display = (int)std::ceil(buffer_to_display_line(disp_range.begin.line));
+        // and vice-versa for the last (hence floor)
+        int end_display = (int)std::floor(buffer_to_display_line(disp_range.end.line));
+
+        // ensure at least one cell is foreground
+        end_display = std::max(begin_display, end_display);
+
+        const auto& faces = context.context.faces();
+        HashMap<int, Face> indicators;
+        // reverse-iterate so that the first added indicators has precedence over the face of the cell
+        for (auto& indicator : m_indicators | reverse())
+        {
+            auto& subhl = *indicator.second;
+            auto& line_flags = context.context.options()[subhl.m_option_name].get_mutable<LineAndSpecList>();
+            auto& buffer = context.context.buffer();
+            update_line_specs_ifn(buffer, line_flags);
+            for (auto& line : line_flags.list)
+            {
+                int display_line = (int)std::round(buffer_to_display_line(std::get<0>(line)));
+                indicators[display_line] = faces[subhl.m_face_name];
+            }
+        }
+
+        const auto& default_face = faces["Scrollbar"];
+        for (int i = 0; i < display_lines.size(); ++i)
+        {
+            auto& line = display_lines[i];
+            ColumnCount len = 0;
+            auto first_buf = find_if(line, [](auto& atom) { return atom.has_buffer_range(); });
+            for (auto atom_it = first_buf; atom_it != line.end(); ++atom_it)
+                len += atom_it->length();
+            auto remaining = context.setup.window_range.column - len;
+            if (remaining > 0)
+                line.push_back({ String{' ', remaining}, {} });
+
+            auto it = indicators.find(i);
+            const auto& face = it == indicators.end() ? default_face : it->value;
+
+            if (i >= begin_display && i <= end_display)
+                line.push_back({ m_foreground, face });
+            else
+                line.push_back({ m_background, face });
+        }
+    }
+
+    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
+    {
+        if (contains(context.disabled_ids, ms_id))
+            return;
+
+        setup.window_range.column -= 1;
+    }
+
+    void fill_unique_ids(Vector<StringView>& unique_ids) const override
+    {
+        unique_ids.push_back(ms_id);
+    }
+
+    const String m_foreground;
+    const String m_background;
+
+    Vector<std::pair<String, std::unique_ptr<IndicatorHighlighter>>> m_indicators;
+};
+
+constexpr StringView ScrollbarHighlighter::ms_id;
+
 struct RegexMatch
 {
     LineCount line;
@@ -2357,6 +2552,14 @@ void register_highlighters()
           "Reference the highlighter at <path> in shared highlighters\n"
           "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
           "which specify what kind of highlighters can be referenced" } });
+    registry.insert({
+        "scrollbar",
+        { ScrollbarHighlighter::create,
+          "TODO" } });
+    registry.insert({
+        "scrollbar-indicator",
+        { ScrollbarHighlighter::create_indicator,
+          "TODO" } });
     registry.insert({
         "regions",
         { RegionsHighlighter::create,

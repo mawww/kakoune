@@ -181,6 +181,7 @@ FaceRegistry::FaceRegistry()
         { "MatchingChar", {Face{ Color::Default, Color::Default, Attribute::Bold }} },
         { "BufferPadding", {Face{ Color::Blue, Color::Default }} },
         { "Whitespace", {Face{ Color::Default, Color::Default, Attribute::FinalFg }} },
+        { "Scrollbar", {Face{ Color::White, Color::Default }} },
       }
 {}
 
