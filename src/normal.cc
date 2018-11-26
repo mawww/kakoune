@@ -2003,10 +2003,9 @@ public:
         ScopedEdition edition(context);
         do {
             m_func(context, {0, params.reg});
-            if (params.count > 1) {
+            if (params.count > 1)
                 context.post_movement_logic();
-            }
-        } while(--params.count > 0);
+        } while (--params.count > 0);
     }
 private:
     T m_func;
@@ -2018,10 +2017,9 @@ void repeated(Context& context, NormalParams params)
     ScopedEdition edition(context);
     do {
         func(context, {0, params.reg});
-        if (params.count > 1) {
+        if (params.count > 1)
             context.post_movement_logic();
-        }
-    } while(--params.count > 0);
+    } while (--params.count > 0);
 }
 
 template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>

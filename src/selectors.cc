@@ -839,7 +839,6 @@ trim_partial_lines(const Context& context, const Selection& selection)
     BufferCoord& to_line_start = anchor <= cursor ? anchor : cursor;
     BufferCoord& to_line_end = anchor <= cursor ? cursor : anchor;
 
-
     context.enter_or_keep_line_editing();
 
     if (to_line_start.column != 0)

@@ -318,7 +318,6 @@ public:
         context().hooks().run_hook(Hook::NormalKey, key_to_str(key), context());
         if (enabled() and not transient) // The hook might have changed mode
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
-
     }
 
     DisplayLine mode_line() const override
