@@ -2075,6 +2075,10 @@ void clear_selections(Context& context, NormalParams)
 
 void flip_selections(Context& context, NormalParams)
 {
+    if (context.is_line_editing()) {
+        context.enter_or_keep_line_editing();
+    }
+
     for (auto& sel : context.selections())
     {
         const BufferCoord tmp = sel.anchor();
@@ -2086,6 +2090,10 @@ void flip_selections(Context& context, NormalParams)
 
 void ensure_forward(Context& context, NormalParams)
 {
+    if (context.is_line_editing()) {
+        context.enter_or_keep_line_editing();
+    }
+
     for (auto& sel : context.selections())
     {
         const BufferCoord min = sel.min(), max = sel.max();
