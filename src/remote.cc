@@ -699,13 +699,12 @@ public:
     Accepter(int socket)
         : m_socket_watcher(socket, FdEvents::Read,
                            [this](FDWatcher&, FdEvents, EventMode mode) {
-                               if (mode == EventMode::Normal)
-                                   handle_available_input();
+                               handle_available_input(mode);
                            })
     {}
 
 private:
-    void handle_available_input()
+    void handle_available_input(EventMode mode)
     {
         const int sock = m_socket_watcher.fd();
         try
@@ -713,7 +712,7 @@ private:
             while (not m_reader.ready() and fd_readable(sock))
                 m_reader.read_available(sock);
 
-            if (not m_reader.ready())
+            if (mode != EventMode::Normal or not m_reader.ready())
                 return;
 
             switch (m_reader.type())
