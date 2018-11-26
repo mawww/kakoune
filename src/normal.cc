@@ -439,6 +439,9 @@ void for_each_codepoint(Context& context, NormalParams)
 
 void command(Context& context, NormalParams params)
 {
+    if (context.is_line_editing()) {
+        context.enter_or_keep_line_editing();
+    }
     if (not CommandManager::has_instance())
         throw runtime_error{"commands are not supported"};
 
@@ -449,9 +452,15 @@ void command(Context& context, NormalParams params)
         context.faces()["Prompt"], PromptFlags::DropHistoryEntriesWithBlankPrefix,
         [](const Context& context, CompletionFlags flags,
            StringView cmd_line, ByteCount pos) {
+                if (context.is_line_editing()) {
+                    context.enter_or_keep_line_editing();
+                }
                return CommandManager::instance().complete(context, flags, cmd_line, pos);
         },
         [params](StringView cmdline, PromptEvent event, Context& context) {
+            if (context.is_line_editing()) {
+                context.enter_or_keep_line_editing();
+            }
             if (context.has_client())
             {
                 context.client().info_hide();
