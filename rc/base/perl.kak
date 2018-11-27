@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*\.p[lm] %{
+hook global BufCreate .*\.(t|p[lm])$ %{
     set-option buffer filetype perl
 }
 
