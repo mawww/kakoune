@@ -103,7 +103,7 @@ enum class MatchDirection;
 
 template<MatchDirection direction>
 Selection find_next_match(const Context& context, const Selection& sel,
-                          const Regex& regex, bool& wrapped);
+                          const Regex& regex, int capture_count, bool& wrapped);
 
 void select_all_matches(SelectionList& selections, const Regex& regex, int capture = 0);
 void split_selections(SelectionList& selections, const Regex& regex, int capture = 0);

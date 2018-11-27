@@ -127,8 +127,10 @@ public:
 
     template<typename Func>
     void set_last_select(Func&& last_select) { m_last_select = std::forward<Func>(last_select); }
+    void set_last_capture_count(int count) { m_last_capture_count = count; }
 
     void repeat_last_select() { if (m_last_select) m_last_select(*this); }
+    int get_last_capture_count() const { return m_last_capture_count; }
 
 private:
     void begin_edition();
@@ -151,6 +153,7 @@ private:
     JumpList m_jump_list;
 
     LastSelectFunc m_last_select;
+    int            m_last_capture_count = 0;
 
     NestedBool m_hooks_disabled;
     NestedBool m_keymaps_disabled;

@@ -896,7 +896,7 @@ static bool find_prev(const Buffer& buffer, const BufferIterator& pos,
 }
 
 template<MatchDirection direction>
-Selection find_next_match(const Context& context, const Selection& sel, const Regex& regex, bool& wrapped)
+Selection find_next_match(const Context& context, const Selection& sel, const Regex& regex, int capture_count, bool& wrapped)
 {
     auto& buffer = context.buffer();
     MatchResults<BufferIterator> matches;
@@ -906,22 +906,22 @@ Selection find_next_match(const Context& context, const Selection& sel, const Re
         find_next(buffer, utf8::next(pos, buffer.end()), matches, regex, wrapped)
       : find_prev(buffer, pos, matches, regex, wrapped);
 
-    if (not found or matches[0].first == buffer.end())
+    if (not found or matches[capture_count].first == buffer.end())
         throw runtime_error(format("no matches found: '{}'", regex.str()));
 
     CaptureList captures;
     for (const auto& match : matches)
         captures.push_back(buffer.string(match.first.coord(), match.second.coord()));
 
-    auto begin = matches[0].first, end = matches[0].second;
+    auto begin = matches[capture_count].first, end = matches[capture_count].second;
     end = (begin == end) ? end : utf8::previous(end, begin);
     if (direction == MatchDirection::Backward)
         std::swap(begin, end);
 
     return {begin.coord(), end.coord(), std::move(captures)};
 }
-template Selection find_next_match<MatchDirection::Forward>(const Context&, const Selection&, const Regex&, bool&);
-template Selection find_next_match<MatchDirection::Backward>(const Context&, const Selection&, const Regex&, bool&);
+template Selection find_next_match<MatchDirection::Forward>(const Context&, const Selection&, const Regex&, int, bool&);
+template Selection find_next_match<MatchDirection::Backward>(const Context&, const Selection&, const Regex&, int, bool&);
 
 using RegexIt = RegexIterator<BufferIterator>;
 
