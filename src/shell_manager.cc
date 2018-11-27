@@ -28,22 +28,32 @@ namespace Kakoune
 ShellManager::ShellManager(ConstArrayView<EnvVarDesc> builtin_env_vars)
     : m_env_vars{builtin_env_vars}
 {
-    // Get a guaranteed to be POSIX shell binary
+    auto is_executable = [](StringView path) {
+        struct stat st;
+        if (stat(path.zstr(), &st))
+            return false;
+
+        bool executable = (st.st_mode & S_IXUSR)
+                        | (st.st_mode & S_IXGRP)
+                        | (st.st_mode & S_IXOTH);
+        return S_ISREG(st.st_mode) and executable;
+    };
+
+    if (const char* shell = getenv("KAKOUNE_POSIX_SHELL"))
+    {
+        if (not is_executable(shell))
+            throw runtime_error{format("KAKOUNE_POSIX_SHELL '{}' is not executable", shell)};
+        m_shell = shell;
+    }
+    else // Get a guaranteed to be POSIX shell binary
     {
         auto size = confstr(_CS_PATH, nullptr, 0);
         String path; path.resize(size-1, 0);
         confstr(_CS_PATH, path.data(), size);
         for (auto dir : StringView{path} | split<StringView>(':'))
         {
-            String candidate = format("{}/sh", dir);
-            struct stat st;
-            if (stat(candidate.c_str(), &st))
-                continue;
-
-            bool executable = (st.st_mode & S_IXUSR)
-                            | (st.st_mode & S_IXGRP)
-                            | (st.st_mode & S_IXOTH);
-            if (S_ISREG(st.st_mode) and executable)
+            auto candidate = format("{}/sh", dir);
+            if (is_executable(candidate))
             {
                 m_shell = std::move(candidate);
                 break;
@@ -100,7 +110,7 @@ pid_t spawn_shell(const char* shell, StringView cmdline,
     envptrs.push_back(nullptr);
 
     auto cmdlinezstr = cmdline.zstr();
-    Vector<const char*> execparams = { shell, "-c", cmdlinezstr };
+    Vector<const char*> execparams = { "sh", "-c", cmdlinezstr };
     if (not params.empty())
         execparams.push_back(shell);
     for (auto& param : params)
