@@ -107,7 +107,7 @@ pid_t spawn_shell(const char* shell, StringView cmdline,
         execparams.push_back(param.c_str());
     execparams.push_back(nullptr);
 
-    if (pid_t pid = fork())
+    if (pid_t pid = vfork())
         return pid;
 
     setup_child();
