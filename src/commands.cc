@@ -2091,6 +2091,21 @@ static Completions complete_face(const Context& context, CompletionFlags flags,
                      transform([](auto& entry) -> const String& { return entry.key; }))};
 }
 
+static String face_doc_helper(const Context& context, CommandParameters params)
+{
+    if (params.size() < 2)
+        return {};
+    try
+    {
+        auto face = context.faces()[params[1]];
+        return format("{}:\n{}", params[1], indent(to_string(face)));
+    }
+    catch (runtime_error&)
+    {
+        return {};
+    }
+}
+
 const CommandDesc set_face_cmd = {
     "set-face",
     "face",
@@ -2106,7 +2121,7 @@ const CommandDesc set_face_cmd = {
     "facespec can as well just be the name of another face",
     ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
-    CommandHelper{},
+    face_doc_helper,
     make_completer(complete_scope, complete_face, complete_face),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
@@ -2123,7 +2138,7 @@ const CommandDesc unset_face_cmd = {
     "unset-face <scope> <name>: remove <face> from <scope>",
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
     CommandFlags::None,
-    CommandHelper{},
+    face_doc_helper,
     make_completer(complete_scope, complete_face),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
