@@ -1862,9 +1862,6 @@ private:
         auto buf_line_count = context.context.buffer().line_count();
         auto disp_line_count = display_lines.size();
 
-        if (disp_line_count >= buf_line_count)
-            return;
-
         auto buffer_to_display_line = [&](LineCount buffer_line) {
             float percent = (float)(int)buffer_line /  (float)(int)(buf_line_count - 1);
             return percent * (disp_line_count - 1);
