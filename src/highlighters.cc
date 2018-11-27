@@ -1842,8 +1842,8 @@ private:
     {
         IndicatorHighlighter(String option_name, String face_name)
             : Highlighter{HighlightPass::Colorize},
-              m_option_name(option_name),
-              m_face_name(face_name)
+              m_option_name{std::move(option_name)},
+              m_face_name{std::move(face_name)}
         {}
 
         void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
@@ -1880,17 +1880,16 @@ private:
 
         const auto& faces = context.context.faces();
         HashMap<int, Face> indicators;
-        // reverse-iterate so that the first added indicators has precedence over the face of the cell
+        // reverse-iterate so that the indicators added first have precedence over the face of the cell
         for (auto& indicator : m_indicators | reverse())
         {
-            auto& subhl = *indicator.second;
-            auto& line_flags = context.context.options()[subhl.m_option_name].get_mutable<LineAndSpecList>();
-            auto& buffer = context.context.buffer();
-            update_line_specs_ifn(buffer, line_flags);
+            auto& line_flags = context.context.options()[indicator.second->m_option_name].get_mutable<LineAndSpecList>();
+            update_line_specs_ifn(context.context.buffer(), line_flags);
+            auto subface = faces[indicator.second->m_face_name];
             for (auto& line : line_flags.list)
             {
                 int display_line = (int)std::round(buffer_to_display_line(std::get<0>(line)));
-                indicators[display_line] = faces[subhl.m_face_name];
+                indicators[display_line] = subface;
             }
         }
 
