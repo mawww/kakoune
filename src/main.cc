@@ -347,7 +347,7 @@ static void check_matching_pairs(const Vector<Codepoint, MemoryDomain::Options>&
 {
     if ((pairs.size() % 2) != 0)
         throw runtime_error{"matching pairs should have a pair number of element"};
-    if (not all_of(pairs, is_punctuation))
+    if (not all_of(pairs, [](Codepoint cp) { return is_punctuation(cp); }))
         throw runtime_error{"matching pairs can only be punctuation"};
 }
 
@@ -422,7 +422,7 @@ void register_options()
     reg.declare_option<Vector<Codepoint, MemoryDomain::Options>, check_extra_word_chars>(
         "extra_word_chars",
         "Additional characters to be considered as words for insert completion",
-        {});
+        { '_' });
     reg.declare_option<Vector<Codepoint, MemoryDomain::Options>, check_matching_pairs>(
         "matching_pairs",
         "set of pair of characters to be considered as matching pairs",

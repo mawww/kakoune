@@ -1327,7 +1327,7 @@ void select_object(Context& context, NormalParams params)
             return;
 
         const Codepoint cp = *key.codepoint();
-        if (is_punctuation(cp) or cp == '_')
+        if (is_punctuation(cp, {}))
         {
             auto re = Regex{"\\Q" + to_string(cp), RegexCompileFlags::Backward};
             return select_and_set_last<mode>(

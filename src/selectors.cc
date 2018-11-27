@@ -63,6 +63,7 @@ select_to_next_word(const Context& context, const Selection& selection)
     Utf8Iterator end = begin+1;
 
     auto is_word = [&](Codepoint c) { return Kakoune::is_word<word_type>(c, extra_word_chars); };
+    auto is_punctuation = [&](Codepoint c) { return Kakoune::is_punctuation(c, extra_word_chars); };
 
     if (is_word(*begin))
         skip_while(end, buffer.end(), is_word);
@@ -96,6 +97,7 @@ select_to_next_word_end(const Context& context, const Selection& selection)
     skip_while(end, buffer.end(), is_horizontal_blank);
 
     auto is_word = [&](Codepoint c) { return Kakoune::is_word<word_type>(c, extra_word_chars); };
+    auto is_punctuation = [&](Codepoint c) { return Kakoune::is_punctuation(c, extra_word_chars); };
 
     if (is_word(*end))
         skip_while(end, buffer.end(), is_word);
@@ -124,6 +126,7 @@ select_to_previous_word(const Context& context, const Selection& selection)
     Utf8Iterator end = begin;
 
     auto is_word = [&](Codepoint c) { return Kakoune::is_word<word_type>(c, extra_word_chars); };
+    auto is_punctuation = [&](Codepoint c) { return Kakoune::is_punctuation(c, extra_word_chars); };
 
     bool with_end = skip_while_reverse(end, buffer.begin(), is_horizontal_blank);
     if (is_word(*end))

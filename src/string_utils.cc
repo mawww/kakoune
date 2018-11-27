@@ -233,7 +233,7 @@ Vector<StringView> wrap_lines(StringView text, ColumnCount max_width)
     Vector<StringView> lines;
     while (it != end)
     {
-        const CharCategories cat = categorize(*it, {});
+        const CharCategories cat = categorize(*it, {'_'});
         if (cat == CharCategories::EndOfLine)
         {
             lines.emplace_back(line_begin.base(), it.base());
@@ -242,7 +242,7 @@ Vector<StringView> wrap_lines(StringView text, ColumnCount max_width)
         }
 
         Utf8It word_end = it+1;
-        while (word_end != end and categorize(*word_end, {}) == cat)
+        while (word_end != end and categorize(*word_end, {'_'}) == cat)
             ++word_end;
 
         while (word_end > line_begin and

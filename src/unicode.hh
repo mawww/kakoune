@@ -32,9 +32,9 @@ inline bool is_blank(Codepoint c) noexcept
 enum WordType { Word, WORD };
 
 template<WordType word_type = Word>
-inline bool is_word(Codepoint c, ConstArrayView<Codepoint> extra_word_chars = {}) noexcept
+inline bool is_word(Codepoint c, ConstArrayView<Codepoint> extra_word_chars = {'_'}) noexcept
 {
-    return c == '_' or iswalnum((wchar_t)c) or contains(extra_word_chars, c);
+    return iswalnum((wchar_t)c) or contains(extra_word_chars, c);
 }
 
 template<>
@@ -43,9 +43,9 @@ inline bool is_word<WORD>(Codepoint c, ConstArrayView<Codepoint>) noexcept
     return not is_blank(c);
 }
 
-inline bool is_punctuation(Codepoint c) noexcept
+inline bool is_punctuation(Codepoint c, ConstArrayView<Codepoint> extra_word_chars = {'_'}) noexcept
 {
-    return not (is_word(c) or is_blank(c));
+    return not (is_word(c, extra_word_chars) or is_blank(c));
 }
 
 inline bool is_basic_alpha(Codepoint c) noexcept
