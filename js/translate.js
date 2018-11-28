@@ -22,6 +22,7 @@
             "navbar:translation:english": "Anglais",
             "navbar:translation:french": "Français",
             "navbar:translation:hungarian": "Hongrois",
+            "navbar:translation:italian": "Italien",
 
             "banner:title": "Kakoune : l'éditeur de code",
             "banner:pitch": "Editeur modal · Plus rapide via moins de touches · Sélections multiples · Conception orthogonale",
@@ -95,6 +96,7 @@
             "navbar:translation:english": "Angol",
             "navbar:translation:french": "Francia",
             "navbar:translation:hungarian": "Magyar",
+            "navbar:translation:italian": "Olasz",
 
             "banner:title": "Kakoune kódszerkesztő",
             "banner:pitch": "Modális szerkesztés · Több eredmény, kevesebb billentyűleütésből · Több kijelölés egyszerre · Egyszerű felépítés",
@@ -149,6 +151,80 @@
 
             "plugins:malwareWarning": $("[tid-hu='plugins:malwareWarning']").html(),
             "plugins:infoContribute": $("[tid-hu='plugins:infoContribute']").html(),
+        },
+        "it": {
+            "head:indexPageTitle": "Kakoune - Sito ufficiale",
+            "head:galleryPageTitle": "Kakoune - Galleria",
+            "head:pluginsPageTitle": "Kakoune - Estensioni",
+
+            "navbar:getStarted": "Inizia!",
+            "navbar:documentation": "Documentazione",
+            "navbar:issueTracker": "Segnalazioni",
+            "navbar:designNotes": "Note sul design di Kakoune",
+            "navbar:gallery": "Galleria",
+            "navbar:plugins": "Estensioni",
+            "navbar:community": "Community",
+            "navbar:wiki": "Wiki",
+            "navbar:forums": "Forum",
+            "navbar:translation": "Traduzioni",
+            "navbar:translation:english": "Inglese",
+            "navbar:translation:french": "Francese",
+            "navbar:translation:hungarian": "Ungherese",
+            "navbar:translation:italian": "Italiano",
+
+            "banner:title": "Kakoune : l'editor di codice",
+            "banner:pitch": "Editor modale · Vai più veloce usando meno tasti · Selezioni multiple · Design ortogonale",
+
+            "menu:features": "Funzionalità",
+            "menu:screenshots": "Screenshot",
+            "menu:gallery": "Galleria",
+
+            "feature:multipleSelections": "Selezioni multiple",
+            "feature:multipleSelectionsText": $("[tid-it='feature:multipleSelectionsText']").html(),
+            "feature:textEditingTools": "Strumenti per la modifica del testo",
+            "feature:textEditingToolsText": $("[tid-it='feature:textEditingToolsText']").html(),
+            "feature:advancedTextManipulation": "Primitive per la manipolazione del testo avanzati",
+            "feature:advancedTextManipulationText": $("[tid-it='feature:advancedTextManipulationText']").html(),
+            "feature:customization": "Personalizzazione",
+            "feature:customizationText": $("[tid-it='feature:customizationText']").html(),
+            "feature:clientServerArchitecture": "Architettura client/server",
+            "feature:clientServerArchitectureText": $("[tid-it='feature:clientServerArchitectureText']").html(),
+            "feature:activeDevelopmentSupport": "Sviluppo attivo & supporto",
+            "feature:activeDevelopmentSupportText": $("[tid-it='feature:activeDevelopmentSupportText']").html(),
+            "feature:learnMore": "Scopri di più sulla filosofia di Kakoune (in inglese)",
+
+            "error:noVideoTag": "Il tuo browser non supporta l'elemento <code>video</code>.",
+
+            "demo:labelNext": "Successivo",
+            "demo:labelPrevious": "Precedente",
+
+            "demo:0": "Incolonna automaticamente i simboli, allineando i cursori delle selezioni",
+            "demo:1": "Selezione del testo con dei predicati, il testo viene salvato nel registro degli appunti per ulteriori modifiche",
+            "demo:2": "Sostituzione visuale e interattiva del testo in una selezione",
+            "demo:3": "Scambia facilmente di posto i parametri con il comando di rotazione delle selezioni",
+            "demo:4": "Architettura client/server, utilizzo del window manager per X11, esecuzione di make/grep in background",
+            "demo:5": "Limita la lunghezza delle righe che non contengono domande in una FAQ",
+
+            "screenshot:0": $("[tid-it='screenshot:0']").html(),
+            "screenshot:1": $("[tid-it='screenshot:1']").html(),
+
+            "gallery:0": $("[tid-it='gallery:0']").html(),
+            "gallery:1": $("[tid-it='gallery:1']").html(),
+            "gallery:2": $("[tid-it='gallery:2']").html(),
+            "gallery:3": $("[tid-it='gallery:3']").html(),
+            "gallery:4": $("[tid-it='gallery:4']").html(),
+            "gallery:5": $("[tid-it='gallery:5']").html(),
+            "gallery:6": $("[tid-it='gallery:6']").html(),
+            "gallery:7": $("[tid-it='gallery:7']").html(),
+            "gallery:8": $("[tid-it='gallery:8']").html(),
+            "gallery:9": $("[tid-it='gallery:9']").html(),
+            "gallery:10": $("[tid-it='gallery:10']").html(),
+            "gallery:11": $("[tid-it='gallery:11']").html(),
+            "gallery:12": $("[tid-it='gallery:12']").html(),
+            "gallery:13": $("[tid-it='gallery:13']").html(),
+
+            "plugins:malwareWarning": $("[tid-it='plugins:malwareWarning']").html(),
+            "plugins:infoContribute": $("[tid-it='plugins:infoContribute']").html(),
         },
     }
 
