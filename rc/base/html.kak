@@ -57,16 +57,19 @@ define-command -hidden html-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group html-highlight global WinSetOption filetype=(?:html|xml) %{ add-highlighter window/html ref html }
-
-hook global WinSetOption filetype=(?:html|xml) %{
-    hook window ModeChange insert:.* -group html-hooks  html-filter-around-selections
-    hook window InsertChar '>' -group html-indent html-indent-on-greater-than
-    hook window InsertChar \n -group html-indent html-indent-on-new-line
+hook -group html-highlight global WinSetOption filetype=(html|xml) %{
+    add-highlighter "window/%val{hook_param_capture_1}" ref html
+    hook -once -always window WinSetOption "filetype=(?!%val{hook_param_capture_1}).*" "
+        remove-highlighter ""window/%val{hook_param_capture_1}""
+    "
 }
 
-hook -group html-highlight global WinSetOption filetype=(?!html)(?!xml).* %{ remove-highlighter window/html }
+hook global WinSetOption filetype=(html|xml) %{
+    hook window ModeChange insert:.* -group "%val{hook_param_capture_1}-hooks"  html-filter-around-selections
+    hook window InsertChar '>' -group "%val{hook_param_capture_1}-indent" html-indent-on-greater-than
+    hook window InsertChar \n -group "%val{hook_param_capture_1}-indent" html-indent-on-new-line
 
-hook global WinSetOption filetype=(?!html)(?!xml).* %{
-    remove-hooks window html-.+
+    hook -once -always window WinSetOption "filetype=(?!%val{hook_param_capture_1}).*" "
+        remove-hooks window ""%val{hook_param_capture_1}-.+""
+    "
 }

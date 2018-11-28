@@ -72,7 +72,6 @@ define-command -hidden init-javascript-filetype -params 1 %~
 
     add-highlighter "shared/%arg{1}/jsx/tag"  region -recurse <  <(?=[/a-zA-Z]) (?<!=)> regions
     add-highlighter "shared/%arg{1}/jsx/expr" region -recurse \{ \{             \}      ref %arg{1}
-        
 
     add-highlighter "shared/%arg{1}/jsx/tag/base" default-region group
     add-highlighter "shared/%arg{1}/jsx/tag/double_string" region =\K" (?<!\\)(\\\\)*" fill string
@@ -93,19 +92,18 @@ define-command -hidden init-javascript-filetype -params 1 %~
     # Initialization
     # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-    hook -group "%arg{1}-highlight" global WinSetOption "filetype=%arg{1}" "add-highlighter window/%arg{1} ref %arg{1}"
+    hook -group "%arg{1}-highlight" global WinSetOption "filetype=%arg{1}" "
+        add-highlighter window/%arg{1} ref %arg{1}
 
-    hook global WinSetOption "filetype=%arg{1}" "
-        hook window ModeChange insert:.* -group %arg{1}-hooks  javascript-filter-around-selections
-        hook window InsertChar .* -group %arg{1}-indent javascript-indent-on-char
-        hook window InsertChar \n -group %arg{1}-indent javascript-indent-on-new-line
+        hook -once -always window WinSetOption filetype=(?!%arg{1}).* %%{ remove-highlighter window/%arg{1} }
     "
 
-    hook -group "%arg{1}-highlight" global WinSetOption "filetype=(?!%arg{1}).*" "remove-highlighter window/%arg{1}"
+    hook global WinSetOption "filetype=%arg{1}" "
+        hook window ModeChange insert:.* -group %arg{1}-hooks javascript-filter-around-selections
+        hook window InsertChar .* -group %arg{1}-indent javascript-indent-on-char
+        hook window InsertChar \n -group %arg{1}-indent javascript-indent-on-new-line
 
-    hook global WinSetOption "filetype=(?!%arg{1}).*" "
-        remove-hooks window %arg{1}-indent
-        remove-hooks window %arg{1}-hooks
+        hook -once -always window WinSetOption filetype=(?!%arg{1}).* %%{ remove-hooks window %arg{1}-.+ }
     "
 ~
 

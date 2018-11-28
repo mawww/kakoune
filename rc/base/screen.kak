@@ -1,6 +1,6 @@
 # http://gnu.org/software/screen/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
- 
+
 hook -group GNUscreen global KakBegin .* %sh{
     [ -z "${STY}" ] && exit
     echo "
@@ -8,7 +8,6 @@ hook -group GNUscreen global KakBegin .* %sh{
         alias global new screen-new-vertical
     "
 }
-
 
 define-command screen-new-vertical -params .. -command-completion -docstring "Split the current pane into two, left and right" %{
      nop %sh{

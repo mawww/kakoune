@@ -187,15 +187,14 @@ define-command -hidden clojure-indent-on-new-line %{
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-hook -group clojure-highlight global WinSetOption filetype=clojure %{ add-highlighter window/clojure ref clojure }
+hook -group clojure-highlight global WinSetOption filetype=clojure %{
+    add-highlighter window/clojure ref clojure
+    hook -once -always window WinSetOption filetype=(?!clojure).* %{ remove-highlighter window/clojure }
+}
 
 hook global WinSetOption filetype=clojure %[
     hook window ModeChange insert:.* -group clojure-hooks  clojure-filter-around-selections
     hook window InsertChar \n -group clojure-indent clojure-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=(?!clojure).* %{ remove-hooks window clojure-.+ }
 ]
-
-hook -group clojure-highlight global WinSetOption filetype=(?!clojure).* %{ remove-highlighter window/clojure }
-
-hook global WinSetOption filetype=(?!clojure).* %{
-    remove-hooks window clojure-.+
-}

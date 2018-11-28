@@ -144,7 +144,10 @@ define-command -hidden ruby-insert-on-new-line %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group ruby-highlight global WinSetOption filetype=ruby %{ add-highlighter window/ruby ref ruby }
+hook -group ruby-highlight global WinSetOption filetype=ruby %{
+    add-highlighter window/ruby ref ruby
+    hook -once -always window WinSetOption filetype=(?!ruby).* %{ remove-highlighter window/ruby }
+}
 
 hook global WinSetOption filetype=ruby %{
     hook window InsertChar .* -group ruby-indent ruby-indent-on-char
@@ -152,12 +155,9 @@ hook global WinSetOption filetype=ruby %{
     hook window InsertChar \n -group ruby-indent ruby-indent-on-new-line
 
     alias window alt ruby-alternative-file
-}
 
-hook -group ruby-highlight global WinSetOption filetype=(?!ruby).* %{ remove-highlighter window/ruby }
-
-hook global WinSetOption filetype=(?!ruby).* %{
-    remove-hooks window ruby-.+
-
-    unalias window alt ruby-alternative-file
+    hook -once -always window WinSetOption filetype=(?!ruby).* %{
+        remove-hooks window ruby-.+
+        unalias window alt ruby-alternative-file
+    }
 }
