@@ -49,15 +49,14 @@ define-command -hidden haml-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group haml-highlight global WinSetOption filetype=haml %{ add-highlighter window/haml ref haml }
+hook -group haml-highlight global WinSetOption filetype=haml %{
+    add-highlighter window/haml ref haml
+    hook -once -always window WinSetOption filetype=(?!haml).* %{ remove-highlighter window/haml }
+}
 
 hook global WinSetOption filetype=haml %{
     hook window ModeChange insert:.* -group haml-hooks  haml-filter-around-selections
     hook window InsertChar \n -group haml-indent haml-indent-on-new-line
-}
 
-hook -group haml-highlight global WinSetOption filetype=(?!haml).* %{ remove-highlighter window/haml }
-
-hook global WinSetOption filetype=(?!haml).* %{
-    remove-hooks window haml-.+
+    hook -once -always window WinSetOption filetype=(?!haml).* %{ remove-hooks window haml-.+ }
 }

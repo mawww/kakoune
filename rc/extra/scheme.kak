@@ -114,18 +114,14 @@ evaluate-commands %sh{
 
 hook -group scheme-highlight global WinSetOption filetype=scheme %{
     add-highlighter window/scheme ref scheme
+    hook -once -always window WinSetOption filetype=(?!scheme).* %{ remove-highlighter window/scheme }
 }
 
-hook -group scheme-highlight global WinSetOption filetype=(?!scheme).* %{
-    remove-highlighter window/scheme
-}
 
 hook global WinSetOption filetype=scheme %{
     set-option buffer extra_word_chars '_' '-' '!' '%' '?' '<' '>' '='
     hook window InsertEnd  .* -group scheme-hooks  lisp-filter-around-selections
     hook window InsertChar \n -group scheme-indent lisp-indent-on-new-line
-}
 
-hook global WinSetOption filetype=(?!scheme).* %{
-    remove-hooks window scheme-.+
+    hook -once -always window WinSetOption filetype=(?!scheme).* %{ remove-hooks window scheme-.+ }
 }

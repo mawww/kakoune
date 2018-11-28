@@ -61,15 +61,14 @@ define-command -hidden pug-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group pug-highlight global WinSetOption filetype=pug %{ add-highlighter window/pug ref pug }
+hook -group pug-highlight global WinSetOption filetype=pug %{
+    add-highlighter window/pug ref pug
+    hook -once -always window WinSetOption filetype=(?!pug).* %{ remove-highlighter window/pug }
+}
 
 hook global WinSetOption filetype=pug %{
     hook window ModeChange insert:.* -group pug-hooks  pug-filter-around-selections
     hook window InsertChar \n -group pug-indent pug-indent-on-new-line
-}
 
-hook -group pug-highlight global WinSetOption filetype=(?!pug).* %{ remove-highlighter window/pug }
-
-hook global WinSetOption filetype=(?!pug).* %{
-    remove-hooks window pug-.+
+    hook -once -always window WinSetOption filetype=(?!pug).* %{ remove-hooks window pug-.+ }
 }

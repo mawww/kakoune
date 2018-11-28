@@ -88,7 +88,10 @@ define-command -hidden moon-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group moon-highlight global WinSetOption filetype=moon %{ add-highlighter window/moon ref moon }
+hook -group moon-highlight global WinSetOption filetype=moon %{
+    add-highlighter window/moon ref moon
+    hook -once -always window WinSetOption filetype=(?!moon).* %{ remove-highlighter window/moon }
+}
 
 hook global WinSetOption filetype=moon %{
     hook window ModeChange insert:.* -group moon-hooks  moon-filter-around-selections
@@ -96,12 +99,9 @@ hook global WinSetOption filetype=moon %{
     hook window InsertChar \n -group moon-indent moon-indent-on-new-line
 
     alias window alt moon-alternative-file
-}
 
-hook -group moon-highlight global WinSetOption filetype=(?!moon).* %{ remove-highlighter window/moon }
-
-hook global WinSetOption filetype=(?!moon).* %{
-    remove-hooks window moon-.+
-
-    unalias window alt moon-alternative-file
+    hook global WinSetOption filetype=(?!moon).* %{
+        remove-hooks window moon-.+
+        unalias window alt moon-alternative-file
+    }
 }

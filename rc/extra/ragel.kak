@@ -56,16 +56,15 @@ define-command -hidden ragel-indent-on-new-line %<
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group ragel-highlight global WinSetOption filetype=ragel %{ add-highlighter window/ragel ref ragel }
+hook -group ragel-highlight global WinSetOption filetype=ragel %{
+    add-highlighter window/ragel ref ragel
+    hook -once -always window WinSetOption filetype=(?!ragel).* %{ remove-highlighter window/ragel }
+}
 
 hook global WinSetOption filetype=ragel %{
     hook window ModeChange insert:.* -group ragel-hooks  ragel-filter-around-selections
     hook window InsertChar .* -group ragel-indent ragel-indent-on-char
     hook window InsertChar \n -group ragel-indent ragel-indent-on-new-line
-}
 
-hook -group ragel-highlight global WinSetOption filetype=(?!ragel).* %{ remove-highlighter window/ragel }
-
-hook global WinSetOption filetype=(?!ragel).* %{
-    remove-hooks window ragel-.+
+    hook -once -always window WinSetOption filetype=(?!ragel).* %{ remove-hooks window ragel-.+ }
 }
