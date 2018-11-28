@@ -37,5 +37,7 @@ add-highlighter shared/sh/code/function regex ^\h*(\w+)\h*\(\) 1:function
 add-highlighter shared/sh/code/expansion regex \$(\w+|\{.+?\}|#|@|\?|\$|!|-|\*) 0:value
 add-highlighter shared/sh/double_string/expansion regex \$(\w+|\{.+?\}) 0:value
 
-hook -group sh-highlight global WinSetOption filetype=sh %{ add-highlighter window/sh ref sh }
-hook -group sh-highlight global WinSetOption filetype=(?!sh).* %{ remove-highlighter window/sh }
+hook -group sh-highlight global WinSetOption filetype=sh %{
+    add-highlighter window/sh ref sh
+    hook -once -always window WinSetOption filetype=(?!sh).* %{ remove-highlighter window/sh }
+}

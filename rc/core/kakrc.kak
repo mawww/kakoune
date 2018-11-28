@@ -92,7 +92,10 @@ define-command -hidden kak-indent-on-closing-char %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group kak-highlight global WinSetOption filetype=kak %{ add-highlighter window/kakrc ref kakrc }
+hook -group kak-highlight global WinSetOption filetype=kak %{
+    add-highlighter window/kakrc ref kakrc
+    hook -once -always window WinSetOption filetype=(?!kak).* %{ remove-highlighter window/kakrc }
+}
 
 hook global WinSetOption filetype=kak %~
     hook window InsertChar \n -group kak-indent kak-indent-on-new-line
@@ -101,7 +104,6 @@ hook global WinSetOption filetype=kak %~
     # cleanup trailing whitespaces on current line insert end
     hook window ModeChange insert:.* -group kak-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
     set-option buffer extra_word_chars '_' '-'
-~
 
-hook -group kak-highlight global WinSetOption filetype=(?!kak).* %{ remove-highlighter window/kakrc }
-hook global WinSetOption filetype=(?!kak).* %{ remove-hooks window kak-indent }
+    hook -once -always window WinSetOption filetype=(?!kak).* %{ remove-hooks window kak-.+ }
+~

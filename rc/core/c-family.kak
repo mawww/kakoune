@@ -3,7 +3,7 @@ hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H)$ %{
 }
 
 hook global BufSetOption filetype=c\+\+ %{
-    set-option buffer filetype cpp
+    hook -once buffer NormalIdle '' "set-option buffer filetype cpp"
 }
 
 hook global BufCreate .*\.c$ %{
@@ -318,34 +318,37 @@ evaluate-commands %sh{
 }
 
 hook global WinSetOption filetype=(c|cpp|objc) %[
-    try %{ # we might be switching from one c-family language to another
-        remove-hooks window c-family-.+
-    }
-
-    hook -group c-family-indent window ModeChange insert:.* c-family-trim-autoindent
-    hook -group c-family-insert window InsertChar \n c-family-insert-on-newline
-    hook -group c-family-indent window InsertChar \n c-family-indent-on-newline
-    hook -group c-family-indent window InsertChar \{ c-family-indent-on-opening-curly-brace
-    hook -group c-family-indent window InsertChar \} c-family-indent-on-closing-curly-brace
-    hook -group c-family-insert window InsertChar \} c-family-insert-on-closing-curly-brace
+    hook -group "%val{hook_param_capture_1}-family-indent" window ModeChange insert:.* c-family-trim-autoindent
+    hook -group "%val{hook_param_capture_1}-family-insert" window InsertChar \n c-family-insert-on-newline
+    hook -group "%val{hook_param_capture_1}-family-indent" window InsertChar \n c-family-indent-on-newline
+    hook -group "%val{hook_param_capture_1}-family-indent" window InsertChar \{ c-family-indent-on-opening-curly-brace
+    hook -group "%val{hook_param_capture_1}-family-indent" window InsertChar \} c-family-indent-on-closing-curly-brace
+    hook -group "%val{hook_param_capture_1}-family-insert" window InsertChar \} c-family-insert-on-closing-curly-brace
 
     alias window alt c-family-alternative-file
+
+    hook -once -always window WinSetOption "filetype=(?!%val{hook_param_capture_1}).*" "
+        remove-hooks window c-family-.+
+    "
+    hook -once -always window WinSetOption filetype=(?!c)(?!cpp)(?!objc).* %{
+        unalias window alt c-family-alternative-file
+    }
 ]
 
-hook global WinSetOption filetype=(?!c)(?!cpp)(?!objc).* %[
-    remove-hooks window c-family-.+
+hook -group c-highlight global WinSetOption filetype=c %{
+    add-highlighter window/c ref c
+    hook -once -always window WinSetOption filetype=(?!c).* %{ remove-highlighter window/c }
+}
 
-    unalias window alt c-family-alternative-file
-]
+hook -group cpp-highlight global WinSetOption filetype=cpp %{
+    add-highlighter window/cpp ref cpp
+    hook -once -always window WinSetOption filetype=(?!cpp).* %{ remove-highlighter window/cpp }
+}
 
-hook -group c-highlight global WinSetOption filetype=c %[ add-highlighter window/c ref c ]
-hook -group c-highlight global WinSetOption filetype=(?!c).* %[ remove-highlighter window/c ]
-
-hook -group cpp-highlight global WinSetOption filetype=cpp %[ add-highlighter window/cpp ref cpp ]
-hook -group cpp-highlight global WinSetOption filetype=(?!cpp).* %[ remove-highlighter window/cpp ]
-
-hook -group objc-highlight global WinSetOption filetype=objc %[ add-highlighter window/objc ref objc ]
-hook -group objc-highlight global WinSetOption filetype=(?!objc).* %[ remove-highlighter window/objc ]
+hook -group objc-highlight global WinSetOption filetype=objc %{
+    add-highlighter window/objc ref objc
+    hook -once -always window WinSetOption filetype=(?!objc).* %{ remove-highlighter window/objc }
+}
 
 declare-option -docstring %{control the type of include guard to be inserted in empty headers
 Can be one of the following:
