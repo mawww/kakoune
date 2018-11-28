@@ -53,7 +53,7 @@ hook -group sass-highlight global WinSetOption filetype=sass %{ add-highlighter 
 hook global WinSetOption filetype=sass %{
     hook window ModeChange insert:.* -group sass-hooks  sass-filter-around-selections
     hook window InsertChar \n -group sass-indent sass-indent-on-new-line
-    set-option buffer extra_word_chars '-'
+    set-option buffer extra_word_chars '_' '-'
 }
 
 hook -group sass-highlight global WinSetOption filetype=(?!sass).* %{ remove-highlighter window/sass }

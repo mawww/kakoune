@@ -45,7 +45,7 @@ evaluate-commands %sh{
     # Add the language's grammar to the static completion list
     printf '%s\n' "hook global WinSetOption filetype=kak %{
         set-option window static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')'
-        set-option -- window extra_word_chars '-'
+        set-option -- window extra_word_chars '_' '-'
     }"
 
     # Highlight keywords (which are always surrounded by whitespace)
@@ -100,7 +100,7 @@ hook global WinSetOption filetype=kak %~
     hook window InsertChar (?![[{(<>)}\]])[^\s\w] -group kak-indent kak-indent-on-closing-char
     # cleanup trailing whitespaces on current line insert end
     hook window ModeChange insert:.* -group kak-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
-    set-option buffer extra_word_chars '-'
+    set-option buffer extra_word_chars '_' '-'
 ~
 
 hook -group kak-highlight global WinSetOption filetype=(?!kak).* %{ remove-highlighter window/kakrc }

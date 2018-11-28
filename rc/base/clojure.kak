@@ -23,7 +23,7 @@ add-highlighter shared/clojure/code/ regex \
     \\(?:space|tab|newline|return|backspace|formfeed|u[0-9a-fA-F]{4}|o[0-3]?[0-7]{1,2}|.)\b 0:string
 
 hook global WinSetOption filetype=clojure %{
-    set-option window extra_word_chars . / * ? + - < > ! : "'"
+    set-option window extra_word_chars '_' . / * ? + - < > ! : "'"
 }
 
 evaluate-commands %sh{

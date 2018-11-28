@@ -36,7 +36,7 @@ hook global WinSetOption filetype=scss %[
     hook window ModeChange insert:.* -group scss-hooks  scss-filter-around-selections
     hook window InsertChar \n -group scss-indent scss-indent-on-new-line
     hook window InsertChar \} -group scss-indent scss-indent-on-closing-curly-brace
-    set-option buffer extra_word_chars '-'
+    set-option buffer extra_word_chars '_' '-'
 ]
 
 hook -group scss-highlight global WinSetOption filetype=(?!scss).* %{ remove-highlighter window/scss }

@@ -121,7 +121,7 @@ hook -group scheme-highlight global WinSetOption filetype=(?!scheme).* %{
 }
 
 hook global WinSetOption filetype=scheme %{
-	set-option -add buffer extra_word_chars %{-:!:%:?:<:>:=}
+    set-option buffer extra_word_chars '_' '-' '!' '%' '?' '<' '>' '='
     hook window InsertEnd  .* -group scheme-hooks  lisp-filter-around-selections
     hook window InsertChar \n -group scheme-indent lisp-indent-on-new-line
 }
