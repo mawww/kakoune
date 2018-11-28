@@ -59,6 +59,8 @@ public:
     virtual void add_from_strings(ConstArrayView<String> strs) = 0;
     virtual void update(const Context& context) = 0;
 
+    virtual bool has_same_value(const Option& other) const = 0;
+
     virtual Option* clone(OptionManager& manager) const = 0;
     OptionManager& manager() const { return m_manager; }
 
@@ -166,6 +168,11 @@ public:
     void update(const Context& context) override
     {
         option_update(m_value, context);
+    }
+
+    bool has_same_value(const Option& other) const override
+    {
+        return other.is_of_type<T>() and other.get<T>() == m_value;
     }
 private:
     virtual void validate(const T& value) const {}

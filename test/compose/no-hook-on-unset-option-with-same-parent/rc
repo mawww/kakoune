@@ -1,0 +1,5 @@
+decl str foo
+hook global BufSetOption foo=.* %{ exec ifoo<esc> }
+set-option buffer foo value # triggers hook
+set-option global foo value # does not trigger hook
+unset-option buffer foo # does not trigger hook
