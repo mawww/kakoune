@@ -26,6 +26,7 @@ namespace Kakoune
 
 using std::min;
 using std::max;
+using std::function;
 
 struct NCursesWin : WINDOW {};
 
@@ -671,11 +672,12 @@ Optional<Key> NCursesUI::get_next_key()
                   const Codepoint c2 = wgetch(m_window);
                   if ( c2 != ';' )
                   {
-                      ungetch(c2); ungetch(c1); break;
+                      ungetch(c2); ungetch(c1);
+                      break;
                   }
 
                   const Codepoint c3 = wgetch(m_window);
-                  Key (*f)(Key) = NULL;
+                  function<Key(Key)> f  = nullptr;
                   switch (c3)
                   {
                       case '2': f = shift; break;
@@ -686,9 +688,10 @@ Optional<Key> NCursesUI::get_next_key()
                       case '7': f = alt_ctrl; break;
                       case '8': f = shift_alt_ctrl; break;
                   }
-                  if ( f == NULL )
+                  if ( f == nullptr )
                   {
-                      ungetch(c3); ungetch(c2); ungetch(c1); break;
+                      ungetch(c3); ungetch(c2); ungetch(c1);
+                      break;
                   }
 
                   const Codepoint c4 = wgetch(m_window);
@@ -702,10 +705,12 @@ Optional<Key> NCursesUI::get_next_key()
                       case 'F': return f(Key::End);
                   }
 
-                  ungetch(c4); ungetch(c3); ungetch(c2); ungetch(c1); break;
+                  ungetch(c4); ungetch(c3); ungetch(c2); ungetch(c1);
+                  break;
                 }
             default:
-              ungetch(c1); break;
+              ungetch(c1);
+              break;
             }
         }
         wtimeout(m_window, -1);
