@@ -21,7 +21,7 @@ enum class MenuEvent
     Abort,
     Validate
 };
-using MenuCallback = std::function<void (int, MenuEvent, Context&)>;
+using MenuCallback = std::function<void(int, MenuEvent, Context&)>;
 
 enum class PromptEvent
 {
@@ -29,18 +29,17 @@ enum class PromptEvent
     Abort,
     Validate
 };
-using PromptCallback = std::function<void (StringView, PromptEvent, Context&)>;
+using PromptCallback = std::function<void(StringView, PromptEvent, Context&)>;
 enum class PromptFlags
 {
-    None = 0,
-    Password = 1 << 0,
+    None                              = 0,
+    Password                          = 1 << 0,
     DropHistoryEntriesWithBlankPrefix = 1 << 1,
-    Search = 1 << 2,
+    Search                            = 1 << 2,
 };
 constexpr bool with_bit_ops(Meta::Type<PromptFlags>) { return true; }
 
-
-using KeyCallback = std::function<void (Key, Context&)>;
+using KeyCallback = std::function<void(Key, Context&)>;
 
 class InputMode;
 enum class InsertMode : unsigned;
@@ -51,8 +50,7 @@ class InputHandler : public SafeCountable
 {
 public:
     InputHandler(SelectionList selections,
-                 Context::Flags flags = Context::Flags::None,
-                 String name = "");
+                 Context::Flags flags = Context::Flags::None, String name = "");
     ~InputHandler();
 
     // switch to insert mode
@@ -65,8 +63,8 @@ public:
     // returns to normal mode after validation if callback does
     // not change the mode itself
     void prompt(StringView prompt, String initstr, String emptystr,
-                Face prompt_face, PromptFlags flags,
-                Completer completer, PromptCallback callback);
+                Face prompt_face, PromptFlags flags, Completer completer,
+                PromptCallback callback);
     void set_prompt_face(Face prompt_face);
 
     // enter menu mode, callback is called on each selection change,
@@ -118,24 +116,25 @@ private:
     void push_mode(InputMode* new_mode);
     void pop_mode(InputMode* current_mode);
 
-    struct Insertion{
+    struct Insertion
+    {
         NestedBool recording;
         InsertMode mode;
         Vector<Key> keys;
         bool disable_hooks;
         int count;
-    } m_last_insert = { {}, InsertMode::Insert, {}, false, 1 };
+    } m_last_insert = {{}, InsertMode::Insert, {}, false, 1};
 
-    char   m_recording_reg = 0;
+    char m_recording_reg = 0;
     String m_recorded_keys;
-    int    m_recording_level = -1;
+    int m_recording_level = -1;
 
-    int    m_handle_key_level = 0;
+    int m_handle_key_level = 0;
 };
 
 enum class AutoInfo
 {
-    None = 0,
+    None    = 0,
     Command = 1 << 0,
     OnKey   = 1 << 1,
     Normal  = 1 << 2
@@ -145,16 +144,14 @@ constexpr bool with_bit_ops(Meta::Type<AutoInfo>) { return true; }
 
 constexpr auto enum_desc(Meta::Type<AutoInfo>)
 {
-    return make_array<EnumDesc<AutoInfo>, 3>({
-        { AutoInfo::Command, "command"},
-        { AutoInfo::OnKey, "onkey"},
-        { AutoInfo::Normal, "normal" }
-    });
+    return make_array<EnumDesc<AutoInfo>, 3>({{AutoInfo::Command, "command"},
+                                              {AutoInfo::OnKey, "onkey"},
+                                              {AutoInfo::Normal, "normal"}});
 }
 
 enum class AutoComplete
 {
-    None = 0,
+    None   = 0,
     Insert = 0b01,
     Prompt = 0b10
 };
@@ -162,25 +159,24 @@ constexpr bool with_bit_ops(Meta::Type<AutoComplete>) { return true; }
 
 constexpr auto enum_desc(Meta::Type<AutoComplete>)
 {
-    return make_array<EnumDesc<AutoComplete>, 3>({
-        { AutoComplete::Insert, "insert"},
-        { AutoComplete::Prompt, "prompt" }
-    });
+    return make_array<EnumDesc<AutoComplete>, 3>(
+        {{AutoComplete::Insert, "insert"}, {AutoComplete::Prompt, "prompt"}});
 }
 
-bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context);
+bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask,
+                        const Context& context);
 void hide_auto_info_ifn(const Context& context, bool hide);
 
 template<typename Cmd>
-void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode, Cmd cmd,
-                               StringView title, StringView info)
+void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode,
+                               Cmd cmd, StringView title, StringView info)
 {
     const bool hide = show_auto_info_ifn(title, info, AutoInfo::OnKey, context);
     context.input_handler().on_next_key(
-        keymap_mode, [hide,cmd](Key key, Context& context) mutable {
+        keymap_mode, [hide, cmd](Key key, Context& context) mutable {
             hide_auto_info_ifn(context, hide);
             cmd(key, context);
-    });
+        });
 }
 
 void scroll_window(Context& context, LineCount offset);

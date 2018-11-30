@@ -17,25 +17,37 @@
 namespace Kakoune
 {
 
-struct invalid_rpc_request : runtime_error {
+struct invalid_rpc_request : runtime_error
+{
     invalid_rpc_request(String message)
-        : runtime_error(format("invalid json rpc request ({})", message)) {}
+        : runtime_error(format("invalid json rpc request ({})", message))
+    {}
 };
 
 template<typename T>
 String to_json(ArrayView<const T> array)
 {
-    return "[" + join(array | transform([](auto&& elem) { return to_json(elem); }), ", ") + "]";
+    return "["
+           + join(array | transform([](auto&& elem) { return to_json(elem); }),
+                  ", ")
+           + "]";
 }
 
 template<typename T, MemoryDomain D>
-String to_json(const Vector<T, D>& vec) { return to_json(ArrayView<const T>{vec}); }
+String to_json(const Vector<T, D>& vec)
+{
+    return to_json(ArrayView<const T>{vec});
+}
 
 template<typename K, typename V, MemoryDomain D>
 String to_json(const HashMap<K, V, D>& map)
 {
-    return "{" + join(map | transform([](auto&& i) { return format("{}: {}", to_json(i.key), to_json(i.value)); }),
-                      ',', false) + "}";
+    return "{"
+           + join(map | transform([](auto&& i) {
+                      return format("{}: {}", to_json(i.key), to_json(i.value));
+                  }),
+                  ',', false)
+           + "}";
 }
 
 String to_json(int i) { return to_string(i); }
@@ -45,7 +57,7 @@ String to_json(StringView str)
     String res;
     res.reserve(str.length() + 4);
     res += '"';
-    for (auto it = str.begin(), end = str.end(); it != end; )
+    for (auto it = str.begin(), end = str.end(); it != end;)
     {
         auto next = std::find_if(it, end, [](char c) {
             return c == '\\' or c == '"' or (c >= 0 and c <= 0x1F);
@@ -60,7 +72,7 @@ String to_json(StringView str)
             sprintf(buf, "\\u%04x", *next);
 
         res += buf;
-        it = next+1;
+        it = next + 1;
     }
     res += '"';
     return res;
@@ -79,23 +91,28 @@ String to_json(Color color)
 
 String to_json(Attribute attributes)
 {
-    struct Attr { Attribute attr; StringView name; }
-    attrs[] {
-        { Attribute::Underline, "underline" },
-        { Attribute::Reverse, "reverse" },
-        { Attribute::Blink, "blink" },
-        { Attribute::Bold, "bold" },
-        { Attribute::Dim, "dim" },
-        { Attribute::Italic, "italic" },
-        { Attribute::FinalFg, "final_fg" },
-        { Attribute::FinalBg, "final_bg" },
-        { Attribute::FinalAttr, "final_attr" },
+    struct Attr
+    {
+        Attribute attr;
+        StringView name;
+    } attrs[]{
+        {Attribute::Underline, "underline"},
+        {Attribute::Reverse, "reverse"},
+        {Attribute::Blink, "blink"},
+        {Attribute::Bold, "bold"},
+        {Attribute::Dim, "dim"},
+        {Attribute::Italic, "italic"},
+        {Attribute::FinalFg, "final_fg"},
+        {Attribute::FinalBg, "final_bg"},
+        {Attribute::FinalAttr, "final_attr"},
     };
 
-    return "[" + join(attrs |
-                      filter([=](const Attr& a) { return attributes & a.attr; }) |
-                      transform([](const Attr& a) { return to_json(a.name); }),
-                      ',', false) + "]";
+    return "["
+           + join(attrs | filter([=](const Attr& a) {
+                      return attributes & a.attr;
+                  }) | transform([](const Attr& a) { return to_json(a.name); }),
+                  ',', false)
+           + "]";
 }
 
 String to_json(Face face)
@@ -106,13 +123,11 @@ String to_json(Face face)
 
 String to_json(const DisplayAtom& atom)
 {
-    return format(R"(\{ "face": {}, "contents": {} })", to_json(atom.face), to_json(atom.content()));
+    return format(R"(\{ "face": {}, "contents": {} })", to_json(atom.face),
+                  to_json(atom.content()));
 }
 
-String to_json(const DisplayLine& line)
-{
-    return to_json(line.atoms());
-}
+String to_json(const DisplayLine& line) { return to_json(line.atoms()); }
 
 String to_json(DisplayCoord coord)
 {
@@ -123,9 +138,12 @@ String to_json(MenuStyle style)
 {
     switch (style)
     {
-        case MenuStyle::Prompt: return R"("prompt")";
-        case MenuStyle::Search: return R"("search")";
-        case MenuStyle::Inline: return R"("inline")";
+        case MenuStyle::Prompt:
+            return R"("prompt")";
+        case MenuStyle::Search:
+            return R"("search")";
+        case MenuStyle::Inline:
+            return R"("inline")";
     }
     return "";
 }
@@ -134,12 +152,18 @@ String to_json(InfoStyle style)
 {
     switch (style)
     {
-        case InfoStyle::Prompt: return R"("prompt")";
-        case InfoStyle::Inline: return R"("inline")";
-        case InfoStyle::InlineAbove: return R"("inlineAbove")";
-        case InfoStyle::InlineBelow: return R"("inlineBelow")";
-        case InfoStyle::MenuDoc: return R"("menuDoc")";
-        case InfoStyle::Modal: return R"("modal")";
+        case InfoStyle::Prompt:
+            return R"("prompt")";
+        case InfoStyle::Inline:
+            return R"("inline")";
+        case InfoStyle::InlineAbove:
+            return R"("inlineAbove")";
+        case InfoStyle::InlineBelow:
+            return R"("inlineBelow")";
+        case InfoStyle::MenuDoc:
+            return R"("menuDoc")";
+        case InfoStyle::Modal:
+            return R"("modal")";
     }
     return "";
 }
@@ -148,16 +172,15 @@ String to_json(CursorMode mode)
 {
     switch (mode)
     {
-        case CursorMode::Prompt: return R"("prompt")";
-        case CursorMode::Buffer: return R"("buffer")";
+        case CursorMode::Prompt:
+            return R"("prompt")";
+        case CursorMode::Buffer:
+            return R"("buffer")";
     }
     return "";
 }
 
-String concat()
-{
-    return "";
-}
+String concat() { return ""; }
 
 template<typename First, typename... Args>
 String concat(First&& first, Args&&... args)
@@ -170,8 +193,9 @@ String concat(First&& first, Args&&... args)
 template<typename... Args>
 void rpc_call(StringView method, Args&&... args)
 {
-    auto q = format(R"(\{ "jsonrpc": "2.0", "method": "{}", "params": [{}] }{})",
-                    method, concat(std::forward<Args>(args)...), "\n");
+    auto q
+        = format(R"(\{ "jsonrpc": "2.0", "method": "{}", "params": [{}] }{})",
+                 method, concat(std::forward<Args>(args)...), "\n");
 
     write(1, q);
 }
@@ -179,87 +203,68 @@ void rpc_call(StringView method, Args&&... args)
 JsonUI::JsonUI()
     : m_stdin_watcher{0, FdEvents::Read,
                       [this](FDWatcher&, FdEvents, EventMode mode) {
-        parse_requests(mode);
-      }}, m_dimensions{24, 80}
+                          parse_requests(mode);
+                      }},
+      m_dimensions{24, 80}
 {
     set_signal_handler(SIGINT, SIG_DFL);
 }
 
-void JsonUI::draw(const DisplayBuffer& display_buffer,
-                  const Face& default_face, const Face& padding_face)
+void JsonUI::draw(const DisplayBuffer& display_buffer, const Face& default_face,
+                  const Face& padding_face)
 {
     rpc_call("draw", display_buffer.lines(), default_face, padding_face);
 }
 
 void JsonUI::draw_status(const DisplayLine& status_line,
-                         const DisplayLine& mode_line,
-                         const Face& default_face)
+                         const DisplayLine& mode_line, const Face& default_face)
 {
     rpc_call("draw_status", status_line, mode_line, default_face);
 }
 
-
-void JsonUI::menu_show(ConstArrayView<DisplayLine> items,
-                       DisplayCoord anchor, Face fg, Face bg,
-                       MenuStyle style)
+void JsonUI::menu_show(ConstArrayView<DisplayLine> items, DisplayCoord anchor,
+                       Face fg, Face bg, MenuStyle style)
 {
     rpc_call("menu_show", items, anchor, fg, bg, style);
 }
 
-void JsonUI::menu_select(int selected)
-{
-    rpc_call("menu_select", selected);
-}
+void JsonUI::menu_select(int selected) { rpc_call("menu_select", selected); }
 
-void JsonUI::menu_hide()
-{
-    rpc_call("menu_hide");
-}
+void JsonUI::menu_hide() { rpc_call("menu_hide"); }
 
 void JsonUI::info_show(StringView title, StringView content,
-                       DisplayCoord anchor, Face face,
-                       InfoStyle style)
+                       DisplayCoord anchor, Face face, InfoStyle style)
 {
     rpc_call("info_show", title, content, anchor, face, style);
 }
 
-void JsonUI::info_hide()
-{
-    rpc_call("info_hide");
-}
+void JsonUI::info_hide() { rpc_call("info_hide"); }
 
 void JsonUI::set_cursor(CursorMode mode, DisplayCoord coord)
 {
     rpc_call("set_cursor", mode, coord);
 }
 
-void JsonUI::refresh(bool force)
-{
-    rpc_call("refresh", force);
-}
+void JsonUI::refresh(bool force) { rpc_call("refresh", force); }
 
 void JsonUI::set_ui_options(const Options& options)
 {
     rpc_call("set_ui_options", options);
 }
 
-DisplayCoord JsonUI::dimensions()
-{
-    return m_dimensions;
-}
+DisplayCoord JsonUI::dimensions() { return m_dimensions; }
 
 void JsonUI::set_on_key(OnKeyCallback callback)
 {
     m_on_key = std::move(callback);
 }
 
-using JsonArray = Vector<Value>;
+using JsonArray  = Vector<Value>;
 using JsonObject = HashMap<String, Value>;
 
 static bool is_digit(char c) { return c >= '0' and c <= '9'; }
 
-std::tuple<Value, const char*>
-parse_json(const char* pos, const char* end)
+std::tuple<Value, const char*> parse_json(const char* pos, const char* end)
 {
     using Result = std::tuple<Value, const char*>;
 
@@ -270,12 +275,12 @@ parse_json(const char* pos, const char* end)
     {
         auto digit_end = pos;
         skip_while(digit_end, end, is_digit);
-        return Result{ Value{str_to_int({pos, digit_end})}, digit_end };
+        return Result{Value{str_to_int({pos, digit_end})}, digit_end};
     }
-    if (end - pos > 4 and StringView{pos, pos+4} == "true")
-        return Result{ Value{true}, pos+4 };
-    if (end - pos > 5 and StringView{pos, pos+5} == "false")
-        return Result{ Value{false}, pos+5 };
+    if (end - pos > 4 and StringView{pos, pos + 4} == "true")
+        return Result{Value{true}, pos + 4};
+    if (end - pos > 5 and StringView{pos, pos + 5} == "false")
+        return Result{Value{false}, pos + 5};
     if (*pos == '"')
     {
         String value;
@@ -288,7 +293,7 @@ parse_json(const char* pos, const char* end)
                 escaped = false;
                 value += StringView{pos, string_end};
                 value.back() = *string_end;
-                pos = string_end+1;
+                pos          = string_end + 1;
                 continue;
             }
             if (*string_end == '\\')
@@ -296,7 +301,7 @@ parse_json(const char* pos, const char* end)
             if (*string_end == '"')
             {
                 value += StringView{pos, string_end};
-                return Result{std::move(value), string_end+1};
+                return Result{std::move(value), string_end + 1};
             }
         }
         return {};
@@ -307,7 +312,7 @@ parse_json(const char* pos, const char* end)
         if (++pos == end)
             throw runtime_error("unable to parse array");
         if (*pos == ']')
-            return Result{std::move(array), pos+1};
+            return Result{std::move(array), pos + 1};
 
         while (true)
         {
@@ -322,9 +327,10 @@ parse_json(const char* pos, const char* end)
             if (*pos == ',')
                 ++pos;
             else if (*pos == ']')
-                return Result{std::move(array), pos+1};
+                return Result{std::move(array), pos + 1};
             else
-                throw runtime_error("unable to parse array, expected ',' or ']'");
+                throw runtime_error(
+                    "unable to parse array, expected ',' or ']'");
         }
     }
     if (*pos == '{')
@@ -333,7 +339,7 @@ parse_json(const char* pos, const char* end)
             throw runtime_error("unable to parse object");
         JsonObject object;
         if (*pos == '}')
-            return Result{std::move(object), pos+1};
+            return Result{std::move(object), pos + 1};
 
         while (true)
         {
@@ -352,23 +358,26 @@ parse_json(const char* pos, const char* end)
             std::tie(element, pos) = parse_json(pos, end);
             if (not element)
                 return {};
-            object.insert({ std::move(name), std::move(element) });
+            object.insert({std::move(name), std::move(element)});
             if (not skip_while(pos, end, is_blank))
                 return {};
 
             if (*pos == ',')
                 ++pos;
             else if (*pos == '}')
-                return Result{std::move(object), pos+1};
+                return Result{std::move(object), pos + 1};
             else
-                throw runtime_error("unable to parse object, expected ',' or '}'");
+                throw runtime_error(
+                    "unable to parse object, expected ',' or '}'");
         }
     }
     throw runtime_error("unable to parse json");
 }
 
-std::tuple<Value, const char*>
-parse_json(StringView json) { return parse_json(json.begin(), json.end()); }
+std::tuple<Value, const char*> parse_json(StringView json)
+{
+    return parse_json(json.begin(), json.end());
+}
 
 void JsonUI::eval_json(const Value& json)
 {
@@ -376,10 +385,9 @@ void JsonUI::eval_json(const Value& json)
         throw invalid_rpc_request("request is not an object");
 
     const JsonObject& object = json.as<JsonObject>();
-    auto json_it = object.find("jsonrpc"_sv);
-    if (json_it == object.end() or
-        not json_it->value.is_a<String>() or
-        json_it->value.as<String>() != "2.0")
+    auto json_it             = object.find("jsonrpc"_sv);
+    if (json_it == object.end() or not json_it->value.is_a<String>()
+        or json_it->value.as<String>() != "2.0")
         throw invalid_rpc_request("only protocol '2.0' is supported");
     else if (not json_it->value.is_a<String>())
         throw invalid_rpc_request("'jsonrpc' is not a string");
@@ -416,12 +424,12 @@ void JsonUI::eval_json(const Value& json)
 
         if (not params[0].is_a<String>())
             throw invalid_rpc_request("mouse type is not a string");
-        else if (not params[1].is_a<int>() or
-                 not params[2].is_a<int>())
+        else if (not params[1].is_a<int>() or not params[2].is_a<int>())
             throw invalid_rpc_request("mouse coordinates are not integers");
 
         const StringView type = params[0].as<String>();
-        const Codepoint coord = encode_coord({params[1].as<int>(), params[2].as<int>()});
+        const Codepoint coord
+            = encode_coord({params[1].as<int>(), params[2].as<int>()});
         if (type == "move")
             m_on_key({Key::Modifiers::MousePos, coord});
         else if (type == "press")
@@ -433,7 +441,8 @@ void JsonUI::eval_json(const Value& json)
         else if (type == "wheel_down")
             m_on_key({Key::Modifiers::MouseWheelDown, coord});
         else
-            throw invalid_rpc_request(format("invalid mouse event type: {}", type));
+            throw invalid_rpc_request(
+                format("invalid mouse event type: {}", type));
     }
     else if (method == "menu_select")
     {
@@ -448,8 +457,7 @@ void JsonUI::eval_json(const Value& json)
     {
         if (params.size() != 2)
             throw runtime_error("resize expects 2 parameters");
-        else if (not params[0].is_a<int>() or
-                 not params[1].is_a<int>())
+        else if (not params[0].is_a<int>() or not params[1].is_a<int>())
             throw invalid_rpc_request("width and height are not integers");
 
         DisplayCoord dim{params[0].as<int>(), params[1].as<int>()};
@@ -494,7 +502,7 @@ void JsonUI::parse_requests(EventMode mode)
             write(2, format("error while handling requests '{}': '{}'\n",
                             m_requests, error.what()));
             // try to salvage request by dropping its first line
-            pos = std::min(m_requests.end(), find(m_requests, '\n')+1);
+            pos = std::min(m_requests.end(), find(m_requests, '\n') + 1);
         }
         if (not pos)
             break; // unterminated request ?
@@ -503,10 +511,10 @@ void JsonUI::parse_requests(EventMode mode)
     }
 }
 
-UnitTest test_json_parser{[]()
-{
+UnitTest test_json_parser{[]() {
     {
-        auto value = std::get<0>(parse_json(R"({ "jsonrpc": "2.0", "method": "keys", "params": [ "b", "l", "a", "h" ] })"));
+        auto value = std::get<0>(parse_json(
+            R"({ "jsonrpc": "2.0", "method": "keys", "params": [ "b", "l", "a", "h" ] })"));
         kak_assert(value);
     }
 

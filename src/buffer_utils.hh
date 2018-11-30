@@ -20,7 +20,8 @@ inline BufferCoord erase(Buffer& buffer, const Selection& range)
     return buffer.erase(range.min(), buffer.char_next(range.max()));
 }
 
-inline BufferCoord replace(Buffer& buffer, const Selection& range, StringView content)
+inline BufferCoord replace(Buffer& buffer, const Selection& range,
+                           StringView content)
 {
     return buffer.replace(range.min(), buffer.char_next(range.max()), content);
 }
@@ -31,51 +32,53 @@ inline CharCount char_length(const Buffer& buffer, const Selection& range)
                           buffer.iterator_at(buffer.char_next(range.max())));
 }
 
-inline CharCount char_length(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end)
+inline CharCount char_length(const Buffer& buffer, const BufferCoord& begin,
+                             const BufferCoord& end)
 {
     return utf8::distance(buffer.iterator_at(begin), buffer.iterator_at(end));
 }
 
-inline ColumnCount column_length(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end)
+inline ColumnCount column_length(const Buffer& buffer, const BufferCoord& begin,
+                                 const BufferCoord& end)
 {
-    return utf8::column_distance(buffer.iterator_at(begin), buffer.iterator_at(end));
+    return utf8::column_distance(buffer.iterator_at(begin),
+                                 buffer.iterator_at(end));
 }
 
-inline bool is_bol(BufferCoord coord)
-{
-    return coord.column == 0;
-}
+inline bool is_bol(BufferCoord coord) { return coord.column == 0; }
 
 inline bool is_eol(const Buffer& buffer, BufferCoord coord)
 {
-    return buffer.is_end(coord) or buffer[coord.line].length() == coord.column+1;
+    return buffer.is_end(coord)
+           or buffer[coord.line].length() == coord.column + 1;
 }
 
 inline bool is_bow(const Buffer& buffer, BufferCoord coord)
 {
     auto it = utf8::iterator<BufferIterator>(buffer.iterator_at(coord), buffer);
-    if (coord == BufferCoord{0,0})
+    if (coord == BufferCoord{0, 0})
         return is_word(*it);
 
-    return not is_word(*(it-1)) and is_word(*it);
+    return not is_word(*(it - 1)) and is_word(*it);
 }
 
 inline bool is_eow(const Buffer& buffer, BufferCoord coord)
 {
-    if (buffer.is_end(coord) or coord == BufferCoord{0,0})
+    if (buffer.is_end(coord) or coord == BufferCoord{0, 0})
         return false;
 
     auto it = utf8::iterator<BufferIterator>(buffer.iterator_at(coord), buffer);
-    return is_word(*(it-1)) and not is_word(*it);
+    return is_word(*(it - 1)) and not is_word(*it);
 }
 
-ColumnCount get_column(const Buffer& buffer,
-                       ColumnCount tabstop, BufferCoord coord);
+ColumnCount get_column(const Buffer& buffer, ColumnCount tabstop,
+                       BufferCoord coord);
 
 ByteCount get_byte_to_column(const Buffer& buffer, ColumnCount tabstop,
                              DisplayCoord coord);
 
-Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll = false);
+Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags,
+                           bool scroll = false);
 Buffer* open_file_buffer(StringView filename,
                          Buffer::Flags flags = Buffer::Flags::None);
 Buffer* open_or_create_file_buffer(StringView filename,

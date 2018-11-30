@@ -13,7 +13,8 @@ class Regex
 public:
     Regex() = default;
 
-    explicit Regex(StringView re, RegexCompileFlags flags = RegexCompileFlags::None);
+    explicit Regex(StringView re,
+                   RegexCompileFlags flags = RegexCompileFlags::None);
     bool empty() const { return m_str.empty(); }
     bool operator==(const Regex& other) const { return m_str == other.m_str; }
     bool operator!=(const Regex& other) const { return m_str != other.m_str; }
@@ -38,32 +39,51 @@ struct MatchResults
     {
         SubMatch() = default;
         SubMatch(Iterator begin, Iterator end)
-            : std::pair<Iterator, Iterator>{begin, end}, matched{begin != Iterator{}}
+            : std::pair<Iterator, Iterator>{begin, end},
+              matched{begin != Iterator{}}
         {}
 
         bool matched = false;
     };
 
-    struct iterator : std::iterator<std::bidirectional_iterator_tag, SubMatch, size_t, SubMatch*, SubMatch>
+    struct iterator : std::iterator<std::bidirectional_iterator_tag, SubMatch,
+                                    size_t, SubMatch*, SubMatch>
     {
-        using It = typename Vector<Iterator, MemoryDomain::Regex>::const_iterator;
+        using It =
+            typename Vector<Iterator, MemoryDomain::Regex>::const_iterator;
 
         iterator() = default;
         iterator(It it) : m_it{std::move(it)} {}
 
-        iterator& operator--() { m_it += 2; return *this; }
-        iterator& operator++() { m_it += 2; return *this; }
-        SubMatch operator*() const { return {*m_it, *(m_it+1)}; }
+        iterator& operator--()
+        {
+            m_it += 2;
+            return *this;
+        }
+        iterator& operator++()
+        {
+            m_it += 2;
+            return *this;
+        }
+        SubMatch operator*() const { return {*m_it, *(m_it + 1)}; }
 
-        friend bool operator==(const iterator& lhs, const iterator& rhs) { return lhs.m_it == rhs.m_it; }
-        friend bool operator!=(const iterator& lhs, const iterator& rhs) { return lhs.m_it != rhs.m_it; }
+        friend bool operator==(const iterator& lhs, const iterator& rhs)
+        {
+            return lhs.m_it == rhs.m_it;
+        }
+        friend bool operator!=(const iterator& lhs, const iterator& rhs)
+        {
+            return lhs.m_it != rhs.m_it;
+        }
+
     private:
-
         It m_it;
     };
 
     MatchResults() = default;
-    MatchResults(Vector<Iterator, MemoryDomain::Regex> values) : m_values{std::move(values)} {}
+    MatchResults(Vector<Iterator, MemoryDomain::Regex> values)
+        : m_values{std::move(values)}
+    {}
 
     iterator begin() const { return iterator{m_values.begin()}; }
     iterator cbegin() const { return iterator{m_values.cbegin()}; }
@@ -75,8 +95,9 @@ struct MatchResults
 
     SubMatch operator[](size_t i) const
     {
-        return i * 2 < m_values.size() ?
-            SubMatch{m_values[i*2], m_values[i*2+1]} : SubMatch{};
+        return i * 2 < m_values.size()
+                   ? SubMatch{m_values[i * 2], m_values[i * 2 + 1]}
+                   : SubMatch{};
     }
 
     friend bool operator==(const MatchResults& lhs, const MatchResults& rhs)
@@ -86,13 +107,10 @@ struct MatchResults
 
     friend bool operator!=(const MatchResults& lhs, const MatchResults& rhs)
     {
-        return not (lhs == rhs);
+        return not(lhs == rhs);
     }
 
-    void swap(MatchResults& other)
-    {
-        m_values.swap(other.m_values);
-    }
+    void swap(MatchResults& other) { m_values.swap(other.m_values); }
 
     Vector<Iterator, MemoryDomain::Regex>& values() { return m_values; }
 
@@ -102,17 +120,18 @@ private:
 
 inline RegexExecFlags match_flags(bool bol, bool eol, bool bow, bool eow)
 {
-    return (bol ? RegexExecFlags::None : RegexExecFlags::NotBeginOfLine) |
-           (eol ? RegexExecFlags::None : RegexExecFlags::NotEndOfLine) |
-           (bow ? RegexExecFlags::None : RegexExecFlags::NotBeginOfWord) |
-           (eow ? RegexExecFlags::None : RegexExecFlags::NotEndOfWord);
+    return (bol ? RegexExecFlags::None : RegexExecFlags::NotBeginOfLine)
+           | (eol ? RegexExecFlags::None : RegexExecFlags::NotEndOfLine)
+           | (bow ? RegexExecFlags::None : RegexExecFlags::NotBeginOfWord)
+           | (eow ? RegexExecFlags::None : RegexExecFlags::NotEndOfWord);
 }
 
 template<typename It>
 bool regex_match(It begin, It end, const Regex& re)
 {
     ThreadedRegexVM<It, MatchDirection::Forward> vm{*re.impl()};
-    return vm.exec(begin, end, begin, end, RegexExecFlags::AnyMatch | RegexExecFlags::NoSaves);
+    return vm.exec(begin, end, begin, end,
+                   RegexExecFlags::AnyMatch | RegexExecFlags::NoSaves);
 }
 
 template<typename It>
@@ -122,19 +141,21 @@ bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
     ThreadedRegexVM<It, MatchDirection::Forward> vm{*re.impl()};
     if (vm.exec(begin, end, begin, end, RegexExecFlags::None))
     {
-        std::copy(vm.captures().begin(), vm.captures().end(), std::back_inserter(res.values()));
+        std::copy(vm.captures().begin(), vm.captures().end(),
+                  std::back_inserter(res.values()));
         return true;
     }
     return false;
 }
 
 template<typename It>
-bool regex_search(It begin, It end, It subject_begin, It subject_end, const Regex& re,
-                  RegexExecFlags flags = RegexExecFlags::None)
+bool regex_search(It begin, It end, It subject_begin, It subject_end,
+                  const Regex& re, RegexExecFlags flags = RegexExecFlags::None)
 {
     ThreadedRegexVM<It, MatchDirection::Forward> vm{*re.impl()};
     return vm.exec(begin, end, subject_begin, subject_end,
-                   flags | RegexExecFlags::Search | RegexExecFlags::AnyMatch | RegexExecFlags::NoSaves);
+                   flags | RegexExecFlags::Search | RegexExecFlags::AnyMatch
+                       | RegexExecFlags::NoSaves);
 }
 
 template<typename It, MatchDirection direction = MatchDirection::Forward>
@@ -144,9 +165,11 @@ bool regex_search(It begin, It end, It subject_begin, It subject_end,
 {
     res.values().clear();
     ThreadedRegexVM<It, direction> vm{*re.impl()};
-    if (vm.exec(begin, end, subject_begin, subject_end, flags | RegexExecFlags::Search))
+    if (vm.exec(begin, end, subject_begin, subject_end,
+                flags | RegexExecFlags::Search))
     {
-        std::move(vm.captures().begin(), vm.captures().end(), std::back_inserter(res.values()));
+        std::move(vm.captures().begin(), vm.captures().end(),
+                  std::back_inserter(res.values()));
         return true;
     }
     return false;
@@ -157,7 +180,8 @@ bool backward_regex_search(It begin, It end, It subject_begin, It subject_end,
                            MatchResults<It>& res, const Regex& re,
                            RegexExecFlags flags = RegexExecFlags::None)
 {
-    return regex_search<It, MatchDirection::Backward>(begin, end, subject_begin, subject_end, res, re, flags);
+    return regex_search<It, MatchDirection::Backward>(
+        begin, end, subject_begin, subject_end, res, re, flags);
 }
 
 String option_to_string(const Regex& re);
@@ -169,13 +193,15 @@ struct RegexIterator
     using ValueType = MatchResults<Iterator>;
 
     RegexIterator() = default;
-    RegexIterator(Iterator begin, Iterator end,
-                  Iterator subject_begin, Iterator subject_end,
-                  const Regex& re,
+    RegexIterator(Iterator begin, Iterator end, Iterator subject_begin,
+                  Iterator subject_end, const Regex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
-        : m_program{re.impl()}, m_next_pos{direction == MatchDirection::Forward ? begin : end},
-          m_begin{std::move(begin)}, m_end{std::move(end)},
-          m_subject_begin{std::move(subject_begin)}, m_subject_end{std::move(subject_end)},
+        : m_program{re.impl()},
+          m_next_pos{direction == MatchDirection::Forward ? begin : end},
+          m_begin{std::move(begin)},
+          m_end{std::move(end)},
+          m_subject_begin{std::move(subject_begin)},
+          m_subject_end{std::move(subject_end)},
           m_flags{flags}
     {
         next();
@@ -183,10 +209,19 @@ struct RegexIterator
 
     RegexIterator(const Iterator& begin, const Iterator& end, const Regex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
-        : RegexIterator{begin, end, begin, end, re, flags} {}
+        : RegexIterator{begin, end, begin, end, re, flags}
+    {}
 
-    const ValueType& operator*() const { kak_assert(m_program); return m_results; }
-    const ValueType* operator->() const { kak_assert(m_program); return &m_results; }
+    const ValueType& operator*() const
+    {
+        kak_assert(m_program);
+        return m_results;
+    }
+    const ValueType* operator->() const
+    {
+        kak_assert(m_program);
+        return &m_results;
+    }
 
     RegexIterator& operator++()
     {
@@ -199,16 +234,15 @@ struct RegexIterator
         if (lhs.m_program == nullptr and rhs.m_program == nullptr)
             return true;
 
-        return lhs.m_program == rhs.m_program and
-               lhs.m_next_pos == rhs.m_next_pos and
-               lhs.m_end == rhs.m_end and
-               lhs.m_flags == rhs.m_flags and
-               lhs.m_results == rhs.m_results;
+        return lhs.m_program == rhs.m_program
+               and lhs.m_next_pos == rhs.m_next_pos and lhs.m_end == rhs.m_end
+               and lhs.m_flags == rhs.m_flags
+               and lhs.m_results == rhs.m_results;
     }
 
     friend bool operator!=(const RegexIterator& lhs, const RegexIterator& rhs)
     {
-        return not (lhs == rhs);
+        return not(lhs == rhs);
     }
 
     RegexIterator begin() { return *this; }
@@ -226,12 +260,16 @@ private:
         ThreadedRegexVM<Iterator, direction> vm{*m_program};
         constexpr bool forward = direction == MatchDirection::Forward;
 
-        if (vm.exec(forward ? m_next_pos : m_begin, forward ? m_end : m_next_pos,
-                    m_subject_begin, m_subject_end, m_flags | additional_flags))
+        if (vm.exec(forward ? m_next_pos : m_begin,
+                    forward ? m_end : m_next_pos, m_subject_begin,
+                    m_subject_end, m_flags | additional_flags))
         {
             m_results.values().clear();
-            std::move(vm.captures().begin(), vm.captures().end(), std::back_inserter(m_results.values()));
-            m_next_pos = (direction == MatchDirection::Forward) ? m_results[0].second : m_results[0].first;
+            std::move(vm.captures().begin(), vm.captures().end(),
+                      std::back_inserter(m_results.values()));
+            m_next_pos = (direction == MatchDirection::Forward)
+                             ? m_results[0].second
+                             : m_results[0].first;
         }
         else
             m_program = nullptr;

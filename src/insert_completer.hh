@@ -26,19 +26,25 @@ struct InsertCompleterDesc
     };
 
     bool operator==(const InsertCompleterDesc& other) const
-    { return mode == other.mode and param == other.param; }
+    {
+        return mode == other.mode and param == other.param;
+    }
 
     bool operator!=(const InsertCompleterDesc& other) const
-    { return not (*this == other); }
+    {
+        return not(*this == other);
+    }
 
     Mode mode;
     Optional<String> param;
 };
 
-using InsertCompleterDescList = Vector<InsertCompleterDesc, MemoryDomain::Options>;
+using InsertCompleterDescList
+    = Vector<InsertCompleterDesc, MemoryDomain::Options>;
 
 String option_to_string(const InsertCompleterDesc& opt);
-InsertCompleterDesc option_from_string(Meta::Type<InsertCompleterDesc>, StringView str);
+InsertCompleterDesc option_from_string(Meta::Type<InsertCompleterDesc>,
+                                       StringView str);
 
 inline StringView option_type_name(Meta::Type<InsertCompleterDesc>)
 {
@@ -46,7 +52,7 @@ inline StringView option_type_name(Meta::Type<InsertCompleterDesc>)
 }
 
 using CompletionCandidate = std::tuple<String, String, String>;
-using CompletionList = PrefixedList<String, CompletionCandidate>;
+using CompletionList      = PrefixedList<String, CompletionCandidate>;
 
 inline StringView option_type_name(Meta::Type<CompletionList>)
 {
@@ -61,8 +67,14 @@ struct InsertCompletion
         String docstring;
         DisplayLine menu_entry;
 
-        bool operator==(const Candidate& other) const { return completion == other.completion; }
-        bool operator<(const Candidate& other) const { return completion < other.completion; }
+        bool operator==(const Candidate& other) const
+        {
+            return completion == other.completion;
+        }
+        bool operator<(const Candidate& other) const
+        {
+            return completion < other.completion;
+        }
     };
     using CandidateList = Vector<Candidate, MemoryDomain::Completion>;
 
@@ -101,15 +113,15 @@ private:
 
     void menu_show();
 
-    Context&            m_context;
-    OptionManager&      m_options;
+    Context& m_context;
+    OptionManager& m_options;
     const FaceRegistry& m_faces;
-    InsertCompletion    m_completions;
-    int                 m_current_candidate = -1;
+    InsertCompletion m_completions;
+    int m_current_candidate = -1;
 
-    using CompleteFunc = InsertCompletion (const SelectionList& sels,
-                                           const OptionManager& options,
-                                           const FaceRegistry& faces);
+    using CompleteFunc = InsertCompletion(const SelectionList& sels,
+                                          const OptionManager& options,
+                                          const FaceRegistry& faces);
     CompleteFunc* m_explicit_completer = nullptr;
 };
 

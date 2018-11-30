@@ -24,70 +24,104 @@ public:
         return hash_data(str.data(), (int)str.length());
     }
 
-    using iterator = CharType*;
-    using const_iterator = const CharType*;
-    using reverse_iterator = std::reverse_iterator<iterator>;
+    using iterator               = CharType*;
+    using const_iterator         = const CharType*;
+    using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-    [[gnu::always_inline]]
-    iterator begin() { return type().data(); }
+    [[gnu::always_inline]] iterator begin() { return type().data(); }
 
-    [[gnu::always_inline]]
-    const_iterator begin() const { return type().data(); }
+    [[gnu::always_inline]] const_iterator begin() const
+    {
+        return type().data();
+    }
 
-    [[gnu::always_inline]]
-    iterator end() { return type().data() + (int)type().length(); }
+    [[gnu::always_inline]] iterator end()
+    {
+        return type().data() + (int)type().length();
+    }
 
-    [[gnu::always_inline]]
-    const_iterator end() const { return type().data() + (int)type().length(); }
+    [[gnu::always_inline]] const_iterator end() const
+    {
+        return type().data() + (int)type().length();
+    }
 
     reverse_iterator rbegin() { return reverse_iterator{end()}; }
-    const_reverse_iterator rbegin() const { return const_reverse_iterator{end()}; }
+    const_reverse_iterator rbegin() const
+    {
+        return const_reverse_iterator{end()};
+    }
 
     reverse_iterator rend() { return reverse_iterator{begin()}; }
-    const_reverse_iterator rend() const { return const_reverse_iterator{begin()}; }
+    const_reverse_iterator rend() const
+    {
+        return const_reverse_iterator{begin()};
+    }
 
     CharType& front() { return *type().data(); }
     const CharType& front() const { return *type().data(); }
     CharType& back() { return type().data()[(int)type().length() - 1]; }
-    const CharType& back() const { return type().data()[(int)type().length() - 1]; }
+    const CharType& back() const
+    {
+        return type().data()[(int)type().length() - 1];
+    }
 
-    [[gnu::always_inline]]
-    CharType& operator[](ByteCount pos) { return type().data()[(int)pos]; }
+    [[gnu::always_inline]] CharType& operator[](ByteCount pos)
+    {
+        return type().data()[(int)pos];
+    }
 
-    [[gnu::always_inline]]
-    const CharType& operator[](ByteCount pos) const { return type().data()[(int)pos]; }
+    [[gnu::always_inline]] const CharType& operator[](ByteCount pos) const
+    {
+        return type().data()[(int)pos];
+    }
 
     Codepoint operator[](CharCount pos) const
-    { return utf8::codepoint(utf8::advance(begin(), end(), pos), end()); }
+    {
+        return utf8::codepoint(utf8::advance(begin(), end(), pos), end());
+    }
 
     CharCount char_length() const { return utf8::distance(begin(), end()); }
-    ColumnCount column_length() const { return utf8::column_distance(begin(), end()); }
+    ColumnCount column_length() const
+    {
+        return utf8::column_distance(begin(), end());
+    }
 
-    [[gnu::always_inline]]
-    bool empty() const { return type().length() == 0_byte; }
+    [[gnu::always_inline]] bool empty() const
+    {
+        return type().length() == 0_byte;
+    }
 
     ByteCount byte_count_to(CharCount count) const
-    { return utf8::advance(begin(), end(), count) - begin(); }
+    {
+        return utf8::advance(begin(), end(), count) - begin();
+    }
 
     ByteCount byte_count_to(ColumnCount count) const
-    { return utf8::advance(begin(), end(), count) - begin(); }
+    {
+        return utf8::advance(begin(), end(), count) - begin();
+    }
 
     CharCount char_count_to(ByteCount count) const
-    { return utf8::distance(begin(), begin() + (int)count); }
+    {
+        return utf8::distance(begin(), begin() + (int)count);
+    }
 
     ColumnCount column_count_to(ByteCount count) const
-    { return utf8::column_distance(begin(), begin() + (int)count); }
+    {
+        return utf8::column_distance(begin(), begin() + (int)count);
+    }
 
     StringView substr(ByteCount from, ByteCount length = INT_MAX) const;
     StringView substr(CharCount from, CharCount length = INT_MAX) const;
     StringView substr(ColumnCount from, ColumnCount length = INT_MAX) const;
 
 private:
-    [[gnu::always_inline]]
-    Type& type() { return *static_cast<Type*>(this); }
-    [[gnu::always_inline]]
-    const Type& type() const { return *static_cast<const Type*>(this); }
+    [[gnu::always_inline]] Type& type() { return *static_cast<Type*>(this); }
+    [[gnu::always_inline]] const Type& type() const
+    {
+        return *static_cast<const Type*>(this);
+    }
 };
 
 constexpr ByteCount strlen(const char* s)
@@ -117,24 +151,22 @@ public:
         while (cp_count-- > 0)
             utf8::dump(std::back_inserter(*this), cp);
     }
-    String(const char* begin, const char* end) : m_data(begin, end-begin) {}
+    String(const char* begin, const char* end) : m_data(begin, end - begin) {}
 
     explicit String(StringView str);
 
-    [[gnu::always_inline]]
-    char* data() { return m_data.data(); }
+    [[gnu::always_inline]] char* data() { return m_data.data(); }
 
-    [[gnu::always_inline]]
-    const char* data() const { return m_data.data(); }
+    [[gnu::always_inline]] const char* data() const { return m_data.data(); }
 
-    [[gnu::always_inline]]
-    ByteCount length() const { return m_data.size(); }
+    [[gnu::always_inline]] ByteCount length() const { return m_data.size(); }
 
-    [[gnu::always_inline]]
-    const char* c_str() const { return m_data.data(); }
+    [[gnu::always_inline]] const char* c_str() const { return m_data.data(); }
 
-    [[gnu::always_inline]]
-    void append(const char* data, ByteCount count) { m_data.append(data, (size_t)count); }
+    [[gnu::always_inline]] void append(const char* data, ByteCount count)
+    {
+        m_data.append(data, (size_t)count);
+    }
 
     void clear() { m_data.clear(); }
 
@@ -159,8 +191,8 @@ public:
 
         struct Long
         {
-            static constexpr size_t max_capacity =
-                (size_t)1 << 8 * (sizeof(size_t) - 1);
+            static constexpr size_t max_capacity = (size_t)1
+                                                   << 8 * (sizeof(size_t) - 1);
 
             char* ptr;
             size_t size;
@@ -170,7 +202,7 @@ public:
         struct Short
         {
             static constexpr size_t capacity = sizeof(Long) - 2;
-            char string[capacity+1];
+            char string[capacity + 1];
             unsigned char size;
         } s;
 
@@ -186,7 +218,10 @@ public:
 
         bool is_long() const { return (s.size & 1) == 0; }
         size_t size() const { return is_long() ? l.size : (s.size >> 1); }
-        size_t capacity() const { return is_long() ? l.capacity : Short::capacity; }
+        size_t capacity() const
+        {
+            return is_long() ? l.capacity : Short::capacity;
+        }
 
         const char* data() const { return is_long() ? l.ptr : s.string; }
         char* data() { return is_long() ? l.ptr : s.string; }
@@ -213,19 +248,27 @@ class StringView : public StringOps<StringView, const char>
 public:
     StringView() = default;
     constexpr StringView(const char* data, ByteCount length)
-        : m_data{data}, m_length{length} {}
-    constexpr StringView(const char* data) : m_data{data}, m_length{data ? strlen(data) : 0} {}
-    constexpr StringView(const char* begin, const char* end) : m_data{begin}, m_length{(int)(end - begin)} {}
-    StringView(const String& str) : m_data{str.data()}, m_length{(int)str.length()} {}
+        : m_data{data}, m_length{length}
+    {}
+    constexpr StringView(const char* data)
+        : m_data{data}, m_length{data ? strlen(data) : 0}
+    {}
+    constexpr StringView(const char* begin, const char* end)
+        : m_data{begin}, m_length{(int)(end - begin)}
+    {}
+    StringView(const String& str)
+        : m_data{str.data()}, m_length{(int)str.length()}
+    {}
     StringView(const char& c) : m_data(&c), m_length(1) {}
-    StringView(int c) = delete;
+    StringView(int c)       = delete;
     StringView(Codepoint c) = delete;
 
-    [[gnu::always_inline]]
-    constexpr const char* data() const { return m_data; }
+    [[gnu::always_inline]] constexpr const char* data() const { return m_data; }
 
-    [[gnu::always_inline]]
-    constexpr ByteCount length() const { return m_length; }
+    [[gnu::always_inline]] constexpr ByteCount length() const
+    {
+        return m_length;
+    }
 
     String str() const { return {m_data, m_length}; }
 
@@ -238,7 +281,10 @@ public:
             else
                 owned = String::Data(begin, end - begin);
         }
-        operator const char*() const { return unowned ? unowned : owned.data(); }
+        operator const char*() const
+        {
+            return unowned ? unowned : owned.data();
+        }
 
     private:
         String::Data owned;
@@ -253,37 +299,45 @@ private:
 
 static_assert(std::is_trivial<StringView>::value, "");
 
-template<> struct HashCompatible<String, StringView> : std::true_type {};
-template<> struct HashCompatible<StringView, String> : std::true_type {};
+template<>
+struct HashCompatible<String, StringView> : std::true_type
+{};
+template<>
+struct HashCompatible<StringView, String> : std::true_type
+{};
 
 inline String::String(StringView str) : String{str.begin(), str.length()} {}
 
 template<typename Type, typename CharType>
-inline StringView StringOps<Type, CharType>::substr(ByteCount from, ByteCount length) const
+inline StringView StringOps<Type, CharType>::substr(ByteCount from,
+                                                    ByteCount length) const
 {
     if (length < 0)
         length = INT_MAX;
     const auto str_len = type().length();
     kak_assert(from >= 0 and from <= str_len);
-    return StringView{ type().data() + (int)from, std::min(str_len - from, length) };
+    return StringView{type().data() + (int)from,
+                      std::min(str_len - from, length)};
 }
 
 template<typename Type, typename CharType>
-inline StringView StringOps<Type, CharType>::substr(CharCount from, CharCount length) const
+inline StringView StringOps<Type, CharType>::substr(CharCount from,
+                                                    CharCount length) const
 {
     if (length < 0)
         length = INT_MAX;
     auto beg = utf8::advance(begin(), end(), from);
-    return StringView{ beg, utf8::advance(beg, end(), length) };
+    return StringView{beg, utf8::advance(beg, end(), length)};
 }
 
 template<typename Type, typename CharType>
-inline StringView StringOps<Type, CharType>::substr(ColumnCount from, ColumnCount length) const
+inline StringView StringOps<Type, CharType>::substr(ColumnCount from,
+                                                    ColumnCount length) const
 {
     if (length < 0)
         length = INT_MAX;
     auto beg = utf8::advance(begin(), end(), from);
-    return StringView{ beg, utf8::advance(beg, end(), length) };
+    return StringView{beg, utf8::advance(beg, end(), length)};
 }
 
 inline String& operator+=(String& lhs, StringView rhs)
@@ -301,27 +355,26 @@ inline String operator+(StringView lhs, StringView rhs)
     return res;
 }
 
-[[gnu::always_inline]]
-inline bool operator==(const StringView& lhs, const StringView& rhs)
+[[gnu::always_inline]] inline bool operator==(const StringView& lhs,
+                                              const StringView& rhs)
 {
-    return lhs.length() == rhs.length() and
-       std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    return lhs.length() == rhs.length()
+           and std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-[[gnu::always_inline]]
-inline bool operator!=(const StringView& lhs, const StringView& rhs)
-{ return not (lhs == rhs); }
+[[gnu::always_inline]] inline bool operator!=(const StringView& lhs,
+                                              const StringView& rhs)
+{
+    return not(lhs == rhs);
+}
 
 inline bool operator<(const StringView& lhs, const StringView& rhs)
 {
-    return std::lexicographical_compare(lhs.begin(), lhs.end(),
-                                        rhs.begin(), rhs.end());
+    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(),
+                                        rhs.end());
 }
 
-inline String operator"" _str(const char* str, size_t)
-{
-    return String(str);
-}
+inline String operator"" _str(const char* str, size_t) { return String(str); }
 
 inline StringView operator"" _sv(const char* str, size_t)
 {

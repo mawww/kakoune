@@ -19,4 +19,3 @@ struct Backtrace
 }
 
 #endif // backtrace_hh_INCLUDED
-

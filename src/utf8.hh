@@ -14,13 +14,16 @@ namespace utf8
 {
 
 template<typename Iterator>
-[[gnu::always_inline]]
-inline char read(Iterator& it) noexcept { char c = *it; ++it; return c; }
+[[gnu::always_inline]] inline char read(Iterator& it) noexcept
+{
+    char c = *it;
+    ++it;
+    return c;
+}
 
 // return true if it points to the first byte of a (either single or
 // multibyte) character
-[[gnu::always_inline]]
-inline bool is_character_start(char c) noexcept
+[[gnu::always_inline]] inline bool is_character_start(char c) noexcept
 {
     return (c & 0xC0) != 0x80;
 }
@@ -30,7 +33,11 @@ namespace InvalidPolicy
 
 struct Assert
 {
-    Codepoint operator()(Codepoint cp) const { kak_assert(false); return cp; }
+    Codepoint operator()(Codepoint cp) const
+    {
+        kak_assert(false);
+        return cp;
+    }
 };
 
 struct Pass
@@ -42,10 +49,10 @@ struct Pass
 
 // returns the codepoint of the character whose first byte
 // is pointed by it
-template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
-         typename Iterator, typename Sentinel>
-Codepoint read_codepoint(Iterator& it, const Sentinel& end)
-    noexcept(noexcept(InvalidPolicy{}(0)))
+template<typename InvalidPolicy = utf8::InvalidPolicy::Pass, typename Iterator,
+         typename Sentinel>
+Codepoint read_codepoint(Iterator& it, const Sentinel& end) noexcept(
+    noexcept(InvalidPolicy{}(0)))
 {
     if (it == end)
         return InvalidPolicy{}(-1);
@@ -82,17 +89,16 @@ Codepoint read_codepoint(Iterator& it, const Sentinel& end)
     return InvalidPolicy{}(byte);
 }
 
-template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
-         typename Iterator, typename Sentinel>
-Codepoint codepoint(Iterator it, const Sentinel& end)
-    noexcept(noexcept(read_codepoint<InvalidPolicy>(it, end)))
+template<typename InvalidPolicy = utf8::InvalidPolicy::Pass, typename Iterator,
+         typename Sentinel>
+Codepoint codepoint(Iterator it, const Sentinel& end) noexcept(
+    noexcept(read_codepoint<InvalidPolicy>(it, end)))
 {
     return read_codepoint<InvalidPolicy>(it, end);
 }
 
 template<typename InvalidPolicy = utf8::InvalidPolicy::Pass>
-ByteCount codepoint_size(char byte)
-    noexcept(noexcept(InvalidPolicy{}(0)))
+ByteCount codepoint_size(char byte) noexcept(noexcept(InvalidPolicy{}(0)))
 {
     if ((byte & 0x80) == 0) // 0xxxxxxx
         return 1;
@@ -109,7 +115,8 @@ ByteCount codepoint_size(char byte)
     }
 }
 
-struct invalid_codepoint{};
+struct invalid_codepoint
+{};
 
 inline ByteCount codepoint_size(Codepoint cp)
 {
@@ -147,7 +154,7 @@ Iterator next(Iterator it, const Sentinel& end) noexcept
 template<typename Iterator, typename Sentinel>
 Iterator finish(Iterator it, const Sentinel& end) noexcept
 {
-    while (it != end and (*(it) & 0xC0) == 0x80)
+    while (it != end and (*(it)&0xC0) == 0x80)
         ++it;
     return it;
 }
@@ -275,7 +282,7 @@ void dump(OutputIterator&& it, Codepoint cp)
     {
         *it++ = 0xF0 | (cp >> 18);
         *it++ = 0x80 | ((cp >> 12) & 0x3F);
-        *it++ = 0x80 | ((cp >> 6)  & 0x3F);
+        *it++ = 0x80 | ((cp >> 6) & 0x3F);
         *it++ = 0x80 | (cp & 0x3F);
     }
     else

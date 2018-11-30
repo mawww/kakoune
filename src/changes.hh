@@ -25,23 +25,26 @@ struct ForwardChangesTracker
     bool relevant(const Buffer::Change& change, BufferCoord old_coord) const;
 };
 
-const Buffer::Change* forward_sorted_until(const Buffer::Change* first, const Buffer::Change* last);
-const Buffer::Change* backward_sorted_until(const Buffer::Change* first, const Buffer::Change* last);
+const Buffer::Change* forward_sorted_until(const Buffer::Change* first,
+                                           const Buffer::Change* last);
+const Buffer::Change* backward_sorted_until(const Buffer::Change* first,
+                                            const Buffer::Change* last);
 
 template<typename RangeContainer>
-void update_forward(ConstArrayView<Buffer::Change> changes, RangeContainer& ranges)
+void update_forward(ConstArrayView<Buffer::Change> changes,
+                    RangeContainer& ranges)
 {
     ForwardChangesTracker changes_tracker;
-    auto advance_while_relevant = [&, it = changes.begin()]
-                                  (const BufferCoord& pos) mutable {
-        while (it != changes.end() and changes_tracker.relevant(*it, pos))
-            changes_tracker.update(*it++);
-    };
+    auto advance_while_relevant
+        = [&, it = changes.begin()](const BufferCoord& pos) mutable {
+              while (it != changes.end() and changes_tracker.relevant(*it, pos))
+                  changes_tracker.update(*it++);
+          };
 
     for (auto& range : ranges)
     {
         auto& first = get_first(range);
-        auto& last = get_last(range);
+        auto& last  = get_last(range);
         advance_while_relevant(first);
         first = changes_tracker.get_new_coord_tolerant(first);
 
@@ -51,27 +54,28 @@ void update_forward(ConstArrayView<Buffer::Change> changes, RangeContainer& rang
 }
 
 template<typename RangeContainer>
-void update_backward(ConstArrayView<Buffer::Change> changes, RangeContainer& ranges)
+void update_backward(ConstArrayView<Buffer::Change> changes,
+                     RangeContainer& ranges)
 {
     ForwardChangesTracker changes_tracker;
-    auto advance_while_relevant = [&, it = changes.rbegin()]
-                                  (const BufferCoord& pos) mutable {
-        while (it != changes.rend())
-        {
-            const Buffer::Change change{it->type,
-                                        changes_tracker.get_new_coord(it->begin),
-                                        changes_tracker.get_new_coord(it->end)};
-            if (not changes_tracker.relevant(change, pos))
-                break;
-            changes_tracker.update(change);
-            ++it;
-        }
-    };
+    auto advance_while_relevant
+        = [&, it = changes.rbegin()](const BufferCoord& pos) mutable {
+              while (it != changes.rend())
+              {
+                  const Buffer::Change change{
+                      it->type, changes_tracker.get_new_coord(it->begin),
+                      changes_tracker.get_new_coord(it->end)};
+                  if (not changes_tracker.relevant(change, pos))
+                      break;
+                  changes_tracker.update(change);
+                  ++it;
+              }
+          };
 
     for (auto& range : ranges)
     {
         auto& first = get_first(range);
-        auto& last = get_last(range);
+        auto& last  = get_last(range);
         advance_while_relevant(first);
         first = changes_tracker.get_new_coord_tolerant(first);
 
@@ -87,19 +91,19 @@ void update_ranges(Buffer& buffer, size_t& timestamp, RangeContainer& ranges)
         return;
 
     auto changes = buffer.changes_since(timestamp);
-    for (auto change_it = changes.begin(); change_it != changes.end(); )
+    for (auto change_it = changes.begin(); change_it != changes.end();)
     {
-        auto forward_end = forward_sorted_until(change_it, changes.end());
+        auto forward_end  = forward_sorted_until(change_it, changes.end());
         auto backward_end = backward_sorted_until(change_it, changes.end());
 
         if (forward_end >= backward_end)
         {
-            update_forward({ change_it, forward_end }, ranges);
+            update_forward({change_it, forward_end}, ranges);
             change_it = forward_end;
         }
         else
         {
-            update_backward({ change_it, backward_end }, ranges);
+            update_backward({change_it, backward_end}, ranges);
             change_it = backward_end;
         }
     }

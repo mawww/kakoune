@@ -23,26 +23,22 @@ bool CommandManager::command_defined(StringView command_name) const
     return m_commands.find(command_name) != m_commands.end();
 }
 
-void CommandManager::register_command(String command_name,
-                                      CommandFunc func,
+void CommandManager::register_command(String command_name, CommandFunc func,
                                       String docstring,
                                       ParameterDesc param_desc,
-                                      CommandFlags flags,
-                                      CommandHelper helper,
+                                      CommandFlags flags, CommandHelper helper,
                                       CommandCompleter completer)
 {
-    m_commands[command_name] = { std::move(func),
-                                 std::move(docstring),
-                                 std::move(param_desc),
-                                 flags,
-                                 std::move(helper),
-                                 std::move(completer) };
+    m_commands[command_name]
+        = {std::move(func), std::move(docstring), std::move(param_desc),
+           flags,           std::move(helper),    std::move(completer)};
 }
 
 struct parse_error : runtime_error
 {
     parse_error(StringView error)
-        : runtime_error{format("parse error: {}", error)} {}
+        : runtime_error{format("parse error: {}", error)}
+    {}
 };
 
 Codepoint Reader::operator*() const
@@ -68,10 +64,7 @@ Reader& Reader::operator++()
 namespace
 {
 
-bool is_command_separator(Codepoint c)
-{
-    return c == ';' or c == '\n';
-}
+bool is_command_separator(Codepoint c) { return c == ';' or c == '\n'; }
 
 struct QuotedResult
 {
@@ -96,7 +89,7 @@ QuotedResult parse_quoted(Reader& reader, Codepoint delimiter)
                 return {str, true};
             }
             str += (++reader).substr_from(beg);
-            beg = reader.pos+1;
+            beg = reader.pos + 1;
         }
         ++reader;
     }
@@ -109,8 +102,9 @@ QuotedResult parse_quoted_balanced(Reader& reader, char opening_delimiter,
                                    char closing_delimiter)
 {
     kak_assert(utf8::codepoint(utf8::previous(reader.pos, reader.str.begin()),
-                               reader.str.end()) == opening_delimiter);
-    int level = 0;
+                               reader.str.end())
+               == opening_delimiter);
+    int level  = 0;
     auto start = reader.pos;
     while (reader)
     {
@@ -142,7 +136,7 @@ String parse_unquoted(Reader& reader)
             if (reader.pos != reader.str.begin() and *(reader.pos - 1) == '\\')
             {
                 str.back() = c;
-                beg = reader.pos+1;
+                beg        = reader.pos + 1;
             }
             else
                 return str;
@@ -181,8 +175,8 @@ void skip_blanks_and_comments(Reader& reader)
         const Codepoint c = *reader;
         if (is_horizontal_blank(c))
             ++reader;
-        else if (c == '\\' and reader.pos + 1 != reader.str.end() and
-                 *(reader.pos + 1) == '\n')
+        else if (c == '\\' and reader.pos + 1 != reader.str.end()
+                 and *(reader.pos + 1) == '\n')
             ++(++reader);
         else if (c == '#')
         {
@@ -207,30 +201,34 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
     if (not reader or is_blank(*reader))
     {
         if (throw_on_unterminated)
-            throw parse_error{format("expected a string delimiter after '%{}'",
-                                     type_name)};
+            throw parse_error{
+                format("expected a string delimiter after '%{}'", type_name)};
         return {};
     }
 
     Token::Type type = token_type(type_name, throw_on_unterminated);
 
-    constexpr struct CharPair { Codepoint opening; Codepoint closing; } matching_pairs[] = {
-        { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
-    };
+    constexpr struct CharPair
+    {
+        Codepoint opening;
+        Codepoint closing;
+    } matching_pairs[] = {{'(', ')'}, {'[', ']'}, {'{', '}'}, {'<', '>'}};
 
     const Codepoint opening_delimiter = *reader;
-    auto coord = reader.coord();
+    auto coord                        = reader.coord();
     ++reader;
     auto start = reader.pos;
 
-    auto it = find_if(matching_pairs, [opening_delimiter](const CharPair& cp)
-                      { return opening_delimiter == cp.opening; });
+    auto it = find_if(matching_pairs, [opening_delimiter](const CharPair& cp) {
+        return opening_delimiter == cp.opening;
+    });
 
     const auto str_beg = reader.str.begin();
     if (it != std::end(matching_pairs))
     {
         const Codepoint closing_delimiter = it->closing;
-        auto quoted = parse_quoted_balanced(reader, opening_delimiter, closing_delimiter);
+        auto quoted = parse_quoted_balanced(reader, opening_delimiter,
+                                            closing_delimiter);
         if (throw_on_unterminated and not quoted.terminated)
             throw parse_error{format("{}:{}: unterminated string '%{}{}...{}'",
                                      coord.line, coord.column, type_name,
@@ -268,7 +266,8 @@ auto expand_register(StringView reg, const Context& context, std::true_type)
 
 auto expand_register(StringView reg, const Context& context, std::false_type)
 {
-    return RegisterManager::instance()[reg].get(context) | gather<Vector<String>>();
+    return RegisterManager::instance()[reg].get(context)
+           | gather<Vector<String>>();
 }
 
 String expand_arobase(ConstArrayView<String> params, std::true_type)
@@ -282,64 +281,70 @@ Vector<String> expand_arobase(ConstArrayView<String> params, std::false_type)
 }
 
 template<bool single>
-std::conditional_t<single, String, Vector<String>>
-expand_token(const Token& token, const Context& context, const ShellContext& shell_context)
+std::conditional_t<single, String, Vector<String>> expand_token(
+    const Token& token, const Context& context,
+    const ShellContext& shell_context)
 {
     using IsSingle = std::integral_constant<bool, single>;
-    auto& content = token.content;
+    auto& content  = token.content;
     switch (token.type)
     {
-    case Token::Type::ShellExpand:
-    {
-        auto str = ShellManager::instance().eval(
-            content, context, {}, ShellManager::Flags::WaitForStdout,
-            shell_context).first;
-
-        int trailing_eol_count = 0;
-        for (auto c : str | reverse())
+        case Token::Type::ShellExpand:
         {
-            if (c != '\n')
-                break;
-            ++trailing_eol_count;
-        }
-        str.resize(str.length() - trailing_eol_count, 0);
-        return {str};
-    }
-    case Token::Type::RegisterExpand:
-        return expand_register(content, context, IsSingle{});
-    case Token::Type::OptionExpand:
-        return expand_option(context.options()[content], IsSingle{});
-    case Token::Type::ValExpand:
-    {
-        auto it = shell_context.env_vars.find(content);
-        if (it != shell_context.env_vars.end())
-            return {it->value};
-        return {ShellManager::instance().get_val(content, context, Quoting::Kakoune)};
-    }
-    case Token::Type::ArgExpand:
-    {
-        auto& params = shell_context.params;
-        if (content == '@')
-            return expand_arobase(params, IsSingle{});
+            auto str
+                = ShellManager::instance()
+                      .eval(content, context, {},
+                            ShellManager::Flags::WaitForStdout, shell_context)
+                      .first;
 
-        const int arg = str_to_int(content)-1;
-        if (arg < 0)
-            throw runtime_error("invalid argument index");
-        return {arg < params.size() ? params[arg] : String{}};
-    }
-    case Token::Type::RawEval:
-        return {expand(content, context, shell_context)};
-    case Token::Type::Raw:
-    case Token::Type::RawQuoted:
-        return {content};
-    default: kak_assert(false);
+            int trailing_eol_count = 0;
+            for (auto c : str | reverse())
+            {
+                if (c != '\n')
+                    break;
+                ++trailing_eol_count;
+            }
+            str.resize(str.length() - trailing_eol_count, 0);
+            return {str};
+        }
+        case Token::Type::RegisterExpand:
+            return expand_register(content, context, IsSingle{});
+        case Token::Type::OptionExpand:
+            return expand_option(context.options()[content], IsSingle{});
+        case Token::Type::ValExpand:
+        {
+            auto it = shell_context.env_vars.find(content);
+            if (it != shell_context.env_vars.end())
+                return {it->value};
+            return {ShellManager::instance().get_val(content, context,
+                                                     Quoting::Kakoune)};
+        }
+        case Token::Type::ArgExpand:
+        {
+            auto& params = shell_context.params;
+            if (content == '@')
+                return expand_arobase(params, IsSingle{});
+
+            const int arg = str_to_int(content) - 1;
+            if (arg < 0)
+                throw runtime_error("invalid argument index");
+            return {arg < params.size() ? params[arg] : String{}};
+        }
+        case Token::Type::RawEval:
+            return {expand(content, context, shell_context)};
+        case Token::Type::Raw:
+        case Token::Type::RawQuoted:
+            return {content};
+        default:
+            kak_assert(false);
     }
     return {};
 }
 
 }
 
-CommandParser::CommandParser(StringView command_line) : m_reader{command_line} {}
+CommandParser::CommandParser(StringView command_line) : m_reader{command_line}
+{}
 
 Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
 {
@@ -348,18 +353,17 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
         return {};
 
     const StringView line = m_reader.str;
-    const char* start = m_reader.pos;
-    auto coord = m_reader.coord();
+    const char* start     = m_reader.pos;
+    auto coord            = m_reader.coord();
 
     const Codepoint c = *m_reader;
     if (c == '"' or c == '\'')
     {
-        start = (++m_reader).pos;
+        start               = (++m_reader).pos;
         QuotedResult quoted = parse_quoted(m_reader, c);
         if (throw_on_unterminated and not quoted.terminated)
             throw parse_error{format("unterminated string {0}...{0}", c)};
-        return Token{c == '"' ? Token::Type::RawEval
-                              : Token::Type::RawQuoted,
+        return Token{c == '"' ? Token::Type::RawEval : Token::Type::RawQuoted,
                      start - line.begin(), coord, std::move(quoted.content)};
     }
     else if (c == '%')
@@ -371,7 +375,9 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
     {
         ++m_reader;
         return Token{Token::Type::CommandSeparator,
-                     m_reader.pos - line.begin(), coord, {}};
+                     m_reader.pos - line.begin(),
+                     coord,
+                     {}};
     }
     else
     {
@@ -381,16 +387,15 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
             if (next == '%' or next == '\'' or next == '"')
                 ++m_reader;
         }
-        return Token{Token::Type::Raw, start - line.begin(),
-                     coord, parse_unquoted(m_reader)};
+        return Token{Token::Type::Raw, start - line.begin(), coord,
+                     parse_unquoted(m_reader)};
     }
     return {};
 }
 
 template<typename Postprocess>
 String expand_impl(StringView str, const Context& context,
-                   const ShellContext& shell_context,
-                   Postprocess postprocess)
+                   const ShellContext& shell_context, Postprocess postprocess)
 {
     Reader reader{str};
     String res;
@@ -408,7 +413,8 @@ String expand_impl(StringView str, const Context& context,
             else
             {
                 res += reader.substr_from(beg);
-                res += postprocess(expand_token<true>(parse_percent_token(reader, true), context, shell_context));
+                res += postprocess(expand_token<true>(
+                    parse_percent_token(reader, true), context, shell_context));
                 beg = reader.pos;
             }
         }
@@ -422,12 +428,12 @@ String expand_impl(StringView str, const Context& context,
 String expand(StringView str, const Context& context,
               const ShellContext& shell_context)
 {
-    return expand_impl(str, context, shell_context, [](String s){ return s; });
+    return expand_impl(str, context, shell_context, [](String s) { return s; });
 }
 
 String expand(StringView str, const Context& context,
               const ShellContext& shell_context,
-              const std::function<String (String)>& postprocess)
+              const std::function<String(String)>& postprocess)
 {
     return expand_impl(str, context, shell_context,
                        [&](String s) { return postprocess(std::move(s)); });
@@ -436,13 +442,14 @@ String expand(StringView str, const Context& context,
 struct command_not_found : runtime_error
 {
     command_not_found(StringView name)
-        : runtime_error(format("no such command: '{}'", name)) {}
+        : runtime_error(format("no such command: '{}'", name))
+    {}
 };
 
-CommandManager::CommandMap::const_iterator
-CommandManager::find_command(const Context& context, StringView name) const
+CommandManager::CommandMap::const_iterator CommandManager::find_command(
+    const Context& context, StringView name) const
 {
-    auto alias = context.aliases()[name];
+    auto alias          = context.aliases()[name];
     StringView cmd_name = alias.empty() ? name : alias;
 
     return m_commands.find(cmd_name);
@@ -463,14 +470,15 @@ void CommandManager::execute_single_command(CommandParameters params,
     ++m_command_depth;
     auto pop_cmd = on_scope_end([this] { --m_command_depth; });
 
-    ParameterList param_view(params.begin()+1, params.end());
+    ParameterList param_view(params.begin() + 1, params.end());
     auto command_it = find_command(context, params[0]);
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);
 
     const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
     if (debug_flags & DebugFlags::Commands)
-        write_to_debug_buffer(format("command {} {}", params[0], join(param_view, ' ')));
+        write_to_debug_buffer(
+            format("command {} {}", params[0], join(param_view, ' ')));
 
     try
     {
@@ -484,14 +492,14 @@ void CommandManager::execute_single_command(CommandParameters params,
     }
     catch (runtime_error& error)
     {
-        error.set_what(format("{}:{}: '{}' {}", pos.line+1, pos.column+1,
+        error.set_what(format("{}:{}: '{}' {}", pos.line + 1, pos.column + 1,
                               params[0], error.what()));
         throw;
     }
 }
 
-void CommandManager::execute(StringView command_line,
-                             Context& context, const ShellContext& shell_context)
+void CommandManager::execute(StringView command_line, Context& context,
+                             const ShellContext& shell_context)
 {
     CommandParser parser(command_line);
 
@@ -505,7 +513,8 @@ void CommandManager::execute(StringView command_line,
 
         if (token.type == Token::Type::CommandSeparator)
         {
-            execute_single_command(params, context, shell_context, command_coord);
+            execute_single_command(params, context, shell_context,
+                                   command_coord);
             params.clear();
         }
         else if (token.type == Token::Type::ArgExpand and token.content == '@')
@@ -514,15 +523,15 @@ void CommandManager::execute(StringView command_line,
         else
         {
             auto tokens = expand_token<false>(token, context, shell_context);
-            params.insert(params.end(),
-                          std::make_move_iterator(tokens.begin()),
+            params.insert(params.end(), std::make_move_iterator(tokens.begin()),
                           std::make_move_iterator(tokens.end()));
         }
     }
     execute_single_command(params, context, shell_context, command_coord);
 }
 
-Optional<CommandInfo> CommandManager::command_info(const Context& context, StringView command_line) const
+Optional<CommandInfo> CommandManager::command_info(
+    const Context& context, StringView command_line) const
 {
     CommandParser parser{command_line};
     Vector<Token> tokens;
@@ -534,9 +543,9 @@ Optional<CommandInfo> CommandManager::command_info(const Context& context, Strin
             tokens.push_back(std::move(*token));
     }
 
-    if (tokens.empty() or
-        (tokens.front().type != Token::Type::Raw and
-         tokens.front().type != Token::Type::RawQuoted))
+    if (tokens.empty()
+        or (tokens.front().type != Token::Type::Raw
+            and tokens.front().type != Token::Type::RawQuoted))
         return {};
 
     auto cmd = find_command(context, tokens.front().content);
@@ -553,9 +562,9 @@ Optional<CommandInfo> CommandManager::command_info(const Context& context, Strin
         Vector<String> params;
         for (auto it = tokens.begin() + 1; it != tokens.end(); ++it)
         {
-            if (it->type == Token::Type::Raw or
-                it->type == Token::Type::RawQuoted or
-                it->type == Token::Type::RawEval)
+            if (it->type == Token::Type::Raw
+                or it->type == Token::Type::RawQuoted
+                or it->type == Token::Type::RawEval)
                 params.push_back(it->content);
         }
         String helpstr = cmd->value.helper(context, params);
@@ -571,22 +580,27 @@ Optional<CommandInfo> CommandManager::command_info(const Context& context, Strin
 
     auto& switches = cmd->value.param_desc.switches;
     if (not switches.empty())
-        res.info += format("Switches:\n{}", indent(generate_switches_doc(switches)));
+        res.info
+            += format("Switches:\n{}", indent(generate_switches_doc(switches)));
 
     return res;
 }
 
-Completions CommandManager::complete_command_name(const Context& context, StringView query) const
+Completions CommandManager::complete_command_name(const Context& context,
+                                                  StringView query) const
 {
-    auto commands = m_commands
-            | filter([](const CommandMap::Item& cmd) { return not (cmd.value.flags & CommandFlags::Hidden); })
-            | transform(&CommandMap::Item::key);
+    auto commands = m_commands | filter([](const CommandMap::Item& cmd) {
+                        return not(cmd.value.flags & CommandFlags::Hidden);
+                    })
+                    | transform(&CommandMap::Item::key);
 
     auto aliases = context.aliases().flatten_aliases()
-            | transform(&HashItem<String, String>::key)
-            | filter([](auto& alias) { return alias.length() > 3; });
+                   | transform(&HashItem<String, String>::key)
+                   | filter([](auto& alias) { return alias.length() > 3; });
 
-    return {0, query.length(), Kakoune::complete(query, query.length(), concatenated(commands, aliases))};
+    return {0, query.length(),
+            Kakoune::complete(query, query.length(),
+                              concatenated(commands, aliases))};
 }
 
 Completions CommandManager::complete(const Context& context,
@@ -616,84 +630,95 @@ Completions CommandManager::complete(const Context& context,
     }
 
     if (is_last_token)
-        tokens.push_back({Token::Type::Raw, command_line.length(), parser.coord(), {}});
+        tokens.push_back(
+            {Token::Type::Raw, command_line.length(), parser.coord(), {}});
     kak_assert(not tokens.empty());
     const auto& token = tokens.back();
 
     // command name completion
-    if (tokens.size() == 1 and (token.type == Token::Type::Raw or
-                                token.type == Token::Type::RawQuoted))
+    if (tokens.size() == 1
+        and (token.type == Token::Type::Raw
+             or token.type == Token::Type::RawQuoted))
     {
         auto cmd_start = token.pos;
-        StringView query = command_line.substr(cmd_start, cursor_pos - cmd_start);
+        StringView query
+            = command_line.substr(cmd_start, cursor_pos - cmd_start);
         return offset_pos(complete_command_name(context, query), cmd_start);
     }
 
-    const ByteCount start = token.pos;
+    const ByteCount start               = token.pos;
     const ByteCount cursor_pos_in_token = cursor_pos - start;
 
     switch (token.type)
     {
-    case Token::Type::OptionExpand:
-        return {start , cursor_pos,
+        case Token::Type::OptionExpand:
+            return {
+                start, cursor_pos,
                 GlobalScope::instance().option_registry().complete_option_name(
-                    token.content, cursor_pos_in_token) };
+                    token.content, cursor_pos_in_token)};
 
-    case Token::Type::ShellExpand:
-        return offset_pos(shell_complete(context, flags, token.content,
-                                         cursor_pos_in_token), start);
+        case Token::Type::ShellExpand:
+            return offset_pos(shell_complete(context, flags, token.content,
+                                             cursor_pos_in_token),
+                              start);
 
-    case Token::Type::ValExpand:
-        return {start , cursor_pos,
-                ShellManager::instance().complete_env_var(
-                    token.content, cursor_pos_in_token) };
+        case Token::Type::ValExpand:
+            return {start, cursor_pos,
+                    ShellManager::instance().complete_env_var(
+                        token.content, cursor_pos_in_token)};
 
-    case Token::Type::Raw:
-    case Token::Type::RawQuoted:
-    case Token::Type::RawEval:
-    {
-        if (token.type != Token::Type::Raw and token.type != Token::Type::RawQuoted)
-            return Completions{};
-
-        StringView command_name = tokens.front().content;
-        if (command_name != m_last_complete_command)
+        case Token::Type::Raw:
+        case Token::Type::RawQuoted:
+        case Token::Type::RawEval:
         {
-            m_last_complete_command = command_name.str();
-            flags |= CompletionFlags::Start;
+            if (token.type != Token::Type::Raw
+                and token.type != Token::Type::RawQuoted)
+                return Completions{};
+
+            StringView command_name = tokens.front().content;
+            if (command_name != m_last_complete_command)
+            {
+                m_last_complete_command = command_name.str();
+                flags |= CompletionFlags::Start;
+            }
+
+            auto command_it = find_command(context, command_name);
+            if (command_it == m_commands.end())
+                return Completions{};
+
+            if (token.content.substr(0_byte, 1_byte) == "-")
+            {
+                auto switches = Kakoune::complete(
+                    token.content.substr(1_byte), cursor_pos_in_token,
+                    command_it->value.param_desc.switches
+                        | transform(&SwitchMap::Item::key));
+                if (not switches.empty())
+                    return Completions{start + 1, cursor_pos,
+                                       std::move(switches)};
+            }
+            if (not command_it->value.completer)
+                return Completions{};
+
+            Vector<String> params;
+            for (auto it = tokens.begin() + 1; it != tokens.end(); ++it)
+                params.push_back(it->content);
+            Completions completions
+                = offset_pos(command_it->value.completer(context, flags, params,
+                                                         tokens.size() - 2,
+                                                         cursor_pos_in_token),
+                             start);
+
+            if (not completions.quoted and token.type == Token::Type::Raw)
+            {
+                for (auto& c : completions.candidates)
+                    c = (not c.empty() and contains("%'\"", c[0]) ? "\\" : "")
+                        + escape(c, "; \t", '\\');
+            }
+
+            return completions;
         }
-
-        auto command_it = find_command(context, command_name);
-        if (command_it == m_commands.end())
-            return Completions{};
-
-        if (token.content.substr(0_byte, 1_byte) == "-")
-        {
-            auto switches = Kakoune::complete(token.content.substr(1_byte), cursor_pos_in_token,
-                                              command_it->value.param_desc.switches |
-                                              transform(&SwitchMap::Item::key));
-            if (not switches.empty())
-                return Completions{start+1, cursor_pos, std::move(switches)};
-        }
-        if (not command_it->value.completer)
-            return Completions{};
-
-        Vector<String> params;
-        for (auto it = tokens.begin() + 1; it != tokens.end(); ++it)
-            params.push_back(it->content);
-        Completions completions = offset_pos(command_it->value.completer(
-            context, flags, params, tokens.size() - 2,
-            cursor_pos_in_token), start);
-
-        if (not completions.quoted and token.type == Token::Type::Raw)
-        {
-            for (auto& c : completions.candidates)
-                c = (not c.empty() and contains("%'\"", c[0]) ? "\\" : "") + escape(c, "; \t", '\\');
-        }
-
-        return completions;
-    }
-    default:
-        break;
+        default:
+            break;
     }
     return Completions{};
 }
@@ -720,39 +745,38 @@ Completions CommandManager::complete(const Context& context,
         auto command_it = find_command(context, command_name);
         if (command_it != m_commands.end() and command_it->value.completer)
             return command_it->value.completer(
-                context, flags, params.subrange(1),
-                token_to_complete-1, pos_in_token);
+                context, flags, params.subrange(1), token_to_complete - 1,
+                pos_in_token);
     }
     return Completions{};
 }
 
-UnitTest test_command_parsing{[]
-{
-    auto check_quoted = [](StringView str, bool terminated, StringView content)
-    {
-        Reader reader{str};
-        const Codepoint delimiter = *reader;
-        auto quoted = parse_quoted(++reader, delimiter);
-        kak_assert(quoted.terminated == terminated);
-        kak_assert(quoted.content == content);
-    };
+UnitTest test_command_parsing{[] {
+    auto check_quoted
+        = [](StringView str, bool terminated, StringView content) {
+              Reader reader{str};
+              const Codepoint delimiter = *reader;
+              auto quoted               = parse_quoted(++reader, delimiter);
+              kak_assert(quoted.terminated == terminated);
+              kak_assert(quoted.content == content);
+          };
     check_quoted("'abc'", true, "abc");
     check_quoted("'abc''def", false, "abc'def");
     check_quoted("'abc''def'''", true, "abc'def'");
 
-    auto check_balanced = [](StringView str, Codepoint opening, Codepoint closing, bool terminated, StringView content)
-    {
-        Reader reader{str};
-        auto quoted = parse_quoted_balanced(++reader, opening, closing);
-        kak_assert(quoted.terminated == terminated);
-        kak_assert(quoted.content == content);
-    };
+    auto check_balanced
+        = [](StringView str, Codepoint opening, Codepoint closing,
+             bool terminated, StringView content) {
+              Reader reader{str};
+              auto quoted = parse_quoted_balanced(++reader, opening, closing);
+              kak_assert(quoted.terminated == terminated);
+              kak_assert(quoted.content == content);
+          };
     check_balanced("{abc}", '{', '}', true, "abc");
     check_balanced("{abc{def}}", '{', '}', true, "abc{def}");
     check_balanced("{{abc}{def}", '{', '}', false, "{abc}{def}");
 
-    auto check_unquoted = [](StringView str, StringView content)
-    {
+    auto check_unquoted = [](StringView str, StringView content) {
         Reader reader{str};
         auto res = parse_unquoted(reader);
         kak_assert(res == content);

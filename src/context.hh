@@ -29,7 +29,10 @@ struct JumpList
         return lhs.m_jumps == rhs.m_jumps and lhs.m_current == rhs.m_current;
     }
 
-    friend bool operator!=(const JumpList& lhs, const JumpList& rhs) { return not (lhs == rhs); }
+    friend bool operator!=(const JumpList& lhs, const JumpList& rhs)
+    {
+        return not(lhs == rhs);
+    }
 
 private:
     using Contents = Vector<SelectionList, MemoryDomain::Selections>;
@@ -37,7 +40,7 @@ private:
     size_t m_current = 0;
 };
 
-using LastSelectFunc = std::function<void (Context&)>;
+using LastSelectFunc = std::function<void(Context&)>;
 
 // A Context is used to access non singleton objects for various services
 // in commands.
@@ -55,10 +58,11 @@ public:
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
-    Context(InputHandler& input_handler, SelectionList selections,
-            Flags flags, String name = "");
+    Context(InputHandler& input_handler, SelectionList selections, Flags flags,
+            String name = "");
 
-    struct EmptyContextFlag {};
+    struct EmptyContextFlag
+    {};
     explicit Context(EmptyContextFlag);
     ~Context();
 
@@ -79,7 +83,7 @@ public:
 
     SelectionList& selections();
     const SelectionList& selections() const;
-    Vector<String>  selections_content() const;
+    Vector<String> selections_content() const;
 
     // Return potentially out of date selections
     SelectionList& selections_write_only();
@@ -92,10 +96,10 @@ public:
     Scope& scope() const;
 
     OptionManager& options() const { return scope().options(); }
-    HookManager&   hooks()   const { return scope().hooks(); }
+    HookManager& hooks() const { return scope().hooks(); }
     KeymapManager& keymaps() const { return scope().keymaps(); }
     AliasRegistry& aliases() const { return scope().aliases(); }
-    FaceRegistry&  faces()   const { return scope().faces(); }
+    FaceRegistry& faces() const { return scope().faces(); }
 
     void print_status(DisplayLine status) const;
 
@@ -104,7 +108,7 @@ public:
     const String& name() const { return m_name; }
     void set_name(String name) { m_name = std::move(name); }
 
-    bool is_editing() const { return m_edition_level!= 0; }
+    bool is_editing() const { return m_edition_level != 0; }
     void disable_undo_handling() { m_edition_level = -1; }
 
     NestedBool& hooks_disabled() { return m_hooks_disabled; }
@@ -121,19 +125,26 @@ public:
     JumpList& jump_list() { return m_jump_list; }
     void push_jump(bool force = false)
     {
-        if (force or not (m_flags & Flags::Draft))
+        if (force or not(m_flags & Flags::Draft))
             m_jump_list.push(selections());
     }
 
     template<typename Func>
-    void set_last_select(Func&& last_select) { m_last_select = std::forward<Func>(last_select); }
+    void set_last_select(Func&& last_select)
+    {
+        m_last_select = std::forward<Func>(last_select);
+    }
 
-    void repeat_last_select() { if (m_last_select) m_last_select(*this); }
+    void repeat_last_select()
+    {
+        if (m_last_select)
+            m_last_select(*this);
+    }
 
 private:
     void begin_edition();
     void end_edition();
-    int m_edition_level = 0;
+    int m_edition_level        = 0;
     size_t m_edition_timestamp = 0;
 
     friend struct ScopedEdition;
@@ -141,8 +152,8 @@ private:
     Flags m_flags = Flags::None;
 
     SafePtr<InputHandler> m_input_handler;
-    SafePtr<Window>       m_window;
-    SafePtr<Client>       m_client;
+    SafePtr<Window> m_window;
+    SafePtr<Client> m_client;
 
     Optional<SelectionList> m_selections;
 
@@ -162,11 +173,19 @@ struct ScopedEdition
     ScopedEdition(Context& context)
         : m_context{context},
           m_buffer{context.has_buffer() ? &context.buffer() : nullptr}
-    { if (m_buffer) m_context.begin_edition(); }
+    {
+        if (m_buffer)
+            m_context.begin_edition();
+    }
 
-    ~ScopedEdition() { if (m_buffer) m_context.end_edition(); }
+    ~ScopedEdition()
+    {
+        if (m_buffer)
+            m_context.end_edition();
+    }
 
     Context& context() const { return m_context; }
+
 private:
     Context& m_context;
     SafePtr<Buffer> m_buffer;

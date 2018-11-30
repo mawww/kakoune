@@ -18,8 +18,8 @@ inline String option_to_string(bool opt);
 
 // Default fallback to single value functions
 template<typename T>
-decltype(option_from_string(Meta::Type<T>{}, StringView{}))
-option_from_strings(Meta::Type<T>, ConstArrayView<String> strs)
+decltype(option_from_string(Meta::Type<T>{}, StringView{})) option_from_strings(
+    Meta::Type<T>, ConstArrayView<String> strs)
 {
     if (strs.size() != 1)
         throw runtime_error("expected a single value for option");
@@ -27,8 +27,8 @@ option_from_strings(Meta::Type<T>, ConstArrayView<String> strs)
 }
 
 template<typename T>
-Vector<decltype(option_to_string(std::declval<T>()))>
-option_to_strings(const T& opt)
+Vector<decltype(option_to_string(std::declval<T>()))> option_to_strings(
+    const T& opt)
 {
     return Vector<String>{option_to_string(opt)};
 }
@@ -61,7 +61,7 @@ struct PrefixedList
 
     friend bool operator!=(const PrefixedList& lhs, const PrefixedList& rhs)
     {
-        return not (lhs == rhs);
+        return not(lhs == rhs);
     }
 };
 
@@ -83,11 +83,11 @@ constexpr bool with_bit_ops(Meta::Type<DebugFlags>) { return true; }
 constexpr auto enum_desc(Meta::Type<DebugFlags>)
 {
     return make_array<EnumDesc<DebugFlags>, 5>({
-        { DebugFlags::Hooks, "hooks" },
-        { DebugFlags::Shell, "shell" },
-        { DebugFlags::Profile, "profile" },
-        { DebugFlags::Keys, "keys" },
-        { DebugFlags::Commands, "commands" },
+        {DebugFlags::Hooks, "hooks"},
+        {DebugFlags::Shell, "shell"},
+        {DebugFlags::Profile, "profile"},
+        {DebugFlags::Keys, "keys"},
+        {DebugFlags::Commands, "commands"},
     });
 }
 

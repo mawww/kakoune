@@ -7,21 +7,26 @@ namespace Kakoune
 {
 
 UnitTest test_ranges{[] {
-    auto check_equal = [](auto&& container, ConstArrayView<StringView> expected) {
-        kak_assert(std::equal(container.begin(), container.end(), expected.begin(), expected.end()));
-    };
+    auto check_equal
+        = [](auto&& container, ConstArrayView<StringView> expected) {
+              kak_assert(std::equal(container.begin(), container.end(),
+                                    expected.begin(), expected.end()));
+          };
     check_equal("a,b,c"_sv | split<StringView>(','), {"a", "b", "c"});
-    check_equal(",b,c"_sv  | split<StringView>(','), {"", "b", "c"});
-    check_equal(",b,"_sv   | split<StringView>(','), {"", "b", ""});
-    check_equal(","_sv     | split<StringView>(','), {"", ""});
-    check_equal(""_sv      | split<StringView>(','), {});
+    check_equal(",b,c"_sv | split<StringView>(','), {"", "b", "c"});
+    check_equal(",b,"_sv | split<StringView>(','), {"", "b", ""});
+    check_equal(","_sv | split<StringView>(','), {"", ""});
+    check_equal(""_sv | split<StringView>(','), {});
 
     check_equal(R"(a\,,\,b,\,)"_sv | split<StringView>(',', '\\')
-                                   | transform(unescape<',', '\\'>), {"a,", ",b", ","});
+                    | transform(unescape<',', '\\'>),
+                {"a,", ",b", ","});
     check_equal(R"(\,\,)"_sv | split<StringView>(',', '\\')
-                             | transform(unescape<',', '\\'>), {",,"});
+                    | transform(unescape<',', '\\'>),
+                {",,"});
     check_equal(R"(\\,\\,)"_sv | split<StringView>(',', '\\')
-                               | transform(unescape<',', '\\'>), {R"(\)", R"(\)", ""});
+                    | transform(unescape<',', '\\'>),
+                {R"(\)", R"(\)", ""});
 }};
 
 }

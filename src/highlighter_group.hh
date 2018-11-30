@@ -26,28 +26,36 @@ public:
 
     Highlighter& get_child(StringView path) override;
 
-    Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override;
+    Completions complete_child(StringView path, ByteCount cursor_pos,
+                               bool group) const override;
 
     void fill_unique_ids(Vector<StringView>& unique_ids) const override;
 
 protected:
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override;
-    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override;
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                      BufferRange range) override;
+    void do_compute_display_setup(HighlightContext context,
+                                  DisplaySetup& setup) const override;
 
-    using HighlighterMap = HashMap<String, std::unique_ptr<Highlighter>, MemoryDomain::Highlight>;
+    using HighlighterMap = HashMap<String, std::unique_ptr<Highlighter>,
+                                   MemoryDomain::Highlight>;
     HighlighterMap m_highlighters;
 };
 
 class Highlighters : public SafeCountable
 {
 public:
-    Highlighters(Highlighters& parent) : SafeCountable{}, m_parent{&parent}, m_group{HighlightPass::All} {}
+    Highlighters(Highlighters& parent)
+        : SafeCountable{}, m_parent{&parent}, m_group{HighlightPass::All}
+    {}
 
     HighlighterGroup& group() { return m_group; }
     const HighlighterGroup& group() const { return m_group; }
 
-    void highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range);
-    void compute_display_setup(HighlightContext context, DisplaySetup& setup) const;
+    void highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                   BufferRange range);
+    void compute_display_setup(HighlightContext context,
+                               DisplaySetup& setup) const;
 
 private:
     friend class Scope;

@@ -26,23 +26,20 @@ public:
 
     bool is_ok() const override { return m_window != nullptr; }
 
-    void draw(const DisplayBuffer& display_buffer,
-              const Face& default_face,
+    void draw(const DisplayBuffer& display_buffer, const Face& default_face,
               const Face& padding_face) override;
 
     void draw_status(const DisplayLine& status_line,
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
 
-    void menu_show(ConstArrayView<DisplayLine> items,
-                   DisplayCoord anchor, Face fg, Face bg,
-                   MenuStyle style) override;
+    void menu_show(ConstArrayView<DisplayLine> items, DisplayCoord anchor,
+                   Face fg, Face bg, MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
 
-    void info_show(StringView title, StringView content,
-                   DisplayCoord anchor, Face face,
-                   InfoStyle style) override;
+    void info_show(StringView title, StringView content, DisplayCoord anchor,
+                   Face face, InfoStyle style) override;
     void info_hide() override;
 
     void set_cursor(CursorMode mode, DisplayCoord coord) override;
@@ -81,8 +78,8 @@ private:
     using ColorPair = std::pair<Color, Color>;
     HashMap<Color, int, MemoryDomain::Faces> m_colors;
     HashMap<ColorPair, int, MemoryDomain::Faces> m_colorpairs;
-    int m_next_color = 16;
-    int m_next_pair = 1;
+    int m_next_color  = 16;
+    int m_next_pair   = 1;
     int m_active_pair = -1;
 
     struct Window : Rect
@@ -106,8 +103,8 @@ private:
         DisplayCoord anchor;
         MenuStyle style;
         int selected_item = 0;
-        int first_item = 0;
-        int columns = 1;
+        int first_item    = 0;
+        int columns       = 1;
     } m_menu;
 
     void draw_menu();
@@ -137,14 +134,14 @@ private:
 
     void enable_mouse(bool enabled);
 
-    bool m_mouse_enabled = false;
-    int m_wheel_up_button = 4;
+    bool m_mouse_enabled    = false;
+    int m_wheel_up_button   = 4;
     int m_wheel_down_button = 5;
 
     static constexpr int default_shift_function_key = 12;
     int m_shift_function_key = default_shift_function_key;
 
-    bool m_set_title = true;
+    bool m_set_title     = true;
     bool m_change_colors = true;
 
     bool m_dirty = false;

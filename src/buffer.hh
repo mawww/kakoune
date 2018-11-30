@@ -26,8 +26,8 @@ enum class EolFormat
 constexpr auto enum_desc(Meta::Type<EolFormat>)
 {
     return make_array<EnumDesc<EolFormat>, 2>({
-        { EolFormat::Lf, "lf" },
-        { EolFormat::Crlf, "crlf" },
+        {EolFormat::Lf, "lf"},
+        {EolFormat::Crlf, "crlf"},
     });
 }
 
@@ -40,23 +40,23 @@ enum class ByteOrderMark
 constexpr auto enum_desc(Meta::Type<ByteOrderMark>)
 {
     return make_array<EnumDesc<ByteOrderMark>, 2>({
-        { ByteOrderMark::None, "none" },
-        { ByteOrderMark::Utf8, "utf8" },
+        {ByteOrderMark::None, "none"},
+        {ByteOrderMark::Utf8, "utf8"},
     });
 }
 
 class Buffer;
 
-constexpr timespec InvalidTime = { -1, -1 };
+constexpr timespec InvalidTime = {-1, -1};
 
 // A BufferIterator permits to iterate over the characters of a buffer
 class BufferIterator
 {
 public:
-    using value_type = char;
+    using value_type      = char;
     using difference_type = ssize_t;
-    using pointer = const value_type*;
-    using reference = const value_type&;
+    using pointer         = const value_type*;
+    using reference       = const value_type&;
     // computing the distance between two iterator can be
     // costly, so this is not strictly random access
     using iterator_category = std::bidirectional_iterator_tag;
@@ -64,31 +64,31 @@ public:
     BufferIterator() noexcept : m_buffer(nullptr) {}
     BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept;
 
-    bool operator== (const BufferIterator& iterator) const noexcept;
-    bool operator!= (const BufferIterator& iterator) const noexcept;
-    bool operator<  (const BufferIterator& iterator) const noexcept;
-    bool operator<= (const BufferIterator& iterator) const noexcept;
-    bool operator>  (const BufferIterator& iterator) const noexcept;
-    bool operator>= (const BufferIterator& iterator) const noexcept;
+    bool operator==(const BufferIterator& iterator) const noexcept;
+    bool operator!=(const BufferIterator& iterator) const noexcept;
+    bool operator<(const BufferIterator& iterator) const noexcept;
+    bool operator<=(const BufferIterator& iterator) const noexcept;
+    bool operator>(const BufferIterator& iterator) const noexcept;
+    bool operator>=(const BufferIterator& iterator) const noexcept;
 
-    bool operator== (const BufferCoord& coord) const noexcept;
-    bool operator!= (const BufferCoord& coord) const noexcept;
+    bool operator==(const BufferCoord& coord) const noexcept;
+    bool operator!=(const BufferCoord& coord) const noexcept;
 
-    const char& operator* () const noexcept;
+    const char& operator*() const noexcept;
     const char& operator[](size_t n) const noexcept;
-    size_t operator- (const BufferIterator& iterator) const;
+    size_t operator-(const BufferIterator& iterator) const;
 
-    BufferIterator operator+ (ByteCount size) const;
-    BufferIterator operator- (ByteCount size) const;
+    BufferIterator operator+(ByteCount size) const;
+    BufferIterator operator-(ByteCount size) const;
 
-    BufferIterator& operator+= (ByteCount size);
-    BufferIterator& operator-= (ByteCount size);
+    BufferIterator& operator+=(ByteCount size);
+    BufferIterator& operator-=(ByteCount size);
 
-    BufferIterator& operator++ ();
-    BufferIterator& operator-- ();
+    BufferIterator& operator++();
+    BufferIterator& operator--();
 
-    BufferIterator operator++ (int);
-    BufferIterator operator-- (int);
+    BufferIterator operator++(int);
+    BufferIterator operator--(int);
 
     const BufferCoord& coord() const noexcept { return m_coord; }
     explicit operator BufferCoord() const noexcept { return m_coord; }
@@ -107,7 +107,9 @@ using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;
 // The Buffer class permits to read and mutate this file
 // representation. It also manage modifications undo/redo and
 // provides tools to deal with the line/column nature of text.
-class Buffer final : public SafeCountable, public Scope, private OptionManagerWatcher
+class Buffer final : public SafeCountable,
+                     public Scope,
+                     private OptionManagerWatcher
 {
 public:
     enum class Flags
@@ -123,12 +125,16 @@ public:
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
-    enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
+    enum class HistoryId : size_t
+    {
+        First   = 0,
+        Invalid = (size_t)-1
+    };
 
     Buffer(String name, Flags flags, StringView data = {},
            timespec fs_timestamp = InvalidTime);
     Buffer(const Buffer&) = delete;
-    Buffer& operator= (const Buffer&) = delete;
+    Buffer& operator=(const Buffer&) = delete;
     ~Buffer();
 
     Flags flags() const { return m_flags; }
@@ -141,46 +147,50 @@ public:
     BufferCoord erase(BufferCoord begin, BufferCoord end);
     BufferCoord replace(BufferCoord begin, BufferCoord end, StringView content);
 
-    size_t         timestamp() const;
-    timespec       fs_timestamp() const;
-    void           set_fs_timestamp(timespec ts);
+    size_t timestamp() const;
+    timespec fs_timestamp() const;
+    void set_fs_timestamp(timespec ts);
 
-    void           commit_undo_group();
-    bool           undo(size_t count = 1);
-    bool           redo(size_t count = 1);
-    bool           move_to(HistoryId id);
-    HistoryId      current_history_id() const noexcept { return m_history_id; }
-    HistoryId      next_history_id() const noexcept { return (HistoryId)m_history.size(); }
+    void commit_undo_group();
+    bool undo(size_t count = 1);
+    bool redo(size_t count = 1);
+    bool move_to(HistoryId id);
+    HistoryId current_history_id() const noexcept { return m_history_id; }
+    HistoryId next_history_id() const noexcept
+    {
+        return (HistoryId)m_history.size();
+    }
 
-    String         string(BufferCoord begin, BufferCoord end) const;
-    StringView     substr(BufferCoord begin, BufferCoord end) const;
+    String string(BufferCoord begin, BufferCoord end) const;
+    StringView substr(BufferCoord begin, BufferCoord end) const;
 
-    const char&    byte_at(BufferCoord c) const;
-    ByteCount      distance(BufferCoord begin, BufferCoord end) const;
-    BufferCoord    advance(BufferCoord coord, ByteCount count) const;
-    BufferCoord    next(BufferCoord coord) const;
-    BufferCoord    prev(BufferCoord coord) const;
+    const char& byte_at(BufferCoord c) const;
+    ByteCount distance(BufferCoord begin, BufferCoord end) const;
+    BufferCoord advance(BufferCoord coord, ByteCount count) const;
+    BufferCoord next(BufferCoord coord) const;
+    BufferCoord prev(BufferCoord coord) const;
 
-    BufferCoord    char_next(BufferCoord coord) const;
-    BufferCoord    char_prev(BufferCoord coord) const;
+    BufferCoord char_next(BufferCoord coord) const;
+    BufferCoord char_prev(BufferCoord coord) const;
 
-    BufferCoord    back_coord() const;
-    BufferCoord    end_coord() const;
+    BufferCoord back_coord() const;
+    BufferCoord end_coord() const;
 
-    bool           is_valid(BufferCoord c) const;
-    bool           is_end(BufferCoord c) const;
+    bool is_valid(BufferCoord c) const;
+    bool is_end(BufferCoord c) const;
 
     BufferIterator begin() const;
     BufferIterator end() const;
-    LineCount      line_count() const;
+    LineCount line_count() const;
 
     Optional<BufferCoord> last_modification_coord() const;
 
-    StringView operator[](LineCount line) const
-    { return m_lines[line]; }
+    StringView operator[](LineCount line) const { return m_lines[line]; }
 
     const StringDataPtr& line_storage(LineCount line) const
-    { return m_lines.get_storage(line); }
+    {
+        return m_lines.get_storage(line);
+    }
 
     // returns an iterator at given coordinates. clamp line_and_column
     BufferIterator iterator_at(BufferCoord coord) const;
@@ -188,8 +198,11 @@ public:
     // returns nearest valid coordinates from given ones
     BufferCoord clamp(BufferCoord coord) const;
 
-    BufferCoord offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool);
-    BufferCoordAndTarget offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol);
+    BufferCoord offset_coord(BufferCoord coord, CharCount offset, ColumnCount,
+                             bool);
+    BufferCoordAndTarget offset_coord(BufferCoordAndTarget coord,
+                                      LineCount offset, ColumnCount tabstop,
+                                      bool avoid_eol);
 
     const String& name() const { return m_name; }
     const String& display_name() const { return m_display_name; }
@@ -212,7 +225,11 @@ public:
 
     struct Change
     {
-        enum Type : char { Insert, Erase };
+        enum Type : char
+        {
+            Insert,
+            Erase
+        };
         Type type;
         BufferCoord begin;
         BufferCoord end;
@@ -226,6 +243,7 @@ public:
     void on_unregistered();
 
     void throw_if_read_only() const;
+
 private:
     void on_option_changed(const Option& option) override;
 
@@ -239,17 +257,21 @@ private:
 
     struct LineList : BufferLines
     {
-        [[gnu::always_inline]]
-        StringDataPtr& get_storage(LineCount line)
-        { return BufferLines::operator[]((int)line); }
+        [[gnu::always_inline]] StringDataPtr& get_storage(LineCount line)
+        {
+            return BufferLines::operator[]((int)line);
+        }
 
-        [[gnu::always_inline]]
-        const StringDataPtr& get_storage(LineCount line) const
-        { return BufferLines::operator[]((int)line); }
+        [[gnu::always_inline]] const StringDataPtr& get_storage(
+            LineCount line) const
+        {
+            return BufferLines::operator[]((int)line);
+        }
 
-        [[gnu::always_inline]]
-        StringView operator[](LineCount line) const
-        { return get_storage(line)->strview(); }
+        [[gnu::always_inline]] StringView operator[](LineCount line) const
+        {
+            return get_storage(line)->strview();
+        }
 
         StringView front() const { return BufferLines::front()->strview(); }
         StringView back() const { return BufferLines::back()->strview(); }
@@ -258,7 +280,7 @@ private:
 
     String m_name;
     String m_display_name;
-    Flags  m_flags;
+    Flags m_flags;
 
     using UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
 
@@ -273,14 +295,23 @@ private:
     };
 
     Vector<HistoryNode> m_history;
-    HistoryId           m_history_id = HistoryId::Invalid;
-    HistoryId           m_last_save_history_id = HistoryId::Invalid;
-    UndoGroup           m_current_undo_group;
+    HistoryId m_history_id           = HistoryId::Invalid;
+    HistoryId m_last_save_history_id = HistoryId::Invalid;
+    UndoGroup m_current_undo_group;
 
-          HistoryNode& history_node(HistoryId id)       { return m_history[(size_t)id]; }
-    const HistoryNode& history_node(HistoryId id) const { return m_history[(size_t)id]; }
-          HistoryNode& current_history_node()           { return m_history[(size_t)m_history_id]; }
-    const HistoryNode& current_history_node()     const { return m_history[(size_t)m_history_id]; }
+    HistoryNode& history_node(HistoryId id) { return m_history[(size_t)id]; }
+    const HistoryNode& history_node(HistoryId id) const
+    {
+        return m_history[(size_t)id];
+    }
+    HistoryNode& current_history_node()
+    {
+        return m_history[(size_t)m_history_id];
+    }
+    const HistoryNode& current_history_node() const
+    {
+        return m_history[(size_t)m_history_id];
+    }
 
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 

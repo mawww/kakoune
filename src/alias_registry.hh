@@ -22,12 +22,16 @@ public:
     {
         auto merge = [](auto&& first, const AliasMap& second) {
             return concatenated(std::forward<decltype(first)>(first)
-                                | filter([&second](auto& i) { return not second.contains(i.key); }),
+                                    | filter([&second](auto& i) {
+                                          return not second.contains(i.key);
+                                      }),
                                 second);
         };
         static const AliasMap empty;
-        auto& parent = m_parent ? m_parent->m_aliases : empty;
-        auto& grand_parent = (m_parent and m_parent->m_parent) ? m_parent->m_parent->m_aliases : empty;
+        auto& parent       = m_parent ? m_parent->m_aliases : empty;
+        auto& grand_parent = (m_parent and m_parent->m_parent)
+                                 ? m_parent->m_parent->m_aliases
+                                 : empty;
         return merge(merge(grand_parent, parent), m_aliases);
     }
 

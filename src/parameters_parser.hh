@@ -23,13 +23,15 @@ struct parameter_error : public runtime_error
 struct unknown_option : public parameter_error
 {
     unknown_option(StringView name)
-        : parameter_error(format("unknown option '{}'", name)) {}
+        : parameter_error(format("unknown option '{}'", name))
+    {}
 };
 
-struct missing_option_value: public parameter_error
+struct missing_option_value : public parameter_error
 {
     missing_option_value(StringView name)
-        : parameter_error(format("missing value for option '{}'", name)) {}
+        : parameter_error(format("missing value for option '{}'", name))
+    {}
 };
 
 struct wrong_argument_count : public parameter_error
@@ -51,7 +53,7 @@ struct ParameterDesc
 {
     enum class Flags
     {
-        None = 0,
+        None                  = 0,
         SwitchesOnlyAtStart   = 0b0001,
         SwitchesAsPositional  = 0b0010,
         IgnoreUnknownSwitches = 0b0100
@@ -59,7 +61,7 @@ struct ParameterDesc
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
     SwitchMap switches;
-    Flags flags = Flags::None;
+    Flags flags            = Flags::None;
     size_t min_positionals = 0;
     size_t max_positionals = -1;
 };
@@ -83,13 +85,23 @@ struct ParametersParser
     struct iterator : std::iterator<std::forward_iterator_tag, String>
     {
         iterator(const ParametersParser& parser, size_t index)
-            : m_parser(parser), m_index(index) {}
+            : m_parser(parser), m_index(index)
+        {}
 
         const String& operator*() const { return m_parser[m_index]; }
         const String* operator->() const { return &m_parser[m_index]; }
 
-        iterator& operator++() { ++m_index; return *this; }
-        iterator operator++(int) { auto copy = *this; ++m_index; return copy; }
+        iterator& operator++()
+        {
+            ++m_index;
+            return *this;
+        }
+        iterator operator++(int)
+        {
+            auto copy = *this;
+            ++m_index;
+            return copy;
+        }
 
         bool operator==(const iterator& other) const
         {
@@ -99,19 +111,19 @@ struct ParametersParser
 
         bool operator!=(const iterator& other) const
         {
-            return not (*this == other);
+            return not(*this == other);
         }
 
     private:
         const ParametersParser& m_parser;
-        size_t                  m_index;
+        size_t m_index;
     };
 
     // positional parameters count
     size_t positional_count() const { return m_positional_indices.size(); }
 
     // access positional parameter by index
-    const String& operator[] (size_t index) const
+    const String& operator[](size_t index) const
     {
         kak_assert(index < positional_count());
         return m_params[m_positional_indices[index]];
@@ -119,12 +131,19 @@ struct ParametersParser
 
     ConstArrayView<String> positionals_from(size_t first) const
     {
-        kak_assert(m_desc.flags & (ParameterDesc::Flags::SwitchesOnlyAtStart | ParameterDesc::Flags::SwitchesAsPositional));
-        return m_params.subrange(first < m_positional_indices.size() ? m_positional_indices[first] : -1);
+        kak_assert(m_desc.flags
+                   & (ParameterDesc::Flags::SwitchesOnlyAtStart
+                      | ParameterDesc::Flags::SwitchesAsPositional));
+        return m_params.subrange(first < m_positional_indices.size()
+                                     ? m_positional_indices[first]
+                                     : -1);
     }
 
     iterator begin() const { return iterator(*this, 0); }
-    iterator end() const { return iterator(*this, m_positional_indices.size()); }
+    iterator end() const
+    {
+        return iterator(*this, m_positional_indices.size());
+    }
 
 private:
     ParameterList m_params;

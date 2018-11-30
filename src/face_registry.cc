@@ -9,37 +9,61 @@ namespace Kakoune
 
 static Face parse_face(StringView facedesc)
 {
-    constexpr StringView invalid_face_error = "invalid face description, expected <fg>[,<bg>][+<attr>]";
-    auto bg_it = find(facedesc, ',');
+    constexpr StringView invalid_face_error
+        = "invalid face description, expected <fg>[,<bg>][+<attr>]";
+    auto bg_it   = find(facedesc, ',');
     auto attr_it = find(facedesc, '+');
     if (bg_it != facedesc.end()
         and (attr_it < bg_it or (bg_it + 1) == facedesc.end()))
         throw runtime_error(invalid_face_error.str());
-    if (attr_it != facedesc.end()
-        and (attr_it + 1) == facedesc.end())
+    if (attr_it != facedesc.end() and (attr_it + 1) == facedesc.end())
         throw runtime_error(invalid_face_error.str());
     Face res;
-    res.fg = attr_it != facedesc.begin() ?
-        str_to_color({facedesc.begin(), std::min(attr_it, bg_it)}) : Color::Default;
+    res.fg = attr_it != facedesc.begin()
+                 ? str_to_color({facedesc.begin(), std::min(attr_it, bg_it)})
+                 : Color::Default;
     if (bg_it != facedesc.end())
-        res.bg = bg_it+1 != attr_it ? str_to_color({bg_it+1, attr_it}) : Color::Default;
+        res.bg = bg_it + 1 != attr_it ? str_to_color({bg_it + 1, attr_it})
+                                      : Color::Default;
     if (attr_it != facedesc.end())
     {
         for (++attr_it; attr_it != facedesc.end(); ++attr_it)
         {
             switch (*attr_it)
             {
-                case 'u': res.attributes |= Attribute::Underline; break;
-                case 'r': res.attributes |= Attribute::Reverse; break;
-                case 'b': res.attributes |= Attribute::Bold; break;
-                case 'B': res.attributes |= Attribute::Blink; break;
-                case 'd': res.attributes |= Attribute::Dim; break;
-                case 'i': res.attributes |= Attribute::Italic; break;
-                case 'f': res.attributes |= Attribute::FinalFg; break;
-                case 'g': res.attributes |= Attribute::FinalBg; break;
-                case 'a': res.attributes |= Attribute::FinalAttr; break;
-                case 'F': res.attributes |= Attribute::Final; break;
-                default: throw runtime_error(format("no such face attribute: '{}'", StringView{*attr_it}));
+                case 'u':
+                    res.attributes |= Attribute::Underline;
+                    break;
+                case 'r':
+                    res.attributes |= Attribute::Reverse;
+                    break;
+                case 'b':
+                    res.attributes |= Attribute::Bold;
+                    break;
+                case 'B':
+                    res.attributes |= Attribute::Blink;
+                    break;
+                case 'd':
+                    res.attributes |= Attribute::Dim;
+                    break;
+                case 'i':
+                    res.attributes |= Attribute::Italic;
+                    break;
+                case 'f':
+                    res.attributes |= Attribute::FinalFg;
+                    break;
+                case 'g':
+                    res.attributes |= Attribute::FinalBg;
+                    break;
+                case 'a':
+                    res.attributes |= Attribute::FinalAttr;
+                    break;
+                case 'F':
+                    res.attributes |= Attribute::Final;
+                    break;
+                default:
+                    throw runtime_error(format("no such face attribute: '{}'",
+                                               StringView{*attr_it}));
             }
         }
     }
@@ -51,23 +75,21 @@ String to_string(Attribute attributes)
     if (attributes == Attribute::Normal)
         return "";
 
-    struct Attr { Attribute attr; StringView name; }
-    attrs[] {
-        { Attribute::Underline, "u" },
-        { Attribute::Reverse, "r" },
-        { Attribute::Blink, "B" },
-        { Attribute::Bold, "b" },
-        { Attribute::Dim, "d" },
-        { Attribute::Italic, "i" },
-        { Attribute::Final, "F" },
-        { Attribute::FinalFg, "f" },
-        { Attribute::FinalBg, "g" },
-        { Attribute::FinalAttr, "a" },
+    struct Attr
+    {
+        Attribute attr;
+        StringView name;
+    } attrs[]{
+        {Attribute::Underline, "u"}, {Attribute::Reverse, "r"},
+        {Attribute::Blink, "B"},     {Attribute::Bold, "b"},
+        {Attribute::Dim, "d"},       {Attribute::Italic, "i"},
+        {Attribute::Final, "F"},     {Attribute::FinalFg, "f"},
+        {Attribute::FinalBg, "g"},   {Attribute::FinalAttr, "a"},
     };
 
-    auto filteredAttrs = attrs |
-                         filter([=](const Attr& a) { return attributes & a.attr; }) |
-                         transform([](const Attr& a) { return a.name; });
+    auto filteredAttrs
+        = attrs | filter([=](const Attr& a) { return attributes & a.attr; })
+          | transform([](const Attr& a) { return a.name; });
 
     return accumulate(filteredAttrs, "+"_str, std::plus<>{});
 }
@@ -96,9 +118,9 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
     if (not override and m_faces.find(name) != m_faces.end())
         throw runtime_error(format("face '{}' already defined", name));
 
-    if (name.empty() or is_color_name(name) or
-        std::any_of(name.begin(), name.end(),
-                    [](char c){ return not is_word(c); }))
+    if (name.empty() or is_color_name(name)
+        or std::any_of(name.begin(), name.end(),
+                       [](char c) { return not is_word(c); }))
         throw runtime_error(format("invalid face name: '{}'", name));
 
     if (name == facedesc)
@@ -114,7 +136,8 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
 
     FaceOrAlias& face = m_faces[name];
 
-    for (auto* registry = this; registry != nullptr; registry = registry->m_parent.get())
+    for (auto* registry = this; registry != nullptr;
+         registry       = registry->m_parent.get())
     {
         if (not registry->m_faces.contains(facedesc))
             continue;
@@ -123,40 +146,41 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
     }
 
     face.alias = "";
-    face.face = parse_face(facedesc);
+    face.face  = parse_face(facedesc);
 }
 
-void FaceRegistry::remove_face(StringView name)
-{
-    m_faces.remove(name);
-}
+void FaceRegistry::remove_face(StringView name) { m_faces.remove(name); }
 
 FaceRegistry::FaceRegistry()
     : m_faces{
-        { "Default", {Face{ Color::Default, Color::Default }} },
-        { "PrimarySelection", {Face{ Color::White, Color::Blue }} },
-        { "SecondarySelection", {Face{ Color::Black, Color::Blue }} },
-        { "PrimaryCursor", {Face{ Color::Black, Color::White }} },
-        { "SecondaryCursor", {Face{ Color::Black, Color::White }} },
-        { "PrimaryCursorEol", {Face{ Color::Black, Color::Cyan }} },
-        { "SecondaryCursorEol", {Face{ Color::Black, Color::Cyan }} },
-        { "LineNumbers", {Face{ Color::Default, Color::Default }} },
-        { "LineNumberCursor", {Face{ Color::Default, Color::Default, Attribute::Reverse }} },
-        { "LineNumbersWrapped", {Face{ Color::Default, Color::Default, Attribute::Italic }} },
-        { "MenuForeground", {Face{ Color::White, Color::Blue }} },
-        { "MenuBackground", {Face{ Color::Blue, Color::White }} },
-        { "MenuInfo", {Face{ Color::Cyan, Color::Default }} },
-        { "Information", {Face{ Color::Black, Color::Yellow }} },
-        { "Error", {Face{ Color::Black, Color::Red }} },
-        { "StatusLine", {Face{ Color::Cyan, Color::Default }} },
-        { "StatusLineMode", {Face{ Color::Yellow, Color::Default }} },
-        { "StatusLineInfo", {Face{ Color::Blue, Color::Default }} },
-        { "StatusLineValue", {Face{ Color::Green, Color::Default }} },
-        { "StatusCursor", {Face{ Color::Black, Color::Cyan }} },
-        { "Prompt", {Face{ Color::Yellow, Color::Default }} },
-        { "MatchingChar", {Face{ Color::Default, Color::Default, Attribute::Bold }} },
-        { "BufferPadding", {Face{ Color::Blue, Color::Default }} },
-        { "Whitespace", {Face{ Color::Default, Color::Default, Attribute::FinalFg }} },
+          {"Default", {Face{Color::Default, Color::Default}}},
+          {"PrimarySelection", {Face{Color::White, Color::Blue}}},
+          {"SecondarySelection", {Face{Color::Black, Color::Blue}}},
+          {"PrimaryCursor", {Face{Color::Black, Color::White}}},
+          {"SecondaryCursor", {Face{Color::Black, Color::White}}},
+          {"PrimaryCursorEol", {Face{Color::Black, Color::Cyan}}},
+          {"SecondaryCursorEol", {Face{Color::Black, Color::Cyan}}},
+          {"LineNumbers", {Face{Color::Default, Color::Default}}},
+          {"LineNumberCursor",
+           {Face{Color::Default, Color::Default, Attribute::Reverse}}},
+          {"LineNumbersWrapped",
+           {Face{Color::Default, Color::Default, Attribute::Italic}}},
+          {"MenuForeground", {Face{Color::White, Color::Blue}}},
+          {"MenuBackground", {Face{Color::Blue, Color::White}}},
+          {"MenuInfo", {Face{Color::Cyan, Color::Default}}},
+          {"Information", {Face{Color::Black, Color::Yellow}}},
+          {"Error", {Face{Color::Black, Color::Red}}},
+          {"StatusLine", {Face{Color::Cyan, Color::Default}}},
+          {"StatusLineMode", {Face{Color::Yellow, Color::Default}}},
+          {"StatusLineInfo", {Face{Color::Blue, Color::Default}}},
+          {"StatusLineValue", {Face{Color::Green, Color::Default}}},
+          {"StatusCursor", {Face{Color::Black, Color::Cyan}}},
+          {"Prompt", {Face{Color::Yellow, Color::Default}}},
+          {"MatchingChar",
+           {Face{Color::Default, Color::Default, Attribute::Bold}}},
+          {"BufferPadding", {Face{Color::Blue, Color::Default}}},
+          {"Whitespace",
+           {Face{Color::Default, Color::Default, Attribute::FinalFg}}},
       }
 {}
 

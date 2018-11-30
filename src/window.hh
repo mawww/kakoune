@@ -15,7 +15,9 @@ namespace Kakoune
 enum class Hook;
 
 // A Window is a view onto a Buffer
-class Window final : public SafeCountable, public Scope, private OptionManagerWatcher
+class Window final : public SafeCountable,
+                     public Scope,
+                     private OptionManagerWatcher
 {
 public:
     Window(Buffer& buffer);
@@ -33,7 +35,8 @@ public:
 
     void scroll(ColumnCount offset);
     void center_column(ColumnCount buffer_column);
-    void display_column_at(ColumnCount buffer_column, ColumnCount display_column);
+    void display_column_at(ColumnCount buffer_column,
+                           ColumnCount display_column);
 
     const DisplayBuffer& update_display_buffer(const Context& context);
 
@@ -48,6 +51,7 @@ public:
     void set_client(Client* client) { m_client = client; }
 
     void clear_display_buffer();
+
 private:
     Window(const Window&) = delete;
 

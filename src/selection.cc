@@ -8,15 +8,17 @@ namespace Kakoune
 {
 
 SelectionList::SelectionList(Buffer& buffer, Selection s, size_t timestamp)
-    : m_buffer(&buffer), m_selections({ std::move(s) }), m_timestamp(timestamp)
+    : m_buffer(&buffer), m_selections({std::move(s)}), m_timestamp(timestamp)
 {
     check_invariant();
 }
 
 SelectionList::SelectionList(Buffer& buffer, Selection s)
-    : SelectionList(buffer, std::move(s), buffer.timestamp()) {}
+    : SelectionList(buffer, std::move(s), buffer.timestamp())
+{}
 
-SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list, size_t timestamp)
+SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list,
+                             size_t timestamp)
     : m_buffer(&buffer), m_selections(std::move(list)), m_timestamp(timestamp)
 {
     kak_assert(size() > 0);
@@ -25,9 +27,12 @@ SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list, size_t time
 }
 
 SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list)
-    : SelectionList(buffer, std::move(list), buffer.timestamp()) {}
+    : SelectionList(buffer, std::move(list), buffer.timestamp())
+{}
 
-SelectionList::SelectionList(SelectionList::UnsortedTag, Buffer& buffer, Vector<Selection> list, size_t timestamp, size_t main)
+SelectionList::SelectionList(SelectionList::UnsortedTag, Buffer& buffer,
+                             Vector<Selection> list, size_t timestamp,
+                             size_t main)
     : m_buffer(&buffer), m_selections(std::move(list)), m_timestamp(timestamp)
 {
     sort_and_merge_overlapping();
@@ -44,8 +49,8 @@ void SelectionList::set(Vector<Selection> list, size_t main)
 {
     kak_assert(main < list.size());
     m_selections = std::move(list);
-    m_main = main;
-    m_timestamp = m_buffer->timestamp();
+    m_main       = main;
+    m_timestamp  = m_buffer->timestamp();
     sort_and_merge_overlapping();
     check_invariant();
 }
@@ -85,14 +90,15 @@ bool compare_selections(const Selection& lhs, const Selection& rhs)
 }
 
 template<typename Iterator, typename OverlapsFunc>
-Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsFunc overlaps)
+Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main,
+                           OverlapsFunc overlaps)
 {
     if (begin == end)
         return begin;
 
     kak_assert(std::is_sorted(begin, end, compare_selections));
     size_t size = end - begin;
-    size_t i = 0;
+    size_t i    = 0;
     for (size_t j = 1; j < size; ++j)
     {
         if (overlaps(begin[i], begin[j]))
@@ -109,7 +115,7 @@ Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsF
                 begin[i] = std::move(begin[j]);
         }
     }
-    kak_assert(std::is_sorted(begin, begin + i +1, compare_selections));
+    kak_assert(std::is_sorted(begin, begin + i + 1, compare_selections));
     return begin + i + 1;
 }
 
@@ -121,21 +127,24 @@ BufferCoord& get_last(Selection& sel) { return sel.max(); }
 Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
 {
     Vector<Selection> ranges;
-    auto changes = buffer.changes_since(timestamp);
+    auto changes   = buffer.changes_since(timestamp);
     auto change_it = changes.begin();
     while (change_it != changes.end())
     {
-        auto forward_end = forward_sorted_until(change_it, changes.end());
+        auto forward_end  = forward_sorted_until(change_it, changes.end());
         auto backward_end = backward_sorted_until(change_it, changes.end());
 
-        kak_assert(std::is_sorted(ranges.begin(), ranges.end(), compare_selections));
+        kak_assert(
+            std::is_sorted(ranges.begin(), ranges.end(), compare_selections));
 
         size_t prev_size;
         size_t dummy = 0;
         if (forward_end >= backward_end)
         {
-            update_forward({ change_it, forward_end }, ranges);
-            ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy, overlaps), ranges.end());
+            update_forward({change_it, forward_end}, ranges);
+            ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy,
+                                           overlaps),
+                         ranges.end());
             prev_size = ranges.size();
 
             ForwardChangesTracker changes_tracker;
@@ -150,17 +159,19 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
         }
         else
         {
-            update_backward({ change_it, backward_end }, ranges);
-            ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy, overlaps), ranges.end());
+            update_backward({change_it, backward_end}, ranges);
+            ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy,
+                                           overlaps),
+                         ranges.end());
             prev_size = ranges.size();
 
             using ReverseIt = std::reverse_iterator<const Buffer::Change*>;
             ForwardChangesTracker changes_tracker;
             for (ReverseIt it{backward_end}, end{change_it}; it != end; ++it)
             {
-                auto change = *it;
+                auto change  = *it;
                 change.begin = changes_tracker.get_new_coord(change.begin);
-                change.end = changes_tracker.get_new_coord(change.end);
+                change.end   = changes_tracker.get_new_coord(change.end);
 
                 if (change.type == Buffer::Change::Insert)
                     ranges.emplace_back(change.begin, change.end);
@@ -171,10 +182,14 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
             change_it = backward_end;
         }
 
-        kak_assert(std::is_sorted(ranges.begin() + prev_size, ranges.end(), compare_selections));
-        std::inplace_merge(ranges.begin(), ranges.begin() + prev_size, ranges.end(), compare_selections);
+        kak_assert(std::is_sorted(ranges.begin() + prev_size, ranges.end(),
+                                  compare_selections));
+        std::inplace_merge(ranges.begin(), ranges.begin() + prev_size,
+                           ranges.end(), compare_selections);
         // The newly added ranges might be overlapping pre-existing ones
-        ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy, overlaps), ranges.end());
+        ranges.erase(
+            merge_overlapping(ranges.begin(), ranges.end(), dummy, overlaps),
+            ranges.end());
     }
 
     const auto end_coord = buffer.end_coord();
@@ -185,10 +200,13 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
     }
 
     auto touches = [&](const Selection& lhs, const Selection& rhs) {
-        return lhs.max() == end_coord or buffer.char_next(lhs.max()) >= rhs.min();
+        return lhs.max() == end_coord
+               or buffer.char_next(lhs.max()) >= rhs.min();
     };
     size_t dummy = 0;
-    ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy, touches), ranges.end());
+    ranges.erase(
+        merge_overlapping(ranges.begin(), ranges.end(), dummy, touches),
+        ranges.end());
 
     for (auto& sel : ranges)
     {
@@ -218,39 +236,41 @@ void clamp_selections(Vector<Selection>& selections, const Buffer& buffer)
         clamp(sel, buffer);
 }
 
-void update_selections(Vector<Selection>& selections, size_t& main, Buffer& buffer, size_t timestamp)
+void update_selections(Vector<Selection>& selections, size_t& main,
+                       Buffer& buffer, size_t timestamp)
 {
     if (timestamp == buffer.timestamp())
         return;
 
-    auto changes = buffer.changes_since(timestamp);
+    auto changes   = buffer.changes_since(timestamp);
     auto change_it = changes.begin();
     while (change_it != changes.end())
     {
-        auto forward_end = forward_sorted_until(change_it, changes.end());
+        auto forward_end  = forward_sorted_until(change_it, changes.end());
         auto backward_end = backward_sorted_until(change_it, changes.end());
 
         if (forward_end >= backward_end)
         {
-            update_forward({ change_it, forward_end }, selections);
+            update_forward({change_it, forward_end}, selections);
             change_it = forward_end;
         }
         else
         {
-            update_backward({ change_it, backward_end }, selections);
+            update_backward({change_it, backward_end}, selections);
             change_it = backward_end;
         }
         kak_assert(std::is_sorted(selections.begin(), selections.end(),
                                   compare_selections));
-        selections.erase(
-            merge_overlapping(selections.begin(), selections.end(),
-                              main, overlaps), selections.end());
+        selections.erase(merge_overlapping(selections.begin(), selections.end(),
+                                           main, overlaps),
+                         selections.end());
     }
     for (auto& sel : selections)
         clamp(sel, buffer);
 
-    selections.erase(merge_overlapping(selections.begin(), selections.end(),
-                                       main, overlaps), selections.end());
+    selections.erase(
+        merge_overlapping(selections.begin(), selections.end(), main, overlaps),
+        selections.end());
 }
 
 void SelectionList::update()
@@ -274,7 +294,7 @@ void SelectionList::check_invariant() const
         return;
 
     const auto end_coord = buffer.end_coord();
-    BufferCoord last_min{0,0};
+    BufferCoord last_min{0, 0};
     for (auto& sel : m_selections)
     {
         auto& min = sel.min();
@@ -282,11 +302,11 @@ void SelectionList::check_invariant() const
         last_min = min;
 
         const auto anchor = sel.anchor();
-        kak_assert(anchor >= BufferCoord{0,0} and anchor < end_coord);
+        kak_assert(anchor >= BufferCoord{0, 0} and anchor < end_coord);
         kak_assert(anchor.column < buffer[anchor.line].length());
 
         const auto cursor = sel.cursor();
-        kak_assert(cursor >= BufferCoord{0,0} and cursor < end_coord);
+        kak_assert(cursor >= BufferCoord{0, 0} and cursor < end_coord);
         kak_assert(cursor.column < buffer[cursor.line].length());
     }
 #endif
@@ -297,32 +317,32 @@ void sort_selections(Vector<Selection>& selections, size_t& main_index)
     if (selections.size() == 1)
         return;
 
-    const auto& main = selections[main_index];
+    const auto& main      = selections[main_index];
     const auto main_begin = main.min();
-    main_index = std::count_if(selections.begin(), selections.end(),
+    main_index            = std::count_if(selections.begin(), selections.end(),
                                [&](const Selection& sel) {
-        auto begin = sel.min();
-        if (begin == main_begin)
-            return &sel < &main;
-        else
-            return begin < main_begin;
-    });
+                                   auto begin = sel.min();
+                                   if (begin == main_begin)
+                                       return &sel < &main;
+                                   else
+                                       return begin < main_begin;
+                               });
     std::stable_sort(selections.begin(), selections.end(), compare_selections);
 }
 
-void merge_overlapping_selections(Vector<Selection>& selections, size_t& main_index)
+void merge_overlapping_selections(Vector<Selection>& selections,
+                                  size_t& main_index)
 {
     if (selections.size() == 1)
         return;
 
-    selections.erase(Kakoune::merge_overlapping(selections.begin(), selections.end(),
-                                                main_index, overlaps), selections.end());
+    selections.erase(
+        Kakoune::merge_overlapping(selections.begin(), selections.end(),
+                                   main_index, overlaps),
+        selections.end());
 }
 
-void SelectionList::sort()
-{
-    sort_selections(m_selections, m_main);
-}
+void SelectionList::sort() { sort_selections(m_selections, m_main); }
 
 void SelectionList::merge_overlapping()
 {
@@ -337,8 +357,8 @@ void SelectionList::merge_consecutive()
     auto touches = [this](const Selection& lhs, const Selection& rhs) {
         return m_buffer->char_next(lhs.max()) >= rhs.min();
     };
-    m_selections.erase(Kakoune::merge_overlapping(begin(), end(),
-                                                  m_main, touches), end());
+    m_selections.erase(
+        Kakoune::merge_overlapping(begin(), end(), m_main, touches), end());
 }
 
 void SelectionList::sort_and_merge_overlapping()
@@ -352,21 +372,21 @@ BufferCoord get_insert_pos(const Buffer& buffer, const Selection& sel,
 {
     switch (mode)
     {
-    case InsertMode::Insert:
-        return sel.min();
-    case InsertMode::InsertCursor:
-        return sel.cursor();
-    case InsertMode::Append:
-        return buffer.char_next(sel.max());
-    case InsertMode::InsertAtLineBegin:
-        return sel.min().line;
-    case InsertMode::AppendAtLineEnd:
-        return {sel.max().line, buffer[sel.max().line].length() - 1};
-    case InsertMode::InsertAtNextLineBegin:
-        return sel.max().line+1;
-    default:
-        kak_assert(false);
-        return {};
+        case InsertMode::Insert:
+            return sel.min();
+        case InsertMode::InsertCursor:
+            return sel.cursor();
+        case InsertMode::Append:
+            return buffer.char_next(sel.max());
+        case InsertMode::InsertAtLineBegin:
+            return sel.min().line;
+        case InsertMode::AppendAtLineEnd:
+            return {sel.max().line, buffer[sel.max().line].length() - 1};
+        case InsertMode::InsertAtNextLineBegin:
+            return sel.max().line + 1;
+        default:
+            kak_assert(false);
+            return {};
     }
 }
 
@@ -403,14 +423,16 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
 
         sel.anchor() = changes_tracker.get_new_coord_tolerant(sel.anchor());
         sel.cursor() = changes_tracker.get_new_coord_tolerant(sel.cursor());
-        kak_assert(m_buffer->is_valid(sel.anchor()) and
-                   m_buffer->is_valid(sel.cursor()));
+        kak_assert(m_buffer->is_valid(sel.anchor())
+                   and m_buffer->is_valid(sel.cursor()));
 
-        const String& str = strings[std::min(index, strings.size()-1)];
+        const String& str = strings[std::min(index, strings.size() - 1)];
 
-        const auto pos = (mode == InsertMode::Replace) ?
-            replace(*m_buffer, sel, str)
-          : m_buffer->insert(changes_tracker.get_new_coord(insert_pos[index]), str);
+        const auto pos
+            = (mode == InsertMode::Replace)
+                  ? replace(*m_buffer, sel, str)
+                  : m_buffer->insert(
+                        changes_tracker.get_new_coord(insert_pos[index]), str);
 
         size_t old_timestamp = m_timestamp;
         changes_tracker.update(*m_buffer, m_timestamp);
@@ -421,15 +443,16 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
         if (mode == InsertMode::Replace)
         {
             auto changes = m_buffer->changes_since(old_timestamp);
-            if (changes.size() == 1) // Nothing got inserted, either str was empty, or just \n at end of buffer
+            if (changes.size() == 1) // Nothing got inserted, either str was
+                                     // empty, or just \n at end of buffer
                 sel.anchor() = sel.cursor() = m_buffer->clamp(pos);
             else if (changes.size() == 2)
             {
                 // we want min and max from *before* we do any change
                 auto& min = sel.min();
                 auto& max = sel.max();
-                min = changes.back().begin;
-                max = m_buffer->char_prev(changes.back().end);
+                min       = changes.back().begin;
+                max       = m_buffer->char_prev(changes.back().end);
             }
             else
                 kak_assert(changes.empty());
@@ -437,8 +460,10 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
         else if (not str.empty())
         {
             auto& change = m_buffer->changes_since(0).back();
-            sel.anchor() = m_buffer->clamp(update_insert(sel.anchor(), change.begin, change.end));
-            sel.cursor() = m_buffer->clamp(update_insert(sel.cursor(), change.begin, change.end));
+            sel.anchor() = m_buffer->clamp(
+                update_insert(sel.anchor(), change.begin, change.end));
+            sel.cursor() = m_buffer->clamp(
+                update_insert(sel.cursor(), change.begin, change.end));
         }
     }
 
@@ -464,7 +489,7 @@ void SelectionList::erase()
         sel.cursor() = changes_tracker.get_new_coord(sel.cursor());
         kak_assert(m_buffer->is_valid(sel.cursor()));
 
-        auto pos = Kakoune::erase(*m_buffer, sel);
+        auto pos     = Kakoune::erase(*m_buffer, sel);
         sel.anchor() = sel.cursor() = pos;
         changes_tracker.update(*m_buffer, m_timestamp);
     }
@@ -484,42 +509,51 @@ String selection_to_string(const Selection& selection)
 String selection_list_to_string(const SelectionList& selections)
 {
     auto beg = &*selections.begin(), end = &*selections.end();
-    auto main = beg + selections.main_index();
+    auto main  = beg + selections.main_index();
     using View = ConstArrayView<Selection>;
-    return join(concatenated(View{main, end}, View{beg, main}) |
-                transform(selection_to_string), ' ', false);
+    return join(concatenated(View{main, end}, View{beg, main})
+                    | transform(selection_to_string),
+                ' ', false);
 }
 
 Selection selection_from_string(StringView desc)
 {
-    auto comma = find(desc, ',');
+    auto comma      = find(desc, ',');
     auto dot_anchor = find(StringView{desc.begin(), comma}, '.');
     auto dot_cursor = find(StringView{comma, desc.end()}, '.');
 
     if (comma == desc.end() or dot_anchor == comma or dot_cursor == desc.end())
-        throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> format", desc));
+        throw runtime_error(format(
+            "'{}' does not follow <line>.<column>,<line>.<column> format",
+            desc));
 
     BufferCoord anchor{str_to_int({desc.begin(), dot_anchor}) - 1,
-                       str_to_int({dot_anchor+1, comma}) - 1};
+                       str_to_int({dot_anchor + 1, comma}) - 1};
 
-    BufferCoord cursor{str_to_int({comma+1, dot_cursor}) - 1,
-                       str_to_int({dot_cursor+1, desc.end()}) - 1};
+    BufferCoord cursor{str_to_int({comma + 1, dot_cursor}) - 1,
+                       str_to_int({dot_cursor + 1, desc.end()}) - 1};
 
-    if (anchor.line < 0 or anchor.column < 0 or
-        cursor.line < 0 or cursor.column < 0)
+    if (anchor.line < 0 or anchor.column < 0 or cursor.line < 0
+        or cursor.column < 0)
         throw runtime_error(format("coordinates must be >= 1: '{}'", desc));
 
     return Selection{anchor, cursor};
 }
 
-SelectionList selection_list_from_string(Buffer& buffer, ConstArrayView<String> descs)
+SelectionList selection_list_from_string(Buffer& buffer,
+                                         ConstArrayView<String> descs)
 {
     if (descs.empty())
         throw runtime_error{"empty selection description"};
 
-    auto sels = descs | transform([&](auto&& d) { auto s = selection_from_string(d); clamp(s, buffer); return s; })
-                      | gather<Vector<Selection>>();
-    return {SelectionList::UnsortedTag{}, buffer, std::move(sels), buffer.timestamp(), 0};
+    auto sels = descs | transform([&](auto&& d) {
+                    auto s = selection_from_string(d);
+                    clamp(s, buffer);
+                    return s;
+                })
+                | gather<Vector<Selection>>();
+    return {SelectionList::UnsortedTag{}, buffer, std::move(sels),
+            buffer.timestamp(), 0};
 }
 
 }

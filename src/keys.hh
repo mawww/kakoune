@@ -21,15 +21,15 @@ struct Key
         Alt     = 1 << 1,
         Shift   = 1 << 2,
 
-        MousePress   = 1 << 3,
-        MouseRelease = 1 << 4,
-        MousePos     = 1 << 5,
+        MousePress     = 1 << 3,
+        MouseRelease   = 1 << 4,
+        MousePos       = 1 << 5,
         MouseWheelDown = 1 << 6,
-        MouseWheelUp = 1 << 7,
-        MouseEvent = MousePress | MouseRelease | MousePos |
-                     MouseWheelDown | MouseWheelUp,
+        MouseWheelUp   = 1 << 7,
+        MouseEvent
+        = MousePress | MouseRelease | MousePos | MouseWheelDown | MouseWheelUp,
 
-        Resize = 1 << 8,
+        Resize     = 1 << 8,
         MenuSelect = 1 << 10,
     };
     enum NamedKey : Codepoint
@@ -66,13 +66,13 @@ struct Key
     };
 
     Modifiers modifiers = {};
-    Codepoint key = {};
+    Codepoint key       = {};
 
     constexpr Key(Modifiers modifiers, Codepoint key)
-        : modifiers(modifiers), key(key) {}
+        : modifiers(modifiers), key(key)
+    {}
 
-    constexpr Key(Codepoint key)
-        : modifiers(Modifiers::None), key(key) {}
+    constexpr Key(Codepoint key) : modifiers(Modifiers::None), key(key) {}
 
     constexpr Key() = default;
 
@@ -82,7 +82,10 @@ struct Key
     constexpr bool operator!=(Key other) const { return val() != other.val(); }
     constexpr bool operator<(Key other) const { return val() < other.val(); }
 
-    constexpr DisplayCoord coord() const { return {(int)((key & 0xFFFF0000) >> 16), (int)(key & 0x0000FFFF)}; }
+    constexpr DisplayCoord coord() const
+    {
+        return {(int)((key & 0xFFFF0000) >> 16), (int)(key & 0x0000FFFF)};
+    }
 
     Optional<Codepoint> codepoint() const;
 };
@@ -95,26 +98,36 @@ class String;
 class StringView;
 
 KeyList parse_keys(StringView str);
-String  key_to_str(Key key);
+String key_to_str(Key key);
 
 constexpr Key shift(Key key)
 {
-    return { key.modifiers | Key::Modifiers::Shift, key.key };
+    return {key.modifiers | Key::Modifiers::Shift, key.key};
 }
 constexpr Key alt(Key key)
 {
-    return { key.modifiers | Key::Modifiers::Alt, key.key };
+    return {key.modifiers | Key::Modifiers::Alt, key.key};
 }
 constexpr Key ctrl(Key key)
 {
-    return { key.modifiers | Key::Modifiers::Control, key.key };
+    return {key.modifiers | Key::Modifiers::Control, key.key};
 }
 
-constexpr Codepoint encode_coord(DisplayCoord coord) { return (Codepoint)(((int)coord.line << 16) | ((int)coord.column & 0x0000FFFF)); }
+constexpr Codepoint encode_coord(DisplayCoord coord)
+{
+    return (Codepoint)(((int)coord.line << 16)
+                       | ((int)coord.column & 0x0000FFFF));
+}
 
-constexpr Key resize(DisplayCoord dim) { return { Key::Modifiers::Resize, encode_coord(dim) }; }
+constexpr Key resize(DisplayCoord dim)
+{
+    return {Key::Modifiers::Resize, encode_coord(dim)};
+}
 
-constexpr size_t hash_value(const Key& key) { return hash_values(key.modifiers, key.key); }
+constexpr size_t hash_value(const Key& key)
+{
+    return hash_values(key.modifiers, key.key);
+}
 
 }
 

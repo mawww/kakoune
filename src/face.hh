@@ -31,20 +31,20 @@ struct Face
     Attribute attributes;
 
     constexpr Face(Color fg = Color::Default, Color bg = Color::Default,
-         Attribute attributes = Attribute::Normal)
-      : fg{fg}, bg{bg}, attributes{attributes} {}
+                   Attribute attributes = Attribute::Normal)
+        : fg{fg}, bg{bg}, attributes{attributes}
+    {}
 };
 
 constexpr bool operator==(const Face& lhs, const Face& rhs)
 {
-    return lhs.fg == rhs.fg and
-           lhs.bg == rhs.bg and
-           lhs.attributes == rhs.attributes;
+    return lhs.fg == rhs.fg and lhs.bg == rhs.bg
+           and lhs.attributes == rhs.attributes;
 }
 
 constexpr bool operator!=(const Face& lhs, const Face& rhs)
 {
-    return not (lhs == rhs);
+    return not(lhs == rhs);
 }
 
 constexpr size_t hash_value(const Face& val)
@@ -64,11 +64,13 @@ inline Face merge_faces(const Face& base, const Face& face)
         return face.*color;
     };
 
-    return Face{ choose(&Face::fg, Attribute::FinalFg),
-                 choose(&Face::bg, Attribute::FinalBg),
-                 face.attributes & Attribute::FinalAttr ? face.attributes :
-                 base.attributes & Attribute::FinalAttr ? base.attributes :
-                 face.attributes | base.attributes };
+    return Face{choose(&Face::fg, Attribute::FinalFg),
+                choose(&Face::bg, Attribute::FinalBg),
+                face.attributes & Attribute::FinalAttr
+                    ? face.attributes
+                    : base.attributes & Attribute::FinalAttr
+                          ? base.attributes
+                          : face.attributes | base.attributes};
 }
 
 }

@@ -22,7 +22,8 @@ enum class Quoting;
 
 struct EnvVarDesc
 {
-    using Retriever = String (*)(StringView name, const Context&, Quoting quoting);
+    using Retriever
+        = String (*)(StringView name, const Context&, Quoting quoting);
 
     StringView str;
     bool prefix;
@@ -36,19 +37,21 @@ public:
 
     enum class Flags
     {
-        None = 0,
+        None          = 0,
         WaitForStdout = 1
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
     std::pair<String, int> eval(StringView cmdline, const Context& context,
                                 StringView input = {},
-                                Flags flags = Flags::WaitForStdout,
+                                Flags flags      = Flags::WaitForStdout,
                                 const ShellContext& shell_context = {});
 
-    String get_val(StringView name, const Context& context, Quoting quoting) const;
+    String get_val(StringView name, const Context& context,
+                   Quoting quoting) const;
 
-    CandidateList complete_env_var(StringView prefix, ByteCount cursor_pos) const;
+    CandidateList complete_env_var(StringView prefix,
+                                   ByteCount cursor_pos) const;
 
 private:
     String m_shell;

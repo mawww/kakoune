@@ -14,8 +14,7 @@ struct exception
 
 struct runtime_error : exception
 {
-    runtime_error(String what)
-        : m_what(std::move(what)) {}
+    runtime_error(String what) : m_what(std::move(what)) {}
 
     StringView what() const override { return m_what; }
     void set_what(String what) { m_what = std::move(what); }
@@ -30,8 +29,7 @@ struct failure : runtime_error
 };
 
 struct logic_error : exception
-{
-};
+{};
 
 }
 

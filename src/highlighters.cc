@@ -30,15 +30,20 @@ namespace Kakoune
 using Utf8Iterator = utf8::iterator<BufferIterator>;
 
 template<typename Func>
-std::unique_ptr<Highlighter> make_highlighter(Func func, HighlightPass pass = HighlightPass::Colorize)
+std::unique_ptr<Highlighter> make_highlighter(Func func,
+                                              HighlightPass pass
+                                              = HighlightPass::Colorize)
 {
     struct SimpleHighlighter : public Highlighter
     {
         SimpleHighlighter(Func func, HighlightPass pass)
-          : Highlighter{pass}, m_func{std::move(func)} {}
+            : Highlighter{pass}, m_func{std::move(func)}
+        {}
 
     private:
-        void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
+        void do_highlight(HighlightContext context,
+                          DisplayBuffer& display_buffer,
+                          BufferRange range) override
         {
             m_func(context, display_buffer, range);
         }
@@ -48,28 +53,27 @@ std::unique_ptr<Highlighter> make_highlighter(Func func, HighlightPass pass = Hi
 }
 
 template<typename T>
-void highlight_range(DisplayBuffer& display_buffer,
-                     BufferCoord begin, BufferCoord end,
-                     bool skip_replaced, T func)
+void highlight_range(DisplayBuffer& display_buffer, BufferCoord begin,
+                     BufferCoord end, bool skip_replaced, T func)
 {
     // tolerate begin > end as that can be triggered by wrong encodings
     if (begin >= end or end <= display_buffer.range().begin
-                     or begin >= display_buffer.range().end)
+        or begin >= display_buffer.range().end)
         return;
 
     for (auto& line : display_buffer.lines())
     {
         auto& range = line.range();
-        if (range.end <= begin or  end < range.begin)
+        if (range.end <= begin or end < range.begin)
             continue;
 
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
             bool is_replaced = atom_it->type() == DisplayAtom::ReplacedRange;
 
-            if (not atom_it->has_buffer_range() or
-                (skip_replaced and is_replaced) or
-                end <= atom_it->begin() or begin >= atom_it->end())
+            if (not atom_it->has_buffer_range()
+                or (skip_replaced and is_replaced) or end <= atom_it->begin()
+                or begin >= atom_it->end())
                 continue;
 
             if (not is_replaced and begin > atom_it->begin())
@@ -88,25 +92,25 @@ void highlight_range(DisplayBuffer& display_buffer,
 }
 
 template<typename T>
-void replace_range(DisplayBuffer& display_buffer,
-                   BufferCoord begin, BufferCoord end, T func)
+void replace_range(DisplayBuffer& display_buffer, BufferCoord begin,
+                   BufferCoord end, T func)
 {
     // tolerate begin > end as that can be triggered by wrong encodings
     if (begin >= end or end <= display_buffer.range().begin
-                     or begin >= display_buffer.range().end)
+        or begin >= display_buffer.range().end)
         return;
 
     for (auto& line : display_buffer.lines())
     {
         auto& range = line.range();
-        if (range.end <= begin or  end < range.begin)
+        if (range.end <= begin or end < range.begin)
             continue;
 
         int beg_idx = -1, end_idx = -1;
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            if (not atom_it->has_buffer_range() or
-                end <= atom_it->begin() or begin >= atom_it->end())
+            if (not atom_it->has_buffer_range() or end <= atom_it->begin()
+                or begin >= atom_it->end())
                 continue;
 
             if (begin >= atom_it->begin())
@@ -128,8 +132,7 @@ void replace_range(DisplayBuffer& display_buffer,
     }
 }
 
-void apply_highlighter(HighlightContext context,
-                       DisplayBuffer& display_buffer,
+void apply_highlighter(HighlightContext context, DisplayBuffer& display_buffer,
                        BufferCoord begin, BufferCoord end,
                        Highlighter& highlighter)
 {
@@ -143,9 +146,10 @@ void apply_highlighter(HighlightContext context,
 
     DisplayBuffer region_display;
     auto& region_lines = region_display.lines();
-    for (auto line_it = display_buffer.lines().begin(); line_it != line_end; ++line_it)
+    for (auto line_it = display_buffer.lines().begin(); line_it != line_end;
+         ++line_it)
     {
-        auto& line = *line_it;
+        auto& line  = *line_it;
         auto& range = line.range();
         if (range.end <= begin or end <= range.begin)
             continue;
@@ -162,10 +166,12 @@ void apply_highlighter(HighlightContext context,
 
             for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
             {
-                if (not atom_it->has_buffer_range() or end <= atom_it->begin() or begin >= atom_it->end())
+                if (not atom_it->has_buffer_range() or end <= atom_it->begin()
+                    or begin >= atom_it->end())
                     continue;
 
-                bool is_replaced = atom_it->type() == DisplayAtom::ReplacedRange;
+                bool is_replaced
+                    = atom_it->type() == DisplayAtom::ReplacedRange;
                 if (atom_it->begin() <= begin)
                 {
                     if (is_replaced or atom_it->begin() == begin)
@@ -191,12 +197,13 @@ void apply_highlighter(HighlightContext context,
             }
             std::move(line.begin() + beg_idx, line.begin() + end_idx,
                       std::back_inserter(region_lines.back()));
-            insert_pos.back() = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
+            insert_pos.back()
+                = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
         }
         else
         {
             region_lines.back() = std::move(line);
-            insert_pos.back() = line.begin();
+            insert_pos.back()   = line.begin();
         }
     }
 
@@ -209,28 +216,28 @@ void apply_highlighter(HighlightContext context,
     for (size_t i = 0; i < region_lines.size(); ++i)
     {
         auto& line = *(first_line + i);
-        auto pos = insert_pos[i];
+        auto pos   = insert_pos[i];
         for (auto& atom : region_lines[i])
             pos = ++line.insert(pos, std::move(atom));
     }
     display_buffer.compute_range();
 }
 
-auto apply_face = [](const Face& face)
-{
+auto apply_face = [](const Face& face) {
     return [&face](DisplayAtom& atom) {
         atom.face = merge_faces(atom.face, face);
     };
 };
 
-static std::unique_ptr<Highlighter> create_fill_highlighter(HighlighterParameters params, Highlighter*)
+static std::unique_ptr<Highlighter> create_fill_highlighter(
+    HighlighterParameters params, Highlighter*)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
 
     const String& facespec = params[0];
-    auto func = [facespec](HighlightContext context, DisplayBuffer& display_buffer, BufferRange range)
-    {
+    auto func              = [facespec](HighlightContext context,
+                           DisplayBuffer& display_buffer, BufferRange range) {
         highlight_range(display_buffer, range.begin, range.end, false,
                         apply_face(context.context.faces()[facespec]));
     };
@@ -249,6 +256,7 @@ struct BufferSideCache
             cache_val = Value(T{});
         return cache_val.as<T>();
     }
+
 private:
     ValueId m_id;
 };
@@ -266,7 +274,8 @@ public:
         ensure_first_face_is_capture_0();
     }
 
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                      BufferRange range) override
     {
         auto overlaps = [](const BufferRange& lhs, const BufferRange& rhs) {
             return lhs.begin < rhs.begin ? lhs.end > rhs.begin
@@ -276,11 +285,15 @@ public:
         if (not overlaps(display_buffer.range(), range))
             return;
 
-        const auto faces = m_faces | transform([&faces = context.context.faces()](auto&& spec) {
-                return spec.second.empty() ? Face{} : faces[spec.second];
-            }) | gather<Vector<Face>>();
+        const auto faces
+            = m_faces
+              | transform([& faces = context.context.faces()](auto&& spec) {
+                    return spec.second.empty() ? Face{} : faces[spec.second];
+                })
+              | gather<Vector<Face>>();
 
-        const auto& matches = get_matches(context.context.buffer(), display_buffer.range(), range);
+        const auto& matches = get_matches(context.context.buffer(),
+                                          display_buffer.range(), range);
         kak_assert(matches.size() % m_faces.size() == 0);
         for (size_t m = 0; m < matches.size(); ++m)
         {
@@ -288,8 +301,7 @@ public:
             if (face == Face{})
                 continue;
 
-            highlight_range(display_buffer,
-                            matches[m].begin, matches[m].end,
+            highlight_range(display_buffer, matches[m].begin, matches[m].end,
                             false, apply_face(face));
         }
     }
@@ -302,7 +314,8 @@ public:
         ++m_regex_version;
     }
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params,
+                                               Highlighter*)
     {
         if (params.size() < 2)
             throw runtime_error("wrong parameter count");
@@ -312,14 +325,17 @@ public:
         {
             auto colon = find(spec, ':');
             if (colon == spec.end())
-                throw runtime_error(format("wrong face spec: '{}' expected <capture>:<facespec>", spec));
+                throw runtime_error(format(
+                    "wrong face spec: '{}' expected <capture>:<facespec>",
+                    spec));
             int capture = str_to_int({spec.begin(), colon});
-            faces.emplace_back(capture, String{colon+1, spec.end()});
+            faces.emplace_back(capture, String{colon + 1, spec.end()});
         }
 
         Regex ex{params[0], RegexCompileFlags::Optimize};
 
-        return std::make_unique<RegexHighlighter>(std::move(ex), std::move(faces));
+        return std::make_unique<RegexHighlighter>(std::move(ex),
+                                                  std::move(faces));
     }
 
 private:
@@ -327,14 +343,18 @@ private:
     using MatchList = Vector<BufferRange, MemoryDomain::Highlight>;
     struct Cache
     {
-        size_t m_timestamp = -1;
+        size_t m_timestamp     = -1;
         size_t m_regex_version = -1;
-        struct RangeAndMatches { BufferRange range; MatchList matches; };
+        struct RangeAndMatches
+        {
+            BufferRange range;
+            MatchList matches;
+        };
         Vector<RangeAndMatches, MemoryDomain::Highlight> m_matches;
     };
     BufferSideCache<Cache> m_cache;
 
-    Regex     m_regex;
+    Regex m_regex;
     FacesSpec m_faces;
 
     size_t m_regex_version = 0;
@@ -346,23 +366,27 @@ private:
 
         std::sort(m_faces.begin(), m_faces.end(),
                   [](const std::pair<size_t, String>& lhs,
-                     const std::pair<size_t, String>& rhs)
-                  { return lhs.first < rhs.first; });
+                     const std::pair<size_t, String>& rhs) {
+                      return lhs.first < rhs.first;
+                  });
         if (m_faces[0].first != 0)
             m_faces.emplace(m_faces.begin(), 0, String{});
     }
 
-    void add_matches(const Buffer& buffer, MatchList& matches, BufferRange range)
+    void add_matches(const Buffer& buffer, MatchList& matches,
+                     BufferRange range)
     {
         kak_assert(matches.size() % m_faces.size() == 0);
         using RegexIt = RegexIterator<BufferIterator>;
-        RegexIt re_it{get_iterator(buffer, range.begin),
-                      get_iterator(buffer, range.end),
-                      buffer.begin(), buffer.end(), m_regex,
-                      match_flags(is_bol(range.begin),
-                                  is_eol(buffer, range.end),
-                                  is_bow(buffer, range.begin),
-                                  is_eow(buffer, range.end))};
+        RegexIt re_it{
+            get_iterator(buffer, range.begin),
+            get_iterator(buffer, range.end),
+            buffer.begin(),
+            buffer.end(),
+            m_regex,
+            match_flags(is_bol(range.begin), is_eol(buffer, range.end),
+                        is_bow(buffer, range.begin),
+                        is_eow(buffer, range.end))};
         RegexIt re_end;
         for (; re_it != re_end; ++re_it)
         {
@@ -374,27 +398,33 @@ private:
         }
     }
 
-    const MatchList& get_matches(const Buffer& buffer, BufferRange display_range, BufferRange buffer_range)
+    const MatchList& get_matches(const Buffer& buffer,
+                                 BufferRange display_range,
+                                 BufferRange buffer_range)
     {
-        Cache& cache = m_cache.get(buffer);
+        Cache& cache  = m_cache.get(buffer);
         auto& matches = cache.m_matches;
 
-        if (cache.m_regex_version != m_regex_version or
-            cache.m_timestamp != buffer.timestamp() or
-            matches.size() > 1000)
+        if (cache.m_regex_version != m_regex_version
+            or cache.m_timestamp != buffer.timestamp() or matches.size() > 1000)
         {
             matches.clear();
-            cache.m_timestamp = buffer.timestamp();
+            cache.m_timestamp     = buffer.timestamp();
             cache.m_regex_version = m_regex_version;
         }
 
         const LineCount line_offset = 3;
-        BufferRange range{std::max<BufferCoord>(buffer_range.begin, display_range.begin.line - line_offset),
-                          std::min<BufferCoord>(buffer_range.end, display_range.end.line + line_offset)};
+        BufferRange range{
+            std::max<BufferCoord>(buffer_range.begin,
+                                  display_range.begin.line - line_offset),
+            std::min<BufferCoord>(buffer_range.end,
+                                  display_range.end.line + line_offset)};
 
-        auto it = std::upper_bound(matches.begin(), matches.end(), range.begin,
-                                   [](const BufferCoord& lhs, const Cache::RangeAndMatches& rhs)
-                                   { return lhs < rhs.range.end; });
+        auto it = std::upper_bound(
+            matches.begin(), matches.end(), range.begin,
+            [](const BufferCoord& lhs, const Cache::RangeAndMatches& rhs) {
+                return lhs < rhs.range.end;
+            });
 
         if (it == matches.end() or it->range.begin > range.end)
         {
@@ -413,22 +443,24 @@ private:
             // greatly reduces regex parsing. To change if we encounter
             // regex that do not work great with that.
             BufferRange& old_range = it->range;
-            MatchList& matches = it->matches;
+            MatchList& matches     = it->matches;
 
             // Thanks to the ensure_first_face_is_capture_0 method, we know
             // these point to the first/last matches capture 0.
             auto first_end = matches.begin()->end;
-            auto last_end = (matches.end() - m_faces.size())->end;
+            auto last_end  = (matches.end() - m_faces.size())->end;
 
             // add regex matches from new begin to old first match end
             if (range.begin < old_range.begin)
             {
-                matches.erase(matches.begin(), matches.begin() + m_faces.size());
-                size_t pivot = matches.size();
+                matches.erase(matches.begin(),
+                              matches.begin() + m_faces.size());
+                size_t pivot    = matches.size();
                 old_range.begin = range.begin;
                 add_matches(buffer, matches, {range.begin, first_end});
 
-                std::rotate(matches.begin(), matches.begin() + pivot, matches.end());
+                std::rotate(matches.begin(), matches.begin() + pivot,
+                            matches.end());
             }
             // add regex matches from old last match begin to new end
             if (old_range.end < range.end)
@@ -446,19 +478,21 @@ class DynamicRegexHighlighter : public Highlighter
 {
 public:
     DynamicRegexHighlighter(RegexGetter regex_getter, FaceGetter face_getter)
-      : Highlighter{HighlightPass::Colorize},
-        m_regex_getter(std::move(regex_getter)),
-        m_face_getter(std::move(face_getter)),
-        m_highlighter(Regex{}, FacesSpec{}) {}
+        : Highlighter{HighlightPass::Colorize},
+          m_regex_getter(std::move(regex_getter)),
+          m_face_getter(std::move(face_getter)),
+          m_highlighter(Regex{}, FacesSpec{})
+    {}
 
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                      BufferRange range) override
     {
-        Regex regex = m_regex_getter(context.context);
+        Regex regex    = m_regex_getter(context.context);
         FacesSpec face = m_face_getter(context.context);
         if (regex != m_last_regex or face != m_last_face)
         {
             m_last_regex = std::move(regex);
-            m_last_face = face;
+            m_last_face  = face;
             if (not m_last_regex.empty())
                 m_highlighter.reset(m_last_regex, m_last_face);
         }
@@ -467,16 +501,17 @@ public:
     }
 
 private:
-    Regex       m_last_regex;
+    Regex m_last_regex;
     RegexGetter m_regex_getter;
 
-    FacesSpec   m_last_face;
-    FaceGetter  m_face_getter;
+    FacesSpec m_last_face;
+    FaceGetter m_face_getter;
 
     RegexHighlighter m_highlighter;
 };
 
-std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParameters params, Highlighter*)
+std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(
+    HighlighterParameters params, Highlighter*)
 {
     if (params.size() < 2)
         throw runtime_error("wrong parameter count");
@@ -486,32 +521,35 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
     {
         auto colon = find(spec, ':');
         if (colon == spec.end())
-            throw runtime_error("wrong face spec: '" + spec +
-                                 "' expected <capture>:<facespec>");
+            throw runtime_error("wrong face spec: '" + spec
+                                + "' expected <capture>:<facespec>");
         int capture = str_to_int({spec.begin(), colon});
-        faces.emplace_back(capture, String{colon+1, spec.end()});
+        faces.emplace_back(capture, String{colon + 1, spec.end()});
     }
 
-
     auto make_hl = [](auto& regex_getter, auto& face_getter) {
-        return std::make_unique<DynamicRegexHighlighter<std::decay_t<decltype(regex_getter)>,
-                                                        std::decay_t<decltype(face_getter)>>>(
+        return std::make_unique<
+            DynamicRegexHighlighter<std::decay_t<decltype(regex_getter)>,
+                                    std::decay_t<decltype(face_getter)>>>(
             std::move(regex_getter), std::move(face_getter));
     };
-    auto get_face = [faces](const Context& context){ return faces; };
+    auto get_face = [faces](const Context& context) { return faces; };
 
     CommandParser parser{params[0]};
     auto token = parser.read_token(true);
-    if (token and parser.done() and token->type == Token::Type::OptionExpand and
-        GlobalScope::instance().options()[token->content].is_of_type<Regex>())
+    if (token and parser.done() and token->type == Token::Type::OptionExpand
+        and GlobalScope::instance()
+                .options()[token->content]
+                .is_of_type<Regex>())
     {
-        auto get_regex = [option_name = token->content](const Context& context) {
-            return context.options()[option_name].get<Regex>();
-        };
+        auto get_regex
+            = [option_name = token->content](const Context& context) {
+                  return context.options()[option_name].get<Regex>();
+              };
         return make_hl(get_regex, get_face);
     }
 
-    auto get_regex = [expr = params[0]](const Context& context){
+    auto get_regex = [expr = params[0]](const Context& context) {
         try
         {
             auto re = expand(expr, context);
@@ -519,42 +557,47 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
         }
         catch (runtime_error& err)
         {
-            write_to_debug_buffer(format("Error while evaluating dynamic regex expression: {}", err.what()));
+            write_to_debug_buffer(
+                format("Error while evaluating dynamic regex expression: {}",
+                       err.what()));
             return Regex{};
         }
     };
     return make_hl(get_regex, get_face);
 }
 
-std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters params, Highlighter*)
+std::unique_ptr<Highlighter> create_line_highlighter(
+    HighlighterParameters params, Highlighter*)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    auto func = [line_expr=params[0], facespec=params[1]]
-                (HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
-    {
+    auto func = [line_expr = params[0], facespec = params[1]](
+                    HighlightContext context, DisplayBuffer& display_buffer,
+                    BufferRange) {
         LineCount line = -1;
         try
         {
-            line = str_to_int_ifp(expand(line_expr, context.context)).value_or(0) - 1;
+            line
+                = str_to_int_ifp(expand(line_expr, context.context)).value_or(0)
+                  - 1;
         }
         catch (runtime_error& err)
         {
-            write_to_debug_buffer(
-                format("Error evaluating highlight line expression: {}", err.what()));
+            write_to_debug_buffer(format(
+                "Error evaluating highlight line expression: {}", err.what()));
         }
 
         if (line < 0)
             return;
 
-        auto it = find_if(display_buffer.lines(),
-                          [line](const DisplayLine& l)
-                          { return l.range().begin.line == line; });
+        auto it = find_if(display_buffer.lines(), [line](const DisplayLine& l) {
+            return l.range().begin.line == line;
+        });
         if (it == display_buffer.lines().end())
             return;
 
-        auto face = context.context.faces()[facespec];
+        auto face          = context.context.faces()[facespec];
         ColumnCount column = 0;
         for (auto& atom : *it)
         {
@@ -565,37 +608,42 @@ std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters param
             kak_assert(atom.begin().line == line);
             apply_face(face)(atom);
         }
-        const ColumnCount remaining = context.context.window().dimensions().column - column;
+        const ColumnCount remaining
+            = context.context.window().dimensions().column - column;
         if (remaining > 0)
-            it->push_back({ String{' ', remaining}, face });
+            it->push_back({String{' ', remaining}, face});
     };
 
     return make_highlighter(std::move(func));
 }
 
-std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters params, Highlighter*)
+std::unique_ptr<Highlighter> create_column_highlighter(
+    HighlighterParameters params, Highlighter*)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    auto func = [col_expr=params[0], facespec=params[1]]
-                (HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
-    {
+    auto func = [col_expr = params[0], facespec = params[1]](
+                    HighlightContext context, DisplayBuffer& display_buffer,
+                    BufferRange) {
         ColumnCount column = -1;
         try
         {
-            column = str_to_int_ifp(expand(col_expr, context.context)).value_or(0) - 1;
+            column
+                = str_to_int_ifp(expand(col_expr, context.context)).value_or(0)
+                  - 1;
         }
         catch (runtime_error& err)
         {
             write_to_debug_buffer(
-                format("Error evaluating highlight column expression: {}", err.what()));
+                format("Error evaluating highlight column expression: {}",
+                       err.what()));
         }
 
         if (column < 0)
             return;
 
-        const auto face = context.context.faces()[facespec];
+        const auto face       = context.context.faces()[facespec];
         const auto win_column = context.setup.window_pos.column;
         const auto target_col = column - win_column;
         if (target_col < 0 or target_col >= context.setup.window_range.column)
@@ -604,8 +652,9 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
         for (auto& line : display_buffer.lines())
         {
             auto remaining_col = target_col;
-            bool found = false;
-            auto first_buf = find_if(line, [](auto& atom) { return atom.has_buffer_range(); });
+            bool found         = false;
+            auto first_buf     = find_if(
+                line, [](auto& atom) { return atom.has_buffer_range(); });
             for (auto atom_it = first_buf; atom_it != line.end(); ++atom_it)
             {
                 const auto atom_len = atom_it->length();
@@ -616,7 +665,7 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
                     if (atom_it->length() > 1)
                         atom_it = line.split(atom_it, 1_col);
                     atom_it->face = merge_faces(atom_it->face, face);
-                    found = true;
+                    found         = true;
                     break;
                 }
                 remaining_col -= atom_len;
@@ -635,47 +684,60 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
 
 struct WrapHighlighter : Highlighter
 {
-    WrapHighlighter(ColumnCount max_width, bool word_wrap, bool preserve_indent, String marker)
-        : Highlighter{HighlightPass::Wrap}, m_max_width{max_width},
-          m_word_wrap{word_wrap}, m_preserve_indent{preserve_indent},
-          m_marker{std::move(marker)} {}
+    WrapHighlighter(ColumnCount max_width, bool word_wrap, bool preserve_indent,
+                    String marker)
+        : Highlighter{HighlightPass::Wrap},
+          m_max_width{max_width},
+          m_word_wrap{word_wrap},
+          m_preserve_indent{preserve_indent},
+          m_marker{std::move(marker)}
+    {}
 
     static constexpr StringView ms_id = "wrap";
 
-    struct SplitPos{ ByteCount byte; ColumnCount column; };
+    struct SplitPos
+    {
+        ByteCount byte;
+        ColumnCount column;
+    };
 
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                      BufferRange) override
     {
         if (contains(context.disabled_ids, ms_id))
             return;
 
-        const ColumnCount wrap_column = std::min(m_max_width, context.setup.window_range.column);
+        const ColumnCount wrap_column
+            = std::min(m_max_width, context.setup.window_range.column);
         if (wrap_column <= 0)
             return;
 
         const Buffer& buffer = context.context.buffer();
-        const auto& cursor = context.context.selections().main().cursor();
-        const int tabstop = context.context.options()["tabstop"].get<int>();
+        const auto& cursor   = context.context.selections().main().cursor();
+        const int tabstop    = context.context.options()["tabstop"].get<int>();
         const LineCount win_height = context.context.window().dimensions().line;
         const ColumnCount marker_len = m_marker.column_length();
         const Face face_marker = context.context.faces()["StatusLineInfo"];
         for (auto it = display_buffer.lines().begin();
              it != display_buffer.lines().end(); ++it)
         {
-            const LineCount buf_line = it->range().begin.line;
+            const LineCount buf_line    = it->range().begin.line;
             const ByteCount line_length = buffer[buf_line].length();
-            const ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col;
+            const ColumnCount indent
+                = m_preserve_indent ? line_indent(buffer, tabstop, buf_line)
+                                    : 0_col;
 
-            auto pos = next_split_pos(buffer, wrap_column, tabstop, buf_line, {0, 0});
+            auto pos = next_split_pos(buffer, wrap_column, tabstop, buf_line,
+                                      {0, 0});
             if (pos.byte == line_length)
                 continue;
 
             for (auto atom_it = it->begin();
-                 pos.byte != line_length and atom_it != it->end(); )
+                 pos.byte != line_length and atom_it != it->end();)
             {
                 const BufferCoord coord{buf_line, pos.byte};
-                if (!atom_it->has_buffer_range() or
-                    coord < atom_it->begin() or coord >= atom_it->end())
+                if (!atom_it->has_buffer_range() or coord < atom_it->begin()
+                    or coord >= atom_it->end())
                 {
                     ++atom_it;
                     continue;
@@ -686,7 +748,7 @@ struct WrapHighlighter : Highlighter
                 if (coord > atom_it->begin())
                     atom_it = ++line.split(atom_it, coord);
 
-                DisplayLine new_line{ AtomList{ atom_it, line.end() } };
+                DisplayLine new_line{AtomList{atom_it, line.end()}};
                 line.erase(atom_it, line.end());
 
                 ColumnCount prefix_len = 0;
@@ -697,53 +759,64 @@ struct WrapHighlighter : Highlighter
                 }
                 if (indent > marker_len and indent < wrap_column)
                 {
-                    auto it = new_line.insert(new_line.begin() + (marker_len > 0), {buffer, coord, coord});
+                    auto it
+                        = new_line.insert(new_line.begin() + (marker_len > 0),
+                                          {buffer, coord, coord});
                     it->replace(String{' ', indent - marker_len});
                     prefix_len = indent;
                 }
 
-                if (it+1 - display_buffer.lines().begin() == win_height)
+                if (it + 1 - display_buffer.lines().begin() == win_height)
                 {
-                    if (cursor >= new_line.range().begin) // strip first lines if cursor is not visible
+                    if (cursor
+                        >= new_line.range().begin) // strip first lines if
+                                                   // cursor is not visible
                     {
-                        display_buffer.lines().erase(display_buffer.lines().begin(), display_buffer.lines().begin()+1);
+                        display_buffer.lines().erase(
+                            display_buffer.lines().begin(),
+                            display_buffer.lines().begin() + 1);
                         --it;
                     }
                     else
                     {
-                        display_buffer.lines().erase(it+1, display_buffer.lines().end());
+                        display_buffer.lines().erase(
+                            it + 1, display_buffer.lines().end());
                         return;
                     }
                 }
-                it = display_buffer.lines().insert(it+1, new_line);
+                it = display_buffer.lines().insert(it + 1, new_line);
 
-                pos = next_split_pos(buffer, wrap_column - prefix_len, tabstop, buf_line, pos);
+                pos = next_split_pos(buffer, wrap_column - prefix_len, tabstop,
+                                     buf_line, pos);
                 atom_it = it->begin();
             }
         }
     }
 
-    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
+    void do_compute_display_setup(HighlightContext context,
+                                  DisplaySetup& setup) const override
     {
         if (contains(context.disabled_ids, ms_id))
             return;
 
-        const ColumnCount wrap_column = std::min(setup.window_range.column, m_max_width);
+        const ColumnCount wrap_column
+            = std::min(setup.window_range.column, m_max_width);
         if (wrap_column <= 0)
             return;
 
         const Buffer& buffer = context.context.buffer();
-        const auto& cursor = context.context.selections().main().cursor();
-        const int tabstop = context.context.options()["tabstop"].get<int>();
+        const auto& cursor   = context.context.selections().main().cursor();
+        const int tabstop    = context.context.options()["tabstop"].get<int>();
 
         auto line_wrap_count = [&](LineCount line, ColumnCount indent) {
-            LineCount count = 0;
+            LineCount count             = 0;
             const ByteCount line_length = buffer[line].length();
             SplitPos pos{0, 0};
             while (true)
             {
-                pos = next_split_pos(buffer, wrap_column - (pos.byte == 0 ? 0_col : indent),
-                                     tabstop, line, pos);
+                pos = next_split_pos(
+                    buffer, wrap_column - (pos.byte == 0 ? 0_col : indent),
+                    tabstop, line, pos);
                 if (pos.byte == line_length)
                     break;
                 ++count;
@@ -754,10 +827,10 @@ struct WrapHighlighter : Highlighter
         const auto win_height = context.context.window().dimensions().line;
 
         // Disable horizontal scrolling when using a WrapHighlighter
-        setup.window_pos.column = 0;
-        setup.window_range.line = 0;
+        setup.window_pos.column    = 0;
+        setup.window_range.line    = 0;
         setup.scroll_offset.column = 0;
-        setup.full_lines = true;
+        setup.full_lines           = true;
 
         const ColumnCount marker_len = m_marker.column_length();
 
@@ -768,7 +841,9 @@ struct WrapHighlighter : Highlighter
             if (buf_line >= buffer.line_count())
                 break;
 
-            const ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col;
+            const ColumnCount indent
+                = m_preserve_indent ? line_indent(buffer, tabstop, buf_line)
+                                    : 0_col;
 
             ColumnCount prefix_len = 0;
             if (marker_len < wrap_column)
@@ -781,29 +856,37 @@ struct WrapHighlighter : Highlighter
                 SplitPos pos{0, 0};
                 for (LineCount count = 0; true; ++count)
                 {
-                    auto next_pos = next_split_pos(buffer, wrap_column - (pos.byte != 0 ? prefix_len : 0_col),
-                                                   tabstop, buf_line, pos);
+                    auto next_pos = next_split_pos(
+                        buffer,
+                        wrap_column - (pos.byte != 0 ? prefix_len : 0_col),
+                        tabstop, buf_line, pos);
                     if (next_pos.byte > cursor.column)
                     {
                         setup.cursor_pos = DisplayCoord{
                             win_line + count,
-                            get_column(buffer, tabstop, cursor) -
-                            pos.column + (pos.byte != 0 ? indent : 0_col)
-                        };
+                            get_column(buffer, tabstop, cursor) - pos.column
+                                + (pos.byte != 0 ? indent : 0_col)};
                         break;
                     }
                     pos = next_pos;
                 }
-                kak_assert(setup.cursor_pos.column >= 0 and setup.cursor_pos.column < setup.window_range.column);
+                kak_assert(setup.cursor_pos.column >= 0
+                           and setup.cursor_pos.column
+                                   < setup.window_range.column);
             }
             const auto wrap_count = line_wrap_count(buf_line, prefix_len);
             win_line += wrap_count + 1;
 
-            // scroll window to keep cursor visible, and update range as lines gets removed
-            while (buf_line >= cursor.line and setup.window_pos.line < cursor.line and
-                   setup.cursor_pos.line + setup.scroll_offset.line >= win_height)
+            // scroll window to keep cursor visible, and update range as lines
+            // gets removed
+            while (buf_line >= cursor.line
+                   and setup.window_pos.line < cursor.line
+                   and setup.cursor_pos.line + setup.scroll_offset.line
+                           >= win_height)
             {
-                auto remove_count = std::min(win_height, 1 + line_wrap_count(setup.window_pos.line, indent));
+                auto remove_count = std::min(
+                    win_height,
+                    1 + line_wrap_count(setup.window_pos.line, indent));
                 ++setup.window_pos.line;
                 --setup.window_range.line;
                 setup.cursor_pos.line -= remove_count;
@@ -818,20 +901,24 @@ struct WrapHighlighter : Highlighter
         unique_ids.push_back(ms_id);
     }
 
-    SplitPos next_split_pos(const Buffer& buffer,  ColumnCount wrap_column, int tabstop, LineCount line, SplitPos current) const
+    SplitPos next_split_pos(const Buffer& buffer, ColumnCount wrap_column,
+                            int tabstop, LineCount line, SplitPos current) const
     {
         const ColumnCount target_column = current.column + wrap_column;
-        StringView content = buffer[line];
+        StringView content              = buffer[line];
 
-        SplitPos pos = current;
+        SplitPos pos           = current;
         SplitPos last_boundary = {0, 0};
 
         while (pos.byte < content.length() and pos.column < target_column)
         {
             if (content[pos.byte] == '\t')
             {
-                const ColumnCount next_column = (pos.column / tabstop + 1) * tabstop;
-                if (next_column > target_column and pos.byte != current.byte) // the target column was in the tab
+                const ColumnCount next_column
+                    = (pos.column / tabstop + 1) * tabstop;
+                if (next_column > target_column
+                    and pos.byte
+                            != current.byte) // the target column was in the tab
                     break;
                 pos.column = next_column;
                 ++pos.byte;
@@ -839,10 +926,13 @@ struct WrapHighlighter : Highlighter
             }
             else
             {
-                const char* it = &content[pos.byte];
+                const char* it     = &content[pos.byte];
                 const Codepoint cp = utf8::read_codepoint(it, content.end());
                 const ColumnCount width = codepoint_width(cp);
-                if (pos.column + width > target_column and pos.byte != current.byte) // the target column was in the char
+                if (pos.column + width > target_column
+                    and pos.byte
+                            != current
+                                   .byte) // the target column was in the char
                 {
                     if (!is_word<WORD>(cp))
                         last_boundary = pos;
@@ -855,40 +945,45 @@ struct WrapHighlighter : Highlighter
             }
         }
 
-        if (m_word_wrap and pos.byte < content.length()) // find a word boundary before current position
+        if (m_word_wrap
+            and pos.byte < content.length()) // find a word boundary before
+                                             // current position
             if (last_boundary.byte > 0)
                 pos = last_boundary;
 
         return pos;
     };
 
-    ColumnCount line_indent(const Buffer& buffer, int tabstop, LineCount line) const
+    ColumnCount line_indent(const Buffer& buffer, int tabstop,
+                            LineCount line) const
     {
         StringView l = buffer[line];
-        auto col = 0_byte;
+        auto col     = 0_byte;
         while (is_horizontal_blank(l[col]))
-               ++col;
+            ++col;
         return get_column(buffer, tabstop, {line, col});
     }
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params,
+                                               Highlighter*)
     {
-        static const ParameterDesc param_desc{
-            { { "word", { false, "" } },
-              { "indent", { false, "" } },
-              { "width", { true, "" } },
-              { "marker", { true, "" } } },
-            ParameterDesc::Flags::None, 0, 0
-        };
+        static const ParameterDesc param_desc{{{"word", {false, ""}},
+                                               {"indent", {false, ""}},
+                                               {"width", {true, ""}},
+                                               {"marker", {true, ""}}},
+                                              ParameterDesc::Flags::None,
+                                              0,
+                                              0};
         ParametersParser parser(params, param_desc);
 
         ColumnCount max_width{std::numeric_limits<int>::max()};
         if (auto width = parser.get_switch("width"))
             max_width = str_to_int(*width);
 
-        return std::make_unique<WrapHighlighter>(max_width, (bool)parser.get_switch("word"),
-                                                 (bool)parser.get_switch("indent"),
-                                                 parser.get_switch("marker").value_or("").str());
+        return std::make_unique<WrapHighlighter>(
+            max_width, (bool)parser.get_switch("word"),
+            (bool)parser.get_switch("indent"),
+            parser.get_switch("marker").value_or("").str());
     }
 
     const bool m_word_wrap;
@@ -903,10 +998,12 @@ struct TabulationHighlighter : Highlighter
 {
     TabulationHighlighter() : Highlighter{HighlightPass::Move} {}
 
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                      BufferRange) override
     {
-        const ColumnCount tabstop = context.context.options()["tabstop"].get<int>();
-        auto& buffer = context.context.buffer();
+        const ColumnCount tabstop
+            = context.context.options()["tabstop"].get<int>();
+        auto& buffer    = context.context.buffer();
         auto win_column = context.setup.window_pos.column;
         for (auto& line : display_buffer.lines())
         {
@@ -916,19 +1013,21 @@ struct TabulationHighlighter : Highlighter
                     continue;
 
                 auto begin = get_iterator(buffer, atom_it->begin());
-                auto end = get_iterator(buffer, atom_it->end());
+                auto end   = get_iterator(buffer, atom_it->end());
                 for (BufferIterator it = begin; it != end; ++it)
                 {
                     if (*it == '\t')
                     {
                         if (it != begin)
                             atom_it = ++line.split(atom_it, it.coord());
-                        if (it+1 != end)
-                            atom_it = line.split(atom_it, (it+1).coord());
+                        if (it + 1 != end)
+                            atom_it = line.split(atom_it, (it + 1).coord());
 
-                        const ColumnCount column = get_column(buffer, tabstop, it.coord());
-                        const ColumnCount count = tabstop - (column % tabstop) -
-                                                  std::max(win_column - column, 0_col);
+                        const ColumnCount column
+                            = get_column(buffer, tabstop, it.coord());
+                        const ColumnCount count
+                            = tabstop - (column % tabstop)
+                              - std::max(win_column - column, 0_col);
                         atom_it->replace(String{' ', count});
                         break;
                     }
@@ -937,18 +1036,22 @@ struct TabulationHighlighter : Highlighter
         }
     }
 
-    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
+    void do_compute_display_setup(HighlightContext context,
+                                  DisplaySetup& setup) const override
     {
         auto& buffer = context.context.buffer();
-        // Ensure that a cursor on a tab character makes the full tab character visible
+        // Ensure that a cursor on a tab character makes the full tab character
+        // visible
         auto cursor = context.context.selections().main().cursor();
         if (buffer.byte_at(cursor) != '\t')
             return;
 
-        const ColumnCount tabstop = context.context.options()["tabstop"].get<int>();
+        const ColumnCount tabstop
+            = context.context.options()["tabstop"].get<int>();
         const ColumnCount column = get_column(buffer, tabstop, cursor);
-        const ColumnCount width = tabstop - (column % tabstop);
-        const ColumnCount win_end = setup.window_pos.column + setup.window_range.column;
+        const ColumnCount width  = tabstop - (column % tabstop);
+        const ColumnCount win_end
+            = setup.window_pos.column + setup.window_range.column;
         const ColumnCount offset = std::max(column + width - win_end, 0_col);
 
         setup.window_pos.column += offset;
@@ -958,42 +1061,51 @@ struct TabulationHighlighter : Highlighter
 
 struct ShowWhitespacesHighlighter : Highlighter
 {
-    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp)
-      : Highlighter{HighlightPass::Move}, m_tab{std::move(tab)}, m_tabpad{std::move(tabpad)},
-        m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}
+    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf,
+                               String nbsp)
+        : Highlighter{HighlightPass::Move},
+          m_tab{std::move(tab)},
+          m_tabpad{std::move(tabpad)},
+          m_spc{std::move(spc)},
+          m_lf{std::move(lf)},
+          m_nbsp{std::move(nbsp)}
     {}
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params,
+                                               Highlighter*)
     {
-        static const ParameterDesc param_desc{
-            { { "tab", { true, "" } },
-              { "tabpad", { true, "" } },
-              { "spc", { true, "" } },
-              { "lf", { true, "" } },
-              { "nbsp", { true, "" } } },
-            ParameterDesc::Flags::None, 0, 0
-        };
+        static const ParameterDesc param_desc{{{"tab", {true, ""}},
+                                               {"tabpad", {true, ""}},
+                                               {"spc", {true, ""}},
+                                               {"lf", {true, ""}},
+                                               {"nbsp", {true, ""}}},
+                                              ParameterDesc::Flags::None,
+                                              0,
+                                              0};
         ParametersParser parser(params, param_desc);
 
-        auto get_param = [&](StringView param,  StringView fallback) {
+        auto get_param = [&](StringView param, StringView fallback) {
             StringView value = parser.get_switch(param).value_or(fallback);
             if (value.char_length() != 1)
-                throw runtime_error{format("-{} expects a single character parameter", param)};
+                throw runtime_error{
+                    format("-{} expects a single character parameter", param)};
             return value.str();
         };
 
         return std::make_unique<ShowWhitespacesHighlighter>(
-            get_param("tab", "→"), get_param("tabpad", " "), get_param("spc", "·"),
-            get_param("lf", "¬"), get_param("nbsp", "⍽"));
+            get_param("tab", "→"), get_param("tabpad", " "),
+            get_param("spc", "·"), get_param("lf", "¬"),
+            get_param("nbsp", "⍽"));
     }
 
 private:
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                      BufferRange)
     {
-        const int tabstop = context.context.options()["tabstop"].get<int>();
+        const int tabstop   = context.context.options()["tabstop"].get<int>();
         auto whitespaceface = context.context.faces()["Whitespace"];
-        auto& buffer = context.context.buffer();
-        auto win_column = context.setup.window_pos.column;
+        auto& buffer        = context.context.buffer();
+        auto win_column     = context.setup.window_pos.column;
         for (auto& line : display_buffer.lines())
         {
             for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -1002,10 +1114,10 @@ private:
                     continue;
 
                 auto begin = get_iterator(buffer, atom_it->begin());
-                auto end = get_iterator(buffer, atom_it->end());
-                for (BufferIterator it = begin; it != end; )
+                auto end   = get_iterator(buffer, atom_it->end());
+                for (BufferIterator it = begin; it != end;)
                 {
-                    auto coord = it.coord();
+                    auto coord   = it.coord();
                     Codepoint cp = utf8::read_codepoint(it, end);
                     if (cp == '\t' or cp == ' ' or cp == '\n' or cp == 0xA0)
                     {
@@ -1016,10 +1128,15 @@ private:
 
                         if (cp == '\t')
                         {
-                            const ColumnCount column = get_column(buffer, tabstop, coord);
-                            const ColumnCount count = tabstop - (column % tabstop) -
-                                                      std::max(win_column - column, 0_col);
-                            atom_it->replace(m_tab + String(m_tabpad[(CharCount)0], count - m_tab.column_length()));
+                            const ColumnCount column
+                                = get_column(buffer, tabstop, coord);
+                            const ColumnCount count
+                                = tabstop - (column % tabstop)
+                                  - std::max(win_column - column, 0_col);
+                            atom_it->replace(
+                                m_tab
+                                + String(m_tabpad[(CharCount)0],
+                                         count - m_tab.column_length()));
                         }
                         else if (cp == ' ')
                             atom_it->replace(m_spc);
@@ -1027,7 +1144,8 @@ private:
                             atom_it->replace(m_lf);
                         else if (cp == 0xA0)
                             atom_it->replace(m_nbsp);
-                        atom_it->face = merge_faces(atom_it->face, whitespaceface);
+                        atom_it->face
+                            = merge_faces(atom_it->face, whitespaceface);
                         break;
                     }
                 }
@@ -1041,56 +1159,66 @@ private:
 struct LineNumbersHighlighter : Highlighter
 {
     LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator)
-      : Highlighter{HighlightPass::Move},
-        m_relative{relative},
-        m_hl_cursor_line{hl_cursor_line},
-        m_separator{std::move(separator)} {}
+        : Highlighter{HighlightPass::Move},
+          m_relative{relative},
+          m_hl_cursor_line{hl_cursor_line},
+          m_separator{std::move(separator)}
+    {}
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params,
+                                               Highlighter*)
     {
-        static const ParameterDesc param_desc{
-            { { "relative", { false, "" } },
-              { "separator", { true, "" } },
-              { "hlcursor", { false, "" } } },
-            ParameterDesc::Flags::None, 0, 0
-        };
+        static const ParameterDesc param_desc{{{"relative", {false, ""}},
+                                               {"separator", {true, ""}},
+                                               {"hlcursor", {false, ""}}},
+                                              ParameterDesc::Flags::None,
+                                              0,
+                                              0};
         ParametersParser parser(params, param_desc);
 
         StringView separator = parser.get_switch("separator").value_or("│");
         if (separator.length() > 10)
             throw runtime_error("separator length is limited to 10 bytes");
 
-        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str());
+        return std::make_unique<LineNumbersHighlighter>(
+            (bool)parser.get_switch("relative"),
+            (bool)parser.get_switch("hlcursor"), separator.str());
     }
 
 private:
     static constexpr StringView ms_id = "line-numbers";
 
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                      BufferRange) override
     {
         if (contains(context.disabled_ids, ms_id))
             return;
 
-        auto& faces = context.context.faces();
-        const Face face = faces["LineNumbers"];
-        const Face face_wrapped = faces["LineNumbersWrapped"];
+        auto& faces              = context.context.faces();
+        const Face face          = faces["LineNumbers"];
+        const Face face_wrapped  = faces["LineNumbersWrapped"];
         const Face face_absolute = faces["LineNumberCursor"];
-        int digit_count = compute_digit_count(context.context);
+        int digit_count          = compute_digit_count(context.context);
 
         char format[16];
         format_to(format, "%{}d", digit_count);
-        const int main_line = (int)context.context.selections().main().cursor().line + 1;
+        const int main_line
+            = (int)context.context.selections().main().cursor().line + 1;
         int last_line = -1;
         for (auto& line : display_buffer.lines())
         {
-            const int current_line = (int)line.range().begin.line + 1;
+            const int current_line    = (int)line.range().begin.line + 1;
             const bool is_cursor_line = main_line == current_line;
-            const int line_to_format = (m_relative and not is_cursor_line) ?
-                                       current_line - main_line : current_line;
+            const int line_to_format  = (m_relative and not is_cursor_line)
+                                           ? current_line - main_line
+                                           : current_line;
             char buffer[16];
             snprintf(buffer, 16, format, std::abs(line_to_format));
-            const auto atom_face = last_line == current_line ? face_wrapped :
-                ((m_hl_cursor_line and is_cursor_line) ? face_absolute : face);
+            const auto atom_face
+                = last_line == current_line
+                      ? face_wrapped
+                      : ((m_hl_cursor_line and is_cursor_line) ? face_absolute
+                                                               : face);
             line.insert(line.begin(), {buffer, atom_face});
             line.insert(line.begin() + 1, {m_separator, face});
 
@@ -1098,12 +1226,14 @@ private:
         }
     }
 
-    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
+    void do_compute_display_setup(HighlightContext context,
+                                  DisplaySetup& setup) const override
     {
         if (contains(context.disabled_ids, ms_id))
             return;
 
-        ColumnCount width = compute_digit_count(context.context) + m_separator.column_length();
+        ColumnCount width = compute_digit_count(context.context)
+                            + m_separator.column_length();
         setup.window_range.column -= std::min(width, setup.window_range.column);
     }
 
@@ -1114,26 +1244,28 @@ private:
 
     int compute_digit_count(const Context& context) const
     {
-        int digit_count = 0;
+        int digit_count     = 0;
         LineCount last_line = context.buffer().line_count();
         for (LineCount c = last_line; c > 0; c /= 10)
             ++digit_count;
         return digit_count;
     }
 
-   const bool m_relative;
-   const bool m_hl_cursor_line;
-   const String m_separator;
+    const bool m_relative;
+    const bool m_hl_cursor_line;
+    const String m_separator;
 };
 
 constexpr StringView LineNumbersHighlighter::ms_id;
 
-
-void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
+void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
+                        BufferRange)
 {
     const Face face = context.context.faces()["MatchingChar"];
-    const auto& matching_pairs = context.context.options()["matching_pairs"].get<Vector<Codepoint, MemoryDomain::Options>>();
-    const auto range = display_buffer.range();
+    const auto& matching_pairs
+        = context.context.options()["matching_pairs"]
+              .get<Vector<Codepoint, MemoryDomain::Options>>();
+    const auto range   = display_buffer.range();
     const auto& buffer = context.context.buffer();
     for (auto& sel : context.context.selections())
     {
@@ -1151,15 +1283,16 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
         if (((match - matching_pairs.begin()) % 2) == 0)
         {
             const Codepoint opening = *match;
-            const Codepoint closing = *(match+1);
+            const Codepoint closing = *(match + 1);
             while (it != buffer.end())
             {
                 if (*it == opening)
                     ++level;
                 else if (*it == closing and --level == 0)
                 {
-                    highlight_range(display_buffer, it.base().coord(), (it+1).base().coord(),
-                                    false, apply_face(face));
+                    highlight_range(display_buffer, it.base().coord(),
+                                    (it + 1).base().coord(), false,
+                                    apply_face(face));
                     break;
                 }
                 ++it;
@@ -1167,7 +1300,7 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
         }
         else if (pos > range.begin)
         {
-            const Codepoint opening = *(match-1);
+            const Codepoint opening = *(match - 1);
             const Codepoint closing = *match;
             while (true)
             {
@@ -1175,8 +1308,9 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
                     ++level;
                 else if (*it == opening and --level == 0)
                 {
-                    highlight_range(display_buffer, it.base().coord(), (it+1).base().coord(),
-                                    false, apply_face(face));
+                    highlight_range(display_buffer, it.base().coord(),
+                                    (it + 1).base().coord(), false,
+                                    apply_face(face));
                     break;
                 }
                 if (it == buffer.begin())
@@ -1187,28 +1321,32 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
     }
 }
 
-std::unique_ptr<Highlighter> create_matching_char_highlighter(HighlighterParameters params, Highlighter*)
+std::unique_ptr<Highlighter> create_matching_char_highlighter(
+    HighlighterParameters params, Highlighter*)
 {
     return make_highlighter(show_matching_char);
 }
 
-void highlight_selections(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
+void highlight_selections(HighlightContext context,
+                          DisplayBuffer& display_buffer, BufferRange)
 {
-    const auto& buffer = context.context.buffer();
-    const auto& faces = context.context.faces();
+    const auto& buffer      = context.context.buffer();
+    const auto& faces       = context.context.faces();
     const Face sel_faces[6] = {
-            faces["PrimarySelection"], faces["SecondarySelection"],
-            faces["PrimaryCursor"],    faces["SecondaryCursor"],
-            faces["PrimaryCursorEol"], faces["SecondaryCursorEol"],
+        faces["PrimarySelection"], faces["SecondarySelection"],
+        faces["PrimaryCursor"],    faces["SecondaryCursor"],
+        faces["PrimaryCursorEol"], faces["SecondaryCursorEol"],
     };
 
     const auto& selections = context.context.selections();
     for (size_t i = 0; i < selections.size(); ++i)
     {
-        auto& sel = selections[i];
+        auto& sel          = selections[i];
         const bool forward = sel.anchor() <= sel.cursor();
-        BufferCoord begin = forward ? sel.anchor() : buffer.char_next(sel.cursor());
-        BufferCoord end   = forward ? (BufferCoord)sel.cursor() : buffer.char_next(sel.anchor());
+        BufferCoord begin
+            = forward ? sel.anchor() : buffer.char_next(sel.cursor());
+        BufferCoord end = forward ? (BufferCoord)sel.cursor()
+                                  : buffer.char_next(sel.anchor());
 
         const bool primary = (i == selections.main_index());
         highlight_range(display_buffer, begin, end, false,
@@ -1216,19 +1354,21 @@ void highlight_selections(HighlightContext context, DisplayBuffer& display_buffe
     }
     for (size_t i = 0; i < selections.size(); ++i)
     {
-        auto& sel = selections[i];
+        auto& sel               = selections[i];
         const BufferCoord coord = sel.cursor();
-        const bool primary = (i == selections.main_index());
+        const bool primary      = (i == selections.main_index());
         const bool eol = buffer[coord.line].length() - 1 == coord.column;
-        highlight_range(display_buffer, coord, buffer.char_next(coord), false,
-                        apply_face(sel_faces[2 + (eol ? 2 : 0) + (primary ? 0 : 1)]));
+        highlight_range(
+            display_buffer, coord, buffer.char_next(coord), false,
+            apply_face(sel_faces[2 + (eol ? 2 : 0) + (primary ? 0 : 1)]));
     }
 }
 
-void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
+void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer,
+                        BufferRange)
 {
     auto& buffer = context.context.buffer();
-    auto error = context.context.faces()["Error"];
+    auto error   = context.context.faces()["Error"];
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -1236,9 +1376,10 @@ void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer,
             if (atom_it->type() == DisplayAtom::Range)
             {
                 for (auto it  = get_iterator(buffer, atom_it->begin()),
-                          end = get_iterator(buffer, atom_it->end()); it < end;)
+                          end = get_iterator(buffer, atom_it->end());
+                     it < end;)
                 {
-                    auto coord = it.coord();
+                    auto coord   = it.coord();
                     Codepoint cp = utf8::read_codepoint(it, end);
                     if (cp != '\n' and not iswprint((wchar_t)cp))
                     {
@@ -1257,25 +1398,29 @@ void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer,
     }
 }
 
-static void update_line_specs_ifn(const Buffer& buffer, LineAndSpecList& line_flags)
+static void update_line_specs_ifn(const Buffer& buffer,
+                                  LineAndSpecList& line_flags)
 {
     if (line_flags.prefix == buffer.timestamp())
         return;
 
     auto& lines = line_flags.list;
 
-    auto modifs = compute_line_modifications(buffer, line_flags.prefix);
+    auto modifs  = compute_line_modifications(buffer, line_flags.prefix);
     auto ins_pos = lines.begin();
     for (auto it = lines.begin(); it != lines.end(); ++it)
     {
-        auto& line = std::get<0>(*it); // that line is 1 based as it comes from user side
-        auto modif_it = std::upper_bound(modifs.begin(), modifs.end(), line-1,
-                                         [](const LineCount& l, const LineModification& c)
-                                         { return l < c.old_line; });
+        auto& line = std::get<0>(
+            *it); // that line is 1 based as it comes from user side
+        auto modif_it = std::upper_bound(
+            modifs.begin(), modifs.end(), line - 1,
+            [](const LineCount& l, const LineModification& c) {
+                return l < c.old_line;
+            });
         if (modif_it != modifs.begin())
         {
-            auto& prev = *(modif_it-1);
-            if (line-1 < prev.old_line + prev.num_removed)
+            auto& prev = *(modif_it - 1);
+            if (line - 1 < prev.old_line + prev.num_removed)
                 continue; // line removed
 
             line += prev.diff();
@@ -1296,9 +1441,9 @@ void option_update(LineAndSpecList& opt, const Context& context)
 
 void option_list_postprocess(Vector<LineAndSpec, MemoryDomain::Options>& opt)
 {
-    std::sort(opt.begin(), opt.end(),
-              [](auto& lhs, auto& rhs)
-              { return std::get<0>(lhs) < std::get<0>(rhs); });
+    std::sort(opt.begin(), opt.end(), [](auto& lhs, auto& rhs) {
+        return std::get<0>(lhs) < std::get<0>(rhs);
+    });
 }
 
 struct FlagLinesHighlighter : Highlighter
@@ -1306,26 +1451,31 @@ struct FlagLinesHighlighter : Highlighter
     FlagLinesHighlighter(String option_name, String default_face)
         : Highlighter{HighlightPass::Move},
           m_option_name{std::move(option_name)},
-          m_default_face{std::move(default_face)} {}
+          m_default_face{std::move(default_face)}
+    {}
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params,
+                                               Highlighter*)
     {
         if (params.size() != 2)
             throw runtime_error("wrong parameter count");
 
-        const String& option_name = params[1];
+        const String& option_name  = params[1];
         const String& default_face = params[0];
 
         // throw if wrong option type
         GlobalScope::instance().options()[option_name].get<LineAndSpecList>();
 
-        return std::make_unique<FlagLinesHighlighter>(option_name, default_face);
+        return std::make_unique<FlagLinesHighlighter>(option_name,
+                                                      default_face);
     }
 
 private:
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                      BufferRange) override
     {
-        auto& line_flags = context.context.options()[m_option_name].get_mutable<LineAndSpecList>();
+        auto& line_flags = context.context.options()[m_option_name]
+                               .get_mutable<LineAndSpecList>();
         auto& buffer = context.context.buffer();
         update_line_specs_ifn(buffer, line_flags);
 
@@ -1336,36 +1486,40 @@ private:
         {
             for (auto& line : lines)
             {
-                display_lines.push_back(parse_display_line(std::get<1>(line), context.context.faces()));
+                display_lines.push_back(parse_display_line(
+                    std::get<1>(line), context.context.faces()));
                 for (auto& atom : display_lines.back())
                     atom.face = merge_faces(def_face, atom.face);
             }
         }
         catch (runtime_error& err)
         {
-            write_to_debug_buffer(format("Error while evaluating line flag: {}", err.what()));
+            write_to_debug_buffer(
+                format("Error while evaluating line flag: {}", err.what()));
             return;
         }
 
         ColumnCount width = 0;
         for (auto& l : display_lines)
-             width = std::max(width, l.length());
+            width = std::max(width, l.length());
         const DisplayAtom empty{String{' ', width}, def_face};
         for (auto& line : display_buffer.lines())
         {
             int line_num = (int)line.range().begin.line + 1;
-            auto it = find_if(lines,
-                              [&](const LineAndSpec& l)
-                              { return std::get<0>(l) == line_num; });
+            auto it      = find_if(lines, [&](const LineAndSpec& l) {
+                return std::get<0>(l) == line_num;
+            });
             if (it == lines.end())
                 line.insert(line.begin(), empty);
             else
             {
                 DisplayLine& display_line = display_lines[it - lines.begin()];
-                DisplayAtom padding_atom{String(' ', width - display_line.length()), def_face};
-                auto it = std::copy(std::make_move_iterator(display_line.begin()),
-                                    std::make_move_iterator(display_line.end()),
-                                    std::inserter(line, line.begin()));
+                DisplayAtom padding_atom{
+                    String(' ', width - display_line.length()), def_face};
+                auto it
+                    = std::copy(std::make_move_iterator(display_line.begin()),
+                                std::make_move_iterator(display_line.end()),
+                                std::inserter(line, line.begin()));
 
                 if (padding_atom.length() != 0)
                     *it++ = std::move(padding_atom);
@@ -1373,9 +1527,11 @@ private:
         }
     }
 
-    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
+    void do_compute_display_setup(HighlightContext context,
+                                  DisplaySetup& setup) const override
     {
-        auto& line_flags = context.context.options()[m_option_name].get_mutable<LineAndSpecList>();
+        auto& line_flags = context.context.options()[m_option_name]
+                               .get_mutable<LineAndSpecList>();
         auto& buffer = context.context.buffer();
         update_line_specs_ifn(buffer, line_flags);
 
@@ -1383,11 +1539,15 @@ private:
         try
         {
             for (auto& line : line_flags.list)
-                width = std::max(parse_display_line(std::get<1>(line), context.context.faces()).length(), width);
+                width = std::max(parse_display_line(std::get<1>(line),
+                                                    context.context.faces())
+                                     .length(),
+                                 width);
         }
         catch (runtime_error& err)
         {
-            write_to_debug_buffer(format("Error while evaluating line flag: {}", err.what()));
+            write_to_debug_buffer(
+                format("Error while evaluating line flag: {}", err.what()));
             return;
         }
 
@@ -1400,33 +1560,37 @@ private:
 
 String option_to_string(InclusiveBufferRange range)
 {
-    return format("{}.{},{}.{}",
-                  range.first.line+1, range.first.column+1,
-                  range.last.line+1, range.last.column+1);
+    return format("{}.{},{}.{}", range.first.line + 1, range.first.column + 1,
+                  range.last.line + 1, range.last.column + 1);
 }
 
-InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, StringView str)
+InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>,
+                                        StringView str)
 {
-    auto sep = find_if(str, [](char c){ return c == ',' or c == '+'; });
+    auto sep     = find_if(str, [](char c) { return c == ',' or c == '+'; });
     auto dot_beg = find(StringView{str.begin(), sep}, '.');
     auto dot_end = find(StringView{sep, str.end()}, '.');
 
-    if (sep == str.end() or dot_beg == sep or
-        (*sep == ',' and dot_end == str.end()))
-        throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> or <line>.<column>+<len> format", str));
+    if (sep == str.end() or dot_beg == sep
+        or (*sep == ',' and dot_end == str.end()))
+        throw runtime_error(
+            format("'{}' does not follow <line>.<column>,<line>.<column> or "
+                   "<line>.<column>+<len> format",
+                   str));
 
     const BufferCoord first{str_to_int({str.begin(), dot_beg}) - 1,
-                            str_to_int({dot_beg+1, sep}) - 1};
+                            str_to_int({dot_beg + 1, sep}) - 1};
 
     const bool len = (*sep == '+');
-    const BufferCoord last{len ? first.line : str_to_int({sep+1, dot_end}) - 1,
-                           len ? first.column + str_to_int({sep+1, str.end()}) - 1
-                               : str_to_int({dot_end+1, str.end()}) - 1 };
+    const BufferCoord last{
+        len ? first.line : str_to_int({sep + 1, dot_end}) - 1,
+        len ? first.column + str_to_int({sep + 1, str.end()}) - 1
+            : str_to_int({dot_end + 1, str.end()}) - 1};
 
     if (first.line < 0 or first.column < 0 or last.line < 0 or last.column < 0)
         throw runtime_error("coordinates elements should be >= 1");
 
-    return { std::min(first, last), std::max(first, last) };
+    return {std::min(first, last), std::max(first, last)};
 }
 
 BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).first; }
@@ -1434,11 +1598,10 @@ BufferCoord& get_last(RangeAndString& r) { return std::get<0>(r).last; }
 
 void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt)
 {
-    std::sort(opt.begin(), opt.end(),
-              [](auto& lhs, auto& rhs) {
-        return std::get<0>(lhs).first == std::get<0>(rhs).first ?
-            std::get<0>(lhs).last < std::get<0>(rhs).last
-          : std::get<0>(lhs).first < std::get<0>(rhs).first;
+    std::sort(opt.begin(), opt.end(), [](auto& lhs, auto& rhs) {
+        return std::get<0>(lhs).first == std::get<0>(rhs).first
+                   ? std::get<0>(lhs).last < std::get<0>(rhs).last
+                   : std::get<0>(lhs).first < std::get<0>(rhs).first;
     });
 }
 
@@ -1450,26 +1613,32 @@ void option_update(RangeAndStringList& opt, const Context& context)
 struct RangesHighlighter : Highlighter
 {
     RangesHighlighter(String option_name)
-        : Highlighter{HighlightPass::Colorize}
-        , m_option_name{std::move(option_name)} {}
+        : Highlighter{HighlightPass::Colorize},
+          m_option_name{std::move(option_name)}
+    {}
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params,
+                                               Highlighter*)
     {
         if (params.size() != 1)
             throw runtime_error("wrong parameter count");
 
         const String& option_name = params[0];
         // throw if wrong option type
-        GlobalScope::instance().options()[option_name].get<RangeAndStringList>();
+        GlobalScope::instance()
+            .options()[option_name]
+            .get<RangeAndStringList>();
 
         return std::make_unique<RangesHighlighter>(option_name);
     }
 
 private:
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                      BufferRange) override
     {
-        auto& buffer = context.context.buffer();
-        auto& range_and_faces = context.context.options()[m_option_name].get_mutable<RangeAndStringList>();
+        auto& buffer          = context.context.buffer();
+        auto& range_and_faces = context.context.options()[m_option_name]
+                                    .get_mutable<RangeAndStringList>();
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
 
         for (auto& range : range_and_faces.list)
@@ -1477,9 +1646,13 @@ private:
             try
             {
                 auto& r = std::get<0>(range);
-                if (buffer.is_valid(r.first) and (buffer.is_valid(r.last) and not buffer.is_end(r.last)))
-                    highlight_range(display_buffer, r.first, buffer.char_next(r.last), false,
-                                    apply_face(context.context.faces()[std::get<1>(range)]));
+                if (buffer.is_valid(r.first)
+                    and (buffer.is_valid(r.last) and not buffer.is_end(r.last)))
+                    highlight_range(
+                        display_buffer, r.first, buffer.char_next(r.last),
+                        false,
+                        apply_face(
+                            context.context.faces()[std::get<1>(range)]));
             }
             catch (runtime_error&)
             {}
@@ -1492,26 +1665,32 @@ private:
 struct ReplaceRangesHighlighter : Highlighter
 {
     ReplaceRangesHighlighter(String option_name)
-        : Highlighter{HighlightPass::Colorize}
-        , m_option_name{std::move(option_name)} {}
+        : Highlighter{HighlightPass::Colorize},
+          m_option_name{std::move(option_name)}
+    {}
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params,
+                                               Highlighter*)
     {
         if (params.size() != 1)
             throw runtime_error("wrong parameter count");
 
         const String& option_name = params[0];
         // throw if wrong option type
-        GlobalScope::instance().options()[option_name].get<RangeAndStringList>();
+        GlobalScope::instance()
+            .options()[option_name]
+            .get<RangeAndStringList>();
 
         return std::make_unique<ReplaceRangesHighlighter>(option_name);
     }
 
 private:
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                      BufferRange) override
     {
-        auto& buffer = context.context.buffer();
-        auto& range_and_faces = context.context.options()[m_option_name].get_mutable<RangeAndStringList>();
+        auto& buffer          = context.context.buffer();
+        auto& range_and_faces = context.context.options()[m_option_name]
+                                    .get_mutable<RangeAndStringList>();
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
 
         for (auto& range : range_and_faces.list)
@@ -1521,13 +1700,16 @@ private:
                 auto& r = std::get<0>(range);
                 if (buffer.is_valid(r.first) and buffer.is_valid(r.last))
                 {
-                    auto replacement = parse_display_line(std::get<1>(range), context.context.faces());
-                    replace_range(display_buffer, r.first, buffer.char_next(r.last),
-                                  [&](DisplayLine& line, int beg_idx, int end_idx){
-                                      auto it = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
-                                      for (auto& atom : replacement)
-                                          it = ++line.insert(it, std::move(atom));
-                                  });
+                    auto replacement = parse_display_line(
+                        std::get<1>(range), context.context.faces());
+                    replace_range(
+                        display_buffer, r.first, buffer.char_next(r.last),
+                        [&](DisplayLine& line, int beg_idx, int end_idx) {
+                            auto it = line.erase(line.begin() + beg_idx,
+                                                 line.begin() + end_idx);
+                            for (auto& atom : replacement)
+                                it = ++line.insert(it, std::move(atom));
+                        });
                 }
             }
             catch (runtime_error&)
@@ -1558,14 +1740,17 @@ HighlightPass parse_passes(StringView str)
     return passes;
 }
 
-std::unique_ptr<Highlighter> create_highlighter_group(HighlighterParameters params, Highlighter*)
+std::unique_ptr<Highlighter> create_highlighter_group(
+    HighlighterParameters params, Highlighter*)
 {
     static const ParameterDesc param_desc{
-        { { "passes", { true, "" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 0
-    };
+        {{"passes", {true, ""}}},
+        ParameterDesc::Flags::SwitchesOnlyAtStart,
+        0,
+        0};
     ParametersParser parser{params, param_desc};
-    HighlightPass passes = parse_passes(parser.get_switch("passes").value_or("colorize"));
+    HighlightPass passes
+        = parse_passes(parser.get_switch("passes").value_or("colorize"));
 
     return std::make_unique<HighlighterGroup>(passes);
 }
@@ -1573,43 +1758,53 @@ std::unique_ptr<Highlighter> create_highlighter_group(HighlighterParameters para
 struct ReferenceHighlighter : Highlighter
 {
     ReferenceHighlighter(HighlightPass passes, String name)
-        : Highlighter{passes}, m_name{std::move(name)} {}
+        : Highlighter{passes}, m_name{std::move(name)}
+    {}
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params,
+                                               Highlighter*)
     {
         static const ParameterDesc param_desc{
-            { { "passes", { true, "" } } },
-            ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
-        };
+            {{"passes", {true, ""}}},
+            ParameterDesc::Flags::SwitchesOnlyAtStart,
+            1,
+            1};
         ParametersParser parser{params, param_desc};
-        HighlightPass passes = parse_passes(parser.get_switch("passes").value_or("colorize"));
+        HighlightPass passes
+            = parse_passes(parser.get_switch("passes").value_or("colorize"));
         return std::make_unique<ReferenceHighlighter>(passes, parser[0]);
     }
 
 private:
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                      BufferRange range) override
     {
         static Vector<std::pair<StringView, BufferRange>> running_refs;
         const std::pair<StringView, BufferRange> desc{m_name, range};
         if (contains(running_refs, desc))
-            return write_to_debug_buffer(format("highlighting recursion detected with ref to {}", m_name));
+            return write_to_debug_buffer(format(
+                "highlighting recursion detected with ref to {}", m_name));
 
         running_refs.push_back(desc);
         auto pop_desc = on_scope_end([] { running_refs.pop_back(); });
 
         try
         {
-            DefinedHighlighters::instance().get_child(m_name).highlight(context, display_buffer, range);
+            DefinedHighlighters::instance().get_child(m_name).highlight(
+                context, display_buffer, range);
         }
         catch (child_not_found&)
         {}
     }
 
-    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
+    void do_compute_display_setup(HighlightContext context,
+                                  DisplaySetup& setup) const override
     {
         try
         {
-            DefinedHighlighters::instance().get_child(m_name).compute_display_setup(context, setup);
+            DefinedHighlighters::instance()
+                .get_child(m_name)
+                .compute_display_setup(context, setup);
         }
         catch (child_not_found&)
         {}
@@ -1626,8 +1821,8 @@ struct RegexMatch
     uint16_t capture_pos;
     uint16_t capture_len;
 
-    BufferCoord begin_coord() const { return { line, begin }; }
-    BufferCoord end_coord() const { return { line, end }; }
+    BufferCoord begin_coord() const { return {line, begin}; }
+    BufferCoord end_coord() const { return {line, end}; }
     bool empty() const { return begin == end; }
 
     StringView capture(const Buffer& buffer) const
@@ -1639,63 +1834,72 @@ struct RegexMatch
 };
 
 using RegexMatchList = Vector<RegexMatch, MemoryDomain::Regions>;
-void append_matches(const Buffer& buffer, LineCount line, RegexMatchList& matches, const Regex& regex, bool capture)
+void append_matches(const Buffer& buffer, LineCount line,
+                    RegexMatchList& matches, const Regex& regex, bool capture)
 {
     auto l = buffer[line];
-    for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
+    for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{};
+         it != end; ++it)
     {
         auto& m = *it;
-        const bool with_capture = capture and m[1].matched and
-                                  m[0].second - m[0].first < std::numeric_limits<uint16_t>::max();
-        matches.push_back({
-            line,
-            (int)(m[0].first - l.begin()),
-            (int)(m[0].second - l.begin()),
-            (uint16_t)(with_capture ? m[1].first - m[0].first : 0),
-            (uint16_t)(with_capture ? m[1].second - m[1].first : 0)
-        });
+        const bool with_capture
+            = capture and m[1].matched
+              and m[0].second - m[0].first
+                      < std::numeric_limits<uint16_t>::max();
+        matches.push_back(
+            {line, (int)(m[0].first - l.begin()),
+             (int)(m[0].second - l.begin()),
+             (uint16_t)(with_capture ? m[1].first - m[0].first : 0),
+             (uint16_t)(with_capture ? m[1].second - m[1].first : 0)});
     }
 }
 
-void insert_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex, bool capture, LineRange range)
+void insert_matches(const Buffer& buffer, RegexMatchList& matches,
+                    const Regex& regex, bool capture, LineRange range)
 {
     size_t pivot = matches.size();
-    capture = capture and regex.mark_count() > 0;
+    capture      = capture and regex.mark_count() > 0;
     for (auto line = range.begin; line < range.end; ++line)
         append_matches(buffer, line, matches, regex, capture);
 
-    auto pos = std::lower_bound(matches.begin(), matches.begin() + pivot, range.begin,
-                                [](const RegexMatch& m, LineCount l) { return m.line < l; });
-    kak_assert(pos == matches.begin() + pivot or pos->line >= range.end); // We should not have had matches for range
+    auto pos = std::lower_bound(
+        matches.begin(), matches.begin() + pivot, range.begin,
+        [](const RegexMatch& m, LineCount l) { return m.line < l; });
+    kak_assert(pos == matches.begin() + pivot
+               or pos->line
+                      >= range.end); // We should not have had matches for range
 
     // Move new matches into position.
     std::rotate(pos, matches.begin() + pivot, matches.end());
 }
 
-void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modifs,
+void update_matches(const Buffer& buffer,
+                    ConstArrayView<LineModification> modifs,
                     RegexMatchList& matches)
 {
     // remove out of date matches and update line for others
     auto ins_pos = matches.begin();
     for (auto it = ins_pos; it != matches.end(); ++it)
     {
-        auto modif_it = std::upper_bound(modifs.begin(), modifs.end(), it->line,
-                                         [](const LineCount& l, const LineModification& c)
-                                         { return l < c.old_line; });
+        auto modif_it = std::upper_bound(
+            modifs.begin(), modifs.end(), it->line,
+            [](const LineCount& l, const LineModification& c) {
+                return l < c.old_line;
+            });
 
         if (modif_it != modifs.begin())
         {
-            auto& prev = *(modif_it-1);
+            auto& prev = *(modif_it - 1);
             if (it->line < prev.old_line + prev.num_removed)
                 continue; // match removed
 
             it->line += prev.diff();
         }
 
-        kak_assert(buffer.is_valid(it->begin_coord()) or
-                   buffer[it->line].length() == it->begin);
-        kak_assert(buffer.is_valid(it->end_coord()) or
-                   buffer[it->line].length() == it->end);
+        kak_assert(buffer.is_valid(it->begin_coord())
+                   or buffer[it->line].length() == it->begin);
+        kak_assert(buffer.is_valid(it->end_coord())
+                   or buffer[it->line].length() == it->end);
 
         if (ins_pos != it)
             *ins_pos = std::move(*it);
@@ -1717,14 +1921,16 @@ struct RegionMatches : UseMemoryDomain<MemoryDomain::Highlight>
 
     RegexMatchList::const_iterator find_next_begin(BufferCoord pos) const
     {
-        return std::lower_bound(begin_matches.begin(), begin_matches.end(),
-                                pos, compare_to_begin);
+        return std::lower_bound(begin_matches.begin(), begin_matches.end(), pos,
+                                compare_to_begin);
     }
 
-    RegexMatchList::const_iterator find_matching_end(const Buffer& buffer, BufferCoord beg_pos, Optional<StringView> capture) const
+    RegexMatchList::const_iterator find_matching_end(
+        const Buffer& buffer, BufferCoord beg_pos,
+        Optional<StringView> capture) const
     {
-        auto end_it = end_matches.begin();
-        auto rec_it = recurse_matches.begin();
+        auto end_it       = end_matches.begin();
+        auto rec_it       = recurse_matches.begin();
         int recurse_level = 0;
         while (true)
         {
@@ -1736,8 +1942,8 @@ struct RegionMatches : UseMemoryDomain<MemoryDomain::Highlight>
             if (end_it == end_matches.end())
                 return end_it;
 
-            while (rec_it != recurse_matches.end() and
-                   rec_it->end_coord() <= end_it->end_coord())
+            while (rec_it != recurse_matches.end()
+                   and rec_it->end_coord() <= end_it->end_coord())
             {
                 if (not capture or rec_it->capture(buffer) == *capture)
                     ++recurse_level;
@@ -1761,53 +1967,53 @@ struct RegionMatches : UseMemoryDomain<MemoryDomain::Highlight>
 struct RegionsHighlighter : public Highlighter
 {
 public:
-    RegionsHighlighter()
-        : Highlighter{HighlightPass::Colorize} {}
+    RegionsHighlighter() : Highlighter{HighlightPass::Colorize} {}
 
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer,
+                      BufferRange range) override
     {
         if (m_regions.empty())
             return;
 
         auto display_range = display_buffer.range();
         const auto& buffer = context.context.buffer();
-        auto& regions = get_regions_for_range(buffer, range);
+        auto& regions      = get_regions_for_range(buffer, range);
 
-        auto begin = std::lower_bound(regions.begin(), regions.end(), display_range.begin,
-                                      [](const Region& r, BufferCoord c) { return r.end < c; });
-        auto end = std::lower_bound(begin, regions.end(), display_range.end,
-                                    [](const Region& r, BufferCoord c) { return r.begin < c; });
+        auto begin = std::lower_bound(
+            regions.begin(), regions.end(), display_range.begin,
+            [](const Region& r, BufferCoord c) { return r.end < c; });
+        auto end = std::lower_bound(
+            begin, regions.end(), display_range.end,
+            [](const Region& r, BufferCoord c) { return r.begin < c; });
         auto correct = [&](BufferCoord c) -> BufferCoord {
             if (not buffer.is_end(c) and buffer[c.line].length() == c.column)
-                return {c.line+1, 0};
+                return {c.line + 1, 0};
             return c;
         };
 
-        auto default_region_it = m_regions.find(m_default_region);
+        auto default_region_it   = m_regions.find(m_default_region);
         const bool apply_default = default_region_it != m_regions.end();
 
-        auto last_begin = (begin == regions.begin()) ?
-                             BufferCoord{0,0} : (begin-1)->end;
+        auto last_begin
+            = (begin == regions.begin()) ? BufferCoord{0, 0} : (begin - 1)->end;
         kak_assert(begin <= end);
         for (; begin != end; ++begin)
         {
             if (apply_default and last_begin < begin->begin)
-                apply_highlighter(context, display_buffer,
-                                  correct(last_begin), correct(begin->begin),
+                apply_highlighter(context, display_buffer, correct(last_begin),
+                                  correct(begin->begin),
                                   *default_region_it->value);
 
             auto it = m_regions.find(begin->region);
             if (it == m_regions.end())
                 continue;
-            apply_highlighter(context, display_buffer,
-                              correct(begin->begin), correct(begin->end),
-                              *it->value);
+            apply_highlighter(context, display_buffer, correct(begin->begin),
+                              correct(begin->end), *it->value);
             last_begin = begin->end;
         }
         if (apply_default and last_begin < display_range.end)
-            apply_highlighter(context, display_buffer,
-                              correct(last_begin), range.end,
-                              *default_region_it->value);
+            apply_highlighter(context, display_buffer, correct(last_begin),
+                              range.end, *default_region_it->value);
     }
 
     bool has_children() const override { return true; }
@@ -1822,17 +2028,20 @@ public:
         if (sep_it == path.end())
             return *it->value;
         else
-            return it->value->get_child({sep_it+1, path.end()});
+            return it->value->get_child({sep_it + 1, path.end()});
     }
 
     void add_child(String name, std::unique_ptr<Highlighter>&& hl) override
     {
         if (not dynamic_cast<RegionHighlighter*>(hl.get()))
-            throw runtime_error{"only region highlighter can be added as child of a regions highlighter"};
+            throw runtime_error{
+                "only region highlighter can be added as child of a regions "
+                "highlighter"};
         if (m_regions.contains(name))
             throw runtime_error{format("duplicate id: '{}'", name)};
 
-        std::unique_ptr<RegionHighlighter> region_hl{dynamic_cast<RegionHighlighter*>(hl.release())};
+        std::unique_ptr<RegionHighlighter> region_hl{
+            dynamic_cast<RegionHighlighter*>(hl.release())};
         if (region_hl->is_default())
         {
             if (not m_default_region.empty())
@@ -1853,21 +2062,26 @@ public:
         ++m_regions_timestamp;
     }
 
-    Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override
+    Completions complete_child(StringView path, ByteCount cursor_pos,
+                               bool group) const override
     {
         auto sep_it = find(path, '/');
         if (sep_it != path.end())
         {
-            ByteCount offset = sep_it+1 - path.begin();
-            Highlighter& hl = const_cast<RegionsHighlighter*>(this)->get_child({path.begin(), sep_it});
-            return offset_pos(hl.complete_child(path.substr(offset), cursor_pos - offset, group), offset);
+            ByteCount offset = sep_it + 1 - path.begin();
+            Highlighter& hl  = const_cast<RegionsHighlighter*>(this)->get_child(
+                {path.begin(), sep_it});
+            return offset_pos(hl.complete_child(path.substr(offset),
+                                                cursor_pos - offset, group),
+                              offset);
         }
 
         auto container = m_regions | transform(&decltype(m_regions)::Item::key);
-        return { 0, 0, complete(path, cursor_pos, container) };
+        return {0, 0, complete(path, cursor_pos, container)};
     }
 
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params,
+                                               Highlighter*)
     {
         if (not params.empty())
             throw runtime_error{"unexpected parameters"};
@@ -1883,16 +2097,18 @@ public:
         return false;
     }
 
-    static std::unique_ptr<Highlighter> create_region(HighlighterParameters params, Highlighter* parent)
+    static std::unique_ptr<Highlighter> create_region(
+        HighlighterParameters params, Highlighter* parent)
     {
         if (not is_regions(parent))
-            throw runtime_error{"region highlighter can only be added to a regions parent"};
+            throw runtime_error{
+                "region highlighter can only be added to a regions parent"};
 
         static const ParameterDesc param_desc{
-            { { "match-capture", { false, "" } }, { "recurse", { true, "" } } },
-            ParameterDesc::Flags::SwitchesOnlyAtStart | ParameterDesc::Flags::IgnoreUnknownSwitches,
-            3
-        };
+            {{"match-capture", {false, ""}}, {"recurse", {true, ""}}},
+            ParameterDesc::Flags::SwitchesOnlyAtStart
+                | ParameterDesc::Flags::IgnoreUnknownSwitches,
+            3};
 
         ParametersParser parser{params, param_desc};
 
@@ -1900,12 +2116,14 @@ public:
         if (parser[0].empty() or parser[1].empty())
             throw runtime_error("begin and end must not be empty");
 
-        const RegexCompileFlags flags = match_capture ?
-            RegexCompileFlags::Optimize : RegexCompileFlags::NoSubs | RegexCompileFlags::Optimize;
+        const RegexCompileFlags flags
+            = match_capture
+                  ? RegexCompileFlags::Optimize
+                  : RegexCompileFlags::NoSubs | RegexCompileFlags::Optimize;
 
         const auto& type = parser[2];
-        auto& registry = HighlighterRegistry::instance();
-        auto it = registry.find(type);
+        auto& registry   = HighlighterRegistry::instance();
+        auto it          = registry.find(type);
         if (it == registry.end())
             throw runtime_error(format("no such highlighter type: '{}'", type));
 
@@ -1914,18 +2132,25 @@ public:
             recurse = Regex{*recurse_switch, flags};
 
         auto delegate = it->value.factory(parser.positionals_from(3), nullptr);
-        return std::make_unique<RegionHighlighter>(std::move(delegate), Regex{parser[0], flags}, Regex{parser[1], flags}, recurse, match_capture);
+        return std::make_unique<RegionHighlighter>(
+            std::move(delegate), Regex{parser[0], flags},
+            Regex{parser[1], flags}, recurse, match_capture);
     }
 
-    static std::unique_ptr<Highlighter> create_default_region(HighlighterParameters params, Highlighter* parent)
+    static std::unique_ptr<Highlighter> create_default_region(
+        HighlighterParameters params, Highlighter* parent)
     {
         if (not is_regions(parent))
-            throw runtime_error{"default-region highlighter can only be added to a regions parent"};
+            throw runtime_error{
+                "default-region highlighter can only be added to a regions "
+                "parent"};
 
-        static const ParameterDesc param_desc{ {}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 };
+        static const ParameterDesc param_desc{
+            {}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1};
         ParametersParser parser{params, param_desc};
 
-        auto delegate = HighlighterRegistry::instance()[parser[0]].factory(parser.positionals_from(1), nullptr);
+        auto delegate = HighlighterRegistry::instance()[parser[0]].factory(
+            parser.positionals_from(1), nullptr);
         return std::make_unique<RegionHighlighter>(std::move(delegate));
     }
 
@@ -1940,7 +2165,7 @@ private:
 
     struct Cache
     {
-        size_t buffer_timestamp = 0;
+        size_t buffer_timestamp  = 0;
         size_t regions_timestamp = 0;
         LineRangeSet ranges;
         std::unique_ptr<RegionMatches[]> matches;
@@ -1956,10 +2181,10 @@ private:
         for (size_t i = 1; i < m_regions.size(); ++i)
         {
             const auto& matches = cache.matches[i];
-            auto it = matches.find_next_begin(pos);
-            if (it != matches.begin_matches.end() and
-                (res.second == cache.matches[res.first].begin_matches.end() or
-                 it->begin_coord() < res.second->begin_coord()))
+            auto it             = matches.find_next_begin(pos);
+            if (it != matches.begin_matches.end()
+                and (res.second == cache.matches[res.first].begin_matches.end()
+                     or it->begin_coord() < res.second->begin_coord()))
                 res = RegionAndMatch{i, it};
         }
         return res;
@@ -1968,17 +2193,18 @@ private:
     bool update_matches(Cache& cache, const Buffer& buffer, LineRange range)
     {
         const size_t buffer_timestamp = buffer.timestamp();
-        if (cache.buffer_timestamp == 0 or
-            cache.regions_timestamp != m_regions_timestamp)
+        if (cache.buffer_timestamp == 0
+            or cache.regions_timestamp != m_regions_timestamp)
         {
             cache.matches.reset(new RegionMatches[m_regions.size()]);
             for (size_t i = 0; i < m_regions.size(); ++i)
             {
                 cache.matches[i] = RegionMatches{};
-                m_regions.item(i).value->add_matches(buffer, range, cache.matches[i]);
+                m_regions.item(i).value->add_matches(buffer, range,
+                                                     cache.matches[i]);
             }
             cache.ranges.reset(range);
-            cache.buffer_timestamp = buffer_timestamp;
+            cache.buffer_timestamp  = buffer_timestamp;
             cache.regions_timestamp = m_regions_timestamp;
             return true;
         }
@@ -1987,34 +2213,42 @@ private:
             bool modified = false;
             if (cache.buffer_timestamp != buffer_timestamp)
             {
-                auto modifs = compute_line_modifications(buffer, cache.buffer_timestamp);
+                auto modifs = compute_line_modifications(
+                    buffer, cache.buffer_timestamp);
                 for (size_t i = 0; i < m_regions.size(); ++i)
                 {
-                    Kakoune::update_matches(buffer, modifs, cache.matches[i].begin_matches);
-                    Kakoune::update_matches(buffer, modifs, cache.matches[i].end_matches);
-                    Kakoune::update_matches(buffer, modifs, cache.matches[i].recurse_matches);
+                    Kakoune::update_matches(buffer, modifs,
+                                            cache.matches[i].begin_matches);
+                    Kakoune::update_matches(buffer, modifs,
+                                            cache.matches[i].end_matches);
+                    Kakoune::update_matches(buffer, modifs,
+                                            cache.matches[i].recurse_matches);
                 }
 
                 cache.ranges.update(modifs);
                 cache.buffer_timestamp = buffer_timestamp;
-                modified = true;
+                modified               = true;
             }
 
             cache.ranges.add_range(range, [&, this](const LineRange& range) {
                 if (range.begin == range.end)
                     return;
                 for (size_t i = 0; i < m_regions.size(); ++i)
-                    m_regions.item(i).value->add_matches(buffer, range, cache.matches[i]);
+                    m_regions.item(i).value->add_matches(buffer, range,
+                                                         cache.matches[i]);
                 modified = true;
             });
             return modified;
         }
     }
 
-    const RegionList& get_regions_for_range(const Buffer& buffer, BufferRange range)
+    const RegionList& get_regions_for_range(const Buffer& buffer,
+                                            BufferRange range)
     {
         Cache& cache = m_cache.get(buffer);
-        if (update_matches(cache, buffer, {range.begin.line, std::min(buffer.line_count(), range.end.line + 1)}))
+        if (update_matches(cache, buffer,
+                           {range.begin.line,
+                            std::min(buffer.line_count(), range.end.line + 1)}))
             cache.regions.clear();
 
         auto it = cache.regions.find(range);
@@ -2024,25 +2258,27 @@ private:
         RegionList& regions = cache.regions[range];
 
         for (auto begin = find_next_begin(cache, range.begin),
-                  end = RegionAndMatch{ 0, cache.matches[0].begin_matches.end() };
-             begin != end; )
+                  end = RegionAndMatch{0, cache.matches[0].begin_matches.end()};
+             begin != end;)
         {
             const RegionMatches& matches = cache.matches[begin.first];
-            auto& region = m_regions.item(begin.first);
-            auto beg_it = begin.second;
-            auto end_it = matches.find_matching_end(buffer, beg_it->end_coord(),
-                                                    region.value->match_capture() ? beg_it->capture(buffer) : Optional<StringView>{});
+            auto& region                 = m_regions.item(begin.first);
+            auto beg_it                  = begin.second;
+            auto end_it                  = matches.find_matching_end(
+                buffer, beg_it->end_coord(),
+                region.value->match_capture() ? beg_it->capture(buffer)
+                                              : Optional<StringView>{});
 
-            if (end_it == matches.end_matches.end() or end_it->end_coord() >= range.end)
+            if (end_it == matches.end_matches.end()
+                or end_it->end_coord() >= range.end)
             {
-                regions.push_back({ {beg_it->line, beg_it->begin},
-                                    range.end,
-                                    region.key });
+                regions.push_back(
+                    {{beg_it->line, beg_it->begin}, range.end, region.key});
                 break;
             }
 
             auto end_coord = end_it->end_coord();
-            regions.push_back({ beg_it->begin_coord(), end_coord, region.key });
+            regions.push_back({beg_it->begin_coord(), end_coord, region.key});
 
             // With empty begin and end matches (for example if the regexes
             // are /"\K/ and /(?=")/), that case can happen, and would
@@ -2059,20 +2295,21 @@ private:
 
     struct RegionHighlighter : public Highlighter
     {
-        RegionHighlighter(std::unique_ptr<Highlighter>&& delegate,
-                          Regex begin, Regex end, Regex recurse,
-                          bool match_capture)
+        RegionHighlighter(std::unique_ptr<Highlighter>&& delegate, Regex begin,
+                          Regex end, Regex recurse, bool match_capture)
             : Highlighter{delegate->passes()},
               m_delegate{std::move(delegate)},
-              m_begin{std::move(begin)}, m_end{std::move(end)}, m_recurse{std::move(recurse)},
+              m_begin{std::move(begin)},
+              m_end{std::move(end)},
+              m_recurse{std::move(recurse)},
               m_match_capture{match_capture}
-       {
-       }
+        {}
 
         RegionHighlighter(std::unique_ptr<Highlighter>&& delegate)
-            : Highlighter{delegate->passes()}, m_delegate{std::move(delegate)}, m_default{true}
-       {
-       }
+            : Highlighter{delegate->passes()},
+              m_delegate{std::move(delegate)},
+              m_default{true}
+        {}
 
         bool has_children() const override
         {
@@ -2094,7 +2331,8 @@ private:
             return m_delegate->remove_child(id);
         }
 
-        Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override
+        Completions complete_child(StringView path, ByteCount cursor_pos,
+                                   bool group) const override
         {
             return m_delegate->complete_child(path, cursor_pos, group);
         }
@@ -2104,20 +2342,26 @@ private:
             return m_delegate->fill_unique_ids(unique_ids);
         }
 
-        void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
+        void do_highlight(HighlightContext context,
+                          DisplayBuffer& display_buffer,
+                          BufferRange range) override
         {
             return m_delegate->highlight(context, display_buffer, range);
         }
 
-        void add_matches(const Buffer& buffer, LineRange range, RegionMatches& matches) const
+        void add_matches(const Buffer& buffer, LineRange range,
+                         RegionMatches& matches) const
         {
             if (m_default)
                 return;
 
-            Kakoune::insert_matches(buffer, matches.begin_matches, m_begin, m_match_capture, range);
-            Kakoune::insert_matches(buffer, matches.end_matches, m_end, m_match_capture, range);
+            Kakoune::insert_matches(buffer, matches.begin_matches, m_begin,
+                                    m_match_capture, range);
+            Kakoune::insert_matches(buffer, matches.end_matches, m_end,
+                                    m_match_capture, range);
             if (not m_recurse.empty())
-                Kakoune::insert_matches(buffer, matches.recurse_matches, m_recurse, m_match_capture, range);
+                Kakoune::insert_matches(buffer, matches.recurse_matches,
+                                        m_recurse, m_match_capture, range);
         }
 
         bool match_capture() const { return m_match_capture; }
@@ -2131,11 +2375,12 @@ private:
         Regex m_begin;
         Regex m_end;
         Regex m_recurse;
-        bool  m_match_capture = false;
-        bool  m_default = false;
+        bool m_match_capture = false;
+        bool m_default       = false;
     };
 
-    HashMap<String, std::unique_ptr<RegionHighlighter>, MemoryDomain::Highlight> m_regions;
+    HashMap<String, std::unique_ptr<RegionHighlighter>, MemoryDomain::Highlight>
+        m_regions;
     String m_default_region;
 
     size_t m_regions_timestamp = 0;
@@ -2144,116 +2389,127 @@ private:
 
 void setup_builtin_highlighters(HighlighterGroup& group)
 {
-    group.add_child("tabulations"_str, std::make_unique<TabulationHighlighter>());
+    group.add_child("tabulations"_str,
+                    std::make_unique<TabulationHighlighter>());
     group.add_child("unprintable"_str, make_highlighter(expand_unprintable));
-    group.add_child("selections"_str,  make_highlighter(highlight_selections));
+    group.add_child("selections"_str, make_highlighter(highlight_selections));
 }
 
 void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    registry.insert({
-        "number-lines",
-        { LineNumbersHighlighter::create,
+    registry.insert(
+        {"number-lines",
+         {LineNumbersHighlighter::create,
           "Display line numbers \n"
-          "Parameters: -relative, -hlcursor, -separator <separator text>\n" } });
-    registry.insert({
-        "show-matching",
-        { create_matching_char_highlighter,
-          "Apply the MatchingChar face to the char matching the one under the cursor" } });
-    registry.insert({
-        "show-whitespaces",
-        { ShowWhitespacesHighlighter::create,
-          "Display whitespaces using symbols \n"
-          "Parameters: -tab <separator> -tabpad <separator> -lf <separator> -spc <separator> -nbsp <separator>\n" } });
-    registry.insert({
-        "fill",
-        { create_fill_highlighter,
-          "Fill the whole highlighted range with the given face" } });
-    registry.insert({
-        "regex",
-        { RegexHighlighter::create,
+          "Parameters: -relative, -hlcursor, -separator <separator text>\n"}});
+    registry.insert({"show-matching",
+                     {create_matching_char_highlighter,
+                      "Apply the MatchingChar face to the char matching the "
+                      "one under the cursor"}});
+    registry.insert({"show-whitespaces",
+                     {ShowWhitespacesHighlighter::create,
+                      "Display whitespaces using symbols \n"
+                      "Parameters: -tab <separator> -tabpad <separator> -lf "
+                      "<separator> -spc <separator> -nbsp <separator>\n"}});
+    registry.insert({"fill",
+                     {create_fill_highlighter,
+                      "Fill the whole highlighted range with the given face"}});
+    registry.insert(
+        {"regex",
+         {RegexHighlighter::create,
           "Parameters: <regex> <capture num>:<face> <capture num>:<face>...\n"
-          "Highlights the matches for captures from the regex with the given faces" } });
-    registry.insert({
-        "dynregex",
-        { create_dynamic_regex_highlighter,
+          "Highlights the matches for captures from the regex with the given "
+          "faces"}});
+    registry.insert(
+        {"dynregex",
+         {create_dynamic_regex_highlighter,
           "Parameters: <expr> <capture num>:<face> <capture num>:<face>...\n"
-          "Evaluate expression at every redraw to gather a regex" } });
-    registry.insert({
-        "group",
-        { create_highlighter_group,
+          "Evaluate expression at every redraw to gather a regex"}});
+    registry.insert(
+        {"group",
+         {create_highlighter_group,
           "Parameters: [-passes <passes>]\n"
           "Creates a group that can contain other highlighters,\n"
           "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
-          "which specify what kind of highlighters can be put in the group" } });
-    registry.insert({
-        "flag-lines",
-        { FlagLinesHighlighter::create,
-          "Parameters: <face> <option name>\n"
-          "Display flags specified in the line-spec option <option name> with <face>"} });
-    registry.insert({
-        "ranges",
-        { RangesHighlighter::create,
+          "which specify what kind of highlighters can be put in the group"}});
+    registry.insert({"flag-lines",
+                     {FlagLinesHighlighter::create,
+                      "Parameters: <face> <option name>\n"
+                      "Display flags specified in the line-spec option <option "
+                      "name> with <face>"}});
+    registry.insert(
+        {"ranges",
+         {RangesHighlighter::create,
           "Parameters: <option name>\n"
           "Use the range-specs option given as parameter to highlight buffer\n"
-          "each spec is interpreted as a face to apply to the range\n" } });
-    registry.insert({
-        "replace-ranges",
-        { ReplaceRangesHighlighter::create,
+          "each spec is interpreted as a face to apply to the range\n"}});
+    registry.insert(
+        {"replace-ranges",
+         {ReplaceRangesHighlighter::create,
           "Parameters: <option name>\n"
           "Use the range-specs option given as parameter to highlight buffer\n"
-          "each spec is interpreted as a display line to display in place of the range\n" } });
-    registry.insert({
-        "line",
-        { create_line_highlighter,
-          "Parameters: <value string> <face>\n"
-          "Highlight the line given by evaluating <value string> with <face>" } });
-    registry.insert({
-        "column",
-        { create_column_highlighter,
-          "Parameters: <value string> <face>\n"
-          "Highlight the column given by evaluating <value string> with <face>" } });
-    registry.insert({
-        "wrap",
-        { WrapHighlighter::create,
-          "Parameters: [-word] [-indent] [-width <max_width>] [-marker <marker_text>]\n"
-          "Wrap lines to window width, or max_width if given and window is wider,\n"
-          "wrap at word boundaries instead of codepoint boundaries if -word is given\n"
+          "each spec is interpreted as a display line to display in place of "
+          "the range\n"}});
+    registry.insert({"line",
+                     {create_line_highlighter,
+                      "Parameters: <value string> <face>\n"
+                      "Highlight the line given by evaluating <value string> "
+                      "with <face>"}});
+    registry.insert({"column",
+                     {create_column_highlighter,
+                      "Parameters: <value string> <face>\n"
+                      "Highlight the column given by evaluating <value string> "
+                      "with <face>"}});
+    registry.insert(
+        {"wrap",
+         {WrapHighlighter::create,
+          "Parameters: [-word] [-indent] [-width <max_width>] [-marker "
+          "<marker_text>]\n"
+          "Wrap lines to window width, or max_width if given and window is "
+          "wider,\n"
+          "wrap at word boundaries instead of codepoint boundaries if -word is "
+          "given\n"
           "insert marker_text at start of wrapped lines if given\n"
-          "preserve line indent in wrapped parts if -indent is given\n"} });
-    registry.insert({
-        "ref",
-        { ReferenceHighlighter::create,
+          "preserve line indent in wrapped parts if -indent is given\n"}});
+    registry.insert(
+        {"ref",
+         {ReferenceHighlighter::create,
           "Parameters: [-passes <passes>] <path>\n"
           "Reference the highlighter at <path> in shared highlighters\n"
           "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
-          "which specify what kind of highlighters can be referenced" } });
-    registry.insert({
-        "regions",
-        { RegionsHighlighter::create,
-          "Parameters: None\n"
-          "Holds child region highlighters and segments the buffer in ranges based on those regions\n"
-          "definitions. The regions highlighter finds the next region to start by finding which\n"
-          "of its child region has the leftmost starting point from current position. In between\n"
-          "regions, the default-region child highlighter is applied (if such a child exists)" } });
-    registry.insert({
-        "region",
-        { RegionsHighlighter::create_region,
-          "Parameters:  [-match-capture] [-recurse <recurse>] <opening> <closing> <type> <params>...\n"
-          "Define a region for a regions highlighter, and apply the given delegate\n"
+          "which specify what kind of highlighters can be referenced"}});
+    registry.insert({"regions",
+                     {RegionsHighlighter::create,
+                      "Parameters: None\n"
+                      "Holds child region highlighters and segments the buffer "
+                      "in ranges based on those regions\n"
+                      "definitions. The regions highlighter finds the next "
+                      "region to start by finding which\n"
+                      "of its child region has the leftmost starting point "
+                      "from current position. In between\n"
+                      "regions, the default-region child highlighter is "
+                      "applied (if such a child exists)"}});
+    registry.insert(
+        {"region",
+         {RegionsHighlighter::create_region,
+          "Parameters:  [-match-capture] [-recurse <recurse>] <opening> "
+          "<closing> <type> <params>...\n"
+          "Define a region for a regions highlighter, and apply the given "
+          "delegate\n"
           "highlighter as defined by <type> and eventual <params>...\n"
           "The region starts at <begin> match and ends at the first <end>\n"
-          "If -recurse is specified, then the region ends at the first <end> that\n"
+          "If -recurse is specified, then the region ends at the first <end> "
+          "that\n"
           "does not close a <recurse> match.\n"
-          "If -match-capture is specified, then regions end/recurse matches must have\n"
-          "the same \\1 capture content as the begin match to be considered"} });
-    registry.insert({
-        "default-region",
-        { RegionsHighlighter::create_default_region,
-          "Parameters: <delegate_type> <delegate_params>...\n"
-          "Define the default region of a regions highlighter" } });
+          "If -match-capture is specified, then regions end/recurse matches "
+          "must have\n"
+          "the same \\1 capture content as the begin match to be considered"}});
+    registry.insert({"default-region",
+                     {RegionsHighlighter::create_default_region,
+                      "Parameters: <delegate_type> <delegate_params>...\n"
+                      "Define the default region of a regions highlighter"}});
 }
 
 }

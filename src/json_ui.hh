@@ -21,23 +21,20 @@ public:
 
     bool is_ok() const override { return m_stdin_watcher.fd() != -1; }
 
-    void draw(const DisplayBuffer& display_buffer,
-              const Face& default_face,
+    void draw(const DisplayBuffer& display_buffer, const Face& default_face,
               const Face& buffer_padding) override;
 
     void draw_status(const DisplayLine& status_line,
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
 
-    void menu_show(ConstArrayView<DisplayLine> items,
-                   DisplayCoord anchor, Face fg, Face bg,
-                   MenuStyle style) override;
+    void menu_show(ConstArrayView<DisplayLine> items, DisplayCoord anchor,
+                   Face fg, Face bg, MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
 
-    void info_show(StringView title, StringView content,
-                   DisplayCoord anchor, Face face,
-                   InfoStyle style) override;
+    void info_show(StringView title, StringView content, DisplayCoord anchor,
+                   Face face, InfoStyle style) override;
     void info_hide() override;
 
     void set_cursor(CursorMode mode, DisplayCoord coord) override;

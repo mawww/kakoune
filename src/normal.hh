@@ -20,7 +20,7 @@ struct NormalParams
 
 struct NormalCmd
 {
-    StringView docstring = {};
+    StringView docstring                                = {};
     void (*func)(Context& context, NormalParams params) = nullptr;
 };
 

@@ -6,10 +6,14 @@ namespace Kakoune
 inline namespace Meta
 {
 
-struct AnyType{};
-template<typename T> struct Type : AnyType {};
+struct AnyType
+{};
+template<typename T>
+struct Type : AnyType
+{};
 
-template<typename T> using void_t = void;
+template<typename T>
+using void_t = void;
 
 }
 }

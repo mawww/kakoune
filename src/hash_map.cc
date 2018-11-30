@@ -116,17 +116,17 @@ void do_profile(size_t count, StringView type)
     auto after_find = Clock::now();
 
     using namespace std::chrono;
-    write_to_debug_buffer(format("{} ({}) -- inserts: {}us, reads: {}us, remove: {}us, find: {}us ({})", type, count,
-                                 duration_cast<microseconds>(after_insert - start).count(),
-                                 duration_cast<microseconds>(after_read - after_insert).count(),
-                                 duration_cast<microseconds>(after_remove - after_read).count(),
-                                 duration_cast<microseconds>(after_find - after_remove).count(),
-                                 c));
+    write_to_debug_buffer(format(
+        "{} ({}) -- inserts: {}us, reads: {}us, remove: {}us, find: {}us ({})",
+        type, count, duration_cast<microseconds>(after_insert - start).count(),
+        duration_cast<microseconds>(after_read - after_insert).count(),
+        duration_cast<microseconds>(after_remove - after_read).count(),
+        duration_cast<microseconds>(after_find - after_remove).count(), c));
 }
 
 void profile_hash_maps()
 {
-    for (auto i : { 1000, 10000, 100000, 1000000, 10000000 })
+    for (auto i : {1000, 10000, 100000, 1000000, 10000000})
     {
         do_profile<std::unordered_map<size_t, size_t>>(i, "UnorderedMap");
         do_profile<HashMap<size_t, size_t>>(i, "     HashMap");

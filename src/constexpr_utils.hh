@@ -16,11 +16,11 @@ struct Array
     constexpr size_t size() const { return N; }
     constexpr const T& operator[](int i) const { return m_data[i]; }
     constexpr const T* begin() const { return m_data; }
-    constexpr const T* end() const { return m_data+N; }
+    constexpr const T* end() const { return m_data + N; }
 
     constexpr T& operator[](int i) { return m_data[i]; }
     constexpr T* begin() { return m_data; }
-    constexpr T* end() { return m_data+N; }
+    constexpr T* end() { return m_data + N; }
 
     constexpr operator ArrayView<T>() { return {m_data, N}; }
     constexpr operator ConstArrayView<T>() const { return {m_data, N}; }
@@ -29,7 +29,8 @@ struct Array
 };
 
 template<typename T, size_t N, size_t... Indices>
-constexpr Array<T, N> make_array(const T (&data)[N], std::index_sequence<Indices...>)
+constexpr Array<T, N> make_array(const T (&data)[N],
+                                 std::index_sequence<Indices...>)
 {
     static_assert(sizeof...(Indices) == N, "size mismatch");
     return {{data[Indices]...}};
@@ -44,7 +45,7 @@ constexpr Array<T, N> make_array(const T (&data)[N])
 template<typename T, size_t capacity>
 struct ConstexprVector
 {
-    using iterator = T*;
+    using iterator       = T*;
     using const_iterator = const T*;
 
     constexpr ConstexprVector() : m_size{0} {}
@@ -66,7 +67,10 @@ struct ConstexprVector
         for (int i = m_size; i < n; ++i)
             m_data[i] = val;
         m_size = n;
-        kak_assert(this->size() == m_size); // check for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=79520
+        kak_assert(
+            this->size()
+            == m_size); // check for
+                        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=79520
     }
 
     constexpr T& operator[](size_t i) { return m_data[i]; }

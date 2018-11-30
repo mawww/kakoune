@@ -14,8 +14,8 @@ String::Data::Data(const char* data, size_t size, size_t capacity)
             ++capacity;
 
         kak_assert(capacity < Long::max_capacity);
-        l.ptr = Alloc{}.allocate(capacity+1);
-        l.size = size;
+        l.ptr      = Alloc{}.allocate(capacity + 1);
+        l.size     = size;
         l.capacity = capacity;
 
         if (data != nullptr)
@@ -44,7 +44,7 @@ String::Data& String::Data::operator=(const Data& other)
 
     const size_t new_size = other.size();
     reserve<false>(new_size);
-    memcpy(data(), other.data(), new_size+1);
+    memcpy(data(), other.data(), new_size + 1);
     set_size(new_size);
 
     return *this;
@@ -81,15 +81,15 @@ void String::Data::reserve(size_t new_capacity)
         ++new_capacity;
 
     kak_assert(new_capacity < Long::max_capacity);
-    char* new_ptr = Alloc{}.allocate(new_capacity+1);
+    char* new_ptr = Alloc{}.allocate(new_capacity + 1);
     if (copy)
     {
-        memcpy(new_ptr, data(), size()+1);
+        memcpy(new_ptr, data(), size() + 1);
         l.size = size();
     }
     release();
 
-    l.ptr = new_ptr;
+    l.ptr      = new_ptr;
     l.capacity = new_capacity;
 }
 
@@ -124,12 +124,12 @@ void String::Data::clear()
 void String::Data::release()
 {
     if (is_long())
-        Alloc{}.deallocate(l.ptr, l.capacity+1);
+        Alloc{}.deallocate(l.ptr, l.capacity + 1);
 }
 
 void String::resize(ByteCount size, char c)
 {
-    const size_t target_size = (size_t)size;
+    const size_t target_size  = (size_t)size;
     const size_t current_size = m_data.size();
     if (target_size < current_size)
         m_data.set_size(target_size);

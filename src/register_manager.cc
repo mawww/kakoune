@@ -12,18 +12,10 @@ Register& RegisterManager::operator[](StringView reg) const
     if (reg.length() == 1)
         return (*this)[reg[0_byte]];
 
-    static const HashMap<String, Codepoint> reg_names = {
-        { "slash", '/' },
-        { "dquote", '"' },
-        { "pipe", '|' },
-        { "caret", '^' },
-        { "arobase", '@' },
-        { "percent", '%' },
-        { "dot", '.' },
-        { "hash", '#' },
-        { "underscore", '_' },
-        { "colon", ':' }
-    };
+    static const HashMap<String, Codepoint> reg_names
+        = {{"slash", '/'},      {"dquote", '"'},  {"pipe", '|'}, {"caret", '^'},
+           {"arobase", '@'},    {"percent", '%'}, {"dot", '.'},  {"hash", '#'},
+           {"underscore", '_'}, {"colon", ':'}};
     auto it = reg_names.find(reg);
     if (it == reg_names.end())
         throw runtime_error(format("no such register: '{}'", reg));
@@ -32,7 +24,7 @@ Register& RegisterManager::operator[](StringView reg) const
 
 Register& RegisterManager::operator[](Codepoint c) const
 {
-    c = to_lower(c);
+    c       = to_lower(c);
     auto it = m_registers.find(c);
     if (it == m_registers.end())
         throw runtime_error(format("no such register: '{}'", c));

@@ -20,20 +20,28 @@ struct Snake
     // The end points of the diagonal (x, y) -> (u, v)
     int x, y, u, v;
     // the edit op, reverse op happen at the end of the diagonal
-    enum Op { Add, Del, RevAdd, RevDel } op;
+    enum Op
+    {
+        Add,
+        Del,
+        RevAdd,
+        RevDel
+    } op;
 };
 
 template<typename Iterator, typename Equal>
-Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, int M,
-                                               const int* V, const int D, const int k, Equal eq)
+Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b,
+                                               int M, const int* V, const int D,
+                                               const int k, Equal eq)
 {
-    const bool add = k == -D or (k != D and V[k-1] < V[k+1]);
+    const bool add = k == -D or (k != D and V[k - 1] < V[k + 1]);
 
     // if diagonal on the right goes further along x than diagonal on the left,
     // then we take a vertical edge from it to this diagonal, hence x = V[k+1]
     // else, we take an horizontal edge from our left diagonal,x = V[k-1]+1
-    const int x = add ? V[k+1] : V[k-1]+1;
-    // we are by construction on diagonal k, so our position along b (y) is x - k.
+    const int x = add ? V[k + 1] : V[k - 1] + 1;
+    // we are by construction on diagonal k, so our position along b (y) is x -
+    // k.
     const int y = x - k;
 
     int u = x, v = y;
@@ -41,16 +49,16 @@ Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, in
     while (u < N and v < M and eq(a[u], b[v]))
         ++u, ++v;
 
-    return { x, y, u, v, add ? Snake::Add : Snake::Del };
+    return {x, y, u, v, add ? Snake::Add : Snake::Del};
 }
 
 template<typename Iterator, typename Equal>
-Snake find_middle_snake(Iterator a, int N, Iterator b, int M,
-                        int* V1, int* V2, int cost_limit, Equal eq)
+Snake find_middle_snake(Iterator a, int N, Iterator b, int M, int* V1, int* V2,
+                        int cost_limit, Equal eq)
 {
     const int delta = N - M;
-    V1[1] = 0;
-    V2[1] = 0;
+    V1[1]           = 0;
+    V2[1]           = 0;
 
     std::reverse_iterator<Iterator> ra{a + N}, rb{b + M};
     const int max_D = std::min((M + N + 1) / 2 + 1, cost_limit);
@@ -58,52 +66,70 @@ Snake find_middle_snake(Iterator a, int N, Iterator b, int M,
     {
         for (int k1 = -D; k1 <= D; k1 += 2)
         {
-            auto p = find_end_snake_of_further_reaching_dpath(a, N, b, M, V1, D, k1, eq);
+            auto p = find_end_snake_of_further_reaching_dpath(a, N, b, M, V1, D,
+                                                              k1, eq);
             V1[k1] = p.u;
 
             const int k2 = -(k1 - delta);
-            if ((delta % 2 != 0) and -(D-1) <= k2 and k2 <= (D-1) and V1[k1] + V2[k2] >= N)
-                return p;// return last snake on forward path, len = (2 * D - 1)
+            if ((delta % 2 != 0) and -(D - 1) <= k2 and k2 <= (D - 1)
+                and V1[k1] + V2[k2] >= N)
+                return p; // return last snake on forward path, len = (2 * D -
+                          // 1)
         }
 
         for (int k2 = -D; k2 <= D; k2 += 2)
         {
-            auto p = find_end_snake_of_further_reaching_dpath(ra, N, rb, M, V2, D, k2, eq);
+            auto p = find_end_snake_of_further_reaching_dpath(ra, N, rb, M, V2,
+                                                              D, k2, eq);
             V2[k2] = p.u;
 
             const int k1 = -(k2 - delta);
-            if ((delta % 2 == 0) and -D <= k1 and k1 <= D and V1[k1] + V2[k2] >= N)
-                return { N - p.u, M - p.v, N - p.x , M - p.y,
-                         (Snake::Op)(p.op + Snake::RevAdd) };// return last snake on reverse path, len = 2 * D
+            if ((delta % 2 == 0) and -D <= k1 and k1 <= D
+                and V1[k1] + V2[k2] >= N)
+                return {N - p.u, M - p.v, N - p.x, M - p.y,
+                        (Snake::Op)(
+                            p.op + Snake::RevAdd)}; // return last snake on
+                                                    // reverse path, len = 2 * D
         }
     }
 
-    // We did not find a minimal path in less than max_D iterations, iterate one more time finding the best
+    // We did not find a minimal path in less than max_D iterations, iterate one
+    // more time finding the best
     Snake best{};
     auto score = [](const Snake& s) { return s.u + s.v; };
     for (int k1 = -max_D; k1 <= max_D; k1 += 2)
     {
-        auto p = find_end_snake_of_further_reaching_dpath(a, N, b, M, V1, max_D, k1, eq);
+        auto p = find_end_snake_of_further_reaching_dpath(a, N, b, M, V1, max_D,
+                                                          k1, eq);
         V1[k1] = p.u;
-        if ((delta % 2 != 0) and p.u <= N and p.v <= M and score(p) >= score(best))
+        if ((delta % 2 != 0) and p.u <= N and p.v <= M
+            and score(p) >= score(best))
             best = p;
     }
     for (int k2 = -max_D; k2 <= max_D; k2 += 2)
     {
-        auto p = find_end_snake_of_further_reaching_dpath(ra, N, rb, M, V2, max_D, k2, eq);
+        auto p = find_end_snake_of_further_reaching_dpath(ra, N, rb, M, V2,
+                                                          max_D, k2, eq);
         V2[k2] = p.u;
-        if ((delta % 2 == 0) and p.u <= N and p.v <= M and score(p) >= score(best))
+        if ((delta % 2 == 0) and p.u <= N and p.v <= M
+            and score(p) >= score(best))
             best = {p.x, p.y, p.u, p.v, (Snake::Op)(p.op + Snake::RevAdd)};
     }
 
-    if (best.op >= Snake::RevAdd) // reverse the snake now, as we were comparing snake length
-        best = { N - best.u, M - best.v, N - best.x , M - best.y, best.op };
+    if (best.op >= Snake::RevAdd) // reverse the snake now, as we were comparing
+                                  // snake length
+        best = {N - best.u, M - best.v, N - best.x, M - best.y, best.op};
     return best;
 }
 
 struct Diff
 {
-    enum { Keep, Add, Remove } mode;
+    enum
+    {
+        Keep,
+        Add,
+        Remove
+    } mode;
     int len;
     int posB;
 };
@@ -114,25 +140,24 @@ inline void append_diff(Vector<Diff>& diffs, Diff diff)
         return;
 
     if (not diffs.empty() and diffs.back().mode == diff.mode
-        and (diff.mode != Diff::Add or
-             diffs.back().posB + diffs.back().len == diff.posB))
+        and (diff.mode != Diff::Add
+             or diffs.back().posB + diffs.back().len == diff.posB))
         diffs.back().len += diff.len;
     else
         diffs.push_back(diff);
 }
 
 template<typename Iterator, typename Equal>
-void find_diff_rec(Iterator a, int begA, int endA,
-                   Iterator b, int begB, int endB,
-                   int* V1, int* V2, int cost_limit,
-                   Equal eq, Vector<Diff>& diffs)
+void find_diff_rec(Iterator a, int begA, int endA, Iterator b, int begB,
+                   int endB, int* V1, int* V2, int cost_limit, Equal eq,
+                   Vector<Diff>& diffs)
 {
     int prefix_len = 0;
     while (begA != endA and begB != endB and eq(a[begA], b[begB]))
-         ++begA, ++begB, ++prefix_len;
+        ++begA, ++begB, ++prefix_len;
 
     int suffix_len = 0;
-    while (begA != endA and begB != endB and eq(a[endA-1], b[endB-1]))
+    while (begA != endA and begB != endB and eq(a[endA - 1], b[endB - 1]))
         --endA, --endB, ++suffix_len;
 
     append_diff(diffs, {Diff::Keep, prefix_len, 0});
@@ -145,7 +170,8 @@ void find_diff_rec(Iterator a, int begA, int endA,
         append_diff(diffs, {Diff::Remove, lenA, 0});
     else
     {
-        auto snake = find_middle_snake(a + begA, lenA, b + begB, lenB, V1, V2, cost_limit, eq);
+        auto snake = find_middle_snake(a + begA, lenA, b + begB, lenB, V1, V2,
+                                       cost_limit, eq);
         kak_assert(snake.u <= lenA and snake.v <= lenB);
 
         find_diff_rec(a, begA, begA + snake.x - (int)(snake.op == Snake::Del),
@@ -164,8 +190,9 @@ void find_diff_rec(Iterator a, int begA, int endA,
         if (snake.op == Snake::RevDel)
             append_diff(diffs, {Diff::Remove, 1, 0});
 
-        find_diff_rec(a, begA + snake.u + (int)(snake.op == Snake::RevDel), endA,
-                      b, begB + snake.v + (int)(snake.op == Snake::RevAdd), endB,
+        find_diff_rec(a, begA + snake.u + (int)(snake.op == Snake::RevDel),
+                      endA, b,
+                      begB + snake.v + (int)(snake.op == Snake::RevAdd), endB,
                       V1, V2, cost_limit, eq, diffs);
     }
 
@@ -176,10 +203,11 @@ template<typename Iterator, typename Equal = std::equal_to<>>
 Vector<Diff> find_diff(Iterator a, int N, Iterator b, int M, Equal eq = Equal{})
 {
     const int max = 2 * (N + M) + 1;
-    Vector<int> data(2*max);
+    Vector<int> data(2 * max);
     Vector<Diff> diffs;
     constexpr int cost_limit = 1000;
-    find_diff_rec(a, 0, N, b, 0, M, &data[N+M], &data[max + N+M], cost_limit, eq, diffs);
+    find_diff_rec(a, 0, N, b, 0, M, &data[N + M], &data[max + N + M],
+                  cost_limit, eq, diffs);
 
     return diffs;
 }

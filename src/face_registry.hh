@@ -22,7 +22,7 @@ public:
 
     struct FaceOrAlias
     {
-        Face face = {};
+        Face face    = {};
         String alias = {};
     };
     using FaceMap = HashMap<String, FaceOrAlias, MemoryDomain::Faces>;
@@ -31,12 +31,16 @@ public:
     {
         auto merge = [](auto&& first, const FaceMap& second) {
             return concatenated(std::forward<decltype(first)>(first)
-                                | filter([&second](auto& i) { return not second.contains(i.key); }),
+                                    | filter([&second](auto& i) {
+                                          return not second.contains(i.key);
+                                      }),
                                 second);
         };
         static const FaceMap empty;
-        auto& parent = m_parent ? m_parent->m_faces : empty;
-        auto& grand_parent = (m_parent and m_parent->m_parent) ? m_parent->m_parent->m_faces : empty;
+        auto& parent       = m_parent ? m_parent->m_faces : empty;
+        auto& grand_parent = (m_parent and m_parent->m_parent)
+                                 ? m_parent->m_parent->m_faces
+                                 : empty;
         return merge(merge(grand_parent, parent), m_faces);
     }
 

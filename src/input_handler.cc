@@ -25,11 +25,15 @@ class InputMode : public RefCountable
 {
 public:
     InputMode(InputHandler& input_handler) : m_input_handler(input_handler) {}
-    ~InputMode() override = default;
+    ~InputMode() override       = default;
     InputMode(const InputMode&) = delete;
     InputMode& operator=(const InputMode&) = delete;
 
-    void handle_key(Key key) { RefPtr<InputMode> keep_alive{this}; on_key(key); }
+    void handle_key(Key key)
+    {
+        RefPtr<InputMode> keep_alive{this};
+        on_key(key);
+    }
 
     virtual void on_enabled() {}
     virtual void on_disabled(bool temporary) {}
@@ -46,7 +50,8 @@ public:
     virtual std::pair<CursorMode, DisplayCoord> get_cursor_info() const
     {
         const auto cursor = context().selections().main().cursor();
-        auto coord = context().window().display_position(cursor).value_or(DisplayCoord{});
+        auto coord = context().window().display_position(cursor).value_or(
+            DisplayCoord{});
         return {CursorMode::Buffer, coord};
     }
 
@@ -56,15 +61,10 @@ public:
 protected:
     virtual void on_key(Key key) = 0;
 
-    void push_mode(InputMode* new_mode)
-    {
-        m_input_handler.push_mode(new_mode);
-    }
+    void push_mode(InputMode* new_mode) { m_input_handler.push_mode(new_mode); }
 
-    void pop_mode()
-    {
-        m_input_handler.pop_mode(this);
-    }
+    void pop_mode() { m_input_handler.pop_mode(this); }
+
 private:
     InputHandler& m_input_handler;
 };
@@ -74,12 +74,14 @@ namespace InputModes
 
 std::chrono::milliseconds get_idle_timeout(const Context& context)
 {
-    return std::chrono::milliseconds{context.options()["idle_timeout"].get<int>()};
+    return std::chrono::milliseconds{
+        context.options()["idle_timeout"].get<int>()};
 }
 
 std::chrono::milliseconds get_fs_check_timeout(const Context& context)
 {
-    return std::chrono::milliseconds{context.options()["fs_check_timeout"].get<int>()};
+    return std::chrono::milliseconds{
+        context.options()["fs_check_timeout"].get<int>()};
 }
 
 struct MouseHandler
@@ -94,48 +96,49 @@ struct MouseHandler
         auto& selections = context.selections();
         switch ((Key::Modifiers)(key.modifiers & Key::Modifiers::MouseEvent))
         {
-        case Key::Modifiers::MousePress:
-            m_dragging = true;
-            m_anchor = context.window().buffer_coord(key.coord());
-            if (not (key.modifiers & Key::Modifiers::Control))
-                context.selections_write_only() = { buffer, m_anchor};
-            else
-            {
-                size_t main = selections.size();
-                selections.push_back({m_anchor});
-                selections.set_main_index(main);
+            case Key::Modifiers::MousePress:
+                m_dragging = true;
+                m_anchor   = context.window().buffer_coord(key.coord());
+                if (not(key.modifiers & Key::Modifiers::Control))
+                    context.selections_write_only() = {buffer, m_anchor};
+                else
+                {
+                    size_t main = selections.size();
+                    selections.push_back({m_anchor});
+                    selections.set_main_index(main);
+                    selections.sort_and_merge_overlapping();
+                }
+                return true;
+
+            case Key::Modifiers::MouseRelease:
+                if (not m_dragging)
+                    return true;
+                m_dragging        = false;
+                cursor            = context.window().buffer_coord(key.coord());
+                selections.main() = {buffer.clamp(m_anchor), cursor};
                 selections.sort_and_merge_overlapping();
-            }
-            return true;
-
-        case Key::Modifiers::MouseRelease:
-            if (not m_dragging)
                 return true;
-            m_dragging = false;
-            cursor = context.window().buffer_coord(key.coord());
-            selections.main() = {buffer.clamp(m_anchor), cursor};
-            selections.sort_and_merge_overlapping();
-            return true;
 
-        case Key::Modifiers::MousePos:
-            if (not m_dragging)
+            case Key::Modifiers::MousePos:
+                if (not m_dragging)
+                    return true;
+                cursor            = context.window().buffer_coord(key.coord());
+                selections.main() = {buffer.clamp(m_anchor), cursor};
+                selections.sort_and_merge_overlapping();
                 return true;
-            cursor = context.window().buffer_coord(key.coord());
-            selections.main() = {buffer.clamp(m_anchor), cursor};
-            selections.sort_and_merge_overlapping();
-            return true;
 
-        case Key::Modifiers::MouseWheelDown:
-            m_dragging = false;
-            scroll_window(context, 3);
-            return true;
+            case Key::Modifiers::MouseWheelDown:
+                m_dragging = false;
+                scroll_window(context, 3);
+                return true;
 
-        case Key::Modifiers::MouseWheelUp:
-            m_dragging = false;
-            scroll_window(context, -3);
-            return true;
+            case Key::Modifiers::MouseWheelUp:
+                m_dragging = false;
+                scroll_window(context, -3);
+                return true;
 
-        default: return false;
+            default:
+                return false;
         }
     }
 
@@ -144,19 +147,19 @@ private:
     BufferCoord m_anchor;
 };
 
-constexpr StringView register_doc =
-    "Special registers:\n"
-    "[0-9]: selections capture group\n"
-    "%:     buffer name\n"
-    ".:     selection contents\n"
-    "#:     selection index\n"
-    "_:     null register\n"
-    "\":     default yank/paste register\n"
-    "@:     default macro register\n"
-    "/:     default search register\n"
-    "^:     default mark register\n"
-    "|:     default shell command register\n"
-    "::     last entered command\n";
+constexpr StringView register_doc
+    = "Special registers:\n"
+      "[0-9]: selections capture group\n"
+      "%:     buffer name\n"
+      ".:     selection contents\n"
+      "#:     selection index\n"
+      "_:     null register\n"
+      "\":     default yank/paste register\n"
+      "@:     default macro register\n"
+      "/:     default search register\n"
+      "^:     default mark register\n"
+      "|:     default shell command register\n"
+      "::     last entered command\n";
 
 class Normal : public InputMode
 {
@@ -183,13 +186,15 @@ public:
         if (m_state == State::PopOnEnabled)
             return pop_mode();
 
-        if (not (context().flags() & Context::Flags::Draft))
+        if (not(context().flags() & Context::Flags::Draft))
         {
             if (context().has_client())
                 context().client().check_if_buffer_needs_reloading();
 
-            m_fs_check_timer.set_next_date(Clock::now() + get_fs_check_timeout(context()));
-            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+            m_fs_check_timer.set_next_date(Clock::now()
+                                           + get_fs_check_timeout(context()));
+            m_idle_timer.set_next_date(Clock::now()
+                                       + get_idle_timeout(context()));
         }
 
         if (m_hooks_disabled and not m_in_on_key)
@@ -223,15 +228,15 @@ public:
         // Hack to parse keys sent by terminals using the 8th bit to mark the
         // meta key. In normal mode, give priority to a potential alt-key than
         // the accentuated character.
-        if (not (key.modifiers & Key::Modifiers::MouseEvent) and
-            key.key >= 127 and key.key < 256)
+        if (not(key.modifiers & Key::Modifiers::MouseEvent) and key.key >= 127
+            and key.key < 256)
         {
             key.modifiers |= Key::Modifiers::Alt;
             key.key &= 0x7f;
         }
 
         bool do_restore_hooks = false;
-        auto restore_hooks = on_scope_end([&, this]{
+        auto restore_hooks    = on_scope_end([&, this] {
             if (m_hooks_disabled and enabled() and do_restore_hooks)
             {
                 context().hooks_disabled().unset();
@@ -250,13 +255,15 @@ public:
                 context().client().info_hide();
 
             if (not transient)
-                m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+                m_idle_timer.set_next_date(Clock::now()
+                                           + get_idle_timeout(context()));
         }
         else if (cp and isdigit(*cp))
         {
             long long new_val = (long long)m_params.count * 10 + *cp - '0';
             if (new_val > std::numeric_limits<int>::max())
-                context().print_status({ "parameter overflowed", context().faces()["Error"] });
+                context().print_status(
+                    {"parameter overflowed", context().faces()["Error"]});
             else
                 m_params.count = new_val;
         }
@@ -272,7 +279,8 @@ public:
         }
         else if (key == '"')
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(
+                context(), KeymapMode::None,
                 [this](Key key, Context& context) {
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
@@ -281,17 +289,18 @@ public:
                         m_params.reg = *cp;
                     else
                         context.print_status(
-                            { format("invalid register '{}'", *cp),
-                              context.faces()["Error"] });
-                }, "enter target register", register_doc);
+                            {format("invalid register '{}'", *cp),
+                             context.faces()["Error"]});
+                },
+                "enter target register", register_doc);
         }
         else
         {
             auto pop_if_single_command = on_scope_end([this] {
                 if (m_state == State::SingleCommand and enabled())
-                     pop_mode();
+                    pop_mode();
                 else if (m_state == State::SingleCommand)
-                     m_state = State::PopOnEnabled;
+                    m_state = State::PopOnEnabled;
             });
 
             context().print_status({});
@@ -303,12 +312,13 @@ public:
             {
                 auto autoinfo = context().options()["autoinfo"].get<AutoInfo>();
                 if (autoinfo & AutoInfo::Normal and context().has_client())
-                    context().client().info_show(key_to_str(key), command->docstring.str(),
-                                                 {}, InfoStyle::Prompt);
+                    context().client().info_show(key_to_str(key),
+                                                 command->docstring.str(), {},
+                                                 InfoStyle::Prompt);
 
                 // reset m_params now to be reentrant
                 NormalParams params = m_params;
-                m_params = { 0, 0 };
+                m_params            = {0, 0};
 
                 command->func(context(), params);
             }
@@ -316,28 +326,33 @@ public:
 
         context().hooks().run_hook(Hook::NormalKey, key_to_str(key), context());
         if (enabled() and not transient) // The hook might have changed mode
-            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+            m_idle_timer.set_next_date(Clock::now()
+                                       + get_idle_timeout(context()));
     }
 
     DisplayLine mode_line() const override
     {
         AtomList atoms;
-        auto num_sel = context().selections().size();
+        auto num_sel    = context().selections().size();
         auto main_index = context().selections().main_index();
         if (num_sel == 1)
-            atoms.emplace_back(format("{} sel", num_sel), context().faces()["StatusLineInfo"]);
+            atoms.emplace_back(format("{} sel", num_sel),
+                               context().faces()["StatusLineInfo"]);
         else
-            atoms.emplace_back(format("{} sels ({})", num_sel, main_index + 1), context().faces()["StatusLineInfo"]);
+            atoms.emplace_back(format("{} sels ({})", num_sel, main_index + 1),
+                               context().faces()["StatusLineInfo"]);
 
         if (m_params.count != 0)
         {
             atoms.emplace_back(" param=", context().faces()["StatusLineInfo"]);
-            atoms.emplace_back(to_string(m_params.count), context().faces()["StatusLineValue"]);
+            atoms.emplace_back(to_string(m_params.count),
+                               context().faces()["StatusLineValue"]);
         }
         if (m_params.reg)
         {
             atoms.emplace_back(" reg=", context().faces()["StatusLineInfo"]);
-            atoms.emplace_back(StringView(m_params.reg).str(), context().faces()["StatusLineValue"]);
+            atoms.emplace_back(StringView(m_params.reg).str(),
+                               context().faces()["StatusLineValue"]);
         }
         return atoms;
     }
@@ -349,14 +364,19 @@ public:
 private:
     friend struct InputHandler::ScopedForceNormal;
 
-    NormalParams m_params = { 0, 0 };
+    NormalParams m_params = {0, 0};
     bool m_hooks_disabled = false;
     NestedBool m_in_on_key;
     Timer m_idle_timer;
     Timer m_fs_check_timer;
     MouseHandler m_mouse_handler;
 
-    enum class State { Normal, SingleCommand, PopOnEnabled };
+    enum class State
+    {
+        Normal,
+        SingleCommand,
+        PopOnEnabled
+    };
     State m_state;
 };
 
@@ -427,7 +447,7 @@ void to_prev_word_begin(CharCount& pos, StringView line)
             --pos;
         if (!is_word<word_type>(line[pos]))
             ++pos;
-     }
+    }
 }
 
 class LineEditor
@@ -442,7 +462,8 @@ public:
             move_func(m_cursor_pos, m_line);
             if (m_cursor_pos > old_pos)
                 std::swap(m_cursor_pos, old_pos);
-            m_clipboard = m_line.substr(m_cursor_pos, old_pos - m_cursor_pos).str();
+            m_clipboard
+                = m_line.substr(m_cursor_pos, old_pos - m_cursor_pos).str();
             m_line = m_line.substr(0, m_cursor_pos) + m_line.substr(old_pos);
         };
 
@@ -465,7 +486,7 @@ public:
             if (m_cursor_pos != 0)
             {
                 m_line = m_line.substr(0_char, m_cursor_pos - 1)
-                       + m_line.substr(m_cursor_pos);
+                         + m_line.substr(m_cursor_pos);
 
                 --m_cursor_pos;
             }
@@ -474,7 +495,7 @@ public:
         {
             if (m_cursor_pos != m_line.char_length())
                 m_line = m_line.substr(0, m_cursor_pos)
-                       + m_line.substr(m_cursor_pos+1);
+                         + m_line.substr(m_cursor_pos + 1);
         }
         else if (key == alt('f'))
             to_next_word_begin<Word>(m_cursor_pos, m_line);
@@ -491,12 +512,12 @@ public:
         else if (key == ctrl('k'))
         {
             m_clipboard = m_line.substr(m_cursor_pos).str();
-            m_line = m_line.substr(0, m_cursor_pos).str();
+            m_line      = m_line.substr(0, m_cursor_pos).str();
         }
         else if (key == ctrl('u'))
         {
-            m_clipboard = m_line.substr(0, m_cursor_pos).str();
-            m_line = m_line.substr(m_cursor_pos).str();
+            m_clipboard  = m_line.substr(0, m_cursor_pos).str();
+            m_line       = m_line.substr(m_cursor_pos).str();
             m_cursor_pos = 0;
         }
         else if (key == ctrl('w') or key == alt(Key::Backspace))
@@ -509,7 +530,8 @@ public:
             erase_move(&to_next_word_begin<WORD>);
         else if (key == ctrl('y'))
         {
-            m_line = m_line.substr(0, m_cursor_pos) + m_clipboard + m_line.substr(m_cursor_pos);
+            m_line = m_line.substr(0, m_cursor_pos) + m_clipboard
+                     + m_line.substr(m_cursor_pos);
             m_cursor_pos += m_clipboard.char_length();
         }
         else if (auto cp = key.codepoint())
@@ -519,28 +541,24 @@ public:
     void insert(Codepoint cp)
     {
         m_line = m_line.substr(0, m_cursor_pos) + String{cp}
-               + m_line.substr(m_cursor_pos);
+                 + m_line.substr(m_cursor_pos);
         ++m_cursor_pos;
     }
 
-    void insert(StringView str)
-    {
-        insert_from(m_cursor_pos, str);
-    }
+    void insert(StringView str) { insert_from(m_cursor_pos, str); }
 
     void insert_from(CharCount start, StringView str)
     {
         kak_assert(start <= m_cursor_pos);
-        m_line = m_line.substr(0, start) + str
-               + m_line.substr(m_cursor_pos);
-       m_cursor_pos = start + str.char_length();
+        m_line = m_line.substr(0, start) + str + m_line.substr(m_cursor_pos);
+        m_cursor_pos = start + str.char_length();
     }
 
     void reset(String line, StringView empty_text)
     {
-        m_line = std::move(line);
-        m_empty_text = empty_text;
-        m_cursor_pos = m_line.char_length();
+        m_line        = std::move(line);
+        m_empty_text  = empty_text;
+        m_cursor_pos  = m_line.char_length();
         m_display_pos = 0;
     }
 
@@ -562,26 +580,35 @@ public:
             m_display_pos = m_cursor_pos + 1 - width;
 
         const bool empty = m_line.empty();
-        StringView str = empty ? m_empty_text : m_line;
+        StringView str   = empty ? m_empty_text : m_line;
 
         const Face line_face = m_faces[empty ? "StatusLineInfo" : "StatusLine"];
         const Face cursor_face = m_faces["StatusCursor"];
 
         if (m_cursor_pos == str.char_length())
-            return DisplayLine{{ { fix_atom_text(str.substr(m_display_pos, width-1)), line_face },
-                                 { " "_str, cursor_face} } };
+            return DisplayLine{
+                {{fix_atom_text(str.substr(m_display_pos, width - 1)),
+                  line_face},
+                 {" "_str, cursor_face}}};
         else
-            return DisplayLine({ { fix_atom_text(str.substr(m_display_pos, m_cursor_pos - m_display_pos)), line_face },
-                                 { fix_atom_text(str.substr(m_cursor_pos,1)), cursor_face },
-                                 { fix_atom_text(str.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1)), line_face } });
+            return DisplayLine(
+                {{fix_atom_text(
+                      str.substr(m_display_pos, m_cursor_pos - m_display_pos)),
+                  line_face},
+                 {fix_atom_text(str.substr(m_cursor_pos, 1)), cursor_face},
+                 {fix_atom_text(
+                      str.substr(m_cursor_pos + 1,
+                                 width - m_cursor_pos + m_display_pos - 1)),
+                  line_face}});
     }
-private:
-    CharCount  m_cursor_pos = 0;
-    CharCount  m_display_pos = 0;
 
-    String     m_line;
+private:
+    CharCount m_cursor_pos  = 0;
+    CharCount m_display_pos = 0;
+
+    String m_line;
     StringView m_empty_text = {};
-    String     m_clipboard;
+    String m_clipboard;
 
     const FaceRegistry& m_faces;
 };
@@ -592,7 +619,8 @@ public:
     Menu(InputHandler& input_handler, Vector<DisplayLine> choices,
          MenuCallback callback)
         : InputMode(input_handler),
-          m_callback(std::move(callback)), m_choices(choices.begin(), choices.end()),
+          m_callback(std::move(callback)),
+          m_choices(choices.begin(), choices.end()),
           m_selected(m_choices.begin()),
           m_filter_editor{context().faces()}
     {
@@ -633,7 +661,7 @@ public:
             if (m_edit_filter)
             {
                 m_edit_filter = false;
-                m_filter = Regex{".*"};
+                m_filter      = Regex{".*"};
                 m_filter_editor.reset("", "");
                 context().print_status(DisplayLine{});
             }
@@ -642,7 +670,8 @@ public:
                 if (context().has_client())
                     context().client().menu_hide();
 
-                // Maintain hooks disabled in callback if they were before pop_mode
+                // Maintain hooks disabled in callback if they were before
+                // pop_mode
                 ScopedSetBool disable_hooks(context().hooks_disabled(),
                                             context().hooks_disabled());
                 pop_mode();
@@ -650,22 +679,24 @@ public:
                 m_callback(selected, MenuEvent::Abort, context());
             }
         }
-        else if (key == Key::Down or key == Key::Tab or
-                 key == ctrl('n') or (not m_edit_filter and key == 'j'))
+        else if (key == Key::Down or key == Key::Tab or key == ctrl('n')
+                 or (not m_edit_filter and key == 'j'))
         {
-            auto it = std::find_if(m_selected+1, m_choices.end(), match_filter);
+            auto it
+                = std::find_if(m_selected + 1, m_choices.end(), match_filter);
             if (it == m_choices.end())
                 it = std::find_if(m_choices.begin(), m_selected, match_filter);
             select(it);
         }
-        else if (key == Key::Up or key == shift(Key::Tab) or
-                 key == ctrl('p') or (not m_edit_filter and key == 'k'))
+        else if (key == Key::Up or key == shift(Key::Tab) or key == ctrl('p')
+                 or (not m_edit_filter and key == 'k'))
         {
-            ChoiceList::const_reverse_iterator selected(m_selected+1);
-            auto it = std::find_if(selected+1, m_choices.rend(), match_filter);
+            ChoiceList::const_reverse_iterator selected(m_selected + 1);
+            auto it
+                = std::find_if(selected + 1, m_choices.rend(), match_filter);
             if (it == m_choices.rend())
                 it = std::find_if(m_choices.rbegin(), selected, match_filter);
-            select(it.base()-1);
+            select(it.base() - 1);
         }
         else if (key == '/' and not m_edit_filter)
         {
@@ -676,7 +707,7 @@ public:
             m_filter_editor.handle_key(key);
 
             auto search = ".*" + m_filter_editor.line() + ".*";
-            m_filter = Regex{search};
+            m_filter    = Regex{search};
             auto it = std::find_if(m_selected, m_choices.end(), match_filter);
             if (it == m_choices.end())
                 it = std::find_if(m_choices.begin(), m_selected, match_filter);
@@ -686,16 +717,18 @@ public:
         if (m_edit_filter and context().has_client())
         {
             auto prompt = "filter:"_str;
-            auto width = context().client().dimensions().column - prompt.column_length();
+            auto width  = context().client().dimensions().column
+                         - prompt.column_length();
             auto display_line = m_filter_editor.build_display_line(width);
-            display_line.insert(display_line.begin(), { prompt, context().faces()["Prompt"] });
+            display_line.insert(display_line.begin(),
+                                {prompt, context().faces()["Prompt"]});
             context().print_status(display_line);
         }
     }
 
     DisplayLine mode_line() const override
     {
-        return { "menu", context().faces()["StatusLineMode"] };
+        return {"menu", context().faces()["StatusLineMode"]};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Menu; }
@@ -711,15 +744,15 @@ private:
 
     void select(ChoiceList::const_iterator it)
     {
-        m_selected = it;
+        m_selected   = it;
         int selected = m_selected - m_choices.begin();
         if (context().has_client())
             context().client().menu_select(selected);
         m_callback(selected, MenuEvent::Select, context());
     }
 
-    Regex      m_filter = Regex{".*"};
-    bool       m_edit_filter = false;
+    Regex m_filter     = Regex{".*"};
+    bool m_edit_filter = false;
     LineEditor m_filter_editor;
 };
 
@@ -727,9 +760,9 @@ static Optional<Codepoint> get_raw_codepoint(Key key)
 {
     if (auto cp = key.codepoint())
         return cp;
-    else if (key.modifiers == Key::Modifiers::Control and
-             ((key.key >= '@' and key.key <= '_') or
-              (key.key >= 'a' and key.key <= 'z')))
+    else if (key.modifiers == Key::Modifiers::Control
+             and ((key.key >= '@' and key.key <= '_')
+                  or (key.key >= 'a' and key.key <= 'z')))
         return {(Codepoint)(to_upper((char)key.key) - '@')};
     return {};
 }
@@ -763,7 +796,7 @@ public:
 
     void on_key(Key key) override
     {
-        History& history = ms_history[m_prompt];
+        History& history   = ms_history[m_prompt];
         const String& line = m_line_editor.line();
 
         if (key == Key::Return)
@@ -800,33 +833,38 @@ public:
         }
         else if (key == ctrl('r'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(
+                context(), KeymapMode::None,
                 [this](Key key, Context&) {
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
                         return;
-                    StringView reg = context().main_sel_register_value(String{*cp});
+                    StringView reg
+                        = context().main_sel_register_value(String{*cp});
                     m_line_editor.insert(reg);
 
                     display();
-                    m_line_changed = true;
+                    m_line_changed               = true;
                     m_refresh_completion_pending = true;
-                }, "enter register name", register_doc);
+                },
+                "enter register name", register_doc);
             display();
             return;
         }
         else if (key == ctrl('v'))
         {
             on_next_key_with_autoinfo(context(), KeymapMode::None,
-                [this](Key key, Context&) {
-                    if (auto cp = get_raw_codepoint(key))
-                    {
-                        m_line_editor.insert(*cp);
-                        display();
-                        m_line_changed = true;
-                        m_refresh_completion_pending = true;
-                    }
-                }, "raw insert", "enter key to insert");
+                                      [this](Key key, Context&) {
+                                          if (auto cp = get_raw_codepoint(key))
+                                          {
+                                              m_line_editor.insert(*cp);
+                                              display();
+                                              m_line_changed = true;
+                                              m_refresh_completion_pending
+                                                  = true;
+                                          }
+                                      },
+                                      "raw insert", "enter key to insert");
             display();
             return;
         }
@@ -835,7 +873,7 @@ public:
             if (m_history_it != history.begin())
             {
                 if (m_history_it == history.end())
-                   m_prefix = line;
+                    m_prefix = line;
                 auto it = m_history_it;
                 // search for the previous history entry matching typed prefix
                 do
@@ -859,8 +897,8 @@ public:
             {
                 // search for the next history entry matching typed prefix
                 ++m_history_it;
-                while (m_history_it != history.end() and
-                       not prefix_match(*m_history_it, m_prefix))
+                while (m_history_it != history.end()
+                       and not prefix_match(*m_history_it, m_prefix))
                     ++m_history_it;
 
                 if (m_history_it != history.end())
@@ -872,15 +910,16 @@ public:
                 m_refresh_completion_pending = true;
             }
         }
-        else if (key == Key::Tab or key == shift(Key::Tab) or key.modifiers == Key::Modifiers::MenuSelect) // completion
+        else if (key == Key::Tab or key == shift(Key::Tab)
+                 or key.modifiers == Key::Modifiers::MenuSelect) // completion
         {
             CandidateList& candidates = m_completions.candidates;
             // first try, we need to ask our completer for completions
             if (candidates.empty())
             {
                 refresh_completions(CompletionFlags::None);
-                if ((not m_prefix_in_completions and candidates.size() > 1) or
-                    candidates.size() > 2)
+                if ((not m_prefix_in_completions and candidates.size() > 1)
+                    or candidates.size() > 2)
                     return;
             }
 
@@ -889,11 +928,13 @@ public:
 
             const bool reverse = (key == shift(Key::Tab));
             if (key.modifiers == Key::Modifiers::MenuSelect)
-                m_current_completion = clamp<int>(key.key, 0, candidates.size() - 1);
-            else if (not reverse and ++m_current_completion >= candidates.size())
+                m_current_completion
+                    = clamp<int>(key.key, 0, candidates.size() - 1);
+            else if (not reverse
+                     and ++m_current_completion >= candidates.size())
                 m_current_completion = 0;
             else if (reverse and --m_current_completion < 0)
-                m_current_completion = candidates.size()-1;
+                m_current_completion = candidates.size() - 1;
 
             const String& completion = candidates[m_current_completion];
             if (context().has_client())
@@ -902,10 +943,10 @@ public:
             m_line_editor.insert_from(line.char_count_to(m_completions.start),
                                       completion);
 
-            // when we have only one completion candidate, make next tab complete
-            // from the new content.
-            if (candidates.size() == 1 or
-                (m_prefix_in_completions and candidates.size() == 2))
+            // when we have only one completion candidate, make next tab
+            // complete from the new content.
+            if (candidates.size() == 1
+                or (m_prefix_in_completions and candidates.size() == 2))
             {
                 m_current_completion = -1;
                 candidates.clear();
@@ -927,11 +968,13 @@ public:
         {
             try
             {
-                m_line_editor.reset(expand(m_line_editor.line(), context()), m_empty_text);
+                m_line_editor.reset(expand(m_line_editor.line(), context()),
+                                    m_empty_text);
             }
             catch (std::runtime_error& error)
             {
-                context().print_status({error.what(), context().faces()["Error"]});
+                context().print_status(
+                    {error.what(), context().faces()["Error"]});
                 return;
             }
         }
@@ -949,8 +992,12 @@ public:
 
         display();
         m_line_changed = true;
-        if (enabled() and not (context().flags() & Context::Flags::Draft)) // The callback might have disabled us
-            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        if (enabled()
+            and not(context().flags()
+                    & Context::Flags::Draft)) // The callback might have
+                                              // disabled us
+            m_idle_timer.set_next_date(Clock::now()
+                                       + get_idle_timeout(context()));
     }
 
     void set_prompt_face(Face face)
@@ -964,7 +1011,7 @@ public:
 
     DisplayLine mode_line() const override
     {
-        return { "prompt", context().faces()["StatusLineMode"] };
+        return {"prompt", context().faces()["StatusLineMode"]};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Prompt; }
@@ -973,8 +1020,9 @@ public:
 
     std::pair<CursorMode, DisplayCoord> get_cursor_info() const override
     {
-        DisplayCoord coord{0_line, m_prompt.column_length() + m_line_editor.cursor_display_column()};
-        return { CursorMode::Prompt, coord };
+        DisplayCoord coord{0_line, m_prompt.column_length()
+                                       + m_line_editor.cursor_display_column()};
+        return {CursorMode::Prompt, coord};
     }
 
 private:
@@ -986,9 +1034,10 @@ private:
             if (not m_completer)
                 return;
             m_current_completion = -1;
-            const String& line = m_line_editor.line();
-            m_completions = m_completer(context(), flags, line,
-                                        line.byte_count_to(m_line_editor.cursor_pos()));
+            const String& line   = m_line_editor.line();
+            m_completions
+                = m_completer(context(), flags, line,
+                              line.byte_count_to(m_line_editor.cursor_pos()));
             if (context().has_client())
             {
                 if (m_completions.candidates.empty())
@@ -996,12 +1045,16 @@ private:
 
                 Vector<DisplayLine> items;
                 for (auto& candidate : m_completions.candidates)
-                    items.push_back({ candidate, {} });
+                    items.push_back({candidate, {}});
 
-                const auto menu_style = (m_flags & PromptFlags::Search) ? MenuStyle::Search : MenuStyle::Prompt;
+                const auto menu_style = (m_flags & PromptFlags::Search)
+                                            ? MenuStyle::Search
+                                            : MenuStyle::Prompt;
                 context().client().menu_show(items, {}, menu_style);
 
-                auto prefix = line.substr(m_completions.start, m_completions.end - m_completions.start);
+                auto prefix
+                    = line.substr(m_completions.start,
+                                  m_completions.end - m_completions.start);
                 if (not contains(m_completions.candidates, prefix))
                 {
                     m_current_completion = m_completions.candidates.size();
@@ -1011,7 +1064,9 @@ private:
                 else
                     m_prefix_in_completions = false;
             }
-        } catch (runtime_error&) {}
+        }
+        catch (runtime_error&)
+        {}
     }
 
     void clear_completions()
@@ -1025,11 +1080,12 @@ private:
         if (not context().has_client())
             return;
 
-        auto width = context().client().dimensions().column - m_prompt.column_length();
+        auto width
+            = context().client().dimensions().column - m_prompt.column_length();
         DisplayLine display_line;
-        if (not (m_flags & PromptFlags::Password))
+        if (not(m_flags & PromptFlags::Password))
             display_line = m_line_editor.build_display_line(width);
-        display_line.insert(display_line.begin(), { m_prompt, m_prompt_face });
+        display_line.insert(display_line.begin(), {m_prompt, m_prompt_face});
         context().print_status(display_line);
     }
 
@@ -1038,8 +1094,9 @@ private:
         display();
         m_line_changed = true;
 
-        if (not (context().flags() & Context::Flags::Draft))
-            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        if (not(context().flags() & Context::Flags::Draft))
+            m_idle_timer.set_next_date(Clock::now()
+                                       + get_idle_timeout(context()));
     }
 
     void on_disabled(bool temporary) override
@@ -1053,20 +1110,20 @@ private:
     }
 
     PromptCallback m_callback;
-    Completer      m_completer;
-    const String   m_prompt;
-    Face           m_prompt_face;
-    Completions    m_completions;
-    int            m_current_completion = -1;
-    bool           m_prefix_in_completions = false;
-    String         m_prefix;
-    String         m_empty_text;
-    LineEditor     m_line_editor;
-    bool           m_line_changed = false;
-    PromptFlags    m_flags;
-    bool           m_auto_complete;
-    bool           m_refresh_completion_pending = true;
-    Timer          m_idle_timer;
+    Completer m_completer;
+    const String m_prompt;
+    Face m_prompt_face;
+    Completions m_completions;
+    int m_current_completion     = -1;
+    bool m_prefix_in_completions = false;
+    String m_prefix;
+    String m_empty_text;
+    LineEditor m_line_editor;
+    bool m_line_changed = false;
+    PromptFlags m_flags;
+    bool m_auto_complete;
+    bool m_refresh_completion_pending = true;
+    Timer m_idle_timer;
 
     using History = Vector<String, MemoryDomain::History>;
     static HashMap<String, History, MemoryDomain::History> ms_history;
@@ -1074,9 +1131,9 @@ private:
 
     void history_push(History& history, StringView entry)
     {
-        if (entry.empty() or
-            (m_flags & PromptFlags::DropHistoryEntriesWithBlankPrefix and
-             is_horizontal_blank(entry[0_byte])))
+        if (entry.empty()
+            or (m_flags & PromptFlags::DropHistoryEntriesWithBlankPrefix
+                and is_horizontal_blank(entry[0_byte])))
             return;
 
         history.erase(std::remove(history.begin(), history.end(), entry),
@@ -1089,8 +1146,12 @@ HashMap<String, Prompt::History, MemoryDomain::History> Prompt::ms_history;
 class NextKey : public InputMode
 {
 public:
-    NextKey(InputHandler& input_handler, KeymapMode keymap_mode, KeyCallback callback)
-        : InputMode(input_handler), m_keymap_mode(keymap_mode), m_callback(std::move(callback)) {}
+    NextKey(InputHandler& input_handler, KeymapMode keymap_mode,
+            KeyCallback callback)
+        : InputMode(input_handler),
+          m_keymap_mode(keymap_mode),
+          m_callback(std::move(callback))
+    {}
 
     void on_key(Key key) override
     {
@@ -1103,7 +1164,7 @@ public:
 
     DisplayLine mode_line() const override
     {
-        return { "enter key", context().faces()["StatusLineMode"] };
+        return {"enter key", context().faces()["StatusLineMode"]};
     }
 
     KeymapMode keymap_mode() const override { return m_keymap_mode; }
@@ -1123,13 +1184,19 @@ public:
           m_restore_cursor(mode == InsertMode::Append),
           m_edition(context()),
           m_completer(context()),
-          m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Insert},
-          m_disable_hooks{context().hooks_disabled(), context().hooks_disabled()},
-          m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
-                       Timer::Callback{} : [this](Timer&) {
-                           m_completer.update(m_auto_complete);
-                           context().hooks().run_hook(Hook::InsertIdle, "", context());
-                       }}
+          m_auto_complete{
+              context().options()["autocomplete"].get<AutoComplete>()
+              & AutoComplete::Insert},
+          m_disable_hooks{context().hooks_disabled(),
+                          context().hooks_disabled()},
+          m_idle_timer{TimePoint::max(),
+                       context().flags() & Context::Flags::Draft
+                           ? Timer::Callback{}
+                           : [this](Timer&) {
+                                 m_completer.update(m_auto_complete);
+                                 context().hooks().run_hook(Hook::InsertIdle,
+                                                            "", context());
+                             }}
     {
         context().buffer().throw_if_read_only();
 
@@ -1137,15 +1204,16 @@ public:
         last_insert().mode = mode;
         last_insert().keys.clear();
         last_insert().disable_hooks = context().hooks_disabled();
-        last_insert().count = count;
+        last_insert().count         = count;
         context().hooks().run_hook(Hook::InsertBegin, "", context());
         prepare(mode, count);
     }
 
     void on_enabled() override
     {
-        if (not (context().flags() & Context::Flags::Draft))
-            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        if (not(context().flags() & Context::Flags::Draft))
+            m_idle_timer.set_next_date(Clock::now()
+                                       + get_idle_timeout(context()));
     }
 
     void on_disabled(bool temporary) override
@@ -1161,8 +1229,10 @@ public:
             {
                 for (auto& sel : selections)
                 {
-                    if (sel.cursor() > sel.anchor() and sel.cursor() > BufferCoord{0, 0})
-                        sel.cursor() = context().buffer().char_prev(sel.cursor());
+                    if (sel.cursor() > sel.anchor()
+                        and sel.cursor() > BufferCoord{0, 0})
+                        sel.cursor()
+                            = context().buffer().char_prev(sel.cursor());
                 }
             }
         }
@@ -1172,18 +1242,20 @@ public:
     {
         auto& buffer = context().buffer();
 
-        const bool transient = context().flags() & Context::Flags::Draft;
+        const bool transient    = context().flags() & Context::Flags::Draft;
         bool update_completions = true;
-        bool moved = false;
+        bool moved              = false;
         if (m_mouse_handler.handle_key(key, context()))
         {
             if (not transient)
-                m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+                m_idle_timer.set_next_date(Clock::now()
+                                           + get_idle_timeout(context()));
         }
         else if (key == Key::Escape or key == ctrl('c'))
         {
             if (m_in_end)
-                throw runtime_error("asked to exit insert mode while running InsertEnd hook");
+                throw runtime_error(
+                    "asked to exit insert mode while running InsertEnd hook");
             m_in_end = true;
             context().hooks().run_hook(Hook::InsertEnd, "", context());
 
@@ -1195,7 +1267,7 @@ public:
             Vector<Selection> sels;
             for (auto& sel : context().selections())
             {
-                if (sel.cursor() == BufferCoord{0,0})
+                if (sel.cursor() == BufferCoord{0, 0})
                     continue;
                 auto pos = sel.cursor();
                 sels.emplace_back(buffer.char_prev(pos));
@@ -1209,7 +1281,8 @@ public:
                 SelectionList{buffer, std::move(sels)}.erase();
 
             if (not main_char.empty())
-                context().hooks().run_hook(Hook::InsertDelete, main_char, context());
+                context().hooks().run_hook(Hook::InsertDelete, main_char,
+                                           context());
         }
         else if (key == Key::Delete)
         {
@@ -1247,12 +1320,13 @@ public:
         }
         else if (key == Key::End)
         {
-            auto& buffer = context().buffer();
+            auto& buffer     = context().buffer();
             auto& selections = context().selections();
             for (auto& sel : selections)
             {
                 const LineCount line = sel.cursor().line;
-                sel.anchor() = sel.cursor() = buffer.clamp({line, buffer[line].length()});
+                sel.anchor()         = sel.cursor()
+                    = buffer.clamp({line, buffer[line].length()});
             }
             selections.sort_and_merge_overlapping();
         }
@@ -1260,13 +1334,15 @@ public:
             insert(*cp);
         else if (key == ctrl('r'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(
+                context(), KeymapMode::None,
                 [this](Key key, Context&) {
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
                         return;
                     insert(RegisterManager::instance()[*cp].get(context()));
-                }, "enter register name", register_doc);
+                },
+                "enter register name", register_doc);
             update_completions = false;
         }
         else if (key == ctrl('n'))
@@ -1289,7 +1365,8 @@ public:
         }
         else if (key == ctrl('x'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(
+                context(), KeymapMode::None,
                 [this](Key key, Context&) {
                     if (key.key == 'f')
                         m_completer.explicit_file_complete();
@@ -1301,12 +1378,13 @@ public:
                         m_completer.explicit_line_buffer_complete();
                     if (key.key == 'L')
                         m_completer.explicit_line_all_complete();
-            }, "enter completion type",
-            "f: filename\n"
-            "w: word (current buffer)\n"
-            "W: word (all buffers)\n"
-            "l: line (current buffer)\n"
-            "L: line (all buffers)\n");
+                },
+                "enter completion type",
+                "f: filename\n"
+                "w: word (current buffer)\n"
+                "W: word (all buffers)\n"
+                "l: line (current buffer)\n"
+                "L: line (all buffers)\n");
             update_completions = false;
         }
         else if (key == ctrl('o'))
@@ -1317,22 +1395,27 @@ public:
         else if (key == ctrl('u'))
         {
             context().buffer().commit_undo_group();
-            context().print_status({ format("committed change #{}",
-                                            (size_t)context().buffer().current_history_id()),
-                                     context().faces()["Information"] });
+            context().print_status(
+                {format("committed change #{}",
+                        (size_t)context().buffer().current_history_id()),
+                 context().faces()["Information"]});
         }
         else if (key == ctrl('v'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(
+                context(), KeymapMode::None,
                 [this, transient](Key key, Context&) {
                     if (auto cp = get_raw_codepoint(key))
                     {
                         insert(*cp);
-                        context().hooks().run_hook(Hook::InsertKey, key_to_str(key), context());
+                        context().hooks().run_hook(Hook::InsertKey,
+                                                   key_to_str(key), context());
                         if (enabled() and not transient)
-                            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+                            m_idle_timer.set_next_date(
+                                Clock::now() + get_idle_timeout(context()));
                     }
-                }, "raw insert", "enter key to insert");
+                },
+                "raw insert", "enter key to insert");
             update_completions = false;
         }
         else if (key == alt(';'))
@@ -1343,20 +1426,23 @@ public:
 
         context().hooks().run_hook(Hook::InsertKey, key_to_str(key), context());
         if (moved)
-            context().hooks().run_hook(Hook::InsertMove, key_to_str(key), context());
+            context().hooks().run_hook(Hook::InsertMove, key_to_str(key),
+                                       context());
 
-        if (update_completions and enabled() and not transient) // Hooks might have disabled us
-            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        if (update_completions and enabled()
+            and not transient) // Hooks might have disabled us
+            m_idle_timer.set_next_date(Clock::now()
+                                       + get_idle_timeout(context()));
     }
 
     DisplayLine mode_line() const override
     {
-        auto num_sel = context().selections().size();
+        auto num_sel    = context().selections().size();
         auto main_index = context().selections().main_index();
-        return {AtomList{ { "insert", context().faces()["StatusLineMode"] },
-                          { " ", context().faces()["StatusLine"] },
-                          { format( "{} sels ({})", num_sel, main_index + 1),
-                             context().faces()["StatusLineInfo"] } }};
+        return {AtomList{{"insert", context().faces()["StatusLineMode"]},
+                         {" ", context().faces()["StatusLine"]},
+                         {format("{} sels ({})", num_sel, main_index + 1),
+                          context().faces()["StatusLineInfo"]}}};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }
@@ -1367,11 +1453,12 @@ private:
     template<typename Type>
     void move(Type offset)
     {
-        auto& selections = context().selections();
+        auto& selections          = context().selections();
         const ColumnCount tabstop = context().options()["tabstop"].get<int>();
         for (auto& sel : selections)
         {
-            auto cursor = context().buffer().offset_coord(sel.cursor(), offset, tabstop, false);
+            auto cursor  = context().buffer().offset_coord(sel.cursor(), offset,
+                                                          tabstop, false);
             sel.anchor() = sel.cursor() = cursor;
         }
         selections.sort_and_merge_overlapping();
@@ -1392,81 +1479,84 @@ private:
     void prepare(InsertMode mode, int count)
     {
         SelectionList& selections = context().selections();
-        Buffer& buffer = context().buffer();
+        Buffer& buffer            = context().buffer();
 
         switch (mode)
         {
-        case InsertMode::Insert:
-            for (auto& sel : selections)
-                sel.set(sel.max(), sel.min());
-            break;
-        case InsertMode::Replace:
-            selections.erase();
-            break;
-        case InsertMode::Append:
-            for (auto& sel : selections)
+            case InsertMode::Insert:
+                for (auto& sel : selections)
+                    sel.set(sel.max(), sel.min());
+                break;
+            case InsertMode::Replace:
+                selections.erase();
+                break;
+            case InsertMode::Append:
+                for (auto& sel : selections)
+                {
+                    sel.set(sel.min(), buffer.char_next(sel.max()));
+                    if (sel.cursor() == buffer.end_coord())
+                        buffer.insert(buffer.end_coord(), "\n");
+                }
+                break;
+            case InsertMode::AppendAtLineEnd:
+                for (auto& sel : selections)
+                    sel.set(
+                        {sel.max().line, buffer[sel.max().line].length() - 1});
+                break;
+            case InsertMode::OpenLineBelow:
             {
-                sel.set(sel.min(),  buffer.char_next(sel.max()));
-                if (sel.cursor() == buffer.end_coord())
-                    buffer.insert(buffer.end_coord(), "\n");
+                Vector<Selection> new_sels;
+                count                    = count > 0 ? count : 1;
+                LineCount inserted_count = 0;
+                for (auto sel : selections)
+                {
+                    buffer.insert(sel.max().line + inserted_count + 1,
+                                  String{'\n', CharCount{count}});
+                    for (int i = 0; i < count; ++i)
+                        new_sels.push_back(
+                            {sel.max().line + inserted_count + i + 1});
+                    inserted_count += count;
+                }
+                selections.set(std::move(new_sels),
+                               selections.main_index() * count + count - 1);
+                context().hooks().run_hook(Hook::InsertChar, "\n", context());
+                break;
             }
-            break;
-        case InsertMode::AppendAtLineEnd:
-            for (auto& sel : selections)
-                sel.set({sel.max().line, buffer[sel.max().line].length() - 1});
-            break;
-        case InsertMode::OpenLineBelow:
-        {
-            Vector<Selection> new_sels;
-            count = count > 0 ? count : 1;
-            LineCount inserted_count = 0;
-            for (auto sel : selections)
+            case InsertMode::OpenLineAbove:
             {
-                buffer.insert(sel.max().line + inserted_count + 1,
-                              String{'\n', CharCount{count}});
-                for (int i = 0; i < count; ++i)
-                    new_sels.push_back({sel.max().line + inserted_count + i + 1});
-                inserted_count += count;
+                Vector<Selection> new_sels;
+                count                    = count > 0 ? count : 1;
+                LineCount inserted_count = 0;
+                for (auto sel : selections)
+                {
+                    buffer.insert(sel.min().line + inserted_count,
+                                  String{'\n', CharCount{count}});
+                    for (int i = 0; i < count; ++i)
+                        new_sels.push_back(
+                            {sel.min().line + inserted_count + i});
+                    inserted_count += count;
+                }
+                selections.set(std::move(new_sels),
+                               selections.main_index() * count + count - 1);
+                context().hooks().run_hook(Hook::InsertChar, "\n", context());
+                break;
             }
-            selections.set(std::move(new_sels),
-                           selections.main_index() * count + count - 1);
-            context().hooks().run_hook(Hook::InsertChar, "\n", context());
-            break;
-        }
-        case InsertMode::OpenLineAbove:
-        {
-            Vector<Selection> new_sels;
-            count = count > 0 ? count : 1;
-            LineCount inserted_count = 0;
-            for (auto sel : selections)
-            {
-                buffer.insert(sel.min().line + inserted_count,
-                              String{'\n', CharCount{count}});
-                for (int i = 0; i < count; ++i)
-                    new_sels.push_back({sel.min().line + inserted_count + i});
-                inserted_count += count;
-            }
-            selections.set(std::move(new_sels),
-                           selections.main_index() * count + count - 1);
-            context().hooks().run_hook(Hook::InsertChar, "\n", context());
-            break;
-        }
-        case InsertMode::InsertAtLineBegin:
-            for (auto& sel : selections)
-            {
-                BufferCoord pos = sel.min().line;
-                auto pos_non_blank = buffer.iterator_at(pos);
-                while (*pos_non_blank == ' ' or *pos_non_blank == '\t')
-                    ++pos_non_blank;
-                if (*pos_non_blank != '\n')
-                    pos = pos_non_blank.coord();
-                sel.set(pos);
-            }
-            break;
-        case InsertMode::InsertAtNextLineBegin:
-        case InsertMode::InsertCursor:
-             kak_assert(false); // invalid for interactive insert
-             break;
+            case InsertMode::InsertAtLineBegin:
+                for (auto& sel : selections)
+                {
+                    BufferCoord pos    = sel.min().line;
+                    auto pos_non_blank = buffer.iterator_at(pos);
+                    while (*pos_non_blank == ' ' or *pos_non_blank == '\t')
+                        ++pos_non_blank;
+                    if (*pos_non_blank != '\n')
+                        pos = pos_non_blank.coord();
+                    sel.set(pos);
+                }
+                break;
+            case InsertMode::InsertAtNextLineBegin:
+            case InsertMode::InsertCursor:
+                kak_assert(false); // invalid for interactive insert
+                break;
         }
         if (mode != InsertMode::Append and mode != InsertMode::Replace)
             selections.sort_and_merge_overlapping();
@@ -1474,19 +1564,20 @@ private:
         buffer.check_invariant();
     }
 
-    ScopedEdition   m_edition;
+    ScopedEdition m_edition;
     InsertCompleter m_completer;
-    const bool      m_restore_cursor;
-    bool            m_auto_complete;
-    Timer           m_idle_timer;
-    bool            m_in_end = false;
-    MouseHandler    m_mouse_handler;
-    ScopedSetBool   m_disable_hooks;
+    const bool m_restore_cursor;
+    bool m_auto_complete;
+    Timer m_idle_timer;
+    bool m_in_end = false;
+    MouseHandler m_mouse_handler;
+    ScopedSetBool m_disable_hooks;
 };
 
 }
 
-InputHandler::InputHandler(SelectionList selections, Context::Flags flags, String name)
+InputHandler::InputHandler(SelectionList selections, Context::Flags flags,
+                           String name)
     : m_context(*this, std::move(selections), flags, std::move(name))
 {
     m_mode_stack.emplace_back(new InputModes::Normal(*this));
@@ -1503,7 +1594,9 @@ void InputHandler::push_mode(InputMode* new_mode)
     m_mode_stack.emplace_back(new_mode);
     new_mode->on_enabled();
 
-    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, new_mode->name()), context());
+    context().hooks().run_hook(Hook::ModeChange,
+                               format("{}:{}", prev_name, new_mode->name()),
+                               context());
 }
 
 void InputHandler::pop_mode(InputMode* mode)
@@ -1517,12 +1610,15 @@ void InputHandler::pop_mode(InputMode* mode)
     m_mode_stack.pop_back();
     current_mode().on_enabled();
 
-    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()), context());
+    context().hooks().run_hook(
+        Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()),
+        context());
 }
 
 void InputHandler::reset_normal_mode()
 {
-    kak_assert(dynamic_cast<InputModes::Normal*>(m_mode_stack[0].get()) != nullptr);
+    kak_assert(dynamic_cast<InputModes::Normal*>(m_mode_stack[0].get())
+               != nullptr);
     if (m_mode_stack.size() == 1)
         return;
 
@@ -1531,7 +1627,9 @@ void InputHandler::reset_normal_mode()
     m_mode_stack.resize(1);
     current_mode().on_enabled();
 
-    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()), context());
+    context().hooks().run_hook(
+        Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()),
+        context());
 }
 
 void InputHandler::insert(InsertMode mode, int count)
@@ -1544,20 +1642,22 @@ void InputHandler::repeat_last_insert()
     if (m_last_insert.keys.empty())
         return;
 
-    if (dynamic_cast<InputModes::Normal*>(&current_mode()) == nullptr or
-        m_last_insert.recording)
-        throw runtime_error{"repeating last insert not available in this context"};
+    if (dynamic_cast<InputModes::Normal*>(&current_mode()) == nullptr
+        or m_last_insert.recording)
+        throw runtime_error{
+            "repeating last insert not available in this context"};
 
     Vector<Key> keys;
     swap(keys, m_last_insert.keys);
     ScopedSetBool disable_hooks(context().hooks_disabled(),
                                 m_last_insert.disable_hooks);
 
-    push_mode(new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count));
+    push_mode(
+        new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count));
     for (auto& key : keys)
     {
-        // refill last_insert,  this is very inefficient, but necesary at the moment
-        // to properly handle insert completion
+        // refill last_insert,  this is very inefficient, but necesary at the
+        // moment to properly handle insert completion
         m_last_insert.keys.push_back(key);
         current_mode().handle_key(key);
     }
@@ -1568,20 +1668,23 @@ void InputHandler::prompt(StringView prompt, String initstr, String emptystr,
                           Face prompt_face, PromptFlags flags,
                           Completer completer, PromptCallback callback)
 {
-    push_mode(new InputModes::Prompt(*this, prompt, std::move(initstr), std::move(emptystr),
-                                     prompt_face, flags, std::move(completer), std::move(callback)));
+    push_mode(new InputModes::Prompt(
+        *this, prompt, std::move(initstr), std::move(emptystr), prompt_face,
+        flags, std::move(completer), std::move(callback)));
 }
 
 void InputHandler::set_prompt_face(Face prompt_face)
 {
-    InputModes::Prompt* prompt = dynamic_cast<InputModes::Prompt*>(&current_mode());
+    InputModes::Prompt* prompt
+        = dynamic_cast<InputModes::Prompt*>(&current_mode());
     if (prompt)
         prompt->set_prompt_face(prompt_face);
 }
 
 void InputHandler::menu(Vector<DisplayLine> choices, MenuCallback callback)
 {
-    push_mode(new InputModes::Menu(*this, std::move(choices), std::move(callback)));
+    push_mode(
+        new InputModes::Menu(*this, std::move(choices), std::move(callback)));
 }
 
 void InputHandler::on_next_key(KeymapMode keymap_mode, KeyCallback callback)
@@ -1589,7 +1692,8 @@ void InputHandler::on_next_key(KeymapMode keymap_mode, KeyCallback callback)
     push_mode(new InputModes::NextKey(*this, keymap_mode, std::move(callback)));
 }
 
-InputHandler::ScopedForceNormal::ScopedForceNormal(InputHandler& handler, NormalParams params)
+InputHandler::ScopedForceNormal::ScopedForceNormal(InputHandler& handler,
+                                                   NormalParams params)
     : m_handler(handler), m_mode(nullptr)
 {
     if (handler.m_mode_stack.size() != 1)
@@ -1598,7 +1702,9 @@ InputHandler::ScopedForceNormal::ScopedForceNormal(InputHandler& handler, Normal
         m_mode = handler.m_mode_stack.back().get();
     }
 
-    static_cast<InputModes::Normal*>(handler.m_mode_stack.back().get())->m_params = params;
+    static_cast<InputModes::Normal*>(handler.m_mode_stack.back().get())
+        ->m_params
+        = params;
 }
 
 InputHandler::ScopedForceNormal::~ScopedForceNormal()
@@ -1612,9 +1718,9 @@ InputHandler::ScopedForceNormal::~ScopedForceNormal()
         m_handler.pop_mode(m_mode);
     else
     {
-        auto it = find_if(m_handler.m_mode_stack,
-                          [this](const RefPtr<InputMode>& m)
-                          { return m.get() == m_mode; });
+        auto it = find_if(
+            m_handler.m_mode_stack,
+            [this](const RefPtr<InputMode>& m) { return m.get() == m_mode; });
         kak_assert(it != m_handler.m_mode_stack.end());
         m_handler.m_mode_stack.erase(it);
     }
@@ -1622,10 +1728,12 @@ InputHandler::ScopedForceNormal::~ScopedForceNormal()
 
 static bool is_valid(Key key)
 {
-    constexpr Key::Modifiers valid_mods = (Key::Modifiers::Control | Key::Modifiers::Alt | Key::Modifiers::Shift);
+    constexpr Key::Modifiers valid_mods
+        = (Key::Modifiers::Control | Key::Modifiers::Alt
+           | Key::Modifiers::Shift);
 
-    return key != Key::Invalid and
-        ((key.modifiers & ~valid_mods) or key.key <= 0x10FFFF);
+    return key != Key::Invalid
+           and ((key.modifiers & ~valid_mods) or key.key <= 0x10FFFF);
 }
 
 void InputHandler::handle_key(Key key)
@@ -1635,7 +1743,7 @@ void InputHandler::handle_key(Key key)
 
     const bool was_recording = is_recording();
     ++m_handle_key_level;
-    auto dec = on_scope_end([this]{ --m_handle_key_level; });
+    auto dec = on_scope_end([this] { --m_handle_key_level; });
 
     auto process_key = [&](Key key) {
         if (m_last_insert.recording)
@@ -1645,7 +1753,8 @@ void InputHandler::handle_key(Key key)
 
     const auto keymap_mode = current_mode().keymap_mode();
     KeymapManager& keymaps = m_context.keymaps();
-    if (keymaps.is_mapped(key, keymap_mode) and not m_context.keymaps_disabled())
+    if (keymaps.is_mapped(key, keymap_mode)
+        and not m_context.keymaps_disabled())
     {
         ScopedSetBool disable_history{context().history_disabled()};
         for (auto& k : keymaps.get_mapping(key, keymap_mode).keys)
@@ -1656,13 +1765,14 @@ void InputHandler::handle_key(Key key)
 
     // do not record the key that made us enter or leave recording mode,
     // and the ones that are triggered recursively by previous keys.
-    if (was_recording and is_recording() and m_handle_key_level == m_recording_level)
+    if (was_recording and is_recording()
+        and m_handle_key_level == m_recording_level)
         m_recorded_keys += key_to_str(key);
 
     if (m_handle_key_level < m_recording_level)
     {
         write_to_debug_buffer("Macro recording started but not finished");
-        m_recording_reg = 0;
+        m_recording_reg   = 0;
         m_recording_level = -1;
     }
 }
@@ -1671,24 +1781,21 @@ void InputHandler::start_recording(char reg)
 {
     kak_assert(m_recording_reg == 0);
     m_recording_level = m_handle_key_level;
-    m_recorded_keys = "";
-    m_recording_reg = reg;
+    m_recorded_keys   = "";
+    m_recording_reg   = reg;
 }
 
-bool InputHandler::is_recording() const
-{
-    return m_recording_reg != 0;
-}
+bool InputHandler::is_recording() const { return m_recording_reg != 0; }
 
 void InputHandler::stop_recording()
 {
     kak_assert(m_recording_reg != 0);
 
     if (not m_recorded_keys.empty())
-        RegisterManager::instance()[m_recording_reg].set(
-            context(), {m_recorded_keys});
+        RegisterManager::instance()[m_recording_reg].set(context(),
+                                                         {m_recorded_keys});
 
-    m_recording_reg = 0;
+    m_recording_reg   = 0;
     m_recording_level = -1;
 }
 
@@ -1702,10 +1809,11 @@ std::pair<CursorMode, DisplayCoord> InputHandler::get_cursor_info() const
     return current_mode().get_cursor_info();
 }
 
-bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context)
+bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask,
+                        const Context& context)
 {
-    if (not (context.options()["autoinfo"].get<AutoInfo>() & mask) or
-        not context.has_client())
+    if (not(context.options()["autoinfo"].get<AutoInfo>() & mask)
+        or not context.has_client())
         return false;
 
     context.client().info_show(title.str(), info.str(), {}, InfoStyle::Prompt);
@@ -1726,25 +1834,28 @@ void scroll_window(Context& context, LineCount offset)
     DisplayCoord win_pos = window.position();
     DisplayCoord win_dim = window.dimensions();
 
-    const DisplayCoord max_offset{(win_dim.line - 1)/2, (win_dim.column - 1)/2};
-    const DisplayCoord scrolloff =
-        std::min(context.options()["scrolloff"].get<DisplayCoord>(), max_offset);
+    const DisplayCoord max_offset{(win_dim.line - 1) / 2,
+                                  (win_dim.column - 1) / 2};
+    const DisplayCoord scrolloff = std::min(
+        context.options()["scrolloff"].get<DisplayCoord>(), max_offset);
 
     const LineCount line_count = buffer.line_count();
-    win_pos.line = clamp(win_pos.line + offset, 0_line, line_count-1);
+    win_pos.line = clamp(win_pos.line + offset, 0_line, line_count - 1);
 
     SelectionList& selections = context.selections();
-    const BufferCoord cursor = selections.main().cursor();
+    const BufferCoord cursor  = selections.main().cursor();
 
     auto line = clamp(cursor.line, win_pos.line + scrolloff.line,
                       win_pos.line + win_dim.line - 1 - scrolloff.line);
-    line = clamp(line, 0_line, line_count-1);
+    line      = clamp(line, 0_line, line_count - 1);
 
-    using std::min; using std::max;
+    using std::max;
+    using std::min;
     // This is not exactly a clamp, and must be done in this order as
     // byte_count_to could return line length
-    auto col = min(max(cursor.column, buffer[line].byte_count_to(win_pos.column)),
-                   buffer[line].length()-1);
+    auto col
+        = min(max(cursor.column, buffer[line].byte_count_to(win_pos.column)),
+              buffer[line].length() - 1);
 
     selections = SelectionList{buffer, BufferCoord{line, col}};
     window.set_position(win_pos);
