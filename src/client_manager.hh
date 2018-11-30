@@ -24,7 +24,7 @@ public:
                           Optional<BufferCoord> init_coord,
                           Client::OnExitCallback on_exit);
 
-    bool   empty() const { return m_clients.empty(); }
+    bool empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
 
     void clear();
@@ -32,19 +32,20 @@ public:
     void ensure_no_client_uses_buffer(Buffer& buffer);
 
     WindowAndSelections get_free_window(Buffer& buffer);
-    void add_free_window(std::unique_ptr<Window>&& window, SelectionList selections);
+    void add_free_window(std::unique_ptr<Window>&& window,
+                         SelectionList selections);
 
     void redraw_clients() const;
     void process_pending_inputs() const;
     bool has_pending_inputs() const;
 
-    Client*  get_client_ifp(StringView name);
-    Client&  get_client(StringView name);
+    Client* get_client_ifp(StringView name);
+    Client& get_client(StringView name);
     bool client_name_exists(StringView name) const;
     void remove_client(Client& client, bool graceful, int status);
 
     using ClientList = Vector<std::unique_ptr<Client>, MemoryDomain::Client>;
-    using iterator = ClientList::const_iterator;
+    using iterator   = ClientList::const_iterator;
 
     iterator begin() const { return m_clients.begin(); }
     iterator end() const { return m_clients.end(); }
@@ -54,6 +55,7 @@ public:
 
     void clear_window_trash();
     void clear_client_trash();
+
 private:
     String generate_name() const;
 

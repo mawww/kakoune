@@ -24,12 +24,10 @@ namespace Kakoune
 {
 
 Client::Client(std::unique_ptr<UserInterface>&& ui,
-               std::unique_ptr<Window>&& window,
-               SelectionList selections, int pid,
-               EnvVarMap env_vars,
-               String name,
-               OnExitCallback on_exit)
-    : m_ui{std::move(ui)}, m_window{std::move(window)},
+               std::unique_ptr<Window>&& window, SelectionList selections,
+               int pid, EnvVarMap env_vars, String name, OnExitCallback on_exit)
+    : m_ui{std::move(ui)},
+      m_window{std::move(window)},
       m_pid{pid},
       m_on_exit{std::move(on_exit)},
       m_input_handler{std::move(selections), Context::Flags::None,
@@ -44,7 +42,8 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
     m_window->set_dimensions(m_ui->dimensions());
     m_window->options().register_watcher(*this);
 
-    m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
+    m_ui->set_ui_options(
+        m_window->options()["ui_options"].get<UserInterface::Options>());
     m_ui->set_on_key([this](Key key) {
         if (key == ctrl('c'))
             killpg(getpgrp(), SIGINT);
@@ -57,7 +56,8 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
             m_pending_keys.push_back(key);
     });
 
-    m_window->hooks().run_hook(Hook::WinDisplay, m_window->buffer().name(), context());
+    m_window->hooks().run_hook(Hook::WinDisplay, m_window->buffer().name(),
+                               context());
 
     force_redraw();
 }
@@ -72,14 +72,13 @@ Client::~Client()
                                               context().selections());
 }
 
-bool Client::is_ui_ok() const
-{
-    return m_ui->is_ok();
-}
+bool Client::is_ui_ok() const { return m_ui->is_ok(); }
 
 bool Client::process_pending_inputs()
 {
-    const bool debug_keys = (bool)(context().options()["debug"].get<DebugFlags>() & DebugFlags::Keys);
+    const bool debug_keys
+        = (bool)(context().options()["debug"].get<DebugFlags>()
+                 & DebugFlags::Keys);
     // steal keys as we might receive new keys while handling them.
     Vector<Key, MemoryDomain::Client> keys = std::move(m_pending_keys);
     for (auto& key : keys)
@@ -88,23 +87,28 @@ bool Client::process_pending_inputs()
         {
             if (debug_keys)
                 write_to_debug_buffer(format("Client '{}' got key '{}'",
-                                             context().name(), key_to_str(key)));
+                                             context().name(),
+                                             key_to_str(key)));
 
             if (key == Key::FocusIn)
-                context().hooks().run_hook(Hook::FocusIn, context().name(), context());
+                context().hooks().run_hook(Hook::FocusIn, context().name(),
+                                           context());
             else if (key == Key::FocusOut)
-                context().hooks().run_hook(Hook::FocusOut, context().name(), context());
+                context().hooks().run_hook(Hook::FocusOut, context().name(),
+                                           context());
             else
                 m_input_handler.handle_key(key);
 
-            context().hooks().run_hook(Hook::RawKey, key_to_str(key), context());
+            context().hooks().run_hook(Hook::RawKey, key_to_str(key),
+                                       context());
         }
         catch (Kakoune::runtime_error& error)
         {
             write_to_debug_buffer(format("Error: {}", error.what()));
-            context().print_status({ fix_atom_text(error.what().str()),
-                                     context().faces()["Error"] });
-            context().hooks().run_hook(Hook::RuntimeError, error.what(), context());
+            context().print_status({fix_atom_text(error.what().str()),
+                                    context().faces()["Error"]});
+            context().hooks().run_hook(Hook::RuntimeError, error.what(),
+                                       context());
         }
     }
     return not keys.empty();
@@ -116,11 +120,7 @@ void Client::print_status(DisplayLine status_line)
     m_ui_pending |= StatusLine;
 }
 
-
-DisplayCoord Client::dimensions() const
-{
-    return m_ui->dimensions();
-}
+DisplayCoord Client::dimensions() const { return m_ui->dimensions(); }
 
 String generate_context_info(const Context& context)
 {
@@ -128,10 +128,12 @@ String generate_context_info(const Context& context)
     if (context.buffer().is_modified())
         s += "[+]";
     if (context.client().input_handler().is_recording())
-        s += format("[recording ({})]", context.client().input_handler().recording_reg());
+        s += format("[recording ({})]",
+                    context.client().input_handler().recording_reg());
     if (context.hooks_disabled())
         s += "[no-hooks]";
-    if (not(context.buffer().flags() & (Buffer::Flags::File | Buffer::Flags::Debug)))
+    if (not(context.buffer().flags()
+            & (Buffer::Flags::File | Buffer::Flags::Debug)))
         s += "[scratch]";
     if (context.buffer().flags() & Buffer::Flags::New)
         s += "[new file]";
@@ -147,18 +149,23 @@ DisplayLine Client::generate_mode_line() const
     DisplayLine modeline;
     try
     {
-        const String& modelinefmt = context().options()["modelinefmt"].get<String>();
-        HashMap<String, DisplayLine> atoms{{ "mode_info", context().client().input_handler().mode_line() },
-                                           { "context_info", {generate_context_info(context()),
-                                                              context().faces()["Information"]}}};
+        const String& modelinefmt
+            = context().options()["modelinefmt"].get<String>();
+        HashMap<String, DisplayLine> atoms{
+            {"mode_info", context().client().input_handler().mode_line()},
+            {"context_info",
+             {generate_context_info(context()),
+              context().faces()["Information"]}}};
         auto expanded = expand(modelinefmt, context(), ShellContext{},
                                [](String s) { return escape(s, '{', '\\'); });
-        modeline = parse_display_line(expanded, context().faces(), atoms);
+        modeline      = parse_display_line(expanded, context().faces(), atoms);
     }
     catch (runtime_error& err)
     {
-        write_to_debug_buffer(format("Error while parsing modelinefmt: {}", err.what()));
-        modeline.push_back({ "modelinefmt error, see *debug* buffer", context().faces()["Error"] });
+        write_to_debug_buffer(
+            format("Error while parsing modelinefmt: {}", err.what()));
+        modeline.push_back({"modelinefmt error, see *debug* buffer",
+                            context().faces()["Error"]});
     }
 
     return modeline;
@@ -170,7 +177,8 @@ void Client::change_buffer(Buffer& buffer)
         close_buffer_reload_dialog();
 
     auto* current = &m_window->buffer();
-    m_last_buffer = contains(BufferManager::instance(), current) ? current : nullptr;
+    m_last_buffer
+        = contains(BufferManager::instance(), current) ? current : nullptr;
 
     auto& client_manager = ClientManager::instance();
     m_window->options().unregister_watcher(*this);
@@ -182,7 +190,8 @@ void Client::change_buffer(Buffer& buffer)
     m_window = std::move(ws.window);
     m_window->set_client(this);
     m_window->options().register_watcher(*this);
-    m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
+    m_ui->set_ui_options(
+        m_window->options()["ui_options"].get<UserInterface::Options>());
 
     context().selections_write_only() = std::move(ws.selections);
     context().set_window(*m_window);
@@ -194,9 +203,8 @@ void Client::change_buffer(Buffer& buffer)
 
 static bool is_inline(InfoStyle style)
 {
-    return style == InfoStyle::Inline or
-           style == InfoStyle::InlineAbove or
-           style == InfoStyle::InlineBelow;
+    return style == InfoStyle::Inline or style == InfoStyle::InlineAbove
+           or style == InfoStyle::InlineBelow;
 }
 
 void Client::redraw_ifn()
@@ -218,16 +226,18 @@ void Client::redraw_ifn()
     auto& faces = context().faces();
 
     if (m_ui_pending & Draw)
-        m_ui->draw(window.update_display_buffer(context()),
-                   faces["Default"], faces["BufferPadding"]);
+        m_ui->draw(window.update_display_buffer(context()), faces["Default"],
+                   faces["BufferPadding"]);
 
-    const bool update_menu_anchor = (m_ui_pending & Draw) and not (m_ui_pending & MenuHide) and
-                                    not m_menu.items.empty() and m_menu.style == MenuStyle::Inline;
+    const bool update_menu_anchor
+        = (m_ui_pending & Draw) and not(m_ui_pending & MenuHide)
+          and not m_menu.items.empty() and m_menu.style == MenuStyle::Inline;
     if ((m_ui_pending & MenuShow) or update_menu_anchor)
     {
-        auto anchor = m_menu.style == MenuStyle::Inline ?
-            window.display_position(m_menu.anchor) : DisplayCoord{};
-        if (not (m_ui_pending & MenuShow) and m_menu.ui_anchor != anchor)
+        auto anchor = m_menu.style == MenuStyle::Inline
+                          ? window.display_position(m_menu.anchor)
+                          : DisplayCoord{};
+        if (not(m_ui_pending & MenuShow) and m_menu.ui_anchor != anchor)
             m_ui_pending |= anchor ? (MenuShow | MenuSelect) : MenuHide;
         m_menu.ui_anchor = anchor;
     }
@@ -241,13 +251,15 @@ void Client::redraw_ifn()
     if (m_ui_pending & MenuHide)
         m_ui->menu_hide();
 
-    const bool update_info_anchor = (m_ui_pending & Draw) and not (m_ui_pending & InfoHide) and
-                                    not m_info.content.empty() and is_inline(m_info.style);
+    const bool update_info_anchor
+        = (m_ui_pending & Draw) and not(m_ui_pending & InfoHide)
+          and not m_info.content.empty() and is_inline(m_info.style);
     if ((m_ui_pending & InfoShow) or update_info_anchor)
     {
-        auto anchor = is_inline(m_info.style) ?
-             window.display_position(m_info.anchor) : DisplayCoord{};
-        if (not (m_ui_pending & MenuShow) and m_info.ui_anchor != anchor)
+        auto anchor = is_inline(m_info.style)
+                          ? window.display_position(m_info.anchor)
+                          : DisplayCoord{};
+        if (not(m_ui_pending & MenuShow) and m_info.ui_anchor != anchor)
             m_ui_pending |= anchor ? InfoShow : InfoHide;
         m_info.ui_anchor = anchor;
     }
@@ -270,9 +282,9 @@ void Client::redraw_ifn()
 
 void Client::force_redraw()
 {
-    m_ui_pending |= Refresh | Draw | StatusLine |
-        (m_menu.items.empty() ? MenuHide : MenuShow | MenuSelect) |
-        (m_info.content.empty() ? InfoHide : InfoShow);
+    m_ui_pending |= Refresh | Draw | StatusLine
+                    | (m_menu.items.empty() ? MenuHide : MenuShow | MenuSelect)
+                    | (m_info.content.empty() ? InfoHide : InfoShow);
 }
 
 void Client::reload_buffer()
@@ -281,15 +293,16 @@ void Client::reload_buffer()
     try
     {
         reload_file_buffer(buffer);
-        context().print_status({ format("'{}' reloaded", buffer.display_name()),
-                                 context().faces()["Information"] });
+        context().print_status({format("'{}' reloaded", buffer.display_name()),
+                                context().faces()["Information"]});
 
         m_window->hooks().run_hook(Hook::BufReload, buffer.name(), context());
     }
     catch (runtime_error& error)
     {
-        context().print_status({ format("error while reloading buffer: '{}'", error.what()),
-                                 context().faces()["Error"] });
+        context().print_status(
+            {format("error while reloading buffer: '{}'", error.what()),
+             context().faces()["Error"]});
         buffer.set_fs_timestamp(get_fs_timestamp(buffer.name()));
     }
 }
@@ -302,7 +315,8 @@ void Client::on_buffer_reload_key(Key key)
         auto* option = &context().options()["autoreload"];
         // Do not touch global autoreload, set it at least at buffer level
         if (&option->manager() == &GlobalScope::instance().options())
-            option = &context().buffer().options().get_local_option("autoreload");
+            option
+                = &context().buffer().options().get_local_option("autoreload");
         option->set(autoreload);
     };
 
@@ -316,23 +330,25 @@ void Client::on_buffer_reload_key(Key key)
     {
         // reread timestamp in case the file was modified again
         buffer.set_fs_timestamp(get_fs_timestamp(buffer.name()));
-        print_status({ format("'{}' kept", buffer.display_name()),
-                       context().faces()["Information"] });
+        print_status({format("'{}' kept", buffer.display_name()),
+                      context().faces()["Information"]});
         if (key == 'N')
             set_autoreload(Autoreload::No);
     }
     else
     {
-        print_status({ format("'{}' is not a valid choice", key_to_str(key)),
-                       context().faces()["Error"] });
-        m_input_handler.on_next_key(KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
+        print_status({format("'{}' is not a valid choice", key_to_str(key)),
+                      context().faces()["Error"]});
+        m_input_handler.on_next_key(
+            KeymapMode::None,
+            [this](Key key, Context&) { on_buffer_reload_key(key); });
         return;
     }
 
     for (auto& client : ClientManager::instance())
     {
-        if (&client->context().buffer() == &buffer and
-            client->m_buffer_reload_dialog_opened)
+        if (&client->context().buffer() == &buffer
+            and client->m_buffer_reload_dialog_opened)
             client->close_buffer_reload_dialog();
     }
 }
@@ -352,12 +368,12 @@ void Client::check_if_buffer_needs_reloading()
         return;
 
     Buffer& buffer = context().buffer();
-    auto reload = context().options()["autoreload"].get<Autoreload>();
-    if (not (buffer.flags() & Buffer::Flags::File) or reload == Autoreload::No)
+    auto reload    = context().options()["autoreload"].get<Autoreload>();
+    if (not(buffer.flags() & Buffer::Flags::File) or reload == Autoreload::No)
         return;
 
     const String& filename = buffer.name();
-    timespec ts = get_fs_timestamp(filename);
+    timespec ts            = get_fs_timestamp(filename);
     if (ts == InvalidTime or ts == buffer.fs_timestamp())
         return;
     if (reload == Autoreload::Ask)
@@ -367,10 +383,13 @@ void Client::check_if_buffer_needs_reloading()
                   format("'{}' was modified externally\n"
                          " y, <ret>: reload | n, <esc>: keep\n"
                          " Y: always reload | N: always keep\n",
-                         bufname), {}, InfoStyle::Modal);
+                         bufname),
+                  {}, InfoStyle::Modal);
 
         m_buffer_reload_dialog_opened = true;
-        m_input_handler.on_next_key(KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
+        m_input_handler.on_next_key(
+            KeymapMode::None,
+            [this](Key key, Context&) { on_buffer_reload_key(key); });
     }
     else
         reload_buffer();
@@ -393,9 +412,10 @@ void Client::on_option_changed(const Option& option)
     }
 }
 
-void Client::menu_show(Vector<DisplayLine> choices, BufferCoord anchor, MenuStyle style)
+void Client::menu_show(Vector<DisplayLine> choices, BufferCoord anchor,
+                       MenuStyle style)
 {
-    m_menu = Menu{ std::move(choices), anchor, {}, style, -1 };
+    m_menu = Menu{std::move(choices), anchor, {}, style, -1};
     m_ui_pending |= MenuShow;
     m_ui_pending &= ~MenuHide;
 }
@@ -414,12 +434,14 @@ void Client::menu_hide()
     m_ui_pending &= ~(MenuShow | MenuSelect);
 }
 
-void Client::info_show(String title, String content, BufferCoord anchor, InfoStyle style)
+void Client::info_show(String title, String content, BufferCoord anchor,
+                       InfoStyle style)
 {
-    if (m_info.style == InfoStyle::Modal) // We already have a modal info opened, do not touch it.
+    if (m_info.style == InfoStyle::Modal) // We already have a modal info
+                                          // opened, do not touch it.
         return;
 
-    m_info = Info{ std::move(title), std::move(content), anchor, {}, style };
+    m_info = Info{std::move(title), std::move(content), anchor, {}, style};
     m_ui_pending |= InfoShow;
     m_ui_pending &= ~InfoHide;
 }

@@ -10,38 +10,23 @@ namespace Kakoune
 {
 
 static constexpr const char* color_names[] = {
-    "default",
-    "black",
-    "red",
-    "green",
-    "yellow",
-    "blue",
-    "magenta",
-    "cyan",
-    "white",
-    "bright-black",
-    "bright-red",
-    "bright-green",
-    "bright-yellow",
-    "bright-blue",
-    "bright-magenta",
-    "bright-cyan",
-    "bright-white",
+    "default",       "black",        "red",
+    "green",         "yellow",       "blue",
+    "magenta",       "cyan",         "white",
+    "bright-black",  "bright-red",   "bright-green",
+    "bright-yellow", "bright-blue",  "bright-magenta",
+    "bright-cyan",   "bright-white",
 };
 
-bool is_color_name(StringView color)
-{
-    return contains(color_names, color);
-}
+bool is_color_name(StringView color) { return contains(color_names, color); }
 
 Color str_to_color(StringView color)
 {
-    auto it = find_if(color_names, [&](const char* c){ return color == c; });
+    auto it = find_if(color_names, [&](const char* c) { return color == c; });
     if (it != std::end(color_names))
         return static_cast<Color::NamedColor>(it - color_names);
 
-    auto hval = [&color](char c) -> int
-    {
+    auto hval = [&color](char c) -> int {
         if (c >= 'A' and c <= 'F')
             return 10 + c - 'A';
         else if (c >= 'a' and c <= 'f')
@@ -52,9 +37,9 @@ Color str_to_color(StringView color)
     };
 
     if (color.length() == 10 and color.substr(0_byte, 4_byte) == "rgb:")
-        return { (unsigned char)(hval(color[4]) * 16 + hval(color[5])),
-                 (unsigned char)(hval(color[6]) * 16 + hval(color[7])),
-                 (unsigned char)(hval(color[8]) * 16 + hval(color[9])) };
+        return {(unsigned char)(hval(color[4]) * 16 + hval(color[5])),
+                (unsigned char)(hval(color[6]) * 16 + hval(color[7])),
+                (unsigned char)(hval(color[8]) * 16 + hval(color[9]))};
 
     throw runtime_error(format("unable to parse color: '{}'", color));
     return Color::Default;
@@ -76,10 +61,7 @@ String to_string(Color color)
     }
 }
 
-String option_to_string(Color color)
-{
-    return to_string(color);
-}
+String option_to_string(Color color) { return to_string(color); }
 
 Color option_from_string(Meta::Type<Color>, StringView str)
 {

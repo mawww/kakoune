@@ -14,11 +14,10 @@ struct Selection
     static constexpr MemoryDomain Domain = MemoryDomain::Selections;
 
     Selection() = default;
-    Selection(BufferCoord pos) : Selection(pos,pos) {}
-    Selection(BufferCoord anchor, BufferCoord cursor,
-              CaptureList captures = {})
-        : m_anchor{anchor}, m_cursor{cursor},
-          m_captures(std::move(captures)) {}
+    Selection(BufferCoord pos) : Selection(pos, pos) {}
+    Selection(BufferCoord anchor, BufferCoord cursor, CaptureList captures = {})
+        : m_anchor{anchor}, m_cursor{cursor}, m_captures(std::move(captures))
+    {}
 
     BufferCoord& anchor() { return m_anchor; }
     BufferCoordAndTarget& cursor() { return m_cursor; }
@@ -37,14 +36,21 @@ struct Selection
     CaptureList& captures() { return m_captures; }
     const CaptureList& captures() const { return m_captures; }
 
-    bool operator== (const Selection& other) const
+    bool operator==(const Selection& other) const
     {
         return m_anchor == other.m_anchor and m_cursor == other.m_cursor;
     }
 
-    // When selections are single char, we want the anchor to be considered min, and cursor max
-    const BufferCoord& min() const { return m_anchor <= m_cursor ? m_anchor : m_cursor; }
-    const BufferCoord& max() const { return m_anchor <= m_cursor ? m_cursor : m_anchor; }
+    // When selections are single char, we want the anchor to be considered min,
+    // and cursor max
+    const BufferCoord& min() const
+    {
+        return m_anchor <= m_cursor ? m_anchor : m_cursor;
+    }
+    const BufferCoord& max() const
+    {
+        return m_anchor <= m_cursor ? m_cursor : m_anchor;
+    }
 
     BufferCoord& min() { return m_anchor <= m_cursor ? m_anchor : m_cursor; }
     BufferCoord& max() { return m_anchor <= m_cursor ? m_cursor : m_anchor; }
@@ -91,8 +97,10 @@ struct SelectionList
     SelectionList(Buffer& buffer, Vector<Selection> s);
     SelectionList(Buffer& buffer, Vector<Selection> s, size_t timestamp);
 
-    struct UnsortedTag {};
-    SelectionList(UnsortedTag, Buffer& buffer, Vector<Selection> s, size_t timestamp, size_t main);
+    struct UnsortedTag
+    {};
+    SelectionList(UnsortedTag, Buffer& buffer, Vector<Selection> s,
+                  size_t timestamp, size_t main);
 
     void update();
 
@@ -101,7 +109,11 @@ struct SelectionList
     const Selection& main() const { return (*this)[m_main]; }
     Selection& main() { return (*this)[m_main]; }
     size_t main_index() const { return m_main; }
-    void set_main_index(size_t main) { kak_assert(main < size()); m_main = main; }
+    void set_main_index(size_t main)
+    {
+        kak_assert(main < size());
+        m_main = main;
+    }
 
     void push_back(const Selection& sel) { m_selections.push_back(sel); }
     void push_back(Selection&& sel) { m_selections.push_back(std::move(sel)); }
@@ -112,7 +124,7 @@ struct SelectionList
     void set(Vector<Selection> list, size_t main);
     SelectionList& operator=(Vector<Selection> list)
     {
-        const size_t main_index = list.size()-1;
+        const size_t main_index = list.size() - 1;
         set(std::move(list), main_index);
         return *this;
     }
@@ -129,8 +141,15 @@ struct SelectionList
 
     size_t size() const { return m_selections.size(); }
 
-    bool operator==(const SelectionList& other) const { return m_buffer == other.m_buffer and m_selections == other.m_selections; }
-    bool operator!=(const SelectionList& other) const { return not ((*this) == other); }
+    bool operator==(const SelectionList& other) const
+    {
+        return m_buffer == other.m_buffer
+               and m_selections == other.m_selections;
+    }
+    bool operator!=(const SelectionList& other) const
+    {
+        return not((*this) == other);
+    }
 
     void sort();
     void merge_overlapping();
@@ -158,7 +177,8 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp);
 String selection_to_string(const Selection& selection);
 String selection_list_to_string(const SelectionList& selection);
 Selection selection_from_string(StringView desc);
-SelectionList selection_list_from_string(Buffer& buffer, ConstArrayView<String> descs);
+SelectionList selection_list_from_string(Buffer& buffer,
+                                         ConstArrayView<String> descs);
 
 }
 

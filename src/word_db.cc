@@ -12,7 +12,7 @@ namespace Kakoune
 WordDB& get_word_db(const Buffer& buffer)
 {
     static const ValueId word_db_id = get_free_value_id();
-    Value& cache_val = buffer.values()[word_db_id];
+    Value& cache_val                = buffer.values()[word_db_id];
     if (not cache_val)
         cache_val = Value(WordDB{buffer});
     return cache_val.as<WordDB>();
@@ -24,29 +24,39 @@ struct WordSplitter
     {
         Iterator(const char* begin, const WordSplitter& splitter)
             : m_word_begin{begin}, m_word_end{begin}, m_splitter{&splitter}
-        { operator++(); }
+        {
+            operator++();
+        }
 
         StringView operator*() const { return {m_word_begin, m_word_end}; }
 
         Iterator& operator++()
         {
-            const auto* end = m_splitter->m_content.end();
+            const auto* end  = m_splitter->m_content.end();
             auto extra_chars = m_splitter->m_extra_word_chars;
 
             m_word_begin = m_word_end;
-            while (m_word_begin != end and not is_word(utf8::codepoint(m_word_begin, end), extra_chars))
+            while (m_word_begin != end
+                   and not is_word(utf8::codepoint(m_word_begin, end),
+                                   extra_chars))
                 utf8::to_next(m_word_begin, end);
             m_word_end = m_word_begin;
-            while (m_word_end != end and is_word(utf8::codepoint(m_word_end, end), extra_chars))
+            while (m_word_end != end
+                   and is_word(utf8::codepoint(m_word_end, end), extra_chars))
                 utf8::to_next(m_word_end, end);
             return *this;
         }
 
         friend bool operator==(const Iterator& lhs, const Iterator& rhs)
-        { return lhs.m_word_begin == rhs.m_word_begin and lhs.m_word_end == rhs.m_word_end; }
+        {
+            return lhs.m_word_begin == rhs.m_word_begin
+                   and lhs.m_word_end == rhs.m_word_end;
+        }
 
         friend bool operator!=(const Iterator& lhs, const Iterator& rhs)
-        { return not (lhs == rhs); }
+        {
+            return not(lhs == rhs);
+        }
 
         const char* m_word_begin;
         const char* m_word_end;
@@ -57,12 +67,13 @@ struct WordSplitter
     ConstArrayView<Codepoint> m_extra_word_chars;
 
     Iterator begin() const { return {m_content.begin(), *this}; }
-    Iterator end()   const { return {m_content.end(), *this}; }
+    Iterator end() const { return {m_content.end(), *this}; }
 };
 
 static ConstArrayView<Codepoint> get_extra_word_chars(const Buffer& buffer)
 {
-    return buffer.options()["extra_word_chars"].get<Vector<Codepoint, MemoryDomain::Options>>();
+    return buffer.options()["extra_word_chars"]
+        .get<Vector<Codepoint, MemoryDomain::Options>>();
 }
 
 void WordDB::add_words(StringView line)
@@ -92,8 +103,7 @@ void WordDB::remove_words(StringView line)
     }
 }
 
-WordDB::WordDB(const Buffer& buffer)
-    : m_buffer{&buffer}
+WordDB::WordDB(const Buffer& buffer) : m_buffer{&buffer}
 {
     buffer.options().register_watcher(*this);
     rebuild_db();
@@ -149,8 +159,10 @@ void WordDB::update_db()
     auto old_line = 0_line;
     for (auto& modif : modifs)
     {
-        kak_assert(0_line <= modif.new_line and modif.new_line <= buffer.line_count());
-        kak_assert(modif.new_line < buffer.line_count() or modif.num_added == 0);
+        kak_assert(0_line <= modif.new_line
+                   and modif.new_line <= buffer.line_count());
+        kak_assert(modif.new_line < buffer.line_count()
+                   or modif.num_added == 0);
         kak_assert(old_line <= modif.old_line);
         while (old_line < modif.old_line)
             new_lines.push_back(std::move(m_lines[(int)old_line++]));
@@ -203,16 +215,16 @@ RankedMatchList WordDB::find_matching(StringView query)
     return res;
 }
 
-UnitTest test_word_db{[]()
-{
+UnitTest test_word_db{[]() {
     auto cmp_words = [](const RankedMatch& lhs, const RankedMatch& rhs) {
         return lhs.candidate() < rhs.candidate();
     };
 
     using WordList = Vector<StringView>;
-    auto eq = [](ArrayView<const RankedMatch> lhs, const WordList& rhs) {
-        return lhs.size() == rhs.size() and
-            std::equal(lhs.begin(), lhs.end(), rhs.begin(),
+    auto eq        = [](ArrayView<const RankedMatch> lhs, const WordList& rhs) {
+        return lhs.size() == rhs.size()
+               and std::equal(
+                       lhs.begin(), lhs.end(), rhs.begin(),
                        [](const RankedMatch& lhs, const StringView& rhs) {
                            return lhs.candidate() == rhs;
                        });
@@ -227,17 +239,17 @@ UnitTest test_word_db{[]()
     WordDB word_db(buffer);
     auto res = word_db.find_matching("");
     std::sort(res.begin(), res.end(), cmp_words);
-    kak_assert(eq(res, WordList{ "allo", "kanaky", "mutch", "tchaa", "tchou" }));
+    kak_assert(eq(res, WordList{"allo", "kanaky", "mutch", "tchaa", "tchou"}));
     kak_assert(word_db.get_word_occurences("tchou") == 3);
     kak_assert(word_db.get_word_occurences("allo") == 1);
     buffer.erase({1, 6}, {4, 0});
     res = word_db.find_matching("");
     std::sort(res.begin(), res.end(), cmp_words);
-    kak_assert(eq(res, WordList{ "allo", "mutch", "tchou" }));
+    kak_assert(eq(res, WordList{"allo", "mutch", "tchou"}));
     buffer.insert({1, 0}, "re");
     res = word_db.find_matching("");
     std::sort(res.begin(), res.end(), cmp_words);
-    kak_assert(eq(res, WordList{ "allo", "mutch", "retchou", "tchou" }));
+    kak_assert(eq(res, WordList{"allo", "mutch", "retchou", "tchou"}));
 }};
 
 }

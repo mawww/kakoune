@@ -53,26 +53,33 @@ BufferCoord ForwardChangesTracker::get_new_coord(BufferCoord coord) const
     return coord;
 }
 
-BufferCoord ForwardChangesTracker::get_new_coord_tolerant(BufferCoord coord) const
+BufferCoord ForwardChangesTracker::get_new_coord_tolerant(
+    BufferCoord coord) const
 {
     if (coord < old_pos)
         return cur_pos;
     return get_new_coord(coord);
 }
 
-bool ForwardChangesTracker::relevant(const Buffer::Change& change, BufferCoord old_coord) const
+bool ForwardChangesTracker::relevant(const Buffer::Change& change,
+                                     BufferCoord old_coord) const
 {
     auto new_coord = get_new_coord_tolerant(old_coord);
     return change.type == Buffer::Change::Insert ? change.begin <= new_coord
                                                  : change.begin < new_coord;
 }
 
-const Buffer::Change* forward_sorted_until(const Buffer::Change* first, const Buffer::Change* last)
+const Buffer::Change* forward_sorted_until(const Buffer::Change* first,
+                                           const Buffer::Change* last)
 {
-    if (first != last) {
+    if (first != last)
+    {
         const Buffer::Change* next = first;
-        while (++next != last) {
-            const auto& ref = first->type == Buffer::Change::Insert ? first->end : first->begin;
+        while (++next != last)
+        {
+            const auto& ref = first->type == Buffer::Change::Insert
+                                  ? first->end
+                                  : first->begin;
             if (next->begin <= ref)
                 return next;
             first = next;
@@ -81,11 +88,14 @@ const Buffer::Change* forward_sorted_until(const Buffer::Change* first, const Bu
     return last;
 }
 
-const Buffer::Change* backward_sorted_until(const Buffer::Change* first, const Buffer::Change* last)
+const Buffer::Change* backward_sorted_until(const Buffer::Change* first,
+                                            const Buffer::Change* last)
 {
-    if (first != last) {
+    if (first != last)
+    {
         const Buffer::Change* next = first;
-        while (++next != last) {
+        while (++next != last)
+        {
             if (first->begin < next->end)
                 return next;
             first = next;

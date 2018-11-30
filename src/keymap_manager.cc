@@ -10,10 +10,11 @@
 namespace Kakoune
 {
 
-void KeymapManager::map_key(Key key, KeymapMode mode,
-                            KeyList mapping, String docstring)
+void KeymapManager::map_key(Key key, KeymapMode mode, KeyList mapping,
+                            String docstring)
 {
-    m_mapping[KeyAndMode{key, mode}] = {std::move(mapping), std::move(docstring)};
+    m_mapping[KeyAndMode{key, mode}]
+        = {std::move(mapping), std::move(docstring)};
 }
 
 void KeymapManager::unmap_key(Key key, KeymapMode mode)
@@ -36,12 +37,12 @@ void KeymapManager::unmap_keys(KeymapMode mode)
 
 bool KeymapManager::is_mapped(Key key, KeymapMode mode) const
 {
-    return m_mapping.find(KeyAndMode{key, mode}) != m_mapping.end() or
-           (m_parent and m_parent->is_mapped(key, mode));
+    return m_mapping.find(KeyAndMode{key, mode}) != m_mapping.end()
+           or (m_parent and m_parent->is_mapped(key, mode));
 }
 
-const KeymapManager::KeymapInfo&
-KeymapManager::get_mapping(Key key, KeymapMode mode) const
+const KeymapManager::KeymapInfo& KeymapManager::get_mapping(
+    Key key, KeymapMode mode) const
 {
     auto it = m_mapping.find(KeyAndMode{key, mode});
     if (it != m_mapping.end())
@@ -65,13 +66,16 @@ KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
 
 void KeymapManager::add_user_mode(String user_mode_name)
 {
-    auto modes = {"normal", "insert", "prompt", "menu", "goto", "view", "user", "object"};
+    auto modes = {"normal", "insert", "prompt", "menu",
+                  "goto",   "view",   "user",   "object"};
 
     if (contains(modes, user_mode_name))
-        throw runtime_error(format("'{}' is already a regular mode", user_mode_name));
+        throw runtime_error(
+            format("'{}' is already a regular mode", user_mode_name));
 
     if (contains(user_modes(), user_mode_name))
-        throw runtime_error(format("user mode '{}' already defined", user_mode_name));
+        throw runtime_error(
+            format("user mode '{}' already defined", user_mode_name));
 
     if (not all_of(user_mode_name, is_identifier))
         throw runtime_error(format("invalid mode name: '{}'", user_mode_name));

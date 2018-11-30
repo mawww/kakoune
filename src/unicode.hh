@@ -14,10 +14,7 @@ namespace Kakoune
 
 using Codepoint = char32_t;
 
-inline bool is_eol(Codepoint c) noexcept
-{
-    return c == '\n';
-}
+inline bool is_eol(Codepoint c) noexcept { return c == '\n'; }
 
 inline bool is_horizontal_blank(Codepoint c) noexcept
 {
@@ -29,10 +26,15 @@ inline bool is_blank(Codepoint c) noexcept
     return c == ' ' or c == '\t' or c == '\n';
 }
 
-enum WordType { Word, WORD };
+enum WordType
+{
+    Word,
+    WORD
+};
 
 template<WordType word_type = Word>
-inline bool is_word(Codepoint c, ConstArrayView<Codepoint> extra_word_chars = {'_'}) noexcept
+inline bool is_word(Codepoint c,
+                    ConstArrayView<Codepoint> extra_word_chars = {'_'}) noexcept
 {
     return iswalnum((wchar_t)c) or contains(extra_word_chars, c);
 }
@@ -43,9 +45,11 @@ inline bool is_word<WORD>(Codepoint c, ConstArrayView<Codepoint>) noexcept
     return not is_blank(c);
 }
 
-inline bool is_punctuation(Codepoint c, ConstArrayView<Codepoint> extra_word_chars = {'_'}) noexcept
+inline bool is_punctuation(Codepoint c,
+                           ConstArrayView<Codepoint> extra_word_chars
+                           = {'_'}) noexcept
 {
-    return not (is_word(c, extra_word_chars) or is_blank(c));
+    return not(is_word(c, extra_word_chars) or is_blank(c));
 }
 
 inline bool is_basic_alpha(Codepoint c) noexcept
@@ -60,8 +64,7 @@ inline bool is_basic_digit(Codepoint c) noexcept
 
 inline bool is_identifier(Codepoint c) noexcept
 {
-    return is_basic_alpha(c) or is_basic_digit(c) or
-           c == '_' or c == '-';
+    return is_basic_alpha(c) or is_basic_digit(c) or c == '_' or c == '-';
 }
 
 inline ColumnCount codepoint_width(Codepoint c) noexcept
@@ -81,7 +84,8 @@ enum class CharCategories
 };
 
 template<WordType word_type = Word>
-inline CharCategories categorize(Codepoint c, ConstArrayView<Codepoint> extra_word_chars) noexcept
+inline CharCategories categorize(
+    Codepoint c, ConstArrayView<Codepoint> extra_word_chars) noexcept
 {
     if (is_eol(c))
         return CharCategories::EndOfLine;
@@ -92,14 +96,26 @@ inline CharCategories categorize(Codepoint c, ConstArrayView<Codepoint> extra_wo
     return CharCategories::Punctuation;
 }
 
-inline Codepoint to_lower(Codepoint cp) noexcept { return towlower((wchar_t)cp); }
-inline Codepoint to_upper(Codepoint cp) noexcept { return towupper((wchar_t)cp); }
+inline Codepoint to_lower(Codepoint cp) noexcept
+{
+    return towlower((wchar_t)cp);
+}
+inline Codepoint to_upper(Codepoint cp) noexcept
+{
+    return towupper((wchar_t)cp);
+}
 
 inline bool is_lower(Codepoint cp) noexcept { return iswlower((wchar_t)cp); }
 inline bool is_upper(Codepoint cp) noexcept { return iswupper((wchar_t)cp); }
 
-inline char to_lower(char c) noexcept { return c >= 'A' and c <= 'Z' ? c - 'A' + 'a' : c; }
-inline char to_upper(char c) noexcept { return c >= 'a' and c <= 'z' ? c - 'a' + 'A' : c; }
+inline char to_lower(char c) noexcept
+{
+    return c >= 'A' and c <= 'Z' ? c - 'A' + 'a' : c;
+}
+inline char to_upper(char c) noexcept
+{
+    return c >= 'a' and c <= 'z' ? c - 'a' + 'A' : c;
+}
 
 inline bool is_lower(char c) noexcept { return c >= 'a' and c <= 'z'; }
 inline bool is_upper(char c) noexcept { return c >= 'A' and c <= 'Z'; }

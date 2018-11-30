@@ -10,9 +10,9 @@
 #include <utility>
 
 #ifdef SAFE_PTR_TRACK_CALLSTACKS
-#include "backtrace.hh"
-#include "vector.hh"
-#include <algorithm>
+#    include "backtrace.hh"
+#    include "vector.hh"
+#    include <algorithm>
 #endif
 
 namespace Kakoune
@@ -28,9 +28,9 @@ public:
     ~SafeCountable()
     {
         kak_assert(m_count == 0);
-        #ifdef SAFE_PTR_TRACK_CALLSTACKS
+#    ifdef SAFE_PTR_TRACK_CALLSTACKS
         kak_assert(m_callstacks.empty());
-        #endif
+#    endif
     }
 
     SafeCountable(const SafeCountable&) {}
@@ -41,7 +41,7 @@ public:
 
 private:
     friend struct SafeCountablePolicy;
-    #ifdef SAFE_PTR_TRACK_CALLSTACKS
+#    ifdef SAFE_PTR_TRACK_CALLSTACKS
     struct Callstack
     {
         Callstack(void* p) : ptr(p) {}
@@ -50,7 +50,7 @@ private:
     };
 
     mutable Vector<Callstack> m_callstacks;
-    #endif
+#    endif
     mutable int m_count = 0;
 #endif
 };
@@ -61,31 +61,34 @@ struct SafeCountablePolicy
     static void inc_ref(const SafeCountable* sc, void* ptr) noexcept
     {
         ++sc->m_count;
-        #ifdef SAFE_PTR_TRACK_CALLSTACKS
+#    ifdef SAFE_PTR_TRACK_CALLSTACKS
         sc->m_callstacks.emplace_back(ptr);
-        #endif
+#    endif
     }
 
     static void dec_ref(const SafeCountable* sc, void* ptr) noexcept
     {
         --sc->m_count;
         kak_assert(sc->m_count >= 0);
-        #ifdef SAFE_PTR_TRACK_CALLSTACKS
-        auto it = std::find_if(sc->m_callstacks.begin(), sc->m_callstacks.end(),
-                               [=](const SafeCountable::Callstack& cs) { return cs.ptr == ptr; });
+#    ifdef SAFE_PTR_TRACK_CALLSTACKS
+        auto it = std::find_if(
+            sc->m_callstacks.begin(), sc->m_callstacks.end(),
+            [=](const SafeCountable::Callstack& cs) { return cs.ptr == ptr; });
         kak_assert(it != sc->m_callstacks.end());
         sc->m_callstacks.erase(it);
-        #endif
+#    endif
     }
 
-    static void ptr_moved(const SafeCountable* sc, void* from, void* to) noexcept
+    static void ptr_moved(const SafeCountable* sc, void* from,
+                          void* to) noexcept
     {
-        #ifdef SAFE_PTR_TRACK_CALLSTACKS
-        auto it = std::find_if(sc->m_callstacks.begin(), sc->m_callstacks.end(),
-                               [=](const SafeCountable::Callstack& cs) { return cs.ptr == from; });
+#    ifdef SAFE_PTR_TRACK_CALLSTACKS
+        auto it = std::find_if(
+            sc->m_callstacks.begin(), sc->m_callstacks.end(),
+            [=](const SafeCountable::Callstack& cs) { return cs.ptr == from; });
         kak_assert(it != sc->m_callstacks.end());
         it->ptr = to;
-        #endif
+#    endif
     }
 #else
     static void inc_ref(const SafeCountable*, void* ptr) noexcept {}

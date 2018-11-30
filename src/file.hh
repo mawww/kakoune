@@ -48,14 +48,17 @@ struct MappedFile
 
     int fd;
     const char* data;
-    struct stat st {};
+    struct stat st
+    {};
 };
 
-void write_buffer_to_file(Buffer& buffer, StringView filename, bool force = false, bool sync = false);
+void write_buffer_to_file(Buffer& buffer, StringView filename,
+                          bool force = false, bool sync = false);
 void write_buffer_to_fd(Buffer& buffer, int fd, bool sync = false);
 void write_buffer_to_backup_file(Buffer& buffer);
 
-String find_file(StringView filename, StringView buf_dir, ConstArrayView<String> paths);
+String find_file(StringView filename, StringView buf_dir,
+                 ConstArrayView<String> paths);
 bool file_exists(StringView filename);
 
 Vector<String> list_files(StringView directory);
@@ -71,20 +74,20 @@ constexpr bool operator==(const timespec& lhs, const timespec& rhs)
 
 constexpr bool operator!=(const timespec& lhs, const timespec& rhs)
 {
-    return not (lhs == rhs);
+    return not(lhs == rhs);
 }
 
 enum class FilenameFlags
 {
-    None = 0,
+    None            = 0,
     OnlyDirectories = 1 << 0,
-    Expand = 1 << 1
+    Expand          = 1 << 1
 };
 constexpr bool with_bit_ops(Meta::Type<FilenameFlags>) { return true; }
 
 CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,
                                 ByteCount cursor_pos = -1,
-                                FilenameFlags flags = FilenameFlags::None);
+                                FilenameFlags flags  = FilenameFlags::None);
 
 CandidateList complete_command(StringView prefix, ByteCount cursor_pos = -1);
 

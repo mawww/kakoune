@@ -12,26 +12,25 @@ StringView trim_whitespaces(StringView str)
     auto beg = str.begin(), end = str.end();
     while (beg != end and is_blank(*beg))
         ++beg;
-    while (beg != end and is_blank(*(end-1)))
+    while (beg != end and is_blank(*(end - 1)))
         --end;
     return {beg, end};
 }
-
 
 String escape(StringView str, StringView characters, char escape)
 {
     String res;
     res.reserve(str.length());
     auto cbeg = characters.begin(), cend = characters.end();
-    for (auto it = str.begin(), end = str.end(); it != end; )
+    for (auto it = str.begin(), end = str.end(); it != end;)
     {
         auto next = std::find_first_of(it, end, cbeg, cend);
         if (next != end)
         {
-            res += StringView{it, next+1};
+            res += StringView{it, next + 1};
             res.back() = escape;
             res += *next;
-            it = next+1;
+            it = next + 1;
         }
         else
         {
@@ -46,14 +45,15 @@ String unescape(StringView str, StringView characters, char escape)
 {
     String res;
     res.reserve(str.length());
-    for (auto it = str.begin(), end = str.end(); it != end; )
+    for (auto it = str.begin(), end = str.end(); it != end;)
     {
         auto next = std::find(it, end, escape);
-        if (next != end and next+1 != end and contains(characters, *(next+1)))
+        if (next != end and next + 1 != end
+            and contains(characters, *(next + 1)))
         {
-            res += StringView{it, next+1};
-            res.back() = *(next+1);
-            it = next + 2;
+            res += StringView{it, next + 1};
+            res.back() = *(next + 1);
+            it         = next + 2;
         }
         else
         {
@@ -82,7 +82,7 @@ String indent(StringView str, StringView indent)
 String replace(StringView str, StringView substr, StringView replacement)
 {
     String res;
-    for (auto it = str.begin(); it != str.end(); )
+    for (auto it = str.begin(); it != str.end();)
     {
         auto match = std::search(it, str.end(), substr.begin(), substr.end());
         res += StringView{it, match};
@@ -199,7 +199,7 @@ String expand_tabs(StringView line, ColumnCount tabstop, ColumnCount col)
 {
     String res;
     res.reserve(line.length());
-    for (auto it = line.begin(), end = line.end(); it != end; )
+    for (auto it = line.begin(), end = line.end(); it != end;)
     {
         if (*it == '\t')
         {
@@ -211,7 +211,7 @@ String expand_tabs(StringView line, ColumnCount tabstop, ColumnCount col)
         else
         {
             auto char_beg = it;
-            auto cp = utf8::read_codepoint(it, end);
+            auto cp       = utf8::read_codepoint(it, end);
             res += {char_beg, it};
             col += codepoint_width(cp);
         }
@@ -227,7 +227,7 @@ Vector<StringView> wrap_lines(StringView text, ColumnCount max_width)
     using Utf8It = utf8::iterator<const char*>;
     Utf8It it{text.begin(), text};
     Utf8It end{text.end(), text};
-    Utf8It line_begin = it;
+    Utf8It line_begin    = it;
     Utf8It last_word_end = it;
 
     Vector<StringView> lines;
@@ -237,20 +237,23 @@ Vector<StringView> wrap_lines(StringView text, ColumnCount max_width)
         if (cat == CharCategories::EndOfLine)
         {
             lines.emplace_back(line_begin.base(), it.base());
-            line_begin = it = it+1;
+            line_begin = it = it + 1;
             continue;
         }
 
-        Utf8It word_end = it+1;
+        Utf8It word_end = it + 1;
         while (word_end != end and categorize(*word_end, {'_'}) == cat)
             ++word_end;
 
-        while (word_end > line_begin and
-               utf8::column_distance(line_begin.base(), word_end.base()) >= max_width)
+        while (word_end > line_begin
+               and utf8::column_distance(line_begin.base(), word_end.base())
+                       >= max_width)
         {
-            auto line_end = last_word_end <= line_begin ?
-                Utf8It{utf8::advance(line_begin.base(), text.end(), max_width), text}
-              : last_word_end;
+            auto line_end = last_word_end <= line_begin
+                                ? Utf8It{utf8::advance(line_begin.base(),
+                                                       text.end(), max_width),
+                                         text}
+                                : last_word_end;
 
             lines.emplace_back(line_begin.base(), line_end.base());
 
@@ -274,7 +277,8 @@ Vector<StringView> wrap_lines(StringView text, ColumnCount max_width)
 }
 
 template<typename AppendFunc>
-void format_impl(StringView fmt, ArrayView<const StringView> params, AppendFunc append)
+void format_impl(StringView fmt, ArrayView<const StringView> params,
+                 AppendFunc append)
 {
     int implicitIndex = 0;
     for (auto it = fmt.begin(), end = fmt.end(); it != end;)
@@ -285,9 +289,9 @@ void format_impl(StringView fmt, ArrayView<const StringView> params, AppendFunc 
             append(StringView{it, opening});
             break;
         }
-        else if (opening != it and *(opening-1) == '\\')
+        else if (opening != it and *(opening - 1) == '\\')
         {
-            append(StringView{it, opening-1});
+            append(StringView{it, opening - 1});
             append('{');
             it = opening + 1;
         }
@@ -298,22 +302,24 @@ void format_impl(StringView fmt, ArrayView<const StringView> params, AppendFunc 
             if (closing == end)
                 throw runtime_error("format string error, unclosed '{'");
 
-            const int index = (closing == opening + 1) ?
-                implicitIndex : str_to_int({opening+1, closing});
+            const int index = (closing == opening + 1)
+                                  ? implicitIndex
+                                  : str_to_int({opening + 1, closing});
 
             if (index >= params.size())
                 throw runtime_error("format string parameter index too big");
 
             append(params[index]);
-            implicitIndex = index+1;
-            it = closing+1;
+            implicitIndex = index + 1;
+            it            = closing + 1;
         }
     }
 }
 
-StringView format_to(ArrayView<char> buffer, StringView fmt, ArrayView<const StringView> params)
+StringView format_to(ArrayView<char> buffer, StringView fmt,
+                     ArrayView<const StringView> params)
 {
-    char* ptr = buffer.begin();
+    char* ptr       = buffer.begin();
     const char* end = buffer.end();
     format_impl(fmt, params, [&](StringView s) mutable {
         for (auto c : s)
@@ -327,13 +333,14 @@ StringView format_to(ArrayView<char> buffer, StringView fmt, ArrayView<const Str
         throw runtime_error("buffer is too small");
     *ptr = 0;
 
-    return { buffer.begin(), ptr };
+    return {buffer.begin(), ptr};
 }
 
 String format(StringView fmt, ArrayView<const StringView> params)
 {
     ByteCount size = fmt.length();
-    for (auto& s : params) size += s.length();
+    for (auto& s : params)
+        size += s.length();
     String res;
     res.reserve(size);
 
@@ -349,20 +356,21 @@ String double_up(StringView s, StringView characters)
     {
         if (contains(characters, *it))
         {
-            res += StringView{pos, it+1};
+            res += StringView{pos, it + 1};
             res += *it;
-            pos = it+1;
+            pos = it + 1;
         }
     }
     res += StringView{pos, s.end()};
     return res;
 }
 
-UnitTest test_string{[]()
-{
+UnitTest test_string{[]() {
     kak_assert(String("youpi ") + "matin" == "youpi matin");
 
-    Vector<StringView> wrapped = wrap_lines("wrap this paragraph\n respecting whitespaces and much_too_long_words", 16);
+    Vector<StringView> wrapped = wrap_lines(
+        "wrap this paragraph\n respecting whitespaces and much_too_long_words",
+        16);
     kak_assert(wrapped.size() == 6);
     kak_assert(wrapped[0] == "wrap this");
     kak_assert(wrapped[1] == "paragraph");
@@ -377,8 +385,10 @@ UnitTest test_string{[]()
     kak_assert(wrapped2[1] == "unknown");
     kak_assert(wrapped2[2] == "type");
 
-    kak_assert(escape(R"(\youpi:matin:tchou\:)", ":\\", '\\') == R"(\\youpi\:matin\:tchou\\\:)");
-    kak_assert(unescape(R"(\\youpi\:matin\:tchou\\\:)", ":\\", '\\') == R"(\youpi:matin:tchou\:)");
+    kak_assert(escape(R"(\youpi:matin:tchou\:)", ":\\", '\\')
+               == R"(\\youpi\:matin\:tchou\\\:)");
+    kak_assert(unescape(R"(\\youpi\:matin\:tchou\\\:)", ":\\", '\\')
+               == R"(\youpi:matin:tchou\:)");
 
     kak_assert(prefix_match("tchou kanaky", "tchou"));
     kak_assert(prefix_match("tchou kanaky", "tchou kanaky"));
@@ -390,7 +400,8 @@ UnitTest test_string{[]()
     kak_assert(subsequence_match("tchou kanaky", "tchou kanaky"));
     kak_assert(not subsequence_match("tchou kanaky", "tchou  kanaky"));
 
-    kak_assert(format("Youhou {1} {} {0} \\{}", 10, "hehe", 5) == "Youhou hehe 5 10 {}");
+    kak_assert(format("Youhou {1} {} {0} \\{}", 10, "hehe", 5)
+               == "Youhou hehe 5 10 {}");
 
     char buffer[20];
     kak_assert(format_to(buffer, "Hey {}", 15) == "Hey 15");

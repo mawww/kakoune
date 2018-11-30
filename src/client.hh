@@ -24,14 +24,11 @@ enum class MenuStyle;
 class Client final : public SafeCountable, public OptionManagerWatcher
 {
 public:
-    using OnExitCallback = std::function<void (int status)>;
+    using OnExitCallback = std::function<void(int status)>;
 
     Client(std::unique_ptr<UserInterface>&& ui,
-           std::unique_ptr<Window>&& window,
-           SelectionList selections,
-           int pid, EnvVarMap env_vars,
-           String name,
-           OnExitCallback on_exit);
+           std::unique_ptr<Window>&& window, SelectionList selections, int pid,
+           EnvVarMap env_vars, String name, OnExitCallback on_exit);
     ~Client();
 
     Client(Client&&) = delete;
@@ -41,11 +38,13 @@ public:
     bool process_pending_inputs();
     bool has_pending_inputs() const { return not m_pending_keys.empty(); }
 
-    void menu_show(Vector<DisplayLine> choices, BufferCoord anchor, MenuStyle style);
+    void menu_show(Vector<DisplayLine> choices, BufferCoord anchor,
+                   MenuStyle style);
     void menu_select(int selected);
     void menu_hide();
 
-    void info_show(String title, String content, BufferCoord anchor, InfoStyle style);
+    void info_show(String title, String content, BufferCoord anchor,
+                   InfoStyle style);
     void info_hide(bool even_modal = false);
 
     void print_status(DisplayLine status_line);
@@ -145,13 +144,11 @@ enum class Autoreload
 
 constexpr auto enum_desc(Meta::Type<Autoreload>)
 {
-    return make_array<EnumDesc<Autoreload>, 5>({
-        { Autoreload::Yes, "yes" },
-        { Autoreload::No, "no" },
-        { Autoreload::Ask, "ask" },
-        { Autoreload::Yes, "true" },
-        { Autoreload::No, "false" }
-    });
+    return make_array<EnumDesc<Autoreload>, 5>({{Autoreload::Yes, "yes"},
+                                                {Autoreload::No, "no"},
+                                                {Autoreload::Ask, "ask"},
+                                                {Autoreload::Yes, "true"},
+                                                {Autoreload::No, "false"}});
 }
 
 }

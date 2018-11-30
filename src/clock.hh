@@ -6,7 +6,7 @@
 namespace Kakoune
 {
 
-using Clock = std::chrono::steady_clock;
+using Clock     = std::chrono::steady_clock;
 using TimePoint = Clock::time_point;
 
 }

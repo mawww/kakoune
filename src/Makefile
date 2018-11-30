@@ -25,6 +25,7 @@ version ?= $(shell if [ -f .version ]; then cat .version; elif  [ -d ../.git ]; 
 sources := $(sort $(wildcard *.cc))
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
 deps := $(addprefix ., $(sources:.cc=$(suffix).d))
+headers := $(sort $(wildcard *.hh))
 
 PKG_CONFIG ?= $(shell command -v pkg-config 2>/dev/null)
 
@@ -109,6 +110,9 @@ TAGS: tags
 tags:
 	ctags -R
 
+format: $(sources) $(headers)
+	clang-format -style=file -i $^
+
 clean:
 	rm -f .*.o .*.d
 
@@ -164,4 +168,4 @@ uninstall:
 		$(mandir)/kak.1
 
 .PHONY: check TAGS clean dist distclean installdirs install install-strip uninstall
-.PHONY: tags test man kak FORCE
+.PHONY: tags format test man kak FORCE

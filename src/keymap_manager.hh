@@ -46,7 +46,8 @@ public:
     const KeymapInfo& get_mapping(Key key, KeymapMode mode) const;
 
     using UserModeList = Vector<String>;
-    UserModeList& user_modes() {
+    UserModeList& user_modes()
+    {
         if (m_parent)
             return m_parent->user_modes();
         return m_user_modes;
@@ -54,8 +55,7 @@ public:
     void add_user_mode(const String user_mode_name);
 
 private:
-    KeymapManager()
-        : m_parent(nullptr) {}
+    KeymapManager() : m_parent(nullptr) {}
     // the only one allowed to construct a root map manager
     friend class Scope;
 

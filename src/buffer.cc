@@ -23,7 +23,7 @@ namespace Kakoune
 struct ParsedLines
 {
     BufferLines lines;
-    ByteOrderMark bom = ByteOrderMark::None;
+    ByteOrderMark bom   = ByteOrderMark::None;
     EolFormat eolformat = EolFormat::Lf;
 };
 
@@ -34,29 +34,31 @@ static ParsedLines parse_lines(StringView data)
     if (data.substr(0, 3_byte) == "\xEF\xBB\xBF")
     {
         res.bom = ByteOrderMark::Utf8;
-        pos = data.begin() + 3;
+        pos     = data.begin() + 3;
     }
 
     bool has_crlf = false, has_lf = false;
     for (auto it = pos; it != data.end(); ++it)
     {
         if (*it == '\n')
-            ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
+            ((it != pos and *(it - 1) == '\r') ? has_crlf : has_lf) = true;
     }
     const bool crlf = has_crlf and not has_lf;
-    res.eolformat = crlf ? EolFormat::Crlf : EolFormat::Lf;
+    res.eolformat   = crlf ? EolFormat::Crlf : EolFormat::Lf;
 
     while (pos < data.end())
     {
         const char* eol = std::find(pos, data.end(), '\n');
-        res.lines.emplace_back(StringData::create({{pos, eol - (crlf and eol != data.end() ? 1 : 0)}, "\n"}));
+        res.lines.emplace_back(StringData::create(
+            {{pos, eol - (crlf and eol != data.end() ? 1 : 0)}, "\n"}));
         pos = eol + 1;
     }
 
     return res;
 }
 
-static void apply_options(OptionManager& options, const ParsedLines& parsed_lines)
+static void apply_options(OptionManager& options,
+                          const ParsedLines& parsed_lines)
 {
     options.get_local_option("eolformat").set(parsed_lines.eolformat);
     options.get_local_option("BOM").set(parsed_lines.bom);
@@ -66,10 +68,10 @@ Buffer::HistoryNode::HistoryNode(HistoryId parent)
     : parent{parent}, timepoint{Clock::now()}
 {}
 
-Buffer::Buffer(String name, Flags flags, StringView data,
-               timespec fs_timestamp)
+Buffer::Buffer(String name, Flags flags, StringView data, timespec fs_timestamp)
     : Scope{GlobalScope::instance()},
-      m_name{(flags & Flags::File) ? real_path(parse_filename(name)) : std::move(name)},
+      m_name{(flags & Flags::File) ? real_path(parse_filename(name))
+                                   : std::move(name)},
       m_display_name{(flags & Flags::File) ? compact_path(m_name) : m_name},
       m_flags{flags | Flags::NoUndo},
       m_history{{HistoryId::Invalid}},
@@ -82,19 +84,19 @@ Buffer::Buffer(String name, Flags flags, StringView data,
     if (parsed_lines.lines.empty())
         parsed_lines.lines.emplace_back(StringData::create({"\n"}));
 
-    #ifdef KAK_DEBUG
+#ifdef KAK_DEBUG
     for (auto& line : parsed_lines.lines)
-        kak_assert(not (line->length == 0) and
-                   line->data()[line->length-1] == '\n');
-    #endif
+        kak_assert(not(line->length == 0)
+                   and line->data()[line->length - 1] == '\n');
+#endif
     static_cast<BufferLines&>(m_lines) = std::move(parsed_lines.lines);
 
-    m_changes.push_back({ Change::Insert, {0,0}, line_count() });
+    m_changes.push_back({Change::Insert, {0, 0}, line_count()});
 
     apply_options(options(), parsed_lines);
 
     // now we may begin to record undo data
-    if (not (flags & Flags::NoUndo))
+    if (not(flags & Flags::NoUndo))
         m_flags &= ~Flags::NoUndo;
 }
 
@@ -128,8 +130,8 @@ void Buffer::on_registered()
     }
 
     for (auto& option : options().flatten_options()
-                      | transform(&std::unique_ptr<Option>::get)
-                      | gather<Vector<Option*>>())
+                            | transform(&std::unique_ptr<Option>::get)
+                            | gather<Vector<Option*>>())
         on_option_changed(*option);
 }
 
@@ -142,10 +144,7 @@ void Buffer::on_unregistered()
     run_hook_in_own_context(Hook::BufClose, m_name);
 }
 
-Buffer::~Buffer()
-{
-    m_values.clear();
-}
+Buffer::~Buffer() { m_values.clear(); }
 
 bool Buffer::set_name(String name)
 {
@@ -154,12 +153,12 @@ bool Buffer::set_name(String name)
     {
         if (m_flags & Flags::File)
         {
-            m_name = real_path(name);
+            m_name         = real_path(name);
             m_display_name = compact_path(m_name);
         }
         else
         {
-            m_name = std::move(name);
+            m_name         = std::move(name);
             m_display_name = m_name;
         }
         return true;
@@ -191,28 +190,38 @@ BufferCoord Buffer::clamp(BufferCoord coord) const
         coord = back_coord();
     kak_assert(coord.line >= 0 and coord.line < line_count());
     ByteCount max_col = std::max(0_byte, m_lines[coord.line].length() - 1);
-    coord.column = Kakoune::clamp(coord.column, 0_byte, max_col);
+    coord.column      = Kakoune::clamp(coord.column, 0_byte, max_col);
     return coord;
 }
 
-BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool)
+BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset,
+                                 ColumnCount, bool)
 {
-    return utf8::advance(iterator_at(coord), offset < 0 ? begin() : end()-1, offset).coord();
+    return utf8::advance(iterator_at(coord), offset < 0 ? begin() : end() - 1,
+                         offset)
+        .coord();
 }
 
-BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol)
+BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord,
+                                          LineCount offset, ColumnCount tabstop,
+                                          bool avoid_eol)
 {
-    const auto column = coord.target == -1 ? get_column(*this, tabstop, coord) : coord.target;
-    const auto line = Kakoune::clamp(coord.line + offset, 0_line, line_count()-1);
-    const auto max_column = get_column(*this, tabstop, {line, m_lines[line].length()-1});
-    const auto final_column = std::max(0_col, std::min(column, max_column - (avoid_eol ? 1 : 0)));
-    return {line, get_byte_to_column(*this, tabstop, {line, final_column}), column};
+    const auto column
+        = coord.target == -1 ? get_column(*this, tabstop, coord) : coord.target;
+    const auto line
+        = Kakoune::clamp(coord.line + offset, 0_line, line_count() - 1);
+    const auto max_column
+        = get_column(*this, tabstop, {line, m_lines[line].length() - 1});
+    const auto final_column
+        = std::max(0_col, std::min(column, max_column - (avoid_eol ? 1 : 0)));
+    return {line, get_byte_to_column(*this, tabstop, {line, final_column}),
+            column};
 }
 
 String Buffer::string(BufferCoord begin, BufferCoord end) const
 {
     String res;
-    const auto last_line = std::min(end.line, line_count()-1);
+    const auto last_line = std::min(end.line, line_count() - 1);
     for (auto line = begin.line; line <= last_line; ++line)
     {
         ByteCount start = 0;
@@ -229,7 +238,11 @@ String Buffer::string(BufferCoord begin, BufferCoord end) const
 // A Modification holds a single atomic modification to Buffer
 struct Buffer::Modification
 {
-    enum Type { Insert, Erase };
+    enum Type
+    {
+        Insert,
+        Erase
+    };
 
     Type type;
     BufferCoord coord;
@@ -248,27 +261,29 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
     if (parsed_lines.lines.empty())
         parsed_lines.lines.emplace_back(StringData::create({"\n"}));
 
-    const bool record_undo = not (m_flags & Flags::NoUndo);
+    const bool record_undo = not(m_flags & Flags::NoUndo);
 
     commit_undo_group();
 
     if (not record_undo)
     {
         // Erase history about to be invalidated history
-        m_history_id = HistoryId::First;
+        m_history_id           = HistoryId::First;
         m_last_save_history_id = HistoryId::First;
-        m_history = {HistoryNode{HistoryId::Invalid}};
+        m_history              = {HistoryNode{HistoryId::Invalid}};
 
-        m_changes.push_back({ Change::Erase, {0,0}, line_count() });
+        m_changes.push_back({Change::Erase, {0, 0}, line_count()});
         static_cast<BufferLines&>(m_lines) = std::move(parsed_lines.lines);
-        m_changes.push_back({ Change::Insert, {0,0}, line_count() });
+        m_changes.push_back({Change::Insert, {0, 0}, line_count()});
     }
     else
     {
-        auto diff = find_diff(m_lines.begin(), m_lines.size(),
-                              parsed_lines.lines.begin(), parsed_lines.lines.size(),
-                              [](const StringDataPtr& lhs, const StringDataPtr& rhs)
-                              { return lhs->strview() == rhs->strview(); });
+        auto diff
+            = find_diff(m_lines.begin(), m_lines.size(),
+                        parsed_lines.lines.begin(), parsed_lines.lines.size(),
+                        [](const StringDataPtr& lhs, const StringDataPtr& rhs) {
+                            return lhs->strview() == rhs->strview();
+                        });
 
         auto it = m_lines.begin();
         for (auto& d : diff)
@@ -280,25 +295,28 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
                 const LineCount cur_line = (int)(it - m_lines.begin());
 
                 for (LineCount line = 0; line < d.len; ++line)
-                    m_current_undo_group.push_back({
-                        Modification::Insert, cur_line + line,
-                        parsed_lines.lines[(int)(d.posB + line)]});
+                    m_current_undo_group.push_back(
+                        {Modification::Insert, cur_line + line,
+                         parsed_lines.lines[(int)(d.posB + line)]});
 
-                m_changes.push_back({ Change::Insert, cur_line, cur_line + d.len });
-                m_lines.insert(it, &parsed_lines.lines[d.posB], &parsed_lines.lines[d.posB + d.len]);
+                m_changes.push_back(
+                    {Change::Insert, cur_line, cur_line + d.len});
+                m_lines.insert(it, &parsed_lines.lines[d.posB],
+                               &parsed_lines.lines[d.posB + d.len]);
                 it = m_lines.begin() + (int)(cur_line + d.len);
             }
             else if (d.mode == Diff::Remove)
             {
                 const LineCount cur_line = (int)(it - m_lines.begin());
 
-                for (LineCount line = d.len-1; line >= 0; --line)
-                    m_current_undo_group.push_back({
-                        Modification::Erase, cur_line + line,
-                        m_lines.get_storage(cur_line + line)});
+                for (LineCount line = d.len - 1; line >= 0; --line)
+                    m_current_undo_group.push_back(
+                        {Modification::Erase, cur_line + line,
+                         m_lines.get_storage(cur_line + line)});
 
                 it = m_lines.erase(it, it + d.len);
-                m_changes.push_back({ Change::Erase, cur_line, cur_line + d.len });
+                m_changes.push_back(
+                    {Change::Erase, cur_line, cur_line + d.len});
             }
         }
     }
@@ -308,7 +326,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
     apply_options(options(), parsed_lines);
 
     m_last_save_history_id = m_history_id;
-    m_fs_timestamp = fs_timestamp;
+    m_fs_timestamp         = fs_timestamp;
 }
 
 void Buffer::commit_undo_group()
@@ -324,7 +342,7 @@ void Buffer::commit_undo_group()
     m_history.back().undo_group = std::move(m_current_undo_group);
     m_current_undo_group.clear();
     current_history_node().redo_child = id;
-    m_history_id = id;
+    m_history_id                      = id;
 }
 
 bool Buffer::undo(size_t count)
@@ -338,7 +356,8 @@ bool Buffer::undo(size_t count)
 
     while (count-- != 0 and current_history_node().parent != HistoryId::Invalid)
     {
-        for (const Modification& modification : current_history_node().undo_group | reverse())
+        for (const Modification& modification :
+             current_history_node().undo_group | reverse())
             apply_modification(modification.inverse());
 
         m_history_id = current_history_node().parent;
@@ -356,11 +375,13 @@ bool Buffer::redo(size_t count)
 
     kak_assert(m_current_undo_group.empty());
 
-    while (count-- != 0 and current_history_node().redo_child != HistoryId::Invalid)
+    while (count-- != 0
+           and current_history_node().redo_child != HistoryId::Invalid)
     {
         m_history_id = current_history_node().redo_child;
 
-        for (const Modification& modification : current_history_node().undo_group)
+        for (const Modification& modification :
+             current_history_node().undo_group)
             apply_modification(modification);
     }
     return true;
@@ -378,7 +399,8 @@ bool Buffer::move_to(HistoryId id)
     auto find_lowest_common_parent = [this](HistoryId a, HistoryId b) {
         auto depth_of = [this](HistoryId id) {
             size_t depth = 0;
-            for (; history_node(id).parent != HistoryId::Invalid; id = history_node(id).parent)
+            for (; history_node(id).parent != HistoryId::Invalid;
+                 id = history_node(id).parent)
                 ++depth;
             return depth;
         };
@@ -404,23 +426,24 @@ bool Buffer::move_to(HistoryId id)
     // undo up to common parent
     for (auto id = m_history_id; id != parent; id = history_node(id).parent)
     {
-        for (const Modification& modification : history_node(id).undo_group | reverse())
+        for (const Modification& modification :
+             history_node(id).undo_group | reverse())
             apply_modification(modification.inverse());
     }
 
-    static void (*apply_from_parent)(Buffer&, HistoryId, HistoryId) =
-    [](Buffer& buffer, HistoryId parent, HistoryId id) {
-        if (id == parent)
-            return;
+    static void (*apply_from_parent)(Buffer&, HistoryId, HistoryId)
+        = [](Buffer& buffer, HistoryId parent, HistoryId id) {
+              if (id == parent)
+                  return;
 
-        auto& node = buffer.history_node(id);
-        apply_from_parent(buffer, parent, node.parent);
+              auto& node = buffer.history_node(id);
+              apply_from_parent(buffer, parent, node.parent);
 
-        buffer.history_node(node.parent).redo_child = id;
+              buffer.history_node(node.parent).redo_child = id;
 
-        for (const Modification& modification : node.undo_group)
-            buffer.apply_modification(modification);
-    };
+              for (const Modification& modification : node.undo_group)
+                  buffer.apply_modification(modification);
+          };
 
     apply_from_parent(*this, parent, id);
     m_history_id = id;
@@ -447,12 +470,13 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
         return pos;
 
     const bool at_end = is_end(pos);
-    const bool append_lines = at_end and (m_lines.empty() or byte_at(back_coord()) == '\n');
+    const bool append_lines
+        = at_end and (m_lines.empty() or byte_at(back_coord()) == '\n');
 
-    const StringView prefix = append_lines ?
-        StringView{} : m_lines[pos.line].substr(0, pos.column);
-    const StringView suffix = at_end ?
-        StringView{} : m_lines[pos.line].substr(pos.column);
+    const StringView prefix
+        = append_lines ? StringView{} : m_lines[pos.line].substr(0, pos.column);
+    const StringView suffix
+        = at_end ? StringView{} : m_lines[pos.line].substr(pos.column);
 
     LineList new_lines;
     ByteCount start = 0;
@@ -461,29 +485,31 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
         if (content[i] == '\n')
         {
             StringView line = content.substr(start, i + 1 - start);
-            new_lines.push_back(StringData::create(start == 0 ? prefix + line : line));
+            new_lines.push_back(
+                StringData::create(start == 0 ? prefix + line : line));
             start = i + 1;
         }
     }
     if (start == 0)
         new_lines.push_back(StringData::create({prefix, content, suffix}));
     else if (start != content.length() or not suffix.empty())
-        new_lines.push_back(StringData::create({content.substr(start), suffix}));
+        new_lines.push_back(
+            StringData::create({content.substr(start), suffix}));
 
-    auto line_it = m_lines.begin() + (int)pos.line;
+    auto line_it      = m_lines.begin() + (int)pos.line;
     auto new_lines_it = new_lines.begin();
     if (not append_lines) // replace first line with new first line
         *line_it++ = std::move(*new_lines_it++);
 
-    m_lines.insert(line_it,
-                   std::make_move_iterator(new_lines_it),
+    m_lines.insert(line_it, std::make_move_iterator(new_lines_it),
                    std::make_move_iterator(new_lines.end()));
 
     const LineCount last_line = pos.line + new_lines.size() - 1;
-    const auto end = at_end ? line_count()
-                            : BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
+    const auto end            = at_end ? line_count()
+                            : BufferCoord{last_line, m_lines[last_line].length()
+                                                         - suffix.length()};
 
-    m_changes.push_back({ Change::Insert, pos, end });
+    m_changes.push_back({Change::Insert, pos, end});
     return pos;
 }
 
@@ -495,46 +521,50 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
     kak_assert(is_valid(begin));
     kak_assert(is_valid(end));
     StringView prefix = m_lines[begin.line].substr(0, begin.column);
-    StringView suffix = end.line == line_count() ? StringView{} : m_lines[end.line].substr(end.column);
+    StringView suffix = end.line == line_count()
+                            ? StringView{}
+                            : m_lines[end.line].substr(end.column);
 
     BufferCoord next;
     if (not prefix.empty() or not suffix.empty())
     {
         auto new_line = StringData::create({prefix, suffix});
-        m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
+        m_lines.erase(m_lines.begin() + (int)begin.line,
+                      m_lines.begin() + (int)end.line);
         m_lines.get_storage(begin.line) = std::move(new_line);
-        next = begin;
+        next                            = begin;
     }
     else
     {
-        m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
+        m_lines.erase(m_lines.begin() + (int)begin.line,
+                      m_lines.begin() + (int)end.line);
         next = begin.line;
     }
 
-    m_changes.push_back({ Change::Erase, begin, end });
+    m_changes.push_back({Change::Erase, begin, end});
     return next;
 }
 
 void Buffer::apply_modification(const Modification& modification)
 {
     StringView content = modification.content->strview();
-    BufferCoord coord = modification.coord;
+    BufferCoord coord  = modification.coord;
 
     kak_assert(is_valid(coord));
     switch (modification.type)
     {
-    case Modification::Insert:
-        do_insert(coord, content);
-        break;
-    case Modification::Erase:
-    {
-        auto end = advance(coord, content.length());
-        kak_assert(string(coord, end) == content);
-        do_erase(coord, end);
-        break;
-    }
-    default:
-        kak_assert(false);
+        case Modification::Insert:
+            do_insert(coord, content);
+            break;
+        case Modification::Erase:
+        {
+            auto end = advance(coord, content.length());
+            kak_assert(string(coord, end) == content);
+            do_erase(coord, end);
+            break;
+        }
+        default:
+            kak_assert(false);
     }
 }
 
@@ -555,8 +585,9 @@ BufferCoord Buffer::insert(BufferCoord pos, StringView content)
     // for undo and redo purpose it is better to use one past last line rather
     // than one past last char coord.
     auto coord = is_end(pos) ? line_count() : pos;
-    if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.push_back({Modification::Insert, coord, real_content});
+    if (not(m_flags & Flags::NoUndo))
+        m_current_undo_group.push_back(
+            {Modification::Insert, coord, real_content});
     return do_insert(pos, real_content->strview());
 }
 
@@ -565,31 +596,34 @@ BufferCoord Buffer::erase(BufferCoord begin, BufferCoord end)
     throw_if_read_only();
 
     kak_assert(is_valid(begin) and is_valid(end));
-    // do not erase last \n except if we erase from the start of a line, and normalize
-    // end coord
+    // do not erase last \n except if we erase from the start of a line, and
+    // normalize end coord
     if (is_end(end))
-        end = (begin.column != 0 or begin == BufferCoord{0,0}) ? prev(end) : end_coord();
+        end = (begin.column != 0 or begin == BufferCoord{0, 0}) ? prev(end)
+                                                                : end_coord();
 
     if (begin >= end) // use >= to handle case where begin is {line_count}
         return begin;
 
-    if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.push_back({Modification::Erase, begin,
-                                        intern(string(begin, end))});
+    if (not(m_flags & Flags::NoUndo))
+        m_current_undo_group.push_back(
+            {Modification::Erase, begin, intern(string(begin, end))});
     return do_erase(begin, end);
 }
 
-BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end, StringView content)
+BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end,
+                            StringView content)
 {
     throw_if_read_only();
 
     if (is_end(end) and not content.empty() and content.back() == '\n')
     {
-        end = back_coord();
+        end     = back_coord();
         content = content.substr(0, content.length() - 1);
     }
 
-    if (std::equal(iterator_at(begin), iterator_at(end), content.begin(), content.end()))
+    if (std::equal(iterator_at(begin), iterator_at(end), content.begin(),
+                   content.end()))
         return begin;
 
     auto pos = erase(begin, end);
@@ -598,9 +632,9 @@ BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end, StringView conte
 
 bool Buffer::is_modified() const
 {
-    return m_flags & Flags::File and
-           (m_history_id != m_last_save_history_id or
-            not m_current_undo_group.empty());
+    return m_flags & Flags::File
+           and (m_history_id != m_last_save_history_id
+                or not m_current_undo_group.empty());
 }
 
 void Buffer::notify_saved()
@@ -610,7 +644,7 @@ void Buffer::notify_saved()
 
     m_flags &= ~Flags::New;
     m_last_save_history_id = m_history_id;
-    m_fs_timestamp = get_fs_timestamp(m_name);
+    m_fs_timestamp         = get_fs_timestamp(m_name);
 }
 
 BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
@@ -625,7 +659,7 @@ BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
             if (line == line_count())
                 return end_coord();
         }
-        return { line, count };
+        return {line, count};
     }
     else if (count < 0)
     {
@@ -637,7 +671,7 @@ BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
             if (line < 0)
                 return {0, 0};
         }
-        return { line, count };
+        return {line, count};
     }
     return coord;
 }
@@ -646,24 +680,26 @@ BufferCoord Buffer::char_next(BufferCoord coord) const
 {
     if (coord.column < m_lines[coord.line].length() - 1)
     {
-        auto line = m_lines[coord.line];
+        auto line   = m_lines[coord.line];
         auto column = coord.column + utf8::codepoint_size(line[coord.column]);
         if (column >= line.length()) // Handle invalid utf-8
-            return { coord.line + 1, 0 };
-        return { coord.line, column };
+            return {coord.line + 1, 0};
+        return {coord.line, column};
     }
-    return { coord.line + 1, 0 };
+    return {coord.line + 1, 0};
 }
 
 BufferCoord Buffer::char_prev(BufferCoord coord) const
 {
     kak_assert(is_valid(coord));
     if (coord.column == 0)
-        return { coord.line - 1, m_lines[coord.line - 1].length() - 1 };
+        return {coord.line - 1, m_lines[coord.line - 1].length() - 1};
 
-    auto line = m_lines[coord.line];
-    auto column = (int)(utf8::character_start(line.begin() + (int)coord.column - 1, line.begin()) - line.begin());
-    return { coord.line, column };
+    auto line   = m_lines[coord.line];
+    auto column = (int)(utf8::character_start(
+                            line.begin() + (int)coord.column - 1, line.begin())
+                        - line.begin());
+    return {coord.line, column};
 }
 
 timespec Buffer::fs_timestamp() const
@@ -687,18 +723,19 @@ void Buffer::on_option_changed(const Option& option)
         else
             m_flags &= ~Flags::ReadOnly;
     }
-    run_hook_in_own_context(Hook::BufSetOption,
-                            format("{}={}", option.name(), option.get_as_string(Quoting::Kakoune)));
+    run_hook_in_own_context(
+        Hook::BufSetOption,
+        format("{}={}", option.name(), option.get_as_string(Quoting::Kakoune)));
 }
 
-void Buffer::run_hook_in_own_context(Hook hook, StringView param, String client_name)
+void Buffer::run_hook_in_own_context(Hook hook, StringView param,
+                                     String client_name)
 {
     if (m_flags & Buffer::Flags::NoHooks)
         return;
 
-    InputHandler hook_handler{{ *this, Selection{} },
-                              Context::Flags::Draft,
-                              std::move(client_name)};
+    InputHandler hook_handler{
+        {*this, Selection{}}, Context::Flags::Draft, std::move(client_name)};
     hooks().run_hook(hook, param, hook_handler.context());
 }
 
@@ -715,21 +752,25 @@ String Buffer::debug_description() const
     for (auto& line : m_lines)
         content_size += (int)line->strview().length();
 
-    const size_t additional_size = accumulate(m_history, 0, [](size_t s, auto&& history) {
-            return sizeof(history) + history.undo_group.size() * sizeof(Modification) + s;
-        }) + m_changes.size() * sizeof(Change);
+    const size_t additional_size
+        = accumulate(
+              m_history, 0,
+              [](size_t s, auto&& history) {
+                  return sizeof(history)
+                         + history.undo_group.size() * sizeof(Modification) + s;
+              })
+          + m_changes.size() * sizeof(Change);
 
     return format("{}\nFlags: {}{}{}{}\nUsed mem: content={} additional={}\n",
                   display_name(),
                   (m_flags & Flags::File) ? "File (" + name() + ") " : "",
                   (m_flags & Flags::New) ? "New " : "",
                   (m_flags & Flags::Fifo) ? "Fifo " : "",
-                  (m_flags & Flags::NoUndo) ? "NoUndo " : "",
-                  content_size, additional_size);
+                  (m_flags & Flags::NoUndo) ? "NoUndo " : "", content_size,
+                  additional_size);
 }
 
-UnitTest test_parse_line{[]
-{
+UnitTest test_parse_line{[] {
     {
         auto lines = parse_lines("foo\nbar\nbaz\n");
         kak_assert(lines.eolformat == EolFormat::Lf);
@@ -741,7 +782,9 @@ UnitTest test_parse_line{[]
     }
 
     {
-        auto lines = parse_lines("\xEF\xBB\xBF" "foo\nbar\r\nbaz");
+        auto lines = parse_lines(
+            "\xEF\xBB\xBF"
+            "foo\nbar\r\nbaz");
         kak_assert(lines.eolformat == EolFormat::Lf);
         kak_assert(lines.bom == ByteOrderMark::Utf8);
         kak_assert(lines.lines.size() == 3);
@@ -761,11 +804,11 @@ UnitTest test_parse_line{[]
     }
 }};
 
-UnitTest test_buffer{[]()
-{
+UnitTest test_buffer{[]() {
     Buffer empty_buffer("empty", Buffer::Flags::None, {});
 
-    Buffer buffer("test", Buffer::Flags::None, "allo ?\nmais que fais la police\n hein ?\n youpi\n");
+    Buffer buffer("test", Buffer::Flags::None,
+                  "allo ?\nmais que fais la police\n hein ?\n youpi\n");
     kak_assert(buffer.line_count() == 4);
 
     BufferIterator pos = buffer.begin();
@@ -784,46 +827,51 @@ UnitTest test_buffer{[]()
     pos2 -= 9;
     kak_assert(*pos2 == '?');
 
-    String str = buffer.string({ 4, 1 }, buffer.next({ 4, 5 }));
+    String str = buffer.string({4, 1}, buffer.next({4, 5}));
     kak_assert(str == "youpi");
 
     // check insert at end behaviour: auto add end of line if necessary
-    pos = buffer.end()-1;
+    pos = buffer.end() - 1;
     buffer.insert(pos.coord(), "tchou");
     kak_assert(buffer.string(pos.coord(), buffer.end_coord()) == "tchou\n"_sv);
 
-    pos = buffer.end()-1;
+    pos = buffer.end() - 1;
     buffer.insert(buffer.end_coord(), "kanaky\n");
-    kak_assert(buffer.string((pos+1).coord(), buffer.end_coord()) == "kanaky\n"_sv);
+    kak_assert(buffer.string((pos + 1).coord(), buffer.end_coord())
+               == "kanaky\n"_sv);
 
     buffer.commit_undo_group();
-    buffer.erase((pos+1).coord(), buffer.end_coord());
+    buffer.erase((pos + 1).coord(), buffer.end_coord());
     buffer.insert(buffer.end_coord(), "mutch\n");
     buffer.commit_undo_group();
     buffer.undo();
-    kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -7), buffer.end_coord()) == "kanaky\n"_sv);
+    kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -7),
+                             buffer.end_coord())
+               == "kanaky\n"_sv);
     buffer.redo();
-    kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -6), buffer.end_coord()) == "mutch\n"_sv);
+    kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -6),
+                             buffer.end_coord())
+               == "mutch\n"_sv);
 }};
 
-UnitTest test_undo{[]()
-{
-    Buffer buffer("test", Buffer::Flags::None, "allo ?\nmais que fais la police\n hein ?\n youpi\n");
+UnitTest test_undo{[]() {
+    Buffer buffer("test", Buffer::Flags::None,
+                  "allo ?\nmais que fais la police\n hein ?\n youpi\n");
     auto pos = buffer.insert(buffer.end_coord(), "kanaky\n"); // change 1
     buffer.commit_undo_group();
-    buffer.erase(pos, buffer.end_coord());                    // change 2
+    buffer.erase(pos, buffer.end_coord()); // change 2
     buffer.commit_undo_group();
-    buffer.insert(2_line, "tchou\n");                         // change 3
+    buffer.insert(2_line, "tchou\n"); // change 3
     buffer.commit_undo_group();
     buffer.undo();
-    buffer.insert(2_line, "mutch\n");                         // change 4
+    buffer.insert(2_line, "mutch\n"); // change 4
     buffer.commit_undo_group();
-    buffer.erase({2, 1}, {2, 5});                             // change 5
+    buffer.erase({2, 1}, {2, 5}); // change 5
     buffer.commit_undo_group();
     buffer.undo(2);
     buffer.redo(2);
     buffer.undo();
-    buffer.replace(2_line, buffer.end_coord(), "foo");        // change 6
+    buffer.replace(2_line, buffer.end_coord(), "foo"); // change 6
     buffer.commit_undo_group();
 
     kak_assert((int)buffer.line_count() == 3);

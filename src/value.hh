@@ -10,7 +10,8 @@
 namespace Kakoune
 {
 
-struct bad_value_cast {};
+struct bad_value_cast
+{};
 
 struct Value
 {
@@ -18,11 +19,11 @@ struct Value
 
     template<typename T,
              typename = std::enable_if_t<not std::is_same<Value, T>::value>>
-    Value(T&& val)
-        : m_value{new Model<std::decay_t<T>>{std::forward<T>(val)}} {}
+    Value(T&& val) : m_value{new Model<std::decay_t<T>>{std::forward<T>(val)}}
+    {}
 
     Value(const Value& val) = delete;
-    Value(Value&&) = default;
+    Value(Value&&)          = default;
 
     Value& operator=(const Value& val) = delete;
     Value& operator=(Value&& val) = default;
@@ -52,7 +53,7 @@ struct Value
 private:
     struct Concept
     {
-        virtual ~Concept() = default;
+        virtual ~Concept()                         = default;
         virtual const std::type_info& type() const = 0;
     };
 
@@ -68,7 +69,9 @@ private:
     std::unique_ptr<Concept> m_value;
 };
 
-enum class ValueId : int {};
+enum class ValueId : int
+{
+};
 
 inline ValueId get_free_value_id()
 {

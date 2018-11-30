@@ -10,73 +10,63 @@ namespace Kakoune
 template<typename EffectiveType, typename LineType, typename ColumnType>
 struct LineAndColumn
 {
-    LineType   line = 0;
+    LineType line     = 0;
     ColumnType column = 0;
 
-    [[gnu::always_inline]]
-    constexpr EffectiveType operator+(EffectiveType other) const
+    [[gnu::always_inline]] constexpr EffectiveType operator+(
+        EffectiveType other) const
     {
         return {line + other.line, column + other.column};
     }
 
-    [[gnu::always_inline]]
-    EffectiveType& operator+=(EffectiveType other)
+    [[gnu::always_inline]] EffectiveType& operator+=(EffectiveType other)
     {
-        line   += other.line;
+        line += other.line;
         column += other.column;
         return *static_cast<EffectiveType*>(this);
     }
 
-    [[gnu::always_inline]]
-    constexpr EffectiveType operator-(EffectiveType other) const
+    [[gnu::always_inline]] constexpr EffectiveType operator-(
+        EffectiveType other) const
     {
         return {line - other.line, column - other.column};
     }
 
-    [[gnu::always_inline]]
-    EffectiveType& operator-=(EffectiveType other)
+    [[gnu::always_inline]] EffectiveType& operator-=(EffectiveType other)
     {
-        line   -= other.line;
+        line -= other.line;
         column -= other.column;
         return *static_cast<EffectiveType*>(this);
     }
 
-    [[gnu::always_inline]]
-    constexpr bool operator< (EffectiveType other) const
+    [[gnu::always_inline]] constexpr bool operator<(EffectiveType other) const
     {
-        return (line != other.line) ? line < other.line
-                                    : column < other.column;
+        return (line != other.line) ? line < other.line : column < other.column;
     }
 
-    [[gnu::always_inline]]
-    constexpr bool operator<= (EffectiveType other) const
+    [[gnu::always_inline]] constexpr bool operator<=(EffectiveType other) const
     {
         return (line != other.line) ? line < other.line
                                     : column <= other.column;
     }
 
-    [[gnu::always_inline]]
-    constexpr bool operator> (EffectiveType other) const
+    [[gnu::always_inline]] constexpr bool operator>(EffectiveType other) const
     {
-        return (line != other.line) ? line > other.line
-                                    : column > other.column;
+        return (line != other.line) ? line > other.line : column > other.column;
     }
 
-    [[gnu::always_inline]]
-    constexpr bool operator>= (EffectiveType other) const
+    [[gnu::always_inline]] constexpr bool operator>=(EffectiveType other) const
     {
         return (line != other.line) ? line > other.line
                                     : column >= other.column;
     }
 
-    [[gnu::always_inline]]
-    constexpr bool operator== (EffectiveType other) const
+    [[gnu::always_inline]] constexpr bool operator==(EffectiveType other) const
     {
         return line == other.line and column == other.column;
     }
 
-    [[gnu::always_inline]]
-    constexpr bool operator!= (EffectiveType other) const
+    [[gnu::always_inline]] constexpr bool operator!=(EffectiveType other) const
     {
         return line != other.line or column != other.column;
     }
@@ -89,29 +79,36 @@ struct LineAndColumn
 
 struct BufferCoord : LineAndColumn<BufferCoord, LineCount, ByteCount>
 {
-    [[gnu::always_inline]]
-    constexpr BufferCoord(LineCount line = 0, ByteCount column = 0)
-        : LineAndColumn{line, column} {}
+    [[gnu::always_inline]] constexpr BufferCoord(LineCount line   = 0,
+                                                 ByteCount column = 0)
+        : LineAndColumn{line, column}
+    {}
 };
 
 struct DisplayCoord : LineAndColumn<DisplayCoord, LineCount, ColumnCount>
 {
-    [[gnu::always_inline]]
-    constexpr DisplayCoord(LineCount line = 0, ColumnCount column = 0)
-        : LineAndColumn{line, column} {}
+    [[gnu::always_inline]] constexpr DisplayCoord(LineCount line     = 0,
+                                                  ColumnCount column = 0)
+        : LineAndColumn{line, column}
+    {}
 
     static constexpr const char* option_type_name = "coord";
 };
 
 struct BufferCoordAndTarget : BufferCoord
 {
-    [[gnu::always_inline]]
-    constexpr BufferCoordAndTarget(LineCount line = 0, ByteCount column = 0, ColumnCount target = -1)
-        : BufferCoord{line, column}, target{target} {}
+    [[gnu::always_inline]] constexpr BufferCoordAndTarget(LineCount line   = 0,
+                                                          ByteCount column = 0,
+                                                          ColumnCount target
+                                                          = -1)
+        : BufferCoord{line, column}, target{target}
+    {}
 
-    [[gnu::always_inline]]
-    constexpr BufferCoordAndTarget(BufferCoord coord, ColumnCount target = -1)
-        : BufferCoord{coord}, target{target} {}
+    [[gnu::always_inline]] constexpr BufferCoordAndTarget(BufferCoord coord,
+                                                          ColumnCount target
+                                                          = -1)
+        : BufferCoord{coord}, target{target}
+    {}
 
     ColumnCount target;
 };

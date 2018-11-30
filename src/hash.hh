@@ -19,15 +19,15 @@ constexpr size_t hash_value(const Type&... val)
 }
 
 template<typename Type>
-std::enable_if_t<std::is_integral<Type>::value, size_t>
-constexpr hash_value(const Type& val)
+std::enable_if_t<std::is_integral<Type>::value, size_t> constexpr hash_value(
+    const Type& val)
 {
     return (size_t)val;
 }
 
 template<typename Type>
-std::enable_if_t<std::is_enum<Type>::value, size_t>
-constexpr hash_value(const Type& val)
+std::enable_if_t<std::is_enum<Type>::value, size_t> constexpr hash_value(
+    const Type& val)
 {
     return hash_value((std::underlying_type_t<Type>)val);
 }
@@ -68,9 +68,12 @@ struct Hash
 // Traits specifying if two types have compatible hashing, that is,
 // if lhs == rhs => hash_value(lhs) == hash_value(rhs)
 template<typename Lhs, typename Rhs>
-struct HashCompatible : std::false_type {};
+struct HashCompatible : std::false_type
+{};
 
-template<typename T> struct HashCompatible<T, T> : std::true_type {};
+template<typename T>
+struct HashCompatible<T, T> : std::true_type
+{};
 
 template<typename Lhs, typename Rhs>
 constexpr bool IsHashCompatible = HashCompatible<Lhs, Rhs>::value;

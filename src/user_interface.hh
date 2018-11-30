@@ -52,22 +52,24 @@ public:
 
     virtual void menu_show(ConstArrayView<DisplayLine> choices,
                            DisplayCoord anchor, Face fg, Face bg,
-                           MenuStyle style) = 0;
+                           MenuStyle style)
+        = 0;
     virtual void menu_select(int selected) = 0;
-    virtual void menu_hide() = 0;
+    virtual void menu_hide()               = 0;
 
     virtual void info_show(StringView title, StringView content,
-                           DisplayCoord anchor, Face face,
-                           InfoStyle style) = 0;
+                           DisplayCoord anchor, Face face, InfoStyle style)
+        = 0;
     virtual void info_hide() = 0;
 
     virtual void draw(const DisplayBuffer& display_buffer,
-                      const Face& default_face,
-                      const Face& padding_face) = 0;
+                      const Face& default_face, const Face& padding_face)
+        = 0;
 
     virtual void draw_status(const DisplayLine& status_line,
                              const DisplayLine& mode_line,
-                             const Face& default_face) = 0;
+                             const Face& default_face)
+        = 0;
 
     virtual DisplayCoord dimensions() = 0;
 

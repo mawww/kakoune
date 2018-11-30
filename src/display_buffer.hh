@@ -22,13 +22,20 @@ BufferIterator get_iterator(const Buffer& buffer, BufferCoord coord);
 struct DisplayAtom : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:
-    enum Type { Range, ReplacedRange, Text };
+    enum Type
+    {
+        Range,
+        ReplacedRange,
+        Text
+    };
 
     DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end)
-        : m_type(Range), m_buffer(&buffer), m_range{begin, end} {}
+        : m_type(Range), m_buffer(&buffer), m_range{begin, end}
+    {}
 
     DisplayAtom(String str, Face face)
-        : m_type(Text), m_text(std::move(str)), face(face) {}
+        : m_type(Text), m_text(std::move(str)), face(face)
+    {}
 
     StringView content() const;
     ColumnCount length() const;
@@ -57,7 +64,11 @@ public:
         return m_type == Range or m_type == ReplacedRange;
     }
 
-    const Buffer& buffer() const { kak_assert(m_buffer); return *m_buffer; }
+    const Buffer& buffer() const
+    {
+        kak_assert(m_buffer);
+        return *m_buffer;
+    }
 
     Type type() const { return m_type; }
 
@@ -66,8 +77,8 @@ public:
 
     bool operator==(const DisplayAtom& other) const
     {
-        return face == other.face and type() == other.type() and
-               content() == other.content();
+        return face == other.face and type() == other.type()
+               and content() == other.content();
     }
 
 public:
@@ -88,14 +99,13 @@ using AtomList = Vector<DisplayAtom, MemoryDomain::Display>;
 class DisplayLine : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:
-    using iterator = AtomList::iterator;
+    using iterator       = AtomList::iterator;
     using const_iterator = AtomList::const_iterator;
-    using value_type = AtomList::value_type;
+    using value_type     = AtomList::value_type;
 
     DisplayLine() = default;
     DisplayLine(AtomList atoms);
-    DisplayLine(String str, Face face)
-    { push_back({ std::move(str), face }); }
+    DisplayLine(String str, Face face) { push_back({std::move(str), face}); }
 
     iterator begin() { return m_atoms.begin(); }
     iterator end() { return m_atoms.end(); }
@@ -118,24 +128,27 @@ public:
 
     iterator insert(iterator it, DisplayAtom atom);
     iterator erase(iterator beg, iterator end);
-    void     push_back(DisplayAtom atom);
+    void push_back(DisplayAtom atom);
 
     // remove first_col from the begining of the line, and make sure
     // the line is less that col_count character
     void trim(ColumnCount first_col, ColumnCount col_count);
 
     // Merge together consecutive atoms sharing the same display attributes
-    void     optimize();
+    void optimize();
+
 private:
     void compute_range();
-    BufferRange m_range = { { INT_MAX, INT_MAX }, { INT_MIN, INT_MIN } };
-    AtomList  m_atoms;
+    BufferRange m_range = {{INT_MAX, INT_MAX}, {INT_MIN, INT_MIN}};
+    AtomList m_atoms;
 };
 
 class FaceRegistry;
 
 String fix_atom_text(StringView str);
-DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const HashMap<String, DisplayLine>& builtins = {});
+DisplayLine parse_display_line(StringView line, const FaceRegistry& faces,
+                               const HashMap<String, DisplayLine>& builtins
+                               = {});
 
 class DisplayBuffer : public UseMemoryDomain<MemoryDomain::Display>
 {

@@ -39,7 +39,7 @@
 #include <unistd.h>
 
 #if defined(__GLIBC__) || defined(__CYGWIN__)
-#include <malloc.h>
+#    include <malloc.h>
 #endif
 
 namespace Kakoune
@@ -50,33 +50,42 @@ extern const char* version;
 namespace
 {
 
-Buffer* open_fifo(StringView name, StringView filename, Buffer::Flags flags, bool scroll)
+Buffer* open_fifo(StringView name, StringView filename, Buffer::Flags flags,
+                  bool scroll)
 {
     int fd = open(parse_filename(filename).c_str(), O_RDONLY | O_NONBLOCK);
     fcntl(fd, F_SETFD, FD_CLOEXEC);
     if (fd < 0)
-       throw runtime_error(format("unable to open '{}'", filename));
+        throw runtime_error(format("unable to open '{}'", filename));
 
     return create_fifo_buffer(name.str(), fd, flags, scroll);
 }
 
-template<typename... Completers> struct PerArgumentCommandCompleter;
+template<typename... Completers>
+struct PerArgumentCommandCompleter;
 
-template<> struct PerArgumentCommandCompleter<>
+template<>
+struct PerArgumentCommandCompleter<>
 {
     Completions operator()(const Context&, CompletionFlags, CommandParameters,
-                           size_t, ByteCount) const { return {}; }
+                           size_t, ByteCount) const
+    {
+        return {};
+    }
 };
 
 template<typename Completer, typename... Rest>
-struct PerArgumentCommandCompleter<Completer, Rest...> : PerArgumentCommandCompleter<Rest...>
+struct PerArgumentCommandCompleter<Completer, Rest...>
+    : PerArgumentCommandCompleter<Rest...>
 {
-    template<typename C, typename... R,
-             typename = std::enable_if_t<not std::is_base_of<PerArgumentCommandCompleter<>,
-                                         std::remove_reference_t<C>>::value>>
+    template<
+        typename C, typename... R,
+        typename = std::enable_if_t<not std::is_base_of<
+            PerArgumentCommandCompleter<>, std::remove_reference_t<C>>::value>>
     PerArgumentCommandCompleter(C&& completer, R&&... rest)
-      : PerArgumentCommandCompleter<Rest...>(std::forward<R>(rest)...),
-        m_completer(std::forward<C>(completer)) {}
+        : PerArgumentCommandCompleter<Rest...>(std::forward<R>(rest)...),
+          m_completer(std::forward<C>(completer))
+    {}
 
     Completions operator()(const Context& context, CompletionFlags flags,
                            CommandParameters params, size_t token_to_complete,
@@ -84,40 +93,46 @@ struct PerArgumentCommandCompleter<Completer, Rest...> : PerArgumentCommandCompl
     {
         if (token_to_complete == 0)
         {
-            const String& arg = token_to_complete < params.size() ?
-                                params[token_to_complete] : String();
+            const String& arg = token_to_complete < params.size()
+                                    ? params[token_to_complete]
+                                    : String();
             return m_completer(context, flags, arg, pos_in_token);
         }
         return PerArgumentCommandCompleter<Rest...>::operator()(
-            context, flags, params.subrange(1),
-            token_to_complete-1, pos_in_token);
+            context, flags, params.subrange(1), token_to_complete - 1,
+            pos_in_token);
     }
 
     Completer m_completer;
 };
 
 template<typename... Completers>
-PerArgumentCommandCompleter<std::decay_t<Completers>...>
-make_completer(Completers&&... completers)
+PerArgumentCommandCompleter<std::decay_t<Completers>...> make_completer(
+    Completers&&... completers)
 {
     return {std::forward<Completers>(completers)...};
 }
 
-auto filename_completer = make_completer(
-    [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
-    { return Completions{ 0_byte, cursor_pos,
-                          complete_filename(prefix,
-                                            context.options()["ignored_files"].get<Regex>(),
-                                            cursor_pos, FilenameFlags::Expand) }; });
+auto filename_completer
+    = make_completer([](const Context& context, CompletionFlags flags,
+                        const String& prefix, ByteCount cursor_pos) {
+          return Completions{
+              0_byte, cursor_pos,
+              complete_filename(prefix,
+                                context.options()["ignored_files"].get<Regex>(),
+                                cursor_pos, FilenameFlags::Expand)};
+      });
 
 template<bool ignore_current = false>
-static Completions complete_buffer_name(const Context& context, CompletionFlags flags,
+static Completions complete_buffer_name(const Context& context,
+                                        CompletionFlags flags,
                                         StringView prefix, ByteCount cursor_pos)
 {
     struct RankedMatchAndBuffer : RankedMatch
     {
-        RankedMatchAndBuffer(RankedMatch  m, const Buffer* b)
-            : RankedMatch{std::move(m)}, buffer{b} {}
+        RankedMatchAndBuffer(RankedMatch m, const Buffer* b)
+            : RankedMatch{std::move(m)}, buffer{b}
+        {}
 
         using RankedMatch::operator==;
         using RankedMatch::operator<;
@@ -154,41 +169,41 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
     for (auto& match : matches)
         res.push_back(match.buffer->display_name());
 
-    return { 0, cursor_pos, res };
+    return {0, cursor_pos, res};
 }
 
-auto make_single_word_completer(std::function<String (const Context&)> func)
+auto make_single_word_completer(std::function<String(const Context&)> func)
 {
-    return make_completer(
-        [func](const Context& context, CompletionFlags flags,
-               const String& prefix, ByteCount cursor_pos) -> Completions {
-            auto candidate = { func(context) };
-            return { 0_byte, cursor_pos, complete(prefix, cursor_pos, candidate) }; });
+    return make_completer([func](const Context& context, CompletionFlags flags,
+                                 const String& prefix,
+                                 ByteCount cursor_pos) -> Completions {
+        auto candidate = {func(context)};
+        return {0_byte, cursor_pos, complete(prefix, cursor_pos, candidate)};
+    });
 }
 
-auto buffer_completer = make_completer(complete_buffer_name<false>);
+auto buffer_completer       = make_completer(complete_buffer_name<false>);
 auto other_buffer_completer = make_completer(complete_buffer_name<true>);
 
-const ParameterDesc no_params{ {}, ParameterDesc::Flags::None, 0, 0 };
-const ParameterDesc single_param{ {}, ParameterDesc::Flags::None, 1, 1 };
-const ParameterDesc single_optional_param{ {}, ParameterDesc::Flags::None, 0, 1 };
+const ParameterDesc no_params{{}, ParameterDesc::Flags::None, 0, 0};
+const ParameterDesc single_param{{}, ParameterDesc::Flags::None, 1, 1};
+const ParameterDesc single_optional_param{{}, ParameterDesc::Flags::None, 0, 1};
 
-static constexpr auto scopes = { "global", "buffer", "window" };
+static constexpr auto scopes = {"global", "buffer", "window"};
 
 static Completions complete_scope(const Context&, CompletionFlags,
                                   const String& prefix, ByteCount cursor_pos)
 {
-   return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
+    return {0_byte, cursor_pos, complete(prefix, cursor_pos, scopes)};
 }
 
-
-static Completions complete_command_name(const Context& context, CompletionFlags,
-                                         const String& prefix, ByteCount cursor_pos)
+static Completions complete_command_name(const Context& context,
+                                         CompletionFlags, const String& prefix,
+                                         ByteCount cursor_pos)
 {
-   return CommandManager::instance().complete_command_name(
-       context, prefix.substr(0, cursor_pos));
+    return CommandManager::instance().complete_command_name(
+        context, prefix.substr(0, cursor_pos));
 }
-
 
 Scope* get_scope_ifp(StringView scope, const Context& context)
 {
@@ -228,14 +243,15 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
     if (parser.positional_count() == 0 and not force_reload)
         throw wrong_argument_count();
 
-    auto& name = parser.positional_count() > 0 ? parser[0]
-                                               : context.buffer().name();
+    auto& name
+        = parser.positional_count() > 0 ? parser[0] : context.buffer().name();
     auto& buffer_manager = BufferManager::instance();
 
-    Buffer* buffer = buffer_manager.get_buffer_ifp(name);
+    Buffer* buffer      = buffer_manager.get_buffer_ifp(name);
     const bool no_hooks = context.hooks_disabled();
-    const auto flags = (no_hooks ? Buffer::Flags::NoHooks : Buffer::Flags::None) |
-       (parser.get_switch("debug") ? Buffer::Flags::Debug : Buffer::Flags::None);
+    const auto flags = (no_hooks ? Buffer::Flags::NoHooks : Buffer::Flags::None)
+                       | (parser.get_switch("debug") ? Buffer::Flags::Debug
+                                                     : Buffer::Flags::None);
 
     if (force_reload and buffer and buffer->flags() & Buffer::Flags::File)
         reload_file_buffer(*buffer);
@@ -243,7 +259,8 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (parser.get_switch("scratch"))
         {
-            if (buffer and (force_reload or buffer->flags() != Buffer::Flags::None))
+            if (buffer
+                and (force_reload or buffer->flags() != Buffer::Flags::None))
             {
                 buffer_manager.delete_buffer(*buffer);
                 buffer = nullptr;
@@ -253,14 +270,16 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
                 buffer = buffer_manager.create_buffer(name, flags);
         }
         else if (auto fifo = parser.get_switch("fifo"))
-            buffer = open_fifo(name, *fifo, flags, (bool)parser.get_switch("scroll"));
+            buffer = open_fifo(name, *fifo, flags,
+                               (bool)parser.get_switch("scroll"));
         else if (not buffer)
         {
-            buffer = parser.get_switch("existing") ? open_file_buffer(name, flags)
-                                                   : open_or_create_file_buffer(name, flags);
+            buffer = parser.get_switch("existing")
+                         ? open_file_buffer(name, flags)
+                         : open_or_create_file_buffer(name, flags);
             if (buffer->flags() & Buffer::Flags::New)
-                context.print_status({ format("new file '{}'", name),
-                                       context.faces()["StatusLine"] });
+                context.print_status({format("new file '{}'", name),
+                                      context.faces()["StatusLine"]});
         }
 
         buffer->flags() &= ~Buffer::Flags::NoHooks;
@@ -278,71 +297,85 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
         context.change_buffer(*buffer);
 
     if (parser.get_switch("fifo") and not parser.get_switch("scroll"))
-        context.selections_write_only() = { *buffer, Selection{} };
+        context.selections_write_only() = {*buffer, Selection{}};
     else if (param_count > 1 and not parser[1].empty())
     {
-        int line = std::max(0, str_to_int(parser[1]) - 1);
-        int column = param_count > 2 and not parser[2].empty() ?
-                     std::max(0, str_to_int(parser[2]) - 1) : 0;
+        int line   = std::max(0, str_to_int(parser[1]) - 1);
+        int column = param_count > 2 and not parser[2].empty()
+                         ? std::max(0, str_to_int(parser[2]) - 1)
+                         : 0;
 
         auto& buffer = context.buffer();
-        context.selections_write_only() = { buffer, buffer.clamp({ line,  column }) };
+        context.selections_write_only()
+            = {buffer, buffer.clamp({line, column})};
         if (context.has_window())
-            context.window().center_line(context.selections().main().cursor().line);
+            context.window().center_line(
+                context.selections().main().cursor().line);
     }
 }
 
 ParameterDesc edit_params{
-    { { "existing", { false, "fail if the file does not exists, do not open a new file" } },
-      { "scratch",  { false, "create a scratch buffer, not linked to a file" } },
-      { "debug",    { false, "create buffer as debug output" } },
-      { "fifo",     { true,  "create a buffer reading its content from a named fifo" } },
-      { "readonly", { false, "create a buffer in readonly mode" } },
-      { "scroll",   { false, "place the initial cursor so that the fifo will scroll to show new data" } } },
-      ParameterDesc::Flags::None, 0, 3
-};
-const CommandDesc edit_cmd = {
-    "edit",
-    "e",
-    "edit [<switches>] <filename> [<line> [<column>]]: open the given filename in a buffer",
-    edit_params,
-    CommandFlags::None,
-    CommandHelper{},
-    filename_completer,
-    edit<false>
-};
+    {{"existing",
+      {false, "fail if the file does not exists, do not open a new file"}},
+     {"scratch", {false, "create a scratch buffer, not linked to a file"}},
+     {"debug", {false, "create buffer as debug output"}},
+     {"fifo", {true, "create a buffer reading its content from a named fifo"}},
+     {"readonly", {false, "create a buffer in readonly mode"}},
+     {"scroll",
+      {false,
+       "place the initial cursor so that the fifo will scroll to show new "
+       "data"}}},
+    ParameterDesc::Flags::None,
+    0,
+    3};
+const CommandDesc edit_cmd
+    = {"edit",
+       "e",
+       "edit [<switches>] <filename> [<line> [<column>]]: open the given "
+       "filename in a buffer",
+       edit_params,
+       CommandFlags::None,
+       CommandHelper{},
+       filename_completer,
+       edit<false>};
 
-const CommandDesc force_edit_cmd = {
-    "edit!",
-    "e!",
-    "edit! [<switches>] <filename> [<line> [<column>]]: open the given filename in a buffer, "
-    "force reload if needed",
-    edit_params,
-    CommandFlags::None,
-    CommandHelper{},
-    filename_completer,
-    edit<true>
-};
+const CommandDesc force_edit_cmd
+    = {"edit!",
+       "e!",
+       "edit! [<switches>] <filename> [<line> [<column>]]: open the given "
+       "filename in a buffer, "
+       "force reload if needed",
+       edit_params,
+       CommandFlags::None,
+       CommandHelper{},
+       filename_completer,
+       edit<true>};
 
 const ParameterDesc write_params{
-    { { "sync", { false, "force the synchronization of the file onto the filesystem" } } },
-    ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
-};
+    {{"sync",
+      {false, "force the synchronization of the file onto the filesystem"}}},
+    ParameterDesc::Flags::SwitchesOnlyAtStart,
+    0,
+    1};
 
-void do_write_buffer(Context& context, Optional<String> filename, bool sync_file, bool force)
+void do_write_buffer(Context& context, Optional<String> filename,
+                     bool sync_file, bool force)
 {
     Buffer& buffer = context.buffer();
 
     if (not filename and !(buffer.flags() & Buffer::Flags::File))
-        throw runtime_error("cannot write a non file buffer without a filename");
+        throw runtime_error(
+            "cannot write a non file buffer without a filename");
 
     // if the buffer is in read-only mode and we try to save it directly
     // or we try to write to it indirectly using e.g. a symlink, throw an error
     if ((context.buffer().flags() & Buffer::Flags::ReadOnly)
         and (not filename or real_path(*filename) == buffer.name()))
-        throw runtime_error("cannot overwrite the buffer when in readonly mode");
+        throw runtime_error(
+            "cannot overwrite the buffer when in readonly mode");
 
-    auto effective_filename = not filename ? buffer.name() : parse_filename(*filename);
+    auto effective_filename
+        = not filename ? buffer.name() : parse_filename(*filename);
 
     context.hooks().run_hook(Hook::BufWritePre, effective_filename, context);
     write_buffer_to_file(buffer, effective_filename, force, sync_file);
@@ -350,11 +383,12 @@ void do_write_buffer(Context& context, Optional<String> filename, bool sync_file
 }
 
 template<bool force = false>
-void write_buffer(const ParametersParser& parser, Context& context, const ShellContext&)
+void write_buffer(const ParametersParser& parser, Context& context,
+                  const ShellContext&)
 {
-    return do_write_buffer(context,
-                           parser.positional_count() > 0 ? parser[0] : Optional<String>{},
-                           (bool)parser.get_switch("sync"), force);
+    return do_write_buffer(
+        context, parser.positional_count() > 0 ? parser[0] : Optional<String>{},
+        (bool)parser.get_switch("sync"), force);
 }
 
 const CommandDesc write_cmd = {
@@ -390,14 +424,16 @@ void write_all_buffers(Context& context, bool sync = false)
 
     for (auto& buffer : buffers)
     {
-        if ((buffer->flags() & Buffer::Flags::File) and
-            ((buffer->flags() & Buffer::Flags::New) or
-             buffer->is_modified())
+        if ((buffer->flags() & Buffer::Flags::File)
+            and ((buffer->flags() & Buffer::Flags::New)
+                 or buffer->is_modified())
             and !(buffer->flags() & Buffer::Flags::ReadOnly))
         {
-            buffer->run_hook_in_own_context(Hook::BufWritePre, buffer->name(), context.name());
+            buffer->run_hook_in_own_context(Hook::BufWritePre, buffer->name(),
+                                            context.name());
             write_buffer_to_file(*buffer, buffer->name(), sync);
-            buffer->run_hook_in_own_context(Hook::BufWritePost, buffer->name(), context.name());
+            buffer->run_hook_in_own_context(Hook::BufWritePost, buffer->name(),
+                                            context.name());
         }
     }
 }
@@ -407,16 +443,18 @@ const CommandDesc write_all_cmd = {
     "wa",
     "write-all [-sync]: write all buffers that are associated to a file",
     ParameterDesc{
-        { { "sync", { false, "force the synchronization of the file onto the filesystem" } } },
-        ParameterDesc::Flags::None, 0, 0
-    },
+        {{"sync",
+          {false,
+           "force the synchronization of the file onto the filesystem"}}},
+        ParameterDesc::Flags::None,
+        0,
+        0},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&){
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         write_all_buffers(context, (bool)parser.get_switch("sync"));
-    }
-};
+    }};
 
 static void ensure_all_buffers_are_saved()
 {
@@ -424,7 +462,7 @@ static void ensure_all_buffers_are_saved()
         return (buf->flags() & Buffer::Flags::File) and buf->is_modified();
     };
 
-    auto it = find_if(BufferManager::instance(), is_modified);
+    auto it        = find_if(BufferManager::instance(), is_modified);
     const auto end = BufferManager::instance().end();
     if (it == end)
         return;
@@ -434,7 +472,7 @@ static void ensure_all_buffers_are_saved()
     while (it != end)
     {
         message += (*it)->name();
-        it = std::find_if(it+1, end, is_modified);
+        it = std::find_if(it + 1, end, is_modified);
         message += (it != end) ? ", " : "]";
     }
     throw runtime_error(message);
@@ -448,37 +486,39 @@ void kill(const ParametersParser& parser, Context& context, const ShellContext&)
     if (not force)
         ensure_all_buffers_are_saved();
 
-    const int status = parser.positional_count() > 0 ? str_to_int(parser[0]) : 0;
+    const int status
+        = parser.positional_count() > 0 ? str_to_int(parser[0]) : 0;
     while (not client_manager.empty())
         client_manager.remove_client(**client_manager.begin(), true, status);
 
     throw kill_session{status};
 }
 
-const CommandDesc kill_cmd = {
-    "kill",
-    nullptr,
-    "kill [<exit status>]: terminate the current session, the server and all clients connected. "
-    "An optional integer parameter can set the server and client processes exit status",
-    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    kill<false>
-};
+const CommandDesc kill_cmd
+    = {"kill",
+       nullptr,
+       "kill [<exit status>]: terminate the current session, the server and "
+       "all clients connected. "
+       "An optional integer parameter can set the server and client processes "
+       "exit status",
+       {{}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1},
+       CommandFlags::None,
+       CommandHelper{},
+       CommandCompleter{},
+       kill<false>};
 
-
-const CommandDesc force_kill_cmd = {
-    "kill!",
-    nullptr,
-    "kill! [<exit status>]: force the termination of the current session, the server and all clients connected. "
-    "An optional integer parameter can set the server and client processes exit status",
-    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    kill<true>
-};
+const CommandDesc force_kill_cmd
+    = {"kill!",
+       nullptr,
+       "kill! [<exit status>]: force the termination of the current session, "
+       "the server and all clients connected. "
+       "An optional integer parameter can set the server and client processes "
+       "exit status",
+       {{}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1},
+       CommandFlags::None,
+       CommandHelper{},
+       CommandCompleter{},
+       kill<true>};
 
 template<bool force>
 void quit(const ParametersParser& parser, Context& context, const ShellContext&)
@@ -486,36 +526,37 @@ void quit(const ParametersParser& parser, Context& context, const ShellContext&)
     if (not force and ClientManager::instance().count() == 1)
         ensure_all_buffers_are_saved();
 
-    const int status = parser.positional_count() > 0 ? str_to_int(parser[0]) : 0;
+    const int status
+        = parser.positional_count() > 0 ? str_to_int(parser[0]) : 0;
     ClientManager::instance().remove_client(context.client(), true, status);
 }
 
-const CommandDesc quit_cmd = {
-    "quit",
-    "q",
-    "quit [<exit status>]: quit current client, and the kakoune session if the client is the last "
-    "(if not running in daemon mode). "
-    "An optional integer parameter can set the client exit status",
-    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    quit<false>
-};
+const CommandDesc quit_cmd
+    = {"quit",
+       "q",
+       "quit [<exit status>]: quit current client, and the kakoune session if "
+       "the client is the last "
+       "(if not running in daemon mode). "
+       "An optional integer parameter can set the client exit status",
+       {{}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1},
+       CommandFlags::None,
+       CommandHelper{},
+       CommandCompleter{},
+       quit<false>};
 
-const CommandDesc force_quit_cmd = {
-    "quit!",
-    "q!",
-    "quit! [<exit status>]: quit current client, and the kakoune session if the client is the last "
-    "(if not running in daemon mode). Force quit even if the client is the "
-    "last and some buffers are not saved. "
-    "An optional integer parameter can set the client exit status",
-    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    quit<true>
-};
+const CommandDesc force_quit_cmd
+    = {"quit!",
+       "q!",
+       "quit! [<exit status>]: quit current client, and the kakoune session if "
+       "the client is the last "
+       "(if not running in daemon mode). Force quit even if the client is the "
+       "last and some buffers are not saved. "
+       "An optional integer parameter can set the client exit status",
+       {{}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1},
+       CommandFlags::None,
+       CommandHelper{},
+       CommandCompleter{},
+       quit<true>};
 
 template<bool force>
 void write_quit(const ParametersParser& parser, Context& context,
@@ -525,45 +566,45 @@ void write_quit(const ParametersParser& parser, Context& context,
     quit<force>(parser, context, shell_context);
 }
 
-const CommandDesc write_quit_cmd = {
-    "write-quit",
-    "wq",
-    "write-quit [-sync] [<exit status>]: write current buffer and quit current client. "
-    "An optional integer parameter can set the client exit status",
-    write_params,
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    write_quit<false>
-};
+const CommandDesc write_quit_cmd
+    = {"write-quit",
+       "wq",
+       "write-quit [-sync] [<exit status>]: write current buffer and quit "
+       "current client. "
+       "An optional integer parameter can set the client exit status",
+       write_params,
+       CommandFlags::None,
+       CommandHelper{},
+       CommandCompleter{},
+       write_quit<false>};
 
-const CommandDesc force_write_quit_cmd = {
-    "write-quit!",
-    "wq!",
-    "write-quit! [-sync] [<exit status>] write: current buffer and quit current client, even if other buffers are not saved. "
-    "An optional integer parameter can set the client exit status",
-    write_params,
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    write_quit<true>
-};
+const CommandDesc force_write_quit_cmd
+    = {"write-quit!",
+       "wq!",
+       "write-quit! [-sync] [<exit status>] write: current buffer and quit "
+       "current client, even if other buffers are not saved. "
+       "An optional integer parameter can set the client exit status",
+       write_params,
+       CommandFlags::None,
+       CommandHelper{},
+       CommandCompleter{},
+       write_quit<true>};
 
-const CommandDesc write_all_quit_cmd = {
-    "write-all-quit",
-    "waq",
-    "write-all-quit [-sync] [<exit status>]: write all buffers associated to a file and quit current client. "
-    "An optional integer parameter can set the client exit status.",
-    write_params,
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
-    {
-        write_all_buffers(context, (bool)parser.get_switch("sync"));
-        quit<false>(parser, context, shell_context);
-    }
-};
+const CommandDesc write_all_quit_cmd
+    = {"write-all-quit",
+       "waq",
+       "write-all-quit [-sync] [<exit status>]: write all buffers associated "
+       "to a file and quit current client. "
+       "An optional integer parameter can set the client exit status.",
+       write_params,
+       CommandFlags::None,
+       CommandHelper{},
+       CommandCompleter{},
+       [](const ParametersParser& parser, Context& context,
+          const ShellContext& shell_context) {
+           write_all_buffers(context, (bool)parser.get_switch("sync"));
+           quit<false>(parser, context, shell_context);
+       }};
 
 const CommandDesc buffer_cmd = {
     "buffer",
@@ -573,28 +614,28 @@ const CommandDesc buffer_cmd = {
     CommandFlags::None,
     CommandHelper{},
     other_buffer_completer,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         Buffer& buffer = BufferManager::instance().get_buffer(parser[0]);
         if (&buffer != &context.buffer())
         {
             context.push_jump();
             context.change_buffer(buffer);
         }
-    }
-};
+    }};
 
 template<bool next>
-void cycle_buffer(const ParametersParser& parser, Context& context, const ShellContext&)
+void cycle_buffer(const ParametersParser& parser, Context& context,
+                  const ShellContext&)
 {
     Buffer* oldbuf = &context.buffer();
-    auto it = find_if(BufferManager::instance(),
-                      [oldbuf](const std::unique_ptr<Buffer>& lhs)
-                      { return lhs.get() == oldbuf; });
+    auto it        = find_if(BufferManager::instance(),
+                      [oldbuf](const std::unique_ptr<Buffer>& lhs) {
+                          return lhs.get() == oldbuf;
+                      });
     kak_assert(it != BufferManager::instance().end());
 
     Buffer* newbuf = nullptr;
-    auto cycle = [&] {
+    auto cycle     = [&] {
         if (not next)
         {
             if (it == BufferManager::instance().begin())
@@ -619,61 +660,63 @@ void cycle_buffer(const ParametersParser& parser, Context& context, const ShellC
     }
 }
 
-const CommandDesc buffer_next_cmd = {
-    "buffer-next",
-    "bn",
-    "buffer-next: move to the next buffer in the list",
-    no_params,
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    cycle_buffer<true>
-};
+const CommandDesc buffer_next_cmd
+    = {"buffer-next",
+       "bn",
+       "buffer-next: move to the next buffer in the list",
+       no_params,
+       CommandFlags::None,
+       CommandHelper{},
+       CommandCompleter{},
+       cycle_buffer<true>};
 
-const CommandDesc buffer_previous_cmd = {
-    "buffer-previous",
-    "bp",
-    "buffer-previous: move to the previous buffer in the list",
-    no_params,
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    cycle_buffer<false>
-};
+const CommandDesc buffer_previous_cmd
+    = {"buffer-previous",
+       "bp",
+       "buffer-previous: move to the previous buffer in the list",
+       no_params,
+       CommandFlags::None,
+       CommandHelper{},
+       CommandCompleter{},
+       cycle_buffer<false>};
 
 template<bool force>
-void delete_buffer(const ParametersParser& parser, Context& context, const ShellContext&)
+void delete_buffer(const ParametersParser& parser, Context& context,
+                   const ShellContext&)
 {
     BufferManager& manager = BufferManager::instance();
-    Buffer& buffer = parser.positional_count() == 0 ? context.buffer() : manager.get_buffer(parser[0]);
-    if (not force and (buffer.flags() & Buffer::Flags::File) and buffer.is_modified())
+    Buffer& buffer         = parser.positional_count() == 0
+                         ? context.buffer()
+                         : manager.get_buffer(parser[0]);
+    if (not force and (buffer.flags() & Buffer::Flags::File)
+        and buffer.is_modified())
         throw runtime_error(format("buffer '{}' is modified", buffer.name()));
 
     manager.delete_buffer(buffer);
 }
 
-const CommandDesc delete_buffer_cmd = {
-    "delete-buffer",
-    "db",
-    "delete-buffer [name]: delete current buffer or the buffer named <name> if given",
-    single_optional_param,
-    CommandFlags::None,
-    CommandHelper{},
-    buffer_completer,
-    delete_buffer<false>
-};
+const CommandDesc delete_buffer_cmd
+    = {"delete-buffer",
+       "db",
+       "delete-buffer [name]: delete current buffer or the buffer named <name> "
+       "if given",
+       single_optional_param,
+       CommandFlags::None,
+       CommandHelper{},
+       buffer_completer,
+       delete_buffer<false>};
 
-const CommandDesc force_delete_buffer_cmd = {
-    "delete-buffer!",
-    "db!",
-    "delete-buffer! [name]: delete current buffer or the buffer named <name> if "
-    "given, even if the buffer is unsaved",
-    single_optional_param,
-    CommandFlags::None,
-    CommandHelper{},
-    buffer_completer,
-    delete_buffer<true>
-};
+const CommandDesc force_delete_buffer_cmd
+    = {"delete-buffer!",
+       "db!",
+       "delete-buffer! [name]: delete current buffer or the buffer named "
+       "<name> if "
+       "given, even if the buffer is unsaved",
+       single_optional_param,
+       CommandFlags::None,
+       CommandHelper{},
+       buffer_completer,
+       delete_buffer<true>};
 
 const CommandDesc rename_buffer_cmd = {
     "rename-buffer",
@@ -682,28 +725,32 @@ const CommandDesc rename_buffer_cmd = {
     single_param,
     CommandFlags::None,
     CommandHelper{},
-    make_single_word_completer([](const Context& context){ return context.buffer().display_name(); }),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    make_single_word_completer(
+        [](const Context& context) { return context.buffer().display_name(); }),
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         if (not context.buffer().set_name(parser[0]))
-            throw runtime_error(format("unable to change buffer name to '{}'", parser[0]));
-    }
-};
+            throw runtime_error(
+                format("unable to change buffer name to '{}'", parser[0]));
+    }};
 
-static constexpr auto highlighter_scopes = { "global/", "buffer/", "window/", "shared/" };
+static constexpr auto highlighter_scopes
+    = {"global/", "buffer/", "window/", "shared/"};
 
 template<bool add>
-Completions highlighter_cmd_completer(
-    const Context& context, CompletionFlags flags, CommandParameters params,
-    size_t token_to_complete, ByteCount pos_in_token)
+Completions highlighter_cmd_completer(const Context& context,
+                                      CompletionFlags flags,
+                                      CommandParameters params,
+                                      size_t token_to_complete,
+                                      ByteCount pos_in_token)
 {
     if (token_to_complete == 0)
     {
 
         StringView path = params[0];
-        auto sep_it = find(path, '/');
+        auto sep_it     = find(path, '/');
         if (sep_it == path.end())
-           return { 0_byte, pos_in_token, complete(path, pos_in_token, highlighter_scopes) };
+            return {0_byte, pos_in_token,
+                    complete(path, pos_in_token, highlighter_scopes)};
 
         StringView scope{path.begin(), sep_it};
         HighlighterGroup* root = nullptr;
@@ -715,12 +762,18 @@ Completions highlighter_cmd_completer(
             return {};
 
         auto offset = scope.length() + 1;
-        return offset_pos(root->complete_child(StringView{sep_it+1, path.end()}, pos_in_token - offset, add), offset);
+        return offset_pos(
+            root->complete_child(StringView{sep_it + 1, path.end()},
+                                 pos_in_token - offset, add),
+            offset);
     }
     else if (add and token_to_complete == 1)
     {
         StringView name = params[1];
-        return { 0_byte, name.length(), complete(name, pos_in_token, HighlighterRegistry::instance() | transform(&HighlighterRegistry::Item::key)) };
+        return {0_byte, name.length(),
+                complete(name, pos_in_token,
+                         HighlighterRegistry::instance()
+                             | transform(&HighlighterRegistry::Item::key))};
     }
     else
         return {};
@@ -733,38 +786,43 @@ Highlighter& get_highlighter(const Context& context, StringView path)
 
     auto sep_it = find(path, '/');
     StringView scope{path.begin(), sep_it};
-    auto* root = (scope == "shared") ? static_cast<HighlighterGroup*>(&DefinedHighlighters::instance())
-                                     : static_cast<HighlighterGroup*>(&get_scope(scope, context).highlighters().group());
+    auto* root
+        = (scope == "shared")
+              ? static_cast<HighlighterGroup*>(&DefinedHighlighters::instance())
+              : static_cast<HighlighterGroup*>(
+                    &get_scope(scope, context).highlighters().group());
     if (sep_it != path.end())
-        return root->get_child(StringView{sep_it+1, path.end()});
+        return root->get_child(StringView{sep_it + 1, path.end()});
     return *root;
 }
 
 const CommandDesc add_highlighter_cmd = {
     "add-highlighter",
     "addhl",
-    "add-highlighter <path>/<name> <type> <type params>...: add an highlighter to the group identified by <path>\n"
-    "    <path> is a '/' delimited path or the parent highlighter, starting with either\n"
-    "   'global', 'buffer', 'window' or 'shared', if <name> is empty, it will be autogenerated",
-    ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, 2 },
+    "add-highlighter <path>/<name> <type> <type params>...: add an highlighter "
+    "to the group identified by <path>\n"
+    "    <path> is a '/' delimited path or the parent highlighter, starting "
+    "with either\n"
+    "   'global', 'buffer', 'window' or 'shared', if <name> is empty, it will "
+    "be autogenerated",
+    ParameterDesc{{}, ParameterDesc::Flags::SwitchesAsPositional, 2},
     CommandFlags::None,
-    [](const Context& context, CommandParameters params) -> String
-    {
+    [](const Context& context, CommandParameters params) -> String {
         if (params.size() > 1)
         {
             HighlighterRegistry& registry = HighlighterRegistry::instance();
-            auto it = registry.find(params[1]);
+            auto it                       = registry.find(params[1]);
             if (it != registry.end())
-                return format("{}:\n{}", params[1], indent(it->value.docstring));
+                return format("{}:\n{}", params[1],
+                              indent(it->value.docstring));
         }
         return "";
     },
     highlighter_cmd_completer<true>,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-        auto begin = parser.begin();
+        auto begin      = parser.begin();
         StringView path = *begin++;
         StringView type = *begin++;
         Vector<String> highlighter_params;
@@ -780,78 +838,89 @@ const CommandDesc add_highlighter_cmd = {
             throw runtime_error("no parent in path");
 
         auto auto_name = [](ConstArrayView<String> params) {
-            return join(params | transform([](StringView s) { return replace(s, "/", "<slash>"); }), "_");
+            return join(params | transform([](StringView s) {
+                            return replace(s, "/", "<slash>");
+                        }),
+                        "_");
         };
 
         String name{slash.base(), path.end()};
-        Highlighter& parent = get_highlighter(context, {path.begin(), slash.base() - 1});
-        parent.add_child(name.empty() ? auto_name(parser.positionals_from(1)) : std::move(name),
-                            it->value.factory(highlighter_params, &parent));
+        Highlighter& parent
+            = get_highlighter(context, {path.begin(), slash.base() - 1});
+        parent.add_child(name.empty() ? auto_name(parser.positionals_from(1))
+                                      : std::move(name),
+                         it->value.factory(highlighter_params, &parent));
 
-        // TODO: better, this will fail if we touch scopes highlighters that impact multiple windows
+        // TODO: better, this will fail if we touch scopes highlighters that
+        // impact multiple windows
         if (context.has_window())
             context.window().force_redraw();
-    }
-};
+    }};
 
 const CommandDesc remove_highlighter_cmd = {
     "remove-highlighter",
     "rmhl",
     "remove-highlighter <path>: remove highlighter identified by <path>",
-    { {}, ParameterDesc::Flags::None, 1, 1 },
+    {{}, ParameterDesc::Flags::None, 1, 1},
     CommandFlags::None,
     CommandHelper{},
     highlighter_cmd_completer<false>,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         StringView path = parser[0];
         if (not path.empty() and path.back() == '/') // ignore trailing /
             path = path.substr(0_byte, path.length() - 1_byte);
 
         auto rev_path = path | reverse();
-        auto sep_it = find(rev_path, '/');
+        auto sep_it   = find(rev_path, '/');
         if (sep_it == rev_path.end())
             return;
-        get_highlighter(context, {path.begin(), sep_it.base()}).remove_child({sep_it.base(), path.end()});
+        get_highlighter(context, {path.begin(), sep_it.base()})
+            .remove_child({sep_it.base(), path.end()});
 
         if (context.has_window())
             context.window().force_redraw();
-    }
-};
+    }};
 
 static Completions complete_hooks(const Context&, CompletionFlags,
                                   const String& prefix, ByteCount cursor_pos)
 {
-    return { 0_byte, cursor_pos, complete(prefix, cursor_pos, enum_desc(Meta::Type<Hook>{}) | transform(&EnumDesc<Hook>::name)) };
+    return {0_byte, cursor_pos,
+            complete(prefix, cursor_pos,
+                     enum_desc(Meta::Type<Hook>{})
+                         | transform(&EnumDesc<Hook>::name))};
 }
 
 const CommandDesc add_hook_cmd = {
     "hook",
     nullptr,
-    "hook [<switches>] <scope> <hook_name> <filter> <command>: add <command> in <scope> "
-    "to be executed on hook <hook_name> when its parameter matches the <filter> regex\n"
+    "hook [<switches>] <scope> <hook_name> <filter> <command>: add <command> "
+    "in <scope> "
+    "to be executed on hook <hook_name> when its parameter matches the "
+    "<filter> regex\n"
     "<scope> can be:\n"
     "  * global: hook is executed for any buffer or window\n"
     "  * buffer: hook is executed only for the current buffer\n"
     "            (and any window for that buffer)\n"
     "  * window: hook is executed only for the current window\n",
-    ParameterDesc{
-        { { "group", { true, "set hook group, see remove-hooks" } },
-          { "always", { false, "run hook even if hooks are disabled" } },
-          { "once", { false, "run the hook only once" } } },
-        ParameterDesc::Flags::None, 4, 4
-    },
+    ParameterDesc{{{"group", {true, "set hook group, see remove-hooks"}},
+                   {"always", {false, "run hook even if hooks are disabled"}},
+                   {"once", {false, "run the hook only once"}}},
+                  ParameterDesc::Flags::None,
+                  4,
+                  4},
     CommandFlags::None,
     CommandHelper{},
     make_completer(complete_scope, complete_hooks, complete_nothing,
                    [](const Context& context, CompletionFlags flags,
-                      const String& prefix, ByteCount cursor_pos)
-                   { return CommandManager::instance().complete(
-                         context, flags, prefix, cursor_pos); }),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+                      const String& prefix, ByteCount cursor_pos) {
+                       return CommandManager::instance().complete(
+                           context, flags, prefix, cursor_pos);
+                   }),
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         auto descs = enum_desc(Meta::Type<Hook>{});
-        auto it = find_if(descs, [&](const EnumDesc<Hook>& desc) { return desc.name == parser[1]; });
+        auto it    = find_if(descs, [&](const EnumDesc<Hook>& desc) {
+            return desc.name == parser[1];
+        });
         if (it == descs.end())
             throw runtime_error{format("no such hook: '{}'", parser[1])};
 
@@ -859,44 +928,44 @@ const CommandDesc add_hook_cmd = {
         const String& command = parser[3];
         auto group = parser.get_switch("group").value_or(StringView{});
 
-        if (any_of(group, [](char c) { return not is_word(c, { '-' }); }) or
-            (not group.empty() and not is_word(group[0])))
+        if (any_of(group, [](char c) { return not is_word(c, {'-'}); })
+            or (not group.empty() and not is_word(group[0])))
             throw runtime_error{format("invalid group name '{}'", group)};
 
-        const auto flags = (parser.get_switch("always") ? HookFlags::Always : HookFlags::None) |
-                           (parser.get_switch("once")   ? HookFlags::Once   : HookFlags::None);
-        get_scope(parser[0], context).hooks().add_hook(it->value, group.str(), flags,
-                                                       std::move(regex), command);
-    }
-};
+        const auto flags
+            = (parser.get_switch("always") ? HookFlags::Always
+                                           : HookFlags::None)
+              | (parser.get_switch("once") ? HookFlags::Once : HookFlags::None);
+        get_scope(parser[0], context)
+            .hooks()
+            .add_hook(it->value, group.str(), flags, std::move(regex), command);
+    }};
 
 const CommandDesc remove_hook_cmd = {
     "remove-hooks",
     "rmhooks",
-    "remove-hooks <scope> <group>: remove all hooks whose group matches the regex <group>",
-    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    "remove-hooks <scope> <group>: remove all hooks whose group matches the "
+    "regex <group>",
+    ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
     CommandFlags::None,
     CommandHelper{},
-    [](const Context& context, CompletionFlags flags,
-       CommandParameters params, size_t token_to_complete,
-       ByteCount pos_in_token) -> Completions
-    {
+    [](const Context& context, CompletionFlags flags, CommandParameters params,
+       size_t token_to_complete, ByteCount pos_in_token) -> Completions {
         if (token_to_complete == 0)
-            return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, scopes) };
+            return {0_byte, params[0].length(),
+                    complete(params[0], pos_in_token, scopes)};
         else if (token_to_complete == 1)
         {
             if (auto scope = get_scope_ifp(params[0], context))
-                return { 0_byte, params[0].length(),
-                         scope->hooks().complete_hook_group(params[1], pos_in_token) };
+                return {0_byte, params[0].length(),
+                        scope->hooks().complete_hook_group(params[1],
+                                                           pos_in_token)};
         }
         return {};
     },
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         get_scope(parser[0], context).hooks().remove_hooks(Regex{parser[1]});
-    }
-};
+    }};
 
 Vector<String> params_to_shell(const ParametersParser& parser)
 {
@@ -906,10 +975,11 @@ Vector<String> params_to_shell(const ParametersParser& parser)
     return vars;
 }
 
-void define_command(const ParametersParser& parser, Context& context, const ShellContext&)
+void define_command(const ParametersParser& parser, Context& context,
+                    const ShellContext&)
 {
     const String& cmd_name = parser[0];
-    auto& cm = CommandManager::instance();
+    auto& cm               = CommandManager::instance();
 
     if (not all_of(cmd_name, is_identifier))
         throw runtime_error(format("invalid command name: '{}'", cmd_name));
@@ -940,17 +1010,22 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
         else
             min = max = (size_t)str_to_int(counts);
 
-        desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, min, max };
-        cmd = [=](const ParametersParser& parser, Context& context, const ShellContext& sc) {
-            CommandManager::instance().execute(commands, context,
-                                               { params_to_shell(parser), sc.env_vars });
+        desc = ParameterDesc{
+            {}, ParameterDesc::Flags::SwitchesAsPositional, min, max};
+        cmd = [=](const ParametersParser& parser, Context& context,
+                  const ShellContext& sc) {
+            CommandManager::instance().execute(
+                commands, context, {params_to_shell(parser), sc.env_vars});
         };
     }
     else
     {
-        desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 0 };
-        cmd = [=](const ParametersParser& parser, Context& context, const ShellContext& sc) {
-            CommandManager::instance().execute(commands, context, { {}, sc.env_vars });
+        desc = ParameterDesc{
+            {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 0};
+        cmd = [=](const ParametersParser& parser, Context& context,
+                  const ShellContext& sc) {
+            CommandManager::instance().execute(commands, context,
+                                               {{}, sc.env_vars});
         };
     }
 
@@ -958,71 +1033,72 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     if (parser.get_switch("file-completion"))
     {
         completer = [](const Context& context, CompletionFlags flags,
-                       CommandParameters params,
-                       size_t token_to_complete, ByteCount pos_in_token)
-        {
-             const String& prefix = params[token_to_complete];
-             auto& ignored_files = context.options()["ignored_files"].get<Regex>();
-             return Completions{ 0_byte, pos_in_token,
-                                 complete_filename(prefix, ignored_files,
-                                                   pos_in_token, FilenameFlags::Expand) };
+                       CommandParameters params, size_t token_to_complete,
+                       ByteCount pos_in_token) {
+            const String& prefix = params[token_to_complete];
+            auto& ignored_files
+                = context.options()["ignored_files"].get<Regex>();
+            return Completions{
+                0_byte, pos_in_token,
+                complete_filename(prefix, ignored_files, pos_in_token,
+                                  FilenameFlags::Expand)};
         };
     }
     else if (parser.get_switch("client-completion"))
     {
         completer = [](const Context& context, CompletionFlags flags,
-                       CommandParameters params,
-                       size_t token_to_complete, ByteCount pos_in_token)
-        {
-             const String& prefix = params[token_to_complete];
-             auto& cm = ClientManager::instance();
-             return Completions{ 0_byte, pos_in_token,
-                                 cm.complete_client_name(prefix, pos_in_token) };
+                       CommandParameters params, size_t token_to_complete,
+                       ByteCount pos_in_token) {
+            const String& prefix = params[token_to_complete];
+            auto& cm             = ClientManager::instance();
+            return Completions{0_byte, pos_in_token,
+                               cm.complete_client_name(prefix, pos_in_token)};
         };
     }
     else if (parser.get_switch("buffer-completion"))
     {
         completer = [](const Context& context, CompletionFlags flags,
-                       CommandParameters params,
-                       size_t token_to_complete, ByteCount pos_in_token)
-        {
-             return complete_buffer_name(context, flags, params[token_to_complete], pos_in_token);
+                       CommandParameters params, size_t token_to_complete,
+                       ByteCount pos_in_token) {
+            return complete_buffer_name(
+                context, flags, params[token_to_complete], pos_in_token);
         };
     }
     else if (auto shell_cmd_opt = parser.get_switch("shell-script-completion"))
     {
         String shell_cmd = shell_cmd_opt->str();
-        completer = [=](const Context& context, CompletionFlags flags,
-                        CommandParameters params,
-                        size_t token_to_complete, ByteCount pos_in_token)
-        {
+        completer        = [=](const Context& context, CompletionFlags flags,
+                        CommandParameters params, size_t token_to_complete,
+                        ByteCount pos_in_token) {
             if (flags & CompletionFlags::Fast) // no shell on fast completion
                 return Completions{};
 
             ShellContext shell_context{
                 params,
-                { { "token_to_complete", to_string(token_to_complete) },
-                  { "pos_in_token",      to_string(pos_in_token) } }
-            };
-            String output = ShellManager::instance().eval(shell_cmd, context, {},
-                                                          ShellManager::Flags::WaitForStdout,
-                                                          shell_context).first;
+                {{"token_to_complete", to_string(token_to_complete)},
+                 {"pos_in_token", to_string(pos_in_token)}}};
+            String output
+                = ShellManager::instance()
+                      .eval(shell_cmd, context, {},
+                            ShellManager::Flags::WaitForStdout, shell_context)
+                      .first;
             CandidateList candidates;
             for (auto&& candidate : output | split<StringView>('\n'))
                 candidates.push_back(candidate.str());
 
-            return Completions{ 0_byte, pos_in_token, std::move(candidates) };
+            return Completions{0_byte, pos_in_token, std::move(candidates)};
         };
     }
     else if (auto shell_cmd_opt = parser.get_switch("shell-script-candidates"))
     {
         String shell_cmd = shell_cmd_opt->str();
-        Vector<std::pair<String, UsedLetters>, MemoryDomain::Completion> candidates;
+        Vector<std::pair<String, UsedLetters>, MemoryDomain::Completion>
+            candidates;
         int token = -1;
         completer = [shell_cmd, candidates, token](
-            const Context& context, CompletionFlags flags, CommandParameters params,
-            size_t token_to_complete, ByteCount pos_in_token) mutable
-        {
+                        const Context& context, CompletionFlags flags,
+                        CommandParameters params, size_t token_to_complete,
+                        ByteCount pos_in_token) mutable {
             if (flags & CompletionFlags::Start)
                 token = -1;
 
@@ -1030,46 +1106,49 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
             {
                 ShellContext shell_context{
                     params,
-                    { { "token_to_complete", to_string(token_to_complete) } }
-                };
-                String output = ShellManager::instance().eval(shell_cmd, context, {},
-                                                              ShellManager::Flags::WaitForStdout,
-                                                              shell_context).first;
+                    {{"token_to_complete", to_string(token_to_complete)}}};
+                String output = ShellManager::instance()
+                                    .eval(shell_cmd, context, {},
+                                          ShellManager::Flags::WaitForStdout,
+                                          shell_context)
+                                    .first;
                 candidates.clear();
                 for (auto c : output | split<StringView>('\n'))
                     candidates.emplace_back(c.str(), used_letters(c));
                 token = token_to_complete;
             }
 
-            StringView query = params[token_to_complete].substr(0, pos_in_token);
+            StringView query
+                = params[token_to_complete].substr(0, pos_in_token);
             UsedLetters query_letters = used_letters(query);
             Vector<RankedMatch> matches;
             for (const auto& candidate : candidates)
             {
-                if (RankedMatch match{candidate.first, candidate.second, query, query_letters})
+                if (RankedMatch match{candidate.first, candidate.second, query,
+                                      query_letters})
                     matches.push_back(match);
             }
 
             constexpr size_t max_count = 100;
             CandidateList res;
             // Gather best max_count matches
-            for_n_best(matches, max_count, [](auto& lhs, auto& rhs) { return rhs < lhs; },
-                       [&] (RankedMatch& m) {
-                if (not res.empty() and res.back() == m.candidate())
-                    return false;
-                res.push_back(m.candidate().str());
-                return true;
-            });
+            for_n_best(matches, max_count,
+                       [](auto& lhs, auto& rhs) { return rhs < lhs; },
+                       [&](RankedMatch& m) {
+                           if (not res.empty() and res.back() == m.candidate())
+                               return false;
+                           res.push_back(m.candidate().str());
+                           return true;
+                       });
 
-            return Completions{ 0_byte, pos_in_token, std::move(res) };
+            return Completions{0_byte, pos_in_token, std::move(res)};
         };
     }
     else if (parser.get_switch("command-completion"))
     {
         completer = [](const Context& context, CompletionFlags flags,
-                       CommandParameters params,
-                       size_t token_to_complete, ByteCount pos_in_token)
-        {
+                       CommandParameters params, size_t token_to_complete,
+                       ByteCount pos_in_token) {
             return CommandManager::instance().complete(
                 context, flags, params, token_to_complete, pos_in_token);
         };
@@ -1077,43 +1156,56 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     else if (parser.get_switch("shell-completion"))
     {
         completer = [](const Context& context, CompletionFlags flags,
-                       CommandParameters params,
-                       size_t token_to_complete, ByteCount pos_in_token)
-        {
-            return shell_complete(context, flags, params[token_to_complete], pos_in_token);
+                       CommandParameters params, size_t token_to_complete,
+                       ByteCount pos_in_token) {
+            return shell_complete(context, flags, params[token_to_complete],
+                                  pos_in_token);
         };
     }
 
-    auto docstring = trim_whitespaces(parser.get_switch("docstring").value_or(StringView{}));
+    auto docstring = trim_whitespaces(
+        parser.get_switch("docstring").value_or(StringView{}));
 
-    cm.register_command(cmd_name, cmd, docstring.str(), desc, flags, CommandHelper{}, completer);
+    cm.register_command(cmd_name, cmd, docstring.str(), desc, flags,
+                        CommandHelper{}, completer);
 }
 
 const CommandDesc define_command_cmd = {
     "define-command",
     "def",
-    "define-command [<switches>] <name> <cmds>: define a command <name> executing <cmds>",
+    "define-command [<switches>] <name> <cmds>: define a command <name> "
+    "executing <cmds>",
     ParameterDesc{
-        { { "params",                   { true,  "take parameters, accessible to each shell escape as $0..$N\n"
-                                                 "parameter should take the form <count> or <min>..<max> (both omittable)" } },
-          { "override",                 { false, "allow overriding an existing command" } },
-          { "hidden",                   { false, "do not display the command in completion candidates" } },
-          { "docstring",                { true,  "define the documentation string for command" } },
-          { "file-completion",          { false, "complete parameters using filename completion" } },
-          { "client-completion",        { false, "complete parameters using client name completion" } },
-          { "buffer-completion",        { false, "complete parameters using buffer name completion" } },
-          { "command-completion",       { false, "complete parameters using kakoune command completion" } },
-          { "shell-completion",         { false, "complete parameters using shell command completion" } },
-          { "shell-script-completion",  { true,  "complete parameters using the given shell-script" } },
-          { "shell-script-candidates",  { true,  "get the parameter candidates using the given shell-script" } } },
+        {{"params",
+          {true,
+           "take parameters, accessible to each shell escape as $0..$N\n"
+           "parameter should take the form <count> or <min>..<max> (both "
+           "omittable)"}},
+         {"override", {false, "allow overriding an existing command"}},
+         {"hidden",
+          {false, "do not display the command in completion candidates"}},
+         {"docstring", {true, "define the documentation string for command"}},
+         {"file-completion",
+          {false, "complete parameters using filename completion"}},
+         {"client-completion",
+          {false, "complete parameters using client name completion"}},
+         {"buffer-completion",
+          {false, "complete parameters using buffer name completion"}},
+         {"command-completion",
+          {false, "complete parameters using kakoune command completion"}},
+         {"shell-completion",
+          {false, "complete parameters using shell command completion"}},
+         {"shell-script-completion",
+          {true, "complete parameters using the given shell-script"}},
+         {"shell-script-candidates",
+          {true, "get the parameter candidates using the given shell-script"}}},
         ParameterDesc::Flags::None,
-        2, 2
-    },
+        2,
+        2},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    define_command
-};
+    define_command};
 
 const CommandDesc alias_cmd = {
     "alias",
@@ -1123,77 +1215,83 @@ const CommandDesc alias_cmd = {
     CommandFlags::None,
     CommandHelper{},
     make_completer(complete_scope, complete_nothing, complete_command_name),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         if (not CommandManager::instance().command_defined(parser[2]))
             throw runtime_error(format("no such command: '{}'", parser[2]));
 
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
         aliases.add_alias(parser[1], parser[2]);
-    }
-};
+    }};
 
 static Completions complete_alias(const Context& context, CompletionFlags flags,
-                                 const String& prefix, ByteCount cursor_pos)
+                                  const String& prefix, ByteCount cursor_pos)
 {
     return {0_byte, cursor_pos,
-            complete(prefix, cursor_pos, context.aliases().flatten_aliases() |
-                     transform([](auto& entry) -> const String& { return entry.key; }))};
+            complete(prefix, cursor_pos,
+                     context.aliases().flatten_aliases()
+                         | transform([](auto& entry) -> const String& {
+                               return entry.key;
+                           }))};
 }
 
 const CommandDesc unalias_cmd = {
     "unalias",
     nullptr,
     "unalias <scope> <alias> [<expected>]: remove <alias> from <scope>\n"
-    "If <expected> is specified, remove <alias> only if its value is <expected>",
+    "If <expected> is specified, remove <alias> only if its value is "
+    "<expected>",
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
     make_completer(complete_scope, complete_alias, complete_command_name),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
-        if (parser.positional_count() == 3 and
-            aliases[parser[1]] != parser[2])
+        if (parser.positional_count() == 3 and aliases[parser[1]] != parser[2])
             return;
         aliases.remove_alias(parser[1]);
-    }
-};
+    }};
 
 const CommandDesc echo_cmd = {
     "echo",
     nullptr,
     "echo <params>...: display given parameters in the status line",
     ParameterDesc{
-        { { "markup", { false, "parse markup" } },
-          { "debug", { false, "write to debug buffer instead of status line" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart
-    },
+        {{"markup", {false, "parse markup"}},
+         {"debug", {false, "write to debug buffer instead of status line"}}},
+        ParameterDesc::Flags::SwitchesOnlyAtStart},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         String message = fix_atom_text(join(parser, ' ', false));
         if (parser.get_switch("debug"))
             write_to_debug_buffer(message);
         else if (parser.get_switch("markup"))
             context.print_status(parse_display_line(message, context.faces()));
         else
-            context.print_status({ std::move(message), context.faces()["StatusLine"] });
-    }
-};
+            context.print_status(
+                {std::move(message), context.faces()["StatusLine"]});
+    }};
 
-KeymapMode parse_keymap_mode(StringView str, const KeymapManager::UserModeList& user_modes)
+KeymapMode parse_keymap_mode(StringView str,
+                             const KeymapManager::UserModeList& user_modes)
 {
-    if (prefix_match("normal", str)) return KeymapMode::Normal;
-    if (prefix_match("insert", str)) return KeymapMode::Insert;
-    if (prefix_match("menu", str))   return KeymapMode::Menu;
-    if (prefix_match("prompt", str)) return KeymapMode::Prompt;
-    if (prefix_match("goto", str))   return KeymapMode::Goto;
-    if (prefix_match("view", str))   return KeymapMode::View;
-    if (prefix_match("user", str))   return KeymapMode::User;
-    if (prefix_match("object", str)) return KeymapMode::Object;
+    if (prefix_match("normal", str))
+        return KeymapMode::Normal;
+    if (prefix_match("insert", str))
+        return KeymapMode::Insert;
+    if (prefix_match("menu", str))
+        return KeymapMode::Menu;
+    if (prefix_match("prompt", str))
+        return KeymapMode::Prompt;
+    if (prefix_match("goto", str))
+        return KeymapMode::Goto;
+    if (prefix_match("view", str))
+        return KeymapMode::View;
+    if (prefix_match("user", str))
+        return KeymapMode::User;
+    if (prefix_match("object", str))
+        return KeymapMode::Object;
 
     auto it = find(user_modes, str);
     if (it == user_modes.end())
@@ -1203,7 +1301,8 @@ KeymapMode parse_keymap_mode(StringView str, const KeymapManager::UserModeList& 
     return (KeymapMode)(std::distance(user_modes.begin(), it) + offset);
 }
 
-static constexpr auto modes = { "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" };
+static constexpr auto modes
+    = {"normal", "insert", "menu", "prompt", "goto", "view", "user", "object"};
 
 const CommandDesc debug_cmd = {
     "debug",
@@ -1212,25 +1311,26 @@ const CommandDesc debug_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(
-        [](const Context& context, CompletionFlags flags,
-           const String& prefix, ByteCount cursor_pos) -> Completions {
-               auto c = {"info", "buffers", "options", "memory", "shared-strings",
-                         "profile-hash-maps", "faces", "mappings", "regex"};
-               return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
+    make_completer([](const Context& context, CompletionFlags flags,
+                      const String& prefix,
+                      ByteCount cursor_pos) -> Completions {
+        auto c = {"info",   "buffers",        "options",
+                  "memory", "shared-strings", "profile-hash-maps",
+                  "faces",  "mappings",       "regex"};
+        return {0_byte, cursor_pos, complete(prefix, cursor_pos, c)};
     }),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         if (parser[0] == "info")
         {
             write_to_debug_buffer(format("version: {}", version));
             write_to_debug_buffer(format("pid: {}", getpid()));
-            write_to_debug_buffer(format("session: {}", Server::instance().session()));
-            #ifdef KAK_DEBUG
+            write_to_debug_buffer(
+                format("session: {}", Server::instance().session()));
+#ifdef KAK_DEBUG
             write_to_debug_buffer("build: debug");
-            #else
+#else
             write_to_debug_buffer("build: release");
-            #endif
+#endif
         }
         else if (parser[0] == "buffers")
         {
@@ -1242,8 +1342,9 @@ const CommandDesc debug_cmd = {
         {
             write_to_debug_buffer("Options:");
             for (auto& option : context.options().flatten_options())
-                write_to_debug_buffer(format(" * {}: {}", option->name(),
-                                             option->get_as_string(Quoting::Kakoune)));
+                write_to_debug_buffer(
+                    format(" * {}: {}", option->name(),
+                           option->get_as_string(Quoting::Kakoune)));
         }
         else if (parser[0] == "memory")
         {
@@ -1253,12 +1354,14 @@ const CommandDesc debug_cmd = {
             {
                 size_t count = domain_allocated_bytes[domain];
                 total += count;
-                write_to_debug_buffer(format("  {}: {}", domain_name((MemoryDomain)domain), count));
+                write_to_debug_buffer(format(
+                    "  {}: {}", domain_name((MemoryDomain)domain), count));
             }
             write_to_debug_buffer(format("  Total: {}", total));
-            #if defined(__GLIBC__) || defined(__CYGWIN__)
-            write_to_debug_buffer(format("  Malloced: {}", mallinfo().uordblks));
-            #endif
+#if defined(__GLIBC__) || defined(__CYGWIN__)
+            write_to_debug_buffer(
+                format("  Malloced: {}", mallinfo().uordblks));
+#endif
         }
         else if (parser[0] == "shared-strings")
         {
@@ -1272,20 +1375,22 @@ const CommandDesc debug_cmd = {
         {
             write_to_debug_buffer("Faces:");
             for (auto& face : context.faces().flatten_faces())
-                write_to_debug_buffer(format(" * {}: {}", face.key, face.value.face));
+                write_to_debug_buffer(
+                    format(" * {}: {}", face.key, face.value.face));
         }
         else if (parser[0] == "mappings")
         {
-            auto& keymaps = context.keymaps();
+            auto& keymaps   = context.keymaps();
             auto user_modes = keymaps.user_modes();
             write_to_debug_buffer("Mappings:");
-            for (auto& mode : concatenated(modes, user_modes) | gather<Vector<String>>())
+            for (auto& mode :
+                 concatenated(modes, user_modes) | gather<Vector<String>>())
             {
                 KeymapMode m = parse_keymap_mode(mode, user_modes);
                 for (auto& key : keymaps.get_mapped_keys(m))
-                    write_to_debug_buffer(format(" * {} {}: {}",
-                                          mode, key_to_str(key),
-                                          keymaps.get_mapping(key, m).docstring));
+                    write_to_debug_buffer(
+                        format(" * {} {}: {}", mode, key_to_str(key),
+                               keymaps.get_mapping(key, m).docstring));
             }
         }
         else if (parser[0] == "regex")
@@ -1293,28 +1398,29 @@ const CommandDesc debug_cmd = {
             if (parser.positional_count() != 2)
                 throw runtime_error("expected a regex");
 
-            write_to_debug_buffer(format(" * {}:\n{}",
-                                  parser[1], dump_regex(compile_regex(parser[1], RegexCompileFlags::None))));
+            write_to_debug_buffer(format(
+                " * {}:\n{}", parser[1],
+                dump_regex(compile_regex(parser[1], RegexCompileFlags::None))));
         }
         else
-            throw runtime_error(format("no such debug command: '{}'", parser[0]));
-    }
-};
+            throw runtime_error(
+                format("no such debug command: '{}'", parser[0]));
+    }};
 
 const CommandDesc source_cmd = {
     "source",
     nullptr,
     "source <filename> <params>...: execute commands contained in <filename>\n"
     "parameters are available in the sourced script as %arg{0}, %arg{1}, …",
-    ParameterDesc{ {}, ParameterDesc::Flags::None, 1, (size_t)-1 },
+    ParameterDesc{{}, ParameterDesc::Flags::None, 1, (size_t)-1},
     CommandFlags::None,
     CommandHelper{},
     filename_completer,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
-        const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
+        const DebugFlags debug_flags
+            = context.options()["debug"].get<DebugFlags>();
         const bool profile = debug_flags & DebugFlags::Profile;
-        auto start_time = profile ? Clock::now() : Clock::time_point{};
+        auto start_time    = profile ? Clock::now() : Clock::time_point{};
 
         String path = real_path(parse_filename(parser[0]));
         MappedFile file_content{path};
@@ -1332,25 +1438,29 @@ const CommandDesc source_cmd = {
 
         using namespace std::chrono;
         if (profile)
-            write_to_debug_buffer(format("sourcing '{}' took {} us", parser[0],
-                                         (size_t)duration_cast<microseconds>(Clock::now() - start_time).count()));
-    }
-};
+            write_to_debug_buffer(format(
+                "sourcing '{}' took {} us", parser[0],
+                (size_t)duration_cast<microseconds>(Clock::now() - start_time)
+                    .count()));
+    }};
 
-static String option_doc_helper(const Context& context, CommandParameters params)
+static String option_doc_helper(const Context& context,
+                                CommandParameters params)
 {
     const bool add = params.size() > 1 and params[0] == "-add";
     if (params.size() < 2 + (add ? 1 : 0))
         return "";
 
-    auto desc = GlobalScope::instance().option_registry().option_desc(params[1 + (add ? 1 : 0)]);
+    auto desc = GlobalScope::instance().option_registry().option_desc(
+        params[1 + (add ? 1 : 0)]);
     if (not desc or desc->docstring().empty())
         return "";
 
     return format("{}:\n{}", desc->name(), indent(desc->docstring()));
 }
 
-static OptionManager& get_options(StringView scope, const Context& context, StringView option_name)
+static OptionManager& get_options(StringView scope, const Context& context,
+                                  StringView option_name)
 {
     if (scope == "current")
         return context.options()[option_name].manager();
@@ -1360,47 +1470,56 @@ static OptionManager& get_options(StringView scope, const Context& context, Stri
 const CommandDesc set_option_cmd = {
     "set-option",
     "set",
-    "set-option [<switches>] <scope> <name> <value>: set option <name> in <scope> to <value>\n"
-    "<scope> can be global, buffer, window, or current which refers to the narrowest "
+    "set-option [<switches>] <scope> <name> <value>: set option <name> in "
+    "<scope> to <value>\n"
+    "<scope> can be global, buffer, window, or current which refers to the "
+    "narrowest "
     "scope the option is set in",
-    ParameterDesc{
-        { { "add", { false, "add to option rather than replacing it" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 2, (size_t)-1
-    },
+    ParameterDesc{{{"add", {false, "add to option rather than replacing it"}}},
+                  ParameterDesc::Flags::SwitchesOnlyAtStart,
+                  2,
+                  (size_t)-1},
     CommandFlags::None,
     option_doc_helper,
-    [](const Context& context, CompletionFlags,
-       CommandParameters params, size_t token_to_complete,
-       ByteCount pos_in_token) -> Completions
-    {
-        const bool add = params.size() > 1 and params[0] == "-add";
+    [](const Context& context, CompletionFlags, CommandParameters params,
+       size_t token_to_complete, ByteCount pos_in_token) -> Completions {
+        const bool add  = params.size() > 1 and params[0] == "-add";
         const int start = add ? 1 : 0;
 
-        static constexpr auto scopes = { "global", "buffer", "window", "current" };
+        static constexpr auto scopes
+            = {"global", "buffer", "window", "current"};
 
         if (token_to_complete == start)
-            return { 0_byte, params[start].length(),
-                     complete(params[start], pos_in_token, scopes) };
+            return {0_byte, params[start].length(),
+                    complete(params[start], pos_in_token, scopes)};
         else if (token_to_complete == start + 1)
-            return { 0_byte, params[start + 1].length(),
-                     GlobalScope::instance().option_registry().complete_option_name(params[start + 1], pos_in_token) };
-        else if (not add and token_to_complete == start + 2  and params[start + 2].empty() and
-                 GlobalScope::instance().option_registry().option_exists(params[start + 1]))
+            return {
+                0_byte, params[start + 1].length(),
+                GlobalScope::instance().option_registry().complete_option_name(
+                    params[start + 1], pos_in_token)};
+        else if (not add and token_to_complete == start + 2
+                 and params[start + 2].empty()
+                 and GlobalScope::instance().option_registry().option_exists(
+                         params[start + 1]))
         {
-            OptionManager& options = get_scope(params[start], context).options();
-            return { 0_byte, params[start + 2].length(), { options[params[start + 1]].get_as_string(Quoting::Kakoune) }, true };
+            OptionManager& options
+                = get_scope(params[start], context).options();
+            return {
+                0_byte,
+                params[start + 2].length(),
+                {options[params[start + 1]].get_as_string(Quoting::Kakoune)},
+                true};
         }
         return Completions{};
     },
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
-        Option& opt = get_options(parser[0], context, parser[1]).get_local_option(parser[1]);
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
+        Option& opt = get_options(parser[0], context, parser[1])
+                          .get_local_option(parser[1]);
         if (parser.get_switch("add"))
             opt.add_from_strings(parser.positionals_from(2));
         else
             opt.set_from_strings(parser.positionals_from(2));
-    }
-};
+    }};
 
 Completions complete_option(const Context& context, CompletionFlags,
                             CommandParameters params, size_t token_to_complete,
@@ -1408,56 +1527,58 @@ Completions complete_option(const Context& context, CompletionFlags,
 {
     if (token_to_complete == 0)
     {
-        static constexpr auto scopes = { "buffer", "window", "current" };
-        return { 0_byte, params[0].length(), complete(params[0], pos_in_token, scopes) };
+        static constexpr auto scopes = {"buffer", "window", "current"};
+        return {0_byte, params[0].length(),
+                complete(params[0], pos_in_token, scopes)};
     }
     else if (token_to_complete == 1)
-        return { 0_byte, params[1].length(),
-                 GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
+        return {0_byte, params[1].length(),
+                GlobalScope::instance().option_registry().complete_option_name(
+                    params[1], pos_in_token)};
     return Completions{};
 }
 
 const CommandDesc unset_option_cmd = {
     "unset-option",
     "unset",
-    "unset-option <scope> <name>: remove <name> option from scope, falling back on parent scope value\n"
+    "unset-option <scope> <name>: remove <name> option from scope, falling "
+    "back on parent scope value\n"
     "<scope> can be buffer, window, or current which refers to the narrowest "
     "scope the option is set in",
-    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
     CommandFlags::None,
     option_doc_helper,
     complete_option,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         auto& options = get_options(parser[0], context, parser[1]);
         if (&options == &GlobalScope::instance().options())
             throw runtime_error("cannot unset options in global scope");
         options.unset_option(parser[1]);
-    }
-};
+    }};
 
 const CommandDesc update_option_cmd = {
     "update-option",
     nullptr,
     "update-option <scope> <name>: update <name> option from scope\n"
-    "some option types, such as line-specs or range-specs can be updated to latest buffer timestamp\n"
+    "some option types, such as line-specs or range-specs can be updated to "
+    "latest buffer timestamp\n"
     "<scope> can be buffer, window, or current which refers to the narrowest "
     "scope the option is set in",
-    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
     CommandFlags::None,
     option_doc_helper,
     complete_option,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
-        Option& opt = get_options(parser[0], context, parser[1]).get_local_option(parser[1]);
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
+        Option& opt = get_options(parser[0], context, parser[1])
+                          .get_local_option(parser[1]);
         opt.update(context);
-    }
-};
+    }};
 
 const CommandDesc declare_option_cmd = {
     "declare-option",
     "decl",
-    "declare-option <type> <name> [value]: declare option <name> of type <type>.\n"
+    "declare-option <type> <name> [value]: declare option <name> of type "
+    "<type>.\n"
     "set its initial value to <value> if given and the option did not exist\n"
     "Available types:\n"
     "    int: integer\n"
@@ -1471,29 +1592,33 @@ const CommandDesc declare_option_cmd = {
     "    range-specs: list of range specs\n"
     "    str-to-str-map: map from strings to strings\n",
     ParameterDesc{
-        { { "hidden",    { false, "do not display option name when completing" } },
-          { "docstring", { true,  "specify option description" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 2, (size_t)-1
-    },
+        {{"hidden", {false, "do not display option name when completing"}},
+         {"docstring", {true, "specify option description"}}},
+        ParameterDesc::Flags::SwitchesOnlyAtStart,
+        2,
+        (size_t)-1},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(
-        [](const Context& context, CompletionFlags flags,
-           const String& prefix, ByteCount cursor_pos) -> Completions {
-               auto c = {"int", "bool", "str", "regex", "int-list", "str-list", "completions", "line-specs", "range-specs", "str-to-str-map"};
-               return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
+    make_completer([](const Context& context, CompletionFlags flags,
+                      const String& prefix,
+                      ByteCount cursor_pos) -> Completions {
+        auto c = {"int",         "bool",          "str",         "regex",
+                  "int-list",    "str-list",      "completions", "line-specs",
+                  "range-specs", "str-to-str-map"};
+        return {0_byte, cursor_pos, complete(prefix, cursor_pos, c)};
     }),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         Option* opt = nullptr;
 
         OptionFlags flags = OptionFlags::None;
         if (parser.get_switch("hidden"))
             flags = OptionFlags::Hidden;
 
-        auto docstring = trim_whitespaces(parser.get_switch("docstring").value_or(StringView{})).str();
+        auto docstring
+            = trim_whitespaces(
+                  parser.get_switch("docstring").value_or(StringView{}))
+                  .str();
         OptionsRegistry& reg = GlobalScope::instance().option_registry();
-
 
         if (parser[0] == "int")
             opt = &reg.declare_option<int>(parser[1], docstring, 0, flags);
@@ -1502,51 +1627,63 @@ const CommandDesc declare_option_cmd = {
         else if (parser[0] == "str")
             opt = &reg.declare_option<String>(parser[1], docstring, "", flags);
         else if (parser[0] == "regex")
-            opt = &reg.declare_option<Regex>(parser[1], docstring, Regex{}, flags);
+            opt = &reg.declare_option<Regex>(parser[1], docstring, Regex{},
+                                             flags);
         else if (parser[0] == "int-list")
-            opt = &reg.declare_option<Vector<int, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
+            opt = &reg.declare_option<Vector<int, MemoryDomain::Options>>(
+                parser[1], docstring, {}, flags);
         else if (parser[0] == "str-list")
-            opt = &reg.declare_option<Vector<String, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
+            opt = &reg.declare_option<Vector<String, MemoryDomain::Options>>(
+                parser[1], docstring, {}, flags);
         else if (parser[0] == "completions")
-            opt = &reg.declare_option<CompletionList>(parser[1], docstring, {}, flags);
+            opt = &reg.declare_option<CompletionList>(parser[1], docstring, {},
+                                                      flags);
         else if (parser[0] == "line-specs")
-            opt = &reg.declare_option<TimestampedList<LineAndSpec>>(parser[1], docstring, {}, flags);
+            opt = &reg.declare_option<TimestampedList<LineAndSpec>>(
+                parser[1], docstring, {}, flags);
         else if (parser[0] == "range-specs")
-            opt = &reg.declare_option<TimestampedList<RangeAndString>>(parser[1], docstring, {}, flags);
+            opt = &reg.declare_option<TimestampedList<RangeAndString>>(
+                parser[1], docstring, {}, flags);
         else if (parser[0] == "str-to-str-map")
-            opt = &reg.declare_option<HashMap<String, String, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
+            opt = &reg.declare_option<
+                HashMap<String, String, MemoryDomain::Options>>(
+                parser[1], docstring, {}, flags);
         else
             throw runtime_error(format("no such option type: '{}'", parser[0]));
 
         if (parser.positional_count() > 2)
             opt->set_from_strings(parser.positionals_from(2));
-    }
-};
+    }};
 
 template<bool unmap>
-static Completions map_key_completer(const Context& context, CompletionFlags flags,
-                                     CommandParameters params, size_t token_to_complete,
+static Completions map_key_completer(const Context& context,
+                                     CompletionFlags flags,
+                                     CommandParameters params,
+                                     size_t token_to_complete,
                                      ByteCount pos_in_token)
 {
     if (token_to_complete == 0)
-        return { 0_byte, params[0].length(),
-                 complete(params[0], pos_in_token, scopes) };
+        return {0_byte, params[0].length(),
+                complete(params[0], pos_in_token, scopes)};
     if (token_to_complete == 1)
     {
         auto& user_modes = get_scope(params[0], context).keymaps().user_modes();
-        return { 0_byte, params[1].length(),
-                 complete(params[1], pos_in_token, concatenated(modes, user_modes) | gather<Vector<String>>()) };
+        return {0_byte, params[1].length(),
+                complete(params[1], pos_in_token,
+                         concatenated(modes, user_modes)
+                             | gather<Vector<String>>())};
     }
     if (unmap and token_to_complete == 2)
     {
         KeymapManager& keymaps = get_scope(params[0], context).keymaps();
-        KeymapMode keymap_mode = parse_keymap_mode(params[1], keymaps.user_modes());
+        KeymapMode keymap_mode
+            = parse_keymap_mode(params[1], keymaps.user_modes());
         KeyList keys = keymaps.get_mapped_keys(keymap_mode);
 
-        return { 0_byte, params[2].length(),
-                 complete(params[2], pos_in_token,
-                          keys | transform([](Key k) { return key_to_str(k); })
-                               | gather<Vector<String>>()) };
+        return {0_byte, params[2].length(),
+                complete(params[2], pos_in_token,
+                         keys | transform([](Key k) { return key_to_str(k); })
+                             | gather<Vector<String>>())};
     }
     return {};
 }
@@ -1554,43 +1691,47 @@ static Completions map_key_completer(const Context& context, CompletionFlags fla
 const CommandDesc map_key_cmd = {
     "map",
     nullptr,
-    "map [<switches>] <scope> <mode> <key> <keys>: map <key> to <keys> in given <mode> in <scope>",
-    ParameterDesc{
-        { { "docstring", { true,  "specify mapping description" } } },
-        ParameterDesc::Flags::None, 4, 4
-    },
+    "map [<switches>] <scope> <mode> <key> <keys>: map <key> to <keys> in "
+    "given <mode> in <scope>",
+    ParameterDesc{{{"docstring", {true, "specify mapping description"}}},
+                  ParameterDesc::Flags::None,
+                  4,
+                  4},
     CommandFlags::None,
     CommandHelper{},
     map_key_completer<false>,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
-        KeymapMode keymap_mode = parse_keymap_mode(parser[1], keymaps.user_modes());
+        KeymapMode keymap_mode
+            = parse_keymap_mode(parser[1], keymaps.user_modes());
 
         KeyList key = parse_keys(parser[2]);
         if (key.size() != 1)
             throw runtime_error("only a single key can be mapped");
 
         KeyList mapping = parse_keys(parser[3]);
-        keymaps.map_key(key[0], keymap_mode, std::move(mapping),
-                        trim_whitespaces(parser.get_switch("docstring").value_or("")).str());
-    }
-};
+        keymaps.map_key(
+            key[0], keymap_mode, std::move(mapping),
+            trim_whitespaces(parser.get_switch("docstring").value_or(""))
+                .str());
+    }};
 
 const CommandDesc unmap_key_cmd = {
     "unmap",
     nullptr,
-    "unmap <scope> <mode> [<key> [<expected-keys>]]: unmap <key> from given <mode> in <scope>.\n"
-    "If <expected-keys> is specified, remove the mapping only if its value is <expected-keys>.\n"
+    "unmap <scope> <mode> [<key> [<expected-keys>]]: unmap <key> from given "
+    "<mode> in <scope>.\n"
+    "If <expected-keys> is specified, remove the mapping only if its value is "
+    "<expected-keys>.\n"
     "If only <scope> and <mode> are specified remove all mappings",
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 4},
     CommandFlags::None,
     CommandHelper{},
     map_key_completer<true>,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
-        KeymapMode keymap_mode = parse_keymap_mode(parser[1], keymaps.user_modes());
+        KeymapMode keymap_mode
+            = parse_keymap_mode(parser[1], keymaps.user_modes());
 
         if (parser.positional_count() == 2)
         {
@@ -1602,53 +1743,70 @@ const CommandDesc unmap_key_cmd = {
         if (key.size() != 1)
             throw runtime_error("only a single key can be unmapped");
 
-        if (keymaps.is_mapped(key[0], keymap_mode) and
-            (parser.positional_count() < 4 or
-             (keymaps.get_mapping(key[0], keymap_mode).keys ==
-              parse_keys(parser[3]))))
+        if (keymaps.is_mapped(key[0], keymap_mode)
+            and (parser.positional_count() < 4
+                 or (keymaps.get_mapping(key[0], keymap_mode).keys
+                     == parse_keys(parser[3]))))
             keymaps.unmap_key(key[0], keymap_mode);
-    }
-};
+    }};
 
 template<size_t... P>
-ParameterDesc make_context_wrap_params_impl(Array<HashItem<String, SwitchDesc>, sizeof...(P)>&& additional_params,
-                                            std::index_sequence<P...>)
+ParameterDesc make_context_wrap_params_impl(
+    Array<HashItem<String, SwitchDesc>, sizeof...(P)>&& additional_params,
+    std::index_sequence<P...>)
 {
-    return { { { "client",     { true,  "run in given client context" } },
-               { "try-client", { true,  "run in given client context if it exists, or else in the current one" } },
-               { "buffer",     { true,  "run in a disposable context for each given buffer in the comma separated list argument" } },
-               { "draft",      { false, "run in a disposable context" } },
-               { "itersel",    { false, "run once for each selection with that selection as the only one" } },
-               { "save-regs",  { true, "restore all given registers after execution" } },
-               std::move(additional_params[P])...},
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 1
-    };
+    return {
+        {{"client", {true, "run in given client context"}},
+         {"try-client",
+          {true,
+           "run in given client context if it exists, or else in the current "
+           "one"}},
+         {"buffer",
+          {true,
+           "run in a disposable context for each given buffer in the comma "
+           "separated list argument"}},
+         {"draft", {false, "run in a disposable context"}},
+         {"itersel",
+          {false,
+           "run once for each selection with that selection as the only one"}},
+         {"save-regs", {true, "restore all given registers after execution"}},
+         std::move(additional_params[P])...},
+        ParameterDesc::Flags::SwitchesOnlyAtStart,
+        1};
 }
 
 template<size_t N>
-ParameterDesc make_context_wrap_params(Array<HashItem<String, SwitchDesc>, N>&& additional_params)
+ParameterDesc make_context_wrap_params(
+    Array<HashItem<String, SwitchDesc>, N>&& additional_params)
 {
-    return make_context_wrap_params_impl(std::move(additional_params), std::make_index_sequence<N>());
+    return make_context_wrap_params_impl(std::move(additional_params),
+                                         std::make_index_sequence<N>());
 }
 
 template<typename Func>
-void context_wrap(const ParametersParser& parser, Context& context, StringView default_saved_regs, Func func)
+void context_wrap(const ParametersParser& parser, Context& context,
+                  StringView default_saved_regs, Func func)
 {
-    if ((int)(bool)parser.get_switch("buffer") +
-        (int)(bool)parser.get_switch("client") +
-        (int)(bool)parser.get_switch("try-client") > 1)
-        throw runtime_error{"only one of -buffer, -client or -try-client can be specified"};
+    if ((int)(bool)parser.get_switch("buffer")
+            + (int)(bool)parser.get_switch("client")
+            + (int)(bool)parser.get_switch("try-client")
+        > 1)
+        throw runtime_error{
+            "only one of -buffer, -client or -try-client can be specified"};
 
-    auto& register_manager = RegisterManager::instance();
+    auto& register_manager      = RegisterManager::instance();
     auto make_register_restorer = [&](char c) {
-        return on_scope_end([&, c, save=register_manager[c].get(context) | gather<Vector<String>>()] {
+        return on_scope_end([&, c,
+                             save = register_manager[c].get(context)
+                                    | gather<Vector<String>>()] {
             try
             {
                 RegisterManager::instance()[c].set(context, save);
             }
             catch (runtime_error& err)
             {
-                write_to_debug_buffer(format("failed to restore register '{}': {}", c, err.what()));
+                write_to_debug_buffer(format(
+                    "failed to restore register '{}': {}", c, err.what()));
             }
         });
     };
@@ -1659,7 +1817,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
     if (auto bufnames = parser.get_switch("buffer"))
     {
         auto context_wrap_for_buffer = [&](Buffer& buffer) {
-            InputHandler input_handler{{ buffer, Selection{} },
+            InputHandler input_handler{{buffer, Selection{}},
                                        Context::Flags::Draft};
             Context& c = input_handler.context();
 
@@ -1669,19 +1827,26 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
         };
         if (*bufnames == "*")
         {
-            for (auto&& buffer : BufferManager::instance()
-                               | transform(&std::unique_ptr<Buffer>::get)
-                               | filter([](Buffer* buf) { return not (buf->flags() & Buffer::Flags::Debug); })
-                               | gather<Vector<SafePtr<Buffer>>>()) // gather as we might be mutating the buffer list in the loop.
+            for (auto&& buffer :
+                 BufferManager::instance()
+                     | transform(&std::unique_ptr<Buffer>::get)
+                     | filter([](Buffer* buf) {
+                           return not(buf->flags() & Buffer::Flags::Debug);
+                       })
+                     | gather<Vector<SafePtr<Buffer>>>()) // gather as we might
+                                                          // be mutating the
+                                                          // buffer list in the
+                                                          // loop.
                 context_wrap_for_buffer(*buffer);
         }
         else
             for (auto&& name : *bufnames | split<StringView>(','))
-                context_wrap_for_buffer(BufferManager::instance().get_buffer(name));
+                context_wrap_for_buffer(
+                    BufferManager::instance().get_buffer(name));
         return;
     }
 
-    ClientManager& cm = ClientManager::instance();
+    ClientManager& cm     = ClientManager::instance();
     Context* base_context = &context;
     if (auto client_name = parser.get_switch("client"))
         base_context = &cm.get_client(*client_name).context();
@@ -1697,8 +1862,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
     const bool draft = (bool)parser.get_switch("draft");
     if (draft)
     {
-        input_handler.emplace(base_context->selections(),
-                              Context::Flags::Draft,
+        input_handler.emplace(base_context->selections(), Context::Flags::Draft,
                               base_context->name());
         effective_context = &input_handler->context();
 
@@ -1706,8 +1870,8 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
         if (base_context->has_window())
             effective_context->set_window(base_context->window());
 
-        // We do not want this draft context to commit undo groups if the real one is
-        // going to commit the whole thing later
+        // We do not want this draft context to commit undo groups if the real
+        // one is going to commit the whole thing later
         if (base_context->is_editing())
             effective_context->disable_undo_handling();
     }
@@ -1721,11 +1885,12 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
     {
         SelectionList sels{base_context->selections()};
         Vector<Selection> new_sels;
-        size_t main = 0;
+        size_t main      = 0;
         size_t timestamp = c.buffer().timestamp();
         for (auto& sel : sels)
         {
-            c.selections_write_only() = SelectionList{sels.buffer(), sel, sels.timestamp()};
+            c.selections_write_only()
+                = SelectionList{sels.buffer(), sel, sels.timestamp()};
             c.selections().update();
 
             func(parser, c);
@@ -1733,7 +1898,8 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
             if (not draft)
             {
                 if (&sels.buffer() != &c.buffer())
-                    throw runtime_error("buffer has changed while iterating on selections");
+                    throw runtime_error(
+                        "buffer has changed while iterating on selections");
 
                 update_selections(new_sels, main, c.buffer(), timestamp);
                 timestamp = c.buffer().timestamp();
@@ -1750,13 +1916,16 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
     }
     else
     {
-        const bool collapse_jumps = not (c.flags() & Context::Flags::Draft) and context.has_buffer();
-        auto original_jump_list = collapse_jumps ? c.jump_list() : Optional<JumpList>{};
+        const bool collapse_jumps
+            = not(c.flags() & Context::Flags::Draft) and context.has_buffer();
+        auto original_jump_list
+            = collapse_jumps ? c.jump_list() : Optional<JumpList>{};
         auto jump = collapse_jumps ? c.selections() : Optional<SelectionList>{};
 
         func(parser, c);
 
-        // If the jump list got mutated, collapse all jumps into a single one from original selections
+        // If the jump list got mutated, collapse all jumps into a single one
+        // from original selections
         if (collapse_jumps and c.jump_list() != *original_jump_list)
         {
             original_jump_list->push(std::move(*jump));
@@ -1769,132 +1938,154 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
 const CommandDesc exec_string_cmd = {
     "execute-keys",
     "exec",
-    "execute-keys [<switches>] <keys>: execute given keys as if entered by user",
-    make_context_wrap_params<2>({{
-        {"with-maps",  {false, "use user defined key mapping when executing keys"}},
-        {"with-hooks", {false, "trigger hooks while executing keys"}}
-    }}),
+    "execute-keys [<switches>] <keys>: execute given keys as if entered by "
+    "user",
+    make_context_wrap_params<2>(
+        {{{"with-maps",
+           {false, "use user defined key mapping when executing keys"}},
+          {"with-hooks", {false, "trigger hooks while executing keys"}}}}),
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
-        context_wrap(parser, context, "/\"|^@", [](const ParametersParser& parser, Context& context) {
-            ScopedSetBool disable_keymaps(context.keymaps_disabled(), not parser.get_switch("with-maps"));
-            ScopedSetBool disable_hoooks(context.hooks_disabled(), not parser.get_switch("with-hooks"));
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
+        context_wrap(parser, context, "/\"|^@",
+                     [](const ParametersParser& parser, Context& context) {
+                         ScopedSetBool disable_keymaps(
+                             context.keymaps_disabled(),
+                             not parser.get_switch("with-maps"));
+                         ScopedSetBool disable_hoooks(
+                             context.hooks_disabled(),
+                             not parser.get_switch("with-hooks"));
 
-            KeyList keys;
-            for (auto& param : parser)
-            {
-                KeyList param_keys = parse_keys(param);
-                keys.insert(keys.end(), param_keys.begin(), param_keys.end());
-            }
+                         KeyList keys;
+                         for (auto& param : parser)
+                         {
+                             KeyList param_keys = parse_keys(param);
+                             keys.insert(keys.end(), param_keys.begin(),
+                                         param_keys.end());
+                         }
 
-            for (auto& key : keys)
-                context.input_handler().handle_key(key);
-        });
-    }
-};
+                         for (auto& key : keys)
+                             context.input_handler().handle_key(key);
+                     });
+    }};
 
 const CommandDesc eval_string_cmd = {
     "evaluate-commands",
     "eval",
-    "evaluate-commands [<switches>] <commands>...: execute commands as if entered by user",
-    make_context_wrap_params<1>({{{"no-hooks", { false, "disable hooks while executing commands" }}}}),
+    "evaluate-commands [<switches>] <commands>...: execute commands as if "
+    "entered by user",
+    make_context_wrap_params<1>(
+        {{{"no-hooks", {false, "disable hooks while executing commands"}}}}),
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
-    {
-        context_wrap(parser, context, {}, [&](const ParametersParser& parser, Context& context) {
-            const bool no_hooks = context.hooks_disabled() or parser.get_switch("no-hooks");
-            ScopedSetBool disable_hoooks(context.hooks_disabled(), no_hooks);
+    [](const ParametersParser& parser, Context& context,
+       const ShellContext& shell_context) {
+        context_wrap(parser, context, {},
+                     [&](const ParametersParser& parser, Context& context) {
+                         const bool no_hooks = context.hooks_disabled()
+                                               or parser.get_switch("no-hooks");
+                         ScopedSetBool disable_hoooks(context.hooks_disabled(),
+                                                      no_hooks);
 
-            CommandManager::instance().execute(join(parser, ' ', false), context, shell_context);
-        });
-    }
-};
+                         CommandManager::instance().execute(
+                             join(parser, ' ', false), context, shell_context);
+                     });
+    }};
 
 struct CapturedShellContext
 {
     explicit CapturedShellContext(const ShellContext& sc)
-      : params{sc.params.begin(), sc.params.end()}, env_vars{sc.env_vars} {}
+        : params{sc.params.begin(), sc.params.end()}, env_vars{sc.env_vars}
+    {}
 
     Vector<String> params;
     EnvVarMap env_vars;
 
-    operator ShellContext() const { return { params, env_vars }; }
+    operator ShellContext() const { return {params, env_vars}; }
 };
 
 const CommandDesc prompt_cmd = {
     "prompt",
     nullptr,
-    "prompt [<switches>] <prompt> <command>: prompt the user to enter a text string "
-    "and then executes <command>, entered text is available in the 'text' value",
+    "prompt [<switches>] <prompt> <command>: prompt the user to enter a text "
+    "string "
+    "and then executes <command>, entered text is available in the 'text' "
+    "value",
     ParameterDesc{
-        { { "init", { true, "set initial prompt content" } },
-          { "password", { false, "Do not display entered text and clear reg after command" } },
-          { "file-completion", { false, "use file completion for prompt" } },
-          { "client-completion", { false, "use client completion for prompt" } },
-          { "buffer-completion", { false, "use buffer completion for prompt" } },
-          { "command-completion", { false, "use command completion for prompt" } },
-          { "shell-completion", { false, "use shell command completion for prompt" } },
-          { "on-change", { true, "command to execute whenever the prompt changes" } },
-          { "on-abort", { true, "command to execute whenever the prompt is canceled" } } },
-        ParameterDesc::Flags::None, 2, 2
-    },
+        {{"init", {true, "set initial prompt content"}},
+         {"password",
+          {false, "Do not display entered text and clear reg after command"}},
+         {"file-completion", {false, "use file completion for prompt"}},
+         {"client-completion", {false, "use client completion for prompt"}},
+         {"buffer-completion", {false, "use buffer completion for prompt"}},
+         {"command-completion", {false, "use command completion for prompt"}},
+         {"shell-completion",
+          {false, "use shell command completion for prompt"}},
+         {"on-change",
+          {true, "command to execute whenever the prompt changes"}},
+         {"on-abort",
+          {true, "command to execute whenever the prompt is canceled"}}},
+        ParameterDesc::Flags::None,
+        2,
+        2},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
-    {
+    [](const ParametersParser& parser, Context& context,
+       const ShellContext& shell_context) {
         const String& command = parser[1];
         auto initstr = parser.get_switch("init").value_or(StringView{});
 
         Completer completer;
         if (parser.get_switch("file-completion"))
-            completer = [](const Context& context, CompletionFlags,
-                           StringView prefix, ByteCount cursor_pos) -> Completions {
-                auto& ignored_files = context.options()["ignored_files"].get<Regex>();
-                return { 0_byte, cursor_pos,
-                         complete_filename(prefix, ignored_files, cursor_pos,
-                                           FilenameFlags::Expand) };
+            completer
+                = [](const Context& context, CompletionFlags, StringView prefix,
+                     ByteCount cursor_pos) -> Completions {
+                auto& ignored_files
+                    = context.options()["ignored_files"].get<Regex>();
+                return {0_byte, cursor_pos,
+                        complete_filename(prefix, ignored_files, cursor_pos,
+                                          FilenameFlags::Expand)};
             };
         else if (parser.get_switch("client-completion"))
-            completer = [](const Context& context, CompletionFlags,
-                           StringView prefix, ByteCount cursor_pos) -> Completions {
-                 return { 0_byte, cursor_pos,
-                          ClientManager::instance().complete_client_name(prefix, cursor_pos) };
+            completer
+                = [](const Context& context, CompletionFlags, StringView prefix,
+                     ByteCount cursor_pos) -> Completions {
+                return {0_byte, cursor_pos,
+                        ClientManager::instance().complete_client_name(
+                            prefix, cursor_pos)};
             };
         else if (parser.get_switch("buffer-completion"))
             completer = complete_buffer_name<false>;
         else if (parser.get_switch("command-completion"))
-            completer = [](const Context& context, CompletionFlags flags,
-                           StringView prefix, ByteCount cursor_pos) -> Completions {
-                return CommandManager::instance().complete(
-                    context, flags, prefix, cursor_pos);
+            completer
+                = [](const Context& context, CompletionFlags flags,
+                     StringView prefix, ByteCount cursor_pos) -> Completions {
+                return CommandManager::instance().complete(context, flags,
+                                                           prefix, cursor_pos);
             };
         else if (parser.get_switch("shell-completion"))
             completer = shell_complete;
 
-        const auto flags = parser.get_switch("password") ?
-            PromptFlags::Password : PromptFlags::None;
+        const auto flags = parser.get_switch("password") ? PromptFlags::Password
+                                                         : PromptFlags::None;
 
         String on_change = parser.get_switch("on-change").value_or("").str();
-        String on_abort = parser.get_switch("on-abort").value_or("").str();
+        String on_abort  = parser.get_switch("on-abort").value_or("").str();
 
         CapturedShellContext sc{shell_context};
         context.input_handler().prompt(
-            parser[0], initstr.str(), {}, context.faces()["Prompt"],
-            flags, std::move(completer),
-            [=](StringView str, PromptEvent event, Context& context) mutable
-            {
-                if ((event == PromptEvent::Abort and on_abort.empty()) or
-                    (event == PromptEvent::Change and on_change.empty()))
+            parser[0], initstr.str(), {}, context.faces()["Prompt"], flags,
+            std::move(completer),
+            [=](StringView str, PromptEvent event, Context& context) mutable {
+                if ((event == PromptEvent::Abort and on_abort.empty())
+                    or (event == PromptEvent::Change and on_change.empty()))
                     return;
 
                 auto& text = sc.env_vars["text"_sv] = str.str();
-                auto clear_password = on_scope_end([&] {
+                auto clear_password                 = on_scope_end([&] {
                     if (flags & PromptFlags::Password)
                         memset(text.data(), 0, (int)text.length());
                 });
@@ -1904,14 +2095,19 @@ const CommandDesc prompt_cmd = {
                 StringView cmd;
                 switch (event)
                 {
-                    case PromptEvent::Validate: cmd = command; break;
-                    case PromptEvent::Change: cmd = on_change; break;
-                    case PromptEvent::Abort: cmd = on_abort; break;
+                    case PromptEvent::Validate:
+                        cmd = command;
+                        break;
+                    case PromptEvent::Change:
+                        cmd = on_change;
+                        break;
+                    case PromptEvent::Abort:
+                        cmd = on_abort;
+                        break;
                 }
                 CommandManager::instance().execute(cmd, context, sc);
             });
-    }
-};
+    }};
 
 const CommandDesc menu_cmd = {
     "menu",
@@ -1919,18 +2115,20 @@ const CommandDesc menu_cmd = {
     "menu [<switches>] <name1> <commands1> <name2> <commands2>...: display a "
     "menu and execute commands for the selected item",
     ParameterDesc{
-        { { "auto-single", { false, "instantly validate if only one item is available" } },
-          { "select-cmds", { false, "each item specify an additional command to run when selected" } },
-          { "markup", { false, "parse menu entries as markup text" } } }
-    },
+        {{"auto-single",
+          {false, "instantly validate if only one item is available"}},
+         {"select-cmds",
+          {false,
+           "each item specify an additional command to run when selected"}},
+         {"markup", {false, "parse menu entries as markup text"}}}},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
-    {
+    [](const ParametersParser& parser, Context& context,
+       const ShellContext& shell_context) {
         const bool with_select_cmds = (bool)parser.get_switch("select-cmds");
-        const bool markup = (bool)parser.get_switch("markup");
-        const size_t modulo = with_select_cmds ? 3 : 2;
+        const bool markup           = (bool)parser.get_switch("markup");
+        const size_t modulo         = with_select_cmds ? 3 : 2;
 
         const size_t count = parser.positional_count();
         if (count == 0 or (count % modulo) != 0)
@@ -1950,67 +2148,71 @@ const CommandDesc menu_cmd = {
         for (int i = 0; i < count; i += modulo)
         {
             if (parser[i].empty())
-                throw runtime_error(format("entry #{} is empty", i+1));
+                throw runtime_error(format("entry #{} is empty", i + 1));
 
-            choices.push_back(markup ? parse_display_line(parser[i], context.faces())
-                                     : DisplayLine{ parser[i], {} });
-            commands.push_back(parser[i+1]);
+            choices.push_back(
+                markup ? parse_display_line(parser[i], context.faces())
+                       : DisplayLine{parser[i], {}});
+            commands.push_back(parser[i + 1]);
             if (with_select_cmds)
-                select_cmds.push_back(parser[i+2]);
+                select_cmds.push_back(parser[i + 2]);
         }
 
         CapturedShellContext sc{shell_context};
-        context.input_handler().menu(std::move(choices),
+        context.input_handler().menu(
+            std::move(choices),
             [=](int choice, MenuEvent event, Context& context) {
                 ScopedSetBool disable_history{context.history_disabled()};
 
-                if (event == MenuEvent::Validate and choice >= 0 and choice < commands.size())
-                  CommandManager::instance().execute(commands[choice], context, sc);
-                if (event == MenuEvent::Select and choice >= 0 and choice < select_cmds.size())
-                  CommandManager::instance().execute(select_cmds[choice], context, sc);
+                if (event == MenuEvent::Validate and choice >= 0
+                    and choice < commands.size())
+                    CommandManager::instance().execute(commands[choice],
+                                                       context, sc);
+                if (event == MenuEvent::Select and choice >= 0
+                    and choice < select_cmds.size())
+                    CommandManager::instance().execute(select_cmds[choice],
+                                                       context, sc);
             });
-    }
-};
+    }};
 
-const CommandDesc on_key_cmd = {
-    "on-key",
-    nullptr,
-    "on-key <command>: wait for next user key and then execute <command>, "
-    "with key available in the `key` value",
-    single_param,
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
-    {
-        String command = parser[0];
+const CommandDesc on_key_cmd
+    = {"on-key",
+       nullptr,
+       "on-key <command>: wait for next user key and then execute <command>, "
+       "with key available in the `key` value",
+       single_param,
+       CommandFlags::None,
+       CommandHelper{},
+       CommandCompleter{},
+       [](const ParametersParser& parser, Context& context,
+          const ShellContext& shell_context) {
+           String command = parser[0];
 
-        CapturedShellContext sc{shell_context};
-        context.input_handler().on_next_key(
-            KeymapMode::None, [=](Key key, Context& context) mutable {
-            sc.env_vars["key"_sv] = key_to_str(key);
-            ScopedSetBool disable_history{context.history_disabled()};
+           CapturedShellContext sc{shell_context};
+           context.input_handler().on_next_key(
+               KeymapMode::None, [=](Key key, Context& context) mutable {
+                   sc.env_vars["key"_sv] = key_to_str(key);
+                   ScopedSetBool disable_history{context.history_disabled()};
 
-            CommandManager::instance().execute(command, context, sc);
-        });
-    }
-};
+                   CommandManager::instance().execute(command, context, sc);
+               });
+       }};
 
 const CommandDesc info_cmd = {
     "info",
     nullptr,
     "info [<switches>] <text>: display an info box containing <text>",
-    ParameterDesc{
-        { { "anchor",    { true, "set info anchoring <line>.<column>" } },
-          { "placement", { true, "set placement relative to anchor (above, below)" } },
-          { "title",     { true, "set info title" } } },
-        ParameterDesc::Flags::None, 0, 1
-    },
+    ParameterDesc{{{"anchor", {true, "set info anchoring <line>.<column>"}},
+                   {"placement",
+                    {true, "set placement relative to anchor (above, below)"}},
+                   {"title", {true, "set info title"}}},
+                  ParameterDesc::Flags::None,
+                  0,
+                  1},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         if (not context.has_client())
             return;
 
@@ -2025,8 +2227,8 @@ const CommandDesc info_cmd = {
                 if (dot == anchor->end())
                     throw runtime_error("expected <line>.<column> for anchor");
 
-                pos = BufferCoord{str_to_int({anchor->begin(), dot})-1,
-                                str_to_int({dot+1, anchor->end()})-1};
+                pos   = BufferCoord{str_to_int({anchor->begin(), dot}) - 1,
+                                  str_to_int({dot + 1, anchor->end()}) - 1};
                 style = InfoStyle::Inline;
 
                 if (auto placement = parser.get_switch("placement"))
@@ -2036,14 +2238,14 @@ const CommandDesc info_cmd = {
                     else if (*placement == "below")
                         style = InfoStyle::InlineBelow;
                     else
-                        throw runtime_error(format("invalid placement: '{}'", *placement));
+                        throw runtime_error(
+                            format("invalid placement: '{}'", *placement));
                 }
             }
             auto title = parser.get_switch("title").value_or(StringView{});
             context.client().info_show(title.str(), parser[0], pos, style);
         }
-    }
-};
+    }};
 
 const CommandDesc try_catch_cmd = {
     "try",
@@ -2056,15 +2258,16 @@ const CommandDesc try_catch_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
-    {
+    [](const ParametersParser& parser, Context& context,
+       const ShellContext& shell_context) {
         if ((parser.positional_count() % 2) != 1)
             throw wrong_argument_count();
 
         for (size_t i = 1; i < parser.positional_count(); i += 2)
         {
             if (parser[i] != "catch")
-                throw runtime_error("usage: try <commands> [catch <on error commands>]...");
+                throw runtime_error(
+                    "usage: try <commands> [catch <on error commands>]...");
         }
 
         CommandManager& command_manager = CommandManager::instance();
@@ -2072,23 +2275,28 @@ const CommandDesc try_catch_cmd = {
         {
             if (i == 0 or i < parser.positional_count() - 1)
             {
-                try {
+                try
+                {
                     command_manager.execute(parser[i], context, shell_context);
                     return;
-                } catch (runtime_error&) {}
+                }
+                catch (runtime_error&)
+                {}
             }
             else
                 command_manager.execute(parser[i], context, shell_context);
         }
-    }
-};
+    }};
 
 static Completions complete_face(const Context& context, CompletionFlags flags,
                                  const String& prefix, ByteCount cursor_pos)
 {
     return {0_byte, cursor_pos,
-            complete(prefix, cursor_pos, context.faces().flatten_faces() |
-                     transform([](auto& entry) -> const String& { return entry.key; }))};
+            complete(prefix, cursor_pos,
+                     context.faces().flatten_faces()
+                         | transform([](auto& entry) -> const String& {
+                               return entry.key;
+                           }))};
 }
 
 static String face_doc_helper(const Context& context, CommandParameters params)
@@ -2109,7 +2317,8 @@ static String face_doc_helper(const Context& context, CommandParameters params)
 const CommandDesc set_face_cmd = {
     "set-face",
     "face",
-    "set-face <scope> <name> <facespec>: set face <name> to refer to <facespec> in <scope>\n"
+    "set-face <scope> <name> <facespec>: set face <name> to refer to "
+    "<facespec> in <scope>\n"
     "\n"
     "facespec format is <fg color>[,<bg color>][+<attributes>]\n"
     "colors are either a color name, or rgb:###### values.\n"
@@ -2123,14 +2332,14 @@ const CommandDesc set_face_cmd = {
     CommandFlags::None,
     face_doc_helper,
     make_completer(complete_scope, complete_face, complete_face),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
-        get_scope(parser[0], context).faces().add_face(parser[1], parser[2], true);
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
+        get_scope(parser[0], context)
+            .faces()
+            .add_face(parser[1], parser[2], true);
 
         for (auto& client : ClientManager::instance())
             client->force_redraw();
-    }
-};
+    }};
 
 const CommandDesc unset_face_cmd = {
     "unset-face",
@@ -2140,11 +2349,9 @@ const CommandDesc unset_face_cmd = {
     CommandFlags::None,
     face_doc_helper,
     make_completer(complete_scope, complete_face),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
-       get_scope(parser[0], context).faces().remove_face(parser[1]);
-    }
-};
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
+        get_scope(parser[0], context).faces().remove_face(parser[1]);
+    }};
 
 const CommandDesc rename_client_cmd = {
     "rename-client",
@@ -2153,19 +2360,18 @@ const CommandDesc rename_client_cmd = {
     single_param,
     CommandFlags::None,
     CommandHelper{},
-    make_single_word_completer([](const Context& context){ return context.name(); }),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    make_single_word_completer(
+        [](const Context& context) { return context.name(); }),
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         const String& name = parser[0];
         if (not all_of(name, is_identifier))
             throw runtime_error{format("invalid client name: '{}'", name)};
-        else if (ClientManager::instance().client_name_exists(name) and
-                 context.name() != name)
+        else if (ClientManager::instance().client_name_exists(name)
+                 and context.name() != name)
             throw runtime_error{format("client name '{}' is not unique", name)};
         else
             context.set_name(name);
-    }
-};
+    }};
 
 const CommandDesc set_register_cmd = {
     "set-register",
@@ -2175,52 +2381,52 @@ const CommandDesc set_register_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
-        RegisterManager::instance()[parser[0]].set(context, parser.positionals_from(1));
-    }
-};
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
+        RegisterManager::instance()[parser[0]].set(context,
+                                                   parser.positionals_from(1));
+    }};
 
 const CommandDesc select_cmd = {
     "select",
     nullptr,
     "select <selection_desc>...: select given selections\n"
     "\n"
-    "selection_desc format is <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>",
+    "selection_desc format is "
+    "<anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>",
     ParameterDesc{{}, ParameterDesc::Flags::SwitchesAsPositional, 1},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
-        context.selections_write_only() = selection_list_from_string(context.buffer(), parser.positionals_from(0));
-    }
-};
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
+        context.selections_write_only() = selection_list_from_string(
+            context.buffer(), parser.positionals_from(0));
+    }};
 
-const CommandDesc change_directory_cmd = {
-    "change-directory",
-    "cd",
-    "change-directory [<directory>]: change the server's working directory to <directory>, or the home directory if unspecified",
-    single_optional_param,
-    CommandFlags::None,
-    CommandHelper{},
-    make_completer(
-         [](const Context& context, CompletionFlags flags,
-            const String& prefix, ByteCount cursor_pos) -> Completions {
-             return { 0_byte, cursor_pos,
-                      complete_filename(prefix,
-                                        context.options()["ignored_files"].get<Regex>(),
-                                        cursor_pos, FilenameFlags::OnlyDirectories) };
-        }),
-    [](const ParametersParser& parser, Context&, const ShellContext&)
-    {
-        StringView target = parser.positional_count() == 1 ? StringView{parser[0]} : "~";
-        if (chdir(parse_filename(target).c_str()) != 0)
-            throw runtime_error(format("unable to change to directory: '{}'", target));
-        for (auto& buffer : BufferManager::instance())
-            buffer->update_display_name();
-    }
-};
+const CommandDesc change_directory_cmd
+    = {"change-directory",
+       "cd",
+       "change-directory [<directory>]: change the server's working directory "
+       "to <directory>, or the home directory if unspecified",
+       single_optional_param,
+       CommandFlags::None,
+       CommandHelper{},
+       make_completer([](const Context& context, CompletionFlags flags,
+                         const String& prefix,
+                         ByteCount cursor_pos) -> Completions {
+           return {0_byte, cursor_pos,
+                   complete_filename(
+                       prefix, context.options()["ignored_files"].get<Regex>(),
+                       cursor_pos, FilenameFlags::OnlyDirectories)};
+       }),
+       [](const ParametersParser& parser, Context&, const ShellContext&) {
+           StringView target
+               = parser.positional_count() == 1 ? StringView{parser[0]} : "~";
+           if (chdir(parse_filename(target).c_str()) != 0)
+               throw runtime_error(
+                   format("unable to change to directory: '{}'", target));
+           for (auto& buffer : BufferManager::instance())
+               buffer->update_display_name();
+       }};
 
 const CommandDesc rename_session_cmd = {
     "rename-session",
@@ -2229,27 +2435,26 @@ const CommandDesc rename_session_cmd = {
     single_param,
     CommandFlags::None,
     CommandHelper{},
-    make_single_word_completer([](const Context&){ return Server::instance().session(); }),
-    [](const ParametersParser& parser, Context&, const ShellContext&)
-    {
+    make_single_word_completer(
+        [](const Context&) { return Server::instance().session(); }),
+    [](const ParametersParser& parser, Context&, const ShellContext&) {
         if (not Server::instance().rename_session(parser[0]))
-            throw runtime_error(format("unable to rename current session: '{}' may be already in use", parser[0]));
-    }
-};
+            throw runtime_error(format(
+                "unable to rename current session: '{}' may be already in use",
+                parser[0]));
+    }};
 
-const CommandDesc fail_cmd = {
-    "fail",
-    nullptr,
-    "fail [<message>]: raise an error with the given message",
-    ParameterDesc{},
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    [](const ParametersParser& parser, Context&, const ShellContext&)
-    {
-        throw failure{fix_atom_text(join(parser, " "))};
-    }
-};
+const CommandDesc fail_cmd
+    = {"fail",
+       nullptr,
+       "fail [<message>]: raise an error with the given message",
+       ParameterDesc{},
+       CommandFlags::None,
+       CommandHelper{},
+       CommandCompleter{},
+       [](const ParametersParser& parser, Context&, const ShellContext&) {
+           throw failure{fix_atom_text(join(parser, " "))};
+       }};
 
 const CommandDesc declare_user_mode_cmd = {
     "declare-user-mode",
@@ -2259,75 +2464,78 @@ const CommandDesc declare_user_mode_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         context.keymaps().add_user_mode(std::move(parser[0]));
-    }
-};
+    }};
 
-void enter_user_mode(Context& context, const String mode_name, KeymapMode mode, bool lock)
+void enter_user_mode(Context& context, const String mode_name, KeymapMode mode,
+                     bool lock)
 {
-    on_next_key_with_autoinfo(context, KeymapMode::None,
-                             [mode_name, mode, lock](Key key, Context& context) mutable {
-        if (key == Key::Escape)
-            return;
-        if (not context.keymaps().is_mapped(key, mode))
-            return;
+    on_next_key_with_autoinfo(
+        context, KeymapMode::None,
+        [mode_name, mode, lock](Key key, Context& context) mutable {
+            if (key == Key::Escape)
+                return;
+            if (not context.keymaps().is_mapped(key, mode))
+                return;
 
-        auto& mapping = context.keymaps().get_mapping(key, mode);
-        ScopedSetBool disable_keymaps(context.keymaps_disabled());
+            auto& mapping = context.keymaps().get_mapping(key, mode);
+            ScopedSetBool disable_keymaps(context.keymaps_disabled());
 
-        InputHandler::ScopedForceNormal force_normal{context.input_handler(), {}};
+            InputHandler::ScopedForceNormal force_normal{
+                context.input_handler(), {}};
 
-        ScopedEdition edition(context);
-        for (auto& key : mapping.keys)
-            context.input_handler().handle_key(key);
+            ScopedEdition edition(context);
+            for (auto& key : mapping.keys)
+                context.input_handler().handle_key(key);
 
-        if (lock)
-            enter_user_mode(context, std::move(mode_name), mode, true);
-    }, lock ? format("{} (lock)", mode_name) : mode_name,
-    build_autoinfo_for_mapping(context, mode, {}));
+            if (lock)
+                enter_user_mode(context, std::move(mode_name), mode, true);
+        },
+        lock ? format("{} (lock)", mode_name) : mode_name,
+        build_autoinfo_for_mapping(context, mode, {}));
 }
 
 const CommandDesc enter_user_mode_cmd = {
     "enter-user-mode",
     nullptr,
-    "enter-user-mode [<switches>] <name>: enable <name> keymap mode for next key",
-    ParameterDesc{
-        { { "lock", { false, "stay in mode until <esc> is pressed" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
-    },
+    "enter-user-mode [<switches>] <name>: enable <name> keymap mode for next "
+    "key",
+    ParameterDesc{{{"lock", {false, "stay in mode until <esc> is pressed"}}},
+                  ParameterDesc::Flags::SwitchesOnlyAtStart,
+                  1,
+                  1},
     CommandFlags::None,
     CommandHelper{},
-    [](const Context& context, CompletionFlags flags,
-       CommandParameters params, size_t token_to_complete,
-       ByteCount pos_in_token) -> Completions
-    {
+    [](const Context& context, CompletionFlags flags, CommandParameters params,
+       size_t token_to_complete, ByteCount pos_in_token) -> Completions {
         if (token_to_complete == 0)
         {
-            return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, context.keymaps().user_modes()) };
+            return {0_byte, params[0].length(),
+                    complete(params[0], pos_in_token,
+                             context.keymaps().user_modes())};
         }
         return {};
     },
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
+    [](const ParametersParser& parser, Context& context, const ShellContext&) {
         auto lock = (bool)parser.get_switch("lock");
-        KeymapMode mode = parse_keymap_mode(parser[0], context.keymaps().user_modes());
+        KeymapMode mode
+            = parse_keymap_mode(parser[0], context.keymaps().user_modes());
         enter_user_mode(context, std::move(parser[0]), mode, lock);
-    }
-};
+    }};
 
 }
 
 void register_commands()
 {
     CommandManager& cm = CommandManager::instance();
-    cm.register_command("nop", [](const ParametersParser&, Context&, const ShellContext&){}, "do nothing", {});
+    cm.register_command(
+        "nop", [](const ParametersParser&, Context&, const ShellContext&) {},
+        "do nothing", {});
 
-    auto register_command = [&](const CommandDesc& c)
-    {
-        cm.register_command(c.name, c.func, c.docstring, c.params, c.flags, c.helper, c.completer);
+    auto register_command = [&](const CommandDesc& c) {
+        cm.register_command(c.name, c.func, c.docstring, c.params, c.flags,
+                            c.helper, c.completer);
         if (c.alias)
             GlobalScope::instance().aliases().add_alias(c.alias, c.name);
     };

@@ -13,17 +13,16 @@ namespace utf8
 
 // adapter for an iterator on bytes which permits to iterate
 // on unicode codepoints instead.
-template<typename BaseIt,
-         typename Sentinel = BaseIt,
-         typename CodepointType = Codepoint,
+template<typename BaseIt, typename Sentinel = BaseIt,
+         typename CodepointType  = Codepoint,
          typename DifferenceType = CharCount,
-         typename InvalidPolicy = utf8::InvalidPolicy::Pass>
-class iterator : public std::iterator<std::bidirectional_iterator_tag,
-                                      CodepointType, DifferenceType,
-                                      CodepointType*, CodepointType>
+         typename InvalidPolicy  = utf8::InvalidPolicy::Pass>
+class iterator
+    : public std::iterator<std::bidirectional_iterator_tag, CodepointType,
+                           DifferenceType, CodepointType*, CodepointType>
 {
 public:
-    iterator() = default;
+    iterator()                            = default;
     constexpr static bool noexcept_policy = noexcept(InvalidPolicy{}(0));
 
     iterator(BaseIt it, Sentinel begin, Sentinel end) noexcept
@@ -95,30 +94,65 @@ public:
         return *this;
     }
 
-    bool operator==(const iterator& other) const noexcept { return m_it == other.m_it; }
-    bool operator!=(const iterator& other) const noexcept { return m_it != other.m_it; }
+    bool operator==(const iterator& other) const noexcept
+    {
+        return m_it == other.m_it;
+    }
+    bool operator!=(const iterator& other) const noexcept
+    {
+        return m_it != other.m_it;
+    }
 
-    bool operator< (const iterator& other) const noexcept { return m_it < other.m_it; }
-    bool operator<= (const iterator& other) const noexcept { return m_it <= other.m_it; }
+    bool operator<(const iterator& other) const noexcept
+    {
+        return m_it < other.m_it;
+    }
+    bool operator<=(const iterator& other) const noexcept
+    {
+        return m_it <= other.m_it;
+    }
 
-    bool operator> (const iterator& other) const noexcept { return m_it > other.m_it; }
-    bool operator>= (const iterator& other) const noexcept { return m_it >= other.m_it; }
+    bool operator>(const iterator& other) const noexcept
+    {
+        return m_it > other.m_it;
+    }
+    bool operator>=(const iterator& other) const noexcept
+    {
+        return m_it >= other.m_it;
+    }
 
     template<typename T>
-    std::enable_if_t<std::is_same<T, BaseIt>::value or std::is_same<T, Sentinel>::value, bool>
-    operator==(const T& other) const noexcept { return m_it == other; }
+    std::enable_if_t<std::is_same<T, BaseIt>::value
+                         or std::is_same<T, Sentinel>::value,
+                     bool>
+    operator==(const T& other) const noexcept
+    {
+        return m_it == other;
+    }
 
     template<typename T>
-    std::enable_if_t<std::is_same<T, BaseIt>::value or std::is_same<T, Sentinel>::value, bool>
-    operator!=(const T& other) const noexcept { return m_it != other; }
+    std::enable_if_t<std::is_same<T, BaseIt>::value
+                         or std::is_same<T, Sentinel>::value,
+                     bool>
+    operator!=(const T& other) const noexcept
+    {
+        return m_it != other;
+    }
 
-    bool operator< (const BaseIt& other) const noexcept { return m_it < other; }
-    bool operator<= (const BaseIt& other) const noexcept { return m_it <= other; }
+    bool operator<(const BaseIt& other) const noexcept { return m_it < other; }
+    bool operator<=(const BaseIt& other) const noexcept
+    {
+        return m_it <= other;
+    }
 
-    bool operator> (const BaseIt& other) const noexcept { return m_it > other; }
-    bool operator>= (const BaseIt& other) const noexcept { return m_it >= other; }
+    bool operator>(const BaseIt& other) const noexcept { return m_it > other; }
+    bool operator>=(const BaseIt& other) const noexcept
+    {
+        return m_it >= other;
+    }
 
-    DifferenceType operator-(const iterator& other) const noexcept(noexcept_policy)
+    DifferenceType operator-(const iterator& other) const
+        noexcept(noexcept_policy)
     {
         return (DifferenceType)utf8::distance<InvalidPolicy>(other.m_it, m_it);
     }

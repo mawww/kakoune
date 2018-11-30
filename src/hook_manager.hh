@@ -103,9 +103,9 @@ constexpr auto enum_desc(Meta::Type<Hook>)
 
 enum class HookFlags
 {
-    None = 0,
+    None   = 0,
     Always = 1 << 0,
-    Once = 1 << 1
+    Once   = 1 << 1
 };
 constexpr bool with_bit_ops(Meta::Type<HookFlags>) { return true; }
 
@@ -115,10 +115,11 @@ public:
     HookManager(HookManager& parent);
     ~HookManager();
 
-    void add_hook(Hook hook, String group, HookFlags flags,
-                  Regex filter, String commands);
+    void add_hook(Hook hook, String group, HookFlags flags, Regex filter,
+                  String commands);
     void remove_hooks(const Regex& regex);
-    CandidateList complete_hook_group(StringView prefix, ByteCount pos_in_token);
+    CandidateList complete_hook_group(StringView prefix,
+                                      ByteCount pos_in_token);
     void run_hook(Hook hook, StringView param, Context& context);
 
 private:
@@ -129,10 +130,14 @@ private:
     struct HookData;
 
     SafePtr<HookManager> m_parent;
-    Array<Vector<std::unique_ptr<HookData>, MemoryDomain::Hooks>, enum_desc(Meta::Type<Hook>{}).size()> m_hooks;
+    Array<Vector<std::unique_ptr<HookData>, MemoryDomain::Hooks>,
+          enum_desc(Meta::Type<Hook>{}).size()>
+        m_hooks;
 
-    mutable Vector<std::pair<Hook, StringView>, MemoryDomain::Hooks> m_running_hooks;
-    mutable Vector<std::unique_ptr<HookData>, MemoryDomain::Hooks> m_hooks_trash;
+    mutable Vector<std::pair<Hook, StringView>, MemoryDomain::Hooks>
+        m_running_hooks;
+    mutable Vector<std::unique_ptr<HookData>, MemoryDomain::Hooks>
+        m_hooks_trash;
 };
 
 }

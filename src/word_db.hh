@@ -24,6 +24,7 @@ public:
     RankedMatchList find_matching(StringView str);
 
     int get_word_occurences(StringView word) const;
+
 private:
     void update_db();
     void add_words(StringView line);
@@ -40,7 +41,7 @@ private:
         int refcount;
     };
     using WordToInfo = HashMap<StringView, WordInfo, MemoryDomain::WordDB>;
-    using Lines = Vector<StringDataPtr, MemoryDomain::WordDB>;
+    using Lines      = Vector<StringDataPtr, MemoryDomain::WordDB>;
 
     SafePtr<const Buffer> m_buffer;
     size_t m_timestamp;

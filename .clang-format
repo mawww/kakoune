@@ -1,0 +1,37 @@
+---
+BasedOnStyle: Google
+IndentWidth: 4
+---
+Language: Cpp
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterClass: true
+    AfterControlStatement: true
+    AfterEnum: true
+    AfterFunction: true
+    AfterNamespace: true
+    AfterStruct: true
+    AfterUnion: true
+    AfterExternBlock: true
+    BeforeCatch: true
+    BeforeElse: true
+    IndentBraces: false
+    SplitEmptyFunction: false
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: false
+SortIncludes: false
+SpaceAfterTemplateKeyword: false
+AlignAfterOpenBracket: Align
+KeepEmptyLinesAtTheStartOfBlocks: true
+SpaceBeforeParens: ControlStatements
+AlignConsecutiveAssignments: true
+BreakBeforeBinaryOperators: All
+Cpp11BracedListStyle: true
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+FixNamespaceComments: false
+SpacesBeforeTrailingComments: 1
+AccessModifierOffset: -4
+AlignConsecutiveAssignments: true
+IndentPPDirectives: AfterHash
+...

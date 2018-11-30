@@ -12,10 +12,7 @@ namespace Kakoune
 {
 
 ClientManager::ClientManager() = default;
-ClientManager::~ClientManager()
-{
-    clear();
-}
+ClientManager::~ClientManager() { clear(); }
 
 void ClientManager::clear()
 {
@@ -38,24 +35,28 @@ String ClientManager::generate_name() const
     }
 }
 
-Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pid,
-                                     String name, EnvVarMap env_vars, StringView init_cmds,
+Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
+                                     int pid, String name, EnvVarMap env_vars,
+                                     StringView init_cmds,
                                      Optional<BufferCoord> init_coord,
                                      Client::OnExitCallback on_exit)
 {
-    Buffer& buffer = BufferManager::instance().get_first_buffer();
+    Buffer& buffer         = BufferManager::instance().get_first_buffer();
     WindowAndSelections ws = get_free_window(buffer);
-    Client* client = new Client{std::move(ui), std::move(ws.window),
-                                std::move(ws.selections), pid,
-                                std::move(env_vars),
-                                name.empty() ? generate_name() : std::move(name),
-                                std::move(on_exit)};
+    Client* client
+        = new Client{std::move(ui),
+                     std::move(ws.window),
+                     std::move(ws.selections),
+                     pid,
+                     std::move(env_vars),
+                     name.empty() ? generate_name() : std::move(name),
+                     std::move(on_exit)};
     m_clients.emplace_back(client);
 
     if (init_coord)
     {
         auto& selections = client->context().selections_write_only();
-        selections = SelectionList(buffer, buffer.clamp(*init_coord));
+        selections       = SelectionList(buffer, buffer.clamp(*init_coord));
         client->context().window().center_line(init_coord->line);
     }
 
@@ -65,8 +66,8 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
     }
     catch (Kakoune::runtime_error& error)
     {
-        client->context().print_status({ fix_atom_text(error.what().str()),
-                                         client->context().faces()["Error"] });
+        client->context().print_status({fix_atom_text(error.what().str()),
+                                        client->context().faces()["Error"]});
         client->context().hooks().run_hook(Hook::RuntimeError, error.what(),
                                            client->context());
     }
@@ -116,20 +117,22 @@ void ClientManager::remove_client(Client& client, bool graceful, int status)
 WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
 {
     auto it = find_if(m_free_windows | reverse(),
-                      [&](const WindowAndSelections& ws)
-                      { return &ws.window->buffer() == &buffer; });
+                      [&](const WindowAndSelections& ws) {
+                          return &ws.window->buffer() == &buffer;
+                      });
 
     if (it == m_free_windows.rend())
-        return { std::make_unique<Window>(buffer), { buffer, Selection{} } };
+        return {std::make_unique<Window>(buffer), {buffer, Selection{}}};
 
     it->window->force_redraw();
     WindowAndSelections res = std::move(*it);
-    m_free_windows.erase(it.base()-1);
+    m_free_windows.erase(it.base() - 1);
     res.selections.update();
     return res;
 }
 
-void ClientManager::add_free_window(std::unique_ptr<Window>&& window, SelectionList selections)
+void ClientManager::add_free_window(std::unique_ptr<Window>&& window,
+                                    SelectionList selections)
 {
     window->clear_display_buffer();
     m_free_windows.push_back({std::move(window), std::move(selections)});
@@ -151,11 +154,13 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
             context.input_handler().reset_normal_mode();
 
         Buffer* last = client->last_buffer();
-        context.change_buffer(last ? *last : BufferManager::instance().get_first_buffer());
+        context.change_buffer(
+            last ? *last : BufferManager::instance().get_first_buffer());
     }
     auto end = std::remove_if(m_free_windows.begin(), m_free_windows.end(),
-                              [&buffer](const WindowAndSelections& ws)
-                              { return &ws.window->buffer() == &buffer; });
+                              [&buffer](const WindowAndSelections& ws) {
+                                  return &ws.window->buffer() == &buffer;
+                              });
 
     for (auto it = end; it != m_free_windows.end(); ++it)
         m_window_trash.push_back(std::move(it->window));
@@ -163,15 +168,9 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
     m_free_windows.erase(end, m_free_windows.end());
 }
 
-void ClientManager::clear_window_trash()
-{
-    m_window_trash.clear();
-}
+void ClientManager::clear_window_trash() { m_window_trash.clear(); }
 
-void ClientManager::clear_client_trash()
-{
-    m_client_trash.clear();
-}
+void ClientManager::clear_client_trash() { m_client_trash.clear(); }
 
 bool ClientManager::client_name_exists(StringView name) const
 {
@@ -204,8 +203,10 @@ void ClientManager::redraw_clients() const
 CandidateList ClientManager::complete_client_name(StringView prefix,
                                                   ByteCount cursor_pos) const
 {
-    auto c = m_clients | transform([](const std::unique_ptr<Client>& c) -> const String&
-                                   { return c->context().name(); });
+    auto c = m_clients
+             | transform([](const std::unique_ptr<Client>& c) -> const String& {
+                   return c->context().name();
+               });
     return complete(prefix, cursor_pos, c);
 }
 

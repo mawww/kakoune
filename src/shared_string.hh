@@ -16,10 +16,14 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
     uint32_t refcount;
     const int length;
 
-    [[gnu::always_inline]]
-    const char* data() const { return reinterpret_cast<const char*>(this + 1); }
-    [[gnu::always_inline]]
-    StringView strview() const { return {data(), length}; }
+    [[gnu::always_inline]] const char* data() const
+    {
+        return reinterpret_cast<const char*>(this + 1);
+    }
+    [[gnu::always_inline]] StringView strview() const
+    {
+        return {data(), length};
+    }
 
 private:
     StringData(int len) : refcount(0), length(len) {}
@@ -36,7 +40,8 @@ private:
             {
                 if (r->refcount & interned_flag)
                     Registry::instance().remove(r->strview());
-                StringData::operator delete(r, sizeof(StringData) + r->length + 1);
+                StringData::operator delete(r,
+                                            sizeof(StringData) + r->length + 1);
             }
         }
         static void ptr_moved(StringData*, void*, void*) noexcept {}
@@ -59,7 +64,7 @@ public:
     static Ptr create(ArrayView<const StringView> strs);
 };
 
-using StringDataPtr = StringData::Ptr;
+using StringDataPtr  = StringData::Ptr;
 using StringRegistry = StringData::Registry;
 
 inline StringDataPtr intern(StringView str)

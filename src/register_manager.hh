@@ -19,7 +19,7 @@ public:
     virtual ~Register() = default;
 
     virtual void set(Context& context, ConstArrayView<String> values) = 0;
-    virtual ConstArrayView<String> get(const Context& context) = 0;
+    virtual ConstArrayView<String> get(const Context& context)        = 0;
 };
 
 // static value register, which can be modified
@@ -39,6 +39,7 @@ public:
         else
             return ConstArrayView<String>(m_content);
     }
+
 protected:
     Vector<String, MemoryDomain::Registers> m_content;
 };
@@ -50,7 +51,8 @@ class DynamicRegister : public StaticRegister
 {
 public:
     DynamicRegister(Getter getter, Setter setter)
-        : m_getter(std::move(getter)), m_setter(std::move(setter)) {}
+        : m_getter(std::move(getter)), m_setter(std::move(setter))
+    {}
 
     void set(Context& context, ConstArrayView<String> values) override
     {
@@ -71,17 +73,18 @@ private:
 template<typename Func>
 std::unique_ptr<Register> make_dyn_reg(Func func)
 {
-    auto setter = [](Context&, ConstArrayView<String>)
-    {
+    auto setter = [](Context&, ConstArrayView<String>) {
         throw runtime_error("this register is not assignable");
     };
-    return std::make_unique<DynamicRegister<Func, decltype(setter)>>(std::move(func), setter);
+    return std::make_unique<DynamicRegister<Func, decltype(setter)>>(
+        std::move(func), setter);
 }
 
 template<typename Getter, typename Setter>
 std::unique_ptr<Register> make_dyn_reg(Getter getter, Setter setter)
 {
-    return std::make_unique<DynamicRegister<Getter, Setter>>(std::move(getter), std::move(setter));
+    return std::make_unique<DynamicRegister<Getter, Setter>>(std::move(getter),
+                                                             std::move(setter));
 }
 
 class NullRegister : public Register
@@ -103,7 +106,8 @@ public:
     void add_register(Codepoint c, std::unique_ptr<Register> reg);
 
 protected:
-    HashMap<Codepoint, std::unique_ptr<Register>, MemoryDomain::Registers> m_registers;
+    HashMap<Codepoint, std::unique_ptr<Register>, MemoryDomain::Registers>
+        m_registers;
 };
 
 }

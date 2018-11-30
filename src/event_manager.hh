@@ -22,9 +22,9 @@ enum class EventMode
 
 enum class FdEvents
 {
-    None = 0,
-    Read = 1 << 0,
-    Write = 1 << 1,
+    None   = 0,
+    Read   = 1 << 0,
+    Write  = 1 << 1,
     Except = 1 << 2,
 };
 
@@ -33,7 +33,8 @@ constexpr bool with_bit_ops(Meta::Type<FdEvents>) { return true; }
 class FDWatcher
 {
 public:
-    using Callback = std::function<void (FDWatcher& watcher, FdEvents events, EventMode mode)>;
+    using Callback = std::function<void(FDWatcher& watcher, FdEvents events,
+                                        EventMode mode)>;
     FDWatcher(int fd, FdEvents events, Callback callback);
     FDWatcher(const FDWatcher&) = delete;
     FDWatcher& operator=(const FDWatcher&) = delete;
@@ -49,7 +50,7 @@ public:
     void disable() { m_fd = -1; }
 
 private:
-    int      m_fd;
+    int m_fd;
     FdEvents m_events;
     Callback m_callback;
 };
@@ -57,7 +58,7 @@ private:
 class Timer
 {
 public:
-    using Callback = std::function<void (Timer& timer)>;
+    using Callback = std::function<void(Timer& timer)>;
 
     Timer(TimePoint date, Callback callback,
           EventMode mode = EventMode::Normal);
@@ -66,13 +67,13 @@ public:
     ~Timer();
 
     TimePoint next_date() const { return m_date; }
-    void      set_next_date(TimePoint date) { m_date = date; }
+    void set_next_date(TimePoint date) { m_date = date; }
     void run(EventMode mode);
 
 private:
     TimePoint m_date;
     EventMode m_mode;
-    Callback  m_callback;
+    Callback m_callback;
 };
 
 // The EventManager provides an interface to file descriptor
@@ -86,7 +87,8 @@ public:
     EventManager();
     ~EventManager();
 
-    bool handle_next_events(EventMode mode, sigset_t* sigmask = nullptr, bool block = true);
+    bool handle_next_events(EventMode mode, sigset_t* sigmask = nullptr,
+                            bool block = true);
 
     // force the watchers associated with fd to be executed
     // on next handle_next_events call.
@@ -96,14 +98,14 @@ private:
     friend class FDWatcher;
     friend class Timer;
     Vector<FDWatcher*, MemoryDomain::Events> m_fd_watchers;
-    Vector<Timer*, MemoryDomain::Events>     m_timers;
+    Vector<Timer*, MemoryDomain::Events> m_timers;
     fd_set m_forced_fd;
-    bool   m_has_forced_fd = false;
+    bool m_has_forced_fd = false;
 
     TimePoint m_last;
 };
 
-using SignalHandler = void(*)(int);
+using SignalHandler = void (*)(int);
 
 SignalHandler set_signal_handler(int signum, SignalHandler handler);
 

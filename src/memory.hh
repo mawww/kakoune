@@ -45,32 +45,58 @@ inline const char* domain_name(MemoryDomain domain)
 {
     switch (domain)
     {
-        case MemoryDomain::Undefined: return "Undefined";
-        case MemoryDomain::String: return "String";
-        case MemoryDomain::SharedString: return "SharedString";
-        case MemoryDomain::BufferContent: return "BufferContent";
-        case MemoryDomain::BufferMeta: return "BufferMeta";
-        case MemoryDomain::Options: return "Options";
-        case MemoryDomain::Highlight: return "Highlight";
-        case MemoryDomain::Regions: return "Regions";
-        case MemoryDomain::Display: return "Display";
-        case MemoryDomain::Mapping: return "Mapping";
-        case MemoryDomain::Commands: return "Commands";
-        case MemoryDomain::Hooks: return "Hooks";
-        case MemoryDomain::WordDB: return "WordDB";
-        case MemoryDomain::Aliases: return "Aliases";
-        case MemoryDomain::EnvVars: return "EnvVars";
-        case MemoryDomain::Faces: return "Faces";
-        case MemoryDomain::Values: return "Values";
-        case MemoryDomain::Registers: return "Registers";
-        case MemoryDomain::Client: return "Client";
-        case MemoryDomain::Selections: return "Selections";
-        case MemoryDomain::History: return "History";
-        case MemoryDomain::Remote: return "Remote";
-        case MemoryDomain::Events: return "Events";
-        case MemoryDomain::Completion: return "Completion";
-        case MemoryDomain::Regex: return "Regex";
-        case MemoryDomain::Count: break;
+        case MemoryDomain::Undefined:
+            return "Undefined";
+        case MemoryDomain::String:
+            return "String";
+        case MemoryDomain::SharedString:
+            return "SharedString";
+        case MemoryDomain::BufferContent:
+            return "BufferContent";
+        case MemoryDomain::BufferMeta:
+            return "BufferMeta";
+        case MemoryDomain::Options:
+            return "Options";
+        case MemoryDomain::Highlight:
+            return "Highlight";
+        case MemoryDomain::Regions:
+            return "Regions";
+        case MemoryDomain::Display:
+            return "Display";
+        case MemoryDomain::Mapping:
+            return "Mapping";
+        case MemoryDomain::Commands:
+            return "Commands";
+        case MemoryDomain::Hooks:
+            return "Hooks";
+        case MemoryDomain::WordDB:
+            return "WordDB";
+        case MemoryDomain::Aliases:
+            return "Aliases";
+        case MemoryDomain::EnvVars:
+            return "EnvVars";
+        case MemoryDomain::Faces:
+            return "Faces";
+        case MemoryDomain::Values:
+            return "Values";
+        case MemoryDomain::Registers:
+            return "Registers";
+        case MemoryDomain::Client:
+            return "Client";
+        case MemoryDomain::Selections:
+            return "Selections";
+        case MemoryDomain::History:
+            return "History";
+        case MemoryDomain::Remote:
+            return "Remote";
+        case MemoryDomain::Events:
+            return "Events";
+        case MemoryDomain::Completion:
+            return "Completion";
+        case MemoryDomain::Regex:
+            return "Regex";
+        case MemoryDomain::Count:
+            break;
     }
     kak_assert(false);
     return "";
@@ -96,10 +122,14 @@ struct Allocator
 
     Allocator() = default;
     template<typename U>
-    Allocator(const Allocator<U, domain>&) {}
+    Allocator(const Allocator<U, domain>&)
+    {}
 
     template<typename U>
-    struct rebind { using other = Allocator<U, domain>; };
+    struct rebind
+    {
+        using other = Allocator<U, domain>;
+    };
 
     T* allocate(size_t n)
     {
@@ -128,11 +158,16 @@ constexpr bool operator!=(const Allocator<T1, d1>&, const Allocator<T2, d2>&)
     return d1 != d2;
 }
 
-
-constexpr MemoryDomain memory_domain(Meta::AnyType) { return MemoryDomain::Undefined; }
+constexpr MemoryDomain memory_domain(Meta::AnyType)
+{
+    return MemoryDomain::Undefined;
+}
 
 template<typename T>
-constexpr decltype(T::Domain) memory_domain(Meta::Type<T>) { return T::Domain; }
+constexpr decltype(T::Domain) memory_domain(Meta::Type<T>)
+{
+    return T::Domain;
+}
 
 template<MemoryDomain d>
 struct UseMemoryDomain

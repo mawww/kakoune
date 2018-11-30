@@ -6,7 +6,12 @@
 namespace Kakoune
 {
 
-template<typename T> struct EnumDesc { T value; StringView name; };
+template<typename T>
+struct EnumDesc
+{
+    T value;
+    StringView name;
+};
 
 }
 

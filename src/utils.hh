@@ -25,10 +25,7 @@ public:
         return *static_cast<T*>(ms_instance);
     }
 
-    static bool has_instance()
-    {
-        return ms_instance != nullptr;
-    }
+    static bool has_instance() { return ms_instance != nullptr; }
 
 protected:
     Singleton()
@@ -64,16 +61,21 @@ template<typename T>
 class OnScopeEnd
 {
 public:
-    [[gnu::always_inline]]
-    OnScopeEnd(T func) : m_func{std::move(func)}, m_valid{true} {}
+    [[gnu::always_inline]] OnScopeEnd(T func)
+        : m_func{std::move(func)}, m_valid{true}
+    {}
 
-    [[gnu::always_inline]]
-    OnScopeEnd(OnScopeEnd&& other)
-      : m_func{std::move(other.m_func)}, m_valid{other.m_valid}
-    { other.m_valid = false; }
+    [[gnu::always_inline]] OnScopeEnd(OnScopeEnd&& other)
+        : m_func{std::move(other.m_func)}, m_valid{other.m_valid}
+    {
+        other.m_valid = false;
+    }
 
-    [[gnu::always_inline]]
-    ~OnScopeEnd() noexcept(noexcept(std::declval<T>()())) { if (m_valid) m_func(); }
+    [[gnu::always_inline]] ~OnScopeEnd() noexcept(noexcept(std::declval<T>()()))
+    {
+        if (m_valid)
+            m_func();
+    }
 
 private:
     bool m_valid;
@@ -91,9 +93,14 @@ OnScopeEnd<T> on_scope_end(T t)
 struct NestedBool
 {
     void set() { m_count++; }
-    void unset() { kak_assert(m_count > 0); m_count--; }
+    void unset()
+    {
+        kak_assert(m_count > 0);
+        m_count--;
+    }
 
     operator bool() const { return m_count > 0; }
+
 private:
     int m_count = 0;
 };
@@ -121,7 +128,7 @@ private:
 // *** Misc helper functions ***
 
 template<typename T>
-bool operator== (const std::unique_ptr<T>& lhs, T* rhs)
+bool operator==(const std::unique_ptr<T>& lhs, T* rhs)
 {
     return lhs.get() == rhs;
 }

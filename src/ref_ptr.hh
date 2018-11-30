@@ -22,7 +22,11 @@ struct RefCountable
 struct RefCountablePolicy
 {
     static void inc_ref(RefCountable* r, void*) noexcept { ++r->refcount; }
-    static void dec_ref(RefCountable* r, void*) noexcept { if (--r->refcount == 0) delete r; }
+    static void dec_ref(RefCountable* r, void*) noexcept
+    {
+        if (--r->refcount == 0)
+            delete r;
+    }
     static void ptr_moved(RefCountable*, void*, void*) noexcept {}
 };
 
@@ -33,9 +37,13 @@ struct RefPtr
     explicit RefPtr(T* ptr) : m_ptr(ptr) { acquire(); }
     ~RefPtr() noexcept { release(); }
     RefPtr(const RefPtr& other) : m_ptr(other.m_ptr) { acquire(); }
-    RefPtr(RefPtr&& other)
-        noexcept(noexcept(std::declval<RefPtr>().moved(nullptr)))
-        : m_ptr(other.m_ptr) { other.m_ptr = nullptr; moved(&other); }
+    RefPtr(RefPtr&& other) noexcept(
+        noexcept(std::declval<RefPtr>().moved(nullptr)))
+        : m_ptr(other.m_ptr)
+    {
+        other.m_ptr = nullptr;
+        moved(&other);
+    }
 
     RefPtr& operator=(const RefPtr& other)
     {
@@ -51,7 +59,7 @@ struct RefPtr
     RefPtr& operator=(RefPtr&& other)
     {
         release();
-        m_ptr = other.m_ptr;
+        m_ptr       = other.m_ptr;
         other.m_ptr = nullptr;
         moved(&other);
         return *this;
@@ -68,16 +76,12 @@ struct RefPtr
         return *this;
     }
 
-    [[gnu::always_inline]]
-    T* operator->() const { return m_ptr; }
-    [[gnu::always_inline]]
-    T& operator*() const { return *m_ptr; }
+    [[gnu::always_inline]] T* operator->() const { return m_ptr; }
+    [[gnu::always_inline]] T& operator*() const { return *m_ptr; }
 
-    [[gnu::always_inline]]
-    T* get() const { return m_ptr; }
+    [[gnu::always_inline]] T* get() const { return m_ptr; }
 
-    [[gnu::always_inline]]
-    explicit operator bool() const { return m_ptr; }
+    [[gnu::always_inline]] explicit operator bool() const { return m_ptr; }
 
     void reset(T* ptr = nullptr)
     {
@@ -88,29 +92,32 @@ struct RefPtr
         acquire();
     }
 
-    friend bool operator==(const RefPtr& lhs, const RefPtr& rhs) { return lhs.m_ptr == rhs.m_ptr; }
-    friend bool operator!=(const RefPtr& lhs, const RefPtr& rhs) { return lhs.m_ptr != rhs.m_ptr; }
+    friend bool operator==(const RefPtr& lhs, const RefPtr& rhs)
+    {
+        return lhs.m_ptr == rhs.m_ptr;
+    }
+    friend bool operator!=(const RefPtr& lhs, const RefPtr& rhs)
+    {
+        return lhs.m_ptr != rhs.m_ptr;
+    }
 
 private:
     T* m_ptr = nullptr;
 
-    [[gnu::always_inline]]
-    void acquire()
+    [[gnu::always_inline]] void acquire()
     {
         if (m_ptr)
             Policy::inc_ref(m_ptr, this);
     }
 
-    [[gnu::always_inline]]
-    void release() noexcept
+    [[gnu::always_inline]] void release() noexcept
     {
         if (m_ptr)
             Policy::dec_ref(m_ptr, this);
     }
 
-    [[gnu::always_inline]]
-    void moved(void* from)
-        noexcept(noexcept(Policy::ptr_moved(nullptr, nullptr, nullptr)))
+    [[gnu::always_inline]] void moved(void* from) noexcept(
+        noexcept(Policy::ptr_moved(nullptr, nullptr, nullptr)))
     {
         if (m_ptr)
             Policy::ptr_moved(m_ptr, from, this);

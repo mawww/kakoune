@@ -13,7 +13,8 @@ namespace Kakoune
 
 BufferManager::~BufferManager()
 {
-    // Move buffers to avoid running BufClose with buffers remaining in that list
+    // Move buffers to avoid running BufClose with buffers remaining in that
+    // list
     BufferList buffers = std::move(m_buffers);
 
     for (auto& buffer : buffers)
@@ -30,12 +31,13 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
     auto path = real_path(parse_filename(name));
     for (auto& buf : m_buffers)
     {
-        if (buf->name() == name or
-            (buf->flags() & Buffer::Flags::File and buf->name() == path))
+        if (buf->name() == name
+            or (buf->flags() & Buffer::Flags::File and buf->name() == path))
             throw runtime_error{"buffer name is already in use"};
     }
 
-    m_buffers.push_back(std::make_unique<Buffer>(std::move(name), flags, data, fs_timestamp));
+    m_buffers.push_back(
+        std::make_unique<Buffer>(std::move(name), flags, data, fs_timestamp));
     auto* buffer = m_buffers.back().get();
     buffer->on_registered();
 
@@ -64,8 +66,8 @@ Buffer* BufferManager::get_buffer_ifp(StringView name)
     auto path = real_path(parse_filename(name));
     for (auto& buf : m_buffers)
     {
-        if (buf->name() == name or
-            (buf->flags() & Buffer::Flags::File and buf->name() == path))
+        if (buf->name() == name
+            or (buf->flags() & Buffer::Flags::File and buf->name() == path))
             return buf.get();
     }
     return nullptr;
@@ -81,7 +83,8 @@ Buffer& BufferManager::get_buffer(StringView name)
 
 Buffer& BufferManager::get_first_buffer()
 {
-    if (all_of(m_buffers, [](auto& b) { return (b->flags() & Buffer::Flags::Debug); }))
+    if (all_of(m_buffers,
+               [](auto& b) { return (b->flags() & Buffer::Flags::Debug); }))
         create_buffer("*scratch*", Buffer::Flags::None);
 
     return *m_buffers.back();
@@ -92,7 +95,7 @@ void BufferManager::backup_modified_buffers()
     for (auto& buf : m_buffers)
     {
         if ((buf->flags() & Buffer::Flags::File) and buf->is_modified()
-            and not (buf->flags() & Buffer::Flags::ReadOnly))
+            and not(buf->flags() & Buffer::Flags::ReadOnly))
             write_buffer_to_backup_file(*buf);
     }
 }
