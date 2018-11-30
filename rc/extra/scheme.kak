@@ -75,7 +75,7 @@ evaluate-commands %sh{
     join () { printf "%s" "$1" | tr -s ' \n\t' "$2"; }
 
     printf '%s\n' "hook global WinSetOption filetype=scheme %{
-        	set-option window static_words '$(join "$keywords:$meta:$operators:$builtins" ':' )'
+           set-option window static_words $(join "$keywords $meta $operators $builtins" ' ' )
     }"
 
     exact_quote () {
