@@ -1908,7 +1908,17 @@ const CommandDesc prompt_cmd = {
                     case PromptEvent::Change: cmd = on_change; break;
                     case PromptEvent::Abort: cmd = on_abort; break;
                 }
-                CommandManager::instance().execute(cmd, context, sc);
+                try
+                {
+                    CommandManager::instance().execute(cmd, context, sc);
+                }
+                catch (Kakoune::runtime_error& error)
+                {
+                    context.print_status({ fix_atom_text(error.what().str()),
+                                           context.faces()["Error"] });
+                    context.hooks().run_hook(Hook::RuntimeError, error.what(),
+                                             context);
+                }
             });
     }
 };
