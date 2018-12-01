@@ -217,8 +217,8 @@ Optional<Selection>
 select_to_first_non_blank(const Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
-    auto it = buffer.iterator_at(selection.cursor().line);
-    skip_while(it, buffer.iterator_at(selection.cursor().line+1),
+    auto it = buffer.iterator_at(selection.anchor().line);
+    skip_while(it, buffer.iterator_at(selection.anchor().line+1),
                is_horizontal_blank);
     return {it.coord()};
 }
