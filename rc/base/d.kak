@@ -128,5 +128,5 @@ hook global WinSetOption filetype=d %{
     hook window InsertChar \{ -group d-indent d-indent-on-opening-curly-brace
     hook window InsertChar \} -group d-indent d-indent-on-closing-curly-brace
 
-    hook -once -always window WinSetOptionfiletype=(?!d).* %{ remove-hooks window d-.+ }
+    hook -once -always window WinSetOption filetype=(?!d).* %{ remove-hooks window d-.+ }
 }

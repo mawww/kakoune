@@ -100,7 +100,7 @@ hook global WinSetOption filetype=moon %{
 
     alias window alt moon-alternative-file
 
-    hook global WinSetOption filetype=(?!moon).* %{
+    hook -once -always window WinSetOption filetype=(?!moon).* %{
         remove-hooks window moon-.+
         unalias window alt moon-alternative-file
     }
