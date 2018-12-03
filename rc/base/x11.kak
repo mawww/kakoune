@@ -22,16 +22,16 @@ A shell command is appended to the one set in this option at runtime} \
     done
 }
 
-define-command x11-terminal -params 1.. -shell-completion -docstring '
-x11-terminal <program> [<arguments>]: create a new terminal as an x11 window
-The program passed as argument will be executed in the new terminal' \
+define-command x11-terminal -params 1 -shell-completion -docstring '
+x11-terminal <program>: create a new terminal as an x11 window
+The shell program passed as argument will be executed in the new terminal' \
 %{
     evaluate-commands %sh{
         if [ -z "${kak_opt_termcmd}" ]; then
            echo "fail 'termcmd option is not set'"
            exit
         fi
-        setsid ${kak_opt_termcmd} "$*" < /dev/null > /dev/null 2>&1 &
+        setsid ${kak_opt_termcmd} "$1" < /dev/null > /dev/null 2>&1 &
     }
 }
 
@@ -39,7 +39,7 @@ define-command x11-new -params .. -command-completion -docstring '
 x11-new [<commands>]: create a new kakoune client as an x11 window
 The optional arguments are passed as commands to the new client' \
 %{
-    x11-terminal "kak -c %val{session} -e '%arg{@}'"
+    x11-terminal "kak -c '%val{session}' -e '%arg{@}'"
 }
 
 define-command x11-focus -params ..1 -client-completion -docstring '
