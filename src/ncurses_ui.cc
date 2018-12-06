@@ -688,7 +688,7 @@ Optional<Key> NCursesUI::get_next_key()
                       case '7': f = alt_ctrl; break;
                       case '8': f = shift_alt_ctrl; break;
                   }
-                  if (f)
+                  if (!f)
                   {
                       ungetch(c3); ungetch(c2); ungetch(c1);
                       break;
