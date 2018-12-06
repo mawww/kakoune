@@ -912,7 +912,7 @@ int main(int argc, char* argv[])
     set_signal_handler(SIGFPE,  signal_handler);
     set_signal_handler(SIGQUIT, signal_handler);
     set_signal_handler(SIGTERM, signal_handler);
-    set_signal_handler(SIGPIPE, SIG_IGN);
+    set_signal_handler(SIGPIPE, [](int){});
     set_signal_handler(SIGINT, [](int){});
     set_signal_handler(SIGCHLD, [](int){});
 
