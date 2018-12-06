@@ -31,6 +31,7 @@ add-highlighter shared/justfile/inline   region '`' '`' ref sh
 add-highlighter shared/justfile/shell    region '^\h+' '^[^\h]' group
 
 add-highlighter shared/justfile/shell/ ref sh
+add-highlighter shared/justfile/shell/ regex '(\{{2})([\w-]+)(\}{2})' 1:operator 2:variable 3:operator
 
 add-highlighter shared/justfile/content/ regex '^(@)?([\w-]+)(?:\s(.+))?\s?(:)(.+)?$' 1:operator 2:function 3:value 4:operator 5:type
 add-highlighter shared/justfile/content/ regex '([=+])' 1:operator
@@ -39,10 +40,6 @@ add-highlighter shared/justfile/content/ regex '^([\w-]+)\s=' 1:value
 hook global WinSetOption filetype=justfile %{
     hook window InsertChar \n -group justfile-indent just-indent-on-new-line
     add-highlighter window/justfile ref justfile
-
-    # variable substititution highlighting
-    add-highlighter shared/justfile/shell regex '(\{{2})([\w-]+)(\}{2})' 1:operator 2:variable 3:operator
-
 }
 
 hook global WinSetOption filetype=(?!justfile).* %{
