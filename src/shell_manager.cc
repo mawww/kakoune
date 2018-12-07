@@ -123,7 +123,7 @@ pid_t spawn_shell(const char* shell, StringView cmdline,
     setup_child();
 
     execve(shell, (char* const*)execparams.data(), (char* const*)envptrs.data());
-    exit(-1);
+    _exit(-1);
     return -1;
 }
 
