@@ -369,44 +369,44 @@ define-command -hidden c-family-insert-include-guards %{
 
 hook -group c-family-insert global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-insert-include-guards
 
-declare-option -docstring "colon separated list of path in which header files will be looked for" \
-    str-list alt_dirs '.' '..'
+declare-option -docstring "list of paths in which header files will be looked for" \
+    str-list altdirs '.' '..'
 
 define-command c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ evaluate-commands %sh{
-    file="${kak_buffile##*/}"
-    file_noext="${file%.*}"
-    dir=$(dirname "${kak_buffile}")
+    populate_menu() {
+        file="${kak_buffile##*/}"
+        file_noext="${file%.*}"
+        dir="${kak_buffile%/*}"
 
-    # Set $@ to alt_dirs
-    eval "set -- ${kak_opt_alt_dirs}"
+        base_extensions="${1}"
+        alt_extensions="${2}"
 
-    case ${file} in
-        *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
-            for alt_dir in "$@"; do
-                for ext in h hh hpp hxx H; do
-                    altname="${dir}/${alt_dir}/${file_noext}.${ext}"
-                    if [ -f ${altname} ]; then
-                        printf 'edit %%{%s}\n' "${altname}"
-                        exit
-                    fi
-                done
-            done
-        ;;
-        *.h|*.hh|*.hpp|*.hxx|*.H)
-            for alt_dir in "$@"; do
-                for ext in c cc cpp cxx C m; do
-                    altname="${dir}/${alt_dir}/${file_noext}.${ext}"
-                    if [ -f ${altname} ]; then
-                        printf 'edit %%{%s}\n' "${altname}"
-                        exit
-                    fi
-                done
-            done
-        ;;
-        *)
-            echo "echo -markup '{Error}extension not recognized'"
-            exit
-        ;;
-    esac
-    echo "echo -markup '{Error}alternative file not found'"
+        eval "set -- ${kak_opt_altdirs}"
+
+        for ext in ${base_extensions}; do
+            case "${file}" in
+                *\.${ext})
+                    for alt_dir in "$@"; do
+                        for alt_ext in ${alt_extensions}; do
+                            alt_name="${file_noext}.${alt_ext}"
+                            alt_path="${dir}/${alt_dir}/${alt_name}"
+                            if [ -f "${alt_path}" ]; then
+                                menu_entries="${menu_entries} '${alt_name}' 'edit! %{${alt_path}}'"
+                            fi
+                        done
+                    done;;
+            esac
+        done
+    }
+
+    menu_entries=""
+
+    populate_menu "c cc cpp cxx C inl m" "h hh hpp hxx H"
+    populate_menu "h hh hpp hxx H"       "c cc cpp cxx C m"
+
+    if [ -z "${menu_entries}" ]; then
+        echo "echo -markup '{Error}alternative file not found'"
+    else
+        printf 'menu -auto-single %s' "${menu_entries}"
+    fi
 }}
