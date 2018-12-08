@@ -293,7 +293,7 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
 }
 
 ParameterDesc edit_params{
-    { { "existing", { false, "fail if the file does not exists, do not open a new file" } },
+    { { "existing", { false, "fail if the file does not exist, do not open a new file" } },
       { "scratch",  { false, "create a scratch buffer, not linked to a file" } },
       { "debug",    { false, "create buffer as debug output" } },
       { "fifo",     { true,  "create a buffer reading its content from a named fifo" } },
