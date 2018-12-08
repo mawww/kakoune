@@ -1,0 +1,5 @@
+hook global NormalKey <ret> %{
+    hook window NormalKey <ret> %{
+        exec -draft ifoo<esc> 
+    }
+}

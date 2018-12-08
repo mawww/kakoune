@@ -63,12 +63,26 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
 
 void HookManager::run_hook(Hook hook, StringView param, Context& context)
 {
+    auto& hook_list = m_hooks[to_underlying(hook)];
+
     const bool only_always = context.hooks_disabled();
+    auto& disabled_hooks = context.options()["disabled_hooks"].get<Regex>();
+
+    struct ToRun { HookData* hook; MatchResults<const char*> captures; };
+    Vector<ToRun> hooks_to_run; // The m_hooks_trash vector ensure hooks wont die during this method
+    for (auto& hook : hook_list)
+    {
+        MatchResults<const char*> captures;
+        if ((not only_always or (hook->flags & HookFlags::Always)) and
+            (hook->group.empty() or disabled_hooks.empty() or
+             not regex_match(hook->group.begin(), hook->group.end(), disabled_hooks))
+            and regex_match(param.begin(), param.end(), captures, hook->filter))
+            hooks_to_run.push_back({ hook.get(), std::move(captures) });
+    }
 
     if (m_parent)
         m_parent->run_hook(hook, param, context);
 
-    auto& hook_list = m_hooks[to_underlying(hook)];
     auto hook_name = enum_desc(Meta::Type<Hook>{})[to_underlying(hook)].name;
     if (contains(m_running_hooks, std::make_pair(hook, param)))
     {
@@ -87,20 +101,6 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
     const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
     const bool profile = debug_flags & DebugFlags::Profile;
     auto start_time = profile ? Clock::now() : TimePoint{};
-
-    auto& disabled_hooks = context.options()["disabled_hooks"].get<Regex>();
-
-    struct ToRun { HookData* hook; MatchResults<const char*> captures; };
-    Vector<ToRun> hooks_to_run; // The m_hooks_trash vector ensure hooks wont die during this method
-    for (auto& hook : hook_list)
-    {
-        MatchResults<const char*> captures;
-        if ((not only_always or (hook->flags & HookFlags::Always)) and
-            (hook->group.empty() or disabled_hooks.empty() or
-             not regex_match(hook->group.begin(), hook->group.end(), disabled_hooks))
-            and regex_match(param.begin(), param.end(), captures, hook->filter))
-            hooks_to_run.push_back({ hook.get(), std::move(captures) });
-    }
 
     bool hook_error = false;
     for (auto& to_run : hooks_to_run)
