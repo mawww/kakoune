@@ -14,8 +14,10 @@ hook global KakBegin .* %sh{
 
 define-command -hidden -params 2 iterm-terminal-split-impl %{
     nop %sh{
+        # replace ' with '\\'' in the command
+        escaped=$(printf %s "$2" | sed -e "s|'|'\\\\\\\\''|g")
         direction="$1"
-        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' sh -c '$2'"
+        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' sh -c '$escaped'"
         osascript                                                                             \
         -e "tell application \"iTerm\""                                                       \
         -e "    tell current session of current window"                                       \
@@ -45,7 +47,8 @@ iterm-terminal-tab <program>: create a new terminal as an iterm tab
 The shell program passed as argument will be executed in the new terminal'\
 %{
     nop %sh{
-        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' sh -c '$1'"
+        escaped=$(printf %s "$1" | sed -e "s|'|'\\\\\\\\''|g")
+        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' sh -c '$escaped'"
         osascript                                                       \
         -e "tell application \"iTerm\""                                 \
         -e "    tell current window"                                    \
@@ -60,7 +63,8 @@ iterm-terminal-window <program>: create a new terminal as an iterm window
 The shell program passed as argument will be executed in the new terminal'\
 %{
     nop %sh{
-        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' sh -c '$1'"
+        escaped=$(printf %s "$1" | sed -e "s|'|'\\\\\\\\''|g")
+        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' sh -c '$escaped'"
         osascript                                                      \
         -e "tell application \"iTerm\""                                \
         -e "    create window with default profile command \"${cmd}\"" \
@@ -73,26 +77,26 @@ iterm-new-vertical <program>: create a new kakoune client as an iterm pane
 The current pane is split into two, top and bottom
 The optional arguments are passed as commands to the new client' \
 %{
-    iterm-terminal-vertical "kak -c %val{session} -e '%arg{@}'"
+    iterm-terminal-vertical "kak -c '%val{session}' -e '%arg{@}'"
 }
 define-command iterm-new-horizontal -params .. -command-completion -docstring '
 iterm-new-horizontal <program>: create a new kakoune client as an iterm pane
 The current pane is split into two, left and right
 The optional arguments are passed as commands to the new client' \
 %{
-    iterm-terminal-horizontal "kak -c %val{session} -e '%arg{@}'"
+    iterm-terminal-horizontal "kak -c '%val{session}' -e '%arg{@}'"
 }
 define-command iterm-new-tab -params .. -command-completion -docstring '
 iterm-new-tab <program>: create a new kakoune client as an iterm tab
 The optional arguments are passed as commands to the new client' \
 %{
-    iterm-terminal-tab "kak -c %val{session} -e '%arg{@}'"
+    iterm-terminal-tab "kak -c '%val{session}' -e '%arg{@}'"
 }
 define-command iterm-new-window -params .. -command-completion -docstring '
 iterm-new-window <program>: create a new kakoune client as an iterm window
 The optional arguments are passed as commands to the new client' \
 %{
-    iterm-terminal-window "kak -c %val{session} -e '%arg{@}'"
+    iterm-terminal-window "kak -c '%val{session}' -e '%arg{@}'"
 }
 
 define-command iterm-focus -params ..1 -client-completion -docstring '
