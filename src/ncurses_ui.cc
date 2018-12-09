@@ -656,62 +656,68 @@ Optional<Key> NCursesUI::get_next_key()
         return {};
     };
 
+    auto parse_csi = [this]() -> Optional<Key> {
+        const Codepoint c1 = wgetch(m_window);
+        switch (c1)
+        {
+            case 'I': return {Key::FocusIn};
+            case 'O': return {Key::FocusOut};
+            case '1':
+            {
+              const Codepoint c2 = wgetch(m_window);
+              if (c2 != ';')
+              {
+                  ungetch(c2); ungetch(c1);
+                  break;
+              }
+
+              const Codepoint c3 = wgetch(m_window);
+              function<Key(Key)> f;
+              switch (c3)
+              {
+                  case '2': f = shift; break;
+                  case '3': f = alt; break;
+                  case '4': f = shift_alt; break;
+                  case '5': f = ctrl; break;
+                  case '6': f = shift_ctrl; break;
+                  case '7': f = alt_ctrl; break;
+                  case '8': f = shift_alt_ctrl; break;
+              }
+              if (!f)
+              {
+                  ungetch(c3); ungetch(c2); ungetch(c1);
+                  break;
+              }
+
+              const Codepoint c4 = wgetch(m_window);
+              switch (c4)
+              {
+                  case 'A': return f(Key::Up);
+                  case 'B': return f(Key::Down);
+                  case 'C': return f(Key::Right);
+                  case 'D': return f(Key::Left);
+                  case 'H': return f(Key::Home);
+                  case 'F': return f(Key::End);
+              }
+
+              ungetch(c4); ungetch(c3); ungetch(c2); ungetch(c1);
+              break;
+            }
+        default:
+          ungetch(c1);
+          break;
+        }
+        return {};
+    };
+
     if (c == 27)
     {
         wtimeout(m_window, 0);
         const int new_c = wgetch(m_window);
         if (new_c == '[') // potential CSI
         {
-            const Codepoint c1 = wgetch(m_window);
-            switch (c1)
-            {
-                case 'I': return {Key::FocusIn};
-                case 'O': return {Key::FocusOut};
-                case '1':
-                {
-                  const Codepoint c2 = wgetch(m_window);
-                  if (c2 != ';')
-                  {
-                      ungetch(c2); ungetch(c1);
-                      break;
-                  }
-
-                  const Codepoint c3 = wgetch(m_window);
-                  function<Key(Key)> f;
-                  switch (c3)
-                  {
-                      case '2': f = shift; break;
-                      case '3': f = alt; break;
-                      case '4': f = shift_alt; break;
-                      case '5': f = ctrl; break;
-                      case '6': f = shift_ctrl; break;
-                      case '7': f = alt_ctrl; break;
-                      case '8': f = shift_alt_ctrl; break;
-                  }
-                  if (!f)
-                  {
-                      ungetch(c3); ungetch(c2); ungetch(c1);
-                      break;
-                  }
-
-                  const Codepoint c4 = wgetch(m_window);
-                  switch (c4)
-                  {
-                      case 'A': return f(Key::Up);
-                      case 'B': return f(Key::Down);
-                      case 'C': return f(Key::Right);
-                      case 'D': return f(Key::Left);
-                      case 'H': return f(Key::Home);
-                      case 'F': return f(Key::End);
-                  }
-
-                  ungetch(c4); ungetch(c3); ungetch(c2); ungetch(c1);
-                  break;
-                }
-            default:
-              ungetch(c1);
-              break;
-            }
+            if (auto key = parse_csi())
+                return key;
         }
         wtimeout(m_window, -1);
 
@@ -720,6 +726,9 @@ Optional<Key> NCursesUI::get_next_key()
         else
             return {Key::Escape};
     }
+    else if (c == 0x9b)
+        return parse_csi();
+
     return parse_key(c);
 }
 
