@@ -412,7 +412,8 @@ void register_options()
                        "    ncurses_change_colors         bool\n"
                        "    ncurses_wheel_up_button       int\n"
                        "    ncurses_wheel_down_button     int\n"
-                       "    ncurses_shift_function_key    int\n",
+                       "    ncurses_shift_function_key    int\n"
+                       "    ncurses_builtin_key_parser    bool\n",
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]"_str);

@@ -8,6 +8,10 @@ released versions.
 * `auto_complete` has been renamed to `autocomplete` for more
   consistency.
 
+* Start of a builtin key parser in the ncurses ui bypassing
+  the ncurses one. Can be favored by setting the ui option 
+  `ncurses_builtin_key_parser` to `true`.
+
 == Kakoune 2018.10.27
 
 * `remove-hooks` <group> argument is now a regex and removes all

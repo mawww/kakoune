@@ -146,6 +146,7 @@ private:
 
     bool m_set_title = true;
     bool m_change_colors = true;
+    bool m_builtin_key_parser = false;
 
     bool m_dirty = false;
 

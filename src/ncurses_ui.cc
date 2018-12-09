@@ -26,7 +26,6 @@ namespace Kakoune
 
 using std::min;
 using std::max;
-using std::function;
 
 struct NCursesWin : WINDOW {};
 
@@ -505,7 +504,7 @@ void NCursesUI::check_resize(bool force)
     m_window = (NCursesWin*)newpad(ws.ws_row, ws.ws_col);
     kak_assert(m_window);
     intrflush(m_window, false);
-    keypad(m_window, true);
+    keypad(m_window, not m_builtin_key_parser);
     meta(m_window, true);
 
     m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
@@ -549,6 +548,9 @@ Optional<Key> NCursesUI::get_next_key()
     const int c = wgetch(m_window);
     wtimeout(m_window, -1);
 
+    if (c == ERR)
+        return {};
+
     if (c == KEY_MOUSE)
     {
         MEVENT ev;
@@ -579,9 +581,6 @@ Optional<Key> NCursesUI::get_next_key()
     }
 
     auto parse_key = [this](int c) -> Optional<Key> {
-        if (c == ERR)
-            return {};
-
         switch (c)
         {
         case KEY_BACKSPACE: case 127: return {Key::Backspace};
@@ -656,65 +655,58 @@ Optional<Key> NCursesUI::get_next_key()
         return {};
     };
 
+    constexpr auto direction = make_array({Key::Up, Key::Down, Key::Right, Key::Left, Key::Home, Key::End});
     auto parse_csi = [this]() -> Optional<Key> {
         const Codepoint c1 = wgetch(m_window);
-        switch (c1)
+        if (c1 >= 'A' and c1 <= 'F')
+            return Key{direction[c1 - 'A']};
+        if (c1 == '1')
         {
-            case 'I': return {Key::FocusIn};
-            case 'O': return {Key::FocusOut};
-            case '1':
+            const Codepoint c2 = wgetch(m_window);
+            if (c2 >= 'A' and c2 <= 'F')
+                return Key{direction[c2 - 'A']};
+            if (c2 != ';')
             {
-              const Codepoint c2 = wgetch(m_window);
-              if (c2 != ';')
-              {
-                  ungetch(c2); ungetch(c1);
-                  break;
-              }
-
-              const Codepoint c3 = wgetch(m_window);
-              function<Key(Key)> f;
-              switch (c3)
-              {
-                  case '2': f = shift; break;
-                  case '3': f = alt; break;
-                  case '4': f = shift_alt; break;
-                  case '5': f = ctrl; break;
-                  case '6': f = shift_ctrl; break;
-                  case '7': f = alt_ctrl; break;
-                  case '8': f = shift_alt_ctrl; break;
-              }
-              if (!f)
-              {
-                  ungetch(c3); ungetch(c2); ungetch(c1);
-                  break;
-              }
-
-              const Codepoint c4 = wgetch(m_window);
-              switch (c4)
-              {
-                  case 'A': return f(Key::Up);
-                  case 'B': return f(Key::Down);
-                  case 'C': return f(Key::Right);
-                  case 'D': return f(Key::Left);
-                  case 'H': return f(Key::Home);
-                  case 'F': return f(Key::End);
-              }
-
-              ungetch(c4); ungetch(c3); ungetch(c2); ungetch(c1);
-              break;
+                ungetch(c2); ungetch(c1);
+                return {};
             }
-        default:
-          ungetch(c1);
-          break;
+            const Codepoint c3 = wgetch(m_window);
+            if (c3 < '2' or c3 > '8')
+            {
+                ungetch(c3); ungetch(c2); ungetch(c1);
+                return {};
+            }
+            const Codepoint c4 = wgetch(m_window);
+            if (c4 < 'A' or c4 > 'F')
+            {
+                ungetch(c4); ungetch(c3); ungetch(c2); ungetch(c1);
+                return {};
+            }
+
+            Key::Modifiers modifiers = Key::Modifiers::None;
+            const auto mask = c3 - '1';
+            if (mask & 1)
+                modifiers |= Key::Modifiers::Shift;
+            if (mask & 2)
+                modifiers |= Key::Modifiers::Alt;
+            if (mask & 4)
+                modifiers |= Key::Modifiers::Control;
+            return Key{modifiers, direction[c4 - 'A']};
         }
+        if (c1 == 'I')
+            return {Key::FocusIn};
+        if (c1 == 'O')
+            return {Key::FocusOut};
+
+        ungetch(c1);
         return {};
     };
 
-    if (c == 27)
+    if (c < 256 and (c == 27 or (c & 0x80)))
     {
         wtimeout(m_window, 0);
-        const int new_c = wgetch(m_window);
-        if (new_c == '[') // potential CSI
+        const int new_c = (c & 0x80) ? (c & ~0x80) : wgetch(m_window);
+        if (new_c == '[' or c == 0x9b) // potential CSI
         {
             if (auto key = parse_csi())
                 return key;
@@ -726,8 +718,6 @@ Optional<Key> NCursesUI::get_next_key()
         else
             return {Key::Escape};
     }
-    else if (c == 0x9b)
-        return parse_csi();
 
     return parse_key(c);
 }
@@ -1282,6 +1272,14 @@ void NCursesUI::set_ui_options(const Options& options)
         auto wheel_down_it = options.find("ncurses_wheel_down_button"_sv);
         m_wheel_down_button = wheel_down_it != options.end() ?
             str_to_int_ifp(wheel_down_it->value).value_or(5) : 5;
+    }
+
+    {
+        auto builtin_key_parser_it = options.find("ncurses_builtin_key_parser"_sv);
+        m_builtin_key_parser = builtin_key_parser_it != options.end() and
+                               (builtin_key_parser_it->value == "yes" or
+                                builtin_key_parser_it->value == "true");
+        keypad(m_window, not m_builtin_key_parser);
     }
 }
 

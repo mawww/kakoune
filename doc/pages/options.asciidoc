@@ -301,6 +301,9 @@ are exclusively available to built-in options.
             Function key from which shifted function key start, if the
             terminal sends F13 for <s-F1>, this should be set to 12.
 
+        *ncurses_builtin_key_parser*:::
+            Bypass ncurses key parser and use an internal one.
+
 [[startup-info]]
 *startup_info_version* `int`::
     _default_ 0 +

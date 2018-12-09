@@ -109,10 +109,6 @@ constexpr Key ctrl(Key key)
 {
     return { key.modifiers | Key::Modifiers::Control, key.key };
 }
-constexpr Key shift_alt(Key k) { return shift(alt(k)); }
-constexpr Key shift_ctrl(Key k) { return shift(ctrl(k)); }
-constexpr Key alt_ctrl(Key k) { return alt(ctrl(k)); }
-constexpr Key shift_alt_ctrl(Key k) { return shift(alt(ctrl(k))); }
 
 constexpr Codepoint encode_coord(DisplayCoord coord) { return (Codepoint)(((int)coord.line << 16) | ((int)coord.column & 0x0000FFFF)); }
 
