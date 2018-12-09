@@ -285,6 +285,19 @@ public:
                               context.faces()["Error"] });
                 }, "enter target register", register_doc);
         }
+        else if (key == Key::PasteBegin)
+        {
+            if (not m_hooks_disabled)
+            {
+                m_hooks_disabled = true;
+                context().hooks_disabled().set();
+            }
+
+            NormalParams params = m_params;
+            m_params = { 0, 0 };
+
+            context().input_handler().insert(InsertMode::Insert, params.count);
+        }
         else
         {
             auto pop_if_single_command = on_scope_end([this] {
@@ -1180,7 +1193,7 @@ public:
             if (not transient)
                 m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
         }
-        else if (key == Key::Escape or key == ctrl('c'))
+        else if (key == Key::Escape or key == ctrl('c') or key == Key::PasteEnd)
         {
             if (m_in_end)
                 throw runtime_error("asked to exit insert mode while running InsertEnd hook");
@@ -1339,6 +1352,12 @@ public:
         {
             push_mode(new Normal(context().input_handler(), true));
             return;
+        }
+        else if (key == Key::PasteBegin)
+        {
+            push_mode(new Normal(context().input_handler(), true));
+            context().hooks_disabled().set();
+            context().input_handler().insert(InsertMode::Insert, 0);
         }
 
         context().hooks().run_hook(Hook::InsertKey, key_to_str(key), context());
