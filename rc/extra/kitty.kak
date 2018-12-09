@@ -3,8 +3,6 @@ declare-option -docstring %{window type that kitty creates on new and repl calls
 hook -group kitty-hooks global KakBegin .* %sh{
     if [ "$TERM" = "xterm-kitty" ] && [ -z "$TMUX" ]; then
         echo "
-            alias global new kitty-new
-            alias global new-tab kitty-new-tab
             alias global terminal kitty-terminal
             alias global terminal-tab kitty-terminal-tab
             alias global focus kitty-focus
@@ -23,13 +21,6 @@ The shell program passed as argument will be executed in the new terminal' \
     }
 }
 
-define-command kitty-new -params .. -command-completion -docstring '
-kitty-new [<commands>]: create a new kakoune client as a kitty window
-The optional arguments are passed as commands to the new client' \
-%{
-    kitty-terminal "kak -c %val{session} -e '%arg{@}'"
-}
-
 define-command kitty-terminal-tab -params 1 -shell-completion -docstring '
 kitty-terminal-tab <program>: create a new terminal as kitty tab
 The shell program passed as argument will be executed in the new terminal' \
@@ -37,13 +28,6 @@ The shell program passed as argument will be executed in the new terminal' \
     nop %sh{
         kitty @ new-window --no-response --new-tab sh -c "$1"
     }
-}
-
-define-command kitty-new-tab -params .. -command-completion -docstring '
-kitty-new-tab <program> [<arguments>]: create a new terminal as kitty tab
-The optional arguments are passed as commands to the new client' \
-%{
-    kitty-terminal-tab "kak -c %val{session} -e '%arg{@}'"
 }
 
 define-command kitty-focus -params ..1 -client-completion -docstring '

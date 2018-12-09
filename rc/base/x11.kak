@@ -35,13 +35,6 @@ The shell program passed as argument will be executed in the new terminal' \
     }
 }
 
-define-command x11-new -params .. -command-completion -docstring '
-x11-new [<commands>]: create a new kakoune client as an x11 window
-The optional arguments are passed as commands to the new client' \
-%{
-    x11-terminal "kak -c '%val{session}' -e '%arg{@}'"
-}
-
 define-command x11-focus -params ..1 -client-completion -docstring '
 x11-focus [<kakoune_client>]: focus a given client''s window
 If no client is passed, then the current client is used' \
@@ -56,5 +49,4 @@ If no client is passed, then the current client is used' \
 }
 
 alias global focus x11-focus
-alias global new x11-new
 alias global terminal x11-terminal

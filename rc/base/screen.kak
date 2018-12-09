@@ -5,7 +5,6 @@ hook -group GNUscreen global KakBegin .* %sh{
     [ -z "${STY}" ] && exit
     echo "
         alias global focus screen-focus
-        alias global new screen-new-vertical
         alias global terminal screen-terminal-vertical
     "
 }
@@ -40,27 +39,6 @@ The shell program passed as argument will be executed in the new terminal' \
         tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
         screen -X screen sh -c "$*" < "/dev/$tty"
     }
-}
-
-define-command screen-new-vertical -params .. -command-completion -docstring '
-screen-new-vertical [<commands>]: create a new kakoune client as a screen pane
-The current pane is split into two, left and right
-The optional arguments are passed as commands to the new client' \
-%{
-    screen-terminal-vertical "kak -c '%val{session}' -e '%arg{@}'"
-}
-define-command screen-new-horizontal -params .. -command-completion -docstring '
-screen-new-horizontal [<commands>]: create a new kakoune client as a screen pane
-The current pane is split into two, top and bottom
-The optional arguments are passed as commands to the new client' \
-%{
-    screen-terminal-horizontal "kak -c '%val{session}' -e '%arg{@}'"
-}
-define-command screen-new-window -params .. -command-completion -docstring '
-screen-new-window [<commands>]: create a new kakoune client as a screen window
-The optional arguments are passed as commands to the new client' \
-%{
-    screen-terminal-window "kak -c '%val{session}' -e '%arg{@}'"
 }
 
 define-command screen-focus -params ..1 -client-completion -docstring '

@@ -6,7 +6,6 @@ hook global KakBegin .* %sh{
     if [ -n "$TMUX" ]; then
         echo "
             alias global focus tmux-focus
-            alias global new tmux-new-horizontal
             alias global terminal tmux-terminal-horizontal
         "
     fi
@@ -43,27 +42,6 @@ tmux-terminal-window <program> [<arguments>]: create a new terminal as a tmux wi
 The shell program passed as argument will be executed in the new terminal' \
 %{
     tmux-terminal-impl 'new-window' %arg{1}
-}
-
-define-command tmux-new-vertical -params .. -command-completion -docstring '
-tmux-new-vertical [<commands>]: create a new kakoune client as a tmux pane
-The current pane is split into two, top and bottom
-The optional arguments are passed as commands to the new client' \
-%{
-    tmux-terminal-vertical "kak -c '%val{session}' -e '%arg{@}'"
-}
-define-command tmux-new-horizontal -params .. -command-completion -docstring '
-tmux-new-horizontal [<commands>]: create a new kakoune client as a tmux pane
-The current pane is split into two, left and right
-The optional arguments are passed as commands to the new client' \
-%{
-    tmux-terminal-horizontal "kak -c '%val{session}' -e '%arg{@}'"
-}
-define-command tmux-new-window -params .. -command-completion -docstring '
-tmux-new-window [<commands>]: create a new kakoune client as a tmux window
-The optional arguments are passed as commands to the new client' \
-%{
-    tmux-terminal-window "kak -c '%val{session}' -e '%arg{@}'"
 }
 
 define-command tmux-focus -params ..1 -client-completion -docstring '
