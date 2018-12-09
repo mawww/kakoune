@@ -656,7 +656,7 @@ Optional<Key> NCursesUI::get_next_key()
     };
 
     constexpr auto direction = make_array({Key::Up, Key::Down, Key::Right, Key::Left, Key::Home, Key::End});
-    auto parse_csi = [this]() -> Optional<Key> {
+    auto parse_csi = [this, &direction]() -> Optional<Key> {
         const Codepoint c1 = wgetch(m_window);
         if (c1 >= 'A' and c1 <= 'F')
             return Key{direction[c1 - 'A']};
