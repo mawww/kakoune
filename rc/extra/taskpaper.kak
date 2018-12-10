@@ -38,9 +38,10 @@ define-command -hidden taskpaper-indent-on-new-line %{
 
 hook -group taskpaper-highlight global WinSetOption filetype=taskpaper %{
     add-highlighter window/taskpaper ref taskpaper
-    hook window InsertChar \n -group taskpaper-indent taskpaper-indent-on-new-line
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/taskpaper }
 }
-hook -group taskpaper-highlight global WinSetOption filetype=(?!taskpaper).* %{
-    remove-highlighter window/taskpaper
-    remove-hooks window taskpaper-indent
+
+hook global WinSetOption filetype=taskpaper %{
+    hook window InsertChar \n -group taskpaper-indent taskpaper-indent-on-new-line
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window taskpaper-.+ }
 }

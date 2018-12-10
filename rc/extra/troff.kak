@@ -24,6 +24,7 @@ add-highlighter shared/troff/ regex '^\.B\s+([^\n]+)' 1:+b
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group troff-highlight global WinSetOption filetype=troff %{ add-highlighter window/troff ref troff }
-
-hook -group troff-highlight global WinSetOption filetype=(?!troff).* %{ remove-highlighter window/troff }
+hook -group troff-highlight global WinSetOption filetype=troff %{
+    add-highlighter window/troff ref troff
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/troff }
+}

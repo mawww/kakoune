@@ -67,6 +67,8 @@ add-highlighter shared/restructuredtext/content/ regex [^`](``([^\s`]|([^\s`][^`
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-#
-hook -group restructuredtext-highlight global WinSetOption filetype=restructuredtext %{ add-highlighter window/restructuredtext ref restructuredtext }
-hook -group restructuredtext-highlight global WinSetOption filetype=(?!restructuredtext).* %{ remove-highlighter window/restructuredtext }
+
+hook -group restructuredtext-highlight global WinSetOption filetype=restructuredtext %{
+    add-highlighter window/restructuredtext ref restructuredtext
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/restructuredtext }
+}

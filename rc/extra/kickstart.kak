@@ -24,5 +24,7 @@ add-highlighter shared/kickstart/shell/ regex '^\h*%end\b' 0:type
 add-highlighter shared/kickstart/shell/ ref sh
 
 
-hook -group kickstart-highlight global WinSetOption filetype=kickstart %{ add-highlighter window/kickstart ref kickstart }
-hook -group kickstart-highlight global WinSetOption filetype=(?!kickstart).* %{ remove-highlighter window/kickstart }
+hook -group kickstart-highlight global WinSetOption filetype=kickstart %{
+    add-highlighter window/kickstart ref kickstart
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/kickstart }
+}

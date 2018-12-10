@@ -29,6 +29,7 @@ add-highlighter shared/latex/content/ regex '\\textbf\{([^}]+)\}' 1:default+b
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group latex-highlight global WinSetOption filetype=latex %{ add-highlighter window/latex ref latex }
-
-hook -group latex-highlight global WinSetOption filetype=(?!latex).* %{ remove-highlighter window/latex }
+hook -group latex-highlight global WinSetOption filetype=latex %{
+    add-highlighter window/latex ref latex
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/latex }
+}

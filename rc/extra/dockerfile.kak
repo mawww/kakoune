@@ -42,5 +42,7 @@ add-highlighter shared/dockerfile/code/ regex '\$[\w_]+' 0:value
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group dockerfile-highlight global WinSetOption filetype=dockerfile %{ add-highlighter window/dockerfile ref dockerfile }
-hook -group dockerfile-highlight global WinSetOption filetype=(?!dockerfile).* %{ remove-highlighter window/dockerfile }
+hook -group dockerfile-highlight global WinSetOption filetype=dockerfile %{
+    add-highlighter window/dockerfile ref dockerfile
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/dockerfile }
+}

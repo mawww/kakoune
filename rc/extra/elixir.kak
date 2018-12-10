@@ -64,12 +64,14 @@ define-command -hidden elixir-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group elixir-highlight global WinSetOption filetype=elixir %{ add-highlighter window/elixir ref elixir }
+hook -group elixir-highlight global WinSetOption filetype=elixir %{
+    add-highlighter window/elixir ref elixir
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/elixir }
+}
 
 hook global WinSetOption filetype=elixir %{
     hook window ModeChange insert:.* -group elixir-hooks  elixir-filter-around-selections
     hook window InsertChar \n -group elixir-indent elixir-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elixir-.+ }
 }
-
-hook -group elixir-highlight global WinSetOption filetype=(?!elixir).* %{ remove-highlighter window/elixir }
-

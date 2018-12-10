@@ -28,16 +28,14 @@ add-highlighter shared/make/ regex "^((?:\w:)?[^:\n]+):(\d+):(?:(\d+):)?\h+(?:((
 add-highlighter shared/make/ regex "^\h*(~*(?:(\^)~*)?)$" 1:green 2:cyan+b
 add-highlighter shared/make/ line '%opt{make_current_error_line}' default+b
 
-hook -group make-highlight global WinSetOption filetype=make %{ add-highlighter window/make ref make }
+hook -group make-highlight global WinSetOption filetype=make %{
+    add-highlighter window/make ref make
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/make }
+}
 
 hook global WinSetOption filetype=make %{
     hook buffer -group make-hooks NormalKey <ret> make-jump
-}
-
-hook -group make-highlight global WinSetOption filetype=(?!make).* %{ remove-highlighter window/make }
-
-hook global WinSetOption filetype=(?!make).* %{
-    remove-hooks buffer make-hooks
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks buffer make-hooks }
 }
 
 declare-option -docstring "name of the client in which all source code jumps will be executed" \

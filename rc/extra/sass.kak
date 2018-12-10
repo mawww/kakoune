@@ -48,16 +48,15 @@ define-command -hidden sass-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group sass-highlight global WinSetOption filetype=sass %{ add-highlighter window/sass ref sass }
+hook -group sass-highlight global WinSetOption filetype=sass %{
+    add-highlighter window/sass ref sass
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sass }
+}
 
 hook global WinSetOption filetype=sass %{
     hook window ModeChange insert:.* -group sass-hooks  sass-filter-around-selections
     hook window InsertChar \n -group sass-indent sass-indent-on-new-line
     set-option buffer extra_word_chars '_' '-'
-}
 
-hook -group sass-highlight global WinSetOption filetype=(?!sass).* %{ remove-highlighter window/sass }
-
-hook global WinSetOption filetype=(?!sass).* %{
-    remove-hooks window sass-.+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window sass-.+ }
 }

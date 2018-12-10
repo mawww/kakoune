@@ -6,16 +6,18 @@ hook -group git-log-highlight global WinSetOption filetype=git-log %{
     add-highlighter window/git-log/ regex '^(commit) ([0-9a-f]+)$' 1:yellow 2:red
     add-highlighter window/git-log/ regex '^([a-zA-Z_-]+:) (.*?)$' 1:green 2:magenta
     add-highlighter window/git-log/ ref diff # highlight potential diffs from the -p option
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-log }
 }
 
-hook -group git-log-highlight global WinSetOption filetype=(?!git-log).* %{ remove-highlighter window/git-log }
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
     add-highlighter window/git-status group
     add-highlighter window/git-status/ regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-status }
 }
 
-hook -group git-status-highlight global WinSetOption filetype=(?!git-status).* %{ remove-highlighter window/git-status }
 
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden line-specs git_diff_flags

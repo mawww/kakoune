@@ -19,9 +19,10 @@ add-highlighter shared/ocaml/comment region \Q(* \Q*) fill comment
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group ocaml-highlight global WinSetOption filetype=ocaml %{ add-highlighter window/ocaml ref ocaml }
-
-hook -group ocaml-highlight global WinSetOption filetype=(?!ocaml).* %{ remove-highlighter window/ocaml }
+hook -group ocaml-highlight global WinSetOption filetype=ocaml %{
+    add-highlighter window/ocaml ref ocaml
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ocaml }
+}
 
 # Macro
 # ‾‾‾‾‾

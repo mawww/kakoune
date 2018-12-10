@@ -28,16 +28,12 @@ hook -group grep-highlight global WinSetOption filetype=grep %{
     add-highlighter window/grep group
     add-highlighter window/grep/ regex "^((?:\w:)?[^:\n]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
     add-highlighter window/grep/ line %{%opt{grep_current_line}} default+b
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/grep }
 }
 
 hook global WinSetOption filetype=grep %{
     hook buffer -group grep-hooks NormalKey <ret> grep-jump
-}
-
-hook -group grep-highlight global WinSetOption filetype=(?!grep).* %{ remove-highlighter window/grep }
-
-hook global WinSetOption filetype=(?!grep).* %{
-    remove-hooks buffer grep-hooks
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks buffer grep-hooks }
 }
 
 declare-option -docstring "name of the client in which all source code jumps will be executed" \

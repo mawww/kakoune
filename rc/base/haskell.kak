@@ -91,16 +91,15 @@ define-command -hidden haskell-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group haskell-highlight global WinSetOption filetype=haskell %{ add-highlighter window/haskell ref haskell }
+hook -group haskell-highlight global WinSetOption filetype=haskell %{
+    add-highlighter window/haskell ref haskell
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/haskell }
+}
 
 hook global WinSetOption filetype=haskell %{
     set-option window extra_word_chars '_' "'"
     hook window ModeChange insert:.* -group haskell-hooks  haskell-filter-around-selections
     hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
-}
 
-hook -group haskell-highlight global WinSetOption filetype=(?!haskell).* %{ remove-highlighter window/haskell }
-
-hook global WinSetOption filetype=(?!haskell).* %{
-    remove-hooks window haskell-.+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haskell-.+ }
 }

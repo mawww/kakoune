@@ -48,16 +48,18 @@ define-command -hidden java-indent-on-closing-curly-brace %[
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook -group java-highlight global WinSetOption filetype=java %{
+    add-highlighter window/java ref java
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/java }
+}
+
 hook global WinSetOption filetype=java %{
     # cleanup trailing whitespaces when exiting insert mode
     hook window ModeChange insert:.* -group java-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group java-indent java-indent-on-new-line
     hook window InsertChar \{ -group java-indent java-indent-on-opening-curly-brace
     hook window InsertChar \} -group java-indent java-indent-on-closing-curly-brace
-}
 
-hook global WinSetOption filetype=(?!java).* %{
-    remove-hooks window java-.+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window java-.+ }
 }
-hook -group java-highlight global WinSetOption filetype=java %{ add-highlighter window/java ref java }
-hook -group java-highlight global WinSetOption filetype=(?!java).* %{ remove-highlighter window/java }

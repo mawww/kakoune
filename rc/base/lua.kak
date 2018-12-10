@@ -84,7 +84,10 @@ define-command -hidden lua-insert-on-new-line %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group lua-highlight global WinSetOption filetype=lua %{ add-highlighter window/lua ref lua }
+hook -group lua-highlight global WinSetOption filetype=lua %{
+    add-highlighter window/lua ref lua
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/lua }
+}
 
 hook global WinSetOption filetype=lua %{
     hook window InsertChar .* -group lua-indent lua-indent-on-char
@@ -92,12 +95,9 @@ hook global WinSetOption filetype=lua %{
     hook window InsertChar \n -group lua-insert lua-insert-on-new-line
 
     alias window alt lua-alternative-file
-}
 
-hook -group lua-highlight global WinSetOption filetype=(?!lua).* %{ remove-highlighter window/lua }
-
-hook global WinSetOption filetype=(?!lua).* %{
-    remove-hooks window lua-.+
-
-    unalias window alt lua-alternative-file
+    hook -once -always window WinSetOption filetype=.* %{
+        remove-hooks window lua-.+
+        unalias window alt lua-alternative-file
+    }
 }

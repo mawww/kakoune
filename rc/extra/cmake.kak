@@ -21,5 +21,7 @@ add-highlighter shared/cmake/argument/quoted/ fill string
 add-highlighter shared/cmake/argument/quoted/ regex '\$\{\w+\}' 0:variable
 add-highlighter shared/cmake/argument/quoted/ regex '\w+\h*(?=\()' 0:function
 
-hook -group cmake-highlight global WinSetOption filetype=cmake %{ add-highlighter window/cmake ref cmake }
-hook -group cmake-highlight global WinSetOption filetype=(?!cmake).* %{ remove-highlighter window/cmake }
+hook -group cmake-highlight global WinSetOption filetype=cmake %{
+    add-highlighter window/cmake ref cmake
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/cmake }
+}

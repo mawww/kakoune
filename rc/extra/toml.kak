@@ -52,18 +52,12 @@ define-command -hidden toml-indent-on-new-line %{
 
 hook -group toml-highlight global WinSetOption filetype=toml %{
     add-highlighter window/toml ref toml
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/toml }
 }
 
 hook global WinSetOption filetype=toml %{
     hook window ModeChange insert:.* -group toml-hooks toml-filter-around-selections
     hook window InsertChar \n -group toml-indent toml-indent-on-new-line
-}
 
-hook -group toml-highlight global WinSetOption filetype=(?!toml).* %{
-    remove-highlighter window/toml
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window toml-.+ }
 }
-
-hook global WinSetOption filetype=(?!toml).* %{
-    remove-hooks window toml-.+
-}
-

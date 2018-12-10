@@ -58,17 +58,17 @@ define-command -hidden cabal-indent-on-closing-curly-brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group cabal-highlight global WinSetOption filetype=cabal %{ add-highlighter window/cabal ref cabal }
+hook -group cabal-highlight global WinSetOption filetype=cabal %{
+    add-highlighter window/cabal ref cabal
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/cabal }
+
+}
 
 hook global WinSetOption filetype=cabal %[
     hook window ModeChange insert:.* -group cabal-hooks  cabal-filter-around-selections
     hook window InsertChar \n -group cabal-indent cabal-indent-on-new-line
     hook window InsertChar \{ -group cabal-indent cabal-indent-on-opening-curly-brace
     hook window InsertChar \} -group cabal-indent cabal-indent-on-closing-curly-brace
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window cabal-.+ }
 ]
-
-hook -group cabal-highlight global WinSetOption filetype=(?!cabal).* %{ remove-highlighter window/cabal }
-
-hook global WinSetOption filetype=(?!cabal).* %{
-    remove-hooks window cabal-.+
-}

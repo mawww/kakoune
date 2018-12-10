@@ -103,8 +103,5 @@ add-highlighter shared/sql/code/ regex \b\d+(?:\.\d+)?\b 0:value
 
 hook -group sql-highlight global WinSetOption filetype=sql %{
     add-highlighter window/sql ref sql
-}
-
-hook -group sql-highlight global WinSetOption filetype=(?!sql).* %{
-    remove-highlighter window/sql
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sql }
 }

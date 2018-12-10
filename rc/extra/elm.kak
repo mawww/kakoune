@@ -54,15 +54,14 @@ define-command -hidden elm-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group elm-highlight global WinSetOption filetype=elm %{ add-highlighter window/elm ref elm }
+hook -group elm-highlight global WinSetOption filetype=elm %{
+    add-highlighter window/elm ref elm
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/elm }
+}
 
 hook global WinSetOption filetype=elm %{
     hook window ModeChange insert:.* -group elm-hooks  elm-filter-around-selections
     hook window InsertChar \n -group elm-indent elm-indent-on-new-line
-}
 
-hook -group elm-highlight global WinSetOption filetype=(?!elm).* %{ remove-highlighter window/elm }
-
-hook global WinSetOption filetype=(?!elm).* %{
-    remove-hooks window elm-.+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elm-.+ }
 }

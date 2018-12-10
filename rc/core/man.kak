@@ -13,18 +13,13 @@ hook -group man-highlight global WinSetOption filetype=man %{
     add-highlighter window/man-highlight/ regex '^ {7}-[^\s,]+(,\s+-[^\s,]+)*' 0:yellow
     # References to other manpages
     add-highlighter window/man-highlight/ regex [-a-zA-Z0-9_.]+\([a-z0-9]+\) 0:green
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/man-highlight }
 }
 
 hook global WinSetOption filetype=man %{
-    hook -group man-hooks window WinResize .* %{
-        man-impl %val{bufname} %opt{manpage}
-    }
-}
-
-hook -group man-highlight global WinSetOption filetype=(?!man).* %{ remove-highlighter window/man-highlight }
-
-hook global WinSetOption filetype=(?!man).* %{
-    remove-hooks window man-hooks
+    hook -group man-hooks window WinResize .* %{ man-impl %val{bufname} %opt{manpage} }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window man-hooks }
 }
 
 define-command -hidden -params 2..3 man-impl %{ evaluate-commands %sh{

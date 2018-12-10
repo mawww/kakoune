@@ -66,15 +66,14 @@ define-command -hidden coffee-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group coffee-highlight global WinSetOption filetype=coffee %{ add-highlighter window/coffee ref coffee }
+hook -group coffee-highlight global WinSetOption filetype=coffee %{
+    add-highlighter window/coffee ref coffee
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/coffee }
+}
 
 hook global WinSetOption filetype=coffee %{
     hook window ModeChange insert:.* -group coffee-hooks  coffee-filter-around-selections
     hook window InsertChar \n -group coffee-indent coffee-indent-on-new-line
-}
 
-hook -group coffee-highlight global WinSetOption filetype=(?!coffee).* %{ remove-highlighter window/coffee }
-
-hook global WinSetOption filetype=(?!coffee).* %{
-    remove-hooks window coffee-.+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window coffee-.+ }
 }
