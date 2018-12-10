@@ -36,7 +36,7 @@ add-highlighter shared/exheres-0-metadata/ regex ^(?:[\s\t]+)?\]\]$ 0:type
 
 hook -group exheres-0-metadata-highlight global WinSetOption filetype=exheres-0-metadata %{
     add-highlighter window/exheres-0-metadata ref exheres-0-metadata
-    hook -once -always window WinSetOption filetype=(?!exheres-0-metadata).* %{ remove-highlighter window/exheres-0-metadata }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/exheres-0-metadata }
 }
 
 ## exheres-0 options descriptions
@@ -48,7 +48,7 @@ add-highlighter shared/exheres-0-options-descriptions/ regex ^(?:[\s\t]+)?\]\]$ 
 
 hook -group exheres-0-options-descriptions-highlight global WinSetOption filetype=exheres-0-options-descriptions %{
     add-highlighter window/exheres-0-options-descriptions ref exheres-0-options-descriptions
-    hook -once -always window WinSetOption filetype=(?!exheres-0-options-descriptions).* %{ remove-highlighter window/exheres-0-options-descriptions }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/exheres-0-options-descriptions }
 }
 
 ## metadata/licence_groups.conf
@@ -59,7 +59,7 @@ add-highlighter shared/exheres-0-licence-groups/ regex ^#.*?$ 0:comment
 
 hook -group exheres-0-licence-groups-highlight global WinSetOption filetype=exheres-0-licence-groups %{
     add-highlighter window/exheres-0-licence-groups ref exheres-0-licence-groups
-    hook -once -always window WinSetOption filetype=(?!exheres-0-licence-groups).* %{ remove-highlighter window/exheres-0-licence-groups }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/exheres-0-licence-groups }
 }
 
 ## Paludis configurations
@@ -75,7 +75,7 @@ add-highlighter shared/paludis-options-conf/ regex ^#.*?$ 0:comment
 
 hook -group paludis-options-conf-highlight global WinSetOption filetype=paludis-options-conf %{
     add-highlighter window/paludis-options-conf ref paludis-options-conf
-    hook -once -always window WinSetOption filetype=(?!paludis-options-conf).* %{ remove-highlighter window/paludis-options-conf }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-options-conf }
 }
 
 ## general.conf, repository.template
@@ -85,7 +85,7 @@ add-highlighter shared/paludis-key-value-conf/ regex ^#.*?$ 0:comment
 
 hook -group paludis-key-value-conf-highlight global WinSetOption filetype=paludis-key-value-conf %{
     add-highlighter window/paludis-key-value-conf ref paludis-key-value-conf
-    hook -once -always window WinSetOption filetype=(?!paludis-key-value-conf).* %{ remove-highlighter window/paludis-key-value-conf }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-key-value-conf }
 }
 
 ## mirrors.conf
@@ -95,7 +95,7 @@ add-highlighter shared/paludis-mirrors-conf/ regex ^#.*?$ 0:comment
 
 hook -group paludis-mirrors-conf-highlight global WinSetOption filetype=paludis-mirrors-conf %{
     add-highlighter window/paludis-mirrors-conf ref paludis-mirrors-conf
-    hook -once -always window WinSetOption filetype=(?!paludis-mirrors-conf).* %{ remove-highlighter window/paludis-mirrors-conf }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-mirrors-conf }
 }
 
 ## package_(unmask|mask).conf, platforms.conf
@@ -106,7 +106,7 @@ add-highlighter shared/paludis-specs-conf/ regex ^#.*?$ 0:comment
 
 hook -group paludis-specs-conf-highlight global WinSetOption filetype=paludis-specs-conf %{
     add-highlighter window/paludis-specs-conf ref paludis-specs-conf
-    hook -once -always window WinSetOption filetype=(?!paludis-specs-conf).* %{ remove-highlighter window/paludis-specs-conf }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-specs-conf }
 }
 
 ## News items (GLEP42)
@@ -117,5 +117,5 @@ add-highlighter shared/glep42/ regex ^>.*?$ 0:comment
 
 hook -group glep42-highlight global WinSetOption filetype=glep42 %{
     add-highlighter window/glep42 ref glep42
-    hook -once -always window WinSetOption filetype=(?!glep42).* %{ remove-highlighter window/glep42 }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/glep42 }
 }

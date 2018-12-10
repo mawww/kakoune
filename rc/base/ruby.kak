@@ -146,7 +146,7 @@ define-command -hidden ruby-insert-on-new-line %[
 
 hook -group ruby-highlight global WinSetOption filetype=ruby %{
     add-highlighter window/ruby ref ruby
-    hook -once -always window WinSetOption filetype=(?!ruby).* %{ remove-highlighter window/ruby }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ruby }
 }
 
 hook global WinSetOption filetype=ruby %{
@@ -156,7 +156,7 @@ hook global WinSetOption filetype=ruby %{
 
     alias window alt ruby-alternative-file
 
-    hook -once -always window WinSetOption filetype=(?!ruby).* %{
+    hook -once -always window WinSetOption filetype=.* %{
         remove-hooks window ruby-.+
         unalias window alt ruby-alternative-file
     }

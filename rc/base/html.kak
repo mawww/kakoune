@@ -59,7 +59,7 @@ define-command -hidden html-indent-on-new-line %{
 
 hook -group html-highlight global WinSetOption filetype=(html|xml) %{
     add-highlighter "window/%val{hook_param_capture_1}" ref html
-    hook -once -always window WinSetOption "filetype=(?!%val{hook_param_capture_1}).*" "
+    hook -once -always window WinSetOption "filetype=.*" "
         remove-highlighter ""window/%val{hook_param_capture_1}""
     "
 }
@@ -69,7 +69,7 @@ hook global WinSetOption filetype=(html|xml) %{
     hook window InsertChar '>' -group "%val{hook_param_capture_1}-indent" html-indent-on-greater-than
     hook window InsertChar \n -group "%val{hook_param_capture_1}-indent" html-indent-on-new-line
 
-    hook -once -always window WinSetOption "filetype=(?!%val{hook_param_capture_1}).*" "
+    hook -once -always window WinSetOption "filetype=.*" "
         remove-hooks window ""%val{hook_param_capture_1}-.+""
     "
 }

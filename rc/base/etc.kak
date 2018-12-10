@@ -19,7 +19,7 @@ add-highlighter shared/etc-resolv-conf/ regex ^(nameserver|server|domain|sortlis
 
 hook -group etc-resolv-conf-highlight global WinSetOption filetype=etc-resolv-conf %{
     add-highlighter window/etc-resolv-conf ref etc-resolv-conf
-    hook -once -always window WinSetOption filetype=(?!etc-resolv-conf).* %{ remove-highlighter window/etc-resolv-conf }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/etc-resolv-conf }
 }
 
 ## /etc/hosts
@@ -29,7 +29,7 @@ add-highlighter shared/etc-hosts/ regex '#.*?$' 0:comment
 
 hook -group etc-hosts-highlight global WinSetOption filetype=etc-hosts %{
     add-highlighter window/etc-hosts ref etc-hosts
-    hook -once -always window WinSetOption filetype=(?!etc-hosts).* %{ remove-highlighter window/etc-hosts }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/etc-hosts }
 }
 
 ## /etc/fstab
@@ -39,7 +39,7 @@ add-highlighter shared/etc-fstab/ regex '#.*?$' 0:comment
 
 hook -group etc-fstab-highlight global WinSetOption filetype=etc-fstab %{
     add-highlighter window/etc-fstab ref etc-fstab
-    hook -once -always window WinSetOption filetype=(?!etc-fstab).* %{ remove-highlighter window/etc-fstab }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/etc-fstab }
 }
 
 ## /etc/group
@@ -48,7 +48,7 @@ add-highlighter shared/etc-group/ regex ^(\S+?):(\S+?)?:(\S+?)?:(\S+?)?$ 1:keywo
 
 hook -group etc-group-highlight global WinSetOption filetype=etc-group %{
     add-highlighter window/etc-group ref etc-group
-    hook -once -always window WinSetOption filetype=(?!etc-group).* %{ remove-highlighter window/etc-group }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/etc-group }
 }
 
 ## /etc/gshadow
@@ -57,7 +57,7 @@ add-highlighter shared/etc-gshadow/ regex ^(\S+?):(\S+?)?:(\S+?)?:(\S+?)?$ 1:key
 
 hook -group etc-gshadow-highlight global WinSetOption filetype=etc-gshadow %{
     add-highlighter window/etc-gshadow ref etc-gshadow
-    hook -once -always window WinSetOption filetype=(?!etc-gshadow).* %{ remove-highlighter window/etc-gshadow }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/etc-gshadow }
 }
 
 ## /etc/shadow
@@ -66,7 +66,7 @@ add-highlighter shared/etc-shadow/ regex ^(\S+?):(\S+?):([0-9]+?):([0-9]+?)?:([0
 
 hook -group etc-shadow-highlight global WinSetOption filetype=etc-shadow %{
     add-highlighter window/etc-shadow ref etc-shadow
-    hook -once -always window WinSetOption filetype=(?!etc-shadow).* %{ remove-highlighter window/etc-shadow }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/etc-shadow }
 }
 
 ## /etc/passwd
@@ -75,5 +75,5 @@ add-highlighter shared/etc-passwd/ regex ^(\S+?):(\S+?):([0-9]+?):([0-9]+?):(.*?
 
 hook -group etc-passwd-highlight global WinSetOption filetype=etc-passwd %{
     add-highlighter window/etc-passwd ref etc-passwd
-    hook -once -always window WinSetOption filetype=(?!etc-passwd).* %{ remove-highlighter window/etc-passwd }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/etc-passwd }
 }

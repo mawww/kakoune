@@ -9,5 +9,5 @@ add-highlighter shared/mail/ regex ^>.*?$ 0:comment
 
 hook -group mail-highlight global WinSetOption filetype=mail %{
     add-highlighter window/mail ref mail
-    hook -once -always window WinSetOption filetype=(?!mail).* %{ remove-highlighter window/mail }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/mail }
 }

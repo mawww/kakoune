@@ -76,7 +76,7 @@ define-command -hidden rust-indent-on-closing-curly-brace %[
 
 hook -group rust-highlight global WinSetOption filetype=rust %{
     add-highlighter window/rust ref rust
-    hook -once -always window WinSetOption filetype=(?!rust).* %{ remove-highlighter window/rust }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/rust }
 }
 
 hook global WinSetOption filetype=rust %[
@@ -84,5 +84,5 @@ hook global WinSetOption filetype=rust %[
     hook window InsertChar \n -group rust-indent rust-indent-on-new-line
     hook window InsertChar \{ -group rust-indent rust-indent-on-opening-curly-brace
     hook window InsertChar \} -group rust-indent rust-indent-on-closing-curly-brace
-    hook -once -always window WinSetOption filetype=(?!rust).* %{ remove-hooks window rust-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window rust-.+ }
 ]

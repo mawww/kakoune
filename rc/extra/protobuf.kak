@@ -73,7 +73,7 @@ define-command -hidden protobuf-indent-on-closing-curly-brace %[
 
 hook -group protobuf-highlight global WinSetOption filetype=protobuf %{
     add-highlighter window/protobuf ref protobuf
-    hook -once -always window WinSetOption filetype=(?!protobuf).* %{ remove-highlighter window/protobuf }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/protobuf }
 }
 
 hook global WinSetOption filetype=protobuf %[
@@ -81,5 +81,5 @@ hook global WinSetOption filetype=protobuf %[
     hook -group protobuf-indent window InsertChar \{ protobuf-indent-on-opening-curly-brace
     hook -group protobuf-indent window InsertChar \} protobuf-indent-on-closing-curly-brace
 
-    hook -once -always window WinSetOption filetype=(?!protobuf).* %{ remove-hooks window protobuf-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window protobuf-.+ }
 ]

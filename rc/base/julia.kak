@@ -26,5 +26,5 @@ add-highlighter shared/julia/code/ regex \b(Number|Real|BigInt|Integer|UInt|UInt
 
 hook -group julia-highlight global WinSetOption filetype=julia %{
     add-highlighter window/julia ref julia
-    hook -once -always window WinSetOption filetype=(?!julia).* %{ remove-highlighter window/julia }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/julia }
 }

@@ -63,7 +63,7 @@ define-command -hidden css-indent-on-closing-curly-brace %[
 
 hook -group css-highlight global WinSetOption filetype=css %{
     add-highlighter window/css ref css
-    hook -once -always window WinSetOption filetype=(?!css).* %{ remove-highlighter window/css }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/css }
 }
 
 hook global WinSetOption filetype=css %[
@@ -72,5 +72,5 @@ hook global WinSetOption filetype=css %[
     hook window InsertChar \} -group css-indent css-indent-on-closing-curly-brace
     set-option buffer extra_word_chars '_' '-'
 
-    hook -once -always window WinSetOption filetype=(?!css).* %{ remove-hooks window css-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window css-.+ }
 ]

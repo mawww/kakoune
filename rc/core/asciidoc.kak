@@ -39,5 +39,5 @@ add-highlighter shared/asciidoc/ regex ^:[-\w]+: 0:meta
 
 hook -group asciidoc-highlight global WinSetOption filetype=asciidoc %{
     add-highlighter window/asciidoc ref asciidoc
-    hook -once -always window WinSetOption filetype=(?!asciidoc).* %{ remove-highlighter window/asciidoc }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/asciidoc }
 }

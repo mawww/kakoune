@@ -63,7 +63,7 @@ define-command -hidden scala-indent-on-closing-curly-brace %[
 
 hook -group scala-highlight global WinSetOption filetype=scala %{
     add-highlighter window/scala ref scala
-    hook -once -always window WinSetOption filetype=(?!scala).* %{ remove-highlighter window/scala }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/scala }
 }
 
 hook global WinSetOption filetype=scala %[
@@ -71,5 +71,5 @@ hook global WinSetOption filetype=scala %[
     hook window InsertChar \n -group scala-indent scala-indent-on-new-line
     hook window InsertChar \} -group scala-indent scala-indent-on-closing-curly-brace
 
-    hook -once -always window WinSetOption filetype=(?!scala).* %{ remove-hooks window scala-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window scala-.+ }
 ]

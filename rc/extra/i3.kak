@@ -68,7 +68,7 @@ define-command -hidden i3-indent-on-closing-curly-brace %[
 
 hook -group i3-highlight global WinSetOption filetype=i3 %{
     add-highlighter window/i3 ref i3
-    hook -once -always window WinSetOption filetype=(?!i3).* %{ remove-highlighter window/i3 }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/i3 }
 }
 
 hook global WinSetOption filetype=i3 %[
@@ -77,5 +77,5 @@ hook global WinSetOption filetype=i3 %[
     hook window InsertChar \n -group i3-indent i3-indent-on-new-line
     hook window InsertChar \} -group i3-indent i3-indent-on-closing-curly-brace
 
-    hook -once -always window WinSetOption filetype=(?!i3).* %{ remove-hooks window i3-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window i3-.+ }
 ]

@@ -118,7 +118,7 @@ define-command -hidden d-indent-on-closing-curly-brace %[
 
 hook -group d-highlight global WinSetOption filetype=d %{
     add-highlighter window/d ref d
-    hook -once -always window WinSetOption filetype=(?!d).* %{ remove-highlighter window/d }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/d }
 }
 
 hook global WinSetOption filetype=d %{
@@ -128,5 +128,5 @@ hook global WinSetOption filetype=d %{
     hook window InsertChar \{ -group d-indent d-indent-on-opening-curly-brace
     hook window InsertChar \} -group d-indent d-indent-on-closing-curly-brace
 
-    hook -once -always window WinSetOption filetype=(?!d).* %{ remove-hooks window d-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window d-.+ }
 }

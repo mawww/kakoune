@@ -325,29 +325,27 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
     hook -group "%val{hook_param_capture_1}-family-indent" window InsertChar \} c-family-indent-on-closing-curly-brace
     hook -group "%val{hook_param_capture_1}-family-insert" window InsertChar \} c-family-insert-on-closing-curly-brace
 
-    alias window alt c-family-alternative-file
+    alias window alt "%val{hook_param_capture_1}-alternative-file"
 
-    hook -once -always window WinSetOption "filetype=(?!%val{hook_param_capture_1}).*" "
-        remove-hooks window c-family-.+
+    hook -once -always window WinSetOption filetype=.* "
+        remove-hooks window %val{hook_param_capture_1}-family-.+
+        unalias window alt %val{hook_param_capture_1}-alternative-file
     "
-    hook -once -always window WinSetOption filetype=(?!c)(?!cpp)(?!objc).* %{
-        unalias window alt c-family-alternative-file
-    }
 ]
 
 hook -group c-highlight global WinSetOption filetype=c %{
     add-highlighter window/c ref c
-    hook -once -always window WinSetOption filetype=(?!c).* %{ remove-highlighter window/c }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/c }
 }
 
 hook -group cpp-highlight global WinSetOption filetype=cpp %{
     add-highlighter window/cpp ref cpp
-    hook -once -always window WinSetOption filetype=(?!cpp).* %{ remove-highlighter window/cpp }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/cpp }
 }
 
 hook -group objc-highlight global WinSetOption filetype=objc %{
     add-highlighter window/objc ref objc
-    hook -once -always window WinSetOption filetype=(?!objc).* %{ remove-highlighter window/objc }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/objc }
 }
 
 declare-option -docstring %{control the type of include guard to be inserted in empty headers
@@ -375,41 +373,53 @@ hook -group c-family-insert global BufNewFile .*\.(h|hh|hpp|hxx|H) c-family-inse
 declare-option -docstring "colon separated list of path in which header files will be looked for" \
     str-list alt_dirs '.' '..'
 
-define-command c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ evaluate-commands %sh{
-    file="${kak_buffile##*/}"
-    file_noext="${file%.*}"
-    dir=$(dirname "${kak_buffile}")
+define-command -hidden c-family-alternative-file %{
+    evaluate-commands %sh{
+        file="${kak_buffile##*/}"
+        file_noext="${file%.*}"
+        dir=$(dirname "${kak_buffile}")
 
-    # Set $@ to alt_dirs
-    eval "set -- ${kak_opt_alt_dirs}"
+        # Set $@ to alt_dirs
+        eval "set -- ${kak_opt_alt_dirs}"
 
-    case ${file} in
-        *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
-            for alt_dir in "$@"; do
-                for ext in h hh hpp hxx H; do
-                    altname="${dir}/${alt_dir}/${file_noext}.${ext}"
-                    if [ -f ${altname} ]; then
-                        printf 'edit %%{%s}\n' "${altname}"
-                        exit
-                    fi
+        case ${file} in
+            *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
+                for alt_dir in "$@"; do
+                    for ext in h hh hpp hxx H; do
+                        altname="${dir}/${alt_dir}/${file_noext}.${ext}"
+                        if [ -f ${altname} ]; then
+                            printf 'edit %%{%s}\n' "${altname}"
+                            exit
+                        fi
+                    done
                 done
-            done
-        ;;
-        *.h|*.hh|*.hpp|*.hxx|*.H)
-            for alt_dir in "$@"; do
-                for ext in c cc cpp cxx C m; do
-                    altname="${dir}/${alt_dir}/${file_noext}.${ext}"
-                    if [ -f ${altname} ]; then
-                        printf 'edit %%{%s}\n' "${altname}"
-                        exit
-                    fi
+            ;;
+            *.h|*.hh|*.hpp|*.hxx|*.H)
+                for alt_dir in "$@"; do
+                    for ext in c cc cpp cxx C m; do
+                        altname="${dir}/${alt_dir}/${file_noext}.${ext}"
+                        if [ -f ${altname} ]; then
+                            printf 'edit %%{%s}\n' "${altname}"
+                            exit
+                        fi
+                    done
                 done
-            done
-        ;;
-        *)
-            echo "echo -markup '{Error}extension not recognized'"
-            exit
-        ;;
-    esac
-    echo "echo -markup '{Error}alternative file not found'"
-}}
+            ;;
+            *)
+                echo "echo -markup '{Error}extension not recognized'"
+                exit
+            ;;
+        esac
+        echo "echo -markup '{Error}alternative file not found'"
+    }
+}
+
+define-command c-alternative-file -docstring "Jump to the alternate c file (header/implementation)" %{
+    c-family-alternative-file
+}
+define-command cpp-alternative-file -docstring "Jump to the alternate cpp file (header/implementation)" %{
+    c-family-alternative-file
+}
+define-command objc-alternative-file -docstring "Jump to the alternate objc file (header/implementation)" %{
+    c-family-alternative-file
+}

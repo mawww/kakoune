@@ -82,10 +82,10 @@ define-command -hidden gas-indent-on-new-line %~
 
 hook -group gas-highlight global WinSetOption filetype=gas %{
     add-highlighter window/gas ref gas
-    hook -once -always window WinSetOption filetype=(?!gas).* %{ remove-highlighter window/gas }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/gas }
 }
 
 hook global WinSetOption filetype=gas %{
     hook window InsertChar \n -group gas-indent gas-indent-on-new-line
-    hook -once -always window WinSetOption filetype=(?!gas).* %{ remove-hooks window gas-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window gas-.+ }
 }

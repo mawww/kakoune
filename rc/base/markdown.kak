@@ -77,10 +77,10 @@ define-command -hidden markdown-indent-on-new-line %{
 
 hook -group markdown-highlight global WinSetOption filetype=markdown %{
     add-highlighter window/markdown ref markdown
-    hook -once -always window WinSetOption filetype=(?!markdown).* %{ remove-highlighter window/markdown }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/markdown }
 }
 
 hook global WinSetOption filetype=markdown %{
     hook window InsertChar \n -group markdown-indent markdown-indent-on-new-line
-    hook -once -always window WinSetOption filetype=(?!markdown).* %{ remove-hooks window markdown-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window markdown-.+ }
 }

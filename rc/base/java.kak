@@ -51,7 +51,7 @@ define-command -hidden java-indent-on-closing-curly-brace %[
 
 hook -group java-highlight global WinSetOption filetype=java %{
     add-highlighter window/java ref java
-    hook -once -always window WinSetOption filetype=(?!java).* %{ remove-highlighter window/java }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/java }
 }
 
 hook global WinSetOption filetype=java %{
@@ -61,5 +61,5 @@ hook global WinSetOption filetype=java %{
     hook window InsertChar \{ -group java-indent java-indent-on-opening-curly-brace
     hook window InsertChar \} -group java-indent java-indent-on-closing-curly-brace
 
-    hook -once -always window WinSetOption filetype=(?!java).* %{ remove-hooks window java-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window java-.+ }
 }

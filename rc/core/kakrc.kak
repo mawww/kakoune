@@ -94,7 +94,7 @@ define-command -hidden kak-indent-on-closing-char %{
 
 hook -group kak-highlight global WinSetOption filetype=kak %{
     add-highlighter window/kakrc ref kakrc
-    hook -once -always window WinSetOption filetype=(?!kak).* %{ remove-highlighter window/kakrc }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/kakrc }
 }
 
 hook global WinSetOption filetype=kak %~
@@ -105,5 +105,5 @@ hook global WinSetOption filetype=kak %~
     hook window ModeChange insert:.* -group kak-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
     set-option buffer extra_word_chars '_' '-'
 
-    hook -once -always window WinSetOption filetype=(?!kak).* %{ remove-hooks window kak-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window kak-.+ }
 ~

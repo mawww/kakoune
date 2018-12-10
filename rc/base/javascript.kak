@@ -95,7 +95,7 @@ define-command -hidden init-javascript-filetype -params 1 %~
     hook -group "%arg{1}-highlight" global WinSetOption "filetype=%arg{1}" "
         add-highlighter window/%arg{1} ref %arg{1}
 
-        hook -once -always window WinSetOption filetype=(?!%arg{1}).* %%{ remove-highlighter window/%arg{1} }
+        hook -once -always window WinSetOption filetype=.* %%{ remove-highlighter window/%arg{1} }
     "
 
     hook global WinSetOption "filetype=%arg{1}" "
@@ -103,7 +103,7 @@ define-command -hidden init-javascript-filetype -params 1 %~
         hook window InsertChar .* -group %arg{1}-indent javascript-indent-on-char
         hook window InsertChar \n -group %arg{1}-indent javascript-indent-on-new-line
 
-        hook -once -always window WinSetOption filetype=(?!%arg{1}).* %%{ remove-hooks window %arg{1}-.+ }
+        hook -once -always window WinSetOption filetype=.* %%{ remove-hooks window %arg{1}-.+ }
     "
 ~
 

@@ -44,5 +44,5 @@ add-highlighter shared/dockerfile/code/ regex '\$[\w_]+' 0:value
 
 hook -group dockerfile-highlight global WinSetOption filetype=dockerfile %{
     add-highlighter window/dockerfile ref dockerfile
-    hook -once -always window WinSetOption filetype=(?!dockerfile).* %{ remove-highlighter window/dockerfile }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/dockerfile }
 }

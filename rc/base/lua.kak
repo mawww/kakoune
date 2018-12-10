@@ -86,7 +86,7 @@ define-command -hidden lua-insert-on-new-line %[
 
 hook -group lua-highlight global WinSetOption filetype=lua %{
     add-highlighter window/lua ref lua
-    hook -once -always window WinSetOption filetype=(?!lua).* %{ remove-highlighter window/lua }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/lua }
 }
 
 hook global WinSetOption filetype=lua %{
@@ -96,7 +96,7 @@ hook global WinSetOption filetype=lua %{
 
     alias window alt lua-alternative-file
 
-    hook -once -always window WinSetOption filetype=(?!lua).* %{
+    hook -once -always window WinSetOption filetype=.* %{
         remove-hooks window lua-.+
         unalias window alt lua-alternative-file
     }

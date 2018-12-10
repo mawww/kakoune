@@ -11,5 +11,5 @@ add-highlighter shared/ini/code/ regex "^\h*([^\[][^=\n]*)=([^\n]*)" 1:variable 
 
 hook -group ini-highlight global WinSetOption filetype=ini %{
     add-highlighter window/ini ref ini
-    hook -once -always window WinSetOption filetype=(?!ini).* %{ remove-highlighter window/ini }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ini }
 }

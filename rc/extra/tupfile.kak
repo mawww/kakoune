@@ -29,5 +29,5 @@ add-highlighter shared/tupfile/code/ regex '`[^`\n]+`' 0:meta
 
 hook -group tupfile-highlight global WinSetOption filetype=tupfile %{
     add-highlighter window/tupfile ref tupfile
-    hook -once -always window WinSetOption filetype=(?!tupfile).* %{ remove-highlighter window/tupfile }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/tupfile }
 }

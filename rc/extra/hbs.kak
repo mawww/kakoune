@@ -83,7 +83,7 @@ define-command -hidden maybe-add-hbs-to-html %{ evaluate-commands %sh{
 hook -group hbs-highlight global WinSetOption filetype=hbs %{
     maybe-add-hbs-to-html
     add-highlighter window/hbs-file ref hbs-file
-    hook -once -always window WinSetOption filetype=(?!hbs).* %{ remove-highlighter window/hbs-file }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/hbs-file }
 }
 
 hook global WinSetOption filetype=hbs %{
@@ -94,5 +94,5 @@ hook global WinSetOption filetype=hbs %{
     hook window InsertChar '>' -group hbs-indent html-indent-on-greater-than
     hook window InsertChar \n -group hbs-indent html-indent-on-new-line
 
-    hook -once -always window WinSetOption filetype=(?!hbs).* %{ remove-hooks window hbs-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window hbs-.+ }
 }

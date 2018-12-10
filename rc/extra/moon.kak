@@ -90,7 +90,7 @@ define-command -hidden moon-indent-on-new-line %{
 
 hook -group moon-highlight global WinSetOption filetype=moon %{
     add-highlighter window/moon ref moon
-    hook -once -always window WinSetOption filetype=(?!moon).* %{ remove-highlighter window/moon }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/moon }
 }
 
 hook global WinSetOption filetype=moon %{
@@ -100,7 +100,7 @@ hook global WinSetOption filetype=moon %{
 
     alias window alt moon-alternative-file
 
-    hook -once -always window WinSetOption filetype=(?!moon).* %{
+    hook -once -always window WinSetOption filetype=.* %{
         remove-hooks window moon-.+
         unalias window alt moon-alternative-file
     }

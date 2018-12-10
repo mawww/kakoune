@@ -92,7 +92,7 @@ define-command -hidden dart-indent-on-closing-curly-brace %[
 
 hook -group dart-highlight global WinSetOption filetype=dart %{
     add-highlighter window/dart ref dart
-    hook -once -always window WinSetOption filetype=(?!dart).* %{ remove-highlighter window/dart }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/dart }
 }
 
 hook global WinSetOption filetype=dart %{
@@ -102,5 +102,5 @@ hook global WinSetOption filetype=dart %{
     hook window InsertChar \{ -group dart-indent dart-indent-on-opening-curly-brace
     hook window InsertChar \} -group dart-indent dart-indent-on-closing-curly-brace
 
-    hook -once -always window WinSetOption filetype=(?!dart).* %{ remove-hooks window dart-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window dart-.+ }
 }

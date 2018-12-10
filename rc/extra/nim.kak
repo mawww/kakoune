@@ -73,7 +73,7 @@ def -hidden nim-indent-on-new-line %{
 
 hook -group nim-highlight global WinSetOption filetype=nim %{
     add-highlighter window/nim ref nim
-    hook -once -always window WinSetOption filetype=(?!nim).* %{ remove-highlighter window/nim }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/nim }
 }
 
 hook global WinSetOption filetype=nim %{
@@ -81,5 +81,5 @@ hook global WinSetOption filetype=nim %{
     # cleanup trailing whitespaces on current line insert end
     hook window ModeChange insert:.* -group nim-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
 
-    hook -once -always window WinSetOption filetype=(?!nim).* %{ remove-hooks window nim-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window nim-.+ }
 }

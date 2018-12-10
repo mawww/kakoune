@@ -9,5 +9,5 @@ add-highlighter shared/diff/ regex "^@@[^\n]*@@" 0:cyan,default
 
 hook -group diff-highlight global WinSetOption filetype=diff %{
     add-highlighter window/diff ref diff
-    hook -once -always window WinSetOption filetype=(?!diff).* %{ remove-highlighter window/diff }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/diff }
 }

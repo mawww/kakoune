@@ -100,7 +100,7 @@ define-command -hidden perl-indent-on-closing-curly-brace %[
 
 hook -group perl-highlight global WinSetOption filetype=perl %{
     add-highlighter window/perl ref perl
-    hook -once -always window WinSetOption filetype=(?!perl).* %{ remove-highlighter window/perl }
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/perl }
 }
 
 hook global WinSetOption filetype=perl %{
@@ -110,5 +110,5 @@ hook global WinSetOption filetype=perl %{
     hook window InsertChar \{ -group perl-indent perl-indent-on-opening-curly-brace
     hook window InsertChar \} -group perl-indent perl-indent-on-closing-curly-brace
 
-    hook -once -always window WinSetOption filetype=(?!perl).* %{ remove-hooks window perl-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window perl-.+ }
 }
