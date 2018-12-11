@@ -102,7 +102,7 @@ man: ../doc/kak.1
 endif
 
 check: test
-test:
+test: kak
 	cd ../test && ./run
 
 TAGS: tags
