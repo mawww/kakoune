@@ -702,11 +702,11 @@ Optional<Key> NCursesUI::get_next_key()
         return {};
     };
 
-    if (c < 256 and (c == 27 or (c & 0x80)))
+    if (c == 27)
     {
         wtimeout(m_window, 0);
-        const int new_c = (c & 0x80) ? (c & ~0x80) : wgetch(m_window);
-        if (new_c == '[' or c == 0x9b) // potential CSI
+        const int new_c = wgetch(m_window);
+        if (new_c == '[') // potential CSI
         {
             if (auto key = parse_csi())
                 return key;
