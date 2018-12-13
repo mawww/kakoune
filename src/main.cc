@@ -897,6 +897,12 @@ void signal_handler(int signal)
 
     if (signal == SIGTERM)
         exit(-1);
+    else if (signal == SIGSEGV)
+    {
+        // generate core dump
+        ::signal(SIGSEGV, SIG_DFL);
+        kill(getpid(), SIGSEGV);
+    }
     else
         abort();
 }
