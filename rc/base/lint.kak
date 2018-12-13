@@ -100,7 +100,7 @@ ${i}"
         printf %s\\n "${s}" | awk -v line="${kak_cursor_line}" \
                                   -v column="${kak_cursor_column}" \
             "/^${kak_cursor_line}\./"' {
-                gsub(/"/, "\"\"")
+                gsub(/"|%/, "&&")
                 msg = substr($0, index($0, "|"))
                 sub(/^[^ \t]+[ \t]+/, "", msg)
                 printf "info -anchor %d.%d \"%s\"\n", line, column, msg
