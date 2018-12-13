@@ -958,9 +958,9 @@ struct TabulationHighlighter : Highlighter
 
 struct ShowWhitespacesHighlighter : Highlighter
 {
-    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp)
+    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp, bool only_trailing)
       : Highlighter{HighlightPass::Move}, m_tab{std::move(tab)}, m_tabpad{std::move(tabpad)},
-        m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}
+        m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}, m_only_trailing{std::move(only_trailing)}
     {}
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
@@ -970,11 +970,13 @@ struct ShowWhitespacesHighlighter : Highlighter
               { "tabpad", { true, "" } },
               { "spc", { true, "" } },
               { "lf", { true, "" } },
-              { "nbsp", { true, "" } } },
+              { "nbsp", { true, "" } },
+              { "only-trailing", { false, "" } } },
             ParameterDesc::Flags::None, 0, 0
         };
         ParametersParser parser(params, param_desc);
 
+        bool only_trailing = (bool) parser.get_switch("only-trailing");
         auto get_param = [&](StringView param,  StringView fallback) {
             StringView value = parser.get_switch(param).value_or(fallback);
             if (value.char_length() != 1)
@@ -984,7 +986,7 @@ struct ShowWhitespacesHighlighter : Highlighter
 
         return std::make_unique<ShowWhitespacesHighlighter>(
             get_param("tab", "→"), get_param("tabpad", " "), get_param("spc", "·"),
-            get_param("lf", "¬"), get_param("nbsp", "⍽"));
+            get_param("lf", "¬"), get_param("nbsp", "⍽"), only_trailing);
     }
 
 private:
@@ -1003,30 +1005,47 @@ private:
 
                 auto begin = get_iterator(buffer, atom_it->begin());
                 auto end = get_iterator(buffer, atom_it->end());
+                auto last_non_space = begin.coord();
+
+                if(m_only_trailing)
+                {
+                    for (BufferIterator it = begin; it != end; )
+                    {
+                        Codepoint cp = utf8::read_codepoint(it, end);
+                        if (cp == '\t' or cp == ' ' or cp == '\n' or cp == 0xA0)
+                            continue;
+                        last_non_space = it.coord();
+                    }
+                }
+
                 for (BufferIterator it = begin; it != end; )
                 {
                     auto coord = it.coord();
                     Codepoint cp = utf8::read_codepoint(it, end);
                     if (cp == '\t' or cp == ' ' or cp == '\n' or cp == 0xA0)
                     {
+                        auto should_highlight = !m_only_trailing or it.coord() > last_non_space;
                         if (coord != begin.coord())
                             atom_it = ++line.split(atom_it, coord);
                         if (it != end)
                             atom_it = line.split(atom_it, it.coord());
 
-                        if (cp == '\t')
+                        if (should_highlight)
                         {
-                            const ColumnCount column = get_column(buffer, tabstop, coord);
-                            const ColumnCount count = tabstop - (column % tabstop) -
-                                                      std::max(win_column - column, 0_col);
-                            atom_it->replace(m_tab + String(m_tabpad[(CharCount)0], count - m_tab.column_length()));
+                            if (cp == '\t')
+                            {
+                                const ColumnCount column = get_column(buffer, tabstop, coord);
+                                const ColumnCount count = tabstop - (column % tabstop) -
+                                                          std::max(win_column - column, 0_col);
+                                atom_it->replace(m_tab + String(m_tabpad[(CharCount)0], count - m_tab.column_length()));
+                            }
+                            else if (cp == ' ')
+                                atom_it->replace(m_spc);
+                            else if (cp == '\n')
+                                atom_it->replace(m_lf);
+                            else if (cp == 0xA0)
+                                atom_it->replace(m_nbsp);
                         }
-                        else if (cp == ' ')
-                            atom_it->replace(m_spc);
-                        else if (cp == '\n')
-                            atom_it->replace(m_lf);
-                        else if (cp == 0xA0)
-                            atom_it->replace(m_nbsp);
                         atom_it->face = merge_faces(atom_it->face, whitespaceface);
                         break;
                     }
@@ -1036,6 +1055,7 @@ private:
     }
 
     const String m_tab, m_tabpad, m_spc, m_lf, m_nbsp;
+    const bool m_only_trailing;
 };
 
 struct LineNumbersHighlighter : Highlighter
