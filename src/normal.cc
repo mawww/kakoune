@@ -1207,7 +1207,7 @@ void deindent(Context& context, NormalParams params)
                         sels.emplace_back(line, BufferCoord{line, column-1});
                     break;
                 }
-                if (width == indent_width)
+                if (width >= indent_width)
                 {
                     sels.emplace_back(line, BufferCoord{line, column});
                     break;
