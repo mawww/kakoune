@@ -28,7 +28,7 @@ Formats of language supported:
         fi
 
         {
-            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell --byte-offsets -a $options" 2>&1 | {
+            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell --byte-offsets -a $options" | {
                 line_num=1
                 regions=$kak_timestamp
                 read line # drop the identification message

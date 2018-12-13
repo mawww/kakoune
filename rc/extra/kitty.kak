@@ -46,7 +46,7 @@ All optional parameters are forwarded to the new window} \
     -shell-completion \
     kitty-repl %{ evaluate-commands %sh{
         if [ $# -eq 0 ]; then cmd="${SHELL:-/bin/sh}"; else cmd="$*"; fi
-        kitty @ new-window --no-response --window-type $kak_opt_kitty_window_type --title kak_repl_window --cwd "$PWD" $cmd < /dev/null > /dev/null 2>&1 &
+        kitty @ new-window --no-response --window-type $kak_opt_kitty_window_type --title kak_repl_window --cwd "$PWD" $cmd < /dev/null > /dev/null &
 }}
 
 define-command kitty-send-text -docstring "send the selected text to the repl window" %{
