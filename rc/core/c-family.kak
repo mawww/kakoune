@@ -160,8 +160,8 @@ evaluate-commands %sh{
     # Grammar
     keywords="asm break case continue default do else for goto if return
               sizeof switch while offsetof alignas alignof"
-    attributes="auto const enum extern inline register restrict static struct
-                typedef union volatile thread_local"
+    attributes="auto atomic const enum extern inline register restrict static
+                struct typedef union volatile thread_local"
     types="char double float int long short signed unsigned void"
     complex_types="complex imaginary"
     fenv_types="fenv_t fexcept_t"
@@ -171,7 +171,7 @@ evaluate-commands %sh{
     setjmp_types="jmp_buf"
     signal_types="sig_atomic_t"
     stdarg_types="va_list"
-    stdatomic_types="memory_order atomic_bool atomic_char atomic_schar atomic_uchar atomic_wchar atomic_short atomic_ushort atomic_int atomic_uint atomic_long atomic_llong atomic_ulong atomic_ullong atomic_char16_t atomic_char32_t atomic_intptr_t atomic_intmax_t atomic_int8_t atomic_int16_t atomic_int32_t atomic_int64_t atomic_int_least8_t atomic_int_least16_t atomic_int_least32_t atomic_int_least64_t atomic_int_fast8_t atomic_int_fast16_t atomic_int_fast32_t atomic_int_fast64_t atomic_uintptr_t atomic_uintmax_t atomic_uint8_t atomic_uint16_t atomic_uint32_t atomic_uint64_t atomic_uint_least8_t atomic_uint_least16_t atomic_uint_least32_t atomic_uint_least64_t atomic_uint_fast8_t atomic_uint_fast16_t atomic_uint_fast32_t atomic_uint_fast64_t atomic_size_t atomic_ptrdiff_t"
+    stdatomic_types="memory_order atomic_flag atomic_bool atomic_char atomic_schar atomic_uchar atomic_wchar atomic_short atomic_ushort atomic_int atomic_uint atomic_long atomic_llong atomic_ulong atomic_ullong atomic_char16_t atomic_char32_t atomic_intptr_t atomic_intmax_t atomic_int8_t atomic_int16_t atomic_int32_t atomic_int64_t atomic_int_least8_t atomic_int_least16_t atomic_int_least32_t atomic_int_least64_t atomic_int_fast8_t atomic_int_fast16_t atomic_int_fast32_t atomic_int_fast64_t atomic_uintptr_t atomic_uintmax_t atomic_uint8_t atomic_uint16_t atomic_uint32_t atomic_uint64_t atomic_uint_least8_t atomic_uint_least16_t atomic_uint_least32_t atomic_uint_least64_t atomic_uint_fast8_t atomic_uint_fast16_t atomic_uint_fast32_t atomic_uint_fast64_t atomic_size_t atomic_ptrdiff_t"
     stdbool_types="bool"
     stddef_types="ptrdiff_t size_t max_align_t wchar_t"
     stdint_types="intptr_t intmax_t int8_t int16_t int32_t int64_t int_least8_t int_least16_t int_least32_t int_least64_t int_fast8_t int_fast16_t int_fast32_t int_fast64_t uintptr_t uintmax_t uint8_t uint16_t uint32_t uint64_t uint_least8_t uint_least16_t uint_least32_t uint_least64_t uint_fast8_t uint_fast16_t uint_fast32_t uint_fast64_t"
