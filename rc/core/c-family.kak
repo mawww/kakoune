@@ -181,6 +181,7 @@ evaluate-commands %sh{
     time_types="clock_t time_t timespec tm"
     wchar_types="mbstate_t wint_t"
     wctype_types="wctrans_t wctype_t"
+    uchar_types="char16_t char32_t"
     unistd_types="ssize_t gid_t uid_t off_t off64_t useconds_t pid_t socklen_t"
 
     assert_macros="assert static_assert NDEBUG"
@@ -212,15 +213,15 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf '%s\n' "hook global WinSetOption filetype=c %{
-        set-option window static_words $(join "${keywords} ${attributes} ${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stdbool_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${time_types} ${wchar_types} ${wctype_types} ${unistd_types} ${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdlib_macros} ${stdint_macros} ${threads_macros} ${time_macros} ${wchar_macros} ${misc_macros} ${unistd_macros} ${values}" ' ')
+        set-option window static_words $(join "${keywords} ${attributes} ${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stdbool_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${time_types} ${wchar_types} ${wctype_types} ${uchar_types} ${unistd_types} ${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdlib_macros} ${stdint_macros} ${threads_macros} ${time_macros} ${wchar_macros} ${misc_macros} ${unistd_macros} ${values}" ' ')
     }"
 
     # Highlight keywords
     printf %s "
         add-highlighter shared/c/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
         add-highlighter shared/c/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
-        add-highlighter shared/c/code/types regex \b($(join "${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stdbool_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${time_types} ${wchar_types} ${wctype_types} ${unistd_types}" '|'))\b 0:type
-        add-highlighter shared/c/code/values regex \b($(join "${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdint_macros} ${threads_macros} ${time_macros} ${wchar_macros} ${misc_macros} ${unistd_macros}" '|'))\b 0:value
+        add-highlighter shared/c/code/types regex \b($(join "${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stdbool_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${time_types} ${wchar_types} ${wctype_types} ${uchar_types} ${unistd_types}" '|'))\b 0:type
+        add-highlighter shared/c/code/values regex \b($(join "${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdint_macros} ${stdlib_macros} ${threads_macros} ${time_macros} ${wchar_macros} ${misc_macros} ${unistd_macros}" '|'))\b 0:value
     "
 }
 
@@ -263,6 +264,7 @@ evaluate-commands %sh{
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=cpp %{
         set-option window static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')
+        uchar_types="char16_t char32_t"
     }"
 
     # Highlight keywords
