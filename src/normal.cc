@@ -617,10 +617,23 @@ void insert_output(Context& context, NormalParams)
             if (cmdline.empty())
                 return;
 
+            auto& sels = context.selections();
             auto str = ShellManager::instance().eval(
                 cmdline, context, {}, ShellManager::Flags::WaitForStdout).first;
             ScopedEdition edition(context);
-            context.selections().insert(str, mode);
+            if (not str.empty())
+            {
+                Vector<BufferCoordPair> out_insert_coords;
+                sels.insert(str, mode, &out_insert_coords);
+
+                for (size_t i = 0; i < sels.size(); ++i)
+                {
+                    auto& sel = sels[i];
+                    const auto& coords = out_insert_coords[i];
+
+                    sel.set(coords);
+                }
+            }
         });
 }
 
@@ -700,7 +713,7 @@ void paste_all(Context& context, NormalParams params)
         offsets.push_back(all.length());
     }
 
-    Vector<BufferCoord> insert_pos;
+    Vector<BufferCoordPair> insert_pos;
     auto& selections = context.selections();
     {
         ScopedEdition edition(context);
@@ -714,8 +727,8 @@ void paste_all(Context& context, NormalParams params)
         ByteCount pos = 0;
         for (auto offset : offsets)
         {
-            result.emplace_back(buffer.advance(ins_pos, pos),
-                                buffer.advance(ins_pos, offset-1));
+            result.emplace_back(buffer.advance(ins_pos.first, pos),
+                                buffer.advance(ins_pos.first, offset-1));
             pos = offset;
         }
     }

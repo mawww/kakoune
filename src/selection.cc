@@ -382,7 +382,7 @@ static void fix_overflowing_selections(Vector<Selection>& selections,
 }
 
 void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
-                           Vector<BufferCoord>* out_insert_pos)
+                           Vector<BufferCoordPair>* out_insert_coords)
 {
     if (strings.empty())
         return;
@@ -408,21 +408,26 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
 
         const String& str = strings[std::min(index, strings.size()-1)];
 
-        const auto pos = (mode == InsertMode::Replace) ?
-            replace(*m_buffer, sel, str)
-          : m_buffer->insert(changes_tracker.get_new_coord(insert_pos[index]), str);
+        BufferCoordPair pos;
+        if (mode == InsertMode::Replace)
+        {
+            const BufferCoord first = replace(*m_buffer, sel, str);
+            pos = {first, first};
+        }
+        else
+            pos = m_buffer->insert(changes_tracker.get_new_coord(insert_pos[index]), str);
 
         size_t old_timestamp = m_timestamp;
         changes_tracker.update(*m_buffer, m_timestamp);
 
-        if (out_insert_pos)
-            out_insert_pos->push_back(pos);
+        if (out_insert_coords)
+            out_insert_coords->push_back(pos);
 
         if (mode == InsertMode::Replace)
         {
             auto changes = m_buffer->changes_since(old_timestamp);
             if (changes.size() == 1) // Nothing got inserted, either str was empty, or just \n at end of buffer
-                sel.anchor() = sel.cursor() = m_buffer->clamp(pos);
+                sel.anchor() = sel.cursor() = m_buffer->clamp(pos.first);
             else if (changes.size() == 2)
             {
                 // we want min and max from *before* we do any change

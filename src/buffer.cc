@@ -439,12 +439,12 @@ void Buffer::check_invariant() const
 #endif
 }
 
-BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
+BufferCoordPair Buffer::do_insert(BufferCoord pos, StringView content)
 {
     kak_assert(is_valid(pos));
 
     if (content.empty())
-        return pos;
+        return {pos, pos};
 
     const bool at_end = is_end(pos);
     const bool append_lines = at_end and (m_lines.empty() or byte_at(back_coord()) == '\n');
@@ -480,11 +480,19 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
                    std::make_move_iterator(new_lines.end()));
 
     const LineCount last_line = pos.line + new_lines.size() - 1;
-    const auto end = at_end ? line_count()
-                            : BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
+    auto end = at_end ? line_count()
+                      : BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
 
     m_changes.push_back({ Change::Insert, pos, end });
-    return pos;
+    if (not end.column)
+    {
+        end.line--;
+        end.column = m_lines[end.line].length() - 1;
+    }
+    else
+        end.column--;
+
+    return {pos, end};
 }
 
 BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
@@ -538,13 +546,13 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-BufferCoord Buffer::insert(BufferCoord pos, StringView content)
+BufferCoordPair Buffer::insert(BufferCoord pos, StringView content)
 {
     throw_if_read_only();
 
     kak_assert(is_valid(pos));
     if (content.empty())
-        return pos;
+        return {pos, pos};
 
     StringDataPtr real_content;
     if (is_end(pos) and content.back() != '\n')
@@ -593,7 +601,7 @@ BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end, StringView conte
         return begin;
 
     auto pos = erase(begin, end);
-    return insert(pos, content);
+    return insert(pos, content).first;
 }
 
 bool Buffer::is_modified() const
@@ -811,7 +819,7 @@ UnitTest test_undo{[]()
     Buffer buffer("test", Buffer::Flags::None, "allo ?\nmais que fais la police\n hein ?\n youpi\n");
     auto pos = buffer.insert(buffer.end_coord(), "kanaky\n"); // change 1
     buffer.commit_undo_group();
-    buffer.erase(pos, buffer.end_coord());                    // change 2
+    buffer.erase(pos.first, buffer.end_coord());                    // change 2
     buffer.commit_undo_group();
     buffer.insert(2_line, "tchou\n");                         // change 3
     buffer.commit_undo_group();

@@ -33,6 +33,7 @@ struct Selection
     }
 
     void set(BufferCoord coord) { set(coord, coord); }
+    void set(BufferCoordPair coords) { set(coords.first, coords.second); }
 
     CaptureList& captures() { return m_captures; }
     const CaptureList& captures() const { return m_captures; }
@@ -142,7 +143,7 @@ struct SelectionList
     size_t timestamp() const { return m_timestamp; }
 
     void insert(ConstArrayView<String> strings, InsertMode mode,
-                Vector<BufferCoord>* out_insert_pos = nullptr);
+                Vector<BufferCoordPair>* out_insert_coords = nullptr);
     void erase();
 
 private:

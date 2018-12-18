@@ -94,6 +94,15 @@ struct BufferCoord : LineAndColumn<BufferCoord, LineCount, ByteCount>
         : LineAndColumn{line, column} {}
 };
 
+struct BufferCoordPair
+{
+    BufferCoord first;
+    BufferCoord second;
+
+    BufferCoordPair(BufferCoord first = {}, BufferCoord second = {})
+        : first(first), second(second) {}
+};
+
 struct DisplayCoord : LineAndColumn<DisplayCoord, LineCount, ColumnCount>
 {
     [[gnu::always_inline]]
