@@ -21,16 +21,19 @@ struct Key
         Alt     = 1 << 1,
         Shift   = 1 << 2,
 
-        MousePress   = 1 << 3,
-        MouseRelease = 1 << 4,
-        MousePos     = 1 << 5,
-        MouseWheelDown = 1 << 6,
-        MouseWheelUp = 1 << 7,
-        MouseEvent = MousePress | MouseRelease | MousePos |
-                     MouseWheelDown | MouseWheelUp,
+        MousePressLeft    = 1 << 3,
+        MousePressRight   = 1 << 4,
+        MouseReleaseLeft  = 1 << 5,
+        MouseReleaseRight = 1 << 6,
+        MousePos          = 1 << 7,
+        MouseWheelDown    = 1 << 8,
+        MouseWheelUp      = 1 << 9,
+        MouseEvent        = MousePressLeft | MousePressRight |
+                            MouseReleaseLeft | MouseReleaseRight |
+                            MousePos | MouseWheelDown | MouseWheelUp,
 
-        Resize = 1 << 8,
-        MenuSelect = 1 << 10,
+        Resize     = 1 << 10,
+        MenuSelect = 1 << 11,
     };
     enum NamedKey : Codepoint
     {

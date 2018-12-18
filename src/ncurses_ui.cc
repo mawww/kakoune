@@ -565,9 +565,13 @@ Optional<Key> NCursesUI::get_next_key()
                     res |= Key::Modifiers::Alt;
 
                 if (BUTTON_PRESS(mask, 1))
-                    return res | Key::Modifiers::MousePress;
+                    return res | Key::Modifiers::MousePressLeft;
+                if (BUTTON_PRESS(mask, 3))
+                    return res | Key::Modifiers::MousePressRight;
                 if (BUTTON_RELEASE(mask, 1))
-                    return res | Key::Modifiers::MouseRelease;
+                    return res | Key::Modifiers::MouseReleaseLeft;
+                if (BUTTON_RELEASE(mask, 3))
+                    return res | Key::Modifiers::MouseReleaseRight;
                 if (BUTTON_PRESS(mask, m_wheel_down_button))
                     return res | Key::Modifiers::MouseWheelDown;
                 if (BUTTON_PRESS(mask, m_wheel_up_button))
