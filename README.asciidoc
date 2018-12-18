@@ -343,7 +343,7 @@ See <<Appending>> below for instructions on extending (appending to) the current
  * `e`: select preceding whitespaces and the word on the right of selection end
  * `<a-[wbe]>`: same as [wbe] but select WORD instead of word
 
- * `f`: select to the next occurrence of the given character
+ * `f`: select to (including) the next occurrence of the given character
  * `t`: select until (excluding) the next occurrence of the given character
  * `<a-[ft]>`: same as [ft] but in the other direction
 
