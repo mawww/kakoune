@@ -331,6 +331,8 @@ selection's cursor. Some additional keys are recognised in insert mode:
 Movement
 ~~~~~~~~
 
+See <<Appending>> below for instructions on extending (appending to) the current selection, in order to select more text in multiple steps.
+
  * `h`: select the character on the left of selection end
  * `j`: select the character below the selection end
  * `k`: select the character above the selection end
@@ -391,8 +393,13 @@ sequence of non whitespace characters.
 Appending
 ~~~~~~~~~
 
-for most selection commands, using shift permits extending current selection
-instead of replacing it. for example, `wWW` selects 3 consecutive words
+For most <<Movement>> commands, using `Shift` extends the current selection
+instead of replacing it.
+
+Examples:
+
+ * `wWW` selects 3 consecutive words: first `w` selects a word, then `WW` extends the selection two words further.
+ * `f/F/` selects up to and including the second `/` character forward.
 
 Using Counts
 ~~~~~~~~~~~~
