@@ -338,13 +338,13 @@ See <<Appending>> below for instructions on extending (appending to) the current
  * `k`: select the character above the selection end
  * `l`: select the character on the right of selection end
 
- * `w`: select the word and following whitespaces  on the right of selection end
+ * `w`: select the word and following whitespaces on the right of selection end
  * `b`: select preceding whitespaces and the word on the left of selection end
  * `e`: select preceding whitespaces and the word on the right of selection end
  * `<a-[wbe]>`: same as [wbe] but select WORD instead of word
 
- * `f`: select to the next occurence of given character
- * `t`: select until the next occurence of given character
+ * `f`: select to the next occurrence of the given character
+ * `t`: select until (excluding) the next occurrence of the given character
  * `<a-[ft]>`: same as [ft] but in the other direction
 
  * `m`: select to matching character
