@@ -69,7 +69,7 @@ UnitTest test_hash_map{[] {
             ref.push_back({key, value});
             map.insert({key, value});
 
-            std::random_shuffle(ref.begin(), ref.end());
+            std::shuffle(ref.begin(), ref.end(), re);
             for (auto& elem : ref)
             {
                 auto it = map.find(elem.first);
@@ -89,7 +89,7 @@ void do_profile(size_t count, StringView type)
     Vector<size_t> vec;
     for (size_t i = 0; i < count; ++i)
         vec.push_back(i);
-    std::random_shuffle(vec.begin(), vec.end());
+    std::shuffle(vec.begin(), vec.end(), re);
 
     Map map;
     auto start = Clock::now();
