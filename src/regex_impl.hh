@@ -184,8 +184,8 @@ public:
         }
     }
 
-    bool exec(Iterator begin, Iterator end,
-              Iterator subject_begin, Iterator subject_end,
+    bool exec(const Iterator& begin, const Iterator& end,
+              const Iterator& subject_begin, const Iterator& subject_end,
               RegexExecFlags flags)
     {
         if (flags & RegexExecFlags::NotInitialNull and begin == end)
