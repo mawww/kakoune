@@ -91,46 +91,52 @@ struct ParsedRegex
 
 namespace
 {
-template<MatchDirection = MatchDirection::Forward>
-struct ForEachChild
+
+template<MatchDirection direction = MatchDirection::Forward>
+struct Children
 {
-    template<typename Func>
-    static bool apply(const ParsedRegex& parsed_regex, ParsedRegex::NodeIndex index, Func&& func)
+    using Index = ParsedRegex::NodeIndex;
+    struct Sentinel {};
+    struct Iterator
     {
-        const auto end = parsed_regex.nodes[index].children_end;
-        for (auto child = index+1; child != end;
-             child = parsed_regex.nodes[child].children_end)
+        static constexpr bool forward = direction == MatchDirection::Forward;
+        Iterator(ArrayView<const ParsedRegex::Node> nodes, Index index)
+          : m_nodes{nodes},
+            m_pos(forward ? index+1 : find_prev(index, nodes[index].children_end)),
+            m_end(forward ? nodes[index].children_end : index)
+        {}
+
+        Iterator& operator++()
         {
-            if (func(child) == false)
-                return false;
+            m_pos = forward ? m_nodes[m_pos].children_end : find_prev(m_end, m_pos);
+            return *this;
         }
-        return true;
-    }
+
+        Index operator*() const { return m_pos; }
+        bool operator!=(Sentinel) const { return m_pos != m_end; }
+
+        Index find_prev(Index parent, Index pos) const
+        {
+            Index child = parent+1;
+            if (child == pos)
+                return parent;
+            while (m_nodes[child].children_end != pos)
+                child = m_nodes[child].children_end;
+            return child;
+        }
+
+        ArrayView<const ParsedRegex::Node> m_nodes;
+        Index m_pos;
+        Index m_end;
+    };
+
+    Iterator begin() const { return {m_parsed_regex.nodes, m_index}; }
+    Sentinel end() const { return {}; }
+
+    const ParsedRegex& m_parsed_regex;
+    const Index m_index;
 };
 
-template<>
-struct ForEachChild<MatchDirection::Backward>
-{
-    template<typename Func>
-    static bool apply(const ParsedRegex& parsed_regex, ParsedRegex::NodeIndex index, Func&& func)
-    {
-        auto find_last_child = [&](ParsedRegex::NodeIndex begin, ParsedRegex::NodeIndex end) {
-            while (parsed_regex.nodes[begin].children_end != end)
-                begin = parsed_regex.nodes[begin].children_end;
-            return begin;
-        };
-        const auto first_child = index+1;
-        auto end = parsed_regex.nodes[index].children_end;
-        while (end != first_child)
-        {
-            auto child = find_last_child(first_child, end);
-            if (func(child) == false)
-                return false;
-            end = child;
-        }
-        return true;
-    }
-};
 }
 
 // Recursive descent parser based on naming used in the ECMAScript
@@ -615,7 +621,8 @@ private:
     void validate_lookaround(NodeIndex index)
     {
         using Lookaround = CompiledRegex::Lookaround;
-        ForEachChild<>::apply(m_parsed_regex, index, [this](NodeIndex child_index) {
+        for (auto child_index : Children<>{m_parsed_regex, index})
+        {
             auto& child = get_node(child_index);
             if (child.op != ParsedRegex::Literal and child.op != ParsedRegex::Class and
                 child.op != ParsedRegex::CharacterType and child.op != ParsedRegex::AnyChar and
@@ -627,8 +634,7 @@ private:
                 parse_error("Lookaround does not support literals codepoint between 0xF0000 and 0xFFFFD");
             if (child.quantifier.type != ParsedRegex::Quantifier::One)
                 parse_error("Quantifiers cannot be used in lookarounds");
-            return true;
-        });
+        }
     }
 
     ParsedRegex m_parsed_regex;
@@ -738,22 +744,22 @@ private:
                 break;
             case ParsedRegex::Sequence:
             {
-                ForEachChild<direction>::apply(m_parsed_regex, index, [this](ParsedRegex::NodeIndex child) {
-                    compile_node<direction>(child); return true;
-                });
+                for (auto child : Children<direction>{m_parsed_regex, index})
+                    compile_node<direction>(child);
                 break;
             }
             case ParsedRegex::Alternation:
             {
                 auto split_pos = m_program.instructions.size();
-                ForEachChild<>::apply(m_parsed_regex, index, [this, index](ParsedRegex::NodeIndex child) {
+                for (auto child : Children<>{m_parsed_regex, index})
+                {
                     if (child != index+1)
                         push_inst(CompiledRegex::Split_PrioritizeParent);
-                    return true;
-                });
+                }
 
-                ForEachChild<>::apply(m_parsed_regex, index,
-                                      [&, end = node.children_end](ParsedRegex::NodeIndex  child) {
+                const auto end = node.children_end;
+                for (auto child : Children<>{m_parsed_regex, index})
+                {
                     auto node = compile_node<direction>(child);
                     if (child != index+1)
                         m_program.instructions[split_pos++].param = node;
@@ -762,8 +768,7 @@ private:
                         auto jump = push_inst(CompiledRegex::Jump);
                         goto_inner_end_offsets.push_back(jump);
                     }
-                    return true;
-                });
+                }
                 break;
             }
             case ParsedRegex::LookAhead:
@@ -886,26 +891,23 @@ private:
         using Lookaround = CompiledRegex::Lookaround;
 
         const uint32_t res = m_program.lookarounds.size();
-        auto write_matcher = [this, ignore_case](ParsedRegex::NodeIndex  child) {
-                auto& character = get_node(child);
-                if (character.op == ParsedRegex::Literal)
-                    m_program.lookarounds.push_back(
-                        static_cast<Lookaround>(ignore_case ? to_lower(character.value) : character.value));
-                else if (character.op == ParsedRegex::AnyChar)
-                    m_program.lookarounds.push_back(Lookaround::AnyChar);
-                else if (character.op == ParsedRegex::AnyCharExceptNewLine)
-                    m_program.lookarounds.push_back(Lookaround::AnyCharExceptNewLine);
-                else if (character.op == ParsedRegex::Class)
-                    m_program.lookarounds.push_back(static_cast<Lookaround>(to_underlying(Lookaround::CharacterClass) + character.value));
-                else if (character.op == ParsedRegex::CharacterType)
-                    m_program.lookarounds.push_back(static_cast<Lookaround>(to_underlying(Lookaround::CharacterType) | character.value));
-                else
-                    kak_assert(false);
-                return true;
-        };
-
-        ForEachChild<direction>::apply(m_parsed_regex, index, write_matcher);
-
+        for (auto child : Children<direction>{m_parsed_regex, index})
+        {
+            auto& character = get_node(child);
+            if (character.op == ParsedRegex::Literal)
+                m_program.lookarounds.push_back(
+                    static_cast<Lookaround>(ignore_case ? to_lower(character.value) : character.value));
+            else if (character.op == ParsedRegex::AnyChar)
+                m_program.lookarounds.push_back(Lookaround::AnyChar);
+            else if (character.op == ParsedRegex::AnyCharExceptNewLine)
+                m_program.lookarounds.push_back(Lookaround::AnyCharExceptNewLine);
+            else if (character.op == ParsedRegex::Class)
+                m_program.lookarounds.push_back(static_cast<Lookaround>(to_underlying(Lookaround::CharacterClass) + character.value));
+            else if (character.op == ParsedRegex::CharacterType)
+                m_program.lookarounds.push_back(static_cast<Lookaround>(to_underlying(Lookaround::CharacterType) | character.value));
+            else
+                kak_assert(false);
+        }
         m_program.lookarounds.push_back(Lookaround::EndOfLookaround);
         return res;
     }
@@ -983,22 +985,21 @@ private:
             }
             case ParsedRegex::Sequence:
             {
-                bool did_not_consume = false;
-                auto does_not_consume = [&, this](auto child) {
-                    return this->compute_start_desc<direction>(child, start_desc);
-                };
-                did_not_consume = ForEachChild<direction>::apply(m_parsed_regex, index, does_not_consume);
-
-                return did_not_consume or node.quantifier.allows_none();
+                for (auto child : Children<direction>{m_parsed_regex, index})
+                {
+                    if (not compute_start_desc<direction>(child, start_desc))
+                        return node.quantifier.allows_none();
+                }
+                return true;
             }
             case ParsedRegex::Alternation:
             {
                 bool all_consumed = not node.quantifier.allows_none();
-                ForEachChild<>::apply(m_parsed_regex, index, [&](ParsedRegex::NodeIndex  child) {
+                for (auto child : Children<>{m_parsed_regex, index})
+                {
                     if (compute_start_desc<direction>(child, start_desc))
                         all_consumed = false;
-                    return true;
-                });
+                }
                 return not all_consumed;
             }
             case ParsedRegex::LineStart:
