@@ -26,7 +26,7 @@ add-highlighter shared/lisp/code/ regex (\b\d+)?\.\d+([eEsSfFdDlL]\d+)?\b 0:valu
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden lisp-filter-around-selections %{
+define-command -hidden lisp-trim-indent %{
     # remove trailing white spaces
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
@@ -63,7 +63,7 @@ hook -group lisp-highlight global WinSetOption filetype=lisp %{
 }
 
 hook global WinSetOption filetype=lisp %{
-    hook window ModeChange insert:.* -group lisp-hooks  lisp-filter-around-selections
+    hook window ModeChange insert:.* -group lisp-trim-indent  lisp-trim-indent
     hook window InsertChar \n -group lisp-indent lisp-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window lisp-.+ }

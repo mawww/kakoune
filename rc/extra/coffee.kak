@@ -42,7 +42,7 @@ add-highlighter shared/coffee/code/ regex \b(break|case|catch|class|const|contin
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden coffee-filter-around-selections %{
+define-command -hidden coffee-trim-indent %{
     evaluate-commands -draft -itersel %{
         execute-keys <a-x>
         # remove trailing white spaces
@@ -57,7 +57,7 @@ define-command -hidden coffee-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : coffee-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : coffee-trim-indent <ret> }
         # indent after start structure
         try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) \b | (=|->) $ <ret> j <a-gt> }
     }
@@ -72,7 +72,7 @@ hook -group coffee-highlight global WinSetOption filetype=coffee %{
 }
 
 hook global WinSetOption filetype=coffee %{
-    hook window ModeChange insert:.* -group coffee-hooks  coffee-filter-around-selections
+    hook window ModeChange insert:.* -group coffee-trim-indent  coffee-trim-indent
     hook window InsertChar \n -group coffee-indent coffee-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window coffee-.+ }

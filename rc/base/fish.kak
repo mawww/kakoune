@@ -28,7 +28,7 @@ add-highlighter shared/fish/code/ regex \b(and|begin|bg|bind|block|break|breakpo
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden fish-filter-around-selections %{
+define-command -hidden fish-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
         # remove trailing white spaces
         try %{ execute-keys -draft <a-x>s\h+$<ret>d }
@@ -49,7 +49,7 @@ define-command -hidden fish-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft <space>K<a-&> }
         # filter previous line
-        try %{ execute-keys -draft k:fish-filter-around-selections<ret> }
+        try %{ execute-keys -draft k:fish-trim-indent<ret> }
         # indent after start structure
         try %{ execute-keys -draft k<a-x><a-k>^\h*(begin|case|else|for|function|if|switch|while)\b<ret>j<a-gt> }
     }

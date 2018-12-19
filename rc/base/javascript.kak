@@ -12,7 +12,7 @@ hook global BufCreate .*[.](ts)x? %{
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden javascript-filter-around-selections %{
+define-command -hidden javascript-trim-indent %{
     # remove trailing white spaces
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
@@ -31,7 +31,7 @@ define-command -hidden javascript-indent-on-new-line %<
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : javascript-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : javascript-trim-indent <ret> }
         # indent after lines beginning / ending with opener token
         try %_ execute-keys -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
     >
@@ -99,7 +99,7 @@ define-command -hidden init-javascript-filetype -params 1 %~
     "
 
     hook global WinSetOption "filetype=%arg{1}" "
-        hook window ModeChange insert:.* -group %arg{1}-hooks javascript-filter-around-selections
+        hook window ModeChange insert:.* -group %arg{1}-trim-indent javascript-trim-indent
         hook window InsertChar .* -group %arg{1}-indent javascript-indent-on-char
         hook window InsertChar \n -group %arg{1}-indent javascript-indent-on-new-line
 

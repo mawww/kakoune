@@ -61,7 +61,7 @@ add-highlighter shared/gas/code/ regex \
 ^\h*(cvttp[ds]2dq|cvttp[ds]2pi|cvtts[ds]2si)\b|\
 ^\h*(vxorp[sd]|vandp[sd]|ucomis[sd])\b 0:keyword
 
-define-command -hidden gas-filter-around-selections %{
+define-command -hidden gas-trim-indent %{
     evaluate-commands -draft -itersel %{
         execute-keys <a-x>
         # remove trailing white spaces
@@ -74,7 +74,7 @@ define-command -hidden gas-indent-on-new-line %~
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : gas-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : gas-trim-indent <ret> }
         # indent after label
         try %[ execute-keys -draft k <a-x> <a-k> :$ <ret> j <a-gt> ]
     >

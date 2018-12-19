@@ -23,7 +23,7 @@ hook global BufCreate .*\.m %{
     set-option buffer filetype objc
 }
 
-define-command -hidden c-family-trim-autoindent %{
+define-command -hidden c-family-trim-indent %{
     # remove the line if it's empty when leaving the insert mode
     try %{ execute-keys -draft <a-x> 1s^(\h+)$<ret> d }
 }
@@ -321,7 +321,7 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
     hook -group "%val{hook_param_capture_1}-indent" window InsertChar \n c-family-indent-on-newline
     hook -group "%val{hook_param_capture_1}-indent" window InsertChar \{ c-family-indent-on-opening-curly-brace
     hook -group "%val{hook_param_capture_1}-indent" window InsertChar \} c-family-indent-on-closing-curly-brace
-    hook -group "%val{hook_param_capture_1}-trim-indent" window ModeChange insert:.* c-family-trim-autoindent
+    hook -group "%val{hook_param_capture_1}-trim-indent" window ModeChange insert:.* c-family-trim-indent
     hook -group "%val{hook_param_capture_1}-insert" window InsertChar \n c-family-insert-on-newline
     hook -group "%val{hook_param_capture_1}-insert" window InsertChar \} c-family-insert-on-closing-curly-brace
 

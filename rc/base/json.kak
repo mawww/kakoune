@@ -20,7 +20,7 @@ add-highlighter shared/json/code/ regex \b(true|false|null|\d+(?:\.\d+)?(?:[eE][
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden json-filter-around-selections %{
+define-command -hidden json-trim-indent %{
     # remove trailing white spaces
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
@@ -37,7 +37,7 @@ define-command -hidden json-indent-on-new-line %<
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : json-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : json-trim-indent <ret> }
         # indent after lines beginning with opener token
         try %< execute-keys -draft k <a-x> <a-k> ^\h*[[{] <ret> j <a-gt> >
     >
@@ -52,7 +52,7 @@ hook -group json-highlight global WinSetOption filetype=json %{
 }
 
 hook global WinSetOption filetype=json %{
-    hook window ModeChange insert:.* -group json-hooks  json-filter-around-selections
+    hook window ModeChange insert:.* -group json-trim-indent  json-trim-indent
     hook window InsertChar .* -group json-indent json-indent-on-char
     hook window InsertChar \n -group json-indent json-indent-on-new-line
 

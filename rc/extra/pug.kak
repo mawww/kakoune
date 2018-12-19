@@ -40,7 +40,7 @@ add-highlighter shared/pug/code/            regex   ((?:\.[A-Za-z][A-Za-z0-9_-]*
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden pug-filter-around-selections %{
+define-command -hidden pug-trim-indent %{
     # remove trailing white spaces
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
@@ -50,7 +50,7 @@ define-command -hidden pug-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : pug-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : pug-trim-indent <ret> }
         # copy '//', '|', '-' or '(!)=' prefix and following whitespace
         try %{ execute-keys -draft k <a-x> s ^\h*\K[/|!=-]{1,2}\h* <ret> y gh j P }
         # indent unless we copied something above
@@ -67,7 +67,7 @@ hook -group pug-highlight global WinSetOption filetype=pug %{
 }
 
 hook global WinSetOption filetype=pug %{
-    hook window ModeChange insert:.* -group pug-hooks  pug-filter-around-selections
+    hook window ModeChange insert:.* -group pug-trim-indent  pug-trim-indent
     hook window InsertChar \n -group pug-indent pug-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pug-.+ }
