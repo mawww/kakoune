@@ -20,6 +20,21 @@ else
     endif
 endif
 
+ifneq (,$(findstring address,$(sanitize)))
+    CPPFLAGS += -fsanitize=address
+    LDFLAGS += -lasan
+    sanitize_suffix := $(sanitize_suffix)a
+endif
+ifneq (,$(findstring undefined,$(sanitize)))
+    CPPFLAGS += -fsanitize=undefined
+    LDFLAGS += -lubsan
+    sanitize_suffix := $(sanitize_suffix)u
+endif
+
+ifneq (,$(sanitize_suffix))
+    suffix := $(suffix).san_$(sanitize_suffix)
+endif
+
 version ?= $(shell if [ -f .version ]; then cat .version; elif  [ -d ../.git ]; then git describe --tags HEAD; else echo "unknown"; fi)
 
 sources := $(sort $(wildcard *.cc))
