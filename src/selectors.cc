@@ -305,7 +305,7 @@ find_opening(Iterator pos, const Container& container,
         pos = res[0].first;
 
     using RegexIt = RegexIterator<Iterator, MatchDirection::Backward>;
-    for (auto match : RegexIt{container.begin(), pos, container.begin(), container.end(), opening})
+    for (auto&& match : RegexIt{container.begin(), pos, container.begin(), container.end(), opening})
     {
         if (nestable)
         {
@@ -923,8 +923,6 @@ Selection find_next_match(const Context& context, const Selection& sel, const Re
 template Selection find_next_match<MatchDirection::Forward>(const Context&, const Selection&, const Regex&, bool&);
 template Selection find_next_match<MatchDirection::Backward>(const Context&, const Selection&, const Regex&, bool&);
 
-using RegexIt = RegexIterator<BufferIterator>;
-
 void select_all_matches(SelectionList& selections, const Regex& regex, int capture)
 {
     const int mark_count = (int)regex.mark_count();
@@ -937,21 +935,19 @@ void select_all_matches(SelectionList& selections, const Regex& regex, int captu
     {
         auto sel_beg = buffer.iterator_at(sel.min());
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
-        RegexIt re_it(sel_beg, sel_end, regex, match_flags(buffer, sel_beg, sel_end));
-        RegexIt re_end;
 
-        for (; re_it != re_end; ++re_it)
+        for (auto&& match : RegexIterator{sel_beg, sel_end, regex, match_flags(buffer, sel_beg, sel_end)})
         {
-            auto begin = (*re_it)[capture].first;
+            auto begin = match[capture].first;
             if (begin == sel_end)
                 continue;
-            auto end = (*re_it)[capture].second;
+            auto end = match[capture].second;
 
             CaptureList captures;
             captures.reserve(mark_count);
-            for (const auto& match : *re_it)
-                captures.push_back(buffer.string(match.first.coord(),
-                                                 match.second.coord()));
+            for (const auto& submatch : match)
+                captures.push_back(buffer.string(submatch.first.coord(),
+                                                 submatch.second.coord()));
 
             result.push_back(
                 keep_direction({ begin.coord(),
@@ -981,12 +977,9 @@ void split_selections(SelectionList& selections, const Regex& regex, int capture
         auto begin = buffer.iterator_at(sel.min());
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
 
-        RegexIt re_it(begin, sel_end, regex, match_flags(buffer, begin, sel_end));
-        RegexIt re_end;
-
-        for (; re_it != re_end; ++re_it)
+        for (auto&& match : RegexIterator{begin, sel_end, regex, match_flags(buffer, begin, sel_end)})
         {
-            BufferIterator end = (*re_it)[capture].first;
+            BufferIterator end = match[capture].first;
             if (end == buf_end)
                 continue;
 
@@ -995,7 +988,7 @@ void split_selections(SelectionList& selections, const Regex& regex, int capture
                 auto sel_end = (begin == end) ? end : utf8::previous(end, begin);
                 result.push_back(keep_direction({ begin.coord(), sel_end.coord() }, sel));
             }
-            begin = (*re_it)[capture].second;
+            begin = match[capture].second;
         }
         if (begin.coord() <= sel.max())
             result.push_back(keep_direction({ begin.coord(), sel.max() }, sel));

@@ -136,10 +136,9 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
     static const Regex re(R"(\bkak_(\w+)\b)");
 
     Vector<String> kak_env;
-    for (RegexIterator<const char*> it{cmdline.begin(), cmdline.end(), re}, end;
-         it != end; ++it)
+    for (auto&& match : RegexIterator{cmdline.begin(), cmdline.end(), re})
     {
-        StringView name{(*it)[1].first, (*it)[1].second};
+        StringView name{match[1].first, match[1].second};
 
         auto match_name = [&](const String& s) {
             return s.substr(0_byte, name.length()) == name and

@@ -168,77 +168,58 @@ template<typename Iterator, MatchDirection direction = MatchDirection::Forward>
 struct RegexIterator
 {
     using ValueType = MatchResults<Iterator>;
+    struct Sentinel{};
+    struct It
+    {
+        It(RegexIterator& base) : m_base(base), m_valid{m_base.next()} {}
 
-    RegexIterator() = default;
+        const ValueType& operator*() const { kak_assert(m_valid); return m_base.m_results; }
+        const ValueType* operator->() const { kak_assert(m_valid); return &m_base.m_results; }
+
+        It& operator++() { m_valid = m_base.next(); return *this; }
+
+        RegexIterator& m_base;
+        bool m_valid;
+    };
+
+    friend bool operator==(const It& lhs, Sentinel) { return not lhs.m_valid; }
+    friend bool operator!=(const It& lhs, Sentinel) { return lhs.m_valid; }
+
     RegexIterator(Iterator begin, Iterator end,
                   Iterator subject_begin, Iterator subject_end,
-                  const Regex& re,
-                  RegexExecFlags flags = RegexExecFlags::None)
-        : m_program{re.impl()}, m_next_pos{direction == MatchDirection::Forward ? begin : end},
+                  const Regex& re, RegexExecFlags flags = RegexExecFlags::None)
+        : m_vm{*re.impl()}, m_next_pos{direction == MatchDirection::Forward ? begin : end},
           m_begin{std::move(begin)}, m_end{std::move(end)},
           m_subject_begin{std::move(subject_begin)}, m_subject_end{std::move(subject_end)},
-          m_flags{flags}
-    {
-        next();
-    }
+          m_flags{flags} {}
 
     RegexIterator(const Iterator& begin, const Iterator& end, const Regex& re,
                   RegexExecFlags flags = RegexExecFlags::None)
         : RegexIterator{begin, end, begin, end, re, flags} {}
 
-    const ValueType& operator*() const { kak_assert(m_program); return m_results; }
-    const ValueType* operator->() const { kak_assert(m_program); return &m_results; }
-
-    RegexIterator& operator++()
-    {
-        next();
-        return *this;
-    }
-
-    friend bool operator==(const RegexIterator& lhs, const RegexIterator& rhs)
-    {
-        if (lhs.m_program == nullptr and rhs.m_program == nullptr)
-            return true;
-
-        return lhs.m_program == rhs.m_program and
-               lhs.m_next_pos == rhs.m_next_pos and
-               lhs.m_end == rhs.m_end and
-               lhs.m_flags == rhs.m_flags and
-               lhs.m_results == rhs.m_results;
-    }
-
-    friend bool operator!=(const RegexIterator& lhs, const RegexIterator& rhs)
-    {
-        return not (lhs == rhs);
-    }
-
-    RegexIterator begin() { return *this; }
-    RegexIterator end() { return {}; }
+    It begin() { return {*this}; }
+    Sentinel end() const { return {}; }
 
 private:
-    void next()
+    bool next()
     {
-        kak_assert(m_program);
-
         auto additional_flags = RegexExecFlags::Search;
         if (m_results.size() and m_results[0].first == m_results[0].second)
             additional_flags |= RegexExecFlags::NotInitialNull;
 
-        ThreadedRegexVM<Iterator, direction> vm{*m_program};
         constexpr bool forward = direction == MatchDirection::Forward;
 
-        if (vm.exec(forward ? m_next_pos : m_begin, forward ? m_end : m_next_pos,
-                    m_subject_begin, m_subject_end, m_flags | additional_flags))
-        {
-            m_results.values().clear();
-            std::move(vm.captures().begin(), vm.captures().end(), std::back_inserter(m_results.values()));
-            m_next_pos = (direction == MatchDirection::Forward) ? m_results[0].second : m_results[0].first;
-        }
-        else
-            m_program = nullptr;
+        if (not m_vm.exec(forward ? m_next_pos : m_begin, forward ? m_end : m_next_pos,
+                          m_subject_begin, m_subject_end, m_flags | additional_flags))
+            return false;
+
+        m_results.values().clear();
+        std::move(m_vm.captures().begin(), m_vm.captures().end(), std::back_inserter(m_results.values()));
+        m_next_pos = (direction == MatchDirection::Forward) ? m_results[0].second : m_results[0].first;
+        return true;
     }
 
-    const CompiledRegex* m_program = nullptr;
+    ThreadedRegexVM<Iterator, direction> m_vm;
     MatchResults<Iterator> m_results;
     Iterator m_next_pos{};
     const Iterator m_begin{};

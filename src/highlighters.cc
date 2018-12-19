@@ -361,20 +361,17 @@ private:
     void add_matches(const Buffer& buffer, MatchList& matches, BufferRange range)
     {
         kak_assert(matches.size() % m_faces.size() == 0);
-        using RegexIt = RegexIterator<BufferIterator>;
-        RegexIt re_it{get_iterator(buffer, range.begin),
-                      get_iterator(buffer, range.end),
-                      buffer.begin(), buffer.end(), m_regex,
-                      match_flags(is_bol(range.begin),
-                                  is_eol(buffer, range.end),
-                                  is_bow(buffer, range.begin),
-                                  is_eow(buffer, range.end))};
-        RegexIt re_end;
-        for (; re_it != re_end; ++re_it)
+        for (auto&& match : RegexIterator{get_iterator(buffer, range.begin),
+                                          get_iterator(buffer, range.end),
+                                          buffer.begin(), buffer.end(), m_regex,
+                                          match_flags(is_bol(range.begin),
+                                                      is_eol(buffer, range.end),
+                                                      is_bow(buffer, range.begin),
+                                                      is_eow(buffer, range.end))})
         {
             for (auto& face : m_faces)
             {
-                const auto& sub = (*re_it)[face.first];
+                const auto& sub = match[face.first];
                 matches.push_back({sub.first.coord(), sub.second.coord()});
             }
         }
@@ -1647,9 +1644,8 @@ using RegexMatchList = Vector<RegexMatch, MemoryDomain::Regions>;
 void append_matches(const Buffer& buffer, LineCount line, RegexMatchList& matches, const Regex& regex, bool capture)
 {
     auto l = buffer[line];
-    for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
+    for (auto&& m : RegexIterator{l.begin(), l.end(), regex})
     {
-        auto& m = *it;
         const bool with_capture = capture and m[1].matched and
                                   m[0].second - m[0].first < std::numeric_limits<uint16_t>::max();
         matches.push_back({
