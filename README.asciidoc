@@ -454,9 +454,12 @@ Changes
 
  * `r`: replace each character with the next entered one
 
- * `<a-j>`: join selected lines
- * `<a-J>`: join selected lines and select spaces inserted
-            in place of line breaks
+ * `<a-j>`: join selected lines, replacing the line break with
+            whitespace--joins lines containing words
+            to make a paragraph
+ * `<a-J>`: join selected lines, then select the inserted whitespace,
+            in case you want to delete it
+
  * `<a-m>`: merge contiguous selections together (works across lines as well)
 
  * `<gt> (>)`: indent selected lines
