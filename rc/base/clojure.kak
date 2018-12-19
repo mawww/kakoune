@@ -157,7 +157,7 @@ evaluate-commands %sh{
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden clojure-filter-around-selections lisp-filter-around-selections
+define-command -hidden clojure-trim-indent lisp-trim-indent
 
 declare-option \
     -docstring 'regex matching the head of forms which have options *and* indented bodies' \
@@ -193,7 +193,7 @@ hook -group clojure-highlight global WinSetOption filetype=clojure %{
 }
 
 hook global WinSetOption filetype=clojure %[
-    hook window ModeChange insert:.* -group clojure-hooks  clojure-filter-around-selections
+    hook window ModeChange insert:.* -group clojure-trim-indent  clojure-trim-indent
     hook window InsertChar \n -group clojure-indent clojure-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window clojure-.+ }

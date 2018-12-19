@@ -35,7 +35,7 @@ add-highlighter shared/css/selector/ regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:vari
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden css-filter-around-selections %{
+define-command -hidden css-trim-indent %{
     # remove trailing white spaces
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
@@ -45,7 +45,7 @@ define-command -hidden css-indent-on-new-line %[
         # preserve previous line indent
         try %[ execute-keys -draft \; K <a-&> ]
         # filter previous line
-        try %[ execute-keys -draft k : css-filter-around-selections <ret> ]
+        try %[ execute-keys -draft k : css-trim-indent <ret> ]
         # indent after lines ending with with {
         try %[ execute-keys -draft k <a-x> <a-k> \{$ <ret> j <a-gt> ]
     ]
@@ -67,7 +67,7 @@ hook -group css-highlight global WinSetOption filetype=css %{
 }
 
 hook global WinSetOption filetype=css %[
-    hook window ModeChange insert:.* -group css-hooks  css-filter-around-selections
+    hook window ModeChange insert:.* -group css-trim-indent  css-trim-indent
     hook window InsertChar \n -group css-indent css-indent-on-new-line
     hook window InsertChar \} -group css-indent css-indent-on-closing-curly-brace
     set-option buffer extra_word_chars '_' '-'

@@ -97,7 +97,7 @@ hook -group dart-highlight global WinSetOption filetype=dart %{
 
 hook global WinSetOption filetype=dart %{
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group dart-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange insert:.* -group dart-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group dart-indent dart-indent-on-new-line
     hook window InsertChar \{ -group dart-indent dart-indent-on-opening-curly-brace
     hook window InsertChar \} -group dart-indent dart-indent-on-closing-curly-brace

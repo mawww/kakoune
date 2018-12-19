@@ -25,7 +25,7 @@ add-highlighter shared/yaml/code/ regex ^\h*-?\h*(\S+): 1:attribute
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden yaml-filter-around-selections %{
+define-command -hidden yaml-trim-indent %{
     # remove trailing white spaces
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
@@ -37,7 +37,7 @@ define-command -hidden yaml-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : yaml-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : yaml-trim-indent <ret> }
         # indent after :
         try %{ execute-keys -draft <space> k x <a-k> :$ <ret> j <a-gt> }
     }
@@ -52,7 +52,7 @@ hook -group yaml-highlight global WinSetOption filetype=yaml %{
 }
 
 hook global WinSetOption filetype=yaml %{
-    hook window ModeChange insert:.* -group yaml-hooks  yaml-filter-around-selections
+    hook window ModeChange insert:.* -group yaml-trim-indent yaml-trim-indent
     hook window InsertChar \n -group yaml-indent yaml-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window yaml-.+ }
 }

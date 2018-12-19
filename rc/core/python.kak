@@ -143,6 +143,6 @@ hook -group python-highlight global WinSetOption filetype=python %{
 hook global WinSetOption filetype=python %{
     hook window InsertChar \n -group python-indent python-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group python-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange insert:.* -group python-trim-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window python-.+ }
 }

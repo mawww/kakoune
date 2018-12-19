@@ -73,7 +73,7 @@ hook -group i3-highlight global WinSetOption filetype=i3 %{
 
 hook global WinSetOption filetype=i3 %[
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group i3-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange insert:.* -group i3-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group i3-indent i3-indent-on-new-line
     hook window InsertChar \} -group i3-indent i3-indent-on-closing-curly-brace
 

@@ -79,7 +79,7 @@ hook -group nim-highlight global WinSetOption filetype=nim %{
 hook global WinSetOption filetype=nim %{
     hook window InsertChar \n -group nim-indent nim-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group nim-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange insert:.* -group nim-trim-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window nim-.+ }
 }

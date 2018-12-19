@@ -88,7 +88,7 @@ hook -group go-highlight global WinSetOption filetype=go %{
 
 hook global WinSetOption filetype=go %{
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group go-hooks %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange insert:.* -group go-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group go-indent go-indent-on-new-line
     hook window InsertChar \{ -group go-indent go-indent-on-opening-curly-brace
     hook window InsertChar \} -group go-indent go-indent-on-closing-curly-brace

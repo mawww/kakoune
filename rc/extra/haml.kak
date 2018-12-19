@@ -28,7 +28,7 @@ add-highlighter shared/haml/code/ regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden haml-filter-around-selections %{
+define-command -hidden haml-trim-indent %{
     # remove trailing white spaces
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
@@ -40,7 +40,7 @@ define-command -hidden haml-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : haml-filter-around-selections <ret> }
+        try %{ execute-keys -draft k : haml-trim-indent <ret> }
         # indent after lines beginning with : or -
         try %{ execute-keys -draft k <a-x> <a-k> ^\h*[:-] <ret> j <a-gt> }
     }
@@ -55,7 +55,7 @@ hook -group haml-highlight global WinSetOption filetype=haml %{
 }
 
 hook global WinSetOption filetype=haml %{
-    hook window ModeChange insert:.* -group haml-hooks  haml-filter-around-selections
+    hook window ModeChange insert:.* -group haml-trim-indent  haml-trim-indent
     hook window InsertChar \n -group haml-indent haml-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haml-.+ }
