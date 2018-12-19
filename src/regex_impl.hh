@@ -307,10 +307,10 @@ private:
     // Steps a thread until it consumes the current character, matches or fail
     void step_thread(const Iterator& pos, uint16_t current_step, Thread thread, const ExecConfig& config)
     {
-        auto failed = [this](const Thread& thread) {
+        auto failed = [this, &thread]() {
             release_saves(thread.saves);
         };
-        auto consumed = [this](const Thread& thread) {
+        auto consumed = [this, &thread]() {
             if (m_program.instructions[thread.inst].scheduled)
                 return release_saves(thread.saves);
             m_program.instructions[thread.inst].scheduled = true;
@@ -324,25 +324,25 @@ private:
             // if this instruction was already executed for this step in another thread,
             // then this thread is redundant and can be dropped
             if (inst.last_step == current_step)
-                return failed(thread);
+                return failed();
             inst.last_step = current_step;
 
             switch (inst.op)
             {
                 case CompiledRegex::Literal:
                     if (pos != config.end and inst.param == codepoint(pos, config))
-                        return consumed(thread);
-                    return failed(thread);
+                        return consumed();
+                    return failed();
                 case CompiledRegex::Literal_IgnoreCase:
                     if (pos != config.end and inst.param == to_lower(codepoint(pos, config)))
-                        return consumed(thread);
-                    return failed(thread);
+                        return consumed();
+                    return failed();
                 case CompiledRegex::AnyChar:
-                    return consumed(thread);
+                    return consumed();
                 case CompiledRegex::AnyCharExceptNewLine:
                     if (pos != config.end and codepoint(pos, config) != '\n')
-                        return consumed(thread);
-                    return failed(thread);
+                        return consumed();
+                    return failed();
                 case CompiledRegex::Jump:
                     thread.inst = static_cast<int16_t>(inst.param);
                     break;
@@ -377,74 +377,74 @@ private:
                 }
                 case CompiledRegex::Class:
                     if (pos == config.end)
-                        return failed(thread);
+                        return failed();
                     return is_character_class(m_program.character_classes[inst.param], codepoint(pos, config)) ?
-                        consumed(thread) : failed(thread);
+                        consumed() : failed();
                 case CompiledRegex::CharacterType:
                     if (pos == config.end)
-                        return failed(thread);
+                        return failed();
                     return is_ctype((CharacterType)inst.param, codepoint(pos, config)) ?
-                        consumed(thread) : failed(thread);
+                        consumed() : failed();
                 case CompiledRegex::LineStart:
                     if (not is_line_start(pos, config))
-                        return failed(thread);
+                        return failed();
                     break;
                 case CompiledRegex::LineEnd:
                     if (not is_line_end(pos, config))
-                        return failed(thread);
+                        return failed();
                     break;
                 case CompiledRegex::WordBoundary:
                     if (not is_word_boundary(pos, config))
-                        return failed(thread);
+                        return failed();
                     break;
                 case CompiledRegex::NotWordBoundary:
                     if (is_word_boundary(pos, config))
-                        return failed(thread);
+                        return failed();
                     break;
                 case CompiledRegex::SubjectBegin:
                     if (pos != config.subject_begin)
-                        return failed(thread);
+                        return failed();
                     break;
                 case CompiledRegex::SubjectEnd:
                     if (pos != config.subject_end)
-                        return failed(thread);
+                        return failed();
                     break;
                 case CompiledRegex::LookAhead:
                 case CompiledRegex::NegativeLookAhead:
                     if (lookaround<MatchDirection::Forward, false>(inst.param, pos, config) !=
                         (inst.op == CompiledRegex::LookAhead))
-                        return failed(thread);
+                        return failed();
                     break;
                 case CompiledRegex::LookAhead_IgnoreCase:
                 case CompiledRegex::NegativeLookAhead_IgnoreCase:
                     if (lookaround<MatchDirection::Forward, true>(inst.param, pos, config) !=
                         (inst.op == CompiledRegex::LookAhead_IgnoreCase))
-                        return failed(thread);
+                        return failed();
                     break;
                 case CompiledRegex::LookBehind:
                 case CompiledRegex::NegativeLookBehind:
                     if (lookaround<MatchDirection::Backward, false>(inst.param, pos, config) !=
                         (inst.op == CompiledRegex::LookBehind))
-                        return failed(thread);
+                        return failed();
                     break;
                 case CompiledRegex::LookBehind_IgnoreCase:
                 case CompiledRegex::NegativeLookBehind_IgnoreCase:
                     if (lookaround<MatchDirection::Backward, true>(inst.param, pos, config) !=
                         (inst.op == CompiledRegex::LookBehind_IgnoreCase))
-                        return failed(thread);
+                        return failed();
                     break;
                 case CompiledRegex::FindNextStart:
                     // search thread should by construction be the lowest priority thread
                     kak_assert(m_threads.current_is_empty());
                     if (not m_threads.next_is_empty())
-                        return consumed(thread);
+                        return consumed();
                     m_threads.push_next(thread);
                     m_find_next_start = true;
                     return;
                 case CompiledRegex::Match:
                     if ((pos != config.end and not (config.flags & RegexExecFlags::Search)) or
                         (config.flags & RegexExecFlags::NotInitialNull and pos == config.begin))
-                        return failed(thread);
+                        return failed();
 
                     release_saves(m_captures);
                     m_captures = thread.saves;
@@ -456,7 +456,7 @@ private:
                     return;
             }
         }
-        return failed(thread);
+        return failed();
     }
 
     bool exec_program(Iterator pos, const ExecConfig& config)
