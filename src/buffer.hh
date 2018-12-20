@@ -61,7 +61,7 @@ public:
     // costly, so this is not strictly random access
     using iterator_category = std::bidirectional_iterator_tag;
 
-    BufferIterator() noexcept : m_buffer(nullptr) {}
+    BufferIterator() noexcept : m_buffer{nullptr}, m_line{} {}
     BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept;
 
     bool operator== (const BufferIterator& iterator) const noexcept;
