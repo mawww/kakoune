@@ -1641,29 +1641,28 @@ struct RegexMatch
 };
 
 using RegexMatchList = Vector<RegexMatch, MemoryDomain::Regions>;
-void append_matches(const Buffer& buffer, LineCount line, RegexMatchList& matches, const Regex& regex, bool capture)
-{
-    auto l = buffer[line];
-    for (auto&& m : RegexIterator{l.begin(), l.end(), regex})
-    {
-        const bool with_capture = capture and m[1].matched and
-                                  m[0].second - m[0].first < std::numeric_limits<uint16_t>::max();
-        matches.push_back({
-            line,
-            (int)(m[0].first - l.begin()),
-            (int)(m[0].second - l.begin()),
-            (uint16_t)(with_capture ? m[1].first - m[0].first : 0),
-            (uint16_t)(with_capture ? m[1].second - m[1].first : 0)
-        });
-    }
-}
 
 void insert_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex, bool capture, LineRange range)
 {
     size_t pivot = matches.size();
     capture = capture and regex.mark_count() > 0;
+    ThreadedRegexVM<const char*, MatchDirection::Forward> vm{*regex.impl()};
     for (auto line = range.begin; line < range.end; ++line)
-        append_matches(buffer, line, matches, regex, capture);
+    {
+        const StringView l = buffer[line];
+        for (auto&& m : RegexIterator{l.begin(), l.end(), vm})
+        {
+            const bool with_capture = capture and m[1].matched and
+                                      m[0].second - m[0].first < std::numeric_limits<uint16_t>::max();
+            matches.push_back({
+                line,
+                (int)(m[0].first - l.begin()),
+                (int)(m[0].second - l.begin()),
+                (uint16_t)(with_capture ? m[1].first - m[0].first : 0),
+                (uint16_t)(with_capture ? m[1].second - m[1].first : 0)
+            });
+        }
+    }
 
     auto pos = std::lower_bound(matches.begin(), matches.begin() + pivot, range.begin,
                                 [](const RegexMatch& m, LineCount l) { return m.line < l; });

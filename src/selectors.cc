@@ -931,12 +931,13 @@ void select_all_matches(SelectionList& selections, const Regex& regex, int captu
 
     Vector<Selection> result;
     auto& buffer = selections.buffer();
+    ThreadedRegexVM<BufferIterator, MatchDirection::Forward> vm{*regex.impl()};
     for (auto& sel : selections)
     {
         auto sel_beg = buffer.iterator_at(sel.min());
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
 
-        for (auto&& match : RegexIterator{sel_beg, sel_end, regex, match_flags(buffer, sel_beg, sel_end)})
+        for (auto&& match : RegexIterator{sel_beg, sel_end, vm, match_flags(buffer, sel_beg, sel_end)})
         {
             auto begin = match[capture].first;
             if (begin == sel_end)
@@ -972,12 +973,13 @@ void split_selections(SelectionList& selections, const Regex& regex, int capture
     auto& buffer = selections.buffer();
     auto buf_end = buffer.end();
     auto buf_begin = buffer.begin();
+    ThreadedRegexVM<BufferIterator, MatchDirection::Forward> vm{*regex.impl()};
     for (auto& sel : selections)
     {
         auto begin = buffer.iterator_at(sel.min());
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
 
-        for (auto&& match : RegexIterator{begin, sel_end, regex, match_flags(buffer, begin, sel_end)})
+        for (auto&& match : RegexIterator{begin, sel_end, vm, match_flags(buffer, begin, sel_end)})
         {
             BufferIterator end = match[capture].first;
             if (end == buf_end)
