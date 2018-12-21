@@ -9,35 +9,46 @@ hook -group GNUscreen global KakBegin .* %sh{
     "
 }
 
-define-command screen-terminal-impl -hidden -params 3 %{
+define-command screen-terminal-impl -hidden -params 3.. %{
     nop %sh{
         tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
         screen -X eval "$1" "$2"
-        screen -X screen sh -c "$3; screen -X remove" < "/dev/$tty"
+        shift 2
+        # see x11.kak for what this achieves
+        args=$(
+            for i in "$@"; do
+                if [ "$i" = '' ]; then
+                    printf "'' "
+                else
+                    printf %s "$i" | sed -e "s|'|'\\\\''|g; s|^|'|; s|$|' |"
+                fi
+            done
+        )
+        screen -X screen sh -c "${args} ; screen -X remove" < "/dev/$tty"
     }
 }
 
-define-command screen-terminal-vertical -params 1 -shell-completion -docstring '
-screen-terminal-vertical <program>: create a new terminal as a screen pane
+define-command screen-terminal-vertical -params 1.. -shell-completion -docstring '
+screen-terminal-vertical <program> [<arguments>] [<arguments>]: create a new terminal as a screen pane
 The current pane is split into two, left and right
-The shell program passed as argument will be executed in the new terminal' \
+The program passed as argument will be executed in the new terminal' \
 %{
     screen-terminal-impl 'split -v' 'focus right' %arg{@}
 }
-define-command screen-terminal-horizontal -params 1 -shell-completion -docstring '
-screen-terminal-horizontal <program>: create a new terminal as a screen pane
+define-command screen-terminal-horizontal -params 1.. -shell-completion -docstring '
+screen-terminal-horizontal <program> [<arguments>]: create a new terminal as a screen pane
 The current pane is split into two, top and bottom
-The shell program passed as argument will be executed in the new terminal' \
+The program passed as argument will be executed in the new terminal' \
 %{
     screen-terminal-impl 'split -h' 'focus down' %arg{@}
 }
-define-command screen-terminal-window -params 1 -shell-completion -docstring '
-screen-terminal-window <program>: create a new terminal as a screen window
-The shell program passed as argument will be executed in the new terminal' \
+define-command screen-terminal-window -params 1.. -shell-completion -docstring '
+screen-terminal-window <program> [<arguments>]: create a new terminal as a screen window
+The program passed as argument will be executed in the new terminal' \
 %{
     nop %sh{
         tty="$(ps -o tty ${kak_client_pid} | tail -n 1)"
-        screen -X screen sh -c "$*" < "/dev/$tty"
+        screen -X screen "$@" < "/dev/$tty"
     }
 }
 

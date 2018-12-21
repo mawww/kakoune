@@ -12,21 +12,21 @@ hook -group kitty-hooks global KakBegin .* %sh{
     fi
 }
 
-define-command kitty-terminal -params 1 -shell-completion -docstring '
-kitty-terminal <program>: create a new terminal as a kitty window
-The shell program passed as argument will be executed in the new terminal' \
+define-command kitty-terminal -params 1.. -shell-completion -docstring '
+kitty-terminal <program> [<arguments>]: create a new terminal as a kitty window
+The program passed as argument will be executed in the new terminal' \
 %{
     nop %sh{
-        kitty @ new-window --no-response --window-type $kak_opt_kitty_window_type sh -c "$1"
+        kitty @ new-window --no-response --window-type $kak_opt_kitty_window_type "$@"
     }
 }
 
-define-command kitty-terminal-tab -params 1 -shell-completion -docstring '
-kitty-terminal-tab <program>: create a new terminal as kitty tab
-The shell program passed as argument will be executed in the new terminal' \
+define-command kitty-terminal-tab -params 1.. -shell-completion -docstring '
+kitty-terminal-tab <program> [<arguments>]: create a new terminal as kitty tab
+The program passed as argument will be executed in the new terminal' \
 %{
     nop %sh{
-        kitty @ new-window --no-response --new-tab sh -c "$1"
+        kitty @ new-window --no-response --new-tab "$@"
     }
 }
 

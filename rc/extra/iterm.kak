@@ -11,12 +11,25 @@ hook global KakBegin .* %sh{
     fi
 }
 
-define-command -hidden -params 2 iterm-terminal-split-impl %{
+define-command -hidden -params 2.. iterm-terminal-split-impl %{
     nop %sh{
-        # replace ' with '\\'' in the command
-        escaped=$(printf %s "$2" | sed -e "s|'|'\\\\\\\\''|g")
         direction="$1"
-        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' sh -c '$escaped'"
+        shift
+        # join the arguments as one string for the shell execution (see x11.kak)
+        args=$(
+            for i in "$@"; do
+                if [ "$i" = '' ]; then
+                    printf "'' "
+                else
+                    printf %s "$i" | sed -e "s|'|'\\\\''|g; s|^|'|; s|$|' |"
+                fi
+            done
+        )
+        # go through another round of escaping for osascript
+        # \ -> \\
+        # " -> \"
+        escaped=$(printf %s "$args" | sed -e 's|\|\\\\|g; s|"|\\"|g')
+        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' $escaped"
         osascript                                                                             \
         -e "tell application \"iTerm\""                                                       \
         -e "    tell current session of current window"                                       \
@@ -26,28 +39,38 @@ define-command -hidden -params 2 iterm-terminal-split-impl %{
     }
 }
 
-define-command iterm-terminal-vertical -params 1 -shell-completion -docstring '
-iterm-terminal-vertical <program>: create a new terminal as an iterm pane
+define-command iterm-terminal-vertical -params 1.. -shell-completion -docstring '
+iterm-terminal-vertical <program> [<arguments>]: create a new terminal as an iterm pane
 The current pane is split into two, top and bottom
-The shell program passed as argument will be executed in the new terminal'\
+The program passed as argument will be executed in the new terminal'\
 %{
     iterm-terminal-split-impl 'vertically' %arg{1}
 }
-define-command iterm-terminal-horizontal -params 1 -shell-completion -docstring '
-iterm-terminal-horizontal <program>: create a new terminal as an iterm pane
+define-command iterm-terminal-horizontal -params 1.. -shell-completion -docstring '
+iterm-terminal-horizontal <program> [<arguments>]: create a new terminal as an iterm pane
 The current pane is split into two, left and right
-The shell program passed as argument will be executed in the new terminal'\
+The program passed as argument will be executed in the new terminal'\
 %{
     iterm-terminal-split-impl 'horizontally' %arg{1}
 }
 
-define-command iterm-terminal-tab -params 1 -shell-completion -docstring '
-iterm-terminal-tab <program>: create a new terminal as an iterm tab
-The shell program passed as argument will be executed in the new terminal'\
+define-command iterm-terminal-tab -params 1.. -shell-completion -docstring '
+iterm-terminal-tab <program> [<arguments>]: create a new terminal as an iterm tab
+The program passed as argument will be executed in the new terminal'\
 %{
     nop %sh{
-        escaped=$(printf %s "$1" | sed -e "s|'|'\\\\\\\\''|g")
-        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' sh -c '$escaped'"
+        # see above
+        args=$(
+            for i in "$@"; do
+                if [ "$i" = '' ]; then
+                    printf "'' "
+                else
+                    printf %s "$i" | sed -e "s|'|'\\\\''|g; s|^|'|; s|$|' |"
+                fi
+            done
+        )
+        escaped=$(printf %s "$args" | sed -e 's|\|\\\\|g; s|"|\\"|g')
+        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' $escaped"
         osascript                                                       \
         -e "tell application \"iTerm\""                                 \
         -e "    tell current window"                                    \
@@ -58,12 +81,22 @@ The shell program passed as argument will be executed in the new terminal'\
 }
 
 define-command iterm-terminal-window -params 1 -shell-completion -docstring '
-iterm-terminal-window <program>: create a new terminal as an iterm window
-The shell program passed as argument will be executed in the new terminal'\
+iterm-terminal-window <program> [<arguments>]: create a new terminal as an iterm window
+The program passed as argument will be executed in the new terminal'\
 %{
     nop %sh{
-        escaped=$(printf %s "$1" | sed -e "s|'|'\\\\\\\\''|g")
-        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' sh -c '$escaped'"
+        # see above
+        args=$(
+            for i in "$@"; do
+                if [ "$i" = '' ]; then
+                    printf "'' "
+                else
+                    printf %s "$i" | sed -e "s|'|'\\\\''|g; s|^|'|; s|$|' |"
+                fi
+            done
+        )
+        escaped=$(printf %s "$args" | sed -e 's|\|\\\\|g; s|"|\\"|g')
+        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' $escaped"
         osascript                                                      \
         -e "tell application \"iTerm\""                                \
         -e "    create window with default profile command \"${cmd}\"" \

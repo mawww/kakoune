@@ -4,11 +4,7 @@ The ''terminal'' alias is being used to determine the user''s preferred terminal
 The optional arguments are passed as commands to the new client' \
 %{
     try %{
-        terminal %sh{
-            # double-up single-quotes
-            escaped=$(printf %s "$*" | sed -e "s|'|''|g")
-            printf "kak -c '%s' -e '%s'" "$kak_session" "$escaped"
-        }
+        terminal kak -c %val{session} -e "%arg{@}"
     } catch %{
         fail "The 'terminal' alias must be defined to use this command"
     }
