@@ -109,7 +109,7 @@ back the original values. For example, if you want to process the contents
 of each selection, you can do something like:
 
 ----
-eval set -- $kak_selections
+eval set -- "$kak_selections"
 while [ $# -gt 0 ]; do
     # ... do a thing with $1 ...
     shift
