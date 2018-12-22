@@ -92,9 +92,20 @@ struct MouseHandler
         Buffer& buffer = context.buffer();
         BufferCoord cursor;
         auto& selections = context.selections();
-        switch ((Key::Modifiers)(key.modifiers & Key::Modifiers::MouseEvent))
+        const auto key_modifier = (Key::Modifiers)(key.modifiers & Key::Modifiers::MouseEvent);
+        switch (key_modifier)
         {
-        case Key::Modifiers::MousePress:
+        case Key::Modifiers::MousePressRight:
+            m_dragging = false;
+            cursor = context.window().buffer_coord(key.coord());
+            if (key.modifiers & Key::Modifiers::Control)
+                selections = {{selections.begin()->anchor(), cursor}};
+            else
+                selections.main() = {selections.main().anchor(), cursor};
+            selections.sort_and_merge_overlapping();
+            return true;
+
+        case Key::Modifiers::MousePressLeft:
             m_dragging = true;
             m_anchor = context.window().buffer_coord(key.coord());
             if (not (key.modifiers & Key::Modifiers::Control))
@@ -108,7 +119,8 @@ struct MouseHandler
             }
             return true;
 
-        case Key::Modifiers::MouseRelease:
+        case Key::Modifiers::MouseReleaseLeft:
+        case Key::Modifiers::MouseReleaseRight:
             if (not m_dragging)
                 return true;
             m_dragging = false;

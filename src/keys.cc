@@ -152,10 +152,14 @@ String key_to_str(Key key)
         {
             case Key::Modifiers::MousePos:
                 return format("<mouse:move:{}.{}>", coord.line, coord.column);
-            case Key::Modifiers::MousePress:
-                return format("<mouse:press:{}.{}>", coord.line, coord.column);
-            case Key::Modifiers::MouseRelease:
-                return format("<mouse:release:{}.{}>", coord.line, coord.column);
+            case Key::Modifiers::MousePressLeft:
+                return format("<mouse:press_left:{}.{}>", coord.line, coord.column);
+            case Key::Modifiers::MousePressRight:
+                return format("<mouse:press_right:{}.{}>", coord.line, coord.column);
+            case Key::Modifiers::MouseReleaseLeft:
+                return format("<mouse:release_left:{}.{}>", coord.line, coord.column);
+            case Key::Modifiers::MouseReleaseRight:
+                return format("<mouse:release_right:{}.{}>", coord.line, coord.column);
             case Key::Modifiers::MouseWheelDown:
                 return "<mouse:wheel_down>";
             case Key::Modifiers::MouseWheelUp:

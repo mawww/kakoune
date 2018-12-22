@@ -424,10 +424,14 @@ void JsonUI::eval_json(const Value& json)
         const Codepoint coord = encode_coord({params[1].as<int>(), params[2].as<int>()});
         if (type == "move")
             m_on_key({Key::Modifiers::MousePos, coord});
-        else if (type == "press")
-            m_on_key({Key::Modifiers::MousePress, coord});
-        else if (type == "release")
-            m_on_key({Key::Modifiers::MouseRelease, coord});
+        else if (type == "press_left")
+            m_on_key({Key::Modifiers::MousePressLeft, coord});
+        else if (type == "press_right")
+            m_on_key({Key::Modifiers::MousePressRight, coord});
+        else if (type == "release_left")
+            m_on_key({Key::Modifiers::MouseReleaseLeft, coord});
+        else if (type == "release_right")
+            m_on_key({Key::Modifiers::MouseReleaseRight, coord});
         else if (type == "wheel_up")
             m_on_key({Key::Modifiers::MouseWheelUp, coord});
         else if (type == "wheel_down")
