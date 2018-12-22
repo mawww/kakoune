@@ -24,7 +24,8 @@ install:
         export CXX=g++-7;
       fi;
     elif [ $TRAVIS_OS_NAME = osx ]; then
-      brew outdated gcc || brew upgrade gcc;
+      brew install gcc@7;
+      export CXX=g++-7
     fi;
 env:
   global:
