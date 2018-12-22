@@ -808,11 +808,12 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
 template<MatchDirection direction>
 void select_next_matches(Context& context, const Regex& regex, int count)
 {
+     const int capture_count = context.get_last_capture_count();
      auto& selections = context.selections();
      do {
          bool wrapped = false;
          for (auto& sel : selections)
-             sel = keep_direction(find_next_match<direction>(context, sel, regex, wrapped), sel);
+             sel = keep_direction(find_next_match<direction>(context, sel, regex, capture_count, wrapped), sel);
          selections.sort_and_merge_overlapping();
      } while (--count > 0);
 }
@@ -820,6 +821,7 @@ void select_next_matches(Context& context, const Regex& regex, int count)
 template<MatchDirection direction>
 void extend_to_next_matches(Context& context, const Regex& regex, int count)
 {
+     const int capture_count = context.get_last_capture_count();
      Vector<Selection> new_sels;
      auto& selections = context.selections();
      do {
@@ -827,7 +829,7 @@ void extend_to_next_matches(Context& context, const Regex& regex, int count)
          size_t main_index = selections.main_index();
          for (auto& sel : selections)
          {
-             auto new_sel = find_next_match<direction>(context, sel, regex, wrapped);
+             auto new_sel = find_next_match<direction>(context, sel, regex, capture_count, wrapped);
              if (not wrapped)
              {
                  new_sels.push_back(sel);
@@ -853,6 +855,8 @@ void search(Context& context, NormalParams params)
 
     const char reg = to_lower(params.reg ? params.reg : '/');
     const int count = params.count;
+
+    context.set_last_capture_count(0);
 
     auto reg_content = RegisterManager::instance()[reg].get(context);
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
@@ -881,6 +885,7 @@ void search(Context& context, NormalParams params)
 template<SelectMode mode, MatchDirection direction>
 void search_next(Context& context, NormalParams params)
 {
+    const int capture_count = context.get_last_capture_count();
     const char reg = to_lower(params.reg ? params.reg : '/');
     StringView str = context.main_sel_register_value(reg);
     if (not str.empty())
@@ -893,12 +898,12 @@ void search_next(Context& context, NormalParams params)
             if (mode == SelectMode::Replace)
             {
                 auto& sel = selections.main();
-                sel = keep_direction(find_next_match<direction>(context, sel, regex, wrapped), sel);
+                sel = keep_direction(find_next_match<direction>(context, sel, regex, capture_count, wrapped), sel);
             }
             else if (mode == SelectMode::Append)
             {
                 auto sel = keep_direction(
-                    find_next_match<direction>(context, selections.main(), regex, wrapped),
+                    find_next_match<direction>(context, selections.main(), regex, capture_count, wrapped),
                     selections.main());
                 selections.push_back(std::move(sel));
                 selections.set_main_index(selections.size() - 1);
@@ -947,6 +952,8 @@ void select_regex(Context& context, NormalParams params)
     const char reg = to_lower(params.reg ? params.reg : '/');
     const int capture = params.count;
     auto prompt = capture ? format("select (capture {}):", capture) :  "select:"_str;
+
+    context.set_last_capture_count(capture);
 
     auto reg_content = RegisterManager::instance()[reg].get(context);
     Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
