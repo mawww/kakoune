@@ -12,6 +12,9 @@ released versions.
   the ncurses one. Can be favored by setting the ui option 
   `ncurses_builtin_key_parser` to `true`.
 
+* Right clicks extend the current selection, the control modifier allows
+  merging all the selections after extension
+
 == Kakoune 2018.10.27
 
 * `remove-hooks` <group> argument is now a regex and removes all
