@@ -7,7 +7,7 @@
 
 evaluate-commands %sh{
     for dep in gocode goimports gogetdoc jq; do
-        if ! command -v $dep > /dev/null 2>&1; then
+        if ! command -v $dep > /dev/null; then
             echo "echo -debug %{Dependency unmet: $dep, please install it to use go-tools}"
         fi
     done
