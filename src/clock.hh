@@ -8,7 +8,6 @@ namespace Kakoune
 
 using Clock = std::chrono::steady_clock;
 using TimePoint = Clock::time_point;
-using DurationMs = std::chrono::milliseconds;
 
 }
 

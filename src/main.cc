@@ -658,8 +658,11 @@ int run_server(StringView session, StringView server_init,
     UnitTest::run_all_tests();
 
     if (debug_flags & DebugFlags::Profile)
+    {
+        using namespace std::chrono;
         write_to_debug_buffer(format("running the unit tests took {} ms",
-            std::chrono::duration_cast<DurationMs>(Clock::now() - start_time).count()));
+                                     duration_cast<milliseconds>(Clock::now() - start_time).count()));
+    }
 
     GlobalScope::instance().options().get_local_option("readonly").set<bool>(flags & ServerFlags::ReadOnly);
 
