@@ -1646,7 +1646,7 @@ void insert_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& 
 {
     size_t pivot = matches.size();
     capture = capture and regex.mark_count() > 0;
-    ThreadedRegexVM<const char*, MatchDirection::Forward> vm{*regex.impl()};
+    ThreadedRegexVM<const char*, RegexMode::Forward | RegexMode::Search> vm{*regex.impl()};
     for (auto line = range.begin; line < range.end; ++line)
     {
         const StringView l = buffer[line];

@@ -92,14 +92,15 @@ struct ParsedRegex
 namespace
 {
 
-template<MatchDirection direction = MatchDirection::Forward>
+template<RegexMode mode = RegexMode::Forward>
 struct Children
 {
+    static_assert(has_direction(mode));
     using Index = ParsedRegex::NodeIndex;
     struct Sentinel {};
     struct Iterator
     {
-        static constexpr bool forward = direction == MatchDirection::Forward;
+        static constexpr bool forward = mode & RegexMode::Forward;
         Iterator(ArrayView<const ParsedRegex::Node> nodes, Index index)
           : m_nodes{nodes},
             m_pos(forward ? index+1 : find_prev(index, nodes[index].children_end)),
@@ -681,18 +682,18 @@ struct RegexCompiler
 
         if (not (flags & RegexCompileFlags::NoForward))
         {
-            m_program.forward_start_desc = compute_start_desc<MatchDirection::Forward>();
+            m_program.forward_start_desc = compute_start_desc<RegexMode::Forward>();
             write_search_prefix();
-            compile_node<MatchDirection::Forward>(0);
+            compile_node<RegexMode::Forward>(0);
             push_inst(CompiledRegex::Match);
         }
 
         if (flags & RegexCompileFlags::Backward)
         {
             m_program.first_backward_inst = m_program.instructions.size();
-            m_program.backward_start_desc = compute_start_desc<MatchDirection::Backward>();
+            m_program.backward_start_desc = compute_start_desc<RegexMode::Backward>();
             write_search_prefix();
-            compile_node<MatchDirection::Backward>(0);
+            compile_node<RegexMode::Backward>(0);
             push_inst(CompiledRegex::Match);
         }
         else
@@ -707,7 +708,7 @@ struct RegexCompiler
 
 private:
 
-    template<MatchDirection direction>
+    template<RegexMode direction>
     uint32_t compile_node_inner(ParsedRegex::NodeIndex index)
     {
         auto& node = get_node(index);
@@ -717,7 +718,7 @@ private:
 
         const bool save = (node.op == ParsedRegex::Alternation or node.op == ParsedRegex::Sequence) and
                           (node.value == 0 or (node.value != -1 and not (m_flags & RegexCompileFlags::NoSubs)));
-        constexpr bool forward = direction == MatchDirection::Forward;
+        constexpr bool forward = direction == RegexMode::Forward;
         if (save)
             push_inst(CompiledRegex::Save, node.value * 2 + (forward ? 0 : 1));
 
@@ -774,22 +775,22 @@ private:
             case ParsedRegex::LookAhead:
                 push_inst(ignore_case ? CompiledRegex::LookAhead_IgnoreCase
                                       : CompiledRegex::LookAhead,
-                          push_lookaround<MatchDirection::Forward>(index, ignore_case));
+                          push_lookaround<RegexMode::Forward>(index, ignore_case));
                 break;
             case ParsedRegex::NegativeLookAhead:
                 push_inst(ignore_case ? CompiledRegex::NegativeLookAhead_IgnoreCase
                                       : CompiledRegex::NegativeLookAhead,
-                          push_lookaround<MatchDirection::Forward>(index, ignore_case));
+                          push_lookaround<RegexMode::Forward>(index, ignore_case));
                 break;
             case ParsedRegex::LookBehind:
                 push_inst(ignore_case ? CompiledRegex::LookBehind_IgnoreCase
                                       : CompiledRegex::LookBehind,
-                          push_lookaround<MatchDirection::Backward>(index, ignore_case));
+                          push_lookaround<RegexMode::Backward>(index, ignore_case));
                 break;
             case ParsedRegex::NegativeLookBehind:
                 push_inst(ignore_case ? CompiledRegex::NegativeLookBehind_IgnoreCase
                                       : CompiledRegex::NegativeLookBehind,
-                          push_lookaround<MatchDirection::Backward>(index, ignore_case));
+                          push_lookaround<RegexMode::Backward>(index, ignore_case));
                 break;
             case ParsedRegex::LineStart:
                 push_inst(CompiledRegex::LineStart);
@@ -823,7 +824,7 @@ private:
         return start_pos;
     }
 
-    template<MatchDirection direction>
+    template<RegexMode direction>
     uint32_t compile_node(ParsedRegex::NodeIndex index)
     {
         auto& node = get_node(index);
@@ -885,7 +886,7 @@ private:
         return res;
     }
 
-    template<MatchDirection direction>
+    template<RegexMode direction>
     uint32_t push_lookaround(ParsedRegex::NodeIndex index, bool ignore_case)
     {
         using Lookaround = CompiledRegex::Lookaround;
@@ -915,7 +916,7 @@ private:
     // Mutate start_desc with informations on which Codepoint could start a match.
     // Returns true if the node possibly does not consume the char, in which case
     // the next node would still be relevant for the parent node start chars computation.
-    template<MatchDirection direction>
+    template<RegexMode direction>
     bool compute_start_desc(ParsedRegex::NodeIndex index,
                              CompiledRegex::StartDesc& start_desc) const
     {
@@ -1018,7 +1019,7 @@ private:
         return false;
     }
 
-    template<MatchDirection direction>
+    template<RegexMode direction>
     [[gnu::noinline]]
     std::unique_ptr<CompiledRegex::StartDesc> compute_start_desc() const
     {
@@ -1199,18 +1200,18 @@ bool is_ctype(CharacterType ctype, Codepoint cp)
 
 namespace
 {
-template<MatchDirection dir = MatchDirection::Forward>
-struct TestVM : CompiledRegex, ThreadedRegexVM<const char*, dir>
+template<RegexMode mode = RegexMode::Forward>
+struct TestVM : CompiledRegex, ThreadedRegexVM<const char*, mode>
 {
-    using VMType = ThreadedRegexVM<const char*, dir>;
+    using VMType = ThreadedRegexVM<const char*, mode>;
 
     TestVM(StringView re, bool dump = false)
-        : CompiledRegex{compile_regex(re, dir == MatchDirection::Forward ?
+        : CompiledRegex{compile_regex(re, mode & RegexMode::Forward ?
                                           RegexCompileFlags::None : RegexCompileFlags::Backward)},
           VMType{(const CompiledRegex&)*this}
     { if (dump) puts(dump_regex(*this).c_str()); }
 
-    bool exec(StringView re, RegexExecFlags flags = RegexExecFlags::AnyMatch)
+    bool exec(StringView re, RegexExecFlags flags = RegexExecFlags::None)
     {
         return VMType::exec(re.begin(), re.end(), re.begin(), re.end(), flags);
     }
@@ -1294,11 +1295,11 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        TestVM<> vm{R"(f.*a(.*o))"};
-        kak_assert(vm.exec("blahfoobarfoobaz", RegexExecFlags::Search));
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{R"(f.*a(.*o))"};
+        kak_assert(vm.exec("blahfoobarfoobaz"));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]} == "foobarfoo");
         kak_assert(StringView{vm.captures()[2], vm.captures()[3]} == "rfoo");
-        kak_assert(vm.exec("mais que fais la police", RegexExecFlags::Search));
+        kak_assert(vm.exec("mais que fais la police"));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]} == "fais la po");
         kak_assert(StringView{vm.captures()[2], vm.captures()[3]} == " po");
     }
@@ -1358,21 +1359,21 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        TestVM<> vm{R"(foo\Kbar)"};
-        kak_assert(vm.exec("foobar", RegexExecFlags::None));
+        TestVM<RegexMode::Forward> vm{R"(foo\Kbar)"};
+        kak_assert(vm.exec("foobar"));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]} == "bar");
-        kak_assert(not vm.exec("bar", RegexExecFlags::None));
+        kak_assert(not vm.exec("bar"));
     }
 
     {
-        TestVM<> vm{R"((fo+?).*)"};
-        kak_assert(vm.exec("foooo", RegexExecFlags::None));
+        TestVM<RegexMode::Forward> vm{R"((fo+?).*)"};
+        kak_assert(vm.exec("foooo"));
         kak_assert(StringView{vm.captures()[2], vm.captures()[3]} == "fo");
     }
 
     {
-        TestVM<> vm{R"((?=fo[\w]).)"};
-        kak_assert(vm.exec("barfoo", RegexExecFlags::Search));
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{R"((?=fo[\w]).)"};
+        kak_assert(vm.exec("barfoo"));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]} == "f");
     }
 
@@ -1423,66 +1424,66 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        TestVM<> vm{R"((?<!\\)(?:\\\\)*")"};
-        kak_assert(vm.exec("foo\"", RegexExecFlags::Search));
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{R"((?<!\\)(?:\\\\)*")"};
+        kak_assert(vm.exec("foo\""));
     }
 
     {
-        TestVM<> vm{R"($)"};
-        kak_assert(vm.exec("foo\n", RegexExecFlags::Search));
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{R"($)"};
+        kak_assert(vm.exec("foo\n"));
         kak_assert(*vm.captures()[0] == '\n');
     }
 
     {
-        TestVM<MatchDirection::Backward> vm{R"(fo{1,})"};
-        kak_assert(vm.exec("foo1fooo2", RegexExecFlags::Search));
+        TestVM<RegexMode::Backward | RegexMode::Search> vm{R"(fo{1,})"};
+        kak_assert(vm.exec("foo1fooo2"));
         kak_assert(*vm.captures()[1] == '2');
     }
 
     {
-        TestVM<MatchDirection::Backward> vm{R"((?<=f)oo(b[ae]r)?(?=baz))"};
-        kak_assert(vm.exec("foobarbazfoobazfooberbaz", RegexExecFlags::Search));
+        TestVM<RegexMode::Backward | RegexMode::Search> vm{R"((?<=f)oo(b[ae]r)?(?=baz))"};
+        kak_assert(vm.exec("foobarbazfoobazfooberbaz"));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]}  == "oober");
         kak_assert(StringView{vm.captures()[2], vm.captures()[3]}  == "ber");
     }
 
     {
-        TestVM<MatchDirection::Backward> vm{R"((baz|boz|foo|qux)(?<!baz)(?<!o))"};
-        kak_assert(vm.exec("quxbozfoobaz", RegexExecFlags::Search));
+        TestVM<RegexMode::Backward | RegexMode::Search> vm{R"((baz|boz|foo|qux)(?<!baz)(?<!o))"};
+        kak_assert(vm.exec("quxbozfoobaz"));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]}  == "boz");
     }
 
     {
-        TestVM<MatchDirection::Backward> vm{R"(foo)"};
-        kak_assert(vm.exec("foofoo", RegexExecFlags::Search));
+        TestVM<RegexMode::Backward | RegexMode::Search> vm{R"(foo)"};
+        kak_assert(vm.exec("foofoo"));
         kak_assert(*vm.captures()[1]  == 0);
     }
 
     {
-        TestVM<MatchDirection::Backward> vm{R"($)"};
-        kak_assert(vm.exec("foo\nbar\nbaz\nqux", RegexExecFlags::Search | RegexExecFlags::NotEndOfLine));
+        TestVM<RegexMode::Backward | RegexMode::Search> vm{R"($)"};
+        kak_assert(vm.exec("foo\nbar\nbaz\nqux", RegexExecFlags::NotEndOfLine));
         kak_assert(StringView{vm.captures()[0]}  == "\nqux");
-        kak_assert(vm.exec("foo\nbar\nbaz\nqux", RegexExecFlags::Search));
+        kak_assert(vm.exec("foo\nbar\nbaz\nqux", RegexExecFlags::None));
         kak_assert(StringView{vm.captures()[0]}  == "");
     }
 
     {
-        TestVM<MatchDirection::Backward> vm{R"(^)"};
-        kak_assert(not vm.exec("foo", RegexExecFlags::Search | RegexExecFlags::NotBeginOfLine));
-        kak_assert(vm.exec("foo", RegexExecFlags::Search));
-        kak_assert(vm.exec("foo\nbar", RegexExecFlags::Search));
+        TestVM<RegexMode::Backward | RegexMode::Search> vm{R"(^)"};
+        kak_assert(not vm.exec("foo", RegexExecFlags::NotBeginOfLine));
+        kak_assert(vm.exec("foo", RegexExecFlags::None));
+        kak_assert(vm.exec("foo\nbar", RegexExecFlags::None));
         kak_assert(StringView{vm.captures()[0]}  == "bar");
     }
 
     {
-        TestVM<MatchDirection::Backward> vm{R"(\A\w+)"};
-        kak_assert(vm.exec("foo\nbar\nbaz", RegexExecFlags::Search));
+        TestVM<RegexMode::Backward | RegexMode::Search> vm{R"(\A\w+)"};
+        kak_assert(vm.exec("foo\nbar\nbaz", RegexExecFlags::None));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]}  == "foo");
     }
 
     {
-        TestVM<MatchDirection::Backward> vm{R"(\b\w+\z)"};
-        kak_assert(vm.exec("foo\nbar\nbaz", RegexExecFlags::Search));
+        TestVM<RegexMode::Backward | RegexMode::Search> vm{R"(\b\w+\z)"};
+        kak_assert(vm.exec("foo\nbar\nbaz", RegexExecFlags::None));
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]}  == "baz");
     }
 
@@ -1492,8 +1493,8 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        TestVM<> vm{R"(\b(?<!-)(a|b|)(?!-)\b)"};
-        kak_assert(vm.exec("# foo bar", RegexExecFlags::Search));
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{R"(\b(?<!-)(a|b|)(?!-)\b)"};
+        kak_assert(vm.exec("# foo bar", RegexExecFlags::None));
         kak_assert(*vm.captures()[0] == '#');
     }
 
@@ -1503,19 +1504,19 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        TestVM<> vm{R"((?i)FOO)"};
-        kak_assert(vm.exec("foo", RegexExecFlags::Search));
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{R"((?i)FOO)"};
+        kak_assert(vm.exec("foo", RegexExecFlags::None));
     }
 
     {
-        TestVM<> vm{R"(.?(?=foo))"};
-        kak_assert(vm.exec("afoo", RegexExecFlags::Search));
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{R"(.?(?=foo))"};
+        kak_assert(vm.exec("afoo", RegexExecFlags::None));
         kak_assert(*vm.captures()[0] == 'a');
     }
 
     {
-        TestVM<> vm{R"((?i)(?=Foo))"};
-        kak_assert(vm.exec("fOO", RegexExecFlags::Search));
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{R"((?i)(?=Foo))"};
+        kak_assert(vm.exec("fOO", RegexExecFlags::None));
         kak_assert(*vm.captures()[0] == 'f');
     }
 
@@ -1530,8 +1531,8 @@ auto test_regex = UnitTest{[]{
     }
 
     {
-        TestVM<> vm{R"(д)"};
-        kak_assert(vm.exec("д", RegexExecFlags::Search));
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{R"(д)"};
+        kak_assert(vm.exec("д", RegexExecFlags::None));
     }
 
     {

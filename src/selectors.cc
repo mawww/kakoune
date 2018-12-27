@@ -304,7 +304,7 @@ find_opening(Iterator pos, const Container& container,
         res[0].second == pos)
         pos = res[0].first;
 
-    using RegexIt = RegexIterator<Iterator, MatchDirection::Backward>;
+    using RegexIt = RegexIterator<Iterator, RegexMode::Backward>;
     for (auto&& match : RegexIt{container.begin(), pos, container.begin(), container.end(), opening})
     {
         if (nestable)
@@ -332,7 +332,7 @@ find_closing(Iterator pos, const Container& container,
                      res, opening) and res[0].first == pos)
         pos = res[0].second;
 
-    using RegexIt = RegexIterator<Iterator, MatchDirection::Forward>;
+    using RegexIt = RegexIterator<Iterator, RegexMode::Forward>;
     for (auto match : RegexIt{pos, container.end(), container.begin(), container.end(), closing})
     {
         if (nestable)
@@ -895,14 +895,16 @@ static bool find_prev(const Buffer& buffer, const BufferIterator& pos,
                                  RegexExecFlags::NotInitialNull);
 }
 
-template<MatchDirection direction>
+template<RegexMode mode>
 Selection find_next_match(const Context& context, const Selection& sel, const Regex& regex, bool& wrapped)
 {
+    static_assert(is_direction(mode));
+    constexpr bool forward = mode & RegexMode::Forward;
     auto& buffer = context.buffer();
     MatchResults<BufferIterator> matches;
-    auto pos = buffer.iterator_at(direction == MatchDirection::Backward ? sel.min() : sel.max());
+    auto pos = buffer.iterator_at(forward ? sel.max() : sel.min());
     wrapped = false;
-    const bool found = (direction == MatchDirection::Forward) ?
+    const bool found = forward ?
         find_next(buffer, utf8::next(pos, buffer.end()), matches, regex, wrapped)
       : find_prev(buffer, pos, matches, regex, wrapped);
 
@@ -915,13 +917,13 @@ Selection find_next_match(const Context& context, const Selection& sel, const Re
 
     auto begin = matches[0].first, end = matches[0].second;
     end = (begin == end) ? end : utf8::previous(end, begin);
-    if (direction == MatchDirection::Backward)
+    if (not forward)
         std::swap(begin, end);
 
     return {begin.coord(), end.coord(), std::move(captures)};
 }
-template Selection find_next_match<MatchDirection::Forward>(const Context&, const Selection&, const Regex&, bool&);
-template Selection find_next_match<MatchDirection::Backward>(const Context&, const Selection&, const Regex&, bool&);
+template Selection find_next_match<RegexMode::Forward>(const Context&, const Selection&, const Regex&, bool&);
+template Selection find_next_match<RegexMode::Backward>(const Context&, const Selection&, const Regex&, bool&);
 
 void select_all_matches(SelectionList& selections, const Regex& regex, int capture)
 {
@@ -931,7 +933,7 @@ void select_all_matches(SelectionList& selections, const Regex& regex, int captu
 
     Vector<Selection> result;
     auto& buffer = selections.buffer();
-    ThreadedRegexVM<BufferIterator, MatchDirection::Forward> vm{*regex.impl()};
+    ThreadedRegexVM<BufferIterator, RegexMode::Forward | RegexMode::Search> vm{*regex.impl()};
     for (auto& sel : selections)
     {
         auto sel_beg = buffer.iterator_at(sel.min());
@@ -973,7 +975,7 @@ void split_selections(SelectionList& selections, const Regex& regex, int capture
     auto& buffer = selections.buffer();
     auto buf_end = buffer.end();
     auto buf_begin = buffer.begin();
-    ThreadedRegexVM<BufferIterator, MatchDirection::Forward> vm{*regex.impl()};
+    ThreadedRegexVM<BufferIterator, RegexMode::Forward | RegexMode::Search> vm{*regex.impl()};
     for (auto& sel : selections)
     {
         auto begin = buffer.iterator_at(sel.min());
