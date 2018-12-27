@@ -20,6 +20,10 @@
 #include <fcntl.h>
 #include <cstdlib>
 
+#if defined(__CYGWIN__)
+#define vfork fork
+#endif
+
 extern char **environ;
 
 namespace Kakoune
