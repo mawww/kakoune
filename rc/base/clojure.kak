@@ -16,6 +16,7 @@ hook global BufCreate .*[.](clj|cljc|cljs|cljx|edn) %{
 add-highlighter shared/clojure regions
 add-highlighter shared/clojure/code default-region group
 add-highlighter shared/clojure/comment region '(?<!\\)(?:\\\\)*\K;' '$'                 fill comment
+add-highlighter shared/clojure/shebang region '(?<!\\)(?:\\\\)*\K#!' '$'                fill comment
 add-highlighter shared/clojure/string  region '(?<!\\)(?:\\\\)*\K"' '(?<!\\)(?:\\\\)*"' fill string
 
 add-highlighter shared/clojure/code/ regex \b(nil|true|false)\b 0:value
@@ -30,7 +31,7 @@ evaluate-commands %sh{
     symbol_char='[^\s()\[\]{}"\;@^`~\\%/]'
     in_core='(clojure\.core/|(?<!/))'
     keywords="
-    case cond cond-> cond->> def definline definterface defmacro defmethod
+    case cond condp cond-> cond->> def definline definterface defmacro defmethod
     defmulti defn defn- defonce defprotocol defrecord defstruct deftype fn if
     if-let if-not if-some let letfn new ns when when-first when-let when-not
     when-some . .."
@@ -141,7 +142,7 @@ evaluate-commands %sh{
         add-highlighter shared/clojure/code/ regex ::?(${symbol_char}+/)?${symbol_char}+ 0:value
 
         # Numbers
-        add-highlighter shared/clojure/code/ regex (?<!${symbol_char})[-+]?(?:0(?:[xX][0-9a-fA-F]+|[0-7]*)|[1-9]+)N? 0:value
+        add-highlighter shared/clojure/code/ regex (?<!${symbol_char})[-+]?(?:0(?:[xX][0-9a-fA-F]+|[0-7]*)|[1-9]\d*)N? 0:value
         add-highlighter shared/clojure/code/ regex (?<!${symbol_char})[-+]?(?:0|[1-9]\d*)(?:\.\d*)(?:M|[eE][-+]?\d+)? 0:value
         add-highlighter shared/clojure/code/ regex (?<!${symbol_char})[-+]?(?:0|[1-9]\d*)/(?:0|[1-9]\d*) 0:value
 
