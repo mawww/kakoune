@@ -35,7 +35,8 @@ evaluate-commands %sh{
     keywords="${keywords}|with|without|xor|yield"
     types="int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|float"
     types="${types}|float32|float64|bool|char|object|seq|array|cstring|string"
-    types="${types}|tuple|varargs|typedesc|pointer|byte|set"
+    types="${types}|tuple|varargs|typedesc|pointer|byte|set|typed|untyped"
+    types="${types}|void"
     values="false|true"
 
     # Add the language's grammar to the static completion list
