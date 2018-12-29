@@ -13,7 +13,7 @@ hook global BufCreate .*\.nim(s|ble)? %{
 
 add-highlighter shared/nim regions
 add-highlighter shared/nim/code default-region group
-add-highlighter shared/nim/triple_string region '"""' '"""(?!")' fill string
+add-highlighter shared/nim/triple_string region '([A-Za-z](_?\w)*)?"""' '"""(?!")' fill string
 add-highlighter shared/nim/raw_string region '[A-Za-z](_?\w)*"' '(?<!")"(?!")' fill string
 add-highlighter shared/nim/string region '"' (?<!\\)(\\\\)*" fill string
 add-highlighter shared/nim/comment region '#?#\[' '\]##?' fill comment
@@ -65,8 +65,8 @@ def -hidden nim-indent-on-new-line %{
         try %{ exec -draft \; K <a-&> }
         # cleanup trailing whitespaces from previous line
         try %{ exec -draft k <a-x> s \h+$ <ret> d }
-        # indent after line ending with const, let, var, ':' or '='
-        try %{ exec -draft <space> k x <a-k> (:|=|const|let|var)$ <ret> j <a-gt> }
+        # indent after line ending with type, import, export, const, let, var, ':' or '='
+        try %{ exec -draft <space> k x <a-k> (:|=|const|let|var|import|export|type)$ <ret> j <a-gt> }
     }
 }
 
