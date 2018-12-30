@@ -268,7 +268,6 @@ private:
 
         HistoryId parent;
         HistoryId redo_child = HistoryId::Invalid;
-        TimePoint timepoint;
         UndoGroup undo_group;
     };
 

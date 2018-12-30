@@ -63,7 +63,7 @@ static void apply_options(OptionManager& options, const ParsedLines& parsed_line
 }
 
 Buffer::HistoryNode::HistoryNode(HistoryId parent)
-    : parent{parent}, timepoint{Clock::now()}
+    : parent{parent}
 {}
 
 Buffer::Buffer(String name, Flags flags, StringView data,
