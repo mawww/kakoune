@@ -340,41 +340,42 @@ std::pair<Vector<String>, int> ShellManager::eval_multiple(
 
     auto spawn_time = profile ? Clock::now() : Clock::time_point{};
 
-    struct PipeReader : FDWatcher
+    struct PipeReader
     {
-        String&& contents;
-        Pipe&& pipe;
+        String contents;
+        Pipe pipe;
         PipeReader(Pipe pipe, String contents)
-            : pipe(std::move(pipe)), contents(std::move(contents)),
-            FDWatcher(pipe.read_fd(), FdEvents::Read,
-                        [&contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) {
+            : pipe(std::move(pipe)), contents(std::move(contents))
+        {
+            FDWatcher(this->pipe.read_fd(), FdEvents::Read,
+                        [this](FDWatcher& watcher, FdEvents, EventMode) {
                             char buffer[1024];
-                            while (fd_readable(pipe.read_fd()))
+                            while (fd_readable(this->pipe.read_fd()))
                             {
-                                size_t size = ::read(pipe.read_fd(), buffer, 1024);
+                                size_t size = ::read(this->pipe.read_fd(), buffer, 1024);
                                 if (size <= 0)
                                 {
-                                    pipe.close_read_fd();
+                                    this->pipe.close_read_fd();
                                     watcher.disable();
                                     return;
                                 }
-                                contents += StringView{buffer, buffer+size};
+                                this->contents += StringView{buffer, buffer+size};
                             }
-                        })
-        {
+                        });
         }
     };
 
-    struct PipeWriter : FDWatcher
+    struct PipeWriter
     {
-        Pipe&& pipe;
+        Pipe pipe;
         PipeWriter(Pipe pipe, StringView contents)
-            : pipe(std::move(pipe)),
-            FDWatcher(pipe.write_fd(), FdEvents::Write,
-                        [contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) mutable {
-                            while (fd_writable(pipe.write_fd()))
+            : pipe(std::move(pipe))
+        {
+            FDWatcher(this->pipe.write_fd(), FdEvents::Write,
+                        [contents, this](FDWatcher& watcher, FdEvents, EventMode) mutable {
+                            while (fd_writable(this->pipe.write_fd()))
                             {
-                                ssize_t size = ::write(pipe.write_fd(), contents.begin(),
+                                ssize_t size = ::write(this->pipe.write_fd(), contents.begin(),
                                                        (size_t)contents.length());
                                 if (size > 0)
                                     contents = contents.substr(ByteCount{(int)size});
@@ -382,15 +383,14 @@ std::pair<Vector<String>, int> ShellManager::eval_multiple(
                                     return;
                                 if (size < 0 or contents.empty())
                                 {
-                                    pipe.close_write_fd();
+                                    this->pipe.close_write_fd();
                                     watcher.disable();
                                     return;
                                 }
                             }
-                        })
-        {
-            int flags = fcntl(pipe.write_fd(), F_GETFL, 0);
-            fcntl(pipe.write_fd(), F_SETFL, flags | O_NONBLOCK);
+                        });
+            int flags = fcntl(this->pipe.write_fd(), F_GETFL, 0);
+            fcntl(this->pipe.write_fd(), F_SETFL, flags | O_NONBLOCK);
         }
     };    
 
@@ -414,17 +414,17 @@ std::pair<Vector<String>, int> ShellManager::eval_multiple(
         }
 
         bool writes_closed() {
-            return std::any_of(processes.cbegin(),processes.cend(),
+            return std::none_of(processes.cbegin(),processes.cend(),
                  [](const PipeProcess& p) {
                      return p.stdin.pipe.write_fd() != -1;
                  });
         }
 
         bool reads_closed() {
-            return std::any_of(processes.cbegin(),processes.cend(),
+            return std::none_of(processes.cbegin(),processes.cend(),
                  [](const PipeProcess& p) {
                      return p.stdout.pipe.read_fd() != -1 
-                        or p.stderr.pipe.read_fd() != -1;
+                        and p.stderr.pipe.read_fd() != -1;
                  });
         }
     } process_container;
@@ -507,9 +507,12 @@ std::pair<Vector<String>, int> ShellManager::eval_multiple(
         timer.set_next_date(Clock::now() + wait_timeout);
     }, EventMode::Urgent};
 
-    while (not terminated or process_container.writes_closed() or
-           ((flags & Flags::WaitForStdout) and process_container.reads_closed()))
+    while (not terminated or not process_container.writes_closed() or
+           ((flags & Flags::WaitForStdout) and not process_container.reads_closed()))
     {
+        /*write(2,format("terminated: {}\n",terminated));
+        write(2,format("writes_closed: {}\n",process_container.writes_closed()));
+        write(2,format("reads_closed: {}\n",process_container.reads_closed()));*/
         EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
         if (not terminated) {
             std::tie(terminated,status) = process_container.is_terminated();
@@ -542,6 +545,7 @@ std::pair<Vector<String>, int> ShellManager::eval_multiple(
     for (PipeProcess& process: process_container.processes)
     {
         output.push_back(process.stdout.contents);
+        write(2,format("output: {}\n",process.stdout.contents));
     }
 
     return { std::move(output), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
