@@ -66,7 +66,7 @@ static void apply_options(OptionManager& options, const ParsedLines& parsed_line
 }
 
 Buffer::HistoryNode::HistoryNode(HistoryId parent)
-    : parent{parent}, timepoint{Clock::now()}
+    : parent{parent}, committed{Clock::now()}
 {}
 
 Buffer::Buffer(String name, Flags flags, StringView data,
@@ -231,20 +231,10 @@ String Buffer::string(BufferCoord begin, BufferCoord end) const
     return res;
 }
 
-// A Modification holds a single atomic modification to Buffer
-struct Buffer::Modification
+Buffer::Modification Buffer::Modification::inverse() const
 {
-    enum Type { Insert, Erase };
-
-    Type type;
-    BufferCoord coord;
-    StringDataPtr content;
-
-    Modification inverse() const
-    {
-        return {type == Insert ? Erase : Insert, coord, content};
-    }
-};
+    return {type == Insert ? Erase : Insert, coord, content};
+}
 
 void Buffer::reload(StringView data, timespec fs_timestamp)
 {

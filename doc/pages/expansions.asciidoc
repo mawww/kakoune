@@ -258,6 +258,18 @@ The following expansions are supported (with required context _in italics_):
     the text of the error that cancelled execution of the <commands> parameter
     (or the previous <on_error_commands> parameter)
 
+*%val{history}*::
+    _in buffer, window scope_ +
+    the full change history of the buffer, including undo forks, in terms
+    of `parent committed redo_child modification0 modification1 ...`
+    entries, where _parent_ is the index of the entry's predecessor (entry
+    0, which is the root of the history tree, will always have `-` here),
+    _committed_ is a count in seconds from Kakoune's steady clock's epoch
+    of the  creation of the history entry, _redo_child_ is the index of the
+    child which will be visited for `U` (always `-` at the leaves of the
+    history), and each _modification_ is presented as in
+    `%val{uncommited_changes}`.
+
 *%val{history_id}*::
     _in buffer, window scope_ +
     history id of the current buffer, an integer value which refers to a
@@ -352,6 +364,15 @@ The following expansions are supported (with required context _in italics_):
     timestamp of the current buffer, an integer that increments each time the
     buffer is modified, including undoing and redoing previous modifications
     (see also `%val{history_id}`)
+
+*%val{uncommitted_modifications}*::
+    _in buffer, window scope_ +
+    a list of quoted insertions (in the format `+line.column|text`) and
+    deletions (`-line.column|text`) not yet saved to the history (e.g. typing
+    in insert mode before pressing `<esc>`), where _line_ is the 1-based line
+    of the change, _column_ is the 1-based _byte_ of the change start (see
+    `%val{cursor_column}`), and _text_ is the content of the insertion or
+    deletion (see also `%val{history}`)
 
 *%val{user_modes}*::
     unquoted list of user modes.

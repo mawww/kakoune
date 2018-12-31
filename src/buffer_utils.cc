@@ -213,4 +213,47 @@ void write_to_debug_buffer(StringView str)
     }
 }
 
+InplaceString<23> to_string(Buffer::HistoryId id)
+{
+    if (id == Buffer::HistoryId::Invalid) {
+        InplaceString<23> res;
+        res.m_data[0] = '-';
+        res.m_length = 1;
+        return res;
+    } else {
+        return to_string(static_cast<size_t>(id));
+    }
+}
+
+String format_modification(const Buffer::Modification& modification, Quoting quoting)
+{
+    auto quote = quoter(quoting);
+    return quote(format("{}{}.{}|{}",
+                        modification.type == Buffer::Modification::Type::Insert ? '+' : '-',
+                        modification.coord.line, modification.coord.column,
+                        modification.content->strview()));
+}
+
+String history_as_string(const Vector<Buffer::HistoryNode>& history, Quoting quoting)
+{
+    auto format_history_node = [&](const Buffer::HistoryNode& node) {
+        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(node.committed.time_since_epoch());
+        return format("{} {} {}{}{}",
+                      node.parent,
+                      seconds.count(),
+                      node.redo_child,
+                      node.undo_group.empty() ? "" : " ",
+                      undo_group_as_string(node.undo_group, quoting));
+    };
+    return join(history |transform(format_history_node), ' ', false);
+}
+
+String undo_group_as_string(const Buffer::UndoGroup& undo_group, Quoting quoting)
+{
+    auto modification_as_string = [&](const Buffer::Modification& modification) {
+        return format_modification(modification, quoting);
+    };
+    return join(undo_group |transform(modification_as_string), ' ', false);
+}
+
 }
