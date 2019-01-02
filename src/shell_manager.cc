@@ -414,17 +414,17 @@ std::pair<Vector<String>, int> ShellManager::eval_multiple(
         }
 
         bool writes_closed() {
-            return std::none_of(processes.cbegin(),processes.cend(),
+            return std::all_of(processes.cbegin(),processes.cend(),
                  [](const PipeProcess& p) {
-                     return p.stdin.pipe.write_fd() != -1;
+                     return p.stdin.pipe.write_fd() == -1;
                  });
         }
 
         bool reads_closed() {
-            return std::none_of(processes.cbegin(),processes.cend(),
+            return std::all_of(processes.cbegin(),processes.cend(),
                  [](const PipeProcess& p) {
-                     return p.stdout.pipe.read_fd() != -1 
-                        and p.stderr.pipe.read_fd() != -1;
+                     return p.stdout.pipe.read_fd() == -1 
+                        and p.stderr.pipe.read_fd() == -1;
                  });
         }
     } process_container;
