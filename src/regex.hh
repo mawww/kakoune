@@ -21,6 +21,7 @@ public:
     const String& str() const { return m_str; }
 
     size_t mark_count() const { return m_impl->save_count / 2 - 1; }
+    int named_capture_index(StringView name) const;
 
     static constexpr const char* option_type_name = "regex";
 

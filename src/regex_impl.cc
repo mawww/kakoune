@@ -85,7 +85,8 @@ struct ParsedRegex
     Vector<Node, MemoryDomain::Regex> nodes;
 
     Vector<CharacterClass, MemoryDomain::Regex> character_classes;
-    size_t capture_count;
+    Vector<CompiledRegex::NamedCapture, MemoryDomain::Regex> named_captures;
+    uint32_t capture_count;
 };
 
 namespace
@@ -166,7 +167,7 @@ private:
     using Iterator = utf8::iterator<const char*, const char*, Codepoint, int, InvalidPolicy>;
     using NodeIndex = ParsedRegex::NodeIndex;
 
-    NodeIndex disjunction(unsigned capture = -1)
+    NodeIndex disjunction(uint32_t capture = -1)
     {
         NodeIndex index = new_node(ParsedRegex::Alternation);
         get_node(index).value = capture;
@@ -301,15 +302,25 @@ private:
                     return new_node(ParsedRegex::AnyCharExceptNewLine);
             case '(':
             {
-                auto captures = [this, it = (++m_pos).base()]() mutable {
-                    if (m_regex.end() - it >= 2 and *it++ == '?' and *it++ == ':')
-                    {
-                        m_pos = Iterator{it, m_regex};
-                        return false;
-                    }
-                    return true;
-                };
-                NodeIndex content = disjunction(captures() ? m_parsed_regex.capture_count++ : -1);
+                uint32_t capture_group = -1;
+                const char* it = (++m_pos).base();
+                if (m_regex.end() - it < 2 or *it++ != '?')
+                    capture_group = m_parsed_regex.capture_count++;
+                else if (*it == ':')
+                    m_pos = Iterator{++it, m_regex};
+                else if (*it == '<')
+                {
+                    const auto name_start = ++it;
+                    while (it != m_regex.end() and is_word(*it))
+                        ++it;
+                    if (it == m_regex.end() or *it != '>')
+                        parse_error("named captures should be only ascii word characters");
+                    capture_group = m_parsed_regex.capture_count++;
+                    m_parsed_regex.named_captures.push_back({{name_start, it}, capture_group});
+                    m_pos = Iterator{++it, m_regex};
+                }
+
+                NodeIndex content = disjunction(capture_group);
                 if (at_end() or *m_pos++ != ')')
                     parse_error("unclosed parenthesis");
                 return content;
@@ -682,6 +693,7 @@ struct RegexCompiler
             m_program.first_backward_inst = -1;
 
         m_program.character_classes = std::move(m_parsed_regex.character_classes);
+        m_program.named_captures = std::move(m_parsed_regex.named_captures);
         m_program.save_count = m_parsed_regex.capture_count * 2;
     }
 
@@ -1525,6 +1537,24 @@ auto test_regex = UnitTest{[]{
         TestVM<> vm{R"(\0\x0A\u260e\u260F)"};
         const char str[] = "\0\n☎☏"; // work around the null byte in the literal
         kak_assert(vm.exec({str, str + sizeof(str)-1}));
+    }
+
+    {
+        auto eq = [](const CompiledRegex::NamedCapture& lhs,
+                     const CompiledRegex::NamedCapture& rhs) {
+            return lhs.name == rhs.name and
+                   lhs.index == rhs.index;
+        };
+
+        TestVM<> vm{R"((?<year>\d+)-(?<month>\d+)-(?<day>\d+))"};
+        kak_assert(vm.exec("2019-01-03", RegexExecFlags::None));
+        kak_assert(StringView{vm.captures()[2], vm.captures()[3]} == "2019");
+        kak_assert(StringView{vm.captures()[4], vm.captures()[5]} == "01");
+        kak_assert(StringView{vm.captures()[6], vm.captures()[7]} == "03");
+        kak_assert(vm.named_captures.size() == 3);
+        kak_assert(eq(vm.named_captures[0], {"year", 1}));
+        kak_assert(eq(vm.named_captures[1], {"month", 2}));
+        kak_assert(eq(vm.named_captures[2], {"day", 3}));
     }
 }};
 
