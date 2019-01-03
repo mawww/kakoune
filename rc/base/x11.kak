@@ -22,29 +22,51 @@ A shell command is appended to the one set in this option at runtime} \
     done
 }
 
-define-command -docstring %{x11-new [<command>]: create a new kak client for the current session
-The optional arguments will be passed as arguments to the new client} \
-    -params .. \
-    -command-completion \
-    x11-new %{ evaluate-commands %sh{
+define-command x11-terminal -params 1.. -shell-completion -docstring '
+x11-terminal <program> [<arguments>]: create a new terminal as an x11 window
+The program passed as argument will be executed in the new terminal' \
+%{
+    evaluate-commands %sh{
         if [ -z "${kak_opt_termcmd}" ]; then
-           echo "echo -markup '{Error}termcmd option is not set'"
+           echo "fail 'termcmd option is not set'"
            exit
         fi
-        if [ $# -ne 0 ]; then kakoune_params="-e '$@'"; fi
-        setsid ${kak_opt_termcmd} "kak -c ${kak_session} ${kakoune_params}" < /dev/null > /dev/null 2>&1 &
-}}
+        # join arguments into a single string, in which they're delimited
+        # by single quotes, and with single quotes inside transformed to '\''
+        # so that sh -c "$args" will re-split the arguments properly
+        # example:
+        # $1 = ab
+        # $2 = foo bar
+        # $3 =
+        # $4 = foo'bar
+        # $args = 'ab' 'foo bar' '' 'foo'\''bar'
+        # would be nicer to do in a single sed/awk call but that's difficult
+        args=$(
+            for i in "$@"; do
+                # special case to preserve empty variables as sed won't touch these
+                if [ "$i" = '' ]; then
+                    printf "'' "
+                else
+                    printf %s "$i" | sed -e "s|'|'\\\\''|g; s|^|'|; s|$|' |"
+                fi
+            done
+        )
+        setsid ${kak_opt_termcmd} "$args" < /dev/null > /dev/null 2>&1 &
+    }
+}
 
-define-command -docstring %{x11-focus [<client>]: focus a given client's window
-If no client is passed, then the current client is used} \
-    -params ..1 -client-completion \
-    x11-focus %{ evaluate-commands %sh{
+define-command x11-focus -params ..1 -client-completion -docstring '
+x11-focus [<kakoune_client>]: focus a given client''s window
+If no client is passed, then the current client is used' \
+%{
+    evaluate-commands %sh{
         if [ $# -eq 1 ]; then
-            printf %s\\n "evaluate-commands -client '$1' focus"
+            printf "evaluate-commands -client '%s' focus" "$1"
         else
             xdotool windowactivate $kak_client_env_WINDOWID > /dev/null
         fi
-} }
+    }
+}
 
 alias global focus x11-focus
-alias global new x11-new
+alias global terminal x11-terminal

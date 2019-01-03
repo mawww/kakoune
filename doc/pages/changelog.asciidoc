@@ -13,7 +13,10 @@ released versions.
   `ncurses_builtin_key_parser` to `true`.
 
 * Right clicks extend the current selection, the control modifier allows
-  merging all the selections after extension
+  merging all the selections after extension.
+
+* The `regex` highlighter now supports named capture groups to
+  ease readability.
 
 == Kakoune 2018.10.27
 

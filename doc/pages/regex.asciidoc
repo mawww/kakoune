@@ -78,17 +78,21 @@ Regex atoms can be grouped using `(` and `)` or `(?:` and `)`. If `(` is
 used, the group will be a capturing group, which means the positions from
 the subject strings that matched between `(` and `)` will be recorded.
 
-Capture groups are numbered starting at 1. They are numbered in the order of
-appearance of their `(` in the regex. A special capture group 0 is
-for the whole sequence that matched.
+Capture groups are numbered starting at 1. They are numbered in the
+order of appearance of their `(` in the regex. A special capture group
+0 is for the whole sequence that matched.
 
-`(?:` introduces a non capturing group, which will not record the
+* `(?:` introduces a non capturing group, which will not record the
 matching positions.
+
+* `(?<name>` introduces a named capturing group, which, in addition to
+being referred by number, can be, in certain contexts, referred by the
+given name.
 
 == Alternations
 
-`|` introduces an alternation, which will either match its left-hand side,
-or its right-hand side (preferring the left-hand side)
+The `|` character introduces an alternation, which will either match
+its left-hand side, or its right-hand side (preferring the left-hand side)
 
 For example, `foo|bar` matches either `foo` or `bar`, `foo(bar|baz|qux)`
 matches `foo` followed by either `bar`, `baz` or `qux`.

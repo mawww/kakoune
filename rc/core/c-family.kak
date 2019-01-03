@@ -160,8 +160,8 @@ evaluate-commands %sh{
     # Grammar
     keywords="asm break case continue default do else for goto if return
               sizeof switch while offsetof alignas alignof"
-    attributes="auto const enum extern inline register restrict static struct
-                typedef union volatile thread_local"
+    attributes="auto atomic const enum extern inline register restrict static
+                struct typedef union volatile thread_local"
     types="char double float int long short signed unsigned void"
     complex_types="complex imaginary"
     fenv_types="fenv_t fexcept_t"
@@ -171,7 +171,7 @@ evaluate-commands %sh{
     setjmp_types="jmp_buf"
     signal_types="sig_atomic_t"
     stdarg_types="va_list"
-    stdatomic_types="memory_order atomic_bool atomic_char atomic_schar atomic_uchar atomic_wchar atomic_short atomic_ushort atomic_int atomic_uint atomic_long atomic_llong atomic_ulong atomic_ullong atomic_char16_t atomic_char32_t atomic_intptr_t atomic_intmax_t atomic_int8_t atomic_int16_t atomic_int32_t atomic_int64_t atomic_int_least8_t atomic_int_least16_t atomic_int_least32_t atomic_int_least64_t atomic_int_fast8_t atomic_int_fast16_t atomic_int_fast32_t atomic_int_fast64_t atomic_uintptr_t atomic_uintmax_t atomic_uint8_t atomic_uint16_t atomic_uint32_t atomic_uint64_t atomic_uint_least8_t atomic_uint_least16_t atomic_uint_least32_t atomic_uint_least64_t atomic_uint_fast8_t atomic_uint_fast16_t atomic_uint_fast32_t atomic_uint_fast64_t atomic_size_t atomic_ptrdiff_t"
+    stdatomic_types="memory_order atomic_flag atomic_bool atomic_char atomic_schar atomic_uchar atomic_wchar atomic_short atomic_ushort atomic_int atomic_uint atomic_long atomic_llong atomic_ulong atomic_ullong atomic_char16_t atomic_char32_t atomic_intptr_t atomic_intmax_t atomic_int8_t atomic_int16_t atomic_int32_t atomic_int64_t atomic_int_least8_t atomic_int_least16_t atomic_int_least32_t atomic_int_least64_t atomic_int_fast8_t atomic_int_fast16_t atomic_int_fast32_t atomic_int_fast64_t atomic_uintptr_t atomic_uintmax_t atomic_uint8_t atomic_uint16_t atomic_uint32_t atomic_uint64_t atomic_uint_least8_t atomic_uint_least16_t atomic_uint_least32_t atomic_uint_least64_t atomic_uint_fast8_t atomic_uint_fast16_t atomic_uint_fast32_t atomic_uint_fast64_t atomic_size_t atomic_ptrdiff_t"
     stdbool_types="bool"
     stddef_types="ptrdiff_t size_t max_align_t wchar_t"
     stdint_types="intptr_t intmax_t int8_t int16_t int32_t int64_t int_least8_t int_least16_t int_least32_t int_least64_t int_fast8_t int_fast16_t int_fast32_t int_fast64_t uintptr_t uintmax_t uint8_t uint16_t uint32_t uint64_t uint_least8_t uint_least16_t uint_least32_t uint_least64_t uint_fast8_t uint_fast16_t uint_fast32_t uint_fast64_t"
@@ -181,6 +181,7 @@ evaluate-commands %sh{
     time_types="clock_t time_t timespec tm"
     wchar_types="mbstate_t wint_t"
     wctype_types="wctrans_t wctype_t"
+    uchar_types="char16_t char32_t"
     unistd_types="ssize_t gid_t uid_t off_t off64_t useconds_t pid_t socklen_t"
 
     assert_macros="assert static_assert NDEBUG"
@@ -212,15 +213,15 @@ evaluate-commands %sh{
 
     # Add the language's grammar to the static completion list
     printf '%s\n' "hook global WinSetOption filetype=c %{
-        set-option window static_words $(join "${keywords} ${attributes} ${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stdbool_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${time_types} ${wchar_types} ${wctype_types} ${unistd_types} ${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdlib_macros} ${stdint_macros} ${threads_macros} ${time_macros} ${wchar_macros} ${misc_macros} ${unistd_macros} ${values}" ' ')
+        set-option window static_words $(join "${keywords} ${attributes} ${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stdbool_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${time_types} ${wchar_types} ${wctype_types} ${uchar_types} ${unistd_types} ${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdlib_macros} ${stdint_macros} ${threads_macros} ${time_macros} ${wchar_macros} ${misc_macros} ${unistd_macros} ${values}" ' ')
     }"
 
     # Highlight keywords
     printf %s "
         add-highlighter shared/c/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
         add-highlighter shared/c/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
-        add-highlighter shared/c/code/types regex \b($(join "${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stdbool_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${time_types} ${wchar_types} ${wctype_types} ${unistd_types}" '|'))\b 0:type
-        add-highlighter shared/c/code/values regex \b($(join "${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdint_macros} ${threads_macros} ${time_macros} ${wchar_macros} ${misc_macros} ${unistd_macros}" '|'))\b 0:value
+        add-highlighter shared/c/code/types regex \b($(join "${types} ${complex_types} ${fenv_types} ${inttypes_types} ${locale_types} ${math_types} ${setjmp_types} ${signal_types} ${stdarg_types} ${stdatomic_types} ${stdbool_types} ${stddef_types} ${stdint_types} ${stdio_types} ${stdlib_types} ${threads_types} ${time_types} ${wchar_types} ${wctype_types} ${uchar_types} ${unistd_types}" '|'))\b 0:type
+        add-highlighter shared/c/code/values regex \b($(join "${assert_macros} ${complex_macros} ${error_macros} ${fenv_macros} ${float_macros} ${inttypes_macros} ${iso646_macros} ${limits_macros} ${locale_macros} ${math_macros} ${setjmp_macros} ${signal_macros} ${stdarg_macros} ${stdatomic_macros} ${stdbool_macros} ${stddef_macros} ${stdio_macros} ${stdint_macros} ${stdlib_macros} ${threads_macros} ${time_macros} ${wchar_macros} ${misc_macros} ${unistd_macros}" '|'))\b 0:value
     "
 }
 

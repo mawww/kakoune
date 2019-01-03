@@ -107,9 +107,16 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
 
     explicit operator bool() const { return not instructions.empty(); }
 
+    struct NamedCapture
+    {
+        String name;
+        uint32_t index;
+    };
+
     Vector<Instruction, MemoryDomain::Regex> instructions;
     Vector<CharacterClass, MemoryDomain::Regex> character_classes;
     Vector<Lookaround, MemoryDomain::Regex> lookarounds;
+    Vector<NamedCapture, MemoryDomain::Regex> named_captures;
     uint32_t first_backward_inst; // -1 if no backward support, 0 if only backward, >0 if both forward and backward
     uint32_t save_count;
 

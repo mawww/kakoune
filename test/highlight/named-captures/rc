@@ -1,0 +1,1 @@
+add-highlighter window/ regex (?<year>\d+)-(?<month>\d+)-(?<day>\d+) year:red month:green day:yellow

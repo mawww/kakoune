@@ -2,6 +2,10 @@ hook global BufCreate .*(COMMIT_EDITMSG|MERGE_MSG) %{
     set-option buffer filetype git-commit
 }
 
+hook global BufCreate .*/NOTES_EDITMSG %{
+    set-option buffer filetype git-notes
+}
+
 hook global BufCreate .*(\.gitconfig|git/config) %{
     set-option buffer filetype ini
 }
@@ -15,6 +19,13 @@ hook -group git-commit-highlight global WinSetOption filetype=git-commit %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-commit-highlight }
 }
+
+hook -group git-commit-highlight global WinSetOption filetype=git-notes %{
+    add-highlighter window/git-notes-highlight regex '^\h*#[^\n]*$' 0:cyan
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-notes-highlight }
+}
+
 
 hook global BufCreate .*git-rebase-todo %{
     set-option buffer filetype git-rebase

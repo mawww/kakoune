@@ -13,14 +13,15 @@ hook global BufCreate .*\.nim(s|ble)? %{
 
 add-highlighter shared/nim regions
 add-highlighter shared/nim/code default-region group
-add-highlighter shared/nim/single_string region "'"   (?<!\\)(\\\\)*'  fill string
-add-highlighter shared/nim/double_string region '"' (?<!\\)(\\\\)*" fill string
-add-highlighter shared/nim/triple_string region '"""' '"""' fill string
+add-highlighter shared/nim/triple_string region '([A-Za-z](_?\w)*)?"""' '"""(?!")' fill string
+add-highlighter shared/nim/raw_string region '[A-Za-z](_?\w)*"' '(?<!")"(?!")' fill string
+add-highlighter shared/nim/string region '"' (?<!\\)(\\\\)*" fill string
 add-highlighter shared/nim/comment region '#?#\[' '\]##?' fill comment
 
-add-highlighter shared/nim/code/ regex \b(0[xXocCbB])?[\d_]+('[iIuUfFdD](8|16|32|64|128))?\b 0:value
-add-highlighter shared/nim/code/ regex \b\d+\.\d+\b 0:value
-add-highlighter shared/nim/code/ regex %{'[^'\n]'} 0:string
+add-highlighter shared/nim/code/ regex [=+-/<>@$~&%|!?^.:\\*]+ 0:operator
+add-highlighter shared/nim/code/ regex \b(0[xXocCbB])?[\d_]+('[iIuU](8|16|32|64)|'d|'f(32|64|128)?)?\b 0:value
+add-highlighter shared/nim/code/ regex \b\d[\d_]*\.\d[\d_]*([eE]\d[\d_]*)?('d|'f(32|64|128))?\b 0:value
+add-highlighter shared/nim/code/ regex %{'(\\([rcnlftvabe\\"']|\d+|x[0-9a-fA-F]{2})|[^'\n])'} 0:string
 
 evaluate-commands %sh{
     # Grammar
@@ -34,7 +35,8 @@ evaluate-commands %sh{
     keywords="${keywords}|with|without|xor|yield"
     types="int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|float"
     types="${types}|float32|float64|bool|char|object|seq|array|cstring|string"
-    types="${types}|tuple|varargs"
+    types="${types}|tuple|varargs|typedesc|pointer|byte|set|typed|untyped"
+    types="${types}|void"
     values="false|true"
 
     # Add the language's grammar to the static completion list
@@ -63,8 +65,8 @@ def -hidden nim-indent-on-new-line %{
         try %{ exec -draft \; K <a-&> }
         # cleanup trailing whitespaces from previous line
         try %{ exec -draft k <a-x> s \h+$ <ret> d }
-        # indent after line ending with const, let, var, ':' or '='
-        try %{ exec -draft <space> k x <a-k> (:|=|const|let|var)$ <ret> j <a-gt> }
+        # indent after line ending with type, import, export, const, let, var, ':' or '='
+        try %{ exec -draft <space> k x <a-k> (:|=|const|let|var|import|export|type)$ <ret> j <a-gt> }
     }
 }
 

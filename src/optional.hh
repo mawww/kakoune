@@ -84,6 +84,9 @@ public:
     template<typename U>
     T value_or(U&& fallback) const { return m_valid ? m_value : T{std::forward<U>(fallback)}; }
 
+    template<typename U>
+    T value_or_compute(U&& compute_func) const { return m_valid ? m_value : compute_func(); }
+
     void reset() { destruct_ifn(); m_valid = false; }
 
 private:

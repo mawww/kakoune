@@ -99,6 +99,10 @@ from the remaining parameters.
 add-highlighter window/ regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
 --------------------------------------------------------------------
 
+    capture_id can be either the capture number, or its name if a
+    named capture is used in the regex (See
+    <<regex#Groups, `:doc regex Groups`>>)
+
 *dynregex* <expression> <capture_id>:<face> ...::
     similar to regex, but expand (like a command parameter would) the
     given expression before building a regex from the result.

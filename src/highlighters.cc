@@ -307,19 +307,25 @@ public:
         if (params.size() < 2)
             throw runtime_error("wrong parameter count");
 
+        Regex re{params[0], RegexCompileFlags::Optimize};
+
         FacesSpec faces;
         for (auto& spec : params.subrange(1))
         {
             auto colon = find(spec, ':');
             if (colon == spec.end())
                 throw runtime_error(format("wrong face spec: '{}' expected <capture>:<facespec>", spec));
-            int capture = str_to_int({spec.begin(), colon});
+            const StringView capture_name{spec.begin(), colon};
+            const int capture = str_to_int_ifp(capture_name).value_or_compute([&] {
+                return re.named_capture_index(capture_name);
+            });
+            if (capture < 0)
+                throw runtime_error(format("capture name {} is neither a capture index, nor an existing capture name",
+                                           capture_name));
             faces.emplace_back(capture, String{colon+1, spec.end()});
         }
 
-        Regex ex{params[0], RegexCompileFlags::Optimize};
-
-        return std::make_unique<RegexHighlighter>(std::move(ex), std::move(faces));
+        return std::make_unique<RegexHighlighter>(std::move(re), std::move(faces));
     }
 
 private:
@@ -491,7 +497,6 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
         int capture = str_to_int({spec.begin(), colon});
         faces.emplace_back(capture, String{colon+1, spec.end()});
     }
-
 
     auto make_hl = [](auto& regex_getter, auto& face_getter) {
         return std::make_unique<DynamicRegexHighlighter<std::decay_t<decltype(regex_getter)>,

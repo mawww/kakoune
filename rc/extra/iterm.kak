@@ -6,18 +6,30 @@
 hook global KakBegin .* %sh{
     if [ "$TERM_PROGRAM" = "iTerm.app" ] && [ -z "$TMUX" ]; then
         echo "
-            alias global new iterm-new-vertical
             alias global focus iterm-focus
         "
     fi
 }
 
-define-command -hidden -params 1.. iterm-new-split-impl %{
+define-command -hidden -params 2.. iterm-terminal-split-impl %{
     nop %sh{
         direction="$1"
         shift
-        if [ $# -gt 0 ]; then kakoune_params="-e \\\"$*\\\""; fi
-        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' kak -c '${kak_session}' ${kakoune_params}"
+        # join the arguments as one string for the shell execution (see x11.kak)
+        args=$(
+            for i in "$@"; do
+                if [ "$i" = '' ]; then
+                    printf "'' "
+                else
+                    printf %s "$i" | sed -e "s|'|'\\\\''|g; s|^|'|; s|$|' |"
+                fi
+            done
+        )
+        # go through another round of escaping for osascript
+        # \ -> \\
+        # " -> \"
+        escaped=$(printf %s "$args" | sed -e 's|\|\\\\|g; s|"|\\"|g')
+        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' $escaped"
         osascript                                                                             \
         -e "tell application \"iTerm\""                                                       \
         -e "    tell current session of current window"                                       \
@@ -27,21 +39,38 @@ define-command -hidden -params 1.. iterm-new-split-impl %{
     }
 }
 
-define-command iterm-new-vertical -params .. -command-completion -docstring "Split the current pane into two, top and bottom" %{
-    iterm-new-split-impl 'vertically' %arg{@}
+define-command iterm-terminal-vertical -params 1.. -shell-completion -docstring '
+iterm-terminal-vertical <program> [<arguments>]: create a new terminal as an iterm pane
+The current pane is split into two, top and bottom
+The program passed as argument will be executed in the new terminal'\
+%{
+    iterm-terminal-split-impl 'vertically' %arg{@}
+}
+define-command iterm-terminal-horizontal -params 1.. -shell-completion -docstring '
+iterm-terminal-horizontal <program> [<arguments>]: create a new terminal as an iterm pane
+The current pane is split into two, left and right
+The program passed as argument will be executed in the new terminal'\
+%{
+    iterm-terminal-split-impl 'horizontally' %arg{@}
 }
 
-define-command iterm-new-horizontal -params .. -command-completion -docstring "Split the current pane into two, left and right" %{
-    iterm-new-split-impl 'horizontally' %arg{@}
-}
-
-define-command -params .. -command-completion \
-    -docstring %{iterm-new-tab [<arguments>]: create a new tab
-All optional arguments are forwarded to the new kak client} \
-    iterm-new-tab %{
+define-command iterm-terminal-tab -params 1.. -shell-completion -docstring '
+iterm-terminal-tab <program> [<arguments>]: create a new terminal as an iterm tab
+The program passed as argument will be executed in the new terminal'\
+%{
     nop %sh{
-        if [ $# -gt 0 ]; then kakoune_params="-e \\\"$*\\\""; fi
-        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' kak -c '${kak_session}' ${kakoune_params}"
+        # see above
+        args=$(
+            for i in "$@"; do
+                if [ "$i" = '' ]; then
+                    printf "'' "
+                else
+                    printf %s "$i" | sed -e "s|'|'\\\\''|g; s|^|'|; s|$|' |"
+                fi
+            done
+        )
+        escaped=$(printf %s "$args" | sed -e 's|\|\\\\|g; s|"|\\"|g')
+        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' $escaped"
         osascript                                                       \
         -e "tell application \"iTerm\""                                 \
         -e "    tell current window"                                    \
@@ -51,13 +80,23 @@ All optional arguments are forwarded to the new kak client} \
     }
 }
 
-define-command -params .. -command-completion \
-    -docstring %{iterm-new-window [<arguments>]: create a new window
-All optional arguments are forwarded to the new kak client} \
-    iterm-new-window %{
+define-command iterm-terminal-window -params 1.. -shell-completion -docstring '
+iterm-terminal-window <program> [<arguments>]: create a new terminal as an iterm window
+The program passed as argument will be executed in the new terminal'\
+%{
     nop %sh{
-        if [ $# -gt 0 ]; then kakoune_params="-e \\\"$*\\\""; fi
-        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' kak -c '${kak_session}' ${kakoune_params}"
+        # see above
+        args=$(
+            for i in "$@"; do
+                if [ "$i" = '' ]; then
+                    printf "'' "
+                else
+                    printf %s "$i" | sed -e "s|'|'\\\\''|g; s|^|'|; s|$|' |"
+                fi
+            done
+        )
+        escaped=$(printf %s "$args" | sed -e 's|\|\\\\|g; s|"|\\"|g')
+        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' $escaped"
         osascript                                                      \
         -e "tell application \"iTerm\""                                \
         -e "    create window with default profile command \"${cmd}\"" \
@@ -65,10 +104,11 @@ All optional arguments are forwarded to the new kak client} \
     }
 }
 
-define-command -params ..1 -client-completion \
-    -docstring %{iterm-focus [<client>]: focus the given client
-If no client is passed then the current one is used} \
-    iterm-focus %{ evaluate-commands %sh{
+define-command iterm-focus -params ..1 -client-completion -docstring '
+iterm-focus [<client>]: focus the given client
+If no client is passed then the current one is used' \
+%{
+    evaluate-commands %sh{
         if [ $# -eq 1 ]; then
             printf %s\\n "evaluate-commands -client '$1' focus"
         else

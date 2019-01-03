@@ -26,6 +26,7 @@
 #include "string.hh"
 #include "unit_tests.hh"
 #include "window.hh"
+#include "clock.hh"
 
 #include <fcntl.h>
 #include <locale>
@@ -651,9 +652,17 @@ int run_server(StringView session, StringView server_init,
 
     global_scope.options()["debug"].set(debug_flags);
 
+    write_to_debug_buffer("*** This is the debug buffer, where debug info will be written ***");
+
+    const auto start_time = Clock::now();
     UnitTest::run_all_tests();
 
-    write_to_debug_buffer("*** This is the debug buffer, where debug info will be written ***");
+    if (debug_flags & DebugFlags::Profile)
+    {
+        using namespace std::chrono;
+        write_to_debug_buffer(format("running the unit tests took {} ms",
+                                     duration_cast<milliseconds>(Clock::now() - start_time).count()));
+    }
 
     GlobalScope::instance().options().get_local_option("readonly").set<bool>(flags & ServerFlags::ReadOnly);
 
