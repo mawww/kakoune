@@ -444,29 +444,29 @@ std::pair<Vector<String>, int> ShellManager::eval_multiple(
     };
 
     struct PipeProcessContainer {
-        Vector<PipeProcess> processes;
+        Vector<std::unique_ptr<PipeProcess>> processes;
 
         std::pair<bool,int> is_terminated() {
             bool terminated = true;
             int status = 0;
-            for (PipeProcess& process: processes) {
-                terminated = terminated && (waitpid(process.pid, &status, WNOHANG) != 0);
+            for (auto& process: processes) {
+                terminated = terminated && (waitpid(process->pid, &status, WNOHANG) != 0);
             }
             return {terminated,status};
         }
 
         bool writes_closed() {
             return std::all_of(processes.cbegin(),processes.cend(),
-                 [](const PipeProcess& p) {
-                     return p.child_stdin.write_fd() == -1;
+                 [](auto& p) {
+                     return p->child_stdin.write_fd() == -1;
                  });
         }
 
         bool reads_closed() {
             return std::all_of(processes.cbegin(),processes.cend(),
-                 [](const PipeProcess& p) {
-                     return p.child_stdout.read_fd() == -1 
-                        and p.child_stderr.read_fd() == -1;
+                 [](auto& p) {
+                     return p->child_stdout.read_fd() == -1 
+                        and p->child_stderr.read_fd() == -1;
                  });
         }
     } process_container;
@@ -475,9 +475,9 @@ std::pair<Vector<String>, int> ShellManager::eval_multiple(
 
     for (StringView input: inputs) 
     {
-        process_container.processes.push_back(PipeProcess{
+        process_container.processes.push_back(std::unique_ptr<PipeProcess>(new PipeProcess{
             input, m_shell, cmdline, shell_context, kak_env
-            });
+            }));
     }
 
 
@@ -514,21 +514,18 @@ std::pair<Vector<String>, int> ShellManager::eval_multiple(
         timer.set_next_date(Clock::now() + wait_timeout);
     }, EventMode::Urgent};
 
-    while (not terminated or not process_container.writes_closed() or
+    while ((not terminated) or (not process_container.writes_closed()) or
            ((flags & Flags::WaitForStdout) and not process_container.reads_closed()))
     {
-        write(2,format("terminated: {}\n",terminated));
-        write(2,format("writes_closed: {}\n",process_container.writes_closed()));
-        write(2,format("reads_closed: {}\n",process_container.reads_closed()));
         EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
         if (not terminated) {
             std::tie(terminated,status) = process_container.is_terminated();
         }
     }
 
-    for (PipeProcess& process: process_container.processes) {
-        if (not process.stderr->contents.empty())
-            write_to_debug_buffer(format("shell stderr: <<<\n{}>>>", process.stderr->contents));
+    for (auto& process: process_container.processes) {
+        if (not process->stderr->contents.empty())
+            write_to_debug_buffer(format("shell stderr: <<<\n{}>>>", process->stderr->contents));
     }
 
     if (profile)
@@ -549,10 +546,9 @@ std::pair<Vector<String>, int> ShellManager::eval_multiple(
 
     Vector<String> output;
 
-    for (PipeProcess& process: process_container.processes)
+    for (auto& process: process_container.processes)
     {
-        output.push_back(process.stdout->contents);
-        write(2,format("output: {}\n",process.stdout->contents));
+        output.push_back(process->stdout->contents);
     }
 
     return { std::move(output), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
