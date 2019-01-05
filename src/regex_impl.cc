@@ -676,14 +676,13 @@ struct RegexCompiler
     {
         kak_assert(not (flags & RegexCompileFlags::NoForward) or flags & RegexCompileFlags::Backward);
         // Approximation of the number of instructions generated
-        m_program.instructions.reserve((CompiledRegex::search_prefix_size + parsed_regex.nodes.size() + 1)
+        m_program.instructions.reserve((parsed_regex.nodes.size() + 1)
                                        * (((flags & RegexCompileFlags::Backward) and
                                            not (flags & RegexCompileFlags::NoForward)) ? 2 : 1));
 
         if (not (flags & RegexCompileFlags::NoForward))
         {
             m_program.forward_start_desc = compute_start_desc<RegexMode::Forward>();
-            write_search_prefix();
             compile_node<RegexMode::Forward>(0);
             push_inst(CompiledRegex::Match);
         }
@@ -692,7 +691,6 @@ struct RegexCompiler
         {
             m_program.first_backward_inst = m_program.instructions.size();
             m_program.backward_start_desc = compute_start_desc<RegexMode::Backward>();
-            write_search_prefix();
             compile_node<RegexMode::Backward>(0);
             push_inst(CompiledRegex::Match);
         }
@@ -864,16 +862,6 @@ private:
             m_program.instructions[offset].param = m_program.instructions.size();
 
         return start_pos;
-    }
-
-    // Add a sequence of instructions that enable searching for a match instead of checking for it
-    void write_search_prefix()
-    {
-        const uint32_t first_inst = m_program.instructions.size();
-        push_inst(CompiledRegex::Split_PrioritizeChild, first_inst + CompiledRegex::search_prefix_size);
-        push_inst(CompiledRegex::FindNextStart);
-        push_inst(CompiledRegex::Split_PrioritizeParent, first_inst + 1);
-        kak_assert(m_program.instructions.size() == first_inst + CompiledRegex::search_prefix_size);
     }
 
     uint32_t push_inst(CompiledRegex::Op op, uint32_t param = 0)
@@ -1137,9 +1125,6 @@ String dump_regex(const CompiledRegex& program)
                 res += format("{} ({})\n", name, str);
                 break;
             }
-            case CompiledRegex::FindNextStart:
-                res += "find next start\n";
-                break;
             case CompiledRegex::Match:
                 res += "match\n";
         }

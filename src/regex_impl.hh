@@ -49,7 +49,6 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     enum Op : char
     {
         Match,
-        FindNextStart,
         Literal,
         Literal_IgnoreCase,
         AnyChar,
@@ -96,8 +95,6 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
         uint32_t param;
     };
     static_assert(sizeof(Instruction) == 8, "");
-
-    static constexpr uint16_t search_prefix_size = 3;
 
     explicit operator bool() const { return not instructions.empty(); }
 
@@ -217,8 +214,6 @@ public:
             instructions = instructions.subrange(0, m_program.first_backward_inst);
         else
             instructions = instructions.subrange(m_program.first_backward_inst);
-        if (not search)
-            instructions = instructions.subrange(CompiledRegex::search_prefix_size);
 
         const ExecConfig config{
             Sentinel{forward ? begin : end},
@@ -452,14 +447,6 @@ private:
                         (inst.op == CompiledRegex::LookBehind_IgnoreCase))
                         return failed();
                     break;
-                case CompiledRegex::FindNextStart:
-                    // search thread should by construction be the lowest priority thread
-                    kak_assert(m_threads.current_is_empty());
-                    if (not m_threads.next_is_empty())
-                        return consumed();
-                    m_threads.push_next(thread);
-                    m_find_next_start = true;
-                    return;
                 case CompiledRegex::Match:
                     if ((pos != config.end and not (mode & RegexMode::Search)) or
                         (config.flags & RegexExecFlags::NotInitialNull and pos == config.begin))
@@ -484,10 +471,12 @@ private:
         release_saves(m_captures);
         m_captures = -1;
         m_threads.grow_ifn();
-        m_threads.push_current({static_cast<int16_t>(&config.instructions[0] - &m_program.instructions[0]), -1});
+        const int16_t first_inst = &config.instructions[0] - &m_program.instructions[0];
+        m_threads.push_current({first_inst, -1});
 
         const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc;
 
+        constexpr bool search = mode & RegexMode::Search;
         constexpr bool any_match = mode & RegexMode::AnyMatch;
         uint16_t current_step = -1;
         m_found_match = false;
@@ -501,14 +490,15 @@ private:
                 current_step = 1; // step 0 is never valid
             }
 
-            m_find_next_start = false;
             while (not m_threads.current_is_empty())
                 step_thread(pos, current_step, m_threads.pop_current(), config);
 
             for (auto& thread : m_threads.next_threads())
                 m_program.instructions[thread.inst].scheduled = false;
 
-            if (pos == config.end or m_threads.next_is_empty() or (m_found_match and any_match))
+            if (pos == config.end or
+                (m_threads.next_is_empty() and (not search or m_found_match)) or
+                (m_found_match and any_match))
             {
                 for (auto& t : m_threads.next_threads())
                     release_saves(t.saves);
@@ -516,12 +506,17 @@ private:
                 return m_found_match;
             }
 
-            m_threads.swap_next();
             forward ? utf8::to_next(pos, config.subject_end)
                     : utf8::to_previous(pos, config.subject_begin);
 
-            if (m_find_next_start and start_desc)
-                to_next_start(pos, config, *start_desc);
+            if (search)
+            {
+                if (start_desc and m_threads.next_is_empty())
+                    to_next_start(pos, config, *start_desc);
+                m_threads.grow_ifn();
+                m_threads.push_next({first_inst, -1});
+            }
+            m_threads.swap_next();
         }
     }
 
@@ -691,7 +686,6 @@ private:
     int16_t m_first_free = -1;
     int16_t m_captures = -1;
     bool m_found_match = false;
-    bool m_find_next_start = false;
 };
 
 }
