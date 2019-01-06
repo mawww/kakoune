@@ -471,7 +471,8 @@ private:
         release_saves(m_captures);
         m_captures = -1;
         m_threads.grow_ifn();
-        const int16_t first_inst = &config.instructions[0] - &m_program.instructions[0];
+
+        const int16_t first_inst = forward ? 0 : m_program.first_backward_inst;
         m_threads.push_current({first_inst, -1});
 
         const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc;
