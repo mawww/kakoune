@@ -247,29 +247,31 @@ add-highlighter shared/cpp/code/char regex %{(\b(u8|u|U|L)|\B)'((\\.)|[^'\\])'\B
 evaluate-commands %sh{
     # Grammar
     keywords="alignas alignof and and_eq asm bitand bitor break case catch
-              compl const_cast continue decltype default delete do dynamic_cast
-              else explicit for goto if new not not_eq operator or or_eq
+              compl const_cast continue decltype delete do dynamic_cast
+              else export for goto if new not not_eq operator or or_eq
               reinterpret_cast return sizeof static_assert static_cast switch
-              throw try typeid using while xor xor_eq"
-    attributes="auto class const constexpr enum extern final friend inline
-                mutable namespace noexcept override private protected public
-                register static struct template thread_local typedef typename
-                union virtual volatile"
-    types="bool byte char char16_t char32_t double float int long max_align_t
-           nullptr_t ptrdiff_t short signed size_t unsigned void wchar_t"
+              throw try typedef typeid using while xor xor_eq"
+    attributes="audit auto axiom const consteval constexpr default explicit
+                extern final friend inline mutable noexcept override private
+                protected public register requires static thread_local typename
+                virtual volatile"
+    entities="class concept enum namespace struct template union"
+    types="bool byte char char8_t char16_t char32_t double float int long
+           max_align_t nullptr_t ptrdiff_t short signed size_t unsigned void
+           wchar_t"
     values="NULL false nullptr this true"
 
     join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=cpp %{
-        set-option window static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')
+        set-option window static_words $(join "${keywords} ${attributes} ${entities} ${types} ${values}" ' ')
     }"
 
     # Highlight keywords
     printf %s "
         add-highlighter shared/cpp/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
-        add-highlighter shared/cpp/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
+        add-highlighter shared/cpp/code/attributes regex \b($(join "${attributes} ${entities}" '|'))\b 0:attribute
         add-highlighter shared/cpp/code/types regex \b($(join "${types}" '|'))\b 0:type
         add-highlighter shared/cpp/code/values regex \b($(join "${values}" '|'))\b 0:value
     "
