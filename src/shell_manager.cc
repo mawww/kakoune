@@ -326,7 +326,7 @@ std::pair<String, int> ShellManager::eval(
 }
 
 std::pair<Vector<String>, int> ShellManager::eval_multiple(
-    StringView cmdline, const Context& context, Vector<StringView> inputs,
+    StringView cmdline, const Context& context, Vector<String> inputs,
     Flags flags, const ShellContext& shell_context)
 {
     const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();

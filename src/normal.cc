@@ -553,7 +553,7 @@ void pipe(Context& context, NormalParams)
                 ScopedEdition edition(context);
                 ForwardChangesTracker changes_tracker;
                 size_t timestamp = buffer.timestamp();
-                Vector<StringView> inputs;
+                Vector<String> inputs;
                 Vector<BufferCoord> begins;
                 for (int i = 0; i < selections.size(); ++i)
                 {
@@ -569,8 +569,8 @@ void pipe(Context& context, NormalParams)
 
                     // Needed in case we read selections inside the cmdline
                     context.selections_write_only() = selections;
-                    inputs.push_back(in);
-                    begins.push_back(beg);
+                    inputs.push_back(std::move(in));
+                    begins.push_back(std::move(beg));
                 }
 
                 Vector<String> output = ShellManager::instance().eval_multiple(

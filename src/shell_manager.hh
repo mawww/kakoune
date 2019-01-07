@@ -47,7 +47,7 @@ public:
                                 const ShellContext& shell_context = {});
 
     std::pair<Vector<String>, int> eval_multiple(StringView cmdline, const Context& context,
-                                Vector<StringView> input = {},
+                                Vector<String> input = {},
                                 Flags flags = Flags::WaitForStdout,
                                 const ShellContext& shell_context = {});
 
