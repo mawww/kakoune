@@ -88,6 +88,7 @@ struct Pipe
             throw runtime_error(format("unable to create pipe (fds: {}/{}; errno: {})", m_fd[0], m_fd[1], ::strerror(errno)));
     }
     ~Pipe() { close_read_fd(); close_write_fd(); }
+    Pipe(const Pipe&) = delete;
 
     int read_fd() const { return m_fd[0]; }
     int write_fd() const { return m_fd[1]; }
@@ -98,6 +99,56 @@ struct Pipe
 private:
     void close_fd(int& fd) { if (fd != -1) { close(fd); fd = -1; } }
     int m_fd[2];
+};
+
+struct PipeReader : FDWatcher
+{
+    PipeReader(Pipe& pipe)
+        : FDWatcher(pipe.read_fd(), FdEvents::Read,
+                    [this, &pipe](FDWatcher& watcher, FdEvents, EventMode) {
+                        char buffer[1024];
+                        while (fd_readable(pipe.read_fd()))
+                        {
+                            size_t size = ::read(pipe.read_fd(), buffer, 1024);
+                            if (size <= 0)
+                            {
+                                pipe.close_read_fd();
+                                watcher.disable();
+                                return;
+                            }
+                            contents += StringView{buffer, buffer+size};
+                        }
+                    })
+    {}
+
+    String contents;
+};
+
+struct PipeWriter : FDWatcher
+{
+    PipeWriter(Pipe& pipe, StringView contents)
+        : FDWatcher(pipe.write_fd(), FdEvents::Write,
+                    [contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) mutable {
+                        while (fd_writable(pipe.write_fd()))
+                        {
+                            ssize_t size = ::write(pipe.write_fd(), contents.begin(),
+                                                   (size_t)contents.length());
+                            if (size > 0)
+                                contents = contents.substr(ByteCount{(int)size});
+                            if (size == -1 and (errno == EAGAIN or errno == EWOULDBLOCK))
+                                return;
+                            if (size < 0 or contents.empty())
+                            {
+                                pipe.close_write_fd();
+                                watcher.disable();
+                                return;
+                            }
+                        }
+                    })
+    {
+        int flags = fcntl(pipe.write_fd(), F_GETFL, 0);
+        fcntl(pipe.write_fd(), F_SETFL, flags | O_NONBLOCK);
+    }
 };
 
 template<typename Func>
@@ -209,57 +260,9 @@ std::pair<String, int> ShellManager::eval(
 
     auto wait_time = Clock::now();
 
-    struct PipeReader : FDWatcher
-    {
-        PipeReader(Pipe& pipe, String& contents)
-            : FDWatcher(pipe.read_fd(), FdEvents::Read,
-                        [&contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) {
-                            char buffer[1024];
-                            while (fd_readable(pipe.read_fd()))
-                            {
-                                size_t size = ::read(pipe.read_fd(), buffer, 1024);
-                                if (size <= 0)
-                                {
-                                    pipe.close_read_fd();
-                                    watcher.disable();
-                                    return;
-                                }
-                                contents += StringView{buffer, buffer+size};
-                            }
-                        })
-        {}
-    };
 
-    struct PipeWriter : FDWatcher
-    {
-        PipeWriter(Pipe& pipe, StringView contents)
-            : FDWatcher(pipe.write_fd(), FdEvents::Write,
-                        [contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) mutable {
-                            while (fd_writable(pipe.write_fd()))
-                            {
-                                ssize_t size = ::write(pipe.write_fd(), contents.begin(),
-                                                       (size_t)contents.length());
-                                if (size > 0)
-                                    contents = contents.substr(ByteCount{(int)size});
-                                if (size == -1 and (errno == EAGAIN or errno == EWOULDBLOCK))
-                                    return;
-                                if (size < 0 or contents.empty())
-                                {
-                                    pipe.close_write_fd();
-                                    watcher.disable();
-                                    return;
-                                }
-                            }
-                        })
-        {
-            int flags = fcntl(pipe.write_fd(), F_GETFL, 0);
-            fcntl(pipe.write_fd(), F_SETFL, flags | O_NONBLOCK);
-        }
-    };
-
-    String stdout_contents, stderr_contents;
-    PipeReader stdout_reader{child_stdout, stdout_contents};
-    PipeReader stderr_reader{child_stderr, stderr_contents};
+    PipeReader stdout_reader{child_stdout};
+    PipeReader stderr_reader{child_stderr};
     PipeWriter stdin_writer{child_stdin, input};
 
     // block SIGCHLD to make sure we wont receive it before
@@ -303,8 +306,8 @@ std::pair<String, int> ShellManager::eval(
             terminated = waitpid(pid, &status, WNOHANG) != 0;
     }
 
-    if (not stderr_contents.empty())
-        write_to_debug_buffer(format("shell stderr: <<<\n{}>>>", stderr_contents));
+    if (not stderr_reader.contents.empty())
+        write_to_debug_buffer(format("shell stderr: <<<\n{}>>>", stderr_reader.contents));
 
     if (profile)
     {
@@ -322,7 +325,8 @@ std::pair<String, int> ShellManager::eval(
         context.client().redraw_ifn();
     }
 
-    return { std::move(stdout_contents), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
+    return {std::move(stdout_reader.contents),
+            WIFEXITED(status) ? WEXITSTATUS(status) : -1};
 }
 
 String ShellManager::get_val(StringView name, const Context& context, Quoting quoting) const
