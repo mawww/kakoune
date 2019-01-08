@@ -1,0 +1,1 @@
+exec i %sh{eval "cat <&$kak_pipe_selection"} <esc>

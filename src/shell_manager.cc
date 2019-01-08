@@ -151,17 +151,33 @@ struct PipeWriter : FDWatcher
     }
 };
 
+struct PipedVar
+{
+    PipedVar(const String& contents)
+        : m_contents{contents}, m_pipe{}, m_pipe_writer{m_pipe, m_contents} {}
+
+    String m_contents;
+    Pipe m_pipe;
+    PipeWriter m_pipe_writer;
+};
+
+struct Environment
+{
+    Vector<String> strings;
+    Vector<std::unique_ptr<PipedVar>> piped_vars;
+};
+
 template<typename Func>
 pid_t spawn_shell(const char* shell, StringView cmdline,
                   ConstArrayView<String> params,
-                  ConstArrayView<String> kak_env,
+                  const Environment& env,
                   Func setup_child)
 {
     Vector<const char*> envptrs;
     for (char** envp = environ; *envp; ++envp)
         envptrs.push_back(*envp);
-    for (auto& env : kak_env)
-        envptrs.push_back(env.c_str());
+    for (auto& str : env.strings)
+        envptrs.push_back(str.c_str());
     envptrs.push_back(nullptr);
 
     auto cmdlinezstr = cmdline.zstr();
@@ -182,11 +198,11 @@ pid_t spawn_shell(const char* shell, StringView cmdline,
     return -1;
 }
 
-Vector<String> generate_env(StringView cmdline, const Context& context, const ShellContext& shell_context)
+Environment generate_env(StringView cmdline, const Context& context, const ShellContext& shell_context)
 {
     static const Regex re(R"(\bkak_(\w+)\b)");
 
-    Vector<String> kak_env;
+    Environment env;
     for (RegexIterator<const char*> it{cmdline.begin(), cmdline.end(), re}, end;
          it != end; ++it)
     {
@@ -196,8 +212,15 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
             return s.substr(0_byte, name.length()) == name and
                    s.substr(name.length(), 1_byte) == "=";
         };
-        if (any_of(kak_env, match_name))
+        if (any_of(env.strings, match_name))
             continue;
+
+        bool piped = false;
+        if (name.substr(0, 5_byte) == "pipe_")
+        {
+            name = name.substr(5_byte);
+            piped = true;
+        }
 
         auto var_it = shell_context.env_vars.find(name);
         try
@@ -205,11 +228,17 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
             const String& value = var_it != shell_context.env_vars.end() ?
                 var_it->value : ShellManager::instance().get_val(name, context, Quoting::Shell);
 
-            kak_env.push_back(format("kak_{}={}", name, value));
+            if (piped)
+            {
+                env.piped_vars.emplace_back(std::make_unique<PipedVar>(value));
+                env.strings.push_back(format("kak_pipe_{}={}", name, env.piped_vars.back()->m_pipe.read_fd()));
+            }
+            else
+                env.strings.push_back(format("kak_{}={}", name, value));
         } catch (runtime_error&) {}
     }
 
-    return kak_env;
+    return env;
 }
 
 }
@@ -225,13 +254,13 @@ std::pair<String, int> ShellManager::eval(
 
     auto start_time = profile ? Clock::now() : Clock::time_point{};
 
-    auto kak_env = generate_env(cmdline, context, shell_context);
+    auto env = generate_env(cmdline, context, shell_context);
 
     auto spawn_time = profile ? Clock::now() : Clock::time_point{};
 
     Pipe child_stdin{not input.empty()}, child_stdout, child_stderr;
-    pid_t pid = spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env,
-                            [&child_stdin, &child_stdout, &child_stderr] {
+    pid_t pid = spawn_shell(m_shell.c_str(), cmdline, shell_context.params, env,
+                            [&child_stdin, &child_stdout, &child_stderr, &env] {
         auto move = [](int oldfd, int newfd)
         {
             if (oldfd == newfd)
@@ -252,14 +281,19 @@ std::pair<String, int> ShellManager::eval(
 
         close(child_stderr.read_fd());
         move(child_stderr.write_fd(), 2);
+
+        for (auto& piped_var : env.piped_vars)
+            close(piped_var->m_pipe.write_fd());
     });
 
     child_stdin.close_read_fd();
     child_stdout.close_write_fd();
     child_stderr.close_write_fd();
 
-    auto wait_time = Clock::now();
+    for (auto& piped_var : env.piped_vars)
+        piped_var->m_pipe.close_read_fd();
 
+    auto wait_time = Clock::now();
 
     PipeReader stdout_reader{child_stdout};
     PipeReader stderr_reader{child_stderr};
