@@ -471,8 +471,6 @@ std::pair<Vector<String>, int> ShellManager::eval_multiple(
         }
     } process_container;
 
-    auto wait_time = Clock::now();
-
     for (StringView input: inputs) 
     {
         process_container.processes.push_back(std::unique_ptr<PipeProcess>(new PipeProcess{
@@ -480,6 +478,7 @@ std::pair<Vector<String>, int> ShellManager::eval_multiple(
             }));
     }
 
+    auto wait_time = Clock::now();
 
     // block SIGCHLD to make sure we wont receive it before
     // our call to pselect, that will end up blocking indefinitly.
