@@ -6,6 +6,8 @@
 #include "string.hh"
 #include "units.hh"
 #include "vector.hh"
+#include "exception.hh"
+#include "string_utils.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -18,6 +20,18 @@ class String;
 class Regex;
 
 using CandidateList = Vector<String, MemoryDomain::Completion>;
+
+struct file_access_error : runtime_error
+{
+public:
+    file_access_error(StringView filename,
+                      StringView error_desc)
+        : runtime_error(format("{}: {}", filename, error_desc)) {}
+
+    file_access_error(int fd, StringView error_desc)
+        : runtime_error(format("fd {}: {}", fd, error_desc)) {}
+};
+
 
 // parse ~/ and %/ in filename and returns the translated filename
 String parse_filename(StringView filename, StringView buf_dir = {});

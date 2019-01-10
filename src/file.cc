@@ -2,7 +2,6 @@
 
 #include "assert.hh"
 #include "buffer.hh"
-#include "exception.hh"
 #include "flags.hh"
 #include "option_types.hh"
 #include "ranked_match.hh"
@@ -37,17 +36,6 @@
 
 namespace Kakoune
 {
-
-struct file_access_error : runtime_error
-{
-public:
-    file_access_error(StringView filename,
-                      StringView error_desc)
-        : runtime_error(format("{}: {}", filename, error_desc)) {}
-
-    file_access_error(int fd, StringView error_desc)
-        : runtime_error(format("fd {}: {}", fd, error_desc)) {}
-};
 
 String parse_filename(StringView filename, StringView buf_dir)
 {
