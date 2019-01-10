@@ -24,8 +24,10 @@ install:
         export CXX=g++-7;
       fi;
     elif [ $TRAVIS_OS_NAME = osx ]; then
-      brew install gcc@7;
-      export CXX=g++-7
+      if [ "$CXX" = "g++" ]; then
+        brew install gcc@7;
+        export CXX=g++-7;
+      fi;
     fi;
 env:
   global:
