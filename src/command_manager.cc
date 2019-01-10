@@ -13,8 +13,12 @@
 #include "shell_manager.hh"
 #include "utils.hh"
 #include "unit_tests.hh"
+#include "file.hh"
 
 #include <algorithm>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
 
 namespace Kakoune
 {
@@ -95,6 +99,8 @@ Reader& Reader::operator++()
     utf8::to_next(pos, str.end());
     return *this;
 }
+
+String runtime_directory();
 
 namespace
 {
@@ -191,6 +197,8 @@ Token::Type token_type(StringView type_name, bool throw_on_invalid)
         return Token::Type::RawQuoted;
     else if (type_name == "sh")
         return Token::Type::ShellExpand;
+    else if (type_name == "shi")
+        return Token::Type::ShellExpandImmediate;
     else if (type_name == "reg")
         return Token::Type::RegisterExpand;
     else if (type_name == "opt")
@@ -314,6 +322,21 @@ Vector<String> expand_arobase(ConstArrayView<String> params, std::false_type)
     return {params.begin(), params.end()};
 }
 
+// Fletcher, J. G. (January 1982). "An Arithmetic Checksum for Serial Transmissions". IEEE Transactions on Communications COM-30 (1): 247-252.
+static uint16_t Fletcher16( const uint8_t* data, size_t count ) {
+   uint16_t sum1 = 0;
+   uint16_t sum2 = 0;
+   size_t index;
+
+   for( index = 0; index < count; ++index )
+   {
+      sum1 = (sum1 + data[index]) % 255;
+      sum2 = (sum2 + sum1) % 255;
+   }
+
+   return (sum2 << 8) | sum1;
+}
+
 template<bool single>
 std::conditional_t<single, String, Vector<String>>
 expand_token(const Token& token, const Context& context, const ShellContext& shell_context)
@@ -323,10 +346,31 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
     switch (token.type)
     {
     case Token::Type::ShellExpand:
+    case Token::Type::ShellExpandImmediate:
     {
-        auto str = ShellManager::instance().eval(
-            content, context, {}, ShellManager::Flags::WaitForStdout,
-            shell_context).first;
+        String str;
+        auto hash = Fletcher16((const uint8_t *)content.data(), (size_t)content.length());
+        String path = real_path(parse_filename(format("{}/shell_tokens/{}", runtime_directory(), hash)));
+        if(token.type != Token::Type::ShellExpandImmediate and file_exists(path))
+        {
+            MappedFile cached_content{path};
+            str = String(cached_content);
+        }
+        else
+        {
+            str = ShellManager::instance().eval(
+                content, context, {}, ShellManager::Flags::WaitForStdout,
+                shell_context).first;
+
+            int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+            if (fd == -1)
+                throw file_access_error(path, strerror(errno));
+
+            {
+                auto close_fd = on_scope_end([fd]{ close(fd); });
+                write(fd, str);
+            }
+        }
 
         int trailing_eol_count = 0;
         for (auto c : str | reverse())
