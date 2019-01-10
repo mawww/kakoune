@@ -18,6 +18,10 @@ released versions.
 * The `regex` highlighter now supports named capture groups to
   ease readability.
 
+* Kakoune state can now be accessed through pipes by using
+  `$kak_pipe_<name>` which will expand to a file descriptor
+  from which the state can be read.
+
 == Kakoune 2018.10.27
 
 * `remove-hooks` <group> argument is now a regex and removes all

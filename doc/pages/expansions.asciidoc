@@ -141,6 +141,18 @@ TIP: These environment variables are also available in other contexts where
 Kakoune uses a shell command, such as the `|`, `!` or `$` normal mode commands
 (See <<keys#,`:doc keys`>>).
 
+=== Piped expansions
+
+Certain expansions can be big and possibly hit the environment size limit,
+an alternative way to access them from the shell is through the
+`$kak_pipe_<name>` syntax.
+
+`$kak_pipe_<name>` will expand to a file descriptor (an integer) from
+which the value that would be in `$kak_<name>` can be read.
+
+For example, `eval "cat <&$kak_pipe_selection >selection"` will write
+the content of the selection to the file named `selection`.
+
 == Value expansions
 
 Expansions with the type `val` give access to Kakoune internal data that is
