@@ -5,9 +5,11 @@ namespace Kakoune
 {
 
 Regex::Regex(StringView re, RegexCompileFlags flags)
-    : m_impl{new CompiledRegex{compile_regex(re, flags)}},
+    : m_impl{new CompiledRegex{}},
       m_str{re.str()}
-{}
+{
+    *m_impl = compile_regex(re, flags);
+}
 
 int Regex::named_capture_index(StringView name) const
 {
