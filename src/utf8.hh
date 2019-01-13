@@ -109,9 +109,9 @@ ByteCount codepoint_size(char byte)
     }
 }
 
-struct invalid_codepoint{};
-
-inline ByteCount codepoint_size(Codepoint cp)
+template<typename InvalidPolicy = utf8::InvalidPolicy::Pass>
+ByteCount codepoint_size(Codepoint cp)
+    noexcept(noexcept(InvalidPolicy{}(0)))
 {
     if (cp <= 0x7F)
         return 1;
@@ -122,7 +122,10 @@ inline ByteCount codepoint_size(Codepoint cp)
     else if (cp <= 0x10FFFF)
         return 4;
     else
-        throw invalid_codepoint{};
+    {
+        InvalidPolicy{}(cp);
+        return 0;
+    }
 }
 
 template<typename Iterator, typename Sentinel>
@@ -255,7 +258,7 @@ Iterator character_start(Iterator it, const Sentinel& begin) noexcept
     return it;
 }
 
-template<typename OutputIterator>
+template<typename OutputIterator, typename InvalidPolicy = utf8::InvalidPolicy::Pass>
 void dump(OutputIterator&& it, Codepoint cp)
 {
     if (cp <= 0x7F)
@@ -279,7 +282,7 @@ void dump(OutputIterator&& it, Codepoint cp)
         *it++ = 0x80 | (cp & 0x3F);
     }
     else
-        throw invalid_codepoint{};
+        InvalidPolicy{}(cp);
 }
 
 }
