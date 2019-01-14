@@ -1,2 +1,10 @@
 if (int i = bar())
     foo();%( )
+
+if (bar(a, b,
+        c, d))
+    foo(); // comment%( )
+
+if (bar(a, b,
+        c, d)) // comment
+    foo();%( )

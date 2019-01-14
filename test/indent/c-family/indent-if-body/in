@@ -1,1 +1,7 @@
 if (int i = bar())%( )
+
+if (bar(a, b,
+        c, d))%( )
+
+if (bar(a, b,
+        c, d)) // comment%( )

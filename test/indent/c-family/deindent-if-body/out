@@ -1,3 +1,13 @@
 if (int i = bar())
     foo();
 baz
+
+if (bar(a, b,
+        c, d))
+    foo(); // comment
+baz
+
+if (bar(a, b,
+        c, d)) // comment
+    foo();
+baz

@@ -34,8 +34,9 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
         # if previous line is part of a comment, do nothing
         execute-keys -draft <a-?>/\*<ret> <a-K>^\h*[^/*\h]<ret>
     > catch %<
-        # else if previous line closed a paren, copy indent of the opening paren line
-        execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?$<ret> m<a-\;>J <a-S> 1<a-&>
+        # else if previous line closed a paren (possibly followed by words and a comment),
+        # copy indent of the opening paren line
+        execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?(?://[^\n]+)?\n\z<ret> m<a-\;>J <a-S> 1<a-&>
     > catch %<
         # else indent new lines with the same level as the previous one
         execute-keys -draft K <a-&>
@@ -47,9 +48,12 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
     # indent after a label
     try %< execute-keys -draft k <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> >
     # indent after a statement not followed by an opening brace
-    try %< execute-keys -draft k <a-x> <a-k>\b(if|else|for|while)\h*(\(.*?\)\h*)?$<ret> j <a-gt> >
+    try %< execute-keys -draft k <a-x> s\)\h*(?://[^\n]+)?\n\z<ret> \
+                               <a-\;>mB <a-k>\A\b(if|else|for|while)\b<ret> <a-\;>j <a-gt> >
     # deindent after a single line statement end
-    try %< execute-keys -draft K <a-x> <a-k>\;\h*$<ret> K <a-x> s\b(if|else|for|while)\h*(\(.*?\)\h*)?$|.\z<ret> 1<a-&> >
+    try %< execute-keys -draft K <a-x> <a-k>\;\h*(//[^\n]+)?$<ret> \
+                               K <a-x> s\)(\h+\w+)*\h*(//[^\n]+)?\n([^\n]*\n){2}\z<ret> \
+                               MB <a-k>\A\b(if|else|for|while)\b<ret> <a-S>1<a-&> >
     # align to the opening parenthesis or opening brace (whichever is first)
     # on a previous line if its followed by text on the same line
     try %< evaluate-commands -draft %<
