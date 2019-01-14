@@ -45,7 +45,7 @@ add-highlighter shared/go/comment_line region '//' $ fill comment
 
 add-highlighter shared/go/code/ regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\b} 0:value
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     keywords='break default func interface select case defer go map struct
               chan else goto package switch const fallthrough if range type

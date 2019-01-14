@@ -100,8 +100,6 @@ Reader& Reader::operator++()
     return *this;
 }
 
-String runtime_directory();
-
 namespace
 {
 
@@ -197,8 +195,8 @@ Token::Type token_type(StringView type_name, bool throw_on_invalid)
         return Token::Type::RawQuoted;
     else if (type_name == "sh")
         return Token::Type::ShellExpand;
-    else if (type_name == "shi")
-        return Token::Type::ShellExpandImmediate;
+    else if (type_name == "cached")
+        return Token::Type::ShellExpandCached;
     else if (type_name == "reg")
         return Token::Type::RegisterExpand;
     else if (type_name == "opt")
@@ -337,6 +335,22 @@ static uint16_t Fletcher16( const uint8_t* data, size_t count ) {
    return (sum2 << 8) | sum1;
 }
 
+String cache_directory()
+{
+    String cache_home;
+
+    StringView env = getenv("XDG_CACHE_HOME");
+    if (env.empty())
+        cache_home = format("{}/.cache/kak", homedir());
+    else
+        cache_home = format("{}/kak", env);
+
+    if (!file_exists(cache_home))
+        make_directory(cache_home, 01777);
+
+    return cache_home;
+}
+
 template<bool single>
 std::conditional_t<single, String, Vector<String>>
 expand_token(const Token& token, const Context& context, const ShellContext& shell_context)
@@ -346,29 +360,37 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
     switch (token.type)
     {
     case Token::Type::ShellExpand:
-    case Token::Type::ShellExpandImmediate:
+    case Token::Type::ShellExpandCached:
     {
         String str;
-        auto hash = Fletcher16((const uint8_t *)content.data(), (size_t)content.length());
-        String path = real_path(parse_filename(format("{}/shell_tokens/{}", runtime_directory(), hash)));
-        if(token.type != Token::Type::ShellExpandImmediate and file_exists(path))
+        String path;
+        if(token.type == Token::Type::ShellExpandCached)
         {
-            MappedFile cached_content{path};
-            str = String(cached_content);
+            auto hash = Fletcher16((const uint8_t *)content.data(), (size_t)content.length());
+            path = real_path(parse_filename(format("{}/{}", cache_directory(), hash)));
+            if(file_exists(path))
+            {
+                MappedFile cached_content{path};
+                str = String(cached_content);
+            }
         }
-        else
+
+        if(str.empty())
         {
             str = ShellManager::instance().eval(
                 content, context, {}, ShellManager::Flags::WaitForStdout,
                 shell_context).first;
 
-            int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
-            if (fd == -1)
-                throw file_access_error(path, strerror(errno));
-
+            if(token.type == Token::Type::ShellExpandCached)
             {
-                auto close_fd = on_scope_end([fd]{ close(fd); });
-                write(fd, str);
+                int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+                if (fd == -1)
+                    throw file_access_error(path, strerror(errno));
+
+                {
+                    auto close_fd = on_scope_end([fd]{ close(fd); });
+                    write(fd, str);
+                }
             }
         }
 

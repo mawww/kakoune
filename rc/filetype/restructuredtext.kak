@@ -26,7 +26,7 @@ add-highlighter shared/restructuredtext regions
 add-highlighter shared/restructuredtext/content default-region group
 add-highlighter shared/restructuredtext/code region ::\h*\n ^[^\s]  fill meta
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     for ft in c cabal clojure coffee cpp css cucumber ddiff dockerfile \
               fish gas go haml haskell html ini java javascript json \
               julia kak kickstart latex lisp lua makefile moon objc \

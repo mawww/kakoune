@@ -52,7 +52,7 @@ hook global WinSetOption filetype=clojure %{
     set-option window extra_word_chars '_' . / * ? + - < > ! : "'"
 }
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     exec awk -f - <<'EOF'
     BEGIN{
         symbol_char="[^\\s()\\[\\]{}\"\\;@^`~\\\\%/]";

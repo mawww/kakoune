@@ -46,7 +46,7 @@ add-highlighter shared/dart/comment_line region '//' $ fill comment
 
 add-highlighter shared/dart/code/ regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\b} 0:value
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     keywords="abstract|do|import|super|as|in|switch|assert|else|interface|async"
     keywords="${keywords}|enum|is|this|export|library|throw|await|external|mixin|break|extends"

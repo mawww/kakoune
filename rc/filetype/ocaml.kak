@@ -36,7 +36,7 @@ add-highlighter shared/ocaml/code/char regex %{\B'([^'\\]|(\\[\\"'nrtb])|(\\\d{3
 # Macro
 # ‾‾‾‾‾
 
-evaluate-commands %sh{
+evaluate-commands %cached{
   keywords="and|as|asr|assert|begin|class|constraint|do|done|downto|else|end|exception|external|false"
   keywords="${keywords}|for|fun|function|functor|if|in|include|inherit|initializer|land|lazy|let|lor"
   keywords="${keywords}|lsl|lsr|lxor|match|method|mod|module|mutable|new|nonrec|object|of|open|or"

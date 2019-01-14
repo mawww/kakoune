@@ -152,7 +152,6 @@ installdirs:
 		$(sharedir)/rc \
 		$(sharedir)/colors \
 		$(sharedir)/doc \
-		$(sharedir)/shell_tokens \
 		$(docdir) \
 		$(mandir)
 

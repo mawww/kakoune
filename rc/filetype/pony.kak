@@ -40,7 +40,7 @@ add-highlighter shared/pony/double_string region '"'   (?<!\\)(\\\\)*"  fill str
 add-highlighter shared/pony/comment       region '/\*'   '\*/'          fill comment
 add-highlighter shared/pony/line_comment  region '//'   '$'             fill comment
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     values="true|false|None|this"
     meta='use'
