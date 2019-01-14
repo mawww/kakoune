@@ -28,6 +28,14 @@ hook global WinSetOption filetype=clojure %{
 }
 
 evaluate-commands %sh{
+    cache_version=1 # Change when below code is changed
+    cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/kak"
+    cache_file="$cache_dir/clojure-v$cache_version.kak"
+    if [ -f "$cache_file" ]; then
+        printf 'source "%s"\n' "$cache_file"
+        exit 0
+    fi
+    mkdir -p "$cache_dir"
     symbol_char='[^\s()\[\]{}"\;@^`~\\%/]'
     in_core='(clojure\.core/|(?<!/))'
     keywords="
@@ -152,7 +160,8 @@ evaluate-commands %sh{
         hook global WinSetOption filetype=clojure %{
             set-option window static_words $static_words
         }
-    "
+    " >"$cache_file"
+    printf 'source "%s"\n' "$cache_file"
 }
 
 # Commands
