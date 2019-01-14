@@ -18,7 +18,7 @@ add-highlighter shared/protobuf/comment_line region '//' $ fill comment
 
 add-highlighter shared/protobuf/code/ regex %{(0x)?[0-9]+\b} 0:value
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammer
     keywords="default|deprecated|enum|extend|import|message|oneof|option"
     keywords="${keywords}|package|service|syntax"

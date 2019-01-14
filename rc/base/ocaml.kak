@@ -27,7 +27,7 @@ hook -group ocaml-highlight global WinSetOption filetype=ocaml %{
 # Macro
 # ‾‾‾‾‾
 
-evaluate-commands %sh{
+evaluate-commands %cached{
   keywords=and:as:asr:assert:begin:class:constraint:do:done:downto:else:end:exception:external:false:for:fun:function:functor:if:in:include:inherit:initializer:land:lazy:let:lor:lsl:lsr:lxor:match:method:mod:module:mutable:new:nonrec:object:of:open:or:private:rec:sig:struct:then:to:true:try:type:val:virtual:when:while:with
   echo "
     add-highlighter shared/ocaml/code/ regex \b($(printf $keywords | tr : '|'))\b 0:keyword

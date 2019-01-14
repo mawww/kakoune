@@ -40,7 +40,7 @@ add-highlighter shared/ruby/regex/interpolation region -recurse \{ \Q#{ \} fill 
 
 add-highlighter shared/ruby/code/ regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|((?<!:):(([A-Za-z]\w*[=?!]?)|(\[\]=?)))|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:variable
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     # Keywords are collected searching for keywords at
     # https://github.com/ruby/ruby/blob/trunk/parse.y

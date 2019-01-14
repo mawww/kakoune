@@ -27,7 +27,7 @@ hook global WinSetOption filetype=clojure %{
     set-option window extra_word_chars '_' . / * ? + - < > ! : "'"
 }
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     symbol_char='[^\s()\[\]{}"\;@^`~\\%/]'
     in_core='(clojure\.core/|(?<!/))'
     keywords="

@@ -18,7 +18,7 @@ add-highlighter shared/nim/raw_string region [A-Za-z](_?[A-Za-z])*" (?<!")"(?!")
 add-highlighter shared/nim/string region (?<!'\\)"(?!') (?<!\\)(\\\\)*" fill string
 add-highlighter shared/nim/comment region '#?#\[' '\]##?' fill comment
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     opchars='[=+-/<>@$~&%|!?^.:\\*]'
     opnocol='[=+-/<>@$~&%|!?^.\\*]'

@@ -17,7 +17,7 @@ add-highlighter shared/makefile/evaluate-commands region -recurse '\(' '\$\(' '\
 add-highlighter shared/makefile/content/ regex ^[\w.%-]+\h*:\s 0:variable
 add-highlighter shared/makefile/content/ regex [+?:]= 0:operator
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     keywords="ifeq|ifneq|ifdef|ifndef|else|endif|define|endef"
 

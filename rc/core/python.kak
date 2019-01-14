@@ -34,7 +34,7 @@ add-highlighter shared/python/docstring/ default-region fill string
 add-highlighter shared/python/docstring/ region '>>> \K'    '\z' ref python
 add-highlighter shared/python/docstring/ region '\.\.\. \K'    '\z' ref python
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     values="True|False|None|self|inf"
     meta="import|from"
