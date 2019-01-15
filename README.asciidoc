@@ -193,6 +193,10 @@ git clone https://github.com/mawww/kakoune.git && cd kakoune/src
 make
 PREFIX=$HOME/.local make install
 ----------------------------------------------------------------
+It is also available in the official repositories and can be installed with
+--------------------------------------------------
+sudo apt install kakoune
+--------------------------------------------------
 ====
 
 [TIP]
