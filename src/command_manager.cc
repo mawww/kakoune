@@ -13,6 +13,7 @@
 #include "utils.hh"
 #include "unit_tests.hh"
 #include "file.hh"
+#include "hash.hh"
 
 #include <algorithm>
 #include <fcntl.h>
@@ -287,21 +288,6 @@ Vector<String> expand_arobase(ConstArrayView<String> params, std::false_type)
     return {params.begin(), params.end()};
 }
 
-// Fletcher, J. G. (January 1982). "An Arithmetic Checksum for Serial Transmissions". IEEE Transactions on Communications COM-30 (1): 247-252.
-static uint16_t Fletcher16( const uint8_t* data, size_t count ) {
-   uint16_t sum1 = 0;
-   uint16_t sum2 = 0;
-   size_t index;
-
-   for( index = 0; index < count; ++index )
-   {
-      sum1 = (sum1 + data[index]) % 255;
-      sum2 = (sum2 + sum1) % 255;
-   }
-
-   return (sum2 << 8) | sum1;
-}
-
 String cache_directory()
 {
     String cache_home;
@@ -333,7 +319,7 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
         String path;
         if(token.type == Token::Type::ShellExpandCached)
         {
-            auto hash = Fletcher16((const uint8_t *)content.data(), (size_t)content.length());
+            auto hash = hash_data(content.data(), (size_t)content.length());
             path = real_path(parse_filename(format("{}/{}", cache_directory(), hash)));
             if(file_exists(path))
             {
