@@ -14,7 +14,6 @@
 #include "utils.hh"
 #include "unit_tests.hh"
 #include "file.hh"
-#include "hash.hh"
 
 #include <algorithm>
 #include <fcntl.h>
@@ -352,7 +351,7 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
         String path;
         if(token.type == Token::Type::ShellExpandCached)
         {
-            auto hash = hash_data(content.data(), (size_t)content.length());
+            auto hash = hash_value(content);
             path = real_path(parse_filename(format("{}/{}", cache_directory(), hash)));
             if(file_exists(path))
             {
