@@ -145,7 +145,7 @@ evaluate-commands %sh{
             add-highlighter shared/FT regions
             add-highlighter shared/FT/code default-region group
             add-highlighter shared/FT/string region %{MAYBEAT(?<!QUOTE)(?<!QUOTE\\)"} %{(?<!\\)(?:\\\\)*"} fill string
-            add-highlighter shared/FT/raw_string region %{R"([^(]*)\(} %{\)([^")]*)"} fill string
+            add-highlighter shared/FT/raw_string region -match-capture %{R"([^(]*)\(} %{\)([^")]*)"} fill string
             add-highlighter shared/FT/comment region /\* \*/ fill comment
             add-highlighter shared/FT/line_comment region // (?<!\\)(?=\n) fill comment
             add-highlighter shared/FT/disabled region -recurse "#\h*if(?:def)?" ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" fill rgb:666666
