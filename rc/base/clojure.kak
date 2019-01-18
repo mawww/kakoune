@@ -31,7 +31,7 @@ evaluate-commands %sh{
     exec awk '
     BEGIN{
         symbol_char="[^\\s()\\[\\]{}\"\\;@^`~\\\\%/]";
-        in_core="(clojure\.core/|(?<!/))";
+        in_core="(clojure\\.core/|(?<!/))";
         split( \
         "case cond condp cond-> cond->> def definline definterface defmacro defmethod "\
         "defmulti defn defn- defonce defprotocol defrecord defstruct deftype fn if "\
@@ -147,9 +147,9 @@ evaluate-commands %sh{
         printf("add-highlighter shared/clojure/code/ regex ::?(%s+/)?%s+ 0:value\n", symbol_char, symbol_char);
 
         # Numbers
-        printf("add-highlighter shared/clojure/code/ regex (?<!%s)[-+]?(?:0(?:[xX][0-9a-fA-F]+|[0-7]*)|[1-9]\d*)N? 0:value\n", symbol_char);
-        printf("add-highlighter shared/clojure/code/ regex (?<!%s)[-+]?(?:0|[1-9]\d*)(?:\.\d*)(?:M|[eE][-+]?\d+)? 0:value\n", symbol_char);
-        printf("add-highlighter shared/clojure/code/ regex (?<!%s)[-+]?(?:0|[1-9]\d*)/(?:0|[1-9]\d*) 0:value\n", symbol_char);
+        printf("add-highlighter shared/clojure/code/ regex (?<!%s)[-+]?(?:0(?:[xX][0-9a-fA-F]+|[0-7]*)|[1-9]\\d*)N? 0:value\n", symbol_char);
+        printf("add-highlighter shared/clojure/code/ regex (?<!%s)[-+]?(?:0|[1-9]\\d*)(?:\\.\\d*)(?:M|[eE][-+]?\\d+)? 0:value\n", symbol_char);
+        printf("add-highlighter shared/clojure/code/ regex (?<!%s)[-+]?(?:0|[1-9]\\d*)/(?:0|[1-9]\\d*) 0:value\n", symbol_char);
 
         print_word_highlighter(keywords, "keyword");
         print_word_highlighter(core_fns, "function");
