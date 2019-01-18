@@ -910,7 +910,7 @@ void signal_handler(int signal)
     {
         // generate core dump
         ::signal(SIGSEGV, SIG_DFL);
-        kill(getpid(), SIGSEGV);
+        ::kill(getpid(), SIGSEGV);
     }
     else
         abort();
