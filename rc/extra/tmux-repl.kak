@@ -1,6 +1,8 @@
 # http://tmux.github.io/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+declare-option -docstring "tmux pane id in which the REPL is running" str tmux_repl_id
+
 hook global KakBegin .* %sh{
     if [ -n "$TMUX" ]; then
         VERSION_TMUX=$(tmux -V | cut -d' ' -f2)
@@ -31,8 +33,7 @@ define-command -hidden -params 1..2 tmux-repl-impl %{
         shift
         tmux_cmd="$@"
         tmux $tmux_args $tmux_cmd
-        tmux set-buffer -b kak_repl_window $(tmux display-message -p '#I')
-        tmux set-buffer -b kak_repl_pane $(tmux display-message -p '#{pane_id}')
+        printf "set-option global tmux_repl_id '%s'" $(tmux display-message -p '#{session_id}:#{window_id}.#{pane_id}')
     }
 }
 
@@ -56,13 +57,7 @@ define-command -hidden tmux-send-text -params 0..1 -docstring "tmux-send-text [t
         else
             tmux set-buffer -b kak_selection "$1"
         fi
-        kak_orig_window=$(tmux display-message -p '#I')
-        kak_orig_pane=$(tmux display-message -p '#P')
-        tmux select-window -t:$(tmux show-buffer -b kak_repl_window)
-        tmux select-pane -t:.$(tmux show-buffer -b kak_repl_pane)
-        tmux paste-buffer -b kak_selection
-        tmux select-window -t:${kak_orig_window}
-        tmux select-pane -t:.${kak_orig_pane}
+        tmux paste-buffer -b kak_selection -t "$kak_opt_tmux_repl_id"
     }
 }
 
