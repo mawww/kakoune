@@ -28,7 +28,7 @@ hook global WinSetOption filetype=clojure %{
 }
 
 evaluate-commands %sh{
-    exec awk '
+    exec awk -f - <<'EOF'
     BEGIN{
         symbol_char="[^\\s()\\[\\]{}\"\\;@^`~\\\\%/]";
         in_core="(clojure\\.core/|(?<!/))";
@@ -39,7 +39,7 @@ evaluate-commands %sh{
         "when-some . ..", keywords);
 
         split( \
-        "* *'\'' + +'\'' - -'\'' -> ->> ->ArrayChunk ->Eduction ->Vec ->VecNode ->VecSeq / < "\
+        "* *' + +' - -' -> ->> ->ArrayChunk ->Eduction ->Vec ->VecNode ->VecSeq / < "\
         "<= = == > >= StackTraceElement->vec Throwable->map accessor aclone "\
         "add-classpath add-watch agent agent-error agent-errors aget alength alias "\
         "all-ns alter alter-meta! alter-var-root amap ancestors and any? apply "\
@@ -54,7 +54,7 @@ evaluate-commands %sh{
         "clojure-version coll? comment commute comp comparator compare "\
         "compare-and-set! compile complement completing concat  conj conj! cons "\
         "constantly construct-proxy contains? count counted? create-ns "\
-        "create-struct cycle dec dec'\'' decimal? declare dedupe default-data-readers "\
+        "create-struct cycle dec dec' decimal? declare dedupe default-data-readers "\
         "delay delay? deliver denominator deref derive descendants disj disj! "\
         "dissoc dissoc! distinct distinct? do doall dorun doseq dosync dotimes doto "\
         "double double-array double? doubles drop drop-last drop-while eduction "\
@@ -67,7 +67,7 @@ evaluate-commands %sh{
         "future-done? future? gen-class gen-interface gensym get get-in get-method "\
         "get-proxy-class get-thread-bindings get-validator group-by halt-when hash "\
         "hash-map hash-ordered-coll hash-set hash-unordered-coll ident? identical? "\
-        "identity ifn? import in-ns inc inc'\'' indexed? init-proxy inst-ms inst? "\
+        "identity ifn? import in-ns inc inc' indexed? init-proxy inst-ms inst? "\
         "instance? int int-array int? integer? interleave intern interpose into "\
         "into-array ints io! isa? iterate iterator-seq juxt keep keep-indexed key "\
         "keys keyword keyword? last lazy-cat lazy-seq line-seq list list* list? "\
@@ -161,7 +161,8 @@ evaluate-commands %sh{
         print_static_words(core_fns);
         print_static_words(core_vars);
         printf("\n   }\n");
-    }'
+    }
+EOF
 }
 
 # Commands
