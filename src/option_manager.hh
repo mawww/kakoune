@@ -263,9 +263,13 @@ public:
     bool option_exists(StringView name) const { return option_desc(name) != nullptr; }
 
     CandidateList complete_option_name(StringView prefix, ByteCount cursor_pos) const;
+
+    void clear_option_trash() { m_option_trash.clear(); }
+    void move_to_trash(std::unique_ptr<Option>&& option) { m_option_trash.push_back(std::move(option)); }
 private:
     OptionManager& m_global_manager;
     Vector<std::unique_ptr<const OptionDesc>, MemoryDomain::Options> m_descs;
+    Vector<std::unique_ptr<Option>> m_option_trash;
 };
 
 }

@@ -759,6 +759,7 @@ int run_server(StringView session, StringView server_init,
             client_manager.clear_client_trash();
             client_manager.clear_window_trash();
             buffer_manager.clear_buffer_trash();
+            global_scope.option_registry().clear_option_trash();
 
             if (local_client and not contains(client_manager, local_client))
                 local_client = nullptr;
