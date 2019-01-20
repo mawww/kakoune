@@ -141,20 +141,20 @@ evaluate-commands %sh{
             maybe_at=''
         fi
 
-        printf %s\\n '
-            add-highlighter shared/FT regions
-            add-highlighter shared/FT/code default-region group
-            add-highlighter shared/FT/string region %{MAYBEAT(?<!QUOTE)(?<!QUOTE\\)"} %{(?<!\\)(?:\\\\)*"} fill string
-            add-highlighter shared/FT/raw_string region -match-capture %{R"([^(]*)\(} %{\)([^")]*)"} fill string
-            add-highlighter shared/FT/comment region /\* \*/ fill comment
-            add-highlighter shared/FT/line_comment region // (?<!\\)(?=\n) fill comment
-            add-highlighter shared/FT/disabled region -recurse "#\h*if(?:def)?" ^\h*?#\h*if\h+(?:0|FALSE)\b "#\h*(?:else|elif|endif)" fill rgb:666666
-            add-highlighter shared/FT/macro region %{^\h*?\K#} %{(?<!\\)(?=\n)|(?=//)} group
+        cat <<-EOF
+            add-highlighter shared/$ft regions
+            add-highlighter shared/$ft/code default-region group
+            add-highlighter shared/$ft/string region %{$maybe_at(?<!')(?<!'\\\\)"} %{(?<!\\\\)(?:\\\\\\\\)*"} fill string
+            add-highlighter shared/$ft/raw_string region -match-capture %{R"([^(]*)\\(} %{\\)([^")]*)"} fill string
+            add-highlighter shared/$ft/comment region /\\* \\*/ fill comment
+            add-highlighter shared/$ft/line_comment region // (?<!\\\\)(?=\\n) fill comment
+            add-highlighter shared/$ft/disabled region -recurse "#\\h*if(?:def)?" ^\\h*?#\\h*if\\h+(?:0|FALSE)\\b "#\\h*(?:else|elif|endif)" fill rgb:666666
+            add-highlighter shared/$ft/macro region %{^\\h*?\\K#} %{(?<!\\\\)(?=\\n)|(?=//)} group
 
-            add-highlighter shared/FT/macro/ fill meta
-            add-highlighter shared/FT/macro/ regex ^\h*#include\h+(\S*) 1:module
-            add-highlighter shared/FT/macro/ regex /\*.*?\*/ 0:comment
-            ' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g; s/MAYBEAT/${maybe_at}/;"
+            add-highlighter shared/$ft/macro/ fill meta
+            add-highlighter shared/$ft/macro/ regex ^\\h*#include\\h+(\\S*) 1:module
+            add-highlighter shared/$ft/macro/ regex /\\*.*?\\*/ 0:comment
+	EOF
     done
 }
 
@@ -162,11 +162,11 @@ evaluate-commands %sh{
 add-highlighter shared/c/code/numbers regex %{\b-?(0x[0-9a-fA-F]+|\d+)([uU][lL]{0,2}|[lL]{1,2}[uU]?|[fFdDiI])?|'((\\.)?|[^'\\])'} 0:value
 evaluate-commands %sh{
     # Grammar
-    keywords="asm break case continue default do else for goto if return
-              sizeof switch while offsetof alignas alignof"
-    attributes="auto atomic const enum extern inline register restrict static
-                struct typedef union volatile thread_local"
-    types="char double float int long short signed unsigned void
+    keywords='asm break case continue default do else for goto if return
+              sizeof switch while offsetof alignas alignof'
+    attributes='auto atomic const enum extern inline register restrict static
+                struct typedef union volatile thread_local'
+    types='char double float int long short signed unsigned void
            complex imaginary
            fenv_t fexcept_t
            imaxdiv_t
@@ -186,9 +186,9 @@ evaluate-commands %sh{
            mbstate_t wint_t
            wctrans_t wctype_t
            char16_t char32_t
-           ssize_t gid_t uid_t off_t off64_t useconds_t pid_t socklen_t"
+           ssize_t gid_t uid_t off_t off64_t useconds_t pid_t socklen_t'
 
-    macros="assert static_assert NDEBUG
+    macros='assert static_assert NDEBUG
             I
             EDOM EILSEQ ERANGE errno
             FE_DIVBYZERO FE_INEXACT FE_INVALID FE_OVERFLOW FE_UNDERFLOW FE_ALL_EXCEPT FE_DOWNWARD FE_TONEAREST FE_TOWARDZERO FE_UPWARD FE_DFL_ENV
@@ -211,7 +211,7 @@ evaluate-commands %sh{
             CLOCKS_PER_SEC TIME_UTC
             WEOF
             noreturn
-            R_OK W_OK X_OK F_OK F_LOCK F_ULOCK F_TLOCK F_TEST"
+            R_OK W_OK X_OK F_OK F_LOCK F_ULOCK F_TLOCK F_TEST'
 
     join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
@@ -250,20 +250,20 @@ add-highlighter shared/cpp/code/char regex %{(\b(u8|u|U|L)|\B)'((\\.)|[^'\\])'\B
 
 evaluate-commands %sh{
     # Grammar
-    keywords="alignas alignof and and_eq asm bitand bitor break case catch
+    keywords='alignas alignof and and_eq asm bitand bitor break case catch
               compl const_cast continue decltype delete do dynamic_cast
               else export for goto if new not not_eq operator or or_eq
               reinterpret_cast return sizeof static_assert static_cast switch
-              throw try typedef typeid using while xor xor_eq"
-    attributes="audit auto axiom const consteval constexpr default explicit
+              throw try typedef typeid using while xor xor_eq'
+    attributes='audit auto axiom const consteval constexpr default explicit
                 extern final friend inline mutable noexcept override private
                 protected public register requires static thread_local typename
-                virtual volatile"
-    entities="class concept enum namespace struct template union"
-    types="bool byte char char8_t char16_t char32_t double float int long
+                virtual volatile'
+    entities='class concept enum namespace struct template union'
+    types='bool byte char char8_t char16_t char32_t double float int long
            max_align_t nullptr_t ptrdiff_t short signed size_t unsigned void
-           wchar_t"
-    values="NULL false nullptr this true"
+           wchar_t'
+    values='NULL false nullptr this true'
 
     join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
@@ -296,16 +296,16 @@ add-highlighter shared/objc/code/number regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'
 
 evaluate-commands %sh{
     # Grammar
-    keywords="break case continue default do else for goto if return switch
-              while"
-    attributes="IBAction IBOutlet __block assign auto const copy enum extern
+    keywords='break case continue default do else for goto if return switch
+              while'
+    attributes='IBAction IBOutlet __block assign auto const copy enum extern
                 inline nonatomic readonly retain static strong struct typedef
-                union volatile weak"
-    types="BOOL CGFloat NSInteger NSString NSUInteger bool char float
-           instancetype int long short signed size_t unsigned void"
-    values="FALSE NO NULL TRUE YES id nil self super"
-    decorators="autoreleasepool catch class end implementation interface
-                property protocol selector synchronized synthesize try"
+                union volatile weak'
+    types='BOOL CGFloat NSInteger NSString NSUInteger bool char float
+           instancetype int long short signed size_t unsigned void'
+    values='FALSE NO NULL TRUE YES id nil self super'
+    decorators='autoreleasepool catch class end implementation interface
+                property protocol selector synchronized synthesize try'
 
     join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
