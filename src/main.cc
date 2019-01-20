@@ -44,6 +44,10 @@ struct {
     unsigned int version;
     const char* notes;
 } constexpr version_notes[] = { {
+        20190120,
+        "» named capture groups in regex\n"
+        "» auto_complete option renamed to autocomplete\n"
+    }, {
         20181027,
         "» define-commands -shell-completion and -shell-candidates has been renamed\n"
         "» exclusive face attributes is replaced with final (fg/bg/attr)\n"
