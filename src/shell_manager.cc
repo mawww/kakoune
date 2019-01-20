@@ -325,6 +325,234 @@ std::pair<String, int> ShellManager::eval(
     return { std::move(stdout_contents), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
 }
 
+std::pair<Vector<String>, int> ShellManager::eval_multiple(
+    StringView cmdline, const Context& context, Vector<String> inputs,
+    Flags flags, const ShellContext& shell_context)
+{
+    const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
+    const bool profile = debug_flags & DebugFlags::Profile;
+    if (debug_flags & DebugFlags::Shell)
+        write_to_debug_buffer(format("shell:\n{}\n----\n", cmdline));
+
+    auto start_time = profile ? Clock::now() : Clock::time_point{};
+
+    auto kak_env = generate_env(cmdline, context, shell_context);
+
+    auto spawn_time = profile ? Clock::now() : Clock::time_point{};
+
+    struct PipeReader : FDWatcher
+    {
+        String contents;
+
+        PipeReader(Pipe& pipe)
+            : FDWatcher(pipe.read_fd(), FdEvents::Read,
+                        [this, &pipe](FDWatcher& watcher, FdEvents, EventMode) {
+                            char buffer[1024];
+                            while (fd_readable(pipe.read_fd()))
+                            {
+                                size_t size = ::read(pipe.read_fd(), buffer, 1024);
+                                if (size <= 0)
+                                {
+                                    pipe.close_read_fd();
+                                    watcher.disable();
+                                    return;
+                                }
+                                contents += StringView{buffer, buffer+size};
+                            }
+                        })
+        {}
+    };
+
+    struct PipeWriter : FDWatcher
+    {
+        PipeWriter(Pipe& pipe, StringView contents)
+            : FDWatcher(pipe.write_fd(), FdEvents::Write,
+                        [contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) mutable {
+                            while (fd_writable(pipe.write_fd()))
+                            {
+                                ssize_t size = ::write(pipe.write_fd(), contents.begin(),
+                                                       (size_t)contents.length());
+                                if (size > 0)
+                                    contents = contents.substr(ByteCount{(int)size});
+                                if (size == -1 and (errno == EAGAIN or errno == EWOULDBLOCK))
+                                    return;
+                                if (size < 0 or contents.empty())
+                                {
+                                    pipe.close_write_fd();
+                                    watcher.disable();
+                                    return;
+                                }
+                            }
+                        })
+        {
+            int flags = fcntl(pipe.write_fd(), F_GETFL, 0);
+            fcntl(pipe.write_fd(), F_SETFL, flags | O_NONBLOCK);
+        }
+
+    };
+;    
+
+    struct PipeProcess
+    {
+        pid_t pid;
+        PipeWriter *stdin;
+        PipeReader *stdout, *stderr;
+        Pipe child_stdin, child_stdout, child_stderr;
+
+        PipeProcess(StringView input, String m_shell, StringView cmdline,
+                    const ShellContext& shell_context, Vector<String> kak_env) 
+                :  child_stdin(Pipe{not input.empty()}),  child_stdout(Pipe{}),  child_stderr(Pipe{})
+        {
+            pid = spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env,
+                                    [this] {
+                auto move = [](int oldfd, int newfd)
+                {
+                    if (oldfd == newfd)
+                        return;
+                    dup2(oldfd, newfd); close(oldfd);
+                };
+
+                if (child_stdin.read_fd() != -1)
+                {
+                    close(child_stdin.write_fd());
+                    move(child_stdin.read_fd(), 0);
+                }
+                else
+                    move(open("/dev/null", O_RDONLY), 0);
+
+                close(child_stdout.read_fd());
+                move(child_stdout.write_fd(), 1);
+
+                close(child_stderr.read_fd());
+                move(child_stderr.write_fd(), 2);
+            });
+
+            child_stdin.close_read_fd();
+            child_stdout.close_write_fd();
+            child_stderr.close_write_fd();
+
+            stdout = new PipeReader{child_stdout};
+            stderr = new PipeReader{child_stderr};
+            stdin = new PipeWriter{child_stdin, input};
+        }
+
+        ~PipeProcess() {
+            delete stdin;
+            delete stdout;
+            delete stderr;
+        }
+    };
+
+    struct PipeProcessContainer {
+        Vector<std::unique_ptr<PipeProcess>> processes;
+
+        std::pair<bool,int> is_terminated() {
+            bool terminated = true;
+            int status = 0;
+            for (auto& process: processes) {
+                terminated = terminated && (waitpid(process->pid, &status, WNOHANG) != 0);
+            }
+            return {terminated,status};
+        }
+
+        bool writes_closed() {
+            return std::all_of(processes.cbegin(),processes.cend(),
+                 [](auto& p) {
+                     return p->child_stdin.write_fd() == -1;
+                 });
+        }
+
+        bool reads_closed() {
+            return std::all_of(processes.cbegin(),processes.cend(),
+                 [](auto& p) {
+                     return p->child_stdout.read_fd() == -1 
+                        and p->child_stderr.read_fd() == -1;
+                 });
+        }
+    } process_container;
+
+    for (StringView input: inputs) 
+    {
+        process_container.processes.push_back(std::unique_ptr<PipeProcess>(new PipeProcess{
+            input, m_shell, cmdline, shell_context, kak_env
+            }));
+    }
+
+    auto wait_time = Clock::now();
+
+    // block SIGCHLD to make sure we wont receive it before
+    // our call to pselect, that will end up blocking indefinitly.
+    sigset_t mask, orig_mask;
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGCHLD);
+    sigprocmask(SIG_BLOCK, &mask, &orig_mask);
+    auto restore_mask = on_scope_end([&] { sigprocmask(SIG_SETMASK, &orig_mask, nullptr); });
+
+    // check for termination now that SIGCHLD is blocked
+    bool terminated;
+    int status;
+    std::tie(terminated,status) = process_container.is_terminated();
+
+    using namespace std::chrono;
+    static constexpr seconds wait_timeout{1};
+    Optional<DisplayLine> previous_status;
+    Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer)
+    {
+        auto wait_duration = Clock::now() - wait_time;
+        if (context.has_client())
+        {
+            auto& client = context.client();
+            if (not previous_status)
+                previous_status = client.current_status();
+
+            client.print_status({ format("waiting for shell command to finish ({}s)",
+                                          duration_cast<seconds>(wait_duration).count()),
+                                    context.faces()["Information"] });
+            client.redraw_ifn();
+        }
+        timer.set_next_date(Clock::now() + wait_timeout);
+    }, EventMode::Urgent};
+
+    while ((not terminated) or (not process_container.writes_closed()) or
+           ((flags & Flags::WaitForStdout) and not process_container.reads_closed()))
+    {
+        EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
+        if (not terminated) {
+            std::tie(terminated,status) = process_container.is_terminated();
+        }
+    }
+
+    for (auto& process: process_container.processes) {
+        if (not process->stderr->contents.empty())
+            write_to_debug_buffer(format("shell stderr: <<<\n{}>>>", process->stderr->contents));
+    }
+
+    if (profile)
+    {
+        auto end_time = Clock::now();
+        auto full = duration_cast<microseconds>(end_time - start_time);
+        auto spawn = duration_cast<microseconds>(wait_time - spawn_time);
+        auto wait = duration_cast<microseconds>(end_time - wait_time);
+        write_to_debug_buffer(format("shell execution took {} us (spawn: {}, wait: {})",
+                                     (size_t)full.count(), (size_t)spawn.count(), (size_t)wait.count()));
+    }
+
+    if (previous_status) // restore the status line
+    {
+        context.print_status(std::move(*previous_status));
+        context.client().redraw_ifn();
+    }
+
+    Vector<String> output;
+
+    for (auto& process: process_container.processes)
+    {
+        output.push_back(process->stdout->contents);
+    }
+
+    return { std::move(output), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
+}
+
 String ShellManager::get_val(StringView name, const Context& context, Quoting quoting) const
 {
     auto env_var = find_if(m_env_vars, [name](const EnvVarDesc& desc) {

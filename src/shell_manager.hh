@@ -46,6 +46,11 @@ public:
                                 Flags flags = Flags::WaitForStdout,
                                 const ShellContext& shell_context = {});
 
+    std::pair<Vector<String>, int> eval_multiple(StringView cmdline, const Context& context,
+                                Vector<String> input = {},
+                                Flags flags = Flags::WaitForStdout,
+                                const ShellContext& shell_context = {});
+
     String get_val(StringView name, const Context& context, Quoting quoting) const;
 
     CandidateList complete_env_var(StringView prefix, ByteCount cursor_pos) const;

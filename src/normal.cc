@@ -553,6 +553,8 @@ void pipe(Context& context, NormalParams)
                 ScopedEdition edition(context);
                 ForwardChangesTracker changes_tracker;
                 size_t timestamp = buffer.timestamp();
+                Vector<String> inputs;
+                Vector<BufferCoord> begins;
                 for (int i = 0; i < selections.size(); ++i)
                 {
                     selections.set_main_index(i);
@@ -567,21 +569,29 @@ void pipe(Context& context, NormalParams)
 
                     // Needed in case we read selections inside the cmdline
                     context.selections_write_only() = selections;
-
-                    String out = ShellManager::instance().eval(
-                        cmdline, context, in,
-                        ShellManager::Flags::WaitForStdout).first;
-
-                    if (insert_eol)
-                    {
-                        in.resize(in.length()-1, 0);
-                        if (not out.empty() and out.back() == '\n')
-                            out.resize(out.length()-1, 0);
-                    }
-                    apply_diff(buffer, beg, in, out);
-
-                    changes_tracker.update(buffer, timestamp);
+                    inputs.push_back(std::move(in));
+                    begins.push_back(std::move(beg));
                 }
+
+                Vector<String> output = ShellManager::instance().eval_multiple(
+                    cmdline, context, inputs,
+                    ShellManager::Flags::WaitForStdout).first;
+
+                /*if (insert_eol)
+                {
+                    in.resize(in.length()-1, 0);
+                    if (not out.empty() and out.back() == '\n')
+                        out.resize(out.length()-1, 0);
+                }*/
+                for (int i=0; i < inputs.size(); ++i)
+                {
+                    auto in = inputs[i];
+                    auto out = output[i];
+                    auto beg = begins[i];
+                    apply_diff(buffer, beg, in, out);
+                }
+
+                changes_tracker.update(buffer, timestamp);
             }
             else
             {
