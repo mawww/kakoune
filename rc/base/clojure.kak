@@ -122,18 +122,14 @@ evaluate-commands %sh{
         "*print-length* *print-level* *print-meta* *print-namespace-maps* "\
         "*print-readably* *read-eval* *unchecked-math* *warn-on-reflection*", core_vars);
     }
-    function print_word_highlighter(words, face) {
+    function print_word_highlighter(words, face, first) {
         printf("add-highlighter shared/clojure/code/ regex (?<!%s)%s(", \
                symbol_char, in_core);
         first = 1;
         for (i in words) {
-            if (!first) {
-                printf("|");
-            }
+            if (!first) { printf("|"); }
+            printf("\\Q%s\\E", words[i]);
             first = 0;
-            word = words[i];
-            gsub(/[+?#*\.]/, "\\\\&", word);
-            printf("%s", word);
         }
         printf(")(?!%s) 0:%s\n", symbol_char, face);
     }
