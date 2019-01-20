@@ -25,88 +25,94 @@ add-highlighter shared/scheme/quoted-form region -recurse "\(" "'\(" "\)" fill v
 add-highlighter shared/scheme/code/ regex (#t|#f) 0:value
 add-highlighter shared/scheme/code/ regex \b[0-9]+\.[0-9]*\b 0:value
 
-evaluate-commands %sh{
+evaluate-commands %sh{ exec awk -f - <<'EOF'
+    BEGIN {
+        # Primitive expressions that cannot be derived.
+        split("define do let let* letrec if cond case and or begin lambda delay delay-force set!", keywords);
 
-	# Primitive expressions that cannot be derived.
-	keywords='define do let let* letrec if cond case and or begin lambda delay delay-force set!'
+        # Macro expressions.
+        split("define-syntax let-syntax letrec-syntax syntax-rules syntax-case", meta);
 
-	# Macro expressions.
-	meta="define-syntax let-syntax letrec-syntax syntax-rules syntax-case"
+        # Basic operators.
+        split("* + - ... / < <= = => > >=", operators);
 
-	# Basic operators.
-	operators='* + - ... / < <= = => > >='
+        # Procedures that create a base type and their predicates (for easier type checking)
+        split("list vector bytevector cons string boolean? list? pair? "\
+              "vector? bytevector? string? char? complex? eof-object? input-port? "\
+              "null? number? output-port? procedure? symbol?", types);
 
-	# Procedures that create a base type and their predicates (for easier type checking)
-	types="list vector bytevector cons string boolean? list? pair?
-	vector? bytevector? string? char? complex? eof-object? input-port?
-	null? number? output-port? procedure? symbol?"
+        # R5RS available procedures
+        split("abs acos angle append apply asin assoc assq assv atan "\
+              "caaaar caaadr caaar caadar caaddr caadr "\
+              "caar cadaar cadadr cadar caddar cadddr caddr cadr "\
+              "call-with-current-continuation call-with-input-file "\
+              "call-with-output-file call-with-values car cdaaar cdaadr cdaar "\
+              "cdadar cdaddr cdadr cdar cddaar cddadr cddar cdddar cddddr cdddr "\
+              "cddr cdr ceiling char->integer char-alphabetic? char-ci<=? "\
+              "char-ci<? char-ci=? char-ci>=? char-ci>? char-downcase "\
+              "char-lower-case? char-numeric? char-ready? char-upcase "\
+              "char-upper-case? char-whitespace? char<=? char<? char=? "\
+              "char>=? char>?  close-input-port close-output-port  cons cos "\
+              "current-input-port current-output-port denominator display "\
+              "dynamic-wind else  eq? equal? eqv? eval even? exact->inexact "\
+              "exact? exp expt floor for-each force gcd imag-part inexact->exact "\
+              "inexact?  integer->char integer? interaction-environment lcm "\
+              "length list list->string list->vector list-ref list-tail  load log "\
+              "magnitude make-polar make-rectangular make-string make-vector "\
+              "map max member memq memv min modulo negative? newline not "\
+              "null-environment  number->string numerator odd? open-input-file "\
+              "open-output-file or peek-char positive?  quasiquote quote quotient "\
+              "rational? rationalize read read-char real-part real? remainder "\
+              "reverse round scheme-report-environment set-car! set-cdr! sin "\
+              "sqrt string->list string->number string->symbol string-append "\
+              "string-ci<=? string-ci<? string-ci=? string-ci>=? "\
+              "string-ci>? string-copy string-fill! string-length string-ref "\
+              "string-set! string<=? string<? string=? string>=? string>? "\
+              "substring symbol->string   tan truncate values vector "\
+              "vector->list vector-fill! vector-length vector-ref vector-set! "\
+              "with-input-from-file with-output-to-file write write-char zero?",
+              builtins);
 
-	# R5RS available procedures
-	builtins="abs acos angle append apply asin assoc assq assv atan
-                caaaar caaadr caaar caadar caaddr caadr
-            	caar cadaar cadadr cadar caddar cadddr caddr cadr
-            	call-with-current-continuation call-with-input-file
-            	call-with-output-file call-with-values car cdaaar cdaadr cdaar
-            	cdadar cdaddr cdadr cdar cddaar cddadr cddar cdddar cddddr cdddr
-            	cddr cdr ceiling char->integer char-alphabetic? char-ci<=?
-            	char-ci<? char-ci=? char-ci>=? char-ci>? char-downcase
-            	char-lower-case? char-numeric? char-ready? char-upcase
-            	char-upper-case? char-whitespace? char<=? char<? char=?
-            	char>=? char>?	close-input-port close-output-port  cons cos
-            	current-input-port current-output-port denominator display
-            	dynamic-wind else  eq? equal? eqv? eval even? exact->inexact
-            	exact? exp expt floor for-each force gcd imag-part inexact->exact
-            	inexact?  integer->char integer? interaction-environment lcm
-            	length list list->string list->vector list-ref list-tail  load log
-            	magnitude make-polar make-rectangular make-string make-vector
-            	map max member memq memv min modulo negative? newline not
-            	null-environment  number->string numerator odd? open-input-file
-            	open-output-file or peek-char positive?  quasiquote quote quotient
-            	rational? rationalize read read-char real-part real? remainder
-            	reverse round scheme-report-environment set-car! set-cdr! sin
-            	sqrt string->list string->number string->symbol string-append
-            	string-ci<=? string-ci<? string-ci=? string-ci>=?
-            	string-ci>? string-copy string-fill! string-length string-ref
-            	string-set! string<=? string<? string=? string>=? string>?
-            	substring symbol->string   tan truncate values vector
-            	vector->list vector-fill! vector-length vector-ref vector-set!
-            	with-input-from-file with-output-to-file write write-char zero?"
+        non_word_chars="[\\s\\(\\)\\[\\]\\{\\};\\|]";
 
-    join () { printf "%s" "$1" | tr -s ' \n\t' "$2"; }
-
-    printf '%s\n' "hook global WinSetOption filetype=scheme %{
-           set-option window static_words $(join "$keywords $meta $operators $builtins" ' ' )
-    }"
-
-    exact_quote () {
-		for symbol in "$@"
-		do
-			printf '\\Q%s\\E ' "$symbol"
-		done
+        normal_identifiers="-!$%&\\*\\+\\./:<=>\\?\\^_~a-zA-Z0-9";
+        identifier_chars="[" normal_identifiers "][" normal_identifiers ",#]*";
+    }
+    function add_highlighter(regex, highlight) {
+        printf("add-highlighter shared/scheme/code/ regex \"%s\" %s\n", regex, highlight);
+    }
+    function quoted_join(words, quoted, first) {
+        first=1
+        for (i in words) {
+            if (!first) { quoted=quoted "|"; }
+            quoted=quoted "\\Q" words[i] "\\E";
+            first=0;
+        }
+        return quoted;
+    }
+    function add_word_highlighter(words, face, regex) {
+        regex = non_word_chars "+(" quoted_join(words) ")" non_word_chars
+        add_highlighter(regex, "1:" face)
+    }
+    function print_words(words) {
+        for (i in words) { printf(" %s", words[i]); }
     }
 
-    qkeys=$(join "$(exact_quote $keywords)" '|')
-    qmeta=$(join "$(exact_quote $meta)" '|')
-    qops=$(join "$(exact_quote "$operators")" '|')
-    qbuiltins=$(join "$(exact_quote $builtins)" '|')
-    qtypes=$(join "$(exact_quote $types)" '|')
+    BEGIN {
+        printf("hook global WinSetOption filetype=scheme %%{ set-option window static_words ");
+        print_words(keywords); print_words(meta); print_words(operators); print_words(builtins); 
+        printf(" }\n")
 
-	non_word_chars='[\s\(\)\[\]\{\};\|]'
-	normal_identifiers='-!$%&\*\+\./:<=>\?\^_~a-zA-Z0-9'
-	identifier_chars="[${normal_identifiers}][${normal_identifiers},#]*"
-
-	add_highlighter () {
-    	printf '%s\n' "add-highlighter shared/scheme/code/ regex \"$1\" $2"
-	}
-
-    add_highlighter "${non_word_chars}+(${qkeys})${non_word_chars}" "1:keyword"
-    add_highlighter "${non_word_chars}+(${qmeta})${non_word_chars}" "1:meta"
-    add_highlighter "${non_word_chars}+(${qops})${non_word_chars}" "1:operator"
-    add_highlighter "${non_word_chars}+(${qbuiltins})${non_word_chars}" "1:builtin"
-    add_highlighter "${non_word_chars}+('${identifier_chars})" "1:attribute"
-    add_highlighter "${non_word_chars}+(${qtypes})${non_word_chars}" "1:type"
-    add_highlighter "\(define\W+\(($identifier_chars)" "1:function"
-    add_highlighter "\(define\W+($identifier_chars)\W+\(lambda" "1:function"
+        add_word_highlighter(keywords, "keyword");
+        add_word_highlighter(meta, "meta");
+        add_word_highlighter(operators, "operator");
+        add_word_highlighter(builtins, "builtin");
+        add_word_highlighter(types, "type");
+        add_highlighter(non_word_chars "+('" identifier_chars ")", "1:attribute");
+        add_highlighter("\\(define\\W+\\((" identifier_chars ")", "1:function");
+        add_highlighter("\\(define\\W+(" identifier_chars ")\\W+\\(lambda", "1:function");
+    }
+EOF
 }
 
 # Initialization
