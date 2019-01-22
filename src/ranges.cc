@@ -16,6 +16,9 @@ UnitTest test_ranges{[] {
     check_equal(","_sv     | split<StringView>(','), {"", ""});
     check_equal(""_sv      | split<StringView>(','), {});
 
+    check_equal("a,b,c,"_sv | split_after<StringView>(','), {"a,", "b,", "c,"});
+    check_equal("a,b,c"_sv  | split_after<StringView>(','), {"a,", "b,", "c"});
+
     check_equal(R"(a\,,\,b,\,)"_sv | split<StringView>(',', '\\')
                                    | transform(unescape<',', '\\'>), {"a,", ",b", ","});
     check_equal(R"(\,\,)"_sv | split<StringView>(',', '\\')

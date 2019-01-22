@@ -491,29 +491,33 @@ void command(Context& context, NormalParams params)
 
 BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView after)
 {
-    // The diff algorithm is O(ND) with N the sum of string len, and D the diff count
-    // do not use it if our data is too big
-    constexpr ByteCount size_limit = 100 * 1024;
-    if (before.length() + after.length() > size_limit)
-    {
-        buffer.erase(pos, buffer.advance(pos, before.length()));
-        return buffer.insert(pos, after);
-    }
+    const auto lines_before = before | split_after<StringView>('\n') | gather<Vector<StringView>>();
+    const auto lines_after = after | split_after<StringView>('\n') | gather<Vector<StringView>>();
 
-    auto diffs = find_diff(before.begin(), (int)before.length(), after.begin(), (int)after.length());
+    auto diffs = find_diff(lines_before.begin(), (int)lines_before.size(),
+                           lines_after.begin(), (int)lines_after.size());
 
+    auto byte_count = [](auto&& lines, int first, int count) {
+        return std::accumulate(&lines[first], &lines[first+count], 0_byte,
+                               [](ByteCount l, StringView s) { return l + s.length(); });
+    };
+
+    int posA = 0;
     for (auto& diff : diffs)
     {
         switch (diff.mode)
         {
         case Diff::Keep:
-            pos = buffer.advance(pos, diff.len);
+            pos = buffer.advance(pos, byte_count(lines_before, posA, diff.len));
+            posA += diff.len;
             break;
         case Diff::Add:
-            pos = buffer.insert(pos, after.substr(ByteCount{diff.posB}, ByteCount{diff.len}));
+            pos = buffer.insert(pos, {lines_after[diff.posB].begin(),
+                                      lines_after[diff.posB + diff.len - 1].end()});
             break;
         case Diff::Remove:
-            pos = buffer.erase(pos, buffer.advance(pos, diff.len));
+            pos = buffer.erase(pos, buffer.advance(pos, byte_count(lines_before, posA, diff.len)));
+            posA += diff.len;
             break;
         }
     }
