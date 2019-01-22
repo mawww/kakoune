@@ -1,4 +1,4 @@
-debug ?= yes
+debug ?= no
 static ?= no
 gzip_man ?= yes
 
