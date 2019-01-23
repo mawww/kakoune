@@ -65,6 +65,10 @@ characters, selections have an anchor and a cursor character. Most commands
 move both of them, except when extending selection where the anchor character
 stays fixed and the cursor one moves around.
 
+For more information, use the \fB:doc\fR command after starting Kakoune,
+the Kakoune wiki at https://github.com/mawww/kakoune/wiki
+or the main Kakoune web site: https://kakoune.org/
+
 .SH OPTIONS
 
 .TP
@@ -208,3 +212,9 @@ After that, if it exists, source the \fI$XDG_CONFIG_HOME/kak/kakrc\fR file
 which should be used for user configuration. In order to continue autoloading
 site\-wide files with a local autoload directory, just add a symbolic link
 to \fI../share/kak/autoload\fR into your local autoload directory.
+
+.SH SEE ALSO
+
+.BR vi (1),
+.BR vim (1),
+.BR sam (1plan9)
