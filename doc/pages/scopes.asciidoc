@@ -46,6 +46,16 @@ The above priority line implies that objects can have individual values that
 will be resolved first in the *window* scope (highest priority), then in
 the *buffer* scope, and finally in the *global* scope (lowest priority).
 
+Normally, the *buffer* scope keyword means the scope associated with the
+currently active buffer, but it's possible to specify any existing buffer by
+adding an `=` and the value of `%val{buffile}` for that buffer
+(See <<expansions#value-expansions,`:doc expansions value-expansions`>>).
+For example, to set the `indentwidth` option for the `/etc/fstab` buffer::
+
+----
+set-option buffer=/etc/fstab indentwidth 8
+----
+
 The `set-option` and `unset-option` commands also accept *current* as 
 a valid scope name. It refers to the narrowest scope the option is set in.
 

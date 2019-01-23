@@ -96,20 +96,21 @@ of the file onto the filesystem
 
 *set-option* [<switches>] <scope> <name> <value>::
     *alias* set +
-    change the value of an option
-    note that the name of a particular buffer can be specified when the
-    target *scope* is 'buffer', e.g. set buffer=/path/to/buffer foo "bar";
-    the scope can also take the `current` special value, which will automatically
-    point to the narrowest scope available in the current context
-    (See <<options#set-option,`:doc options set-option`>>)
+    change the value of an option in *scope*
+    (See <<options#set-option,`:doc options set-option`>>
+    and <<scopes#,`:doc scopes`>>)
 
 *unset-option* <scope> <name>::
     *alias* unset +
-    unset the value of an option (See <<options#unset-option,`:doc options unset-option`>>)
+    unset the value of an option in *scope*, so the value from an outer scope
+    is used
+    (See <<options#unset-option,`:doc options unset-option`>>
+    and <<scopes#,`:doc scopes`>>)
 
 *update-option* <scope> <name>::
     update the value of an option if its type supports that operation
-    (See <<options#update-option,`:doc options update-option`>>)
+    (See <<options#update-option,`:doc options update-option`>>
+    and <<scopes#,`:doc scopes`>>)
 
 == Commands and Keys
 
@@ -118,11 +119,13 @@ of the file onto the filesystem
     define a new command (See <<declaring-new-commands,Declaring new commands>>)
 
 *alias* <scope> <name> <command>::
-    define a new alias, within the context of a scope
+    define a new alias named *name* in *scope*
+    (See <<scopes#,`:doc scopes`>>)
 
 *unalias* <scope> <name> [<command>]::
     remove an alias if its current value is the same as the one passed
     as an optional parameter, remove it unconditionally otherwise
+    (See <<scopes#,`:doc scopes`>>)
 
 *evaluate-commands* [<switches>] <command> ...::
     *alias* eval +
@@ -134,10 +137,12 @@ of the file onto the filesystem
     execute a series of keys, as if they were hit (See <<execeval#,`:doc execeval`>>)
 
 *map* [<switches>] <scope> <mode> <key> <keys>::
-    bind a list of keys to a combination (See <<mapping#,`:doc mapping`>>)
+    bind a list of keys to a combination (See <<mapping#,`:doc mapping`>>
+    and <<scopes#,`:doc scopes`>>)
 
 *unmap* <scope> <mode> <key> [<expected>]::
-    unbind a key combination (See <<mapping#,`:doc mapping`>>)
+    unbind a key combination (See <<mapping#,`:doc mapping`>>
+    and <<scopes#,`:doc scopes`>>)
 
 *declare-user-mode* <name>::
     declare a new user keymap mode
@@ -151,13 +156,13 @@ of the file onto the filesystem
 == Hooks
 
 *hook* [-group <group>] <scope> <hook_name> <filtering_regex> <command>::
-    execute a command whenever an event is triggered
-    (See <<hooks#,`:doc hooks`>>)
+    execute *command* whenever an *hook_name* is triggered in *scope*
+    (See <<hooks#,`:doc hooks`>> and <<scopes#,`:doc scopes`>>)
 
 *remove-hooks* <scope> <group>::
     *alias* rmhooks +
     remove every hooks in *scope* that are part of the given *group*
-    (See <<hooks#,`:doc hooks`>>)
+    (See <<hooks#,`:doc hooks`>> and <<scopes#,`:doc scopes`>>)
 
 == Display
 
@@ -173,10 +178,12 @@ of the file onto the filesystem
 
 *set-face* <scope> <name> <facespec>::
     *alias* face +
-    define a face in *scope* (See <<faces#,`:doc faces`>>)
+    define a face in *scope*
+    (See <<faces#,`:doc faces`>> and <<scopes#,`:doc scopes`>>)
 
 *unset-face* <scope> <name>::
-    Remove a face definition from *scope* (See <<faces#,`:doc faces`>>)
+    Remove a face definition from *scope*
+    (See <<faces#,`:doc faces`>> and <<scopes#,`:doc scopes`>>)
 
 *colorscheme* <name>::
     load named colorscheme
