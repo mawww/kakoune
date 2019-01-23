@@ -489,7 +489,7 @@ void command(Context& context, NormalParams params)
         });
 }
 
-void apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView after)
+BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView after)
 {
     // The diff algorithm is O(ND) with N the sum of string len, and D the diff count
     // do not use it if our data is too big
@@ -497,8 +497,7 @@ void apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView a
     if (before.length() + after.length() > size_limit)
     {
         buffer.erase(pos, buffer.advance(pos, before.length()));
-        buffer.insert(pos, after);
-        return;
+        return buffer.insert(pos, after);
     }
 
     auto diffs = find_diff(before.begin(), (int)before.length(), after.begin(), (int)after.length());
@@ -511,14 +510,14 @@ void apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView a
             pos = buffer.advance(pos, diff.len);
             break;
         case Diff::Add:
-            buffer.insert(pos, after.substr(ByteCount{diff.posB}, ByteCount{diff.len}));
-            pos = buffer.advance(pos, diff.len);
+            pos = buffer.insert(pos, after.substr(ByteCount{diff.posB}, ByteCount{diff.len}));
             break;
         case Diff::Remove:
-            buffer.erase(pos, buffer.advance(pos, diff.len));
+            pos = buffer.erase(pos, buffer.advance(pos, diff.len));
             break;
         }
     }
+    return pos;
 }
 
 template<bool replace>
@@ -544,19 +543,14 @@ void pipe(Context& context, NormalParams)
 
             Buffer& buffer = context.buffer();
             SelectionList selections = context.selections();
-            auto restore_sels = on_scope_end([&, old_main = selections.main_index()] {
-                selections.set_main_index(old_main);
-                context.selections() = std::move(selections);
-            });
             if (replace)
             {
                 ScopedEdition edition(context);
                 ForwardChangesTracker changes_tracker;
                 size_t timestamp = buffer.timestamp();
-                for (int i = 0; i < selections.size(); ++i)
+                Vector<Selection> new_sels;
+                for (auto& sel : selections)
                 {
-                    selections.set_main_index(i);
-                    auto& sel = selections.main();
                     const auto beg = changes_tracker.get_new_coord_tolerant(sel.min());
                     const auto end = changes_tracker.get_new_coord_tolerant(sel.max());
 
@@ -566,7 +560,7 @@ void pipe(Context& context, NormalParams)
                         in += '\n';
 
                     // Needed in case we read selections inside the cmdline
-                    context.selections_write_only() = selections;
+                    context.selections_write_only().set({keep_direction(Selection{beg, end}, sel)}, 0);
 
                     String out = ShellManager::instance().eval(
                         cmdline, context, in,
@@ -578,13 +572,23 @@ void pipe(Context& context, NormalParams)
                         if (not out.empty() and out.back() == '\n')
                             out.resize(out.length()-1, 0);
                     }
-                    apply_diff(buffer, beg, in, out);
+                    auto new_end = apply_diff(buffer, beg, in, out);
+                    if (new_end != beg)
+                        new_sels.push_back(keep_direction({beg, buffer.char_prev(new_end), std::move(sel.captures())}, sel));
+                    else
+                    {
+                        if (new_end != BufferCoord{})
+                            new_end = buffer.char_prev(new_end);
+                        new_sels.push_back({new_end, new_end, std::move(sel.captures())});
+                    }
 
                     changes_tracker.update(buffer, timestamp);
                 }
+                context.selections_write_only().set(std::move(new_sels), selections.main_index());
             }
             else
             {
+                const auto old_main = selections.main_index();
                 for (int i = 0; i < selections.size(); ++i)
                 {
                     selections.set_main_index(i);
@@ -592,6 +596,7 @@ void pipe(Context& context, NormalParams)
                                                   content(buffer, selections.main()),
                                                   ShellManager::Flags::None);
                 }
+                selections.set_main_index(old_main);
             }
         });
 }

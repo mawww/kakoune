@@ -484,7 +484,7 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
                             : BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
 
     m_changes.push_back({ Change::Insert, pos, end });
-    return pos;
+    return end;
 }
 
 BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
@@ -809,7 +809,8 @@ UnitTest test_buffer{[]()
 UnitTest test_undo{[]()
 {
     Buffer buffer("test", Buffer::Flags::None, "allo ?\nmais que fais la police\n hein ?\n youpi\n");
-    auto pos = buffer.insert(buffer.end_coord(), "kanaky\n"); // change 1
+    auto pos = buffer.end_coord();
+    buffer.insert(pos, "kanaky\n");                           // change 1
     buffer.commit_undo_group();
     buffer.erase(pos, buffer.end_coord());                    // change 2
     buffer.commit_undo_group();

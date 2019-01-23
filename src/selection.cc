@@ -409,8 +409,12 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
         const String& str = strings[std::min(index, strings.size()-1)];
 
         const auto pos = (mode == InsertMode::Replace) ?
-            replace(*m_buffer, sel, str)
-          : m_buffer->insert(changes_tracker.get_new_coord(insert_pos[index]), str);
+            sel.min() : changes_tracker.get_new_coord(insert_pos[index]);
+
+        if (mode == InsertMode::Replace)
+            replace(*m_buffer, sel, str);
+        else
+            m_buffer->insert(pos, str);
 
         size_t old_timestamp = m_timestamp;
         changes_tracker.update(*m_buffer, m_timestamp);
