@@ -1139,3 +1139,15 @@ int main(int argc, char* argv[])
     }
     return 0;
 }
+
+asm(R"(
+.pushsection ".debug_gdb_scripts", "MS",@progbits,1
+.byte 4
+.ascii "kakoune-inline-gdb.py\n"
+.ascii "import os.path\n"
+.ascii "sys.path.insert(0, os.path.dirname(gdb.current_objfile().filename) + '/../share/kak/gdb/')\n"
+.ascii "import gdb.printing\n"
+.ascii "import kakoune\n"
+.ascii "gdb.printing.register_pretty_printer(gdb.current_objfile(), kakoune.build_pretty_printer())\n"
+.popsection
+)");
