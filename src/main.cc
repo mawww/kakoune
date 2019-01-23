@@ -1140,6 +1140,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+#if defined(__ELF__)
 asm(R"(
 .pushsection ".debug_gdb_scripts", "MS",@progbits,1
 .byte 4
@@ -1151,3 +1152,4 @@ asm(R"(
 .ascii "gdb.printing.register_pretty_printer(gdb.current_objfile(), kakoune.build_pretty_printer())\n"
 .popsection
 )");
+#endif
