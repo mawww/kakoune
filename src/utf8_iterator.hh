@@ -18,11 +18,15 @@ template<typename BaseIt,
          typename CodepointType = Codepoint,
          typename DifferenceType = CharCount,
          typename InvalidPolicy = utf8::InvalidPolicy::Pass>
-class iterator : public std::iterator<std::bidirectional_iterator_tag,
-                                      CodepointType, DifferenceType,
-                                      CodepointType*, CodepointType>
+class iterator
 {
 public:
+    using value_type = CodepointType;
+    using difference_type = DifferenceType;
+    using pointer = CodepointType*;
+    using reference = CodepointType&;
+    using iterator_category = std::bidirectional_iterator_tag;
+
     iterator() = default;
     constexpr static bool noexcept_policy = noexcept(InvalidPolicy{}(0));
 

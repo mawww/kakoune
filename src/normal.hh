@@ -1,7 +1,6 @@
 #ifndef normal_hh_INCLUDED
 #define normal_hh_INCLUDED
 
-#include "context.hh"
 #include "optional.hh"
 #include "keys.hh"
 #include "keymap_manager.hh"

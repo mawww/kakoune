@@ -12,7 +12,6 @@
 #include "option_types.hh"
 
 #include <algorithm>
-#include <sstream>
 
 namespace Kakoune
 {

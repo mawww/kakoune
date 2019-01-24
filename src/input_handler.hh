@@ -47,6 +47,10 @@ enum class InsertMode : unsigned;
 enum class KeymapMode : char;
 enum class CursorMode;
 
+using PromptCompleter = std::function<Completions (const Context&, CompletionFlags,
+                                             StringView, ByteCount)>;
+
+
 class InputHandler : public SafeCountable
 {
 public:
@@ -66,7 +70,7 @@ public:
     // not change the mode itself
     void prompt(StringView prompt, String initstr, String emptystr,
                 Face prompt_face, PromptFlags flags,
-                Completer completer, PromptCallback callback);
+                PromptCompleter completer, PromptCallback callback);
     void set_prompt_face(Face prompt_face);
 
     // enter menu mode, callback is called on each selection change,

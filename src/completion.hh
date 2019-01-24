@@ -42,9 +42,6 @@ enum class CompletionFlags
 
 constexpr bool with_bit_ops(Meta::Type<CompletionFlags>) { return true; }
 
-using Completer = std::function<Completions (const Context&, CompletionFlags,
-                                             StringView, ByteCount)>;
-
 inline Completions complete_nothing(const Context&, CompletionFlags,
                                     StringView, ByteCount cursor_pos)
 {

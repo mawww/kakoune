@@ -7,6 +7,8 @@
 #include "meta.hh"
 #include "enum.hh"
 
+#include <memory>
+
 namespace Kakoune
 {
 

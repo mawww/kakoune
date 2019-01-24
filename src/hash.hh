@@ -2,7 +2,7 @@
 #define hash_hh_INCLUDED
 
 #include <type_traits>
-#include <functional>
+#include <utility>
 
 #include <cstddef>
 
@@ -10,13 +10,6 @@ namespace Kakoune
 {
 
 size_t hash_data(const char* data, size_t len);
-
-template<typename... Type>
-constexpr size_t hash_value(const Type&... val)
-{
-    static_assert(sizeof...(Type) == 1, "");
-    return std::hash<Type...>()(val...);
-}
 
 template<typename Type>
 std::enable_if_t<std::is_integral<Type>::value, size_t>

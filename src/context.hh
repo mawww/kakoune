@@ -5,6 +5,8 @@
 #include "optional.hh"
 #include "utils.hh"
 
+#include <functional>
+
 namespace Kakoune
 {
 

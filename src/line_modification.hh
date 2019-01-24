@@ -7,6 +7,8 @@
 #include "range.hh"
 #include "vector.hh"
 
+#include <functional>
+
 namespace Kakoune
 {
 

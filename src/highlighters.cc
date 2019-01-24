@@ -9,20 +9,15 @@
 #include "face_registry.hh"
 #include "highlighter_group.hh"
 #include "line_modification.hh"
-#include "option.hh"
 #include "option_types.hh"
 #include "parameters_parser.hh"
 #include "ranges.hh"
 #include "regex.hh"
 #include "register_manager.hh"
 #include "string.hh"
-#include "unit_tests.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
 #include "window.hh"
-
-#include <locale>
-#include <cstdio>
 
 namespace Kakoune
 {

@@ -29,7 +29,6 @@
 #include "user_interface.hh"
 #include "window.hh"
 
-#include <cstring>
 #include <functional>
 #include <utility>
 
@@ -1851,7 +1850,7 @@ const CommandDesc prompt_cmd = {
         const String& command = parser[1];
         auto initstr = parser.get_switch("init").value_or(StringView{});
 
-        Completer completer;
+        PromptCompleter completer;
         if (parser.get_switch("file-completion"))
             completer = [](const Context& context, CompletionFlags,
                            StringView prefix, ByteCount cursor_pos) -> Completions {
@@ -1896,7 +1895,7 @@ const CommandDesc prompt_cmd = {
                 auto& text = sc.env_vars["text"_sv] = str.str();
                 auto clear_password = on_scope_end([&] {
                     if (flags & PromptFlags::Password)
-                        memset(text.data(), 0, (int)text.length());
+                        std::fill(text.begin(), text.end(), '\0');
                 });
 
                 ScopedSetBool disable_history{context.history_disabled()};

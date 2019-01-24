@@ -6,9 +6,6 @@
 #include "assert.hh"
 #include "ref_ptr.hh"
 
-#include <type_traits>
-#include <utility>
-
 #ifdef SAFE_PTR_TRACK_CALLSTACKS
 #include "backtrace.hh"
 #include "vector.hh"

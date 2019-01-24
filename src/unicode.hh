@@ -3,7 +3,6 @@
 
 #include <cwctype>
 #include <cwchar>
-#include <locale>
 
 #include "array_view.hh"
 #include "ranges.hh"

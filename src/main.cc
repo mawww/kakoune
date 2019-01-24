@@ -29,7 +29,6 @@
 #include "clock.hh"
 
 #include <fcntl.h>
-#include <locale>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>

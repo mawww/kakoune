@@ -751,7 +751,7 @@ class Prompt : public InputMode
 public:
     Prompt(InputHandler& input_handler, StringView prompt,
            String initstr, String emptystr, Face face, PromptFlags flags,
-           Completer completer, PromptCallback callback)
+           PromptCompleter completer, PromptCallback callback)
         : InputMode(input_handler), m_prompt(prompt.str()), m_prompt_face(face),
           m_empty_text{std::move(emptystr)},
           m_flags(flags), m_completer(std::move(completer)), m_callback(std::move(callback)),
@@ -1064,8 +1064,8 @@ private:
             context().client().menu_hide();
     }
 
-    PromptCallback m_callback;
-    Completer      m_completer;
+    PromptCallback  m_callback;
+    PromptCompleter m_completer;
     const String   m_prompt;
     Face           m_prompt_face;
     Completions    m_completions;
@@ -1578,7 +1578,7 @@ void InputHandler::repeat_last_insert()
 
 void InputHandler::prompt(StringView prompt, String initstr, String emptystr,
                           Face prompt_face, PromptFlags flags,
-                          Completer completer, PromptCallback callback)
+                          PromptCompleter completer, PromptCallback callback)
 {
     push_mode(new InputModes::Prompt(*this, prompt, std::move(initstr), std::move(emptystr),
                                      prompt_face, flags, std::move(completer), std::move(callback)));

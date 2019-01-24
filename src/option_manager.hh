@@ -11,7 +11,7 @@
 #include "string_utils.hh"
 
 #include <memory>
-#include <type_traits>
+#include <utility>
 
 namespace Kakoune
 {
