@@ -258,11 +258,10 @@ using JsonObject = HashMap<String, Value>;
 
 static bool is_digit(char c) { return c >= '0' and c <= '9'; }
 
-std::tuple<Value, const char*>
-parse_json(const char* pos, const char* end)
-{
-    using Result = std::tuple<Value, const char*>;
+struct JsonResult { Value value; const char* new_pos; };
 
+JsonResult parse_json(const char* pos, const char* end)
+{
     if (not skip_while(pos, end, is_blank))
         return {};
 
@@ -270,12 +269,12 @@ parse_json(const char* pos, const char* end)
     {
         auto digit_end = pos;
         skip_while(digit_end, end, is_digit);
-        return Result{ Value{str_to_int({pos, digit_end})}, digit_end };
+        return { Value{str_to_int({pos, digit_end})}, digit_end };
     }
     if (end - pos > 4 and StringView{pos, pos+4} == "true")
-        return Result{ Value{true}, pos+4 };
+        return { Value{true}, pos+4 };
     if (end - pos > 5 and StringView{pos, pos+5} == "false")
-        return Result{ Value{false}, pos+5 };
+        return { Value{false}, pos+5 };
     if (*pos == '"')
     {
         String value;
@@ -296,7 +295,7 @@ parse_json(const char* pos, const char* end)
             if (*string_end == '"')
             {
                 value += StringView{pos, string_end};
-                return Result{std::move(value), string_end+1};
+                return {std::move(value), string_end+1};
             }
         }
         return {};
@@ -307,14 +306,14 @@ parse_json(const char* pos, const char* end)
         if (++pos == end)
             throw runtime_error("unable to parse array");
         if (*pos == ']')
-            return Result{std::move(array), pos+1};
+            return {std::move(array), pos+1};
 
         while (true)
         {
-            Value element;
-            std::tie(element, pos) = parse_json(pos, end);
+            auto [element, new_pos] = parse_json(pos, end);
             if (not element)
                 return {};
+            pos = new_pos;
             array.push_back(std::move(element));
             if (not skip_while(pos, end, is_blank))
                 return {};
@@ -322,7 +321,7 @@ parse_json(const char* pos, const char* end)
             if (*pos == ',')
                 ++pos;
             else if (*pos == ']')
-                return Result{std::move(array), pos+1};
+                return {std::move(array), pos+1};
             else
                 throw runtime_error("unable to parse array, expected ',' or ']'");
         }
@@ -333,25 +332,24 @@ parse_json(const char* pos, const char* end)
             throw runtime_error("unable to parse object");
         JsonObject object;
         if (*pos == '}')
-            return Result{std::move(object), pos+1};
+            return {std::move(object), pos+1};
 
         while (true)
         {
-            Value name_value;
-            std::tie(name_value, pos) = parse_json(pos, end);
+            auto [name_value, name_end] = parse_json(pos, end);
             if (not name_value)
                 return {};
-
+            pos = name_end;
             String& name = name_value.as<String>();
             if (not skip_while(pos, end, is_blank))
                 return {};
             if (*pos++ != ':')
                 throw runtime_error("expected :");
 
-            Value element;
-            std::tie(element, pos) = parse_json(pos, end);
+            auto [element, element_end] = parse_json(pos, end);
             if (not element)
                 return {};
+            pos = element_end;
             object.insert({ std::move(name), std::move(element) });
             if (not skip_while(pos, end, is_blank))
                 return {};
@@ -359,7 +357,7 @@ parse_json(const char* pos, const char* end)
             if (*pos == ',')
                 ++pos;
             else if (*pos == '}')
-                return Result{std::move(object), pos+1};
+                return {std::move(object), pos+1};
             else
                 throw runtime_error("unable to parse object, expected ',' or '}'");
         }
@@ -367,8 +365,7 @@ parse_json(const char* pos, const char* end)
     throw runtime_error("unable to parse json");
 }
 
-std::tuple<Value, const char*>
-parse_json(StringView json) { return parse_json(json.begin(), json.end()); }
+auto parse_json(StringView json) { return parse_json(json.begin(), json.end()); }
 
 void JsonUI::eval_json(const Value& json)
 {
@@ -488,8 +485,8 @@ void JsonUI::parse_requests(EventMode mode)
         const char* pos = nullptr;
         try
         {
-            Value json;
-            std::tie(json, pos) = parse_json(m_requests);
+            auto [json, new_pos] = parse_json(m_requests);
+            pos = new_pos;
             if (json)
                 eval_json(json);
         }
@@ -510,18 +507,18 @@ void JsonUI::parse_requests(EventMode mode)
 UnitTest test_json_parser{[]()
 {
     {
-        auto value = std::get<0>(parse_json(R"({ "jsonrpc": "2.0", "method": "keys", "params": [ "b", "l", "a", "h" ] })"));
+        auto value = parse_json(R"({ "jsonrpc": "2.0", "method": "keys", "params": [ "b", "l", "a", "h" ] })").value;
         kak_assert(value);
     }
 
     {
-        auto value = std::get<0>(parse_json("[10,20]"));
+        auto value = parse_json("[10,20]").value;
         kak_assert(value and value.is_a<JsonArray>());
         kak_assert(value.as<JsonArray>().at(1).as<int>() == 20);
     }
 
     {
-        auto value = std::get<0>(parse_json("{}"));
+        auto value = parse_json("{}").value;
         kak_assert(value and value.is_a<JsonObject>());
         kak_assert(value.as<JsonObject>().empty());
     }

@@ -320,8 +320,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename, bool force, bool 
 void write_buffer_to_backup_file(Buffer& buffer)
 {
     String path = real_path(buffer.name());
-    StringView dir, file;
-    std::tie(dir,file) = split_path(path);
+    auto [dir,file] = split_path(path);
 
     char pattern[PATH_MAX];
     if (dir.empty())
@@ -440,8 +439,7 @@ CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
                                 ByteCount cursor_pos, FilenameFlags flags)
 {
     prefix = prefix.substr(0, cursor_pos);
-    StringView dirname, fileprefix;
-    std::tie(dirname, fileprefix) = split_path(prefix);
+    auto [dirname, fileprefix] = split_path(prefix);
     auto parsed_dirname = parse_filename(dirname);
 
     const bool check_ignored_regex = not ignored_regex.empty() and
@@ -469,8 +467,7 @@ CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
 CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
 {
     String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
-    StringView dirname, fileprefix;
-    std::tie(dirname, fileprefix) = split_path(real_prefix);
+    auto [dirname, fileprefix] = split_path(real_prefix);
 
     if (not dirname.empty())
     {
