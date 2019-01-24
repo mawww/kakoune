@@ -58,8 +58,9 @@ public:
 
     constexpr ArrayView subrange(size_t first, size_t count = -1) const
     {
-        return ArrayView(m_pointer + std::min(first, m_size),
-                         std::min(count, m_size - std::min(first, m_size)));
+        auto min = [](size_t a, size_t b) { return a < b ? a : b; };
+        return ArrayView(m_pointer + min(first, m_size),
+                         min(count, m_size - min(first, m_size)));
     }
 
 private:
