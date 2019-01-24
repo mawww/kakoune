@@ -5,7 +5,6 @@
 #include <utility>
 #include <iterator>
 #include <numeric>
-#include <functional>
 
 #include "constexpr_utils.hh"
 
@@ -191,10 +190,31 @@ inline auto transform(Transform t)
     });
 }
 
+template<typename T, typename U, typename = void>
+struct is_pointer_like : std::false_type {};
+
+template<typename T, typename U>
+struct is_pointer_like<T, U, std::enable_if_t<std::is_same_v<std::decay_t<decltype(*std::declval<U>())>, std::decay_t<T>>>> : std::true_type {};
+
 template<typename M, typename T>
-inline auto transform(M T::*m)
+inline auto transform(M T::*member)
 {
-    return transform(std::mem_fn(std::forward<decltype(m)>(m)));
+    return transform([member](auto&& arg) -> decltype(auto) {
+        using Arg = decltype(arg);
+        using Member = decltype(member);
+
+        auto get_object = [&] () mutable  -> decltype(auto) {
+            if constexpr (is_pointer_like<T, Arg>::value)
+                return *std::forward<Arg>(arg);
+            else
+                return std::forward<Arg>(arg);
+        };
+
+        if constexpr (std::is_member_function_pointer_v<Member>)
+            return (get_object().*member)();
+        else
+            return get_object().*member;
+    });
 }
 
 template<typename Range, bool escape, bool include_separator,
