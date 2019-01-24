@@ -1456,7 +1456,7 @@ const CommandDesc update_option_cmd = {
 const CommandDesc declare_option_cmd = {
     "declare-option",
     "decl",
-    "declare-option <type> <name> [value]: declare option <name> of type <type>.\n"
+    "declare-option [<switches>] <type> <name> [value]: declare option <name> of type <type>.\n"
     "set its initial value to <value> if given and the option did not exist\n"
     "Available types:\n"
     "    int: integer\n"
