@@ -19,6 +19,7 @@
 #include <string.h>
 #include <pwd.h>
 #include <fcntl.h>
+#include <errno.h>
 
 
 namespace Kakoune

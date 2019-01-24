@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <cstdlib>
+#include <errno.h>
 
 #if defined(__CYGWIN__)
 #define vfork fork
