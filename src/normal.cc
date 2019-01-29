@@ -439,6 +439,9 @@ void for_each_codepoint(Context& context, NormalParams)
 
 void command(Context& context, NormalParams params)
 {
+    if (context.is_line_editing()) {
+        context.enter_or_keep_line_editing();
+    }
     if (not CommandManager::has_instance())
         throw runtime_error{"commands are not supported"};
 
@@ -449,9 +452,15 @@ void command(Context& context, NormalParams params)
         context.faces()["Prompt"], PromptFlags::DropHistoryEntriesWithBlankPrefix,
         [](const Context& context, CompletionFlags flags,
            StringView cmd_line, ByteCount pos) {
+                if (context.is_line_editing()) {
+                    context.enter_or_keep_line_editing();
+                }
                return CommandManager::instance().complete(context, flags, cmd_line, pos);
         },
         [params](StringView cmdline, PromptEvent event, Context& context) {
+            if (context.is_line_editing()) {
+                context.enter_or_keep_line_editing();
+            }
             if (context.has_client())
             {
                 context.client().info_hide();
@@ -2026,7 +2035,11 @@ public:
     void operator() (Context& context, NormalParams params)
     {
         ScopedEdition edition(context);
-        do { m_func(context, {0, params.reg}); } while(--params.count > 0);
+        do {
+            m_func(context, {0, params.reg});
+            if (params.count > 1)
+                context.post_movement_logic();
+        } while (--params.count > 0);
     }
 private:
     T m_func;
@@ -2036,7 +2049,11 @@ template<void (*func)(Context&, NormalParams)>
 void repeated(Context& context, NormalParams params)
 {
     ScopedEdition edition(context);
-    do { func(context, {0, params.reg}); } while(--params.count > 0);
+    do {
+        func(context, {0, params.reg});
+        if (params.count > 1)
+            context.post_movement_logic();
+    } while (--params.count > 0);
 }
 
 template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
@@ -2092,6 +2109,10 @@ void clear_selections(Context& context, NormalParams)
 
 void flip_selections(Context& context, NormalParams)
 {
+    if (context.is_line_editing()) {
+        context.enter_or_keep_line_editing();
+    }
+
     for (auto& sel : context.selections())
     {
         const BufferCoord tmp = sel.anchor();
@@ -2103,6 +2124,10 @@ void flip_selections(Context& context, NormalParams)
 
 void ensure_forward(Context& context, NormalParams)
 {
+    if (context.is_line_editing()) {
+        context.enter_or_keep_line_editing();
+    }
+
     for (auto& sel : context.selections())
     {
         const BufferCoord min = sel.min(), max = sel.max();
