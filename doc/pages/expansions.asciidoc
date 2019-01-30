@@ -6,11 +6,33 @@ associated value before executing the command. These patterns are called
 expansions.
 
 Every expansion consists of a `%`, followed by the expansion _type_ (one
-or more alphabetic characters), a nestable punctuation character (`(`, `[`,
-`{`, or `<`), and then all the text up to and including its matching opposite
-(`)`, `]`, `}`, or `>`). It doesn't matter which character is used, but
-`{}` are most common. For example, the command `echo %val{session}` will
-echo the ID of the current Kakoune session.
+or more alphabetic characters), a quoting character, and then all the text
+up to and including its matching character.
+
+If an openning brace (`(`, `[`, `{`, or `<`) is used as the openning quoting
+character, the expansion will end at the character's matching brace (`)`, `]`,
+`}`, or `>`). Nested pairs of the braces used in the expansion are allowed, but
+they must be balanced. Braces other than the ones used in the expansion need
+not be balanced, however. For example, `%{nest{ed} non[nested}` is valid and
+expands to `nest{ed} non[nested`.
+
+If any other character is used, the expansion will end at the next occurance of
+that character. The quoting character can be escpaed inside the expansion if it
+is doubled-up. For example, `%|abc||def|` expands to the text `abc|def`.
+
+It doesn't matter which character is used, but `{}` are most common.
+
+There are 2 types of quoting which can be used to group together words separated
+by whitespace into a single argument or prevent expansions from expanding:
+
+"double quoted strings"::
+    Double quoted strings are mainly for grouping multiple `%` expansions or
+    `%` expansions and regular text as a single argument. `%` and `"` can be
+    escaped by doubling the characters (i.e. `%%` and `""`).
+
+'single quoted strings'::
+    Expansions are not processed inside single quoted strings. Single quotes can
+    be escaped by doubling up (i.e. `''`).
 
 Expansions are processed when unquoted and anywhere inside double-quoted
 strings, but not inside unquoted words, inside single-quoted strings, or
