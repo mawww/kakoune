@@ -9,15 +9,15 @@ Every expansion consists of a `%`, followed by the expansion _type_ (one
 or more alphabetic characters), a quoting character, and then all the text
 up to and including its matching character.
 
-If an openning brace (`(`, `[`, `{`, or `<`) is used as the openning quoting
-character, the expansion will end at the character's matching brace (`)`, `]`,
-`}`, or `>`). Nested pairs of the braces used in the expansion are allowed, but
-they must be balanced. Braces other than the ones used in the expansion need
-not be balanced, however. For example, `%{nest{ed} non[nested}` is valid and
-expands to `nest{ed} non[nested`.
+If a nestable punctuation character (`(`, `[`, `{`, or `<`) is used as the
+opening quoting character, the expansion will end at its matching opposite
+(`)`, `]`, `}`, or `>`). Nested pairs of the braces used in the expansion are
+allowed, but they must be balanced. Braces other than the ones used in the
+expansion need not be balanced, however. For example, `%{nest{ed} non[nested}`
+is valid and expands to `nest{ed} non[nested`.
 
-If any other character is used, the expansion will end at the next occurance of
-that character. The quoting character can be escpaed inside the expansion if it
+If any other character is used, the expansion will end at the next occurrence of
+that character. The quoting character can be escaped inside the expansion if it
 is doubled-up. For example, `%|abc||def|` expands to the text `abc|def`.
 
 It doesn't matter which character is used, but `{}` are most common.
