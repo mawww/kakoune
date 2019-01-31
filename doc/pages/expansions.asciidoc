@@ -53,11 +53,12 @@ inside %-strings or other expansions. So:
 Like "variable expansion" and "command substitution" in shell programming,
 Kakoune expansions can expand to multiple "words" - that is, separate
 arguments on the resulting command-line. However, unlike shell programming,
-Kakoune expansions cannot _accidentally_ expand to multiple words, even if
-the expansion contains whitespace or other special characters: only list types
-can expand to multiple arguments. While in shell-programming it's good practice
-to always wrap expansions in double-quotes, in Kakoune it's perfectly safe to
-leave expansions unquoted.
+Kakoune expansions cannot _accidentally_ expand to multiple words because they
+contain whitespace or other special characters. Only expansions which
+semantically contain a list of values (list-type options, registers, selections,
+etc.) expand to multiple arguments. While in shell-programming it's good
+practice to always wrap expansions in double-quotes, in Kakoune it's perfectly
+safe to leave expansions unquoted.
 
 == Argument expansions
 
