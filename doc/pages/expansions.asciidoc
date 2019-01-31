@@ -36,7 +36,9 @@ by whitespace into a single argument or prevent expansions from expanding:
 
 Expansions are processed when unquoted and anywhere inside double-quoted
 strings, but not inside unquoted words, inside single-quoted strings, or
-inside %-strings or other expansions. So:
+inside %-strings or other expansions (see
+<<command-parsing#typed-expansions, `:doc command-parsing typed-expansions`>>
+for full details). For example:
 
 * `echo %val{session}` echoes the current session ID
 

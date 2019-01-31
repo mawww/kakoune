@@ -63,7 +63,7 @@ is treated as a literal `\\`.
 
 == Typed Expansions
 
-Quoted and Balanced strings startings with `%` might have an optional
+Quoted and Balanced strings starting with `%` might have an optional
 alphabetic *expansion type* between the `%` and their delimiter (which
 is always a punctuation character). This *expansion type* defines how the
 string content is going to be expanded.
@@ -71,7 +71,6 @@ string content is going to be expanded.
 - If the *expansion type* is empty, the string content is used verbatim.
 
 - If the *expansion type* is one of `sh`, `reg`, `opt`, `val` or `arg`,
-  The string is expanded according as described in
-  <<expansions#typed-expansions,`:doc expansion typed-expansions`>>
+  The string is expanded as described in <<expansions#,`:doc expansions`>>
 
 - For any other *expansion type* a parsing error is raised.
