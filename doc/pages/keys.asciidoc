@@ -77,7 +77,7 @@ the value specified in the `idle_timeout` option is reached.
 
 == Using Counts
 
-In normal mode, commands can be prefixed with a numeric count, which can control
+In normal mode, commands can be prefixed with a numeric `count`, which can control
 the command behaviour.
 
 For example, *3W* selects 3 consecutive words and *3w* select the third word on
@@ -227,11 +227,11 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
     the end of each selection
 
 *o*::
-    enter insert mode in a new line (or in a given count of new lines)
+    enter insert mode in a new line (or in a given `count` of new lines)
     below the end of each selection
 
 *O*::
-    enter insert mode in a new line (or in a given count of new lines)
+    enter insert mode in a new line (or in a given `count` of new lines)
     above the beginning of each selection
 
 *<a-o>*::
@@ -304,7 +304,7 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
 
 *<a-&>*::
     copy indent, copy the indentation of the main selection (or the
-    count one if a count is given) to all other ones
+    `count` one if a `count` is given) to all other ones
 
 *`*::
     to lower case
@@ -317,18 +317,18 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
 
 *@*::
     convert tabs to spaces in each selection, uses the buffer tabstop
-    option or the count parameter for tabstop
+    option or the `count` parameter for tabstop
 
 *<a-@>*::
     convert spaces to tabs in each selection, uses the buffer tabstop
-    option or the count parameter for tabstop
+    option or the `count` parameter for tabstop
 
 *_*::
     unselect whitespace surrounding each selection, drop those that only
     contain whitespace
 
 *<a-)>*::
-    rotate selections content, if specified, the count groups selections,
+    rotate selections content, if specified, the `count` groups selections,
     so the following command
 
 ----------
@@ -398,7 +398,7 @@ Searches use the */* register by default (See <<registers#,`:doc registers`>>)
 == Goto commands
 
 *g*, *G*::
-    When a count is specified, *G* only extends the selection to the given line,
+    When a `count` is specified, *G* only extends the selection to the given line,
     *g* sends the anchor to the given line and a menu is then displayed which waits
     for one of the following additional keys:
 
@@ -458,16 +458,16 @@ Searches use the */* register by default (See <<registers#,`:doc registers`>>)
         scroll to put the main selection on the bottom line of the window
 
     *h*:::
-        scroll the window count columns left
+        scroll the window `count` columns left
 
     *j*:::
-        scroll the window count line downward
+        scroll the window `count` line downward
 
     *k*:::
-        scroll the window count line upward
+        scroll the window `count` line upward
 
     *l*:::
-        scroll the window count columns right
+        scroll the window `count` columns right
 
 == Marks
 
@@ -583,7 +583,7 @@ to skim through the jump list using:
 
 == Object Selection
 
-For nestable objects, a count can be used in order to specify which surrounding
+For nestable objects, a `count` can be used in order to specify which surrounding
 level to select. Object selections are repeatable using *<a-.>*.
 
 === Whole object
