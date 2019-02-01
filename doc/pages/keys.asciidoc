@@ -540,9 +540,11 @@ to skim through the jump list using:
 
 *s*::
     create a selection for each match of the given regex
+    (selects the count capture if it is given)
 
 *S*::
     split selections with the given regex
+    (selects the count capture if it is given)
 
 *<a-s>*::
     split selections on line boundaries
