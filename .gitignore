@@ -7,7 +7,6 @@ src/kak
 src/kak.debug
 src/kak.opt
 src/.version*
-doc/kak.1
 doc/kak.1.gz
 doc/manpages/*.gz
 tags
