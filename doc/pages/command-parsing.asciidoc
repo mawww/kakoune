@@ -15,19 +15,30 @@ If a word starts with `'`, `"` or `%X` with `X` a non nestable
 punctuation character it is parsed as a quoted string whose delimiter is,
 respectively, `'`, `"` or `X`.
 
-A quoted string contains every characters (including whitespaces) until
+A quoted string contains every character (including whitespaces) until
 its closing delimiter. If its closing delimiter is doubled, then it is
 considered to be part of the string content as a single delimiter.
+
+Inside double quotes, `%`-strings are processed unless the `%` is escaped by
+doubling it. Double quotes inside these nested strings must still be escaped.
 
 No other escaping takes place in quoted strings.
 
 === Quoted Strings Examples
 
-- `'foo'` contents is *foo*
+- `'foo'` contains *foo*
+
+- `foo'bar'` is read verbatim, so it contains *foo'bar'*
+
+- `foo%|bar|` is read verbatim, so it contains *foo%|bar|*.
 
 - `'foo''bar'` is a single word whose content is *foo'bar*
 
 - `"baz"""` is a single word whose content is *baz"*.
+
+- `%|foo||bar|` is a single word whose content is *foo|bar*.
+
+- `"foo %|""bar| %%,baz,"` is a single word whose content is *foo "bar %,baz,*.
 
 == Balanced Strings
 
@@ -45,9 +56,13 @@ No other escaping takes place in balanced strings.
 
 === Balanced Strings Examples
 
-- `%{foo}` contents is *foo*
+- `%{foo}` contains *foo*
 
-- `%{foo\{bar}}` contents is *foo\{bar}*
+- `%{foo\{bar}}` contains *foo\{bar}*
+
+- `foo%{bar}` contains *foo%{bar}*
+
+- `"foo %{bar}"` is a single word whose content is *foo bar*
 
 == Non Quoted words
 
@@ -57,21 +72,21 @@ or a `;`.
 If they start with `\\` followed by `%`, `'` or `"`, then that leading
 `\\` is discarded.
 
-If a whitespace or `;` is preceeded by `\\`, then the `\\` is discarded
+If a whitespace or `;` is preceded by `\\`, then the `\\` is discarded
 and the whitespace or `;` becomes part of the word. Any other `\\`
 is treated as a literal `\\`.
 
 == Typed Expansions
 
-Quoted and Balanced strings startings with `%` might have an optional
+Quoted and Balanced strings starting with `%` might have an optional
 alphabetic *expansion type* between the `%` and their delimiter (which
 is always a punctuation character). This *expansion type* defines how the
-string content is going to be expanded.
+string content is going to be expanded. Rules for expanding and escaping typed
+expansions are the same as for `%`-strings.
 
 - If the *expansion type* is empty, the string content is used verbatim.
 
 - If the *expansion type* is one of `sh`, `reg`, `opt`, `val` or `arg`,
-  The string is expanded according as described in
-  <<expansions#typed-expansions,`:doc expansion typed-expansions`>>
+  The string is expanded as described in <<expansions#,`:doc expansions`>>
 
 - For any other *expansion type* a parsing error is raised.
