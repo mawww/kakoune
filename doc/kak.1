@@ -6,8 +6,44 @@ kak \- a vim inspired, selection oriented code editor
 
 .SH SYNOPSIS
 
+.PP
+.B kak \-help
+
+.PP
+.B kak \-version
+
+.PP
+.B kak \-l
+
+.PP
+.B kak \-clear
+
+.PP
+.B kak \-f
+.I keys
+[\fB\-q\fR] [\fB\-i\fR]
+.IR file ...
+
+.PP
+.B kak \-p
+.I session_id
+
+.PP
+.B kak \-s
+.I session_id
+.B \-d
+[\fB\-n\fR] [\fB\-ro\fR]
+[\fB\-E\fR \fIcommand\fR]
+[\fB+line\fR[\fB:column\fR]|\fB+:\fR]
+.IR file ...
+
+.PP
 .B kak
-[\fB\-help\fR] [\fB\-version\fR] [\fB\-q\fR] [\fB\-n\fR] [\fB\-l\fR] [\fB\-ro\fR] [\fB\-clear\fR] [\fB\-ui\fR \fIui_type\fR] [\fB\-e\fR \fIcommand\fR] [\fB\-E\fR \fIcommand\fR] [\fB\-f\fR \fIkeys\fR] [\fB\-p\fR \fIsession_id\fR] [\fB\-c\fR \fIsession_id\fR|[[\fB\-d\fR] \fB\-s\fR \fIsession_id\fR] [\fB+line\fR[\fB:column\fR]|\fB+:\fR]
+[\fB\-c\fR \fIsession_id\fR|\fB\-s\fR \fIsession_id\fR]
+[\fB\-n\fR] [\fB\-ro\fR]
+[\fB\-ui\fR \fIui_type\fR] [\fB\-e\fR \fIcommand\fR]
+[\fB\-E\fR \fIcommand\fR]
+[\fB+line\fR[\fB:column\fR]|\fB+:\fR]
 .IR file ...
 
 .SH DESCRIPTION
@@ -28,6 +64,10 @@ Kakoune works on selections, which are oriented, inclusive range of
 characters, selections have an anchor and a cursor character. Most commands
 move both of them, except when extending selection where the anchor character
 stays fixed and the cursor one moves around.
+
+For more information, use the \fB:doc\fR command after starting Kakoune,
+the Kakoune wiki at https://github.com/mawww/kakoune/wiki
+or the main Kakoune web site: https://kakoune.org/
 
 .SH OPTIONS
 
@@ -105,6 +145,7 @@ line of the file
 .BR file
 one or more \fIfile\fRs to edit
 
+.PP
 At  startup, if \fB\-n\fR is not specified, Kakoune will try to source the file
 \fI../share/kak/kakrc\fR relative to the kak binary. This kak file will then
 try to recursively source any files in \fI$XDG_CONFIG_HOME/kak/autoload\fR
@@ -171,3 +212,9 @@ After that, if it exists, source the \fI$XDG_CONFIG_HOME/kak/kakrc\fR file
 which should be used for user configuration. In order to continue autoloading
 site\-wide files with a local autoload directory, just add a symbolic link
 to \fI../share/kak/autoload\fR into your local autoload directory.
+
+.SH SEE ALSO
+
+.BR vi (1),
+.BR vim (1),
+.BR sam (1plan9)
