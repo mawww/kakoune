@@ -270,14 +270,10 @@ void write_buffer_to_fd(Buffer& buffer, int fd, bool sync)
         if (::write(fd, "\xEF\xBB\xBF", 3) < 0)
             throw runtime_error(format("unable to write data to the buffer (fd: {}; errno: {})", fd, ::strerror(errno)));
 
-    for (LineCount i = 0; i < buffer.line_count(); ++i)
-    {
-        // end of lines are written according to eolformat but always
-        // stored as \n
-        StringView linedata = buffer[i];
-        write(fd, linedata.substr(0, linedata.length()-1));
-        write(fd, eoldata);
-    }
+    BufferCoord start { 0, 0 };
+    auto end = buffer.end_coord();
+    String contents = buffer.string(start, end);
+    write(fd, contents);
 
     if (sync)
         ::fsync(fd);
