@@ -21,12 +21,6 @@ using Utf8Iterator = utf8::iterator<BufferIterator>;
 namespace
 {
 
-Selection target_eol(Selection sel)
-{
-    sel.cursor().target = INT_MAX;
-    return sel;
-}
-
 Selection utf8_range(const BufferIterator& first, const BufferIterator& last)
 {
     return {first.coord(), last.coord()};
@@ -183,7 +177,7 @@ select_line(const Context& context, const Selection& selection)
         selection.cursor() == BufferCoord{line, buffer[line].length() - 1} and
         line != buffer.line_count() - 1)
         ++line;
-    return target_eol({{line, 0_byte}, {line, buffer[line].length() - 1}});
+    return Selection{{line, 0_byte}, {line, buffer[line].length() - 1, max_column}};
 }
 
 template<bool only_move>
@@ -197,7 +191,7 @@ select_to_line_end(const Context& context, const Selection& selection)
                                      buffer.iterator_at(line)).coord();
     if (end < begin) // Do not go backward when cursor is on eol
         end = begin;
-    return target_eol({only_move ? end : begin, end});
+    return Selection{only_move ? end : begin, {end, max_column}};
 }
 template Optional<Selection> select_to_line_end<false>(const Context&, const Selection&);
 template Optional<Selection> select_to_line_end<true>(const Context&, const Selection&);
@@ -823,7 +817,7 @@ select_lines(const Context& context, const Selection& selection)
     to_line_start.column = 0;
     to_line_end.column = buffer[to_line_end.line].length()-1;
 
-    return target_eol({anchor, cursor});
+    return Selection{anchor, {cursor, max_column}};
 }
 
 Optional<Selection>
@@ -849,13 +843,7 @@ trim_partial_lines(const Context& context, const Selection& selection)
     if (to_line_start > to_line_end)
         return {};
 
-    return target_eol({anchor, cursor});
-}
-
-void select_buffer(SelectionList& selections)
-{
-    auto& buffer = selections.buffer();
-    selections = SelectionList{ buffer, target_eol({{0,0}, buffer.back_coord()}) };
+    return Selection{anchor, {cursor, max_column}};
 }
 
 static RegexExecFlags

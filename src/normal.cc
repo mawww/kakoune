@@ -2057,7 +2057,8 @@ void move_cursor(Context& context, NormalParams params)
 
 void select_whole_buffer(Context& context, NormalParams)
 {
-    select_buffer(context.selections());
+    auto& buffer = context.buffer();
+    context.selections_write_only() = SelectionList{buffer, {{0,0}, {buffer.back_coord(), max_column}}};
 }
 
 void keep_selection(Context& context, NormalParams p)

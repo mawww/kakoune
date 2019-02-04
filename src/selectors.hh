@@ -97,8 +97,6 @@ select_lines(const Context& context, const Selection& selection);
 Optional<Selection>
 trim_partial_lines(const Context& context, const Selection& selection);
 
-void select_buffer(SelectionList& selections);
-
 enum class RegexMode;
 
 template<RegexMode mode>

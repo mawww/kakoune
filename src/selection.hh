@@ -8,6 +8,8 @@ namespace Kakoune
 
 using CaptureList = Vector<String, MemoryDomain::Selections>;
 
+constexpr ColumnCount max_column{std::numeric_limits<int>::max()};
+
 // A selection is a Selection, associated with a CaptureList
 struct Selection
 {
@@ -15,7 +17,7 @@ struct Selection
 
     Selection() = default;
     Selection(BufferCoord pos) : Selection(pos,pos) {}
-    Selection(BufferCoord anchor, BufferCoord cursor,
+    Selection(BufferCoord anchor, BufferCoordAndTarget cursor,
               CaptureList captures = {})
         : m_anchor{anchor}, m_cursor{cursor},
           m_captures(std::move(captures)) {}
