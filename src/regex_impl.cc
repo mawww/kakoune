@@ -1490,6 +1490,12 @@ auto test_regex = UnitTest{[]{
     }
 
     {
+        TestVM<RegexMode::Backward | RegexMode::Search> vm{R"(a[^\n]*\n|\n)"};
+        kak_assert(vm.exec("foo\nbar\nb", RegexExecFlags::None));
+        kak_assert(StringView{vm.captures()[0], vm.captures()[1]}  == "ar\n");
+    }
+
+    {
         TestVM<> vm{R"(()*)"};
         kak_assert(not vm.exec(" "));
     }

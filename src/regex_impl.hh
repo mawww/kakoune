@@ -510,7 +510,7 @@ private:
             forward ? utf8::to_next(pos, config.subject_end)
                     : utf8::to_previous(pos, config.subject_begin);
 
-            if (search)
+            if (search and not m_found_match)
             {
                 if (start_desc and m_threads.next_is_empty())
                     to_next_start(pos, config, *start_desc);
