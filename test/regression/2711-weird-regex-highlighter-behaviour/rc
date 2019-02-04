@@ -1,0 +1,1 @@
+add-highlighter buffer/ regex ((?<!\.\.)(?<=\.)|(?<=->))[a-zA-Z](\w+)?\b(?![>"\(]) 0:red
