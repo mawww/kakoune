@@ -8,7 +8,7 @@ declare-option -docstring "list of paths to tag files to parse when looking up a
 
 define-command -params ..1 \
     -shell-script-candidates %{
-        realpath() { ( path=$(readlink "$1"); cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
+        realpath() { ( cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
         eval "set -- $kak_opt_ctagsfiles"
         for candidate in "$@"; do
             [ -f "$candidate" ] && realpath "$candidate"
@@ -24,7 +24,7 @@ define-command -params ..1 \
 If no symbol is passed then the current selection is used as symbol name} \
     ctags-search \
     %{ evaluate-commands %sh{
-        realpath() { ( path=$(readlink "$1"); cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
+        realpath() { ( cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
         export tagname=${1:-${kak_selection}}
         eval "set -- $kak_opt_ctagsfiles"
         for candidate in "$@"; do
