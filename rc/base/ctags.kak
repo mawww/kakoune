@@ -9,9 +9,10 @@ declare-option -docstring "list of paths to tag files to parse when looking up a
 define-command -params ..1 \
     -shell-script-candidates %{
         realpath() { ( path=$(readlink "$1"); cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
+        search() { [ -f "$1" ] && realpath "$1" || [ "$1" != "${1#/}" ] || ( while [ "$(pwd)" != "/" ]; do cd ..; [ -f "$1" ] && realpath "$1" && break; done ) }
         eval "set -- $kak_opt_ctagsfiles"
         for candidate in "$@"; do
-            [ -f "$candidate" ] && realpath "$candidate"
+            search "$candidate"
         done | awk '!x[$0]++' | # remove duplicates
         while read -r tags; do
             namecache="${tags%/*}/.kak.${tags##*/}.namecache"
@@ -25,10 +26,11 @@ If no symbol is passed then the current selection is used as symbol name} \
     ctags-search \
     %{ evaluate-commands %sh{
         realpath() { ( path=$(readlink "$1"); cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
+        search() { [ -f "$1" ] && realpath "$1" || [ "$1" != "${1#/}" ] || ( while [ "$(pwd)" != "/" ]; do cd ..; [ -f "$1" ] && realpath "$1" && break; done ) }
         export tagname=${1:-${kak_selection}}
         eval "set -- $kak_opt_ctagsfiles"
         for candidate in "$@"; do
-            [ -f "$candidate" ] && realpath "$candidate"
+            search "$candidate"
         done | awk '!x[$0]++' | # remove duplicates
         while read -r tags; do
             printf '!TAGROOT\t%s\n' "$(realpath "${tags%/*}")/"
