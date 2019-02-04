@@ -973,8 +973,10 @@ void select_regex(Context& context, NormalParams params)
 
         RegisterManager::instance()[reg].set(context, ex.str());
 
+        auto& selections = context.selections();
+        auto& buffer = selections.buffer();
         if (not ex.empty() and not ex.str().empty())
-            select_all_matches(context.selections(), ex, capture);
+            selections = SelectionList{buffer, select_matches(buffer, selections, ex, capture)};
     });
 }
 
@@ -998,8 +1000,10 @@ void split_regex(Context& context, NormalParams params)
 
         RegisterManager::instance()[reg].set(context, ex.str());
 
+        auto& selections = context.selections();
+        auto& buffer = selections.buffer();
         if (not ex.empty() and not ex.str().empty())
-            split_selections(context.selections(), ex, capture);
+            selections = SelectionList{buffer, split_on_matches(buffer, selections, ex, capture)};
     });
 }
 

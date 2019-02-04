@@ -1,20 +1,20 @@
 #ifndef selectors_hh_INCLUDED
 #define selectors_hh_INCLUDED
 
-#include "selection.hh"
+#include "optional.hh"
+#include "meta.hh"
+#include "unicode.hh"
+#include "vector.hh"
 
 namespace Kakoune
 {
 
+class Selection;
+class Buffer;
 class Regex;
 class Context;
 
-inline Selection keep_direction(Selection res, const Selection& ref)
-{
-    if ((res.cursor() < res.anchor()) != (ref.cursor() < ref.anchor()))
-        std::swap<BufferCoord>(res.cursor(), res.anchor());
-    return res;
-}
+Selection keep_direction(Selection res, const Selection& ref);
 
 template<WordType word_type>
 Optional<Selection>
@@ -103,8 +103,13 @@ template<RegexMode mode>
 Selection find_next_match(const Context& context, const Selection& sel,
                           const Regex& regex, bool& wrapped);
 
-void select_all_matches(SelectionList& selections, const Regex& regex, int capture = 0);
-void split_selections(SelectionList& selections, const Regex& regex, int capture = 0);
+Vector<Selection, MemoryDomain::Selections>
+select_matches(const Buffer& buffer, ConstArrayView<Selection> selections,
+               const Regex& regex, int capture = 0);
+
+Vector<Selection, MemoryDomain::Selections>
+split_on_matches(const Buffer& buffer, ConstArrayView<Selection> selections,
+                 const Regex& regex, int capture = 0);
 
 Optional<Selection>
 select_surrounding(const Context& context, const Selection& selection,

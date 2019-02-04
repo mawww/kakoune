@@ -3,11 +3,10 @@
 #include "buffer_utils.hh"
 #include "context.hh"
 #include "flags.hh"
-#include "optional.hh"
 #include "option_types.hh"
 #include "regex.hh"
+#include "selection.hh"
 #include "string.hh"
-#include "unicode.hh"
 #include "unit_tests.hh"
 #include "utf8_iterator.hh"
 
@@ -36,6 +35,13 @@ ConstArrayView<Codepoint> get_extra_word_chars(const Context& context)
     return context.options()["extra_word_chars"].get<Vector<Codepoint, MemoryDomain::Options>>();
 }
 
+}
+
+Selection keep_direction(Selection res, const Selection& ref)
+{
+    if ((res.cursor() < res.anchor()) != (ref.cursor() < ref.anchor()))
+        std::swap<BufferCoord>(res.cursor(), res.anchor());
+    return res;
 }
 
 template<WordType word_type>
@@ -913,14 +919,13 @@ Selection find_next_match(const Context& context, const Selection& sel, const Re
 template Selection find_next_match<RegexMode::Forward>(const Context&, const Selection&, const Regex&, bool&);
 template Selection find_next_match<RegexMode::Backward>(const Context&, const Selection&, const Regex&, bool&);
 
-void select_all_matches(SelectionList& selections, const Regex& regex, int capture)
+Vector<Selection> select_matches(const Buffer& buffer, ConstArrayView<Selection> selections, const Regex& regex, int capture)
 {
     const int mark_count = (int)regex.mark_count();
     if (capture < 0 or capture > mark_count)
         throw runtime_error("invalid capture number");
 
     Vector<Selection> result;
-    auto& buffer = selections.buffer();
     ThreadedRegexVM<BufferIterator, RegexMode::Forward | RegexMode::Search> vm{*regex.impl()};
     for (auto& sel : selections)
     {
@@ -948,26 +953,22 @@ void select_all_matches(SelectionList& selections, const Regex& regex, int captu
     }
     if (result.empty())
         throw runtime_error("nothing selected");
-
-    // Avoid SelectionList::operator=(Vector<Selection>) as we know result is
-    // already sorted and non overlapping.
-    selections = SelectionList{buffer, std::move(result)};
+    return result;
 }
 
-void split_selections(SelectionList& selections, const Regex& regex, int capture)
+Vector<Selection> split_on_matches(const Buffer& buffer, ConstArrayView<Selection> selections, const Regex& regex, int capture)
 {
     if (capture < 0 or capture > (int)regex.mark_count())
         throw runtime_error("invalid capture number");
 
     Vector<Selection> result;
-    auto& buffer = selections.buffer();
     auto buf_end = buffer.end();
     auto buf_begin = buffer.begin();
     ThreadedRegexVM<BufferIterator, RegexMode::Forward | RegexMode::Search> vm{*regex.impl()};
     for (auto& sel : selections)
     {
         auto begin = buffer.iterator_at(sel.min());
-        auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
+        auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buf_end);
 
         for (auto&& match : RegexIterator{begin, sel_end, vm, match_flags(buffer, begin, sel_end)})
         {
@@ -987,8 +988,7 @@ void split_selections(SelectionList& selections, const Regex& regex, int capture
     }
     if (result.empty())
         throw runtime_error("nothing selected");
-
-    selections = std::move(result);
+    return result;
 }
 
 UnitTest test_find_surrounding{[]()

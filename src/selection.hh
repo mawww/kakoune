@@ -129,6 +129,7 @@ struct SelectionList
 
     void remove(size_t index);
 
+    const Selection* data() const { return m_selections.data(); }
     size_t size() const { return m_selections.size(); }
 
     bool operator==(const SelectionList& other) const { return m_buffer == other.m_buffer and m_selections == other.m_selections; }
