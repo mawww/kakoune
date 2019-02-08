@@ -11,3 +11,11 @@ if (bar(a, b,
         c, d)) // comment
     foo();
 baz
+
+else
+    bar();
+baz
+
+else // comment
+    bar();
+baz

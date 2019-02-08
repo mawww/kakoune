@@ -8,3 +8,9 @@ if (bar(a, b,
 if (bar(a, b,
         c, d)) // comment
     foo();%( )
+
+else
+    bar();%( )
+
+else // comment
+    bar();%( )
