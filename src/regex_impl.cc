@@ -672,7 +672,7 @@ constexpr RegexParser::ControlEscape RegexParser::control_escapes[];
 struct RegexCompiler
 {
     RegexCompiler(ParsedRegex&& parsed_regex, RegexCompileFlags flags)
-        : m_parsed_regex{parsed_regex}, m_flags(flags)
+        : m_flags(flags), m_parsed_regex{parsed_regex}
     {
         kak_assert(not (flags & RegexCompileFlags::NoForward) or flags & RegexCompileFlags::Backward);
         // Approximation of the number of instructions generated

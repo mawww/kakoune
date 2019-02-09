@@ -752,9 +752,10 @@ public:
     Prompt(InputHandler& input_handler, StringView prompt,
            String initstr, String emptystr, Face face, PromptFlags flags,
            PromptCompleter completer, PromptCallback callback)
-        : InputMode(input_handler), m_prompt(prompt.str()), m_prompt_face(face),
+        : InputMode(input_handler), m_callback(std::move(callback)), m_completer(std::move(completer)),
+          m_prompt(prompt.str()), m_prompt_face(face),
           m_empty_text{std::move(emptystr)},
-          m_flags(flags), m_completer(std::move(completer)), m_callback(std::move(callback)),
+          m_line_editor{context().faces()}, m_flags(flags),
           m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Prompt},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
@@ -766,8 +767,7 @@ public:
                                m_line_changed = false;
                            }
                            context().hooks().run_hook(Hook::PromptIdle, "", context());
-                       }},
-          m_line_editor{context().faces()}
+                       }}
     {
         m_history_it = ms_history[m_prompt].end();
         m_line_editor.reset(std::move(initstr), m_empty_text);
@@ -1102,7 +1102,7 @@ class NextKey : public InputMode
 {
 public:
     NextKey(InputHandler& input_handler, KeymapMode keymap_mode, KeyCallback callback)
-        : InputMode(input_handler), m_keymap_mode(keymap_mode), m_callback(std::move(callback)) {}
+        : InputMode(input_handler), m_callback(std::move(callback)), m_keymap_mode(keymap_mode) {}
 
     void on_key(Key key) override
     {
@@ -1132,16 +1132,16 @@ class Insert : public InputMode
 public:
     Insert(InputHandler& input_handler, InsertMode mode, int count)
         : InputMode(input_handler),
-          m_restore_cursor(mode == InsertMode::Append),
           m_edition(context()),
           m_completer(context()),
+          m_restore_cursor(mode == InsertMode::Append),
           m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Insert},
-          m_disable_hooks{context().hooks_disabled(), context().hooks_disabled()},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                        Timer::Callback{} : [this](Timer&) {
                            m_completer.update(m_auto_complete);
                            context().hooks().run_hook(Hook::InsertIdle, "", context());
-                       }}
+                       }},
+          m_disable_hooks{context().hooks_disabled(), context().hooks_disabled()}
     {
         context().buffer().throw_if_read_only();
 

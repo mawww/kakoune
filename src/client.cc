@@ -32,9 +32,9 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
     : m_ui{std::move(ui)}, m_window{std::move(window)},
       m_pid{pid},
       m_on_exit{std::move(on_exit)},
+      m_env_vars(std::move(env_vars)),
       m_input_handler{std::move(selections), Context::Flags::None,
-                      std::move(name)},
-      m_env_vars(std::move(env_vars))
+                      std::move(name)}
 {
     m_window->set_client(this);
 
