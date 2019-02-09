@@ -10,7 +10,7 @@
 namespace Kakoune
 {
 
-class Selection;
+struct Selection;
 class Buffer;
 class Regex;
 class Context;
