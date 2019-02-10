@@ -111,7 +111,7 @@ main() {
   else
     color=$green
   fi
-  printf "\nResume: %s tests, %s failures\n" $number_tests $number_failures | colorize $color $none
+  printf "\nSummary: %s tests, %s failures\n" $number_tests $number_failures | colorize $color $none
   exit $number_failures
 }
 
