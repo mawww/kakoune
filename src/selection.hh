@@ -67,6 +67,7 @@ inline bool overlaps(const Selection& lhs, const Selection& rhs)
 void update_selections(Vector<Selection>& selections, size_t& main,
                        Buffer& buffer, size_t timestamp);
 
+bool compare_selections(const Selection& lhs, const Selection& rhs);
 void sort_selections(Vector<Selection>& selections, size_t& main);
 void merge_overlapping_selections(Vector<Selection>& selections, size_t& main);
 void clamp_selections(Vector<Selection>& sel, const Buffer& buffer);

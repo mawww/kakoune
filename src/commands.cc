@@ -1739,8 +1739,8 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
                 if (&sel == &sels.main())
                     main = new_sels.size() + c.selections().main_index();
 
-                for (auto& sel : c.selections())
-                    new_sels.push_back(sel);
+                const auto middle = new_sels.insert(new_sels.end(), c.selections().begin(), c.selections().end());
+                std::inplace_merge(new_sels.begin(), middle, new_sels.end(), compare_selections);
             }
         }
 

@@ -50,6 +50,12 @@ void SelectionList::set(Vector<Selection> list, size_t main)
     check_invariant();
 }
 
+bool compare_selections(const Selection& lhs, const Selection& rhs)
+{
+    const auto lmin = lhs.min(), rmin = rhs.min();
+    return lmin == rmin ? lhs.max() < rhs.max() : lmin < rmin;
+}
+
 namespace
 {
 
@@ -77,12 +83,6 @@ BufferCoord update_erase(BufferCoord coord, BufferCoord begin, BufferCoord end)
     kak_assert(coord.line >= 0 and coord.column >= 0);
     return coord;
 } */
-
-bool compare_selections(const Selection& lhs, const Selection& rhs)
-{
-    const auto lmin = lhs.min(), rmin = rhs.min();
-    return lmin == rmin ? lhs.max() < rhs.max() : lmin < rmin;
-}
 
 template<typename Iterator, typename OverlapsFunc>
 Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsFunc overlaps)
