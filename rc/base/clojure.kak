@@ -179,8 +179,9 @@ define-command -hidden clojure-indent-on-new-line %{
             execute-keys -draft '[bl"i<a-Z><gt>"wZ'
 
             try %{
-                # If a special form, indent another space
-                execute-keys -draft '"wze<a-k>\A' %opt{clojure_special_indent_forms} '\z<ret><a-L>s.\K.*<ret><a-;>;"i<a-Z><gt>'
+                # If a special form, indent another (indentwidth - 1) spaces
+                execute-keys -draft '"wze<a-k>\A' %opt{clojure_special_indent_forms} '\z<ret>'
+                execute-keys -draft '"wze<a-L>s.{' %sh{printf $(( kak_opt_indentwidth - 1 ))} '}\K.*<ret><a-;>;"i<a-Z><gt>'
             } catch %{
                 # If not special and parameter appears on line 1, indent to parameter
                 execute-keys -draft '"wze<a-l>s\h\K[^\s].*<ret><a-;>;"i<a-Z><gt>'
