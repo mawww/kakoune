@@ -328,7 +328,7 @@ const ParameterDesc write_params{
     ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
 };
 
-void do_write_buffer(Context& context, Optional<String> filename, bool sync_file, bool force)
+void do_write_buffer(Context& context, Optional<String> filename, WriteFlags flags)
 {
     Buffer& buffer = context.buffer();
 
@@ -344,7 +344,7 @@ void do_write_buffer(Context& context, Optional<String> filename, bool sync_file
     auto effective_filename = not filename ? buffer.name() : parse_filename(*filename);
 
     context.hooks().run_hook(Hook::BufWritePre, effective_filename, context);
-    write_buffer_to_file(buffer, effective_filename, force, sync_file);
+    write_buffer_to_file(buffer, effective_filename, flags);
     context.hooks().run_hook(Hook::BufWritePost, effective_filename, context);
 }
 
@@ -353,7 +353,8 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
 {
     return do_write_buffer(context,
                            parser.positional_count() > 0 ? parser[0] : Optional<String>{},
-                           (bool)parser.get_switch("sync"), force);
+                           (parser.get_switch("sync") ? WriteFlags::Sync : WriteFlags::None) |
+                           (force ? WriteFlags::Force : WriteFlags::None));
 }
 
 const CommandDesc write_cmd = {
@@ -395,7 +396,7 @@ void write_all_buffers(Context& context, bool sync = false)
             and !(buffer->flags() & Buffer::Flags::ReadOnly))
         {
             buffer->run_hook_in_own_context(Hook::BufWritePre, buffer->name(), context.name());
-            write_buffer_to_file(*buffer, buffer->name(), sync);
+            write_buffer_to_file(*buffer, buffer->name(), sync ? WriteFlags::Sync : WriteFlags::None);
             buffer->run_hook_in_own_context(Hook::BufWritePost, buffer->name(), context.name());
         }
     }
@@ -520,7 +521,7 @@ template<bool force>
 void write_quit(const ParametersParser& parser, Context& context,
                 const ShellContext& shell_context)
 {
-    do_write_buffer(context, {}, (bool)parser.get_switch("sync"), false);
+    do_write_buffer(context, {}, parser.get_switch("sync") ? WriteFlags::Sync : WriteFlags::None);
     quit<force>(parser, context, shell_context);
 }
 

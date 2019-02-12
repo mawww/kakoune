@@ -847,9 +847,11 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
         {
             Buffer* buffer = open_file_buffer(file, Buffer::Flags::NoHooks);
             if (not suffix_backup.empty())
-                write_buffer_to_file(*buffer, buffer->name() + suffix_backup);
+                write_buffer_to_file(*buffer, buffer->name() + suffix_backup,
+                                     WriteFlags::None);
             apply_to_buffer(*buffer);
-            write_buffer_to_file(*buffer, buffer->name());
+            write_buffer_to_file(*buffer, buffer->name(),
+                                 WriteFlags::None);
             buffer_manager.delete_buffer(*buffer);
         }
         if (not isatty(0))

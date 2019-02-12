@@ -257,7 +257,7 @@ void write(int fd, StringView data)
     }
 }
 
-void write_buffer_to_fd(Buffer& buffer, int fd, bool sync)
+void write_buffer_to_fd(Buffer& buffer, int fd)
 {
     auto eolformat = buffer.options()["eolformat"].get<EolFormat>();
     StringView eoldata;
@@ -278,38 +278,35 @@ void write_buffer_to_fd(Buffer& buffer, int fd, bool sync)
         write(fd, linedata.substr(0, linedata.length()-1));
         write(fd, eoldata);
     }
-
-    if (sync)
-        ::fsync(fd);
 }
 
-void write_buffer_to_file(Buffer& buffer, StringView filename, bool force, bool sync)
+void write_buffer_to_file(Buffer& buffer, StringView filename, WriteFlags flags)
 {
     struct stat st;
     auto zfilename = filename.zstr();
 
-    if (force)
+    if (flags & WriteFlags::Force and ::stat(zfilename, &st) == 0)
     {
-        if (::stat(zfilename, &st) == 0)
-        {
-            if (::chmod(zfilename, st.st_mode | S_IWUSR) < 0)
-                throw runtime_error("unable to change file permissions");
-        }
-        else
-            force = false;
+        if (::chmod(zfilename, st.st_mode | S_IWUSR) < 0)
+            throw runtime_error("unable to change file permissions");
     }
+    else
+        flags |= ~WriteFlags::Force;
+
     auto restore_mode = on_scope_end([&]{
-        if (force and ::chmod(zfilename, st.st_mode) < 0)
+        if (flags & WriteFlags::Force and ::chmod(zfilename, st.st_mode) < 0)
             throw runtime_error("unable to restore file permissions");
     });
 
-    int fd = open(zfilename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    const int fd = open(zfilename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
 
     {
         auto close_fd = on_scope_end([fd]{ close(fd); });
-        write_buffer_to_fd(buffer, fd, sync);
+        write_buffer_to_fd(buffer, fd);
+        if (flags & WriteFlags::Sync)
+            ::fsync(fd);
     }
 
     if ((buffer.flags() & Buffer::Flags::File) and
