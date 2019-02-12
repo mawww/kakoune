@@ -335,8 +335,8 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
             ::fsync(fd);
     }
 
-    if (replace)
-        rename(temp_filename, zfilename);
+    if (replace and rename(temp_filename, zfilename) != 0)
+        throw runtime_error("replacing file failed");
 
     if ((buffer.flags() & Buffer::Flags::File) and
         real_path(filename) == real_path(buffer.name()))
