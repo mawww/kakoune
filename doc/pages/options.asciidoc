@@ -240,6 +240,13 @@ are exclusively available to built-in options.
     _default_ ask +
     auto reload the buffers when an external modification is detected
 
+*writemethod* `enum(overwrite|replace)`::
+    _default_ overwrite +
+    method used to write buffers to file, `overwrite` will open the
+    existing file and write on top of the previous data, `replace`
+    will open a temporary file next to the target file, write it and
+    then rename it to the target file.
+
 *debug* `flags(hooks|shell|profile|keys|commands)`::
     dump various debug information in the '\*debug*' buffer
 

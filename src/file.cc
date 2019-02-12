@@ -280,25 +280,51 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
     }
 }
 
-void write_buffer_to_file(Buffer& buffer, StringView filename, WriteFlags flags)
+int open_temp_file(StringView filename, char (&buffer)[PATH_MAX])
 {
-    struct stat st;
-    auto zfilename = filename.zstr();
+    String path = real_path(filename);
+    auto [dir,file] = split_path(path);
 
-    if (flags & WriteFlags::Force and ::stat(zfilename, &st) == 0)
-    {
-        if (::chmod(zfilename, st.st_mode | S_IWUSR) < 0)
-            throw runtime_error("unable to change file permissions");
-    }
+    if (dir.empty())
+        format_to(buffer, ".{}.kak.XXXXXX", file);
     else
-        flags |= ~WriteFlags::Force;
+        format_to(buffer, "{}/.{}.kak.XXXXXX", dir, file);
+
+    return mkstemp(buffer);
+}
+
+int open_temp_file(StringView filename)
+{
+    char buffer[PATH_MAX];
+    return open_temp_file(filename, buffer);
+}
+
+void write_buffer_to_file(Buffer& buffer, StringView filename,
+                          WriteMethod method, WriteFlags flags)
+{
+    auto zfilename = filename.zstr();
+    struct stat st;
+
+    bool replace = method == WriteMethod::Replace;
+    bool force = flags & WriteFlags::Force;
+
+    if ((replace or force) and ::stat(zfilename, &st) != 0)
+    {
+        force = false;
+        replace = false;
+    }
+
+    if (force and ::chmod(zfilename, st.st_mode | S_IWUSR) < 0)
+        throw runtime_error("unable to change file permissions");
 
     auto restore_mode = on_scope_end([&]{
-        if (flags & WriteFlags::Force and ::chmod(zfilename, st.st_mode) < 0)
+        if ((force or replace) and ::chmod(zfilename, st.st_mode) < 0)
             throw runtime_error("unable to restore file permissions");
     });
 
-    const int fd = open(zfilename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    char temp_filename[PATH_MAX];
+    const int fd = replace ? open_temp_file(filename, temp_filename)
+                           : open(zfilename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
 
@@ -309,6 +335,9 @@ void write_buffer_to_file(Buffer& buffer, StringView filename, WriteFlags flags)
             ::fsync(fd);
     }
 
+    if (replace)
+        rename(temp_filename, zfilename);
+
     if ((buffer.flags() & Buffer::Flags::File) and
         real_path(filename) == real_path(buffer.name()))
         buffer.notify_saved();
@@ -316,16 +345,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename, WriteFlags flags)
 
 void write_buffer_to_backup_file(Buffer& buffer)
 {
-    String path = real_path(buffer.name());
-    auto [dir,file] = split_path(path);
-
-    char pattern[PATH_MAX];
-    if (dir.empty())
-        format_to(pattern, ".{}.kak.XXXXXX", file);
-    else
-        format_to(pattern, "{}/.{}.kak.XXXXXX", dir, file);
-
-    int fd = mkstemp(pattern);
+    const int fd = open_temp_file(buffer.name());
     if (fd >= 0)
     {
         write_buffer_to_fd(buffer, fd);

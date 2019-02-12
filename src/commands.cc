@@ -342,9 +342,10 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
         throw runtime_error("cannot overwrite the buffer when in readonly mode");
 
     auto effective_filename = not filename ? buffer.name() : parse_filename(*filename);
+    auto mode = context.options()["writemethod"].get<WriteMethod>();
 
     context.hooks().run_hook(Hook::BufWritePre, effective_filename, context);
-    write_buffer_to_file(buffer, effective_filename, flags);
+    write_buffer_to_file(buffer, effective_filename, mode, flags);
     context.hooks().run_hook(Hook::BufWritePost, effective_filename, context);
 }
 
@@ -395,8 +396,9 @@ void write_all_buffers(Context& context, bool sync = false)
              buffer->is_modified())
             and !(buffer->flags() & Buffer::Flags::ReadOnly))
         {
+            auto mode = context.options()["writemethod"].get<WriteMethod>();
             buffer->run_hook_in_own_context(Hook::BufWritePre, buffer->name(), context.name());
-            write_buffer_to_file(*buffer, buffer->name(), sync ? WriteFlags::Sync : WriteFlags::None);
+            write_buffer_to_file(*buffer, buffer->name(), mode, sync ? WriteFlags::Sync : WriteFlags::None);
             buffer->run_hook_in_own_context(Hook::BufWritePost, buffer->name(), context.name());
         }
     }

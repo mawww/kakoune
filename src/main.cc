@@ -399,6 +399,9 @@ void register_options()
     reg.declare_option("autoreload",
                        "autoreload buffer when a filesystem modification is detected",
                        Autoreload::Ask);
+    reg.declare_option("writemethod",
+                       "how to write buffer to files",
+                       WriteMethod::Overwrite);
     reg.declare_option<int, check_timeout>(
         "idle_timeout", "timeout, in milliseconds, before idle hooks are triggered", 50);
     reg.declare_option<int, check_timeout>(
@@ -848,10 +851,10 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
             Buffer* buffer = open_file_buffer(file, Buffer::Flags::NoHooks);
             if (not suffix_backup.empty())
                 write_buffer_to_file(*buffer, buffer->name() + suffix_backup,
-                                     WriteFlags::None);
+                                     WriteMethod::Overwrite, WriteFlags::None);
             apply_to_buffer(*buffer);
             write_buffer_to_file(*buffer, buffer->name(),
-                                 WriteFlags::None);
+                                 WriteMethod::Overwrite, WriteFlags::None);
             buffer_manager.delete_buffer(*buffer);
         }
         if (not isatty(0))

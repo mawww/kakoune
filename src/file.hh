@@ -2,6 +2,7 @@
 #define file_hh_INCLUDED
 
 #include "array_view.hh"
+#include "enum.hh"
 #include "meta.hh"
 #include "string.hh"
 #include "units.hh"
@@ -51,6 +52,19 @@ struct MappedFile
     struct stat st {};
 };
 
+enum class WriteMethod
+{
+    Overwrite,
+    Replace
+};
+constexpr auto enum_desc(Meta::Type<WriteMethod>)
+{
+    return make_array<EnumDesc<WriteMethod>, 2>({
+        { WriteMethod::Overwrite, "overwrite" },
+        { WriteMethod::Replace, "replace" },
+    });
+}
+
 enum class WriteFlags
 {
     None  = 0,
@@ -60,7 +74,7 @@ enum class WriteFlags
 constexpr bool with_bit_ops(Meta::Type<WriteFlags>) { return true; }
 
 void write_buffer_to_file(Buffer& buffer, StringView filename,
-                          WriteFlags flags);
+                          WriteMethod method, WriteFlags flags);
 void write_buffer_to_fd(Buffer& buffer, int fd);
 void write_buffer_to_backup_file(Buffer& buffer);
 
