@@ -1252,12 +1252,12 @@ void select_object(Context& context, NormalParams params)
                       whole ? "" : (flags & ObjectFlags::ToBegin ? " begin" : " end"));
     };
 
-    const int count = params.count <= 0 ? 0 : params.count - 1;
     on_next_key_with_autoinfo(context, KeymapMode::Object,
-                             [count](Key key, Context& context) {
+                             [params](Key key, Context& context) {
         if (key == Key::Escape)
             return;
 
+        const int count = params.count <= 0 ? 0 : params.count - 1;
         static constexpr struct ObjectType
         {
             Key key;
@@ -1308,6 +1308,12 @@ void select_object(Context& context, NormalParams params)
                                            Regex{params[1], RegexCompileFlags::Backward},
                                            count, flags));
                 });
+            return;
+        }
+
+        if (key == alt(';'))
+        {
+            command(context, params);
             return;
         }
 
@@ -1365,7 +1371,8 @@ void select_object(Context& context, NormalParams params)
          {{'i'},         "indent"},
          {{'u'},         "argument"},
          {{'n'},         "number"},
-         {{'c'},         "custom object desc"}}));
+         {{'c'},         "custom object desc"},
+         {{alt(';')},    "run command in object context"}}));
 }
 
 enum Direction { Backward = -1, Forward = 1 };

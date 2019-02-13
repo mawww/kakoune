@@ -681,6 +681,10 @@ in order to specify the wanted object:
 *c*::
     select user defined object, will prompt for open and close text
 
+*<a-;>*::
+    run a command in object context.  The expansions `%val{count}` and
+    `%val{register}` are available here.
+
 == Prompt commands
 
 When pressing `:` in normal mode, Kakoune will open a prompt to enter
