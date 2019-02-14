@@ -682,8 +682,8 @@ in order to specify the wanted object:
     select user defined object, will prompt for open and close text
 
 *<a-;>*::
-    run a command in object context.  The expansions `%val{count}` and
-    `%val{register}` are available here.
+    run a command with additional expansions describing the selection
+    context (See <<expansions#,`:doc expansions`>>)
 
 == Prompt commands
 

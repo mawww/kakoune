@@ -9,6 +9,7 @@
 #include "commands.hh"
 #include "context.hh"
 #include "diff.hh"
+#include "enum.hh"
 #include "face_registry.hh"
 #include "file.hh"
 #include "flags.hh"
@@ -37,6 +38,14 @@ enum class SelectMode
     Append,
 };
 
+constexpr auto enum_desc(Meta::Type<SelectMode>)
+{
+    return make_array<EnumDesc<SelectMode>, 3>({
+        { SelectMode::Replace, "replace" },
+        { SelectMode::Extend, "extend" },
+        { SelectMode::Append, "append" },
+    });
+}
 void merge_selections(Selection& sel, const Selection& new_sel)
 {
     const bool forward = sel.cursor() >= sel.anchor();
@@ -437,7 +446,7 @@ void for_each_codepoint(Context& context, NormalParams)
     selections.insert(strings, InsertMode::Replace);
 }
 
-void command(Context& context, NormalParams params)
+void command(Context& context, EnvVarMap env_vars)
 {
     if (not CommandManager::has_instance())
         throw runtime_error{"commands are not supported"};
@@ -451,7 +460,7 @@ void command(Context& context, NormalParams params)
            StringView cmd_line, ByteCount pos) {
                return CommandManager::instance().complete(context, flags, cmd_line, pos);
         },
-        [params](StringView cmdline, PromptEvent event, Context& context) {
+        [env_vars = std::move(env_vars)](StringView cmdline, PromptEvent event, Context& context) {
             if (context.has_client())
             {
                 context.client().info_hide();
@@ -479,14 +488,19 @@ void command(Context& context, NormalParams params)
                 else if (not is_blank(cmdline[0]))
                     RegisterManager::instance()[':'].set(context, cmdline.str());
 
-                EnvVarMap env_vars = {
-                    { "count", to_string(params.count) },
-                    { "register", String{&params.reg, 1} }
-                };
                 CommandManager::instance().execute(
                     cmdline, context, { {}, env_vars });
             }
         });
+}
+
+void command(Context& context, NormalParams params)
+{
+    EnvVarMap env_vars = {
+        { "count", to_string(params.count) },
+        { "register", String{&params.reg, 1} }
+    };
+    command(context, std::move(env_vars));
 }
 
 BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView after)
@@ -1313,7 +1327,13 @@ void select_object(Context& context, NormalParams params)
 
         if (key == alt(';'))
         {
-            command(context, params);
+            EnvVarMap env_vars = {
+                { "count", to_string(params.count) },
+                { "register", String{&params.reg, 1} },
+                { "select_mode", option_to_string(mode) },
+                { "object_flags", option_to_string(flags) }
+            };
+            command(context, std::move(env_vars));
             return;
         }
 

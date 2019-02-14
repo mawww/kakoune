@@ -215,7 +215,7 @@ The following expansions are supported (with required context _in italics_):
     directory containing the user configuration
 
 *%val{count}*::
-    _in `map` command <keys> parameter_ +
+    _in `map` command <keys> parameter and `<a-;>` from object menu_ +
     current count when the mapping was triggered, defaults to 0 if no
     count given
 
@@ -262,13 +262,24 @@ The following expansions are supported (with required context _in italics_):
     _in buffer, window scope_ +
     `true` if the buffer has modifications not saved, otherwise `false`
 
+*%val{object_flags}*::
+    _for commands executed from the object menu's `<a-;>` only_ +
+    a pipe-separted list of words including `inner` if the user wants
+    an inner selection, `to_begin` if the user wants to select to the
+    beginning, and `to_end` if the user wants to select to the end
+
 *%val{register}*::
-    _in `map` command <keys> parameter_ +
+    _in `map` command <keys> parameter and `<a-;>` from the object menu_ +
     current register when the mapping was triggered
 
 *%val{runtime}*::
     directory containing the kak support files, determined from Kakoune's
     binary location
+
+*%val{select_mode}*::
+    _for commands executed from the object menu's `<a-;>` only_ +
+    `replace` if the new selection should replace the existing, `extend`
+    otherwise
 
 *%val{selection}*::
     _in window scope_ +

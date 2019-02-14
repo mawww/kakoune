@@ -1,6 +1,7 @@
 #ifndef selectors_hh_INCLUDED
 #define selectors_hh_INCLUDED
 
+#include "enum.hh"
 #include "optional.hh"
 #include "meta.hh"
 #include "unicode.hh"
@@ -61,6 +62,15 @@ enum class ObjectFlags
 };
 
 constexpr bool with_bit_ops(Meta::Type<ObjectFlags>) { return true; }
+
+constexpr auto enum_desc(Meta::Type<ObjectFlags>)
+{
+    return make_array<EnumDesc<ObjectFlags>, 3>({
+        { ObjectFlags::ToBegin, "to_begin" },
+        { ObjectFlags::ToEnd, "to_end" },
+        { ObjectFlags::Inner, "inner" },
+    });
+}
 
 template<WordType word_type>
 Optional<Selection>
