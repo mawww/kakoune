@@ -1,0 +1,9 @@
+hook global WinDisplay .* %{ evaluate-commands %sh{
+    tmp=$(mktemp -d)
+    fifo="${tmp}/fifo"
+    mkfifo $fifo
+    printf "%s\n" "try %{ delete-buffer *test* }
+                   edit! -fifo ${fifo} *test*
+                   try %{ hook -always global KakEnd .* %{ nop %sh{ rm -rf ${tmp} } } }
+                   map buffer normal '<ret>' '<a-h>;/:<c-v><c-i><ret><a-h>2<s-l><a-l>:<space>test-jump $kak_bufname<ret>'"
+}}
