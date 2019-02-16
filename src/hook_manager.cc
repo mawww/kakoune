@@ -36,13 +36,14 @@ void HookManager::remove_hooks(const Regex& regex)
 {
     for (auto& list : m_hooks)
     {
-        auto it = std::remove_if(list.begin(), list.end(),
-                                 [&](const std::unique_ptr<HookData>& h)
-                                 { return regex_match(h->group.begin(), h->group.end(), regex); });
-        if (not m_running_hooks.empty()) // we are running some hooks, defer deletion
-            m_hooks_trash.insert(m_hooks_trash.end(), std::make_move_iterator(it),
-                                 std::make_move_iterator(list.end()));
-        list.erase(it, list.end());
+        list.erase(std::remove_if(list.begin(), list.end(),
+                                  [this, &regex](std::unique_ptr<HookData>& h) {
+                                      if (not regex_match(h->group.begin(), h->group.end(), regex))
+                                          return false;
+                                      m_hooks_trash.push_back(std::move(h));
+                                      return true;
+                                  }),
+                   list.end());
     }
 }
 

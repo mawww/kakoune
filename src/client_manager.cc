@@ -153,18 +153,22 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
         Buffer* last = client->last_buffer();
         context.change_buffer(last ? *last : BufferManager::instance().get_first_buffer());
     }
-    auto end = std::remove_if(m_free_windows.begin(), m_free_windows.end(),
-                              [&buffer](const WindowAndSelections& ws)
-                              { return &ws.window->buffer() == &buffer; });
+    Vector<std::unique_ptr<Window>> removed_windows;
+    m_free_windows.erase(std::remove_if(m_free_windows.begin(), m_free_windows.end(),
+                                        [&buffer, &removed_windows](WindowAndSelections& ws) {
+                                            if (&ws.window->buffer() != &buffer)
+                                                return false;
+                                            removed_windows.push_back(std::move(ws.window));
+                                            return true;
+                                         }),
+                         m_free_windows.end());
 
-    for (auto it = end; it != m_free_windows.end(); ++it)
+    for (auto&& removed_window : removed_windows)
     {
-        auto& win = it->window;
-        win->run_hook_in_own_context(Hook::WinClose, win->buffer().name());
-        m_window_trash.push_back(std::move(win));
+        removed_window->run_hook_in_own_context(Hook::WinClose,
+                                                removed_window->buffer().name());
+        m_window_trash.push_back(std::move(removed_window));
     }
-
-    m_free_windows.erase(end, m_free_windows.end());
 }
 
 void ClientManager::clear_window_trash()
