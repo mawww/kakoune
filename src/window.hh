@@ -54,6 +54,7 @@ private:
     void on_option_changed(const Option& option) override;
     DisplaySetup compute_display_setup(const Context& context) const;
 
+    friend class ClientManager;
     void run_hook_in_own_context(Hook hook, StringView param,
                                  String client_name = "");
 

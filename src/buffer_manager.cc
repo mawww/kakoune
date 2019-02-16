@@ -50,13 +50,13 @@ void BufferManager::delete_buffer(Buffer& buffer)
     auto it = find_if(m_buffers, [&](auto& p) { return p.get() == &buffer; });
     kak_assert(it != m_buffers.end());
 
+    buffer.on_unregistered();
+
     m_buffer_trash.emplace_back(std::move(*it));
     m_buffers.erase(it);
 
     if (ClientManager::has_instance())
         ClientManager::instance().ensure_no_client_uses_buffer(buffer);
-
-    buffer.on_unregistered();
 }
 
 Buffer* BufferManager::get_buffer_ifp(StringView name)
@@ -99,19 +99,6 @@ void BufferManager::backup_modified_buffers()
 
 void BufferManager::clear_buffer_trash()
 {
-    for (auto& buffer : m_buffer_trash)
-    {
-        // Do that again, to be tolerant in some corner cases, where a buffer is
-        // deleted during its creation
-        if (ClientManager::has_instance())
-        {
-            ClientManager::instance().ensure_no_client_uses_buffer(*buffer);
-            ClientManager::instance().clear_window_trash();
-        }
-
-        buffer.reset();
-    }
-
     m_buffer_trash.clear();
 }
 

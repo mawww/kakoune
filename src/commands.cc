@@ -275,6 +275,7 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
 
     if (buffer != current_buffer)
         context.change_buffer(*buffer);
+    buffer = &context.buffer(); // change_buffer hooks might change the buffer again
 
     if (parser.get_switch("fifo") and not parser.get_switch("scroll"))
         context.selections_write_only() = { *buffer, Selection{} };

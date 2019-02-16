@@ -158,7 +158,11 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
                               { return &ws.window->buffer() == &buffer; });
 
     for (auto it = end; it != m_free_windows.end(); ++it)
-        m_window_trash.push_back(std::move(it->window));
+    {
+        auto& win = it->window;
+        win->run_hook_in_own_context(Hook::WinClose, win->buffer().name());
+        m_window_trash.push_back(std::move(win));
+    }
 
     m_free_windows.erase(end, m_free_windows.end());
 }
