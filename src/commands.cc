@@ -1754,18 +1754,17 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
     else
     {
         const bool collapse_jumps = not (c.flags() & Context::Flags::Draft) and context.has_buffer();
-        auto original_jump_list = collapse_jumps ? c.jump_list() : Optional<JumpList>{};
+        auto& jump_list = c.jump_list();
+        const size_t prev_index = jump_list.current_index();
         auto jump = collapse_jumps ? c.selections() : Optional<SelectionList>{};
 
         func(parser, c);
 
         // If the jump list got mutated, collapse all jumps into a single one from original selections
-        if (collapse_jumps and c.jump_list() != *original_jump_list)
-        {
-            original_jump_list->push(std::move(*jump));
-            if (c.jump_list() != *original_jump_list)
-                c.jump_list() = std::move(*original_jump_list);
-        }
+        if (auto index = jump_list.current_index();
+            collapse_jumps and index > prev_index and
+            contains(BufferManager::instance(), &jump->buffer()))
+            jump_list.push(std::move(*jump), prev_index);
     }
 }
 

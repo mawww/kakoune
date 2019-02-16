@@ -21,7 +21,7 @@ class AliasRegistry;
 
 struct JumpList
 {
-    void push(SelectionList jump);
+    void push(SelectionList jump, Optional<size_t> index = {});
     const SelectionList& forward(Context& context, int count);
     const SelectionList& backward(Context& context, int count);
     void forget_buffer(Buffer& buffer);
@@ -32,6 +32,8 @@ struct JumpList
     }
 
     friend bool operator!=(const JumpList& lhs, const JumpList& rhs) { return not (lhs == rhs); }
+
+    size_t current_index() const { return m_current; }
 
 private:
     using Contents = Vector<SelectionList, MemoryDomain::Selections>;

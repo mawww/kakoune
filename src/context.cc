@@ -76,8 +76,14 @@ void Context::print_status(DisplayLine status) const
         client().print_status(std::move(status));
 }
 
-void JumpList::push(SelectionList jump)
+void JumpList::push(SelectionList jump, Optional<size_t> index)
 {
+    if (index)
+    {
+        m_current = *index;
+        kak_assert(m_current <= m_jumps.size());
+    }
+
     if (m_current != m_jumps.size())
         m_jumps.erase(m_jumps.begin()+m_current+1, m_jumps.end());
     m_jumps.erase(std::remove(begin(m_jumps), end(m_jumps), jump),
