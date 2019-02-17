@@ -8,7 +8,8 @@ To open buffers or navigate through the buffers list see
 == Scratch Buffers
 
 Scratch buffers are useful for volatile data and quick prototyping.
-They are not linked to files.
+They are not linked to files, so Kakoune does not warn about unsaved
+changes at exit, and the `:write` command requires an explicit filename.
 
 One particular scratch buffer, named *\*scratch*\*, is automatically
 created when there are no other buffers left in the current
@@ -49,6 +50,8 @@ This is very useful for running some commands asynchronously while
 displaying their result in a buffer. See `rc/make.kak` and `rc/grep.kak`
 for examples.
 
-When the buffer is deleted, the fifo will be closed, so any program
-writing to it will receive `SIGPIPE`. This is useful as it permits to
-stop the writing program when the buffer is deleted.
+When the write end of the fifo is closed, the buffer becomes an ordinary
+<<buffers#scratch-buffers,scratch buffer>>. When the buffer is deleted,
+Kakoune closes the read end of the fifo, so any program writing to it
+will receive `SIGPIPE`. This is useful as it permits to stop the writing
+program when the buffer is deleted.

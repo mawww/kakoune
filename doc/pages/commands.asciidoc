@@ -19,10 +19,36 @@ of the file onto the filesystem
     change the current directory to *directory*, or the home directory if
     unspecified
 
-*edit[!]* <filename> [<line> [<column>]]::
+*edit[!]* [<switches>] <filename> [<line> [<column>]]::
     *alias* e +
     open buffer on file, go to given line and column. If file is already
     opened, just switch to this file. Use edit! to force reloading
+
+    *-debug*:::
+        The new buffer (if any) will be created as a debug buffer.
+        (See <<buffers#debug-buffers,`:doc buffers debug-buffers`>>)
+
+    *-existing*:::
+        If the named file does not exist, fail instead of creating a new buffer.
+
+    *-readonly*:::
+        The new buffer (if any) will be set read-only.
+
+    *-fifo* <fifoname>:::
+        Creates a new scratch buffer named <filename>, and continually appends
+        data from the fifo (named pipe) <fifoname> as it arrives.
+        (See <<buffers#fifo-buffers,`:doc buffers fifo-buffers`>>)
+
+    *-scratch*:::
+        Creates a new buffer named <filename>, which doesn't correspond to any
+        file on disk.
+        (See <<buffers#scratch-buffers,`:doc buffers scratch-buffers`>>)
+
+    *-scroll*:::
+        If used with `-fifo`, when new data arrives Kakoune will scroll the
+        buffer down to make the new data visible.
+        Otherwise, does nothing.
+
 
 *write[!]* [-sync] [<filename>]::
     *alias* w +
@@ -57,11 +83,15 @@ of the file onto the filesystem
 
 *buffer-next*::
     *alias* bn +
-    switch to the next buffer
+    switch to the next buffer.
+    Debug buffers are skipped.
+    (See <<buffers#debug-buffers,`:doc buffers debug-buffers`>>)
 
 *buffer-prev*::
     *alias* bp +
-    switch to the previous buffer
+    switch to the previous buffer.
+    Debug buffers are skipped.
+    (See <<buffers#debug-buffers,`:doc buffers debug-buffers`>>)
 
 *delete-buffer[!]* [<name>]::
     *alias* db +
