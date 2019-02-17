@@ -21,8 +21,14 @@ A scratch buffer can be created by passing the `-scratch` switch to the
 
 == Debug Buffers
 
-Debug buffers are used to gather diagnostics. They are not accessible
-while cycling over the buffers list.
+Debug buffers are used to gather diagnostics. They have a number of
+restrictions compared to regular buffers:
+
+- They are skipped when cycling over the buffers list.
+- Their content is not considered for word completions with `word=all`
+  completers
+- Hooks are not always run (like the `BufCreate`/`BufClose` hooks)
+- Display profiling is disabled
 
 A specific *\*debug*\* buffer is used by Kakoune to write errors or
 warnings.  This is also where the ouput of the `:debug` and the `:echo
