@@ -98,7 +98,7 @@ kak$(suffix) : $(objects) .version.o
 -include $(deps)
 
 .%$(suffix).o: %.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
 
 .version.o: .version.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
