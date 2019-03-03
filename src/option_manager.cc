@@ -91,6 +91,8 @@ void OptionManager::unset_option(StringView name)
         if (changed)
             on_option_changed(parent_option);
     }
+    else
+        throw runtime_error{format("option '{}' is not set in this scope", name)};
 }
 
 void OptionManager::on_option_changed(const Option& option)
