@@ -1,0 +1,1 @@
+define-command error %{ try %{ non-existing-command } catch %{ exec i "%val{error}" <esc> } }

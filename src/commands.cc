@@ -2080,17 +2080,26 @@ const CommandDesc try_catch_cmd = {
         }
 
         CommandManager& command_manager = CommandManager::instance();
+        Optional<ShellContext> shell_context_with_error;
         for (size_t i = 0; i < parser.positional_count(); i += 2)
         {
             if (i == 0 or i < parser.positional_count() - 1)
             {
-                try {
-                    command_manager.execute(parser[i], context, shell_context);
+                try
+                {
+                    command_manager.execute(parser[i], context,
+                                            shell_context_with_error.value_or(shell_context));
                     return;
-                } catch (runtime_error&) {}
+                }
+                catch (const runtime_error& error)
+                {
+                    shell_context_with_error.emplace(shell_context);
+                    shell_context_with_error->env_vars[StringView{"error"}] = error.what().str();
+                }
             }
             else
-                command_manager.execute(parser[i], context, shell_context);
+                command_manager.execute(parser[i], context,
+                                        shell_context_with_error.value_or(shell_context));
         }
     }
 };
