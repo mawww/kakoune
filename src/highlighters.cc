@@ -133,7 +133,7 @@ void apply_highlighter(HighlightContext context,
 
     using LineIterator = DisplayBuffer::LineList::iterator;
     LineIterator first_line;
-    Vector<DisplayLine::iterator> insert_pos;
+    Vector<size_t> insert_idx;
     auto line_end = display_buffer.lines().end();
 
     DisplayBuffer region_display;
@@ -147,8 +147,6 @@ void apply_highlighter(HighlightContext context,
 
         if (region_lines.empty())
             first_line = line_it;
-        region_lines.emplace_back();
-        insert_pos.emplace_back();
 
         if (range.begin < begin or range.end > end)
         {
@@ -184,14 +182,16 @@ void apply_highlighter(HighlightContext context,
                     }
                 }
             }
+            region_lines.emplace_back();
             std::move(line.begin() + beg_idx, line.begin() + end_idx,
                       std::back_inserter(region_lines.back()));
-            insert_pos.back() = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
+            auto it = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
+            insert_idx.push_back(it - line.begin());
         }
         else
         {
-            region_lines.back() = std::move(line);
-            insert_pos.back() = line.begin();
+            insert_idx.push_back(0);
+            region_lines.push_back(std::move(line));
         }
     }
 
@@ -204,7 +204,7 @@ void apply_highlighter(HighlightContext context,
     for (size_t i = 0; i < region_lines.size(); ++i)
     {
         auto& line = *(first_line + i);
-        auto pos = insert_pos[i];
+        auto pos = line.begin() + insert_idx[i];
         for (auto& atom : region_lines[i])
             pos = ++line.insert(pos, std::move(atom));
     }

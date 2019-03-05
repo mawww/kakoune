@@ -1,0 +1,5 @@
+add-highlighter buffer/regions regions
+add-highlighter buffer/regions/inline default-region regions
+
+add-highlighter buffer/ wrap
+add-highlighter buffer/ wrap -indent
