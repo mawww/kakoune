@@ -408,7 +408,7 @@ void write_all_buffers(Context& context, bool sync = false)
 const CommandDesc write_all_cmd = {
     "write-all",
     "wa",
-    "write-all [-sync]: write all buffers that are associated to a file",
+    "write-all [-sync]: write all changed buffers that are associated to a file",
     ParameterDesc{
         { { "sync", { false, "force the synchronization of the file onto the filesystem" } } },
         ParameterDesc::Flags::None, 0, 0

@@ -59,7 +59,7 @@ of the file onto the filesystem
 
 *write-all* [-sync]::
     *alias* wa +
-    write all buffers that are associated to a file
+    write all changed buffers that are associated to a file
 
 *quit[!]* [<exit status>]::
     *alias* q +
