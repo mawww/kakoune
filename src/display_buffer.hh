@@ -28,7 +28,7 @@ public:
         : m_type(Range), m_buffer(&buffer), m_range{begin, end} {}
 
     DisplayAtom(String str, Face face)
-        : m_type(Text), m_text(std::move(str)), face(face) {}
+        : face(face), m_type(Text), m_text(std::move(str)) {}
 
     StringView content() const;
     ColumnCount length() const;

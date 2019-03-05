@@ -85,7 +85,7 @@ else
     LDFLAGS += -rdynamic
 endif
 
-CXXFLAGS += -pedantic -std=c++17 -g -Wall -Wextra -Wno-unused-parameter -Wno-reorder -Wno-sign-compare -Wno-address -Wno-noexcept-type -Wno-unknown-attributes -Wno-unknown-warning-option
+CXXFLAGS += -pedantic -std=c++17 -g -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-address
 
 all : kak
 
@@ -98,7 +98,7 @@ kak$(suffix) : $(objects) .version.o
 -include $(deps)
 
 .%$(suffix).o: %.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
 
 .version.o: .version.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<

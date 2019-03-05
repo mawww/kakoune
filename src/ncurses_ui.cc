@@ -250,7 +250,9 @@ default_colors = {
 };
 
 NCursesUI::NCursesUI()
-    : m_stdin_watcher{0, FdEvents::Read,
+    : m_colors{default_colors},
+      m_cursor{CursorMode::Buffer, {}},
+      m_stdin_watcher{0, FdEvents::Read,
                       [this](FDWatcher&, FdEvents, EventMode) {
         if (not m_on_key)
             return;
@@ -258,9 +260,7 @@ NCursesUI::NCursesUI()
         while (auto key = get_next_key())
             m_on_key(*key);
       }},
-      m_assistant(assistant_clippy),
-      m_colors{default_colors},
-      m_cursor{CursorMode::Buffer, {}}
+      m_assistant(assistant_clippy)
 {
     initscr();
     raw();

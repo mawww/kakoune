@@ -34,7 +34,7 @@ void FDWatcher::close_fd()
 }
 
 Timer::Timer(TimePoint date, Callback callback, EventMode mode)
-    : m_date{date}, m_callback{std::move(callback)}, m_mode(mode)
+    : m_date{date}, m_mode(mode), m_callback{std::move(callback)}
 {
     if (m_callback and EventManager::has_instance())
         EventManager::instance().m_timers.push_back(this);

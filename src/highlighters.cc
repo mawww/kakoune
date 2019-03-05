@@ -633,8 +633,8 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
 struct WrapHighlighter : Highlighter
 {
     WrapHighlighter(ColumnCount max_width, bool word_wrap, bool preserve_indent, String marker)
-        : Highlighter{HighlightPass::Wrap}, m_max_width{max_width},
-          m_word_wrap{word_wrap}, m_preserve_indent{preserve_indent},
+        : Highlighter{HighlightPass::Wrap}, m_word_wrap{word_wrap},
+          m_preserve_indent{preserve_indent}, m_max_width{max_width},
           m_marker{std::move(marker)} {}
 
     static constexpr StringView ms_id = "wrap";
