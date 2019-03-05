@@ -53,20 +53,20 @@ regular color palette by Kakoune. Fortunately, on recent versions of `tmux`
 (>=2.6), you can work around that by using the following configuration
 settings:
 
-~/.tmux.conf
-```
+.~/.tmux.conf
+----
 set -g default-terminal "tmux-256color"
 set -ga terminal-overrides ",*col*:Tc"
-```
+----
 
 Note: `\*col*` is a regular expression that matches your terminal's `$TERM`
 value, modify it if necessary, e.g. `xterm-termite`.
 
 Next, run the following command to create a local `terminfo` override:
 
-```
+----
 $ tic /path/to/kakoune/contrib/tmux-256color.terminfo
-```
+----
 
 Finally, quit all existing sessions (`tmux kill-server`), and restart `tmux`.
 
