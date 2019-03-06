@@ -13,7 +13,8 @@ A shell command is appended to the one set in this option at runtime} \
                    'mintty         -e sh -c' \
                    'sakura         -x      ' \
                    'gnome-terminal -e      ' \
-                   'xfce4-terminal -e      ' ; do
+                   'xfce4-terminal -e      ' \
+                   'konsole        -e      '; do
         terminal=${termcmd%% *}
         if command -v $terminal >/dev/null 2>&1; then
             printf %s\\n "$termcmd"
