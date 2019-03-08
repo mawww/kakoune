@@ -2405,6 +2405,36 @@ const CommandDesc enter_user_mode_cmd = {
     }
 };
 
+const CommandDesc provide_module_cmd = {
+    "provide-module",
+    nullptr,
+    "provide-module [<switches>] <name> <cmds>: declares a module <name> provided by <cmds>",
+    ParameterDesc{
+        { { "override", { false, "allow overriding an existing module" } } },
+        ParameterDesc::Flags::None,
+        2, 2
+    },
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parse, Context& context, const ShellContext&)
+    {
+    }
+};
+
+const CommandDesc require_module_cmd = {
+    "require-module",
+    nullptr,
+    "require-module <name>: ensures that <name> module has been loaded",
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 1, 1 },
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+    }
+};
+
 }
 
 void register_commands()
@@ -2470,6 +2500,8 @@ void register_commands()
     register_command(fail_cmd);
     register_command(declare_user_mode_cmd);
     register_command(enter_user_mode_cmd);
+    register_command(provide_module_cmd);
+    register_command(require_module_cmd);
 }
 
 }
