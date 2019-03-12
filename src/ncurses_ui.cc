@@ -286,7 +286,7 @@ NCursesUI::~NCursesUI()
     enable_mouse(false);
     if (can_change_color()) // try to reset palette
     {
-        fputs("\033]104;\007", stdout);
+        fputs("\033]104\007", stdout);
         fflush(stdout);
     }
     endwin();
