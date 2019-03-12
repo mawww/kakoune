@@ -2417,8 +2417,17 @@ const CommandDesc provide_module_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parse, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
+        const String& module_name = parser[0];
+        auto& cm = CommandManager::instance();
+
+        if (not all_of(module_name, is_identifier))
+            throw runtime_error(format("invalid module name: '{}'", module_name));
+
+        if (cm.module_defined(module_name) and not parser.get_switch("override"))
+            throw runtime_error(format("module '{}' already defined", module_name));
+        cm.register_module(module_name, parser[1]);
     }
 };
 
@@ -2432,6 +2441,7 @@ const CommandDesc require_module_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
+        CommandManager::instance().load_module(parser[0], context);
     }
 };
 

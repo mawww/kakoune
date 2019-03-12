@@ -40,6 +40,33 @@ void CommandManager::register_command(String command_name,
                                  std::move(completer) };
 }
 
+bool CommandManager::module_defined(StringView module_name) const
+{
+    return m_modules.find(module_name) != m_modules.end();
+}
+
+void CommandManager::register_module(String module_name, String commands)
+{
+    auto module = m_modules.find(module_name);
+    if (module != m_modules.end() and module->value.loaded)
+        throw runtime_error{format("module already loaded: '{}'", module_name)};
+
+    m_modules[module_name] = { false, std::move(commands) };
+}
+
+void CommandManager::load_module(StringView module_name, Context& context)
+{
+    auto module = m_modules.find(module_name);
+    if (module == m_modules.end())
+        throw runtime_error{format("no such module: '{}'", module_name)};
+    if (module->value.loaded)
+        return;
+
+    module->value.loaded = true;
+    execute(module->value.commands, context);
+    module->value.commands.clear();
+}
+
 struct parse_error : runtime_error
 {
     parse_error(StringView error)
