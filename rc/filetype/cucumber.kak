@@ -8,6 +8,12 @@ hook global BufCreate .*[.](feature|story) %{
     set-option buffer filetype cucumber
 }
 
+hook -once global BufSetOption filetype=cucumber %{
+    require-module cucumber
+}
+
+provide-module cucumber %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -86,4 +92,6 @@ hook global WinSetOption filetype=cucumber %{
     hook window InsertChar \n -group cucumber-indent cucumber-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window cucumber-.+ }
+}
+
 }

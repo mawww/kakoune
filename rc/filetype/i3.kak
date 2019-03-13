@@ -2,6 +2,12 @@ hook global BufCreate .*(sway|i3)/config %{
     set buffer filetype i3
 }
 
+hook -once global BufSetOption filetype=i3 %{
+    require-module i3
+}
+
+provide-module i3 %{
+
 add-highlighter shared/i3 regions
 add-highlighter shared/i3/code default-region group
 add-highlighter shared/i3/double_string region %{"} %{"} group
@@ -79,3 +85,5 @@ hook global WinSetOption filetype=i3 %[
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window i3-.+ }
 ]
+
+}

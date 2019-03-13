@@ -8,6 +8,12 @@ hook global BufCreate .*[.](coffee) %{
     set-option buffer filetype coffee
 }
 
+hook -once global BufSetOption filetype=coffee %{
+    require-module coffee
+}
+
+provide-module coffee %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -77,3 +83,5 @@ hook global WinSetOption filetype=coffee %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window coffee-.+ }
 }
+
+]

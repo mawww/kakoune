@@ -8,6 +8,12 @@ hook global BufCreate .*[.](moon) %{
     set-option buffer filetype moon
 }
 
+hook -once global BufSetOption filetype=moon %{
+    require-module moon
+}
+
+provide-module moon %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -105,3 +111,5 @@ hook global WinSetOption filetype=moon %{
         unalias window alt moon-alternative-file
     }
 }
+
+]

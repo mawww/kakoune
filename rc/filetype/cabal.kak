@@ -8,6 +8,12 @@ hook global BufCreate .*[.](cabal) %{
     set-option buffer filetype cabal
 }
 
+hook -once global BufSetOption filetype=cabal %{
+    require-module cabal
+}
+
+provide-module cabal %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -71,4 +77,6 @@ hook global WinSetOption filetype=cabal %[
     hook window InsertChar \} -group cabal-indent cabal-indent-on-closing-curly-brace
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window cabal-.+ }
+]
+
 ]

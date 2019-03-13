@@ -8,6 +8,12 @@ hook global BufCreate .*\.(toml) %{
     set-option buffer filetype toml
 }
 
+hook -once global BufSetOption filetype=toml %{
+    require-module toml
+}
+
+provide-module toml %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -60,4 +66,6 @@ hook global WinSetOption filetype=toml %{
     hook window InsertChar \n -group toml-indent toml-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window toml-.+ }
+}
+
 }

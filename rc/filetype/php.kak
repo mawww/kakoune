@@ -5,6 +5,13 @@ hook global BufCreate .*[.](php) %{
     set-option buffer filetype php
 }
 
+hook -once global BufSetOption filetype=php %{
+    require-module php
+}
+
+provide-module php %(
+require-module html
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -88,3 +95,5 @@ hook global WinSetOption filetype=php %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window php-.+ }
 }
+
+)

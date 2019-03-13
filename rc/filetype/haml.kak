@@ -8,6 +8,15 @@ hook global BufCreate .*[.](haml) %{
     set-option buffer filetype haml
 }
 
+hook -once global BufSetOption filetype=haml %{
+    require-module haml
+}
+
+provide-module haml %[
+require-module ruby
+require-module coffee
+require-module sass
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -60,3 +69,5 @@ hook global WinSetOption filetype=haml %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haml-.+ }
 }
+
+]

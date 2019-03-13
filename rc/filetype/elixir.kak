@@ -8,6 +8,11 @@ hook global BufCreate .*[.](ex|exs) %{
     set-option buffer filetype elixir
 }
 
+hook -once global BufSetOption filetype=elixir %{
+    require-module elixir
+}
+
+provide-module elixir %[
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -48,11 +53,11 @@ define-command -hidden elixir-trim-indent %{
 
 define-command -hidden elixir-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
-        # copy -- comments prefix and following white spaces 
+        # copy -- comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # indent after line ending with: 
+        # indent after line ending with:
 	# try %{ execute-keys -draft k x <a-k> (do|else|->)$ <ret> & }
 	# filter previous line
         try %{ execute-keys -draft k : elixir-trim-indent <ret> }
@@ -75,3 +80,5 @@ hook global WinSetOption filetype=elixir %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elixir-.+ }
 }
+
+]

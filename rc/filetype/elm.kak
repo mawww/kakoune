@@ -8,6 +8,12 @@ hook global BufCreate .*[.](elm) %{
     set-option buffer filetype elm
 }
 
+hook -once global BufSetOption filetype=elm %{
+    require-module elm
+}
+
+provide-module elm %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -65,3 +71,5 @@ hook global WinSetOption filetype=elm %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elm-.+ }
 }
+
+]

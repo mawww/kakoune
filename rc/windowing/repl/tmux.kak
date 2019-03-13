@@ -1,27 +1,13 @@
 # http://tmux.github.io/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-declare-option -docstring "tmux pane id in which the REPL is running" str tmux_repl_id
-
-hook global KakBegin .* %sh{
-    if [ -n "$TMUX" ]; then
-        VERSION_TMUX=$(tmux -V | cut -d' ' -f2)
-        VERSION_TMUX=${VERSION_TMUX%%.*}
-
-        if [ "${VERSION_TMUX}" = "master" ] \
-            || [ "${VERSION_TMUX}" -ge 2 ]; then
-            echo "
-                alias global repl tmux-repl-horizontal
-                alias global send-text tmux-send-text
-            "
-        else
-            echo "
-                alias global repl tmux-repl-disabled
-                alias global send-text tmux-repl-disabled
-            "
-        fi
-    fi
+hook global ModuleLoad tmux %{
+    require-module tmux-repl
 }
+
+provide-module tmux-repl %{
+
+declare-option -docstring "tmux pane id in which the REPL is running" str tmux_repl_id
 
 define-command -hidden -params 1..2 tmux-repl-impl %{
     evaluate-commands %sh{
@@ -52,7 +38,7 @@ define-command tmux-repl-window -params 0..1 -command-completion -docstring "Cre
 define-command -hidden tmux-send-text -params 0..1 -docstring "tmux-send-text [text]: Send text(append new line) to the REPL pane.
   If no text is passed, then the selection is used" %{
     nop %sh{
-        if [ $# -eq 0 ]; then 
+        if [ $# -eq 0 ]; then
             tmux set-buffer -b kak_selection "${kak_selection}"
         else
             tmux set-buffer -b kak_selection "$1"
@@ -65,3 +51,23 @@ define-command -hidden tmux-repl-disabled %{ evaluate-commands %sh{
     VERSION_TMUX=$(tmux -V)
     printf %s "echo -markup %{{Error}The version of tmux is too old: got ${VERSION_TMUX}, expected >= 2.x}"
 } }
+
+evaluate-commands %sh{
+    VERSION_TMUX=$(tmux -V | cut -d' ' -f2)
+    VERSION_TMUX=${VERSION_TMUX%%.*}
+
+    if [ "${VERSION_TMUX}" = "master" ] \
+        || [ "${VERSION_TMUX}" -ge 2 ]; then
+        echo "
+            alias global repl tmux-repl-horizontal
+            alias global send-text tmux-send-text
+        "
+    else
+        echo "
+            alias global repl tmux-repl-disabled
+            alias global send-text tmux-repl-disabled
+        "
+    fi
+}
+
+}

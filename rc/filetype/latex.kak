@@ -8,6 +8,12 @@ hook global BufCreate .*\.tex %{
     set-option buffer filetype latex
 }
 
+hook -once global BufSetOption filetype=latex %{
+    require-module latex
+}
+
+provide-module latex %(
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -33,3 +39,5 @@ hook -group latex-highlight global WinSetOption filetype=latex %{
     add-highlighter window/latex ref latex
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/latex }
 }
+
+)

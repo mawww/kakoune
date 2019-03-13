@@ -1,16 +1,13 @@
-declare-option -docstring %{window type that kitty creates on new and repl calls (kitty|os)} str kitty_window_type kitty
 
 hook -group kitty-hooks global KakBegin .* %sh{
     if [ "$TERM" = "xterm-kitty" ] && [ -z "$TMUX" ]; then
-        echo "
-            alias global terminal kitty-terminal
-            alias global terminal-tab kitty-terminal-tab
-            alias global focus kitty-focus
-            alias global repl kitty-repl
-            alias global send-text kitty-send-text
-        "
+        echo "require-module kitty"
     fi
 }
+
+provide-module kitty %{
+
+declare-option -docstring %{window type that kitty creates on new and repl calls (kitty|os)} str kitty_window_type kitty
 
 define-command kitty-terminal -params 1.. -shell-completion -docstring '
 kitty-terminal <program> [<arguments>]: create a new terminal as a kitty window
@@ -62,4 +59,12 @@ define-command kitty-send-text -docstring "send the selected text to the repl wi
     nop %sh{
         kitty @ send-text -m=title:kak_repl_window "${kak_selection}"
     }
+}
+
+alias global terminal kitty-terminal
+alias global terminal-tab kitty-terminal-tab
+alias global focus kitty-focus
+alias global repl kitty-repl
+alias global send-text kitty-send-text
+
 }

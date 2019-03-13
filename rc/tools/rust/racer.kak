@@ -1,3 +1,9 @@
+hook -once global BufSetOption filetype=rust %{
+    require-module racer
+}
+
+provide-module racer %{
+
 declare-option -hidden str racer_tmp_dir
 declare-option -hidden completions racer_completions
 
@@ -150,4 +156,6 @@ define-command racer-show-doc -docstring "Show the documentation about the rust 
           printf %s\\n "echo -debug 'racer could not find a definition'"
         fi
     }
+}
+
 }

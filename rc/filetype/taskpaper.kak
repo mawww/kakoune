@@ -6,7 +6,13 @@
 
 hook global BufCreate .*\.taskpaper %{
     set-option buffer filetype taskpaper
-} 
+}
+
+hook -once global BufSetOption filetype=taskpaper %{
+    require-module taskpaper
+}
+
+provide-module taskpaper %{
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -44,4 +50,6 @@ hook -group taskpaper-highlight global WinSetOption filetype=taskpaper %{
 hook global WinSetOption filetype=taskpaper %{
     hook window InsertChar \n -group taskpaper-indent taskpaper-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window taskpaper-.+ }
+}
+
 }

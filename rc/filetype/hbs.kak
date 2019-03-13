@@ -8,6 +8,12 @@ hook global BufCreate .*[.](hbs) %{
     set-option buffer filetype hbs
 }
 
+hook -once global BufSetOption filetype=hbs %{
+    require-module hbs
+}
+
+provide-module hbs %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -95,3 +101,5 @@ hook global WinSetOption filetype=hbs %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window hbs-.+ }
 }
+
+]

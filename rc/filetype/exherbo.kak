@@ -25,6 +25,19 @@ hook global BufCreate .*/etc/paludis(-.*)?/repository_defaults\.conf            
 hook global BufCreate .*/etc/paludis(-.*)?/specpath\.conf                       %{ set-option buffer filetype paludis-key-value-conf }
 hook global BufCreate .*/etc/paludis(-.*)?/suggestions(\.conf.d/.*.conf|\.conf) %{ set-option buffer filetype paludis-specs-conf }
 
+hook -once global BufSetOption filetype=exheres-0-(licence-groups|metadata) %{
+    require-module exheres
+}
+
+hook -once global BufSetOption filetype=paludis-(key-value|options|mirrors|specs)-conf %{
+    require-module paludis
+}
+
+hook -once global BufSetOption filetype=glep42 %{
+    require-module glep42
+}
+
+provide-module exheres %{
 # Highlighters
 ## exheres-0 Repository metadata files
 add-highlighter shared/exheres-0-metadata group
@@ -61,7 +74,9 @@ hook -group exheres-0-licence-groups-highlight global WinSetOption filetype=exhe
     add-highlighter window/exheres-0-licence-groups ref exheres-0-licence-groups
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/exheres-0-licence-groups }
 }
+}
 
+provide-module paludis %{
 ## Paludis configurations
 ### options.conf
 add-highlighter shared/paludis-options-conf group
@@ -108,7 +123,9 @@ hook -group paludis-specs-conf-highlight global WinSetOption filetype=paludis-sp
     add-highlighter window/paludis-specs-conf ref paludis-specs-conf
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-specs-conf }
 }
+}
 
+provide-module glep42 %{
 ## News items (GLEP42)
 add-highlighter shared/glep42 group
 add-highlighter shared/glep42/ regex ^(Title|Author|Translator|Content-Type|Posted|Revision|News-Item-Format|Display-If-Installed|Display-If-Keyword|Display-If-Profile):([^\n]*(?:\n\h+[^\n]+)*)$ 1:keyword 2:attribute
@@ -118,4 +135,5 @@ add-highlighter shared/glep42/ regex ^>.*?$ 0:comment
 hook -group glep42-highlight global WinSetOption filetype=glep42 %{
     add-highlighter window/glep42 ref glep42
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/glep42 }
+}
 }

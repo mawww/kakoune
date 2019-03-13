@@ -1,14 +1,20 @@
 # http://sass-lang.com
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# require css.kak
-
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](scss) %{
     set-option buffer filetype scss
 }
+
+hook -once global BufSetOption filetype=scss %{
+    require-module scss
+}
+
+provide-module scss %[
+
+require-module css
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -42,4 +48,6 @@ hook global WinSetOption filetype=scss %[
     set-option buffer extra_word_chars '_' '-'
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window scss-.+ }
+]
+
 ]

@@ -12,6 +12,12 @@ hook global BufCreate .*[.](pug|jade) %{
     set-option buffer filetype pug
 }
 
+hook -once global BufSetOption filetype=pug %{
+    require-module pug
+}
+
+provide-module pug %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -71,4 +77,6 @@ hook global WinSetOption filetype=pug %{
     hook window InsertChar \n -group pug-indent pug-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pug-.+ }
+}
+
 }

@@ -5,6 +5,12 @@ hook global BufCreate .*/?[jJ]ustfile %{
     set-option buffer filetype justfile
 }
 
+hook -once global BufSetOption filetype=justfile %{
+    require-module justfile
+}
+
+provide-module justfile %{
+
 # Indentation
 # ‾‾‾‾‾‾‾‾‾‾‾
 
@@ -45,4 +51,6 @@ hook -group justfile-highlight global WinSetOption filetype=justfile %{
 hook global WinSetOption filetype=justfile %{
     hook window InsertChar \n -group justfile-indent just-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window justfile-.+ }
+}
+
 }

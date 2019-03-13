@@ -10,6 +10,12 @@ hook global BufCreate .*[.](ragel|rl) %{
     set-option buffer filetype ragel
 }
 
+hook -once global BufSetOption filetype=ragel %{
+    require-module ragel
+}
+
+provide-module ragel %🦀
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -68,3 +74,5 @@ hook global WinSetOption filetype=ragel %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window ragel-.+ }
 }
+
+🦀

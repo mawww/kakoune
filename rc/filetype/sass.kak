@@ -8,6 +8,12 @@ hook global BufCreate .*[.](sass) %{
     set-option buffer filetype sass
 }
 
+hook -once global BufSetOption filetype=sass %{
+    require-module sass
+}
+
+provide-module sass %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -59,4 +65,6 @@ hook global WinSetOption filetype=sass %{
     set-option buffer extra_word_chars '_' '-'
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window sass-.+ }
+}
+
 }

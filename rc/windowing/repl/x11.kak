@@ -1,3 +1,9 @@
+hook global ModuleLoad x11 %{
+    require-module x11-repl
+}
+
+provide-module x11-repl %{
+
 # termcmd should already be set in x11.kak
 define-command -docstring %{x11-repl [<arguments>]: create a new window for repl interaction
 All optional parameters are forwarded to the new window} \
@@ -24,3 +30,5 @@ define-command x11-send-text -docstring "send the selected text to the repl wind
 
 alias global repl x11-repl
 alias global send-text x11-send-text
+
+}
