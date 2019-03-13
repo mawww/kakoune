@@ -8,6 +8,12 @@ hook global BufCreate .*[.](pony) %{
     set-option buffer filetype pony
 }
 
+hook -once global BufSetOption filetype=pony %{
+    require-module pony
+}
+
+provide-module pony %{
+
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -89,4 +95,6 @@ hook global WinSetOption filetype=pony %{
     hook window ModeChange insert:.* -group pony-trim-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pony-.+ }
+}
+
 }

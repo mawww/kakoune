@@ -10,6 +10,12 @@ hook global BufCreate .*[.](clj|cljc|cljs|cljx|edn) %{
     set-option buffer filetype clojure
 }
 
+hook -once global BufSetOption filetype=clojure %{
+    require-module clojure
+}
+
+provide-module clojure %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -206,3 +212,5 @@ hook global WinSetOption filetype=clojure %[
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window clojure-.+ }
 ]
+
+}

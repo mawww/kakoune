@@ -8,6 +8,12 @@ hook global BufCreate .*[.](py) %{
     set-option buffer filetype python
 }
 
+hook -once global BufSetOption filetype=python %{
+    require-module python
+}
+
+provide-module python %{
+
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -145,4 +151,6 @@ hook global WinSetOption filetype=python %{
     # cleanup trailing whitespaces on current line insert end
     hook window ModeChange insert:.* -group python-trim-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window python-.+ }
+}
+
 }

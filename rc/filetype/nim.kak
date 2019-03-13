@@ -8,6 +8,12 @@ hook global BufCreate .*\.nim(s|ble)? %{
     set-option buffer filetype nim
 }
 
+hook -once global BufSetOption filetype=nim %{
+    require-module nim
+}
+
+provide-module nim %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -109,4 +115,6 @@ hook global WinSetOption filetype=nim %{
     hook window ModeChange insert:.* -group nim-trim-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window nim-.+ }
+}
+
 }

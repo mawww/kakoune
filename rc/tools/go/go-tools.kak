@@ -5,6 +5,12 @@
 # Needs the following tools in the path:
 # - jq for json deserializaton
 
+hook -once global BufSetOption filetype=go %{
+    require-module go-tools
+}
+
+provide-module go-tools %{
+
 evaluate-commands %sh{
     for dep in gocode goimports gogetdoc jq; do
         if ! command -v $dep > /dev/null 2>&1; then
@@ -180,3 +186,5 @@ define-command go-share-selection -docstring "Share the selection using the Go P
     snippet_id=$(printf %s\\n "${kak_selection}" | curl -s https://play.golang.org/share --data-binary @-)
     printf "echo https://play.golang.org/p/%s" ${snippet_id}
 } }
+
+}

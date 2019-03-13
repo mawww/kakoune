@@ -1,14 +1,20 @@
 # http://www.scheme-reports.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# require lisp.kak
-
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate (.*/)?(.*\.(scm|ss|sld)) %{
     set-option buffer filetype scheme
 }
+
+hook -once global BufSetOption filetype=scheme %{
+    require-module scheme
+}
+
+provide-module scheme %{
+
+require-module lisp
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -100,7 +106,7 @@ evaluate-commands %sh{ exec awk -f - <<'EOF'
 
     BEGIN {
         printf("hook global WinSetOption filetype=scheme %%{ set-option window static_words ");
-        print_words(keywords); print_words(meta); print_words(operators); print_words(builtins); 
+        print_words(keywords); print_words(meta); print_words(operators); print_words(builtins);
         printf(" }\n")
 
         add_word_highlighter(keywords, "keyword");
@@ -130,4 +136,6 @@ hook global WinSetOption filetype=scheme %{
     hook window InsertChar \n -group scheme-indent lisp-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window scheme-.+ }
+}
+
 }

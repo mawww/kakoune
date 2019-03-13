@@ -2,6 +2,12 @@ hook global BufCreate .*\.(z|ba|c|k|mk)?sh(rc|_profile)? %{
     set-option buffer filetype sh
 }
 
+hook -once global BufSetOption filetype=sh %{
+    require-module sh
+}
+
+provide-module sh %[
+
 add-highlighter shared/sh regions
 add-highlighter shared/sh/code default-region group
 add-highlighter shared/sh/double_string region  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)(?:\\\\)*"} group
@@ -42,3 +48,5 @@ hook -group sh-highlight global WinSetOption filetype=sh %{
     add-highlighter window/sh ref sh
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sh }
 }
+
+]

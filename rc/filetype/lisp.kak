@@ -8,6 +8,12 @@ hook global BufCreate .*[.](lisp) %{
     set-option buffer filetype lisp
 }
 
+hook -once global BufSetOption filetype=lisp %{
+    require-module lisp
+}
+
+provide-module lisp %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -71,4 +77,6 @@ hook global WinSetOption filetype=lisp %{
     hook window InsertChar \n -group lisp-indent lisp-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window lisp-.+ }
+}
+
 }

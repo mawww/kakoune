@@ -8,6 +8,12 @@ hook global BufCreate .*/?(?i)sql %{
     set-option buffer filetype sql
 }
 
+hook -once global BufSetOption filetype=sql %{
+    require-module sql
+}
+
+provide-module sql %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -104,4 +110,6 @@ add-highlighter shared/sql/code/ regex \b\d+(?:\.\d+)?\b 0:value
 hook -group sql-highlight global WinSetOption filetype=sql %{
     add-highlighter window/sql ref sql
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sql }
+}
+
 }

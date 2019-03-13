@@ -7,6 +7,12 @@ hook global BufCreate .*\.proto$ %{
     set-option buffer filetype protobuf
 }
 
+hook -once global BufSetOption filetype=protobuf %{
+    require-module protobuf
+}
+
+provide-module protobuf %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -82,4 +88,6 @@ hook global WinSetOption filetype=protobuf %[
     hook -group protobuf-indent window InsertChar \} protobuf-indent-on-closing-curly-brace
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window protobuf-.+ }
+]
+
 ]

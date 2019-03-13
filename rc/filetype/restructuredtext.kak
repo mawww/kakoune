@@ -5,6 +5,12 @@ hook global BufCreate .*[.](rst) %{
     set-option buffer filetype restructuredtext
 }
 
+hook -once global BufSetOption filetype=restructuredtext %{
+    require-module restructuredtext
+}
+
+provide-module restructuredtext %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -71,4 +77,6 @@ add-highlighter shared/restructuredtext/content/ regex [^`](``([^\s`]|([^\s`][^`
 hook -group restructuredtext-highlight global WinSetOption filetype=restructuredtext %{
     add-highlighter window/restructuredtext ref restructuredtext
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/restructuredtext }
+}
+
 }

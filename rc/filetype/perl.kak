@@ -8,6 +8,12 @@ hook global BufCreate .*\.(t|p[lm])$ %{
     set-option buffer filetype perl
 }
 
+hook -once global BufSetOption filetype=perl %{
+    require-module perl
+}
+
+provide-module perl %🦀
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -112,3 +118,5 @@ hook global WinSetOption filetype=perl %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window perl-.+ }
 }
+
+🦀

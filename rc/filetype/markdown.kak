@@ -8,6 +8,12 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
     set-option buffer filetype markdown
 }
 
+hook -once global BufSetOption filetype=markdown %{
+    require-module markdown
+}
+
+provide-module markdown %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -82,4 +88,6 @@ hook -group markdown-highlight global WinSetOption filetype=markdown %{
 hook global WinSetOption filetype=markdown %{
     hook window InsertChar \n -group markdown-indent markdown-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window markdown-.+ }
+}
+
 }

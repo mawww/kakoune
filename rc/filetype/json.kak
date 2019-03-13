@@ -8,6 +8,12 @@ hook global BufCreate .*[.](json) %{
     set-option buffer filetype json
 }
 
+hook -once global BufSetOption filetype=json %{
+    require-module json
+}
+
+provide-module json %(
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -58,3 +64,5 @@ hook global WinSetOption filetype=json %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window json-.+ }
 }
+
+)

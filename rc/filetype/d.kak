@@ -8,6 +8,12 @@ hook global BufCreate .*\.di? %{
     set-option buffer filetype d
 }
 
+hook -once global BufSetOption filetype=d %{
+    require-module d
+}
+
+provide-module d %🦀
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -130,3 +136,5 @@ hook global WinSetOption filetype=d %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window d-.+ }
 }
+
+🦀

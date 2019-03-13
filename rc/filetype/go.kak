@@ -8,6 +8,12 @@ hook global BufCreate .*\.go %{
     set-option buffer filetype go
 }
 
+hook -once global BufSetOption filetype=go %{
+    require-module go
+}
+
+provide-module go %🦀
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -95,3 +101,5 @@ hook global WinSetOption filetype=go %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window go-.+ }
 }
+
+🦀

@@ -10,6 +10,12 @@ hook global BufCreate .*/?Dockerfile(\.\w+)?$ %{
     set-option buffer filetype dockerfile
 }
 
+hook -once global BufSetOption filetype=dockerfile %{
+    require-module dockerfile
+}
+
+provide-module dockerfile %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -45,4 +51,6 @@ add-highlighter shared/dockerfile/code/ regex '\$[\w_]+' 0:value
 hook -group dockerfile-highlight global WinSetOption filetype=dockerfile %{
     add-highlighter window/dockerfile ref dockerfile
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/dockerfile }
+}
+
 }

@@ -23,6 +23,13 @@ hook global BufCreate .*\.m %{
     set-option buffer filetype objc
 }
 
+hook -once global BufSetOption filetype=(c|cpp|objc) %{
+    require-module c-family
+}
+
+
+provide-module c-family %🦀
+
 define-command -hidden c-family-trim-indent %{
     # remove the line if it's empty when leaving the insert mode
     try %{ execute-keys -draft <a-x> 1s^(\h+)$<ret> d }
@@ -441,3 +448,5 @@ define-command cpp-alternative-file -docstring "Jump to the alternate cpp file (
 define-command objc-alternative-file -docstring "Jump to the alternate objc file (header/implementation)" %{
     c-family-alternative-file
 }
+
+🦀

@@ -8,6 +8,12 @@ hook global BufCreate .*(([.](rb))|(irbrc)|(pryrc)|(Brewfile)|(Capfile|[.]cap)|(
     set-option buffer filetype ruby
 }
 
+hook -once global BufSetOption filetype=ruby %{
+    require-module ruby
+}
+
+provide-module ruby %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -166,3 +172,5 @@ hook global WinSetOption filetype=ruby %{
         unalias window alt ruby-alternative-file
     }
 }
+
+]

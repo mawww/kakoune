@@ -8,6 +8,12 @@ hook global BufCreate .*[.](css) %{
     set-option buffer filetype css
 }
 
+hook -once global BufSetOption filetype=css %{
+    require-module css
+}
+
+provide-module css %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -73,4 +79,6 @@ hook global WinSetOption filetype=css %[
     set-option buffer extra_word_chars '_' '-'
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window css-.+ }
+]
+
 ]

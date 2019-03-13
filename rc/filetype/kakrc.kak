@@ -8,6 +8,14 @@ hook global BufCreate (.*/)?(kakrc|.*.kak) %{
     set-option buffer filetype kak
 }
 
+hook -once global BufSetOption filetype=kak %{
+    require-module kak
+}
+
+provide-module kak %🦀
+
+require-module sh
+
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -33,7 +41,7 @@ evaluate-commands %sh{
               set-option unset-option update-option declare-option execute-keys evaluate-commands
               prompt menu on-key info set-face unset-face rename-client set-register select
               change-directory rename-session colorscheme declare-user-mode enter-user-mode
-              edit! write! kill! quit! write-quit! delete-buffer!"
+              edit! write! kill! quit! write-quit! delete-buffer! provide-module require-module"
     attributes="global buffer window current
                 normal insert menu prompt goto view user object
                 number-lines show-matching show-whitespaces fill regex dynregex group flag-lines
@@ -108,3 +116,5 @@ hook global WinSetOption filetype=kak %~
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window kak-.+ }
 ~
+
+🦀

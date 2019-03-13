@@ -12,6 +12,17 @@ hook global BufCreate .*\.xml %{
     set-option buffer filetype xml
 }
 
+hook -once global BufSetOption filetype=(html|xml) %{
+    require-module html
+}
+
+provide-module html %[
+
+try %{
+    require-module css
+    require-module javascript
+}
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -73,3 +84,5 @@ hook global WinSetOption filetype=(html|xml) %{
         remove-hooks window ""%val{hook_param_capture_1}-.+""
     "
 }
+
+]

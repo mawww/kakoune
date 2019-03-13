@@ -8,6 +8,12 @@ hook global BufCreate .*\.dart %{
     set-option buffer filetype dart
 }
 
+hook -once global BufSetOption filetype=dart %{
+    require-module dart
+}
+
+provide-module dart %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -103,4 +109,7 @@ hook global WinSetOption filetype=dart %{
     hook window InsertChar \} -group dart-indent dart-indent-on-closing-curly-brace
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window dart-.+ }
+}
+
+# balancing }}}
 }

@@ -5,8 +5,14 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*\.mli? %{
-  set-option buffer filetype ocaml
+    set-option buffer filetype ocaml
 }
+
+hook -once global BufSetOption filetype=ocaml %{
+    require-module ocaml
+}
+
+provide-module ocaml %{
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -35,4 +41,6 @@ evaluate-commands %sh{
       set-option window static_words $keywords
     }
   "
+}
+
 }
