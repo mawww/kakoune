@@ -2,6 +2,12 @@ hook global BufCreate .*\.java %{
     set-option buffer filetype java
 }
 
+hook -once global BufSetOption filetype=java %{
+    require-module java
+}
+
+provide-module java %🦀
+
 add-highlighter shared/java regions
 add-highlighter shared/java/code default-region group
 add-highlighter shared/java/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} fill string
@@ -63,3 +69,5 @@ hook global WinSetOption filetype=java %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window java-.+ }
 }
+
+🦀

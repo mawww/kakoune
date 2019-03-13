@@ -8,6 +8,12 @@ hook global BufCreate .*[.](lua) %{
     set-option buffer filetype lua
 }
 
+hook -once global BufSetOption filetype=lua %{
+    require-module lua
+}
+
+provide-module lua %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -101,3 +107,5 @@ hook global WinSetOption filetype=lua %{
         unalias window alt lua-alternative-file
     }
 }
+
+]

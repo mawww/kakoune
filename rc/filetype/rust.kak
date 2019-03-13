@@ -8,6 +8,12 @@ hook global BufCreate .*[.](rust|rs) %{
     set-option buffer filetype rust
 }
 
+hook -once global BufSetOption filetype=rust %{
+    require-module rust
+}
+
+provide-module rust %🦀
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -93,3 +99,5 @@ hook global WinSetOption filetype=rust %[
 hook global WinSetOption filetype=rust %[
     set window formatcmd 'rustfmt'
 ]
+
+🦀

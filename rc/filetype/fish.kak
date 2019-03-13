@@ -8,6 +8,12 @@ hook global BufCreate .*[.](fish) %{
     set-option buffer filetype fish
 }
 
+hook -once global BufSetOption filetype=fish %{
+    require-module fish
+}
+
+provide-module fish %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -70,4 +76,6 @@ hook global WinSetOption filetype=fish %{
     hook window InsertChar \n -group fish-indent fish-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window fish-.+ }
+}
+
 }

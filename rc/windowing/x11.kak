@@ -1,3 +1,13 @@
+# x11
+
+hook global KakBegin .* %sh{
+    if [ -n "$DISPLAY" ]; then
+        echo "require-module x11"
+    fi
+}
+
+provide-module x11 %{
+
 # termcmd should be set such as the next argument is the whole
 # command line to execute
 declare-option -docstring %{shell command run to spawn a new terminal
@@ -71,3 +81,5 @@ If no client is passed, then the current client is used' \
 
 alias global focus x11-focus
 alias global terminal x11-terminal
+
+}

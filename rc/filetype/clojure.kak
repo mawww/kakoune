@@ -1,8 +1,6 @@
 # http://clojure.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# require lisp.kak
-
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -15,6 +13,8 @@ hook -once global BufSetOption filetype=clojure %{
 }
 
 provide-module clojure %{
+
+require-module lisp
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾

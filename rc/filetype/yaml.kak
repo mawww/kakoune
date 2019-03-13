@@ -8,6 +8,12 @@ hook global BufCreate .*[.](ya?ml) %{
     set-option buffer filetype yaml
 }
 
+hook -once global BufSetOption filetype=yaml %{
+    require-module yaml
+}
+
+provide-module yaml %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -55,4 +61,6 @@ hook global WinSetOption filetype=yaml %{
     hook window ModeChange insert:.* -group yaml-trim-indent yaml-trim-indent
     hook window InsertChar \n -group yaml-indent yaml-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window yaml-.+ }
+}
+
 }

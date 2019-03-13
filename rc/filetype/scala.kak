@@ -8,6 +8,12 @@ hook global BufCreate .*[.](scala) %{
     set-option buffer filetype scala
 }
 
+hook -once global BufSetOption filetype=scala %{
+    require-module scala
+}
+
+provide-module scala %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -73,3 +79,5 @@ hook global WinSetOption filetype=scala %[
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window scala-.+ }
 ]
+
+}

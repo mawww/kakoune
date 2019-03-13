@@ -8,6 +8,12 @@ hook global BufCreate .*[.](hs) %{
     set-option buffer filetype haskell
 }
 
+hook -once global BufSetOption filetype=haskell %{
+    require-module haskell
+}
+
+provide-module haskell %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -103,3 +109,5 @@ hook global WinSetOption filetype=haskell %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haskell-.+ }
 }
+
+]
