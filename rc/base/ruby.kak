@@ -38,7 +38,7 @@ add-highlighter shared/ruby/backtick/interpolation region -recurse \{ \Q#{ \} fi
 add-highlighter shared/ruby/regex/ default-region fill meta
 add-highlighter shared/ruby/regex/interpolation region -recurse \{ \Q#{ \} fill meta
 
-add-highlighter shared/ruby/code/ regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|((?<!:):(([A-Za-z]\w*[=?!]?)|(\[\]=?)))|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:variable
+add-highlighter shared/ruby/code/ regex \b(\w+:(?!:))|([$@]\w+)|((?<!:):((\w+[=?!]?)|(\[\]=?)))|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:variable
 
 evaluate-commands %sh{
     # Grammar
