@@ -180,6 +180,9 @@ name. Hooks with no description will always use an empty string.
 *RawKey* `key`::
     Triggered whenever a key is pressed by the user
 
+*ModuleLoad* `module`::
+    Triggered when a module is loaded
+
 Note that some hooks will not consider underlying scopes depending on what
 context they are bound to be run into, e.g. the `BufWritePost` hook is a buffer
 hook, and will not consider the `window` scope.
