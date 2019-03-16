@@ -1252,7 +1252,7 @@ void NCursesUI::set_ui_options(const Options& options)
 
         if (can_change_color() and m_change_colors != value)
         {
-            fputs("\033]104;\007", stdout); // try to reset palette
+            fputs("\033]104\007", stdout); // try to reset palette
             fflush(stdout);
             m_colorpairs.clear();
             m_colors = default_colors;
