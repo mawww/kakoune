@@ -82,7 +82,9 @@ Buffer& BufferManager::get_buffer(StringView name)
 Buffer& BufferManager::get_first_buffer()
 {
     if (all_of(m_buffers, [](auto& b) { return (b->flags() & Buffer::Flags::Debug); }))
-        create_buffer("*scratch*", Buffer::Flags::None);
+        create_buffer("*scratch*", Buffer::Flags::None,
+                      "*** this is a *scratch* buffer which wont be automatically saved ***\n"
+                      "*** use it for notes or open a file buffer with the edit command ***\n");
 
     return *m_buffers.back();
 }
