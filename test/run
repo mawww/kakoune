@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Color codes ├──────────────────────────────────────────────────────────────────
-none="00"; red="31"; green="32"; yellow="33"; magenta="35"; bold="01"
+none='\033[0m'; red='\033[31m'; green='\033[32m'; yellow='\033[33m'; magenta='\033[35m'; bold='\033[1m'
 
 # Main ├────────────────────────────────────────────────────────────────────────
 
@@ -50,7 +50,7 @@ main() {
       echo "$indent$name"
       continue
     elif [ -x enabled ] && ! ./enabled; then
-      echo "$indent$name (disabled)" | colorize $yellow $none
+      printf "${yellow}$indent%s (disabled)${none}\n" "$name"
       continue
     fi
 
@@ -66,21 +66,21 @@ main() {
     failed=0
     if [ ! -e error ]; then # failure not expected
       if [ $retval -ne 0 ]; then
-        echo "$indent$name" | colorize $red $none
+        printf "${red}$indent%s${none}\n" "$name"
         echo "$indent  Kakoune returned error $retval"
         failed=1
       else
         for file in out selections state ui-out; do
           if [ -f $root/$dir/$file ] && ! cmp -s $root/$dir/$file $file; then
             if [ $failed -eq 0 ]; then
-              echo "$indent$name" | colorize $red $none
+              printf "${red}$indent%s${none}\n" "$name"
               failed=1
             fi
             show_diff $root/$dir/$file $file
           fi
         done
         if [ $failed -ne 0 ] && [ -f debug ]; then
-          printf "\ndebug buffer:\n" | colorize $yellow $none
+          printf "\n${yellow}debug buffer:${none}\n"
           cat debug
         fi
       fi
@@ -88,19 +88,19 @@ main() {
       if [ -f stderr ]; then
         sed -i -e 's/^[0-9]*:[0-9]*: //g' stderr
         if [ -s error ] && ! cmp -s error stderr; then
-          echo "$indent$name" | colorize $yellow $none
+          printf "${yellow}$indent%s${none}\n" "$name"
           show_diff error stderr
           failed=1
         fi
       elif [ $retval -eq 0 ]; then
-        echo "$indent$name" | colorize $red $none
+        printf "${red}$indent%s${none}\n" "$name"
         echo "$indent  Expected failure, but Kakoune returned 0"
         failed=1
       fi
     fi
 
     if [ $failed -eq 0 ]; then
-      echo "$indent$name" | colorize $green $none
+      printf "${green}$indent%s${none}\n" "$name"
     else
       number_failures=$(($number_failures + 1))
     fi
@@ -111,17 +111,11 @@ main() {
   else
     color=$green
   fi
-  printf "\nSummary: %s tests, %s failures\n" $number_tests $number_failures | colorize $color $none
+  printf "\n${color}Summary: %s tests, %s failures${none}\n" $number_tests $number_failures
   exit $number_failures
 }
 
 # Utility ├─────────────────────────────────────────────────────────────────────
-
-colorize() {
-  color=${1:-$none}
-  style=${2:-$none}
-  printf '\033[%s;%sm%s\033[00;00m\n' $style $color "$(cat)"
-}
 
 show_diff() {
   diff -u $1 $2 | while IFS='' read -r line; do
@@ -132,7 +126,7 @@ show_diff() {
       @) color=$magenta ;;
       *) color=$none ;;
     esac
-    printf '%s\n' "$line" | colorize $color $none
+    printf "${color}%s${none}\n" "$line"
   done
 }
 
