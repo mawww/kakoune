@@ -6,13 +6,13 @@ declare-option -hidden str manpage
 hook -group man-highlight global WinSetOption filetype=man %{
     add-highlighter window/man-highlight group
     # Sections
-    add-highlighter window/man-highlight/ regex ^\S.*?$ 0:blue
+    add-highlighter window/man-highlight/ regex ^\S.*?$ 0:title
     # Subsections
     add-highlighter window/man-highlight/ regex '^ {3}\S.*?$' 0:default+b
     # Command line options
-    add-highlighter window/man-highlight/ regex '^ {7}-[^\s,]+(,\s+-[^\s,]+)*' 0:yellow
+    add-highlighter window/man-highlight/ regex '^ {7}-[^\s,]+(,\s+-[^\s,]+)*' 0:list
     # References to other manpages
-    add-highlighter window/man-highlight/ regex [-a-zA-Z0-9_.]+\([a-z0-9]+\) 0:green
+    add-highlighter window/man-highlight/ regex [-a-zA-Z0-9_.]+\([a-z0-9]+\) 0:header
 
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/man-highlight }
 }
