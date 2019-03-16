@@ -2159,10 +2159,39 @@ void force_redraw(Context& context, NormalParams)
     }
 }
 
-template<typename T, MemoryDomain domain>
-using KeymapBackend = Vector<T, domain>;
+constexpr size_t keymap_max_size = 512;
 
-static const HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> keymap = {
+template<typename T, MemoryDomain domain>
+struct KeymapBackend : private Array<T, keymap_max_size>
+{
+    using iterator = const T*;
+    using const_iterator = const T*;
+
+    constexpr KeymapBackend() = default;
+    constexpr KeymapBackend(std::initializer_list<T> items)
+    {
+        resize(items.size());
+        for (size_t i = 0; i < items.size(); ++i)
+            this->m_data[i] = *(items.begin() + i);
+    }
+
+    constexpr void resize(size_t s)
+    {
+        if (s > keymap_max_size)
+            throw runtime_error{"cannot resize"};
+        m_size = s;
+    }
+    constexpr size_t size() const { return m_size; }
+
+    using KeymapBackend::Array::begin;
+    using KeymapBackend::Array::end;
+    using KeymapBackend::Array::operator[];
+
+private:
+    size_t m_size = 0;
+};
+
+static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend> keymap = {
     { {'h'}, {"move left", move_cursor<CharCount, Backward>} },
     { {'j'}, {"move down", move_cursor<LineCount, Forward>} },
     { {'k'}, {"move up",  move_cursor<LineCount, Backward>} },
