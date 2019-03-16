@@ -19,8 +19,8 @@ released versions.
   `requires-module` commands that allows for lazily loading language
   support files with dependency resolution.
 
-* Added a new hook `ModuleLoad` which is run when a module is loaded, as
-  now options needed by modules aren't defined until the module is loaded.
+* Added a new hook `ModuleLoad` which is run when a module is loaded,
+  allowing for module specific configuration.
 
 == Kakoune 2019.01.20
 
