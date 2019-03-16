@@ -63,7 +63,8 @@ void CommandManager::load_module(StringView module_name, Context& context)
         return;
 
     module->value.loaded = true;
-    execute(module->value.commands, context);
+    Context empty_context{Context::EmptyContextFlag{}};
+    execute(module->value.commands, empty_context);
     module->value.commands.clear();
 
     context.hooks().run_hook(Hook::ModuleLoad, module_name, context);
