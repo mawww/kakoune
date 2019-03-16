@@ -13,12 +13,14 @@ hook global BufCreate .*(([.](rb))|(irbrc)|(pryrc)|(Brewfile)|(Capfile|[.]cap)|(
 
 add-highlighter shared/ruby regions
 add-highlighter shared/ruby/code default-region group
-add-highlighter shared/ruby/double_string region '"' (?<!\\)(\\\\)*"        regions
-add-highlighter shared/ruby/single_string region "'" (?<!\\)(\\\\)*'        fill string
-add-highlighter shared/ruby/backtick      region '`' (?<!\\)(\\\\)*`        regions
-add-highlighter shared/ruby/regex         region '/' (?<!\\)(\\\\)*/[imox]* regions
-add-highlighter shared/ruby/              region '#' '$'                    fill comment
-add-highlighter shared/ruby/              region ^begin= ^=end              fill comment
+add-highlighter shared/ruby/double_symbol region ':"' (?<!\\)(\\\\)*"                regions
+add-highlighter shared/ruby/single_symbol region ":'" (?<!\\)(\\\\)*'                fill variable
+add-highlighter shared/ruby/double_string region '"' (?<!\\)(\\\\)*"                 regions
+add-highlighter shared/ruby/single_string region "'" (?<!\\)(\\\\)*'                 fill string
+add-highlighter shared/ruby/backtick      region '(?<![$:])`' (?<!\\)(\\\\)*`        regions
+add-highlighter shared/ruby/regex         region '(?<![$:])/' (?<!\\)(\\\\)*/[imox]* regions
+add-highlighter shared/ruby/              region '#' '$'                             fill comment
+add-highlighter shared/ruby/              region ^=begin ^=end                       fill comment
 add-highlighter shared/ruby/              region -recurse \( '%[iqrswxIQRSWX]\(' \) fill meta
 add-highlighter shared/ruby/              region -recurse \{ '%[iqrswxIQRSWX]\{' \} fill meta
 add-highlighter shared/ruby/              region -recurse \[ '%[iqrswxIQRSWX]\[' \] fill meta
@@ -32,13 +34,14 @@ add-highlighter shared/ruby/division region '[\w\)\]](/|(\h+/\h+))' '\w' group #
 add-highlighter shared/ruby/double_string/ default-region fill string
 add-highlighter shared/ruby/double_string/interpolation region -recurse \{ \Q#{ \} fill meta
 
+add-highlighter shared/ruby/double_symbol/ default-region fill variable
+add-highlighter shared/ruby/double_symbol/interpolation region -recurse \{ \Q#{ \} fill meta
+
 add-highlighter shared/ruby/backtick/ default-region fill meta
 add-highlighter shared/ruby/backtick/interpolation region -recurse \{ \Q#{ \} fill meta
 
 add-highlighter shared/ruby/regex/ default-region fill meta
 add-highlighter shared/ruby/regex/interpolation region -recurse \{ \Q#{ \} fill meta
-
-add-highlighter shared/ruby/code/ regex \b([A-Za-z]\w*:(?!:))|([$@][A-Za-z]\w*)|((?<!:):(([A-Za-z]\w*[=?!]?)|(\[\]=?)))|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:variable
 
 evaluate-commands %sh{
     # Grammar
@@ -64,6 +67,8 @@ evaluate-commands %sh{
         add-highlighter shared/ruby/code/ regex \b(${meta})\b 0:meta
     "
 }
+
+add-highlighter shared/ruby/code/ regex \b(\w+:(?!:))|(:?(\$(-[0FIKWadilpvw]|["'`/~&+=!$*,:.\;<>?@\\])|(\$|@@?)\w+))|((?<!:):(![~=]|=~|>[=>]?|<((=>?)|<)?|[+\-]@?|\*\*?|===?|[/`%&!^|~]|(\w+[=?!]?)|(\[\]=?)))|([A-Z]\w*|^|\h)\K::(?=[A-Z]) 0:variable
 
 # Commands
 # ‾‾‾‾‾‾‾‾
