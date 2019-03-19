@@ -31,39 +31,29 @@ add-highlighter shared/fish/code/ regex \b(and|begin|bg|bind|block|break|breakpo
 define-command -hidden fish-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
         # remove trailing white spaces
-        try %{ execute-keys -draft <a-x>s\h+$<ret>d }
+        try %{ execute-keys -draft <a-x> 1s^(\h+)$<ret> d }
     }
 }
 
 define-command -hidden fish-indent-on-char %{
     evaluate-commands -no-hooks -draft -itersel %{
         # align middle and end structures to start and indent when necessary
-        try %{ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-\;><a-?>^\h*(if)<ret>s\A|\z<ret>)<a-&> }
-        try %{ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-\;><a-?>^\h*(begin|for|function|if|switch|while)<ret>s\A|\z<ret>)<a-&> }
-        try %{ execute-keys -draft <a-x><a-k>^\h*(case)$<ret><a-\;><a-?>^\h*(switch)<ret>s\A|\z<ret>)<a-&>)<space><a-gt> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-\;><a-?>^\h*(if)<ret>s\A|.\z<ret>1<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-\;><a-?>^\h*(begin|for|function|if|switch|while)<ret>s\A|.\z<ret>1<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(case)$<ret><a-\;><a-?>^\h*(switch)<ret>s\A|.\z<ret>1<a-&> }
     }
 }
 
 define-command -hidden fish-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
+        # copy '#' comment prefix and following white spaces
+        try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
-        try %{ execute-keys -draft <space>K<a-&> }
-        # filter previous line
-        try %{ execute-keys -draft k:fish-trim-indent<ret> }
+        try %{ execute-keys -draft \; K <a-&> }
+        # cleanup trailing whitespaces from previous line
+        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
         # indent after start structure
-        try %{ execute-keys -draft k<a-x><a-k>^\h*(begin|case|else|for|function|if|switch|while)\b<ret>j<a-gt> }
-    }
-}
-
-define-command -hidden fish-insert-on-new-line %{
-    evaluate-commands -no-hooks -draft -itersel %{
-        # copy _#_ comment prefix and following white spaces
-        try %{ execute-keys -draft k<a-x>s^\h*\K#\h*<ret>yjp }
-        # wisely add end structure
-        evaluate-commands -save-regs x %{
-            try %{ execute-keys -draft k<a-x>s^\h+<ret>"xy } catch %{ reg x '' }
-            try %{ execute-keys -draft k<a-x><a-k>^<c-r>x(begin|for|function|if|switch|while)<ret>j<a-a>iX<a-\;>K<a-K>^<c-r>x(begin|for|function|if|switch|while).*\n<c-r>xend$<ret>jxypjaend<esc><a-lt> }
-        }
+        try %{ execute-keys -draft k<a-x><a-k>^\h*(begin|case|else|for|function|if|while)\b<ret>j<a-gt> }
     }
 }
 
@@ -77,7 +67,6 @@ hook -group fish-highlight global WinSetOption filetype=fish %{
 
 hook global WinSetOption filetype=fish %{
     hook window InsertChar .* -group fish-indent fish-indent-on-char
-    hook window InsertChar \n -group fish-insert fish-insert-on-new-line
     hook window InsertChar \n -group fish-indent fish-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window fish-.+ }
