@@ -6,6 +6,13 @@
 namespace Kakoune
 {
 
+String::Data::Data(String::NoCopy, const char* data, size_t size)
+{
+    l.ptr = const_cast<char*>(data);
+    l.size = size;
+    l.capacity = 0;
+}
+
 String::Data::Data(const char* data, size_t size, size_t capacity)
 {
     if (capacity > Short::capacity)
@@ -71,7 +78,7 @@ String::Data& String::Data::operator=(Data&& other) noexcept
 template<bool copy>
 void String::Data::reserve(size_t new_capacity)
 {
-    if (new_capacity <= capacity())
+    if (capacity() != 0 and new_capacity <= capacity())
         return;
 
     if (is_long())
@@ -123,7 +130,7 @@ void String::Data::clear()
 
 void String::Data::release()
 {
-    if (is_long())
+    if (is_long() and l.capacity != 0)
         Alloc{}.deallocate(l.ptr, l.capacity+1);
 }
 

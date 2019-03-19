@@ -121,11 +121,11 @@ QuotedResult parse_quoted_balanced(Reader& reader, char opening_delimiter,
         {
             auto content = reader.substr_from(start);
             ++reader.pos;
-            return {content.str(), true};
+            return {String{String::NoCopy{}, content}, true};
         }
         ++reader.pos;
     }
-    return {reader.substr_from(start).str(), false};
+    return {String{String::NoCopy{}, reader.substr_from(start)}, false};
 }
 
 String parse_unquoted(Reader& reader)
