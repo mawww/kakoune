@@ -28,12 +28,21 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
                   edit! -fifo $dir/fifo -debug *lint-output*
                   set-option buffer filetype make
                   set-option buffer make_current_error_line 0
-                  hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r '$dir' } }
+                  hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -rf '$dir' } }
               }"
 
         { # do the parsing in the background and when ready send to the session
 
-        eval "$kak_opt_lintcmd '$dir'/buf${extension}" | sort -t: -k2,2 -n > "$dir"/stderr
+        export lint_file_in="${dir}/buf${extension}"
+        export lint_file_out="${dir}/out"
+
+        if ! eval "${kak_opt_lintcmd}"; then
+            printf 'eval -client %%{%s} echo -markup {Error}the linter returned an error\n' "${kak_client}" | kak -p "${kak_session}"
+            rm -rf "${dir}"
+            exit 1
+        fi
+
+        sort -t: -k2,2 -n "${dir}/out" > "${dir}/stderr"
 
         # Flags for the gutter:
         #   stamp l3|{red}█ l11|{yellow}█
@@ -80,7 +89,6 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
                 print bufname ":" $0
             }
             ' > "$dir"/fifo
-
         } >/dev/null 2>&1 </dev/null &
     }
 }
