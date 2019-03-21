@@ -3,6 +3,10 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development version
+
+* Re-organized bundled script files directory hierarchy.
+
 == Kakoune 2019.01.20
 
 * `auto_complete` has been renamed to `autocomplete` for more
