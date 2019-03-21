@@ -16,7 +16,8 @@ EnvVarMap get_env_vars()
         const char* value = name;
         while (*value != 0 and *value != '=')
             ++value;
-        env_vars.insert({{name, value}, (*value == '=') ? value+1 : String{}});
+        env_vars.insert({String{String::NoCopy{}, {name, value}},
+                         (*value == '=') ? String{String::NoCopy{}, value+1} : String{}});
     }
     return env_vars;
 }
