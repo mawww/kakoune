@@ -3,6 +3,6 @@
 namespace Kakoune
 {
 
-size_t domain_allocated_bytes[(size_t)MemoryDomain::Count] = {};
+MemoryStats memory_stats[(size_t)MemoryDomain::Count] = {};
 
 }

@@ -76,17 +76,29 @@ inline const char* domain_name(MemoryDomain domain)
     return "";
 }
 
-extern size_t domain_allocated_bytes[(size_t)MemoryDomain::Count];
+struct MemoryStats
+{
+    size_t allocated_bytes;
+    size_t allocation_count;
+    size_t total_allocation_count;
+};
+
+extern MemoryStats memory_stats[(size_t)MemoryDomain::Count];
 
 inline void on_alloc(MemoryDomain domain, size_t size)
 {
-    domain_allocated_bytes[(int)domain] += size;
+    auto& stats = memory_stats[(int)domain];
+    stats.allocated_bytes += size;
+    ++stats.allocation_count;
+    ++stats.total_allocation_count;
 }
 
 inline void on_dealloc(MemoryDomain domain, size_t size)
 {
-    kak_assert(domain_allocated_bytes[(int)domain] >= size);
-    domain_allocated_bytes[(int)domain] -= size;
+    auto& stats = memory_stats[(int)domain];
+    kak_assert(stats.allocated_bytes >= size);
+    stats.allocated_bytes -= size;
+    --stats.allocation_count;
 }
 
 template<typename T, MemoryDomain domain>

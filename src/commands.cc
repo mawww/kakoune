@@ -1254,9 +1254,14 @@ const CommandDesc debug_cmd = {
             write_to_debug_buffer("Memory usage:");
             for (int domain = 0; domain < (int)MemoryDomain::Count; ++domain)
             {
-                size_t count = domain_allocated_bytes[domain];
-                total += count;
-                write_to_debug_buffer(format("  {}: {}", domain_name((MemoryDomain)domain), count));
+                auto& stats = memory_stats[domain];
+                total += stats.allocated_bytes;
+                write_to_debug_buffer(
+                    format("  {}: {} bytes, {} alloc active, {} alloc total",
+                           domain_name((MemoryDomain)domain),
+                           stats.allocated_bytes,
+                           stats.allocation_count,
+                           stats.total_allocation_count));
             }
             write_to_debug_buffer(format("  Total: {}", total));
             #if defined(__GLIBC__) || defined(__CYGWIN__)
