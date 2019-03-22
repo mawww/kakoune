@@ -19,7 +19,7 @@ TL;DR
 *Multiple selections* -- *Orthogonal design*
 
 ---------------------------------------------
-git clone http://github.com/mawww/kakoune.git
+git clone --recurse-submodules http://github.com/mawww/kakoune.git
 cd kakoune/src
 make
 ./kak
@@ -189,7 +189,7 @@ Make sure you have .local/bin in your path to make the kak binary available from
 
 ----------------------------------------------------------------
 sudo apt install libncursesw5-dev pkg-config
-git clone https://github.com/mawww/kakoune.git && cd kakoune/src
+git clone --recurse-submodules https://github.com/mawww/kakoune.git && cd kakoune/src
 make
 PREFIX=$HOME/.local make install
 ----------------------------------------------------------------

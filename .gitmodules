@@ -1,0 +1,3 @@
+[submodule "rc/windowing/connect"]
+	path = rc/windowing/connect
+	url = https://github.com/alexherbo2/connect.kak
