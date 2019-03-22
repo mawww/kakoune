@@ -140,7 +140,7 @@ dist:
 
 distclean: clean
 	rm -f kak kak$(suffix)
-	find . ../doc -type f \( -name \*\\.gz -o -name \*\\.1 \) -exec rm -f '{}' +
+	find ../doc -type f \( -name \*\\.gz -o -name \*\\.1 \) -exec rm -f '{}' +
 
 installdirs:
 	install -d $(bindir) \
