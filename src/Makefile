@@ -140,7 +140,7 @@ dist:
 
 distclean: clean
 	rm -f kak kak$(suffix)
-	find ../doc -type f \( -name \*\\.gz -o -name \*\\.1 \) -exec rm -f '{}' +
+	find . ../doc -type f \( -name \*\\.gz -o -name \*\\.1 \) -exec rm -f '{}' +
 
 installdirs:
 	install -d $(bindir) \
@@ -155,7 +155,7 @@ install: kak man installdirs
 	install -m 0644 ../share/kak/kakrc $(sharedir)
 	install -m 0644 ../doc/pages/*.asciidoc $(sharedir)/doc
 	cp -r ../rc/* $(sharedir)/rc
-	find -type f -exec chmod 0644 {} +
+	find . -type f -exec chmod 0644 {} +
 	[ -e $(sharedir)/autoload ] || ln -s rc $(sharedir)/autoload
 	install -m 0644 ../colors/* $(sharedir)/colors
 	install -m 0644 ../README.asciidoc $(docdir)
