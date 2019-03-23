@@ -13,6 +13,8 @@ fg_color[,bg_color][+attributes]
 'fg_color', 'bg_color'::
     a color whose value can be expressed in the following formats:
         *black*, *red*, *green*, *yellow*, *blue*, *magenta*, *cyan*, *white*:::
+        *bright-black*, *bright-red*, *bright-green*, *bright-yellow*:::
+        *bright-blue*, *bright-magenta*, *bright-cyan*, *bright-white*:::
             a named color
         *default*:::
             keep the existing color
