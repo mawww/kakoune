@@ -90,4 +90,6 @@ hook global WinSetOption filetype=rust %[
 # Configuration
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-set window formatcmd 'rustfmt'
+hook global WinSetOption filetype=rust %[
+    set window formatcmd 'rustfmt'
+]
