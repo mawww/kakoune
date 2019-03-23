@@ -230,6 +230,11 @@ The following expansions are supported (with required context _in italics_):
     contains full-width codepoints (which occupy two columns) or zero-width
     codepoints
 
+*%val{cursor_display_column}*::
+    _in window scope_ +
+    1-based offset from the start of the line to the cursor position in
+    display column, taking into account tabs and character width.
+
 *%val{cursor_char_value}*::
     _in window scope_ +
     unicode value of the codepoint under the main cursor

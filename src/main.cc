@@ -227,6 +227,13 @@ static const EnvVarDesc builtin_env_vars[] = { {
         { auto coord = context.selections().main().cursor();
           return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
     }, {
+        "cursor_display_column", false,
+        [](StringView name, const Context& context, Quoting quoting) -> String
+        { auto coord = context.selections().main().cursor();
+          return to_string(get_column(context.buffer(),
+                                      context.options()["tabstop"].get<int>(),
+                                      coord) + 1); }
+    }, {
         "cursor_byte_offset", false,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { auto cursor = context.selections().main().cursor();
