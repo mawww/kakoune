@@ -34,7 +34,10 @@ add-highlighter shared/rust/code/ regex \$\w+\b 0:variable
 add-highlighter shared/rust/code/ regex "'\\\\?.'" 0:value
 add-highlighter shared/rust/code/ regex "('\w+)[^']" 1:meta
 
-# Commands
+add-highlighter shared/rust/code/ regex [a-zA-Z](\w+)?(\h+)?(?=\() 0:function
+add-highlighter shared/rust/code/ regex ((?<!\.\.)(?<=\.)|(?<=->))[a-zA-Z](\w+)?\b(?![>"\(]) 0:meta
+add-highlighter shared/rust/code/ regex ((?<!\.\.)(?<=\.)|(?<=->))[a-zA-Z](\w+)?(\h+)?(?=\() 0:function
+add-highlighter shared/rust/code/ regex ([a-zA-Z](\w+)?)(\h+)?(?=::) 1:module
 # ‾‾‾‾‾‾‾‾
 
 define-command -hidden rust-trim-indent %{
