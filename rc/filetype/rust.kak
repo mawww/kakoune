@@ -86,3 +86,10 @@ hook global WinSetOption filetype=rust %[
     hook window InsertChar \} -group rust-indent rust-indent-on-closing-curly-brace
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window rust-.+ }
 ]
+
+# Configuration
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=rust %[
+    set window formatcmd 'rustfmt'
+]
