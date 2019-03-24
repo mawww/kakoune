@@ -272,6 +272,21 @@ private:
     int m_token = -1;
 };
 
+template<typename Completer>
+struct PromptCompleterAdapter
+{
+    PromptCompleterAdapter(Completer completer) : m_completer{completer} {}
+
+    Completions operator()(const Context& context, CompletionFlags flags,
+                           StringView prefix, ByteCount cursor_pos)
+    {
+        return m_completer(context, flags, {String{String::NoCopy{}, prefix}}, 0, cursor_pos);
+    }
+
+private:
+    Completer m_completer;
+};
+
 Scope* get_scope_ifp(StringView scope, const Context& context)
 {
     if (prefix_match("global", scope))
@@ -1862,6 +1877,8 @@ const CommandDesc prompt_cmd = {
           { "buffer-completion", { false, "use buffer completion for prompt" } },
           { "command-completion", { false, "use command completion for prompt" } },
           { "shell-completion", { false, "use shell command completion for prompt" } },
+          { "shell-script-completion", { true, "use shell command completion for prompt" } },
+          { "shell-script-candidates", { true, "use shell command completion for prompt" } },
           { "on-change", { true, "command to execute whenever the prompt changes" } },
           { "on-abort", { true, "command to execute whenever the prompt is canceled" } } },
         ParameterDesc::Flags::None, 2, 2
@@ -1899,6 +1916,10 @@ const CommandDesc prompt_cmd = {
             };
         else if (parser.get_switch("shell-completion"))
             completer = shell_complete;
+        else if (auto shell_script = parser.get_switch("shell-script-completion"))
+            completer = PromptCompleterAdapter{ShellScriptCompleter{shell_script->str()}};
+        else if (auto shell_script = parser.get_switch("shell-script-candidates"))
+            completer = PromptCompleterAdapter{ShellCandidatesCompleter{shell_script->str()}};
 
         const auto flags = parser.get_switch("password") ?
             PromptFlags::Password : PromptFlags::None;
