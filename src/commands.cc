@@ -188,6 +188,89 @@ static Completions complete_command_name(const Context& context, CompletionFlags
        context, prefix.substr(0, cursor_pos));
 }
 
+struct ShellScriptCompleter
+{
+    ShellScriptCompleter(String shell_script) : m_shell_script{std::move(shell_script)} {}
+
+    Completions operator()(const Context& context, CompletionFlags flags,
+                           CommandParameters params, size_t token_to_complete,
+                           ByteCount pos_in_token)
+    {
+        if (flags & CompletionFlags::Fast) // no shell on fast completion
+            return Completions{};
+
+        ShellContext shell_context{
+            params,
+            { { "token_to_complete", to_string(token_to_complete) },
+              { "pos_in_token",      to_string(pos_in_token) } }
+        };
+        String output = ShellManager::instance().eval(m_shell_script, context, {},
+                                                      ShellManager::Flags::WaitForStdout,
+                                                      shell_context).first;
+        CandidateList candidates;
+        for (auto&& candidate : output | split<StringView>('\n'))
+            candidates.push_back(candidate.str());
+
+        return {0_byte, pos_in_token, std::move(candidates)};
+    }
+private:
+    String m_shell_script;
+};
+
+struct ShellCandidatesCompleter
+{
+    ShellCandidatesCompleter(String shell_script) : m_shell_script{std::move(shell_script)} {}
+
+    Completions operator()(const Context& context, CompletionFlags flags,
+                           CommandParameters params, size_t token_to_complete,
+                           ByteCount pos_in_token)
+    {
+        if (flags & CompletionFlags::Start)
+            m_token = -1;
+
+        if (m_token != token_to_complete)
+        {
+            ShellContext shell_context{
+                params,
+                { { "token_to_complete", to_string(token_to_complete) } }
+            };
+            String output = ShellManager::instance().eval(m_shell_script, context, {},
+                                                          ShellManager::Flags::WaitForStdout,
+                                                          shell_context).first;
+            m_candidates.clear();
+            for (auto c : output | split<StringView>('\n'))
+                m_candidates.emplace_back(c.str(), used_letters(c));
+            m_token = token_to_complete;
+        }
+
+        StringView query = params[token_to_complete].substr(0, pos_in_token);
+        UsedLetters query_letters = used_letters(query);
+        Vector<RankedMatch> matches;
+        for (const auto& candidate : m_candidates)
+        {
+            if (RankedMatch match{candidate.first, candidate.second, query, query_letters})
+                matches.push_back(match);
+        }
+
+        constexpr size_t max_count = 100;
+        CandidateList res;
+        // Gather best max_count matches
+        for_n_best(matches, max_count, [](auto& lhs, auto& rhs) { return rhs < lhs; },
+                   [&] (RankedMatch& m) {
+            if (not res.empty() and res.back() == m.candidate())
+                return false;
+            res.push_back(m.candidate().str());
+            return true;
+        });
+
+        return Completions{ 0_byte, pos_in_token, std::move(res) };
+    }
+
+private:
+    String m_shell_script;
+    Vector<std::pair<String, UsedLetters>, MemoryDomain::Completion> m_candidates;
+    int m_token = -1;
+};
 
 Scope* get_scope_ifp(StringView scope, const Context& context)
 {
@@ -992,80 +1075,13 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
              return complete_buffer_name(context, flags, params[token_to_complete], pos_in_token);
         };
     }
-    else if (auto shell_cmd_opt = parser.get_switch("shell-script-completion"))
+    else if (auto shell_script = parser.get_switch("shell-script-completion"))
     {
-        String shell_cmd = shell_cmd_opt->str();
-        completer = [=](const Context& context, CompletionFlags flags,
-                        CommandParameters params,
-                        size_t token_to_complete, ByteCount pos_in_token)
-        {
-            if (flags & CompletionFlags::Fast) // no shell on fast completion
-                return Completions{};
-
-            ShellContext shell_context{
-                params,
-                { { "token_to_complete", to_string(token_to_complete) },
-                  { "pos_in_token",      to_string(pos_in_token) } }
-            };
-            String output = ShellManager::instance().eval(shell_cmd, context, {},
-                                                          ShellManager::Flags::WaitForStdout,
-                                                          shell_context).first;
-            CandidateList candidates;
-            for (auto&& candidate : output | split<StringView>('\n'))
-                candidates.push_back(candidate.str());
-
-            return Completions{ 0_byte, pos_in_token, std::move(candidates) };
-        };
+        completer = ShellScriptCompleter{shell_script->str()};
     }
-    else if (auto shell_cmd_opt = parser.get_switch("shell-script-candidates"))
+    else if (auto shell_script = parser.get_switch("shell-script-candidates"))
     {
-        String shell_cmd = shell_cmd_opt->str();
-        Vector<std::pair<String, UsedLetters>, MemoryDomain::Completion> candidates;
-        int token = -1;
-        completer = [shell_cmd, candidates, token](
-            const Context& context, CompletionFlags flags, CommandParameters params,
-            size_t token_to_complete, ByteCount pos_in_token) mutable
-        {
-            if (flags & CompletionFlags::Start)
-                token = -1;
-
-            if (token != token_to_complete)
-            {
-                ShellContext shell_context{
-                    params,
-                    { { "token_to_complete", to_string(token_to_complete) } }
-                };
-                String output = ShellManager::instance().eval(shell_cmd, context, {},
-                                                              ShellManager::Flags::WaitForStdout,
-                                                              shell_context).first;
-                candidates.clear();
-                for (auto c : output | split<StringView>('\n'))
-                    candidates.emplace_back(c.str(), used_letters(c));
-                token = token_to_complete;
-            }
-
-            StringView query = params[token_to_complete].substr(0, pos_in_token);
-            UsedLetters query_letters = used_letters(query);
-            Vector<RankedMatch> matches;
-            for (const auto& candidate : candidates)
-            {
-                if (RankedMatch match{candidate.first, candidate.second, query, query_letters})
-                    matches.push_back(match);
-            }
-
-            constexpr size_t max_count = 100;
-            CandidateList res;
-            // Gather best max_count matches
-            for_n_best(matches, max_count, [](auto& lhs, auto& rhs) { return rhs < lhs; },
-                       [&] (RankedMatch& m) {
-                if (not res.empty() and res.back() == m.candidate())
-                    return false;
-                res.push_back(m.candidate().str());
-                return true;
-            });
-
-            return Completions{ 0_byte, pos_in_token, std::move(res) };
-        };
+        completer = ShellCandidatesCompleter{shell_script->str()};
     }
     else if (parser.get_switch("command-completion"))
     {
