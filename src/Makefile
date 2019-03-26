@@ -60,7 +60,8 @@ os := $(shell uname)
 
 ifeq ($(os),Darwin)
     LIBS += -lncurses
-    CPPFLAGS += -I$(PREFIX)/opt/ncurses/include -I/opt/local/include
+    NCURSES_CFLAGS += -I$(PREFIX)/opt/ncurses/include 
+    CPPFLAGS += -I/opt/local/include
     LDFLAGS += -L$(PREFIX)/opt/ncurses/lib -L/opt/local/lib
 else ifeq ($(os),FreeBSD)
     LIBS += -ltinfow -lncursesw
@@ -81,7 +82,7 @@ else
     endif
 
     LIBS += $(shell $(PKG_CONFIG) $(PKG_CONFIG_FLAGS) --libs ncursesw)
-    CPPFLAGS += $(shell $(PKG_CONFIG) $(PKG_CONFIG_FLAGS) --cflags ncursesw)
+    NCURSES_CFLAGS += $(shell $(PKG_CONFIG) $(PKG_CONFIG_FLAGS) --cflags ncursesw)
     LDFLAGS += -rdynamic
 endif
 
@@ -99,6 +100,8 @@ kak$(suffix) : $(objects) .version.o
 
 .%$(suffix).o: %.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
+
+.ncurses_ui$(suffix).o: CPPFLAGS += $(NCURSES_CFLAGS)
 
 .version.o: .version.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
