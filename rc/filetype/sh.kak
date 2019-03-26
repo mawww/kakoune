@@ -6,6 +6,7 @@ add-highlighter shared/sh regions
 add-highlighter shared/sh/code default-region group
 add-highlighter shared/sh/double_string region  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)(?:\\\\)*"} group
 add-highlighter shared/sh/single_string region %{(?<!\\)(?:\\\\)*\K'} %{'} fill string
+add-highlighter shared/sh/expansion region '\$\{' '\}|\n' fill value
 add-highlighter shared/sh/comment region '(?<!\$)(?<!\$\{)#' '$' fill comment
 add-highlighter shared/sh/heredoc region -match-capture '<<-?''?(\w+)''?' '^\t*(\w+)$' fill string
 
@@ -34,7 +35,7 @@ add-highlighter shared/sh/code/operators regex [\[\]\(\)&|]{1,2} 0:operator
 add-highlighter shared/sh/code/variable regex (\w+)= 1:variable
 add-highlighter shared/sh/code/function regex ^\h*(\w+)\h*\(\) 1:function
 
-add-highlighter shared/sh/code/expansion regex \$(\w+|\{.+?\}|#|@|\?|\$|!|-|\*) 0:value
+add-highlighter shared/sh/code/unscoped_expansion regex \$(\w+|#|@|\?|\$|!|-|\*) 0:value
 add-highlighter shared/sh/double_string/expansion regex \$(\w+|\{.+?\}) 0:value
 
 hook -group sh-highlight global WinSetOption filetype=sh %{
