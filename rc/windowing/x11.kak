@@ -1,7 +1,7 @@
 # x11
 
 hook global KakBegin .* %sh{
-    if [ -n "$DISPLAY" && [ -z "$TMUX" ]; then
+    if [ -n "$DISPLAY" ] && [ -z "$TMUX" ]; then
         echo "require-module x11"
     fi
 }
