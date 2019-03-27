@@ -65,7 +65,7 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
         # Go to opening parenthesis and opening brace, then select the most nested one
         try %< execute-keys [c [({],[)}] <ret> >
         # Validate selection and get first and last char
-        execute-keys <a-k>\A[{(](\h*\S+)+\n<ret> <a-:><a-\;>L <a-S>
+        execute-keys <a-k>\A[{(](\h*\S+)+\n<ret> <a-K>"(([^"]*"){2})*<ret> <a-K>'(([^']*'){2})*<ret> <a-:><a-\;>L <a-S>
         # Remove possibly incorrect indent from new line which was copied from previous line
         try %< execute-keys -draft <space> <a-h> s\h+<ret> d >
         # Now indent and align that new line with the opening parenthesis/brace
