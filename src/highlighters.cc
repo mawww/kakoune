@@ -662,8 +662,9 @@ struct WrapHighlighter : Highlighter
             const LineCount buf_line = it->range().begin.line;
             const ByteCount line_length = buffer[buf_line].length();
             const ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col;
+            const ColumnCount line_column_length = wrap_column - indent;
 
-            auto pos = next_split_pos(buffer, wrap_column, tabstop, buf_line, {0, 0});
+            auto pos = next_split_pos(buffer, wrap_column, tabstop, buf_line, {0, 0}, line_column_length);
             if (pos.byte == line_length)
                 continue;
 
@@ -714,7 +715,7 @@ struct WrapHighlighter : Highlighter
                 }
                 it = display_buffer.lines().insert(it+1, new_line);
 
-                pos = next_split_pos(buffer, wrap_column - prefix_len, tabstop, buf_line, pos);
+                pos = next_split_pos(buffer, wrap_column - prefix_len, tabstop, buf_line, pos, line_column_length);
                 atom_it = it->begin();
             }
         }
@@ -736,11 +737,13 @@ struct WrapHighlighter : Highlighter
         auto line_wrap_count = [&](LineCount line, ColumnCount indent) {
             LineCount count = 0;
             const ByteCount line_length = buffer[line].length();
+            const ColumnCount line_column_length = wrap_column - indent;
+
             SplitPos pos{0, 0};
             while (true)
             {
                 pos = next_split_pos(buffer, wrap_column - (pos.byte == 0 ? 0_col : indent),
-                                     tabstop, line, pos);
+                                     tabstop, line, pos, line_column_length);
                 if (pos.byte == line_length)
                     break;
                 ++count;
@@ -766,6 +769,7 @@ struct WrapHighlighter : Highlighter
                 break;
 
             const ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col;
+            const ColumnCount line_column_length = wrap_column - indent;
 
             ColumnCount prefix_len = 0;
             if (marker_len < wrap_column)
@@ -779,7 +783,7 @@ struct WrapHighlighter : Highlighter
                 for (LineCount count = 0; true; ++count)
                 {
                     auto next_pos = next_split_pos(buffer, wrap_column - (pos.byte != 0 ? prefix_len : 0_col),
-                                                   tabstop, buf_line, pos);
+                                                   tabstop, buf_line, pos, line_column_length);
                     if (next_pos.byte > cursor.column)
                     {
                         setup.cursor_pos = DisplayCoord{
@@ -815,7 +819,7 @@ struct WrapHighlighter : Highlighter
         unique_ids.push_back(ms_id);
     }
 
-    SplitPos next_split_pos(const Buffer& buffer,  ColumnCount wrap_column, int tabstop, LineCount line, SplitPos current) const
+    SplitPos next_split_pos(const Buffer& buffer,  ColumnCount wrap_column, int tabstop, LineCount line, SplitPos current, ColumnCount line_length) const
     {
         const ColumnCount target_column = current.column + wrap_column;
         StringView content = buffer[line];
@@ -853,8 +857,23 @@ struct WrapHighlighter : Highlighter
         }
 
         if (m_word_wrap and pos.byte < content.length()) // find a word boundary before current position
-            if (last_boundary.byte > 0)
+        {
+            // compute length of word
+            SplitPos end = last_boundary;
+            do {
+                const char* it = &content[end.byte];
+                const Codepoint cp = utf8::read_codepoint(it, content.end());
+                const ColumnCount width = codepoint_width(cp);
+                end.column += width;
+                end.byte = (int)(it - content.begin());
+                if (!is_word<WORD>(cp))
+                    break;
+            } while (end.byte < content.length() and end.column < target_column + wrap_column);
+
+            const ColumnCount word_length = end.column - last_boundary.column - 1;
+            if (last_boundary.byte > 0 and word_length < line_length) // only break before word if it's shorter than a full line
                 pos = last_boundary;
+        }
 
         return pos;
     };
