@@ -1,0 +1,7 @@
+    Foo {
+        bar,
+        baz
+
+    foo(
+        bar,
+        baz
