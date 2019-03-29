@@ -458,7 +458,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     {
         char buf[4 + 511 + 2] = "\033]2;";
         auto buf_it = &buf[4];
-        if (m_title_line != "")
+        if (not m_title_line.empty())
         {
             auto buf_end = &buf[511 + 1];
             for (auto ch: m_title_line)
