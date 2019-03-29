@@ -463,7 +463,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
             auto buf_end = &buf[511 + 1];
             for (auto ch: m_title_line)
             {
-                if (buf_it == buf_end)
+                if (buf_it + 1 == buf_end)
                     break;
                 *buf_it++ = ch;
             }
