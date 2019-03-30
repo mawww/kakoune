@@ -23,7 +23,7 @@ A shell command is appended to the one set in this option at runtime} \
     done
 }
 
-define-command x11-terminal -params 1.. -shell-completion -docstring '
+define-command x11-terminal -params .. -shell-completion -docstring '
 x11-terminal <program> [<arguments>]: create a new terminal as an x11 window
 The program passed as argument will be executed in the new terminal' \
 %{
@@ -32,6 +32,13 @@ The program passed as argument will be executed in the new terminal' \
            echo "fail 'termcmd option is not set'"
            exit
         fi
+
+        # run default shell if no arguments
+        if [ $# -eq 0 ]; then
+            setsid ${kak_opt_termcmd%% *} < /dev/null > /dev/null 2>&1 &
+            exit
+        fi
+
         # join arguments into a single string, in which they're delimited
         # by single quotes, and with single quotes inside transformed to '\''
         # so that sh -c "$args" will re-split the arguments properly
