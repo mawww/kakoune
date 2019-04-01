@@ -44,6 +44,36 @@ enum class MessageType : uint8_t
     SetOptions,
     Exit,
     Key,
+
+    // 9p messages
+    Tversion = 100,
+    Rversion,
+    Tauth    = 102,
+    Rauth,
+    Tattach  = 104,
+    Rattach,
+    Terror   = 106,    // illegal
+    Rerror,
+    Tflush   = 108,
+    Rflush,
+    Twalk    = 110,
+    Rwalk,
+    Topen    = 112,
+    Ropen,
+    Tcreate  = 114,
+    Rcreate,
+    Tread    = 116,
+    Rread,
+    Twrite   = 118,
+    Rwrite,
+    Tclunk   = 120,
+    Rclunk,
+    Tremove  = 122,
+    Rremove,
+    Tstat    = 124,
+    Rstat,
+    Twstat   = 126,
+    Rwstat,
 };
 
 typedef FieldWriter<uint32_t> KakouneFieldWriter;
