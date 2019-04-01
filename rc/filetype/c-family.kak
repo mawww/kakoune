@@ -86,7 +86,7 @@ define-command -hidden c-family-indent-on-closing-curly-brace %[
     ] catch %[
         # otherwise align with open curly brace
         execute-keys -itersel -draft <a-h><a-:><a-k>^\h+\}$<ret>hm<a-S>1<a-&>
-    ]
+    ] catch %[]
 ]
 
 define-command -hidden c-family-insert-on-closing-curly-brace %[
