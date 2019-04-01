@@ -58,7 +58,7 @@ public:
     ~MsgWriter()
     {
         uint32_t count = (uint32_t)m_buffer.size() - m_start;
-        memcpy(m_buffer.data() + m_start + sizeof(MessageType), &count, sizeof(uint32_t));
+        memcpy(m_buffer.data() + m_start, &count, sizeof(uint32_t));
     }
 
     template<typename ...Args>
@@ -237,14 +237,14 @@ public:
     {
         kak_assert(m_write_pos >= header_size);
         uint32_t res;
-        memcpy(&res, m_stream.data() + sizeof(MessageType), sizeof(uint32_t));
+        memcpy(&res, m_stream.data(), sizeof(uint32_t));
         return res;
     }
 
     MessageType type() const
     {
         kak_assert(m_write_pos >= header_size);
-        return *reinterpret_cast<const MessageType*>(m_stream.data());
+        return *reinterpret_cast<const MessageType*>(m_stream.data() + sizeof(uint32_t));
     }
 
     void read(char* buffer, size_t size)
@@ -278,7 +278,7 @@ private:
         m_write_pos += res;
     }
 
-    static constexpr uint32_t header_size = sizeof(MessageType) + sizeof(uint32_t);
+    static constexpr uint32_t header_size = sizeof(uint32_t) + sizeof(MessageType);
     Vector<char, MemoryDomain::Remote> m_stream;
     uint32_t m_write_pos = 0;
     uint32_t m_read_pos = header_size;
