@@ -2250,13 +2250,18 @@ const CommandDesc select_cmd = {
     "select <selection_desc>...: select given selections\n"
     "\n"
     "selection_desc format is <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>",
-    ParameterDesc{{}, ParameterDesc::Flags::SwitchesAsPositional, 1},
+    ParameterDesc{
+        {{"timestamp", {true, "specify buffer timestamp at which those selections are valid"}}},
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 1
+    },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        context.selections_write_only() = selection_list_from_string(context.buffer(), parser.positionals_from(0));
+        auto& buffer = context.buffer();
+        const size_t timestamp = parser.get_switch("timestamp").map(str_to_int_ifp).cast<size_t>().value_or(buffer.timestamp());
+        context.selections_write_only() = selection_list_from_string(buffer, parser.positionals_from(0), timestamp);
     }
 };
 

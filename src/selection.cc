@@ -516,14 +516,14 @@ Selection selection_from_string(StringView desc)
     return Selection{anchor, cursor};
 }
 
-SelectionList selection_list_from_string(Buffer& buffer, ConstArrayView<String> descs)
+SelectionList selection_list_from_string(Buffer& buffer, ConstArrayView<String> descs, size_t timestamp)
 {
     if (descs.empty())
         throw runtime_error{"empty selection description"};
 
     auto sels = descs | transform([&](auto&& d) { auto s = selection_from_string(d); clamp(s, buffer); return s; })
                       | gather<Vector<Selection>>();
-    return {SelectionList::UnsortedTag{}, buffer, std::move(sels), buffer.timestamp(), 0};
+    return {SelectionList::UnsortedTag{}, buffer, std::move(sels), timestamp, 0};
 }
 
 }
