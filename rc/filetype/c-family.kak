@@ -169,7 +169,7 @@ evaluate-commands %sh{
             add-highlighter shared/$ft/code/functions regex (\\w*?)\\b(for|if|while)?(\\h+)?(?=\\() 1:function
             add-highlighter shared/$ft/code/field regex ((?<!\\.\\.)(?<=\\.)|(?<=->))[a-zA-Z](\\w+)?\\b(?![>"\\(]) 0:meta
             add-highlighter shared/$ft/code/method regex ((?<!\\.\\.)(?<=\\.)|(?<=->))[a-zA-Z](\\w+)?(\\h+)?(?=\\() 0:function
-            add-highlighter shared/$ft/code/  regex ([a-zA-Z](\\w+)?)(\\h+)?(?=::) 1:module
+            add-highlighter shared/$ft/code/class_module regex ([a-zA-Z](\\w+)?)(\\h+)?(?=::) 1:module
 	EOF
     done
 }
