@@ -48,8 +48,7 @@ enum class KeymapMode : char;
 enum class CursorMode;
 
 using PromptCompleter = std::function<Completions (const Context&, CompletionFlags,
-                                             StringView, ByteCount)>;
-
+                                                   StringView, ByteCount)>;
 
 class InputHandler : public SafeCountable
 {

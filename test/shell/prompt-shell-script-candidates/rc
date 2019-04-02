@@ -1,0 +1,3 @@
+define-command foo %{
+    prompt -shell-script-candidates %{ printf 'foo\nbar\nhaz\n' } ': ' %{exec i %val{text} <esc>}
+}

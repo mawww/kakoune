@@ -42,7 +42,8 @@ when the commands have been executed: */*, *"*, *|*, *^*, *@*.
 
 *-buffer* <names>::
     execute in the context of each buffers in the comma separated list
-    *names*. `*` as a name can be used to iterate on all buffers
+    *names*. `*` as a name can be used to iterate on all non-debug buffers
+    (See <<buffers#debug-buffers, `:doc buffers`>>)
 
 *-save-regs* <regs>::
     regs is a string of registers to be restored after execution (overwrites

@@ -257,6 +257,41 @@ void write(int fd, StringView data)
     }
 }
 
+struct BufferedWriter
+{
+    BufferedWriter(int fd) : fd{fd} {}
+
+    ~BufferedWriter()
+    {
+        if (pos != 0)
+            Kakoune::write(fd, {buffer, pos});
+    }
+
+    void write(StringView data)
+    {
+        while (not data.empty())
+        {
+            const ByteCount length = data.length();
+            const ByteCount write_len = std::min(length, size - pos);
+            memcpy(buffer + (int)pos, data.data(), (int)write_len);
+            pos += write_len;
+            if (pos == size)
+            {
+                Kakoune::write(fd, {buffer, size});
+                pos = 0;
+            }
+            data = data.substr(write_len);
+        }
+    }
+
+private:
+    static constexpr ByteCount size = 4096;
+    int fd;
+    ByteCount pos = 0;
+    char buffer[(int)size];
+};
+
+
 void write_buffer_to_fd(Buffer& buffer, int fd)
 {
     auto eolformat = buffer.options()["eolformat"].get<EolFormat>();
@@ -266,17 +301,18 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
     else
         eoldata = "\n";
 
+
+    BufferedWriter writer{fd};
     if (buffer.options()["BOM"].get<ByteOrderMark>() == ByteOrderMark::Utf8)
-        if (::write(fd, "\xEF\xBB\xBF", 3) < 0)
-            throw runtime_error(format("unable to write data to the buffer (fd: {}; errno: {})", fd, ::strerror(errno)));
+        writer.write("\xEF\xBB\xBF");
 
     for (LineCount i = 0; i < buffer.line_count(); ++i)
     {
         // end of lines are written according to eolformat but always
         // stored as \n
         StringView linedata = buffer[i];
-        write(fd, linedata.substr(0, linedata.length()-1));
-        write(fd, eoldata);
+        writer.write(linedata.substr(0, linedata.length()-1));
+        writer.write(eoldata);
     }
 }
 

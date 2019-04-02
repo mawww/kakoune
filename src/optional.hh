@@ -81,6 +81,26 @@ public:
     }
     const T* operator->() const { return const_cast<Optional&>(*this).operator->(); }
 
+    template<typename U> struct DecayOptionalImpl { using Type = U; };
+    template<typename U> struct DecayOptionalImpl<Optional<U>> { using Type = typename DecayOptionalImpl<U>::Type; };
+    template<typename U> using DecayOptional = typename DecayOptionalImpl<U>::Type;
+
+    template<typename F>
+    auto map(F f) -> Optional<DecayOptional<decltype(f(std::declval<T&&>()))>>
+    {
+        if (not m_valid)
+            return {};
+        return {f(m_value)};
+    }
+
+    template<typename U>
+    auto cast() -> Optional<U>
+    {
+        if (not m_valid)
+            return {};
+        return {(U)m_value};
+    }
+
     template<typename U>
     T value_or(U&& fallback) const { return m_valid ? m_value : T{std::forward<U>(fallback)}; }
 

@@ -719,12 +719,16 @@ String Buffer::debug_description() const
             return sizeof(history) + history.undo_group.size() * sizeof(Modification) + s;
         }) + m_changes.size() * sizeof(Change);
 
-    return format("{}\nFlags: {}{}{}{}\nUsed mem: content={} additional={}\n",
+    return format("{}\nFlags: {}{}{}{}{}{}{}{}\nUsed mem: content={} additional={}\n",
                   display_name(),
                   (m_flags & Flags::File) ? "File (" + name() + ") " : "",
                   (m_flags & Flags::New) ? "New " : "",
                   (m_flags & Flags::Fifo) ? "Fifo " : "",
                   (m_flags & Flags::NoUndo) ? "NoUndo " : "",
+                  (m_flags & Flags::NoHooks) ? "NoHooks " : "",
+                  (m_flags & Flags::Debug) ? "Debug " : "",
+                  (m_flags & Flags::ReadOnly) ? "ReadOnly " : "",
+                  is_modified() ? "Modified " : "",
                   content_size, additional_size);
 }
 
