@@ -38,6 +38,8 @@ add-highlighter shared/rust/code/ regex (\w*?)\b(let|as|fn|return|match|if|else|
 add-highlighter shared/rust/code/ regex (?:(?<!\.\.)(?<=\.))([a-zA-Z](\w*))\b(?![>"\(]) 1:meta
 add-highlighter shared/rust/code/ regex (?:(?<!\.\.)(?<=\.))([a-zA-Z](\w*))(\h+)?(?=\() 1:function
 add-highlighter shared/rust/code/ regex ([a-zA-Z]\w*)(\h+)?(?=::) 1:module
+
+# Commands
 # ‾‾‾‾‾‾‾‾
 
 define-command -hidden rust-trim-indent %{
