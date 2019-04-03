@@ -34,7 +34,7 @@ add-highlighter shared/rust/code/ regex \$\w+\b 0:variable
 add-highlighter shared/rust/code/ regex "'\\\\?.'" 0:value
 add-highlighter shared/rust/code/ regex "('\w+)[^']" 1:meta
 
-add-highlighter shared/rust/code/ regex (\\w*?)\\b(for|in|while|loop|do)?(\\h+)?(?=\\() 1:function
+add-highlighter shared/rust/code/ regex (\w*?)\b(let|as|fn|return|match|if|else|loop|for|in|while|break|continue|move|box|where|impl|dyn|pub|unsafe)?(\h*)(?=\() 1:function
 add-highlighter shared/rust/code/ regex ((?<!\.\.)(?<=\.)|(?<=->))[a-zA-Z](\w+)?\b(?![>"\(]) 0:meta
 add-highlighter shared/rust/code/ regex ((?<!\.\.)(?<=\.)|(?<=->))[a-zA-Z](\w+)?(\h+)?(?=\() 0:function
 add-highlighter shared/rust/code/ regex ([a-zA-Z](\w+)?)(\h+)?(?=::) 1:module
