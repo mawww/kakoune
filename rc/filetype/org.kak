@@ -23,10 +23,10 @@ evaluate-commands %sh{
         sass scala scss sh swift toml tupfile typescript yaml sql
     "
     for lang in ${languages}; do
-        printf "%s\n" "add-highlighter shared/org/${lang} region '#\\+BEGIN_SRC\\h+${lang}\\b' '#\\+END_SRC' regions"
+        printf "%s\n" "add-highlighter shared/org/${lang} region '#\\+(?i)BEGIN_SRC(?I)\\h+${lang}\\b' '#\\+(?i)END_SRC' regions"
         printf "%s\n" "add-highlighter shared/org/${lang}/ default-region fill meta"
         [ "${lang}" = kak ] && ref=kakrc || ref="${lang}"
-        printf "%s\n" "add-highlighter shared/org/${lang}/inner region \\A#\\+BEGIN_SRC[^\n]*\\K '(?=#\\+END_SRC)' ref ${ref}"
+        printf "%s\n" "add-highlighter shared/org/${lang}/inner region \\A#\\+(?i)BEGIN_SRC(?I)[^\\n]*\\K '(?=#\\+(?i)END_SRC)' ref ${ref}"
     done
 }
 
