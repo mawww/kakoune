@@ -166,9 +166,9 @@ evaluate-commands %sh{
             add-highlighter shared/$ft/macro/ regex ^\\h*#include\\h+(\\S*) 1:module
             add-highlighter shared/$ft/macro/ regex /\\*.*?\\*/ 0:comment
 
-            add-highlighter shared/$ft/code/field regex ((?<!\\.\\.)(?<=\\.)|(?<=->))[a-zA-Z](\\w+)?\\b(?![>"\\(]) 0:meta
-            add-highlighter shared/$ft/code/method regex ((?<!\\.\\.)(?<=\\.)|(?<=->))[a-zA-Z](\\w+)?(\\h+)?(?=\\() 0:function
-            add-highlighter shared/$ft/code/class_module regex ([a-zA-Z](\\w+)?)(\\h+)?(?=::) 1:module
+            add-highlighter shared/$ft/code/field regex ((?<!\\.\\.)(?<=\\.)|(?<=->))[a-zA-Z](\\w*)\\b(?![>"\\(]) 0:meta
+            add-highlighter shared/$ft/code/method regex ((?<!\\.\\.)(?<=\\.)|(?<=->))[a-zA-Z](\\w*)(\\h*)(?=\\() 0:function
+            add-highlighter shared/$ft/code/class_module regex ([a-zA-Z](\\w*))(\\h*)(?=::) 1:module
 	EOF
     done
 }
