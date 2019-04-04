@@ -86,7 +86,7 @@ evaluate-commands %sh{
     types="bool|buffer|bytearray|bytes|complex|dict|file|float|frozenset|int"
     types="${types}|list|long|memoryview|object|set|str|tuple|unicode|xrange"
 
-    functions="abs|all|any|ascii|bin|callable|chr|classmethod|compile|complex"
+    functions="abs|all|any|ascii|bin|breakpoint|callable|chr|classmethod|compile|complex"
     functions="${functions}|delattr|dict|dir|divmod|enumerate|eval|exec|filter"
     functions="${functions}|format|frozenset|getattr|globals|hasattr|hash|help"
     functions="${functions}|hex|id|__import__|input|isinstance|issubclass|iter"
