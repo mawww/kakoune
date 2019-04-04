@@ -75,7 +75,7 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
     return contains(m_clients, client) ? client : nullptr;
 }
 
-void ClientManager::process_pending_inputs() const
+void ClientManager::process_pending_inputs()
 {
     while (true)
     {
@@ -84,8 +84,16 @@ void ClientManager::process_pending_inputs() const
         // client input processing, which would break iterator based iteration.
         // (its fine to skip a client if that happens as had_input will be true
         // if a client triggers client removal)
-        for (int i = 0; i < m_clients.size(); ++i)
+        for (int i = 0; i < m_clients.size(); )
+        {
+            if (not m_clients[i]->is_ui_ok())
+            {
+                remove_client(*m_clients[i], false, -1);
+                continue;
+            }
             had_input = m_clients[i]->process_pending_inputs() or had_input;
+            ++i;
+        }
 
         if (not had_input)
             break;
