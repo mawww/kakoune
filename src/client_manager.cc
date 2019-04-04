@@ -24,6 +24,9 @@ void ClientManager::clear()
     ClientList clients = std::move(m_clients);
     clients.clear();
     m_client_trash.clear();
+    for (auto& window : m_free_windows)
+        window.window->run_hook_in_own_context(Hook::WinClose,
+                                               window.window->buffer().name());
     m_free_windows.clear();
     m_window_trash.clear();
 }
