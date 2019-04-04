@@ -40,8 +40,9 @@ evaluate-commands %sh{
         # and markup
         face global title ${lucius_light_blue}
         face global header ${lucius_light_green}
-        face global bold ${lucius_blue}
-        face global italic ${lucius_green}
+        face global bold ${lucius_blue}+b
+        face global italic ${lucius_light_grey}+i
+        face global underline ${lucius_green}+u
         face global mono ${lucius_light_green}
         face global block ${lucius_light_blue}
         face global link ${lucius_light_green}

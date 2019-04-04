@@ -55,15 +55,15 @@ add-highlighter shared/org/inline/text/star-list regex ^(?:\h+)([*])\h+ 1:bullet
 add-highlighter shared/org/inline/text/ordered-lists regex ^(?:\h*)(\d+[.)])\h+ 1:bullet
 
 # Headings
-add-highlighter shared/org/inline/text/heading    regex "^[*]+\h+[^\n]+"                          0:header
-add-highlighter shared/org/inline/text/italic     regex "\s([/][^\s/].*?[^\s/]*?[/])\W" 1:default,default+i
+add-highlighter shared/org/inline/text/heading    regex "^[*]+\h+[^\n]+"                0:header
+add-highlighter shared/org/inline/text/italic     regex "\s([/][^\s/].*?[^\s/]*?[/])\W" 1:italic
 add-highlighter shared/org/inline/text/verbatim   regex "\s([=][^\s=].*?[^\s=]*?[=])\W" 1:meta
 add-highlighter shared/org/inline/text/code       regex "\s([~][^\s~].*?[^\s~]*?[~])\W" 1:mono
 add-highlighter shared/org/inline/text/math       regex "\s([$][^\s].*?[^\s]*?[$])\W"   1:mono
-add-highlighter shared/org/inline/text/underlined regex "\s([_][^\s_].*?[^\s_]*?[_])\W" 1:default,default+u
-add-highlighter shared/org/inline/text/bold       regex "\s([*][^\s*].*?[^\s*]*?[*])\W" 1:default,default+b
-add-highlighter shared/org/inline/text/link       regex "\[[^\n]+\]\]"                            0:link
-add-highlighter shared/org/inline/text/option     regex "(?i)#\+[a-z]\w*\b"                       0:meta
+add-highlighter shared/org/inline/text/underlined regex "\s([_][^\s_].*?[^\s_]*?[_])\W" 1:underline
+add-highlighter shared/org/inline/text/bold       regex "\s([*][^\s*].*?[^\s*]*?[*])\W" 1:bold
+add-highlighter shared/org/inline/text/link       regex "\[[^\n]+\]\]"                  0:link
+add-highlighter shared/org/inline/text/option     regex "(?i)#\+[a-z]\w*\b"             0:meta
 
 # Strikethrough highlighter is disabled because Kakoune doesn't support strikethrough attribute
 # add-highlighter shared/org/inline/text/strikethrough regex "\W*\+[^\s][^\n+]+[^\s]\+\W" 0:default,default+s

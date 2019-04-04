@@ -42,6 +42,7 @@ evaluate-commands %sh{
         face global header    ${orange}
         face global bold      ${fg}+b
         face global italic    ${fg}+i
+        face global underline ${fg}+u
         face global mono      ${fg4}
         face global block     ${aqua}
         face global link      ${blue}+u
