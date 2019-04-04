@@ -50,6 +50,7 @@ evaluate-commands %sh{
         face global bold ${zenstorageClass}+b
         face global italic ${zenfunction}+i
         face global underline ${zenvariable}+u
+        face global strikethrough ${zenfunction}
         face global mono ${zennumber}
         face global block ${zenstatement}
         face global link ${zenstring}

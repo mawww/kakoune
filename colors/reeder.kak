@@ -36,16 +36,17 @@ evaluate-commands %sh{
         face global builtin   default+b
 
         # and markup
-        face global title      ${orange}+b
-        face global header     ${orange}+b
-        face global bold       default+b
-        face global italic     default+i
-        face global underline  default+u
-        face global mono       ${green_light}
-        face global block      ${green}
-        face global link       ${orange}
-        face global bullet     ${brown_dark}
-        face global list       ${black}
+        face global title         ${orange}+b
+        face global header        ${orange}+b
+        face global bold          default+b
+        face global italic        default+i
+        face global underline     default+u
+        face global strikethrough default
+        face global mono          ${green_light}
+        face global block         ${green}
+        face global link          ${orange}
+        face global bullet        ${brown_dark}
+        face global list          ${black}
 
         # and built in faces
         face global Default            ${black_light},${white}

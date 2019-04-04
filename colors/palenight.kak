@@ -41,16 +41,17 @@ evaluate-commands %sh{
     face global meta       $yellow
 
     # Markup
-    face global title     $blue
-    face global header    $cyan
-    face global bold      $red+b
-    face global italic    $yellow+i
-    face global underline $blue+u
-    face global mono      $green
-    face global block     $purple
-    face global link      $cyan
-    face global bullet    $cyan
-    face global list      $yellow
+    face global title         $blue
+    face global header        $cyan
+    face global bold          $red+b
+    face global italic        $yellow+i
+    face global underline     $blue+u
+    face global strikethrough $green
+    face global mono          $green
+    face global block         $purple
+    face global link          $cyan
+    face global bullet        $cyan
+    face global list          $yellow
 
     # Builtin
     face global Default            $white,$black

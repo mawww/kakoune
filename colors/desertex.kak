@@ -15,16 +15,17 @@ face global comment    rgb:7ccd7c+i
 face global meta rgb:ee799f
 
 # Markup
-face global title     blue
-face global header    cyan
-face global bold      red+b
-face global italic    yellow+i
-face global underline blue+u
-face global mono      green
-face global block     magenta
-face global link      cyan
-face global bullet    cyan
-face global list      yellow
+face global title         blue
+face global header        cyan
+face global bold          red+b
+face global italic        yellow+i
+face global underline     blue+u
+face global strikethrough green
+face global mono          green
+face global block         magenta
+face global link          cyan
+face global bullet        cyan
+face global list          yellow
 
 # Builtin
 # fg,bg+attributes

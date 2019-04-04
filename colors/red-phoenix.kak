@@ -54,6 +54,7 @@ evaluate-commands %sh{
         face global bold ${orange2}+b
         face global italic ${orange3}+i
         face global underline ${orange3}+u
+        face global strikethrough ${orange1}
         face global mono ${yellow1}
         face global block ${tan1}
         face global link blue

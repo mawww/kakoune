@@ -21,6 +21,7 @@ face global header             blue
 face global bold               bright-blue+b
 face global italic             bright-blue+i
 face global underline          bright-blue+u
+face global strikethrough      bright-blue
 face global mono               bright-cyan
 face global block              cyan
 face global link               bright-cyan
