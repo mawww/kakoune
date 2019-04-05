@@ -29,6 +29,7 @@ add-highlighter shared/rust/code/ regex (?:#!?\[.*?\]) 0:meta
 add-highlighter shared/rust/code/ regex \b(?:let|as|fn|return|match|if|else|loop|for|in|while|break|continue|move|box|where|impl|dyn|pub|unsafe)\b 0:keyword
 add-highlighter shared/rust/code/ regex \b(?:trait|struct|enum|type|mut|ref|static|const)\b 0:attribute
 add-highlighter shared/rust/code/ regex \b(?:u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64|bool|char|str|Self)\b 0:type
+add-highlighter shared/rust/code/ regex \b[A-Z]\w*\b 0:type
 add-highlighter shared/rust/code/ regex \b(?:mod|crate|use|extern)\b 0:module
 add-highlighter shared/rust/code/ regex \$\w+\b 0:variable
 add-highlighter shared/rust/code/ regex "'\\\\?.'" 0:value
