@@ -7,6 +7,9 @@ released versions.
 
 * Re-organized bundled script files directory hierarchy.
 
+* Introduced helpers to write/read from file in scripts with
+  `%file{...}` expansion and `echo -to-file <filename>`.
+
 == Kakoune 2019.01.20
 
 * `auto_complete` has been renamed to `autocomplete` for more

@@ -44,6 +44,10 @@ struct {
     unsigned int version;
     const char* notes;
 } constexpr version_notes[] = { {
+        0,
+        "» %file{...} expansions to read files\n"
+        "» echo -to-file <filename> to write to file\n"
+    }, {
         20190120,
         "» named capture groups in regex\n"
         "» auto_complete option renamed to autocomplete\n"
