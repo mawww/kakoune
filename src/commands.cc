@@ -1200,6 +1200,7 @@ const CommandDesc echo_cmd = {
     "echo <params>...: display given parameters in the status line",
     ParameterDesc{
         { { "markup", { false, "parse markup" } },
+          { "to-file", { true, "echo contents to given filename" } },
           { "debug", { false, "write to debug buffer instead of status line" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart
     },
@@ -1208,7 +1209,11 @@ const CommandDesc echo_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        String message = fix_atom_text(join(parser, ' ', false));
+        String message = join(parser, ' ', false);
+        if (auto filename = parser.get_switch("to-file"))
+            return write_to_file(*filename, message);
+
+        message = fix_atom_text(message);
         if (parser.get_switch("debug"))
             write_to_debug_buffer(message);
         else if (parser.get_switch("markup"))
