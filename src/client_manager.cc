@@ -19,11 +19,10 @@ ClientManager::~ClientManager()
 
 void ClientManager::clear()
 {
-    // So that clients destructor find the client manager empty
-    // so that local UI does not fork.
-    ClientList clients = std::move(m_clients);
-    clients.clear();
+    while (not m_clients.empty())
+        remove_client(*m_clients.front(), true, 0);
     m_client_trash.clear();
+
     for (auto& window : m_free_windows)
         window.window->run_hook_in_own_context(Hook::WinClose,
                                                window.window->buffer().name());
