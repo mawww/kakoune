@@ -64,7 +64,9 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
 
     try
     {
-        CommandManager::instance().execute(init_cmds, client->context());
+        auto& context = client->context();
+        context.hooks().run_hook(Hook::ClientCreate, context.name(), context);
+        CommandManager::instance().execute(init_cmds, context);
     }
     catch (Kakoune::runtime_error& error)
     {
@@ -116,9 +118,13 @@ void ClientManager::remove_client(Client& client, bool graceful, int status)
         kak_assert(contains(m_client_trash, &client));
         return;
     }
+
     client.exit(status);
     m_client_trash.push_back(std::move(*it));
     m_clients.erase(it);
+
+    auto& context = client.context();
+    context.hooks().run_hook(Hook::ClientClose, context.name(), context);
 
     if (not graceful and m_clients.empty())
         BufferManager::instance().backup_modified_buffers();

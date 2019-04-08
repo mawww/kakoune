@@ -28,6 +28,8 @@ enum class Hook
     BufCloseFifo,
     BufReadFifo,
     BufSetOption,
+    ClientCreate,
+    ClientClose,
     InsertBegin,
     InsertChar,
     InsertDelete,
@@ -60,7 +62,7 @@ enum class Hook
 
 constexpr auto enum_desc(Meta::Type<Hook>)
 {
-    return make_array<EnumDesc<Hook>, 39>({
+    return make_array<EnumDesc<Hook>, 41>({
         {Hook::BufCreate, "BufCreate"},
         {Hook::BufNewFile, "BufNewFile"},
         {Hook::BufOpenFile, "BufOpenFile"},
@@ -72,6 +74,8 @@ constexpr auto enum_desc(Meta::Type<Hook>)
         {Hook::BufCloseFifo, "BufCloseFifo"},
         {Hook::BufReadFifo, "BufReadFifo"},
         {Hook::BufSetOption, "BufSetOption"},
+        {Hook::ClientCreate, "ClientCreate"},
+        {Hook::ClientClose, "ClientClose"},
         {Hook::InsertBegin, "InsertBegin"},
         {Hook::InsertChar, "InsertChar"},
         {Hook::InsertDelete, "InsertDelete"},

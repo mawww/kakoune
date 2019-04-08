@@ -140,6 +140,13 @@ name. Hooks with no description will always use an empty string.
     executed when a fifo buffer closes its fifo file descriptor either
     because the buffer is being deleted or the writing end has been closed
 
+*ClientCreate* `client name`::
+    executed when a new client is created.
+
+*ClientClose* `client name`::
+    executed when a client is closed, after it was removed from the client
+    list.
+
 *RuntimeError* `error message`::
     an error was encountered while executing a user command
 
