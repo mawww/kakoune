@@ -322,34 +322,48 @@ struct CommandDesc
 template<bool force_reload>
 void edit(const ParametersParser& parser, Context& context, const ShellContext&)
 {
-    if (parser.positional_count() == 0 and not force_reload)
+    if (parser.positional_count() == 0 and
+        not force_reload and
+        not parser.get_switch("scratch"))
         throw wrong_argument_count();
 
-    auto& name = parser.positional_count() > 0 ? parser[0]
-                                               : context.buffer().name();
-    auto& buffer_manager = BufferManager::instance();
-
-    Buffer* buffer = buffer_manager.get_buffer_ifp(name);
     const bool no_hooks = context.hooks_disabled();
     const auto flags = (no_hooks ? Buffer::Flags::NoHooks : Buffer::Flags::None) |
        (parser.get_switch("debug") ? Buffer::Flags::Debug : Buffer::Flags::None);
+
+    auto& buffer_manager = BufferManager::instance();
+    if (parser.get_switch("scratch"))
+    {
+        if (parser.get_switch("readonly") or parser.get_switch("fifo") or parser.get_switch("scroll"))
+            throw runtime_error("scratch is not compatible with readonly, fifo or scroll");
+
+        String name;
+        if (parser.positional_count() > 0)
+            name = parser[0];
+        else
+        {
+            for (int i = 0; true; ++i)
+            {
+                name = format("*scratch-{}*", i);
+                if (buffer_manager.get_buffer_ifp(name) == nullptr)
+                    break;
+            }
+        }
+
+        Buffer* buffer = buffer_manager.create_buffer(std::move(name), flags);
+        context.change_buffer(*buffer);
+        return;
+    }
+
+    auto& name = parser.positional_count() > 0 ? parser[0]
+                                               : context.buffer().name();
+    Buffer* buffer = buffer_manager.get_buffer_ifp(name);
 
     if (force_reload and buffer and buffer->flags() & Buffer::Flags::File)
         reload_file_buffer(*buffer);
     else
     {
-        if (parser.get_switch("scratch"))
-        {
-            if (buffer and (force_reload or buffer->flags() != Buffer::Flags::None))
-            {
-                buffer_manager.delete_buffer(*buffer);
-                buffer = nullptr;
-            }
-
-            if (not buffer)
-                buffer = buffer_manager.create_buffer(name, flags);
-        }
-        else if (auto fifo = parser.get_switch("fifo"))
+        if (auto fifo = parser.get_switch("fifo"))
             buffer = open_fifo(name, *fifo, flags, (bool)parser.get_switch("scroll"));
         else if (not buffer)
         {
