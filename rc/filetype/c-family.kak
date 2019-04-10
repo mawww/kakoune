@@ -243,7 +243,7 @@ evaluate-commands %sh{
         add-highlighter shared/c/code/values regex \b($(join "${macros}" '|'))\b 0:value
     "
     # Hihglight functions ignoring existing keywords
-    printf %s\\n "add-highlighter shared/c/code/functions regex (\w*?)\b($(join '${keywords}' '|'))?(\h*)(?=\() 1:function"
+    printf %s\\n "add-highlighter shared/c/code/functions regex (\w*?)\b($(join "${keywords} ${attributes} ${types} ${macros}" '|'))?(\h*)(?=\() 1:function"
 }
 
 # c++ specific
@@ -297,7 +297,7 @@ evaluate-commands %sh{
         add-highlighter shared/cpp/code/values regex \b($(join "${values}" '|'))\b 0:value
     "
     # Hihglight functions ignoring existing keywords
-    printf %s\\n "add-highlighter shared/cpp/code/functions regex (\w*?)\b($(join '${keywords}' '|'))?(\h*)(?=\() 1:function"
+    printf %s\\n "add-highlighter shared/cpp/code/functions regex (\w*?)\b($(join "${keywords} ${attributes} ${types} ${macros}" '|'))?(\h*)(?=\() 1:function"
 }
 
 # c and c++ compiler macros
@@ -342,7 +342,7 @@ evaluate-commands %sh{
         add-highlighter shared/objc/code/decorators regex  @($(join "${decorators}" '|'))\b 0:attribute
     "
     # Hihglight functions ignoring existing keywords
-    printf %s\\n "add-highlighter shared/objc/code/functions regex (\w*?)\b($(join '${keywords}' '|'))?(\h*)(?=\() 1:function"
+    printf %s\\n "add-highlighter shared/objc/code/functions regex (\w*?)\b($(join "${keywords} ${attributes} ${types} ${values} ${decorators}" '|'))?(\h*)(?=\() 1:function"
 }
 
 hook global WinSetOption filetype=(c|cpp|objc) %[
