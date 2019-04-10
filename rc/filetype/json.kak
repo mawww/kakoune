@@ -8,9 +8,6 @@ hook global BufCreate .*[.](json) %{
     set-option buffer filetype json
 }
 
-hook -once global BufSetOption filetype=json %{
-}
-
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 

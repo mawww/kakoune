@@ -9,10 +9,6 @@ hook global BufCreate .*[.](ts)x? %{
     set-option buffer filetype typescript
 }
 
-hook -once global BufSetOption filetype=(java|type)script %{
-    require-module javascript
-}
-
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 

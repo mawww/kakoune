@@ -8,9 +8,23 @@ hook global BufCreate .*[.](fish) %{
     set-option buffer filetype fish
 }
 
-hook -once global BufSetOption filetype=fish %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=fish %{
     require-module fish
+
+    hook window InsertChar .* -group fish-indent fish-indent-on-char
+    hook window InsertChar \n -group fish-indent fish-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window fish-.+ }
 }
+
+hook -group fish-highlight global WinSetOption filetype=fish %{
+    add-highlighter window/fish ref fish
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/fish }
+}
+
 
 provide-module fish %{
 
@@ -61,21 +75,6 @@ define-command -hidden fish-indent-on-new-line %{
         # indent after start structure
         try %{ execute-keys -draft k<a-x><a-k>^\h*(begin|case|else|for|function|if|while)\b<ret>j<a-gt> }
     }
-}
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group fish-highlight global WinSetOption filetype=fish %{
-    add-highlighter window/fish ref fish
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/fish }
-}
-
-hook global WinSetOption filetype=fish %{
-    hook window InsertChar .* -group fish-indent fish-indent-on-char
-    hook window InsertChar \n -group fish-indent fish-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window fish-.+ }
 }
 
 }
