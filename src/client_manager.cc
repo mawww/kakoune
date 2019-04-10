@@ -19,11 +19,13 @@ ClientManager::~ClientManager()
 
 void ClientManager::clear()
 {
-    // So that clients destructor find the client manager empty
-    // so that local UI does not fork.
-    ClientList clients = std::move(m_clients);
-    clients.clear();
+    while (not m_clients.empty())
+        remove_client(*m_clients.front(), true, 0);
     m_client_trash.clear();
+
+    for (auto& window : m_free_windows)
+        window.window->run_hook_in_own_context(Hook::WinClose,
+                                               window.window->buffer().name());
     m_free_windows.clear();
     m_window_trash.clear();
 }
@@ -61,7 +63,9 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
 
     try
     {
-        CommandManager::instance().execute(init_cmds, client->context());
+        auto& context = client->context();
+        context.hooks().run_hook(Hook::ClientCreate, context.name(), context);
+        CommandManager::instance().execute(init_cmds, context);
     }
     catch (Kakoune::runtime_error& error)
     {
@@ -113,9 +117,13 @@ void ClientManager::remove_client(Client& client, bool graceful, int status)
         kak_assert(contains(m_client_trash, &client));
         return;
     }
+
     client.exit(status);
     m_client_trash.push_back(std::move(*it));
     m_clients.erase(it);
+
+    auto& context = client.context();
+    context.hooks().run_hook(Hook::ClientClose, context.name(), context);
 
     if (not graceful and m_clients.empty())
         BufferManager::instance().backup_modified_buffers();

@@ -206,6 +206,10 @@ of the file onto the filesystem
     *-debug*:::
         print the given text to the *\*debug** buffer
 
+    *-to-file* <filename>:::
+        write the given text to the given file on the host
+        filesystem.
+
 *set-face* <scope> <name> <facespec>::
     *alias* face +
     define a face in *scope*

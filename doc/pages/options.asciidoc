@@ -317,3 +317,22 @@ are exclusively available to built-in options.
     Controls which messages will be displayed in the startup info box, only messages
     relating to a Kakoune version greater than this value will be displayed. Versions
     are written as a single number: Like `20180413` for version `2018.04.13`
+
+== Current values
+
+The current value for an option can be viewed using
+<<expansions#option-expansions, `:doc expansions option-expansions`>>.
+
+For example, the current value of the `BOM` option can be displayed in the
+status line using the `echo` command:
+
+--------------
+echo %opt{BOM}
+--------------
+
+The current values for all options can be dumped to the *\*debug*\* buffer using
+the following command:
+
+-------------
+debug options
+-------------

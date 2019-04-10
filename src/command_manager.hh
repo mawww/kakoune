@@ -51,6 +51,7 @@ struct Token
         OptionExpand,
         ValExpand,
         ArgExpand,
+        FileExpand,
         CommandSeparator
     };
 

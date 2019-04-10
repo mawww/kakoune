@@ -39,6 +39,7 @@ bool fd_writable(int fd);
 String read_fd(int fd, bool text = false);
 String read_file(StringView filename, bool text = false);
 void write(int fd, StringView data);
+void write_to_file(StringView filename, StringView data);
 
 struct MappedFile
 {
