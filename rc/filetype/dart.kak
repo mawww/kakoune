@@ -8,11 +8,29 @@ hook global BufCreate .*\.dart %{
     set-option buffer filetype dart
 }
 
-hook -once global BufSetOption filetype=dart %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=dart %{
     require-module dart
+
+    set-option window static_words %opt{dart_static_words}
+
+    # cleanup trailing whitespaces when exiting insert mode
+    hook window ModeChange insert:.* -group dart-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group dart-indent dart-indent-on-new-line
+    hook window InsertChar \{ -group dart-indent dart-indent-on-opening-curly-brace
+    hook window InsertChar \} -group dart-indent dart-indent-on-closing-curly-brace
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window dart-.+ }
 }
 
-provide-module dart %{
+hook -group dart-highlight global WinSetOption filetype=dart %{
+    add-highlighter window/dart ref dart
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/dart }
+}
+
+provide-module dart %🦀
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -44,9 +62,7 @@ evaluate-commands %sh{
     classes="[A-Z][a-zA-Z0-9]*"
 
     # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=dart %{
-        set-option window static_words ${keywords} ${attributes} ${types} ${values}
-    }" | tr '|' ' '
+    printf %s\\n "declare-option str-list dart_static_words ${keywords} ${attributes} ${types} ${values}" | tr '|' ' '
 
     # Highlight keywords
     printf %s "
@@ -93,23 +109,4 @@ define-command -hidden dart-indent-on-closing-curly-brace %[
     try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group dart-highlight global WinSetOption filetype=dart %{
-    add-highlighter window/dart ref dart
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/dart }
-}
-
-hook global WinSetOption filetype=dart %{
-    # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group dart-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
-    hook window InsertChar \n -group dart-indent dart-indent-on-new-line
-    hook window InsertChar \{ -group dart-indent dart-indent-on-opening-curly-brace
-    hook window InsertChar \} -group dart-indent dart-indent-on-closing-curly-brace
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window dart-.+ }
-}
-
-# balancing }}}
-}
+🦀

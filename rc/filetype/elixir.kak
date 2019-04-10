@@ -8,9 +8,23 @@ hook global BufCreate .*[.](ex|exs) %{
     set-option buffer filetype elixir
 }
 
-hook -once global BufSetOption filetype=elixir %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=elixir %{
     require-module elixir
+
+    hook window ModeChange insert:.* -group elixir-trim-indent  elixir-trim-indent
+    hook window InsertChar \n -group elixir-indent elixir-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elixir-.+ }
 }
+
+hook -group elixir-highlight global WinSetOption filetype=elixir %{
+    add-highlighter window/elixir ref elixir
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/elixir }
+}
+
 
 provide-module elixir %[
 
@@ -64,21 +78,6 @@ define-command -hidden elixir-indent-on-new-line %{
         # indent after lines ending with do or ->
         try %{ execute-keys -draft \\; k x <a-k> ^.+(do|->)$ <ret> j <a-gt> }
     }
-}
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group elixir-highlight global WinSetOption filetype=elixir %{
-    add-highlighter window/elixir ref elixir
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/elixir }
-}
-
-hook global WinSetOption filetype=elixir %{
-    hook window ModeChange insert:.* -group elixir-trim-indent  elixir-trim-indent
-    hook window InsertChar \n -group elixir-indent elixir-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elixir-.+ }
 }
 
 ]

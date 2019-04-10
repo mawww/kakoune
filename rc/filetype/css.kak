@@ -8,9 +8,25 @@ hook global BufCreate .*[.](css) %{
     set-option buffer filetype css
 }
 
-hook -once global BufSetOption filetype=css %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=css %[
     require-module css
+
+    hook window ModeChange insert:.* -group css-trim-indent  css-trim-indent
+    hook window InsertChar \n -group css-indent css-indent-on-new-line
+    hook window InsertChar \} -group css-indent css-indent-on-closing-curly-brace
+    set-option buffer extra_word_chars '_' '-'
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window css-.+ }
+]
+
+hook -group css-highlight global WinSetOption filetype=css %{
+    add-highlighter window/css ref css
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/css }
 }
+
 
 provide-module css %[
 
@@ -62,23 +78,6 @@ define-command -hidden css-indent-on-closing-curly-brace %[
         # align to opening curly brace when alone on a line
         try %[ execute-keys -draft <a-h> <a-k> ^\h+\}$ <ret> m s \A|.\z <ret> 1<a-&> ]
     ]
-]
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group css-highlight global WinSetOption filetype=css %{
-    add-highlighter window/css ref css
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/css }
-}
-
-hook global WinSetOption filetype=css %[
-    hook window ModeChange insert:.* -group css-trim-indent  css-trim-indent
-    hook window InsertChar \n -group css-indent css-indent-on-new-line
-    hook window InsertChar \} -group css-indent css-indent-on-closing-curly-brace
-    set-option buffer extra_word_chars '_' '-'
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window css-.+ }
 ]
 
 ]

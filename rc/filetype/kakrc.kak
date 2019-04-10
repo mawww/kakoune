@@ -8,8 +8,27 @@ hook global BufCreate (.*/)?(kakrc|.*.kak) %{
     set-option buffer filetype kak
 }
 
-hook -once global BufSetOption filetype=kak %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=kak %~
     require-module kak
+
+    set-option window static_words %opt{kak_static_words}
+
+    hook window InsertChar \n -group kak-indent kak-indent-on-new-line
+    hook window InsertChar [>)}\]] -group kak-indent kak-indent-on-closing-matching
+    hook window InsertChar (?![[{(<>)}\]])[^\s\w] -group kak-indent kak-indent-on-closing-char
+    # cleanup trailing whitespaces on current line insert end
+    hook window ModeChange insert:.* -group kak-trim-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
+    set-option buffer extra_word_chars '_' '-'
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window kak-.+ }
+~
+
+hook -group kak-highlight global WinSetOption filetype=kak %{
+    add-highlighter window/kakrc ref kakrc
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/kakrc }
 }
 
 provide-module kak %🦀
@@ -52,10 +71,7 @@ evaluate-commands %sh{
     join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammar to the static completion list
-    printf '%s\n' "hook global WinSetOption filetype=kak %{
-        set-option window static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')'
-        set-option -- window extra_word_chars '_' '-'
-    }"
+    printf %s\\n "declare-option str-list kak_static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')'"
 
     # Highlight keywords (which are always surrounded by whitespace)
     printf '%s\n' "add-highlighter shared/kakrc/code/keywords regex (?:\s|\A)\K($(join "${keywords}" '|'))(?:(?=\s)|\z) 0:keyword
@@ -97,24 +113,5 @@ define-command -hidden kak-indent-on-closing-char %{
     # align to opening matching character when alone on a line
     try %{ execute-keys -draft -itersel <a-h><a-k>^\h*\Q %val{hook_param} \E$<ret>gi<a-f> %val{hook_param} <a-T>%<a-k>\w*\Q %val{hook_param} \E$<ret> s \A|.\z<ret> gi 1<a-&> }
 }
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group kak-highlight global WinSetOption filetype=kak %{
-    add-highlighter window/kakrc ref kakrc
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/kakrc }
-}
-
-hook global WinSetOption filetype=kak %~
-    hook window InsertChar \n -group kak-indent kak-indent-on-new-line
-    hook window InsertChar [>)}\]] -group kak-indent kak-indent-on-closing-matching
-    hook window InsertChar (?![[{(<>)}\]])[^\s\w] -group kak-indent kak-indent-on-closing-char
-    # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group kak-trim-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
-    set-option buffer extra_word_chars '_' '-'
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window kak-.+ }
-~
 
 🦀

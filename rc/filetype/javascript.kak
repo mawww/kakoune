@@ -13,6 +13,34 @@ hook -once global BufSetOption filetype=(java|type)script %{
     require-module javascript
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=(javascript|typescript) %{
+    require-module javascript
+
+    hook window ModeChange insert:.* -group "%val{hook_param_capture_1}-trim-indent javascript-trim-indent"
+    hook window InsertChar .* -group "%val{hook_param_capture_1}-indent javascript-indent-on-char"
+    hook window InsertChar \n -group "%val{hook_param_capture_1}-indent javascript-indent-on-new-line"
+
+    hook -once -always window WinSetOption filetype=.* "
+        remove-hooks window %val{hook_param_capture_1}-.+
+    "
+}
+
+hook -group javascript-highlight global WinSetOption filetype=javascript %{
+    add-highlighter window/javascript ref javascript
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/javascript }
+}
+
+hook -group typescript-highlight global WinSetOption filetype=typescript %{
+    add-highlighter window/typescript ref typescript
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/typescript }
+}
+
+
 provide-module javascript %🦀
 
 # Commands
@@ -93,23 +121,6 @@ define-command -hidden init-javascript-filetype -params 1 %~
     # Keywords are collected at
     # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
     add-highlighter "shared/%arg{1}/code/" regex \b(async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|let|new|of|return|static|super|switch|throw|try|typeof|var|void|while|with|yield)\b 0:keyword
-
-    # Initialization
-    # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-    hook -group "%arg{1}-highlight" global WinSetOption "filetype=%arg{1}" "
-        add-highlighter window/%arg{1} ref %arg{1}
-
-        hook -once -always window WinSetOption filetype=.* %%{ remove-highlighter window/%arg{1} }
-    "
-
-    hook global WinSetOption "filetype=%arg{1}" "
-        hook window ModeChange insert:.* -group %arg{1}-trim-indent javascript-trim-indent
-        hook window InsertChar .* -group %arg{1}-indent javascript-indent-on-char
-        hook window InsertChar \n -group %arg{1}-indent javascript-indent-on-new-line
-
-        hook -once -always window WinSetOption filetype=.* %%{ remove-hooks window %arg{1}-.+ }
-    "
 ~
 
 init-javascript-filetype javascript

@@ -8,8 +8,29 @@ hook global BufCreate .*(([.](rb))|(irbrc)|(pryrc)|(Brewfile)|(Capfile|[.]cap)|(
     set-option buffer filetype ruby
 }
 
-hook -once global BufSetOption filetype=ruby %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=ruby %{
     require-module ruby
+
+    set-option window static_words %opt{ruby_static_words}
+
+    hook window InsertChar .* -group ruby-indent ruby-indent-on-char
+    hook window InsertChar \n -group ruby-insert ruby-insert-on-new-line
+    hook window InsertChar \n -group ruby-indent ruby-indent-on-new-line
+
+    alias window alt ruby-alternative-file
+
+    hook -once -always window WinSetOption filetype=.* %{
+        remove-hooks window ruby-.+
+        unalias window alt ruby-alternative-file
+    }
+}
+
+hook -group ruby-highlight global WinSetOption filetype=ruby %{
+    add-highlighter window/ruby ref ruby
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ruby }
 }
 
 provide-module ruby %[
@@ -61,9 +82,7 @@ evaluate-commands %sh{
     meta="require|include|extend"
 
     # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=ruby %{
-        set-option window static_words ${keywords} ${attributes} ${values} ${meta}
-    }" | tr '|' ' '
+    printf %s\\n "declare-option str-list ruby_static_words ${keywords} ${attributes} ${values} ${meta}" | tr '|' ' '
 
     # Highlight keywords
     printf %s "
@@ -151,26 +170,5 @@ define-command -hidden ruby-insert-on-new-line %[
         ]
     ]
 ]
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group ruby-highlight global WinSetOption filetype=ruby %{
-    add-highlighter window/ruby ref ruby
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ruby }
-}
-
-hook global WinSetOption filetype=ruby %{
-    hook window InsertChar .* -group ruby-indent ruby-indent-on-char
-    hook window InsertChar \n -group ruby-insert ruby-insert-on-new-line
-    hook window InsertChar \n -group ruby-indent ruby-indent-on-new-line
-
-    alias window alt ruby-alternative-file
-
-    hook -once -always window WinSetOption filetype=.* %{
-        remove-hooks window ruby-.+
-        unalias window alt ruby-alternative-file
-    }
-}
 
 ]

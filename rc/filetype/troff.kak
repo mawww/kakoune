@@ -5,8 +5,16 @@ hook global BufCreate .*\.\d+ %{
     set-option buffer filetype troff
 }
 
-hook -once global BufSetOption filetype=troff %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=troff %{
     require-module troff
+}
+
+hook -group troff-highlight global WinSetOption filetype=troff %{
+    add-highlighter window/troff ref troff
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/troff }
 }
 
 provide-module troff %{
@@ -26,13 +34,5 @@ add-highlighter shared/troff/ regex '^\.IR\s+(\S+)' 1:+i
 add-highlighter shared/troff/ regex '^\.BR\s+(\S+)' 1:+b
 add-highlighter shared/troff/ regex '^\.I\s+([^\n]+)' 1:+i
 add-highlighter shared/troff/ regex '^\.B\s+([^\n]+)' 1:+b
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group troff-highlight global WinSetOption filetype=troff %{
-    add-highlighter window/troff ref troff
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/troff }
-}
 
 }

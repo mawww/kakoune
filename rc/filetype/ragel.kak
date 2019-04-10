@@ -10,8 +10,22 @@ hook global BufCreate .*[.](ragel|rl) %{
     set-option buffer filetype ragel
 }
 
-hook -once global BufSetOption filetype=ragel %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=ragel %{
     require-module ragel
+
+    hook window ModeChange insert:.* -group ragel-trim-indent  ragel-trim-indent
+    hook window InsertChar .* -group ragel-indent ragel-indent-on-char
+    hook window InsertChar \n -group ragel-indent ragel-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window ragel-.+ }
+}
+
+hook -group ragel-highlight global WinSetOption filetype=ragel %{
+    add-highlighter window/ragel ref ragel
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ragel }
 }
 
 provide-module ragel %🦀
@@ -58,21 +72,5 @@ define-command -hidden ragel-indent-on-new-line %<
         try %< execute-keys -draft k <a-x> <a-k> [[{(*]$ <ret> j <a-gt> >
     >
 >
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group ragel-highlight global WinSetOption filetype=ragel %{
-    add-highlighter window/ragel ref ragel
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ragel }
-}
-
-hook global WinSetOption filetype=ragel %{
-    hook window ModeChange insert:.* -group ragel-trim-indent  ragel-trim-indent
-    hook window InsertChar .* -group ragel-indent ragel-indent-on-char
-    hook window InsertChar \n -group ragel-indent ragel-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window ragel-.+ }
-}
 
 🦀
