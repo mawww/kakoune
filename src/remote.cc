@@ -685,18 +685,21 @@ class Server::Accepter
 public:
     Accepter(int socket)
         : m_socket_watcher(socket, FdEvents::Read,
-                           [this](FDWatcher&, FdEvents, EventMode mode) {
-                               handle_available_input(mode);
+                           [this](FDWatcher&, FdEvents events, EventMode mode) {
+                               handle_events(events, mode);
                            })
     {}
 
 private:
-    void handle_available_input(EventMode mode)
+    void handle_events(FdEvents events, EventMode mode)
     {
         const int sock = m_socket_watcher.fd();
         try
         {
-            while (not m_reader.ready() and fd_readable(sock))
+            if (events & FdEvents::Write and send_data(sock, m_send_buffer))
+                m_socket_watcher.events() &= ~FdEvents::Write;
+
+            while (events & FdEvents::Read and not m_reader.ready() and fd_readable(sock))
                 m_reader.read_available(sock);
 
             if (mode != EventMode::Normal or not m_reader.ready())
@@ -740,6 +743,25 @@ private:
                 Server::instance().remove_accepter(this);
                 break;
             }
+            case MessageType::Tversion:
+            {
+                NinePFieldReader fields{m_reader};
+                auto tag = fields.read<uint16_t>();
+                auto msize = fields.read<uint32_t>();
+                auto version = fields.read<String>();
+                m_reader.reset();
+                const char* reply_version = version == "9P2000" ? "9P2000" : "unknown";
+                {
+                    MsgWriter msg{m_send_buffer};
+                    NinePFieldWriter fields{m_send_buffer};
+                    fields.write(MessageType::Rversion);
+                    fields.write(tag);
+                    fields.write(msize);
+                    fields.write(reply_version);
+                }
+                m_socket_watcher.events() |= FdEvents::Write;
+                break;
+            }
             default:
                 write_to_debug_buffer("invalid introduction message received");
                 close(sock);
@@ -756,6 +778,7 @@ private:
 
     FDWatcher m_socket_watcher;
     MsgReader m_reader;
+    RemoteBuffer m_send_buffer;
 };
 
 Server::Server(String session_name)

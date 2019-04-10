@@ -49,6 +49,11 @@ private:
         write_raw(str.data(), (int)str.length());
     }
 
+    void write_field(const char* str)
+    {
+        write_field(StringView{str});
+    }
+
     void write_field(const String& str)
     {
         write_field(StringView{str});
@@ -57,7 +62,7 @@ private:
     template<typename T>
     void write_field(ConstArrayView<T> view)
     {
-        write_field<uint32_t>(view.size());
+        write_field(convert_size(view.size()));
         for (auto& val : view)
             write_field(val);
     }
@@ -71,7 +76,7 @@ private:
     template<typename Key, typename Val, MemoryDomain domain>
     void write_field(const HashMap<Key, Val, domain>& map)
     {
-        write_field<uint32_t>(map.size());
+        write_field(convert_size(map.size()));
         for (auto& val : map)
         {
             write_field(val.key);
