@@ -14,13 +14,18 @@ namespace Kakoune
 ClientManager::ClientManager() = default;
 ClientManager::~ClientManager()
 {
-    clear();
+    clear(true);
 }
 
-void ClientManager::clear()
+void ClientManager::clear(bool disconnect_clients)
 {
-    while (not m_clients.empty())
-        remove_client(*m_clients.front(), true, 0);
+    if (disconnect_clients)
+    {
+        while (not m_clients.empty())
+            remove_client(*m_clients.front(), true, 0);
+    }
+    else
+        m_clients.clear();
     m_client_trash.clear();
 
     for (auto& window : m_free_windows)
