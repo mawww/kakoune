@@ -143,7 +143,10 @@ name. Hooks with no description will always use an empty string.
 *ClientCreate* `client name`::
     executed when a new client is created.
 
-*ClientClose* `client name`::
+*ClientClosePre* `client name`::
+    executed before a client is closed
+
+*ClientClosePost* `client name`::
     executed when a client is closed, after it was removed from the client
     list.
 
