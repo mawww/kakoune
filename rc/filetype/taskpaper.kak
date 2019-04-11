@@ -8,9 +8,21 @@ hook global BufCreate .*\.taskpaper %{
     set-option buffer filetype taskpaper
 }
 
-hook -once global BufSetOption filetype=taskpaper %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=taskpaper %{
     require-module taskpaper
+
+    hook window InsertChar \n -group taskpaper-indent taskpaper-indent-on-new-line
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window taskpaper-.+ }
 }
+
+hook -group taskpaper-highlight global WinSetOption filetype=taskpaper %{
+    add-highlighter window/taskpaper ref taskpaper
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/taskpaper }
+}
+
 
 provide-module taskpaper %{
 
@@ -37,19 +49,6 @@ define-command -hidden taskpaper-indent-on-new-line %{
         # cleanup trailing white spaces on previous line
         try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
     }
-}
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group taskpaper-highlight global WinSetOption filetype=taskpaper %{
-    add-highlighter window/taskpaper ref taskpaper
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/taskpaper }
-}
-
-hook global WinSetOption filetype=taskpaper %{
-    hook window InsertChar \n -group taskpaper-indent taskpaper-indent-on-new-line
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window taskpaper-.+ }
 }
 
 }

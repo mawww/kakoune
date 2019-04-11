@@ -8,9 +8,25 @@ hook global BufCreate .*[.](cabal) %{
     set-option buffer filetype cabal
 }
 
-hook -once global BufSetOption filetype=cabal %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=cabal %[
     require-module cabal
+
+    hook window ModeChange insert:.* -group cabal-trim-indent  cabal-trim-indent
+    hook window InsertChar \n -group cabal-indent cabal-indent-on-new-line
+    hook window InsertChar \{ -group cabal-indent cabal-indent-on-opening-curly-brace
+    hook window InsertChar \} -group cabal-indent cabal-indent-on-closing-curly-brace
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window cabal-.+ }
+]
+
+hook -group cabal-highlight global WinSetOption filetype=cabal %{
+    add-highlighter window/cabal ref cabal
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/cabal }
 }
+
 
 provide-module cabal %[
 
@@ -59,24 +75,6 @@ define-command -hidden cabal-indent-on-closing-curly-brace %[
         # align to opening curly brace when alone on a line
         try %[ execute-keys -draft <a-h> <a-k> ^\h+\}$ <ret> h m s \A|.\z<ret> 1<a-&> ]
     ]
-]
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group cabal-highlight global WinSetOption filetype=cabal %{
-    add-highlighter window/cabal ref cabal
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/cabal }
-
-}
-
-hook global WinSetOption filetype=cabal %[
-    hook window ModeChange insert:.* -group cabal-trim-indent  cabal-trim-indent
-    hook window InsertChar \n -group cabal-indent cabal-indent-on-new-line
-    hook window InsertChar \{ -group cabal-indent cabal-indent-on-opening-curly-brace
-    hook window InsertChar \} -group cabal-indent cabal-indent-on-closing-curly-brace
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window cabal-.+ }
 ]
 
 ]

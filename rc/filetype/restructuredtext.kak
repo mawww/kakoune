@@ -5,8 +5,16 @@ hook global BufCreate .*[.](rst) %{
     set-option buffer filetype restructuredtext
 }
 
-hook -once global BufSetOption filetype=restructuredtext %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=restructuredtext %{
     require-module restructuredtext
+}
+
+hook -group restructuredtext-highlight global WinSetOption filetype=restructuredtext %{
+    add-highlighter window/restructuredtext ref restructuredtext
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/restructuredtext }
 }
 
 provide-module restructuredtext %{
@@ -70,13 +78,5 @@ add-highlighter shared/restructuredtext/content/ regex (\A|\n\n)(~{3,}\n)?[^\n]+
 add-highlighter shared/restructuredtext/content/ regex [^*](\*\*([^\s*]|([^\s*][^*]*[^\s*]))\*\*)[^*] 1:bold
 add-highlighter shared/restructuredtext/content/ regex [^*](\*([^\s*]|([^\s*][^*]*[^\s*]))\*)[^*] 1:italic
 add-highlighter shared/restructuredtext/content/ regex [^`](``([^\s`]|([^\s`][^`]*[^\s`]))``)[^`] 1:mono
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group restructuredtext-highlight global WinSetOption filetype=restructuredtext %{
-    add-highlighter window/restructuredtext ref restructuredtext
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/restructuredtext }
-}
 
 }

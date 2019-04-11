@@ -8,9 +8,23 @@ hook global BufCreate .*[.](feature|story) %{
     set-option buffer filetype cucumber
 }
 
-hook -once global BufSetOption filetype=cucumber %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=cucumber %{
     require-module cucumber
+
+    hook window ModeChange insert:.* -group cucumber-trim-indent  cucumber-trim-indent
+    hook window InsertChar \n -group cucumber-indent cucumber-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window cucumber-.+ }
 }
+
+hook -group cucumber-highlight global WinSetOption filetype=cucumber %{
+    add-highlighter window/cucumber ref cucumber
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/cucumber }
+}
+
 
 provide-module cucumber %{
 
@@ -77,21 +91,6 @@ define-command -hidden cucumber-indent-on-new-line %{
         # indent after lines containing :
         try %{ execute-keys -draft <space> k x <a-k> : <ret> j <a-gt> }
     }
-}
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group cucumber-highlight global WinSetOption filetype=cucumber %{
-    add-highlighter window/cucumber ref cucumber
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/cucumber }
-}
-
-hook global WinSetOption filetype=cucumber %{
-    hook window ModeChange insert:.* -group cucumber-trim-indent  cucumber-trim-indent
-    hook window InsertChar \n -group cucumber-indent cucumber-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window cucumber-.+ }
 }
 
 }

@@ -8,8 +8,21 @@ hook global BufCreate .*[.](elm) %{
     set-option buffer filetype elm
 }
 
-hook -once global BufSetOption filetype=elm %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=elm %{
     require-module elm
+
+    hook window ModeChange insert:.* -group elm-trim-indent  elm-trim-indent
+    hook window InsertChar \n -group elm-indent elm-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elm-.+ }
+}
+
+hook -group elm-highlight global WinSetOption filetype=elm %{
+    add-highlighter window/elm ref elm
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/elm }
 }
 
 provide-module elm %[
@@ -55,21 +68,6 @@ define-command -hidden elm-indent-on-new-line %{
         # indent after lines beginning with condition or ending with expression or =(
         try %{ elm-indent-after }
     }
-}
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group elm-highlight global WinSetOption filetype=elm %{
-    add-highlighter window/elm ref elm
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/elm }
-}
-
-hook global WinSetOption filetype=elm %{
-    hook window ModeChange insert:.* -group elm-trim-indent  elm-trim-indent
-    hook window InsertChar \n -group elm-indent elm-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elm-.+ }
 }
 
 ]

@@ -2,9 +2,15 @@ hook global BufCreate .*\.ks %{
     set-option buffer filetype kickstart
 }
 
-hook -once global BufSetOption filetype=kickstart %{
+hook global WinSetOption filetype=kickstart %{
     require-module kickstart
 }
+
+hook -group kickstart-highlight global WinSetOption filetype=kickstart %{
+    add-highlighter window/kickstart ref kickstart
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/kickstart }
+}
+
 
 provide-module kickstart %{
 
@@ -28,11 +34,5 @@ add-highlighter shared/kickstart/packages/ regex '^\h*%end\b' 0:type
 add-highlighter shared/kickstart/shell/ regex '\A\h*\K%(pre-install|pre|post)\b' 0:type
 add-highlighter shared/kickstart/shell/ regex '^\h*%end\b' 0:type
 add-highlighter shared/kickstart/shell/ ref sh
-
-
-hook -group kickstart-highlight global WinSetOption filetype=kickstart %{
-    add-highlighter window/kickstart ref kickstart
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/kickstart }
-}
 
 }

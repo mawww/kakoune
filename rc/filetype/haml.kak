@@ -8,9 +8,23 @@ hook global BufCreate .*[.](haml) %{
     set-option buffer filetype haml
 }
 
-hook -once global BufSetOption filetype=haml %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=haml %{
     require-module haml
+
+    hook window ModeChange insert:.* -group haml-trim-indent  haml-trim-indent
+    hook window InsertChar \n -group haml-indent haml-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haml-.+ }
 }
+
+hook -group haml-highlight global WinSetOption filetype=haml %{
+    add-highlighter window/haml ref haml
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/haml }
+}
+
 
 provide-module haml %[
 require-module ruby
@@ -53,21 +67,6 @@ define-command -hidden haml-indent-on-new-line %{
         # indent after lines beginning with : or -
         try %{ execute-keys -draft k <a-x> <a-k> ^\h*[:-] <ret> j <a-gt> }
     }
-}
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group haml-highlight global WinSetOption filetype=haml %{
-    add-highlighter window/haml ref haml
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/haml }
-}
-
-hook global WinSetOption filetype=haml %{
-    hook window ModeChange insert:.* -group haml-trim-indent  haml-trim-indent
-    hook window InsertChar \n -group haml-indent haml-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haml-.+ }
 }
 
 ]

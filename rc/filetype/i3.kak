@@ -2,11 +2,27 @@ hook global BufCreate .*(sway|i3)/config %{
     set buffer filetype i3
 }
 
-hook -once global BufSetOption filetype=i3 %{
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=i3 %[
     require-module i3
+
+    # cleanup trailing whitespaces when exiting insert mode
+    hook window ModeChange insert:.* -group i3-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group i3-indent i3-indent-on-new-line
+    hook window InsertChar \} -group i3-indent i3-indent-on-closing-curly-brace
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window i3-.+ }
+]
+
+hook -group i3-highlight global WinSetOption filetype=i3 %{
+    add-highlighter window/i3 ref i3
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/i3 }
 }
 
-provide-module i3 %{
+
+provide-module i3 %[
 
 add-highlighter shared/i3 regions
 add-highlighter shared/i3/code default-region group
@@ -69,21 +85,4 @@ define-command -hidden i3-indent-on-closing-curly-brace %[
     try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group i3-highlight global WinSetOption filetype=i3 %{
-    add-highlighter window/i3 ref i3
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/i3 }
-}
-
-hook global WinSetOption filetype=i3 %[
-    # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group i3-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
-    hook window InsertChar \n -group i3-indent i3-indent-on-new-line
-    hook window InsertChar \} -group i3-indent i3-indent-on-closing-curly-brace
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window i3-.+ }
 ]
-
-}
