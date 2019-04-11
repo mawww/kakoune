@@ -48,7 +48,6 @@ add-highlighter shared/org/comment region (^|\h)\K#[^+] $ fill comment
 # Table
 add-highlighter shared/org/table region (^|\h)\K[|][^+] $ fill string
 
-
 # Various blocks
 evaluate-commands %sh{
     blocks="EXAMPLE QUOTE EXPORT CENTER VERSE"
@@ -61,6 +60,7 @@ add-highlighter shared/org/inline/text/example regex ^(\h*)[:]\h+[^\n]* 0:meta
 
 # Unordered list items start with `-', `+', or `*'
 add-highlighter shared/org/inline/text/unordered-lists regex ^(?:\h*)([-+])\h+ 1:bullet
+
 # But `*' list must be indented with at least single space, if not it is treated as a heading
 add-highlighter shared/org/inline/text/star-list regex ^(?:\h+)([*])\h+ 1:bullet
 
@@ -68,11 +68,10 @@ add-highlighter shared/org/inline/text/star-list regex ^(?:\h+)([*])\h+ 1:bullet
 add-highlighter shared/org/inline/text/ordered-lists regex ^(?:\h*)(\d+[.)])\h+ 1:bullet
 
 # Headings
-add-highlighter shared/org/inline/text/heading regex "^[*]+\h+[^\n]+"                    0:header
+add-highlighter shared/org/inline/text/heading regex "^[*]+\h+[^\n]+" 0:header
 
 # Options
-add-highlighter shared/org/inline/text/option regex "(?i)#\+[a-z]\w*\b"                 0:module
-
+add-highlighter shared/org/inline/text/option regex "(?i)#\+[a-z]\w*\b" 0:module
 
 # Markup
 add-highlighter shared/org/inline/text/italic        regex "\s([/][^\s/].*?[^\s/]*?[/])\W"     1:italic
@@ -85,6 +84,16 @@ add-highlighter shared/org/inline/text/underlined    regex "\s([_][^\s_].*?[^\s_
 add-highlighter shared/org/inline/text/bold          regex "\s([*][^\s*].*?[^\s*]*?[*])\W"     1:bold
 add-highlighter shared/org/inline/text/link          regex "\[[^\n]+\]\]"                      0:link
 
+# Commands
+# ‾‾‾‾‾‾‾‾
+
+define-command -hidden org-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
+        # follow list item indentation and amount of leading whitespaces
+        try %{ execute-keys -draft '<a-/>^\h*([-+]|\h+[*]|\d[.)])<ret><a-x>s^\h*([+-]|\h+[*][^*]|\d[.)])\h*<ret>y/^\n<ret>PxHr<space>' }
+    }
+}
+
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -93,3 +102,7 @@ hook -group org-highlight global WinSetOption filetype=org %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/org }
 }
 
+hook global WinSetOption filetype=org %{
+    hook window InsertChar \n -group org-indent org-indent-on-new-line
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window org-.+ }
+}
