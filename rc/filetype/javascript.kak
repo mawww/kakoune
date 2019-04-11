@@ -15,9 +15,9 @@ hook global BufCreate .*[.](ts)x? %{
 hook global WinSetOption filetype=(javascript|typescript) %{
     require-module javascript
 
-    hook window ModeChange insert:.* -group "%val{hook_param_capture_1}-trim-indent javascript-trim-indent"
-    hook window InsertChar .* -group "%val{hook_param_capture_1}-indent javascript-indent-on-char"
-    hook window InsertChar \n -group "%val{hook_param_capture_1}-indent javascript-indent-on-new-line"
+    hook window ModeChange insert:.* -group "%val{hook_param_capture_1}-trim-indent" javascript-trim-indent
+    hook window InsertChar .* -group "%val{hook_param_capture_1}-indent" javascript-indent-on-char
+    hook window InsertChar \n -group "%val{hook_param_capture_1}-indent" javascript-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* "
         remove-hooks window %val{hook_param_capture_1}-.+
@@ -26,13 +26,11 @@ hook global WinSetOption filetype=(javascript|typescript) %{
 
 hook -group javascript-highlight global WinSetOption filetype=javascript %{
     add-highlighter window/javascript ref javascript
-
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/javascript }
 }
 
 hook -group typescript-highlight global WinSetOption filetype=typescript %{
     add-highlighter window/typescript ref typescript
-
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/typescript }
 }
 
