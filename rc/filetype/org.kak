@@ -71,18 +71,20 @@ add-highlighter shared/org/inline/text/ordered-lists regex ^(?:\h*)(\d+[.)])\h+ 
 add-highlighter shared/org/inline/text/heading regex "^[*]+\h+[^\n]+" 0:header
 
 # Options
-add-highlighter shared/org/inline/text/option regex "(?i)#\+[a-z]\w*\b" 0:module
+add-highlighter shared/org/inline/text/option regex "(?i)#\+[a-z]\w*\b[^\n]*" 0:module
 
 # Markup
-add-highlighter shared/org/inline/text/italic        regex "\s([/][^\s/].*?[^\s/]*?[/])\W"     1:italic
-add-highlighter shared/org/inline/text/strikethrough regex "\s([+][^\s+].*?[^\s+]*?[+])\W"     1:strikethrough
-add-highlighter shared/org/inline/text/verbatim      regex "\s([=][^\s=].*?[^\s=]*?[=])\W"     1:meta
-add-highlighter shared/org/inline/text/code          regex "\s([~][^\s~].*?[^\s~]*?[~])\W"     1:mono
-add-highlighter shared/org/inline/text/inline-math   regex "\s([$][^\s$].*?[^\s$]*?[$])\W"     1:mono
-add-highlighter shared/org/inline/text/math          regex "\s([$]{2}[^\s].*?[^\s]*?[$]{2})\W" 1:mono
-add-highlighter shared/org/inline/text/underlined    regex "\s([_][^\s_].*?[^\s_]*?[_])\W"     1:underline
-add-highlighter shared/org/inline/text/bold          regex "\s([*][^\s*].*?[^\s*]*?[*])\W"     1:bold
-add-highlighter shared/org/inline/text/link          regex "\[[^\n]+\]\]"                      0:link
+add-highlighter shared/org/inline/text/italic        regex "(^|\s)([/]\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[/])\W"       2:italic
+add-highlighter shared/org/inline/text/strikethrough regex "(^|\s)([+]\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[+])\W"       2:strikethrough
+add-highlighter shared/org/inline/text/verbatim      regex "(^|\s)([=]\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[=])\W"       2:meta
+add-highlighter shared/org/inline/text/code          regex "(^|\s)([~]\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[~])\W"       2:mono
+add-highlighter shared/org/inline/text/inline-math   regex "(^|\s)([$]\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[$])\W"       2:mono
+add-highlighter shared/org/inline/text/math          regex "(^|\s)([$]{2}\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[$]{2})\W" 2:mono
+add-highlighter shared/org/inline/text/underlined    regex "(^|\s)([_]\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[_])\W"       2:underline
+add-highlighter shared/org/inline/text/bold          regex "(^|\s)([*]\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[*])\W"       2:bold
+add-highlighter shared/org/inline/text/date          regex "(?:^|\s)([\[][^\s][^\n]*?[^\s]*?[\]])\W"                      0:variable
+add-highlighter shared/org/inline/text/link          regex "(?:^|\s)([\[]{2}[^\n]*?[\]]{2})\W"                            0:link
+add-highlighter shared/org/inline/text/properties    regex "^\h*([:][^\s][^\n]*?[^\s]*?[:])\W"                            1:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
