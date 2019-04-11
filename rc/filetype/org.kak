@@ -87,7 +87,7 @@ add-highlighter shared/org/inline/text/date          regex "(?:^|\h)([\[][^\s][^
 add-highlighter shared/org/inline/text/link          regex "(?:^|\h)([\[]{2}[^\n]*?[\]]{2})\W"                            0:link
 add-highlighter shared/org/inline/text/drawer        regex "^\h*([:][^\s][^\n]*?[^\s]*?[:])\W"                            1:keyword
 
-add-highlighter shared/org/math region '[$]{2}' '[$]{2}' fill mono
+add-highlighter shared/org/math region '[$]{2}|\\\[' '[$]{2}|\\\]' fill mono
 # Commands
 # ‾‾‾‾‾‾‾‾
 
