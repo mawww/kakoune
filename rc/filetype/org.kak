@@ -90,7 +90,7 @@ add-highlighter shared/org/inline/text/link          regex "\[[^\n]+\]\]"       
 define-command -hidden org-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # follow list item indentation and amount of leading whitespaces
-        try %{ execute-keys -draft 'k<a-x>s\S<ret><space><a-/>^\h*([-+]|\h+[*]|\d[.)])<ret><a-x>s^\h*([+-]|\h+[*][^*]|\d[.)])\h*<ret>y/^\n<ret>PxHr<space>' }
+        try %{ execute-keys -draft 'k<a-x>s\S<ret><space><a-?>^\h*([-+]|\h+[*]|\d[.)])<ret><a-x>s^\h*([+-]|\h+[*][^*]|\d[.)])\h*<ret>y/^\n<ret>PxHr<space>' }
         try %{ execute-keys -draft -itersel 'k<a-x>s\h+$<ret>d' }
     }
 }
