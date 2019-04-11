@@ -111,6 +111,8 @@ bool ClientManager::has_pending_inputs() const
 
 void ClientManager::remove_client(Client& client, bool graceful, int status)
 {
+    auto& context = client.context();
+    context.hooks().run_hook(Hook::ClientClosePre, context.name(), context);
     auto it = find(m_clients, &client);
     if (it == m_clients.end())
     {
@@ -122,8 +124,7 @@ void ClientManager::remove_client(Client& client, bool graceful, int status)
     m_client_trash.push_back(std::move(*it));
     m_clients.erase(it);
 
-    auto& context = client.context();
-    context.hooks().run_hook(Hook::ClientClose, context.name(), context);
+    context.hooks().run_hook(Hook::ClientClosePost, context.name(), context);
 
     if (not graceful and m_clients.empty())
         BufferManager::instance().backup_modified_buffers();
