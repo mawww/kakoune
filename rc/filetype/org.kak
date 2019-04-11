@@ -46,7 +46,7 @@ add-highlighter shared/org/src_block region ^(\h*)(?i)#\+BEGIN_SRC(\h+|\n) ^(\h*
 add-highlighter shared/org/comment region (^|\h)\K#[^+] $ fill comment
 
 # Table
-add-highlighter shared/org/table region (^|\h)\K[|][^+] $ fill string
+add-highlighter shared/org/table region ^\h*[|][^+] $ fill string
 
 # Various blocks
 evaluate-commands %sh{
