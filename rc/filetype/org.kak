@@ -81,13 +81,13 @@ add-highlighter shared/org/inline/text/strikethrough regex "(^|\h)([+]\S+?[\w\S\
 add-highlighter shared/org/inline/text/verbatim      regex "(^|\h)([=]\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[=])\W"       2:meta
 add-highlighter shared/org/inline/text/code          regex "(^|\h)([~]\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[~])\W"       2:mono
 add-highlighter shared/org/inline/text/inline-math   regex "(^|\h)([$]\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[$])\W"       2:mono
-add-highlighter shared/org/inline/text/math          regex "(^|\h)([$]{2}\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[$]{2})\W" 2:mono
 add-highlighter shared/org/inline/text/underlined    regex "(^|\h)([_]\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[_])\W"       2:underline
 add-highlighter shared/org/inline/text/bold          regex "(^|\h)([*]\S+?[\w\S\h]*?([\n]{1})?[\w\S\h]*?\S+?[*])\W"       2:bold
 add-highlighter shared/org/inline/text/date          regex "(?:^|\h)([\[][^\s][^\n]*?[^\s]*?[\]])\W"                      0:variable
 add-highlighter shared/org/inline/text/link          regex "(?:^|\h)([\[]{2}[^\n]*?[\]]{2})\W"                            0:link
 add-highlighter shared/org/inline/text/drawer        regex "^\h*([:][^\s][^\n]*?[^\s]*?[:])\W"                            1:keyword
 
+add-highlighter shared/org/math region '[$]{2}' '[$]{2}' fill mono
 # Commands
 # ‾‾‾‾‾‾‾‾
 
