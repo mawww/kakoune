@@ -49,15 +49,18 @@ evaluate-commands %sh{
 
     ## markup
     echo "
-        face global title blue
+        face global title ${blue}
         face global header ${orange1}
+        face global section ${light_orange1}
+        face global subsection ${tan3}
+        face global subsubsection ${orange2}
         face global bold ${orange2}+b
         face global italic ${orange3}+i
         face global underline ${orange3}+u
         face global strikethrough ${orange1}
         face global mono ${yellow1}
         face global block ${tan1}
-        face global link blue
+        face global link ${blue}
         face global bullet ${gray1}
         face global list ${gray1}
     "
@@ -73,7 +76,7 @@ evaluate-commands %sh{
         face global SecondaryCursorEol black,${orange2}+fg
         face global LineNumbers ${text_light},${background}
         face global LineNumberCursor ${text},${gray1}+b
-        face global MenuForeground ${text_light},blue
+        face global MenuForeground ${text_light},${blue}
         face global MenuBackground ${orange1},${window}
         face global MenuInfo ${gray1}
         face global Information white,${window}

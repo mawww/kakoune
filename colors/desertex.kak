@@ -17,6 +17,9 @@ face global meta rgb:ee799f
 # Markup
 face global title         blue
 face global header        cyan
+face global section       blue
+face global subsection    magenta
+face global subsubsection red
 face global bold          red+b
 face global italic        yellow+i
 face global underline     blue+u

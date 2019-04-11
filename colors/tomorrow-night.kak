@@ -39,8 +39,11 @@ evaluate-commands %sh{
 
     ## markup
     echo "
-        face global title blue
+        face global title ${blue}
         face global header ${aqua}
+        face global section ${aqua}
+        face global subsection ${purple}
+        face global subsubsection ${magenta}
         face global bold ${yellow}+b
         face global italic ${orange}+i
         face global underline ${blue}+u
