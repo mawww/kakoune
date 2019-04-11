@@ -20,8 +20,8 @@ evaluate-commands %sh{
                cmake coffee css cucumber dart diff d dockerfile
                elixir elm etc exherbo fish gas git go haml haskell
                hbs html i3 ini java javascript json julia justrc
-               kickstart latex lisp lua mail makefile markdown
-               mercurial moon nim ocaml org perl php pony protobuf
+               kickstart latex emacs-lisp lisp lua mail makefile markdown
+               mercurial moon nim ocaml perl php pony protobuf
                pug python ragel restructuredtext ruby rust sass
                scala scheme scss sh sql swift systemd taskpaper
                toml troff tupfile void-linux yaml"
