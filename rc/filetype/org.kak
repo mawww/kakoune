@@ -27,7 +27,7 @@ evaluate-commands %sh{
                toml troff tupfile void-linux yaml"
 
     for lang in ${languages}; do
-        printf "%s\n" "add-highlighter shared/org/${lang} region '#\+(?i)BEGIN_SRC(?I)\h+${lang}\b' '#\+(?i)END_SRC' regions"
+        printf "%s\n" "add-highlighter shared/org/${lang} region '#\+(?i)BEGIN_SRC(?I)\h+${lang}\b' '(?i)#\+END_SRC' regions"
         printf "%s\n" "add-highlighter shared/org/${lang}/ default-region fill meta"
         case ${lang} in
             # here we need to declare all workarounds for Org-mode supported languages
@@ -35,7 +35,7 @@ evaluate-commands %sh{
             emacs-lisp) ref="lisp"    ;;
             *)          ref="${lang}" ;;
         esac
-        printf "%s\n" "add-highlighter shared/org/${lang}/inner region \A#\+(?i)BEGIN_SRC(?I)[^\n]*\K '(?=#\+(?i)END_SRC)' ref ${ref}"
+        printf "%s\n" "add-highlighter shared/org/${lang}/inner region \A#\+(?i)BEGIN_SRC(?I)\h+[^\n]+\K '(?i)(?=#\+END_SRC)' ref ${ref}"
     done
 }
 
