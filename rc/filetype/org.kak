@@ -16,12 +16,13 @@ add-highlighter shared/org/inline default-region regions
 add-highlighter shared/org/inline/text default-region group
 
 evaluate-commands %sh{
-    languages="arch-linux asciidoc cabal c cpp objc clojure
-               cmake coffee css cucumber dart diff d dockerfile
-               elixir elm etc exherbo fish gas git go haml haskell
-               hbs html i3 ini java javascript json julia justrc
-               kickstart latex emacs-lisp lisp lua mail makefile markdown
-               mercurial moon nim ocaml perl php pony protobuf
+    languages="arch-linux asciidoc c cabal clojure
+               cmake coffee cpp css cucumber d dart diff
+               dockerfile elixir elm emacs-lisp etc exherbo
+               fish gas git go haml haskell hbs html i3 ini
+               java javascript json julia justrc kickstart
+               latex lisp lua mail makefile markdown mercurial
+               moon nim objc ocaml org perl php pony protobuf
                pug python ragel restructuredtext ruby rust sass
                scala scheme scss sh sql swift systemd taskpaper
                toml troff tupfile void-linux yaml"
@@ -89,8 +90,8 @@ add-highlighter shared/org/inline/text/verbatim       regex "(^|\h)([=]\S[^\n]*?
 add-highlighter shared/org/inline/text/code           regex "(^|\h)([~]\S[^\n]*?\n?[^\n]*?[~])\W"     2:mono
 add-highlighter shared/org/inline/text/inline-math    regex "(^|\h)([$]\S[^\n]*?\n?[^\n]*?[$])\W"     2:mono
 add-highlighter shared/org/inline/text/underlined     regex "(^|\h)([_]\S[^\n]*?\n?[^\n]*?[_])\W"     2:underline
-add-highlighter shared/org/inline/text/date           regex "(?:^|\h)([\[][^\s][^\n]*?[^\s]*?[\]])\W" 0:variable
-add-highlighter shared/org/inline/text/link           regex "(?:^|\h)([\[]{2}[^\n]*?[\]]{2})\W"       0:link
+add-highlighter shared/org/inline/text/date           regex "[\[][^\s][^\n]*?[^\s]*?[\]]"             0:variable
+add-highlighter shared/org/inline/text/link           regex "[\[]{2}[^\n]*?[\]]{2}"                   0:link
 add-highlighter shared/org/inline/text/drawer         regex "^\h*([:][^\s][^\n]*?[^\s]*?[:])\W"       1:keyword
 
 ## bold is kinda tricky because we need to HL everything but headings, so it's split up on several regexps
