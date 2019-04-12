@@ -79,12 +79,12 @@ add-highlighter shared/org/inline/text/title      regex "(?i)#\+title:([^\n]+)" 
 add-highlighter shared/org/inline/text/requisites regex "(?i)#\+(?:author|email):([^\n]+)" 0:module 1:keyword
 
 # Markup
-add-highlighter shared/org/inline/text/italic         regex "(^|\h)[/]\S[^\n]*?\n?[^\n]*?[/]\W"       2:italic
-add-highlighter shared/org/inline/text/strikethrough  regex "(^|\h)[+]\S[^\n]*?\n?[^\n]*?[+]\W"       2:strikethrough
-add-highlighter shared/org/inline/text/verbatim       regex "(^|\h)[=]\S[^\n]*?\n?[^\n]*?[=]\W"       2:meta
-add-highlighter shared/org/inline/text/code           regex "(^|\h)[~]\S[^\n]*?\n?[^\n]*?[~]\W"       2:mono
-add-highlighter shared/org/inline/text/inline-math    regex "(^|\h)[$]\S[^\n]*?\n?[^\n]*?[$]\W"       2:mono
-add-highlighter shared/org/inline/text/underlined     regex "(^|\h)[_]\S[^\n]*?\n?[^\n]*?[_]\W"       2:underline
+add-highlighter shared/org/inline/text/italic         regex "(^|\h)([/]\S[^\n]*?\n?[^\n]*?[/])\W"     2:italic
+add-highlighter shared/org/inline/text/strikethrough  regex "(^|\h)([+]\S[^\n]*?\n?[^\n]*?[+])\W"     2:strikethrough
+add-highlighter shared/org/inline/text/verbatim       regex "(^|\h)([=]\S[^\n]*?\n?[^\n]*?[=])\W"     2:meta
+add-highlighter shared/org/inline/text/code           regex "(^|\h)([~]\S[^\n]*?\n?[^\n]*?[~])\W"     2:mono
+add-highlighter shared/org/inline/text/inline-math    regex "(^|\h)([$]\S[^\n]*?\n?[^\n]*?[$])\W"     2:mono
+add-highlighter shared/org/inline/text/underlined     regex "(^|\h)([_]\S[^\n]*?\n?[^\n]*?[_])\W"     2:underline
 add-highlighter shared/org/inline/text/date           regex "(?:^|\h)([\[][^\s][^\n]*?[^\s]*?[\]])\W" 0:variable
 add-highlighter shared/org/inline/text/link           regex "(?:^|\h)([\[]{2}[^\n]*?[\]]{2})\W"       0:link
 add-highlighter shared/org/inline/text/drawer         regex "^\h*([:][^\s][^\n]*?[^\s]*?[:])\W"       1:keyword
