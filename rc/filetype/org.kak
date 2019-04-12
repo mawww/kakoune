@@ -90,9 +90,7 @@ add-highlighter shared/org/inline/text/link           regex "(?:^|\h)([\[]{2}[^\
 add-highlighter shared/org/inline/text/drawer         regex "^\h*([:][^\s][^\n]*?[^\s]*?[:])\W"       1:keyword
 
 ## bold is kinda tricky because we need to HL everything but headings, so it's split up on several regexps
-add-highlighter shared/org/inline/text/bold           regex "(^|\h)([*][^*\s][^\n]*?(\n{1})?[^\n]*?[*])\W" 2:bold
-add-highlighter shared/org/inline/text/bold-stars-bol regex "([*]{3,})\n"                                  1:bold
-add-highlighter shared/org/inline/text/bold-stars-mol regex "\h([*]{3})[^*\w]"                             1:bold
+add-highlighter shared/org/inline/text/bold           regex "(?:^|\h)([*][^*\s][^\n]*?(\n{1})?[^\n]*?[*])\W|([*]{3,})\n|\h([*]{3})[^*\w]" 1:bold
 
 add-highlighter shared/org/math region '[$]{2}|\\\[' '[$]{2}|\\\]' fill mono
 
