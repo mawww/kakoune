@@ -68,10 +68,10 @@ add-highlighter shared/org/inline/text/star-list regex ^(?:\h+)([*])\h+ 1:bullet
 add-highlighter shared/org/inline/text/ordered-lists regex ^(?:\h*)(\d+[.)])\h+ 1:bullet
 
 # Headings
-add-highlighter shared/org/inline/text/heading       regex "^([*]{1}|[*]{5})\h+[^\n]+"  0:header
-add-highlighter shared/org/inline/text/section       regex "^([*]{2}|[*]{6})\h+[^\n]+"  0:section
-add-highlighter shared/org/inline/text/subsection    regex "^([*]{3}|[*]{7})\h+[^\n]+"  0:subsection
-add-highlighter shared/org/inline/text/subsubsection regex "^([*]{4}|[*]{8,})\h+[^\n]+" 0:subsubsection
+add-highlighter shared/org/inline/text/heading       regex "^([*]{1}|[*]{5}|[*]{9})\h+[^\n]+"   0:header
+add-highlighter shared/org/inline/text/section       regex "^([*]{2}|[*]{6}|[*]{10})\h+[^\n]+"  0:section
+add-highlighter shared/org/inline/text/subsection    regex "^([*]{3}|[*]{7}|[*]{11})\h+[^\n]+"  0:subsection
+add-highlighter shared/org/inline/text/subsubsection regex "^([*]{4}|[*]{8}|[*]{12,})\h+[^\n]+" 0:subsubsection
 
 # Options
 add-highlighter shared/org/inline/text/option     regex "(?i)#\+[a-z]\w*\b[^\n]*"          0:module
