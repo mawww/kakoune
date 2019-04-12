@@ -322,9 +322,9 @@ struct CommandDesc
 template<bool force_reload>
 void edit(const ParametersParser& parser, Context& context, const ShellContext&)
 {
-    if (parser.positional_count() == 0 and
-        not force_reload and
-        not parser.get_switch("scratch"))
+    const bool scratch = (bool)parser.get_switch("scratch");
+
+    if (parser.positional_count() == 0 and not force_reload and not scratch)
         throw wrong_argument_count();
 
     const bool no_hooks = context.hooks_disabled();
@@ -332,35 +332,36 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
        (parser.get_switch("debug") ? Buffer::Flags::Debug : Buffer::Flags::None);
 
     auto& buffer_manager = BufferManager::instance();
-    if (parser.get_switch("scratch"))
+    auto generate_scratch_name = [&] {
+        for (int i = 0; true; ++i)
+        {
+            String name = format("*scratch-{}*", i);
+            if (buffer_manager.get_buffer_ifp(name) == nullptr)
+                return name;
+        }
+    };
+    const auto& name = parser.positional_count() > 0 ?
+        parser[0] : (scratch ? generate_scratch_name() : context.buffer().name());
+
+    Buffer* buffer = buffer_manager.get_buffer_ifp(name);
+    if (scratch)
     {
         if (parser.get_switch("readonly") or parser.get_switch("fifo") or parser.get_switch("scroll"))
             throw runtime_error("scratch is not compatible with readonly, fifo or scroll");
 
-        String name;
-        if (parser.positional_count() > 0)
-            name = parser[0];
-        else
+        if (buffer == nullptr or force_reload)
         {
-            for (int i = 0; true; ++i)
-            {
-                name = format("*scratch-{}*", i);
-                if (buffer_manager.get_buffer_ifp(name) == nullptr)
-                    break;
-            }
+            if (buffer != nullptr and force_reload)
+                buffer_manager.delete_buffer(*buffer);
+            buffer = buffer_manager.create_buffer(std::move(name), flags);
         }
-
-        Buffer* buffer = buffer_manager.create_buffer(std::move(name), flags);
-        context.change_buffer(*buffer);
-        return;
+        else if (buffer->flags() & Buffer::Flags::File)
+            throw runtime_error(format("buffer '{}' exists but is not a scratch buffer", name));
     }
-
-    auto& name = parser.positional_count() > 0 ? parser[0]
-                                               : context.buffer().name();
-    Buffer* buffer = buffer_manager.get_buffer_ifp(name);
-
-    if (force_reload and buffer and buffer->flags() & Buffer::Flags::File)
+    else if (force_reload and buffer and buffer->flags() & Buffer::Flags::File)
+    {
         reload_file_buffer(*buffer);
+    }
     else
     {
         if (auto fifo = parser.get_switch("fifo"))

@@ -27,7 +27,7 @@ public:
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
 
-    void clear();
+    void clear(bool exit);
 
     void ensure_no_client_uses_buffer(Buffer& buffer);
 
