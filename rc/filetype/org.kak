@@ -51,9 +51,13 @@ add-highlighter shared/org/table region ^\h*[|][^+] $ fill string
 # Various blocks
 evaluate-commands %sh{
     blocks="EXAMPLE QUOTE EXPORT CENTER VERSE"
-    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
-    printf "%s\n" "add-highlighter shared/org/block region -match-capture ^\h*(?i)#\+BEGIN_($(join "${blocks}" '|'))(\h+|\n) ^\h*(?i)#\+END_($(join "${blocks}" '|'))\h*$ fill meta"
+    for block in ${blocks}; do
+        printf "%s\n" "add-highlighter shared/org/${block} region '(?i)#\+BEGIN_${block}\b' '(?i)#\+END_${block}\b' regions"
+        printf "%s\n" "add-highlighter shared/org/${block}/ default-region fill meta"
+        printf "%s\n" "add-highlighter shared/org/${block}/inner region \A#\+(?i)BEGIN_${block}\b\K '(?i)(?=#\+END_${block})' fill mono"
+    done
 }
+
 
 # Small example block
 add-highlighter shared/org/inline/text/example regex ^(\h*)[:]\h+[^\n]* 0:meta
