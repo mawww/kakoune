@@ -48,10 +48,9 @@ enum class MessageType : uint8_t
 class MsgWriter
 {
 public:
-    MsgWriter(RemoteBuffer& buffer, MessageType type)
+    MsgWriter(RemoteBuffer& buffer)
         : m_buffer{buffer}, m_start{(uint32_t)buffer.size()}
     {
-        write_field(type);
         write_field((uint32_t)0); // message size, to be patched on write
     }
 
@@ -386,8 +385,8 @@ private:
     template<typename ...Args>
     void send_message(MessageType type, Args&&... args)
     {
-        MsgWriter msg{m_send_buffer, type};
-        msg.write(std::forward<Args>(args)...);
+        MsgWriter msg{m_send_buffer};
+        msg.write(type, std::forward<Args>(args)...);
         m_socket_watcher.events() |= FdEvents::Write;
     }
 
@@ -598,15 +597,15 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
     int sock = connect_to(session);
 
     {
-        MsgWriter msg{m_send_buffer, MessageType::Connect};
-        msg.write(pid, name, init_command, init_coord, m_ui->dimensions(), env_vars);
+        MsgWriter msg{m_send_buffer};
+        msg.write(MessageType::Connect, pid, name, init_command, init_coord, m_ui->dimensions(), env_vars);
     }
 
     m_ui->set_on_key([this](Key key){
-        MsgWriter msg(m_send_buffer, MessageType::Key);
-        msg.write(key);
+        MsgWriter msg{m_send_buffer};
+        msg.write(MessageType::Key, key);
         m_socket_watcher->events() |= FdEvents::Write;
-     });
+    });
 
     m_socket_watcher.reset(new FDWatcher{sock, FdEvents::Read | FdEvents::Write,
                            [this, reader = MsgReader{}](FDWatcher& watcher, FdEvents events, EventMode) mutable {
@@ -705,8 +704,8 @@ void send_command(StringView session, StringView command)
     auto close_sock = on_scope_end([sock]{ close(sock); });
     RemoteBuffer buffer;
     {
-        MsgWriter msg{buffer, MessageType::Command};
-        msg.write(command);
+        MsgWriter msg{buffer};
+        msg.write(MessageType::Command, command);
     }
     write(sock, {buffer.data(), buffer.data() + buffer.size()});
 }
