@@ -165,6 +165,12 @@ add-highlighter shared/org/math1 region '[$]{2}' '[$]{2}' fill mono
 add-highlighter shared/org/math2 region '\\\['   '\\\]'   fill mono
 add-highlighter shared/org/math3 region '\\\('   '\\\)'   fill mono
 
+# Export snippets
+add-highlighter shared/org/inline/text/export regex "@@[a-zA-Z-]+:.*?@@" 0:mono
+
+# Footnotes
+add-highlighter shared/org/inline/text/footnote regex "\[fn:([\w-_]+)?(:[^\n]+)?\]" 0:link
+
 # Commands
 # ‾‾‾‾‾‾‾‾
 
