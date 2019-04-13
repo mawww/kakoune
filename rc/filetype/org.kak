@@ -21,13 +21,13 @@ declare-option -docstring "Org Mode todo markers. You can customize this option 
     manual format:   '(state1|state2|...|stateN)|(done)'
 Colors for TODO items can be customized with `org_todo' and `org_done' faces.
 " \
-regex org_todo_items "(TODO)|(DONE)"
+regex org_todo "(TODO)|(DONE)"
 
 declare-option -docstring "Org Mode priorities. You can customize this option directly, or by using `#+PRIORITIES:' in your document. Please make sure that the highest priority is earlier in the alphabet than the lowest priority:
     document format: #+PRIORITIES: A C B
     manual format:   'A|C|B'
 Colors for priority items can be customized with `org_priority' face." \
-regex org_priority_items "A|C|B"
+regex org_priority "A|C|B"
 
 # Detection
 # ‾‾‾‾‾‾‾‾‾
@@ -107,10 +107,11 @@ add-highlighter shared/org/inline/text/star-list regex ^(?:\h+)([*])\h+ 1:bullet
 add-highlighter shared/org/inline/text/ordered-lists regex ^(?:\h*)(\d+[.)])\h+ 1:bullet
 
 # Headings. Also includes highlighting groups for TODO and PRIORITIES
-add-highlighter shared/org/inline/text/heading       dynregex   '^(?:[*]{1}|[*]{5}|[*]{9})\h+(?:(?:%opt{org_todo_items})\h+)?(\[#(?:%opt{org_priority_items})\])?[^\n]+' 0:header        1:org_todo 2:org_done 3:org_priority
-add-highlighter shared/org/inline/text/section       dynregex  '^(?:[*]{2}|[*]{6}|[*]{10})\h+(?:(?:%opt{org_todo_items})\h+)?(\[#(?:%opt{org_priority_items})\])?[^\n]+' 0:section       1:org_todo 2:org_done 3:org_priority
-add-highlighter shared/org/inline/text/subsection    dynregex  '^(?:[*]{3}|[*]{7}|[*]{11})\h+(?:(?:%opt{org_todo_items})\h+)?(\[#(?:%opt{org_priority_items})\])?[^\n]+' 0:subsection    1:org_todo 2:org_done 3:org_priority
-add-highlighter shared/org/inline/text/subsubsection dynregex '^(?:[*]{4}|[*]{8}|[*]{12,})\h+(?:(?:%opt{org_todo_items})\h+)?(\[#(?:%opt{org_priority_items})\])?[^\n]+' 0:subsubsection 1:org_todo 2:org_done 3:org_priority
+# format: STARS TODO PRIORITY TEXT TAGS
+add-highlighter shared/org/inline/text/heading       dynregex   '^(?:[*]{1}|[*]{5}|[*]{9})\h+(?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?.*?(:[^:\n]+?:)?\n' 0:header        1:org_todo 2:org_done 3:org_priority 4:module
+add-highlighter shared/org/inline/text/section       dynregex  '^(?:[*]{2}|[*]{6}|[*]{10})\h+(?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?.*?(:[^:\n]+?:)?\n' 0:section       1:org_todo 2:org_done 3:org_priority 4:module
+add-highlighter shared/org/inline/text/subsection    dynregex  '^(?:[*]{3}|[*]{7}|[*]{11})\h+(?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?.*?(:[^:\n]+?:)?\n' 0:subsection    1:org_todo 2:org_done 3:org_priority 4:module
+add-highlighter shared/org/inline/text/subsubsection dynregex '^(?:[*]{4}|[*]{8}|[*]{12,})\h+(?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?.*?(:[^:\n]+?:)?\n' 0:subsubsection 1:org_todo 2:org_done 3:org_priority 4:module
 
 # Options
 add-highlighter shared/org/inline/text/option     regex "(?i)#\+[a-z]\w*\b[^\n]*"          0:module
