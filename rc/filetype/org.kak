@@ -158,6 +158,9 @@ add-highlighter shared/org/inline/text/link     regex "(?:^|\h)([\[]{2}[^\n]*?[\
 add-highlighter shared/org/inline/text/drawer   regex "^\h*([:][^\s][^\n]*?[^\s]*?[:])\W" 1:keyword
 
 # LaTeX
+add-highlighter shared/org/LaTeX region '\\begin\{[A-Za-z0-9*]+\}' '\\end\{[A-Za-z0-9*]+\}' fill string
+
+# LaTeX Math
 add-highlighter shared/org/math1 region '[$]{2}' '[$]{2}' fill mono
 add-highlighter shared/org/math2 region '\\\['   '\\\]'   fill mono
 add-highlighter shared/org/math3 region '\\\('   '\\\)'   fill mono
