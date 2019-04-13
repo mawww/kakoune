@@ -123,6 +123,9 @@ add-highlighter shared/org/inline/text/option     regex "(?i)#\+[a-z]\w*\b[^\n]*
 add-highlighter shared/org/inline/text/title      regex "(?i)#\+title:([^\n]+)"            0:module 1:title
 add-highlighter shared/org/inline/text/requisites regex "(?i)#\+(?:author|email):([^\n]+)" 0:module 1:keyword
 
+# Drawer
+add-highlighter shared/org/inline/text/drawer   regex "^\h*([:][^\s][^\n]*?[^\s]*?[:])\W" 1:keyword
+
 # Timestamps
 ## YYYY-MM-DD DAYNAME
 declare-option regex org_date '\d\d\d\d-\d\d-\d\d\h+[^\s-+>\]\d]+'
@@ -154,9 +157,6 @@ add-highlighter shared/org/inline/text/underlined     regex "(^|[\h({'i""])([_][
 ## bold is kinda tricky because we need to HL everything but headings, so it's split up on several regexps
 add-highlighter shared/org/inline/text/bold regex "(?:^|[\h({'i""])([*][^\h,'""*][^\n]*?(\n{1})?[^\n]*?[*])\W|([*]{3,})\n|\h([*]{3})[\s.,:!?')}]" 1:bold
 
-add-highlighter shared/org/inline/text/link     regex "(?:^|\h)([\[]{2}[^\n]*?[\]]{2})\W" 0:link
-add-highlighter shared/org/inline/text/drawer   regex "^\h*([:][^\s][^\n]*?[^\s]*?[:])\W" 1:keyword
-
 # LaTeX
 add-highlighter shared/org/LaTeX region -match-capture '\\begin\{([A-Za-z0-9*]+)\}' '\\end\{([A-Za-z0-9*]+)\}' fill string
 
@@ -168,8 +168,22 @@ add-highlighter shared/org/math3 region '\\\('   '\\\)'   fill mono
 # Export snippets
 add-highlighter shared/org/inline/text/export regex "@@[a-zA-Z-]+:.*?@@" 0:mono
 
-# Footnotes
+# Footnotes (greedy)
 add-highlighter shared/org/inline/text/footnote regex "\[fn:([\w-_]+)?(:[^\n]+)?\]" 0:link
+
+# Links
+add-highlighter shared/org/inline/text/link1 regex "[<][^<>\n\]+:[^<>\n\]+?[>]"            0:link
+add-highlighter shared/org/inline/text/link2 regex "(?:^|\h)([\[]{2}[^\n\[\]]*?[\]]{2})\W" 0:link
+
+# Targets
+add-highlighter shared/org/inline/text/org_target       regex '<<[^\s<>][^\n<>]+[^\s<>]>>'   0:link
+add-highlighter shared/org/inline/text/org_radio_target regex '<<<[^\s<>][^\n<>]+[^\s<>]>>>' 0:link
+
+# Macros
+add-highlighter shared/org/inline/text/macros regex '[{]{3}[A-Za-z][a-zA-Z0-9-_]+\(.*?\)[}]{3}' 0:meta
+
+# Cookies
+add-highlighter shared/org/inline/text/cookies regex '[\[]\d+?(%|/\d+?)[\]]' 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
