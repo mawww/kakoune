@@ -118,13 +118,33 @@ add-highlighter shared/org/inline/text/option     regex "(?i)#\+[a-z]\w*\b[^\n]*
 add-highlighter shared/org/inline/text/title      regex "(?i)#\+title:([^\n]+)"            0:module 1:title
 add-highlighter shared/org/inline/text/requisites regex "(?i)#\+(?:author|email):([^\n]+)" 0:module 1:keyword
 
+# Timestamps
+## YYYY-MM-DD DAYNAME
+declare-option regex org_date '\d\d\d\d-\d\d-\d\d\h+[^\s-+>\]\d]+'
+## H:MM
+declare-option regex org_time '([0-2])?[0-9]:[0-5][0-9]'
+## (.+|++) or (-|--) digit (hour|day|week|month|year)
+declare-option regex org_repeater_or_delay '([.+][+]|[-]{1,2})\h+\d\h+[hdwmy]'
+## DATE TIME REPEATER-OR-DELAY
+declare-option regex org_timestamp "%opt{org_date}(\h+%opt{org_time}(-%opt{org_time})?(\h+%opt{org_repeater_or_delay})?)?"
+
+add-highlighter shared/org/inline/text/timestamp_active   dynregex "<%opt{org_timestamp}(--%opt{org_timestamp})?>"   0:keyword
+add-highlighter shared/org/inline/text/timestamp_inactive dynregex "\[%opt{org_timestamp}(--%opt{org_timestamp})?\]" 0:comment
+
 # Markup
-add-highlighter shared/org/inline/text/italic         regex "(^|\h)([/]\S[^\n]*?\n?[^\n]*?[/])\W"     2:italic
-add-highlighter shared/org/inline/text/strikethrough  regex "(^|\h)([+]\S[^\n]*?\n?[^\n]*?[+])\W"     2:strikethrough
-add-highlighter shared/org/inline/text/verbatim       regex "(^|\h)([=]\S[^\n]*?\n?[^\n]*?[=])\W"     2:meta
-add-highlighter shared/org/inline/text/code           regex "(^|\h)([~]\S[^\n]*?\n?[^\n]*?[~])\W"     2:mono
-add-highlighter shared/org/inline/text/inline-math    regex "(^|\h)([$]\S[^\n]*?\n?[^\n]*?[$])\W"     2:mono
-add-highlighter shared/org/inline/text/underlined     regex "(^|\h)([_]\S[^\n]*?\n?[^\n]*?[_])\W"     2:underline
+## FORMAT: PRE MARKER CONTENTS MARKER POST
+## PRE: whitespace `(`, `{`, `'`, `"` or beginning of the line
+## MARKER: `/`, `+`, `=`, `~`, `_`, or `$`
+## CONTENTS FORMAT: BORDER BODY BORDER
+## BORDER: any non-whitespace, and not `,` `'` or `"`
+## BODY: any character, can't be longer than tho lines
+add-highlighter shared/org/inline/text/italic         regex "(^|[\h({'i""])([/][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][/])\W" 2:italic
+add-highlighter shared/org/inline/text/strikethrough  regex "(^|[\h({'i""])([+][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][+])\W" 2:strikethrough
+add-highlighter shared/org/inline/text/verbatim       regex "(^|[\h({'i""])([=][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][=])\W" 2:meta
+add-highlighter shared/org/inline/text/code           regex "(^|[\h({'i""])([~][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][~])\W" 2:mono
+add-highlighter shared/org/inline/text/inline-math    regex "(^|[\h({'i""])([$][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][$])\W" 2:mono
+add-highlighter shared/org/inline/text/underlined     regex "(^|[\h({'i""])([_][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][_])\W" 2:underline
+
 add-highlighter shared/org/inline/text/date           regex "(?:^|\h)([\[][^\s][^\n]*?[^\s]*?[\]])\W" 0:variable
 add-highlighter shared/org/inline/text/link           regex "(?:^|\h)([\[]{2}[^\n]*?[\]]{2})\W"       0:link
 add-highlighter shared/org/inline/text/drawer         regex "^\h*([:][^\s][^\n]*?[^\s]*?[:])\W"       1:keyword
