@@ -1,11 +1,50 @@
 # https://orgmode.org/ - your life in plain text
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+
+# Faces
+# ‾‾‾‾‾
+
+set-face global org_todo     red+b
+set-face global org_done     green+b
+set-face global org_priority value
+
+# Options
+# ‾‾‾‾‾‾‾
+
+# Org mode supports different priorities and those can be customized either by
+# using `#+TODO' and `#+PRIORITIES:' or by settings. These are default values
+# that will be used in `dynregex' highlighters. We also need to update these
+# items when opening file.
+declare-option -docstring "Org Mode todo markers. You can customize this option directly, following the format, or by using `#+TODO:' in your document:
+    document format: #+TODO: state1 state2 ... stateN done
+    manual format:   '(state1|state2|...|stateN)|(done)'
+Colors for TODO items can be customized with `org_todo' and `org_done' faces.
+" \
+regex org_todo_items "(TODO)|(DONE)"
+
+declare-option -docstring "Org Mode priorities. You can customize this option directly, or by using `#+PRIORITIES:' in your document. Please make sure that the highest priority is earlier in the alphabet than the lowest priority:
+    document format: #+PRIORITIES: A C B
+    manual format:   'A|C|B'
+Colors for priority items can be customized with `org_priority' face." \
+regex org_priority_items "A|C|B"
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.]org %{
     set-option buffer filetype org
+    # Update `org_todo_items' and `org_priority_items' when opening file
+    evaluate-commands -save-regs '"/' %{
+        try %{
+            execute-keys -draft '/(?i)#\+TODO:[^\n]+<ret><a-h>f:l<a-l>y: set-option buffer org_todo_items %reg{dquote}<ret>'
+            set-option buffer org_todo_items %sh{ printf "%s\n" " ${kak_opt_org_todo_items}" | sed -E "s/\s+/|/g;s/^\|//;s/(.*)\|(\w+)$/(\1)|(\2)/" }
+        }
+        try %{
+            execute-keys -draft '/(?i)#\+PRIORITIES:[^\n]+<ret><a-h>f:l<a-l>s\h*\w(\s+)?(\w)?(\s+)?(\w)?\s<ret>y: set-option buffer org_priority_items %reg{dquote}<ret>'
+            set-option buffer org_priority_items %sh{ printf "%s\n" "${kak_opt_org_priority_items}" | sed -E "s/ /|/g" }
+        }
+    }
 }
 
 # Highlighters
@@ -67,11 +106,11 @@ add-highlighter shared/org/inline/text/star-list regex ^(?:\h+)([*])\h+ 1:bullet
 # Ordered list items start with a numeral followed by either a period or a right parenthesis, such as `1.' or `1)'
 add-highlighter shared/org/inline/text/ordered-lists regex ^(?:\h*)(\d+[.)])\h+ 1:bullet
 
-# Headings
-add-highlighter shared/org/inline/text/heading       regex "^([*]{1}|[*]{5}|[*]{9})\h+[^\n]+"   0:header
-add-highlighter shared/org/inline/text/section       regex "^([*]{2}|[*]{6}|[*]{10})\h+[^\n]+"  0:section
-add-highlighter shared/org/inline/text/subsection    regex "^([*]{3}|[*]{7}|[*]{11})\h+[^\n]+"  0:subsection
-add-highlighter shared/org/inline/text/subsubsection regex "^([*]{4}|[*]{8}|[*]{12,})\h+[^\n]+" 0:subsubsection
+# Headings. Also includes highlighting groups for TODO and PRIORITIES
+add-highlighter shared/org/inline/text/heading       dynregex   '^(?:[*]{1}|[*]{5}|[*]{9})\h+(?:(?:%opt{org_todo_items})\h+)?(\[#(?:%opt{org_priority_items})\])?[^\n]+' 0:header        1:org_todo 2:org_done 3:org_priority
+add-highlighter shared/org/inline/text/section       dynregex  '^(?:[*]{2}|[*]{6}|[*]{10})\h+(?:(?:%opt{org_todo_items})\h+)?(\[#(?:%opt{org_priority_items})\])?[^\n]+' 0:section       1:org_todo 2:org_done 3:org_priority
+add-highlighter shared/org/inline/text/subsection    dynregex  '^(?:[*]{3}|[*]{7}|[*]{11})\h+(?:(?:%opt{org_todo_items})\h+)?(\[#(?:%opt{org_priority_items})\])?[^\n]+' 0:subsection    1:org_todo 2:org_done 3:org_priority
+add-highlighter shared/org/inline/text/subsubsection dynregex '^(?:[*]{4}|[*]{8}|[*]{12,})\h+(?:(?:%opt{org_todo_items})\h+)?(\[#(?:%opt{org_priority_items})\])?[^\n]+' 0:subsubsection 1:org_todo 2:org_done 3:org_priority
 
 # Options
 add-highlighter shared/org/inline/text/option     regex "(?i)#\+[a-z]\w*\b[^\n]*"          0:module
