@@ -3,6 +3,7 @@
 
 #include "env_vars.hh"
 #include "exception.hh"
+#include "field_writer.hh"
 #include "utils.hh"
 #include "vector.hh"
 #include "optional.hh"
@@ -22,8 +23,6 @@ class UserInterface;
 
 template<typename T> struct Optional;
 struct BufferCoord;
-
-using RemoteBuffer = Vector<char, MemoryDomain::Remote>;
 
 // A remote client handle communication between a client running on the server
 // and a user interface running on the local process.

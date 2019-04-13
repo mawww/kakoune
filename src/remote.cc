@@ -6,6 +6,7 @@
 #include "command_manager.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
+#include "field_writer.hh"
 #include "file.hh"
 #include "hash_map.hh"
 #include "optional.hh"
@@ -45,114 +46,28 @@ enum class MessageType : uint8_t
     Key,
 };
 
+typedef FieldWriter<uint32_t> KakouneFieldWriter;
+
 class MsgWriter
 {
 public:
     MsgWriter(RemoteBuffer& buffer)
-        : m_buffer{buffer}, m_start{(uint32_t)buffer.size()}
+        : m_buffer{buffer}, m_start{buffer.size()}
     {
-        write_field((uint32_t)0); // message size, to be patched on write
+        uint32_t size{0};
+        auto p = reinterpret_cast<const char*>(&size);
+        m_buffer.insert(m_buffer.end(), p, p + sizeof(size)); // message size, to be patched on write
     }
 
     ~MsgWriter()
     {
-        uint32_t count = (uint32_t)m_buffer.size() - m_start;
+        uint32_t count = uint32_t(m_buffer.size() - m_start);
         memcpy(m_buffer.data() + m_start, &count, sizeof(uint32_t));
-    }
-
-    template<typename ...Args>
-    void write(Args&&... args)
-    {
-        (write_field(std::forward<Args>(args)), ...);
-    }
-
-private:
-    void write_raw(const char* val, size_t size)
-    {
-        m_buffer.insert(m_buffer.end(), val, val + size);
-    }
-
-    template<typename T>
-    void write_field(const T& val)
-    {
-        static_assert(std::is_trivially_copyable<T>::value, "");
-        write_raw((const char*)&val, sizeof(val));
-    }
-
-    void write_field(StringView str)
-    {
-        write_field(str.length());
-        write_raw(str.data(), (int)str.length());
-    };
-
-    void write_field(const String& str)
-    {
-        write_field(StringView{str});
-    }
-
-    template<typename T>
-    void write_field(ConstArrayView<T> view)
-    {
-        write_field<uint32_t>(view.size());
-        for (auto& val : view)
-            write_field(val);
-    }
-
-    template<typename T, MemoryDomain domain>
-    void write_field(const Vector<T, domain>& vec)
-    {
-        write_field(ConstArrayView<T>(vec));
-    }
-
-    template<typename Key, typename Val, MemoryDomain domain>
-    void write_field(const HashMap<Key, Val, domain>& map)
-    {
-        write_field<uint32_t>(map.size());
-        for (auto& val : map)
-        {
-            write_field(val.key);
-            write_field(val.value);
-        }
-    }
-
-    template<typename T>
-    void write_field(const Optional<T>& val)
-    {
-        write_field((bool)val);
-        if (val)
-            write_field(*val);
-    }
-
-    void write_field(Color color)
-    {
-        write_field(color.color);
-        if (color.color == Color::RGB)
-        {
-            write_field(color.r);
-            write_field(color.g);
-            write_field(color.b);
-        }
-    }
-
-    void write_field(const DisplayAtom& atom)
-    {
-        write_field(atom.content());
-        write_field(atom.face);
-    }
-
-    void write_field(const DisplayLine& line)
-    {
-        write_field(line.atoms());
-    }
-
-    void write_field(const DisplayBuffer& display_buffer)
-    {
-        write_field(display_buffer.lines());
     }
 
 private:
     RemoteBuffer& m_buffer;
-    uint32_t m_start;
+    decltype(m_buffer.size()) m_start;
 };
 
 class MsgReader
@@ -380,7 +295,8 @@ private:
     void send_message(MessageType type, Args&&... args)
     {
         MsgWriter msg{m_send_buffer};
-        msg.write(type, std::forward<Args>(args)...);
+        KakouneFieldWriter fields{m_send_buffer};
+        fields.write(type, std::forward<Args>(args)...);
         m_socket_watcher.events() |= FdEvents::Write;
     }
 
@@ -593,12 +509,14 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
 
     {
         MsgWriter msg{m_send_buffer};
-        msg.write(MessageType::Connect, pid, name, init_command, init_coord, m_ui->dimensions(), env_vars);
+        KakouneFieldWriter fields{m_send_buffer};
+        fields.write(MessageType::Connect, pid, name, init_command, init_coord, m_ui->dimensions(), env_vars);
     }
 
     m_ui->set_on_key([this](Key key){
         MsgWriter msg{m_send_buffer};
-        msg.write(MessageType::Key, key);
+        KakouneFieldWriter fields{m_send_buffer};
+        fields.write(MessageType::Key, key);
         m_socket_watcher->events() |= FdEvents::Write;
     });
 
@@ -701,7 +619,8 @@ void send_command(StringView session, StringView command)
     RemoteBuffer buffer;
     {
         MsgWriter msg{buffer};
-        msg.write(MessageType::Command, command);
+        KakouneFieldWriter fields{buffer};
+        fields.write(MessageType::Command, command);
     }
     write(sock, {buffer.data(), buffer.data() + buffer.size()});
 }
