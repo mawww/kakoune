@@ -55,12 +55,13 @@ add-highlighter shared/org/inline default-region regions
 add-highlighter shared/org/inline/text default-region group
 
 evaluate-commands %sh{
-    languages="arch-linux asciidoc cabal c cpp objc clojure
-               cmake coffee css cucumber dart diff d dockerfile
-               elixir elm etc exherbo fish gas git go haml haskell
-               hbs html i3 ini java javascript json julia justrc
-               kickstart latex emacs-lisp lisp lua mail makefile markdown
-               mercurial moon nim ocaml perl php pony protobuf
+    languages="arch-linux asciidoc c cabal clojure
+               cmake coffee cpp css cucumber d dart diff
+               dockerfile elixir elm emacs-lisp etc exherbo
+               fish gas git go haml haskell hbs html i3 ini
+               java javascript json julia justrc kickstart
+               latex lisp lua mail makefile markdown mercurial
+               moon nim objc ocaml org perl php pony protobuf
                pug python ragel restructuredtext ruby rust sass
                scala scheme scss sh sql swift systemd taskpaper
                toml troff tupfile void-linux yaml"
@@ -90,9 +91,13 @@ add-highlighter shared/org/table region ^\h*[|][^+] $ fill string
 # Various blocks
 evaluate-commands %sh{
     blocks="EXAMPLE QUOTE EXPORT CENTER VERSE"
-    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
-    printf "%s\n" "add-highlighter shared/org/block region -match-capture ^\h*(?i)#\+BEGIN_($(join "${blocks}" '|'))(\h+|\n) ^\h*(?i)#\+END_($(join "${blocks}" '|'))\h*$ fill meta"
+    for block in ${blocks}; do
+        printf "%s\n" "add-highlighter shared/org/${block} region '(?i)#\+BEGIN_${block}\b' '(?i)#\+END_${block}\b' regions"
+        printf "%s\n" "add-highlighter shared/org/${block}/ default-region fill meta"
+        printf "%s\n" "add-highlighter shared/org/${block}/inner region \A#\+(?i)BEGIN_${block}\b\K '(?i)(?=#\+END_${block})' fill mono"
+    done
 }
+
 
 # Small example block
 add-highlighter shared/org/inline/text/example regex ^(\h*)[:]\h+[^\n]* 0:meta
@@ -138,22 +143,21 @@ add-highlighter shared/org/inline/text/timestamp_inactive dynregex "\[%opt{org_t
 ## CONTENTS FORMAT: BORDER BODY BORDER
 ## BORDER: any non-whitespace, and not `,` `'` or `"`
 ## BODY: any character, can't be longer than tho lines
-add-highlighter shared/org/inline/text/italic         regex "(^|[\h({'i""])([/][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][/])\W" 2:italic
-add-highlighter shared/org/inline/text/strikethrough  regex "(^|[\h({'i""])([+][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][+])\W" 2:strikethrough
-add-highlighter shared/org/inline/text/verbatim       regex "(^|[\h({'i""])([=][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][=])\W" 2:meta
-add-highlighter shared/org/inline/text/code           regex "(^|[\h({'i""])([~][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][~])\W" 2:mono
-add-highlighter shared/org/inline/text/inline-math    regex "(^|[\h({'i""])([$][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][$])\W" 2:mono
-add-highlighter shared/org/inline/text/underlined     regex "(^|[\h({'i""])([_][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][_])\W" 2:underline
-
-add-highlighter shared/org/inline/text/date           regex "(?:^|\h)([\[][^\s][^\n]*?[^\s]*?[\]])\W" 0:variable
-add-highlighter shared/org/inline/text/link           regex "(?:^|\h)([\[]{2}[^\n]*?[\]]{2})\W"       0:link
-add-highlighter shared/org/inline/text/drawer         regex "^\h*([:][^\s][^\n]*?[^\s]*?[:])\W"       1:keyword
+## POST: a whitespace character, `-`, `.`, `,`, `:`, `!`, `?`, `'`, `)`, `}`
+add-highlighter shared/org/inline/text/italic         regex "(^|[\h({'i""])([/][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][/])[\s.,:!?')}]" 2:italic
+add-highlighter shared/org/inline/text/strikethrough  regex "(^|[\h({'i""])([+][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][+])[\s.,:!?')}]" 2:strikethrough
+add-highlighter shared/org/inline/text/verbatim       regex "(^|[\h({'i""])([=][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][=])[\s.,:!?')}]" 2:meta
+add-highlighter shared/org/inline/text/code           regex "(^|[\h({'i""])([~][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][~])[\s.,:!?')}]" 2:mono
+add-highlighter shared/org/inline/text/inline-math    regex "(^|[\h({'i""])([$][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][$])[\s.,:!?')}]" 2:mono
+add-highlighter shared/org/inline/text/underlined     regex "(^|[\h({'i""])([_][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][_])[\s.,:!?')}]" 2:underline
 
 ## bold is kinda tricky because we need to HL everything but headings, so it's split up on several regexps
-add-highlighter shared/org/inline/text/bold           regex "(^|\h)([*][^*\s][^\n]*?(\n{1})?[^\n]*?[*])\W" 2:bold
-add-highlighter shared/org/inline/text/bold-stars-bol regex "([*]{3,})\n"                                  1:bold
-add-highlighter shared/org/inline/text/bold-stars-mol regex "\h([*]{3})[^*\w]"                             1:bold
+add-highlighter shared/org/inline/text/bold regex "(?:^|[\h({'i""])([*][^\h,'""*][^\n]*?(\n{1})?[^\n]*?[*])\W|([*]{3,})\n|\h([*]{3})[\s.,:!?')}]" 1:bold
 
+add-highlighter shared/org/inline/text/link     regex "(?:^|\h)([\[]{2}[^\n]*?[\]]{2})\W" 0:link
+add-highlighter shared/org/inline/text/drawer   regex "^\h*([:][^\s][^\n]*?[^\s]*?[:])\W" 1:keyword
+
+# LaTeX
 add-highlighter shared/org/math1 region '[$]{2}' '[$]{2}' fill mono
 add-highlighter shared/org/math2 region '\\\['   '\\\]'   fill mono
 add-highlighter shared/org/math3 region '\\\('   '\\\)'   fill mono

@@ -801,6 +801,7 @@ int run_server(StringView session, StringView server_init,
 
                 if (fork_server_to_background())
                 {
+                    ClientManager::instance().clear(false);
                     String session = server.session();
                     server.close_session(false);
                     throw convert_to_client_mode{ std::move(session), std::move(client_name), std::move(buffer_name), std::move(selections) };
