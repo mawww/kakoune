@@ -34,7 +34,7 @@ hook global WinSetOption filetype=rust %[
 ]
 
 
-provide-module rust %🦀
+provide-module rust %§
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -99,4 +99,4 @@ define-command -hidden rust-indent-on-closing %[
     _
 ]
 
-🦀
+§

@@ -23,7 +23,7 @@ hook -group java-highlight global WinSetOption filetype=java %{
 }
 
 
-provide-module java %🦀
+provide-module java %§
 
 add-highlighter shared/java regions
 add-highlighter shared/java/code default-region group
@@ -69,4 +69,4 @@ define-command -hidden java-indent-on-closing-curly-brace %[
     try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-🦀
+§

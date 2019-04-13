@@ -35,7 +35,7 @@ hook -group typescript-highlight global WinSetOption filetype=typescript %{
 }
 
 
-provide-module javascript %🦀
+provide-module javascript %§
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -127,4 +127,4 @@ add-highlighter shared/typescript/code/ regex \b(array|boolean|date|number|objec
 # Keywords grabbed from https://github.com/Microsoft/TypeScript/issues/2536
 add-highlighter shared/typescript/code/ regex \b(as|constructor|declare|enum|from|implements|interface|module|namespace|package|private|protected|public|readonly|static|type)\b 0:keyword
 
-🦀
+§

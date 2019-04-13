@@ -59,7 +59,7 @@ hook -group objc-highlight global WinSetOption filetype=objc %{
 }
 
 
-provide-module c-family %🦀
+provide-module c-family %§
 
 define-command -hidden c-family-trim-indent %{
     # remove the line if it's empty when leaving the insert mode
@@ -443,4 +443,4 @@ define-command objc-alternative-file -docstring "Jump to the alternate objc file
     c-family-alternative-file
 }
 
-🦀
+§

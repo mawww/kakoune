@@ -30,7 +30,7 @@ hook -group d-highlight global WinSetOption filetype=d %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/d }
 }
 
-provide-module d %🦀
+provide-module d %§
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -135,4 +135,4 @@ define-command -hidden d-indent-on-closing-curly-brace %[
     try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-🦀
+§

@@ -28,7 +28,7 @@ hook -group ragel-highlight global WinSetOption filetype=ragel %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ragel }
 }
 
-provide-module ragel %🦀
+provide-module ragel %§
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -73,4 +73,4 @@ define-command -hidden ragel-indent-on-new-line %<
     >
 >
 
-🦀
+§

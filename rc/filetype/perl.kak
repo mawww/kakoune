@@ -30,7 +30,7 @@ hook -group perl-highlight global WinSetOption filetype=perl %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/perl }
 }
 
-provide-module perl %🦀
+provide-module perl %§
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -119,4 +119,4 @@ define-command -hidden perl-indent-on-closing-curly-brace %[
     try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-🦀
+§

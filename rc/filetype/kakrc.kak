@@ -31,7 +31,7 @@ hook -group kak-highlight global WinSetOption filetype=kak %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/kakrc }
 }
 
-provide-module kak %🦀
+provide-module kak %§
 
 require-module sh
 
@@ -114,4 +114,4 @@ define-command -hidden kak-indent-on-closing-char %{
     try %{ execute-keys -draft -itersel <a-h><a-k>^\h*\Q %val{hook_param} \E$<ret>gi<a-f> %val{hook_param} <a-T>%<a-k>\w*\Q %val{hook_param} \E$<ret> s \A|.\z<ret> gi 1<a-&> }
 }
 
-🦀
+§
