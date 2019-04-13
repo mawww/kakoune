@@ -108,10 +108,10 @@ add-highlighter shared/org/inline/text/ordered-lists regex ^(?:\h*)(\d+[.)])\h+ 
 
 # Headings. Also includes highlighting groups for TODO and PRIORITIES
 # format: STARS TODO PRIORITY TEXT TAGS
-add-highlighter shared/org/inline/text/heading       dynregex   '^(?:[*]{1}|[*]{5}|[*]{9})\h+(?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?.*?(:[^:\n]+?:)?\n' 0:header        1:org_todo 2:org_done 3:org_priority 4:module
-add-highlighter shared/org/inline/text/section       dynregex  '^(?:[*]{2}|[*]{6}|[*]{10})\h+(?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?.*?(:[^:\n]+?:)?\n' 0:section       1:org_todo 2:org_done 3:org_priority 4:module
-add-highlighter shared/org/inline/text/subsection    dynregex  '^(?:[*]{3}|[*]{7}|[*]{11})\h+(?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?.*?(:[^:\n]+?:)?\n' 0:subsection    1:org_todo 2:org_done 3:org_priority 4:module
-add-highlighter shared/org/inline/text/subsubsection dynregex '^(?:[*]{4}|[*]{8}|[*]{12,})\h+(?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?.*?(:[^:\n]+?:)?\n' 0:subsubsection 1:org_todo 2:org_done 3:org_priority 4:module
+add-highlighter shared/org/inline/text/heading       dynregex   '^(?:[*]{1}|[*]{5}|[*]{9})\h+(?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?[^\n]*(:[^:\n]+?:)?\n' 0:header        1:org_todo 2:org_done 3:org_priority 4:module
+add-highlighter shared/org/inline/text/section       dynregex  '^(?:[*]{2}|[*]{6}|[*]{10})\h+(?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?[^\n]*(:[^:\n]+?:)?\n' 0:section       1:org_todo 2:org_done 3:org_priority 4:module
+add-highlighter shared/org/inline/text/subsection    dynregex  '^(?:[*]{3}|[*]{7}|[*]{11})\h+(?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?[^\n]*(:[^:\n]+?:)?\n' 0:subsection    1:org_todo 2:org_done 3:org_priority 4:module
+add-highlighter shared/org/inline/text/subsubsection dynregex '^(?:[*]{4}|[*]{8}|[*]{12,})\h+(?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?[^\n]*(:[^:\n]+?:)?\n' 0:subsubsection 1:org_todo 2:org_done 3:org_priority 4:module
 
 # Options
 add-highlighter shared/org/inline/text/option     regex "(?i)#\+[a-z]\w*\b[^\n]*"          0:module
