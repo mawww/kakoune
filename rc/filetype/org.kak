@@ -133,7 +133,9 @@ add-highlighter shared/org/inline/text/bold           regex "(^|\h)([*][^*\s][^\
 add-highlighter shared/org/inline/text/bold-stars-bol regex "([*]{3,})\n"                                  1:bold
 add-highlighter shared/org/inline/text/bold-stars-mol regex "\h([*]{3})[^*\w]"                             1:bold
 
-add-highlighter shared/org/math region '[$]{2}|\\\[' '[$]{2}|\\\]' fill mono
+add-highlighter shared/org/math1 region '[$]{2}' '[$]{2}' fill mono
+add-highlighter shared/org/math2 region '\\\['   '\\\]'   fill mono
+add-highlighter shared/org/math3 region '\\\('   '\\\)'   fill mono
 
 # Commands
 # ‾‾‾‾‾‾‾‾
