@@ -17,15 +17,15 @@ set-face global org_priority value
 # that will be used in `dynregex' highlighters. We also need to update these
 # items when opening file.
 declare-option -docstring "Org Mode todo markers. You can customize this option directly, following the format, or by using `#+TODO:' in your document:
-    document format: #+TODO: todo1 todo2 ... todoN | done1 done2 ... doneN
-    manual format:   '(todo1|todo2|...|todoN)|(done1|done2|...|doneN)'
+          document format: #+TODO: todo1 todo2 ... todoN | done1 done2 ... doneN
+          manual format:   '(todo1|todo2|...|todoN)|(done1|done2|...|doneN)'
 # Colors for TODO items can be customized with `org_todo' and `org_done' faces.
 " \
 regex org_todo "(TODO)|(DONE)"
 
 declare-option -docstring "Org Mode priorities. You can customize this option directly, or by using `#+PRIORITIES:' in your document. Please make sure that the highest priority is earlier in the alphabet than the lowest priority:
-    document format: #+PRIORITIES: A C B
-    manual format:   'A|C|B'
+          document format: #+PRIORITIES: A C B
+          manual format:   'A|C|B'
 Colors for priority items can be customized with `org_priority' face." \
 regex org_priority "A|C|B"
 
@@ -37,7 +37,7 @@ hook global BufCreate .*[.]org %{
     # Update `org_todo_items' and `org_priority_items' when opening file
     evaluate-commands -save-regs '"/' %{
         try %{
-            execute-keys -draft '/(?i)#\+(SEQ_|TYP_)?TODO:[^\n]+<ret><a-h>f:l<a-l>y: set-option buffer org_todo %reg{dquote}<ret>'
+            execute-keys -draft '/(?i)^\h*#\+(SEQ_|TYP_)?TODO:[^\n]+<ret><a-h>f:l<a-l>y: set-option buffer org_todo %reg{dquote}<ret>'
             set-option buffer org_todo %sh{ printf "%s\n" "${kak_opt_org_todo}" | perl -pe 'if (/^.*\|.*$/) {
                                                                                                  $_ =~ s/(.*)\|(.*)/($1)|($2)/;
                                                                                                  $_ =~ s/\(\s+/(/g;
@@ -51,7 +51,7 @@ hook global BufCreate .*[.]org %{
                                                                                              }' }
         }
         try %{
-            execute-keys -draft '/(?i)#\+PRIORITIES:[^\n]+<ret><a-h>f:l<a-l>s\h*\w(\s+)?(\w)?(\s+)?(\w)?\s<ret>y: set-option buffer org_priority %reg{dquote}<ret>'
+            execute-keys -draft '/(?i)^\h*#\+PRIORITIES:[^\n]+<ret><a-h>f:l<a-l>s\h*\w(\s+)?(\w)?(\s+)?(\w)?\s<ret>y: set-option buffer org_priority %reg{dquote}<ret>'
             set-option buffer org_priority %sh{ printf "%s\n" "${kak_opt_org_priority}" | sed -E "s/ /|/g" }
         }
     }
@@ -140,20 +140,20 @@ add-highlighter shared/org/inline/text/drawer   regex "^\h*([:][^\s][^\n]*?[^\s]
 
 # Timestamps
 declare-option -docstring "Org date
-    format: YYYY-MM-DD DAYNAME" \
+          format: YYYY-MM-DD DAYNAME" \
 regex org_date '\d\d\d\d-\d\d-\d\d\h+[^\s-+>\]\d]+'
 
 declare-option -docstring "Org time
-    format H:MM" \
+          format H:MM" \
 regex org_time '([0-2])?[0-9]:[0-5][0-9]'
 
 declare-option -docstring "Org repeater or delay
-    format: (.+|++) or (-|--) digit (hour|day|week|month|year)
+          format: (.+|++) or (-|--) digit (hour|day|week|month|year)
 " \
 regex org_repeater_or_delay '([.+][+]|[-]{1,2})\h+\d\h+[hdwmy]'
 
 declare-option -docstring "Org timestamp
-    format: DATE TIME REPEATER-OR-DELAY" \
+          format: DATE TIME REPEATER-OR-DELAY" \
 regex org_timestamp "%opt{org_date}(\h+%opt{org_time}(-%opt{org_time})?(\h+%opt{org_repeater_or_delay})?)?"
 
 add-highlighter shared/org/inline/text/timestamp_active   dynregex "<%opt{org_timestamp}(--%opt{org_timestamp})?>"   0:keyword
@@ -167,15 +167,15 @@ add-highlighter shared/org/inline/text/timestamp_inactive dynregex "\[%opt{org_t
 ## BORDER: any non-whitespace, and not `,` `'` or `"`
 ## BODY: any character, can't be longer than tho lines
 ## POST: a whitespace character, `-`, `.`, `,`, `:`, `!`, `?`, `'`, `)`, `}`
-add-highlighter shared/org/inline/text/italic         regex "(^|[\h({'""])([/][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][/])[\s.,:!?')}]" 2:italic
-add-highlighter shared/org/inline/text/strikethrough  regex "(^|[\h({'""])([+][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][+])[\s.,:!?')}]" 2:strikethrough
-add-highlighter shared/org/inline/text/verbatim       regex "(^|[\h({'""])([=][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][=])[\s.,:!?')}]" 2:meta
-add-highlighter shared/org/inline/text/code           regex "(^|[\h({'""])([~][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][~])[\s.,:!?')}]" 2:mono
-add-highlighter shared/org/inline/text/underlined     regex "(^|[\h({'""])([_][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][_])[\s.,:!?')}]" 2:underline
+add-highlighter shared/org/inline/text/italic         regex "(^|[\h({'""])([/][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[/])[\s.,:!?')}]" 2:italic
+add-highlighter shared/org/inline/text/strikethrough  regex "(^|[\h({'""])([+][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[+])[\s.,:!?')}]" 2:strikethrough
+add-highlighter shared/org/inline/text/verbatim       regex "(^|[\h({'""])([=][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[=])[\s.,:!?')}]" 2:meta
+add-highlighter shared/org/inline/text/code           regex "(^|[\h({'""])([~][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[~])[\s.,:!?')}]" 2:mono
+add-highlighter shared/org/inline/text/underlined     regex "(^|[\h({'""])([_][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[_])[\s.,:!?')}]" 2:underline
 ## will be deprecated in future releases of Org but currently is supported
-add-highlighter shared/org/inline/text/inline-math    regex "(^|[\h({'""])([$][^\h,'""][^\n]*?\n?[^\n]*[^\h,'""][$])[\s.,:!?')}]" 2:mono
+add-highlighter shared/org/inline/text/inline-math    regex "(^|[\h({'""])([$][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[$])[\s.,:!?')}]" 2:mono
 ## bold is kinda tricky because we need to HL everything but headings, so it's split up on several regexps
-add-highlighter shared/org/inline/text/bold regex "(?:^|[\h({'""])([*][^\h,'""*][^\n]*?(\n{1})?[^\n]*?[*])\W|([*]{3,})\n|\h([*]{3})[\s.,:!?')}]" 1:bold
+add-highlighter shared/org/inline/text/bold regex "(?:^|[\h({'""])([*][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[*])[\s.,:!?')}]|([*]{3,})\n|\h([*]{3})[\s.,:!?')}]" 1:bold
 
 # LaTeX
 add-highlighter shared/org/LaTeX region -match-capture '\\begin\{([A-Za-z0-9*]+)\}' '\\end\{([A-Za-z0-9*]+)\}' fill string
