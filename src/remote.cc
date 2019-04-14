@@ -240,12 +240,6 @@ public:
         return res;
     }
 
-    MessageType type() const
-    {
-        kak_assert(m_write_pos >= header_size);
-        return *reinterpret_cast<const MessageType*>(m_stream.data() + sizeof(uint32_t));
-    }
-
     void read(char* buffer, size_t size)
     {
         if (m_read_pos + size > m_stream.size())
@@ -277,8 +271,8 @@ private:
         m_write_pos += res;
     }
 
-    static constexpr uint32_t header_size = sizeof(uint32_t) + sizeof(MessageType);
-    Vector<char, MemoryDomain::Remote> m_stream;
+    static constexpr uint32_t header_size = sizeof(uint32_t);
+    RemoteBuffer m_stream;
     uint32_t m_write_pos = 0;
     uint32_t m_read_pos = header_size;
 };
@@ -425,7 +419,8 @@ RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
                   if (not m_reader.ready())
                       continue;
 
-                   if (m_reader.type() != MessageType::Key)
+                   auto type = m_reader.read<MessageType>();
+                   if (type != MessageType::Key)
                    {
                        m_socket_watcher.close_fd();
                        return;
@@ -622,7 +617,8 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
                 continue;
 
             auto clear_reader = on_scope_end([&reader] { reader.reset(); });
-            switch (reader.type())
+            auto type = reader.read<MessageType>();
+            switch (type)
             {
             case MessageType::MenuShow:
             {
@@ -739,7 +735,8 @@ private:
             if (mode != EventMode::Normal or not m_reader.ready())
                 return;
 
-            switch (m_reader.type())
+            auto type = m_reader.read<MessageType>();
+            switch (type)
             {
             case MessageType::Connect:
             {
