@@ -876,6 +876,22 @@ private:
                 m_socket_watcher.events() |= FdEvents::Write;
                 break;
             }
+            case MessageType::Tclunk:
+            {
+                NinePFieldReader fields{m_reader};
+                auto tag = fields.read<uint16_t>();
+                auto fid = fields.read<File::Fid>();
+                m_reader.reset();
+                m_fids.erase(fid);
+                {
+                    MsgWriter msg{m_send_buffer};
+                    NinePFieldWriter fields{m_send_buffer};
+                    fields.write(MessageType::Rclunk);
+                    fields.write(tag);
+                }
+                m_socket_watcher.events() |= FdEvents::Write;
+                break;
+            }
             case MessageType::Tversion:
             {
                 NinePFieldReader fields{m_reader};
