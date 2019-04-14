@@ -134,10 +134,11 @@ private:
     uint32_t m_read_pos = header_size;
 };
 
+template<typename VariableSizeType>
 class FieldReader
 {
 private:
-    template<typename T>
+    template<typename Size, typename T>
     struct Reader {
         static T read(MsgReader& reader)
         {
@@ -148,43 +149,101 @@ private:
         }
     };
 
-    template<typename T, MemoryDomain domain>
-    struct Reader<Vector<T,domain>> {
+    template<typename Size, typename T, MemoryDomain domain>
+    struct Reader<Size, Vector<T,domain>> {
         static Vector<T, domain> read(MsgReader& reader)
         {
-            uint32_t size = Reader<uint32_t>::read(reader);
+            Size size = Reader<Size, Size>::read(reader);
             Vector<T,domain> res;
             res.reserve(size);
             while (size--)
-                res.push_back(std::move(Reader<T>::read(reader)));
+                res.push_back(std::move(Reader<Size, T>::read(reader)));
             return res;
         }
     };
 
-    template<typename Key, typename Value, MemoryDomain domain>
-    struct Reader<HashMap<Key, Value, domain>> {
+    template<typename Size, typename Key, typename Value, MemoryDomain domain>
+    struct Reader<Size, HashMap<Key, Value, domain>> {
         static HashMap<Key, Value, domain> read(MsgReader& reader)
         {
-            uint32_t size = Reader<uint32_t>::read(reader);
+            Size size = Reader<Size, Size>::read(reader);
             HashMap<Key, Value, domain> res;
             res.reserve(size);
             while (size--)
             {
-                auto key = Reader<Key>::read(reader);
-                auto val = Reader<Value>::read(reader);
+                auto key = Reader<Size, Key>::read(reader);
+                auto val = Reader<Size, Value>::read(reader);
                 res.insert({std::move(key), std::move(val)});
             }
             return res;
         }
     };
 
-    template<typename T>
-    struct Reader<Optional<T>> {
+    template<typename Size, typename T>
+    struct Reader<Size, Optional<T>> {
         static Optional<T> read(MsgReader& reader)
         {
-            if (not Reader<bool>::read(reader))
+            if (not Reader<Size, bool>::read(reader))
                 return {};
-            return Reader<T>::read(reader);
+            return Reader<Size, T>::read(reader);
+        }
+    };
+
+    template<typename Size>
+    struct Reader<Size, String> {
+        static String read(MsgReader& reader)
+        {
+            Size length = Reader<Size, Size>::read(reader);
+            String res;
+            if (length > 0)
+            {
+                res.force_size((int)length);
+                reader.read(&res[0_byte], (int)length);
+            }
+            return res;
+        }
+    };
+
+    template<typename Size>
+    struct Reader<Size, Color> {
+        static Color read(MsgReader& reader)
+        {
+            Color res;
+            res.color = Reader<Size, Color::NamedColor>::read(reader);
+            if (res.color == Color::RGB)
+            {
+                res.r = Reader<Size, unsigned char>::read(reader);
+                res.g = Reader<Size, unsigned char>::read(reader);
+                res.b = Reader<Size, unsigned char>::read(reader);
+            }
+            return res;
+        }
+    };
+
+    template<typename Size>
+    struct Reader<Size, DisplayAtom> {
+        static DisplayAtom read(MsgReader& reader)
+        {
+            String content = Reader<Size, String>::read(reader);
+            return {std::move(content), Reader<Size, Face>::read(reader)};
+        }
+    };
+
+    template<typename Size>
+    struct Reader<Size, DisplayLine> {
+        static DisplayLine read(MsgReader& reader)
+        {
+            return {Reader<Size, Vector<DisplayAtom>>::read(reader)};
+        }
+    };
+
+    template<typename Size>
+    struct Reader<Size, DisplayBuffer> {
+        static DisplayBuffer read(MsgReader& reader)
+        {
+            DisplayBuffer db;
+            db.lines() = Reader<Size, Vector<DisplayLine>>::read(reader);
+            return db;
         }
     };
 
@@ -197,70 +256,15 @@ public:
     template<typename T>
     T read()
     {
-        return Reader<T>::read(m_reader);
+        return Reader<VariableSizeType,T>::read(m_reader);
     }
 
 private:
     MsgReader& m_reader;
 };
 
-template<>
-struct FieldReader::Reader<String> {
-    static String read(MsgReader& reader)
-    {
-        ByteCount length = Reader<ByteCount>::read(reader);
-        String res;
-        if (length > 0)
-        {
-            res.force_size((int)length);
-            reader.read(&res[0_byte], (int)length);
-        }
-        return res;
-    }
-};
-
-template<>
-struct FieldReader::Reader<Color> {
-    static Color read(MsgReader& reader)
-    {
-        Color res;
-        res.color = Reader<Color::NamedColor>::read(reader);
-        if (res.color == Color::RGB)
-        {
-            res.r = Reader<unsigned char>::read(reader);
-            res.g = Reader<unsigned char>::read(reader);
-            res.b = Reader<unsigned char>::read(reader);
-        }
-        return res;
-    }
-};
-
-template<>
-struct FieldReader::Reader<DisplayAtom> {
-    static DisplayAtom read(MsgReader& reader)
-    {
-        String content = Reader<String>::read(reader);
-        return {std::move(content), Reader<Face>::read(reader)};
-    }
-};
-
-template<>
-struct FieldReader::Reader<DisplayLine> {
-    static DisplayLine read(MsgReader& reader)
-    {
-        return {Reader<Vector<DisplayAtom>>::read(reader)};
-    }
-};
-
-template<>
-struct FieldReader::Reader<DisplayBuffer> {
-    static DisplayBuffer read(MsgReader& reader)
-    {
-        DisplayBuffer db;
-        db.lines() = Reader<Vector<DisplayLine>>::read(reader);
-        return db;
-    }
-};
+typedef FieldReader<uint32_t> KakouneFieldReader;
+typedef FieldReader<uint16_t> NinePFieldReader;
 
 
 class RemoteUI : public UserInterface
@@ -347,7 +351,7 @@ RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
                   if (not m_reader.ready())
                       continue;
 
-                   FieldReader fields{m_reader};
+                   KakouneFieldReader fields{m_reader};
                    auto type = fields.read<MessageType>();
                    if (type != MessageType::Key)
                    {
@@ -548,7 +552,7 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
                 continue;
 
             auto clear_reader = on_scope_end([&reader] { reader.reset(); });
-            FieldReader fields{reader};
+            KakouneFieldReader fields{reader};
             auto type = fields.read<MessageType>();
             switch (type)
             {
@@ -668,7 +672,7 @@ private:
             if (mode != EventMode::Normal or not m_reader.ready())
                 return;
 
-            FieldReader fields{m_reader};
+            KakouneFieldReader fields{m_reader};
             auto type = fields.read<MessageType>();
             switch (type)
             {
