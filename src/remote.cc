@@ -72,6 +72,70 @@ private:
 
 class MsgReader
 {
+public:
+    void read_available(int sock)
+    {
+        if (m_write_pos < header_size)
+        {
+            m_stream.resize(header_size);
+            read_from_socket(sock, header_size - m_write_pos);
+            if (m_write_pos == header_size)
+            {
+                if (size() < header_size)
+                    throw disconnected{"invalid message received"};
+                m_stream.resize(size());
+            }
+        }
+        else
+            read_from_socket(sock, size() - m_write_pos);
+    }
+
+    bool ready() const
+    {
+        return m_write_pos >= header_size and m_write_pos == size();
+    }
+
+    uint32_t size() const
+    {
+        kak_assert(m_write_pos >= header_size);
+        uint32_t res;
+        memcpy(&res, m_stream.data(), sizeof(uint32_t));
+        return res;
+    }
+
+    void read(char* buffer, size_t size)
+    {
+        if (m_read_pos + size > m_stream.size())
+            throw disconnected{"tried to read after message end"};
+        memcpy(buffer, m_stream.data() + m_read_pos, size);
+        m_read_pos += size;
+    }
+
+    void reset()
+    {
+        m_stream.resize(0);
+        m_write_pos = 0;
+        m_read_pos = header_size;
+    }
+
+private:
+    void read_from_socket(int sock, size_t size)
+    {
+        kak_assert(m_write_pos + size <= m_stream.size());
+        int res = ::read(sock, m_stream.data() + m_write_pos, size);
+        if (res <= 0)
+            throw disconnected{format("socket read failed: {}", strerror(errno))};
+        m_write_pos += res;
+    }
+
+    static constexpr uint32_t header_size = sizeof(uint32_t);
+    RemoteBuffer m_stream;
+    uint32_t m_write_pos = 0;
+    uint32_t m_read_pos = header_size;
+};
+
+class FieldReader
+{
 private:
     template<typename T>
     struct Reader {
@@ -125,75 +189,23 @@ private:
     };
 
 public:
-    void read_available(int sock)
+    FieldReader(MsgReader& reader)
+        : m_reader(reader)
     {
-        if (m_write_pos < header_size)
-        {
-            m_stream.resize(header_size);
-            read_from_socket(sock, header_size - m_write_pos);
-            if (m_write_pos == header_size)
-            {
-                if (size() < header_size)
-                    throw disconnected{"invalid message received"};
-                m_stream.resize(size());
-            }
-        }
-        else
-            read_from_socket(sock, size() - m_write_pos);
-    }
-
-    bool ready() const
-    {
-        return m_write_pos >= header_size and m_write_pos == size();
-    }
-
-    uint32_t size() const
-    {
-        kak_assert(m_write_pos >= header_size);
-        uint32_t res;
-        memcpy(&res, m_stream.data(), sizeof(uint32_t));
-        return res;
-    }
-
-    void read(char* buffer, size_t size)
-    {
-        if (m_read_pos + size > m_stream.size())
-            throw disconnected{"tried to read after message end"};
-        memcpy(buffer, m_stream.data() + m_read_pos, size);
-        m_read_pos += size;
     }
 
     template<typename T>
     T read()
     {
-        return Reader<T>::read(*this);
-    }
-
-    void reset()
-    {
-        m_stream.resize(0);
-        m_write_pos = 0;
-        m_read_pos = header_size;
+        return Reader<T>::read(m_reader);
     }
 
 private:
-    void read_from_socket(int sock, size_t size)
-    {
-        kak_assert(m_write_pos + size <= m_stream.size());
-        int res = ::read(sock, m_stream.data() + m_write_pos, size);
-        if (res <= 0)
-            throw disconnected{format("socket read failed: {}", strerror(errno))};
-        m_write_pos += res;
-    }
-
-    static constexpr uint32_t header_size = sizeof(uint32_t);
-    RemoteBuffer m_stream;
-    uint32_t m_write_pos = 0;
-    uint32_t m_read_pos = header_size;
+    MsgReader& m_reader;
 };
 
 template<>
-struct MsgReader::Reader<String> {
+struct FieldReader::Reader<String> {
     static String read(MsgReader& reader)
     {
         ByteCount length = Reader<ByteCount>::read(reader);
@@ -208,7 +220,7 @@ struct MsgReader::Reader<String> {
 };
 
 template<>
-struct MsgReader::Reader<Color> {
+struct FieldReader::Reader<Color> {
     static Color read(MsgReader& reader)
     {
         Color res;
@@ -224,7 +236,7 @@ struct MsgReader::Reader<Color> {
 };
 
 template<>
-struct MsgReader::Reader<DisplayAtom> {
+struct FieldReader::Reader<DisplayAtom> {
     static DisplayAtom read(MsgReader& reader)
     {
         String content = Reader<String>::read(reader);
@@ -233,7 +245,7 @@ struct MsgReader::Reader<DisplayAtom> {
 };
 
 template<>
-struct MsgReader::Reader<DisplayLine> {
+struct FieldReader::Reader<DisplayLine> {
     static DisplayLine read(MsgReader& reader)
     {
         return {Reader<Vector<DisplayAtom>>::read(reader)};
@@ -241,7 +253,7 @@ struct MsgReader::Reader<DisplayLine> {
 };
 
 template<>
-struct MsgReader::Reader<DisplayBuffer> {
+struct FieldReader::Reader<DisplayBuffer> {
     static DisplayBuffer read(MsgReader& reader)
     {
         DisplayBuffer db;
@@ -335,14 +347,15 @@ RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
                   if (not m_reader.ready())
                       continue;
 
-                   auto type = m_reader.read<MessageType>();
+                   FieldReader fields{m_reader};
+                   auto type = fields.read<MessageType>();
                    if (type != MessageType::Key)
                    {
                        m_socket_watcher.close_fd();
                        return;
                    }
 
-                   auto key = m_reader.read<Key>();
+                   auto key = fields.read<Key>();
                    m_reader.reset();
                    if (key.modifiers == Key::Modifiers::Resize)
                        m_dimensions = key.coord();
@@ -535,32 +548,33 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
                 continue;
 
             auto clear_reader = on_scope_end([&reader] { reader.reset(); });
-            auto type = reader.read<MessageType>();
+            FieldReader fields{reader};
+            auto type = fields.read<MessageType>();
             switch (type)
             {
             case MessageType::MenuShow:
             {
-                auto choices = reader.read<Vector<DisplayLine>>();
-                auto anchor = reader.read<DisplayCoord>();
-                auto fg = reader.read<Face>();
-                auto bg = reader.read<Face>();
-                auto style = reader.read<MenuStyle>();
+                auto choices = fields.read<Vector<DisplayLine>>();
+                auto anchor = fields.read<DisplayCoord>();
+                auto fg = fields.read<Face>();
+                auto bg = fields.read<Face>();
+                auto style = fields.read<MenuStyle>();
                 m_ui->menu_show(choices, anchor, fg, bg, style);
                 break;
             }
             case MessageType::MenuSelect:
-                m_ui->menu_select(reader.read<int>());
+                m_ui->menu_select(fields.read<int>());
                 break;
             case MessageType::MenuHide:
                 m_ui->menu_hide();
                 break;
             case MessageType::InfoShow:
             {
-                auto title = reader.read<DisplayLine>();
-                auto content = reader.read<DisplayLineList>();
-                auto anchor = reader.read<DisplayCoord>();
-                auto face = reader.read<Face>();
-                auto style = reader.read<InfoStyle>();
+                auto title = fields.read<DisplayLine>();
+                auto content = fields.read<DisplayLineList>();
+                auto anchor = fields.read<DisplayCoord>();
+                auto face = fields.read<Face>();
+                auto style = fields.read<InfoStyle>();
                 m_ui->info_show(title, content, anchor, face, style);
                 break;
             }
@@ -569,35 +583,35 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
                 break;
             case MessageType::Draw:
             {
-                auto display_buffer = reader.read<DisplayBuffer>();
-                auto default_face = reader.read<Face>();
-                auto padding_face = reader.read<Face>();
+                auto display_buffer = fields.read<DisplayBuffer>();
+                auto default_face = fields.read<Face>();
+                auto padding_face = fields.read<Face>();
                 m_ui->draw(display_buffer, default_face, padding_face);
                 break;
             }
             case MessageType::DrawStatus:
             {
-                auto status_line = reader.read<DisplayLine>();
-                auto mode_line = reader.read<DisplayLine>();
-                auto default_face = reader.read<Face>();
+                auto status_line = fields.read<DisplayLine>();
+                auto mode_line = fields.read<DisplayLine>();
+                auto default_face = fields.read<Face>();
                 m_ui->draw_status(status_line, mode_line, default_face);
                 break;
             }
             case MessageType::SetCursor:
             {
-                auto mode = reader.read<CursorMode>();
-                auto coord = reader.read<DisplayCoord>();
+                auto mode = fields.read<CursorMode>();
+                auto coord = fields.read<DisplayCoord>();
                 m_ui->set_cursor(mode, coord);
                 break;
             }
             case MessageType::Refresh:
-                m_ui->refresh(reader.read<bool>());
+                m_ui->refresh(fields.read<bool>());
                 break;
             case MessageType::SetOptions:
-                m_ui->set_ui_options(reader.read<HashMap<String, String, MemoryDomain::Options>>());
+                m_ui->set_ui_options(fields.read<HashMap<String, String, MemoryDomain::Options>>());
                 break;
             case MessageType::Exit:
-                m_exit_status = reader.read<int>();
+                m_exit_status = fields.read<int>();
                 watcher.close_fd();
                 return;
             default:
@@ -654,17 +668,18 @@ private:
             if (mode != EventMode::Normal or not m_reader.ready())
                 return;
 
-            auto type = m_reader.read<MessageType>();
+            FieldReader fields{m_reader};
+            auto type = fields.read<MessageType>();
             switch (type)
             {
             case MessageType::Connect:
             {
-                auto pid = m_reader.read<int>();
-                auto name = m_reader.read<String>();
-                auto init_cmds = m_reader.read<String>();
-                auto init_coord = m_reader.read<Optional<BufferCoord>>();
-                auto dimensions = m_reader.read<DisplayCoord>();
-                auto env_vars = m_reader.read<HashMap<String, String, MemoryDomain::EnvVars>>();
+                auto pid = fields.read<int>();
+                auto name = fields.read<String>();
+                auto init_cmds = fields.read<String>();
+                auto init_coord = fields.read<Optional<BufferCoord>>();
+                auto dimensions = fields.read<DisplayCoord>();
+                auto env_vars = fields.read<HashMap<String, String, MemoryDomain::EnvVars>>();
                 auto* ui = new RemoteUI{sock, dimensions};
                 ClientManager::instance().create_client(
                     std::unique_ptr<UserInterface>(ui), pid, std::move(name),
@@ -676,7 +691,7 @@ private:
             }
             case MessageType::Command:
             {
-                auto command = m_reader.read<String>();
+                auto command = fields.read<String>();
                 if (not command.empty()) try
                 {
                     Context context{Context::EmptyContextFlag{}};
