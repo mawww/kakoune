@@ -35,26 +35,7 @@ regex org_priority "A|C|B"
 hook global BufCreate .*[.]org %{
     set-option buffer filetype org
     # Update `org_todo_items' and `org_priority_items' when opening file
-    evaluate-commands -save-regs '"/' %{
-        try %{
-            execute-keys -draft '/(?i)^\h*#\+(SEQ_|TYP_)?TODO:[^\n]+<ret><a-h>f:l<a-l>y: set-option buffer org_todo %reg{dquote}<ret>'
-            set-option buffer org_todo %sh{ printf "%s\n" "${kak_opt_org_todo}" | perl -pe 'if (/^.*\|.*$/) {
-                                                                                                 $_ =~ s/(.*)\|(.*)/($1)|($2)/;
-                                                                                                 $_ =~ s/\(\s+/(/g;
-                                                                                                 $_ =~ s/\s+\)/)/g;
-                                                                                                 $_ =~ s/[\t ]+/|/g;
-                                                                                             } else {
-                                                                                                 $_ =~ s/(.*) ([^\s]+$)/($1)|($2)/;
-                                                                                                 $_ =~ s/\(\s+/(/g;
-                                                                                                 $_ =~ s/\s+\)/)/g;
-                                                                                                 $_ =~ s/[\t ]+/|/g;
-                                                                                             }' }
-        }
-        try %{
-            execute-keys -draft '/(?i)^\h*#\+PRIORITIES:[^\n]+<ret><a-h>f:l<a-l>s\h*\w(\s+)?(\w)?(\s+)?(\w)?\s<ret>y: set-option buffer org_priority %reg{dquote}<ret>'
-            set-option buffer org_priority %sh{ printf "%s\n" "${kak_opt_org_priority}" | sed -E "s/ /|/g" }
-        }
-    }
+    org-parse-file
 }
 
 # Highlighters
@@ -127,8 +108,8 @@ add-highlighter shared/org/inline/text/heading          regex   '^(?:[*]{1}|[*]{
 add-highlighter shared/org/inline/text/section          regex  '^(?:[*]{2}|[*]{6}|[*]{10})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:section       1:module
 add-highlighter shared/org/inline/text/subsection       regex  '^(?:[*]{3}|[*]{7}|[*]{11})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:subsection    1:module
 add-highlighter shared/org/inline/text/subsubsection    regex '^(?:[*]{4}|[*]{8}|[*]{12,})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:subsubsection 1:module
-add-highlighter shared/org/inline/text/heading_todo     dynregex '^(?:[*]+)\h+%opt{org_todo}'                        1:org_todo      2:org_done
-add-highlighter shared/org/inline/text/heading_priority dynregex '^(?:[*]+)\h+[^\n\[]*(\[#(?:%opt{org_priority})\])' 1:org_priority
+add-highlighter shared/org/inline/text/heading_todo     dynregex '^[*]+\h+(?:%opt{org_todo})'                        1:org_todo 2:org_done
+add-highlighter shared/org/inline/text/heading_priority dynregex '^[*]+\h+[^\n\[]*(\[#(?:%opt{org_priority})\])'     1:org_priority
 # (?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?
 # Options
 add-highlighter shared/org/inline/text/option     regex "(?i)#\+[a-z]\w*\b[^\n]*"          0:module
@@ -215,6 +196,35 @@ define-command -hidden org-indent-on-new-line %{
         try %{ execute-keys -draft -itersel 'k<a-x>s\h+$<ret>d' }
     }
 }
+
+define-command -docstring "" \
+org-parse-file %{ evaluate-commands -save-regs '"/' %{
+    # Parse TODO items
+    try %{
+        execute-keys -draft '/(?i)^\h*#\+(SEQ_|TYP_)?TODO:[^\n]+<ret><a-h>f:l<a-l>y: set-option buffer org_todo %reg{dquote}<ret>'
+        # This Perl code transforms these two lines to similar formats:
+        # `word1 word2 word3 word4' to `(word1|word2|word3)|(word4)',
+        # and `word1 word2 | word3 word4' to `(word1|word2)|(word3|word4)'.
+        # This regex is later used in to highlight todo items in headings.
+        set-option buffer org_todo %sh{ printf "%s\n" "${kak_opt_org_todo}" | perl -pe 'if (/^.*\|.*$/) {
+                                                                                             $_ =~ s/(.*)\|(.*)/($1)|($2)/;
+                                                                                             $_ =~ s/\(\s+/(/g;
+                                                                                             $_ =~ s/\s+\)/)/g;
+                                                                                             $_ =~ s/[\t ]+/|/g;
+                                                                                         } else {
+                                                                                             $_ =~ s/(.*) ([^\s]+$)/($1)|($2)/;
+                                                                                             $_ =~ s/\(\s+/(/g;
+                                                                                             $_ =~ s/\s+\)/)/g;
+                                                                                             $_ =~ s/[\t ]+/|/g;
+                                                                                         }' }
+    }
+    # Parse priority items
+    try %{
+        # this `execute-keys' selects first three letters in `#+PRIORITIES' line
+        execute-keys -draft '/(?i)^\h*#\+PRIORITIES:[^\n]+<ret><a-h>f:l<a-l>s\h*\w(\s+)?(\w)?(\s+)?(\w)?\s<ret>y: set-option buffer org_priority %reg{dquote}<ret>'
+        set-option buffer org_priority %sh{ printf "%s\n" "${kak_opt_org_priority}" | sed -E "s/ /|/g" }
+    }
+}}
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
