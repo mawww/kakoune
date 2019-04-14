@@ -172,12 +172,12 @@ add-highlighter shared/org/inline/text/export regex "@@[a-zA-Z-]+:.*?@@" 0:mono
 add-highlighter shared/org/inline/text/footnote regex "\[fn:([\w-_]+)?(:[^\n]+)?\]" 0:link
 
 # Links
-add-highlighter shared/org/inline/text/link1 regex "[<][^<>\n\]+:[^<>\n\]+?[>]"            0:link
+add-highlighter shared/org/inline/text/link1 regex "<[^<>\n]+:[^<>\n\]]+?>"                0:link
 add-highlighter shared/org/inline/text/link2 regex "(?:^|\h)([\[]{2}[^\n\[\]]*?[\]]{2})\W" 0:link
 
 # Targets
-add-highlighter shared/org/inline/text/org_target       regex '<<[^\s<>][^\n<>]+[^\s<>]>>'   0:link
-add-highlighter shared/org/inline/text/org_radio_target regex '<<<[^\s<>][^\n<>]+[^\s<>]>>>' 0:link
+add-highlighter shared/org/inline/text/org_target       regex '[<]{2}[^\s<>][^\n<>]+[^\s<>][>]{2}' 0:link
+add-highlighter shared/org/inline/text/org_radio_target regex '[<]{3}[^\s<>][^\n<>]+[^\s<>][>]{3}' 0:link
 
 # Macros
 add-highlighter shared/org/inline/text/macros regex '[{]{3}[A-Za-z][a-zA-Z0-9-_]+\(.*?\)[}]{3}' 0:meta
