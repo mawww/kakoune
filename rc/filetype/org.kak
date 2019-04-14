@@ -17,9 +17,9 @@ set-face global org_priority value
 # that will be used in `dynregex' highlighters. We also need to update these
 # items when opening file.
 declare-option -docstring "Org Mode todo markers. You can customize this option directly, following the format, or by using `#+TODO:' in your document:
-    document format: #+TODO: state1 state2 ... stateN done
-    manual format:   '(state1|state2|...|stateN)|(done)'
-Colors for TODO items can be customized with `org_todo' and `org_done' faces.
+    document format: #+TODO: todo1 todo2 ... todoN | done1 done2 ... doneN
+    manual format:   '(todo1|todo2|...|todoN)|(done1|done2|...|doneN)'
+# Colors for TODO items can be customized with `org_todo' and `org_done' faces.
 " \
 regex org_todo "(TODO)|(DONE)"
 
@@ -37,12 +37,22 @@ hook global BufCreate .*[.]org %{
     # Update `org_todo_items' and `org_priority_items' when opening file
     evaluate-commands -save-regs '"/' %{
         try %{
-            execute-keys -draft '/(?i)#\+TODO:[^\n]+<ret><a-h>f:l<a-l>y: set-option buffer org_todo_items %reg{dquote}<ret>'
-            set-option buffer org_todo_items %sh{ printf "%s\n" " ${kak_opt_org_todo_items}" | sed -E "s/\s+/|/g;s/^\|//;s/(.*)\|(\w+)$/(\1)|(\2)/" }
+            execute-keys -draft '/(?i)#\+(SEQ_|TYP_)?TODO:[^\n]+<ret><a-h>f:l<a-l>y: set-option buffer org_todo %reg{dquote}<ret>'
+            set-option buffer org_todo %sh{ printf "%s\n" "${kak_opt_org_todo}" | perl -pe 'if (/^.*\|.*$/) {
+                                                                                                 $_ =~ s/(.*)\|(.*)/($1)|($2)/;
+                                                                                                 $_ =~ s/\(\s+/(/g;
+                                                                                                 $_ =~ s/\s+\)/)/g;
+                                                                                                 $_ =~ s/[\t ]+/|/g;
+                                                                                             } else {
+                                                                                                 $_ =~ s/(.*) ([^\s]+$)/($1)|($2)/;
+                                                                                                 $_ =~ s/\(\s+/(/g;
+                                                                                                 $_ =~ s/\s+\)/)/g;
+                                                                                                 $_ =~ s/[\t ]+/|/g;
+                                                                                             }' }
         }
         try %{
-            execute-keys -draft '/(?i)#\+PRIORITIES:[^\n]+<ret><a-h>f:l<a-l>s\h*\w(\s+)?(\w)?(\s+)?(\w)?\s<ret>y: set-option buffer org_priority_items %reg{dquote}<ret>'
-            set-option buffer org_priority_items %sh{ printf "%s\n" "${kak_opt_org_priority_items}" | sed -E "s/ /|/g" }
+            execute-keys -draft '/(?i)#\+PRIORITIES:[^\n]+<ret><a-h>f:l<a-l>s\h*\w(\s+)?(\w)?(\s+)?(\w)?\s<ret>y: set-option buffer org_priority %reg{dquote}<ret>'
+            set-option buffer org_priority %sh{ printf "%s\n" "${kak_opt_org_priority}" | sed -E "s/ /|/g" }
         }
     }
 }
