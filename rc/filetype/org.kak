@@ -193,7 +193,7 @@ add-highlighter shared/org/inline/text/footnote regex "\[fn:([\w-_]+)?(:[^\n]+)?
 
 # Links
 add-highlighter shared/org/inline/text/link1 regex "<[^<>\n]+:[^<>\n\]]+?>"                0:link
-add-highlighter shared/org/inline/text/link2 regex "(?:^|\h)([\[]{2}[^\n\[\]]*?[\]]{2})\W" 0:link
+add-highlighter shared/org/inline/text/link2 regex "(?:^|\h)([\[]{2}[^\n]*?[\]]{2})\W" 0:link
 
 # Targets
 add-highlighter shared/org/inline/text/org_target       regex '[<]{2}[^\s<>][^\n<>]+[^\s<>][>]{2}' 0:link
