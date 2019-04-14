@@ -137,8 +137,7 @@ declare-option -docstring "Org timestamp
           format: DATE TIME REPEATER-OR-DELAY" \
 regex org_timestamp "%opt{org_date}(\h+%opt{org_time}(-%opt{org_time})?(\h+%opt{org_repeater_or_delay})?)?"
 
-add-highlighter shared/org/inline/text/timestamp_active   dynregex "<%opt{org_timestamp}(--%opt{org_timestamp})?>"   0:keyword
-add-highlighter shared/org/inline/text/timestamp_inactive dynregex "\[%opt{org_timestamp}(--%opt{org_timestamp})?\]" 0:comment
+add-highlighter shared/org/inline/text/timestamp dynregex "[\[<]%opt{org_timestamp}([\]>]--[\[<]%opt{org_timestamp})?[\]>]" 0:variable
 
 # Markup
 ## FORMAT: PRE MARKER CONTENTS MARKER POST
@@ -173,7 +172,7 @@ add-highlighter shared/org/inline/text/export regex "@@[a-zA-Z-]+:.*?@@" 0:mono
 add-highlighter shared/org/inline/text/footnote regex "\[fn:([\w-_]+)?(:[^\n]+)?\]" 0:link
 
 # Links
-add-highlighter shared/org/inline/text/link1 regex "<[^<>\n]+:[^<>\n\]]+?>"                0:link
+add-highlighter shared/org/inline/text/link1 regex "<[^<>\n\d]+:[^<>\n\]]+?>"          0:link
 add-highlighter shared/org/inline/text/link2 regex "(?:^|\h)([\[]{2}[^\n]*?[\]]{2})\W" 0:link
 
 # Targets
