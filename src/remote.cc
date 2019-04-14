@@ -673,6 +673,118 @@ void send_command(StringView session, StringView command)
     write(sock, {buffer.data(), buffer.data() + buffer.size()});
 }
 
+class File {
+public:
+    typedef uint32_t Fid;
+
+    enum class Type : uint8_t {
+        DMDIR    = 0x80,
+        DMAPPEND = 0x40,
+        DMEXCL   = 0x20,
+        DMTMP    = 0x04
+    };
+    friend constexpr bool with_bit_ops(Meta::Type<Type>) { return true; }
+
+#pragma pack(push,1)
+    struct Qid {
+        Type     type;
+        uint32_t version;
+        uint64_t path;
+    };
+#pragma pack(pop)
+
+    static_assert(sizeof(Qid) == 13, "compiler has added padding to Qid");
+
+    File(Type type, const Vector<String>& path)
+      : m_type(type), m_path(path)
+    {}
+    virtual ~File() {}
+    virtual Vector<RemoteBuffer> contents() const = 0;
+    virtual std::unique_ptr<File> walk(const String& name) const = 0;
+
+    Type type() const { return m_type; }
+    Qid qid() const { return { m_type, 0, 0 }; }
+    const Vector<String>& path() const { return m_path; }
+
+    uint32_t mode() const
+    {
+        uint32_t mode = uint32_t(m_type) << 24;
+        if (m_type & Type::DMDIR)
+            mode |= 0755;
+        else
+            mode |= 0644;
+        return mode;
+    }
+
+    uint64_t length() const
+    {
+        ByteCount length{0};
+        if (not (m_type & Type::DMDIR))
+        {
+            auto data = contents();
+            for (auto& s : data)
+                length += s.size();
+        }
+        return uint64_t(int(length));
+    }
+
+    String basename() const
+    {
+        if (m_path.empty())
+            return "/";
+        else
+            return *m_path.rbegin();
+    }
+
+    RemoteBuffer stat() const
+    {
+        RemoteBuffer stat_data;
+        {
+            NinePFieldWriter fields{stat_data};
+            fields.write<uint16_t>(0);  // ???
+            fields.write<uint16_t>(0);  // type, "for kernel use"
+            fields.write<uint32_t>(0);  // dev, "for kernel use"
+            fields.write(qid());
+            fields.write<uint32_t>(mode());
+            fields.write<uint32_t>(0); // atime
+            fields.write<uint32_t>(0); // mtime
+            fields.write<uint64_t>(length());
+            fields.write(basename());
+            fields.write(get_user_name());
+            fields.write("group");
+            fields.write(get_user_name());
+        }
+
+        RemoteBuffer result;
+        {
+            NinePFieldWriter result_fields{result};
+            result_fields.write<uint16_t>(int(stat_data.size()));
+            result_fields.write(stat_data.data(), int(stat_data.size()));
+        }
+        return result;
+    }
+
+private:
+    Type m_type;
+    Vector<String> m_path;
+};
+
+class Root : public File {
+public:
+    Root()
+      : File(Type::DMDIR, Vector<String>())
+    {}
+
+    virtual Vector<RemoteBuffer> contents() const
+    {
+        return {};
+    }
+
+    virtual std::unique_ptr<File> walk(const String& name) const
+    {
+        return {};
+    }
+};
 
 // A client accepter handle a connection until it closes or a nul byte is
 // recieved. Everything recieved before is considered to be a command.
@@ -743,6 +855,27 @@ private:
                 Server::instance().remove_accepter(this);
                 break;
             }
+            case MessageType::Tattach:
+            {
+                NinePFieldReader fields{m_reader};
+                auto tag = fields.read<uint16_t>();
+                auto fid = fields.read<File::Fid>();
+                auto afid = fields.read<File::Fid>();
+                auto uname = fields.read<String>();
+                auto aname = fields.read<String>();
+                m_reader.reset();
+                std::shared_ptr<File> file{ new Root() };
+                m_fids.insert({ fid, file });
+                {
+                    MsgWriter msg{m_send_buffer};
+                    NinePFieldWriter fields{m_send_buffer};
+                    fields.write(MessageType::Rattach);
+                    fields.write(tag);
+                    fields.write(file->qid());
+                }
+                m_socket_watcher.events() |= FdEvents::Write;
+                break;
+            }
             case MessageType::Tversion:
             {
                 NinePFieldReader fields{m_reader};
@@ -779,6 +912,7 @@ private:
     FDWatcher m_socket_watcher;
     MsgReader m_reader;
     RemoteBuffer m_send_buffer;
+    HashMap<File::Fid, std::shared_ptr<File>> m_fids;
 };
 
 Server::Server(String session_name)
