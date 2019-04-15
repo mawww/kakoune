@@ -817,6 +817,30 @@ public:
     {}
 
 private:
+    class FidState {
+    public:
+        explicit FidState(std::shared_ptr<File> file)
+            : m_file{file}
+        {
+        }
+
+        std::shared_ptr<File> file() const { return m_file; }
+
+        bool open()
+        {
+            if (m_is_open)
+                return false;
+            m_open_contents = m_file->contents();
+            m_is_open = true;
+            return true;
+        }
+
+    private:
+        std::shared_ptr<File> m_file;
+        bool m_is_open = false;
+        Vector<RemoteBuffer> m_open_contents;
+    };
+
     void handle_events(FdEvents events, EventMode mode)
     {
         const int sock = m_socket_watcher.fd();
@@ -879,7 +903,7 @@ private:
                 auto aname = fields.read<String>();
                 m_reader.reset();
                 std::shared_ptr<File> file{ new Root() };
-                m_fids.insert({ fid, file });
+                m_fids.insert({ fid, FidState{ file } });
                 {
                     MsgWriter msg{m_send_buffer};
                     NinePFieldWriter fields{m_send_buffer};
@@ -914,6 +938,35 @@ private:
                 m_socket_watcher.events() |= FdEvents::Write;
                 break;
             }
+            case MessageType::Topen:
+            {
+                NinePFieldReader fields{m_reader};
+                auto tag = fields.read<uint16_t>();
+                auto fid = fields.read<File::Fid>();
+                auto mode = fields.read<uint8_t>();
+                m_reader.reset();
+                auto it = m_fids.find(fid);
+                if (it == m_fids.end())
+                {
+                    error(tag, "Unknown FID");
+                    return;
+                }
+                if (not it->value.open())
+                {
+                    error(tag, "Failed to open file");
+                    return;
+                }
+                {
+                    MsgWriter msg{m_send_buffer};
+                    NinePFieldWriter fields{m_send_buffer};
+                    fields.write(MessageType::Ropen);
+                    fields.write(tag);
+                    fields.write(it->value.file()->qid());
+                    fields.write<uint32_t>(0);
+                }
+                m_socket_watcher.events() |= FdEvents::Write;
+                break;
+            }
             case MessageType::Tstat:
             {
                 NinePFieldReader fields{m_reader};
@@ -926,7 +979,7 @@ private:
                     error(tag, "Unknown FID");
                     return;
                 }
-                auto stat = it->value->stat();
+                auto stat = it->value.file()->stat();
                 {
                     MsgWriter msg{m_send_buffer};
                     NinePFieldWriter fields{m_send_buffer};
@@ -972,7 +1025,7 @@ private:
                     error(tag, "Unknown FID");
                     return;
                 }
-                auto file = file_it->value;
+                auto file = file_it->value.file();
 
                 if (m_fids.find(newfid) != m_fids.end())
                 {
@@ -989,7 +1042,7 @@ private:
                     }
                     qids.push_back(file->qid());
                 }
-                m_fids.insert({ newfid, file });
+                m_fids.insert({ newfid, FidState{ file } });
 
                 {
                     MsgWriter msg{m_send_buffer};
@@ -1028,7 +1081,7 @@ private:
     FDWatcher m_socket_watcher;
     MsgReader m_reader;
     RemoteBuffer m_send_buffer;
-    HashMap<File::Fid, std::shared_ptr<File>> m_fids;
+    HashMap<File::Fid, FidState> m_fids;
 };
 
 Server::Server(String session_name)
