@@ -57,6 +57,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                                  desc=$4 ? $3 "\n" $4 : $3
 
                                  gsub(/~/, "~~", desc)
+                                 gsub(/!/, "!!", desc)
                                  gsub(/\|/, "\\|", desc)
                                  if (id in docstrings)
                                      docstrings[id]=docstrings[id] "\n" desc
@@ -69,7 +70,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                                     gsub(/(^|[^[:alnum:]_])(operator|new|delete)($|[^{}_[:alnum:]]+)/, "{keyword}&{}", menu)
                                     gsub(/(^|[[:space:]])(int|size_t|bool|char|unsigned|signed|long)($|[[:space:]])/, "{type}&{}", menu)
                                     gsub(/[^{}_[:alnum:]]+/, "{operator}&{}", menu)
-                                    printf "%%~%s|%s|%s~ ", id, docstrings[id], menu
+                                    printf "%%~%s|info -style menu %!%s!|%s~ ", id, docstrings[id], menu
                                 }
                             }')
                 printf %s\\n "evaluate-commands -client ${kak_client} echo 'clang completion done'

@@ -58,7 +58,7 @@ struct InsertCompletion
     struct Candidate
     {
         String completion;
-        String docstring;
+        String on_select;
         DisplayLine menu_entry;
 
         bool operator==(const Candidate& other) const { return completion == other.completion; }

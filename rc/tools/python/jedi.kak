@@ -21,7 +21,7 @@ define-command jedi-complete -docstring "Complete the current selection" %{
             compl=$(python 2> "${dir}/fifo" <<-END
 		import jedi
 		script=jedi.Script(open('$dir/buf', 'r').read(), $kak_cursor_line, $kak_cursor_column - 1, '$kak_buffile')
-		print(' '.join(["'" + (str(c.name).replace("|", "\\|") + "|" + str(c.docstring()).replace("|", "\\|") + "|" + str(c.name).replace("|", "\\|")).replace("~", "~~").replace("'", "''") + "'" for c in script.completions()]))
+		print(' '.join(["'" + (str(c.name).replace("|", "\\|") + "|info -style menu %!" + str(c.docstring()).replace("|", "\\|").replace("!", "!!") + "!|" + str(c.name).replace("|", "\\|")).replace("~", "~~").replace("'", "''") + "'" for c in script.completions()]))
 		END
             )
             printf %s\\n "evaluate-commands -client ${kak_client} %~echo completed; set-option %{buffer=${kak_buffile}} jedi_completions ${header} ${compl}~" | kak -p ${kak_session}
