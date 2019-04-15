@@ -39,7 +39,6 @@ enum class Hook
     InsertMove,
     InsertCompletionHide,
     InsertCompletionShow,
-    InsertCompletionSelect,
     KakBegin,
     KakEnd,
     FocusIn,
@@ -62,7 +61,7 @@ enum class Hook
 
 constexpr auto enum_desc(Meta::Type<Hook>)
 {
-    return make_array<EnumDesc<Hook>, 41>({
+    return make_array<EnumDesc<Hook>, 40>({
         {Hook::BufCreate, "BufCreate"},
         {Hook::BufNewFile, "BufNewFile"},
         {Hook::BufOpenFile, "BufOpenFile"},
@@ -85,7 +84,6 @@ constexpr auto enum_desc(Meta::Type<Hook>)
         {Hook::InsertMove, "InsertMove"},
         {Hook::InsertCompletionHide, "InsertCompletionHide"},
         {Hook::InsertCompletionShow, "InsertCompletionShow"},
-        {Hook::InsertCompletionSelect, "InsertCompletionSelect"},
         {Hook::KakBegin, "KakBegin"},
         {Hook::KakEnd, "KakEnd"},
         {Hook::FocusIn, "FocusIn"},

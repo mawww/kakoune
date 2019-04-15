@@ -447,12 +447,6 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
     for (auto& c : candidate.completion)
         keystrokes.emplace_back(c);
 
-    if (m_context.has_client())
-    {
-        const auto param = (m_current_candidate == m_completions.candidates.size() - 1) ?
-            StringView{} : candidate.completion;
-        m_context.hooks().run_hook(Hook::InsertCompletionSelect, param, m_context);
-    }
     if (not candidate.on_select.empty())
         CommandManager::instance().execute(candidate.on_select, m_context);
 }
