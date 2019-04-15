@@ -452,7 +452,7 @@ public:
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
     {
         Regex regex = m_regex_getter(context.context);
-        FacesSpec face = m_face_getter(context.context);
+        FacesSpec face = regex.empty() ? FacesSpec{} : m_face_getter(context.context, regex);
         if (regex != m_last_regex or face != m_last_face)
         {
             m_last_regex = std::move(regex);
@@ -479,15 +479,14 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
     if (params.size() < 2)
         throw runtime_error("wrong parameter count");
 
-    FacesSpec faces;
+    Vector<std::pair<String, String>> faces;
     for (auto& spec : params.subrange(1))
     {
         auto colon = find(spec, ':');
         if (colon == spec.end())
             throw runtime_error("wrong face spec: '" + spec +
                                  "' expected <capture>:<facespec>");
-        int capture = str_to_int({spec.begin(), colon});
-        faces.emplace_back(capture, String{colon+1, spec.end()});
+        faces.emplace_back(String{spec.begin(), colon}, String{colon+1, spec.end()});
     }
 
     auto make_hl = [](auto& regex_getter, auto& face_getter) {
@@ -495,7 +494,24 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
                                                         std::decay_t<decltype(face_getter)>>>(
             std::move(regex_getter), std::move(face_getter));
     };
-    auto get_face = [faces](const Context& context){ return faces; };
+    auto get_face = [faces=std::move(faces)](const Context& context, const Regex& regex){
+        FacesSpec spec;
+        for (auto& face : faces)
+        {
+            const int capture = str_to_int_ifp(face.first).value_or_compute([&] {
+                return regex.named_capture_index(face.first);
+            });
+            if (capture < 0)
+            {
+                write_to_debug_buffer(format("Error while evaluating dynamic regex expression faces,"
+                                             " {} is neither a capture index nor a capture name",
+                                             face.first));
+                return FacesSpec{};
+            }
+            spec.emplace_back(capture, face.second);
+        }
+        return spec;
+    };
 
     CommandParser parser{params[0]};
     auto token = parser.read_token(true);
