@@ -47,6 +47,7 @@ struct {
         0,
         "» %file{...} expansions to read files\n"
         "» echo -to-file <filename> to write to file\n"
+        "» completions option have an on select command instead of a docstring\n"
     }, {
         20190120,
         "» named capture groups in regex\n"
