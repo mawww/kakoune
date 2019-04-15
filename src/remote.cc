@@ -876,6 +876,14 @@ private:
                 m_socket_watcher.events() |= FdEvents::Write;
                 break;
             }
+            case MessageType::Tauth:
+            {
+                NinePFieldReader fields{m_reader};
+                auto tag = fields.read<uint16_t>();
+                m_reader.reset();
+                error(tag, "Auth isn't supported");
+                break;
+            }
             case MessageType::Tclunk:
             {
                 NinePFieldReader fields{m_reader};
