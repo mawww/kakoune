@@ -703,8 +703,22 @@ public:
     virtual std::unique_ptr<File> walk(const String& name) const = 0;
 
     Type type() const { return m_type; }
-    Qid qid() const { return { m_type, 0, 0 }; }
     const Vector<String>& path() const { return m_path; }
+
+    String full_path() const
+    {
+        if (m_path.empty())
+            return String{"/"};
+        else
+            return join(m_path, '/', false);
+    }
+
+    Qid qid() const
+    {
+        String path = full_path();
+        uint64_t path_hash = hash_data(path.data(), size_t(int(path.length())));
+        return { m_type, 0, path_hash };
+    }
 
     uint32_t mode() const
     {
