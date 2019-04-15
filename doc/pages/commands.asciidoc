@@ -279,8 +279,18 @@ but not really useful in that context.
     *-anchor* <line>.<column>:::
         print the text at the given coordinates
 
-    *-placement* {above,below}:::
-        set the placement relative to the anchor
+    *-placement* <placement>:::
+        set the placement and style of the message box.
+
+        *menu*::::
+            display the info next to the displayed menu, as documentation
+            for the currently selected entry.
+
+        *above*::::
+            display the info above the given anchor
+
+        *below*::::
+            display the info below the given anchor
 
     *-title* <text>:::
         set the title of the message box

@@ -2076,7 +2076,7 @@ const CommandDesc info_cmd = {
     "info [<switches>] <text>: display an info box containing <text>",
     ParameterDesc{
         { { "anchor",    { true, "set info anchoring <line>.<column>" } },
-          { "placement", { true, "set placement relative to anchor (above, below)" } },
+          { "placement", { true, "set placement style (above, below, menu)" } },
           { "title",     { true, "set info title" } } },
         ParameterDesc::Flags::None, 0, 1
     },
@@ -2089,33 +2089,29 @@ const CommandDesc info_cmd = {
             return;
 
         context.client().info_hide();
-        if (parser.positional_count() > 0)
-        {
-            InfoStyle style = InfoStyle::Prompt;
-            BufferCoord pos;
-            if (auto anchor = parser.get_switch("anchor"))
-            {
-                auto dot = find(*anchor, '.');
-                if (dot == anchor->end())
+        if (parser.positional_count() == 0)
+            return;
+
+        const InfoStyle style = parser.get_switch("placement").map(
+            [](StringView placement) -> Optional<InfoStyle> {
+                if (placement == "above") return InfoStyle::InlineAbove;
+                if (placement == "below") return InfoStyle::InlineBelow;
+                if (placement == "menu") return InfoStyle::MenuDoc;
+                throw runtime_error(format("invalid placement: '{}'", placement));
+            }).value_or(parser.get_switch("anchor") ? InfoStyle::Inline : InfoStyle::Prompt);
+
+        const BufferCoord pos = parser.get_switch("anchor").map(
+            [](StringView anchor) {
+                auto dot = find(anchor, '.');
+                if (dot == anchor.end())
                     throw runtime_error("expected <line>.<column> for anchor");
 
-                pos = BufferCoord{str_to_int({anchor->begin(), dot})-1,
-                                str_to_int({dot+1, anchor->end()})-1};
-                style = InfoStyle::Inline;
+                return BufferCoord{str_to_int({anchor.begin(), dot})-1,
+                                   str_to_int({dot+1, anchor.end()})-1};
+            }).value_or(BufferCoord{});
 
-                if (auto placement = parser.get_switch("placement"))
-                {
-                    if (*placement == "above")
-                        style = InfoStyle::InlineAbove;
-                    else if (*placement == "below")
-                        style = InfoStyle::InlineBelow;
-                    else
-                        throw runtime_error(format("invalid placement: '{}'", *placement));
-                }
-            }
-            auto title = parser.get_switch("title").value_or(StringView{});
-            context.client().info_show(title.str(), parser[0], pos, style);
-        }
+        auto title = parser.get_switch("title").value_or(StringView{});
+        context.client().info_show(title.str(), parser[0], pos, style);
     }
 };
 
