@@ -892,6 +892,30 @@ private:
                 m_socket_watcher.events() |= FdEvents::Write;
                 break;
             }
+            case MessageType::Tstat:
+            {
+                NinePFieldReader fields{m_reader};
+                auto tag = fields.read<uint16_t>();
+                auto fid = fields.read<File::Fid>();
+                m_reader.reset();
+                auto it = m_fids.find(fid);
+                if (it == m_fids.end())
+                {
+                    error(tag, "Unknown FID");
+                    return;
+                }
+                auto stat = it->value->stat();
+                {
+                    MsgWriter msg{m_send_buffer};
+                    NinePFieldWriter fields{m_send_buffer};
+                    fields.write(MessageType::Rstat);
+                    fields.write(tag);
+                    fields.write<uint16_t>(uint16_t(stat.size()));
+                    fields.write(stat.data(), stat.size());
+                }
+                m_socket_watcher.events() |= FdEvents::Write;
+                break;
+            }
             case MessageType::Tversion:
             {
                 NinePFieldReader fields{m_reader};
@@ -911,8 +935,52 @@ private:
                 m_socket_watcher.events() |= FdEvents::Write;
                 break;
             }
+            case MessageType::Twalk:
+            {
+                NinePFieldReader fields{m_reader};
+                auto tag = fields.read<uint16_t>();
+                auto fid = fields.read<uint32_t>();
+                auto newfid = fields.read<uint32_t>();
+                auto nwnames = fields.read<Vector<String>>();
+                m_reader.reset();
+
+                auto file_it = m_fids.find(fid);
+                if (file_it == m_fids.end())
+                {
+                    error(tag, "Unknown FID");
+                    return;
+                }
+                auto file = file_it->value;
+
+                if (m_fids.find(newfid) != m_fids.end())
+                {
+                    error(tag, "New FID already exists");
+                    return;
+                }
+
+                Vector<File::Qid> qids;
+                for (uint16_t i = 0; i < nwnames.size(); i++) {
+                    file = file->walk(nwnames[i]);
+                    if (not file) {
+                        error(tag, "Not found");
+                        return;
+                    }
+                    qids.push_back(file->qid());
+                }
+                m_fids.insert({ newfid, file });
+
+                {
+                    MsgWriter msg{m_send_buffer};
+                    NinePFieldWriter fields{m_send_buffer};
+                    fields.write(MessageType::Rwalk);
+                    fields.write(tag);
+                    fields.write(qids);
+                }
+                m_socket_watcher.events() |= FdEvents::Write;
+                break;
+            }
             default:
-                write_to_debug_buffer("invalid introduction message received");
+                write_to_debug_buffer(format("invalid introduction message received (type {})", int(type)));
                 close(sock);
                 Server::instance().remove_accepter(this);
             }
@@ -923,6 +991,16 @@ private:
             close(sock);
             Server::instance().remove_accepter(this);
         }
+    }
+
+    void error(uint16_t tag, StringView message)
+    {
+        MsgWriter msg{m_send_buffer};
+        NinePFieldWriter fields{m_send_buffer};
+        fields.write(MessageType::Rerror);
+        fields.write(tag);
+        fields.write(message);
+        m_socket_watcher.events() |= FdEvents::Write;
     }
 
     FDWatcher m_socket_watcher;
