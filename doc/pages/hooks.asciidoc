@@ -169,8 +169,9 @@ name. Hooks with no description will always use an empty string.
 *InsertCompletionShow*::
     Triggered when the insert completion menu gets displayed
 
-*InsertCompletionHide*::
-    Triggered when the insert completion menu gets hidden
+*InsertCompletionHide* `completion`::
+    Triggered when the insert completion menu gets hidden, the inserted
+    completion text is passed as filtering text.
 
 *InsertCompletionSelect* `selected completion`::
     Triggered when an entry is selected in the insert completion

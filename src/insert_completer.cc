@@ -473,13 +473,14 @@ void InsertCompleter::reset()
 {
     if (m_explicit_completer or m_completions.is_valid())
     {
+        String selected_item = std::move(m_completions.candidates[m_current_candidate].completion);
         m_explicit_completer = nullptr;
         m_completions = InsertCompletion{};
         if (m_context.has_client())
         {
             m_context.client().menu_hide();
             m_context.client().info_hide();
-            m_context.hooks().run_hook(Hook::InsertCompletionHide, "", m_context);
+            m_context.hooks().run_hook(Hook::InsertCompletionHide, selected_item, m_context);
         }
     }
 }
