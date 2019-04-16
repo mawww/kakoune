@@ -825,6 +825,7 @@ private:
         }
 
         std::shared_ptr<File> file() const { return m_file; }
+        bool is_open() const { return m_is_open; }
 
         bool open()
         {
@@ -833,6 +834,35 @@ private:
             m_open_contents = m_file->contents();
             m_is_open = true;
             return true;
+        }
+
+        RemoteBuffer read(uint64_t offset, uint32_t count)
+        {
+            if (m_file->type() & File::Type::DMDIR)
+            {
+                uint64_t o = 0;
+                auto it = m_open_contents.begin();
+                auto end = m_open_contents.end();
+                for (; o < offset && it != end; ++it)
+                    o += it->size();
+                if (o == offset) {
+                    RemoteBuffer res;
+                    while (it != end and it->size() < count) {
+                        res.insert(res.end(), it->begin(), it->end());
+                        count -= it->size();
+                        ++it;
+                    }
+                    return res;
+                } else {
+                    // Bad read offset, should error
+                    return RemoteBuffer{};
+                }
+            }
+            else
+            {
+                // Normal file
+                return RemoteBuffer{};
+            }
         }
 
     private:
@@ -963,6 +993,40 @@ private:
                     fields.write(tag);
                     fields.write(it->value.file()->qid());
                     fields.write<uint32_t>(0);
+                }
+                m_socket_watcher.events() |= FdEvents::Write;
+                break;
+            }
+            case MessageType::Tread:
+            {
+                NinePFieldReader fields{m_reader};
+                auto tag = fields.read<uint16_t>();
+                auto fid = fields.read<File::Fid>();
+                auto offset = fields.read<uint64_t>();
+                auto count = fields.read<uint32_t>();
+                m_reader.reset();
+
+                auto it = m_fids.find(fid);
+                if (it == m_fids.end())
+                {
+                    error(tag, "Unknown FID");
+                    return;
+                }
+                if (not it->value.is_open())
+                {
+                    error(tag, "File is not open");
+                    return;
+                }
+
+                auto data = it->value.read(offset, count);
+
+                {
+                    MsgWriter msg{m_send_buffer};
+                    NinePFieldWriter fields{m_send_buffer};
+                    fields.write(MessageType::Rread);
+                    fields.write(tag);
+                    fields.write<uint32_t>(int(data.size()));
+                    fields.write(data.data(), data.size());
                 }
                 m_socket_watcher.events() |= FdEvents::Write;
                 break;
