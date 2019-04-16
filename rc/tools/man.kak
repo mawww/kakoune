@@ -26,8 +26,9 @@ define-command -hidden -params 2..3 man-impl %{ evaluate-commands %sh{
     buffer_name="$1"
     shift
     manout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
+    manerr=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
     colout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
-    MANWIDTH=${kak_window_width} man "$@" > $manout 2>/dev/null
+    MANWIDTH=${kak_window_width} man "$@" > "$manout" 2> "$manerr"
     retval=$?
     col -b -x > ${colout} < ${manout}
     rm ${manout}
@@ -35,13 +36,20 @@ define-command -hidden -params 2..3 man-impl %{ evaluate-commands %sh{
         printf %s\\n "
                 edit -scratch %{*$buffer_name ${*}*}
                 execute-keys '%|cat<space>${colout}<ret>gk'
-                nop %sh{rm ${colout}}
+                nop %sh{ rm ${colout}; rm ${manerr} }
                 set-option buffer filetype man
                 set-option window manpage $buffer_name $*
         "
+    elif [ "${retval}" -eq 16 ]; then
+        printf %s\\n "
+        echo -markup %{{Error}$(cat $manerr)}
+        nop %sh{ rm ${colout}; rm ${manerr} }
+        "
     else
-       printf %s\\n "echo -markup %{{Error}man '$@' failed: see *debug* buffer for details}"
-       rm ${colout}
+        printf %s\\n "
+        fail $(cat $manerr)
+        nop %sh{ rm ${colout}; rm ${manerr} }
+        "
     fi
 } }
 
