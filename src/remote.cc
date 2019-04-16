@@ -700,7 +700,11 @@ public:
     {}
     virtual ~File() {}
     virtual Vector<RemoteBuffer> contents() const = 0;
-    virtual std::unique_ptr<File> walk(const String& name) const = 0;
+
+    virtual std::unique_ptr<File> walk(const String& name) const
+    {
+        return {};
+    }
 
     Type type() const { return m_type; }
     const Vector<String>& path() const { return m_path; }
@@ -755,7 +759,6 @@ public:
         RemoteBuffer stat_data;
         {
             NinePFieldWriter fields{stat_data};
-            fields.write<uint16_t>(0);  // ???
             fields.write<uint16_t>(0);  // type, "for kernel use"
             fields.write<uint32_t>(0);  // dev, "for kernel use"
             fields.write(qid());
@@ -778,25 +781,56 @@ public:
         return result;
     }
 
-private:
+protected:
     Type m_type;
     Vector<String> m_path;
+};
+
+class StaticFile : public File {
+public:
+    StaticFile(Vector<String> path, String contents)
+        : File(Type(0), path), m_contents{contents.begin(), contents.end()}
+    {}
+
+    virtual Vector<RemoteBuffer> contents() const
+    {
+        Vector<RemoteBuffer> res;
+        res.push_back(m_contents);
+        return res;
+    }
+
+private:
+    RemoteBuffer m_contents;
 };
 
 class Root : public File {
 public:
     Root()
-      : File(Type::DMDIR, Vector<String>())
+        : File(Type::DMDIR, Vector<String>())
     {}
 
     virtual Vector<RemoteBuffer> contents() const
     {
-        return {};
+        Vector<RemoteBuffer> res;
+        res.push_back(version_file()->stat());
+        return res;
     }
 
     virtual std::unique_ptr<File> walk(const String& name) const
     {
+        if (name == "version")
+            return version_file();
         return {};
+    }
+
+private:
+    std::unique_ptr<File> version_file() const
+    {
+        Vector<String> path{m_path};
+        path.push_back("version");
+        extern const char *version;
+        String contents{version};
+        return std::unique_ptr<File>{new StaticFile(path, contents)};
     }
 };
 
@@ -860,8 +894,13 @@ private:
             }
             else
             {
-                // Normal file
-                return RemoteBuffer{};
+                kak_assert(m_open_contents.size() == 1);
+                auto& buf = m_open_contents.front();
+                if (offset >= buf.size())
+                    return RemoteBuffer{};
+                auto begin = buf.begin() + offset;
+                auto end = offset + count >= buf.size() ? buf.end() : begin + count;
+                return RemoteBuffer{begin, end};
             }
         }
 
