@@ -792,6 +792,11 @@ RemoteBuffer to_remote_buffer(const char *data)
     return RemoteBuffer{ data, data + int(strlen(data)) };
 }
 
+RemoteBuffer to_remote_buffer(const StringView& s)
+{
+    return RemoteBuffer{ s.begin(), s.end() };
+}
+
 RemoteBuffer version_getter()
 {
     extern const char* version;
@@ -799,7 +804,8 @@ RemoteBuffer version_getter()
 }
 
 File::Entry File::m_entries[] = {
-    { "version", version_getter }, 
+    { "name",    []() { return to_remote_buffer(Server::instance().session()); } },
+    { "version", version_getter },
 };
 
 Vector<RemoteBuffer> File::contents() const
