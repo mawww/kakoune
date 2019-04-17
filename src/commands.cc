@@ -2075,9 +2075,9 @@ const CommandDesc info_cmd = {
     nullptr,
     "info [<switches>] <text>: display an info box containing <text>",
     ParameterDesc{
-        { { "anchor",    { true, "set info anchoring <line>.<column>" } },
-          { "placement", { true, "set placement style (above, below, menu)" } },
-          { "title",     { true, "set info title" } } },
+        { { "anchor", { true, "set info anchoring <line>.<column>" } },
+          { "style", { true, "set info style (above, below, menu, modal)" } },
+          { "title", { true, "set info title" } } },
         ParameterDesc::Flags::None, 0, 1
     },
     CommandFlags::None,
@@ -2088,17 +2088,18 @@ const CommandDesc info_cmd = {
         if (not context.has_client())
             return;
 
-        context.client().info_hide();
+        const InfoStyle style = parser.get_switch("style").map(
+            [](StringView style) -> Optional<InfoStyle> {
+                if (style == "above") return InfoStyle::InlineAbove;
+                if (style == "below") return InfoStyle::InlineBelow;
+                if (style == "menu") return InfoStyle::MenuDoc;
+                if (style == "modal") return InfoStyle::Modal;
+                throw runtime_error(format("invalid style: '{}'", style));
+            }).value_or(parser.get_switch("anchor") ? InfoStyle::Inline : InfoStyle::Prompt);
+
+        context.client().info_hide(style == InfoStyle::Modal);
         if (parser.positional_count() == 0)
             return;
-
-        const InfoStyle style = parser.get_switch("placement").map(
-            [](StringView placement) -> Optional<InfoStyle> {
-                if (placement == "above") return InfoStyle::InlineAbove;
-                if (placement == "below") return InfoStyle::InlineBelow;
-                if (placement == "menu") return InfoStyle::MenuDoc;
-                throw runtime_error(format("invalid placement: '{}'", placement));
-            }).value_or(parser.get_switch("anchor") ? InfoStyle::Inline : InfoStyle::Prompt);
 
         const BufferCoord pos = parser.get_switch("anchor").map(
             [](StringView anchor) {
