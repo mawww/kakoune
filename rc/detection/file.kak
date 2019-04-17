@@ -1,6 +1,6 @@
 hook global BufOpenFile .* %{ evaluate-commands %sh{
     if [ -z "${kak_opt_filetype}" ]; then
-        mime=$(file -b -i "${kak_buffile}")
+        mime=$(file -b -i -L "${kak_buffile}")
         mime=${mime%;*}
         case "${mime}" in
             application/*+xml) filetype="xml" ;;
