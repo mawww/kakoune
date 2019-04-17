@@ -698,38 +698,38 @@ public:
         uint64_t path;
     };
 #pragma pack(pop)
-
     static_assert(sizeof(Qid) == 13, "compiler has added padding to Qid");
 
-    File(Type type, const Vector<String>& path, std::function<RemoteBuffer ()> getter = {})
-      : m_type(type), m_path(path), m_getter{getter}
+    File(const String& path, std::function<RemoteBuffer ()> getter = {})
+      : m_path(path), m_getter{getter}
     {}
 
     Vector<RemoteBuffer> contents() const;
     std::unique_ptr<File> walk(const String& name) const;
 
-    Type type() const { return m_type; }
-    const Vector<String>& path() const { return m_path; }
-
-    String full_path() const
+    Type type() const
     {
-        if (m_path.empty())
-            return String{"/"};
+        if (not m_getter)
+            return Type::DMDIR;
         else
-            return join(m_path, '/', false);
+            return Type(0);
+    }
+
+    String path() const
+    {
+        return m_path;
     }
 
     Qid qid() const
     {
-        String path = full_path();
-        uint64_t path_hash = hash_data(path.data(), size_t(int(path.length())));
-        return { m_type, 0, path_hash };
+        uint64_t path_hash = hash_data(m_path.data(), size_t(int(m_path.length())));
+        return { type(), 0, path_hash };
     }
 
     uint32_t mode() const
     {
-        uint32_t mode = uint32_t(m_type) << 24;
-        if (m_type & Type::DMDIR)
+        uint32_t mode = uint32_t(type()) << 24;
+        if (type() & Type::DMDIR)
             mode |= 0755;
         else
             mode |= 0644;
@@ -738,22 +738,20 @@ public:
 
     uint64_t length() const
     {
-        ByteCount length{0};
-        if (not (m_type & Type::DMDIR))
-        {
-            auto data = contents();
-            for (auto& s : data)
-                length += s.size();
-        }
-        return uint64_t(int(length));
+        if (m_getter)
+            return m_getter().size();
+        else
+            return 0;
     }
 
     String basename() const
     {
-        if (m_path.empty())
-            return "/";
-        else
-            return *m_path.rbegin();
+        ByteCount i;
+        for (i = m_path.length()-1_byte; i >= 0_byte and not (m_path[i] == '/'); --i)
+            ;
+        if (i <= 0)
+            return m_path;
+        return String{m_path.substr(i+1_byte)};
     }
 
     RemoteBuffer stat() const
@@ -783,9 +781,8 @@ public:
         return result;
     }
 
-protected:
-    Type m_type;
-    Vector<String> m_path;
+private:
+    String m_path;
     std::function<RemoteBuffer ()> m_getter;
     static Entry m_entries[];
 };
@@ -818,9 +815,7 @@ Vector<RemoteBuffer> File::contents() const
         Vector<RemoteBuffer> res;
         for (const auto& entry : m_entries)
         {
-            Vector<String> path{m_path};
-            path.push_back(entry.path);
-            std::unique_ptr<File> file(new File(File::Type(0), path, entry.getter));
+            std::unique_ptr<File> file(new File(entry.path, entry.getter));
             res.push_back(file->stat());
         }
         return res;
@@ -830,15 +825,8 @@ Vector<RemoteBuffer> File::contents() const
 std::unique_ptr<File> File::walk(const String& name) const
 {
     for (const auto& entry : m_entries)
-    {
         if (name == entry.path)
-        {
-            Vector<String> path{m_path};
-            path.push_back(entry.path);
-            std::unique_ptr<File> file(new File(File::Type(0), path, entry.getter));
-            return file;
-        }
-    }
+            return std::unique_ptr<File>(new File(entry.path, entry.getter));
     return {};
 }
 
@@ -979,7 +967,7 @@ private:
                 auto uname = fields.read<String>();
                 auto aname = fields.read<String>();
                 m_reader.reset();
-                std::shared_ptr<File> file{ new File(File::Type::DMDIR, {}) };
+                std::shared_ptr<File> file{ new File("/") };
                 m_fids.insert({ fid, FidState{ file } });
                 {
                     MsgWriter msg{m_send_buffer};
