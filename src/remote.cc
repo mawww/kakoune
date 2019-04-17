@@ -674,6 +674,12 @@ void send_command(StringView session, StringView command)
 }
 
 class File {
+private:
+    struct Entry {
+        const char* path;
+        std::function<RemoteBuffer ()> getter;
+    };
+
 public:
     typedef uint32_t Fid;
 
@@ -695,16 +701,12 @@ public:
 
     static_assert(sizeof(Qid) == 13, "compiler has added padding to Qid");
 
-    File(Type type, const Vector<String>& path)
-      : m_type(type), m_path(path)
+    File(Type type, const Vector<String>& path, std::function<RemoteBuffer ()> getter = {})
+      : m_type(type), m_path(path), m_getter{getter}
     {}
-    virtual ~File() {}
-    virtual Vector<RemoteBuffer> contents() const = 0;
 
-    virtual std::unique_ptr<File> walk(const String& name) const
-    {
-        return {};
-    }
+    Vector<RemoteBuffer> contents() const;
+    std::unique_ptr<File> walk(const String& name) const;
 
     Type type() const { return m_type; }
     const Vector<String>& path() const { return m_path; }
@@ -784,55 +786,61 @@ public:
 protected:
     Type m_type;
     Vector<String> m_path;
+    std::function<RemoteBuffer ()> m_getter;
+    static Entry m_entries[];
 };
 
-class StaticFile : public File {
-public:
-    StaticFile(Vector<String> path, String contents)
-        : File(Type(0), path), m_contents{contents.begin(), contents.end()}
-    {}
+RemoteBuffer to_remote_buffer(const char *data)
+{
+    return RemoteBuffer{ data, data + int(strlen(data)) };
+}
 
-    virtual Vector<RemoteBuffer> contents() const
+RemoteBuffer version_getter()
+{
+    extern const char* version;
+    return to_remote_buffer(version);
+}
+
+File::Entry File::m_entries[] = {
+    { "version", version_getter }, 
+};
+
+Vector<RemoteBuffer> File::contents() const
+{
+    if (m_getter)
     {
         Vector<RemoteBuffer> res;
-        res.push_back(m_contents);
+        res.push_back(m_getter());
         return res;
     }
-
-private:
-    RemoteBuffer m_contents;
-};
-
-class Root : public File {
-public:
-    Root()
-        : File(Type::DMDIR, Vector<String>())
-    {}
-
-    virtual Vector<RemoteBuffer> contents() const
+    else
     {
         Vector<RemoteBuffer> res;
-        res.push_back(version_file()->stat());
+        for (const auto& entry : m_entries)
+        {
+            Vector<String> path{m_path};
+            path.push_back(entry.path);
+            std::unique_ptr<File> file(new File(File::Type(0), path, entry.getter));
+            res.push_back(file->stat());
+        }
         return res;
     }
+}
 
-    virtual std::unique_ptr<File> walk(const String& name) const
+std::unique_ptr<File> File::walk(const String& name) const
+{
+    for (const auto& entry : m_entries)
     {
-        if (name == "version")
-            return version_file();
-        return {};
+        if (name == entry.path)
+        {
+            Vector<String> path{m_path};
+            path.push_back(entry.path);
+            std::unique_ptr<File> file(new File(File::Type(0), path, entry.getter));
+            return file;
+        }
     }
-
-private:
-    std::unique_ptr<File> version_file() const
-    {
-        Vector<String> path{m_path};
-        path.push_back("version");
-        extern const char *version;
-        String contents{version};
-        return std::unique_ptr<File>{new StaticFile(path, contents)};
-    }
-};
+    return {};
+}
 
 // A client accepter handle a connection until it closes or a nul byte is
 // recieved. Everything recieved before is considered to be a command.
@@ -971,7 +979,7 @@ private:
                 auto uname = fields.read<String>();
                 auto aname = fields.read<String>();
                 m_reader.reset();
-                std::shared_ptr<File> file{ new Root() };
+                std::shared_ptr<File> file{ new File(File::Type::DMDIR, {}) };
                 m_fids.insert({ fid, FidState{ file } });
                 {
                     MsgWriter msg{m_send_buffer};
