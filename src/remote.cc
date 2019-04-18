@@ -790,6 +790,16 @@ private:
     Vector<String> m_path;
     std::function<RemoteBuffer ()> m_getter;
     static Entry m_entries[];
+
+    bool is_our_entry(const Entry& entry) const
+    {
+        if (entry.path.size() != m_path.size() + 1)
+            return false;
+        if (not std::equal(m_path.begin(), m_path.end(), entry.path.begin(),
+                           entry.path.begin() + m_path.size()))
+            return false;
+        return true;
+    }
 };
 
 RemoteBuffer to_remote_buffer(const char *data)
@@ -826,6 +836,8 @@ Vector<RemoteBuffer> File::contents() const
         Vector<RemoteBuffer> res;
         for (const auto& entry : m_entries)
         {
+            if (not is_our_entry(entry))
+                continue;
             std::unique_ptr<File> file(new File(entry.path, entry.getter));
             res.push_back(file->stat());
         }
@@ -835,11 +847,13 @@ Vector<RemoteBuffer> File::contents() const
 
 std::unique_ptr<File> File::walk(const String& name) const
 {
-    for (const auto& entry : m_entries) {
-        if (entry.path.size() != m_path.size() + 1)
+    for (const auto& entry : m_entries)
+    {
+        if (not is_our_entry(entry))
             continue;
-        if (name == *entry.path.rbegin())
-            return std::unique_ptr<File>(new File(entry.path, entry.getter));
+        if (name != *entry.path.rbegin())
+            continue;
+        return std::unique_ptr<File>(new File(entry.path, entry.getter));
     }
     return {};
 }
