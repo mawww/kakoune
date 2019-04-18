@@ -704,6 +704,22 @@ private:
         String m_value;
     };
 
+    struct ClientGlob : public Glob {
+        bool matches(StringView text) const
+        {
+            auto it = find_if(ClientManager::instance(), [&text](auto& client) { return client->context().name() == text; });
+            return it != ClientManager::instance().end();
+        }
+
+        Vector<String> expand() const
+        {
+            Vector<String> res;
+            for (auto& client : ClientManager::instance())
+                res.push_back(client->context().name());
+            return res;
+        }
+    };
+
     static Glob* p(const char* literal)
     {
         return new LiteralGlob(literal);
@@ -711,7 +727,7 @@ private:
 
     struct Entry {
         Vector<Glob*> path;
-        std::function<RemoteBuffer ()> getter;
+        std::function<RemoteBuffer (const Vector<String>&)> getter;
     };
 
 public:
@@ -734,7 +750,7 @@ public:
 #pragma pack(pop)
     static_assert(sizeof(Qid) == 13, "compiler has added padding to Qid");
 
-    File(Vector<String> path, std::function<RemoteBuffer ()> getter = {})
+    File(Vector<String> path, std::function<RemoteBuffer (const Vector<String>&)> getter = {})
       : m_path(path), m_getter{getter}
     {}
 
@@ -781,7 +797,7 @@ public:
     uint64_t length() const
     {
         if (m_getter)
-            return m_getter().size();
+            return m_getter(m_path).size();
         else
             return 0;
     }
@@ -822,7 +838,7 @@ public:
 
 private:
     Vector<String> m_path;
-    std::function<RemoteBuffer ()> m_getter;
+    std::function<RemoteBuffer (const Vector<String>&)> m_getter;
     static Entry m_entries[];
 
     bool is_our_entry(const Entry& entry) const
@@ -848,20 +864,32 @@ RemoteBuffer to_remote_buffer(const StringView& s)
     return RemoteBuffer{ s.begin(), s.end() };
 }
 
-RemoteBuffer name_getter()
+RemoteBuffer client_pid_getter(const Vector<String>& path)
+{
+    auto it = std::find_if(ClientManager::instance().begin(),
+                           ClientManager::instance().end(),
+                           [&](auto& client) { return client->context().name() == path[1]; });
+    kak_assert(it != ClientManager::instance().end());
+    return to_remote_buffer(format("{}", (*it)->pid()));
+}
+
+RemoteBuffer name_getter(const Vector<String>& path)
 {
     return to_remote_buffer(Server::instance().session());
 }
 
-RemoteBuffer version_getter()
+RemoteBuffer version_getter(const Vector<String>& path)
 {
     extern const char* version;
     return to_remote_buffer(version);
 }
 
 File::Entry File::m_entries[] = {
-    { {p("name")},    name_getter },
-    { {p("version")}, version_getter },
+    { {p("clients")},                             nullptr },
+    { {p("clients"), new ClientGlob()},           nullptr },
+    { {p("clients"), new ClientGlob(), p("pid")}, client_pid_getter },
+    { {p("name")},                                name_getter },
+    { {p("version")},                             version_getter },
 };
 
 Vector<RemoteBuffer> File::contents() const
@@ -869,7 +897,7 @@ Vector<RemoteBuffer> File::contents() const
     if (m_getter)
     {
         Vector<RemoteBuffer> res;
-        res.push_back(m_getter());
+        res.push_back(m_getter(m_path));
         return res;
     }
     else
