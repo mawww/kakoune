@@ -675,8 +675,42 @@ void send_command(StringView session, StringView command)
 
 class File {
 private:
+    struct Glob {
+        virtual ~Glob() {}
+        virtual bool matches(StringView text) const = 0;
+        virtual Vector<String> expand() const = 0;
+    };
+
+    struct LiteralGlob : public Glob {
+        LiteralGlob(String value)
+            : m_value{std::move(value)}
+        {}
+
+        ~LiteralGlob() {}
+
+        bool matches(StringView text) const
+        {
+            return m_value == text;
+        }
+
+        Vector<String> expand() const
+        {
+            Vector<String> res;
+            res.push_back(m_value);
+            return res;
+        }
+
+    private:
+        String m_value;
+    };
+
+    static Glob* p(const char* literal)
+    {
+        return new LiteralGlob(literal);
+    }
+
     struct Entry {
-        Vector<String> path;
+        Vector<Glob*> path;
         std::function<RemoteBuffer ()> getter;
     };
 
@@ -795,9 +829,11 @@ private:
     {
         if (entry.path.size() != m_path.size() + 1)
             return false;
-        if (not std::equal(m_path.begin(), m_path.end(), entry.path.begin(),
-                           entry.path.begin() + m_path.size()))
-            return false;
+        auto it_a = m_path.begin();
+        auto it_b = entry.path.begin();
+        for (; it_a != m_path.end(); ++it_a, ++it_b)
+            if (not (*it_b)->matches(*it_a))
+                return false;
         return true;
     }
 };
@@ -812,6 +848,11 @@ RemoteBuffer to_remote_buffer(const StringView& s)
     return RemoteBuffer{ s.begin(), s.end() };
 }
 
+RemoteBuffer name_getter()
+{
+    return to_remote_buffer(Server::instance().session());
+}
+
 RemoteBuffer version_getter()
 {
     extern const char* version;
@@ -819,8 +860,8 @@ RemoteBuffer version_getter()
 }
 
 File::Entry File::m_entries[] = {
-    { {"name"},    []() { return to_remote_buffer(Server::instance().session()); } },
-    { {"version"}, version_getter },
+    { {p("name")},    name_getter },
+    { {p("version")}, version_getter },
 };
 
 Vector<RemoteBuffer> File::contents() const
@@ -838,8 +879,13 @@ Vector<RemoteBuffer> File::contents() const
         {
             if (not is_our_entry(entry))
                 continue;
-            std::unique_ptr<File> file(new File(entry.path, entry.getter));
-            res.push_back(file->stat());
+            Vector<String> parts = (*entry.path.rbegin())->expand();
+            for (auto& basename : parts) {
+                Vector<String> path{m_path};
+                path.push_back(std::move(basename));
+                std::unique_ptr<File> file(new File(std::move(path), entry.getter));
+                res.push_back(file->stat());
+            }
         }
         return res;
     }
@@ -851,9 +897,11 @@ std::unique_ptr<File> File::walk(const String& name) const
     {
         if (not is_our_entry(entry))
             continue;
-        if (name != *entry.path.rbegin())
+        if (not (*entry.path.rbegin())->matches(name))
             continue;
-        return std::unique_ptr<File>(new File(entry.path, entry.getter));
+        Vector<String> path{m_path};
+        path.push_back(name);
+        return std::unique_ptr<File>(new File(std::move(path), entry.getter));
     }
     return {};
 }
