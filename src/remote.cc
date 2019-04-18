@@ -676,7 +676,7 @@ void send_command(StringView session, StringView command)
 class File {
 private:
     struct Entry {
-        const char* path;
+        Vector<String> path;
         std::function<RemoteBuffer ()> getter;
     };
 
@@ -700,7 +700,7 @@ public:
 #pragma pack(pop)
     static_assert(sizeof(Qid) == 13, "compiler has added padding to Qid");
 
-    File(const String& path, std::function<RemoteBuffer ()> getter = {})
+    File(Vector<String> path, std::function<RemoteBuffer ()> getter = {})
       : m_path(path), m_getter{getter}
     {}
 
@@ -715,14 +715,22 @@ public:
             return Type(0);
     }
 
-    String path() const
+    Vector<String> path() const
     {
         return m_path;
     }
 
+    String fullname() const
+    {
+        if (m_path.empty())
+            return "/";
+        return join(m_path, '/', false);
+    }
+
     Qid qid() const
     {
-        uint64_t path_hash = hash_data(m_path.data(), size_t(int(m_path.length())));
+        String data = fullname();
+        uint64_t path_hash = hash_data(data.data(), size_t(int(data.length())));
         return { type(), 0, path_hash };
     }
 
@@ -746,12 +754,9 @@ public:
 
     String basename() const
     {
-        ByteCount i;
-        for (i = m_path.length()-1_byte; i >= 0_byte and not (m_path[i] == '/'); --i)
-            ;
-        if (i <= 0)
-            return m_path;
-        return String{m_path.substr(i+1_byte)};
+        if (m_path.empty())
+            return "";
+        return *m_path.rbegin();
     }
 
     RemoteBuffer stat() const
@@ -782,7 +787,7 @@ public:
     }
 
 private:
-    String m_path;
+    Vector<String> m_path;
     std::function<RemoteBuffer ()> m_getter;
     static Entry m_entries[];
 };
@@ -804,8 +809,8 @@ RemoteBuffer version_getter()
 }
 
 File::Entry File::m_entries[] = {
-    { "name",    []() { return to_remote_buffer(Server::instance().session()); } },
-    { "version", version_getter },
+    { {"name"},    []() { return to_remote_buffer(Server::instance().session()); } },
+    { {"version"}, version_getter },
 };
 
 Vector<RemoteBuffer> File::contents() const
@@ -830,9 +835,12 @@ Vector<RemoteBuffer> File::contents() const
 
 std::unique_ptr<File> File::walk(const String& name) const
 {
-    for (const auto& entry : m_entries)
-        if (name == entry.path)
+    for (const auto& entry : m_entries) {
+        if (entry.path.size() != m_path.size() + 1)
+            continue;
+        if (name == *entry.path.rbegin())
             return std::unique_ptr<File>(new File(entry.path, entry.getter));
+    }
     return {};
 }
 
@@ -973,7 +981,7 @@ private:
                 auto uname = fields.read<String>();
                 auto aname = fields.read<String>();
                 m_reader.reset();
-                std::shared_ptr<File> file{ new File("/") };
+                std::shared_ptr<File> file{ new File({}) };
                 m_fids.insert({ fid, FidState{ file } });
                 {
                     MsgWriter msg{m_send_buffer};
