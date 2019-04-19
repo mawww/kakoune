@@ -86,7 +86,9 @@ define-command -hidden init-javascript-filetype -params 1 %~
 
     # Keywords are collected at
     # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
-    add-highlighter "shared/%arg{1}/code/" regex \b(async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|let|new|of|return|static|super|switch|throw|try|typeof|var|void|while|with|yield)\b 0:keyword
+    # https://developer.mozilla.org/docs/Web/JavaScript/Reference/Functions/get
+    # https://developer.mozilla.org/docs/Web/JavaScript/Reference/Functions/set
+    add-highlighter "shared/%arg{1}/code/" regex \b(async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|get|if|import|in|instanceof|let|new|of|return|set|static|super|switch|throw|try|typeof|var|void|while|with|yield)\b 0:keyword
 
     # Initialization
     # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
