@@ -150,6 +150,58 @@ private:
 
 class MsgReader
 {
+private:
+    template<typename T>
+    struct Reader {
+        static T read(MsgReader& reader)
+        {
+            static_assert(std::is_trivially_copyable<T>::value, "");
+            T res;
+            reader.read(reinterpret_cast<char*>(&res), sizeof(T));
+            return res;
+        }
+    };
+
+    template<typename T, MemoryDomain domain>
+    struct Reader<Vector<T,domain>> {
+        static Vector<T, domain> read(MsgReader& reader)
+        {
+            uint32_t size = Reader<uint32_t>::read(reader);
+            Vector<T,domain> res;
+            res.reserve(size);
+            while (size--)
+                res.push_back(std::move(Reader<T>::read(reader)));
+            return res;
+        }
+    };
+
+    template<typename Key, typename Value, MemoryDomain domain>
+    struct Reader<HashMap<Key, Value, domain>> {
+        static HashMap<Key, Value, domain> read(MsgReader& reader)
+        {
+            uint32_t size = Reader<uint32_t>::read(reader);
+            HashMap<Key, Value, domain> res;
+            res.reserve(size);
+            while (size--)
+            {
+                auto key = Reader<Key>::read(reader);
+                auto val = Reader<Value>::read(reader);
+                res.insert({std::move(key), std::move(val)});
+            }
+            return res;
+        }
+    };
+
+    template<typename T>
+    struct Reader<Optional<T>> {
+        static Optional<T> read(MsgReader& reader)
+        {
+            if (not Reader<bool>::read(reader))
+                return {};
+            return Reader<T>::read(reader);
+        }
+    };
+
 public:
     void read_available(int sock)
     {
@@ -198,44 +250,7 @@ public:
     template<typename T>
     T read()
     {
-        static_assert(std::is_trivially_copyable<T>::value, "");
-        T res;
-        read(reinterpret_cast<char*>(&res), sizeof(T));
-        return res;
-    }
-
-    template<typename T>
-    Vector<T> read_vector()
-    {
-        uint32_t size = read<uint32_t>();
-        Vector<T> res;
-        res.reserve(size);
-        while (size--)
-            res.push_back(read<T>());
-        return res;
-    }
-
-    template<typename Key, typename Val, MemoryDomain domain>
-    HashMap<Key, Val, domain> read_hash_map()
-    {
-        uint32_t size = read<uint32_t>();
-        HashMap<Key, Val, domain> res;
-        res.reserve(size);
-        while (size--)
-        {
-            auto key = read<Key>();
-            auto val = read<Val>();
-            res.insert({std::move(key), std::move(val)});
-        }
-        return res;
-    }
-
-    template<typename T>
-    Optional<T> read_optional()
-    {
-        if (not read<bool>())
-            return {};
-        return read<T>();
+        return Reader<T>::read(*this);
     }
 
     void reset()
@@ -262,52 +277,62 @@ private:
 };
 
 template<>
-String MsgReader::read<String>()
-{
-    ByteCount length = read<ByteCount>();
-    String res;
-    if (length > 0)
+struct MsgReader::Reader<String> {
+    static String read(MsgReader& reader)
     {
-        res.force_size((int)length);
-        read(&res[0_byte], (int)length);
+        ByteCount length = Reader<ByteCount>::read(reader);
+        String res;
+        if (length > 0)
+        {
+            res.force_size((int)length);
+            reader.read(&res[0_byte], (int)length);
+        }
+        return res;
     }
-    return res;
-}
+};
 
 template<>
-Color MsgReader::read<Color>()
-{
-    Color res;
-    res.color = read<Color::NamedColor>();
-    if (res.color == Color::RGB)
+struct MsgReader::Reader<Color> {
+    static Color read(MsgReader& reader)
     {
-        res.r = read<unsigned char>();
-        res.g = read<unsigned char>();
-        res.b = read<unsigned char>();
+        Color res;
+        res.color = Reader<Color::NamedColor>::read(reader);
+        if (res.color == Color::RGB)
+        {
+            res.r = Reader<unsigned char>::read(reader);
+            res.g = Reader<unsigned char>::read(reader);
+            res.b = Reader<unsigned char>::read(reader);
+        }
+        return res;
     }
-    return res;
-}
+};
 
 template<>
-DisplayAtom MsgReader::read<DisplayAtom>()
-{
-    String content = read<String>();
-    return {std::move(content), read<Face>()};
-}
+struct MsgReader::Reader<DisplayAtom> {
+    static DisplayAtom read(MsgReader& reader)
+    {
+        String content = Reader<String>::read(reader);
+        return {std::move(content), Reader<Face>::read(reader)};
+    }
+};
 
 template<>
-DisplayLine MsgReader::read<DisplayLine>()
-{
-    return {read_vector<DisplayAtom>()};
-}
+struct MsgReader::Reader<DisplayLine> {
+    static DisplayLine read(MsgReader& reader)
+    {
+        return {Reader<Vector<DisplayAtom>>::read(reader)};
+    }
+};
 
 template<>
-DisplayBuffer MsgReader::read<DisplayBuffer>()
-{
-    DisplayBuffer db;
-    db.lines() = read_vector<DisplayLine>();
-    return db;
-}
+struct MsgReader::Reader<DisplayBuffer> {
+    static DisplayBuffer read(MsgReader& reader)
+    {
+        DisplayBuffer db;
+        db.lines() = Reader<Vector<DisplayLine>>::read(reader);
+        return db;
+    }
+};
 
 
 class RemoteUI : public UserInterface
@@ -603,7 +628,7 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
             {
             case MessageType::MenuShow:
             {
-                auto choices = reader.read_vector<DisplayLine>();
+                auto choices = reader.read<Vector<DisplayLine>>();
                 auto anchor = reader.read<DisplayCoord>();
                 auto fg = reader.read<Face>();
                 auto bg = reader.read<Face>();
@@ -657,7 +682,7 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
                 m_ui->refresh(reader.read<bool>());
                 break;
             case MessageType::SetOptions:
-                m_ui->set_ui_options(reader.read_hash_map<String, String, MemoryDomain::Options>());
+                m_ui->set_ui_options(reader.read<HashMap<String, String, MemoryDomain::Options>>());
                 break;
             case MessageType::Exit:
                 m_exit_status = reader.read<int>();
@@ -723,9 +748,9 @@ private:
                 auto pid = m_reader.read<int>();
                 auto name = m_reader.read<String>();
                 auto init_cmds = m_reader.read<String>();
-                auto init_coord = m_reader.read_optional<BufferCoord>();
+                auto init_coord = m_reader.read<Optional<BufferCoord>>();
                 auto dimensions = m_reader.read<DisplayCoord>();
-                auto env_vars = m_reader.read_hash_map<String, String, MemoryDomain::EnvVars>();
+                auto env_vars = m_reader.read<HashMap<String, String, MemoryDomain::EnvVars>>();
                 auto* ui = new RemoteUI{sock, dimensions};
                 ClientManager::instance().create_client(
                     std::unique_ptr<UserInterface>(ui), pid, std::move(name),
