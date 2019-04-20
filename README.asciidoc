@@ -791,7 +791,7 @@ Custom key shortcuts can be registered through mappings.
 See <<doc/pages/mapping#,`:doc mapping`>>.
 
 Defining Commands and Aliases
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 New commands can be created using `:define-command`.
 
