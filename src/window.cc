@@ -78,7 +78,7 @@ static uint32_t compute_faces_hash(const FaceRegistry& faces)
 {
     uint32_t hash = 0;
     for (auto&& face : faces.flatten_faces() | transform(&FaceRegistry::FaceMap::Item::value))
-        hash = combine_hash(hash, face.alias.empty() ? hash_value(face.face) : hash_value(face.alias));
+        hash = combine_hash(hash, face.base.empty() ? hash_value(face.face) : hash_value(face.base));
     return hash;
 }
 

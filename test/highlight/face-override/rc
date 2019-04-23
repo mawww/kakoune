@@ -1,0 +1,3 @@
+face global Foo default,blue+i
+face buffer Foo red,default+u@Foo
+add-highlighter window/ regex foo 0:Foo
