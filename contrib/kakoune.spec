@@ -1,5 +1,5 @@
 Name:           kakoune
-Version:        2018.09.04
+Version:        2019.01.20
 Release:        1%{?dist}
 Summary:        Vim inspired editor
 
@@ -10,6 +10,7 @@ Source0:        %{name}-%{version}.tar.bz2
 BuildRequires:  ncurses-devel >= 5.3
 BuildRequires:  asciidoc
 BuildRequires:  gcc-c++
+BuildRequires:  glibc-langpack-en
 Requires:       ncurses-libs >= 5.3
 
 %description
@@ -38,7 +39,11 @@ cd src
 %{_datadir}/kak/*
 
 %changelog
-* Fri Oct 12 2018 Jiri Konecny <jkonecny@redhat.com> - v2018.09.04
+* Wed Apr 24 2019 Jiri Konecny <jkonecny@redhat.com> - v2019.01.20-1
+- Add a new build dependency (glibc-langpack-en) required for Fedora 30 and later
+- Update version
+
+* Fri Oct 12 2018 Jiri Konecny <jkonecny@redhat.com> - v2018.09.04-1
 - Update spec file to a new release
 
 * Sat May 5 2018 Łukasz Jendrysik <scadu@disroot.org> - v2018.04.13
