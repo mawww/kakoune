@@ -868,9 +868,19 @@ struct WrapHighlighter : Highlighter
             }
         }
 
-        if (m_word_wrap and pos.byte < content.length()) // find a word boundary before current position
-            if (last_boundary.byte > 0)
-                pos = last_boundary;
+        if (m_word_wrap and pos.byte < content.length() and last_boundary.byte > 0)
+        {
+            // split at last word boundary if the word is shorter than our wrapping width
+            ColumnCount word_length = pos.column - last_boundary.column;
+            const char* it = &content[pos.byte]; 
+            while (it != content.end() and word_length <= wrap_column)
+            {
+                const Codepoint cp = utf8::read_codepoint(it, content.end());
+                if (not is_word<WORD>(cp))
+                    return last_boundary;
+                word_length += codepoint_width(cp);
+            }
+        }
 
         return pos;
     };
