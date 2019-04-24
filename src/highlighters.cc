@@ -670,16 +670,18 @@ struct WrapHighlighter : Highlighter
         const auto& cursor = context.context.selections().main().cursor();
         const int tabstop = context.context.options()["tabstop"].get<int>();
         const LineCount win_height = context.context.window().dimensions().line;
-        const ColumnCount marker_len = m_marker.column_length();
+        const ColumnCount marker_len = zero_if_greater(m_marker.column_length(), wrap_column);
         const Face face_marker = context.context.faces()["StatusLineInfo"];
         for (auto it = display_buffer.lines().begin();
              it != display_buffer.lines().end(); ++it)
         {
             const LineCount buf_line = it->range().begin.line;
             const ByteCount line_length = buffer[buf_line].length();
-            const ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col;
+            const ColumnCount indent = m_preserve_indent ?
+                zero_if_greater(line_indent(buffer, tabstop, buf_line), wrap_column) : 0_col;
+            const ColumnCount prefix_len = std::max(marker_len, indent);
 
-            auto pos = next_split_pos(buffer, wrap_column, tabstop, buf_line, {0, 0});
+            auto pos = next_split_pos(buffer, wrap_column, prefix_len, tabstop, buf_line, {0, 0});
             if (pos.byte == line_length)
                 continue;
 
@@ -702,17 +704,12 @@ struct WrapHighlighter : Highlighter
                 DisplayLine new_line{ AtomList{ atom_it, line.end() } };
                 line.erase(atom_it, line.end());
 
-                ColumnCount prefix_len = 0;
-                if (marker_len != 0 and marker_len < wrap_column)
-                {
+                if (marker_len != 0)
                     new_line.insert(new_line.begin(), {m_marker, face_marker});
-                    prefix_len = marker_len;
-                }
-                if (indent > marker_len and indent < wrap_column)
+                if (indent > marker_len)
                 {
                     auto it = new_line.insert(new_line.begin() + (marker_len > 0), {buffer, coord, coord});
                     it->replace(String{' ', indent - marker_len});
-                    prefix_len = indent;
                 }
 
                 if (it+1 - display_buffer.lines().begin() == win_height)
@@ -730,7 +727,7 @@ struct WrapHighlighter : Highlighter
                 }
                 it = display_buffer.lines().insert(it+1, new_line);
 
-                pos = next_split_pos(buffer, wrap_column - prefix_len, tabstop, buf_line, pos);
+                pos = next_split_pos(buffer, wrap_column - prefix_len, prefix_len, tabstop, buf_line, pos);
                 atom_it = it->begin();
             }
         }
@@ -749,14 +746,14 @@ struct WrapHighlighter : Highlighter
         const auto& cursor = context.context.selections().main().cursor();
         const int tabstop = context.context.options()["tabstop"].get<int>();
 
-        auto line_wrap_count = [&](LineCount line, ColumnCount indent) {
+        auto line_wrap_count = [&](LineCount line, ColumnCount prefix_len) {
             LineCount count = 0;
             const ByteCount line_length = buffer[line].length();
             SplitPos pos{0, 0};
             while (true)
             {
-                pos = next_split_pos(buffer, wrap_column - (pos.byte == 0 ? 0_col : indent),
-                                     tabstop, line, pos);
+                pos = next_split_pos(buffer, wrap_column - (pos.byte == 0 ? 0_col : prefix_len),
+                                     prefix_len, tabstop, line, pos);
                 if (pos.byte == line_length)
                     break;
                 ++count;
@@ -772,7 +769,7 @@ struct WrapHighlighter : Highlighter
         setup.scroll_offset.column = 0;
         setup.full_lines = true;
 
-        const ColumnCount marker_len = m_marker.column_length();
+        const ColumnCount marker_len = zero_if_greater(m_marker.column_length(), wrap_column);
 
         for (auto buf_line = setup.window_pos.line, win_line = 0_line;
              win_line < win_height or buf_line <= cursor.line;
@@ -781,13 +778,9 @@ struct WrapHighlighter : Highlighter
             if (buf_line >= buffer.line_count())
                 break;
 
-            const ColumnCount indent = m_preserve_indent ? line_indent(buffer, tabstop, buf_line) : 0_col;
-
-            ColumnCount prefix_len = 0;
-            if (marker_len < wrap_column)
-                prefix_len = marker_len;
-            if (indent > marker_len and indent < wrap_column)
-                prefix_len = indent;
+            const ColumnCount indent = m_preserve_indent ?
+                zero_if_greater(line_indent(buffer, tabstop, buf_line), wrap_column) : 0_col;
+            const ColumnCount prefix_len = std::max(marker_len, indent);
 
             if (buf_line == cursor.line)
             {
@@ -795,7 +788,7 @@ struct WrapHighlighter : Highlighter
                 for (LineCount count = 0; true; ++count)
                 {
                     auto next_pos = next_split_pos(buffer, wrap_column - (pos.byte != 0 ? prefix_len : 0_col),
-                                                   tabstop, buf_line, pos);
+                                                   prefix_len, tabstop, buf_line, pos);
                     if (next_pos.byte > cursor.column)
                     {
                         setup.cursor_pos = DisplayCoord{
@@ -831,7 +824,8 @@ struct WrapHighlighter : Highlighter
         unique_ids.push_back(ms_id);
     }
 
-    SplitPos next_split_pos(const Buffer& buffer,  ColumnCount wrap_column, int tabstop, LineCount line, SplitPos current) const
+    SplitPos next_split_pos(const Buffer& buffer,  ColumnCount wrap_column, ColumnCount prefix_len,
+                            int tabstop, LineCount line, SplitPos current) const
     {
         const ColumnCount target_column = current.column + wrap_column;
         StringView content = buffer[line];
@@ -873,7 +867,7 @@ struct WrapHighlighter : Highlighter
             // split at last word boundary if the word is shorter than our wrapping width
             ColumnCount word_length = pos.column - last_boundary.column;
             const char* it = &content[pos.byte]; 
-            while (it != content.end() and word_length <= wrap_column)
+            while (it != content.end() and word_length < (wrap_column - prefix_len))
             {
                 const Codepoint cp = utf8::read_codepoint(it, content.end());
                 if (not is_word<WORD>(cp))
@@ -913,6 +907,8 @@ struct WrapHighlighter : Highlighter
                                                  (bool)parser.get_switch("indent"),
                                                  parser.get_switch("marker").value_or("").str());
     }
+
+    static ColumnCount zero_if_greater(ColumnCount val, ColumnCount max) { return val < max ? val : 0; };
 
     const bool m_word_wrap;
     const bool m_preserve_indent;
