@@ -8,6 +8,26 @@ hook global BufCreate .*[.](coffee) %{
     set-option buffer filetype coffee
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=coffee %{
+    require-module coffee
+
+    hook window ModeChange insert:.* -group coffee-trim-indent  coffee-trim-indent
+    hook window InsertChar \n -group coffee-indent coffee-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window coffee-.+ }
+}
+
+hook -group coffee-highlight global WinSetOption filetype=coffee %{
+    add-highlighter window/coffee ref coffee
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/coffee }
+}
+
+
+provide-module coffee %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -63,17 +83,4 @@ define-command -hidden coffee-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group coffee-highlight global WinSetOption filetype=coffee %{
-    add-highlighter window/coffee ref coffee
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/coffee }
-}
-
-hook global WinSetOption filetype=coffee %{
-    hook window ModeChange insert:.* -group coffee-trim-indent  coffee-trim-indent
-    hook window InsertChar \n -group coffee-indent coffee-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window coffee-.+ }
-}
+]

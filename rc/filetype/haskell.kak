@@ -8,6 +8,27 @@ hook global BufCreate .*[.](hs) %{
     set-option buffer filetype haskell
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=haskell %{
+    require-module haskell
+
+    set-option window extra_word_chars '_' "'"
+    hook window ModeChange insert:.* -group haskell-trim-indent  haskell-trim-indent
+    hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haskell-.+ }
+}
+
+hook -group haskell-highlight global WinSetOption filetype=haskell %{
+    add-highlighter window/haskell ref haskell
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/haskell }
+}
+
+
+provide-module haskell %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -88,18 +109,4 @@ define-command -hidden haskell-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group haskell-highlight global WinSetOption filetype=haskell %{
-    add-highlighter window/haskell ref haskell
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/haskell }
-}
-
-hook global WinSetOption filetype=haskell %{
-    set-option window extra_word_chars '_' "'"
-    hook window ModeChange insert:.* -group haskell-trim-indent  haskell-trim-indent
-    hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haskell-.+ }
-}
+]

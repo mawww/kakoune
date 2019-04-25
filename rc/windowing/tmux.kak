@@ -1,15 +1,13 @@
 # http://tmux.github.io/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-## The default behaviour for the `new` command is to open an horizontal pane in a tmux session
 hook global KakBegin .* %sh{
     if [ -n "$TMUX" ]; then
-        echo "
-            alias global focus tmux-focus
-            alias global terminal tmux-terminal-horizontal
-        "
+        echo "require-module tmux"
     fi
 }
+
+provide-module tmux %{
 
 define-command -hidden -params 2.. tmux-terminal-impl %{
     evaluate-commands %sh{
@@ -58,4 +56,10 @@ If no client is passed then the current one is used' \
             TMUX="${kak_client_env_TMUX}" tmux select-pane -t "${kak_client_env_TMUX_PANE}" > /dev/null
         fi
     }
+}
+
+## The default behaviour for the `new` command is to open an horizontal pane in a tmux session
+alias global focus tmux-focus
+alias global terminal tmux-terminal-horizontal
+
 }

@@ -8,6 +8,30 @@ hook global BufCreate .*\.go %{
     set-option buffer filetype go
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=go %{
+    require-module go
+
+    set-option window static_words %opt{go_static_words}
+
+    # cleanup trailing whitespaces when exiting insert mode
+    hook window ModeChange insert:.* -group go-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group go-indent go-indent-on-new-line
+    hook window InsertChar \{ -group go-indent go-indent-on-opening-curly-brace
+    hook window InsertChar \} -group go-indent go-indent-on-closing-curly-brace
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window go-.+ }
+}
+
+hook -group go-highlight global WinSetOption filetype=go %{
+    add-highlighter window/go ref go
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/go }
+}
+
+provide-module go %§
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -23,26 +47,26 @@ add-highlighter shared/go/code/ regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-
 
 evaluate-commands %sh{
     # Grammar
-    keywords="break|default|func|interface|select|case|defer|go|map|struct"
-    keywords="${keywords}|chan|else|goto|package|switch|const|fallthrough|if|range|type"
-    keywords="${keywords}|continue|for|import|return|var"
-    types="bool|byte|chan|complex128|complex64|error|float32|float64|int|int16|int32"
-    types="${types}|int64|int8|interface|intptr|map|rune|string|struct|uint|uint16|uint32|uint64|uint8"
-    values="false|true|nil|iota"
-    functions="append|cap|close|complex|copy|delete|imag|len|make|new|panic|print|println|real|recover"
+    keywords='break default func interface select case defer go map struct
+              chan else goto package switch const fallthrough if range type
+              continue for import return var'
+    types='bool byte chan complex128 complex64 error float32 float64 int int16 int32
+           int64 int8 interface intptr map rune string struct uint uint16 uint32 uint64 uint8'
+    values='false true nil iota'
+    functions='append cap close complex copy delete imag len make new panic print println real recover'
+
+    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=go %{
-        set-option window static_words ${keywords} ${attributes} ${types} ${values} ${functions}
-    }" | tr '|' ' '
+    printf %s\\n "declare-option str-list go_static_words $(join "${keywords} ${attributes} ${types} ${values} ${functions}" ' ')"
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/go/code/ regex \b(${keywords})\b 0:keyword
-        add-highlighter shared/go/code/ regex \b(${attributes})\b 0:attribute
-        add-highlighter shared/go/code/ regex \b(${types})\b 0:type
-        add-highlighter shared/go/code/ regex \b(${values})\b 0:value
-        add-highlighter shared/go/code/ regex \b(${functions})\b 0:builtin
+        add-highlighter shared/go/code/ regex \b($(join "${keywords}" '|'))\b 0:keyword
+        add-highlighter shared/go/code/ regex \b($(join "${attributes}" '|'))\b 0:attribute
+        add-highlighter shared/go/code/ regex \b($(join "${types}" '|'))\b 0:type
+        add-highlighter shared/go/code/ regex \b($(join "${values}" '|'))\b 0:value
+        add-highlighter shared/go/code/ regex \b($(join "${functions}" '|'))\b 0:builtin
     "
 }
 
@@ -78,20 +102,4 @@ define-command -hidden go-indent-on-closing-curly-brace %[
     try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group go-highlight global WinSetOption filetype=go %{
-    add-highlighter window/go ref go
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/go }
-}
-
-hook global WinSetOption filetype=go %{
-    # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group go-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
-    hook window InsertChar \n -group go-indent go-indent-on-new-line
-    hook window InsertChar \{ -group go-indent go-indent-on-opening-curly-brace
-    hook window InsertChar \} -group go-indent go-indent-on-closing-curly-brace
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window go-.+ }
-}
+§

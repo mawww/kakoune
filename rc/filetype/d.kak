@@ -8,6 +8,30 @@ hook global BufCreate .*\.di? %{
     set-option buffer filetype d
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=d %{
+    require-module d
+
+    set-option window static_words %opt{d_static_words}
+
+    # cleanup trailing whitespaces when exiting insert mode
+    hook window ModeChange insert:.* -group d-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group d-indent d-indent-on-new-line
+    hook window InsertChar \{ -group d-indent d-indent-on-opening-curly-brace
+    hook window InsertChar \} -group d-indent d-indent-on-closing-curly-brace
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window d-.+ }
+}
+
+hook -group d-highlight global WinSetOption filetype=d %{
+    add-highlighter window/d ref d
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/d }
+}
+
+provide-module d %§
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -62,9 +86,7 @@ evaluate-commands %sh{
     decorators="disable|property|nogc|safe|trusted|system"
 
     # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=d %{
-        set-option window static_words ${keywords} ${attributes} ${types} ${values} ${decorators} ${properties}
-    }" | tr '|' ' '
+    printf %s\\n "declare-option str-list d_static_words ${keywords} ${attributes} ${types} ${values} ${decorators} ${properties}" | tr '|' ' '
 
     # Highlight keywords
     printf %s "
@@ -113,20 +135,4 @@ define-command -hidden d-indent-on-closing-curly-brace %[
     try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group d-highlight global WinSetOption filetype=d %{
-    add-highlighter window/d ref d
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/d }
-}
-
-hook global WinSetOption filetype=d %{
-    # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group d-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
-    hook window InsertChar \n -group d-indent d-indent-on-new-line
-    hook window InsertChar \{ -group d-indent d-indent-on-opening-curly-brace
-    hook window InsertChar \} -group d-indent d-indent-on-closing-curly-brace
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window d-.+ }
-}
+§

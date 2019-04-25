@@ -6,7 +6,25 @@
 
 hook global BufCreate .*\.taskpaper %{
     set-option buffer filetype taskpaper
-} 
+}
+
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=taskpaper %{
+    require-module taskpaper
+
+    hook window InsertChar \n -group taskpaper-indent taskpaper-indent-on-new-line
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window taskpaper-.+ }
+}
+
+hook -group taskpaper-highlight global WinSetOption filetype=taskpaper %{
+    add-highlighter window/taskpaper ref taskpaper
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/taskpaper }
+}
+
+
+provide-module taskpaper %{
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -33,15 +51,4 @@ define-command -hidden taskpaper-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group taskpaper-highlight global WinSetOption filetype=taskpaper %{
-    add-highlighter window/taskpaper ref taskpaper
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/taskpaper }
-}
-
-hook global WinSetOption filetype=taskpaper %{
-    hook window InsertChar \n -group taskpaper-indent taskpaper-indent-on-new-line
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window taskpaper-.+ }
 }

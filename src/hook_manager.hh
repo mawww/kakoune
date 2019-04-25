@@ -56,12 +56,13 @@ enum class Hook
     WinCreate,
     WinDisplay,
     WinResize,
-    WinSetOption
+    WinSetOption,
+    ModuleLoad
 };
 
 constexpr auto enum_desc(Meta::Type<Hook>)
 {
-    return make_array<EnumDesc<Hook>, 40>({
+    return make_array<EnumDesc<Hook>, 41>({
         {Hook::BufCreate, "BufCreate"},
         {Hook::BufNewFile, "BufNewFile"},
         {Hook::BufOpenFile, "BufOpenFile"},
@@ -102,6 +103,7 @@ constexpr auto enum_desc(Meta::Type<Hook>)
         {Hook::WinDisplay, "WinDisplay"},
         {Hook::WinResize, "WinResize"},
         {Hook::WinSetOption, "WinSetOption"},
+        {Hook::ModuleLoad, "ModuleLoad"}
     });
 }
 

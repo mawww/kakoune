@@ -12,6 +12,36 @@ hook global BufCreate .*\.xml %{
     set-option buffer filetype xml
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=(html|xml) %{
+    require-module html
+
+    hook window ModeChange insert:.* -group "%val{hook_param_capture_1}-trim-indent"  html-trim-indent
+    hook window InsertChar '>' -group "%val{hook_param_capture_1}-indent" html-indent-on-greater-than
+    hook window InsertChar \n -group "%val{hook_param_capture_1}-indent" html-indent-on-new-line
+
+    hook -once -always window WinSetOption "filetype=.*" "
+        remove-hooks window ""%val{hook_param_capture_1}-.+""
+    "
+}
+
+hook -group html-highlight global WinSetOption filetype=(html|xml) %{
+    add-highlighter "window/%val{hook_param_capture_1}" ref html
+    hook -once -always window WinSetOption "filetype=.*" "
+        remove-highlighter ""window/%val{hook_param_capture_1}""
+    "
+}
+
+
+provide-module html %[
+
+try %{
+    require-module css
+    require-module javascript
+}
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -54,22 +84,4 @@ define-command -hidden html-indent-on-new-line %{
         try %{ execute-keys -draft k <a-x> <a-k> <lt>(?!area)(?!base)(?!br)(?!col)(?!command)(?!embed)(?!hr)(?!img)(?!input)(?!keygen)(?!link)(?!menuitem)(?!meta)(?!param)(?!source)(?!track)(?!wbr)(?!/)(?!>)[a-zA-Z0-9_-]+[^>]*?>$ <ret> j <a-gt> } }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group html-highlight global WinSetOption filetype=(html|xml) %{
-    add-highlighter "window/%val{hook_param_capture_1}" ref html
-    hook -once -always window WinSetOption "filetype=.*" "
-        remove-highlighter ""window/%val{hook_param_capture_1}""
-    "
-}
-
-hook global WinSetOption filetype=(html|xml) %{
-    hook window ModeChange insert:.* -group "%val{hook_param_capture_1}-trim-indent"  html-trim-indent
-    hook window InsertChar '>' -group "%val{hook_param_capture_1}-indent" html-indent-on-greater-than
-    hook window InsertChar \n -group "%val{hook_param_capture_1}-indent" html-indent-on-new-line
-
-    hook -once -always window WinSetOption "filetype=.*" "
-        remove-hooks window ""%val{hook_param_capture_1}-.+""
-    "
-}
+]

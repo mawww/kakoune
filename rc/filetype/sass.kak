@@ -8,6 +8,27 @@ hook global BufCreate .*[.](sass) %{
     set-option buffer filetype sass
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=sass %{
+    require-module sass
+
+    hook window ModeChange insert:.* -group sass-trim-indent  sass-trim-indent
+    hook window InsertChar \n -group sass-indent sass-indent-on-new-line
+    set-option buffer extra_word_chars '_' '-'
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window sass-.+ }
+}
+
+hook -group sass-highlight global WinSetOption filetype=sass %{
+    add-highlighter window/sass ref sass
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sass }
+}
+
+
+provide-module sass %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -45,18 +66,4 @@ define-command -hidden sass-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group sass-highlight global WinSetOption filetype=sass %{
-    add-highlighter window/sass ref sass
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sass }
-}
-
-hook global WinSetOption filetype=sass %{
-    hook window ModeChange insert:.* -group sass-trim-indent  sass-trim-indent
-    hook window InsertChar \n -group sass-indent sass-indent-on-new-line
-    set-option buffer extra_word_chars '_' '-'
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window sass-.+ }
 }

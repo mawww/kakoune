@@ -1,3 +1,9 @@
+hook -once global BufSetOption filetype=(c|cpp) %{
+    require-module clang
+}
+
+provide-module clang %[
+
 declare-option -docstring "options to pass to the `clang` shell command" \
     str clang_options
 
@@ -179,3 +185,5 @@ define-command clang-diagnostics-next -docstring "Jump to the next line that con
             echo "echo -markup '{Error}no next clang diagnostic'"
         fi
     } }
+
+]

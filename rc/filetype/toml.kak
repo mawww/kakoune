@@ -8,6 +8,26 @@ hook global BufCreate .*\.(toml) %{
     set-option buffer filetype toml
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=toml %{
+    require-module toml
+
+    hook window ModeChange insert:.* -group toml-trim-indent toml-trim-indent
+    hook window InsertChar \n -group toml-indent toml-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window toml-.+ }
+}
+
+hook -group toml-highlight global WinSetOption filetype=toml %{
+    add-highlighter window/toml ref toml
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/toml }
+}
+
+
+provide-module toml %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -47,17 +67,4 @@ define-command -hidden toml-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group toml-highlight global WinSetOption filetype=toml %{
-    add-highlighter window/toml ref toml
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/toml }
-}
-
-hook global WinSetOption filetype=toml %{
-    hook window ModeChange insert:.* -group toml-trim-indent toml-trim-indent
-    hook window InsertChar \n -group toml-indent toml-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window toml-.+ }
 }

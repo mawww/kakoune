@@ -8,7 +8,7 @@ hook global BufCreate .*[.](editorconfig) %{
     set-option buffer filetype ini
     set-option buffer static_words indent_style indent_size tab_width \
     end_of_line charset insert_final_newline trim_trailing_whitespace root \
-    latin1 utf-8 utf-8-bom utf-16be utf-16le lf cr crlf unset space tab 
+    latin1 utf-8 utf-8-bom utf-16be utf-16le lf cr crlf unset space tab
 }
 
 declare-option -hidden bool editorconfig_trim_trailing_whitespace false

@@ -8,6 +8,24 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
     set-option buffer filetype markdown
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=markdown %{
+    require-module markdown
+
+    hook window InsertChar \n -group markdown-indent markdown-indent-on-new-line
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window markdown-.+ }
+}
+
+hook -group markdown-highlight global WinSetOption filetype=markdown %{
+    add-highlighter window/markdown ref markdown
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/markdown }
+}
+
+
+provide-module markdown %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -71,15 +89,4 @@ define-command -hidden markdown-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group markdown-highlight global WinSetOption filetype=markdown %{
-    add-highlighter window/markdown ref markdown
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/markdown }
-}
-
-hook global WinSetOption filetype=markdown %{
-    hook window InsertChar \n -group markdown-indent markdown-indent-on-new-line
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window markdown-.+ }
 }

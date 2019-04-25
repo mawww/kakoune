@@ -1,14 +1,36 @@
 # http://www.scheme-reports.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# require lisp.kak
-
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate (.*/)?(.*\.(scm|ss|sld)) %{
     set-option buffer filetype scheme
 }
+
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=scheme %{
+    require-module scheme
+
+    set-option window static_words %opt{scheme_static_words}
+
+    set-option buffer extra_word_chars '_' '-' '!' '%' '?' '<' '>' '='
+    hook window InsertEnd  .* -group scheme-trim-indent  lisp-trim-indent
+    hook window InsertChar \n -group scheme-indent lisp-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window scheme-.+ }
+}
+
+hook -group scheme-highlight global WinSetOption filetype=scheme %{
+    add-highlighter window/scheme ref scheme
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/scheme }
+}
+
+provide-module scheme %{
+
+require-module lisp
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -99,9 +121,9 @@ evaluate-commands %sh{ exec awk -f - <<'EOF'
     }
 
     BEGIN {
-        printf("hook global WinSetOption filetype=scheme %%{ set-option window static_words ");
-        print_words(keywords); print_words(meta); print_words(operators); print_words(builtins); 
-        printf(" }\n")
+        printf("declare-option str-list scheme_static_words ");
+        print_words(keywords); print_words(meta); print_words(operators); print_words(builtins);
+        printf("\n");
 
         add_word_highlighter(keywords, "keyword");
         add_word_highlighter(meta, "meta");
@@ -115,19 +137,4 @@ evaluate-commands %sh{ exec awk -f - <<'EOF'
 EOF
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group scheme-highlight global WinSetOption filetype=scheme %{
-    add-highlighter window/scheme ref scheme
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/scheme }
-}
-
-
-hook global WinSetOption filetype=scheme %{
-    set-option buffer extra_word_chars '_' '-' '!' '%' '?' '<' '>' '='
-    hook window InsertEnd  .* -group scheme-trim-indent  lisp-trim-indent
-    hook window InsertChar \n -group scheme-indent lisp-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window scheme-.+ }
 }

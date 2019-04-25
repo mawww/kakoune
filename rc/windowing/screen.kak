@@ -3,11 +3,10 @@
 
 hook -group GNUscreen global KakBegin .* %sh{
     [ -z "${STY}" ] && exit
-    echo "
-        alias global focus screen-focus
-        alias global terminal screen-terminal-vertical
-    "
+    echo "require-module screen"
 }
+
+provide-module screen %{
 
 define-command screen-terminal-impl -hidden -params 3.. %{
     nop %sh{
@@ -66,4 +65,9 @@ If no client is passed then the current one is used' \
             screen -X select "${kak_client_env_WINDOW}" < "/dev/$tty"
         fi
     }
+}
+
+alias global focus screen-focus
+alias global terminal screen-terminal-vertical
+
 }

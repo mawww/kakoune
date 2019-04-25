@@ -2403,6 +2403,46 @@ const CommandDesc enter_user_mode_cmd = {
     }
 };
 
+const CommandDesc provide_module_cmd = {
+    "provide-module",
+    nullptr,
+    "provide-module [<switches>] <name> <cmds>: declares a module <name> provided by <cmds>",
+    ParameterDesc{
+        { { "override", { false, "allow overriding an existing module" } } },
+        ParameterDesc::Flags::None,
+        2, 2
+    },
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        const String& module_name = parser[0];
+        auto& cm = CommandManager::instance();
+
+        if (not all_of(module_name, is_identifier))
+            throw runtime_error(format("invalid module name: '{}'", module_name));
+
+        if (cm.module_defined(module_name) and not parser.get_switch("override"))
+            throw runtime_error(format("module '{}' already defined", module_name));
+        cm.register_module(module_name, parser[1]);
+    }
+};
+
+const CommandDesc require_module_cmd = {
+    "require-module",
+    nullptr,
+    "require-module <name>: ensures that <name> module has been loaded",
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 1, 1 },
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        CommandManager::instance().load_module(parser[0], context);
+    }
+};
+
 }
 
 void register_commands()
@@ -2468,6 +2508,8 @@ void register_commands()
     register_command(fail_cmd);
     register_command(declare_user_mode_cmd);
     register_command(enter_user_mode_cmd);
+    register_command(provide_module_cmd);
+    register_command(require_module_cmd);
 }
 
 }

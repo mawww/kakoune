@@ -4,6 +4,21 @@ hook global BufCreate .*\.(s|S|asm)$ %{
     set-option buffer filetype gas
 }
 
+hook global WinSetOption filetype=gas %{
+    require-module gas
+
+    hook window InsertChar \n -group gas-indent gas-indent-on-new-line
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window gas-.+ }
+}
+
+hook -group gas-highlight global WinSetOption filetype=gas %{
+    add-highlighter window/gas ref gas
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/gas }
+}
+
+
+provide-module gas %{
+
 add-highlighter shared/gas regions
 add-highlighter shared/gas/code default-region group
 add-highlighter shared/gas/string         region '"' (?<!\\)(\\\\)*"        fill string
@@ -80,12 +95,4 @@ define-command -hidden gas-indent-on-new-line %~
     >
 ~
 
-hook -group gas-highlight global WinSetOption filetype=gas %{
-    add-highlighter window/gas ref gas
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/gas }
-}
-
-hook global WinSetOption filetype=gas %{
-    hook window InsertChar \n -group gas-indent gas-indent-on-new-line
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window gas-.+ }
 }

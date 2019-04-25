@@ -8,6 +8,29 @@ hook global BufCreate .*[.](haml) %{
     set-option buffer filetype haml
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=haml %{
+    require-module haml
+
+    hook window ModeChange insert:.* -group haml-trim-indent  haml-trim-indent
+    hook window InsertChar \n -group haml-indent haml-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haml-.+ }
+}
+
+hook -group haml-highlight global WinSetOption filetype=haml %{
+    add-highlighter window/haml ref haml
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/haml }
+}
+
+
+provide-module haml %[
+require-module ruby
+require-module coffee
+require-module sass
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -46,17 +69,4 @@ define-command -hidden haml-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group haml-highlight global WinSetOption filetype=haml %{
-    add-highlighter window/haml ref haml
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/haml }
-}
-
-hook global WinSetOption filetype=haml %{
-    hook window ModeChange insert:.* -group haml-trim-indent  haml-trim-indent
-    hook window InsertChar \n -group haml-indent haml-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haml-.+ }
-}
+]

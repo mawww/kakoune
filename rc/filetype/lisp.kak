@@ -8,6 +8,25 @@ hook global BufCreate .*[.](lisp) %{
     set-option buffer filetype lisp
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=lisp %{
+    require-module lisp
+
+    hook window ModeChange insert:.* -group lisp-trim-indent  lisp-trim-indent
+    hook window InsertChar \n -group lisp-indent lisp-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window lisp-.+ }
+}
+
+hook -group lisp-highlight global WinSetOption filetype=lisp %{
+    add-highlighter window/lisp ref lisp
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/lisp }
+}
+
+provide-module lisp %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -58,17 +77,4 @@ define-command -hidden lisp-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group lisp-highlight global WinSetOption filetype=lisp %{
-    add-highlighter window/lisp ref lisp
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/lisp }
-}
-
-hook global WinSetOption filetype=lisp %{
-    hook window ModeChange insert:.* -group lisp-trim-indent  lisp-trim-indent
-    hook window InsertChar \n -group lisp-indent lisp-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window lisp-.+ }
 }

@@ -8,6 +8,32 @@ hook global BufCreate .*[.](moon) %{
     set-option buffer filetype moon
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=moon %{
+    require-module moon
+
+    hook window ModeChange insert:.* -group moon-trim-indent  moon-trim-indent
+    hook window InsertChar .* -group moon-indent moon-indent-on-char
+    hook window InsertChar \n -group moon-indent moon-indent-on-new-line
+
+    alias window alt moon-alternative-file
+
+    hook -once -always window WinSetOption filetype=.* %{
+        remove-hooks window moon-.+
+        unalias window alt moon-alternative-file
+    }
+}
+
+hook -group moon-highlight global WinSetOption filetype=moon %{
+    add-highlighter window/moon ref moon
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/moon }
+}
+
+
+provide-module moon %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -85,23 +111,4 @@ define-command -hidden moon-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group moon-highlight global WinSetOption filetype=moon %{
-    add-highlighter window/moon ref moon
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/moon }
-}
-
-hook global WinSetOption filetype=moon %{
-    hook window ModeChange insert:.* -group moon-trim-indent  moon-trim-indent
-    hook window InsertChar .* -group moon-indent moon-indent-on-char
-    hook window InsertChar \n -group moon-indent moon-indent-on-new-line
-
-    alias window alt moon-alternative-file
-
-    hook -once -always window WinSetOption filetype=.* %{
-        remove-hooks window moon-.+
-        unalias window alt moon-alternative-file
-    }
-}
+]

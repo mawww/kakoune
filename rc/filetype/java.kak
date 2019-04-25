@@ -2,6 +2,29 @@ hook global BufCreate .*\.java %{
     set-option buffer filetype java
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=java %{
+    require-module java
+
+    # cleanup trailing whitespaces when exiting insert mode
+    hook window ModeChange insert:.* -group java-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group java-indent java-indent-on-new-line
+    hook window InsertChar \{ -group java-indent java-indent-on-opening-curly-brace
+    hook window InsertChar \} -group java-indent java-indent-on-closing-curly-brace
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window java-.+ }
+}
+
+hook -group java-highlight global WinSetOption filetype=java %{
+    add-highlighter window/java ref java
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/java }
+}
+
+
+provide-module java %§
+
 add-highlighter shared/java regions
 add-highlighter shared/java/code default-region group
 add-highlighter shared/java/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} fill string
@@ -46,20 +69,4 @@ define-command -hidden java-indent-on-closing-curly-brace %[
     try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group java-highlight global WinSetOption filetype=java %{
-    add-highlighter window/java ref java
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/java }
-}
-
-hook global WinSetOption filetype=java %{
-    # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group java-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
-    hook window InsertChar \n -group java-indent java-indent-on-new-line
-    hook window InsertChar \{ -group java-indent java-indent-on-opening-curly-brace
-    hook window InsertChar \} -group java-indent java-indent-on-closing-curly-brace
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window java-.+ }
-}
+§
