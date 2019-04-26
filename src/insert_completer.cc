@@ -465,7 +465,10 @@ void InsertCompleter::reset()
 {
     if (m_explicit_completer or m_completions.is_valid())
     {
-        String selected_item = std::move(m_completions.candidates[m_current_candidate].completion);
+        String selected_item;
+        if (m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size())
+            selected_item = std::move(m_completions.candidates[m_current_candidate].completion);
+
         m_explicit_completer = nullptr;
         m_completions = InsertCompletion{};
         if (m_context.has_client())
