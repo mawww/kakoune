@@ -18,9 +18,13 @@ define-command -hidden -params 2.. tmux-terminal-impl %{
         fi
         tmux_args="$1"
         shift
-        # ideally we should escape single ';' to stop tmux from interpreting it as a new command
-        # but that's probably too rare to care
-        TMUX=$tmux tmux $tmux_args env TMPDIR="$TMPDIR" "$@" < /dev/null > /dev/null 2>&1 &
+        (
+            TMUX=$tmux tmux $tmux_args "env TMPDIR="$TMPDIR" ${*@Q}" < /dev/null 2>&1
+        ) | (
+            wihle read line; do
+                echo "echo -debug TMUX: ${line@Q}"
+            done
+        )
     }
 }
 
