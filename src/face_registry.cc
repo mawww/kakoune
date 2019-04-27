@@ -23,12 +23,14 @@ static FaceRegistry::FaceSpec parse_face(StringView facedesc)
         and (attr_it + 1) == facedesc.end())
         throw runtime_error(invalid_face_error.str());
 
+    auto colors_end = std::min(attr_it, base_it);
+
     FaceRegistry::FaceSpec spec;
     auto& face = spec.face;
-    face.fg = attr_it != facedesc.begin() ?
-        str_to_color({facedesc.begin(), std::min(attr_it, bg_it)}) : Color::Default;
+    face.fg = colors_end != facedesc.begin() ?
+        str_to_color({facedesc.begin(), std::min(bg_it, colors_end)}) : Color::Default;
     if (bg_it != facedesc.end())
-        face.bg = bg_it+1 != attr_it ? str_to_color({bg_it+1, attr_it}) : Color::Default;
+        face.bg = bg_it+1 != attr_it ? str_to_color({bg_it+1, colors_end}) : Color::Default;
     if (attr_it != facedesc.end())
     {
         for (++attr_it; attr_it != base_it; ++attr_it)
