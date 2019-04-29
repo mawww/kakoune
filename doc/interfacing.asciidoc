@@ -85,11 +85,15 @@ External completions are provided using an option to store completion, which
 have the following format.
 
 ----
-line.column[+len]@timestamp candidate1|desc1|menu1 candidate2|desc2|menu2 ...
+line.column[+len]@timestamp candidate1|select1|menu1 candidate2|select2|menu2 ...
 ----
 
 the first element of this string list specify where and when this completion
-applies, the others are a triplet `<completion text>|<docstring>|<menu text>`
+applies, the others are a triplet `<completion text>|<select cmd>|<menu text>`
+
+The select command is executed whenever this menu item gets selected, and
+is usually used to display an item specific documentation with
+`info -placement menu '<menu item description>'`
 
 The menu text is a markup string (see <<faces#markup-strings,`:doc faces
 markup-strings`>>), so it can contain `{face}` directives.

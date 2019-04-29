@@ -5,6 +5,27 @@ hook global BufCreate .*[.](php) %{
     set-option buffer filetype php
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=php %{
+    require-module php
+
+    hook window ModeChange insert:.* -group php-trim-indent  php-trim-indent
+    hook window InsertChar .* -group php-indent php-indent-on-char
+    hook window InsertChar \n -group php-indent php-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window php-.+ }
+}
+
+hook -group php-highlight global WinSetOption filetype=php %{
+    add-highlighter window/php-file ref php-file
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/php-file }
+}
+
+provide-module php %(
+require-module html
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -73,18 +94,4 @@ define-command -hidden php-indent-on-new-line %<
     >
 >
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group php-highlight global WinSetOption filetype=php %{
-    add-highlighter window/php-file ref php-file
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/php-file }
-}
-
-hook global WinSetOption filetype=php %{
-    hook window ModeChange insert:.* -group php-trim-indent  php-trim-indent
-    hook window InsertChar .* -group php-indent php-indent-on-char
-    hook window InsertChar \n -group php-indent php-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window php-.+ }
-}
+)

@@ -322,34 +322,49 @@ struct CommandDesc
 template<bool force_reload>
 void edit(const ParametersParser& parser, Context& context, const ShellContext&)
 {
-    if (parser.positional_count() == 0 and not force_reload)
+    const bool scratch = (bool)parser.get_switch("scratch");
+
+    if (parser.positional_count() == 0 and not force_reload and not scratch)
         throw wrong_argument_count();
 
-    auto& name = parser.positional_count() > 0 ? parser[0]
-                                               : context.buffer().name();
-    auto& buffer_manager = BufferManager::instance();
-
-    Buffer* buffer = buffer_manager.get_buffer_ifp(name);
     const bool no_hooks = context.hooks_disabled();
     const auto flags = (no_hooks ? Buffer::Flags::NoHooks : Buffer::Flags::None) |
        (parser.get_switch("debug") ? Buffer::Flags::Debug : Buffer::Flags::None);
 
-    if (force_reload and buffer and buffer->flags() & Buffer::Flags::File)
+    auto& buffer_manager = BufferManager::instance();
+    auto generate_scratch_name = [&] {
+        for (int i = 0; true; ++i)
+        {
+            String name = format("*scratch-{}*", i);
+            if (buffer_manager.get_buffer_ifp(name) == nullptr)
+                return name;
+        }
+    };
+    const auto& name = parser.positional_count() > 0 ?
+        parser[0] : (scratch ? generate_scratch_name() : context.buffer().name());
+
+    Buffer* buffer = buffer_manager.get_buffer_ifp(name);
+    if (scratch)
+    {
+        if (parser.get_switch("readonly") or parser.get_switch("fifo") or parser.get_switch("scroll"))
+            throw runtime_error("scratch is not compatible with readonly, fifo or scroll");
+
+        if (buffer == nullptr or force_reload)
+        {
+            if (buffer != nullptr and force_reload)
+                buffer_manager.delete_buffer(*buffer);
+            buffer = buffer_manager.create_buffer(std::move(name), flags);
+        }
+        else if (buffer->flags() & Buffer::Flags::File)
+            throw runtime_error(format("buffer '{}' exists but is not a scratch buffer", name));
+    }
+    else if (force_reload and buffer and buffer->flags() & Buffer::Flags::File)
+    {
         reload_file_buffer(*buffer);
+    }
     else
     {
-        if (parser.get_switch("scratch"))
-        {
-            if (buffer and (force_reload or buffer->flags() != Buffer::Flags::None))
-            {
-                buffer_manager.delete_buffer(*buffer);
-                buffer = nullptr;
-            }
-
-            if (not buffer)
-                buffer = buffer_manager.create_buffer(name, flags);
-        }
-        else if (auto fifo = parser.get_switch("fifo"))
+        if (auto fifo = parser.get_switch("fifo"))
             buffer = open_fifo(name, *fifo, flags, (bool)parser.get_switch("scroll"));
         else if (not buffer)
         {
@@ -1200,6 +1215,7 @@ const CommandDesc echo_cmd = {
     "echo <params>...: display given parameters in the status line",
     ParameterDesc{
         { { "markup", { false, "parse markup" } },
+          { "to-file", { true, "echo contents to given filename" } },
           { "debug", { false, "write to debug buffer instead of status line" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart
     },
@@ -1208,7 +1224,11 @@ const CommandDesc echo_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        String message = fix_atom_text(join(parser, ' ', false));
+        String message = join(parser, ' ', false);
+        if (auto filename = parser.get_switch("to-file"))
+            return write_to_file(*filename, message);
+
+        message = fix_atom_text(message);
         if (parser.get_switch("debug"))
             write_to_debug_buffer(message);
         else if (parser.get_switch("markup"))
@@ -2055,9 +2075,9 @@ const CommandDesc info_cmd = {
     nullptr,
     "info [<switches>] <text>: display an info box containing <text>",
     ParameterDesc{
-        { { "anchor",    { true, "set info anchoring <line>.<column>" } },
-          { "placement", { true, "set placement relative to anchor (above, below)" } },
-          { "title",     { true, "set info title" } } },
+        { { "anchor", { true, "set info anchoring <line>.<column>" } },
+          { "style", { true, "set info style (above, below, menu, modal)" } },
+          { "title", { true, "set info title" } } },
         ParameterDesc::Flags::None, 0, 1
     },
     CommandFlags::None,
@@ -2068,34 +2088,31 @@ const CommandDesc info_cmd = {
         if (not context.has_client())
             return;
 
-        context.client().info_hide();
-        if (parser.positional_count() > 0)
-        {
-            InfoStyle style = InfoStyle::Prompt;
-            BufferCoord pos;
-            if (auto anchor = parser.get_switch("anchor"))
-            {
-                auto dot = find(*anchor, '.');
-                if (dot == anchor->end())
+        const InfoStyle style = parser.get_switch("style").map(
+            [](StringView style) -> Optional<InfoStyle> {
+                if (style == "above") return InfoStyle::InlineAbove;
+                if (style == "below") return InfoStyle::InlineBelow;
+                if (style == "menu") return InfoStyle::MenuDoc;
+                if (style == "modal") return InfoStyle::Modal;
+                throw runtime_error(format("invalid style: '{}'", style));
+            }).value_or(parser.get_switch("anchor") ? InfoStyle::Inline : InfoStyle::Prompt);
+
+        context.client().info_hide(style == InfoStyle::Modal);
+        if (parser.positional_count() == 0)
+            return;
+
+        const BufferCoord pos = parser.get_switch("anchor").map(
+            [](StringView anchor) {
+                auto dot = find(anchor, '.');
+                if (dot == anchor.end())
                     throw runtime_error("expected <line>.<column> for anchor");
 
-                pos = BufferCoord{str_to_int({anchor->begin(), dot})-1,
-                                str_to_int({dot+1, anchor->end()})-1};
-                style = InfoStyle::Inline;
+                return BufferCoord{str_to_int({anchor.begin(), dot})-1,
+                                   str_to_int({dot+1, anchor.end()})-1};
+            }).value_or(BufferCoord{});
 
-                if (auto placement = parser.get_switch("placement"))
-                {
-                    if (*placement == "above")
-                        style = InfoStyle::InlineAbove;
-                    else if (*placement == "below")
-                        style = InfoStyle::InlineBelow;
-                    else
-                        throw runtime_error(format("invalid placement: '{}'", *placement));
-                }
-            }
-            auto title = parser.get_switch("title").value_or(StringView{});
-            context.client().info_show(title.str(), parser[0], pos, style);
-        }
+        auto title = parser.get_switch("title").value_or(StringView{});
+        context.client().info_show(title.str(), parser[0], pos, style);
     }
 };
 
@@ -2386,6 +2403,46 @@ const CommandDesc enter_user_mode_cmd = {
     }
 };
 
+const CommandDesc provide_module_cmd = {
+    "provide-module",
+    nullptr,
+    "provide-module [<switches>] <name> <cmds>: declares a module <name> provided by <cmds>",
+    ParameterDesc{
+        { { "override", { false, "allow overriding an existing module" } } },
+        ParameterDesc::Flags::None,
+        2, 2
+    },
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        const String& module_name = parser[0];
+        auto& cm = CommandManager::instance();
+
+        if (not all_of(module_name, is_identifier))
+            throw runtime_error(format("invalid module name: '{}'", module_name));
+
+        if (cm.module_defined(module_name) and not parser.get_switch("override"))
+            throw runtime_error(format("module '{}' already defined", module_name));
+        cm.register_module(module_name, parser[1]);
+    }
+};
+
+const CommandDesc require_module_cmd = {
+    "require-module",
+    nullptr,
+    "require-module <name>: ensures that <name> module has been loaded",
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 1, 1 },
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        CommandManager::instance().load_module(parser[0], context);
+    }
+};
+
 }
 
 void register_commands()
@@ -2451,6 +2508,8 @@ void register_commands()
     register_command(fail_cmd);
     register_command(declare_user_mode_cmd);
     register_command(enter_user_mode_cmd);
+    register_command(provide_module_cmd);
+    register_command(require_module_cmd);
 }
 
 }

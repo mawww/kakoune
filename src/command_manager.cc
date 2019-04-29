@@ -5,6 +5,7 @@
 #include "buffer_utils.hh"
 #include "context.hh"
 #include "flags.hh"
+#include "file.hh"
 #include "optional.hh"
 #include "option_types.hh"
 #include "ranges.hh"
@@ -37,6 +38,36 @@ void CommandManager::register_command(String command_name,
                                  flags,
                                  std::move(helper),
                                  std::move(completer) };
+}
+
+bool CommandManager::module_defined(StringView module_name) const
+{
+    return m_modules.find(module_name) != m_modules.end();
+}
+
+void CommandManager::register_module(String module_name, String commands)
+{
+    auto module = m_modules.find(module_name);
+    if (module != m_modules.end() and module->value.loaded)
+        throw runtime_error{format("module already loaded: '{}'", module_name)};
+
+    m_modules[module_name] = { false, std::move(commands) };
+}
+
+void CommandManager::load_module(StringView module_name, Context& context)
+{
+    auto module = m_modules.find(module_name);
+    if (module == m_modules.end())
+        throw runtime_error{format("no such module: '{}'", module_name)};
+    if (module->value.loaded)
+        return;
+
+    module->value.loaded = true;
+    Context empty_context{Context::EmptyContextFlag{}};
+    execute(module->value.commands, empty_context);
+    module->value.commands.clear();
+
+    context.hooks().run_hook(Hook::ModuleLoad, module_name, context);
 }
 
 struct parse_error : runtime_error
@@ -168,6 +199,8 @@ Token::Type token_type(StringView type_name, bool throw_on_invalid)
         return Token::Type::ValExpand;
     else if (type_name == "arg")
         return Token::Type::ArgExpand;
+    else if (type_name == "file")
+        return Token::Type::FileExpand;
     else if (throw_on_invalid)
         throw parse_error{format("unknown expand '{}'", type_name)};
     else
@@ -327,6 +360,8 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
             throw runtime_error("invalid argument index");
         return {arg < params.size() ? params[arg] : String{}};
     }
+    case Token::Type::FileExpand:
+        return {read_file(content)};
     case Token::Type::RawEval:
         return {expand(content, context, shell_context)};
     case Token::Type::Raw:

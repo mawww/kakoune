@@ -140,6 +140,13 @@ name. Hooks with no description will always use an empty string.
     executed when a fifo buffer closes its fifo file descriptor either
     because the buffer is being deleted or the writing end has been closed
 
+*ClientCreate* `client name`::
+    executed when a new client is created.
+
+*ClientClose* `client name`::
+    executed when a client is closed, after it was removed from the client
+    list.
+
 *RuntimeError* `error message`::
     an error was encountered while executing a user command
 
@@ -162,16 +169,15 @@ name. Hooks with no description will always use an empty string.
 *InsertCompletionShow*::
     Triggered when the insert completion menu gets displayed
 
-*InsertCompletionHide*::
-    Triggered when the insert completion menu gets hidden
-
-*InsertCompletionSelect* `selected completion`::
-    Triggered when an entry is selected in the insert completion
-    menu. The filtering text is the selected completion text or
-    the empty string if the original text was selected back
+*InsertCompletionHide* `completion`::
+    Triggered when the insert completion menu gets hidden, the inserted
+    completion text is passed as filtering text.
 
 *RawKey* `key`::
     Triggered whenever a key is pressed by the user
+
+*ModuleLoad* `module`::
+    Triggered when a module is evaluated by the first `require-module` call
 
 Note that some hooks will not consider underlying scopes depending on what
 context they are bound to be run into, e.g. the `BufWritePost` hook is a buffer
@@ -182,7 +188,9 @@ vars are available:
 
 * `kak_hook_param`: filtering text passed to the currently executing hook
 
-* `kak_hook_param_capture_N`: text captured by the hook filter regex capture N
+* `kak_hook_param_capture_N`: text captured by the hook filter regex capturing
+    group N, N can either be the capturing group number, or its name
+    (See <<regex#groups,`:doc regex groups`>>).
 
 == Disabling Hooks
 

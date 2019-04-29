@@ -1,0 +1,1 @@
+:echo -to-file commands 'foo bar'<ret>:execute-keys i %file{commands} <lt>esc><ret>

@@ -8,6 +8,22 @@ hook global BufCreate .*/?(?i)sql %{
     set-option buffer filetype sql
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=sql %{
+    require-module sql
+    set-option window static_words %opt{sql_static_words}
+}
+
+hook -group sql-highlight global WinSetOption filetype=sql %{
+    add-highlighter window/sql ref sql
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sql }
+}
+
+
+provide-module sql %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -80,9 +96,7 @@ evaluate-commands %sh{
     data_types="${data_types}|Time|Ole Object|Hyperlink|Lookup Wizard"
 
     # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=sql %{
-        set-option window static_words ${keywords} ${operators} ${functions} ${data_types} ${data_types_fn} NULL
-    }" | tr '|' ' '
+    printf %s\\n "declare-option str-list sql_static_words ${keywords} ${operators} ${functions} ${data_types} ${data_types_fn} NULL" | tr '|' ' '
 
     # Highlight keywords
     printf %s "
@@ -98,10 +112,4 @@ add-highlighter shared/sql/code/ regex '\+|-|\*|/|%|&|\||^|=|>|<|>=|<=|<>|\+=|-=
 add-highlighter shared/sql/code/ regex \bNULL\b 0:value
 add-highlighter shared/sql/code/ regex \b\d+(?:\.\d+)?\b 0:value
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group sql-highlight global WinSetOption filetype=sql %{
-    add-highlighter window/sql ref sql
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sql }
 }

@@ -8,6 +8,25 @@ hook global BufCreate .*[.](ex|exs) %{
     set-option buffer filetype elixir
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=elixir %{
+    require-module elixir
+
+    hook window ModeChange insert:.* -group elixir-trim-indent  elixir-trim-indent
+    hook window InsertChar \n -group elixir-indent elixir-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elixir-.+ }
+}
+
+hook -group elixir-highlight global WinSetOption filetype=elixir %{
+    add-highlighter window/elixir ref elixir
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/elixir }
+}
+
+
+provide-module elixir %[
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -48,11 +67,11 @@ define-command -hidden elixir-trim-indent %{
 
 define-command -hidden elixir-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
-        # copy -- comments prefix and following white spaces 
+        # copy -- comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
-        # indent after line ending with: 
+        # indent after line ending with:
 	# try %{ execute-keys -draft k x <a-k> (do|else|->)$ <ret> & }
 	# filter previous line
         try %{ execute-keys -draft k : elixir-trim-indent <ret> }
@@ -61,17 +80,4 @@ define-command -hidden elixir-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group elixir-highlight global WinSetOption filetype=elixir %{
-    add-highlighter window/elixir ref elixir
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/elixir }
-}
-
-hook global WinSetOption filetype=elixir %{
-    hook window ModeChange insert:.* -group elixir-trim-indent  elixir-trim-indent
-    hook window InsertChar \n -group elixir-indent elixir-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elixir-.+ }
-}
+]

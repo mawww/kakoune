@@ -3,6 +3,7 @@
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
 #include "client.hh"
+#include "command_manager.hh"
 #include "changes.hh"
 #include "context.hh"
 #include "display_buffer.hh"
@@ -287,7 +288,7 @@ InsertCompletion complete_option(const SelectionList& sels,
                 using RankedMatch::operator==;
                 using RankedMatch::operator<;
 
-                StringView docstring;
+                StringView on_select;
                 DisplayLine menu_entry;
             };
 
@@ -297,7 +298,7 @@ InsertCompletion complete_option(const SelectionList& sels,
             {
                 if (RankedMatchAndInfo match{std::get<0>(candidate), query})
                 {
-                    match.docstring = std::get<1>(candidate);
+                    match.on_select = std::get<1>(candidate);
                     auto& menu = std::get<2>(candidate);
                     match.menu_entry = not menu.empty() ?
                         parse_display_line(expand_tabs(menu, tabstop, column), faces)
@@ -318,7 +319,7 @@ InsertCompletion complete_option(const SelectionList& sels,
             while (candidates.size() < max_count and first != last)
             {
                 if (candidates.empty() or candidates.back().completion != first->candidate())
-                    candidates.push_back({ first->candidate().str(), first->docstring.str(),
+                    candidates.push_back({ first->candidate().str(), first->on_select.str(),
                                            std::move(first->menu_entry) });
                 std::pop_heap(first, last--, greater);
             }
@@ -437,11 +438,6 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
     if (m_context.has_client())
     {
         m_context.client().menu_select(m_current_candidate);
-        if (not candidate.docstring.empty())
-            m_context.client().info_show(candidate.completion, candidate.docstring,
-                                         {}, InfoStyle::MenuDoc);
-        else
-            m_context.client().info_hide();
     }
 
     for (auto i = 0_byte; i < prefix_len; ++i)
@@ -451,12 +447,8 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
     for (auto& c : candidate.completion)
         keystrokes.emplace_back(c);
 
-    if (m_context.has_client())
-    {
-        const auto param = (m_current_candidate == m_completions.candidates.size() - 1) ?
-            StringView{} : candidate.completion;
-        m_context.hooks().run_hook(Hook::InsertCompletionSelect, param, m_context);
-    }
+    if (not candidate.on_select.empty())
+        CommandManager::instance().execute(candidate.on_select, m_context);
 }
 
 void InsertCompleter::update(bool allow_implicit)
@@ -473,13 +465,17 @@ void InsertCompleter::reset()
 {
     if (m_explicit_completer or m_completions.is_valid())
     {
+        String selected_item;
+        if (m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size())
+            selected_item = std::move(m_completions.candidates[m_current_candidate].completion);
+
         m_explicit_completer = nullptr;
         m_completions = InsertCompletion{};
         if (m_context.has_client())
         {
             m_context.client().menu_hide();
             m_context.client().info_hide();
-            m_context.hooks().run_hook(Hook::InsertCompletionHide, "", m_context);
+            m_context.hooks().run_hook(Hook::InsertCompletionHide, selected_item, m_context);
         }
     }
 }

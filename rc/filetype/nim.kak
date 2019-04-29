@@ -8,6 +8,28 @@ hook global BufCreate .*\.nim(s|ble)? %{
     set-option buffer filetype nim
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=nim %{
+    require-module nim
+
+    set-option window static_words %opt{nim_static_words}
+
+    hook window InsertChar \n -group nim-indent nim-indent-on-new-line
+    # cleanup trailing whitespaces on current line insert end
+    hook window ModeChange insert:.* -group nim-trim-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window nim-.+ }
+}
+
+hook -group nim-highlight global WinSetOption filetype=nim %{
+    add-highlighter window/nim ref nim
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/nim }
+}
+
+provide-module nim %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -51,9 +73,7 @@ evaluate-commands %sh{
     static_words="$(join "${keywords} ${types} ${operator} ${values}" ' ')"
 
     # Add the language's grammar to the static completion list
-    printf %s "hook global WinSetOption filetype=nim %{
-        set-option window static_words ${static_words}
-    }"
+    printf %s\\n "declare-option str-list nim_static_words ${static_words}"
 
     keywords="$(join "${keywords}" '|')"
     operators="$(join "${operators}" '|')"
@@ -95,18 +115,4 @@ def -hidden nim-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group nim-highlight global WinSetOption filetype=nim %{
-    add-highlighter window/nim ref nim
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/nim }
-}
-
-hook global WinSetOption filetype=nim %{
-    hook window InsertChar \n -group nim-indent nim-indent-on-new-line
-    # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group nim-trim-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window nim-.+ }
 }

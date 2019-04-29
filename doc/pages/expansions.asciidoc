@@ -167,6 +167,11 @@ TIP: These environment variables are also available in other contexts where
 Kakoune uses a shell command, such as the `|`, `!` or `$` normal mode commands
 (See <<keys#,`:doc keys`>>).
 
+== File expansions
+
+Expansions with the type `file` will expand to the content of the filename
+given in argument as read from the host filesystem.
+
 == Value expansions
 
 Expansions with the type `val` give access to Kakoune internal data that is

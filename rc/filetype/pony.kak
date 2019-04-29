@@ -8,6 +8,28 @@ hook global BufCreate .*[.](pony) %{
     set-option buffer filetype pony
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=pony %{
+    require-module pony
+
+    set-option window static_words %opt{pony_static_words}
+
+    hook window InsertChar \n -group pony-indent pony-indent-on-new-line
+    # cleanup trailing whitespaces on current line insert end
+    hook window ModeChange insert:.* -group pony-trim-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pony-.+ }
+}
+
+hook -group pony-highlight global WinSetOption filetype=pony %{
+    add-highlighter window/pony ref pony
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter pony }
+}
+
+provide-module pony %{
+
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -33,9 +55,7 @@ evaluate-commands %sh{
     # Add the language's grammar to the static completion list
     static_words="${values} ${meta} ${keywords} ${types_decl} ${capabilities}"
     static_words="${static_words} ${struct}"
-    printf %s\\n "hook global WinSetOption filetype=pony %{
-        set-option window static_words ${static_words}
-    }" | tr '|' ' '
+    printf %s\\n "declare-option str-list pony_static_words ${static_words}" | tr '|' ' '
 
     # Highlight keywords
     printf %s "
@@ -75,18 +95,4 @@ define-command -hidden pony-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group pony-highlight global WinSetOption filetype=pony %{
-    add-highlighter window/pony ref pony
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter pony }
-}
-
-hook global WinSetOption filetype=pony %{
-    hook window InsertChar \n -group pony-indent pony-indent-on-new-line
-    # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group pony-trim-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pony-.+ }
 }

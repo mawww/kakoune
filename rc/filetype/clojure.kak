@@ -1,14 +1,34 @@
 # http://clojure.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# require lisp.kak
-
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](clj|cljc|cljs|cljx|edn) %{
     set-option buffer filetype clojure
 }
+
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+hook global WinSetOption filetype=clojure %[
+    require-module clojure
+
+    set-option window static_words %opt{clojure_static_words}
+
+    hook window ModeChange insert:.* -group clojure-trim-indent  clojure-trim-indent
+    hook window InsertChar \n -group clojure-indent clojure-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window clojure-.+ }
+]
+
+hook -group clojure-highlight global WinSetOption filetype=clojure %{
+    add-highlighter window/clojure ref clojure
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/clojure }
+}
+
+provide-module clojure %{
+
+require-module lisp
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -151,12 +171,11 @@ evaluate-commands %sh{
         print_word_highlighter(core_fns, "function");
         print_word_highlighter(core_vars, "variable");
 
-        printf("   hook global WinSetOption filetype=clojure %%{\n"\
-               "       set-option window static_words ");
+        printf("declare-option str-list clojure_static_words ")
         print_static_words(keywords);
         print_static_words(core_fns);
         print_static_words(core_vars);
-        printf("\n   }\n");
+        printf("\n");
     }
 EOF
 }
@@ -193,16 +212,4 @@ define-command -hidden clojure-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-hook -group clojure-highlight global WinSetOption filetype=clojure %{
-    add-highlighter window/clojure ref clojure
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/clojure }
 }
-
-hook global WinSetOption filetype=clojure %[
-    hook window ModeChange insert:.* -group clojure-trim-indent  clojure-trim-indent
-    hook window InsertChar \n -group clojure-indent clojure-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window clojure-.+ }
-]

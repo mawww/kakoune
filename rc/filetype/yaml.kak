@@ -8,6 +8,25 @@ hook global BufCreate .*[.](ya?ml) %{
     set-option buffer filetype yaml
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=yaml %{
+    require-module yaml
+
+    hook window ModeChange insert:.* -group yaml-trim-indent yaml-trim-indent
+    hook window InsertChar \n -group yaml-indent yaml-indent-on-new-line
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window yaml-.+ }
+}
+
+hook -group yaml-highlight global WinSetOption filetype=yaml %{
+    add-highlighter window/yaml ref yaml
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/yaml }
+}
+
+
+provide-module yaml %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -43,16 +62,4 @@ define-command -hidden yaml-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group yaml-highlight global WinSetOption filetype=yaml %{
-    add-highlighter window/yaml ref yaml
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/yaml }
-}
-
-hook global WinSetOption filetype=yaml %{
-    hook window ModeChange insert:.* -group yaml-trim-indent yaml-trim-indent
-    hook window InsertChar \n -group yaml-indent yaml-indent-on-new-line
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window yaml-.+ }
 }

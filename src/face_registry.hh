@@ -20,12 +20,12 @@ public:
     void add_face(StringView name, StringView facedesc, bool override = false);
     void remove_face(StringView name);
 
-    struct FaceOrAlias
+    struct FaceSpec
     {
         Face face = {};
-        String alias = {};
+        String base = {};
     };
-    using FaceMap = HashMap<String, FaceOrAlias, MemoryDomain::Faces>;
+    using FaceMap = HashMap<String, FaceSpec, MemoryDomain::Faces>;
 
     auto flatten_faces() const
     {
@@ -41,6 +41,8 @@ public:
     }
 
 private:
+    Face resolve_spec(const FaceSpec& spec) const;
+
     friend class Scope;
     FaceRegistry();
 

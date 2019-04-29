@@ -5,12 +5,11 @@
 ## an iTerm session if not in a tmux session.
 hook global KakBegin .* %sh{
     if [ "$TERM_PROGRAM" = "iTerm.app" ] && [ -z "$TMUX" ]; then
-        echo "
-            alias global focus iterm-focus
-            alias global terminal iterm-terminal-vertical
-        "
+        echo "require-module iterm"
     fi
 }
+
+provide-module iterm %{
 
 define-command -hidden -params 2.. iterm-terminal-split-impl %{
     nop %sh{
@@ -128,4 +127,9 @@ If no client is passed then the current one is used' \
             -e "end repeat"
         fi
     }
+}
+
+alias global focus iterm-focus
+alias global terminal iterm-terminal-vertical
+
 }

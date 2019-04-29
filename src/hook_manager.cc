@@ -117,6 +117,9 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
             for (size_t i = 0; i < to_run.captures.size(); ++i)
                 env_vars.insert({format("hook_param_capture_{}", i),
                                  {to_run.captures[i].first, to_run.captures[i].second}});
+            for (auto& c : to_run.hook->filter.impl()->named_captures)
+                env_vars.insert({format("hook_param_capture_{}", c.name),
+                                 {to_run.captures[c.index].first, to_run.captures[c.index].second}});
 
             CommandManager::instance().execute(to_run.hook->commands, context,
                                                { {}, std::move(env_vars) });

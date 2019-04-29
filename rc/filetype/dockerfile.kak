@@ -10,6 +10,21 @@ hook global BufCreate .*/?Dockerfile(\.\w+)?$ %{
     set-option buffer filetype dockerfile
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=dockerfile %{
+    require-module dockerfile
+    set-option window static_words %opt{dockerfile_static_words}
+}
+
+hook -group dockerfile-highlight global WinSetOption filetype=dockerfile %{
+    add-highlighter window/dockerfile ref dockerfile
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/dockerfile }
+}
+
+provide-module dockerfile %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -25,9 +40,7 @@ evaluate-commands %sh{
     keywords="${keywords}|MAINTAINER|RUN|SHELL|STOPSIGNAL|USER|VOLUME|WORKDIR"
 
     # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=dockerfile %{
-        set window static_words ONBUILD|${keywords}
-    }" | tr '|' ' '
+    printf %s\\n "declare-option str-list dockerfile_static_words ONBUILD|${keywords}" | tr '|' ' '
 
     # Highlight keywords
     printf %s "
@@ -39,10 +52,4 @@ evaluate-commands %sh{
 add-highlighter shared/dockerfile/code/ regex '\$\{[\w_]+\}' 0:value
 add-highlighter shared/dockerfile/code/ regex '\$[\w_]+' 0:value
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group dockerfile-highlight global WinSetOption filetype=dockerfile %{
-    add-highlighter window/dockerfile ref dockerfile
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/dockerfile }
 }

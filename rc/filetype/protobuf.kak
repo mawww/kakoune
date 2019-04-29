@@ -7,6 +7,28 @@ hook global BufCreate .*\.proto$ %{
     set-option buffer filetype protobuf
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=protobuf %[
+    require-module protobuf
+
+    set-option window static_words %opt{protobuf_static_words}
+
+    hook -group protobuf-indent window InsertChar \n protobuf-indent-on-newline
+    hook -group protobuf-indent window InsertChar \{ protobuf-indent-on-opening-curly-brace
+    hook -group protobuf-indent window InsertChar \} protobuf-indent-on-closing-curly-brace
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window protobuf-.+ }
+]
+
+hook -group protobuf-highlight global WinSetOption filetype=protobuf %{
+    add-highlighter window/protobuf ref protobuf
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/protobuf }
+}
+
+provide-module protobuf %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -20,30 +42,29 @@ add-highlighter shared/protobuf/code/ regex %{(0x)?[0-9]+\b} 0:value
 
 evaluate-commands %sh{
     # Grammer
-    keywords="default|deprecated|enum|extend|import|message|oneof|option"
-    keywords="${keywords}|package|service|syntax"
-    attributes="optional|repeated|required"
-    types="double|float|int32|int64|uint32|uint64|sint32|sint64|fixed32|fixed64"
-    types="${types}|sfixed32|sfixed64|bool|string|bytes|rpc"
-    values="false|true"
+    keywords='default deprecated enum extend import message oneof option
+              package service syntax'
+    attributes='optional repeated required'
+    types='double float int32 int64 uint32 uint64 sint32 sint64 fixed32 fixed64
+           sfixed32 sfixed64 bool string bytes rpc'
+    values='false true'
+
+    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammer to the static completion list
-    printf '%s\n' "hook global WinSetOption filetype=protobuf %{
-        set-option window static_words ${keywords} ${attributes} ${types} ${values}
-    }" | tr '|' ' '
+    printf %s\\n "declare-option str-list protobuf_static_words $(join "${keywords} ${attributes} ${types} ${values}" ' ')"
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/protobuf/code/keywords regex \b(${keywords})\b 0:keyword
-        add-highlighter shared/protobuf/code/attributes regex \b(${attributes})\b 0:attribute
-        add-highlighter shared/protobuf/code/types regex \b(${types})\b 0:type
-        add-highlighter shared/protobuf/code/values regex \b(${values})\b 0:value
+        add-highlighter shared/protobuf/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
+        add-highlighter shared/protobuf/code/attributes regex \b($(join "${attributes}" '|'))\b 0:attribute
+        add-highlighter shared/protobuf/code/types regex \b($(join "${types}" '|'))\b 0:type
+        add-highlighter shared/protobuf/code/values regex \b($(join "${values}" '|'))\b 0:value
     "
 }
 
 # Commands
 # ‾‾‾‾‾‾‾‾
-
 
 define-command -hidden protobuf-indent-on-newline %~
     evaluate-commands -draft -itersel %[
@@ -68,18 +89,4 @@ define-command -hidden protobuf-indent-on-closing-curly-brace %[
     try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group protobuf-highlight global WinSetOption filetype=protobuf %{
-    add-highlighter window/protobuf ref protobuf
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/protobuf }
-}
-
-hook global WinSetOption filetype=protobuf %[
-    hook -group protobuf-indent window InsertChar \n protobuf-indent-on-newline
-    hook -group protobuf-indent window InsertChar \{ protobuf-indent-on-opening-curly-brace
-    hook -group protobuf-indent window InsertChar \} protobuf-indent-on-closing-curly-brace
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window protobuf-.+ }
 ]

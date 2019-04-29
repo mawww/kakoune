@@ -8,6 +8,27 @@ hook global BufCreate .*[.](hbs) %{
     set-option buffer filetype hbs
 }
 
+hook global WinSetOption filetype=hbs %{
+    require-module hbs
+
+    hook window ModeChange insert:.* -group hbs-trim-indent hbs-trim-indent
+    hook window InsertChar \n -group hbs-indent hbs-indent-on-new-line
+    hook window InsertChar .* -group hbs-indent hbs-indent-on-char
+    hook window InsertChar '>' -group hbs-indent html-indent-on-greater-than
+    hook window InsertChar \n -group hbs-indent html-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window hbs-.+ }
+}
+
+hook -group hbs-highlight global WinSetOption filetype=hbs %{
+    maybe-add-hbs-to-html
+    add-highlighter window/hbs-file ref hbs-file
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/hbs-file }
+}
+
+
+provide-module hbs %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -80,18 +101,4 @@ define-command -hidden maybe-add-hbs-to-html %{ evaluate-commands %sh{
     fi
 } }
 
-hook -group hbs-highlight global WinSetOption filetype=hbs %{
-    maybe-add-hbs-to-html
-    add-highlighter window/hbs-file ref hbs-file
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/hbs-file }
-}
-
-hook global WinSetOption filetype=hbs %{
-    hook window ModeChange insert:.* -group hbs-trim-indent hbs-trim-indent
-    hook window InsertChar \n -group hbs-indent hbs-indent-on-new-line
-    hook window InsertChar .* -group hbs-indent hbs-indent-on-char
-    hook window InsertChar '>' -group hbs-indent html-indent-on-greater-than
-    hook window InsertChar \n -group hbs-indent html-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window hbs-.+ }
-}
+]

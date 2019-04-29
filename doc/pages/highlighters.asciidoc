@@ -15,7 +15,7 @@ and
 remove-highlighter <path>/<name>
 --------------------------------
 
-*path* is the name of an highlighter group, it is expressed as a */*
+*path* is the name of a highlighter group, it is expressed as a */*
 separated path starting with a scope. Scopes are *global*, *buffer*,
 *window* and *shared*
 

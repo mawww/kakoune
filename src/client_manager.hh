@@ -27,7 +27,7 @@ public:
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
 
-    void clear();
+    void clear(bool exit);
 
     void ensure_no_client_uses_buffer(Buffer& buffer);
 
@@ -35,7 +35,7 @@ public:
     void add_free_window(std::unique_ptr<Window>&& window, SelectionList selections);
 
     void redraw_clients() const;
-    void process_pending_inputs() const;
+    void process_pending_inputs();
     bool has_pending_inputs() const;
 
     Client*  get_client_ifp(StringView name);

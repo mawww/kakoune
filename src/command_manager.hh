@@ -51,6 +51,7 @@ struct Token
         OptionExpand,
         ValExpand,
         ArgExpand,
+        FileExpand,
         CommandSeparator
     };
 
@@ -122,6 +123,12 @@ public:
 
     void clear_last_complete_command() { m_last_complete_command = String{}; }
 
+    bool module_defined(StringView module_name) const;
+
+    void register_module(String module_name, String commands);
+
+    void load_module(StringView module_name, Context& context);
+
 private:
     void execute_single_command(CommandParameters params,
                                 Context& context,
@@ -141,6 +148,14 @@ private:
     CommandMap m_commands;
     String m_last_complete_command;
     int m_command_depth = 0;
+
+    struct Module
+    {
+        bool loaded;
+        String commands;
+    };
+    using ModuleMap = HashMap<String, Module, MemoryDomain::Commands>;
+    ModuleMap m_modules;
 
     CommandMap::const_iterator find_command(const Context& context,
                                             StringView name) const;

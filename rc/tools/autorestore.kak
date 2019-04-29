@@ -22,7 +22,7 @@ define-command autorestore-restore-buffer -docstring "Restore the backup for the
                     echo -debug Old backup file(s) found: will not restore ${older} .
                 "
             fi
-            exit   
+            exit
         fi
 
         printf %s\\n "
@@ -39,7 +39,7 @@ define-command autorestore-restore-buffer -docstring "Restore the backup for the
                 nop %sh{
                     if [ \"\${kak_opt_autorestore_purge_restored}\" = true ];
                     then
-                        rm -f \"${buffer_dirname}/.${buffer_basename}.kak.\"* 
+                        rm -f \"${buffer_dirname}/.${buffer_basename}.kak.\"*
                     fi
                 }
             }

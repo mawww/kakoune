@@ -7,43 +7,53 @@
 namespace Kakoune
 {
 
-static Face parse_face(StringView facedesc)
+static FaceRegistry::FaceSpec parse_face(StringView facedesc)
 {
-    constexpr StringView invalid_face_error = "invalid face description, expected <fg>[,<bg>][+<attr>]";
+    constexpr StringView invalid_face_error = "invalid face description, expected <fg>[,<bg>][+<attr>][@base] or just [base]";
+    if (all_of(facedesc, [](char c){ return is_word(c); }) and not is_color_name(facedesc))
+        return {Face{}, facedesc.str()};
+
     auto bg_it = find(facedesc, ',');
     auto attr_it = find(facedesc, '+');
+    auto base_it = find(facedesc, '@');
     if (bg_it != facedesc.end()
         and (attr_it < bg_it or (bg_it + 1) == facedesc.end()))
         throw runtime_error(invalid_face_error.str());
     if (attr_it != facedesc.end()
         and (attr_it + 1) == facedesc.end())
         throw runtime_error(invalid_face_error.str());
-    Face res;
-    res.fg = attr_it != facedesc.begin() ?
-        str_to_color({facedesc.begin(), std::min(attr_it, bg_it)}) : Color::Default;
+
+    auto colors_end = std::min(attr_it, base_it);
+
+    FaceRegistry::FaceSpec spec;
+    auto& face = spec.face;
+    face.fg = colors_end != facedesc.begin() ?
+        str_to_color({facedesc.begin(), std::min(bg_it, colors_end)}) : Color::Default;
     if (bg_it != facedesc.end())
-        res.bg = bg_it+1 != attr_it ? str_to_color({bg_it+1, attr_it}) : Color::Default;
+        face.bg = bg_it+1 != attr_it ? str_to_color({bg_it+1, colors_end}) : Color::Default;
     if (attr_it != facedesc.end())
     {
-        for (++attr_it; attr_it != facedesc.end(); ++attr_it)
+        for (++attr_it; attr_it != base_it; ++attr_it)
         {
             switch (*attr_it)
             {
-                case 'u': res.attributes |= Attribute::Underline; break;
-                case 'r': res.attributes |= Attribute::Reverse; break;
-                case 'b': res.attributes |= Attribute::Bold; break;
-                case 'B': res.attributes |= Attribute::Blink; break;
-                case 'd': res.attributes |= Attribute::Dim; break;
-                case 'i': res.attributes |= Attribute::Italic; break;
-                case 'f': res.attributes |= Attribute::FinalFg; break;
-                case 'g': res.attributes |= Attribute::FinalBg; break;
-                case 'a': res.attributes |= Attribute::FinalAttr; break;
-                case 'F': res.attributes |= Attribute::Final; break;
+                case 'u': face.attributes |= Attribute::Underline; break;
+                case 'r': face.attributes |= Attribute::Reverse; break;
+                case 'b': face.attributes |= Attribute::Bold; break;
+                case 'B': face.attributes |= Attribute::Blink; break;
+                case 'd': face.attributes |= Attribute::Dim; break;
+                case 'i': face.attributes |= Attribute::Italic; break;
+                case 'f': face.attributes |= Attribute::FinalFg; break;
+                case 'g': face.attributes |= Attribute::FinalBg; break;
+                case 'a': face.attributes |= Attribute::FinalAttr; break;
+                case 'F': face.attributes |= Attribute::Final; break;
                 default: throw runtime_error(format("no such face attribute: '{}'", StringView{*attr_it}));
             }
         }
     }
-    return res;
+    if (base_it != facedesc.end())
+        spec.base = String{base_it+1, facedesc.end()};
+    return spec;
 }
 
 String to_string(Attribute attributes)
@@ -79,16 +89,33 @@ String to_string(Face face)
 
 Face FaceRegistry::operator[](StringView facedesc) const
 {
-    auto it = m_faces.find(facedesc);
-    if (it != m_faces.end())
+    return resolve_spec(parse_face(facedesc));
+}
+
+Face FaceRegistry::resolve_spec(const FaceSpec& spec) const
+{
+    if (spec.base.empty())
+        return spec.face;
+
+    StringView base = spec.base;
+    Face face = spec.face;
+    for (auto* reg = this; reg != nullptr; reg = reg->m_parent.get())
     {
-        if (it->value.alias.empty())
-            return it->value.face;
-        return operator[](it->value.alias);
+        auto it = reg->m_faces.find(base);
+        if (it == reg->m_faces.end())
+            continue;
+
+        if (it->value.base.empty())
+            return merge_faces(it->value.face, face);
+        if (it->value.base != it->key)
+            return merge_faces(reg->resolve_spec(it->value), face);
+        else
+        {
+            face = merge_faces(it->value.face, face);
+            base = it->value.base;
+        }
     }
-    if (m_parent)
-        return (*m_parent)[facedesc];
-    return parse_face(facedesc);
+    return face;
 }
 
 void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
@@ -97,33 +124,25 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
         throw runtime_error(format("face '{}' already defined", name));
 
     if (name.empty() or is_color_name(name) or
-        std::any_of(name.begin(), name.end(),
-                    [](char c){ return not is_word(c); }))
+        any_of(name, [](char c){ return not is_word(c); }))
         throw runtime_error(format("invalid face name: '{}'", name));
 
-    if (name == facedesc)
-        throw runtime_error(format("cannot alias face '{}' to itself", name));
-
-    for (auto it = m_faces.find(facedesc);
-         it != m_faces.end() and not it->value.alias.empty();
-         it = m_faces.find(it->value.alias))
+    FaceSpec spec = parse_face(facedesc);
+    auto it = m_faces.find(spec.base);
+    if (spec.base == name and it != m_faces.end())
     {
-        if (it->value.alias == name)
-            throw runtime_error("face cycle detected");
-    }
-
-    FaceOrAlias& face = m_faces[name];
-
-    for (auto* registry = this; registry != nullptr; registry = registry->m_parent.get())
-    {
-        if (not registry->m_faces.contains(facedesc))
-            continue;
-        face.alias = facedesc.str(); // This is referencing another face
+        it->value.face = merge_faces(it->value.face, spec.face);
+        it->value.base = spec.base;
         return;
     }
 
-    face.alias = "";
-    face.face = parse_face(facedesc);
+    while (it != m_faces.end() and not it->value.base.empty())
+    {
+        if (it->value.base == name)
+            throw runtime_error("face cycle detected");
+        it = m_faces.find(it->value.base);
+    }
+    m_faces[name] = std::move(spec);
 }
 
 void FaceRegistry::remove_face(StringView name)

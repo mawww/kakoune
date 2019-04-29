@@ -5,6 +5,21 @@ hook global BufCreate .*/?[jJ]ustfile %{
     set-option buffer filetype justfile
 }
 
+hook global WinSetOption filetype=justfile %{
+    require-module justfile
+
+    hook window InsertChar \n -group justfile-indent just-indent-on-new-line
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window justfile-.+ }
+}
+
+hook -group justfile-highlight global WinSetOption filetype=justfile %{
+    add-highlighter window/justfile ref justfile
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/justfile }
+}
+
+
+provide-module justfile %{
+
 # Indentation
 # ‾‾‾‾‾‾‾‾‾‾‾
 
@@ -37,12 +52,4 @@ add-highlighter shared/justfile/content/ regex '^(@)?([\w-]+)(?:\s(.+))?\s?(:)(.
 add-highlighter shared/justfile/content/ regex '([=+])' 1:operator
 add-highlighter shared/justfile/content/ regex '^([\w-]+)\s=' 1:value
 
-hook -group justfile-highlight global WinSetOption filetype=justfile %{
-    add-highlighter window/justfile ref justfile
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/justfile }
-}
-
-hook global WinSetOption filetype=justfile %{
-    hook window InsertChar \n -group justfile-indent just-indent-on-new-line
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window justfile-.+ }
 }

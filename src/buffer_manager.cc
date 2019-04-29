@@ -21,7 +21,7 @@ BufferManager::~BufferManager()
 
     // Make sure not clients exists
     if (ClientManager::has_instance())
-        ClientManager::instance().clear();
+        ClientManager::instance().clear(true);
 }
 
 Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,

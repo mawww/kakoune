@@ -44,6 +44,11 @@ struct {
     unsigned int version;
     const char* notes;
 } constexpr version_notes[] = { {
+        0,
+        "» %file{...} expansions to read files\n"
+        "» echo -to-file <filename> to write to file\n"
+        "» completions option have an on select command instead of a docstring\n"
+    }, {
         20190120,
         "» named capture groups in regex\n"
         "» auto_complete option renamed to autocomplete\n"
@@ -797,6 +802,7 @@ int run_server(StringView session, StringView server_init,
 
                 if (fork_server_to_background())
                 {
+                    ClientManager::instance().clear(false);
                     String session = server.session();
                     server.close_session(false);
                     throw convert_to_client_mode{ std::move(session), std::move(client_name), std::move(buffer_name), std::move(selections) };
