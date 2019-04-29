@@ -8,6 +8,30 @@ hook global BufCreate .*\.(t|p[lm])$ %{
     set-option buffer filetype perl
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=perl %{
+    require-module perl
+
+    set-option window static_words %opt{perl_static_words}
+
+    # cleanup trailing whitespaces when exiting insert mode
+    hook window ModeChange insert:.* -group perl-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group perl-indent perl-indent-on-new-line
+    hook window InsertChar \{ -group perl-indent perl-indent-on-opening-curly-brace
+    hook window InsertChar \} -group perl-indent perl-indent-on-closing-curly-brace
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window perl-.+ }
+}
+
+hook -group perl-highlight global WinSetOption filetype=perl %{
+    add-highlighter window/perl ref perl
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/perl }
+}
+
+provide-module perl %§
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -20,31 +44,31 @@ add-highlighter shared/perl/comment       region (?<!\$)(?<!\\)#   $            
 
 evaluate-commands %sh{
     # Grammar
-    keywords="else|lock|qw|elsif|lt|qx|eq|exp|ne|sub|for|no|my|not|tr|goto|and|foreach|or|break|exit|unless|cmp|ge|package|until|continue|gt|while|if|qq|xor|do|le|qr|return"
-    attributes="END|AUTOLOAD|BEGIN|CHECK|UNITCHECK|INIT|DESTROY"
-    attributes="${attributes}|length|setpgrp|endgrent|link|setpriority|endhostent|listen|setprotoent|endnetent|local|setpwent"
-    attributes="${attributes}|endprotoent|localtime|setservent|endpwent|log|setsockopt|endservent|lstat|shift|eof|map|shmctl|eval|mkdir|shmget|exec|msgctl|shmread"
-    attributes="${attributes}|exists|msgget|shmwrite|msgrcv|shutdown|fcntl|msgsnd|sin|fileno|sleep|flock|next|socket|fork|socketpair|format|oct|sort"
-    attributes="${attributes}|formline|open|splice|getc|opendir|split|getgrent|ord|sprintf|getgrgid|our|sqrt|getgrnam|pack|srand|gethostbyaddr|pipe|stat|gethostbyname"
-    attributes="${attributes}|pop|state|gethostent|pos|study|getlogin|print|substr|getnetbyaddr|printf|symlink|abs|getnetbyname|prototype|syscall|accept|getnetent"
-    attributes="${attributes}|push|sysopen|alarm|getpeername|quotemeta|sysread|atan2|getpgrp|rand|sysseek|getppid|read|system|getpriority|readdir|syswrite|bind"
-    attributes="${attributes}|getprotobyname|readline|tell|binmode|getprotobynumber|readlink|telldir|bless|getprotoent|readpipe|tie|getpwent|recv|tied|caller"
-    attributes="${attributes}|getpwnam|redo|time|chdir|getpwuid|ref|times|getservbyname|rename|truncate|chmod|getservbyport|require|uc|chomp|getservent|reset|ucfirst"
-    attributes="${attributes}|chop|getsockname|umask|chown|getsockopt|reverse|undef|chr|glob|rewinddir|chroot|gmtime|rindex|unlink|close|rmdir|unpack"
-    attributes="${attributes}|closedir|grep|say|unshift|connect|hex|scalar|untie|cos|index|seek|use|crypt|seekdir|utime|dbmclose|int|select|values|dbmopen|ioctl|semctl"
-    attributes="${attributes}|vec|defined|join|semget|wait|delete|keys|semop|waitpid|kill|send|wantarray|die|last|setgrent|warn|dump|lc|sethostent|write|each|lcfirst|setnetent"
-    values="ARGV|STDERR|STDOUT|ARGVOUT|STDIN|__DATA__|__END__|__FILE__|__LINE__|__PACKAGE__"
+    keywords="else lock qw elsif lt qx eq exp ne sub for no my not tr goto and foreach or break exit unless cmp ge package until continue gt while if qq xor do le qr return"
+    attributes="END AUTOLOAD BEGIN CHECK UNITCHECK INIT DESTROY
+                length setpgrp endgrent link setpriority endhostent listen setprotoent endnetent local setpwent
+                endprotoent localtime setservent endpwent log setsockopt endservent lstat shift eof map shmctl eval mkdir shmget exec msgctl shmread
+                exists msgget shmwrite msgrcv shutdown fcntl msgsnd sin fileno sleep flock next socket fork socketpair format oct sort
+                formline open splice getc opendir split getgrent ord sprintf getgrgid our sqrt getgrnam pack srand gethostbyaddr pipe stat gethostbyname
+                pop state gethostent pos study getlogin print substr getnetbyaddr printf symlink abs getnetbyname prototype syscall accept getnetent
+                push sysopen alarm getpeername quotemeta sysread atan2 getpgrp rand sysseek getppid read system getpriority readdir syswrite bind
+                getprotobyname readline tell binmode getprotobynumber readlink telldir bless getprotoent readpipe tie getpwent recv tied caller
+                getpwnam redo time chdir getpwuid ref times getservbyname rename truncate chmod getservbyport require uc chomp getservent reset ucfirst
+                chop getsockname umask chown getsockopt reverse undef chr glob rewinddir chroot gmtime rindex unlink close rmdir unpack
+                closedir grep say unshift connect hex scalar untie cos index seek use crypt seekdir utime dbmclose int select values dbmopen ioctl semctl
+                vec defined join semget wait delete keys semop waitpid kill send wantarray die last setgrent warn dump lc sethostent write each lcfirst setnetent"
+    values="ARGV STDERR STDOUT ARGVOUT STDIN __DATA__ __END__ __FILE__ __LINE__ __PACKAGE__"
+
+    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=perl %{
-        set-option window static_words ${keywords} ${attributes} ${values}
-    }" | tr '|' ' '
+    printf %s\\n "declare-option str-list perl_static_words $(join "${keywords} ${attributes} ${values}" ' ')"
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/perl/code/ regex \b(${keywords})\b 0:keyword
-        add-highlighter shared/perl/code/ regex \b(${attributes})\b 0:attribute
-        add-highlighter shared/perl/code/ regex \b(${values})\b 0:value
+        add-highlighter shared/perl/code/ regex \b($(join "${keywords}" '|'))\b 0:keyword
+        add-highlighter shared/perl/code/ regex \b($(join "${attributes}" '|'))\b 0:attribute
+        add-highlighter shared/perl/code/ regex \b($(join "${values}" '|'))\b 0:value
     "
 }
 
@@ -95,20 +119,4 @@ define-command -hidden perl-indent-on-closing-curly-brace %[
     try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group perl-highlight global WinSetOption filetype=perl %{
-    add-highlighter window/perl ref perl
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/perl }
-}
-
-hook global WinSetOption filetype=perl %{
-    # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group perl-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
-    hook window InsertChar \n -group perl-indent perl-indent-on-new-line
-    hook window InsertChar \{ -group perl-indent perl-indent-on-opening-curly-brace
-    hook window InsertChar \} -group perl-indent perl-indent-on-closing-curly-brace
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window perl-.+ }
-}
+§

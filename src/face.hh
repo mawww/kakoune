@@ -26,31 +26,27 @@ constexpr bool with_bit_ops(Meta::Type<Attribute>) { return true; }
 
 struct Face
 {
-    Color fg;
-    Color bg;
-    Attribute attributes;
+    Color fg = Color::Default;
+    Color bg = Color::Default;
+    Attribute attributes = Attribute::Normal;
 
-    constexpr Face(Color fg = Color::Default, Color bg = Color::Default,
-         Attribute attributes = Attribute::Normal)
-      : fg{fg}, bg{bg}, attributes{attributes} {}
+    friend constexpr bool operator==(const Face& lhs, const Face& rhs)
+    {
+        return lhs.fg == rhs.fg and
+               lhs.bg == rhs.bg and
+               lhs.attributes == rhs.attributes;
+    }
+
+    friend constexpr bool operator!=(const Face& lhs, const Face& rhs)
+    {
+        return not (lhs == rhs);
+    }
+
+    friend constexpr size_t hash_value(const Face& val)
+    {
+        return hash_values(val.fg, val.bg, val.attributes);
+    }
 };
-
-constexpr bool operator==(const Face& lhs, const Face& rhs)
-{
-    return lhs.fg == rhs.fg and
-           lhs.bg == rhs.bg and
-           lhs.attributes == rhs.attributes;
-}
-
-constexpr bool operator!=(const Face& lhs, const Face& rhs)
-{
-    return not (lhs == rhs);
-}
-
-constexpr size_t hash_value(const Face& val)
-{
-    return hash_values(val.fg, val.bg, val.attributes);
-}
 
 inline Face merge_faces(const Face& base, const Face& face)
 {

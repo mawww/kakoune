@@ -1,3 +1,9 @@
+hook -once global BufSetOption filetype=(c|cpp) %{
+    require-module clang
+}
+
+provide-module clang %[
+
 declare-option -docstring "options to pass to the `clang` shell command" \
     str clang_options
 
@@ -57,6 +63,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                                  desc=$4 ? $3 "\n" $4 : $3
 
                                  gsub(/~/, "~~", desc)
+                                 gsub(/!/, "!!", desc)
                                  gsub(/\|/, "\\|", desc)
                                  if (id in docstrings)
                                      docstrings[id]=docstrings[id] "\n" desc
@@ -69,7 +76,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                                     gsub(/(^|[^[:alnum:]_])(operator|new|delete)($|[^{}_[:alnum:]]+)/, "{keyword}&{}", menu)
                                     gsub(/(^|[[:space:]])(int|size_t|bool|char|unsigned|signed|long)($|[[:space:]])/, "{type}&{}", menu)
                                     gsub(/[^{}_[:alnum:]]+/, "{operator}&{}", menu)
-                                    printf "%%~%s|%s|%s~ ", id, docstrings[id], menu
+                                    printf "%%~%s|info -style menu %!%s!|%s~ ", id, docstrings[id], menu
                                 }
                             }')
                 printf %s\\n "evaluate-commands -client ${kak_client} echo 'clang completion done'
@@ -105,7 +112,7 @@ define-command -hidden clang-show-completion-info %[ try %[
         evaluate-commands %sh[
             desc=$(printf %s\\n "${kak_opt_clang_completions}" | sed -e "{ s/\([^\\]\):/\1\n/g }" | sed -ne "/^${kak_selection}|/ { s/^[^|]\+|//; s/|.*$//; s/\\\:/:/g; p }")
             if [ -n "$desc" ]; then
-                printf %s\\n "evaluate-commands -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} -placement above %{${desc}}}"
+                printf %s\\n "evaluate-commands -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} -style above %{${desc}}}"
             fi
     ] ]
 ] ]
@@ -178,3 +185,5 @@ define-command clang-diagnostics-next -docstring "Jump to the next line that con
             echo "echo -markup '{Error}no next clang diagnostic'"
         fi
     } }
+
+]

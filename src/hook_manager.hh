@@ -39,7 +39,6 @@ enum class Hook
     InsertMove,
     InsertCompletionHide,
     InsertCompletionShow,
-    InsertCompletionSelect,
     KakBegin,
     KakEnd,
     FocusIn,
@@ -57,7 +56,8 @@ enum class Hook
     WinCreate,
     WinDisplay,
     WinResize,
-    WinSetOption
+    WinSetOption,
+    ModuleLoad
 };
 
 constexpr auto enum_desc(Meta::Type<Hook>)
@@ -85,7 +85,6 @@ constexpr auto enum_desc(Meta::Type<Hook>)
         {Hook::InsertMove, "InsertMove"},
         {Hook::InsertCompletionHide, "InsertCompletionHide"},
         {Hook::InsertCompletionShow, "InsertCompletionShow"},
-        {Hook::InsertCompletionSelect, "InsertCompletionSelect"},
         {Hook::KakBegin, "KakBegin"},
         {Hook::KakEnd, "KakEnd"},
         {Hook::FocusIn, "FocusIn"},
@@ -104,6 +103,7 @@ constexpr auto enum_desc(Meta::Type<Hook>)
         {Hook::WinDisplay, "WinDisplay"},
         {Hook::WinResize, "WinResize"},
         {Hook::WinSetOption, "WinSetOption"},
+        {Hook::ModuleLoad, "ModuleLoad"}
     });
 }
 

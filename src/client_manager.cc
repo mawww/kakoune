@@ -123,12 +123,13 @@ void ClientManager::remove_client(Client& client, bool graceful, int status)
         return;
     }
 
-    client.exit(status);
     m_client_trash.push_back(std::move(*it));
     m_clients.erase(it);
 
     auto& context = client.context();
     context.hooks().run_hook(Hook::ClientClose, context.name(), context);
+
+    client.exit(status);
 
     if (not graceful and m_clients.empty())
         BufferManager::instance().backup_modified_buffers();

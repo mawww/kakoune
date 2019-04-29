@@ -1568,7 +1568,7 @@ void InputHandler::repeat_last_insert()
     push_mode(new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count));
     for (auto& key : keys)
     {
-        // refill last_insert,  this is very inefficient, but necesary at the moment
+        // refill last_insert,  this is very inefficient, but necessary at the moment
         // to properly handle insert completion
         m_last_insert.keys.push_back(key);
         current_mode().handle_key(key);

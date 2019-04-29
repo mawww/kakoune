@@ -2,6 +2,18 @@ hook global BufCreate .*\.(swift) %{
     set-option buffer filetype swift
 }
 
+hook global WinSetOption filetype=swift %{
+    require-module swift
+}
+
+hook -group swift-highlight global WinSetOption filetype=swift %{
+    add-highlighter window/swift ref swift
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/swift }
+}
+
+
+provide-module swift %{
+
 add-highlighter shared/swift regions
 add-highlighter shared/swift/code default-region group
 add-highlighter shared/swift/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} fill string
@@ -22,7 +34,4 @@ add-highlighter shared/swift/code/ regex "\b(Bool|String|UInt|UInt16|UInt32|UInt
 add-highlighter shared/swift/code/ regex "\b(IBAction|IBOutlet)\b" 0:attribute
 add-highlighter shared/swift/code/ regex "@\w+\b" 0:attribute
 
-hook -group swift-highlight global WinSetOption filetype=swift %{
-    add-highlighter window/swift ref swift
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/swift }
 }

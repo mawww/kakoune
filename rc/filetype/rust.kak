@@ -8,6 +8,34 @@ hook global BufCreate .*[.](rust|rs) %{
     set-option buffer filetype rust
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=rust %[
+    require-module rust
+
+    hook window ModeChange insert:.* -group rust-trim-indent  rust-trim-indent
+    hook window InsertChar \n -group rust-indent rust-indent-on-new-line
+    hook window InsertChar \{ -group rust-indent rust-indent-on-opening-curly-brace
+    hook window InsertChar [)}] -group rust-indent rust-indent-on-closing
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window rust-.+ }
+]
+
+hook -group rust-highlight global WinSetOption filetype=rust %{
+    add-highlighter window/rust ref rust
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/rust }
+}
+
+# Configuration
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=rust %[
+    set window formatcmd 'rustfmt'
+]
+
+
+provide-module rust %§
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -71,25 +99,4 @@ define-command -hidden rust-indent-on-closing %[
     _
 ]
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group rust-highlight global WinSetOption filetype=rust %{
-    add-highlighter window/rust ref rust
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/rust }
-}
-
-hook global WinSetOption filetype=rust %[
-    hook window ModeChange insert:.* -group rust-trim-indent  rust-trim-indent
-    hook window InsertChar \n -group rust-indent rust-indent-on-new-line
-    hook window InsertChar \{ -group rust-indent rust-indent-on-opening-curly-brace
-    hook window InsertChar [)}] -group rust-indent rust-indent-on-closing
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window rust-.+ }
-]
-
-# Configuration
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook global WinSetOption filetype=rust %[
-    set window formatcmd 'rustfmt'
-]
+§

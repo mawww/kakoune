@@ -8,6 +8,20 @@ hook global BufCreate .*\.tex %{
     set-option buffer filetype latex
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=latex %{
+    require-module latex
+}
+
+hook -group latex-highlight global WinSetOption filetype=latex %{
+    add-highlighter window/latex ref latex
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/latex }
+}
+
+provide-module latex %(
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -26,10 +40,4 @@ add-highlighter shared/latex/content/ regex '\\(emph|textit)\{([^}]+)\}' 2:defau
 # Bold text
 add-highlighter shared/latex/content/ regex '\\textbf\{([^}]+)\}' 1:default+b
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group latex-highlight global WinSetOption filetype=latex %{
-    add-highlighter window/latex ref latex
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/latex }
-}
+)

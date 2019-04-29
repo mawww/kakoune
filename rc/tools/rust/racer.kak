@@ -1,3 +1,9 @@
+hook -once global BufSetOption filetype=rust %{
+    require-module racer
+}
+
+provide-module racer %{
+
 declare-option -hidden str racer_tmp_dir
 declare-option -hidden completions racer_completions
 
@@ -24,6 +30,7 @@ define-command racer-complete -docstring "Complete the current selection with ra
                     desc = substr($9, 2, length($9) - 2)
                     gsub(/\|/, "\\|", desc)
                     gsub(/\\n/, "\n", desc)
+                    gsub(/!/, "!!", desc)
                     menu = $8
                     sub(/^pub /, "", menu)
                     gsub(/\|/, "\\|", menu)
@@ -66,7 +73,7 @@ define-command racer-complete -docstring "Complete the current selection with ra
                     } else {
                         menu = "{default+F}" word "{default+d} " menu
                     }
-                    candidate = word "|" desc "|" menu
+                    candidate = word "|info -style menu %!" desc "!|" menu
                     gsub(/:/, "\\:", candidate)
                     print candidate
                 }'
@@ -150,4 +157,6 @@ define-command racer-show-doc -docstring "Show the documentation about the rust 
           printf %s\\n "echo -debug 'racer could not find a definition'"
         fi
     }
+}
+
 }

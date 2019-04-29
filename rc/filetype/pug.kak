@@ -12,6 +12,26 @@ hook global BufCreate .*[.](pug|jade) %{
     set-option buffer filetype pug
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=pug %{
+    require-module pug
+
+    hook window ModeChange insert:.* -group pug-trim-indent  pug-trim-indent
+    hook window InsertChar \n -group pug-indent pug-indent-on-new-line
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pug-.+ }
+}
+
+hook -group pug-highlight global WinSetOption filetype=pug %{
+    add-highlighter window/pug ref pug
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/pug }
+}
+
+
+provide-module pug %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -58,17 +78,4 @@ define-command -hidden pug-indent-on-new-line %{
     }
 }
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group pug-highlight global WinSetOption filetype=pug %{
-    add-highlighter window/pug ref pug
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/pug }
-}
-
-hook global WinSetOption filetype=pug %{
-    hook window ModeChange insert:.* -group pug-trim-indent  pug-trim-indent
-    hook window InsertChar \n -group pug-indent pug-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pug-.+ }
 }

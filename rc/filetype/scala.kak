@@ -8,6 +8,27 @@ hook global BufCreate .*[.](scala) %{
     set-option buffer filetype scala
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=scala %[
+    require-module scala
+
+    hook window ModeChange insert:.* -group scala-trim-indent  scala-trim-indent
+    hook window InsertChar \n -group scala-indent scala-indent-on-new-line
+    hook window InsertChar \} -group scala-indent scala-indent-on-closing-curly-brace
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window scala-.+ }
+]
+
+hook -group scala-highlight global WinSetOption filetype=scala %{
+    add-highlighter window/scala ref scala
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/scala }
+}
+
+
+provide-module scala %[
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -58,18 +79,4 @@ define-command -hidden scala-indent-on-closing-curly-brace %[
     ]
 ]
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group scala-highlight global WinSetOption filetype=scala %{
-    add-highlighter window/scala ref scala
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/scala }
-}
-
-hook global WinSetOption filetype=scala %[
-    hook window ModeChange insert:.* -group scala-trim-indent  scala-trim-indent
-    hook window InsertChar \n -group scala-indent scala-indent-on-new-line
-    hook window InsertChar \} -group scala-indent scala-indent-on-closing-curly-brace
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window scala-.+ }
 ]

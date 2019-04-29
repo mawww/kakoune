@@ -8,6 +8,18 @@ hook global BufCreate .+\.(a(scii)?doc|asc) %{
     set-option buffer filetype asciidoc
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook -group asciidoc-highlight global WinSetOption filetype=asciidoc %{
+    require-module asciidoc
+
+    add-highlighter window/asciidoc ref asciidoc
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/asciidoc }
+}
+
+provide-module asciidoc %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -34,10 +46,4 @@ add-highlighter shared/asciidoc/ regex ^:[-\w]+: 0:meta
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group asciidoc-highlight global WinSetOption filetype=asciidoc %{
-    add-highlighter window/asciidoc ref asciidoc
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/asciidoc }
 }

@@ -8,6 +8,19 @@ hook global BufCreate .*/?Tup(file|rules)(\.\w+)?$ %{
     set-option buffer filetype tupfile
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook -group tupfile-highlight global WinSetOption filetype=tupfile %{
+    require-module tupfile
+
+    add-highlighter window/tupfile ref tupfile
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/tupfile }
+}
+
+
+provide-module tupfile %{
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -24,10 +37,4 @@ add-highlighter shared/tupfile/code/ regex '^\h*\b(ifn?eq|ifn?def|else|endif|err
 add-highlighter shared/tupfile/code/ regex '^\h*\b(&?[\w_]+)\s*[:+]?=' 1:keyword
 add-highlighter shared/tupfile/code/ regex '`[^`\n]+`' 0:meta
 
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group tupfile-highlight global WinSetOption filetype=tupfile %{
-    add-highlighter window/tupfile ref tupfile
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/tupfile }
 }
