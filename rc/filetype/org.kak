@@ -1,6 +1,7 @@
 # https://orgmode.org/ - your life in plain text
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module orgmode %&
 
 # Faces
 # ‾‾‾‾‾
@@ -237,3 +238,5 @@ hook global WinSetOption filetype=org %{
     hook window InsertChar \n -group org-indent org-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window org-.+ }
 }
+
+&
