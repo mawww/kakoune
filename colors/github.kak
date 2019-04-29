@@ -20,8 +20,8 @@ face global builtin default+b
 ## markup
 face global title blue
 face global header cyan
-face global bold red+b
-face global italic yellow+i
+face global bold red
+face global italic yellow
 face global mono green
 face global block magenta
 face global link cyan

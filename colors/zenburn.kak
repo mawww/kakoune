@@ -47,8 +47,8 @@ evaluate-commands %sh{
         # and markup
         face global title ${zenkeyword}
         face global header ${zenconstant}
-        face global bold ${zenstorageClass}+b
-        face global italic ${zenfunction}+i
+        face global bold ${zenstorageClass}
+        face global italic ${zenfunction}
         face global mono ${zennumber}
         face global block ${zenstatement}
         face global link ${zenstring}
