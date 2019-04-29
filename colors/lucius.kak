@@ -42,8 +42,6 @@ evaluate-commands %sh{
         face global header ${lucius_light_green}
         face global bold ${lucius_blue}+b
         face global italic ${lucius_light_grey}+i
-        face global underline ${lucius_green}+u
-        face global strikethrough ${lucius_dark_blue}
         face global mono ${lucius_light_green}
         face global block ${lucius_light_blue}
         face global link ${lucius_light_green}

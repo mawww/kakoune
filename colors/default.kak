@@ -19,8 +19,6 @@ face global title blue
 face global header cyan
 face global bold red+b
 face global italic yellow+i
-face global underline blue+u
-face global strikethrough green
 face global mono green
 face global block magenta
 face global link cyan

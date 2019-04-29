@@ -20,8 +20,6 @@ face global title              blue+b
 face global header             blue
 face global bold               bright-green+b
 face global italic             bright-green+i
-face global underline          bright-green+u
-face global strikethrough      bright-green
 face global mono               bright-cyan
 face global block              cyan
 face global link               bright-green

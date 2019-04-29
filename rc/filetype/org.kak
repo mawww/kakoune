@@ -35,6 +35,10 @@ set-face global org_heading       default,default+b@header
 set-face global org_section       default,default@function
 set-face global org_subsection    default,default@variable
 set-face global org_subsubsection default,default@module
+set-face global org_bold          default,default+b
+set-face global org_italic        default,default+i
+set-face global org_underline     default,default+u
+set-face global org_strikethrough default,default
 
 # Options
 # ‾‾‾‾‾‾‾
@@ -166,15 +170,15 @@ add-highlighter shared/org/inline/text/timestamp dynregex "[\[<]%opt{org_timesta
 ## BORDER: any non-whitespace, and not `,` `'` or `"`
 ## BODY: any character, can't be longer than tho lines
 ## POST: a whitespace character, `-`, `.`, `,`, `:`, `!`, `?`, `'`, `)`, `}`
-add-highlighter shared/org/inline/text/italic         regex "(^|[\h({'""])([/][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[/])[\s.,:!?')}]" 2:italic
-add-highlighter shared/org/inline/text/strikethrough  regex "(^|[\h({'""])([+][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[+])[\s.,:!?')}]" 2:strikethrough
+add-highlighter shared/org/inline/text/italic         regex "(^|[\h({'""])([/][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[/])[\s.,:!?')}]" 2:org_italic
+add-highlighter shared/org/inline/text/strikethrough  regex "(^|[\h({'""])([+][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[+])[\s.,:!?')}]" 2:org_strikethrough
 add-highlighter shared/org/inline/text/verbatim       regex "(^|[\h({'""])([=][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[=])[\s.,:!?')}]" 2:meta
 add-highlighter shared/org/inline/text/code           regex "(^|[\h({'""])([~][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[~])[\s.,:!?')}]" 2:mono
-add-highlighter shared/org/inline/text/underlined     regex "(^|[\h({'""])([_][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[_])[\s.,:!?')}]" 2:underline
+add-highlighter shared/org/inline/text/underlined     regex "(^|[\h({'""])([_][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[_])[\s.,:!?')}]" 2:org_underline
 ## will be deprecated in future releases of Org but currently is supported
 add-highlighter shared/org/inline/text/inline-math    regex "(^|[\h({'""])([$][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[$])[\s.,:!?')}]" 2:mono
 ## bold is kinda tricky because we need to HL everything but headings, so it's split up on several regexps
-add-highlighter shared/org/inline/text/bold regex "(?:^|[\h({'""])([*][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[*])[\s.,:!?')}]|([*]{3,})\n|\h([*]{3})[\s.,:!?')}]" 1:bold
+add-highlighter shared/org/inline/text/bold regex "(?:^|[\h({'""])([*][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[*])[\s.,:!?')}]|([*]{3,})\n|\h([*]{3})[\s.,:!?')}]" 1:org_bold
 
 # LaTeX
 add-highlighter shared/org/LaTeX region -match-capture '\\begin\{([A-Za-z0-9*]+)\}' '\\end\{([A-Za-z0-9*]+)\}' fill string
