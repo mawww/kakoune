@@ -1,14 +1,40 @@
 # https://orgmode.org/ - your life in plain text
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+# Detection
+# ‾‾‾‾‾‾‾‾‾
+
+hook global BufCreate .*[.]org %{
+    set-option buffer filetype org
+}
+
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook global WinSetOption filetype=org %{
+    require-module orgmode
+    hook window InsertChar \n -group org-indent org-indent-on-new-line
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window org-.+ }
+    org-parse-file
+}
+
+hook -group org-highlight global WinSetOption filetype=org %{
+    add-highlighter window/org ref org
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/org }
+}
+
 provide-module orgmode %&
 
 # Faces
 # ‾‾‾‾‾
 
-set-face global org_todo     red+b
-set-face global org_done     green+b
-set-face global org_priority value
+set-face global org_todo          default,default+b@Error
+set-face global org_done          default,default+b@string
+set-face global org_priority      default,default@value
+set-face global org_heading       default,default+b@header
+set-face global org_section       default,default@function
+set-face global org_subsection    default,default@variable
+set-face global org_subsubsection default,default@module
 
 # Options
 # ‾‾‾‾‾‾‾
@@ -30,14 +56,6 @@ declare-option -docstring "Org Mode priorities. You can customize this option di
 Colors for priority items can be customized with `org_priority' face." \
 regex org_priority "A|C|B"
 
-# Detection
-# ‾‾‾‾‾‾‾‾‾
-
-hook global BufCreate .*[.]org %{
-    set-option buffer filetype org
-    # Update `org_todo_items' and `org_priority_items' when opening file
-    org-parse-file
-}
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -105,10 +123,10 @@ add-highlighter shared/org/inline/text/ordered-lists regex '^\h*(\d+[.)])\h+' 1:
 
 # Headings. Also includes highlighting groups for TODO and PRIORITIES
 # format: STARS TODO PRIORITY TEXT TAGS
-add-highlighter shared/org/inline/text/heading          regex   '^(?:[*]{1}|[*]{5}|[*]{9})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:header        1:module
-add-highlighter shared/org/inline/text/section          regex  '^(?:[*]{2}|[*]{6}|[*]{10})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:section       1:module
-add-highlighter shared/org/inline/text/subsection       regex  '^(?:[*]{3}|[*]{7}|[*]{11})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:subsection    1:module
-add-highlighter shared/org/inline/text/subsubsection    regex '^(?:[*]{4}|[*]{8}|[*]{12,})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:subsubsection 1:module
+add-highlighter shared/org/inline/text/heading          regex   '^(?:[*]{1}|[*]{5}|[*]{9})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:org_heading       1:module
+add-highlighter shared/org/inline/text/section          regex  '^(?:[*]{2}|[*]{6}|[*]{10})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:org_section       1:module
+add-highlighter shared/org/inline/text/subsection       regex  '^(?:[*]{3}|[*]{7}|[*]{11})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:org_subsection    1:module
+add-highlighter shared/org/inline/text/subsubsection    regex '^(?:[*]{4}|[*]{8}|[*]{12,})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:org_subsubsection 1:module
 add-highlighter shared/org/inline/text/heading_todo     dynregex '^[*]+\h+(?:%opt{org_todo})'                        1:org_todo 2:org_done
 add-highlighter shared/org/inline/text/heading_priority dynregex '^[*]+\h+[^\n\[]*(\[#(?:%opt{org_priority})\])'     1:org_priority
 # (?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?
@@ -197,7 +215,7 @@ define-command -hidden org-indent-on-new-line %{
     }
 }
 
-define-command -docstring "" \
+define-command -docstring "set up org TODO and PRIORITY items based on file contents" \
 org-parse-file %{ evaluate-commands -save-regs '"/' %{
     # Parse TODO items
     try %{
@@ -225,18 +243,5 @@ org-parse-file %{ evaluate-commands -save-regs '"/' %{
         set-option buffer org_priority %sh{ printf "%s\n" "${kak_opt_org_priority}" | sed -E "s/ /|/g" }
     }
 }}
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group org-highlight global WinSetOption filetype=org %{
-    add-highlighter window/org ref org
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/org }
-}
-
-hook global WinSetOption filetype=org %{
-    hook window InsertChar \n -group org-indent org-indent-on-new-line
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window org-.+ }
-}
 
 &
