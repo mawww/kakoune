@@ -131,6 +131,7 @@ add-highlighter shared/org/inline/text/heading          regex   '^(?:[*]{1}|[*]{
 add-highlighter shared/org/inline/text/section          regex  '^(?:[*]{2}|[*]{6}|[*]{10})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:org_section       1:module
 add-highlighter shared/org/inline/text/subsection       regex  '^(?:[*]{3}|[*]{7}|[*]{11})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:org_subsection    1:module
 add-highlighter shared/org/inline/text/subsubsection    regex '^(?:[*]{4}|[*]{8}|[*]{12,})\h+[^\n]*?(:[^:\n]*?:)?\n' 0:org_subsubsection 1:module
+add-highlighter shared/org/inline/text/heading_comment  regex '^[*]+\h+(COMMENT)\b'                                  1:comment
 add-highlighter shared/org/inline/text/heading_todo     dynregex '^[*]+\h+(?:%opt{org_todo})'                        1:org_todo 2:org_done
 add-highlighter shared/org/inline/text/heading_priority dynregex '^[*]+\h+[^\n\[]*(\[#(?:%opt{org_priority})\])'     1:org_priority
 # (?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?
