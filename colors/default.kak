@@ -17,9 +17,6 @@ face global builtin default+b
 # For markup
 face global title blue
 face global header cyan
-face global section blue
-face global subsection magenta
-face global subsubsection red
 face global bold red+b
 face global italic yellow+i
 face global underline blue+u

@@ -36,9 +36,6 @@ evaluate-commands %sh{
     echo "
         face global title blue
         face global header ${cyan_light}
-        face global section ${cyan_light}
-        face global subsection ${purple_dark}
-        face global subsubsection ${magenta_dark}
         face global bold ${orange_light}+b
         face global italic ${orange_dark}+i
         face global underline ${magenta_dark}+u

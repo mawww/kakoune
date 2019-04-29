@@ -40,9 +40,6 @@ evaluate-commands %sh{
         # Markdown highlighting
         face global title         ${green}+b
         face global header        ${orange}
-        face global section       ${aqua}
-        face global subsection    ${blue}
-        face global subsubsection ${purple}
         face global bold          ${fg}+b
         face global italic        ${fg}+i
         face global underline     ${fg}+u

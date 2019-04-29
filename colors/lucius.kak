@@ -40,9 +40,6 @@ evaluate-commands %sh{
         # and markup
         face global title ${lucius_light_blue}
         face global header ${lucius_light_green}
-        face global section ${lucius_light_blue}
-        face global subsection ${lucius_blue}
-        face global subsubsection ${lucius_dark_blue}
         face global bold ${lucius_blue}+b
         face global italic ${lucius_light_grey}+i
         face global underline ${lucius_green}+u
