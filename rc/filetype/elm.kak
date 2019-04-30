@@ -16,8 +16,12 @@ hook global WinSetOption filetype=elm %{
 
     hook window ModeChange insert:.* -group elm-trim-indent  elm-trim-indent
     hook window InsertChar \n -group elm-indent elm-indent-on-new-line
+    set-option window formatcmd %opt{elm_formatcmd}
 
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elm-.+ }
+    hook -once -always window WinSetOption filetype=.* %{
+        remove-hooks window elm-.+
+        unset-option window formatcmd
+    }
 }
 
 hook -group elm-highlight global WinSetOption filetype=elm %{
@@ -40,6 +44,20 @@ add-highlighter shared/elm/code/ regex \b(import|exposing|as|module|where)\b 0:m
 add-highlighter shared/elm/code/ regex \b(True|False)\b 0:value
 add-highlighter shared/elm/code/ regex \b(if|then|else|case|of|let|in|type|port|alias)\b 0:keyword
 add-highlighter shared/elm/code/ regex \b(Array|Bool|Char|Float|Int|String)\b 0:type
+
+# Configuration
+# -------------
+declare-option -hidden str elm_formatcmd ""
+
+evaluate-commands %sh{
+    if command -V "elm-format" >/dev/null 2>/dev/null; then
+        printf "%s\n" "
+            set-option global elm_formatcmd %{elm-format --stdin}
+        "
+    else
+        printf "%s\n" "echo -debug Optional dependency unmet: install elm-format to use :format with Elm files."
+    fi
+}
 
 # Commands
 # ‾‾‾‾‾‾‾‾
