@@ -26,8 +26,7 @@ String generate_switches_doc(const SwitchMap& switches)
 }
 
 ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& desc)
-    : m_params(params),
-      m_desc(desc)
+    : m_params(params)
 {
     const bool switches_only_at_start = desc.flags & ParameterDesc::Flags::SwitchesOnlyAtStart;
     const bool ignore_unknown_switches = desc.flags & ParameterDesc::Flags::IgnoreUnknownSwitches;
@@ -40,8 +39,9 @@ ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& de
             only_pos = true;
         else if (not only_pos and not params[i].empty() and params[i][0_byte] == '-')
         {
-            auto it = m_desc.switches.find(params[i].substr(1_byte));
-            if (it == m_desc.switches.end())
+            StringView switch_name = params[i].substr(1_byte);
+            auto it = desc.switches.find(switch_name);
+            if (it == desc.switches.end())
             {
                 if (ignore_unknown_switches)
                 {
@@ -53,13 +53,15 @@ ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& de
                 throw unknown_option(params[i]);
             }
 
-            auto switch_index = it - m_desc.switches.begin();
+            auto switch_index = it - desc.switches.begin();
             if (switch_seen[switch_index])
                 throw runtime_error{format("switch '-{}' specified more than once", it->key)};
             switch_seen[switch_index] = true;
 
             if (it->value.takes_arg and ++i == params.size())
                throw missing_option_value(it->key);
+
+            m_switches[switch_name.str()] = it->value.takes_arg ? params[i] : StringView{};
         }
         else // positional
         {
@@ -75,18 +77,9 @@ ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& de
 
 Optional<StringView> ParametersParser::get_switch(StringView name) const
 {
-    auto it = m_desc.switches.find(name);
-    kak_assert(it != m_desc.switches.end());
-    for (size_t i = 0; i < m_params.size(); ++i)
-    {
-        const auto& param = m_params[i];
-        if (param.substr(0_byte, 1_byte) == "-" and param.substr(1_byte) == name)
-            return it->value.takes_arg ? m_params[i+1] : StringView{};
-
-        if (param == "--")
-            break;
-    }
-    return {};
+    auto it = m_switches.find(name);
+    return it == m_switches.end() ? Optional<StringView>{}
+                                  : Optional<StringView>{it->value};
 }
 
 }
