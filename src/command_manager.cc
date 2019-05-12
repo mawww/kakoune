@@ -726,7 +726,7 @@ Completions CommandManager::complete(const Context& context,
             context, flags, params, tokens.size() - 2,
             cursor_pos_in_token), start);
 
-        if (not completions.quoted and token.type == Token::Type::Raw)
+        if (not (completions.flags & Completions::Flags::Quoted) and token.type == Token::Type::Raw)
         {
             for (auto& c : completions.candidates)
                 c = (not c.empty() and contains("%'\"", c[0]) ? "\\" : "") + escape(c, "; \t", '\\');
