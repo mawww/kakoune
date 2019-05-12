@@ -271,6 +271,9 @@ evaluate-commands %sh{
     # Add the language's grammar to the static completion list
     printf %s\\n "declare-option str-list c_static_words $(join "${keywords} ${attributes} ${types} ${macros}" ' ')"
 
+    # Hihglight functions ignoring existing keywords
+    printf %s\\n "add-highlighter shared/c/code/functions regex (\w*?)\b($(join "${keywords} ${attributes} ${types} ${macros}" '|'))?(\h*)(?=\() 1:function"
+
     # Highlight keywords
     printf %s "
         add-highlighter shared/c/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
@@ -278,8 +281,6 @@ evaluate-commands %sh{
         add-highlighter shared/c/code/types regex \b($(join "${types}" '|'))\b 0:type
         add-highlighter shared/c/code/values regex \b($(join "${macros}" '|'))\b 0:value
     "
-    # Hihglight functions ignoring existing keywords
-    printf %s\\n "add-highlighter shared/c/code/functions regex (\w*?)\b($(join "${keywords} ${attributes} ${types} ${macros}" '|'))?(\h*)(?=\() 1:function"
 }
 
 # c++ specific
@@ -323,6 +324,9 @@ evaluate-commands %sh{
     # Add the language's grammar to the static completion list
     printf %s\\n "declare-option str-list cpp_static_words $(join "${keywords} ${attributes} ${entities} ${types} ${values}" ' ')"
 
+    # Hihglight functions ignoring existing keywords
+    printf %s\\n "add-highlighter shared/cpp/code/functions regex (\w*?)\b($(join "${keywords} ${attributes} ${types} ${macros}" '|'))?(\h*)(?=\() 1:function"
+
     # Highlight keywords
     printf %s "
         add-highlighter shared/cpp/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
@@ -330,8 +334,6 @@ evaluate-commands %sh{
         add-highlighter shared/cpp/code/types regex \b($(join "${types}" '|'))\b 0:type
         add-highlighter shared/cpp/code/values regex \b($(join "${values}" '|'))\b 0:value
     "
-    # Hihglight functions ignoring existing keywords
-    printf %s\\n "add-highlighter shared/cpp/code/functions regex (\w*?)\b($(join "${keywords} ${attributes} ${types} ${macros}" '|'))?(\h*)(?=\() 1:function"
 }
 
 # c and c++ compiler macros
@@ -365,6 +367,9 @@ evaluate-commands %sh{
     # Add the language's grammar to the static completion list
     printf %s\\n "declare-option str-list objc_static_words $(join "${keywords} ${attributes} ${types} ${values} ${decorators}" ' ')"
 
+    # Hihglight functions ignoring existing keywords
+    printf %s\\n "add-highlighter shared/objc/code/functions regex (\w*?)\b($(join "${keywords} ${attributes} ${types} ${values} ${decorators}" '|'))?(\h*)(?=\() 1:function"
+
     # Highlight keywords
     printf %s "
         add-highlighter shared/objc/code/keywords regex \b($(join "${keywords}" '|'))\b 0:keyword
@@ -373,8 +378,6 @@ evaluate-commands %sh{
         add-highlighter shared/objc/code/values regex \b($(join "${values}" '|'))\b 0:value
         add-highlighter shared/objc/code/decorators regex  @($(join "${decorators}" '|'))\b 0:attribute
     "
-    # Hihglight functions ignoring existing keywords
-    printf %s\\n "add-highlighter shared/objc/code/functions regex (\w*?)\b($(join "${keywords} ${attributes} ${types} ${values} ${decorators}" '|'))?(\h*)(?=\() 1:function"
 }
 
 declare-option -docstring %{control the type of include guard to be inserted in empty headers
