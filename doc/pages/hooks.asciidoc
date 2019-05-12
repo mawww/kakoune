@@ -46,7 +46,7 @@ The parameter string associated with each hook is described after the hook
 name. Hooks with no description will always use an empty string.
 
 *NormalIdle*::
-    a certain duration has passed since last key was pressed in normal mode
+    a certain duration has passed since the last keypress in normal mode
 
 *NormalBegin*::
     entering normal mode
@@ -58,7 +58,7 @@ name. Hooks with no description will always use an empty string.
     a key is received in normal mode
 
 *InsertIdle*::
-    a certain duration has passed since last key was pressed in insert mode
+    a certain duration has passed since the last keypress in insert mode
 
 *InsertBegin*::
     entering insert mode
@@ -79,10 +79,10 @@ name. Hooks with no description will always use an empty string.
     the cursor moved (without inserting) in insert mode
 
 *PromptIdle*::
-    a certain duration has passed since last key was pressed in prompt mode
+    a certain duration has passed since the last keypress in prompt mode
 
 *WinCreate* `buffer name`::
-    a window was created. This hook is executed in draft context, so any a
+    a window was created. This hook is executed in draft context, so any
     changes to selections or input state will be discarded.
 
 *WinClose* `buffer name`::
@@ -98,7 +98,7 @@ name. Hooks with no description will always use an empty string.
 
 *WinSetOption* `<option_name>=<new_value>`::
     an option was set in a window context. This hook is executed in a draft
-    acontext, so any changes to selections or input state will be discarded.
+    context, so any changes to selections or input state will be discarded.
 
 *GlobalSetOption* `<option_name>=<new_value>`::
     an option was set at the global scope
