@@ -76,7 +76,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                       print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags " flag | cmd
                       close(cmd)
                   }
-                  /^([0-9a-f]{40}) ([0-9]+) ([0-9]+) ([0-9]+)/ {
+                  /^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/ {
                       send_flags()
                       sha=$1
                       line=$3
