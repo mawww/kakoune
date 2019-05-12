@@ -54,12 +54,12 @@ add-highlighter shared/rust/code/ regex \b(?:&&|\|\|)\b 0:operator
 # the language keywords are defined here, but many of them are reserved and unused yet:
 # https://doc.rust-lang.org/grammar.html#keywords
 add-highlighter shared/rust/code/ regex (?:#!?\[.*?\]) 0:meta
+add-highlighter shared/rust/code/ regex [_a-zA-Z](\w*)(\h*)(?=\() 0:function"
+add-highlighter shared/rust/code/ regex (?:(?<!\.\.)(?<=\.))([_a-zA-Z](\w*))(\h+)?(?=\() 1:function
+add-highlighter shared/rust/code/ regex (?:(?<!\.\.)(?<=\.))([_a-zA-Z](\w*))\b(?![>"\(]) 1:meta
 add-highlighter shared/rust/code/ regex \b(?:let|as|fn|return|match|if|else|loop|for|in|while|break|continue|move|box|where|impl|dyn|pub|unsafe)\b 0:keyword
 add-highlighter shared/rust/code/ regex \b(?:trait|struct|enum|type|mut|ref|static|const)\b 0:attribute
 add-highlighter shared/rust/code/ regex \b(?:u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64|bool|char|str|Self)\b 0:type
-add-highlighter shared/rust/code/ regex (\w*?)\b(let|as|fn|return|match|if|else|loop|for|in|while|break|continue|move|box|where|impl|dyn|pub|unsafe)?(\h*)(?=\() 1:function
-add-highlighter shared/rust/code/ regex (?:(?<!\.\.)(?<=\.))([_a-zA-Z](\w*))(\h+)?(?=\() 1:function
-add-highlighter shared/rust/code/ regex (?:(?<!\.\.)(?<=\.))([_a-zA-Z](\w*))\b(?![>"\(]) 1:meta
 add-highlighter shared/rust/code/ regex \b[_A-Z]\w*\b 0:type # Rust's convention is that CamelCase is used for types
 add-highlighter shared/rust/code/ regex \b(?:mod|crate|use|extern)\b 0:module
 add-highlighter shared/rust/code/ regex ([a-zA-Z]\w*)(\h+)?(?=::) 1:module

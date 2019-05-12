@@ -204,8 +204,8 @@ evaluate-commands %sh{
             add-highlighter shared/$ft/macro/ regex ^\\h*#include\\h+(\\S*) 1:module
             add-highlighter shared/$ft/macro/ regex /\\*.*?\\*/ 0:comment
 
-            add-highlighter shared/$ft/code/field regex ((?<!\\.\\.)(?<=\\.)|(?<=->))[a-zA-Z](\\w*)\\b(?![>"\\(]) 0:meta
-            add-highlighter shared/$ft/code/method regex ((?<!\\.\\.)(?<=\\.)|(?<=->))[a-zA-Z](\\w*)(\\h*)(?=\\() 0:function
+            add-highlighter shared/$ft/code/field regex ((?<!\\.\\.)(?<=\\.)|(?<=->))[_a-zA-Z](\\w*)\\b(?![>"\\(]) 0:meta
+            add-highlighter shared/$ft/code/method regex ((?<!\\.\\.)(?<=\\.)|(?<=->))[_a-zA-Z](\\w*)(\\h*)(?=\\() 0:function
             add-highlighter shared/$ft/code/class_module regex ([a-zA-Z](\\w*))(\\h*)(?=::) 1:module
 	EOF
     done
@@ -272,7 +272,7 @@ evaluate-commands %sh{
     printf %s\\n "declare-option str-list c_static_words $(join "${keywords} ${attributes} ${types} ${macros}" ' ')"
 
     # Hihglight functions ignoring existing keywords
-    printf %s\\n "add-highlighter shared/c/code/functions regex (\w*?)\b($(join "${keywords} ${attributes} ${types} ${macros}" '|'))?(\h*)(?=\() 1:function"
+    printf %s\\n "add-highlighter shared/c/code/functions regex [_a-zA-Z](\w*)(\h*)(?=\() 0:function"
 
     # Highlight keywords
     printf %s "
@@ -325,7 +325,7 @@ evaluate-commands %sh{
     printf %s\\n "declare-option str-list cpp_static_words $(join "${keywords} ${attributes} ${entities} ${types} ${values}" ' ')"
 
     # Hihglight functions ignoring existing keywords
-    printf %s\\n "add-highlighter shared/cpp/code/functions regex (\w*?)\b($(join "${keywords} ${attributes} ${types} ${macros}" '|'))?(\h*)(?=\() 1:function"
+    printf %s\\n "add-highlighter shared/cpp/code/functions regex [_a-zA-Z](\w*)(\h*)(?=\() 0:function"
 
     # Highlight keywords
     printf %s "
@@ -368,7 +368,7 @@ evaluate-commands %sh{
     printf %s\\n "declare-option str-list objc_static_words $(join "${keywords} ${attributes} ${types} ${values} ${decorators}" ' ')"
 
     # Hihglight functions ignoring existing keywords
-    printf %s\\n "add-highlighter shared/objc/code/functions regex (\w*?)\b($(join "${keywords} ${attributes} ${types} ${values} ${decorators}" '|'))?(\h*)(?=\() 1:function"
+    printf %s\\n "add-highlighter shared/objc/code/functions regex [_a-zA-Z](\w*)(\h*)(?=\() 0:function"
 
     # Highlight keywords
     printf %s "
