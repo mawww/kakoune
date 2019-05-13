@@ -113,7 +113,7 @@ void select(Context& context, T func)
         }
 
         if (to_remove.size() == selections.size())
-            throw runtime_error{"no selections remaining"};
+            throw no_selections_remaining{};
         for (auto& i : to_remove | reverse())
             selections.remove(i);
     }
@@ -1135,7 +1135,7 @@ void keep(Context& context, NormalParams params)
                 keep.push_back(sel);
         }
         if (keep.empty())
-            throw runtime_error("no selections remaining");
+            throw no_selections_remaining{};
         context.selections_write_only() = std::move(keep);
     });
 }
@@ -1168,7 +1168,7 @@ void keep_pipe(Context& context, NormalParams)
                 }
             }
             if (keep.empty())
-                throw runtime_error("no selections remaining");
+                throw no_selections_remaining{};
             if (new_main == -1)
                 new_main = keep.size() - 1;
             context.selections_write_only().set(std::move(keep), new_main);
@@ -1775,7 +1775,7 @@ void trim_selections(Context& context, NormalParams)
     }
 
     if (to_remove.size() == selections.size())
-        throw runtime_error{"no selections remaining"};
+        throw no_selections_remaining{};
     for (auto& i : to_remove | reverse())
         selections.remove(i);
 }

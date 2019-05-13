@@ -1782,26 +1782,38 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
         Vector<Selection> new_sels;
         size_t main = 0;
         size_t timestamp = c.buffer().timestamp();
+        bool one_selection_succeeded = false;
         for (auto& sel : sels)
         {
             c.selections_write_only() = SelectionList{sels.buffer(), sel, sels.timestamp()};
             c.selections().update();
 
-            func(parser, c);
-
-            if (not draft)
+            try
             {
+                func(parser, c);
+                one_selection_succeeded = true;
+
                 if (&sels.buffer() != &c.buffer())
                     throw runtime_error("buffer has changed while iterating on selections");
 
-                update_selections(new_sels, main, c.buffer(), timestamp);
-                timestamp = c.buffer().timestamp();
-                if (&sel == &sels.main())
-                    main = new_sels.size() + c.selections().main_index();
+                if (not draft)
+                {
+                    update_selections(new_sels, main, c.buffer(), timestamp);
+                    timestamp = c.buffer().timestamp();
+                    if (&sel == &sels.main())
+                        main = new_sels.size() + c.selections().main_index();
 
-                const auto middle = new_sels.insert(new_sels.end(), c.selections().begin(), c.selections().end());
-                std::inplace_merge(new_sels.begin(), middle, new_sels.end(), compare_selections);
+                    const auto middle = new_sels.insert(new_sels.end(), c.selections().begin(), c.selections().end());
+                    std::inplace_merge(new_sels.begin(), middle, new_sels.end(), compare_selections);
+                }
             }
+            catch (no_selections_remaining&) {}
+        }
+
+        if (not one_selection_succeeded)
+        {
+            c.selections_write_only() = std::move(sels);
+            throw no_selections_remaining{};
         }
 
         if (not draft)
