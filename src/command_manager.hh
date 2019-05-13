@@ -129,6 +129,8 @@ public:
 
     void load_module(StringView module_name, Context& context);
 
+    Completions complete_module_name(StringView query) const;
+
 private:
     void execute_single_command(CommandParameters params,
                                 Context& context,

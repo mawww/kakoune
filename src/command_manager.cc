@@ -624,6 +624,13 @@ Completions CommandManager::complete_command_name(const Context& context, String
     return {0, query.length(), Kakoune::complete(query, query.length(), concatenated(commands, aliases))};
 }
 
+Completions CommandManager::complete_module_name(StringView query) const
+{
+    return {0, query.length(),
+            Kakoune::complete(query, query.length(), m_modules | filter([](auto&& item) { return not item.value.loaded; })
+                                                               | transform(&ModuleMap::Item::key))};
+}
+
 Completions CommandManager::complete(const Context& context,
                                      CompletionFlags flags,
                                      StringView command_line,

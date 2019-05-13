@@ -2448,7 +2448,10 @@ const CommandDesc require_module_cmd = {
     ParameterDesc{ {}, ParameterDesc::Flags::None, 1, 1 },
     CommandFlags::None,
     CommandHelper{},
-    CommandCompleter{},
+    make_completer(
+         [](const Context&, CompletionFlags, const String& prefix, ByteCount cursor_pos) {
+            return CommandManager::instance().complete_module_name(prefix.substr(0, cursor_pos));
+        }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         CommandManager::instance().load_module(parser[0], context);
