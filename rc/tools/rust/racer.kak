@@ -19,7 +19,7 @@ define-command racer-complete -docstring "Complete the current selection with ra
             cursor="${kak_cursor_line} $((${kak_cursor_column} - 1))"
             racer_data=$(racer --interface tab-text complete-with-snippet ${cursor} ${kak_buffile} ${dir}/buf)
             compl=$(printf %s\\n "${racer_data}" | awk '
-                BEGIN { FS = "\t"; ORS = ":" }
+                BEGIN { FS = "\t"; ORS = " " }
                 /^PREFIX/ {
                     column = ENVIRON["kak_cursor_column"] + $2 - $3
                     print ENVIRON["kak_cursor_line"] "." column "@@" ENVIRON["kak_timestamp"]
@@ -75,12 +75,12 @@ define-command racer-complete -docstring "Complete the current selection with ra
                     }
                     candidate = word "|info -style menu %!" desc "!|" menu
                     gsub(/:/, "\\:", candidate)
-                    print candidate
+                    gsub(/@/, "@@", candidate)
+                    gsub(/~/, "~~", candidate)
+                    print "%~" candidate "~"
                 }'
             )
-            printf %s\\n "evaluate-commands -client '${kak_client}' %{
-                set-option buffer=${kak_bufname} racer_completions %@${compl%?}@
-            }" | kak -p ${kak_session}
+            printf %s\\n "evaluate-commands -client '${kak_client}' %@ set-option 'buffer=${kak_bufname}' racer_completions ${compl%?} @" | kak -p ${kak_session}
             rm -r ${dir}
         ) > /dev/null 2>&1 < /dev/null &
     }
