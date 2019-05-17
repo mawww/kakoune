@@ -10,6 +10,7 @@
 #include "file.hh"
 #include "hash_map.hh"
 #include "optional.hh"
+#include "path_manager.hh"
 #include "user_interface.hh"
 
 #include <sys/types.h>
@@ -675,54 +676,30 @@ void send_command(StringView session, StringView command)
 
 class File {
 private:
-    struct Glob {
-        virtual ~Glob() {}
-        virtual bool matches(StringView text) const = 0;
-        virtual Vector<String> expand() const = 0;
-    };
-
-    struct LiteralGlob : public Glob {
-        LiteralGlob(String value)
-            : m_value{std::move(value)}
+    class Glob
+    {
+    public:
+        Glob(StringView name)
+            : m_name{name}
         {}
-
-        ~LiteralGlob() {}
 
         bool matches(StringView text) const
         {
-            return m_value == text;
+            return GlobType::resolve(m_name)->matches(m_name, text);
         }
 
         Vector<String> expand() const
         {
-            Vector<String> res;
-            res.push_back(m_value);
-            return res;
+            return GlobType::resolve(m_name)->expand(m_name);
         }
 
     private:
-        String m_value;
-    };
-
-    struct ClientGlob : public Glob {
-        bool matches(StringView text) const
-        {
-            auto it = find_if(ClientManager::instance(), [&text](auto& client) { return client->context().name() == text; });
-            return it != ClientManager::instance().end();
-        }
-
-        Vector<String> expand() const
-        {
-            Vector<String> res;
-            for (auto& client : ClientManager::instance())
-                res.push_back(client->context().name());
-            return res;
-        }
+        String m_name;
     };
 
     static Glob* p(const char* literal)
     {
-        return new LiteralGlob(literal);
+        return new Glob(literal);
     }
 
     struct Entry {
@@ -905,13 +882,13 @@ RemoteBuffer version_getter(const Vector<String>& path)
 }
 
 File::Entry File::m_entries[] = {
-    { {p("clients")},                                            nullptr },
-    { {p("clients"), new ClientGlob()},                          nullptr },
-    { {p("clients"), new ClientGlob(), p("cursor_byte_offset")}, client_cursor_byte_offset_getter },
-    { {p("clients"), new ClientGlob(), p("cursor_char_column")}, client_cursor_char_column_getter },
-    { {p("clients"), new ClientGlob(), p("pid")},                client_pid_getter },
-    { {p("name")},                                               name_getter },
-    { {p("version")},                                            version_getter },
+    { {p("clients")},                                             nullptr },
+    { {p("clients"), p("$client_name")},                          nullptr },
+    { {p("clients"), p("$client_name"), p("cursor_byte_offset")}, client_cursor_byte_offset_getter },
+    { {p("clients"), p("$client_name"), p("cursor_char_column")}, client_cursor_char_column_getter },
+    { {p("clients"), p("$client_name"), p("pid")},                client_pid_getter },
+    { {p("name")},                                                name_getter },
+    { {p("version")},                                             version_getter },
 };
 
 Vector<RemoteBuffer> File::contents() const
