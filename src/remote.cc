@@ -864,35 +864,33 @@ RemoteBuffer to_remote_buffer(const StringView& s)
     return RemoteBuffer{ s.begin(), s.end() };
 }
 
-RemoteBuffer client_cursor_byte_offset_getter(const Vector<String>& path)
+Context& path_context(const Vector<String>& path)
 {
     auto it = std::find_if(ClientManager::instance().begin(),
                            ClientManager::instance().end(),
                            [&](auto& client) { return client->context().name() == path[1]; });
     kak_assert(it != ClientManager::instance().end());
-    auto& context = (*it)->context();
+    return (*it)->context();
+}
+
+RemoteBuffer client_cursor_byte_offset_getter(const Vector<String>& path)
+{
+    auto& context = path_context(path);
     auto cursor = context.selections().main().cursor();
     return to_remote_buffer(to_string(context.buffer().distance({0,0}, cursor)));
 }
 
 RemoteBuffer client_cursor_char_column_getter(const Vector<String>& path)
 {
-    auto it = std::find_if(ClientManager::instance().begin(),
-                           ClientManager::instance().end(),
-                           [&](auto& client) { return client->context().name() == path[1]; });
-    kak_assert(it != ClientManager::instance().end());
-    auto& context = (*it)->context();
+    auto& context = path_context(path);
     auto coord = context.selections().main().cursor();
     return to_remote_buffer(to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1));
 }
 
 RemoteBuffer client_pid_getter(const Vector<String>& path)
 {
-    auto it = std::find_if(ClientManager::instance().begin(),
-                           ClientManager::instance().end(),
-                           [&](auto& client) { return client->context().name() == path[1]; });
-    kak_assert(it != ClientManager::instance().end());
-    return to_remote_buffer(format("{}", (*it)->pid()));
+    auto& context = path_context(path);
+    return to_remote_buffer(format("{}", context.client().pid()));
 }
 
 RemoteBuffer name_getter(const Vector<String>& path)
