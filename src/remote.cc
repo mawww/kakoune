@@ -864,6 +864,17 @@ RemoteBuffer to_remote_buffer(const StringView& s)
     return RemoteBuffer{ s.begin(), s.end() };
 }
 
+RemoteBuffer client_cursor_byte_offset_getter(const Vector<String>& path)
+{
+    auto it = std::find_if(ClientManager::instance().begin(),
+                           ClientManager::instance().end(),
+                           [&](auto& client) { return client->context().name() == path[1]; });
+    kak_assert(it != ClientManager::instance().end());
+    auto& context = (*it)->context();
+    auto cursor = context.selections().main().cursor();
+    return to_remote_buffer(to_string(context.buffer().distance({0,0}, cursor)));
+}
+
 RemoteBuffer client_pid_getter(const Vector<String>& path)
 {
     auto it = std::find_if(ClientManager::instance().begin(),
@@ -885,11 +896,12 @@ RemoteBuffer version_getter(const Vector<String>& path)
 }
 
 File::Entry File::m_entries[] = {
-    { {p("clients")},                             nullptr },
-    { {p("clients"), new ClientGlob()},           nullptr },
-    { {p("clients"), new ClientGlob(), p("pid")}, client_pid_getter },
-    { {p("name")},                                name_getter },
-    { {p("version")},                             version_getter },
+    { {p("clients")},                                            nullptr },
+    { {p("clients"), new ClientGlob()},                          nullptr },
+    { {p("clients"), new ClientGlob(), p("cursor_byte_offset")}, client_cursor_byte_offset_getter },
+    { {p("clients"), new ClientGlob(), p("pid")},                client_pid_getter },
+    { {p("name")},                                               name_getter },
+    { {p("version")},                                            version_getter },
 };
 
 Vector<RemoteBuffer> File::contents() const
