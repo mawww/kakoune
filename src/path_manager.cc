@@ -5,6 +5,15 @@
 namespace Kakoune
 {
 
+class GlobType
+{
+public:
+    static GlobType* resolve(StringView name);
+
+    virtual bool matches(StringView name, StringView text) const = 0;
+    virtual Vector<String> expand(StringView name) const = 0;
+};
+
 struct LiteralGlobType : public GlobType
 {
     bool matches(StringView name, StringView text) const
@@ -42,6 +51,21 @@ GlobType* GlobType::resolve(StringView name)
     if (name == "$client_name")
         return &client_name_glob_type;
     return &literal_glob_type;
+}
+
+Glob::Glob(StringView name)
+    : m_name{name}
+{
+}
+
+bool Glob::matches(StringView text) const
+{
+    return GlobType::resolve(m_name)->matches(m_name, text);
+}
+
+Vector<String> Glob::expand() const
+{
+    return GlobType::resolve(m_name)->expand(m_name);
 }
 
 }

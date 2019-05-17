@@ -8,13 +8,16 @@
 namespace Kakoune
 {
 
-class GlobType
+class Glob
 {
 public:
-    static GlobType* resolve(StringView name);
+    Glob(StringView name);
 
-    virtual bool matches(StringView name, StringView text) const = 0;
-    virtual Vector<String> expand(StringView name) const = 0;
+    bool matches(StringView text) const;
+    Vector<String> expand() const;
+
+private:
+    String m_name;
 };
 
 }

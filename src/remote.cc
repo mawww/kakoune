@@ -676,30 +676,9 @@ void send_command(StringView session, StringView command)
 
 class File {
 private:
-    class Glob
+    static Glob* p(const char* name)
     {
-    public:
-        Glob(StringView name)
-            : m_name{name}
-        {}
-
-        bool matches(StringView text) const
-        {
-            return GlobType::resolve(m_name)->matches(m_name, text);
-        }
-
-        Vector<String> expand() const
-        {
-            return GlobType::resolve(m_name)->expand(m_name);
-        }
-
-    private:
-        String m_name;
-    };
-
-    static Glob* p(const char* literal)
-    {
-        return new Glob(literal);
+        return new Glob(name);
     }
 
     struct Entry {
