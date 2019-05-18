@@ -135,6 +135,44 @@ File::File(Vector<String> path, Glob* component)
 {
 }
 
+std::unique_ptr<File> File::walk(const String& name) const
+{
+    for (const auto& child : m_component->children())
+    {
+        if (not child->matches(name))
+            continue;
+        Vector<String> path{m_path};
+        path.push_back(name);
+        return std::unique_ptr<File>(new File(std::move(path), child));
+    }
+    return {};
+}
+
+Vector<RemoteBuffer> File::contents() const
+{
+    if (m_component->type())
+    {
+        Vector<RemoteBuffer> res;
+        res.push_back(m_component->type()->read(m_path));
+        return res;
+    }
+    else
+    {
+        Vector<RemoteBuffer> res;
+        for (const auto& child : m_component->children())
+        {
+            Vector<String> parts = child->expand();
+            for (auto& basename : parts) {
+                Vector<String> path{m_path};
+                path.push_back(std::move(basename));
+                std::unique_ptr<File> file(new File(std::move(path), child));
+                res.push_back(file->stat());
+            }
+        }
+        return res;
+    }
+}
+
 File::Type File::type() const
 {
     if (not m_component->type())
@@ -290,43 +328,5 @@ struct Initializer
         root.register_path({"version"},                                       &version_file_type);
     }
 } initializer{};
-
-Vector<RemoteBuffer> File::contents() const
-{
-    if (m_component->type())
-    {
-        Vector<RemoteBuffer> res;
-        res.push_back(m_component->type()->read(m_path));
-        return res;
-    }
-    else
-    {
-        Vector<RemoteBuffer> res;
-        for (const auto& child : m_component->children())
-        {
-            Vector<String> parts = child->expand();
-            for (auto& basename : parts) {
-                Vector<String> path{m_path};
-                path.push_back(std::move(basename));
-                std::unique_ptr<File> file(new File(std::move(path), child));
-                res.push_back(file->stat());
-            }
-        }
-        return res;
-    }
-}
-
-std::unique_ptr<File> File::walk(const String& name) const
-{
-    for (const auto& child : m_component->children())
-    {
-        if (not child->matches(name))
-            continue;
-        Vector<String> path{m_path};
-        path.push_back(name);
-        return std::unique_ptr<File>(new File(std::move(path), child));
-    }
-    return {};
-}
 
 }
