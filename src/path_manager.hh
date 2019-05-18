@@ -1,6 +1,7 @@
 #ifndef path_manager_hh_INCLUDED
 #define path_manager_hh_INCLUDED
 
+#include "field_writer.hh"
 #include "string.hh"
 #include "utils.hh"
 #include "vector.hh"
@@ -18,6 +19,12 @@ public:
 
 private:
     String m_name;
+};
+
+class FileType
+{
+public:
+    virtual RemoteBuffer read(const Vector<String>& path) const = 0;
 };
 
 }

@@ -683,7 +683,7 @@ private:
 
     struct Entry {
         Vector<Glob*> path;
-        std::function<RemoteBuffer (const Vector<String>&)> getter;
+        FileType* type;
     };
 
 public:
@@ -706,8 +706,8 @@ public:
 #pragma pack(pop)
     static_assert(sizeof(Qid) == 13, "compiler has added padding to Qid");
 
-    File(Vector<String> path, std::function<RemoteBuffer (const Vector<String>&)> getter = {})
-      : m_path(path), m_getter{getter}
+    File(Vector<String> path, FileType* type)
+      : m_path(path), m_type{type}
     {}
 
     Vector<RemoteBuffer> contents() const;
@@ -715,7 +715,7 @@ public:
 
     Type type() const
     {
-        if (not m_getter)
+        if (not m_type)
             return Type::DMDIR;
         else
             return Type(0);
@@ -752,8 +752,8 @@ public:
 
     uint64_t length() const
     {
-        if (m_getter)
-            return m_getter(m_path).size();
+        if (m_type)
+            return m_type->read(m_path).size();
         else
             return 0;
     }
@@ -794,7 +794,7 @@ public:
 
 private:
     Vector<String> m_path;
-    std::function<RemoteBuffer (const Vector<String>&)> m_getter;
+    FileType* m_type;
     static Entry m_entries[];
 
     bool is_our_entry(const Entry& entry) const
@@ -829,53 +829,68 @@ Context& path_context(const Vector<String>& path)
     return (*it)->context();
 }
 
-RemoteBuffer client_cursor_byte_offset_getter(const Vector<String>& path)
+struct ClientCursorByteOffsetFileType : public FileType
 {
-    auto& context = path_context(path);
-    auto cursor = context.selections().main().cursor();
-    return to_remote_buffer(to_string(context.buffer().distance({0,0}, cursor)));
-}
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        auto& context = path_context(path);
+        auto cursor = context.selections().main().cursor();
+        return to_remote_buffer(to_string(context.buffer().distance({0,0}, cursor)));
+    }
+} client_cursor_byte_offset_file_type{};
 
-RemoteBuffer client_cursor_char_column_getter(const Vector<String>& path)
+struct ClientCursorCharColumnFileType : public FileType
 {
-    auto& context = path_context(path);
-    auto coord = context.selections().main().cursor();
-    return to_remote_buffer(to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1));
-}
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        auto& context = path_context(path);
+        auto coord = context.selections().main().cursor();
+        return to_remote_buffer(to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1));
+    }
+} client_cursor_char_column_file_type{};
 
-RemoteBuffer client_pid_getter(const Vector<String>& path)
+struct ClientPidFileType : public FileType
 {
-    auto& context = path_context(path);
-    return to_remote_buffer(format("{}", context.client().pid()));
-}
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        auto& context = path_context(path);
+        return to_remote_buffer(format("{}", context.client().pid()));
+    }
+} client_pid_file_type{};
 
-RemoteBuffer name_getter(const Vector<String>& path)
+struct NameFileType : public FileType
 {
-    return to_remote_buffer(Server::instance().session());
-}
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        return to_remote_buffer(Server::instance().session());
+    }
+} name_file_type{};
 
-RemoteBuffer version_getter(const Vector<String>& path)
+struct VersionFileType : public FileType
 {
-    extern const char* version;
-    return to_remote_buffer(version);
-}
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        extern const char* version;
+        return to_remote_buffer(version);
+    }
+} version_file_type{};
 
 File::Entry File::m_entries[] = {
     { {p("clients")},                                             nullptr },
     { {p("clients"), p("$client_name")},                          nullptr },
-    { {p("clients"), p("$client_name"), p("cursor_byte_offset")}, client_cursor_byte_offset_getter },
-    { {p("clients"), p("$client_name"), p("cursor_char_column")}, client_cursor_char_column_getter },
-    { {p("clients"), p("$client_name"), p("pid")},                client_pid_getter },
-    { {p("name")},                                                name_getter },
-    { {p("version")},                                             version_getter },
+    { {p("clients"), p("$client_name"), p("cursor_byte_offset")}, &client_cursor_byte_offset_file_type },
+    { {p("clients"), p("$client_name"), p("cursor_char_column")}, &client_cursor_char_column_file_type },
+    { {p("clients"), p("$client_name"), p("pid")},                &client_pid_file_type },
+    { {p("name")},                                                &name_file_type },
+    { {p("version")},                                             &version_file_type },
 };
 
 Vector<RemoteBuffer> File::contents() const
 {
-    if (m_getter)
+    if (m_type)
     {
         Vector<RemoteBuffer> res;
-        res.push_back(m_getter(m_path));
+        res.push_back(m_type->read(m_path));
         return res;
     }
     else
@@ -889,7 +904,7 @@ Vector<RemoteBuffer> File::contents() const
             for (auto& basename : parts) {
                 Vector<String> path{m_path};
                 path.push_back(std::move(basename));
-                std::unique_ptr<File> file(new File(std::move(path), entry.getter));
+                std::unique_ptr<File> file(new File(std::move(path), entry.type));
                 res.push_back(file->stat());
             }
         }
@@ -907,7 +922,7 @@ std::unique_ptr<File> File::walk(const String& name) const
             continue;
         Vector<String> path{m_path};
         path.push_back(name);
-        return std::unique_ptr<File>(new File(std::move(path), entry.getter));
+        return std::unique_ptr<File>(new File(std::move(path), entry.type));
     }
     return {};
 }
@@ -1049,7 +1064,7 @@ private:
                 auto uname = fields.read<String>();
                 auto aname = fields.read<String>();
                 m_reader.reset();
-                std::shared_ptr<File> file{ new File({}) };
+                std::shared_ptr<File> file{ new File({}, nullptr) };
                 m_fids.insert({ fid, FidState{ file } });
                 {
                     MsgWriter msg{m_send_buffer};
