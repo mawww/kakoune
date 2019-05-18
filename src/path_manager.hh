@@ -9,7 +9,7 @@
 namespace Kakoune
 {
 
-class FileType;
+class Glob;
 
 class File {
 public:
@@ -32,7 +32,7 @@ public:
 #pragma pack(pop)
     static_assert(sizeof(Qid) == 13, "compiler has added padding to Qid");
 
-    File(Vector<String> path, FileType* type);
+    File();
 
     std::unique_ptr<File> walk(const String& name) const;
 
@@ -47,8 +47,11 @@ public:
     RemoteBuffer stat() const;
 
 private:
+    File(Vector<String> path, Glob* component);
+
+private:
     Vector<String> m_path;
-    FileType* m_type;
+    Glob* m_component;
 };
 
 }

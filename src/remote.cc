@@ -811,7 +811,7 @@ private:
                 auto uname = fields.read<String>();
                 auto aname = fields.read<String>();
                 m_reader.reset();
-                std::shared_ptr<File> file{ new File({}, nullptr) };
+                std::shared_ptr<File> file{ new File() };
                 m_fids.insert({ fid, FidState{ file } });
                 {
                     MsgWriter msg{m_send_buffer};

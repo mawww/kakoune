@@ -55,12 +55,27 @@ GlobType* GlobType::resolve(StringView name)
     return &literal_glob_type;
 }
 
+class FileType
+{
+public:
+    virtual RemoteBuffer read(const Vector<String>& path) const = 0;
+};
+
 class Glob
 {
 public:
     Glob(StringView name)
-        : m_name{name}
+        : m_name{name}, m_type{nullptr}
+    {}
+
+    FileType* type() const
     {
+        return m_type;
+    }
+
+    const Vector<Glob*>& children() const
+    {
+        return m_children;
     }
 
     bool matches(StringView text) const
@@ -73,26 +88,56 @@ public:
         return GlobType::resolve(m_name)->expand(m_name);
     }
 
+    void register_path(Vector<StringView> path, FileType* type)
+    {
+        Glob* node = this;
+        for (auto& path_segment : path)
+        {
+            // Can only add children to directories
+            kak_assert(node->m_type == nullptr);
+
+            auto it = find_if(node->m_children, [&](auto& node) { return node->m_name == path_segment; });
+            if (it != node->m_children.end())
+                node = *it;
+            else
+            {
+                Glob *next = new Glob{path_segment};
+                node->m_children.push_back(next);
+                node = next;
+            }
+        }
+
+        // Can't register the same path twice
+        kak_assert(node->m_type == nullptr);
+        // Can't make an internal node a non-directory
+        kak_assert(node->m_children.empty());
+
+        node->m_type = type;
+    }
+
 private:
     String m_name;
+    FileType* m_type;
+    Vector<Glob*> m_children;
 };
 
-class FileType
-{
-public:
-    virtual RemoteBuffer read(const Vector<String>& path) const = 0;
-};
+Glob root{"/"};
 
 // File
 
-File::File(Vector<String> path, FileType* type)
-    : m_path{path}, m_type{type}
+File::File()
+    : m_path{}, m_component{&root}
+{
+}
+
+File::File(Vector<String> path, Glob* component)
+    : m_path{path}, m_component{component}
 {
 }
 
 File::Type File::type() const
 {
-    if (not m_type)
+    if (not m_component->type())
         return Type::DMDIR;
     else
         return Type(0);
@@ -129,8 +174,8 @@ uint32_t File::mode() const
 
 uint64_t File::length() const
 {
-    if (m_type)
-        return m_type->read(m_path).size();
+    if (m_component->type())
+        return m_component->type()->read(m_path).size();
     else
         return 0;
 }
@@ -234,56 +279,36 @@ struct VersionFileType : public FileType
     }
 } version_file_type{};
 
-Glob* p(const char* name)
+struct Initializer
 {
-    return new Glob(name);
-}
-
-struct Entry {
-    Vector<Glob*> path;
-    FileType* type;
-} FILE_ENTRIES[] = {
-    { {p("clients")},                                             nullptr },
-    { {p("clients"), p("$client_name")},                          nullptr },
-    { {p("clients"), p("$client_name"), p("cursor_byte_offset")}, &client_cursor_byte_offset_file_type },
-    { {p("clients"), p("$client_name"), p("cursor_char_column")}, &client_cursor_char_column_file_type },
-    { {p("clients"), p("$client_name"), p("pid")},                &client_pid_file_type },
-    { {p("name")},                                                &name_file_type },
-    { {p("version")},                                             &version_file_type },
-};
-
-bool is_our_entry(const File* file, const Entry& entry)
-{
-    if (entry.path.size() != file->path().size() + 1)
-        return false;
-    auto it_a = file->path().begin();
-    auto it_b = entry.path.begin();
-    for (; it_a != file->path().end(); ++it_a, ++it_b)
-        if (not (*it_b)->matches(*it_a))
-            return false;
-    return true;
-}
+    Initializer()
+    {
+        root.register_path({"clients", "$client_name", "cursor_byte_offset"}, &client_cursor_byte_offset_file_type);
+        root.register_path({"clients", "$client_name", "cursor_char_column"}, &client_cursor_char_column_file_type);
+        root.register_path({"clients", "$client_name", "pid"},                &client_pid_file_type);
+        root.register_path({"name"},                                          &name_file_type);
+        root.register_path({"version"},                                       &version_file_type);
+    }
+} initializer{};
 
 Vector<RemoteBuffer> File::contents() const
 {
-    if (m_type)
+    if (m_component->type())
     {
         Vector<RemoteBuffer> res;
-        res.push_back(m_type->read(m_path));
+        res.push_back(m_component->type()->read(m_path));
         return res;
     }
     else
     {
         Vector<RemoteBuffer> res;
-        for (const auto& entry : FILE_ENTRIES)
+        for (const auto& child : m_component->children())
         {
-            if (not is_our_entry(this, entry))
-                continue;
-            Vector<String> parts = (*entry.path.rbegin())->expand();
+            Vector<String> parts = child->expand();
             for (auto& basename : parts) {
                 Vector<String> path{m_path};
                 path.push_back(std::move(basename));
-                std::unique_ptr<File> file(new File(std::move(path), entry.type));
+                std::unique_ptr<File> file(new File(std::move(path), child));
                 res.push_back(file->stat());
             }
         }
@@ -293,15 +318,13 @@ Vector<RemoteBuffer> File::contents() const
 
 std::unique_ptr<File> File::walk(const String& name) const
 {
-    for (const auto& entry : FILE_ENTRIES)
+    for (const auto& child : m_component->children())
     {
-        if (not is_our_entry(this, entry))
-            continue;
-        if (not (*entry.path.rbegin())->matches(name))
+        if (not child->matches(name))
             continue;
         Vector<String> path{m_path};
         path.push_back(name);
-        return std::unique_ptr<File>(new File(std::move(path), entry.type));
+        return std::unique_ptr<File>(new File(std::move(path), child));
     }
     return {};
 }
