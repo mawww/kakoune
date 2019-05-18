@@ -271,6 +271,22 @@ Context& path_context(const Vector<String>& path)
     return (*it)->context();
 }
 
+template<typename T>
+class Mount
+{
+public:
+    Mount(Vector<StringView> path)
+    {
+        root.register_path(path, &instance);
+    }
+
+private:
+    static T instance;
+};
+
+template<typename T>
+T Mount<T>::instance{};
+
 struct ClientCursorByteOffsetFileType : public FileType
 {
     RemoteBuffer read(const Vector<String>& path) const
@@ -279,7 +295,8 @@ struct ClientCursorByteOffsetFileType : public FileType
         auto cursor = context.selections().main().cursor();
         return to_remote_buffer(to_string(context.buffer().distance({0,0}, cursor)));
     }
-} client_cursor_byte_offset_file_type{};
+};
+Mount<ClientCursorByteOffsetFileType> mount_client_cursor_byte_offset{{"clients", "$client_name", "cursor_byte_offset"}};
 
 struct ClientCursorCharColumnFileType : public FileType
 {
@@ -289,7 +306,8 @@ struct ClientCursorCharColumnFileType : public FileType
         auto coord = context.selections().main().cursor();
         return to_remote_buffer(to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1));
     }
-} client_cursor_char_column_file_type{};
+};
+Mount<ClientCursorCharColumnFileType> mount_client_cursor_char_column{{"clients", "$client_name", "cursor_char_column"}};
 
 struct ClientPidFileType : public FileType
 {
@@ -298,7 +316,8 @@ struct ClientPidFileType : public FileType
         auto& context = path_context(path);
         return to_remote_buffer(format("{}", context.client().pid()));
     }
-} client_pid_file_type{};
+};
+Mount<ClientPidFileType> mount_client_pid{{"clients", "$client_name", "pid"}};
 
 struct NameFileType : public FileType
 {
@@ -306,7 +325,8 @@ struct NameFileType : public FileType
     {
         return to_remote_buffer(Server::instance().session());
     }
-} name_file_type{};
+};
+Mount<NameFileType> mount_name{{"nmame"}};
 
 struct VersionFileType : public FileType
 {
@@ -315,18 +335,7 @@ struct VersionFileType : public FileType
         extern const char* version;
         return to_remote_buffer(version);
     }
-} version_file_type{};
-
-struct Initializer
-{
-    Initializer()
-    {
-        root.register_path({"clients", "$client_name", "cursor_byte_offset"}, &client_cursor_byte_offset_file_type);
-        root.register_path({"clients", "$client_name", "cursor_char_column"}, &client_cursor_char_column_file_type);
-        root.register_path({"clients", "$client_name", "pid"},                &client_pid_file_type);
-        root.register_path({"name"},                                          &name_file_type);
-        root.register_path({"version"},                                       &version_file_type);
-    }
-} initializer{};
+};
+Mount<VersionFileType> mount_version{{"version"}};
 
 }
