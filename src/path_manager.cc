@@ -55,21 +55,33 @@ GlobType* GlobType::resolve(StringView name)
     return &literal_glob_type;
 }
 
-Glob::Glob(StringView name)
-    : m_name{name}
+class Glob
 {
-}
+public:
+    Glob(StringView name)
+        : m_name{name}
+    {
+    }
 
-bool Glob::matches(StringView text) const
+    bool matches(StringView text) const
+    {
+        return GlobType::resolve(m_name)->matches(m_name, text);
+    }
+
+    Vector<String> expand() const
+    {
+        return GlobType::resolve(m_name)->expand(m_name);
+    }
+
+private:
+    String m_name;
+};
+
+class FileType
 {
-    return GlobType::resolve(m_name)->matches(m_name, text);
-}
-
-Vector<String> Glob::expand() const
-{
-    return GlobType::resolve(m_name)->expand(m_name);
-}
-
+public:
+    virtual RemoteBuffer read(const Vector<String>& path) const = 0;
+};
 
 // File
 
@@ -86,7 +98,7 @@ File::Type File::type() const
         return Type(0);
 }
 
-Vector<String> File::path() const
+const Vector<String>& File::path() const
 {
     return m_path;
 }
@@ -157,18 +169,6 @@ RemoteBuffer File::stat() const
     return result;
 }
 
-bool File::is_our_entry(const Entry& entry) const
-{
-    if (entry.path.size() != m_path.size() + 1)
-        return false;
-    auto it_a = m_path.begin();
-    auto it_b = entry.path.begin();
-    for (; it_a != m_path.end(); ++it_a, ++it_b)
-        if (not (*it_b)->matches(*it_a))
-            return false;
-    return true;
-}
-
 RemoteBuffer to_remote_buffer(const char *data)
 {
     return RemoteBuffer{ data, data + int(strlen(data)) };
@@ -234,7 +234,15 @@ struct VersionFileType : public FileType
     }
 } version_file_type{};
 
-File::Entry File::m_entries[] = {
+Glob* p(const char* name)
+{
+    return new Glob(name);
+}
+
+struct Entry {
+    Vector<Glob*> path;
+    FileType* type;
+} FILE_ENTRIES[] = {
     { {p("clients")},                                             nullptr },
     { {p("clients"), p("$client_name")},                          nullptr },
     { {p("clients"), p("$client_name"), p("cursor_byte_offset")}, &client_cursor_byte_offset_file_type },
@@ -243,6 +251,18 @@ File::Entry File::m_entries[] = {
     { {p("name")},                                                &name_file_type },
     { {p("version")},                                             &version_file_type },
 };
+
+bool is_our_entry(const File* file, const Entry& entry)
+{
+    if (entry.path.size() != file->path().size() + 1)
+        return false;
+    auto it_a = file->path().begin();
+    auto it_b = entry.path.begin();
+    for (; it_a != file->path().end(); ++it_a, ++it_b)
+        if (not (*it_b)->matches(*it_a))
+            return false;
+    return true;
+}
 
 Vector<RemoteBuffer> File::contents() const
 {
@@ -255,9 +275,9 @@ Vector<RemoteBuffer> File::contents() const
     else
     {
         Vector<RemoteBuffer> res;
-        for (const auto& entry : m_entries)
+        for (const auto& entry : FILE_ENTRIES)
         {
-            if (not is_our_entry(entry))
+            if (not is_our_entry(this, entry))
                 continue;
             Vector<String> parts = (*entry.path.rbegin())->expand();
             for (auto& basename : parts) {
@@ -273,9 +293,9 @@ Vector<RemoteBuffer> File::contents() const
 
 std::unique_ptr<File> File::walk(const String& name) const
 {
-    for (const auto& entry : m_entries)
+    for (const auto& entry : FILE_ENTRIES)
     {
-        if (not is_our_entry(entry))
+        if (not is_our_entry(this, entry))
             continue;
         if (not (*entry.path.rbegin())->matches(name))
             continue;

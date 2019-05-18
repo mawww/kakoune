@@ -3,43 +3,15 @@
 
 #include "field_writer.hh"
 #include "string.hh"
-#include "string_utils.hh" // FIXME
 #include "utils.hh"
 #include "vector.hh"
 
 namespace Kakoune
 {
 
-class Glob
-{
-public:
-    Glob(StringView name);
-
-    bool matches(StringView text) const;
-    Vector<String> expand() const;
-
-private:
-    String m_name;
-};
-
-class FileType
-{
-public:
-    virtual RemoteBuffer read(const Vector<String>& path) const = 0;
-};
+class FileType;
 
 class File {
-private:
-    static Glob* p(const char* name)
-    {
-        return new Glob(name);
-    }
-
-    struct Entry {
-        Vector<Glob*> path;
-        FileType* type;
-    };
-
 public:
     typedef uint32_t Fid;
 
@@ -66,7 +38,7 @@ public:
 
     Vector<RemoteBuffer> contents() const;
     Type type() const;
-    Vector<String> path() const;
+    const Vector<String>& path() const;
     String fullname() const;
     Qid qid() const;
     uint32_t mode() const;
@@ -77,9 +49,6 @@ public:
 private:
     Vector<String> m_path;
     FileType* m_type;
-    static Entry m_entries[];
-
-    bool is_our_entry(const Entry& entry) const;
 };
 
 }
