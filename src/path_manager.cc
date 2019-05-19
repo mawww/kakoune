@@ -287,38 +287,6 @@ private:
 template<typename T>
 T Mount<T>::instance{};
 
-struct ClientCursorByteOffsetFileType : public FileType
-{
-    RemoteBuffer read(const Vector<String>& path) const
-    {
-        auto& context = path_context(path);
-        auto cursor = context.selections().main().cursor();
-        return to_remote_buffer(to_string(context.buffer().distance({0,0}, cursor)));
-    }
-};
-Mount<ClientCursorByteOffsetFileType> mount_client_cursor_byte_offset{{"clients", "$client_name", "cursor_byte_offset"}};
-
-struct ClientCursorCharColumnFileType : public FileType
-{
-    RemoteBuffer read(const Vector<String>& path) const
-    {
-        auto& context = path_context(path);
-        auto coord = context.selections().main().cursor();
-        return to_remote_buffer(to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1));
-    }
-};
-Mount<ClientCursorCharColumnFileType> mount_client_cursor_char_column{{"clients", "$client_name", "cursor_char_column"}};
-
-struct ClientPidFileType : public FileType
-{
-    RemoteBuffer read(const Vector<String>& path) const
-    {
-        auto& context = path_context(path);
-        return to_remote_buffer(format("{}", context.client().pid()));
-    }
-};
-Mount<ClientPidFileType> mount_client_pid{{"clients", "$client_name", "pid"}};
-
 struct NameFileType : public FileType
 {
     RemoteBuffer read(const Vector<String>& path) const
@@ -326,7 +294,7 @@ struct NameFileType : public FileType
         return to_remote_buffer(Server::instance().session());
     }
 };
-Mount<NameFileType> mount_name{{"nmame"}};
+Mount<NameFileType> mount_name{{"name"}};
 
 struct VersionFileType : public FileType
 {
@@ -337,5 +305,37 @@ struct VersionFileType : public FileType
     }
 };
 Mount<VersionFileType> mount_version{{"version"}};
+
+struct ClientCursorByteOffsetFileType : public FileType
+{
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        auto& context = path_context(path);
+        auto cursor = context.selections().main().cursor();
+        return to_remote_buffer(to_string(context.buffer().distance({0,0}, cursor)));
+    }
+};
+Mount<ClientCursorByteOffsetFileType> mount_window_cursor_byte_offset{{"windows", "$client_name", "cursor_byte_offset"}};
+
+struct ClientCursorCharColumnFileType : public FileType
+{
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        auto& context = path_context(path);
+        auto coord = context.selections().main().cursor();
+        return to_remote_buffer(to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1));
+    }
+};
+Mount<ClientCursorCharColumnFileType> mount_window_cursor_char_column{{"windows", "$client_name", "cursor_char_column"}};
+
+struct ClientPidFileType : public FileType
+{
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        auto& context = path_context(path);
+        return to_remote_buffer(format("{}", context.client().pid()));
+    }
+};
+Mount<ClientPidFileType> mount_window_pid{{"windows", "$client_name", "client_pid"}};
 
 }
