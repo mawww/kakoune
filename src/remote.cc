@@ -997,6 +997,19 @@ private:
                 m_socket_watcher.events() |= FdEvents::Write;
                 break;
             }
+            case MessageType::Tcreate:
+            case MessageType::Tflush:
+            case MessageType::Tremove:
+            case MessageType::Twrite:
+            case MessageType::Twstat:
+            {
+                NinePFieldReader fields{m_reader};
+                auto tag = fields.read<uint16_t>();
+                m_reader.reset();
+
+                error(tag, "Not implemented.");
+                break;
+            }
             default:
                 write_to_debug_buffer(format("invalid introduction message received (type {})", int(type)));
                 close(sock);
