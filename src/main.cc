@@ -158,164 +158,164 @@ String config_directory()
 }
 
 static const EnvVarDesc builtin_env_vars[] = { {
-        "bufname", false,
+        "bufname", false, EnvVarDesc::Scopes::Buffer,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return context.buffer().display_name(); }
     }, {
-        "buffile", false,
+        "buffile", false, EnvVarDesc::Scopes::Buffer,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return context.buffer().name(); }
     }, {
-        "buflist", false,
+        "buflist", false, EnvVarDesc::Scopes::Global,
         [](StringView name, const Context& context, Quoting quoting)
         { return join(BufferManager::instance() |
                       transform(&Buffer::display_name) | transform(quoter(quoting)), ' ', false); }
     }, {
-        "buf_line_count", false,
+        "buf_line_count", false, EnvVarDesc::Scopes::Buffer,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.buffer().line_count()); }
     }, {
-        "timestamp", false,
+        "timestamp", false, EnvVarDesc::Scopes::Buffer,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.buffer().timestamp()); }
     }, {
-        "history_id", false,
+        "history_id", false, EnvVarDesc::Scopes::Buffer,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string((size_t)context.buffer().current_history_id()); }
     }, {
-        "selection", false,
+        "selection", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting)
         { const Selection& sel = context.selections().main();
           return content(context.buffer(), sel); }
     }, {
-        "selections", false,
+        "selections", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting)
         { return join(context.selections_content() | transform(quoter(quoting)), ' ', false); }
     }, {
-        "runtime", false,
+        "runtime", false, EnvVarDesc::Scopes::Global,
         [](StringView name, const Context& context, Quoting quoting)
         { return runtime_directory(); }
     }, {
-        "config", false,
+        "config", false, EnvVarDesc::Scopes::Global,
         [](StringView name, const Context& context, Quoting quoting)
         { return config_directory(); }
     }, {
-        "version", false,
+        "version", false, EnvVarDesc::Scopes::Global,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return version; }
     }, {
-        "opt_", true,
+        "opt_", true, EnvVarDesc::Scopes::Global,
         [](StringView name, const Context& context, Quoting quoting)
         { return context.options()[name.substr(4_byte)].get_as_string(quoting); }
     }, {
-        "main_reg_", true,
+        "main_reg_", true, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting)
         { return context.main_sel_register_value(name.substr(9_byte)).str(); }
     }, {
-        "reg_", true,
+        "reg_", true, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting)
         { return join(RegisterManager::instance()[name.substr(4_byte)].get(context) |
                       transform(quoter(quoting)), ' ', false); }
     }, {
-        "client_env_", true,
+        "client_env_", true, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting)
         { return context.client().get_env_var(name.substr(11_byte)).str(); }
     }, {
-        "session", false,
+        "session", false, EnvVarDesc::Scopes::Global,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return Server::instance().session(); }
     }, {
-        "client", false,
+        "client", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return context.name(); }
     }, {
-        "client_pid", false,
+        "client_pid", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.client().pid()); }
     }, {
-        "client_list", false,
+        "client_list", false, EnvVarDesc::Scopes::Global,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return join(ClientManager::instance() |
                       transform([](const std::unique_ptr<Client>& c) -> const String&
                                { return c->context().name(); }), ' ', false); }
     }, {
-        "modified", false,
+        "modified", false, EnvVarDesc::Scopes::Buffer,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return context.buffer().is_modified() ? "true" : "false"; }
     }, {
-        "cursor_line", false,
+        "cursor_line", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.selections().main().cursor().line + 1); }
     }, {
-        "cursor_column", false,
+        "cursor_column", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.selections().main().cursor().column + 1); }
     }, {
-        "cursor_char_value", false,
+        "cursor_char_value", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { auto coord = context.selections().main().cursor();
           auto& buffer = context.buffer();
           return to_string((size_t)utf8::codepoint(buffer.iterator_at(coord), buffer.end())); }
     }, {
-        "cursor_char_column", false,
+        "cursor_char_column", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { auto coord = context.selections().main().cursor();
           return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
     }, {
-        "cursor_display_column", false,
+        "cursor_display_column", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { auto coord = context.selections().main().cursor();
           return to_string(get_column(context.buffer(),
                                       context.options()["tabstop"].get<int>(),
                                       coord) + 1); }
     }, {
-        "cursor_byte_offset", false,
+        "cursor_byte_offset", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { auto cursor = context.selections().main().cursor();
           return to_string(context.buffer().distance({0,0}, cursor)); }
     }, {
-        "selection_desc", false,
+        "selection_desc", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting)
         { return selection_to_string(ColumnType::Byte, context.buffer(),
                                      context.selections().main()); }
     }, {
-        "selections_desc", false,
+        "selections_desc", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting)
         { return selection_list_to_string(ColumnType::Byte, context.selections()); }
     }, {
-        "selections_char_desc", false,
+        "selections_char_desc", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting)
         { return selection_list_to_string(ColumnType::Codepoint, context.selections()); }
     }, {
-        "selections_display_column_desc", false,
+        "selections_display_column_desc", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting)
         { return selection_list_to_string(ColumnType::DisplayColumn,
                                           context.selections(),
                                           context.options()["tabstop"].get<int>()); }
     }, {
-        "selection_length", false,
+        "selection_length", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(char_length(context.buffer(), context.selections().main())); }
     }, {
-        "selections_length", false,
+        "selections_length", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting)
         { return join(context.selections() |
                       transform([&](const Selection& s)
                                { return to_string(char_length(context.buffer(), s)); }), ' ', false); }
     }, {
-        "window_width", false,
+        "window_width", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.window().dimensions().column); }
     }, {
-        "window_height", false,
+        "window_height", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.window().dimensions().line); }
     }, {
-        "user_modes", false,
+        "user_modes", false, EnvVarDesc::Scopes::Global,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return join(context.keymaps().user_modes(), ' ', false); }
     }, {
-        "window_range", false,
+        "window_range", false, EnvVarDesc::Scopes::Window,
         [](StringView name, const Context& context, Quoting quoting) -> String
         {
             auto setup = context.window().compute_display_setup(context);
@@ -323,11 +323,11 @@ static const EnvVarDesc builtin_env_vars[] = { {
                                          setup.window_range.line, setup.window_range.column);
         }
     }, {
-        "history", false,
+        "history", false, EnvVarDesc::Scopes::Buffer,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return history_as_string(context.buffer().history(), quoting); }
     }, {
-        "uncommitted_modifications", false,
+        "uncommitted_modifications", false, EnvVarDesc::Scopes::Buffer,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return undo_group_as_string(context.buffer().current_undo_group(), quoting); }
     }

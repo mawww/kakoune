@@ -24,8 +24,17 @@ struct EnvVarDesc
 {
     using Retriever = String (*)(StringView name, const Context&, Quoting quoting);
 
+    enum class Scopes
+    {
+        Global = 0x1,
+        Buffer = 0x2,
+        Window = 0x4
+    };
+    friend constexpr bool with_bit_ops(Meta::Type<Scopes>) { return true; }
+
     StringView str;
     bool prefix;
+    Scopes scopes;
     Retriever func;
 };
 
