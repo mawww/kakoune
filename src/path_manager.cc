@@ -262,6 +262,32 @@ RemoteBuffer to_remote_buffer(const StringView& s)
     return RemoteBuffer{ s.begin(), s.end() };
 }
 
+struct GlobalVarFileType : public FileType
+{
+    GlobalVarFileType(ConstArrayView<EnvVarDesc> env_vars)
+        : m_env_vars{env_vars}
+    {
+    }
+
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        Context context{Context::EmptyContextFlag{}};
+        for (auto& env_var : m_env_vars)
+        {
+            if (env_var.str == path.back())
+            {
+                String value = env_var.func(path.back(), context, Quoting::Shell);
+                return to_remote_buffer(value);
+            }
+        }
+        kak_assert(false);
+        return {};
+    }
+
+private:
+    ConstArrayView<EnvVarDesc> m_env_vars;
+};
+
 struct WindowVarFileType : public FileType
 {
     WindowVarFileType(ConstArrayView<EnvVarDesc> env_vars)
@@ -294,14 +320,17 @@ private:
 
 void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
 {
+    GlobalVarFileType* global_var_file_type = new GlobalVarFileType{builtin_env_vars};
     WindowVarFileType* window_var_file_type = new WindowVarFileType{builtin_env_vars};
     for (auto& env_var : builtin_env_vars)
     {
         if (env_var.prefix)
             continue;
-        Vector<StringView> path{"windows", "$client_name"};
-        path.push_back(env_var.str);
-        root.register_path(path, window_var_file_type);
+
+        if (env_var.scopes & EnvVarDesc::Scopes::Global)
+            root.register_path({"global", env_var.str}, global_var_file_type);
+        if (env_var.scopes & EnvVarDesc::Scopes::Window)
+            root.register_path({"windows", "$client_name", env_var.str}, window_var_file_type);
     }
 }
 
