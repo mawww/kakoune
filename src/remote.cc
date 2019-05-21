@@ -684,11 +684,17 @@ class Server::Accepter
 {
 public:
     Accepter(int socket)
-        : m_socket_watcher(socket, FdEvents::Read,
+        : m_negotiating{true},
+          m_socket_watcher(socket, FdEvents::Read,
                            [this](FDWatcher&, FdEvents events, EventMode mode) {
                                handle_events(events, mode);
                            })
     {}
+
+    bool negotiating() const
+    {
+        return m_negotiating;
+    }
 
 private:
     class FidState {
@@ -941,6 +947,7 @@ private:
                 auto msize = fields.read<uint32_t>();
                 auto version = fields.read<String>();
                 m_reader.reset();
+                m_negotiating = false;
                 const char* reply_version = version == "9P2000" ? "9P2000" : "unknown";
                 {
                     MsgWriter msg{m_send_buffer};
@@ -1034,6 +1041,7 @@ private:
         m_socket_watcher.events() |= FdEvents::Write;
     }
 
+    bool m_negotiating;
     FDWatcher m_socket_watcher;
     MsgReader m_reader;
     RemoteBuffer m_send_buffer;
@@ -1105,6 +1113,16 @@ void Server::close_session(bool do_unlink)
     }
     m_listener->close_fd();
     m_listener.reset();
+}
+
+bool Server::negotiating() const
+{
+    for (auto& accepter : m_accepters)
+    {
+        if (accepter->negotiating())
+            return true;
+    }
+    return false;
 }
 
 Server::~Server()
