@@ -1,5 +1,6 @@
 #include "path_manager.hh"
 
+#include "buffer_manager.hh"
 #include "client_manager.hh"
 #include "field_writer.hh"
 #include "remote.hh"
@@ -31,6 +32,31 @@ struct LiteralGlobType : public GlobType
     }
 } literal_glob_type{};
 
+struct BufferIdGlobType : public GlobType
+{
+    bool matches(StringView name, StringView text) const
+    {
+        String s{text};
+        Buffer* p;
+        if (sscanf(s.c_str(), "%p", (void**)&p) <= 0)
+            return false;
+        auto it = find(BufferManager::instance(), p);
+        return it != BufferManager::instance().end();
+    }
+
+    Vector<String> expand(StringView name) const
+    {
+        Vector<String> res;
+        for (auto& buffer : BufferManager::instance())
+        {
+            char id[25];
+            snprintf(id, sizeof(id), "%p", (void*)&*buffer);
+            res.push_back(String{id});
+        }
+        return res;
+    }
+} buffer_id_glob_type{};
+
 struct ClientNameGlobType : public GlobType
 {
     bool matches(StringView name, StringView text) const
@@ -50,6 +76,8 @@ struct ClientNameGlobType : public GlobType
 
 GlobType* GlobType::resolve(StringView name)
 {
+    if (name == "$buffer_id")
+        return &buffer_id_glob_type;
     if (name == "$client_name")
         return &client_name_glob_type;
     return &literal_glob_type;
@@ -288,6 +316,51 @@ private:
     ConstArrayView<EnvVarDesc> m_env_vars;
 };
 
+struct BufferVarFileType : public FileType
+{
+    BufferVarFileType(ConstArrayView<EnvVarDesc> env_vars)
+        : m_env_vars{env_vars}
+    {
+    }
+
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        Buffer *p = nullptr;
+        if (0 == sscanf(path[1].c_str(), "%p", (void**)&p))
+        {
+            // FIXME: error
+            return RemoteBuffer{};
+        }
+
+        auto& buffer_manager = BufferManager::instance();
+        auto it = std::find(buffer_manager.begin(), buffer_manager.end(), p);
+        if (it == buffer_manager.end())
+        {
+            // FIXME: error
+            return RemoteBuffer{};
+        }
+
+        Selection selection(BufferCoord{0, 0});
+        SelectionList selection_list(**it, selection);
+        InputHandler input_handler{selection_list, Context::Flags::Draft};
+        Context context{input_handler, selection_list, Context::Flags::Draft};
+
+        for (auto& env_var : m_env_vars)
+        {
+            if (env_var.str == path.back())
+            {
+                String value = env_var.func(path.back(), context, Quoting::Shell);
+                return to_remote_buffer(value);
+            }
+        }
+        kak_assert(false);
+        return {};
+    }
+
+private:
+    ConstArrayView<EnvVarDesc> m_env_vars;
+};
+
 struct WindowVarFileType : public FileType
 {
     WindowVarFileType(ConstArrayView<EnvVarDesc> env_vars)
@@ -321,6 +394,7 @@ private:
 void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
 {
     GlobalVarFileType* global_var_file_type = new GlobalVarFileType{builtin_env_vars};
+    BufferVarFileType* buffer_var_file_type = new BufferVarFileType{builtin_env_vars};
     WindowVarFileType* window_var_file_type = new WindowVarFileType{builtin_env_vars};
     for (auto& env_var : builtin_env_vars)
     {
@@ -329,6 +403,8 @@ void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
 
         if (env_var.scopes & EnvVarDesc::Scopes::Global)
             root.register_path({"global", env_var.str}, global_var_file_type);
+        if (env_var.scopes & EnvVarDesc::Scopes::Buffer)
+            root.register_path({"buffers", "$buffer_id", env_var.str}, buffer_var_file_type);
         if (env_var.scopes & EnvVarDesc::Scopes::Window)
             root.register_path({"windows", "$client_name", env_var.str}, window_var_file_type);
     }
