@@ -103,9 +103,10 @@ make_completer(Completers&&... completers)
 }
 
 template<typename Completer>
-auto add_flags(Completer&& completer, Completions::Flags completions_flags)
+auto add_flags(Completer completer, Completions::Flags completions_flags)
 {
-    return [=](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos) {
+    return [completer=std::move(completer), completions_flags]
+           (const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos) {
         Completions res = completer(context, flags, prefix, cursor_pos);
         res.flags |= completions_flags;
         return res;
@@ -113,9 +114,9 @@ auto add_flags(Completer&& completer, Completions::Flags completions_flags)
 }
 
 template<typename Completer>
-auto menu(Completer&& completer)
+auto menu(Completer completer)
 {
-    return add_flags(std::forward<Completer>(completer), Completions::Flags::Menu);
+    return add_flags(std::move(completer), Completions::Flags::Menu);
 }
 
 template<bool menu>
@@ -1128,7 +1129,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
                        CommandParameters params,
                        size_t token_to_complete, ByteCount pos_in_token)
         {
-             return add_flags(complete_buffer_name, completions_flags)(
+             return add_flags(complete_buffer_name<false>, completions_flags)(
                  context, flags, params[token_to_complete], pos_in_token);
         };
     }
