@@ -262,80 +262,47 @@ RemoteBuffer to_remote_buffer(const StringView& s)
     return RemoteBuffer{ s.begin(), s.end() };
 }
 
-Context& path_context(const Vector<String>& path)
+struct WindowVarFileType : public FileType
 {
-    auto it = std::find_if(ClientManager::instance().begin(),
-                           ClientManager::instance().end(),
-                           [&](auto& client) { return client->context().name() == path[1]; });
-    kak_assert(it != ClientManager::instance().end());
-    return (*it)->context();
-}
-
-template<typename T>
-class Mount
-{
-public:
-    Mount(Vector<StringView> path)
+    WindowVarFileType(ConstArrayView<EnvVarDesc> env_vars)
+        : m_env_vars{env_vars}
     {
-        root.register_path(path, &instance);
+    }
+
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        auto it = std::find_if(ClientManager::instance().begin(),
+                               ClientManager::instance().end(),
+                               [&](auto& client) { return client->context().name() == path[1]; });
+        kak_assert(it != ClientManager::instance().end());
+        auto& context = (*it)->context();
+        for (auto& env_var : m_env_vars)
+        {
+            if (env_var.str == path.back())
+            {
+                String value = env_var.func(path.back(), context, Quoting::Shell);
+                return to_remote_buffer(value);
+            }
+        }
+        kak_assert(false);
+        return {};
     }
 
 private:
-    static T instance;
+    ConstArrayView<EnvVarDesc> m_env_vars;
 };
 
-template<typename T>
-T Mount<T>::instance{};
-
-struct NameFileType : public FileType
+void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
 {
-    RemoteBuffer read(const Vector<String>& path) const
+    WindowVarFileType* window_var_file_type = new WindowVarFileType{builtin_env_vars};
+    for (auto& env_var : builtin_env_vars)
     {
-        return to_remote_buffer(Server::instance().session());
+        if (env_var.prefix)
+            continue;
+        Vector<StringView> path{"windows", "$client_name"};
+        path.push_back(env_var.str);
+        root.register_path(path, window_var_file_type);
     }
-};
-Mount<NameFileType> mount_name{{"name"}};
-
-struct VersionFileType : public FileType
-{
-    RemoteBuffer read(const Vector<String>& path) const
-    {
-        extern const char* version;
-        return to_remote_buffer(version);
-    }
-};
-Mount<VersionFileType> mount_version{{"version"}};
-
-struct ClientCursorByteOffsetFileType : public FileType
-{
-    RemoteBuffer read(const Vector<String>& path) const
-    {
-        auto& context = path_context(path);
-        auto cursor = context.selections().main().cursor();
-        return to_remote_buffer(to_string(context.buffer().distance({0,0}, cursor)));
-    }
-};
-Mount<ClientCursorByteOffsetFileType> mount_window_cursor_byte_offset{{"windows", "$client_name", "cursor_byte_offset"}};
-
-struct ClientCursorCharColumnFileType : public FileType
-{
-    RemoteBuffer read(const Vector<String>& path) const
-    {
-        auto& context = path_context(path);
-        auto coord = context.selections().main().cursor();
-        return to_remote_buffer(to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1));
-    }
-};
-Mount<ClientCursorCharColumnFileType> mount_window_cursor_char_column{{"windows", "$client_name", "cursor_char_column"}};
-
-struct ClientPidFileType : public FileType
-{
-    RemoteBuffer read(const Vector<String>& path) const
-    {
-        auto& context = path_context(path);
-        return to_remote_buffer(format("{}", context.client().pid()));
-    }
-};
-Mount<ClientPidFileType> mount_window_pid{{"windows", "$client_name", "client_pid"}};
+}
 
 }

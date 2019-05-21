@@ -2,6 +2,7 @@
 #define path_manager_hh_INCLUDED
 
 #include "field_writer.hh"
+#include "shell_manager.hh"
 #include "string.hh"
 #include "utils.hh"
 #include "vector.hh"
@@ -53,6 +54,8 @@ private:
     Vector<String> m_path;
     Glob* m_component;
 };
+
+void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars);
 
 }
 

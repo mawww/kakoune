@@ -16,6 +16,7 @@
 #include "ncurses_ui.hh"
 #include "option_types.hh"
 #include "parameters_parser.hh"
+#include "path_manager.hh"
 #include "ranges.hh"
 #include "regex.hh"
 #include "register_manager.hh"
@@ -718,6 +719,7 @@ int run_server(StringView session, StringView server_init,
     BufferManager       buffer_manager;
 
     register_options();
+    register_paths(builtin_env_vars);
     register_registers();
     register_keymaps();
     register_commands();
