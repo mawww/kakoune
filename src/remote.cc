@@ -864,7 +864,7 @@ private:
 
     void Tauth(uint16_t tag)
     {
-        error(tag, "Auth isn't supported");
+        throw runtime_error("Auth isn't supported");
     }
 
     void Tclunk(uint16_t tag, File::Fid fid)
@@ -877,15 +877,9 @@ private:
     {
         auto it = m_fids.find(fid);
         if (it == m_fids.end())
-        {
-            error(tag, "Unknown FID");
-            return;
-        }
+            throw runtime_error("Unknown FID");
         if (not it->value.open())
-        {
-            error(tag, "Failed to open file");
-            return;
-        }
+            throw runtime_error("Failed to open file");
         reply(MessageType::Ropen, tag, it->value.file()->qid(), uint32_t(0));
     }
 
@@ -893,15 +887,9 @@ private:
     {
         auto it = m_fids.find(fid);
         if (it == m_fids.end())
-        {
-            error(tag, "Unknown FID");
-            return;
-        }
+            throw runtime_error("Unknown FID");
         if (not it->value.is_open())
-        {
-            error(tag, "File is not open");
-            return;
-        }
+            throw runtime_error("File is not open");
         auto data = it->value.read(offset, count);
         reply(MessageType::Rread, tag, uint32_t(data.size()), Raw{data});
     }
@@ -910,10 +898,7 @@ private:
     {
         auto it = m_fids.find(fid);
         if (it == m_fids.end())
-        {
-            error(tag, "Unknown FID");
-            return;
-        }
+            throw runtime_error("Unknown FID");
         auto stat = it->value.file()->stat();
         reply(MessageType::Rstat, tag, uint16_t(stat.size()), Raw{stat});
     }
@@ -929,25 +914,15 @@ private:
     {
         auto file_it = m_fids.find(fid);
         if (file_it == m_fids.end())
-        {
-            error(tag, "Unknown FID");
-            return;
-        }
+            throw runtime_error("Unknown FID");
         auto file = file_it->value.file();
-
         if (m_fids.find(newfid) != m_fids.end())
-        {
-            error(tag, "New FID already exists");
-            return;
-        }
-
+            throw runtime_error("New FID already exists");
         Vector<File::Qid> qids;
         for (uint16_t i = 0; i < nwnames.size(); i++) {
             file = file->walk(nwnames[i]);
-            if (not file) {
-                error(tag, "Not found");
-                return;
-            }
+            if (not file)
+                throw runtime_error("Not found");
             qids.push_back(file->qid());
         }
         m_fids.insert({ newfid, FidState{ file } });
@@ -956,7 +931,7 @@ private:
 
     void not_implemented(uint16_t tag)
     {
-        error(tag, "Not implemented");
+        throw runtime_error("Not implemented");
     }
 
     template<typename ...Args>
@@ -965,7 +940,15 @@ private:
         NinePFieldReader fields{m_reader};
         auto inputs = fields.read<std::tuple<Args...>>();
         m_reader.reset();
-        std::apply([=](Args... args) { std::invoke(f, this, args...); }, inputs);
+        try
+        {
+            std::apply([=](Args... args) { std::invoke(f, this, args...); }, inputs);
+        }
+        catch (const runtime_error& err)
+        {
+            auto tag = std::get<0>(inputs);
+            reply(MessageType::Rerror, tag, err.what());
+        }
     }
 
     template<typename ...Args>
@@ -975,11 +958,6 @@ private:
         NinePFieldWriter fields{m_send_buffer};
         fields.write(std::forward<Args>(args)...);
         m_socket_watcher.events() |= FdEvents::Write;
-    }
-
-    void error(uint16_t tag, StringView message)
-    {
-        reply(MessageType::Rerror, tag, message);
     }
 
     bool m_negotiating;

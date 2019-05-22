@@ -322,18 +322,12 @@ struct BufferVarFileType : public FileType
     {
         Buffer *p = nullptr;
         if (0 == sscanf(path[1].c_str(), "%p", (void**)&p))
-        {
-            // FIXME: error
-            return RemoteBuffer{};
-        }
+            throw runtime_error("Not found.");
 
         auto& buffer_manager = BufferManager::instance();
         auto it = std::find(buffer_manager.begin(), buffer_manager.end(), p);
         if (it == buffer_manager.end())
-        {
-            // FIXME: error
-            return RemoteBuffer{};
-        }
+            throw runtime_error("Not found.");
 
         Selection selection(BufferCoord{0, 0});
         SelectionList selection_list(**it, selection);
@@ -368,7 +362,8 @@ struct WindowVarFileType : public FileType
         auto it = std::find_if(ClientManager::instance().begin(),
                                ClientManager::instance().end(),
                                [&](auto& client) { return client->context().name() == path[1]; });
-        kak_assert(it != ClientManager::instance().end());
+        if (it == ClientManager::instance().end())
+            throw runtime_error("Not found.");
         auto& context = (*it)->context();
         for (auto& env_var : m_env_vars)
         {
