@@ -275,7 +275,7 @@ RemoteBuffer File::stat() const
     {
         NinePFieldWriter result_fields{result};
         result_fields.write<uint16_t>(int(stat_data.size()));
-        result_fields.write(stat_data.data(), int(stat_data.size()));
+        result_fields.write(Raw{stat_data});
     }
     return result;
 }

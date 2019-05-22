@@ -15,6 +15,12 @@ namespace Kakoune
 
 using RemoteBuffer = Vector<char, MemoryDomain::Remote>;
 
+// Used to disambiguate types
+struct Raw {
+    Raw(const RemoteBuffer& d) : data{d} {}
+    const RemoteBuffer& data;
+};
+
 template<typename VariableSizeType>
 class FieldWriter
 {
@@ -117,6 +123,11 @@ private:
     void write_field(const DisplayBuffer& display_buffer)
     {
         write_field(display_buffer.lines());
+    }
+
+    void write_field(const Raw& raw)
+    {
+        write_raw(raw.data.data(), raw.data.size());
     }
 
 private:

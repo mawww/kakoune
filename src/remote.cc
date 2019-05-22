@@ -883,16 +883,7 @@ private:
                 }
 
                 auto data = it->value.read(offset, count);
-
-                {
-                    MsgWriter msg{m_send_buffer};
-                    NinePFieldWriter fields{m_send_buffer};
-                    fields.write(MessageType::Rread);
-                    fields.write(tag);
-                    fields.write<uint32_t>(int(data.size()));
-                    fields.write(data.data(), data.size());
-                }
-                m_socket_watcher.events() |= FdEvents::Write;
+                reply(MessageType::Rread, tag, uint32_t(data.size()), Raw{data});
                 break;
             }
             case MessageType::Tstat:
@@ -908,15 +899,7 @@ private:
                     return;
                 }
                 auto stat = it->value.file()->stat();
-                {
-                    MsgWriter msg{m_send_buffer};
-                    NinePFieldWriter fields{m_send_buffer};
-                    fields.write(MessageType::Rstat);
-                    fields.write(tag);
-                    fields.write<uint16_t>(uint16_t(stat.size()));
-                    fields.write(stat.data(), stat.size());
-                }
-                m_socket_watcher.events() |= FdEvents::Write;
+                reply(MessageType::Rstat, tag, uint16_t(stat.size()), Raw{stat});
                 break;
             }
             case MessageType::Tversion:
@@ -999,7 +982,7 @@ private:
     {
         MsgWriter msg{m_send_buffer};
         NinePFieldWriter fields{m_send_buffer};
-        fields.write_all(std::forward<Args>(args)...);
+        fields.write(std::forward<Args>(args)...);
         m_socket_watcher.events() |= FdEvents::Write;
     }
 
