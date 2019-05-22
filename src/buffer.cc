@@ -53,6 +53,9 @@ static ParsedLines parse_lines(StringView data)
         pos = eol + 1;
     }
 
+    if (res.lines.empty())
+        res.lines.emplace_back(StringData::create({"\n"}));
+
     return res;
 }
 
@@ -78,9 +81,6 @@ Buffer::Buffer(String name, Flags flags, StringView data,
       m_fs_timestamp{fs_timestamp.tv_sec, fs_timestamp.tv_nsec}
 {
     ParsedLines parsed_lines = parse_lines(data);
-
-    if (parsed_lines.lines.empty())
-        parsed_lines.lines.emplace_back(StringData::create({"\n"}));
 
     #ifdef KAK_DEBUG
     for (auto& line : parsed_lines.lines)
@@ -244,9 +244,6 @@ struct Buffer::Modification
 void Buffer::reload(StringView data, timespec fs_timestamp)
 {
     ParsedLines parsed_lines = parse_lines(data);
-
-    if (parsed_lines.lines.empty())
-        parsed_lines.lines.emplace_back(StringData::create({"\n"}));
 
     const bool record_undo = not (m_flags & Flags::NoUndo);
 

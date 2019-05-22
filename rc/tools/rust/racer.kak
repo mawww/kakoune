@@ -19,68 +19,28 @@ define-command racer-complete -docstring "Complete the current selection with ra
             cursor="${kak_cursor_line} $((${kak_cursor_column} - 1))"
             racer_data=$(racer --interface tab-text complete-with-snippet ${cursor} ${kak_buffile} ${dir}/buf)
             compl=$(printf %s\\n "${racer_data}" | awk '
-                BEGIN { FS = "\t"; ORS = ":" }
+                BEGIN { FS = "\t"; ORS = " " }
                 /^PREFIX/ {
                     column = ENVIRON["kak_cursor_column"] + $2 - $3
                     print ENVIRON["kak_cursor_line"] "." column "@@" ENVIRON["kak_timestamp"]
                 }
                 /^MATCH/ {
                     word = $2
-                    type = $7
                     desc = substr($9, 2, length($9) - 2)
                     gsub(/\|/, "\\|", desc)
                     gsub(/\\n/, "\n", desc)
                     gsub(/!/, "!!", desc)
-                    menu = $8
-                    sub(/^pub /, "", menu)
-                    gsub(/\|/, "\\|", menu)
-                    if (type == "Function") {
-                        sub(word, "{default+F}" word "{default+d}", menu)
-                        gsub(/^fn /, "    fn ", menu)                            # The extra spaces are there to vertically align
-                                                                                 # the type of element on the menu to make it easy
-                                                                                 # to read
-                        menu = "{default+d}" menu
-                    } else if (type == "Enum") {
-                        menu = substr(menu, 0, length(menu) - 2)
-                        sub(word, "{default+F}" word "{default+d}", menu)
-                        gsub(/^enum /, "  enum ", menu)                          # The extra spaces are there to vertically align
-                                                                                 # the type of element on the menu to make it easy
-                                                                                 # to read
-                    } else if (type == "Module") {
-                        if (length(menu) > 30) {                                 # The "menu" bit (as returned by racer),
-                                                                                 # contains the path to the source file
-                                                                                 # containing the module...
+                    info = $8
+                    gsub(/\|/, "\\|", info)
 
-                          menu = substr(menu, length(menu) - 29, 30)             # ... trimming it, so the completion menu
-                                                                                 # doesn''t get distorted if it''s too long
-                        }
-                        menu = "   mod {default+F}" word "{default+d}   .." menu # The extra spaces are there to vertically align
-                                                                                 # the type of element on the menu to make it easy
-                                                                                 # to read
-                    } else if (type == "Trait") {
-                        sub(word, "{default+F}" word "{default+d}", menu)
-                        gsub(/^trait /, " trait ", menu)                         # The extra spaces are there to vertically align
-                                                                                 # the type of element on the menu to make it easy
-                                                                                 # to read
-                    } else if (type == "Type") {
-                        sub(word, "{default+F}" word "{default+d}", menu)
-                        gsub(/^type /, "  type ", menu)                          # The extra spaces are there to vertically align
-                                                                                 # the type of element on the menu to make it easy
-                                                                                 # to read
-                    } else if (type == "Struct") {
-                        sub(word, "{default+F}" word "{default+d}", menu)        # Struct doesn''t have extra spaces because it''s
-                                                                                 # the longest keyword
-                    } else {
-                        menu = "{default+F}" word "{default+d} " menu
-                    }
-                    candidate = word "|info -style menu %!" desc "!|" menu
-                    gsub(/:/, "\\:", candidate)
-                    print candidate
+                    candidate = word "|info -style menu %!" desc "!|" word " {MenuInfo}" info
+
+                    gsub(/@/, "@@", candidate)
+                    gsub(/~/, "~~", candidate)
+                    print "%~" candidate "~"
                 }'
             )
-            printf %s\\n "evaluate-commands -client '${kak_client}' %{
-                set-option buffer=${kak_bufname} racer_completions %@${compl%?}@
-            }" | kak -p ${kak_session}
+            printf %s\\n "evaluate-commands -client '${kak_client}' %@ set-option 'buffer=${kak_bufname}' racer_completions ${compl%?} @" | kak -p ${kak_session}
             rm -r ${dir}
         ) > /dev/null 2>&1 < /dev/null &
     }

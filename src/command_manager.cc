@@ -624,6 +624,13 @@ Completions CommandManager::complete_command_name(const Context& context, String
     return {0, query.length(), Kakoune::complete(query, query.length(), concatenated(commands, aliases))};
 }
 
+Completions CommandManager::complete_module_name(StringView query) const
+{
+    return {0, query.length(),
+            Kakoune::complete(query, query.length(), m_modules | filter([](auto&& item) { return not item.value.loaded; })
+                                                               | transform(&ModuleMap::Item::key))};
+}
+
 Completions CommandManager::complete(const Context& context,
                                      CompletionFlags flags,
                                      StringView command_line,
@@ -719,7 +726,7 @@ Completions CommandManager::complete(const Context& context,
             context, flags, params, tokens.size() - 2,
             cursor_pos_in_token), start);
 
-        if (not completions.quoted and token.type == Token::Type::Raw)
+        if (not (completions.flags & Completions::Flags::Quoted) and token.type == Token::Type::Raw)
         {
             for (auto& c : completions.candidates)
                 c = (not c.empty() and contains("%'\"", c[0]) ? "\\" : "") + escape(c, "; \t", '\\');

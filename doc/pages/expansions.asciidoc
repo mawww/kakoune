@@ -254,6 +254,11 @@ The following expansions are supported (with required context _in italics_):
     _in window scope_ +
     line of the main cursor, the third component of `%val{selection_desc}`
 
+*%val{error}*::
+    _in `try` command's <on_error_commands> parameter_ +
+    the text of the error that cancelled execution of the <commands> parameter
+    (or the previous <on_error_commands> parameter)
+
 *%val{history_id}*::
     _in buffer, window scope_ +
     history id of the current buffer, an integer value which refers to a

@@ -86,7 +86,7 @@ String real_path(StringView filename)
                 return res;
 
             StringView dir = res;
-            if (dir.substr(dir.length()-1_byte, 1_byte) == "/")
+            while (dir.substr(dir.length()-1_byte, 1_byte) == "/")
                 dir = dir.substr(0_byte, dir.length()-1_byte);
             return format("{}/{}", dir, non_existing);
         }
@@ -115,7 +115,10 @@ String compact_path(StringView filename)
     if (prefix_match(real_filename, real_cwd))
         return real_filename.substr(real_cwd.length()).str();
 
-    const StringView home = homedir();
+    StringView home = homedir();
+    while (home.substr(home.length()-1_byte, 1_byte) == "/")
+        home = home.substr(0_byte, home.length()-1_byte);
+
     if (not home.empty())
     {
         ByteCount home_len = home.length();

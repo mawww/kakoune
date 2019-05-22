@@ -780,6 +780,15 @@ public:
 
         if (key == Key::Return)
         {
+            if ((m_completions.flags & Completions::Flags::Menu) and
+                m_current_completion == -1 and
+                not m_completions.candidates.empty())
+            {
+                const String& completion = m_completions.candidates.front();
+                m_line_editor.insert_from(line.char_count_to(m_completions.start),
+                                          completion);
+            }
+
             if (not context().history_disabled())
                 history_push(history, line);
             context().print_status(DisplayLine{});
@@ -1001,6 +1010,7 @@ private:
             const String& line = m_line_editor.line();
             m_completions = m_completer(context(), flags, line,
                                         line.byte_count_to(m_line_editor.cursor_pos()));
+            const bool menu = (bool)(m_completions.flags & Completions::Flags::Menu);
             if (context().has_client())
             {
                 if (m_completions.candidates.empty())
@@ -1013,8 +1023,11 @@ private:
                 const auto menu_style = (m_flags & PromptFlags::Search) ? MenuStyle::Search : MenuStyle::Prompt;
                 context().client().menu_show(items, {}, menu_style);
 
+                if (menu)
+                    context().client().menu_select(0);
+
                 auto prefix = line.substr(m_completions.start, m_completions.end - m_completions.start);
-                if (not contains(m_completions.candidates, prefix))
+                if (not menu and not contains(m_completions.candidates, prefix))
                 {
                     m_current_completion = m_completions.candidates.size();
                     m_completions.candidates.push_back(prefix.str());
