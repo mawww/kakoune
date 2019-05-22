@@ -875,31 +875,24 @@ private:
 
     void Topen(uint16_t tag, File::Fid fid, uint8_t mode)
     {
-        auto it = m_fids.find(fid);
-        if (it == m_fids.end())
-            throw runtime_error("Unknown FID");
-        if (not it->value.open())
+        auto& state = fid_state(fid);
+        if (not state.open())
             throw runtime_error("Failed to open file");
-        reply(MessageType::Ropen, tag, it->value.file()->qid(), uint32_t(0));
+        reply(MessageType::Ropen, tag, state.file()->qid(), uint32_t(0));
     }
 
     void Tread(uint16_t tag, File::Fid fid, uint64_t offset, uint32_t count)
     {
-        auto it = m_fids.find(fid);
-        if (it == m_fids.end())
-            throw runtime_error("Unknown FID");
-        if (not it->value.is_open())
+        auto& state = fid_state(fid);
+        if (not state.is_open())
             throw runtime_error("File is not open");
-        auto data = it->value.read(offset, count);
+        auto data = state.read(offset, count);
         reply(MessageType::Rread, tag, uint32_t(data.size()), Raw{data});
     }
 
     void Tstat(uint16_t tag, File::Fid fid)
     {
-        auto it = m_fids.find(fid);
-        if (it == m_fids.end())
-            throw runtime_error("Unknown FID");
-        auto stat = it->value.file()->stat();
+        auto stat = fid_state(fid).file()->stat();
         reply(MessageType::Rstat, tag, uint16_t(stat.size()), Raw{stat});
     }
 
@@ -912,10 +905,7 @@ private:
 
     void Twalk(uint16_t tag, File::Fid fid, File::Fid newfid, Vector<String> nwnames)
     {
-        auto file_it = m_fids.find(fid);
-        if (file_it == m_fids.end())
-            throw runtime_error("Unknown FID");
-        auto file = file_it->value.file();
+        auto file = fid_state(fid).file();
         if (m_fids.find(newfid) != m_fids.end())
             throw runtime_error("New FID already exists");
         Vector<File::Qid> qids;
@@ -932,6 +922,14 @@ private:
     void not_implemented(uint16_t tag)
     {
         throw runtime_error("Not implemented");
+    }
+
+    FidState& fid_state(File::Fid fid)
+    {
+        auto it = m_fids.find(fid);
+        if (it == m_fids.end())
+            throw runtime_error("Unknown FID");
+        return it->value;
     }
 
     template<typename ...Args>
