@@ -50,8 +50,8 @@ public:
     MsgWriter(RemoteBuffer& buffer, MessageType type)
         : m_buffer{buffer}, m_start{(uint32_t)buffer.size()}
     {
-        write(type);
-        write((uint32_t)0); // message size, to be patched on write
+        write_field(type);
+        write_field((uint32_t)0); // message size, to be patched on write
     }
 
     ~MsgWriter()
@@ -60,87 +60,94 @@ public:
         memcpy(m_buffer.data() + m_start + sizeof(MessageType), &count, sizeof(uint32_t));
     }
 
-    void write(const char* val, size_t size)
+    template<typename ...Args>
+    void write(Args&&... args)
+    {
+        (write_field(std::forward<Args>(args)), ...);
+    }
+
+private:
+    void write_raw(const char* val, size_t size)
     {
         m_buffer.insert(m_buffer.end(), val, val + size);
     }
 
     template<typename T>
-    void write(const T& val)
+    void write_field(const T& val)
     {
         static_assert(std::is_trivially_copyable<T>::value, "");
-        write((const char*)&val, sizeof(val));
+        write_raw((const char*)&val, sizeof(val));
     }
 
-    void write(StringView str)
+    void write_field(StringView str)
     {
-        write(str.length());
-        write(str.data(), (int)str.length());
+        write_field(str.length());
+        write_raw(str.data(), (int)str.length());
     };
 
-    void write(const String& str)
+    void write_field(const String& str)
     {
-        write(StringView{str});
+        write_field(StringView{str});
     }
 
     template<typename T>
-    void write(ConstArrayView<T> view)
+    void write_field(ConstArrayView<T> view)
     {
-        write<uint32_t>(view.size());
+        write_field<uint32_t>(view.size());
         for (auto& val : view)
-            write(val);
+            write_field(val);
     }
 
     template<typename T, MemoryDomain domain>
-    void write(const Vector<T, domain>& vec)
+    void write_field(const Vector<T, domain>& vec)
     {
-        write(ConstArrayView<T>(vec));
+        write_field(ConstArrayView<T>(vec));
     }
 
     template<typename Key, typename Val, MemoryDomain domain>
-    void write(const HashMap<Key, Val, domain>& map)
+    void write_field(const HashMap<Key, Val, domain>& map)
     {
-        write<uint32_t>(map.size());
+        write_field<uint32_t>(map.size());
         for (auto& val : map)
         {
-            write(val.key);
-            write(val.value);
+            write_field(val.key);
+            write_field(val.value);
         }
     }
 
     template<typename T>
-    void write(const Optional<T>& val)
+    void write_field(const Optional<T>& val)
     {
-        write((bool)val);
+        write_field((bool)val);
         if (val)
-            write(*val);
+            write_field(*val);
     }
 
-    void write(Color color)
+    void write_field(Color color)
     {
-        write(color.color);
+        write_field(color.color);
         if (color.color == Color::RGB)
         {
-            write(color.r);
-            write(color.g);
-            write(color.b);
+            write_field(color.r);
+            write_field(color.g);
+            write_field(color.b);
         }
     }
 
-    void write(const DisplayAtom& atom)
+    void write_field(const DisplayAtom& atom)
     {
-        write(atom.content());
-        write(atom.face);
+        write_field(atom.content());
+        write_field(atom.face);
     }
 
-    void write(const DisplayLine& line)
+    void write_field(const DisplayLine& line)
     {
-        write(line.atoms());
+        write_field(line.atoms());
     }
 
-    void write(const DisplayBuffer& display_buffer)
+    void write_field(const DisplayBuffer& display_buffer)
     {
-        write(display_buffer.lines());
+        write_field(display_buffer.lines());
     }
 
 private:
@@ -375,6 +382,14 @@ public:
     void exit(int status);
 
 private:
+    template<typename ...Args>
+    void send_message(MessageType type, Args&&... args)
+    {
+        MsgWriter msg{m_send_buffer, type};
+        msg.write(std::forward<Args>(args)...);
+        m_socket_watcher.events() |= FdEvents::Write;
+    }
+
     FDWatcher     m_socket_watcher;
     MsgReader     m_reader;
     DisplayCoord  m_dimensions;
@@ -453,96 +468,63 @@ void RemoteUI::menu_show(ConstArrayView<DisplayLine> choices,
                          DisplayCoord anchor, Face fg, Face bg,
                          MenuStyle style)
 {
-    MsgWriter msg{m_send_buffer, MessageType::MenuShow};
-    msg.write(choices);
-    msg.write(anchor);
-    msg.write(fg);
-    msg.write(bg);
-    msg.write(style);
-    m_socket_watcher.events() |= FdEvents::Write;
+    send_message(MessageType::MenuShow, choices, anchor, fg, bg, style);
 }
 
 void RemoteUI::menu_select(int selected)
 {
-    MsgWriter msg{m_send_buffer, MessageType::MenuSelect};
-    msg.write(selected);
-    m_socket_watcher.events() |= FdEvents::Write;
+    send_message(MessageType::MenuSelect, selected);
 }
 
 void RemoteUI::menu_hide()
 {
-    MsgWriter msg{m_send_buffer, MessageType::MenuHide};
-    m_socket_watcher.events() |= FdEvents::Write;
+    send_message(MessageType::MenuHide);
 }
 
 void RemoteUI::info_show(StringView title, StringView content,
                          DisplayCoord anchor, Face face,
                          InfoStyle style)
 {
-    MsgWriter msg{m_send_buffer, MessageType::InfoShow};
-    msg.write(title);
-    msg.write(content);
-    msg.write(anchor);
-    msg.write(face);
-    msg.write(style);
-    m_socket_watcher.events() |= FdEvents::Write;
+    send_message(MessageType::InfoShow, title, content, anchor, face, style);
 }
 
 void RemoteUI::info_hide()
 {
-    MsgWriter msg{m_send_buffer, MessageType::InfoHide};
-    m_socket_watcher.events() |= FdEvents::Write;
+    send_message(MessageType::InfoHide);
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
                     const Face& default_face,
                     const Face& padding_face)
 {
-    MsgWriter msg{m_send_buffer, MessageType::Draw};
-    msg.write(display_buffer);
-    msg.write(default_face);
-    msg.write(padding_face);
-    m_socket_watcher.events() |= FdEvents::Write;
+    send_message(MessageType::Draw, display_buffer, default_face, padding_face);
 }
 
 void RemoteUI::draw_status(const DisplayLine& status_line,
                            const DisplayLine& mode_line,
                            const Face& default_face)
 {
-    MsgWriter msg{m_send_buffer, MessageType::DrawStatus};
-    msg.write(status_line);
-    msg.write(mode_line);
-    msg.write(default_face);
-    m_socket_watcher.events() |= FdEvents::Write;
+    send_message(MessageType::DrawStatus, status_line, mode_line, default_face);
 }
 
 void RemoteUI::set_cursor(CursorMode mode, DisplayCoord coord)
 {
-    MsgWriter msg{m_send_buffer, MessageType::SetCursor};
-    msg.write(mode);
-    msg.write(coord);
-    m_socket_watcher.events() |= FdEvents::Write;
+    send_message(MessageType::SetCursor, mode, coord);
 }
 
 void RemoteUI::refresh(bool force)
 {
-    MsgWriter msg{m_send_buffer, MessageType::Refresh};
-    msg.write(force);
-    m_socket_watcher.events() |= FdEvents::Write;
+    send_message(MessageType::Refresh, force);
 }
 
 void RemoteUI::set_ui_options(const Options& options)
 {
-    MsgWriter msg{m_send_buffer, MessageType::SetOptions};
-    msg.write(options);
-    m_socket_watcher.events() |= FdEvents::Write;
+    send_message(MessageType::SetOptions, options);
 }
 
 void RemoteUI::exit(int status)
 {
-    MsgWriter msg{m_send_buffer, MessageType::Exit};
-    msg.write(status);
-    m_socket_watcher.events() |= FdEvents::Write;
+    send_message(MessageType::Exit, status);
 }
 
 String get_user_name()
@@ -595,12 +577,7 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
 
     {
         MsgWriter msg{m_send_buffer, MessageType::Connect};
-        msg.write(pid);
-        msg.write(name);
-        msg.write(init_command);
-        msg.write(init_coord);
-        msg.write(m_ui->dimensions());
-        msg.write(env_vars);
+        msg.write(pid, name, init_command, init_coord, m_ui->dimensions(), env_vars);
     }
 
     m_ui->set_on_key([this](Key key){
