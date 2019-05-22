@@ -819,14 +819,7 @@ private:
                 m_reader.reset();
                 std::shared_ptr<File> file{ new File() };
                 m_fids.insert({ fid, FidState{ file } });
-                {
-                    MsgWriter msg{m_send_buffer};
-                    NinePFieldWriter fields{m_send_buffer};
-                    fields.write(MessageType::Rattach);
-                    fields.write(tag);
-                    fields.write(file->qid());
-                }
-                m_socket_watcher.events() |= FdEvents::Write;
+                reply(MessageType::Rattach, tag, file->qid());
                 break;
             }
             case MessageType::Tauth:
@@ -844,13 +837,7 @@ private:
                 auto fid = fields.read<File::Fid>();
                 m_reader.reset();
                 m_fids.erase(fid);
-                {
-                    MsgWriter msg{m_send_buffer};
-                    NinePFieldWriter fields{m_send_buffer};
-                    fields.write(MessageType::Rclunk);
-                    fields.write(tag);
-                }
-                m_socket_watcher.events() |= FdEvents::Write;
+                reply(MessageType::Rclunk, tag);
                 break;
             }
             case MessageType::Topen:
@@ -871,15 +858,7 @@ private:
                     error(tag, "Failed to open file");
                     return;
                 }
-                {
-                    MsgWriter msg{m_send_buffer};
-                    NinePFieldWriter fields{m_send_buffer};
-                    fields.write(MessageType::Ropen);
-                    fields.write(tag);
-                    fields.write(it->value.file()->qid());
-                    fields.write<uint32_t>(0);
-                }
-                m_socket_watcher.events() |= FdEvents::Write;
+                reply(MessageType::Ropen, tag, it->value.file()->qid(), uint32_t(0));
                 break;
             }
             case MessageType::Tread:
@@ -949,15 +928,7 @@ private:
                 m_reader.reset();
                 m_negotiating = false;
                 const char* reply_version = version == "9P2000" ? "9P2000" : "unknown";
-                {
-                    MsgWriter msg{m_send_buffer};
-                    NinePFieldWriter fields{m_send_buffer};
-                    fields.write(MessageType::Rversion);
-                    fields.write(tag);
-                    fields.write(msize);
-                    fields.write(reply_version);
-                }
-                m_socket_watcher.events() |= FdEvents::Write;
+                reply(MessageType::Rversion, tag, msize, reply_version);
                 break;
             }
             case MessageType::Twalk:
@@ -993,15 +964,7 @@ private:
                     qids.push_back(file->qid());
                 }
                 m_fids.insert({ newfid, FidState{ file } });
-
-                {
-                    MsgWriter msg{m_send_buffer};
-                    NinePFieldWriter fields{m_send_buffer};
-                    fields.write(MessageType::Rwalk);
-                    fields.write(tag);
-                    fields.write(qids);
-                }
-                m_socket_watcher.events() |= FdEvents::Write;
+                reply(MessageType::Rwalk, tag, qids);
                 break;
             }
             case MessageType::Tcreate:
@@ -1031,14 +994,18 @@ private:
         }
     }
 
-    void error(uint16_t tag, StringView message)
+    template<typename ...Args>
+    void reply(Args&&... args)
     {
         MsgWriter msg{m_send_buffer};
         NinePFieldWriter fields{m_send_buffer};
-        fields.write(MessageType::Rerror);
-        fields.write(tag);
-        fields.write(message);
+        fields.write_all(std::forward<Args>(args)...);
         m_socket_watcher.events() |= FdEvents::Write;
+    }
+
+    void error(uint16_t tag, StringView message)
+    {
+        reply(MessageType::Rerror, tag, message);
     }
 
     bool m_negotiating;
