@@ -278,6 +278,24 @@ private:
         }
     };
 
+    template<typename Size, typename Arg1>
+    struct Reader<Size, std::tuple<Arg1>> {
+        static std::tuple<Arg1> read(MsgReader& reader)
+        {
+            return std::make_tuple(Reader<Size, Arg1>::read(reader));
+        }
+    };
+
+    template<typename Size, typename Arg1, typename ...Args>
+    struct Reader<Size, std::tuple<Arg1, Args...>> {
+        static std::tuple<Arg1, Args...> read(MsgReader& reader)
+        {
+            Arg1 arg1 = Reader<Size, Arg1>::read(reader);
+            std::tuple<Args...> rest = Reader<Size, std::tuple<Args...>>::read(reader);
+            return std::tuple_cat(std::make_tuple(arg1), rest);
+        }
+    };
+
 public:
     FieldReader(MsgReader& reader)
         : m_reader(reader)
@@ -808,161 +826,21 @@ private:
                 Server::instance().remove_accepter(this);
                 break;
             }
-            case MessageType::Tattach:
-            {
-                NinePFieldReader fields{m_reader};
-                auto tag = fields.read<uint16_t>();
-                auto fid = fields.read<File::Fid>();
-                auto afid = fields.read<File::Fid>();
-                auto uname = fields.read<String>();
-                auto aname = fields.read<String>();
-                m_reader.reset();
-                std::shared_ptr<File> file{ new File() };
-                m_fids.insert({ fid, FidState{ file } });
-                reply(MessageType::Rattach, tag, file->qid());
-                break;
-            }
-            case MessageType::Tauth:
-            {
-                NinePFieldReader fields{m_reader};
-                auto tag = fields.read<uint16_t>();
-                m_reader.reset();
-                error(tag, "Auth isn't supported");
-                break;
-            }
-            case MessageType::Tclunk:
-            {
-                NinePFieldReader fields{m_reader};
-                auto tag = fields.read<uint16_t>();
-                auto fid = fields.read<File::Fid>();
-                m_reader.reset();
-                m_fids.erase(fid);
-                reply(MessageType::Rclunk, tag);
-                break;
-            }
-            case MessageType::Topen:
-            {
-                NinePFieldReader fields{m_reader};
-                auto tag = fields.read<uint16_t>();
-                auto fid = fields.read<File::Fid>();
-                auto mode = fields.read<uint8_t>();
-                m_reader.reset();
-                auto it = m_fids.find(fid);
-                if (it == m_fids.end())
-                {
-                    error(tag, "Unknown FID");
-                    return;
-                }
-                if (not it->value.open())
-                {
-                    error(tag, "Failed to open file");
-                    return;
-                }
-                reply(MessageType::Ropen, tag, it->value.file()->qid(), uint32_t(0));
-                break;
-            }
-            case MessageType::Tread:
-            {
-                NinePFieldReader fields{m_reader};
-                auto tag = fields.read<uint16_t>();
-                auto fid = fields.read<File::Fid>();
-                auto offset = fields.read<uint64_t>();
-                auto count = fields.read<uint32_t>();
-                m_reader.reset();
-
-                auto it = m_fids.find(fid);
-                if (it == m_fids.end())
-                {
-                    error(tag, "Unknown FID");
-                    return;
-                }
-                if (not it->value.is_open())
-                {
-                    error(tag, "File is not open");
-                    return;
-                }
-
-                auto data = it->value.read(offset, count);
-                reply(MessageType::Rread, tag, uint32_t(data.size()), Raw{data});
-                break;
-            }
-            case MessageType::Tstat:
-            {
-                NinePFieldReader fields{m_reader};
-                auto tag = fields.read<uint16_t>();
-                auto fid = fields.read<File::Fid>();
-                m_reader.reset();
-                auto it = m_fids.find(fid);
-                if (it == m_fids.end())
-                {
-                    error(tag, "Unknown FID");
-                    return;
-                }
-                auto stat = it->value.file()->stat();
-                reply(MessageType::Rstat, tag, uint16_t(stat.size()), Raw{stat});
-                break;
-            }
-            case MessageType::Tversion:
-            {
-                NinePFieldReader fields{m_reader};
-                auto tag = fields.read<uint16_t>();
-                auto msize = fields.read<uint32_t>();
-                auto version = fields.read<String>();
-                m_reader.reset();
-                m_negotiating = false;
-                const char* reply_version = version == "9P2000" ? "9P2000" : "unknown";
-                reply(MessageType::Rversion, tag, msize, reply_version);
-                break;
-            }
-            case MessageType::Twalk:
-            {
-                NinePFieldReader fields{m_reader};
-                auto tag = fields.read<uint16_t>();
-                auto fid = fields.read<uint32_t>();
-                auto newfid = fields.read<uint32_t>();
-                auto nwnames = fields.read<Vector<String>>();
-                m_reader.reset();
-
-                auto file_it = m_fids.find(fid);
-                if (file_it == m_fids.end())
-                {
-                    error(tag, "Unknown FID");
-                    return;
-                }
-                auto file = file_it->value.file();
-
-                if (m_fids.find(newfid) != m_fids.end())
-                {
-                    error(tag, "New FID already exists");
-                    return;
-                }
-
-                Vector<File::Qid> qids;
-                for (uint16_t i = 0; i < nwnames.size(); i++) {
-                    file = file->walk(nwnames[i]);
-                    if (not file) {
-                        error(tag, "Not found");
-                        return;
-                    }
-                    qids.push_back(file->qid());
-                }
-                m_fids.insert({ newfid, FidState{ file } });
-                reply(MessageType::Rwalk, tag, qids);
-                break;
-            }
+            case MessageType::Tattach:  process_message(&Accepter::Tattach);  break;
+            case MessageType::Tauth:    process_message(&Accepter::Tauth);    break;
+            case MessageType::Tclunk:   process_message(&Accepter::Tclunk);   break;
+            case MessageType::Topen:    process_message(&Accepter::Topen);    break;
+            case MessageType::Tread:    process_message(&Accepter::Tread);    break;
+            case MessageType::Tstat:    process_message(&Accepter::Tstat);    break;
+            case MessageType::Tversion: process_message(&Accepter::Tversion); break;
+            case MessageType::Twalk:    process_message(&Accepter::Twalk);    break;
             case MessageType::Tcreate:
             case MessageType::Tflush:
             case MessageType::Tremove:
             case MessageType::Twrite:
             case MessageType::Twstat:
-            {
-                NinePFieldReader fields{m_reader};
-                auto tag = fields.read<uint16_t>();
-                m_reader.reset();
-
-                error(tag, "Not implemented.");
+                process_message(&Accepter::not_implemented);
                 break;
-            }
             default:
                 write_to_debug_buffer(format("invalid introduction message received (type {})", int(type)));
                 close(sock);
@@ -975,6 +853,119 @@ private:
             close(sock);
             Server::instance().remove_accepter(this);
         }
+    }
+
+    void Tattach(uint16_t tag, File::Fid fid, File::Fid afid, String uname, String aname)
+    {
+        std::shared_ptr<File> file{ new File() };
+        m_fids.insert({ fid, FidState{ file } });
+        reply(MessageType::Rattach, tag, file->qid());
+    }
+
+    void Tauth(uint16_t tag)
+    {
+        error(tag, "Auth isn't supported");
+    }
+
+    void Tclunk(uint16_t tag, File::Fid fid)
+    {
+        m_fids.erase(fid);
+        reply(MessageType::Rclunk, tag);
+    }
+
+    void Topen(uint16_t tag, File::Fid fid, uint8_t mode)
+    {
+        auto it = m_fids.find(fid);
+        if (it == m_fids.end())
+        {
+            error(tag, "Unknown FID");
+            return;
+        }
+        if (not it->value.open())
+        {
+            error(tag, "Failed to open file");
+            return;
+        }
+        reply(MessageType::Ropen, tag, it->value.file()->qid(), uint32_t(0));
+    }
+
+    void Tread(uint16_t tag, File::Fid fid, uint64_t offset, uint32_t count)
+    {
+        auto it = m_fids.find(fid);
+        if (it == m_fids.end())
+        {
+            error(tag, "Unknown FID");
+            return;
+        }
+        if (not it->value.is_open())
+        {
+            error(tag, "File is not open");
+            return;
+        }
+        auto data = it->value.read(offset, count);
+        reply(MessageType::Rread, tag, uint32_t(data.size()), Raw{data});
+    }
+
+    void Tstat(uint16_t tag, File::Fid fid)
+    {
+        auto it = m_fids.find(fid);
+        if (it == m_fids.end())
+        {
+            error(tag, "Unknown FID");
+            return;
+        }
+        auto stat = it->value.file()->stat();
+        reply(MessageType::Rstat, tag, uint16_t(stat.size()), Raw{stat});
+    }
+
+    void Tversion(uint16_t tag, uint32_t msize, String version)
+    {
+        m_negotiating = false;
+        const char* reply_version = version == "9P2000" ? "9P2000" : "unknown";
+        reply(MessageType::Rversion, tag, msize, reply_version);
+    }
+
+    void Twalk(uint16_t tag, File::Fid fid, File::Fid newfid, Vector<String> nwnames)
+    {
+        auto file_it = m_fids.find(fid);
+        if (file_it == m_fids.end())
+        {
+            error(tag, "Unknown FID");
+            return;
+        }
+        auto file = file_it->value.file();
+
+        if (m_fids.find(newfid) != m_fids.end())
+        {
+            error(tag, "New FID already exists");
+            return;
+        }
+
+        Vector<File::Qid> qids;
+        for (uint16_t i = 0; i < nwnames.size(); i++) {
+            file = file->walk(nwnames[i]);
+            if (not file) {
+                error(tag, "Not found");
+                return;
+            }
+            qids.push_back(file->qid());
+        }
+        m_fids.insert({ newfid, FidState{ file } });
+        reply(MessageType::Rwalk, tag, qids);
+    }
+
+    void not_implemented(uint16_t tag)
+    {
+        error(tag, "Not implemented");
+    }
+
+    template<typename ...Args>
+    void process_message(void (Accepter::*f) (Args...))
+    {
+        NinePFieldReader fields{m_reader};
+        auto inputs = fields.read<std::tuple<Args...>>();
+        m_reader.reset();
+        std::apply([=](Args... args) { std::invoke(f, this, args...); }, inputs);
     }
 
     template<typename ...Args>
