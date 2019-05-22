@@ -280,11 +280,6 @@ RemoteBuffer File::stat() const
     return result;
 }
 
-RemoteBuffer to_remote_buffer(const char *data)
-{
-    return RemoteBuffer{ data, data + int(strlen(data)) };
-}
-
 RemoteBuffer to_remote_buffer(const StringView& s)
 {
     return RemoteBuffer{ s.begin(), s.end() };
