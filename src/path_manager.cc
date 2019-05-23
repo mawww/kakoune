@@ -74,12 +74,33 @@ struct ClientNameGlobType : public GlobType
     }
 } client_name_glob_type{};
 
+struct OptNameGlobType : public GlobType
+{
+    bool matches(StringView name, StringView text) const
+    {
+        if (text.length() < 4)
+            return false;
+        if (text.substr(0_byte, 4_byte) != "opt_")
+            return false;
+        return GlobalScope::instance().option_registry().option_exists(text.substr(4_byte));
+    }
+
+    Vector<String> expand(StringView name) const
+    {
+        return GlobalScope::instance().option_registry().complete_option_name("", 0_byte)
+            | transform([](const String& name) -> String { return format("opt_{}", name); })
+            | gather<Vector<String>>();
+    }
+} opt_name_glob_type{};
+
 GlobType* GlobType::resolve(StringView name)
 {
     if (name == "$buffer_id")
         return &buffer_id_glob_type;
     if (name == "$client_name")
         return &client_name_glob_type;
+    if (name == "$opt")
+        return &opt_name_glob_type;
     return &literal_glob_type;
 }
 
@@ -371,7 +392,6 @@ void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
     {
         if (env_var.prefix)
             continue;
-
         if (env_var.scopes & EnvVarDesc::Scopes::Global)
             root.register_path({"global", env_var.str}, global_var_file_type);
         if (env_var.scopes & EnvVarDesc::Scopes::Buffer)
@@ -379,6 +399,9 @@ void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
         if (env_var.scopes & EnvVarDesc::Scopes::Window)
             root.register_path({"windows", "$client_name", env_var.str}, window_var_file_type);
     }
+    root.register_path({"global", "$opt"}, global_var_file_type);
+    root.register_path({"buffers", "$buffer_id", "$opt"}, buffer_var_file_type);
+    root.register_path({"windows", "$client_name", "$opt"}, window_var_file_type);
 }
 
 }

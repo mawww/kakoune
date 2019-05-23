@@ -204,7 +204,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return version; }
     }, {
-        "opt_", true, EnvVarDesc::Scopes::Global,
+        "opt_", true, EnvVarDesc::Scopes::Buffer | EnvVarDesc::Scopes::Window | EnvVarDesc::Scopes::Global,
         [](StringView name, const Context& context, Quoting quoting)
         { return context.options()[name.substr(4_byte)].get_as_string(quoting); }
     }, {
