@@ -439,7 +439,8 @@ RemoteUI::~RemoteUI()
     // Try to send the remaining data if possible, as it might contain the desired exit status
     try
     {
-        send_data(m_socket_watcher.fd(), m_send_buffer);
+        if (m_socket_watcher.fd() != -1)
+            send_data(m_socket_watcher.fd(), m_send_buffer);
     }
     catch (disconnected&)
     {

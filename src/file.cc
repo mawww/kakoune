@@ -148,6 +148,7 @@ StringView homedir()
 
 bool fd_readable(int fd)
 {
+    kak_assert(fd >= 0);
     fd_set  rfds;
     FD_ZERO(&rfds);
     FD_SET(fd, &rfds);
@@ -158,6 +159,7 @@ bool fd_readable(int fd)
 
 bool fd_writable(int fd)
 {
+    kak_assert(fd >= 0);
     fd_set  wfds;
     FD_ZERO(&wfds);
     FD_SET(fd, &wfds);
