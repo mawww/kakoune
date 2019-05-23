@@ -338,19 +338,23 @@ public:
     {
     }
 
+    const EnvVarDesc& find_env_var(StringView varname) const
+    {
+        for (auto& env_var : m_env_vars)
+        {
+            if ((not env_var.prefix and env_var.str == varname) or
+                (env_var.prefix and varname.length() > env_var.str.length() and
+                 varname.substr(0_byte, env_var.str.length()) == env_var.str))
+                return env_var;
+        }
+        throw logic_error();
+    }
+
     RemoteBuffer read(const Vector<String>& path) const
     {
+        String varname = path.back();
         return ContextPolicy::with_context(path, [&](Context& context) -> RemoteBuffer {
-            for (auto& env_var : m_env_vars)
-            {
-                if (env_var.str == path.back())
-                {
-                    String value = env_var.func(path.back(), context, Quoting::Shell);
-                    return to_remote_buffer(value);
-                }
-            }
-            kak_assert(false);
-            return {};
+            return to_remote_buffer(find_env_var(varname).func(varname, context, Quoting::Shell));
         });
     }
 
