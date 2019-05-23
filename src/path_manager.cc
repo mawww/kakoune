@@ -329,70 +329,18 @@ struct WindowContext
     }
 };
 
-struct GlobalVarFileType : public FileType, protected GlobalContext
+template<typename ContextPolicy>
+class VarFileType : public FileType
 {
-    GlobalVarFileType(ConstArrayView<EnvVarDesc> env_vars)
+public:
+    VarFileType(ConstArrayView<EnvVarDesc> env_vars)
         : m_env_vars{env_vars}
     {
     }
 
     RemoteBuffer read(const Vector<String>& path) const
     {
-        return with_context(path, [&](Context& context) -> RemoteBuffer {
-            for (auto& env_var : m_env_vars)
-            {
-                if (env_var.str == path.back())
-                {
-                    String value = env_var.func(path.back(), context, Quoting::Shell);
-                    return to_remote_buffer(value);
-                }
-            }
-            kak_assert(false);
-            return {};
-        });
-    }
-
-private:
-    ConstArrayView<EnvVarDesc> m_env_vars;
-};
-
-struct BufferVarFileType : public FileType, protected BufferContext
-{
-    BufferVarFileType(ConstArrayView<EnvVarDesc> env_vars)
-        : m_env_vars{env_vars}
-    {
-    }
-
-    RemoteBuffer read(const Vector<String>& path) const
-    {
-        return with_context(path, [&](Context& context) -> RemoteBuffer {
-            for (auto& env_var : m_env_vars)
-            {
-                if (env_var.str == path.back())
-                {
-                    String value = env_var.func(path.back(), context, Quoting::Shell);
-                    return to_remote_buffer(value);
-                }
-            }
-            kak_assert(false);
-            return {};
-        });
-    }
-
-private:
-    ConstArrayView<EnvVarDesc> m_env_vars;
-};
-
-struct WindowVarFileType : public FileType, protected WindowContext
-{
-    WindowVarFileType(ConstArrayView<EnvVarDesc> env_vars)
-        : m_env_vars{env_vars}
-    {
-    }
-
-    RemoteBuffer read(const Vector<String>& path) const
-    {
-        return with_context(path, [&](Context& context) -> RemoteBuffer {
+        return ContextPolicy::with_context(path, [&](Context& context) -> RemoteBuffer {
             for (auto& env_var : m_env_vars)
             {
                 if (env_var.str == path.back())
@@ -412,9 +360,9 @@ private:
 
 void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
 {
-    GlobalVarFileType* global_var_file_type = new GlobalVarFileType{builtin_env_vars};
-    BufferVarFileType* buffer_var_file_type = new BufferVarFileType{builtin_env_vars};
-    WindowVarFileType* window_var_file_type = new WindowVarFileType{builtin_env_vars};
+    auto* global_var_file_type = new VarFileType<GlobalContext>{builtin_env_vars};
+    auto* buffer_var_file_type = new VarFileType<BufferContext>{builtin_env_vars};
+    auto* window_var_file_type = new VarFileType<WindowContext>{builtin_env_vars};
     for (auto& env_var : builtin_env_vars)
     {
         if (env_var.prefix)
