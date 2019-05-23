@@ -285,40 +285,18 @@ RemoteBuffer to_remote_buffer(const StringView& s)
     return RemoteBuffer{ s.begin(), s.end() };
 }
 
-struct GlobalVarFileType : public FileType
+struct GlobalContext
 {
-    GlobalVarFileType(ConstArrayView<EnvVarDesc> env_vars)
-        : m_env_vars{env_vars}
-    {
-    }
-
-    RemoteBuffer read(const Vector<String>& path) const
+    static RemoteBuffer with_context(const Vector<String>& path, std::function<RemoteBuffer (Context&)> f)
     {
         Context context{Context::EmptyContextFlag{}};
-        for (auto& env_var : m_env_vars)
-        {
-            if (env_var.str == path.back())
-            {
-                String value = env_var.func(path.back(), context, Quoting::Shell);
-                return to_remote_buffer(value);
-            }
-        }
-        kak_assert(false);
-        return {};
+        return f(context);
     }
-
-private:
-    ConstArrayView<EnvVarDesc> m_env_vars;
 };
 
-struct BufferVarFileType : public FileType
+struct BufferContext
 {
-    BufferVarFileType(ConstArrayView<EnvVarDesc> env_vars)
-        : m_env_vars{env_vars}
-    {
-    }
-
-    RemoteBuffer read(const Vector<String>& path) const
+    static RemoteBuffer with_context(const Vector<String>& path, std::function<RemoteBuffer (Context&)> f)
     {
         Buffer *p = nullptr;
         if (0 == sscanf(path[1].c_str(), "%p", (void**)&p))
@@ -333,24 +311,79 @@ struct BufferVarFileType : public FileType
         SelectionList selection_list(**it, selection);
         InputHandler input_handler{selection_list, Context::Flags::Draft};
         Context context{input_handler, selection_list, Context::Flags::Draft};
+        return f(context);
+    }
+};
 
-        for (auto& env_var : m_env_vars)
-        {
-            if (env_var.str == path.back())
+struct WindowContext
+{
+    static RemoteBuffer with_context(const Vector<String>& path, std::function<RemoteBuffer (Context&)> f)
+    {
+        auto it = std::find_if(ClientManager::instance().begin(),
+                               ClientManager::instance().end(),
+                               [&](auto& client) { return client->context().name() == path[1]; });
+        if (it == ClientManager::instance().end())
+            throw runtime_error("Not found.");
+        auto& context = (*it)->context();
+        return f(context);
+    }
+};
+
+struct GlobalVarFileType : public FileType, protected GlobalContext
+{
+    GlobalVarFileType(ConstArrayView<EnvVarDesc> env_vars)
+        : m_env_vars{env_vars}
+    {
+    }
+
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        return with_context(path, [&](Context& context) -> RemoteBuffer {
+            for (auto& env_var : m_env_vars)
             {
-                String value = env_var.func(path.back(), context, Quoting::Shell);
-                return to_remote_buffer(value);
+                if (env_var.str == path.back())
+                {
+                    String value = env_var.func(path.back(), context, Quoting::Shell);
+                    return to_remote_buffer(value);
+                }
             }
-        }
-        kak_assert(false);
-        return {};
+            kak_assert(false);
+            return {};
+        });
     }
 
 private:
     ConstArrayView<EnvVarDesc> m_env_vars;
 };
 
-struct WindowVarFileType : public FileType
+struct BufferVarFileType : public FileType, protected BufferContext
+{
+    BufferVarFileType(ConstArrayView<EnvVarDesc> env_vars)
+        : m_env_vars{env_vars}
+    {
+    }
+
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        return with_context(path, [&](Context& context) -> RemoteBuffer {
+            for (auto& env_var : m_env_vars)
+            {
+                if (env_var.str == path.back())
+                {
+                    String value = env_var.func(path.back(), context, Quoting::Shell);
+                    return to_remote_buffer(value);
+                }
+            }
+            kak_assert(false);
+            return {};
+        });
+    }
+
+private:
+    ConstArrayView<EnvVarDesc> m_env_vars;
+};
+
+struct WindowVarFileType : public FileType, protected WindowContext
 {
     WindowVarFileType(ConstArrayView<EnvVarDesc> env_vars)
         : m_env_vars{env_vars}
@@ -359,22 +392,18 @@ struct WindowVarFileType : public FileType
 
     RemoteBuffer read(const Vector<String>& path) const
     {
-        auto it = std::find_if(ClientManager::instance().begin(),
-                               ClientManager::instance().end(),
-                               [&](auto& client) { return client->context().name() == path[1]; });
-        if (it == ClientManager::instance().end())
-            throw runtime_error("Not found.");
-        auto& context = (*it)->context();
-        for (auto& env_var : m_env_vars)
-        {
-            if (env_var.str == path.back())
+        return with_context(path, [&](Context& context) -> RemoteBuffer {
+            for (auto& env_var : m_env_vars)
             {
-                String value = env_var.func(path.back(), context, Quoting::Shell);
-                return to_remote_buffer(value);
+                if (env_var.str == path.back())
+                {
+                    String value = env_var.func(path.back(), context, Quoting::Shell);
+                    return to_remote_buffer(value);
+                }
             }
-        }
-        kak_assert(false);
-        return {};
+            kak_assert(false);
+            return {};
+        });
     }
 
 private:
