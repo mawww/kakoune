@@ -3,13 +3,12 @@ declare-option -docstring "name of the client in which documentation is to be di
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
     add-highlighter window/git-log group
-    add-highlighter window/git-log/ regex '^(commit) ([0-9a-f]+)$' 1:keyword 2:meta
+    add-highlighter window/git-log/ regex '^(commit) ([0-9a-f]+)( [^\n]+)?$' 1:keyword 2:meta 3:comment
     add-highlighter window/git-log/ regex '^([a-zA-Z_-]+:) (.*?)$' 1:variable 2:value
     add-highlighter window/git-log/ ref diff # highlight potential diffs from the -p option
 
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-log }
 }
-
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
     add-highlighter window/git-status group
@@ -17,7 +16,6 @@ hook -group git-status-highlight global WinSetOption filetype=git-status %{
 
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-status }
 }
-
 
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden line-specs git_diff_flags
