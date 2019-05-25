@@ -284,9 +284,13 @@ static const EnvVarDesc builtin_env_vars[] = { {
 void register_registers()
 {
     RegisterManager& register_manager = RegisterManager::instance();
+    Session& session = SessionManager::instance().get();
 
     for (auto c : "abcdefghijklmnopqrstuvwxyz/\"|^@:")
-        register_manager.add_register(c, std::make_unique<StaticRegister>());
+    {
+        String path = format("global/reg/{}", RegisterManager::name(c));
+        register_manager.add_register(c, std::make_unique<FileRegister>(session, path));
+    }
 
     using StringList = Vector<String, MemoryDomain::Registers>;
 

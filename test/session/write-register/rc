@@ -1,0 +1,10 @@
+define-command test-writing-registers %{
+    nop %sh{
+        rm -f $kak_root/global/reg/z/*
+        printf 'hello' >$kak_session_root/global/reg/z/0
+        printf 'world' >$kak_session_root/global/reg/z/1
+        printf 'word3' >$kak_session_root/global/reg/z/2
+        printf 'word4' >$kak_session_root/global/reg/z/3
+    }
+    execute-keys "o--- Contents of z ---<esc>" '"z<a-p>'
+}

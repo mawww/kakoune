@@ -12,6 +12,7 @@ namespace Kakoune
 {
 
 class Context;
+class Session;
 
 class Register
 {
@@ -24,7 +25,7 @@ public:
 
 // static value register, which can be modified
 // using operator=, so should be user modifiable
-class StaticRegister : public Register
+class MemoryRegister : public Register
 {
 public:
     void set(Context&, ConstArrayView<String> values) override
@@ -43,10 +44,21 @@ protected:
     Vector<String, MemoryDomain::Registers> m_content;
 };
 
+class FileRegister : public MemoryRegister
+{
+public:
+    FileRegister(Session& session, StringView path);
+
+    void set(Context& context, ConstArrayView<String> values) override;
+    ConstArrayView<String> get(const Context& context) override;
+private:
+    String m_path;
+};
+
 // Dynamic value register, use it's RegisterRetriever
 // to get it's value when needed.
 template<typename Getter, typename Setter>
-class DynamicRegister : public StaticRegister
+class DynamicRegister : public MemoryRegister
 {
 public:
     DynamicRegister(Getter getter, Setter setter)
@@ -60,7 +72,7 @@ public:
     ConstArrayView<String> get(const Context& context) override
     {
         m_content = m_getter(context);
-        return StaticRegister::get(context);
+        return MemoryRegister::get(context);
     }
 
 private:
@@ -101,6 +113,8 @@ public:
     Register& operator[](StringView reg) const;
     Register& operator[](Codepoint c) const;
     void add_register(Codepoint c, std::unique_ptr<Register> reg);
+
+    static String name(Codepoint c);
 
 protected:
     HashMap<Codepoint, std::unique_ptr<Register>, MemoryDomain::Registers> m_registers;

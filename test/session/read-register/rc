@@ -1,0 +1,9 @@
+define-command test-reading-registers %{
+    set-register z %{fi\rst 	val
+u'e} "second value" "third value" "fourth value"
+    execute-keys "o--- Contents of z[0] ---<ret><esc>" "!cat $kak_session_root/global/reg/z/0<ret>"
+    execute-keys "o--- Contents of z[1] ---<ret><esc>" "!cat $kak_session_root/global/reg/z/1<ret>"
+    execute-keys "o--- ls -1 of z ---<ret><esc>" "!ls -1 $kak_session_root/global/reg/z<ret>"
+    set-register z v0 v1
+    execute-keys "o--- ls -1 of z after set-register ---<ret><esc>" "!ls -1 $kak_session_root/global/reg/z<ret>"
+}

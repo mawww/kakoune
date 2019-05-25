@@ -135,6 +135,21 @@ void Session::remove()
     nftw(root().c_str(), remove_recursive_fn, 10, FTW_DEPTH|FTW_PHYS);
 }
 
+String Session::read(StringView path) const
+{
+    return read_file(file(path));
+}
+
+void Session::write(StringView path, StringView contents) const
+{
+    return write_to_file(file(path), contents);
+}
+
+bool Session::unlink(StringView path) const
+{
+    return ::unlink(file(path).c_str()) == 0;
+}
+
 Vector<String> SessionManager::list()
 {
     return list_files(format("{}/kakoune/{}/", tmpdir(), get_user_name()))

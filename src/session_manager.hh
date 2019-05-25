@@ -29,6 +29,10 @@ public:
     void rename(StringView name);
     void remove();
 
+    String read(StringView path) const;
+    void write(StringView path, StringView data) const;
+    bool unlink(StringView path) const;
+
 private:
     static String root(StringView session);
     static String file(StringView session, StringView path);

@@ -1,0 +1,9 @@
+
+--- $kak_session ---
+kak-tests-renamed
+
+--- Register z contents ---
+before-rename-value
+
+--- Register z files ---
+before-rename-value

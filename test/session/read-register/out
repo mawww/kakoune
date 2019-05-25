@@ -1,0 +1,16 @@
+
+--- Contents of z[0] ---
+fi\rst 	val
+u'e
+--- Contents of z[1] ---
+second value
+--- ls -1 of z ---
+0
+1
+2
+3
+
+--- ls -1 of z after set-register ---
+0
+1
+

@@ -1,0 +1,7 @@
+define-command test-rename-session %{
+    set-register z before-rename-value
+    rename-session kak-tests-renamed
+    execute-keys "o--- $kak_session ---<ret>" "%sh{echo $kak_session}" "<ret><esc>"
+    execute-keys "o--- Register z contents ---<ret>" "%reg{z}" "<ret><esc>"
+    execute-keys "o--- Register z files ---<ret>" "%sh{cat $kak_session_root/global/reg/z/0}" "<esc>"
+}
