@@ -24,6 +24,7 @@
 #include "regex.hh"
 #include "register_manager.hh"
 #include "remote.hh"
+#include "session_manager.hh"
 #include "shell_manager.hh"
 #include "string.hh"
 #include "user_interface.hh"
@@ -1309,7 +1310,7 @@ const CommandDesc debug_cmd = {
         {
             write_to_debug_buffer(format("version: {}", version));
             write_to_debug_buffer(format("pid: {}", getpid()));
-            write_to_debug_buffer(format("session: {}", Server::instance().session()));
+            write_to_debug_buffer(format("session: {}", context.session().name()));
             #ifdef KAK_DEBUG
             write_to_debug_buffer("build: debug");
             #else
@@ -2358,11 +2359,10 @@ const CommandDesc rename_session_cmd = {
     single_param,
     CommandFlags::None,
     CommandHelper{},
-    make_single_word_completer([](const Context&){ return Server::instance().session(); }),
-    [](const ParametersParser& parser, Context&, const ShellContext&)
+    make_single_word_completer([](const Context& context){ return context.session().name(); }),
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        if (not Server::instance().rename_session(parser[0]))
-            throw runtime_error(format("unable to rename current session: '{}' may be already in use", parser[0]));
+        context.session().rename(parser[0]);
     }
 };
 

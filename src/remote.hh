@@ -3,6 +3,7 @@
 
 #include "env_vars.hh"
 #include "exception.hh"
+#include "session_manager.hh"
 #include "utils.hh"
 #include "vector.hh"
 #include "optional.hh"
@@ -11,11 +12,6 @@
 
 namespace Kakoune
 {
-
-struct disconnected : runtime_error
-{
-    using runtime_error::runtime_error;
-};
 
 class FDWatcher;
 class UserInterface;
@@ -44,15 +40,12 @@ private:
 };
 
 void send_command(StringView session, StringView command);
-String get_user_name();
 
 struct Server : public Singleton<Server>
 {
-    Server(String session_name);
+    Server();
     ~Server();
-    const String& session() const { return m_session; }
 
-    bool rename_session(StringView name);
     void close_session(bool do_unlink = true);
 
     bool negotiating() const { return not m_accepters.empty(); }
@@ -61,12 +54,9 @@ private:
     class Accepter;
     void remove_accepter(Accepter* accepter);
 
-    String m_session;
     std::unique_ptr<FDWatcher> m_listener;
     Vector<std::unique_ptr<Accepter>, MemoryDomain::Remote> m_accepters;
 };
-
-bool check_session(StringView session);
 
 }
 

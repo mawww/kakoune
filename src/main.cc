@@ -21,6 +21,7 @@
 #include "register_manager.hh"
 #include "remote.hh"
 #include "scope.hh"
+#include "session_manager.hh"
 #include "shared_string.hh"
 #include "shell_manager.hh"
 #include "string.hh"
@@ -193,7 +194,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
     }, {
         "session", false,
         [](StringView name, const Context& context, Quoting quoting) -> String
-        { return Server::instance().session(); }
+        { return context.session().name(); }
     }, {
         "client", false,
         [](StringView name, const Context& context, Quoting quoting) -> String
@@ -273,6 +274,10 @@ static const EnvVarDesc builtin_env_vars[] = { {
         "user_modes", false,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return join(context.keymaps().user_modes(), ' ', false); }
+    }, {
+        "session_root", false,
+        [](StringView name, const Context& context, Quoting quoting) -> String
+        { return context.session().root(); }
     }
 };
 
@@ -513,7 +518,7 @@ pid_t fork_server_to_background()
         exit(0);
 
     write_stderr(format("Kakoune forked server to background ({}), for session '{}'\n",
-                        getpid(), Server::instance().session()));
+                        getpid(), SessionManager::instance().get().name()));
     return 0;
 }
 
@@ -652,7 +657,8 @@ int run_server(StringView session, StringView server_init,
     }
 
     EventManager        event_manager;
-    Server              server{session.empty() ? to_string(getpid()) : session.str()};
+    SessionManager      session_manager{session.empty() ? to_string(getpid()) : session.str()};
+    Server              server;
 
     StringRegistry      string_registry;
     GlobalScope         global_scope;
@@ -713,7 +719,7 @@ int run_server(StringView session, StringView server_init,
 
     {
         Context empty_context{Context::EmptyContextFlag{}};
-        global_scope.hooks().run_hook(Hook::KakBegin, session, empty_context);
+        global_scope.hooks().run_hook(Hook::KakBegin, session_manager.get().name(), empty_context);
     }
 
     if (not files.empty()) try
@@ -803,9 +809,9 @@ int run_server(StringView session, StringView server_init,
                 if (fork_server_to_background())
                 {
                     ClientManager::instance().clear(false);
-                    String session = server.session();
+                    String session_name = session_manager.get().name();
                     server.close_session(false);
-                    throw convert_to_client_mode{ std::move(session), std::move(client_name), std::move(buffer_name), std::move(selections) };
+                    throw convert_to_client_mode{ std::move(session_name), std::move(client_name), std::move(buffer_name), std::move(selections) };
                 }
             }
         }
@@ -1012,21 +1018,14 @@ int main(int argc, char* argv[])
         const bool clear_sessions = (bool)parser.get_switch("clear");
         if (list_sessions or clear_sessions)
         {
-            const String username = get_user_name();
-            const StringView tmp_dir = tmpdir();
-            for (auto& session : list_files(format("{}/kakoune/{}/", tmp_dir,
-                                                   username)))
+            for (auto& session_name : SessionManager::instance().list())
             {
-                const bool valid = check_session(session);
+                Session session{session_name};
+                const bool valid = session.check();
                 if (list_sessions)
-                    write_stdout(format("{}{}\n", session, valid ? "" : " (dead)"));
+                    write_stdout(format("{}{}\n", session_name, valid ? "" : " (dead)"));
                 if (not valid and clear_sessions)
-                {
-                    char socket_file[128];
-                    format_to(socket_file, "{}/kakoune/{}/{}", tmp_dir,
-                              username, session);
-                    unlink(socket_file);
-                }
+                    session.remove();
             }
             return 0;
         }

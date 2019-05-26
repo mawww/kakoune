@@ -14,6 +14,7 @@ class Window;
 class Buffer;
 class Client;
 class Scope;
+class Session;
 class InputHandler;
 class DisplayLine;
 class KeymapManager;
@@ -100,6 +101,8 @@ public:
     KeymapManager& keymaps() const { return scope().keymaps(); }
     AliasRegistry& aliases() const { return scope().aliases(); }
     FaceRegistry&  faces()   const { return scope().faces(); }
+
+    Session& session() const;
 
     void print_status(DisplayLine status) const;
 

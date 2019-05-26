@@ -4,6 +4,7 @@
 #include "client.hh"
 #include "face_registry.hh"
 #include "register_manager.hh"
+#include "session_manager.hh"
 #include "window.hh"
 
 namespace Kakoune
@@ -56,6 +57,11 @@ Scope& Context::scope() const
     if (has_buffer())
         return buffer();
     return GlobalScope::instance();
+}
+
+Session& Context::session() const
+{
+    return SessionManager::instance().get();
 }
 
 void Context::set_client(Client& client)

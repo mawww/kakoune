@@ -9,6 +9,7 @@
 #include "file.hh"
 #include "hash_map.hh"
 #include "optional.hh"
+#include "session_manager.hh"
 #include "user_interface.hh"
 
 #include <sys/types.h>
@@ -17,7 +18,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <string.h>
-#include <pwd.h>
 #include <fcntl.h>
 #include <errno.h>
 
@@ -528,53 +528,12 @@ void RemoteUI::exit(int status)
     send_message(MessageType::Exit, status);
 }
 
-String get_user_name()
-{
-    auto pw = getpwuid(geteuid());
-    if (pw)
-      return pw->pw_name;
-    return getenv("USER");
-}
-
-static sockaddr_un session_addr(StringView session)
-{
-    sockaddr_un addr;
-    addr.sun_family = AF_UNIX;
-    auto slash_count = std::count(session.begin(), session.end(), '/');
-    if (slash_count > 1)
-        throw runtime_error{"session names are either <user>/<name> or <name>"};
-    else if (slash_count == 1)
-        format_to(addr.sun_path, "{}/kakoune/{}", tmpdir(), session);
-    else
-        format_to(addr.sun_path, "{}/kakoune/{}/{}", tmpdir(),
-                  get_user_name(), session);
-    return addr;
-}
-
-static int connect_to(StringView session)
-{
-    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    fcntl(sock, F_SETFD, FD_CLOEXEC);
-    sockaddr_un addr = session_addr(session);
-    if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
-        throw disconnected(format("connect to {} failed", addr.sun_path));
-    return sock;
-}
-
-bool check_session(StringView session)
-{
-    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    auto close_sock = on_scope_end([sock]{ close(sock); });
-    sockaddr_un addr = session_addr(session);
-    return connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) != -1;
-}
-
 RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<UserInterface>&& ui,
                            int pid, const EnvVarMap& env_vars, StringView init_command,
                            Optional<BufferCoord> init_coord)
     : m_ui(std::move(ui))
 {
-    int sock = connect_to(session);
+    int sock = Session{session}.connect();
 
     {
         MsgWriter msg{m_send_buffer, MessageType::Connect};
@@ -680,7 +639,7 @@ bool RemoteClient::is_ui_ok() const
 
 void send_command(StringView session, StringView command)
 {
-    int sock = connect_to(session);
+    int sock = Session{session}.connect();
     auto close_sock = on_scope_end([sock]{ close(sock); });
     RemoteBuffer buffer;
     {
@@ -773,32 +732,9 @@ private:
     MsgReader m_reader;
 };
 
-Server::Server(String session_name)
-    : m_session{std::move(session_name)}
+Server::Server()
 {
-    if (not all_of(m_session, is_identifier))
-        throw runtime_error{format("invalid session name: '{}'", session_name)};
-
-    int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
-    sockaddr_un addr = session_addr(m_session);
-
-    // set sticky bit on the shared kakoune directory
-    make_directory(format("{}/kakoune", tmpdir()), 01777);
-    make_directory(split_path(addr.sun_path).first, 0711);
-
-    // Do not give any access to the socket to other users by default
-    auto old_mask = umask(0077);
-    auto restore_mask = on_scope_end([old_mask]() { umask(old_mask); });
-
-    if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
-       throw runtime_error(format("unable to bind listen socket '{}': {}",
-                                  addr.sun_path, strerror(errno)));
-
-    if (listen(listen_sock, 4) == -1)
-       throw runtime_error(format("unable to listen on socket '{}': {}",
-                                  addr.sun_path, strerror(errno)));
-
+    int listen_sock = SessionManager::instance().get().listen();
     auto accepter = [this](FDWatcher& watcher, FdEvents, EventMode) {
         sockaddr_un client_addr;
         socklen_t   client_addr_len = sizeof(sockaddr_un);
@@ -813,34 +749,10 @@ Server::Server(String session_name)
     m_listener.reset(new FDWatcher{listen_sock, FdEvents::Read, accepter});
 }
 
-bool Server::rename_session(StringView name)
-{
-    if (not all_of(name, is_identifier))
-        throw runtime_error{format("invalid session name: '{}'", name)};
-
-    String old_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
-                                    get_user_name(), m_session);
-    String new_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
-                                    get_user_name(), name);
-
-    if (file_exists(new_socket_file))
-        return false;
-
-    if (rename(old_socket_file.c_str(), new_socket_file.c_str()) != 0)
-        return false;
-
-    m_session = name.str();
-    return true;
-}
-
 void Server::close_session(bool do_unlink)
 {
     if (do_unlink)
-    {
-        String socket_file = format("{}/kakoune/{}/{}", tmpdir(),
-                                    get_user_name(), m_session);
-        unlink(socket_file.c_str());
-    }
+        SessionManager::instance().get().remove();
     m_listener->close_fd();
     m_listener.reset();
 }
