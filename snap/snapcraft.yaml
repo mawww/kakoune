@@ -1,6 +1,7 @@
 name: kakoune # you probably want to 'snapcraft register <name>'
 base: core18 # Ubuntu 18.04 LTS
-version: 'v2019.01.20' # just for humans, typically '1.2+git' or '1.3.2'
+version: git
+version-script: git describe HEAD --always
 license: Unlicense
 summary: Modal text editor # 79 char long summary
 description: |
