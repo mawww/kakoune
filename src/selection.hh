@@ -65,7 +65,7 @@ inline bool overlaps(const Selection& lhs, const Selection& rhs)
 }
 
 void update_selections(Vector<Selection>& selections, size_t& main,
-                       Buffer& buffer, size_t timestamp);
+                       Buffer& buffer, size_t timestamp, bool merge = true);
 
 bool compare_selections(const Selection& lhs, const Selection& rhs);
 void sort_selections(Vector<Selection>& selections, size_t& main);
@@ -97,7 +97,7 @@ struct SelectionList
     struct UnsortedTag {};
     SelectionList(UnsortedTag, Buffer& buffer, Vector<Selection> s, size_t timestamp, size_t main);
 
-    void update();
+    void update(bool merge = true);
 
     void check_invariant() const;
 
