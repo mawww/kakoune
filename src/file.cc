@@ -273,12 +273,13 @@ void write_to_file(StringView filename, StringView data)
 
 struct BufferedWriter
 {
-    BufferedWriter(int fd) : fd{fd} {}
+    BufferedWriter(int fd)
+      : m_fd{fd}, m_exception_count{std::uncaught_exceptions()} {}
 
-    ~BufferedWriter()
+    ~BufferedWriter() noexcept(false)
     {
-        if (pos != 0)
-            Kakoune::write(fd, {buffer, pos});
+        if (m_pos != 0 and m_exception_count == std::uncaught_exceptions())
+            Kakoune::write(m_fd, {m_buffer, m_pos});
     }
 
     void write(StringView data)
@@ -286,13 +287,13 @@ struct BufferedWriter
         while (not data.empty())
         {
             const ByteCount length = data.length();
-            const ByteCount write_len = std::min(length, size - pos);
-            memcpy(buffer + (int)pos, data.data(), (int)write_len);
-            pos += write_len;
-            if (pos == size)
+            const ByteCount write_len = std::min(length, size - m_pos);
+            memcpy(m_buffer + (int)m_pos, data.data(), (int)write_len);
+            m_pos += write_len;
+            if (m_pos == size)
             {
-                Kakoune::write(fd, {buffer, size});
-                pos = 0;
+                Kakoune::write(m_fd, {m_buffer, size});
+                m_pos = 0;
             }
             data = data.substr(write_len);
         }
@@ -300,9 +301,10 @@ struct BufferedWriter
 
 private:
     static constexpr ByteCount size = 4096;
-    int fd;
-    ByteCount pos = 0;
-    char buffer[(int)size];
+    int m_fd;
+    int m_exception_count;
+    ByteCount m_pos = 0;
+    char m_buffer[(int)size];
 };
 
 
