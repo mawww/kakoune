@@ -86,7 +86,7 @@ String real_path(StringView filename)
                 return res;
 
             StringView dir = res;
-            while (dir.substr(dir.length()-1_byte, 1_byte) == "/")
+            while (not dir.empty() and dir.back() == '/')
                 dir = dir.substr(0_byte, dir.length()-1_byte);
             return format("{}/{}", dir, non_existing);
         }
@@ -116,7 +116,7 @@ String compact_path(StringView filename)
         return real_filename.substr(real_cwd.length()).str();
 
     StringView home = homedir();
-    while (home.substr(home.length()-1_byte, 1_byte) == "/")
+    while (not home.empty() and home.back() == '/')
         home = home.substr(0_byte, home.length()-1_byte);
 
     if (not home.empty())
