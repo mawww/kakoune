@@ -15,14 +15,11 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
             exit 1
         fi
 
-        extension=""
-        if printf %s "${kak_buffile}" | grep -qE '[^/.]\.[[:alnum:]]+$'; then
-            extension=".${kak_buffile##*.}"
-        fi
+        filename="${kak_buffile##*/}"
 
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-lint.XXXXXXXX)
         mkfifo "$dir"/fifo
-        printf '%s\n' "evaluate-commands -no-hooks write -sync $dir/buf${extension}"
+        printf '%s\n' "evaluate-commands -no-hooks write -sync $dir/${filename}"
 
         printf '%s\n' "evaluate-commands -draft %{
                   edit! -fifo $dir/fifo -debug *lint-output*
@@ -33,7 +30,7 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
 
         { # do the parsing in the background and when ready send to the session
 
-        eval "$kak_opt_lintcmd '$dir'/buf${extension}" | sort -t: -k2,2 -n > "$dir"/stderr
+        eval "$kak_opt_lintcmd '$dir'/${filename}" | sort -t: -k2,2 -n > "$dir"/stderr
 
         # Flags for the gutter:
         #   stamp l3|{red}█ l11|{yellow}█
