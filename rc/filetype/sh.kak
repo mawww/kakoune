@@ -70,29 +70,29 @@ define-command -hidden sh-indent-on-new-line %{
         try %{ execute-keys -draft k : sh-trim-indent <ret> }
 
         # indent after do
-        try %{ execute-keys -draft <space> k x <a-k> do$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> do$ <ret> j <a-gt> }
         # deindent after done
-        try %{ execute-keys -draft <space> k x <a-k> done$ <ret> <a-lt> j K <a-&> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> done$ <ret> <a-lt> j K <a-&> }
 
         # indent after then
-        try %{ execute-keys -draft <space> k x <a-k> then$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> then$ <ret> j <a-gt> }
         # deindent after fi
-        try %{ execute-keys -draft <space> k x <a-k> fi$ <ret> <a-lt> j K <a-&> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> fi$ <ret> <a-lt> j K <a-&> }
 
         # indent after in
-        try %{ execute-keys -draft <space> k x <a-k> in$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> in$ <ret> j <a-gt> }
         # deindent after esac
-        try %{ execute-keys -draft <space> k x <a-k> esac$ <ret> <a-lt> j K <a-&> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> esac$ <ret> <a-lt> j K <a-&> }
 
         # indent after )
-        try %{ execute-keys -draft <space> k x <a-k> \)$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \)$ <ret> j <a-gt> }
         # deindent after ;;
-        try %{ execute-keys -draft <space> k x <a-k> \;\;$ <ret> j <a-lt> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \;\;$ <ret> j <a-lt> }
 
         # function indent
-        try %= execute-keys -draft <space> k x <a-k> \{$ <ret> j <a-gt> =
+        try %= execute-keys -draft <space> k <a-x> <a-k> \{$ <ret> j <a-gt> =
         # deindent at end of function
-        try %= execute-keys -draft <space> k x <a-k> \}$ <ret> <a-lt> j K <a-&> =
+        try %= execute-keys -draft <space> k <a-x> <a-k> \}$ <ret> <a-lt> j K <a-&> =
 
     }
 }
