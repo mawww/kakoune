@@ -31,11 +31,11 @@ add-highlighter shared/awk regions
 add-highlighter shared/awk/code default-region group
 add-highlighter shared/awk/comment region '#' '$' fill comment
 add-highlighter shared/awk/string region '"' (?<!\\)(\\\\)*" fill string
-add-highlighter shared/awk/regex region (\A|[^\s\w)\]+-])\s*\K/ (?<!\\)(\\\\)*/ fill attribute
+add-highlighter shared/awk/regex region (\A|[^\s\w)\]+-]|\bcase\b)\s*\K/ (?<!\\)(\\\\)*/ fill attribute
 
 add-highlighter shared/awk/code/ regex (\.\d+|\b\d+\.?\d*)([eE][+-]?\d+)?\b 0:value # Decimal/octal/scientific
 add-highlighter shared/awk/code/ regex \b0[xX][\da-fA-F]+\b 0:value # Hexadecimal
-add-highlighter shared/awk/code/ regex \$ 0:function # Field reference symbol
+add-highlighter shared/awk/code/ regex (\$)\s*(\+\+|--)?\w 1:operator # Field reference symbol
 
 evaluate-commands %sh{
     # Grammar
