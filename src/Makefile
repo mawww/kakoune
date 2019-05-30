@@ -73,6 +73,7 @@ else ifeq ($(os),OpenBSD)
     LIBS += -lncursesw
     CPPFLAGS += -D'KAK_BIN_PATH="$(bindir)/kak"' -I/usr/local/include
     LDFLAGS += -L/usr/local/lib
+    mandir := $(DESTDIR)$(PREFIX)/man/man1
 else ifneq (,$(findstring CYGWIN,$(os)))
     CPPFLAGS += -D_XOPEN_SOURCE=700
     LIBS += -lncursesw -ldbghelp
@@ -113,7 +114,7 @@ kak$(suffix) : $(objects) .version.o
 # Generate the man page
 ifeq ($(gzip_man),yes)
 ../doc/kak.1.gz: ../doc/kak.1
-	gzip -n -9 -f -k $<
+	gzip -n -9 -f < $< > $@
 man: ../doc/kak.1.gz
 else
 man: ../doc/kak.1

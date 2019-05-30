@@ -1167,7 +1167,7 @@ asm(R"(
 .ascii "sys.path.insert(0, os.path.dirname(gdb.current_objfile().filename) + '/../share/kak/gdb/')\n"
 .ascii "import gdb.printing\n"
 .ascii "import kakoune\n"
-.ascii "gdb.printing.register_pretty_printer(gdb.current_objfile(), kakoune.build_pretty_printer())\n"
+.ascii "gdb.printing.register_pretty_printer(gdb.current_objfile(), kakoune.build_pretty_printer())\n\0"
 .popsection
 )");
 #endif

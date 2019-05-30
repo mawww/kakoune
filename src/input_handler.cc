@@ -1235,6 +1235,8 @@ public:
 
             if (not main_char.empty())
                 context().hooks().run_hook(Hook::InsertDelete, main_char, context());
+
+            context().selections_write_only().update(false);
         }
         else if (key == Key::Delete)
         {

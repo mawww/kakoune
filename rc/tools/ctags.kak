@@ -1,10 +1,14 @@
-# Kakoune Exuberant CTags support script
+# Kakoune CTags support script
 #
-# This script requires the readtags command available in ctags source but
-# not installed by default
+# This script requires the readtags command available in universal-ctags
+
+declare-option -docstring "minimum characters before triggering autocomplete" \
+    int ctags_min_chars 3
 
 declare-option -docstring "list of paths to tag files to parse when looking up a symbol" \
     str-list ctagsfiles 'tags'
+
+declare-option -hidden completions ctags_completions
 
 define-command -params ..1 \
     -shell-script-candidates %{
@@ -59,14 +63,21 @@ If no symbol is passed then the current selection is used as symbol name} \
             function path(x) { return x ~/^\// ? x : tagroot x }'
     }}
 
-define-command ctags-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ evaluate-commands -draft %{
-    execute-keys <space>hb<a-k>^\w+$<ret>
-    nop %sh{ {
-        compl=$(readtags -p "$kak_selection" | cut -f 1 | sort | uniq | sed -e 's/:/\\:/g' | sed -e 's/\n/:/g' )
-        compl="${kak_cursor_line}.${kak_cursor_column}+${#kak_selection}@${kak_timestamp}:${compl}"
-        printf %s\\n "set-option buffer=$kak_bufname ctags_completions '${compl}'" | kak -p ${kak_session}
-    } > /dev/null 2>&1 < /dev/null & }
-}}
+define-command ctags-complete -docstring "Complete the current selection" %{
+    nop %sh{
+        (
+            header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
+            compl=$(
+                eval "set -- $kak_opt_ctagsfiles"
+                for ctagsfile in "$@"; do
+                    readtags -p -t "$ctagsfile" ${kak_selection}
+                done | awk '{ uniq[$1]++ } END { for (elem in uniq) printf " %1$s||%1$s", elem }'
+            )
+            printf %s\\n "evaluate-commands -client ${kak_client} set-option buffer=${kak_bufname} ctags_completions ${header}${compl}" | \
+                kak -p ${kak_session}
+        ) > /dev/null 2>&1 < /dev/null &
+    }
+}
 
 define-command ctags-funcinfo -docstring "Display ctags information about a selected function" %{
     evaluate-commands -draft %{
@@ -131,4 +142,23 @@ define-command ctags-update-tags -docstring 'Update tags for the given file' %{
 
         printf %s\\n "evaluate-commands -client $kak_client echo -markup '{Information}${msg}'" | kak -p ${kak_session}
     ) > /dev/null 2>&1 < /dev/null & }
+}
+
+define-command ctags-enable-autocomplete -docstring "Enable automatic ctags completion" %{
+    set-option window completers "option=ctags_completions" %opt{completers}
+    hook window -group ctags-autocomplete InsertIdle .* %{
+        try %{
+            evaluate-commands -draft %{ # select previous word >= ctags_min_chars
+                execute-keys "<space>b_<a-k>.{%opt{ctags_min_chars},}<ret>"
+                ctags-complete          # run in draft context to preserve selection
+            }
+        }
+    }
+}
+
+define-command ctags-disable-autocomplete -docstring "Disable automatic ctags completion" %{
+    evaluate-commands %sh{
+        printf "set-option window completers %s\n" $(printf %s "${kak_opt_completers}" | sed -e "s/'option=ctags_completions'//g")
+    }
+    remove-hooks window ctags-autocomplete
 }
