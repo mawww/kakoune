@@ -1,19 +1,40 @@
 # Detection
+# ---------
 
 hook global BufCreate .*\.awk %{
     set-option buffer filetype awk
 }
 
+# Initialization
+# --------------
+
+hook global WinSetOption filetype=awk %{
+    require-module awk
+    
+    hook window InsertChar \n -group awk-indent awk-indent-on-new-line
+    hook window ModeChange insert:.* -group awk-trim-indent awk-trim-indent
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window awk-.+ }
+}
+
+hook -group awk-highlight global WinSetOption filetype=awk %{
+    add-highlighter window/awk ref awk
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/awk }
+}
+
+provide-module awk %@
+
 # Highlighters
+# ------------
 
 add-highlighter shared/awk regions
 add-highlighter shared/awk/code default-region group
 add-highlighter shared/awk/comment region '#' '$' fill comment
 add-highlighter shared/awk/string region '"' (?<!\\)(\\\\)*" fill string
-add-highlighter shared/awk/regex region (\A|[^\s\w)\]])\s*\K/ (?<!\\)(\\\\)*/ fill attribute
+add-highlighter shared/awk/regex region (\A|[^\s\w)\]+-])\s*\K/ (?<!\\)(\\\\)*/ fill attribute
 
 add-highlighter shared/awk/code/ regex (\.\d+|\b\d+\.?\d*)([eE][+-]?\d+)?\b 0:value # Decimal/octal/scientific
-add-highlighter shared/awk/code/ regex \b0x[\da-fA-F]+\b 0:value # Hexadecimal
+add-highlighter shared/awk/code/ regex \b0[xX][\da-fA-F]+\b 0:value # Hexadecimal
 add-highlighter shared/awk/code/ regex \$ 0:function # Field reference symbol
 
 evaluate-commands %sh{
@@ -44,7 +65,8 @@ evaluate-commands %sh{
     printf %s\\n "add-highlighter shared/awk/code/ regex \b($(join "${functions}" '|'))\b 0:function"
 }
 
-# Formatting
+# Commands
+# --------
 
 define-command -hidden awk-indent-on-new-line %[
     evaluate-commands -draft -itersel %[
@@ -61,16 +83,4 @@ define-command -hidden awk-trim-indent %{
     try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d }
 }
 
-# Initialization
-
-hook -group awk-highlight global WinSetOption filetype=awk %{
-    add-highlighter window/awk ref awk
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/awk }
-}
-
-hook global WinSetOption filetype=awk %{
-    hook window InsertChar \n -group awk-indent awk-indent-on-new-line
-    hook window ModeChange insert:.* -group awk-trim-indent awk-trim-indent
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window awk-.+ }
-}
+@
