@@ -5,23 +5,23 @@
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate (.*/)?(\.Rprofile|.*\.[rR]) %{
-    set-option buffer filetype R
+    set-option buffer filetype r
 }
 
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/R regions
-add-highlighter shared/R/code default-region group
-add-highlighter shared/R/double_string region '"'   (?<!\\)(\\\\)*"  fill string
-add-highlighter shared/R/single_string region "'"   (?<!\\)(\\\\)*'  fill string
-add-highlighter shared/R/comment       region '#'   '$'              fill comment
-add-highlighter shared/R/identifier    region '`'   (?<!\\)(\\\\)*`  fill attribute
+add-highlighter shared/r regions
+add-highlighter shared/r/code default-region group
+add-highlighter shared/r/double_string region '"'   (?<!\\)(\\\\)*"  fill string
+add-highlighter shared/r/single_string region "'"   (?<!\\)(\\\\)*'  fill string
+add-highlighter shared/r/comment       region '#'   '$'              fill comment
+add-highlighter shared/r/identifier    region '`'   (?<!\\)(\\\\)*`  fill attribute
 
 # see base::NumericConstants
-add-highlighter shared/R/code/ regex '(?i)\b(?<![.\d])\d+(\.\d*)?(e[-+]?\d+)?(?I)[iL]?(?![\d.e\w])' 0:value
-add-highlighter shared/R/code/ regex '(?i)(?<![.\d\w])\.\d+(e[-+]?\d+)?(?I)[iL]?(?![\d.e])' 0:value
-add-highlighter shared/R/code/ regex '(?i)\b(?<![.\d])0x[0-9a-f]+?(p[-+]?\d+)?(?I)[iL]?(?![\d.e\w])' 0:value
+add-highlighter shared/r/code/ regex '(?i)\b(?<![.\d])\d+(\.\d*)?(e[-+]?\d+)?(?I)[iL]?(?![\d.e\w])' 0:value
+add-highlighter shared/r/code/ regex '(?i)(?<![.\d\w])\.\d+(e[-+]?\d+)?(?I)[iL]?(?![\d.e])' 0:value
+add-highlighter shared/r/code/ regex '(?i)\b(?<![.\d])0x[0-9a-f]+?(p[-+]?\d+)?(?I)[iL]?(?![\d.e\w])' 0:value
 
 evaluate-commands %sh{
     # see base::Reserved
@@ -34,24 +34,24 @@ evaluate-commands %sh{
     }" | tr '|' ' '
 
     printf %s "
-        add-highlighter shared/R/code/ regex '\b(${values})\b' 0:value
-        add-highlighter shared/R/code/ regex '\b(${keywords})\b' 0:keyword
+        add-highlighter shared/r/code/ regex '\b(${values})\b' 0:value
+        add-highlighter shared/r/code/ regex '\b(${keywords})\b' 0:keyword
     "
 }
 
 # see base::Syntax
-add-highlighter shared/R/code/ regex (?<=[\w\s\d'"_)])(\$|@|\^|-|\+|%[^%]+%|\*|/|<(?![<-])|(?<![->])>|<=|>=|==|!=|!|&{1,2}|\|{1,2}|~|\?) 0:operator
+add-highlighter shared/r/code/ regex (?<=[\w\s\d'"_)])(\$|@|\^|-|\+|%[^%]+%|\*|/|<(?![<-])|(?<![->])>|<=|>=|==|!=|!|&{1,2}|\|{1,2}|~|\?) 0:operator
 
 
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden R-trim-indent %{
+define-command -hidden r-trim-indent %{
     # remove the line if it's empty when leaving the insert mode
     try %{ execute-keys -draft <a-x> 1s^(\h+)$<ret> d }
 }
 
-define-command -hidden R-indent-on-newline %< evaluate-commands -draft -itersel %<
+define-command -hidden r-indent-on-newline %< evaluate-commands -draft -itersel %<
     execute-keys \;
     try %<
         # if previous line closed a paren (possibly followed by words and a comment),
@@ -91,12 +91,12 @@ define-command -hidden R-indent-on-newline %< evaluate-commands -draft -itersel 
      > >
 > >
 
-define-command -hidden R-indent-on-opening-curly-brace %[
+define-command -hidden r-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ execute-keys -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> <a-S> 1<a-&> ]
 ]
 
-define-command -hidden R-indent-on-closing-curly-brace %[
+define-command -hidden r-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[
         # in case open curly brace follows a closing paren, align indent with opening paren
@@ -107,7 +107,7 @@ define-command -hidden R-indent-on-closing-curly-brace %[
     ] catch %[]
 ]
 
-define-command -hidden R-insert-on-newline %[ evaluate-commands -itersel -draft %[
+define-command -hidden r-insert-on-newline %[ evaluate-commands -itersel -draft %[
     execute-keys \;
     try %[
         evaluate-commands -draft -save-regs '/"' %[
@@ -127,17 +127,17 @@ define-command -hidden R-insert-on-newline %[ evaluate-commands -itersel -draft 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group R-highlight global WinSetOption filetype=R %{
-    add-highlighter window/R ref R
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/R }
+hook -group r-highlight global WinSetOption filetype=r %{
+    add-highlighter window/r ref r
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/r }
 }
 
-hook global WinSetOption filetype=R %~
-    hook window ModeChange insert:.* R-trim-indent
-    hook window InsertChar \n        R-insert-on-newline
-    hook window InsertChar \n        R-indent-on-newline
-    hook window InsertChar \{        R-indent-on-opening-curly-brace
-    hook window InsertChar \}        R-indent-on-closing-curly-brace
+hook global WinSetOption filetype=r %~
+    hook window ModeChange insert:.* r-trim-indent
+    hook window InsertChar \n        r-insert-on-newline
+    hook window InsertChar \n        r-indent-on-newline
+    hook window InsertChar \{        r-indent-on-opening-curly-brace
+    hook window InsertChar \}        r-indent-on-closing-curly-brace
 
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window R-.+ }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window r-.+ }
 ~
