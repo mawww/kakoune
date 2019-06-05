@@ -62,7 +62,7 @@ The program passed as argument will be executed in the new terminal' \
                 fi
             done
         )
-        setsid ${kak_opt_termcmd} "$args" < /dev/null > /dev/null 2>&1 &
+        perl -MPOSIX -e 'setsid; exec @ARGV' ${kak_opt_termcmd} "${args}" < /dev/null > /dev/null 2>&1 &
     }
 }
 
