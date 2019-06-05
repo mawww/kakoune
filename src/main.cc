@@ -280,8 +280,11 @@ void register_registers()
 {
     RegisterManager& register_manager = RegisterManager::instance();
 
-    for (auto c : "abcdefghijklmnopqrstuvwxyz/\"|^@:")
+    for (auto c : StringView{"abcdefghijklmnopqrstuvwxyz\"^@"})
         register_manager.add_register(c, std::make_unique<StaticRegister>());
+
+    for (auto c : StringView{"/|:\\"})
+        register_manager.add_register(c, std::make_unique<HistoryRegister>());
 
     using StringList = Vector<String, MemoryDomain::Registers>;
 

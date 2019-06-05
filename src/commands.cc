@@ -1739,10 +1739,10 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
 
     auto& register_manager = RegisterManager::instance();
     auto make_register_restorer = [&](char c) {
-        return on_scope_end([&, c, save=register_manager[c].get(context) | gather<Vector<String>>()] {
+        return on_scope_end([&, c, save=register_manager[c].save(context)] {
             try
             {
-                RegisterManager::instance()[c].set(context, save);
+                RegisterManager::instance()[c].restore(context, save);
             }
             catch (runtime_error& err)
             {
@@ -2001,7 +2001,7 @@ const CommandDesc prompt_cmd = {
         CapturedShellContext sc{shell_context};
         context.input_handler().prompt(
             parser[0], initstr.str(), {}, context.faces()["Prompt"],
-            flags, std::move(completer),
+            flags, '_', std::move(completer),
             [=](StringView str, PromptEvent event, Context& context) mutable
             {
                 if ((event == PromptEvent::Abort and on_abort.empty()) or

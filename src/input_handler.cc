@@ -751,11 +751,13 @@ class Prompt : public InputMode
 public:
     Prompt(InputHandler& input_handler, StringView prompt,
            String initstr, String emptystr, Face face, PromptFlags flags,
-           PromptCompleter completer, PromptCallback callback)
+           char history_register, PromptCompleter completer, PromptCallback callback)
         : InputMode(input_handler), m_callback(std::move(callback)), m_completer(std::move(completer)),
           m_prompt(prompt.str()), m_prompt_face(face),
           m_empty_text{std::move(emptystr)},
           m_line_editor{context().faces()}, m_flags(flags),
+          m_history{RegisterManager::instance()[history_register]},
+          m_current_history{m_history.get(context()).size()},
           m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Prompt},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
@@ -769,13 +771,11 @@ public:
                            context().hooks().run_hook(Hook::PromptIdle, "", context());
                        }}
     {
-        m_history_it = ms_history[m_prompt].end();
         m_line_editor.reset(std::move(initstr), m_empty_text);
     }
 
     void on_key(Key key) override
     {
-        History& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
 
         if (key == Key::Return)
@@ -790,7 +790,7 @@ public:
             }
 
             if (not context().history_disabled())
-                history_push(history, line);
+                history_push(line);
             context().print_status(DisplayLine{});
             if (context().has_client())
                 context().client().menu_hide();
@@ -807,7 +807,7 @@ public:
         else if (key == Key::Escape or key == ctrl('c'))
         {
             if (not context().history_disabled())
-                history_push(history, line);
+                history_push(line);
             context().print_status(DisplayLine{});
             if (context().has_client())
                 context().client().menu_hide();
@@ -853,22 +853,25 @@ public:
         }
         else if (key == Key::Up or key == ctrl('p'))
         {
-            if (m_history_it != history.begin())
+            if (m_current_history != 0)
             {
-                if (m_history_it == history.end())
+                auto history = m_history.get(context());
+                // The history register might have been mutated in the mean time
+                m_current_history = std::min(history.size(), m_current_history);
+                if (m_current_history == history.size())
                    m_prefix = line;
-                auto it = m_history_it;
+                auto index = m_current_history;
                 // search for the previous history entry matching typed prefix
                 do
                 {
-                    --it;
-                    if (prefix_match(*it, m_prefix))
+                    --index;
+                    if (prefix_match(history[index], m_prefix))
                     {
-                        m_history_it = it;
-                        m_line_editor.reset(*it, m_empty_text);
+                        m_current_history = index;
+                        m_line_editor.reset(history[index], m_empty_text);
                         break;
                     }
-                } while (it != history.begin());
+                } while (index != 0);
 
                 clear_completions();
                 m_refresh_completion_pending = true;
@@ -876,16 +879,19 @@ public:
         }
         else if (key == Key::Down or key == ctrl('n')) // next
         {
-            if (m_history_it != history.end())
+            auto history = m_history.get(context());
+            // The history register might have been mutated in the mean time
+            m_current_history = std::min(history.size(), m_current_history);
+            if (m_current_history < history.size())
             {
                 // search for the next history entry matching typed prefix
-                ++m_history_it;
-                while (m_history_it != history.end() and
-                       not prefix_match(*m_history_it, m_prefix))
-                    ++m_history_it;
+                ++m_current_history;
+                while (m_current_history != history.size() and
+                       not prefix_match(history[m_current_history], m_prefix))
+                    ++m_current_history;
 
-                if (m_history_it != history.end())
-                    m_line_editor.reset(*m_history_it, m_empty_text);
+                if (m_current_history != history.size())
+                    m_line_editor.reset(history[m_current_history], m_empty_text);
                 else
                     m_line_editor.reset(m_prefix, m_empty_text);
 
@@ -1089,27 +1095,22 @@ private:
     LineEditor     m_line_editor;
     bool           m_line_changed = false;
     PromptFlags    m_flags;
+    Register&      m_history;
+    size_t         m_current_history;
     bool           m_auto_complete;
     bool           m_refresh_completion_pending = true;
     Timer          m_idle_timer;
 
-    using History = Vector<String, MemoryDomain::History>;
-    static HashMap<String, History, MemoryDomain::History> ms_history;
-    History::iterator m_history_it;
-
-    void history_push(History& history, StringView entry)
+    void history_push(StringView entry)
     {
         if (entry.empty() or
             (m_flags & PromptFlags::DropHistoryEntriesWithBlankPrefix and
              is_horizontal_blank(entry[0_byte])))
             return;
 
-        history.erase(std::remove(history.begin(), history.end(), entry),
-                      history.end());
-        history.push_back(entry.str());
+        m_history.set(context(), {entry.str()});
     }
 };
-HashMap<String, Prompt::History, MemoryDomain::History> Prompt::ms_history;
 
 class NextKey : public InputMode
 {
@@ -1592,11 +1593,12 @@ void InputHandler::repeat_last_insert()
 }
 
 void InputHandler::prompt(StringView prompt, String initstr, String emptystr,
-                          Face prompt_face, PromptFlags flags,
+                          Face prompt_face, PromptFlags flags, char history_register,
                           PromptCompleter completer, PromptCallback callback)
 {
     push_mode(new InputModes::Prompt(*this, prompt, std::move(initstr), std::move(emptystr),
-                                     prompt_face, flags, std::move(completer), std::move(callback)));
+                                     prompt_face, flags, history_register,
+                                     std::move(completer), std::move(callback)));
 }
 
 void InputHandler::set_prompt_face(Face prompt_face)
