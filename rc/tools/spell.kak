@@ -41,7 +41,8 @@ Formats of language supported:
                                pos=$(printf %s\\n "$line" | cut -d ' ' -f 3)
                             fi
                             word=$(printf %s\\n "$line" | cut -d ' ' -f 2)
-                            len=$(printf %s "$word" | wc -c)
+                            # trim whitespace to make `wc` output consistent across implementations
+                            len=$(($(printf %s "$word" | wc -c)))
                             regions="$regions $line_num.$pos+${len}|Error"
                             ;;
                         '') line_num=$((line_num + 1));;
