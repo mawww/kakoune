@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
         case 0:
             setsid();
             execute_command_in_arguments(argc, argv);
-            return 3;  /* execute_command() should not return. */
+            return 3;  /* execute_command_in_arguments() should not return. */
         default:
             break;
     }
