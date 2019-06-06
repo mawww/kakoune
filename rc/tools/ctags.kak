@@ -27,7 +27,7 @@ define-command -params ..1 \
     -docstring %{ctags-search [<symbol>]: jump to a symbol's definition
 If no symbol is passed then the current selection is used as symbol name} \
     ctags-search \
-    %{ evaluate-commands %sh{
+    %[ evaluate-commands %sh[
         realpath() { ( cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
         export tagname="${1:-${kak_selection}}"
         eval "set -- $kak_opt_ctagsfiles"
@@ -40,9 +40,8 @@ If no symbol is passed then the current selection is used as symbol name} \
         done | awk -F '\t|\n' '
             /^!TAGROOT\t/ { tagroot=$2 }
             /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
-                opener = "\\{"; closer = "\\}"
                 line = $0; sub(".*\t/\\^", "", line); sub("\\$?/$", "", line);
-                menu_info = line; gsub("!", "!!", menu_info); gsub(/^[\t+ ]+/, "", menu_info); gsub(opener, "\\"opener, menu_info); gsub(/\t/, " ", menu_info);
+                menu_info = line; gsub("!", "!!", menu_info); gsub(/^[\t+ ]+/, "", menu_info); gsub("{", "\\{", menu_info); gsub(/\t/, " ", menu_info);
                 keys = line; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys); gsub("!", "!!", keys); gsub("&", "&&", keys); gsub("#", "##", keys); gsub("\\|", "||", keys); gsub("\\\\/", "/", keys);
                 menu_item = $2; gsub("!", "!!", menu_item);
                 edit_path = path($2); gsub("&", "&&", edit_path); gsub("#", "##", edit_path); gsub("\\|", "||", edit_path);
@@ -50,10 +49,9 @@ If no symbol is passed then the current selection is used as symbol name} \
                 out = out "%!" menu_item ": {MenuInfo}" menu_info "! %!evaluate-commands %# try %& edit -existing %|" edit_path "|; execute-keys %|/\\Q" keys "<ret>vc| & catch %& echo -markup %|{Error}unable to find tag| &; try %& execute-keys %|s\\Q" select "<ret>| & # !"
             }
             /[^\t]+\t[^\t]+\t[0-9]+/ {
-                opener = "{"; closer = "}"
                 menu_item = $2; gsub("!", "!!", menu_item);
                 select = $1; gsub(/</, "<lt>", select); gsub(/\t/, "<c-v><c-i>", select); gsub("!", "!!", select); gsub("&", "&&", select); gsub("#", "##", select); gsub("\\|", "||", select);
-                menu_info = $3; gsub("!", "!!", menu_info); gsub(opener, "\\"opener, menu_info);
+                menu_info = $3; gsub("!", "!!", menu_info); gsub("{", "\\{", menu_info);
                 edit_path = path($2); gsub("!", "!!", edit_path); gsub("#", "##", edit_path); gsub("&", "&&", edit_path); gsub("\\|", "||", edit_path);
                 line_number = $3;
                 out = out "%!" menu_item ": {MenuInfo}" menu_info "! %!evaluate-commands %# try %& edit -existing %|" edit_path "|; execute-keys %|" line_number "gx| & catch %& echo -markup %|{Error}unable to find tag| &; try %& execute-keys %|s\\Q" select "<ret>| & # !"
@@ -61,7 +59,7 @@ If no symbol is passed then the current selection is used as symbol name} \
             END { print ( length(out) == 0 ? "echo -markup %{{Error}no such tag " ENVIRON["tagname"] "}" : "menu -markup -auto-single " out ) }
             # Ensure x is an absolute file path, by prepending with tagroot
             function path(x) { return x ~/^\// ? x : tagroot x }'
-    }}
+    ]]
 
 define-command ctags-complete -docstring "Complete the current selection" %{
     nop %sh{
