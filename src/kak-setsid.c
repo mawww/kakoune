@@ -19,6 +19,6 @@ int main(int argc, char *argv[])
             perror("kak-setsid: execvp");  /* execvp() should not return. */
             return 3;
         default:
-            break;
+            return 0;
     }
 }
