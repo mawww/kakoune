@@ -823,6 +823,9 @@ bool Server::rename_session(StringView name)
     String new_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
                                     get_user_name(), name);
 
+    if (file_exists(new_socket_file))
+        return false;
+
     if (rename(old_socket_file.c_str(), new_socket_file.c_str()) != 0)
         return false;
 
