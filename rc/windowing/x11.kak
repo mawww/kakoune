@@ -54,7 +54,7 @@ The program passed as argument will be executed in the new terminal' \
         # would be nicer to do in a single sed/awk call but that's difficult
         args=$(
             for i in "$@"; do
-                # special case to preserve empty variables as sed won't touch these
+                # special case to preserve empty variables as sed will not touch these
                 if [ "$i" = '' ]; then
                     printf "'' "
                 else
