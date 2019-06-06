@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-void execute_command_in_arguments(int argc, char *argv[]);
-
 int main(int argc, char *argv[])
 {
     if(argc < 2) {
@@ -17,21 +15,11 @@ int main(int argc, char *argv[])
             return 2;
         case 0:
             setsid();
-            execute_command_in_arguments(argc, argv);
-            return 3;  /* execute_command_in_arguments() should not return. */
+            execvp(argv[1], argv+1);
+            /* execvp() should not return. */
+            fprintf(stderr, "The given command could not be executed.\n");
+            return 3;
         default:
             break;
     }
-}
-
-void execute_command_in_arguments(int argc, char *argv[])
-{
-    int i;
-    char *command[argc];
-    command[argc-1] = NULL;
-    for(i=0; i<(argc-1); i++) {
-        command[i] = argv[i+1];
-    }
-    execvp(command[0], command);
-    fprintf(stderr, "The given command could not be executed.\n");
 }
