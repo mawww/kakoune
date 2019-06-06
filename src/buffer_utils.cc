@@ -129,17 +129,18 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
         // iteration number allows us to go back go back to the event loop and
         // handle other events sources (such as input)
         constexpr size_t max_loop = 16;
+        bool closed = false;
         size_t loop = 0;
         char data[buffer_size];
-        BufferCoord insert_coord;
+        BufferCoord insert_coord = buffer->back_coord();
         const int fifo = watcher.fd();
         do
         {
             const ssize_t count = ::read(fifo, data, buffer_size);
             if (count <= 0)
             {
-                buffer->values().erase(fifo_watcher_id); // will delete this
-                return;
+                closed = true;
+                break;
             }
 
             auto pos = buffer->back_coord();
@@ -147,8 +148,6 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
             if (prevent_scrolling)
                 pos = buffer->next(pos);
 
-            if (loop == 0)
-                insert_coord = pos;
             buffer->insert(pos, StringView(data, data+count));
 
             if (prevent_scrolling)
@@ -162,8 +161,14 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
         }
         while (++loop < max_loop  and fd_readable(fifo));
 
-        buffer->run_hook_in_own_context(Hook::BufReadFifo,
-                                        selection_to_string({insert_coord, buffer->back_coord()}));
+        if (insert_coord != buffer->back_coord())
+        {
+            buffer->run_hook_in_own_context(Hook::BufReadFifo,
+                                            selection_to_string({insert_coord, buffer->back_coord()}));
+        }
+
+        if (closed)
+            buffer->values().erase(fifo_watcher_id); // will delete this
     }), std::move(watcher_deleter));
 
     buffer->values()[fifo_watcher_id] = Value(std::move(watcher));
