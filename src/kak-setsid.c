@@ -11,13 +11,12 @@ int main(int argc, char *argv[])
     
     switch(fork()) {
         case -1:
-            fprintf(stderr, "Failed to create child process.\n");
+            perror("kak-setsid: fork");
             return 2;
         case 0:
             setsid();
             execvp(argv[1], argv+1);
-            /* execvp() should not return. */
-            fprintf(stderr, "The given command could not be executed.\n");
+            perror("kak-setsid: execvp");  /* execvp() should not return. */
             return 3;
         default:
             break;
