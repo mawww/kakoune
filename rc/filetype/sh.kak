@@ -89,10 +89,15 @@ define-command -hidden sh-indent-on-new-line %{
         # deindent after ;;
         try %{ execute-keys -draft <space> k <a-x> <a-k> \;\;$ <ret> j <a-lt> }
 
-        # function indent
-        try %= execute-keys -draft <space> k <a-x> <a-k> \{$ <ret> j <a-gt> =
-        # deindent at end of function
-        try %= execute-keys -draft <space> k <a-x> <a-k> \}$ <ret> <a-lt> j K <a-&> =
+        # '{}' delimited compound command
+        # Note that in this context the '{' and '}' characters are reserved
+        # words, and hence must be surrounded by white space (including a
+        # newline). Without this, any of the various forms of parameter
+        # expansion that use { and } delimiters will match, for example ${foo},
+        # or brace expansion e.g. thing{1,2}
+        try %= execute-keys -draft <space> k <a-x> <a-k> (\s|^)\{$ <ret> j <a-gt> =
+        # deindent closing } when in reserved word context
+        try %= execute-keys -draft <space> k <a-x> <a-k> \s\}$ <ret> <a-lt> j K <a-&> =
 
     }
 }
