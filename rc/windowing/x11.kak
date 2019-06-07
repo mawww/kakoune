@@ -18,6 +18,7 @@ A shell command is appended to the one set in this option at runtime} \
                    'termite        -e      ' \
                    'urxvt          -e sh -c' \
                    'rxvt           -e sh -c' \
+                   'st             -e sh -c' \
                    'xterm          -e sh -c' \
                    'roxterm        -e sh -c' \
                    'mintty         -e sh -c' \
