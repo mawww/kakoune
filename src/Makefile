@@ -88,9 +88,8 @@ else
 endif
 
 CXXFLAGS += -pedantic -std=c++17 -g -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-address
-CCFLAGS += -pedantic -std=c99 -g -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-address
 
-all : kak kak-setsid
+all : kak
 
 kak : kak$(suffix)
 	ln -sf $< $@
@@ -111,9 +110,6 @@ kak$(suffix) : $(objects) .version.o
 .version.cc: FORCE
 	@printf "%s" 'namespace Kakoune { const char* version = "$(version)"; }' > .version.cc.tmp
 	@if cmp -s .version.cc.tmp .version.cc; then rm .version.cc.tmp; else mv .version.cc.tmp .version.cc; fi
-
-kak-setsid : kak-setsid.c
-	$(CC) $(LDFLAGS) $(CCFLAGS) $< -o $@
 
 # Generate the man page
 ifeq ($(gzip_man),yes)
@@ -147,7 +143,7 @@ dist:
 	bzip2 $${basename}.tar;
 
 distclean: clean
-	rm -f kak kak$(suffix) kak-setsid
+	rm -f kak kak$(suffix)
 	find ../doc -type f \( -name \*\\.gz -o -name \*\\.1 \) -exec rm -f '{}' +
 
 installdirs:
@@ -158,9 +154,8 @@ installdirs:
 		$(docdir) \
 		$(mandir)
 
-install: kak kak-setsid man installdirs
+install: kak man installdirs
 	install -m 0755 kak $(bindir)
-	install -m 0755 kak-setsid $(bindir)
 	install -m 0644 ../share/kak/kakrc $(sharedir)
 	install -m 0644 ../doc/pages/*.asciidoc $(sharedir)/doc
 	cp -r ../rc/* $(sharedir)/rc
@@ -176,15 +171,13 @@ endif
 
 install-strip: install
 	strip -s $(bindir)/kak
-	strip -s $(bindir)/kak-setsid
 
 uninstall:
 	rm -rf $(bindir)/kak \
-		$(bindir)/kak-setsid
 		$(sharedir) \
 		$(docdir) \
 		$(mandir)/kak.1.gz \
 		$(mandir)/kak.1
 
 .PHONY: check TAGS clean dist distclean installdirs install install-strip uninstall
-.PHONY: tags test man kak kak-setsid FORCE
+.PHONY: tags test man kak FORCE
