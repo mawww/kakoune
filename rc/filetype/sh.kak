@@ -14,6 +14,10 @@ hook -group sh-highlight global WinSetOption filetype=sh %{
 
 provide-module sh %[
 
+declare-option -docstring "name of the client in which documentation is to be displayed" \
+    str docsclient
+declare-option -hidden int explain_shell_cols
+
 add-highlighter shared/sh regions
 add-highlighter shared/sh/code default-region group
 add-highlighter shared/sh/double_string region  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)(?:\\\\)*"} group
@@ -47,5 +51,31 @@ add-highlighter shared/sh/code/function regex ^\h*(\w+)\h*\(\) 1:function
 
 add-highlighter shared/sh/code/unscoped_expansion regex \$(\w+|#|@|\?|\$|!|-|\*) 0:value
 add-highlighter shared/sh/double_string/expansion regex \$(\w+|\{.+?\}) 0:value
+
+define-command -docstring "Explain the selected shell command (online api)" explain-shell %{ try %{
+    evaluate-commands -try-client %opt{docsclient} %{
+        set-option global explain_shell_cols %val{window_width}
+    }
+    evaluate-commands %sh{
+        sel=$(echo ${kak_selection} | sed 's/^[ \t\v\f]*//;s/[ \t\v\f]*$//')
+        expl=$(mktemp "${TMPDIR:-/tmp}"/kak-explain-shell-XXXXXX)
+        cols=$((${kak_opt_explain_shell_cols}-5))
+        curl -Gs "https://www.mankier.com/api/explain/?cols=${cols}" \
+            --data-urlencode "q=${sel}" -o ${expl}
+        retval=$?
+        if [ "${retval}" -eq 0 ]; then
+              printf %s\\n "evaluate-commands -try-client '${kak_opt_docsclient}' %{
+                  edit -scratch *explain-shell*
+                  execute-keys 'gj|cat<space>${expl}<ret>gj'
+                  nop %sh{rm -f ${expl}}
+              }"
+        else
+          printf %s\\n "
+              echo -markup %{{Error}explain-shell '${sel}' failed: see *debug* buffer for details}
+              nop %sh{rm -f ${expl}}
+          "
+        fi
+    }
+}}
 
 ]
