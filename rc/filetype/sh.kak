@@ -60,8 +60,8 @@ define-command -hidden sh-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden sh-indent-on-new-line %{
-    evaluate-commands -draft -itersel %{
+define-command -hidden sh-indent-on-new-line %[
+    evaluate-commands -draft -itersel %[
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
@@ -99,7 +99,7 @@ define-command -hidden sh-indent-on-new-line %{
         # deindent closing } when in reserved word context
         try %= execute-keys -draft <space> k <a-x> <a-k> \s\}$ <ret> <a-lt> j K <a-&> =
 
-    }
-}
+    ]
+]
 
 ]
