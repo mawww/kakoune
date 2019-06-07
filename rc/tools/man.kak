@@ -58,9 +58,9 @@ The page can be a word, or a word directly followed by a section number between 
     ## The completion suggestions display the page number, strip them if present
     case "${subject}" in
         *\([1-8]*\))
-            pagenum="${subject##*(}"
-            pagenum="${pagenum%)}"
-            subject="${subject%%(*}"
+            pagenum="${subject##*\(}"
+            pagenum="${pagenum%\)}"
+            subject="${subject%%\(*}"
             ;;
     esac
 
