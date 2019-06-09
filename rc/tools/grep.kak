@@ -11,9 +11,9 @@ All the optional arguments are forwarded to the grep utility} \
      output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
      if [ $# -gt 0 ]; then
-         ( ${kak_opt_grepcmd} "$@" | tr -d '\r' > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
+         { ${kak_opt_grepcmd} "$@" | tr -d '\r' > ${output} 2>&1 & } > /dev/null 2>&1 < /dev/null
      else
-         ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
+         { ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' > ${output} 2>&1 & } > /dev/null 2>&1 < /dev/null
      fi
 
      printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
