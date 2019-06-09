@@ -28,7 +28,7 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
                   hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r '$dir' } }
               }"
 
-        { # do the parsing in the background and when ready send to the session
+        {{ # do the parsing in the background and when ready send to the session
 
         eval "$kak_opt_lintcmd '$dir'/${filename}" | sort -t: -k2,2 -n > "$dir"/stderr
 
@@ -78,7 +78,7 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
             }
             ' > "$dir"/fifo
 
-        } >/dev/null 2>&1 </dev/null &
+        } & } >/dev/null 2>&1 </dev/null
     }
 }
 
