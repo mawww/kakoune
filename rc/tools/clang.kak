@@ -36,7 +36,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
         # not hang while clang is running. As completions references a cursor
         # position and a buffer timestamp, only valid completions should be
         # displayed.
-        {(
+        ((
             case ${kak_opt_filetype} in
                 c) ft=c ;;
                 cpp) ft=c++ ;;
@@ -100,7 +100,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
 
             printf %s\\n "set-option 'buffer=${kak_buffile}' clang_flags ${kak_timestamp} ${flags}
                   set-option 'buffer=${kak_buffile}' clang_errors ${kak_timestamp} ${errors}" | kak -p ${kak_session}
-        ) & } > /dev/null 2>&1 < /dev/null
+        ) & ) > /dev/null 2>&1 < /dev/null
     }
 }
 
