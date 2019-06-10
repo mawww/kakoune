@@ -53,7 +53,7 @@ template<typename Range>
 using IteratorOf = decltype(std::begin(std::declval<Range>()));
 
 template<typename Range>
-using ValueOf = typename Range::value_type;
+using ValueOf = decltype(*std::declval<IteratorOf<Range>>());
 
 template<typename Range>
 struct SkipView
@@ -447,6 +447,16 @@ auto gather()
     return make_view_factory([](auto&& range) {
         using std::begin; using std::end;
         return Container(begin(range), end(range));
+    });
+}
+
+template<template <typename Element> class Container>
+auto gather()
+{
+    return make_view_factory([](auto&& range) {
+        using std::begin; using std::end;
+        using ValueType = std::remove_cv_t<std::remove_reference_t<decltype(*begin(range))>>;
+        return Container<ValueType>(begin(range), end(range));
     });
 }
 
