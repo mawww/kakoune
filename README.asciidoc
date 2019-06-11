@@ -243,7 +243,7 @@ pkg install kakoune
 Running
 ~~~~~~~
 
-Just running *kak* launch a new kak session with a client on local terminal.
+Just running *kak* launches a new kak session with a client on local terminal.
 Run *kak -help* to discover the valid <<doc/kak.1#options,command line flags>>.
 
 Configuration
