@@ -83,14 +83,16 @@ define-command -hidden php-indent-on-char %<
 
 define-command -hidden php-indent-on-new-line %<
     evaluate-commands -draft -itersel %<
-        # copy // comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+        # copy // comments or docblock * prefix and following white spaces
+        try %{ execute-keys -draft s [^/] <ret> k <a-x> s ^\h*\K(?://|[*][^/])\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : php-trim-indent <ret> }
         # indent after lines beginning / ending with opener token
         try %_ execute-keys -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
+        # append " * " on lines starting a multiline /** or /* comment
+    	try %{ execute-keys -draft k <a-x> s ^\h*/[*][* ]? <ret> j gi i <space>*<space> }
     >
 >
 
