@@ -884,11 +884,9 @@ void search(Context& context, NormalParams params)
     regex_prompt<regex_mode>(context, prompt.str(), reg,
                  [reg, count, saved_reg = RegisterManager::instance()[reg].save(context)]
                  (const Regex& regex, PromptEvent event, Context& context) {
+                     RegisterManager::instance()[reg].restore(context, saved_reg);
                      if (event == PromptEvent::Abort)
-                     {
-                         RegisterManager::instance()[reg].restore(context, saved_reg);
                          return;
-                     }
                      RegisterManager::instance()[reg].set(context, regex.str());
 
                      if (regex.empty() or regex.str().empty())
@@ -970,13 +968,11 @@ void select_regex(Context& context, NormalParams params)
     regex_prompt(context, std::move(prompt), reg,
                  [reg, capture, saved_reg = RegisterManager::instance()[reg].save(context)]
                  (Regex ex, PromptEvent event, Context& context) {
-         if (event == PromptEvent::Abort)
-         {
-             RegisterManager::instance()[reg].restore(context, saved_reg);
-             return;
-         }
-
-        RegisterManager::instance()[reg].set(context, ex.str());
+        RegisterManager::instance()[reg].restore(context, saved_reg);
+        if (event == PromptEvent::Abort)
+            return;
+        if (not context.history_disabled())
+            RegisterManager::instance()[reg].set(context, ex.str());
 
         auto& selections = context.selections();
         auto& buffer = selections.buffer();
@@ -994,13 +990,11 @@ void split_regex(Context& context, NormalParams params)
     regex_prompt(context, std::move(prompt), reg,
                  [reg, capture, saved_reg = RegisterManager::instance()[reg].save(context)]
                  (Regex ex, PromptEvent event, Context& context) {
-         if (event == PromptEvent::Abort)
-         {
-             RegisterManager::instance()[reg].restore(context, saved_reg);
-             return;
-         }
-
-        RegisterManager::instance()[reg].set(context, ex.str());
+        RegisterManager::instance()[reg].restore(context, saved_reg);
+        if (event == PromptEvent::Abort)
+            return;
+        if (not context.history_disabled())
+            RegisterManager::instance()[reg].set(context, ex.str());
 
         auto& selections = context.selections();
         auto& buffer = selections.buffer();
@@ -1094,11 +1088,9 @@ void keep(Context& context, NormalParams params)
     regex_prompt(context, prompt.str(), reg,
                  [reg, saved_reg = RegisterManager::instance()[reg].save(context)]
                  (const Regex& regex, PromptEvent event, Context& context) {
+        RegisterManager::instance()[reg].restore(context, saved_reg);
         if (event == PromptEvent::Abort)
-        {
-            RegisterManager::instance()[reg].restore(context, saved_reg);
             return;
-        }
         if (not context.history_disabled())
             RegisterManager::instance()[reg].set(context, regex.str());
 
