@@ -10,6 +10,8 @@ declare-option -docstring "list of paths to tag files to parse when looking up a
 
 declare-option -hidden completions ctags_completions
 
+declare-option -docstring "shell command to run" str readtagscmd "readtags"
+
 define-command -params ..1 \
     -shell-script-candidates %{
         realpath() { ( cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
@@ -36,7 +38,7 @@ If no symbol is passed then the current selection is used as symbol name} \
         done | awk '!x[$0]++' | # remove duplicates
         while read -r tags; do
             printf '!TAGROOT\t%s\n' "$(realpath "${tags%/*}")/"
-            readtags -t "$tags" "$tagname"
+            ${kak_opt_readtagscmd} -t "$tags" "$tagname"
         done | awk -F '\t|\n' '
             /^!TAGROOT\t/ { tagroot=$2 }
             /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
@@ -68,7 +70,7 @@ define-command ctags-complete -docstring "Complete the current selection" %{
             compl=$(
                 eval "set -- $kak_opt_ctagsfiles"
                 for ctagsfile in "$@"; do
-                    readtags -p -t "$ctagsfile" ${kak_selection}
+                    ${kak_opt_readtagscmd} -p -t "$ctagsfile" ${kak_selection}
                 done | awk '{ uniq[$1]++ } END { for (elem in uniq) printf " %1$s||%1$s", elem }'
             )
             printf %s\\n "evaluate-commands -client ${kak_client} set-option buffer=${kak_bufname} ctags_completions ${header}${compl}" | \
@@ -85,7 +87,7 @@ define-command ctags-funcinfo -docstring "Display ctags information about a sele
                 f=${kak_selection%?}
                 sig='\tsignature:(.*)'
                 csn='\t(class|struct|namespace):(\S+)'
-                sigs=$(readtags -e -Q '(eq? $kind "f")' "${f}" | sed -re "s/^.*${csn}.*${sig}$/\3 [\2::${f}]/ ;t ;s/^.*${sig}$/\1 [${f}]/")
+                sigs=$(${kak_opt_readtagscmd} -e -Q '(eq? $kind "f")' "${f}" | sed -re "s/^.*${csn}.*${sig}$/\3 [\2::${f}]/ ;t ;s/^.*${sig}$/\1 [${f}]/")
                 if [ -n "$sigs" ]; then
                     printf %s\\n "evaluate-commands -client ${kak_client} %{info -anchor $kak_cursor_line.$kak_cursor_column -style above '$sigs'}"
                 fi
