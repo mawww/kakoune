@@ -7,7 +7,7 @@ hook global BufCreate '.*\.cr' %{
 
 hook global WinSetOption filetype=crystal %{
   require-module crystal
-  set-option window static_words %opt(crystal_keywords)
+  evaluate-commands set-option window static_words %opt(crystal_keywords) %opt(crystal_attributes) %opt(crystal_objects)
   add-highlighter window/ ref crystal
   hook -group crystal window InsertChar '\n' crystal-new-line-inserted
   hook -always -once window WinSetOption filetype=.* %{
@@ -18,6 +18,10 @@ hook global WinSetOption filetype=crystal %{
 
 provide-module crystal %🐈
   declare-option -hidden str-list crystal_keywords 'abstract' 'alias' 'annotation' 'as' 'asm' 'begin' 'break' 'case' 'class' 'def' 'do' 'else' 'elsif' 'end' 'ensure' 'enum' 'extend' 'false' 'for' 'fun' 'if' 'include' 'instance_sizeof' 'is_a?' 'lib' 'macro' 'module' 'next' 'nil' 'nil?' 'of' 'offsetof' 'out' 'pointerof' 'private' 'protected' 'require' 'rescue' 'responds_to?' 'return' 'select' 'self' 'sizeof' 'struct' 'super' 'then' 'true' 'type' 'typeof' 'uninitialized' 'union' 'unless' 'until' 'verbatim' 'when' 'while' 'with' 'yield'
+  # https://crystal-lang.org/reference/syntax_and_semantics/methods_and_instance_variables.html#getters-and-setters
+  declare-option -hidden str-list crystal_attributes 'getter' 'setter' 'property'
+  declare-option -hidden str-list crystal_operators '+' '-' '*' '/' '//' '%' '|' '&' '^' '~' '**' '<<' '<' '<=' '==' '!=' '=~' '!~' '>>' '>' '>=' '<=>' '===' '[]' '[]=' '[]?' '[' '&+' '&-' '&*' '&**'
+  declare-option -hidden str-list crystal_objects 'Adler32' 'ArgumentError' 'Array' 'Atomic' 'Base64' 'Benchmark' 'BigDecimal' 'BigFloat' 'BigInt' 'BigRational' 'BitArray' 'Bool' 'Box' 'Bytes' 'Channel' 'Char' 'Class' 'Colorize' 'Comparable' 'Complex' 'Concurrent' 'ConcurrentExecutionException' 'CRC32' 'Crypto' 'Crystal' 'CSV' 'Debug' 'Deprecated' 'Deque' 'Digest' 'Dir' 'DivisionByZeroError' 'DL' 'ECR' 'Enum' 'Enumerable' 'ENV' 'Errno' 'Exception' 'Fiber' 'File' 'FileUtils' 'Flags' 'Flate' 'Float' 'Float32' 'Float64' 'GC' 'Gzip' 'Hash' 'HTML' 'HTTP' 'Indexable' 'IndexError' 'INI' 'Int' 'Int128' 'Int16' 'Int32' 'Int64' 'Int8' 'InvalidBigDecimalException' 'InvalidByteSequenceError' 'IO' 'IPSocket' 'Iterable' 'Iterator' 'JSON' 'KeyError' 'Levenshtein' 'Link' 'LLVM' 'Logger' 'Markdown' 'Math' 'MIME' 'Mutex' 'NamedTuple' 'Nil' 'NilAssertionError' 'NotImplementedError' 'Number' 'OAuth' 'OAuth2' 'Object' 'OpenSSL' 'OptionParser' 'OverflowError' 'PartialComparable' 'Path' 'Pointer' 'PrettyPrint' 'Proc' 'Process' 'Random' 'Range' 'Readline' 'Reference' 'Reflect' 'Regex' 'SemanticVersion' 'Set' 'Signal' 'Slice' 'Socket' 'Spec' 'StaticArray' 'String' 'StringPool' 'StringScanner' 'Struct' 'Symbol' 'System' 'TCPServer' 'TCPSocket' 'Termios' 'Time' 'Tuple' 'TypeCastError' 'UDPSocket' 'UInt128' 'UInt16' 'UInt32' 'UInt64' 'UInt8' 'Unicode' 'Union' 'UNIXServer' 'UNIXSocket' 'URI' 'UUID' 'VaList' 'Value' 'WeakRef' 'XML' 'YAML' 'Zip' 'Zlib'
 
   add-highlighter shared/crystal regions
   add-highlighter shared/crystal/code default-region group
@@ -41,11 +45,12 @@ provide-module crystal %🐈
   # Raw
   # https://crystal-lang.org/reference/syntax_and_semantics/literals/string.html#percent-string-literals
   # https://crystal-lang.org/reference/syntax_and_semantics/literals/string.html#percent-string-array-literal
-  add-highlighter shared/crystal/raw-parenthesis-string region -recurse '\(' '%[qw]\(' '\)' fill string
-  add-highlighter shared/crystal/raw-bracket-string region -recurse '\[' '%[qw]\[' '\]' fill string
-  add-highlighter shared/crystal/raw-brace-string region -recurse '\{' '%[qw]\{' '\}' fill string
-  add-highlighter shared/crystal/raw-angle-string region -recurse '<' '%[qw]<' '>' fill string
-  add-highlighter shared/crystal/raw-pipe-string region '%[qw]\|' '\|' fill string
+  # https://crystal-lang.org/reference/syntax_and_semantics/literals/symbol.html#percent-symbol-array-literal
+  add-highlighter shared/crystal/raw-parenthesis-string region -recurse '\(' '%[qwi]\(' '\)' fill string
+  add-highlighter shared/crystal/raw-bracket-string region -recurse '\[' '%[qwi]\[' '\]' fill string
+  add-highlighter shared/crystal/raw-brace-string region -recurse '\{' '%[qwi]\{' '\}' fill string
+  add-highlighter shared/crystal/raw-angle-string region -recurse '<' '%[qwi]<' '>' fill string
+  add-highlighter shared/crystal/raw-pipe-string region '%[qwi]\|' '\|' fill string
 
   # Here document
   # https://crystal-lang.org/reference/syntax_and_semantics/literals/string.html#heredoc
@@ -54,6 +59,10 @@ provide-module crystal %🐈
   add-highlighter shared/crystal/raw-heredoc region -match-capture "<<-'(\w+)'" '^\h*(\w+)$' regions
   add-highlighter shared/crystal/raw-heredoc/fill default-region fill string
   add-highlighter shared/crystal/raw-heredoc/interpolation region -recurse '\{' '#\{' '\}' fill meta
+
+  # Symbol
+  # https://crystal-lang.org/reference/syntax_and_semantics/literals/symbol.html
+  add-highlighter shared/crystal/quoted-symbol region ':"' '(?<!\\)"' fill value
 
   # Regular expressions
   # https://crystal-lang.org/reference/syntax_and_semantics/literals/regex.html
@@ -84,13 +93,43 @@ provide-module crystal %🐈
   evaluate-commands %sh[
     # Keywords
     eval "set -- $kak_opt_crystal_keywords"
-    regex="\\b(?:$1"
+    regex="\\b(?:\\Q$1\\E"
     shift
     for keyword do
       regex="$regex|\\Q$keyword\\E"
     done
     regex="$regex)\\b"
     printf 'add-highlighter shared/crystal/code/keywords regex %s 0:keyword\n' "$regex"
+
+    # Attributes
+    eval "set -- $kak_opt_crystal_attributes"
+    regex="\\b(?:\\Q$1\\E"
+    shift
+    for attribute do
+      regex="$regex|\\Q$attribute\\E"
+    done
+    regex="$regex)\\b"
+    printf 'add-highlighter shared/crystal/code/attributes regex %s 0:attribute\n' "$regex"
+
+    # Symbols
+    eval "set -- $kak_opt_crystal_operators"
+    # Avoid to match modules
+    regex="(?<!:):(?:\\w+[?!]?"
+    for operator do
+      regex="$regex|\\Q$operator\\E"
+    done
+    regex="$regex)"
+    printf 'add-highlighter shared/crystal/code/symbols regex %%(%s) 0:value\n' "$regex"
+
+    # Objects
+    eval "set -- $kak_opt_crystal_objects"
+    regex="\\b(?:\\Q$1\\E"
+    shift
+    for object do
+      regex="$regex|\\Q$object\\E"
+    done
+    regex="$regex)\\b"
+    printf 'add-highlighter shared/crystal/code/objects regex %s 0:builtin\n' "$regex"
 
     # Interpolation
     # String
@@ -130,6 +169,19 @@ provide-module crystal %🐈
     set-register dquote %sh{
       curl --location https://github.com/crystal-lang/crystal/raw/master/src/compiler/crystal/syntax/lexer.cr |
       kak -f '%1scheck_ident_or_keyword\(:(\w+\??), \w+\)<ret>y%<a-R>a<ret><esc><a-_>a<del><esc>|sort<ret>'
+    }
+  }
+  define-command -hidden crystal-fetch-operators %{
+    set-register dquote %sh{
+      curl --location https://github.com/crystal-lang/crystal/raw/master/src/compiler/crystal/syntax/parser.cr |
+      kak -f '/AtomicWithMethodCheck =<ret>x1s:"([^"]+)"<ret>y%<a-R>i''<esc>a''<ret><esc><a-_>a<del><esc>'
+    }
+  }
+  define-command -hidden crystal-fetch-objects %{
+    set-register dquote %sh{
+      curl --location https://crystal-lang.org/api/ |
+      # Remove Top Level Namespace
+      kak -f '%1sdata-id="github.com/crystal-lang/crystal/(\w+)"<ret>)<a-space>y%<a-R>a<ret><esc><a-_>a<del><esc>'
     }
   }
 🐈
