@@ -799,7 +799,7 @@ select_argument(const Context& context, const Selection& selection,
         skip_while_reverse(end, begin, is_blank);
     }
     // get starting delimiter for non inner last arg
-    else if (not first_arg and last_arg)
+    else if (not first_arg and last_arg and begin != buffer.begin())
         --begin;
 
     if (end == buffer.end())
