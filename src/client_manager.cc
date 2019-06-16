@@ -137,6 +137,7 @@ void ClientManager::remove_client(Client& client, bool graceful, int status)
 
 WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
 {
+    kak_assert(contains(BufferManager::instance(), &buffer));
     auto it = find_if(m_free_windows | reverse(),
                       [&](const WindowAndSelections& ws)
                       { return &ws.window->buffer() == &buffer; });
@@ -153,6 +154,9 @@ WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
 
 void ClientManager::add_free_window(std::unique_ptr<Window>&& window, SelectionList selections)
 {
+    if (not contains(BufferManager::instance(), &window->buffer()))
+        return;
+
     window->clear_display_buffer();
     m_free_windows.push_back({std::move(window), std::move(selections)});
 }
