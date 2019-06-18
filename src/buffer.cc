@@ -685,7 +685,7 @@ void Buffer::on_option_changed(const Option& option)
             m_flags &= ~Flags::ReadOnly;
     }
     run_hook_in_own_context(Hook::BufSetOption,
-                            format("{}={}", option.name(), option.get_as_string(Quoting::Kakoune)));
+                            format("{}={}", option.name(), option.get_as_string(Quoting::Raw)));
 }
 
 void Buffer::run_hook_in_own_context(Hook hook, StringView param, String client_name)

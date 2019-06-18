@@ -1330,8 +1330,8 @@ void select_object(Context& context, NormalParams params)
             EnvVarMap env_vars = {
                 { "count", to_string(params.count) },
                 { "register", String{&params.reg, 1} },
-                { "select_mode", option_to_string(mode) },
-                { "object_flags", option_to_string(flags) }
+                { "select_mode", option_to_string(mode, Quoting::Raw) },
+                { "object_flags", option_to_string(flags, Quoting::Raw) }
             };
             command(context, std::move(env_vars));
             return;

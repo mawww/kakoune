@@ -286,7 +286,7 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
 
 auto expand_option(Option& opt, std::true_type)
 {
-    return opt.get_as_string(Quoting::Kakoune);
+    return opt.get_as_string(Quoting::Raw);
 }
 
 auto expand_option(Option& opt, std::false_type)

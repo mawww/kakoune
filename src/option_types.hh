@@ -25,20 +25,6 @@ option_to_string(const T& value, Quoting)
     return option_to_string(value);
 }
 
-template<typename T, typename... Rest>
-constexpr bool option_needs_quoting(Meta::Type<T> type, Meta::Type<Rest>... rest)
-{
-    return option_needs_quoting(type) or option_needs_quoting(rest...);
-}
-
-template<typename... Ts>
-String quote_ifn(String str, Quoting quoting)
-{
-    if (option_needs_quoting(Meta::Type<Ts>{}...))
-        return quoter(quoting)(std::move(str));
-    return str;
-}
-
 template<typename T>
 constexpr decltype(T::option_type_name) option_type_name(Meta::Type<T>)
 {
@@ -79,7 +65,7 @@ inline bool option_from_string(Meta::Type<bool>, StringView str)
 }
 constexpr StringView option_type_name(Meta::Type<bool>) { return "bool"; }
 
-inline String option_to_string(Codepoint opt) { return to_string(opt); }
+inline String option_to_string(Codepoint opt, Quoting quoting) { return quoter(quoting)(to_string(opt)); }
 inline Codepoint option_from_string(Meta::Type<Codepoint>, StringView str)
 {
     if (str.char_length() != 1)
@@ -87,18 +73,17 @@ inline Codepoint option_from_string(Meta::Type<Codepoint>, StringView str)
     return str[0_char];
 }
 constexpr StringView option_type_name(Meta::Type<Codepoint>) { return "codepoint"; }
-constexpr bool option_needs_quoting(Meta::Type<Codepoint>) { return true; }
 
 template<typename T, MemoryDomain domain>
 Vector<String> option_to_strings(const Vector<T, domain>& opt)
 {
-    return opt | transform([](const T& t) { return option_to_string(t); }) | gather<Vector<String>>();
+    return opt | transform([](const T& t) { return option_to_string(t, Quoting::Raw); }) | gather<Vector<String>>();
 }
 
 template<typename T, MemoryDomain domain>
 String option_to_string(const Vector<T, domain>& opt, Quoting quoting)
 {
-    return join(opt | transform([=](const T& t) { return quote_ifn<T>(option_to_string(t), quoting); }), ' ', false);
+    return join(opt | transform([=](const T& t) { return option_to_string(t, quoting); }), ' ', false);
 }
 
 template<typename T, MemoryDomain domain>
@@ -136,8 +121,8 @@ Vector<String> option_to_strings(const HashMap<Key, Value, domain>& opt)
 {
     return opt | transform([](auto&& item) {
         return format("{}={}",
-                      escape(option_to_string(item.key), '=', '\\'),
-                      escape(option_to_string(item.value), '=', '\\'));
+                      escape(option_to_string(item.key, Quoting::Raw), '=', '\\'),
+                      escape(option_to_string(item.value, Quoting::Raw), '=', '\\'));
     }) | gather<Vector<String>>();
 }
 
@@ -145,10 +130,10 @@ template<typename Key, typename Value, MemoryDomain domain>
 String option_to_string(const HashMap<Key, Value, domain>& opt, Quoting quoting)
 {
     return join(opt | transform([=](auto&& item) {
-        return quote_ifn<Key, Value>(
+        return quoter(quoting)(
             format("{}={}",
-                   escape(option_to_string(item.key), '=', '\\'),
-                   escape(option_to_string(item.value), '=', '\\')), quoting);
+                   escape(option_to_string(item.key, Quoting::Raw), '=', '\\'),
+                   escape(option_to_string(item.value, Quoting::Raw), '=', '\\')));
     }), ' ', false);
 }
 
@@ -187,15 +172,15 @@ String option_type_name(Meta::Type<HashMap<K, V, D>>)
 constexpr char tuple_separator = '|';
 
 template<typename... Types, size_t... I>
-String option_to_string_impl(const std::tuple<Types...>& opt, std::index_sequence<I...>)
+String option_to_string_impl(Quoting quoting, const std::tuple<Types...>& opt, std::index_sequence<I...>)
 {
-    return join(make_array({option_to_string(std::get<I>(opt))...}), tuple_separator);
+    return join(make_array({option_to_string(std::get<I>(opt), quoting)...}), tuple_separator);
 }
 
 template<typename... Types>
-String option_to_string(const std::tuple<Types...>& opt)
+String option_to_string(const std::tuple<Types...>& opt, Quoting quoting)
 {
-    return option_to_string_impl(opt, std::make_index_sequence<sizeof...(Types)>());
+    return option_to_string_impl(quoting, opt, std::make_index_sequence<sizeof...(Types)>());
 }
 
 template<typename... Types, size_t... I>
@@ -335,7 +320,7 @@ EnableIfWithBitOps<Flags, bool> option_add(Flags& opt, StringView str)
 template<typename P, typename T>
 inline Vector<String> option_to_strings(const PrefixedList<P, T>& opt)
 {
-    Vector<String> res{option_to_string(opt.prefix)};
+    Vector<String> res{option_to_string(opt.prefix, Quoting::Raw)};
     auto list = option_to_strings(opt.list);
     res.insert(res.end(), std::make_move_iterator(list.begin()), std::make_move_iterator(list.end()));
     return res;
