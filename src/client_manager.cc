@@ -155,7 +155,10 @@ WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
 void ClientManager::add_free_window(std::unique_ptr<Window>&& window, SelectionList selections)
 {
     if (not contains(BufferManager::instance(), &window->buffer()))
+    {
+        m_window_trash.push_back(std::move(window));
         return;
+    }
 
     window->clear_display_buffer();
     m_free_windows.push_back({std::move(window), std::move(selections)});
