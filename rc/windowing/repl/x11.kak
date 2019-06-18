@@ -15,9 +15,8 @@ All optional parameters are forwarded to the new window} \
            exit
         fi
         if [ $# -eq 0 ]; then cmd="${SHELL:-sh}"; else cmd="$@"; fi
-        setsid ${kak_opt_termcmd} \
-               "xdotool getactivewindow set_window --name kak_repl_window \
-                && exec \"${cmd}\"" < /dev/null > /dev/null 2>&1 &
+        setsid ${kak_opt_termcmd} "printf '\e]2;kak_repl_window\a' \
+                && ${cmd}" < /dev/null > /dev/null 2>&1 &
 }}
 
 define-command x11-send-text -docstring "send the selected text to the repl window" %{
