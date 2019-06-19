@@ -92,7 +92,7 @@ provide-module crystal %🐈
 
   evaluate-commands %sh[
     # Keywords
-    eval "set -- $kak_opt_crystal_keywords"
+    eval "set -- $kak_quoted_opt_crystal_keywords"
     regex="\\b(?:\\Q$1\\E"
     shift
     for keyword do
@@ -102,7 +102,7 @@ provide-module crystal %🐈
     printf 'add-highlighter shared/crystal/code/keywords regex %s 0:keyword\n' "$regex"
 
     # Attributes
-    eval "set -- $kak_opt_crystal_attributes"
+    eval "set -- $kak_quoted_opt_crystal_attributes"
     regex="\\b(?:\\Q$1\\E"
     shift
     for attribute do
@@ -112,7 +112,7 @@ provide-module crystal %🐈
     printf 'add-highlighter shared/crystal/code/attributes regex %s 0:attribute\n' "$regex"
 
     # Symbols
-    eval "set -- $kak_opt_crystal_operators"
+    eval "set -- $kak_quoted_opt_crystal_operators"
     # Avoid to match modules
     regex="(?<!:):(?:\\w+[?!]?"
     for operator do
@@ -122,7 +122,7 @@ provide-module crystal %🐈
     printf 'add-highlighter shared/crystal/code/symbols regex %%(%s) 0:value\n' "$regex"
 
     # Objects
-    eval "set -- $kak_opt_crystal_objects"
+    eval "set -- $kak_quoted_opt_crystal_objects"
     regex="\\b(?:\\Q$1\\E"
     shift
     for object do

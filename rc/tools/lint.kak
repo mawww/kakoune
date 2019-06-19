@@ -85,7 +85,7 @@ define-command lint -docstring 'Parse the current buffer with a linter' %{
 define-command -hidden lint-show %{
     update-option buffer lint_errors
     evaluate-commands %sh{
-        eval "set -- ${kak_opt_lint_errors}"
+        eval "set -- ${kak_quoted_opt_lint_errors}"
         shift
 
         s=""
@@ -124,7 +124,7 @@ define-command lint-next-error -docstring "Jump to the next line that contains a
     update-option buffer lint_errors
 
     evaluate-commands %sh{
-        eval "set -- ${kak_opt_lint_errors}"
+        eval "set -- ${kak_quoted_opt_lint_errors}"
         shift
 
         for i in "$@"; do
@@ -148,7 +148,7 @@ define-command lint-previous-error -docstring "Jump to the previous line that co
     update-option buffer lint_errors
 
     evaluate-commands %sh{
-        eval "set -- ${kak_opt_lint_errors}"
+        eval "set -- ${kak_quoted_opt_lint_errors}"
         shift
 
         for i in "$@"; do

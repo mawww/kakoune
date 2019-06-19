@@ -13,7 +13,7 @@ define-command -hidden -params 4 doc-render-regex %{
         execute-keys "%arg{3}"
         evaluate-commands %sh{
             face="$4"
-            eval "set -- $kak_selections_desc"
+            eval "set -- $kak_quoted_selections_desc"
             for desc in "$@"; do ranges="$ranges '$desc|$face'"; done
             echo "update-option buffer doc_render_ranges"
             echo "set-option -add buffer doc_render_ranges $ranges"
@@ -58,7 +58,7 @@ define-command doc-jump-to-anchor -params 1 %{
     update-option buffer doc_anchors
     evaluate-commands %sh{
         anchor="$1"
-        eval "set -- $kak_opt_doc_anchors"
+        eval "set -- $kak_quoted_opt_doc_anchors"
 
         shift
         for range in "$@"; do
@@ -74,7 +74,7 @@ define-command doc-jump-to-anchor -params 1 %{
 define-command doc-follow-link %{
     update-option buffer doc_links
     evaluate-commands %sh{
-        eval "set -- $kak_opt_doc_links"
+        eval "set -- $kak_quoted_opt_doc_links"
         for link in "$@"; do
             printf '%s\n' "$link"
         done | awk -v FS='[.,|#]' '

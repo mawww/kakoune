@@ -15,7 +15,7 @@ declare-option -docstring "shell command to run" str readtagscmd "readtags"
 define-command -params ..1 \
     -shell-script-candidates %{
         realpath() { ( cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
-        eval "set -- $kak_opt_ctagsfiles"
+        eval "set -- $kak_quoted_opt_ctagsfiles"
         for candidate in "$@"; do
             [ -f "$candidate" ] && realpath "$candidate"
         done | awk '!x[$0]++' | # remove duplicates
@@ -32,7 +32,7 @@ If no symbol is passed then the current selection is used as symbol name} \
     %[ evaluate-commands %sh[
         realpath() { ( cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
         export tagname="${1:-${kak_selection}}"
-        eval "set -- $kak_opt_ctagsfiles"
+        eval "set -- $kak_quoted_opt_ctagsfiles"
         for candidate in "$@"; do
             [ -f "$candidate" ] && realpath "$candidate"
         done | awk '!x[$0]++' | # remove duplicates
@@ -68,7 +68,7 @@ define-command ctags-complete -docstring "Complete the current selection" %{
         (
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
             compl=$(
-                eval "set -- $kak_opt_ctagsfiles"
+                eval "set -- $kak_quoted_opt_ctagsfiles"
                 for ctagsfile in "$@"; do
                     ${kak_opt_readtagscmd} -p -t "$ctagsfile" ${kak_selection}
                 done | awk '{ uniq[$1]++ } END { for (elem in uniq) printf " %1$s||%1$s", elem }'

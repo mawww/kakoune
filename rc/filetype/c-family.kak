@@ -399,7 +399,7 @@ define-command -hidden c-family-alternative-file %{
         dir=$(dirname "${kak_buffile}")
 
         # Set $@ to alt_dirs
-        eval "set -- ${kak_opt_alt_dirs}"
+        eval "set -- ${kak_quoted_opt_alt_dirs}"
 
         case ${file} in
             *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
