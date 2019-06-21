@@ -169,7 +169,7 @@ define-command -hidden ruby-insert-on-new-line %[
                     # Check if previous line opens a block
                     execute-keys -draft k<a-x> <a-k>^<c-r>x(begin|case|class|def|for|if|module|unless|until|while|.+\bdo$|.+\bdo\h\|.+(?=\|))\b<ret>
                     # Check that we do not already have an end for this indent level which is first set via `ruby-indent-on-new-line` hook
-                    execute-keys -draft }i J <a-x> <a-K> ^<c-r>xend$<ret>
+                    execute-keys -draft }i J <a-x> <a-K> ^<c-r>x(end|else|elsif|rescue)\b<ret>
                 ]
                 execute-keys -draft o<c-r>xend<esc> # insert a new line with containing end
             ]
