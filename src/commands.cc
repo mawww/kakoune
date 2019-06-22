@@ -1245,6 +1245,7 @@ const CommandDesc echo_cmd = {
     "echo <params>...: display given parameters in the status line",
     ParameterDesc{
         { { "markup", { false, "parse markup" } },
+          { "quoting", { true, "quote each argument separately using the given style (raw|kakoune|shell)" } },
           { "to-file", { true, "echo contents to given filename" } },
           { "debug", { false, "write to debug buffer instead of status line" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart
@@ -1254,7 +1255,13 @@ const CommandDesc echo_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        String message = join(parser, ' ', false);
+        String message;
+        if (auto quoting = parser.get_switch("quoting"))
+            message = join(parser | transform(quoter(option_from_string(Meta::Type<Quoting>{}, *quoting))),
+                           ' ', false);
+        else
+            message = join(parser, ' ', false);
+
         if (auto filename = parser.get_switch("to-file"))
             return write_to_file(*filename, message);
 

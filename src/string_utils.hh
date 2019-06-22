@@ -2,6 +2,7 @@
 #define string_utils_hh_INCLUDED
 
 #include "string.hh"
+#include "enum.hh"
 #include "vector.hh"
 #include "optional.hh"
 
@@ -142,6 +143,15 @@ enum class Quoting
     Kakoune,
     Shell
 };
+
+constexpr auto enum_desc(Meta::Type<Quoting>)
+{
+    return make_array<EnumDesc<Quoting>, 3>({
+        { Quoting::Raw, "raw" },
+        { Quoting::Kakoune, "kakoune" },
+        { Quoting::Shell, "shell" }
+    });
+}
 
 inline auto quoter(Quoting quoting)
 {
