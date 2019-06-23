@@ -244,7 +244,7 @@ Running
 ~~~~~~~
 
 Just running *kak* launches a new kak session with a client on local terminal.
-Run *kak -help* to discover the valid <<doc/kak.1#options,command line flags>>.
+Run *kak -help* to discover the valid command line flags.
 
 Configuration
 ^^^^^^^^^^^^^
