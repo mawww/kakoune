@@ -9,7 +9,8 @@ ifneq ($(gzip_man),yes)
 endif
 
 ifeq ($(debug),yes)
-    CPPFLAGS += -DKAK_DEBUG -Og
+    CPPFLAGS += -DKAK_DEBUG
+    CXXFLAGS + -Og
     suffix := .debug
 else
     ifeq ($(debug),no)
