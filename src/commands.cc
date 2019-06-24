@@ -993,6 +993,15 @@ const CommandDesc add_hook_cmd = {
         if (it == descs.end())
             throw runtime_error{format("no such hook: '{}'", parser[1])};
 
+        const Vector<Hook> key_hooks = {Hook::InsertKey, Hook::NormalKey, Hook::RawKey};
+        if (contains(key_hooks, it->value))
+        {
+            const auto keys = parse_keys(keydesc);// throws a runtime_error on parsing errors
+
+            if (keys.size() != 1)
+                throw runtime_error{format("a single key description is expected, got {}", keys.size())};
+        }
+
         Regex regex{parser[2], RegexCompileFlags::Optimize};
         const String& command = parser[3];
         auto group = parser.get_switch("group").value_or(StringView{});
