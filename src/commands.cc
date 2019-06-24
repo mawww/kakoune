@@ -988,6 +988,7 @@ const CommandDesc add_hook_cmd = {
                          context, flags, prefix, cursor_pos); }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
+        auto keydesc = parser[2];
         auto descs = enum_desc(Meta::Type<Hook>{});
         auto it = find_if(descs, [&](const EnumDesc<Hook>& desc) { return desc.name == parser[1]; });
         if (it == descs.end())
@@ -1000,9 +1001,12 @@ const CommandDesc add_hook_cmd = {
 
             if (keys.size() != 1)
                 throw runtime_error{format("a single key description is expected, got {}", keys.size())};
+
+            if (keys[0].key >= Key::F1 and keys[0].key <= Key::F12)
+                keydesc = key_to_str(keys[0]);
         }
 
-        Regex regex{parser[2], RegexCompileFlags::Optimize};
+        Regex regex{keydesc, RegexCompileFlags::Optimize};
         const String& command = parser[3];
         auto group = parser.get_switch("group").value_or(StringView{});
 
