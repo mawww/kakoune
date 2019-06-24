@@ -38,8 +38,7 @@ provide-module d %§
 add-highlighter shared/d regions
 add-highlighter shared/d/code default-region group
 add-highlighter shared/d/string region %{(?<!')(?<!'\\)"} %{(?<!\\)(?:\\\\)*"} group
-add-highlighter shared/d/verbatim_string1 region ` ` fill meta
-add-highlighter shared/d/verbatim_string2 region %{(?<!')(?<!'\\)`} %{(?<!\\)(?:\\\\)*`} fill meta
+add-highlighter shared/d/verbatim_string region %{(?<!')(?<!'\\)`} %{(?<!\\)(?:\\\\)*`} fill meta
 add-highlighter shared/d/verbatim_string_prefixed region %{r`([^(]*)\(} %{\)([^)]*)`} fill meta
 add-highlighter shared/d/disabled region '/\+[^+]?' '\+/' fill comment
 add-highlighter shared/d/comment1 region '/\*[^*]?' '\*/' fill comment
