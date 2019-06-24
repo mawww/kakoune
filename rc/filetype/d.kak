@@ -54,7 +54,7 @@ add-highlighter shared/d/code/ regex %{'((\\.)?|[^'\\])'} 0:value
 add-highlighter shared/d/code/ regex "-?([0-9_]*\.(?!0[xXbB]))?\b([0-9_]+|0[xX][0-9a-fA-F_]*\.?[0-9a-fA-F_]+|0[bb][01_]+)([ep]-?[0-9_]+)?[fFlLuUi]*\b" 0:value
 add-highlighter shared/d/code/ regex "\b(this)\b\s*[^(]" 1:value
 add-highlighter shared/d/code/ regex "((?:~|\b)this)\b\s*\(" 1:function
-add-highlighter shared/d/code/ regex '#\s*line\b.*' 0:meta
+add-highlighter shared/d/code/ regex '(#line)\h+(\d+)(\h+"[^"\n]*")?' 1:meta 2:value 3:string
 
 evaluate-commands %sh{
     # Grammar
