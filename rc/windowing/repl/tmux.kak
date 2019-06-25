@@ -1,7 +1,7 @@
 # http://tmux.github.io/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global ModuleLoad tmux %{
+hook global ModuleLoaded tmux %{
     require-module tmux-repl
 }
 
