@@ -1,0 +1,1 @@
+declare-option range-specs my_ranges 1 '1.1,1.1|a b' '1.2,1.2|b c'

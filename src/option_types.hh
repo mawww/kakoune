@@ -174,7 +174,7 @@ constexpr char tuple_separator = '|';
 template<typename... Types, size_t... I>
 String option_to_string_impl(Quoting quoting, const std::tuple<Types...>& opt, std::index_sequence<I...>)
 {
-    return join(make_array({option_to_string(std::get<I>(opt), quoting)...}), tuple_separator);
+    return quoter(quoting)(join(make_array({option_to_string(std::get<I>(opt), Quoting::Raw)...}), tuple_separator));
 }
 
 template<typename... Types>
