@@ -1,4 +1,4 @@
-hook global ModuleLoad x11 %{
+hook global ModuleLoaded x11 %{
     require-module x11-repl
 }
 

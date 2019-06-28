@@ -67,7 +67,7 @@ void CommandManager::load_module(StringView module_name, Context& context)
     execute(module->value.commands, empty_context);
     module->value.commands.clear();
 
-    context.hooks().run_hook(Hook::ModuleLoad, module_name, context);
+    context.hooks().run_hook(Hook::ModuleLoaded, module_name, context);
 }
 
 struct parse_error : runtime_error

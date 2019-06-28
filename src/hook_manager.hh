@@ -57,7 +57,7 @@ enum class Hook
     WinDisplay,
     WinResize,
     WinSetOption,
-    ModuleLoad
+    ModuleLoaded
 };
 
 constexpr auto enum_desc(Meta::Type<Hook>)
@@ -103,7 +103,7 @@ constexpr auto enum_desc(Meta::Type<Hook>)
         {Hook::WinDisplay, "WinDisplay"},
         {Hook::WinResize, "WinResize"},
         {Hook::WinSetOption, "WinSetOption"},
-        {Hook::ModuleLoad, "ModuleLoad"}
+        {Hook::ModuleLoaded, "ModuleLoaded"}
     });
 }
 

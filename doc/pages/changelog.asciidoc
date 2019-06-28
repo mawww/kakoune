@@ -28,8 +28,8 @@ released versions.
   `require-module` commands that allows for lazily loading language
   support files with dependency resolution.
 
-* Added a new hook `ModuleLoad` which is run when a module is loaded,
-  allowing for module specific configuration.
+* Added a new hook `ModuleLoaded` which is run after a module is
+  loaded, allowing for module specific configuration.
 
 * Shell quoting of lists is not automatic anymore, `$kak_quoted_...`
   makes it opt-in, and works for all option types.
