@@ -34,6 +34,9 @@ released versions.
 * Shell quoting of lists is not automatic anymore, `$kak_quoted_...`
   makes it opt-in, and works for all option types.
 
+* Lower case function key syntax is not accepted anymore,
+  `<f1>` should be converted to `<F1>`.
+
 == Kakoune 2019.01.20
 
 * `auto_complete` has been renamed to `autocomplete` for more
