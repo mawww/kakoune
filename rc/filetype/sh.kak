@@ -7,7 +7,7 @@ hook global WinSetOption filetype=sh %{
     set-option window static_words %opt{sh_static_words}
 
     hook window ModeChange insert:.* -group sh-trim-indent sh-trim-indent
-    hook window InsertChar \n -group sh-indent maybe-sh-indent-on-new-line
+    hook window InsertChar \n -group sh-indent sh-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window sh-.+ }
 }
 
@@ -17,9 +17,6 @@ hook -group sh-highlight global WinSetOption filetype=sh %{
 }
 
 provide-module sh %[
-
-declare-option -docstring "attempt to automatically indent shell code. Defaults to no." \
-    bool sh_auto_indent no
 
 add-highlighter shared/sh regions
 add-highlighter shared/sh/code default-region group
@@ -57,15 +54,6 @@ add-highlighter shared/sh/double_string/expansion regex \$(\w+|\{.+?\}) 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
-
-# Check sh_auto_indent option before attempting to auto-indent anything
-define-command -hidden maybe-sh-indent-on-new-line %{
-    evaluate-commands %sh{
-        if [ "${kak_opt_sh_auto_indent}" = true ]; then
-            echo "sh-indent-on-new-line"
-        fi
-    }
-}
 
 define-command -hidden sh-trim-indent %{
     # remove trailing white spaces
