@@ -678,7 +678,7 @@ Color Schemes
 ~~~~~~~~~~~~~
 
 Kakoune ships with some color schemes that are installed to
-`../share/kak/colors/`. If `$XDG_CONFIG_HOME/kak/colors/` is present
+`../share/kak/color-schemes/`. If `$XDG_CONFIG_HOME/kak/color-schemes/` is present
 the builtin command `set-color-scheme` will offer completion for those
 color schemes. If a scheme is duplicated in userspace, it will take
 precedence.
