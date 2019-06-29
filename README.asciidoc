@@ -622,7 +622,7 @@ saved in the command history.
  * `b[uffer]p[rev]`: switch to the previous buffer
  * `d[el]b[uf][!] [<name>]`: delete the buffer <name>
  * `source <filename>`: execute commands in <filename>
- * `colorscheme <name>`: load named colorscheme.
+ * `set-color-scheme <name>`: load named color scheme.
  * `rename-client <name>`: set current client name
  * `rename-buffer <name>`: set current buffer name
  * `rename-session <name>`: set current session name
@@ -679,7 +679,7 @@ Color Schemes
 
 Kakoune ships with some color schemes that are installed to
 `../share/kak/colors/`. If `$XDG_CONFIG_HOME/kak/colors/` is present
-the builtin command `colorscheme` will offer completion for those
+the builtin command `set-color-scheme` will offer completion for those
 color schemes. If a scheme is duplicated in userspace, it will take
 precedence.
 

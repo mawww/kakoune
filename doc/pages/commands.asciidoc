@@ -233,8 +233,8 @@ of the file onto the filesystem
     Remove a face definition from *scope*
     (See <<faces#,`:doc faces`>> and <<scopes#,`:doc scopes`>>)
 
-*colorscheme* <name>::
-    load named colorscheme
+*set-color-scheme* <name>::
+    load named color scheme
 
 *add-highlighter* <highlighter_name> <highlighter_parameters> ...::
     *alias* addhl +

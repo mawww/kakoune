@@ -150,7 +150,7 @@ distclean: clean
 installdirs:
 	install -d $(bindir) \
 		$(sharedir)/rc \
-		$(sharedir)/colors \
+		$(sharedir)/color-schemes \
 		$(sharedir)/doc \
 		$(docdir) \
 		$(mandir)
@@ -162,7 +162,7 @@ install: kak man installdirs
 	cp -r ../rc/* $(sharedir)/rc
 	find $(sharedir)/rc -type f -exec chmod 0644 {} +
 	[ -e $(sharedir)/autoload ] || ln -s rc $(sharedir)/autoload
-	install -m 0644 ../colors/* $(sharedir)/colors
+	install -m 0644 ../color-schemes/* $(sharedir)/color-schemes
 	install -m 0644 ../README.asciidoc $(docdir)
 ifeq ($(gzip_man),yes)
 	install -m 0644 ../doc/kak.1.gz $(mandir)

@@ -1,27 +1,27 @@
-def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
+define-command -params 1 -docstring "set-color-scheme <name>: enable named color scheme" \
     -shell-script-candidates %{
-    find -L "${kak_runtime}/colors" "${kak_config}/colors" -type f -name '*\.kak' \
+    find -L "${kak_runtime}/color-schemes" "${kak_config}/color-schemes" -type f -name '*\.kak' \
         | while read -r filename; do
             basename="${filename##*/}"
             printf %s\\n "${basename%.*}"
         done | sort -u
   } \
-  colorscheme %{ evaluate-commands %sh{
+  set-color-scheme %{ evaluate-commands %sh{
     find_colorscheme() {
         find -L "${1}" -type f -name "${2}".kak | head -n 1
     }
 
-    if [ -d "${kak_config}/colors" ]; then
-        filename=$(find_colorscheme "${kak_config}/colors" "${1}")
+    if [ -d "${kak_config}/color-schemes" ]; then
+        filename=$(find_colorscheme "${kak_config}/color-schemes" "${1}")
     fi
     if [ -z "${filename}" ]; then
-        filename=$(find_colorscheme "${kak_runtime}/colors" "${1}")
+        filename=$(find_colorscheme "${kak_runtime}/color-schemes" "${1}")
     fi
 
     if [ -n "${filename}" ]; then
         printf 'source %%{%s}' "${filename}"
     else
-        echo "echo -markup '{Error}No such colorscheme'"
+        echo "echo -markup '{Error}No such color scheme'"
     fi
 }}
 
@@ -31,7 +31,7 @@ evaluate-commands %sh{
             | sed 's/.*/try %{ source "&" } catch %{ echo -debug Autoload: could not load "&" }/'
     }
 
-    echo "colorscheme default"
+    echo "set-color-scheme default"
 
     if [ -d "${kak_config}/autoload" ]; then
         autoload_directory ${kak_config}/autoload

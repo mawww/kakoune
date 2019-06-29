@@ -59,7 +59,7 @@ evaluate-commands %sh{
               hook remove-hooks define-command echo debug source try catch fail nop
               set-option unset-option update-option declare-option execute-keys evaluate-commands
               prompt menu on-key info set-face unset-face rename-client set-register select
-              change-directory rename-session colorscheme declare-user-mode enter-user-mode
+              change-directory rename-session set-color-scheme declare-user-mode enter-user-mode
               edit! write! kill! quit! write-quit! delete-buffer! provide-module require-module"
     attributes="global buffer window current
                 normal insert menu prompt goto view user object
