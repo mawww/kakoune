@@ -25,6 +25,8 @@ define-command -params 1 -docstring "set-color-scheme <name>: enable named color
     fi
 }}
 
+alias global color-scheme set-color-scheme
+
 evaluate-commands %sh{
     autoload_directory() {
         find -L "$1" -type f -name '*\.kak' \
