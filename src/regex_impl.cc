@@ -10,6 +10,7 @@
 #include "vector.hh"
 #include "utils.hh"
 
+#include <cstdio>
 #include <cstring>
 
 namespace Kakoune
