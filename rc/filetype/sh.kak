@@ -5,6 +5,10 @@ hook global BufCreate .*\.(z|ba|c|k|mk)?sh(rc|_profile)? %{
 hook global WinSetOption filetype=sh %{
     require-module sh
     set-option window static_words %opt{sh_static_words}
+
+    hook window ModeChange insert:.* -group sh-trim-indent sh-trim-indent
+    hook window InsertChar \n -group sh-indent sh-indent-on-new-line
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window sh-.+ }
 }
 
 hook -group sh-highlight global WinSetOption filetype=sh %{
@@ -47,5 +51,129 @@ add-highlighter shared/sh/code/function regex ^\h*(\w+)\h*\(\) 1:function
 
 add-highlighter shared/sh/code/unscoped_expansion regex \$(\w+|#|@|\?|\$|!|-|\*) 0:value
 add-highlighter shared/sh/double_string/expansion regex \$(\w+|\{.+?\}) 0:value
+
+# Commands
+# ‾‾‾‾‾‾‾‾
+
+define-command -hidden sh-trim-indent %{
+    # remove trailing white spaces
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+}
+
+# This is at best an approximation, since shell syntax is very complex.
+# Also note that this targets plain sh syntax, not bash - bash adds a whole
+# other level of complexity. If your bash code is fairly portable this will
+# probably work.
+#
+# Of necessity, this is also fairly opinionated about indentation styles.
+# Doing it "properly" would require far more context awareness than we can
+# bring to this kind of thing.
+define-command -hidden sh-indent-on-new-line %[
+    evaluate-commands -draft -itersel %[
+        # copy '#' comment prefix and following white spaces
+        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+        # preserve previous line indent
+        try %{ execute-keys -draft \; K <a-&> }
+        # filter previous line
+        try %{ execute-keys -draft k : sh-trim-indent <ret> }
+
+        # Indent loop syntax, e.g.:
+        # for foo in bar; do
+        #       things
+        # done
+        #
+        # or:
+        #
+        # while foo; do
+        #       things
+        # done
+        #
+        # or equivalently:
+        #
+        # while foo
+        # do
+        #       things
+        # done
+        #
+        # indent after do
+        try %{ execute-keys -draft <space> k <a-x> <a-k> do$ <ret> j <a-gt> }
+        # deindent after done
+        try %{ execute-keys -draft <space> k <a-x> <a-k> done$ <ret> <a-lt> j K <a-&> }
+
+        # Indent if/then/else syntax, e.g.:
+        # if [ $foo = $bar ]; then
+        #       things
+        # else
+        #       other_things
+        # fi
+        #
+        # or equivalently:
+        # if [ $foo = $bar ]
+        # then
+        #       things
+        # else
+        #       other_things
+        # fi
+        #
+        # indent after then
+        try %{ execute-keys -draft <space> k <a-x> <a-k> then$ <ret> j <a-gt> }
+        # deindent after fi
+        try %{ execute-keys -draft <space> k <a-x> <a-k> fi$ <ret> <a-lt> j K <a-&> }
+        # deindent and reindent after else - deindent the else, then back
+        # down and return to the previous indent level.
+        try %{ execute-keys -draft <space> k <a-x> <a-k> else$ <ret> <a-lt> j }
+
+        # Indent case syntax, e.g.:
+        # case "$foo" in
+        #       bar) thing1;;
+        #       baz)
+        #               things
+        #               ;;
+        #       *)
+        #               default_things
+        #               ;;
+        # esac
+        #
+        # or equivalently:
+        # case "$foo"
+        # in
+        #       bar) thing1;;
+        # esac
+        #
+        # indent after in
+        try %{ execute-keys -draft <space> k <a-x> <a-k> in$ <ret> j <a-gt> }
+        # deindent after esac
+        try %{ execute-keys -draft <space> k <a-x> <a-k> esac$ <ret> <a-lt> j K <a-&> }
+        # indent after )
+        try %{ execute-keys -draft <space> k <a-x> <a-k> ^\s*\(?[^(]+[^)]\)$ <ret> j <a-gt> }
+        # deindent after ;;
+        try %{ execute-keys -draft <space> k <a-x> <a-k> ^\s*\;\;$ <ret> j <a-lt> }
+
+        # Indent compound commands as logical blocks, e.g.:
+        # {
+        #       thing1
+        #       thing2
+        # }
+        #
+        # or in a function definition:
+        # foo () {
+        #       thing1
+        #       thing2
+        # }
+        #
+        # We don't handle () delimited compond commands - these are technically very
+        # similar, but the use cases are quite different and much less common.
+        #
+        # Note that in this context the '{' and '}' characters are reserved
+        # words, and hence must be surrounded by a token separator - typically
+        # white space (including a newline), though technically it can also be
+        # ';'. Only vertical white space makes sense in this context, though,
+        # since the syntax denotes a logical block, not a simple compound command.
+        try %= execute-keys -draft <space> k <a-x> <a-k> (\s|^)\{$ <ret> j <a-gt> =
+        # deindent closing }
+        try %= execute-keys -draft <space> k <a-x> <a-k> ^\s*\}$ <ret> <a-lt> j K <a-&> =
+
+    ]
+]
 
 ]

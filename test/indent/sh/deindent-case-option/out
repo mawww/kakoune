@@ -1,0 +1,7 @@
+case $foo in
+    bar) thing1;;
+    baz)
+        thing1
+        thing2
+        ;;
+    *)
