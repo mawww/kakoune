@@ -4,3 +4,4 @@ case $foo in
         thing2
     ;;
 esac
+

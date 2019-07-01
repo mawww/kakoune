@@ -3,3 +3,4 @@ case $foo in
         thing1
         thing2
     ;;
+    esac
