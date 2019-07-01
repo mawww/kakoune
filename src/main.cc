@@ -44,10 +44,12 @@ struct {
     unsigned int version;
     const char* notes;
 } constexpr version_notes[] = { {
-        0,
+        20190701,
         "» %file{...} expansions to read files\n"
         "» echo -to-file <filename> to write to file\n"
         "» completions option have an on select command instead of a docstring\n"
+        "» Function key syntax do not accept lower case f anymore\n"
+        "» shell quoting of list options is now opt-in with $kak_quoted_...\n"
     }, {
         20190120,
         "» named capture groups in regex\n"
