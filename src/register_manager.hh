@@ -85,6 +85,8 @@ class HistoryRegister : public StaticRegister
 public:
     void set(Context& context, ConstArrayView<String> values, bool restoring) override
     {
+        constexpr size_t size_limit = 100;
+
         if (restoring)
             return StaticRegister::set(context, values, true);
 
@@ -94,6 +96,10 @@ public:
                           m_content.end());
             m_content.push_back(entry);
         }
+
+        const size_t current_size = m_content.size();
+        if (current_size > size_limit)
+            m_content.erase(m_content.begin(), m_content.begin() + (current_size - size_limit));
     }
 
     const String& get_main(const Context&, size_t) override
