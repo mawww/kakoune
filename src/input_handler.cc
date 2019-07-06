@@ -490,7 +490,7 @@ public:
         }
         else if (key == alt('f'))
             to_next_word_begin<Word>(m_cursor_pos, m_line);
-        else if (key == alt('W'))
+        else if (key == alt('F'))
             to_next_word_begin<WORD>(m_cursor_pos, m_line);
         else if (key == alt('b'))
             to_prev_word_begin<Word>(m_cursor_pos, m_line);
@@ -514,7 +514,7 @@ public:
         else if (key == ctrl('w') or key == alt(Key::Backspace))
             erase_move(&to_prev_word_begin<Word>);
         else if (key == ctrl('W'))
-            erase_move(&to_prev_word_begin<Word>);
+            erase_move(&to_prev_word_begin<WORD>);
         else if (key == alt('d'))
             erase_move(&to_next_word_begin<Word>);
         else if (key == alt('D'))
