@@ -12,6 +12,7 @@
 
 #include <cerrno>
 #include <cstdlib>
+#include <cstdio>
 #include <cstring>
 #include <dirent.h>
 #include <fcntl.h>
