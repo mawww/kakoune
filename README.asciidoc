@@ -493,7 +493,7 @@ Changes
             tabstop option or the count parameter for tabstop.
 
  * `<a-)>`: rotate selections content, if specified, the count groups
-            selections, so `3<a-">` rotate (1, 2, 3) and (3, 4, 6)
+            selections, so `3<a-)>` rotate (1, 2, 3) and (3, 4, 6)
             independently.
  * `<a-(>`: rotate selections content backwards
 
