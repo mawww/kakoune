@@ -132,6 +132,9 @@ be used:
 *<pageup>*, *<pagedown>*, *<home>*, *<end>*::
     The usual cursor-movement keys.
 
+*<ins>*::
+    The Insert key.
+
 *<f1>*, *<f2>*, ...*<f12>*::
     Function keys.
 
