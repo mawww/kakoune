@@ -70,7 +70,7 @@ define-command -hidden pug-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : pug-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' pug-trim-indent' <ret> }
         # copy '//', '|', '-' or '(!)=' prefix and following whitespace
         try %{ execute-keys -draft k <a-x> s ^\h*\K[/|!=-]{1,2}\h* <ret> y gh j P }
         # indent unless we copied something above

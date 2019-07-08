@@ -77,7 +77,7 @@ define-command -hidden coffee-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : coffee-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' coffee-trim-indent' <ret> }
         # indent after start structure
         try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) \b | (=|->) $ <ret> j <a-gt> }
     }

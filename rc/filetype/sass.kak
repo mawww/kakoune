@@ -60,7 +60,7 @@ define-command -hidden sass-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : sass-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' sass-trim-indent' <ret> }
         # avoid indent after properties and comments
         try %{ execute-keys -draft k <a-x> <a-K> [:/] <ret> j <a-gt> }
     }

@@ -56,7 +56,7 @@ define-command -hidden yaml-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : yaml-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' yaml-trim-indent' <ret> }
         # indent after :
         try %{ execute-keys -draft <space> k x <a-k> :$ <ret> j <a-gt> }
     }

@@ -74,7 +74,7 @@ define-command -hidden elixir-indent-on-new-line %{
         # indent after line ending with:
 	# try %{ execute-keys -draft k x <a-k> (do|else|->)$ <ret> & }
 	# filter previous line
-        try %{ execute-keys -draft k : elixir-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' elixir-trim-indent' <ret> }
         # indent after lines ending with do or ->
         try %{ execute-keys -draft \\; k x <a-k> ^.+(do|->)$ <ret> j <a-gt> }
     }

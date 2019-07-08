@@ -79,7 +79,7 @@ define-command -hidden html-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : html-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' html-trim-indent' <ret> }
         # indent after lines ending with opening tag
         try %{ execute-keys -draft k <a-x> <a-k> <lt>(?!area)(?!base)(?!br)(?!col)(?!command)(?!embed)(?!hr)(?!img)(?!input)(?!keygen)(?!link)(?!menuitem)(?!meta)(?!param)(?!source)(?!track)(?!wbr)(?!/)(?!>)[a-zA-Z0-9_-]+[^>]*?>$ <ret> j <a-gt> } }
 }

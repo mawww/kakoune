@@ -67,7 +67,7 @@ define-command -hidden ragel-indent-on-new-line %<
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : ragel-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' ragel-trim-indent' <ret> }
         # indent after lines ending with opener token
         try %< execute-keys -draft k <a-x> <a-k> [[{(*]$ <ret> j <a-gt> >
     >

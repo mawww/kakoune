@@ -80,7 +80,7 @@ define-command -hidden hbs-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : hbs-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' hbs-trim-indent' <ret> }
         # indent after lines beginning with : or -
         try %{ execute-keys -draft k <a-x> <a-k> ^\h*[:-] <ret> j <a-gt> }
     }

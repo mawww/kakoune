@@ -89,7 +89,7 @@ define-command -hidden gas-indent-on-new-line %~
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : gas-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' gas-trim-indent' <ret> }
         # indent after label
         try %[ execute-keys -draft k <a-x> <a-k> :$ <ret> j <a-gt> ]
     >

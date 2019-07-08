@@ -75,7 +75,7 @@ define-command -hidden sh-indent-on-new-line %[
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : sh-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' sh-trim-indent' <ret> }
 
         # Indent loop syntax, e.g.:
         # for foo in bar; do

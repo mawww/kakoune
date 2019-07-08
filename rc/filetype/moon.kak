@@ -103,7 +103,7 @@ define-command -hidden moon-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : moon-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' moon-trim-indent' <ret> }
         # indent after start structure
         try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (class|else(if)?|for|if|switch|unless|when|while|with) \b | ([:=]|[-=]>) $ <ret> j <a-gt> }
         # deindent after return statements

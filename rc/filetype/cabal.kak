@@ -57,7 +57,7 @@ define-command -hidden cabal-indent-on-new-line %[
         # preserve previous line indent
         try %[ execute-keys -draft \; K <a-&> ]
         # filter previous line
-        try %[ execute-keys -draft k : cabal-trim-indent <ret> ]
+        try %[ execute-keys -draft k : ' cabal-trim-indent' <ret> ]
         # indent after lines ending with { or :
         try %[ execute-keys -draft <space> k <a-x> <a-k> [:{]$ <ret> j <a-gt> ]
     ]

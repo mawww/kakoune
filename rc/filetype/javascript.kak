@@ -59,7 +59,7 @@ define-command -hidden javascript-indent-on-new-line %<
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : javascript-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' javascript-trim-indent' <ret> }
         # indent after lines beginning / ending with opener token
         try %_ execute-keys -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
     >

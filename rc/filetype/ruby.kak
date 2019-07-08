@@ -151,7 +151,7 @@ define-command -hidden ruby-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : ruby-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' ruby-trim-indent' <ret> }
         # indent after start structure
         try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (begin|case|class|def|else|elsif|ensure|for|if|module|rescue|unless|until|when|while|.+\bdo$|.+\bdo\h\|.+(?=\|)) \b <ret> j <a-gt> }
     }

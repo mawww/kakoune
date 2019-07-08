@@ -88,7 +88,7 @@ define-command -hidden php-indent-on-new-line %<
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : php-trim-indent <ret> }
+        try %{ execute-keys -draft k : ' php-trim-indent' <ret> }
         # indent after lines beginning / ending with opener token
         try %_ execute-keys -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
         # append " * " on lines starting a multiline /** or /* comment
