@@ -64,7 +64,7 @@ define-command -hidden elm-indent-on-new-line %{
         # align to first clause
         try %{ execute-keys -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|let)\h+\K.* <ret> s \A|.\z <ret> & }
         # filter previous line
-        try %{ execute-keys -draft k : ' elm-trim-indent' <ret> }
+        try %{ execute-keys -draft k ": elm-trim-indent<ret>" }
         # indent after lines beginning with condition or ending with expression or =(
         try %{ elm-indent-after }
     }

@@ -63,7 +63,7 @@ define-command -hidden toml-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : ' toml-trim-indent' <ret> }
+        try %{ execute-keys -draft k ": toml-trim-indent<ret>" }
     }
 }
 

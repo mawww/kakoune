@@ -77,7 +77,7 @@ define-command -hidden rust-indent-on-new-line %~
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
-        try %{ execute-keys -draft k : ' rust-trim-indent' <ret> }
+        try %{ execute-keys -draft k ": rust-trim-indent<ret>" }
         # indent after lines ending with { or (
         try %[ execute-keys -draft k <a-x> <a-k> [{(]\h*$ <ret> j <a-gt> ]
         # indent after lines ending with [{(].+ and move first parameter to own line
