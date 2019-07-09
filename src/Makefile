@@ -10,7 +10,7 @@ endif
 
 ifeq ($(debug),yes)
     CPPFLAGS += -DKAK_DEBUG
-    CXXFLAGS += -Og
+    CXXFLAGS += -O0
     suffix := .debug
 else
     ifeq ($(debug),no)
