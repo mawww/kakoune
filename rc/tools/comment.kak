@@ -125,15 +125,15 @@ define-command comment-block -docstring '(un)comment selections using block comm
             set-register / "\A\Q%opt{comment_block_begin}\E.*\Q%opt{comment_block_end}\E\n*\z"
             execute-keys "s<ret>"
             # Uncomment it
-            set-register / "\A\Q%opt{comment_block_begin}\E|\Q%opt{comment_block_end}\E\n*\z"
+            set-register / "\A\Q%opt{comment_block_begin}\E\n*|\Q%opt{comment_block_end}\E\n*\z"
             execute-keys s<ret>d
-        } catch %{
+        } catch %{ evaluate-commands %sh{
             # Comment the selection
-            set-register '"' "%opt{comment_block_begin}"
-            execute-keys P
-            set-register '"' "%opt{comment_block_end}"
-            execute-keys p
-        }
+            printf "set-register '\"' \"%s\n\"\n" "$kak_opt_comment_block_begin"
+            printf 'execute-keys P\n'
+            printf "set-register '\"' \"%s\n\"\n" "$kak_opt_comment_block_end"
+            printf 'execute-keys p\n'
+        }}
     }
 }
 
