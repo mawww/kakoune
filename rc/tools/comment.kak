@@ -101,8 +101,8 @@ hook global BufSetOption filetype=python %{
 
 hook global BufSetOption filetype=ragel %{
     set-option buffer comment_line '%%'
-    set-option buffer comment_block_begin '%%{'
-    set-option buffer comment_block_end '}%%'
+    set-option buffer comment_block_begin '%%%%{'
+    set-option buffer comment_block_end '}%%%%'
 }
 
 hook global BufSetOption filetype=ruby %{
@@ -129,9 +129,9 @@ define-command comment-block -docstring '(un)comment selections using block comm
             execute-keys s<ret>d
         } catch %{ evaluate-commands %sh{
             # Comment the selection
-            printf "set-register '\"' \"%s\n\"\n" "$kak_opt_comment_block_begin"
+            printf "set-register '\"' \"$kak_opt_comment_block_begin\"\n"
             printf 'execute-keys P\n'
-            printf "set-register '\"' \"%s\n\"\n" "$kak_opt_comment_block_end"
+            printf "set-register '\"' \"$kak_opt_comment_block_end\"\n"
             printf 'execute-keys p\n'
         }}
     }
