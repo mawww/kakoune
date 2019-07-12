@@ -67,6 +67,10 @@ hook global BufSetOption filetype=latex %{
     set-option buffer comment_line '%'
 }
 
+hook global BufSetOption filetype=ledger %{
+    set-option buffer comment_line ';'
+}
+
 hook global BufSetOption filetype=lisp %{
     set-option buffer comment_line ';'
     set-option buffer comment_block_begin '#|'
