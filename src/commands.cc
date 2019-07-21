@@ -1888,7 +1888,7 @@ const CommandDesc exec_string_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        context_wrap(parser, context, "/\"|^@", [](const ParametersParser& parser, Context& context) {
+        context_wrap(parser, context, "/\"|^@:", [](const ParametersParser& parser, Context& context) {
             ScopedSetBool disable_keymaps(context.keymaps_disabled(), not parser.get_switch("with-maps"));
             ScopedSetBool disable_hoooks(context.hooks_disabled(), not parser.get_switch("with-hooks"));
 
