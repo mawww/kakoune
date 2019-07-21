@@ -789,8 +789,7 @@ public:
                                           completion);
             }
 
-            if (not context().history_disabled())
-                history_push(line);
+            history_push(line);
             context().print_status(DisplayLine{});
             if (context().has_client())
                 context().client().menu_hide();
@@ -806,8 +805,7 @@ public:
         }
         else if (key == Key::Escape or key == ctrl('c'))
         {
-            if (not context().history_disabled())
-                history_push(line);
+            history_push(line);
             context().print_status(DisplayLine{});
             if (context().has_client())
                 context().client().menu_hide();
@@ -1103,7 +1101,7 @@ private:
 
     void history_push(StringView entry)
     {
-        if (entry.empty() or
+        if (entry.empty() or context().history_disabled() or
             (m_flags & PromptFlags::DropHistoryEntriesWithBlankPrefix and
              is_horizontal_blank(entry[0_byte])))
             return;
