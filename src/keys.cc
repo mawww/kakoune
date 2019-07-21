@@ -74,6 +74,7 @@ static constexpr KeyAndName keynamemap[] = {
     { "pagedown", Key::PageDown },
     { "home", Key::Home },
     { "end", Key::End },
+    { "ins", Key::Insert },
     { "del", Key::Delete },
     { "plus", '+' },
     { "minus", '-' },

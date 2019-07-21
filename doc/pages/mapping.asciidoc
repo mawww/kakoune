@@ -132,7 +132,10 @@ be used:
 *<pageup>*, *<pagedown>*, *<home>*, *<end>*::
     The usual cursor-movement keys.
 
-*<f1>*, *<f2>*, ...*<f12>*::
+*<ins>*::
+    The Insert key.
+
+*<F1>*, *<F2>*, ...*<F12>*::
     Function keys.
 
 NOTE: Although Kakoune allows many key combinations to be mapped, not every
