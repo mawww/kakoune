@@ -939,20 +939,14 @@ template<bool smart>
 void use_selection_as_search_pattern(Context& context, NormalParams params)
 {
     const auto& buffer = context.buffer();
-    String pattern;
-
-    for (auto& sel : context.selections())
-    {
+    auto patterns = context.selections() | transform([&](auto&& sel) {
         const auto beg = sel.min(), end = buffer.char_next(sel.max());
-        const String sel_pattern = format("{}{}{}",
-                                          smart and is_bow(buffer, beg) ? "\\b" : "",
-                                          escape(buffer.string(beg, end), "^$\\.*+?()[]{}|", '\\'),
-                                          smart and is_eow(buffer, end) ? "\\b" : "");
-
-        if (not pattern.empty())
-            pattern += '|';
-        pattern += sel_pattern;
-    }
+        return format("{}{}{}",
+                      smart and is_bow(buffer, beg) ? "\\b" : "",
+                      escape(buffer.string(beg, end), "^$\\.*+?()[]{}|", '\\'),
+                      smart and is_eow(buffer, end) ? "\\b" : "");
+    });
+    String pattern = join(patterns, '|', false);
 
     const char reg = to_lower(params.reg ? params.reg : '/');
 
