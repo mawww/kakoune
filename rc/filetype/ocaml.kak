@@ -28,8 +28,10 @@ provide-module ocaml %{
 
 add-highlighter shared/ocaml regions
 add-highlighter shared/ocaml/code default-region group
-add-highlighter shared/ocaml/string region '"' (?<!\\)(\\\\)*" fill string
+add-highlighter shared/ocaml/string region (?<!')" (?<!\\)(\\\\)*" fill string
 add-highlighter shared/ocaml/comment region \Q(* \Q*) fill comment
+
+add-highlighter shared/ocaml/code/char regex %{\B'([^'\\]|(\\[\\"'nrtb])|(\\\d{3})|(\\x[a-fA-F0-9]{2})|(\\o[0-7]{3}))'\B} 0:value
 
 # Macro
 # ‾‾‾‾‾
