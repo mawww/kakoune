@@ -6,15 +6,14 @@
 
 hook global BufCreate .*[.](rust|rs) %{
     set-option buffer filetype rust
+    require-module rust
 }
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook global WinSetOption filetype=rust %[
-    require-module rust
-
-    hook window ModeChange insert:.* -group rust-trim-indent  rust-trim-indent
+    hook window InsertEnd .* -group rust-trim-indent rust-trim-indent
     hook window InsertChar \n -group rust-indent rust-indent-on-new-line
     hook window InsertChar \{ -group rust-indent rust-indent-on-opening-curly-brace
     hook window InsertChar [)}] -group rust-indent rust-indent-on-closing
@@ -29,9 +28,9 @@ hook -group rust-highlight global WinSetOption filetype=rust %{
 # Configuration
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=rust %[
+hook global WinSetOption filetype=rust %{
     set window formatcmd 'rustfmt'
-]
+}
 
 
 provide-module rust %§
@@ -41,26 +40,28 @@ provide-module rust %§
 
 add-highlighter shared/rust regions
 add-highlighter shared/rust/code default-region group
-add-highlighter shared/rust/string       region %{(?<!')"} (?<!\\)(\\\\)*"  fill string
-add-highlighter shared/rust/raw_string   region -match-capture %{(?<!')r(#*)"} %{"(#*)}  fill string
-add-highlighter shared/rust/comment      region -recurse /\* /\*        \*/ fill comment
-add-highlighter shared/rust/line_comment region //          $               fill comment
+add-highlighter shared/rust/string           region %{(?<!')"} (?<!\\)(\\\\)*"              fill string
+add-highlighter shared/rust/raw_string       region -match-capture %{(?<!')r(#*)"} %{"(#*)} fill string
+add-highlighter shared/rust/comment          region -recurse "/\*" "/\*" "\*/"              fill comment
+add-highlighter shared/rust/line_comment     region "//" "$"                                fill comment
+add-highlighter shared/rust/macro_attributes region "#!?\[" "\]"                            fill meta
 
-add-highlighter shared/rust/code/ regex \b[A-z0-9_]+! 0:meta
+add-highlighter shared/rust/code/byte_literal         regex "'\\\\?.'" 0:value
+add-highlighter shared/rust/code/long_quoted          regex "('\w+)[^']" 1:meta
+add-highlighter shared/rust/code/field_or_parameter   regex (_?\w+)(?::)(?!:) 1:variable
+add-highlighter shared/rust/code/namespace            regex [a-zA-Z](\w+)?(\h+)?(?=::) 0:module
 # the number literals syntax is defined here:
 # https://doc.rust-lang.org/reference.html#number-literals
-add-highlighter shared/rust/code/ regex \b(?:self|true|false|[0-9][_0-9]*(?:\.[0-9][_0-9]*|(?:\.[0-9][_0-9]*)?E[\+\-][_0-9]+)(?:f(?:32|64))?|(?:0x[_0-9a-fA-F]+|0o[_0-7]+|0b[_01]+|[0-9][_0-9]*)(?:(?:i|u|f)(?:8|16|32|64|128|size))?)\b 0:value
-add-highlighter shared/rust/code/ regex \b(?:&&|\|\|)\b 0:operator
+add-highlighter shared/rust/code/values regex \b(?:self|true|false|[0-9][_0-9]*(?:\.[0-9][_0-9]*|(?:\.[0-9][_0-9]*)?E[\+\-][_0-9]+)(?:f(?:32|64))?|(?:0x[_0-9a-fA-F]+|0o[_0-7]+|0b[_01]+|[0-9][_0-9]*)(?:(?:i|u|f)(?:8|16|32|64|128|size))?)\b 0:value
+add-highlighter shared/rust/code/attributes regex \b(?:trait|struct|enum|type|mut|ref|static|const)\b 0:attribute
 # the language keywords are defined here, but many of them are reserved and unused yet:
 # https://doc.rust-lang.org/grammar.html#keywords
-add-highlighter shared/rust/code/ regex (?:#!?\[.*?\]) 0:meta
-add-highlighter shared/rust/code/ regex \b(?:let|as|fn|return|match|if|else|loop|for|in|while|break|continue|move|box|where|impl|dyn|pub|unsafe|async|await)\b 0:keyword
-add-highlighter shared/rust/code/ regex \b(?:trait|struct|enum|type|mut|ref|static|const)\b 0:attribute
-add-highlighter shared/rust/code/ regex \b(?:u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64|bool|char|str|Self)\b 0:type
-add-highlighter shared/rust/code/ regex \b(?:mod|crate|use|extern)\b 0:module
-add-highlighter shared/rust/code/ regex \$\w+\b 0:variable
-add-highlighter shared/rust/code/ regex "'\\\\?.'" 0:value
-add-highlighter shared/rust/code/ regex "('\w+)[^']" 1:meta
+add-highlighter shared/rust/code/keywords             regex \b(?:let|as|fn|return|match|if|else|loop|for|in|while|break|continue|move|box|where|impl|dyn|pub|unsafe|async|await|mod|crate|use|extern)\b 0:keyword
+add-highlighter shared/rust/code/builtin_types        regex \b(?:u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64|bool|char|str|Self)\b 0:type
+add-highlighter shared/rust/code/user_defined_type    regex \b[A-Z]\w*\b 0:type
+add-highlighter shared/rust/code/function_declaration regex (?:fn\h+)(_?\w+)(?:<[^>]+?>)?\( 1:function
+add-highlighter shared/rust/code/variable_declaration regex (?:let\h+(?:mut\h+)?)(_?\w+) 1:variable
+add-highlighter shared/rust/code/macro                regex \b[A-z0-9_]+! 0:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
