@@ -6,13 +6,13 @@
 
 hook global BufCreate .*[.](rust|rs) %{
     set-option buffer filetype rust
-    require-module rust
 }
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook global WinSetOption filetype=rust %[
+    require-module rust
     hook window InsertEnd .* -group rust-trim-indent rust-trim-indent
     hook window InsertChar \n -group rust-indent rust-indent-on-new-line
     hook window InsertChar \{ -group rust-indent rust-indent-on-opening-curly-brace
