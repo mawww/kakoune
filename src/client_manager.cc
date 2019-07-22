@@ -167,21 +167,8 @@ void ClientManager::add_free_window(std::unique_ptr<Window>&& window, SelectionL
 void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
 {
     for (auto& client : m_clients)
-    {
-        auto& context = client->context();
-        context.jump_list().forget_buffer(buffer);
-        if (client->last_buffer() == &buffer)
-            client->set_last_buffer(nullptr);
+        client->context().forget_buffer(buffer);
 
-        if (&context.buffer() != &buffer)
-            continue;
-
-        if (context.is_editing())
-            context.input_handler().reset_normal_mode();
-
-        Buffer* last = client->last_buffer();
-        context.change_buffer(last ? *last : BufferManager::instance().get_first_buffer());
-    }
     Vector<std::unique_ptr<Window>> removed_windows;
     m_free_windows.erase(std::remove_if(m_free_windows.begin(), m_free_windows.end(),
                                         [&buffer, &removed_windows](WindowAndSelections& ws) {

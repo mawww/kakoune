@@ -68,9 +68,6 @@ public:
 
     StringView get_env_var(StringView name) const;
 
-    Buffer* last_buffer() const { return m_last_buffer.get(); }
-    void set_last_buffer(Buffer* last_buffer) { m_last_buffer = last_buffer; }
-
     void exit(int status) { m_on_exit(status); }
 
     int pid() const { return m_pid; }
@@ -132,8 +129,6 @@ private:
     Vector<Key, MemoryDomain::Client> m_pending_keys;
 
     bool m_buffer_reload_dialog_opened = false;
-
-    SafePtr<Buffer> m_last_buffer;
 };
 
 enum class Autoreload

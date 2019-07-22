@@ -788,6 +788,7 @@ void delete_buffer(const ParametersParser& parser, Context& context, const Shell
         throw runtime_error(format("buffer '{}' is modified", buffer.name()));
 
     manager.delete_buffer(buffer);
+    context.forget_buffer(buffer);
 }
 
 const CommandDesc delete_buffer_cmd = {

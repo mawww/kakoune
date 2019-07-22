@@ -270,9 +270,8 @@ void goto_commands(Context& context, NormalParams params)
                 break;
             case 'a':
             {
-                Buffer* target = nullptr;
-                if (not context.has_client() or
-                    not (target = context.client().last_buffer()))
+                Buffer* target = context.last_buffer();
+                if (not target)
                 {
                     throw runtime_error("no last buffer");
                     break;
