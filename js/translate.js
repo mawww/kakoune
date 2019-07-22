@@ -44,6 +44,7 @@
             "feature:activeDevelopmentSupport": "Développement actif & support",
             "feature:activeDevelopmentSupportText": $("[tid-fr='feature:activeDevelopmentSupportText']").html(),
             "feature:learnMore": "Découvrir la philosophie Kakoune (en anglais)",
+            "feature:tryKakoune": "Essayez Kakoune !",
 
             "error:noVideoTag": "Votre navigateur ne gère pas l'élément <code>video</code>.",
 
@@ -118,6 +119,7 @@
             "feature:activeDevelopmentSupport": "Aktív fejlesztés és terméktámogatás",
             "feature:activeDevelopmentSupportText": $("[tid-hu='feature:activeDevelopmentSupportText']").html(),
             "feature:learnMore": "A Kakoune elveinek felfedezése (angolul)",
+            "feature:tryKakoune": "Próbáld ki a kakoune!",
 
             "error:noVideoTag": "A böngésződ nem támogatja a <code>video</code> elemeket.",
 

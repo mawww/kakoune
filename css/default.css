@@ -20,6 +20,11 @@ a.btn-outline-secondary {
     border-color: #fa5300;
 }
 
+a.btn-secondary {
+    background-color: #fa5300;
+    border: none;
+}
+
 a:focus,
 a:hover {
     color: #f52500;
