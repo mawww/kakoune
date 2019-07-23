@@ -34,6 +34,9 @@ hook -group typescript-highlight global WinSetOption filetype=typescript %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/typescript }
 }
 
+# Aliases
+# ‾‾‾‾‾‾‾
+provide-module typescript %{ require-module javascript }
 
 provide-module javascript %§
 

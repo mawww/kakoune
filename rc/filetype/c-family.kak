@@ -1,3 +1,4 @@
+# Detection
 hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H)$ %{
     set-option buffer filetype cpp
 }
@@ -57,6 +58,11 @@ hook -group objc-highlight global WinSetOption filetype=objc %{
     add-highlighter window/objc ref objc
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/objc }
 }
+
+# Module aliases
+provide-module c %{ require-module c-family }
+provide-module cpp %{ require-module c-family }
+provide-module objc %{ require-module c-family }
 
 
 provide-module c-family %§
