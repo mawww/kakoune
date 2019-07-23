@@ -34,9 +34,6 @@ hook -group typescript-highlight global WinSetOption filetype=typescript %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/typescript }
 }
 
-# Aliases
-# ‾‾‾‾‾‾‾
-provide-module typescript %{ require-module javascript }
 
 provide-module javascript %§
 
@@ -133,3 +130,7 @@ add-highlighter shared/typescript/code/ regex \b(array|boolean|date|number|objec
 add-highlighter shared/typescript/code/ regex \b(as|constructor|declare|enum|from|implements|interface|module|namespace|package|private|protected|public|readonly|static|type)\b 0:keyword
 
 §
+
+# Aliases
+# ‾‾‾‾‾‾‾
+provide-module typescript %{ require-module javascript }

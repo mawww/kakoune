@@ -59,11 +59,6 @@ hook -group objc-highlight global WinSetOption filetype=objc %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/objc }
 }
 
-# Module aliases
-provide-module c %{ require-module c-family }
-provide-module cpp %{ require-module c-family }
-provide-module objc %{ require-module c-family }
-
 
 provide-module c-family %§
 
@@ -450,3 +445,8 @@ define-command objc-alternative-file -docstring "Jump to the alternate objc file
 }
 
 §
+
+# Module aliases
+provide-module c %{ require-module c-family }
+provide-module cpp %{ require-module c-family }
+provide-module objc %{ require-module c-family }
