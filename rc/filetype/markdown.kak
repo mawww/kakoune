@@ -19,8 +19,8 @@ hook global WinSetOption filetype=markdown %{
 }
 
 hook -group markdown-load-languages global WinSetOption filetype=markdown %{
-    hook window NormalIdle .* markdown-load-languages
-    hook window InsertIdle .* markdown-load-languages
+    hook -group markdown-load-languages window NormalIdle .* markdown-load-languages
+    hook -group markdown-load-languages window InsertIdle .* markdown-load-languages
 }
 
 
