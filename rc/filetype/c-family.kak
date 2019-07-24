@@ -1,3 +1,4 @@
+# Detection
 hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H)$ %{
     set-option buffer filetype cpp
 }
@@ -444,3 +445,8 @@ define-command objc-alternative-file -docstring "Jump to the alternate objc file
 }
 
 §
+
+# Module aliases
+provide-module c %{ require-module c-family }
+provide-module cpp %{ require-module c-family }
+provide-module objc %{ require-module c-family }
