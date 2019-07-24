@@ -84,6 +84,7 @@ else
     endif
 
     LIBS += $(shell $(PKG_CONFIG) $(PKG_CONFIG_FLAGS) --libs ncursesw)
+    CPPFLAGS += -D'KAK_BIN_PATH="$(bindir)/kak"'
     NCURSES_CFLAGS += $(shell $(PKG_CONFIG) $(PKG_CONFIG_FLAGS) --cflags ncursesw)
     LDFLAGS += -rdynamic
 endif
