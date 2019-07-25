@@ -114,6 +114,8 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
 define-command -hidden c-family-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ execute-keys -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> <a-S> 1<a-&> ]
+    # align indent with opening paren when { is entered on a new line after the else
+    try %[ execute-keys -draft -itersel hK <a-x> s \belse\b\h*(?://[^\n]+)?\n\h*\{<ret> <a-S> 1<a-&> ]
 ]
 
 define-command -hidden c-family-indent-on-closing-curly-brace %[
