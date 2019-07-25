@@ -606,6 +606,8 @@ Optional<Key> NCursesUI::get_next_key()
         case KEY_SHOME: return shift(Key::Home);
         case KEY_END: return {Key::End};
         case KEY_SEND: return shift(Key::End);
+        case KEY_IC: return {Key::Insert};
+        case KEY_SIC: return shift(Key::Insert);
         case KEY_BTAB: return shift(Key::Tab);
         case KEY_RESIZE: return resize(dimensions());
         }

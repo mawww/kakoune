@@ -4,6 +4,8 @@
 #include "utf8_iterator.hh"
 #include "unit_tests.hh"
 
+#include <cstdio>
+
 namespace Kakoune
 {
 

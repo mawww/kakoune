@@ -136,8 +136,11 @@ InsertCompletion complete_word(const SelectionList& sels,
                 continue;
             for (auto& m : get_word_db(*buf).find_matching(prefix) |
                            // filter out words that are not considered words for the current buffer
-                           filter([&](auto& rm) { return std::all_of(rm.candidate().begin(), rm.candidate().end(),
-                                                                     is_word_pred); }))
+                           filter([&](auto& rm) {
+                               auto&& c = rm.candidate();
+                               return std::all_of(utf8::iterator{c.begin(), c},
+                                                  utf8::iterator{c.end(), c},
+                                                  is_word_pred); }))
                 matches.push_back({ m, buf.get() });
         }
     }

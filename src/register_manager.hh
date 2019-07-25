@@ -18,8 +18,13 @@ class Register
 public:
     virtual ~Register() = default;
 
-    virtual void set(Context& context, ConstArrayView<String> values) = 0;
+    virtual void set(Context& context, ConstArrayView<String> values, bool restoring = false) = 0;
     virtual ConstArrayView<String> get(const Context& context) = 0;
+    virtual const String& get_main(const Context& context, size_t main_index) = 0;
+
+    using RestoreInfo = Vector<String, MemoryDomain::Registers>;
+    RestoreInfo save(const Context& context) { return get(context) | gather<RestoreInfo>(); }
+    void restore(Context& context, const RestoreInfo& info) { set(context, info, true); }
 };
 
 // static value register, which can be modified
@@ -27,7 +32,7 @@ public:
 class StaticRegister : public Register
 {
 public:
-    void set(Context&, ConstArrayView<String> values) override
+    void set(Context&, ConstArrayView<String> values, bool) override
     {
         m_content.assign(values.begin(), values.end());
     }
@@ -39,6 +44,12 @@ public:
         else
             return ConstArrayView<String>(m_content);
     }
+
+    const String& get_main(const Context& context, size_t main_index) override
+    {
+        return get(context)[std::min(main_index, m_content.size() - 1)];
+    }
+
 protected:
     Vector<String, MemoryDomain::Registers> m_content;
 };
@@ -52,7 +63,7 @@ public:
     DynamicRegister(Getter getter, Setter setter)
         : m_getter(std::move(getter)), m_setter(std::move(setter)) {}
 
-    void set(Context& context, ConstArrayView<String> values) override
+    void set(Context& context, ConstArrayView<String> values, bool) override
     {
         m_setter(context, values);
     }
@@ -66,6 +77,35 @@ public:
 private:
     Getter m_getter;
     Setter m_setter;
+};
+
+// Register that is used to store some kind prompt history
+class HistoryRegister : public StaticRegister
+{
+public:
+    void set(Context& context, ConstArrayView<String> values, bool restoring) override
+    {
+        constexpr size_t size_limit = 100;
+
+        if (restoring)
+            return StaticRegister::set(context, values, true);
+
+        for (auto& entry : values)
+        {
+            m_content.erase(std::remove(m_content.begin(), m_content.end(), entry),
+                          m_content.end());
+            m_content.push_back(entry);
+        }
+
+        const size_t current_size = m_content.size();
+        if (current_size > size_limit)
+            m_content.erase(m_content.begin(), m_content.begin() + (current_size - size_limit));
+    }
+
+    const String& get_main(const Context&, size_t) override
+    {
+        return m_content.empty() ? String::ms_empty : m_content.back();
+    }
 };
 
 template<typename Func>
@@ -87,11 +127,16 @@ std::unique_ptr<Register> make_dyn_reg(Getter getter, Setter setter)
 class NullRegister : public Register
 {
 public:
-    void set(Context&, ConstArrayView<String>) override {}
+    void set(Context&, ConstArrayView<String>, bool) override {}
 
     ConstArrayView<String> get(const Context&) override
     {
         return ConstArrayView<String>(String::ms_empty);
+    }
+
+    const String& get_main(const Context&, size_t) override
+    {
+        return String::ms_empty;
     }
 };
 

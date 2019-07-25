@@ -5,11 +5,17 @@
 #include "keys.hh"
 #include "keymap_manager.hh"
 #include "string.hh"
+#include "exception.hh"
 
 namespace Kakoune
 {
 
 class Context;
+
+struct no_selections_remaining : runtime_error
+{
+    no_selections_remaining() : runtime_error("no selections remaining") {}
+};
 
 struct NormalParams
 {

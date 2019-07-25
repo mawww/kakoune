@@ -18,6 +18,12 @@ hook global WinSetOption filetype=markdown %{
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window markdown-.+ }
 }
 
+hook -group markdown-load-languages global WinSetOption filetype=markdown %{
+    hook -group markdown-load-languages window NormalIdle .* markdown-load-languages
+    hook -group markdown-load-languages window InsertIdle .* markdown-load-languages
+}
+
+
 hook -group markdown-highlight global WinSetOption filetype=markdown %{
     add-highlighter window/markdown ref markdown
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/markdown }
@@ -35,10 +41,10 @@ add-highlighter shared/markdown/inline/text default-region group
 
 evaluate-commands %sh{
   languages="
-    c cabal clojure coffee cpp css cucumber d diff dockerfile fish gas go
-    haml haskell html ini java javascript json julia kak kickstart latex
-    lisp lua makefile markdown moon objc perl pug python ragel ruby rust
-    sass scala scss sh swift toml tupfile typescript yaml sql
+    awk c cabal clojure coffee cpp css cucumber d diff dockerfile fish
+    gas go haml haskell html ini java javascript json julia kak kickstart
+    latex lisp lua makefile markdown moon objc perl pug python ragel
+    ruby rust sass scala scss sh swift toml tupfile typescript yaml sql
   "
   for lang in ${languages}; do
     printf 'add-highlighter shared/markdown/%s region -match-capture ^(\h*)```\h*%s\\b   ^(\h*)``` regions\n' "${lang}" "${lang}"
@@ -87,6 +93,13 @@ define-command -hidden markdown-indent-on-new-line %{
         # remove trailing white spaces
         try %{ execute-keys -draft -itersel %{ k<a-x> s \h+$ <ret> d } }
     }
+}
+
+define-command -hidden markdown-load-languages %{
+    evaluate-commands -draft %{ try %{
+        execute-keys 'gtGbGls```\h*\K[^\s]+<ret>'
+        evaluate-commands -itersel %{ require-module %val{selection} }
+    }}
 }
 
 }

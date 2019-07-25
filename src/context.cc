@@ -3,6 +3,7 @@
 #include "alias_registry.hh"
 #include "client.hh"
 #include "face_registry.hh"
+#include "buffer_manager.hh"
 #include "register_manager.hh"
 #include "window.hh"
 
@@ -171,6 +172,12 @@ void Context::change_buffer(Buffer& buffer)
     if (has_buffer() and m_edition_level > 0)
        this->buffer().commit_undo_group();
 
+    if (has_buffer())
+    {
+        auto* current = &this->buffer();
+        m_last_buffer = contains(BufferManager::instance(), current) ? current : nullptr;
+    }
+
     m_window.reset();
     if (has_client())
     {
@@ -183,6 +190,21 @@ void Context::change_buffer(Buffer& buffer)
 
     if (has_input_handler())
         input_handler().reset_normal_mode();
+}
+
+void Context::forget_buffer(Buffer& buffer)
+{
+    m_jump_list.forget_buffer(buffer);
+    if (m_last_buffer.get() == &buffer)
+        m_last_buffer = nullptr;
+
+    if (&this->buffer() != &buffer)
+        return;
+
+    if (is_editing() && has_input_handler())
+        input_handler().reset_normal_mode();
+
+    change_buffer(m_last_buffer ? *m_last_buffer : BufferManager::instance().get_first_buffer());
 }
 
 SelectionList& Context::selections()
@@ -239,11 +261,8 @@ void Context::end_edition()
 
 StringView Context::main_sel_register_value(StringView reg) const
 {
-    auto strings = RegisterManager::instance()[reg].get(*this);
     size_t index = m_selections ? (*m_selections).main_index() : 0;
-    if (strings.size() <= index)
-        index = strings.size() - 1;
-   return strings[index];
+    return RegisterManager::instance()[reg].get_main(*this, index);
 }
 
 }

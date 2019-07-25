@@ -74,6 +74,7 @@ static constexpr KeyAndName keynamemap[] = {
     { "pagedown", Key::PageDown },
     { "home", Key::Home },
     { "end", Key::End },
+    { "ins", Key::Insert },
     { "del", Key::Delete },
     { "plus", '+' },
     { "minus", '-' },
@@ -126,7 +127,7 @@ KeyList parse_keys(StringView str)
             result.push_back(canonicalize_ifn({ modifier, name_it->key }));
         else if (desc.char_length() == 1)
             result.push_back(canonicalize_ifn({ modifier, desc[0_char] }));
-        else if (to_lower(desc[0_byte]) == 'f' and desc.length() <= 3)
+        else if (desc[0_byte] == 'F' and desc.length() <= 3)
         {
             int val = str_to_int(desc.substr(1_byte));
             if (val >= 1 and val <= 12)

@@ -1,0 +1,8 @@
+declare-option str-list bufnames
+eval -draft -save-regs '' %{
+    edit -scratch *test*
+    set-option global bufnames %val{bufname}
+    db!
+    set-option -add global bufnames %val{bufname}
+    set-register '"' %opt{bufnames}
+}

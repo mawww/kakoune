@@ -218,7 +218,7 @@ void clamp_selections(Vector<Selection>& selections, const Buffer& buffer)
         clamp(sel, buffer);
 }
 
-void update_selections(Vector<Selection>& selections, size_t& main, Buffer& buffer, size_t timestamp)
+void update_selections(Vector<Selection>& selections, size_t& main, Buffer& buffer, size_t timestamp, bool merge)
 {
     if (timestamp == buffer.timestamp())
         return;
@@ -242,20 +242,22 @@ void update_selections(Vector<Selection>& selections, size_t& main, Buffer& buff
         }
         kak_assert(std::is_sorted(selections.begin(), selections.end(),
                                   compare_selections));
-        selections.erase(
-            merge_overlapping(selections.begin(), selections.end(),
-                              main, overlaps), selections.end());
+        if (merge)
+            selections.erase(
+                merge_overlapping(selections.begin(), selections.end(),
+                                  main, overlaps), selections.end());
     }
     for (auto& sel : selections)
         clamp(sel, buffer);
 
-    selections.erase(merge_overlapping(selections.begin(), selections.end(),
-                                       main, overlaps), selections.end());
+    if (merge)
+        selections.erase(merge_overlapping(selections.begin(), selections.end(),
+                                           main, overlaps), selections.end());
 }
 
-void SelectionList::update()
+void SelectionList::update(bool merge)
 {
-    update_selections(m_selections, m_main, *m_buffer, m_timestamp);
+    update_selections(m_selections, m_main, *m_buffer, m_timestamp, merge);
     check_invariant();
     m_timestamp = m_buffer->timestamp();
 }

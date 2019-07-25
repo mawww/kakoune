@@ -746,10 +746,10 @@ The following keys are recognized by this mode to help with editing
     erase to previous WORD begin, save erased content to *clipboard*
 
 *<a-d>*::
-    erase to previous word end, save erased content to *clipboard*
+    erase to next word begin, save erased content to *clipboard*
 
 *<a-D>*::
-    erase to previous WORD end, save erased content to *clipboard*
+    erase to next WORD begin, save erased content to *clipboard*
 
 *<c-k>*::
     erase to end of line, save erased content to *clipboard*

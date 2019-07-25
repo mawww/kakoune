@@ -19,6 +19,8 @@
 #include "utf8_iterator.hh"
 #include "window.hh"
 
+#include <cstdio>
+
 namespace Kakoune
 {
 

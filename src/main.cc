@@ -44,10 +44,12 @@ struct {
     unsigned int version;
     const char* notes;
 } constexpr version_notes[] = { {
-        0,
+        20190701,
         "» %file{...} expansions to read files\n"
         "» echo -to-file <filename> to write to file\n"
         "» completions option have an on select command instead of a docstring\n"
+        "» Function key syntax do not accept lower case f anymore\n"
+        "» shell quoting of list options is now opt-in with $kak_quoted_...\n"
     }, {
         20190120,
         "» named capture groups in regex\n"
@@ -280,8 +282,11 @@ void register_registers()
 {
     RegisterManager& register_manager = RegisterManager::instance();
 
-    for (auto c : "abcdefghijklmnopqrstuvwxyz/\"|^@:")
+    for (auto c : StringView{"abcdefghijklmnopqrstuvwxyz\"^@"})
         register_manager.add_register(c, std::make_unique<StaticRegister>());
+
+    for (auto c : StringView{"/|:\\"})
+        register_manager.add_register(c, std::make_unique<HistoryRegister>());
 
     using StringList = Vector<String, MemoryDomain::Registers>;
 
@@ -1167,7 +1172,7 @@ asm(R"(
 .ascii "sys.path.insert(0, os.path.dirname(gdb.current_objfile().filename) + '/../share/kak/gdb/')\n"
 .ascii "import gdb.printing\n"
 .ascii "import kakoune\n"
-.ascii "gdb.printing.register_pretty_printer(gdb.current_objfile(), kakoune.build_pretty_printer())\n"
+.ascii "gdb.printing.register_pretty_printer(gdb.current_objfile(), kakoune.build_pretty_printer())\n\0"
 .popsection
 )");
 #endif

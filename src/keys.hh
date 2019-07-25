@@ -50,6 +50,7 @@ struct Key
         PageDown,
         Home,
         End,
+        Insert,
         Tab,
         F1,
         F2,

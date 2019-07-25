@@ -1,0 +1,6 @@
+case $foo in
+    bar)
+        thing1
+        thing2
+    ;;
+    esac

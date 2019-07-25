@@ -139,7 +139,7 @@ define-command clang-disable-autocomplete -docstring "Disable automatic clang co
 define-command -hidden clang-show-error-info %{
     update-option buffer clang_errors # Ensure we are up to date with buffer changes
     evaluate-commands %sh{
-        eval "set -- ${kak_opt_clang_errors}"
+        eval "set -- ${kak_quoted_opt_clang_errors}"
         shift # skip timestamp
         desc=$(for error in "$@"; do
             if [ "${error%%|*}" = "$kak_cursor_line" ]; then
@@ -168,7 +168,7 @@ define-command clang-disable-diagnostics -docstring "Disable automatic error rep
 define-command clang-diagnostics-next -docstring "Jump to the next line that contains an error" %{
     update-option buffer clang_errors # Ensure we are up to date with buffer changes
     evaluate-commands %sh{
-        eval "set -- ${kak_opt_clang_errors}"
+        eval "set -- ${kak_quoted_opt_clang_errors}"
         shift # skip timestamp
         for error in "$@"; do
             candidate=${error%%|*}

@@ -1,3 +1,4 @@
+# Detection
 hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H)$ %{
     set-option buffer filetype cpp
 }
@@ -114,6 +115,8 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
 define-command -hidden c-family-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ execute-keys -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> <a-S> 1<a-&> ]
+    # align indent with opening paren when { is entered on a new line after the else
+    try %[ execute-keys -draft -itersel hK <a-x> s \belse\b\h*(?://[^\n]+)?\n\h*\{<ret> <a-S> 1<a-&> ]
 ]
 
 define-command -hidden c-family-indent-on-closing-curly-brace %[
@@ -399,7 +402,7 @@ define-command -hidden c-family-alternative-file %{
         dir=$(dirname "${kak_buffile}")
 
         # Set $@ to alt_dirs
-        eval "set -- ${kak_opt_alt_dirs}"
+        eval "set -- ${kak_quoted_opt_alt_dirs}"
 
         case ${file} in
             *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
@@ -444,3 +447,8 @@ define-command objc-alternative-file -docstring "Jump to the alternate objc file
 }
 
 §
+
+# Module aliases
+provide-module c %{ require-module c-family }
+provide-module cpp %{ require-module c-family }
+provide-module objc %{ require-module c-family }

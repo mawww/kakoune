@@ -243,8 +243,8 @@ pkg install kakoune
 Running
 ~~~~~~~
 
-Just running *kak* launch a new kak session with a client on local terminal.
-Run *kak -help* to discover the valid <<doc/kak.1#options,command line flags>>.
+Just running *kak* launches a new kak session with a client on local terminal.
+Run *kak -help* to discover the valid command line flags.
 
 Configuration
 ^^^^^^^^^^^^^
@@ -493,7 +493,7 @@ Changes
             tabstop option or the count parameter for tabstop.
 
  * `<a-)>`: rotate selections content, if specified, the count groups
-            selections, so `3<a-">` rotate (1, 2, 3) and (3, 4, 6)
+            selections, so `3<a-)>` rotate (1, 2, 3) and (3, 4, 6)
             independently.
  * `<a-(>`: rotate selections content backwards
 

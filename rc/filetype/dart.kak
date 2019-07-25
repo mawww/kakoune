@@ -60,7 +60,7 @@ evaluate-commands %sh{
 
     annotations="@[a-zA-Z]+"
     functions="(_?[a-z][a-zA-Z0-9]*)(\(|\w+=>)"
-    classes="[A-Z][a-zA-Z0-9]*"
+    classes="_?[A-Z][a-zA-Z0-9]*"
 
     # Add the language's grammar to the static completion list
     printf %s\\n "declare-option str-list dart_static_words ${keywords} ${attributes} ${types} ${values}" | tr '|' ' '
@@ -73,7 +73,7 @@ evaluate-commands %sh{
         add-highlighter shared/dart/code/ regex \b(${types})\b 0:type
         add-highlighter shared/dart/code/ regex \b(${values})\b 0:value
         add-highlighter shared/dart/code/ regex \b(${functions}) 2:function
-        add-highlighter shared/dart/code/ regex \b(${annotations})\b 0:meta
+        add-highlighter shared/dart/code/ regex (${annotations})\b 0:meta
         add-highlighter shared/dart/code/ regex \b(${classes})\b 0:module
     "
 }

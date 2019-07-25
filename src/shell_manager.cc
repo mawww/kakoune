@@ -134,12 +134,13 @@ pid_t spawn_shell(const char* shell, StringView cmdline,
 
 Vector<String> generate_env(StringView cmdline, const Context& context, const ShellContext& shell_context)
 {
-    static const Regex re(R"(\bkak_(\w+)\b)");
+    static const Regex re(R"(\bkak_(quoted_)?(\w+)\b)");
 
     Vector<String> kak_env;
     for (auto&& match : RegexIterator{cmdline.begin(), cmdline.end(), re})
     {
-        StringView name{match[1].first, match[1].second};
+        StringView name{match[2].first, match[2].second};
+        Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
 
         auto match_name = [&](const String& s) {
             return s.substr(0_byte, name.length()) == name and
@@ -152,9 +153,10 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
         try
         {
             const String& value = var_it != shell_context.env_vars.end() ?
-                var_it->value : ShellManager::instance().get_val(name, context, Quoting::Shell);
+                var_it->value : ShellManager::instance().get_val(name, context, quoting);
 
-            kak_env.push_back(format("kak_{}={}", name, value));
+            StringView quoted{match[1].first, match[1].second};
+            kak_env.push_back(format("kak_{}{}={}", quoted, name, value));
         } catch (runtime_error&) {}
     }
 

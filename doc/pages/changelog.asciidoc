@@ -3,7 +3,7 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development version
+== Kakoune 2019.07.01
 
 * Re-organized bundled script files directory hierarchy.
 
@@ -28,8 +28,14 @@ released versions.
   `require-module` commands that allows for lazily loading language
   support files with dependency resolution.
 
-* Added a new hook `ModuleLoad` which is run when a module is loaded,
-  allowing for module specific configuration.
+* Added a new hook `ModuleLoaded` which is run after a module is
+  loaded, allowing for module specific configuration.
+
+* Shell quoting of lists is not automatic anymore, `$kak_quoted_...`
+  makes it opt-in, and works for all option types.
+
+* Lower case function key syntax is not accepted anymore,
+  `<f1>` should be converted to `<F1>`.
 
 == Kakoune 2019.01.20
 

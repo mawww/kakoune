@@ -210,6 +210,20 @@ of the file onto the filesystem
         write the given text to the given file on the host
         filesystem.
 
+    *-quoting* <quoting>:::
+        define how each arguments are quoted in echo output:
+
+        - *raw* (default)::::
+            just join each argument with a space
+
+        - *kakoune*::::
+            also wrap each argument in single quotes, doubling-up
+            embedded quotes.
+
+        - *shell*::::
+            also wrap each arguments in single quotes and escape
+            embedded quotes in a shell compatible way.
+
 *set-face* <scope> <name> <facespec>::
     *alias* face +
     define a face in *scope*

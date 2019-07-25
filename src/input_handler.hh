@@ -68,7 +68,7 @@ public:
     // returns to normal mode after validation if callback does
     // not change the mode itself
     void prompt(StringView prompt, String initstr, String emptystr,
-                Face prompt_face, PromptFlags flags,
+                Face prompt_face, PromptFlags flags, char history_register,
                 PromptCompleter completer, PromptCallback callback);
     void set_prompt_face(Face prompt_face);
 

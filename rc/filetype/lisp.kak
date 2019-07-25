@@ -16,6 +16,7 @@ hook global WinSetOption filetype=lisp %{
 
     hook window ModeChange insert:.* -group lisp-trim-indent  lisp-trim-indent
     hook window InsertChar \n -group lisp-indent lisp-indent-on-new-line
+    set-option buffer extra_word_chars '_' '+' '-' '*' '/' '@' '$' '%' '^' '&' '_' '=' '<' '>' '~' '.'
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window lisp-.+ }
 }

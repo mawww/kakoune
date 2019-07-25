@@ -18,6 +18,7 @@ A shell command is appended to the one set in this option at runtime} \
                    'termite        -e      ' \
                    'urxvt          -e sh -c' \
                    'rxvt           -e sh -c' \
+                   'st             -e sh -c' \
                    'xterm          -e sh -c' \
                    'roxterm        -e sh -c' \
                    'mintty         -e sh -c' \
@@ -54,7 +55,7 @@ The program passed as argument will be executed in the new terminal' \
         # would be nicer to do in a single sed/awk call but that's difficult
         args=$(
             for i in "$@"; do
-                # special case to preserve empty variables as sed won't touch these
+                # special case to preserve empty variables as sed will not touch these
                 if [ "$i" = '' ]; then
                     printf "'' "
                 else

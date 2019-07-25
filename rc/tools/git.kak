@@ -3,13 +3,12 @@ declare-option -docstring "name of the client in which documentation is to be di
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
     add-highlighter window/git-log group
-    add-highlighter window/git-log/ regex '^(commit) ([0-9a-f]+)$' 1:keyword 2:meta
+    add-highlighter window/git-log/ regex '^(commit) ([0-9a-f]+)( [^\n]+)?$' 1:keyword 2:meta 3:comment
     add-highlighter window/git-log/ regex '^([a-zA-Z_-]+:) (.*?)$' 1:variable 2:value
     add-highlighter window/git-log/ ref diff # highlight potential diffs from the -p option
 
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-log }
 }
-
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
     add-highlighter window/git-status group
@@ -18,14 +17,13 @@ hook -group git-status-highlight global WinSetOption filetype=git-status %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-status }
 }
 
-
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden line-specs git_diff_flags
 
 define-command -params 1.. \
   -docstring %sh{printf 'git [<arguments>]: git wrapping helper
 All the optional arguments are forwarded to the git utility
-Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  hide-diff\n \init\n log\n  show\n  show-diff\n  status\n  update-diff'} \
+Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  hide-diff\n  init\n  log\n  show\n  show-diff\n  status\n  update-diff'} \
   -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
         printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nshow\nshow-diff\ninit\nstatus\nupdate-diff\n"
@@ -76,7 +74,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                       print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags " flag | cmd
                       close(cmd)
                   }
-                  /^([0-9a-f]{40}) ([0-9]+) ([0-9]+) ([0-9]+)/ {
+                  /^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/ {
                       send_flags()
                       sha=$1
                       line=$3

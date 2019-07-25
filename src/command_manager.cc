@@ -67,7 +67,7 @@ void CommandManager::load_module(StringView module_name, Context& context)
     execute(module->value.commands, empty_context);
     module->value.commands.clear();
 
-    context.hooks().run_hook(Hook::ModuleLoad, module_name, context);
+    context.hooks().run_hook(Hook::ModuleLoaded, module_name, context);
 }
 
 struct parse_error : runtime_error
@@ -286,7 +286,7 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
 
 auto expand_option(Option& opt, std::true_type)
 {
-    return opt.get_as_string(Quoting::Kakoune);
+    return opt.get_as_string(Quoting::Raw);
 }
 
 auto expand_option(Option& opt, std::false_type)
@@ -624,6 +624,13 @@ Completions CommandManager::complete_command_name(const Context& context, String
     return {0, query.length(), Kakoune::complete(query, query.length(), concatenated(commands, aliases))};
 }
 
+Completions CommandManager::complete_module_name(StringView query) const
+{
+    return {0, query.length(),
+            Kakoune::complete(query, query.length(), m_modules | filter([](auto&& item) { return not item.value.loaded; })
+                                                               | transform(&ModuleMap::Item::key))};
+}
+
 Completions CommandManager::complete(const Context& context,
                                      CompletionFlags flags,
                                      StringView command_line,
@@ -719,7 +726,7 @@ Completions CommandManager::complete(const Context& context,
             context, flags, params, tokens.size() - 2,
             cursor_pos_in_token), start);
 
-        if (not completions.quoted and token.type == Token::Type::Raw)
+        if (not (completions.flags & Completions::Flags::Quoted) and token.type == Token::Type::Raw)
         {
             for (auto& c : completions.candidates)
                 c = (not c.empty() and contains("%'\"", c[0]) ? "\\" : "") + escape(c, "; \t", '\\');

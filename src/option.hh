@@ -10,6 +10,7 @@ namespace Kakoune
 {
 
 class String;
+enum class Quoting;
 
 // Forward declare functions that wont get found by ADL
 inline String option_to_string(int opt);
@@ -27,10 +28,10 @@ option_from_strings(Meta::Type<T>, ConstArrayView<String> strs)
 }
 
 template<typename T>
-Vector<decltype(option_to_string(std::declval<T>()))>
+Vector<decltype(option_to_string(std::declval<T>(), Quoting{}))>
 option_to_strings(const T& opt)
 {
-    return Vector<String>{option_to_string(opt)};
+    return Vector<String>{option_to_string(opt, Quoting{})};
 }
 
 template<typename T>
@@ -40,12 +41,6 @@ option_add_from_strings(T& opt, ConstArrayView<String> strs)
     if (strs.size() != 1)
         throw runtime_error("expected a single value for option");
     return option_add(opt, strs[0]);
-}
-
-template<typename T>
-constexpr bool option_needs_quoting(Meta::Type<T>)
-{
-    return not std::is_integral<T>::value;
 }
 
 template<typename P, typename T>

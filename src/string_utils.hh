@@ -2,6 +2,7 @@
 #define string_utils_hh_INCLUDED
 
 #include "string.hh"
+#include "enum.hh"
 #include "vector.hh"
 #include "optional.hh"
 
@@ -64,10 +65,6 @@ Vector<StringView> wrap_lines(StringView text, ColumnCount max_width);
 
 int str_to_int(StringView str); // throws on error
 Optional<int> str_to_int_ifp(StringView str);
-
-inline String option_to_string(StringView opt) { return opt.str(); }
-inline String option_from_string(Meta::Type<String>, StringView str) { return str.str(); }
-inline bool option_add(String& opt, StringView val) { opt += val; return not val.empty(); }
 
 template<size_t N>
 struct InplaceString
@@ -142,15 +139,36 @@ inline String shell_quote(StringView s)
 
 enum class Quoting
 {
+    Raw,
     Kakoune,
     Shell
 };
 
-inline auto quoter(Quoting quoting)
+constexpr auto enum_desc(Meta::Type<Quoting>)
 {
-    return quoting == Quoting::Kakoune ? &quote : &shell_quote;
+    return make_array<EnumDesc<Quoting>, 3>({
+        { Quoting::Raw, "raw" },
+        { Quoting::Kakoune, "kakoune" },
+        { Quoting::Shell, "shell" }
+    });
 }
 
+inline auto quoter(Quoting quoting)
+{
+    switch (quoting)
+    {
+        case Quoting::Kakoune: return &quote;
+        case Quoting::Shell: return &shell_quote;
+        case Quoting::Raw:
+        default:
+            return +[](StringView s) { return s.str(); };
+    }
+}
+
+inline String option_to_string(StringView opt, Quoting quoting) { return quoter(quoting)(opt); }
+inline Vector<String> option_to_strings(StringView opt) { return {opt.str()}; }
+inline String option_from_string(Meta::Type<String>, StringView str) { return str.str(); }
+inline bool option_add(String& opt, StringView val) { opt += val; return not val.empty(); }
 
 }
 

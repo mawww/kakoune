@@ -8,7 +8,7 @@ hook global BufCreate .*[.](editorconfig) %{
     set-option buffer filetype ini
     set-option buffer static_words indent_style indent_size tab_width \
     end_of_line charset insert_final_newline trim_trailing_whitespace root \
-    latin1 utf-8 utf-8-bom utf-16be utf-16le lf cr crlf unset space tab
+    latin1 utf-8 utf-8-bom utf-16be utf-16le lf cr crlf unset space tab max_line_length
 }
 
 declare-option -hidden bool editorconfig_trim_trailing_whitespace false
@@ -18,12 +18,13 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
     evaluate-commands %sh{
         command -v editorconfig >/dev/null 2>&1 || { echo 'echo -markup "{Error}editorconfig could not be found"'; exit 1; }
         editorconfig "${1:-$kak_buffile}" | awk -F= -- '
-            /indent_style=/            { indent_style = $2 }
-            /indent_size=/             { indent_size = $2 == "tab" ? 4 : $2  }
-            /tab_width=/               { tab_width = $2 }
-            /end_of_line=/             { end_of_line = $2 }
-            /charset=/                 { charset = $2 }
+            /indent_style=/             { indent_style = $2 }
+            /indent_size=/              { indent_size = $2 == "tab" ? 4 : $2  }
+            /tab_width=/                { tab_width = $2 }
+            /end_of_line=/              { end_of_line = $2 }
+            /charset=/                  { charset = $2 }
             /trim_trailing_whitespace=/ { trim_trailing_whitespace = $2 }
+            /max_line_length=/          { max_line_length = $2 }
 
             END {
                 if (indent_style == "tab") {
@@ -45,6 +46,11 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
                 }
                 if (trim_trailing_whitespace == "true") {
                     print "set-option buffer editorconfig_trim_trailing_whitespace true"
+                }
+                if (max_line_length && max_line_length != "off") {
+                    print "set window autowrap_column " max_line_length
+                    print "autowrap-enable"
+                    print "add-highlighter window/ column %sh{ echo $((" max_line_length "+1)) } default,bright-black"
                 }
             }
         '

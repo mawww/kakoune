@@ -10,6 +10,7 @@
 #include "unit_tests.hh"
 #include "value.hh"
 
+#include <cstdio>
 #include <utility>
 
 #include <unistd.h>

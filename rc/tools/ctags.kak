@@ -1,15 +1,21 @@
-# Kakoune Exuberant CTags support script
+# Kakoune CTags support script
 #
-# This script requires the readtags command available in ctags source but
-# not installed by default
+# This script requires the readtags command available in universal-ctags
+
+declare-option -docstring "minimum characters before triggering autocomplete" \
+    int ctags_min_chars 3
 
 declare-option -docstring "list of paths to tag files to parse when looking up a symbol" \
     str-list ctagsfiles 'tags'
 
+declare-option -hidden completions ctags_completions
+
+declare-option -docstring "shell command to run" str readtagscmd "readtags"
+
 define-command -params ..1 \
     -shell-script-candidates %{
         realpath() { ( cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
-        eval "set -- $kak_opt_ctagsfiles"
+        eval "set -- $kak_quoted_opt_ctagsfiles"
         for candidate in "$@"; do
             [ -f "$candidate" ] && realpath "$candidate"
         done | awk '!x[$0]++' | # remove duplicates
@@ -23,39 +29,55 @@ define-command -params ..1 \
     -docstring %{ctags-search [<symbol>]: jump to a symbol's definition
 If no symbol is passed then the current selection is used as symbol name} \
     ctags-search \
-    %{ evaluate-commands %sh{
+    %[ evaluate-commands %sh[
         realpath() { ( cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
-        export tagname=${1:-${kak_selection}}
-        eval "set -- $kak_opt_ctagsfiles"
+        export tagname="${1:-${kak_selection}}"
+        eval "set -- $kak_quoted_opt_ctagsfiles"
         for candidate in "$@"; do
             [ -f "$candidate" ] && realpath "$candidate"
         done | awk '!x[$0]++' | # remove duplicates
         while read -r tags; do
             printf '!TAGROOT\t%s\n' "$(realpath "${tags%/*}")/"
-            readtags -t "$tags" $tagname
+            ${kak_opt_readtagscmd} -t "$tags" "$tagname"
         done | awk -F '\t|\n' '
-        /^!TAGROOT\t/ { tagroot=$2 }
-        /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
-            re=$0;
-            sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
-            keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
-            out = out " %{" $2 " {MenuInfo}" re "} %{evaluate-commands %{ try %{ edit %{" path($2) "}; execute-keys %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
-        }
-        /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{evaluate-commands %{ edit %{" path($2) "} %{" $3 "}}}" }
-        END { print ( length(out) == 0 ? "echo -markup %{{Error}no such tag " ENVIRON["tagname"] "}" : "menu -markup -auto-single " out ) }
+            /^!TAGROOT\t/ { tagroot=$2 }
+            /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
+                line = $0; sub(".*\t/\\^", "", line); sub("\\$?/$", "", line);
+                menu_info = line; gsub("!", "!!", menu_info); gsub(/^[\t+ ]+/, "", menu_info); gsub("{", "\\{", menu_info); gsub(/\t/, " ", menu_info);
+                keys = line; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys); gsub("!", "!!", keys); gsub("&", "&&", keys); gsub("#", "##", keys); gsub("\\|", "||", keys); gsub("\\\\/", "/", keys);
+                menu_item = $2; gsub("!", "!!", menu_item);
+                edit_path = path($2); gsub("&", "&&", edit_path); gsub("#", "##", edit_path); gsub("\\|", "||", edit_path);
+                select = $1; gsub(/</, "<lt>", select); gsub(/\t/, "<c-v><c-i>", select); gsub("!", "!!", select); gsub("&", "&&", select); gsub("#", "##", select); gsub("\\|", "||", select);
+                out = out "%!" menu_item ": {MenuInfo}" menu_info "! %!evaluate-commands %# try %& edit -existing %|" edit_path "|; execute-keys %|/\\Q" keys "<ret>vc| & catch %& echo -markup %|{Error}unable to find tag| &; try %& execute-keys %|s\\Q" select "<ret>| & # !"
+            }
+            /[^\t]+\t[^\t]+\t[0-9]+/ {
+                menu_item = $2; gsub("!", "!!", menu_item);
+                select = $1; gsub(/</, "<lt>", select); gsub(/\t/, "<c-v><c-i>", select); gsub("!", "!!", select); gsub("&", "&&", select); gsub("#", "##", select); gsub("\\|", "||", select);
+                menu_info = $3; gsub("!", "!!", menu_info); gsub("{", "\\{", menu_info);
+                edit_path = path($2); gsub("!", "!!", edit_path); gsub("#", "##", edit_path); gsub("&", "&&", edit_path); gsub("\\|", "||", edit_path);
+                line_number = $3;
+                out = out "%!" menu_item ": {MenuInfo}" menu_info "! %!evaluate-commands %# try %& edit -existing %|" edit_path "|; execute-keys %|" line_number "gx| & catch %& echo -markup %|{Error}unable to find tag| &; try %& execute-keys %|s\\Q" select "<ret>| & # !"
+            }
+            END { print ( length(out) == 0 ? "echo -markup %{{Error}no such tag " ENVIRON["tagname"] "}" : "menu -markup -auto-single " out ) }
+            # Ensure x is an absolute file path, by prepending with tagroot
+            function path(x) { return x ~/^\// ? x : tagroot x }'
+    ]]
 
-        # Ensure x is an absolute file path, by prepending with tagroot
-        function path(x) { return x ~/^\// ? x : tagroot x }'
-    }}
-
-define-command ctags-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ evaluate-commands -draft %{
-    execute-keys <space>hb<a-k>^\w+$<ret>
-    nop %sh{ {
-        compl=$(readtags -p "$kak_selection" | cut -f 1 | sort | uniq | sed -e 's/:/\\:/g' | sed -e 's/\n/:/g' )
-        compl="${kak_cursor_line}.${kak_cursor_column}+${#kak_selection}@${kak_timestamp}:${compl}"
-        printf %s\\n "set-option buffer=$kak_bufname ctags_completions '${compl}'" | kak -p ${kak_session}
-    } > /dev/null 2>&1 < /dev/null & }
-}}
+define-command ctags-complete -docstring "Complete the current selection" %{
+    nop %sh{
+        (
+            header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
+            compl=$(
+                eval "set -- $kak_quoted_opt_ctagsfiles"
+                for ctagsfile in "$@"; do
+                    ${kak_opt_readtagscmd} -p -t "$ctagsfile" ${kak_selection}
+                done | awk '{ uniq[$1]++ } END { for (elem in uniq) printf " %1$s||%1$s", elem }'
+            )
+            printf %s\\n "evaluate-commands -client ${kak_client} set-option buffer=${kak_bufname} ctags_completions ${header}${compl}" | \
+                kak -p ${kak_session}
+        ) > /dev/null 2>&1 < /dev/null &
+    }
+}
 
 define-command ctags-funcinfo -docstring "Display ctags information about a selected function" %{
     evaluate-commands -draft %{
@@ -65,7 +87,7 @@ define-command ctags-funcinfo -docstring "Display ctags information about a sele
                 f=${kak_selection%?}
                 sig='\tsignature:(.*)'
                 csn='\t(class|struct|namespace):(\S+)'
-                sigs=$(readtags -e -Q '(eq? $kind "f")' "${f}" | sed -re "s/^.*${csn}.*${sig}$/\3 [\2::${f}]/ ;t ;s/^.*${sig}$/\1 [${f}]/")
+                sigs=$(${kak_opt_readtagscmd} -e -Q '(eq? $kind "f")' "${f}" | sed -re "s/^.*${csn}.*${sig}$/\3 [\2::${f}]/ ;t ;s/^.*${sig}$/\1 [${f}]/")
                 if [ -n "$sigs" ]; then
                     printf %s\\n "evaluate-commands -client ${kak_client} %{info -anchor $kak_cursor_line.$kak_cursor_column -style above '$sigs'}"
                 fi
@@ -120,4 +142,23 @@ define-command ctags-update-tags -docstring 'Update tags for the given file' %{
 
         printf %s\\n "evaluate-commands -client $kak_client echo -markup '{Information}${msg}'" | kak -p ${kak_session}
     ) > /dev/null 2>&1 < /dev/null & }
+}
+
+define-command ctags-enable-autocomplete -docstring "Enable automatic ctags completion" %{
+    set-option window completers "option=ctags_completions" %opt{completers}
+    hook window -group ctags-autocomplete InsertIdle .* %{
+        try %{
+            evaluate-commands -draft %{ # select previous word >= ctags_min_chars
+                execute-keys "<space>b_<a-k>.{%opt{ctags_min_chars},}<ret>"
+                ctags-complete          # run in draft context to preserve selection
+            }
+        }
+    }
+}
+
+define-command ctags-disable-autocomplete -docstring "Disable automatic ctags completion" %{
+    evaluate-commands %sh{
+        printf "set-option window completers %s\n" $(printf %s "${kak_opt_completers}" | sed -e "s/'option=ctags_completions'//g")
+    }
+    remove-hooks window ctags-autocomplete
 }

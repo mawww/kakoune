@@ -18,10 +18,19 @@ using CandidateList = Vector<String, MemoryDomain::Completion>;
 
 struct Completions
 {
+    enum class Flags
+    {
+        None = 0,
+        Quoted = 0b1,
+        Menu = 0b10
+    };
+
+    constexpr friend bool with_bit_ops(Meta::Type<Flags>) { return true; }
+
     CandidateList candidates;
     ByteCount start;
     ByteCount end;
-    bool quoted = false;
+    Flags flags = Flags::None;
 
     Completions()
         : start(0), end(0) {}
@@ -29,8 +38,8 @@ struct Completions
     Completions(ByteCount start, ByteCount end)
         : start(start), end(end) {}
 
-    Completions(ByteCount start, ByteCount end, CandidateList candidates, bool quoted = false)
-        : candidates(std::move(candidates)), start(start), end(end), quoted{quoted} {}
+    Completions(ByteCount start, ByteCount end, CandidateList candidates, Flags flags = Flags::None)
+        : candidates(std::move(candidates)), start(start), end(end), flags{flags} {}
 };
 
 enum class CompletionFlags
@@ -53,8 +62,8 @@ Completions shell_complete(const Context& context, CompletionFlags,
 
 inline Completions offset_pos(Completions completion, ByteCount offset)
 {
-    return { completion.start + offset, completion.end + offset,
-             std::move(completion.candidates), completion.quoted };
+    return {completion.start + offset, completion.end + offset,
+            std::move(completion.candidates), completion.flags};
 }
 
 template<typename Container>

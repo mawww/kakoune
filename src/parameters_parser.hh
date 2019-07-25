@@ -119,7 +119,7 @@ struct ParametersParser
 
     ConstArrayView<String> positionals_from(size_t first) const
     {
-        kak_assert(m_desc.flags & (ParameterDesc::Flags::SwitchesOnlyAtStart | ParameterDesc::Flags::SwitchesAsPositional));
+        // kak_assert(m_desc.flags & (ParameterDesc::Flags::SwitchesOnlyAtStart | ParameterDesc::Flags::SwitchesAsPositional));
         return m_params.subrange(first < m_positional_indices.size() ? m_positional_indices[first] : -1);
     }
 
@@ -129,7 +129,7 @@ struct ParametersParser
 private:
     ParameterList m_params;
     Vector<size_t, MemoryDomain::Commands> m_positional_indices;
-    const ParameterDesc& m_desc;
+    HashMap<String, StringView> m_switches;
 };
 
 }

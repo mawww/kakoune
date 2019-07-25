@@ -113,7 +113,7 @@ void select(Context& context, T func)
         }
 
         if (to_remove.size() == selections.size())
-            throw runtime_error{"no selections remaining"};
+            throw no_selections_remaining{};
         for (auto& i : to_remove | reverse())
             selections.remove(i);
     }
@@ -270,9 +270,8 @@ void goto_commands(Context& context, NormalParams params)
                 break;
             case 'a':
             {
-                Buffer* target = nullptr;
-                if (not context.has_client() or
-                    not (target = context.client().last_buffer()))
+                Buffer* target = context.last_buffer();
+                if (not target)
                 {
                     throw runtime_error("no last buffer");
                     break;
@@ -456,6 +455,7 @@ void command(Context& context, EnvVarMap env_vars)
     context.input_handler().prompt(
         ":", {}, context.main_sel_register_value(':').str(),
         context.faces()["Prompt"], PromptFlags::DropHistoryEntriesWithBlankPrefix,
+        ':',
         [](const Context& context, CompletionFlags flags,
            StringView cmd_line, ByteCount pos) {
                return CommandManager::instance().complete(context, flags, cmd_line, pos);
@@ -544,7 +544,7 @@ void pipe(Context& context, NormalParams)
     const char* prompt = replace ? "pipe:" : "pipe-to:";
     context.input_handler().prompt(
         prompt, {}, context.main_sel_register_value("|").str(), context.faces()["Prompt"],
-        PromptFlags::DropHistoryEntriesWithBlankPrefix,
+        PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
         shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context)
         {
@@ -625,7 +625,7 @@ void insert_output(Context& context, NormalParams)
     const char* prompt = mode == InsertMode::Insert ? "insert-output:" : "append-output:";
     context.input_handler().prompt(
         prompt, {}, context.main_sel_register_value("|").str(), context.faces()["Prompt"],
-        PromptFlags::DropHistoryEntriesWithBlankPrefix,
+        PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
         shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context)
         {
@@ -753,14 +753,15 @@ constexpr RegexCompileFlags direction_flags(RegexMode mode)
 }
 
 template<RegexMode mode = RegexMode::Forward, typename T>
-void regex_prompt(Context& context, String prompt, String default_regex, T func)
+void regex_prompt(Context& context, String prompt, char reg, T func)
 {
     static_assert(is_direction(mode));
     DisplayCoord position = context.has_window() ? context.window().position() : DisplayCoord{};
     SelectionList selections = context.selections();
+    auto default_regex = RegisterManager::instance()[reg].get_main(context, context.selections().main_index());
     context.input_handler().prompt(
         std::move(prompt), {}, default_regex, context.faces()["Prompt"],
-        PromptFlags::Search,
+        PromptFlags::Search, reg,
         [](const Context& context, CompletionFlags, StringView regex, ByteCount pos) -> Completions {
             auto current_word = [](StringView s) {
                 auto it = s.end();
@@ -785,7 +786,7 @@ void regex_prompt(Context& context, String prompt, String default_regex, T func)
                        [&](auto&& m) { candidates.push_back(m.candidate().str()); return true; });
             return {(int)(word.begin() - regex.begin()), pos,  std::move(candidates) };
         },
-        [=](StringView str, PromptEvent event, Context& context) mutable {
+        [=, func=T(std::move(func))](StringView str, PromptEvent event, Context& context) mutable {
             try
             {
                 if (event != PromptEvent::Change and context.has_client())
@@ -879,18 +880,12 @@ void search(Context& context, NormalParams params)
     const char reg = to_lower(params.reg ? params.reg : '/');
     const int count = params.count;
 
-    auto reg_content = RegisterManager::instance()[reg].get(context);
-    Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
-    const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
-
-    regex_prompt<regex_mode>(context, prompt.str(), saved_reg[main_index],
-                 [reg, count, saved_reg]
+    regex_prompt<regex_mode>(context, prompt.str(), reg,
+                 [reg, count, saved_reg = RegisterManager::instance()[reg].save(context)]
                  (const Regex& regex, PromptEvent event, Context& context) {
+                     RegisterManager::instance()[reg].restore(context, saved_reg);
                      if (event == PromptEvent::Abort)
-                     {
-                         RegisterManager::instance()[reg].set(context, saved_reg);
                          return;
-                     }
                      RegisterManager::instance()[reg].set(context, regex.str());
 
                      if (regex.empty() or regex.str().empty())
@@ -907,7 +902,7 @@ template<SelectMode mode, RegexMode regex_mode>
 void search_next(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
-    StringView str = context.main_sel_register_value(reg);
+    StringView str = RegisterManager::instance()[reg].get(context).back();
     if (not str.empty())
     {
         Regex regex{str, direction_flags(regex_mode)};
@@ -942,25 +937,23 @@ void search_next(Context& context, NormalParams params)
 template<bool smart>
 void use_selection_as_search_pattern(Context& context, NormalParams params)
 {
-    Vector<String> patterns;
-    auto& sels = context.selections();
     const auto& buffer = context.buffer();
-    for (auto& sel : sels)
-    {
+    auto patterns = context.selections() | transform([&](auto&& sel) {
         const auto beg = sel.min(), end = buffer.char_next(sel.max());
-        patterns.push_back(format("{}{}{}",
-                                  smart and is_bow(buffer, beg) ? "\\b" : "",
-                                  escape(buffer.string(beg, end), "^$\\.*+?()[]{}|", '\\'),
-                                  smart and is_eow(buffer, end) ? "\\b" : ""));
-    }
+        return format("{}{}{}",
+                      smart and is_bow(buffer, beg) ? "\\b" : "",
+                      escape(buffer.string(beg, end), "^$\\.*+?()[]{}|", '\\'),
+                      smart and is_eow(buffer, end) ? "\\b" : "");
+    });
+    String pattern = join(patterns, '|', false);
 
     const char reg = to_lower(params.reg ? params.reg : '/');
 
     context.print_status({
-        format("register '{}' set to '{}'", reg, fix_atom_text(patterns[sels.main_index()])),
+        format("register '{}' set to '{}'", reg, fix_atom_text(pattern)),
         context.faces()["Information"] });
 
-    RegisterManager::instance()[reg].set(context, patterns);
+    RegisterManager::instance()[reg].set(context, {pattern});
 
     // Hack, as Window do not take register state into account
     if (context.has_window())
@@ -973,19 +966,14 @@ void select_regex(Context& context, NormalParams params)
     const int capture = params.count;
     auto prompt = capture ? format("select (capture {}):", capture) :  "select:"_str;
 
-    auto reg_content = RegisterManager::instance()[reg].get(context);
-    Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
-    const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
-
-    regex_prompt(context, std::move(prompt), saved_reg[main_index],
-                 [reg, capture, saved_reg](Regex ex, PromptEvent event, Context& context) {
-         if (event == PromptEvent::Abort)
-         {
-             RegisterManager::instance()[reg].set(context, saved_reg);
-             return;
-         }
-
-        RegisterManager::instance()[reg].set(context, ex.str());
+    regex_prompt(context, std::move(prompt), reg,
+                 [reg, capture, saved_reg = RegisterManager::instance()[reg].save(context)]
+                 (Regex ex, PromptEvent event, Context& context) {
+        RegisterManager::instance()[reg].restore(context, saved_reg);
+        if (event == PromptEvent::Abort)
+            return;
+        if (not context.history_disabled())
+            RegisterManager::instance()[reg].set(context, ex.str());
 
         auto& selections = context.selections();
         auto& buffer = selections.buffer();
@@ -1000,19 +988,14 @@ void split_regex(Context& context, NormalParams params)
     const int capture = params.count;
     auto prompt = capture ? format("split (on capture {}):", (int)capture) :  "split:"_str;
 
-    auto reg_content = RegisterManager::instance()[reg].get(context);
-    Vector<String> saved_reg{reg_content.begin(), reg_content.end()};
-    const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
-
-    regex_prompt(context, std::move(prompt), saved_reg[main_index],
-                 [reg, capture, saved_reg](Regex ex, PromptEvent event, Context& context) {
-         if (event == PromptEvent::Abort)
-         {
-             RegisterManager::instance()[reg].set(context, saved_reg);
-             return;
-         }
-
-        RegisterManager::instance()[reg].set(context, ex.str());
+    regex_prompt(context, std::move(prompt), reg,
+                 [reg, capture, saved_reg = RegisterManager::instance()[reg].save(context)]
+                 (Regex ex, PromptEvent event, Context& context) {
+        RegisterManager::instance()[reg].restore(context, saved_reg);
+        if (event == PromptEvent::Abort)
+            return;
+        if (not context.history_disabled())
+            RegisterManager::instance()[reg].set(context, ex.str());
 
         auto& selections = context.selections();
         auto& buffer = selections.buffer();
@@ -1102,18 +1085,13 @@ void keep(Context& context, NormalParams params)
     constexpr StringView prompt = matching ? "keep matching:" : "keep not matching:";
 
     const char reg = to_lower(params.reg ? params.reg : '/');
-    auto saved_reg = RegisterManager::instance()[reg].get(context) | gather<Vector<String>>();
-    const int main_index = std::min(context.selections().main_index(), saved_reg.size()-1);
 
-    regex_prompt(context, prompt.str(), saved_reg[main_index],
-                 [saved_reg, reg]
+    regex_prompt(context, prompt.str(), reg,
+                 [reg, saved_reg = RegisterManager::instance()[reg].save(context)]
                  (const Regex& regex, PromptEvent event, Context& context) {
-
+        RegisterManager::instance()[reg].restore(context, saved_reg);
         if (event == PromptEvent::Abort)
-        {
-            RegisterManager::instance()[reg].set(context, saved_reg);
             return;
-        }
         if (not context.history_disabled())
             RegisterManager::instance()[reg].set(context, regex.str());
 
@@ -1135,7 +1113,7 @@ void keep(Context& context, NormalParams params)
                 keep.push_back(sel);
         }
         if (keep.empty())
-            throw runtime_error("no selections remaining");
+            throw no_selections_remaining{};
         context.selections_write_only() = std::move(keep);
     });
 }
@@ -1144,7 +1122,7 @@ void keep_pipe(Context& context, NormalParams)
 {
     context.input_handler().prompt(
         "keep pipe:", {}, {}, context.faces()["Prompt"],
-        PromptFlags::DropHistoryEntriesWithBlankPrefix, shell_complete,
+        PromptFlags::DropHistoryEntriesWithBlankPrefix, '|', shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context) {
             if (event != PromptEvent::Validate)
                 return;
@@ -1168,7 +1146,7 @@ void keep_pipe(Context& context, NormalParams)
                 }
             }
             if (keep.empty())
-                throw runtime_error("no selections remaining");
+                throw no_selections_remaining{};
             if (new_main == -1)
                 new_main = keep.size() - 1;
             context.selections_write_only().set(std::move(keep), new_main);
@@ -1301,7 +1279,7 @@ void select_object(Context& context, NormalParams params)
 
             context.input_handler().prompt(
                 "object desc:", {}, {}, context.faces()["Prompt"],
-                PromptFlags::None, complete_nothing,
+                PromptFlags::None, '_', complete_nothing,
                 [count,info](StringView cmdline, PromptEvent event, Context& context) {
                     if (event != PromptEvent::Change)
                         hide_auto_info_ifn(context, info);
@@ -1330,8 +1308,8 @@ void select_object(Context& context, NormalParams params)
             EnvVarMap env_vars = {
                 { "count", to_string(params.count) },
                 { "register", String{&params.reg, 1} },
-                { "select_mode", option_to_string(mode) },
-                { "object_flags", option_to_string(flags) }
+                { "select_mode", option_to_string(mode, Quoting::Raw) },
+                { "object_flags", option_to_string(flags, Quoting::Raw) }
             };
             command(context, std::move(env_vars));
             return;
@@ -1775,7 +1753,7 @@ void trim_selections(Context& context, NormalParams)
     }
 
     if (to_remove.size() == selections.size())
-        throw runtime_error{"no selections remaining"};
+        throw no_selections_remaining{};
     for (auto& i : to_remove | reverse())
         selections.remove(i);
 }

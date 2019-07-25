@@ -1,6 +1,6 @@
 declare-option str-list my_list 'foo' 'bar' '''foo''bar'''
 evaluate-commands %sh{
-    eval set -- $kak_opt_my_list
+    eval set -- $kak_quoted_opt_my_list
     for elem; do
         echo exec "'i$(printf %s "$elem" | sed -e s/\'/\'\'/g)<ret><esc>'"
     done

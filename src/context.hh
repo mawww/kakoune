@@ -89,6 +89,7 @@ public:
     SelectionList& selections_write_only();
 
     void change_buffer(Buffer& buffer);
+    void forget_buffer(Buffer& buffer);
 
     void set_client(Client& client);
     void set_window(Window& window);
@@ -134,6 +135,7 @@ public:
 
     void repeat_last_select() { if (m_last_select) m_last_select(*this); }
 
+    Buffer* last_buffer() const { return m_last_buffer.get(); }
 private:
     void begin_edition();
     void end_edition();
@@ -147,6 +149,7 @@ private:
     SafePtr<InputHandler> m_input_handler;
     SafePtr<Window>       m_window;
     SafePtr<Client>       m_client;
+    SafePtr<Buffer>       m_last_buffer;
 
     Optional<SelectionList> m_selections;
 

@@ -261,7 +261,7 @@ are exclusively available to built-in options.
     timeout, in milliseconds, with no user input that will trigger the
     *PromptIdle*, *InsertIdle* and *NormalIdle* hooks, and autocompletion.
 
-*fs_checkout_timeout* `int`::
+*fs_check_timeout* `int`::
     _default_ 500 +
     timeout, in milliseconds, between checks in normal mode of modifications
     of the file associated with the current buffer on the filesystem.

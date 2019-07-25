@@ -128,24 +128,23 @@ Here's how expansion patterns map to variable names:
 *%val{x}*::
     becomes `$kak_x`
 
-When turned into environment variables, list-type options, `$kak_reg_x`, and
-"quoted list" values will be shell-quoted so the shell doesn't get confused
-about how many items the list contains. You will need to apply `eval` to get
-back the original values. For example, if you want to process the contents
-of each selection, you can do something like:
+Values can be quoted with a shell compatible quoting by using `$kak_quoted_`
+as a prefix, this is mostly useful for list-type options and registers, as
+it allows to correctly work with lists where elements might contains
+whitespaces:
 
 ----
-eval set -- "$kak_selections"
+eval set -- "$kak_quoted_selections"
 while [ $# -gt 0 ]; do
     # ... do a thing with $1 ...
     shift
 done
 ----
 
-The `eval` command will take the expanded `$kak_selections` and unquote them,
-then execute the resulting `set` command, which sets the shell's argument
-variables to the items from `$kak_selections`. The `while` loop with `shift`
-iterates through the arguments one by one.
+The `eval` command will take the expanded `$kak_quoted_selections`
+and unquote them, then execute the resulting `set` command, which sets
+the shell's argument variables to the items from `$kak_selections`. The
+`while` loop with `shift` iterates through the arguments one by one.
 
 Only variables actually mentioned in the body of the shell expansion will
 be exported into the shell's environment. For example:
@@ -253,6 +252,11 @@ The following expansions are supported (with required context _in italics_):
 *%val{cursor_line}*::
     _in window scope_ +
     line of the main cursor, the third component of `%val{selection_desc}`
+
+*%val{error}*::
+    _in `try` command's <on_error_commands> parameter_ +
+    the text of the error that cancelled execution of the <commands> parameter
+    (or the previous <on_error_commands> parameter)
 
 *%val{history_id}*::
     _in buffer, window scope_ +
