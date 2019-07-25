@@ -23,7 +23,12 @@ hook -group org-highlight global WinSetOption filetype=org %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/org }
 }
 
-provide-module orgmode %&
+hook -group org-load-languages global WinSetOption filetype=org %{
+    hook -group org-load-languages window NormalIdle .* org-load-languages
+    hook -group org-load-languages window InsertIdle .* org-load-languages
+}
+
+provide-module orgmode %§
 
 # Faces
 # ‾‾‾‾‾
@@ -69,16 +74,14 @@ add-highlighter shared/org/inline default-region regions
 add-highlighter shared/org/inline/text default-region group
 
 evaluate-commands %sh{
-    languages="arch-linux asciidoc c cabal clojure
-               cmake coffee cpp css cucumber d dart diff
-               dockerfile elixir elm emacs-lisp etc exherbo
-               fish gas git go haml haskell hbs html i3 ini
-               java javascript json julia justrc kickstart
-               latex lisp lua mail makefile markdown mercurial
-               moon nim objc ocaml org perl php pony protobuf
-               pug python ragel restructuredtext ruby rust sass
-               scala scheme scss sh sql swift systemd taskpaper
-               toml troff tupfile void-linux yaml"
+    languages="asciidoc c cabal clojure cmake coffee cpp css
+               cucumber d dart diff dockerfile elixir elm emacs-lisp
+               etc exherbo fish gas git go haml haskell hbs html i3
+               ini java javascript json julia justrc kickstart latex
+               lisp lua makefile markdown mercurial moon nim objc
+               ocaml org perl php pony protobuf pug python ragel
+               restructuredtext ruby rust sass scala scheme scss sh
+               sql swift taskpaper toml troff tupfile yaml"
 
     for lang in ${languages}; do
         printf "%s\n" "add-highlighter shared/org/${lang} region '#\+(?i)BEGIN_SRC(?I)\h+${lang}\b' '(?i)#\+END_SRC' regions"
@@ -164,13 +167,13 @@ regex org_timestamp "%opt{org_date}(\h+%opt{org_time}(-%opt{org_time})?(\h+%opt{
 add-highlighter shared/org/inline/text/timestamp dynregex "[\[<]%opt{org_timestamp}([\]>]--[\[<]%opt{org_timestamp})?[\]>]" 0:variable
 
 # Markup
-## FORMAT: PRE MARKER CONTENTS MARKER POST
-## PRE: whitespace `(`, `{`, `'`, `"` or beginning of the line
+## FORMAT: PRE MARKER `CONTENTS` MARKER POST
+## PRE: whitespace, `(`, `{`, `'`, `"`, or beginning of the line
 ## MARKER: `/`, `+`, `=`, `~`, `_`, or `$`
 ## CONTENTS FORMAT: BORDER BODY BORDER
-## BORDER: any non-whitespace, and not `,` `'` or `"`
-## BODY: any character, can't be longer than tho lines
-## POST: a whitespace character, `-`, `.`, `,`, `:`, `!`, `?`, `'`, `)`, `}`
+### BORDER: any non-whitespace, and not `,`, `'`, or `"`
+### BODY: any character, can't be longer than tho lines
+### POST: a whitespace character, `-`, `.`, `,`, `:`, `!`, `?`, `'`, `)`, `}`
 add-highlighter shared/org/inline/text/italic         regex "(^|[\h({'""])([/][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[/])[\s.,:!?')}]" 2:org_italic
 add-highlighter shared/org/inline/text/strikethrough  regex "(^|[\h({'""])([+][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[+])[\s.,:!?')}]" 2:org_strikethrough
 add-highlighter shared/org/inline/text/verbatim       regex "(^|[\h({'""])([=][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[=])[\s.,:!?')}]" 2:meta
@@ -249,4 +252,11 @@ org-parse-file %{ evaluate-commands -save-regs '"/' %{
     }
 }}
 
-&
+define-command -hidden org-load-languages %{
+    evaluate-commands -draft %{ try %{
+        execute-keys 'gtGbGls#\+(?i)BEGIN_SRC\h+\K[^\s]+<ret>'
+        evaluate-commands -itersel %{ require-module %val{selection} }
+    }}
+}
+
+§
