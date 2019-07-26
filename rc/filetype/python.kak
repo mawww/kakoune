@@ -130,7 +130,7 @@ evaluate-commands %sh{
         add-highlighter shared/python/code/ regex '\b($(join "${keywords}" '|'))\b' 0:keyword
         add-highlighter shared/python/code/ regex '\b($(join "${functions}" '|'))\b\(' 1:builtin
         add-highlighter shared/python/code/ regex '\b($(join "${types}" '|'))\b' 0:type
-        add-highlighter shared/python/code/ regex '@[\w_]+\b' 0:attribute
+        add-highlighter shared/python/code/ regex '^\h*(@[\w_.]+))' 1:attribute
     "
 }
 
