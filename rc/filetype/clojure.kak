@@ -26,6 +26,11 @@ hook -group clojure-highlight global WinSetOption filetype=clojure %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/clojure }
 }
 
+hook -group clojure-insert global BufNewFile .*[.](clj|cljc|cljs|cljx) %{
+    require-module clojure
+    clojure-insert-ns
+}
+
 provide-module clojure %{
 
 require-module lisp
@@ -209,6 +214,21 @@ define-command -hidden clojure-indent-on-new-line %{
         try %{ execute-keys -draft '[rl"i<a-Z><gt>' }
         try %{ execute-keys -draft '[Bl"i<a-Z><gt>' }
         execute-keys -draft ';"i<a-z>a&<space>'
+    }
+}
+
+declare-option -docstring %{top-level directories which can contain clojure files
+e.g. '(src|test|dev)'} regex clojure_source_directories '(src|test|dev)'
+
+define-command -docstring %{clojure-insert-ns: Insert namespace directive at top of Clojure source file} \
+    clojure-insert-ns %{
+    evaluate-commands -draft %{
+        execute-keys -save-regs '' 'gk\O' "%val{bufname}" '<esc>giZ'
+        try %{ execute-keys 'z<a-l>s\.clj[csx]?$<ret><a-d>' }
+        try %{ execute-keys 'z<a-l>s^' "%opt{clojure_source_directories}" '/<ret><a-d>' }
+        try %{ execute-keys 'z<a-l>s/<ret>r.' }
+        try %{ execute-keys 'z<a-l>s_<ret>r-' }
+        execute-keys 'z<a-l>\c(ns <c-r>")<ret><esc>'
     }
 }
 
