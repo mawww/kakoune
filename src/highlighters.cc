@@ -811,10 +811,10 @@ struct WrapHighlighter : Highlighter
             while (buf_line >= cursor.line and setup.window_pos.line < cursor.line and
                    setup.cursor_pos.line + setup.scroll_offset.line >= win_height)
             {
-                auto remove_count = std::min(win_height, 1 + line_wrap_count(setup.window_pos.line, indent));
+                auto remove_count = 1 + line_wrap_count(setup.window_pos.line, indent);
                 ++setup.window_pos.line;
                 --setup.window_range.line;
-                setup.cursor_pos.line -= remove_count;
+                setup.cursor_pos.line -= std::min(win_height, remove_count);
                 win_line -= remove_count;
                 kak_assert(setup.cursor_pos.line >= 0);
             }
