@@ -137,7 +137,6 @@ add-highlighter shared/org/inline/text/subsubsection    regex '^(?:[*]{4}|[*]{8}
 add-highlighter shared/org/inline/text/heading_comment  regex '^[*]+\h+[^\n]*((?<=\h)COMMENT)\s'                     1:comment
 add-highlighter shared/org/inline/text/heading_todo     dynregex '^[*]+\h+(?:%opt{org_todo})'                        1:org_todo 2:org_done
 add-highlighter shared/org/inline/text/heading_priority dynregex '^[*]+\h+[^\n\[]*(\[#(?:%opt{org_priority})\])'     1:org_priority
-# (?:(?:%opt{org_todo})\h+)?(\[#(?:%opt{org_priority})\])?
 # Options
 add-highlighter shared/org/inline/text/option     regex "(?i)#\+[a-z]\w*\b[^\n]*"          0:module
 add-highlighter shared/org/inline/text/title      regex "(?i)#\+title:([^\n]+)"            0:module 1:title
@@ -149,7 +148,7 @@ add-highlighter shared/org/inline/text/drawer   regex "^\h*([:][^\s][^\n]*?[^\s]
 # Timestamps
 declare-option -docstring "Org date
           format: YYYY-MM-DD DAYNAME" \
-regex org_date '\d\d\d\d-\d\d-\d\d\h+[^\s-+>\]\d]+'
+regex org_date '\d{4}-\d{2}-\d{2}\h+[^\s-+>\]\d]+'
 
 declare-option -docstring "Org time
           format H:MM" \
@@ -185,12 +184,13 @@ add-highlighter shared/org/inline/text/inline-math    regex "(^|[\h({'""])([$][^
 add-highlighter shared/org/inline/text/bold regex "(?:^|[\h({'""])([*][^\h,'""][^\n]*?(\n[^\n]*?[^,'""\s])?[*])[\s.,:!?')}]|([*]{3,})\n|\h([*]{3})[\s.,:!?')}]" 1:org_bold
 
 # LaTeX
-add-highlighter shared/org/LaTeX region -match-capture '\\begin\{([A-Za-z0-9*]+)\}' '\\end\{([A-Za-z0-9*]+)\}' fill string
+require-module latex
+add-highlighter shared/org/LaTeX region -match-capture '\\begin\{([A-Za-z0-9*]+)\}' '\\end\{([A-Za-z0-9*]+)\}' ref latex
 
 ## LaTeX Math
-add-highlighter shared/org/math1 region '[$]{2}' '[$]{2}' fill mono # will be deprecated in future releases of Org but currently is supported
-add-highlighter shared/org/math2 region '\\\['   '\\\]'   fill mono
-add-highlighter shared/org/math3 region '\\\('   '\\\)'   fill mono
+add-highlighter shared/org/math1 region '\${2}' '\${2}' ref latex # will be deprecated in future releases of Org but currently is supported
+add-highlighter shared/org/math2 region '\\\['  '\\\]'  ref latex
+add-highlighter shared/org/math3 region '\\\('  '\\\)'  ref latex
 
 # Export snippets
 add-highlighter shared/org/inline/text/export regex "@@[a-zA-Z-]+:.*?@@" 0:mono
@@ -231,7 +231,7 @@ org-parse-file %{ evaluate-commands -save-regs '"/' %{
         # This Perl code transforms these two lines to similar formats:
         # `word1 word2 word3 word4' to `(word1|word2|word3)|(word4)',
         # and `word1 word2 | word3 word4' to `(word1|word2)|(word3|word4)'.
-        # This regex is later used in to highlight todo items in headings.
+        # This regex is later used to highlight todo items in headings.
         set-option buffer org_todo %sh{ printf "%s\n" "${kak_opt_org_todo}" | perl -pe 'if (/^.*\|.*$/) {
                                                                                              $_ =~ s/(.*)\|(.*)/($1)|($2)/;
                                                                                              $_ =~ s/\(\s+/(/g;
