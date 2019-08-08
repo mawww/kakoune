@@ -37,8 +37,18 @@ add-highlighter shared/nim regions
 add-highlighter shared/nim/code default-region group
 add-highlighter shared/nim/triple_string region '([A-Za-z](_?\w)*)?"""' '"""(?!")' fill string
 add-highlighter shared/nim/raw_string region [A-Za-z](_?[A-Za-z])*" (?<!")"(?!") fill string
-add-highlighter shared/nim/string region (?<!'\\)"(?!') (?<!\\)(\\\\)*" fill string
-add-highlighter shared/nim/comment region '#?#\[' '\]##?' fill comment
+add-highlighter shared/nim/string region (?<!'\\)"(?!') (?<!\\)(\\\\)*" group
+add-highlighter shared/nim/comment region '#?#\[' '\]##?' group
+add-highlighter shared/nim/comment_line region '#?#[^\[]' $ group
+
+add-highlighter shared/nim/string/fill fill string
+add-highlighter shared/nim/comment/fill fill comment
+add-highlighter shared/nim/comment_line/fill fill comment
+# Escape sequences in string
+add-highlighter shared/nim/string/escape regex \\[prcnlftv] 0:value
+# Comment tags
+add-highlighter shared/nim/comment/tags regex \b(TODO|FIXME|XXX|NOTE|BUG)\b 0:default+rb
+add-highlighter shared/nim/comment_line/tags regex \b(TODO|FIXME|XXX|NOTE|BUG)\b 0:default+rb
 
 evaluate-commands %sh{
     # Grammar
@@ -66,7 +76,7 @@ evaluate-commands %sh{
     types="int int8 int16 int32 int64 uint uint8 uint16 uint32 uint64 float
     float32 float64 bool char object seq array cstring string tuple varargs
     typedesc pointer byte set typed untyped void auto"
-    values="false true"
+    values="false true on off"
 
     join() { sep=$2; set -- $1; IFS="$sep"; echo "$*"; }
 
@@ -96,7 +106,6 @@ evaluate-commands %sh{
 }
 
 add-highlighter shared/nim/code/ regex '(,|;|`|\(\.?|\.?\)|\[[.:]?|\.?\]|\{\.?|\.?\})' 0:meta
-add-highlighter shared/nim/code/ regex '#[^\n]+' 0:comment
 add-highlighter shared/nim/code/ regex %{'(\\([rcnlftvabe\\"']|0*[12]?\d?\d|x[0-9a-fA-F]{2})|[^'\n])'} 0:string
 
 # Commands
@@ -111,7 +120,7 @@ def -hidden nim-indent-on-new-line %{
         # cleanup trailing whitespaces from previous line
         try %{ exec -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with enum, tuple, object, type, import, export, const, let, var, ':' or '='
-        try %{ exec -draft <space> k x <a-k> (:|=|enum|tuple|object|const|let|var|import|export|type)$ <ret> j <a-gt> }
+        try %{ exec -draft <space> k <a-x> <a-k> (:|=|enum|tuple|object|const|let|var|import|export|type)$ <ret> j <a-gt> }
     }
 }
 
