@@ -39,16 +39,11 @@ add-highlighter shared/nim/triple_string region '([A-Za-z](_?\w)*)?"""' '"""(?!"
 add-highlighter shared/nim/raw_string region [A-Za-z](_?[A-Za-z])*" (?<!")"(?!") fill string
 add-highlighter shared/nim/string region (?<!'\\)"(?!') (?<!\\)(\\\\)*" group
 add-highlighter shared/nim/comment region '#?#\[' '\]##?' group
-add-highlighter shared/nim/comment_line region '#?#[^\[]' $ group
+add-highlighter shared/nim/comment_line region (^|[^'])#?#[^\[] $ group
 
 add-highlighter shared/nim/string/fill fill string
 add-highlighter shared/nim/comment/fill fill comment
 add-highlighter shared/nim/comment_line/fill fill comment
-# Escape sequences in string
-add-highlighter shared/nim/string/escape regex \\[prcnlftv] 0:value
-# Comment tags
-add-highlighter shared/nim/comment/tags regex \b(TODO|FIXME|XXX|NOTE|BUG)\b 0:default+rb
-add-highlighter shared/nim/comment_line/tags regex \b(TODO|FIXME|XXX|NOTE|BUG)\b 0:default+rb
 
 evaluate-commands %sh{
     # Grammar
