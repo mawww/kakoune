@@ -36,6 +36,7 @@ add-highlighter shared/makefile/content/ regex ^[\w.%-]+\h*:\s 0:variable
 add-highlighter shared/makefile/content/ regex ^[-s]?include\b 0:variable
 add-highlighter shared/makefile/content/ regex [+?:]= 0:operator
 add-highlighter shared/makefile/content/ regex '#[^\n]*' 0:comment
+add-highlighter shared/makefile/content/ regex \$(%|\*|\+|<|\?|@|^|\|)\s 0:value
 
 evaluate-commands %sh{
     # Grammar
