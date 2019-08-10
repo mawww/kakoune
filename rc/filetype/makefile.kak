@@ -10,6 +10,7 @@ hook global BufCreate .*(/?[mM]akefile|\.mk) %{
 
 hook global WinSetOption filetype=makefile %{
     require-module makefile
+    require-module sh
 
     set-option window static_words %opt{makefile_static_words}
 
@@ -29,11 +30,20 @@ provide-module makefile %{
 
 add-highlighter shared/makefile group
 add-highlighter shared/makefile_functions group
+add-highlighter shared/makefile_recipe group
+
+add-highlighter shared/makefile_functions/regions regions
+add-highlighter shared/makefile_functions/regions/ region -recurse '\(' '\$\(shell\s' '\)' ref sh
 
 add-highlighter shared/makefile_functions/ regex \$\((?:(%|\*|\+|<|\?|@|^|\|)|([\w_-]*))|\) 0:value 1:keyword
 
+add-highlighter shared/makefile_recipe/regions regions
+add-highlighter shared/makefile_recipe/regions/ region '^\t+[@-]?' '$' ref sh
+add-highlighter shared/makefile_recipe/ regex \$\((?:(%|\*|\+|<|\?|@|^|\|)|([\w_-]*))|\) 0:value 1:keyword
+
 add-highlighter shared/makefile/regions regions
 add-highlighter shared/makefile/regions/ region -recurse '\(' '\$\(' '\)' ref makefile_functions
+add-highlighter shared/makefile/regions/recipe_shell region '^\t+[@-]?' '$' ref makefile_recipe
 
 add-highlighter shared/makefile/ regex ^[\w.%-]+\h*:\s 0:variable
 add-highlighter shared/makefile/ regex ^[-s]?include\b 0:variable
