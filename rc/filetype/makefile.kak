@@ -33,22 +33,33 @@ add-highlighter shared/makefile_functions group
 add-highlighter shared/makefile_recipe group
 
 add-highlighter shared/makefile_functions/regions regions
+# Highlight shell scripts in $(shell …) scopes
 add-highlighter shared/makefile_functions/regions/ region -recurse '\(' '\$\(shell\s' '\)' ref sh
 
+# Highlight the entire scopes (delimiters + command name) as values
+# but highlight the command name as a keyword when it's a special variable, e.g. $(^:.c=.o)
 add-highlighter shared/makefile_functions/ regex \$\((?:(%|\*|\+|<|\?|@|^|\|)|([\w_-]*))|\) 0:value 1:keyword
 
 add-highlighter shared/makefile_recipe/regions regions
+# Recipes that start with tabs are highlighted as shell
 add-highlighter shared/makefile_recipe/regions/ region '^\t+[@-]?' '$' ref sh
+# Highlight makefile scopes on top of shell script e.g. @printf %s\\n $(CC)
 add-highlighter shared/makefile_recipe/ regex \$\((?:(%|\*|\+|<|\?|@|^|\|)|([\w_-]*))|\) 0:value 1:keyword
 
+# Reference the highlighter groups implemented above in the main highlighter group
 add-highlighter shared/makefile/regions regions
 add-highlighter shared/makefile/regions/ region -recurse '\(' '\$\(' '\)' ref makefile_functions
 add-highlighter shared/makefile/regions/recipe_shell region '^\t+[@-]?' '$' ref makefile_recipe
 
+# Targets
 add-highlighter shared/makefile/ regex ^[\w.%-]+\h*:\s 0:variable
+# Include statements
 add-highlighter shared/makefile/ regex ^[-s]?include\b 0:variable
+# Operators used in value assigments
 add-highlighter shared/makefile/ regex [+?:]= 0:operator
+# Comments
 add-highlighter shared/makefile/ regex '#[^\n]*' 0:comment
+# Special variables
 add-highlighter shared/makefile/ regex \$(%|\*|\+|<|\?|@|^|\|)\s 0:value
 
 evaluate-commands %sh{
