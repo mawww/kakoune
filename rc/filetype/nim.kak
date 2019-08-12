@@ -37,9 +37,9 @@ add-highlighter shared/nim regions
 add-highlighter shared/nim/code default-region group
 add-highlighter shared/nim/triple_string region '([A-Za-z](_?\w)*)?"""' '"""(?!")' fill string
 add-highlighter shared/nim/raw_string region [A-Za-z](_?[A-Za-z])*" (?<!")"(?!") fill string
-add-highlighter shared/nim/string region (?<!'\\)"(?!') (?<!\\)(\\\\)*" group
+add-highlighter shared/nim/string region (?<!'\\)" ((?<!\\)(\\\\)*"|$) group
 add-highlighter shared/nim/comment region '#?#\[' '\]##?' group
-add-highlighter shared/nim/comment_line region (^|[^'])#?#[^\[] $ group
+add-highlighter shared/nim/comment_line region (?<![^'].')#?#(?!'\[) $ group
 
 add-highlighter shared/nim/string/fill fill string
 add-highlighter shared/nim/comment/fill fill comment
@@ -101,7 +101,7 @@ evaluate-commands %sh{
 }
 
 add-highlighter shared/nim/code/ regex '(,|;|`|\(\.?|\.?\)|\[[.:]?|\.?\]|\{\.?|\.?\})' 0:meta
-add-highlighter shared/nim/code/ regex %{'(\\([rcnlftvabe\\"']|0*[12]?\d?\d|x[0-9a-fA-F]{2})|[^'\n])'} 0:string
+add-highlighter shared/nim/code/char regex %{\B'(\\x[0-9a-fA-F]{2}|\\"|(\\.)|[^'\\])'\B} 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
