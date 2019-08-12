@@ -101,7 +101,7 @@ evaluate-commands %sh{
 }
 
 add-highlighter shared/nim/code/ regex '(,|;|`|\(\.?|\.?\)|\[[.:]?|\.?\]|\{\.?|\.?\})' 0:meta
-add-highlighter shared/nim/code/char regex %{\B'(\\x[0-9a-fA-F]{2}|\\"|(\\.)|[^'\\])'\B} 0:value
+add-highlighter shared/nim/code/ regex %{'(\\([rcnlftvabe\\"']|0*[12]?\d?\d|x[0-9a-fA-F]{2})|[^'\n])'} 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
