@@ -833,7 +833,17 @@ struct WrapHighlighter : Highlighter
         StringView content = buffer[line];
 
         SplitPos pos = current;
-        SplitPos last_boundary = {0, 0};
+        SplitPos last_word_boundary = {0, 0};
+        SplitPos last_WORD_boundary = {0, 0};
+
+        auto update_boundaries = [&](Codepoint cp) {
+            if (not m_word_wrap)
+                return;
+            if (!is_word<Word>(cp))
+                last_word_boundary = pos;
+            if (!is_word<WORD>(cp))
+                last_WORD_boundary = pos;
+        };
 
         while (pos.byte < content.length() and pos.column < target_column)
         {
@@ -844,7 +854,7 @@ struct WrapHighlighter : Highlighter
                     break;
                 pos.column = next_column;
                 ++pos.byte;
-                last_boundary = pos;
+                last_word_boundary = last_WORD_boundary = pos;
             }
             else
             {
@@ -853,29 +863,39 @@ struct WrapHighlighter : Highlighter
                 const ColumnCount width = codepoint_width(cp);
                 if (pos.column + width > target_column and pos.byte != current.byte) // the target column was in the char
                 {
-                    if (!is_word<WORD>(cp))
-                        last_boundary = pos;
+                    update_boundaries(cp);
                     break;
                 }
                 pos.column += width;
                 pos.byte = (int)(it - content.begin());
-                if (!is_word<WORD>(cp))
-                    last_boundary = pos;
+                update_boundaries(cp);
             }
         }
 
-        if (m_word_wrap and pos.byte < content.length() and last_boundary.byte > 0)
+        if (m_word_wrap and pos.byte < content.length())
         {
-            // split at last word boundary if the word is shorter than our wrapping width
-            ColumnCount word_length = pos.column - last_boundary.column;
-            const char* it = &content[pos.byte]; 
-            while (it != content.end() and word_length < (wrap_column - prefix_len))
-            {
-                const Codepoint cp = utf8::read_codepoint(it, content.end());
-                if (not is_word<WORD>(cp))
-                    return last_boundary;
-                word_length += codepoint_width(cp);
-            }
+            auto find_split_pos = [&](SplitPos start_pos, auto is_word) -> Optional<SplitPos> {
+                if (start_pos.byte == 0)
+                    return {};
+                const char* it = &content[pos.byte]; 
+                // split at current position if is a word boundary 
+                if (not is_word(utf8::codepoint(it, content.end()), {'_'}))
+                    return pos;
+                // split at last word boundary if the word is shorter than our wrapping width
+                ColumnCount word_length = pos.column - start_pos.column;
+                while (it != content.end() and word_length <= (wrap_column - prefix_len))
+                {
+                    const Codepoint cp = utf8::read_codepoint(it, content.end());
+                    if (not is_word(cp, {'_'}))
+                        return start_pos;
+                    word_length += codepoint_width(cp);
+                }
+                return {};
+            };
+            if (auto split = find_split_pos(last_WORD_boundary, is_word<WORD>))
+                return *split;
+            if (auto split = find_split_pos(last_word_boundary, is_word<Word>))
+                return *split;
         }
 
         return pos;
