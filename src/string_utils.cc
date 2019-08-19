@@ -19,6 +19,36 @@ StringView trim_whitespaces(StringView str)
     return {beg, end};
 }
 
+String trim_indent(StringView str)
+{
+    if (str.empty())
+        return {};
+    else if (str[0_byte] != '\n')
+        return trim_whitespaces(str).str();
+
+    str = str.substr(1_byte);
+    const CharCount docstring_length = str.char_length();
+
+    CharCount level_indent = 0;
+    while (level_indent < docstring_length
+           and is_horizontal_blank(str[level_indent]))
+        level_indent++;
+
+    if (level_indent >= docstring_length or not level_indent)
+        return trim_whitespaces(str).str();
+
+    const auto str_indent = str.substr(0, level_indent);
+    auto s = str | split<StringView>('\n') | transform([&](auto&& line) {
+        if (line.empty())
+            return line;
+        else if (not prefix_match(line, str_indent))
+            throw runtime_error("inconsistent indentation in the string");
+
+        return line.substr(str_indent.char_length());
+    });
+
+    return trim_whitespaces(join(s, '\n', false)).str();
+}
 
 String escape(StringView str, StringView characters, char escape)
 {
@@ -378,6 +408,14 @@ UnitTest test_string{[]()
     kak_assert(wrapped2[0] == "error:");
     kak_assert(wrapped2[1] == "unknown");
     kak_assert(wrapped2[2] == "type");
+
+    kak_assert(trim_indent(" ") == "");
+    kak_assert(trim_indent("no-indent") == "no-indent");
+    kak_assert(trim_indent("\nno-indent") == "no-indent");
+    kak_assert(trim_indent("\n  indent\n  indent") == "indent\nindent");
+    kak_assert(trim_indent("\n  indent\n    indent") == "indent\n  indent");
+
+    kak_expect_throw(runtime_error, trim_indent("\n  indent\nno-indent"));
 
     kak_assert(escape(R"(\youpi:matin:tchou\:)", ":\\", '\\') == R"(\\youpi\:matin\:tchou\\\:)");
     kak_assert(unescape(R"(\\youpi\:matin\:tchou\\\:)", ":\\", '\\') == R"(\youpi:matin:tchou\:)");
