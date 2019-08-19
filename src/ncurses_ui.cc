@@ -556,31 +556,28 @@ Optional<Key> NCursesUI::get_next_key()
         MEVENT ev;
         if (getmouse(&ev) == OK)
         {
-            auto get_modifiers = [this](mmask_t mask) {
-                Key::Modifiers res{};
+            const auto mask = ev.bstate;
+            auto coord = encode_coord({ ev.y - content_line_offset(), ev.x });
 
-                if (mask & BUTTON_CTRL)
-                    res |= Key::Modifiers::Control;
-                if (mask & BUTTON_ALT)
-                    res |= Key::Modifiers::Alt;
+            Key::Modifiers mod{};
+            if (mask & BUTTON_CTRL)
+                mod |= Key::Modifiers::Control;
+            if (mask & BUTTON_ALT)
+                mod |= Key::Modifiers::Alt;
 
-                if (BUTTON_PRESS(mask, 1))
-                    return res | Key::Modifiers::MousePressLeft;
-                if (BUTTON_PRESS(mask, 3))
-                    return res | Key::Modifiers::MousePressRight;
-                if (BUTTON_RELEASE(mask, 1))
-                    return res | Key::Modifiers::MouseReleaseLeft;
-                if (BUTTON_RELEASE(mask, 3))
-                    return res | Key::Modifiers::MouseReleaseRight;
-                if (BUTTON_PRESS(mask, m_wheel_down_button))
-                    return res | Key::Modifiers::MouseWheelDown;
-                if (BUTTON_PRESS(mask, m_wheel_up_button))
-                    return res | Key::Modifiers::MouseWheelUp;
-                return res | Key::Modifiers::MousePos;
-            };
-
-            return Key{ get_modifiers(ev.bstate),
-                        encode_coord({ ev.y - content_line_offset(), ev.x }) };
+            if (BUTTON_PRESS(mask, 1))
+                return Key{mod | Key::Modifiers::MousePressLeft, coord};
+            if (BUTTON_PRESS(mask, 3))
+                return Key{mod | Key::Modifiers::MousePressRight, coord};
+            if (BUTTON_RELEASE(mask, 1))
+                return Key{mod | Key::Modifiers::MouseReleaseLeft, coord};
+            if (BUTTON_RELEASE(mask, 3))
+                return Key{mod | Key::Modifiers::MouseReleaseRight, coord};
+            if (BUTTON_PRESS(mask, m_wheel_down_button))
+                return Key{mod | Key::Modifiers::Scroll, static_cast<Codepoint>(m_wheel_scroll_amount)};
+            if (BUTTON_PRESS(mask, m_wheel_up_button))
+                return Key{mod | Key::Modifiers::Scroll, static_cast<Codepoint>(-m_wheel_scroll_amount)};
+            return Key{mod | Key::Modifiers::MousePos, coord};
         }
     }
 
@@ -1278,6 +1275,10 @@ void NCursesUI::set_ui_options(const Options& options)
         auto wheel_down_it = options.find("ncurses_wheel_down_button"_sv);
         m_wheel_down_button = wheel_down_it != options.end() ?
             str_to_int_ifp(wheel_down_it->value).value_or(5) : 5;
+
+        auto wheel_scroll_amount_it = options.find("ncurses_wheel_scroll_amount"_sv);
+        m_wheel_scroll_amount = wheel_scroll_amount_it != options.end() ?
+            str_to_int_ifp(wheel_scroll_amount_it->value).value_or(3) : 3;
     }
 
     {

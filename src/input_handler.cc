@@ -92,8 +92,7 @@ struct MouseHandler
         Buffer& buffer = context.buffer();
         BufferCoord cursor;
         auto& selections = context.selections();
-        const auto key_modifier = (Key::Modifiers)(key.modifiers & Key::Modifiers::MouseEvent);
-        switch (key_modifier)
+        switch (key.modifiers)
         {
         case Key::Modifiers::MousePressRight:
             m_dragging = false;
@@ -137,14 +136,9 @@ struct MouseHandler
             selections.sort_and_merge_overlapping();
             return true;
 
-        case Key::Modifiers::MouseWheelDown:
+        case Key::Modifiers::Scroll:
             m_dragging = false;
-            scroll_window(context, 3);
-            return true;
-
-        case Key::Modifiers::MouseWheelUp:
-            m_dragging = false;
-            scroll_window(context, -3);
+            scroll_window(context, static_cast<int32_t>(key.key));
             return true;
 
         default: return false;
@@ -232,16 +226,6 @@ public:
         kak_assert(m_state != State::PopOnEnabled);
         ScopedSetBool set_in_on_key{m_in_on_key};
 
-        // Hack to parse keys sent by terminals using the 8th bit to mark the
-        // meta key. In normal mode, give priority to a potential alt-key than
-        // the accentuated character.
-        if (not (key.modifiers & Key::Modifiers::MouseEvent) and
-            key.key >= 127 and key.key < 256)
-        {
-            key.modifiers |= Key::Modifiers::Alt;
-            key.key &= 0x7f;
-        }
-
         bool do_restore_hooks = false;
         auto restore_hooks = on_scope_end([&, this]{
             if (m_hooks_disabled and enabled() and do_restore_hooks)
@@ -253,8 +237,6 @@ public:
 
         const bool transient = context().flags() & Context::Flags::Draft;
 
-        auto cp = key.codepoint();
-
         if (m_mouse_handler.handle_key(key, context()))
         {
             context().print_status({});
@@ -264,7 +246,7 @@ public:
             if (not transient)
                 m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
         }
-        else if (cp and isdigit(*cp))
+        else if (auto cp = key.codepoint(); cp and isdigit(*cp))
         {
             long long new_val = (long long)m_params.count * 10 + *cp - '0';
             if (new_val > std::numeric_limits<int>::max())
@@ -309,6 +291,15 @@ public:
             context().print_status({});
             if (context().has_client())
                 context().client().info_hide();
+
+            // Hack to parse keys sent by terminals using the 8th bit to mark the
+            // meta key. In normal mode, give priority to a potential alt-key than
+            // the accentuated character.
+            if (key.key >= 127 and key.key < 256)
+            {
+                key.modifiers |= Key::Modifiers::Alt;
+                key.key &= 0x7f;
+            }
 
             do_restore_hooks = true;
             if (auto command = get_normal_command(key))

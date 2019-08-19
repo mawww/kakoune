@@ -437,6 +437,7 @@ void register_options()
                        "    ncurses_change_colors         bool\n"
                        "    ncurses_wheel_up_button       int\n"
                        "    ncurses_wheel_down_button     int\n"
+                       "    ncurses_wheel_scroll_amount   int\n"
                        "    ncurses_shift_function_key    int\n"
                        "    ncurses_builtin_key_parser    bool\n",
                        UserInterface::Options{});

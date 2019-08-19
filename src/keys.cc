@@ -146,32 +146,24 @@ KeyList parse_keys(StringView str)
 
 String key_to_str(Key key)
 {
-    if (auto mouse_event = (key.modifiers & Key::Modifiers::MouseEvent))
+    const auto coord = key.coord() + DisplayCoord{1,1};
+    switch (key.modifiers)
     {
-        const auto coord = key.coord() + DisplayCoord{1,1};
-        switch ((Key::Modifiers)mouse_event)
-        {
-            case Key::Modifiers::MousePos:
-                return format("<mouse:move:{}.{}>", coord.line, coord.column);
-            case Key::Modifiers::MousePressLeft:
-                return format("<mouse:press_left:{}.{}>", coord.line, coord.column);
-            case Key::Modifiers::MousePressRight:
-                return format("<mouse:press_right:{}.{}>", coord.line, coord.column);
-            case Key::Modifiers::MouseReleaseLeft:
-                return format("<mouse:release_left:{}.{}>", coord.line, coord.column);
-            case Key::Modifiers::MouseReleaseRight:
-                return format("<mouse:release_right:{}.{}>", coord.line, coord.column);
-            case Key::Modifiers::MouseWheelDown:
-                return "<mouse:wheel_down>";
-            case Key::Modifiers::MouseWheelUp:
-                return "<mouse:wheel_up>";
-            default: kak_assert(false);
-        }
-    }
-    else if (key.modifiers == Key::Modifiers::Resize)
-    {
-        auto size = key.coord() + DisplayCoord{1,1};
-        return format("<resize:{}.{}>", size.line, size.column);
+        case Key::Modifiers::MousePos:
+            return format("<mouse:move:{}.{}>", coord.line, coord.column);
+        case Key::Modifiers::MousePressLeft:
+            return format("<mouse:press_left:{}.{}>", coord.line, coord.column);
+        case Key::Modifiers::MousePressRight:
+            return format("<mouse:press_right:{}.{}>", coord.line, coord.column);
+        case Key::Modifiers::MouseReleaseLeft:
+            return format("<mouse:release_left:{}.{}>", coord.line, coord.column);
+        case Key::Modifiers::MouseReleaseRight:
+            return format("<mouse:release_right:{}.{}>", coord.line, coord.column);
+        case Key::Modifiers::Scroll:
+            return format("<scroll:{}>", static_cast<int>(key.key));
+        case Key::Modifiers::Resize:
+            return format("<resize:{}.{}>", coord.line, coord.column);
+        default: break;
     }
 
     bool named = false;

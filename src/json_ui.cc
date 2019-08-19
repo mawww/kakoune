@@ -430,12 +430,17 @@ void JsonUI::eval_json(const Value& json)
             m_on_key({Key::Modifiers::MouseReleaseLeft, coord});
         else if (type == "release_right")
             m_on_key({Key::Modifiers::MouseReleaseRight, coord});
-        else if (type == "wheel_up")
-            m_on_key({Key::Modifiers::MouseWheelUp, coord});
-        else if (type == "wheel_down")
-            m_on_key({Key::Modifiers::MouseWheelDown, coord});
         else
             throw invalid_rpc_request(format("invalid mouse event type: {}", type));
+    }
+    else if (method == "scroll")
+    {
+        if (params.size() != 1)
+            throw invalid_rpc_request("scroll needs an amount");
+        else if (not params[0].is_a<int>())
+            throw invalid_rpc_request("scroll amount is not an integer");
+        m_on_key({Key::Modifiers::Scroll, (Codepoint)params[0].as<int>()});
+
     }
     else if (method == "menu_select")
     {
