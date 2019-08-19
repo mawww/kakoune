@@ -44,7 +44,11 @@ add-highlighter shared/rust/string           region %{(?<!')"} (?<!\\)(\\\\)*"  
 add-highlighter shared/rust/raw_string       region -match-capture %{(?<!')r(#*)"} %{"(#*)} fill string
 add-highlighter shared/rust/comment          region -recurse "/\*" "/\*" "\*/"              fill comment
 add-highlighter shared/rust/line_comment     region "//" "$"                                fill comment
-add-highlighter shared/rust/macro_attributes region "#!?\[" "\]"                            fill meta
+
+add-highlighter shared/rust/macro_attributes region -recurse "\[" "#!?\[" "\]" regions
+add-highlighter shared/rust/macro_attributes/ default-region fill meta
+add-highlighter shared/rust/macro_attributes/string region %{(?<!')"} (?<!\\)(\\\\)*" fill string
+add-highlighter shared/rust/macro_attributes/raw_string region -match-capture %{(?<!')r(#*)"} %{"(#*)} fill string
 
 add-highlighter shared/rust/code/byte_literal         regex "'\\\\?.'" 0:value
 add-highlighter shared/rust/code/long_quoted          regex "('\w+)[^']" 1:meta
