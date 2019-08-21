@@ -622,7 +622,7 @@ Optional<Key> NCursesUI::get_next_key()
                 bool mouse_enabled = m_mouse_enabled;
                 enable_mouse(false);
 
-                raise(SIGTSTP); // We suspend at this line
+                kill(0, SIGTSTP); // We suspend at this line
 
                 check_resize(true);
                 enable_mouse(mouse_enabled);
