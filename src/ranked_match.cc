@@ -171,6 +171,12 @@ RankedMatch::RankedMatch(StringView candidate, StringView query)
 {
 }
 
+static bool is_word_boundary(Codepoint prev, Codepoint c)
+{
+    return (iswalnum((wchar_t)prev)) != iswalnum((wchar_t)c) or
+           (iswlower((wchar_t)prev) != islower((wchar_t)c));
+}
+
 bool RankedMatch::operator<(const RankedMatch& other) const
 {
     kak_assert((bool)*this and (bool)other);
@@ -193,6 +199,7 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     auto order = [](Codepoint cp) { return cp == '/' ? 0 : cp; };
 
     auto it1 = m_candidate.begin(), it2 = other.m_candidate.begin();
+    const auto begin1 = it1, begin2 = it2;
     const auto end1 = m_candidate.end(), end2 = other.m_candidate.end();
     auto last1 = it1, last2 = it2;
     while (true)
@@ -207,14 +214,17 @@ bool RankedMatch::operator<(const RankedMatch& other) const
         // compare codepoints
         it1 = utf8::character_start(it1, last1);
         it2 = utf8::character_start(it2, last2);
+        const auto itsave1 = it1, itsave2 = it2;
         const auto cp1 = utf8::read_codepoint(it1, end1);
         const auto cp2 = utf8::read_codepoint(it2, end2);
         if (cp1 != cp2)
         {
-            const bool punct1 = iswpunct((wchar_t)cp1);
-            const bool punct2 = iswpunct((wchar_t)cp2);
-            if (punct1 != punct2)
-                return punct1;
+            const auto cplast1 = utf8::prev_codepoint(itsave1, begin1).value_or(Codepoint{0});
+            const auto cplast2 = utf8::prev_codepoint(itsave2, begin2).value_or(Codepoint{0});
+            const bool is_wb1 = is_word_boundary(cplast1, cp1);
+            const bool is_wb2 = is_word_boundary(cplast2, cp2);
+            if (is_wb1 != is_wb2)
+                return is_wb1;
 
             const bool low1 = iswlower((wchar_t)cp1);
             const bool low2 = iswlower((wchar_t)cp2);
@@ -243,6 +253,11 @@ UnitTest test_ranked_match{[] {
     kak_assert(RankedMatch{"class", "cla"} < RankedMatch{"class::attr", "cla"});
     kak_assert(RankedMatch{"meta/", "meta"} < RankedMatch{"meta-a/", "meta"});
     kak_assert(RankedMatch{"find(1p)", "find"} < RankedMatch{"findfs(8)", "find"});
+    kak_assert(RankedMatch{"find(1p)", "fin"} < RankedMatch{"findfs(8)", "fin"});
+    kak_assert(RankedMatch{"sys_find(1p)", "sys_find"} < RankedMatch{"sys_findfs(8)", "sys_find"});
+    kak_assert(RankedMatch{"init", ""} < RankedMatch{"__init__", ""});
+    kak_assert(RankedMatch{"init", "ini"} < RankedMatch{"__init__", "ini"});
+    kak_assert(RankedMatch{"a", ""} < RankedMatch{"b", ""});
     kak_assert(RankedMatch{"expresions", "expresins"} < RankedMatch{"expressionism's", "expresins"});
 }};
 
