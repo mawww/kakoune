@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*\.tex %{
+hook global BufCreate .*\.(tex|cls) %{
     set-option buffer filetype latex
 }
 
