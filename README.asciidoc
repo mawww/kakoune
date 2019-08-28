@@ -184,7 +184,7 @@ sudo zypper install kakoune
 [TIP]
 .Ubuntu
 ====
-Building on Ubuntu 16.04.
+Building on Ubuntu 16.04 and 18.04.
 Make sure you have .local/bin in your path to make the kak binary available from your shell.
 
 ----------------------------------------------------------------
