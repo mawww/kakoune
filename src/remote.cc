@@ -537,6 +537,15 @@ String get_user_name()
     return getenv("USER");
 }
 
+String session_directory()
+{
+    StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
+    if (xdg_runtime_dir.empty())
+        return format("{}/kakoune/{}", tmpdir(), get_user_name());
+    else
+        return format("{}/kakoune", xdg_runtime_dir);
+}
+
 void make_session_directory()
 {
     StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
@@ -544,21 +553,15 @@ void make_session_directory()
     {
         // set sticky bit on the shared kakoune directory
         make_directory(format("{}/kakoune", tmpdir()), 01777);
-        make_directory(format("{}/kakoune/{}", tmpdir(), get_user_name()), 0711);
     }
-    else
-        make_directory(format("{}/kakoune", xdg_runtime_dir), 0711);
+    make_directory(session_directory(), 0711);
 }
 
 String session_path(StringView session)
 {
     if (contains(session, '/'))
         throw runtime_error{"session names cannot have slashes"};
-    StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
-    if (xdg_runtime_dir.empty())
-        return format("{}/kakoune/{}/{}", tmpdir(), get_user_name(), session);
-    else
-        return format("{}/kakoune/{}", xdg_runtime_dir, session);
+    return format("{}/{}", session_directory(), session);
 }
 
 static sockaddr_un session_addr(StringView session)

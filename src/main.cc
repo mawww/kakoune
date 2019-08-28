@@ -1018,21 +1018,13 @@ int main(int argc, char* argv[])
         const bool clear_sessions = (bool)parser.get_switch("clear");
         if (list_sessions or clear_sessions)
         {
-            const String username = get_user_name();
-            const StringView tmp_dir = tmpdir();
-            for (auto& session : list_files(format("{}/kakoune/{}/", tmp_dir,
-                                                   username)))
+            for (auto& session : list_files(session_directory()))
             {
                 const bool valid = check_session(session);
                 if (list_sessions)
                     write_stdout(format("{}{}\n", session, valid ? "" : " (dead)"));
                 if (not valid and clear_sessions)
-                {
-                    char socket_file[128];
-                    format_to(socket_file, "{}/kakoune/{}/{}", tmp_dir,
-                              username, session);
-                    unlink(socket_file);
-                }
+                    unlink(session_path(session).c_str());
             }
             return 0;
         }
