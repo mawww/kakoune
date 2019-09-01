@@ -168,7 +168,7 @@ String expand(StringView str, const Context& context,
 
 String expand(StringView str, const Context& context,
               const ShellContext& shell_context,
-              const std::function<String (String)>& postprocess);
+              const FunctionRef<String (String)>& postprocess);
 
 }
 

@@ -462,10 +462,9 @@ String expand(StringView str, const Context& context,
 
 String expand(StringView str, const Context& context,
               const ShellContext& shell_context,
-              const std::function<String (String)>& postprocess)
+              const FunctionRef<String (String)>& postprocess)
 {
-    return expand_impl(str, context, shell_context,
-                       [&](String s) { return postprocess(std::move(s)); });
+    return expand_impl(str, context, shell_context, postprocess);
 }
 
 struct command_not_found : runtime_error

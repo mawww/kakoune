@@ -7,8 +7,6 @@
 #include "range.hh"
 #include "vector.hh"
 
-#include <functional>
-
 namespace Kakoune
 {
 
@@ -40,7 +38,7 @@ struct LineRangeSet : private Vector<LineRange, MemoryDomain::Highlight>
     void reset(LineRange range) { Base::operator=({range}); }
 
     void update(ConstArrayView<LineModification> modifs);
-    void add_range(LineRange range, std::function<void (LineRange)> on_new_range);
+    void add_range(LineRange range, FunctionRef<void (LineRange)> on_new_range);
     void remove_range(LineRange range);
 };
 

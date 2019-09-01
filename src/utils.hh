@@ -154,6 +154,38 @@ auto to_underlying(E value)
     return static_cast<std::underlying_type_t<E>>(value);
 }
 
+template<typename> class FunctionRef;
+
+template<typename Res, typename... Args>
+class FunctionRef<Res(Args...)>
+{
+public:
+    FunctionRef()
+      : m_target{nullptr},
+        m_invoker{[](void* target, Args... args) {
+            if constexpr (!std::is_same_v<Res, void>) return Res{};
+        }}
+    {}
+
+    template<typename Target>
+    FunctionRef(Target&& target)
+      : m_target{&target},
+        m_invoker{[](void* target, Args... args) {
+            return (*reinterpret_cast<Target*>(target))(static_cast<Args>(args)...);
+        }}
+    {}
+
+    Res operator()(Args... args) const
+    {
+        return m_invoker(m_target, static_cast<Args>(args)...);
+    }
+
+private:
+    using Invoker = Res (void*, Args...);
+    void* m_target;
+    Invoker* m_invoker;
+};
+
 }
 
 #endif // utils_hh_INCLUDED
