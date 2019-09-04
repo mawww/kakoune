@@ -380,6 +380,8 @@ NCursesUI::NCursesUI()
     start_color();
     use_default_colors();
     set_escdelay(25);
+    intrflush(nullptr, false);
+    meta(nullptr, true);
 
     enable_mouse(true);
 
@@ -550,9 +552,7 @@ void NCursesUI::check_resize(bool force)
 
     m_window.create({0, 0}, {ws.ws_row, ws.ws_col});
     kak_assert(m_window);
-    intrflush(m_window.win, false);
     keypad(m_window.win, not m_builtin_key_parser);
-    meta(m_window.win, true);
 
     m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
 
