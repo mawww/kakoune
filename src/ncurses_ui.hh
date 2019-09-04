@@ -24,7 +24,7 @@ public:
     NCursesUI(const NCursesUI&) = delete;
     NCursesUI& operator=(const NCursesUI&) = delete;
 
-    bool is_ok() const override { return m_window != nullptr; }
+    bool is_ok() const override { return (bool)m_window; }
 
     void draw(const DisplayBuffer& display_buffer,
               const Face& default_face,
@@ -63,38 +63,60 @@ public:
 
 private:
     void check_resize(bool force = false);
-    void redraw();
-
-    int get_color(Color color);
-    int get_color_pair(const Face& face);
-    void set_face(NCursesWin* window, Face face, const Face& default_face);
-    void draw_line(NCursesWin* window, const DisplayLine& line,
-                   ColumnCount col_index, ColumnCount max_column,
-                   const Face& default_face);
+    void redraw(bool force);
 
     Optional<Key> get_next_key();
 
-    NCursesWin* m_window = nullptr;
+    struct Palette
+    {
+    private:
+        static const std::initializer_list<HashMap<Kakoune::Color, int>::Item> default_colors;
 
-    DisplayCoord m_dimensions;
+        using ColorPair = std::pair<Color, Color>;
+        HashMap<Color, int, MemoryDomain::Faces> m_colors = default_colors;
+        HashMap<ColorPair, int, MemoryDomain::Faces> m_colorpairs;
+        int m_next_color = 16;
+        int m_next_pair = 1;
+        bool m_change_colors = true;
 
-    using ColorPair = std::pair<Color, Color>;
-    HashMap<Color, int, MemoryDomain::Faces> m_colors;
-    HashMap<ColorPair, int, MemoryDomain::Faces> m_colorpairs;
-    int m_next_color = 16;
-    int m_next_pair = 1;
-    int m_active_pair = -1;
+        int get_color(Color color);
+
+    public:
+        int get_color_pair(const Face& face);
+        bool set_change_colors(bool change_colors);
+    };
+
+    Palette m_palette;
 
     struct Window : Rect
     {
         void create(const DisplayCoord& pos, const DisplayCoord& size);
         void destroy();
-        void refresh();
+        void invalidate();
+        void refresh(bool force);
+        void move_cursor(DisplayCoord coord);
+        void mark_dirty(LineCount pos, LineCount count);
+        void draw_line(Palette& palette,
+                       const DisplayLine& line,
+                       ColumnCount col_index,
+                       ColumnCount max_column,
+                       const Face& default_face);
+        void add_str(StringView str);
+        void clear_to_end_of_line();
+        void set_face(Palette& palette, Face face, const Face& default_face);
+        void set_background_color(Palette& palette, Face face);
+        int get_char();
+        void set_blocking(bool blocking);
 
         explicit operator bool() const { return win; }
 
         NCursesWin* win = nullptr;
+        int m_active_pair = -1;
     };
+
+    Window m_window;
+
+    DisplayCoord m_dimensions;
 
     void mark_dirty(const Window& win);
 
@@ -146,7 +168,6 @@ private:
     int m_shift_function_key = default_shift_function_key;
 
     bool m_set_title = true;
-    bool m_change_colors = true;
     bool m_builtin_key_parser = false;
 
     bool m_dirty = false;

@@ -29,6 +29,131 @@ using std::max;
 
 struct NCursesWin : WINDOW {};
 
+void NCursesUI::Window::create(const DisplayCoord& p, const DisplayCoord& s)
+{
+    pos = p;
+    size = s;
+    win = (NCursesWin*)newpad((int)size.line, (int)size.column);
+}
+
+void NCursesUI::Window::destroy()
+{
+    delwin(win);
+    invalidate();
+}
+
+void NCursesUI::Window::invalidate()
+{
+    win = nullptr;
+    pos = DisplayCoord{};
+    size = DisplayCoord{};
+}
+
+void NCursesUI::Window::refresh(bool force)
+{
+    if (not win)
+        return;
+
+    if (force)
+        redrawwin(win);
+
+    DisplayCoord max_pos = pos + size - DisplayCoord{1,1};
+    pnoutrefresh(win, 0, 0, (int)pos.line, (int)pos.column,
+                 (int)max_pos.line, (int)max_pos.column);
+}
+
+void NCursesUI::Window::move_cursor(DisplayCoord coord)
+{
+    wmove(win, (int)coord.line, (int)coord.column);
+}
+
+void NCursesUI::Window::add_str(StringView str)
+{
+    waddnstr(win, str.begin(), (int)str.length());
+}
+
+void NCursesUI::Window::clear_to_end_of_line()
+{
+    wclrtoeol(win);
+}
+
+void NCursesUI::Window::draw_line(Palette& palette,
+                                  const DisplayLine& line,
+                                  ColumnCount col_index,
+                                  ColumnCount max_column,
+                                  const Face& default_face)
+{
+    for (const DisplayAtom& atom : line)
+    {
+        set_face(palette, atom.face, default_face);
+
+        StringView content = atom.content();
+        if (content.empty())
+            continue;
+
+        const auto remaining_columns = max_column - col_index;
+        if (content.back() == '\n' and
+            content.column_length() - 1 < remaining_columns)
+        {
+            add_str(content.substr(0, content.length()-1));
+            waddch(win, ' ');
+        }
+        else
+        {
+            content = content.substr(0_col, remaining_columns);
+            add_str(content);
+            col_index += content.column_length();
+        }
+    }
+}
+
+void NCursesUI::Window::set_face(Palette& palette, Face face, const Face& default_face)
+{
+    if (m_active_pair != -1)
+        wattroff(win, COLOR_PAIR(m_active_pair));
+
+    face = merge_faces(default_face, face);
+
+    if (face.fg != Color::Default or face.bg != Color::Default)
+    {
+        m_active_pair = palette.get_color_pair(face);
+        wattron(win, COLOR_PAIR(m_active_pair));
+    }
+
+    auto set_attribute = [&](Attribute attr, int nc_attr) {
+        (face.attributes & attr) ?  wattron(win, nc_attr) : wattroff(win, nc_attr);
+    };
+
+    set_attribute(Attribute::Underline, A_UNDERLINE);
+    set_attribute(Attribute::Reverse, A_REVERSE);
+    set_attribute(Attribute::Blink, A_BLINK);
+    set_attribute(Attribute::Bold, A_BOLD);
+    set_attribute(Attribute::Dim, A_DIM);
+    #if defined(A_ITALIC)
+    set_attribute(Attribute::Italic, A_ITALIC);
+    #endif
+}
+
+void NCursesUI::Window::mark_dirty(LineCount pos, LineCount count)
+{
+    wredrawln(win, (int)pos, (int)count);
+}
+
+void NCursesUI::Window::set_background_color(Palette& palette, Face face)
+{
+    wbkgdset(win, COLOR_PAIR(palette.get_color_pair(face)));
+}
+
+int NCursesUI::Window::get_char()
+{
+    return wgetch(win);
+}
+
+void NCursesUI::Window::set_blocking(bool blocking)
+{
+    wtimeout(win, blocking ? -1 : 0);
+}
+
 constexpr int NCursesUI::default_shift_function_key;
 
 static constexpr StringView assistant_cat[] =
@@ -65,14 +190,6 @@ static constexpr StringView assistant_dilbert[] =
       R"(     @      )",
       R"(      @     )",
       R"(            )"};
-
-static void set_attribute(WINDOW* window, int attribute, bool on)
-{
-    if (on)
-        wattron(window, attribute);
-    else
-        wattroff(window, attribute);
-}
 
 template<typename T> T sq(T x) { return x * x; }
 
@@ -143,7 +260,28 @@ constexpr struct { unsigned char r, g, b; } builtin_colors[] = {
     {0xd0,0xd0,0xd0}, {0xda,0xda,0xda}, {0xe4,0xe4,0xe4}, {0xee,0xee,0xee},
 };
 
-int NCursesUI::get_color(Color color)
+const std::initializer_list<HashMap<Kakoune::Color, int>::Item>
+NCursesUI::Palette::default_colors = {
+    { Color::Default,       -1 },
+    { Color::Black,          0 },
+    { Color::Red,            1 },
+    { Color::Green,          2 },
+    { Color::Yellow,         3 },
+    { Color::Blue,           4 },
+    { Color::Magenta,        5 },
+    { Color::Cyan,           6 },
+    { Color::White,          7 },
+    { Color::BrightBlack,    8 },
+    { Color::BrightRed,      9 },
+    { Color::BrightGreen,   10 },
+    { Color::BrightYellow,  11 },
+    { Color::BrightBlue,    12 },
+    { Color::BrightMagenta, 13 },
+    { Color::BrightCyan,    14 },
+    { Color::BrightWhite,   15 },
+};
+
+int NCursesUI::Palette::get_color(Color color)
 {
     auto it = m_colors.find(color);
     if (it != m_colors.end())
@@ -181,7 +319,7 @@ int NCursesUI::get_color(Color color)
     }
 }
 
-int NCursesUI::get_color_pair(const Face& face)
+int NCursesUI::Palette::get_color_pair(const Face& face)
 {
     ColorPair colors{face.fg, face.bg};
     auto it = m_colorpairs.find(colors);
@@ -195,27 +333,21 @@ int NCursesUI::get_color_pair(const Face& face)
     }
 }
 
-void NCursesUI::set_face(NCursesWin* window, Face face, const Face& default_face)
+bool NCursesUI::Palette::set_change_colors(bool change_colors)
 {
-    if (m_active_pair != -1)
-        wattroff(window, COLOR_PAIR(m_active_pair));
-
-    face = merge_faces(default_face, face);
-
-    if (face.fg != Color::Default or face.bg != Color::Default)
+    bool reset = false;
+    if (can_change_color() and m_change_colors != change_colors)
     {
-        m_active_pair = get_color_pair(face);
-        wattron(window, COLOR_PAIR(m_active_pair));
+        fputs("\033]104\007", stdout); // try to reset palette
+        fflush(stdout);
+        m_colorpairs.clear();
+        m_colors = default_colors;
+        m_next_color = 16;
+        m_next_pair = 1;
+        reset = true;
     }
-
-    set_attribute(window, A_UNDERLINE, face.attributes & Attribute::Underline);
-    set_attribute(window, A_REVERSE, face.attributes & Attribute::Reverse);
-    set_attribute(window, A_BLINK, face.attributes & Attribute::Blink);
-    set_attribute(window, A_BOLD, face.attributes & Attribute::Bold);
-    set_attribute(window, A_DIM, face.attributes & Attribute::Dim);
-    #if defined(A_ITALIC)
-    set_attribute(window, A_ITALIC, face.attributes & Attribute::Italic);
-    #endif
+    m_change_colors = change_colors;
+    return reset;
 }
 
 static sig_atomic_t resize_pending = 0;
@@ -228,30 +360,8 @@ static void signal_handler(int)
     EventManager::instance().force_signal(0);
 }
 
-static const std::initializer_list<HashMap<Kakoune::Color, int>::Item>
-default_colors = {
-    { Color::Default,       -1 },
-    { Color::Black,          0 },
-    { Color::Red,            1 },
-    { Color::Green,          2 },
-    { Color::Yellow,         3 },
-    { Color::Blue,           4 },
-    { Color::Magenta,        5 },
-    { Color::Cyan,           6 },
-    { Color::White,          7 },
-    { Color::BrightBlack,    8 },
-    { Color::BrightRed,      9 },
-    { Color::BrightGreen,   10 },
-    { Color::BrightYellow,  11 },
-    { Color::BrightBlue,    12 },
-    { Color::BrightMagenta, 13 },
-    { Color::BrightCyan,    14 },
-    { Color::BrightWhite,   15 },
-};
-
 NCursesUI::NCursesUI()
-    : m_colors{default_colors},
-      m_cursor{CursorMode::Buffer, {}},
+    : m_cursor{CursorMode::Buffer, {}},
       m_stdin_watcher{0, FdEvents::Read,
                       [this](FDWatcher&, FdEvents, EventMode) {
         if (not m_on_key)
@@ -278,7 +388,7 @@ NCursesUI::NCursesUI()
 
     check_resize(true);
 
-    redraw();
+    redraw(false);
 }
 
 NCursesUI::~NCursesUI()
@@ -294,97 +404,34 @@ NCursesUI::~NCursesUI()
     set_signal_handler(SIGCONT, SIG_DFL);
 }
 
-void NCursesUI::Window::create(const DisplayCoord& p, const DisplayCoord& s)
+void NCursesUI::redraw(bool force)
 {
-    pos = p;
-    size = s;
-    win = (NCursesWin*)newpad((int)size.line, (int)size.column);
-}
-
-void NCursesUI::Window::destroy()
-{
-    delwin(win);
-    win = nullptr;
-    pos = DisplayCoord{};
-    size = DisplayCoord{};
-}
-
-void NCursesUI::Window::refresh()
-{
-    if (not win)
-        return;
-
-    DisplayCoord max_pos = pos + size - DisplayCoord{1,1};
-    pnoutrefresh(win, 0, 0, (int)pos.line, (int)pos.column,
-                 (int)max_pos.line, (int)max_pos.column);
-}
-
-void NCursesUI::redraw()
-{
-    pnoutrefresh(m_window, 0, 0, 0, 0,
-                 (int)m_dimensions.line + 1, (int)m_dimensions.column);
+    m_window.refresh(force);
 
     if (m_menu.columns != 0 or m_menu.pos.column > m_status_len)
-        m_menu.refresh();
+        m_menu.refresh(false);
 
-    m_info.refresh();
+    m_info.refresh(false);
 
+    Window screen{{}, static_cast<NCursesWin*>(newscr)};
     if (m_cursor.mode == CursorMode::Prompt)
-        wmove(newscr, m_status_on_top ? 0 : (int)m_dimensions.line,
-              (int)m_cursor.coord.column);
+        screen.move_cursor({m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column});
     else
-        wmove(newscr, (int)(m_cursor.coord.line + content_line_offset()),
-              (int)m_cursor.coord.column);
+        screen.move_cursor(m_cursor.coord + content_line_offset());
 
     doupdate();
 }
 
 void NCursesUI::set_cursor(CursorMode mode, DisplayCoord coord)
 {
-    m_cursor = Cursor{ mode, coord };
+    m_cursor = Cursor{mode, coord};
 }
 
 void NCursesUI::refresh(bool force)
 {
-    if (force)
-        redrawwin(m_window);
-
     if (m_dirty or force)
-        redraw();
+        redraw(force);
     m_dirty = false;
-}
-
-void add_str(WINDOW* win, StringView str)
-{
-    waddnstr(win, str.begin(), (int)str.length());
-}
-
-void NCursesUI::draw_line(NCursesWin* window, const DisplayLine& line,
-                          ColumnCount col_index, ColumnCount max_column,
-                          const Face& default_face)
-{
-    for (const DisplayAtom& atom : line)
-    {
-        set_face(window, atom.face, default_face);
-
-        StringView content = atom.content();
-        if (content.empty())
-            continue;
-
-        const auto remaining_columns = max_column - col_index;
-        if (content.back() == '\n' and
-            content.column_length() - 1 < remaining_columns)
-        {
-            add_str(window, content.substr(0, content.length()-1));
-            waddch(window, ' ');
-        }
-        else
-        {
-            content = content.substr(0_col, remaining_columns);
-            add_str(window, content);
-            col_index += content.column_length();
-        }
-    }
 }
 
 static const DisplayLine empty_line = { String(" "), {} };
@@ -393,7 +440,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
                      const Face& default_face,
                      const Face& padding_face)
 {
-    wbkgdset(m_window, COLOR_PAIR(get_color_pair(default_face)));
+    m_window.set_background_color(m_palette, default_face);
 
     check_resize();
 
@@ -402,20 +449,20 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     LineCount line_index = line_offset;
     for (const DisplayLine& line : display_buffer.lines())
     {
-        wmove(m_window, (int)line_index, 0);
-        wclrtoeol(m_window);
-        draw_line(m_window, line, 0, dim.column, default_face);
+        m_window.move_cursor(line_index);
+        m_window.clear_to_end_of_line();
+        m_window.draw_line(m_palette, line, 0, dim.column, default_face);
         ++line_index;
     }
 
-    wbkgdset(m_window, COLOR_PAIR(get_color_pair(padding_face)));
-    set_face(m_window, padding_face, default_face);
+    m_window.set_background_color(m_palette, padding_face);
+    m_window.set_face(m_palette, padding_face, default_face);
 
     while (line_index < dim.line + line_offset)
     {
-        wmove(m_window, (int)line_index++, 0);
-        wclrtoeol(m_window);
-        waddch(m_window, '~');
+        m_window.move_cursor(line_index++);
+        m_window.clear_to_end_of_line();
+        m_window.add_str('~');
     }
 
     m_dirty = true;
@@ -425,13 +472,13 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
                             const DisplayLine& mode_line,
                             const Face& default_face)
 {
-    const int status_line_pos = m_status_on_top ? 0 : (int)m_dimensions.line;
-    wmove(m_window, status_line_pos, 0);
+    const LineCount status_line_pos = m_status_on_top ? 0 : m_dimensions.line;
+    m_window.move_cursor(status_line_pos);
 
-    wbkgdset(m_window, COLOR_PAIR(get_color_pair(default_face)));
-    wclrtoeol(m_window);
+    m_window.set_background_color(m_palette, default_face);
+    m_window.clear_to_end_of_line();
 
-    draw_line(m_window, status_line, 0, m_dimensions.column, default_face);
+    m_window.draw_line(m_palette, status_line, 0, m_dimensions.column, default_face);
 
     const auto mode_len = mode_line.length();
     m_status_len = status_line.length();
@@ -439,8 +486,8 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     if (mode_len < remaining)
     {
         ColumnCount col = m_dimensions.column - mode_len;
-        wmove(m_window, status_line_pos, (int)col);
-        draw_line(m_window, mode_line, col, m_dimensions.column, default_face);
+        m_window.move_cursor({status_line_pos, col});
+        m_window.draw_line(m_palette, mode_line, col, m_dimensions.column, default_face);
     }
     else if (remaining > 2)
     {
@@ -450,8 +497,8 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
         kak_assert(trimmed_mode_line.length() == remaining - 1);
 
         ColumnCount col = m_dimensions.column - remaining + 1;
-        wmove(m_window, status_line_pos, (int)col);
-        draw_line(m_window, trimmed_mode_line, col, m_dimensions.column, default_face);
+        m_window.move_cursor({status_line_pos, col});
+        m_window.draw_line(m_palette, trimmed_mode_line, col, m_dimensions.column, default_face);
     }
 
     if (m_set_title)
@@ -495,17 +542,17 @@ void NCursesUI::check_resize(bool force)
 
     const bool info = (bool)m_info;
     const bool menu = (bool)m_menu;
-    if (m_window) delwin(m_window);
+    if (m_window) m_window.destroy();
     if (info) m_info.destroy();
     if (menu) m_menu.destroy();
 
     resize_term(ws.ws_row, ws.ws_col);
 
-    m_window = (NCursesWin*)newpad(ws.ws_row, ws.ws_col);
+    m_window.create({0, 0}, {ws.ws_row, ws.ws_col});
     kak_assert(m_window);
-    intrflush(m_window, false);
-    keypad(m_window, not m_builtin_key_parser);
-    meta(m_window, true);
+    intrflush(m_window.win, false);
+    keypad(m_window.win, not m_builtin_key_parser);
+    meta(m_window.win, true);
 
     m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
 
@@ -531,7 +578,7 @@ Optional<Key> NCursesUI::get_next_key()
     {
         set_signal_handler(SIGWINCH, SIG_DFL);
         set_signal_handler(SIGCONT, SIG_DFL);
-        m_window = nullptr;
+        m_window.invalidate();
         m_stdin_watcher.disable();
         return {};
     }
@@ -544,9 +591,9 @@ Optional<Key> NCursesUI::get_next_key()
         return resize(dimensions());
     }
 
-    wtimeout(m_window, 0);
-    const int c = wgetch(m_window);
-    wtimeout(m_window, -1);
+    m_window.set_blocking(false);
+    const int c = m_window.get_char();
+    m_window.set_blocking(true);
 
     if (c == ERR)
         return {};
@@ -644,13 +691,13 @@ Optional<Key> NCursesUI::get_next_key()
            ungetch(c);
            struct getch_iterator
            {
-               getch_iterator(WINDOW* win) : window(win) {}
-               int operator*() { return wgetch(window); }
+               getch_iterator(Window& win) : window(win) {}
+               int operator*() { return window.get_char(); }
                getch_iterator& operator++() { return *this; }
                getch_iterator& operator++(int) { return *this; }
                bool operator== (const getch_iterator&) const { return false; }
 
-                WINDOW* window;
+               Window& window;
            };
            return Key{utf8::codepoint(getch_iterator{m_window},
                                       getch_iterator{m_window})};
@@ -660,12 +707,12 @@ Optional<Key> NCursesUI::get_next_key()
 
     constexpr auto direction = make_array({Key::Up, Key::Down, Key::Right, Key::Left, Key::Home, Key::End});
     auto parse_csi = [this, &direction]() -> Optional<Key> {
-        const Codepoint c1 = wgetch(m_window);
+        const Codepoint c1 = m_window.get_char();
         if (c1 >= 'A' and c1 <= 'F')
             return Key{direction[c1 - 'A']};
         if (c1 == '1')
         {
-            const Codepoint c2 = wgetch(m_window);
+            const Codepoint c2 = m_window.get_char();
             if (c2 >= 'A' and c2 <= 'F')
                 return Key{direction[c2 - 'A']};
             if (c2 != ';')
@@ -673,13 +720,13 @@ Optional<Key> NCursesUI::get_next_key()
                 ungetch(c2); ungetch(c1);
                 return {};
             }
-            const Codepoint c3 = wgetch(m_window);
+            const Codepoint c3 = m_window.get_char();
             if (c3 < '2' or c3 > '8')
             {
                 ungetch(c3); ungetch(c2); ungetch(c1);
                 return {};
             }
-            const Codepoint c4 = wgetch(m_window);
+            const Codepoint c4 = m_window.get_char();
             if (c4 < 'A' or c4 > 'F')
             {
                 ungetch(c4); ungetch(c3); ungetch(c2); ungetch(c1);
@@ -707,14 +754,14 @@ Optional<Key> NCursesUI::get_next_key()
 
     if (c == 27)
     {
-        wtimeout(m_window, 0);
-        const int new_c = wgetch(m_window);
+        m_window.set_blocking(false);
+        const int new_c = m_window.get_char();
         if (new_c == '[') // potential CSI
         {
             if (auto key = parse_csi())
                 return key;
         }
-        wtimeout(m_window, -1);
+        m_window.set_blocking(true);
 
         if (auto key = parse_key(new_c))
             return alt(*key);
@@ -738,9 +785,8 @@ void NCursesUI::draw_menu()
     if (not m_menu)
         return;
 
-    const auto menu_bg = get_color_pair(m_menu.bg);
-    wattron(m_menu.win, COLOR_PAIR(menu_bg));
-    wbkgdset(m_menu.win, COLOR_PAIR(menu_bg));
+    m_menu.set_face(m_palette, m_menu.bg, {});
+    m_menu.set_background_color(m_palette, m_menu.bg);
 
     const int item_count = (int)m_menu.items.size();
     if (m_menu.columns == 0)
@@ -749,31 +795,31 @@ void NCursesUI::draw_menu()
         kak_assert(m_menu.size.line == 1);
         ColumnCount pos = 0;
 
-        wmove(m_menu.win, 0, 0);
-        add_str(m_menu.win, m_menu.first_item > 0 ? "< " : "  ");
+        m_menu.move_cursor({0, 0});
+        m_menu.add_str(m_menu.first_item > 0 ? "< " : "  ");
 
         int i = m_menu.first_item;
         for (; i < item_count and pos < win_width; ++i)
         {
             const DisplayLine& item = m_menu.items[i];
             const ColumnCount item_width = item.length();
-            draw_line(m_menu.win, item, 0, win_width - pos,
-                      i == m_menu.selected_item ? m_menu.fg : m_menu.bg);
+            m_menu.draw_line(m_palette, item, 0, win_width - pos,
+                             i == m_menu.selected_item ? m_menu.fg : m_menu.bg);
 
             if (item_width > win_width - pos)
-                add_str(m_menu.win, "…");
+                m_menu.add_str("…");
             else
             {
-                wattron(m_menu.win, COLOR_PAIR(menu_bg));
-                add_str(m_menu.win, String{" "});
+                m_menu.set_face(m_palette, m_menu.bg, {});
+                m_menu.add_str(String{" "});
             }
             pos += item_width + 1;
         }
 
-        set_face(m_menu.win, m_menu.bg, m_menu.bg);
+        m_menu.set_face(m_palette, m_menu.bg, {});
         if (pos <= win_width)
-            add_str(m_menu.win, String{' ', win_width - pos + 1});
-        add_str(m_menu.win, i == item_count ? " " : ">");
+            m_menu.add_str(String{' ', win_width - pos + 1});
+        m_menu.add_str(i == item_count ? " " : ">");
         m_dirty = true;
         return;
     }
@@ -794,7 +840,7 @@ void NCursesUI::draw_menu()
 
     for (auto line = 0_line; line < win_height; ++line)
     {
-        wmove(m_menu.win, (int)line, 0);
+        m_menu.move_cursor(line);
         for (int col = 0; col < m_menu.columns; ++col)
         {
             int item_idx = (first_col + col) * (int)m_menu.size.line + (int)line;
@@ -802,17 +848,17 @@ void NCursesUI::draw_menu()
                 continue;
 
             const DisplayLine& item = m_menu.items[item_idx];
-            draw_line(m_menu.win, item, 0, column_width,
-                      item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg);
+            m_menu.draw_line(m_palette, item, 0, column_width,
+                             item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg);
             const ColumnCount pad = column_width - item.length();
-            add_str(m_menu.win, String{' ', pad});
+            m_menu.add_str(String{' ', pad});
         }
         const bool is_mark = line >= mark_line and
                              line < mark_line + mark_height;
-        wclrtoeol(m_menu.win);
-        wmove(m_menu.win, (int)line, (int)m_menu.size.column - 1);
-        wattron(m_menu.win, COLOR_PAIR(menu_bg));
-        add_str(m_menu.win, is_mark ? "█" : "░");
+        m_menu.clear_to_end_of_line();
+        m_menu.move_cursor({line, m_menu.size.column - 1});
+        m_menu.set_face(m_palette, m_menu.bg, {});
+        m_menu.add_str(is_mark ? "█" : "░");
     }
     m_dirty = true;
 }
@@ -835,7 +881,7 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
 {
     if (m_menu)
     {
-        mark_dirty(m_menu);
+        m_window.mark_dirty(m_menu.pos.line, m_menu.size.line);
         m_menu.destroy();
         m_dirty = true;
     }
@@ -949,7 +995,7 @@ void NCursesUI::menu_hide()
         return;
 
     m_menu.items.clear();
-    mark_dirty(m_menu);
+    m_window.mark_dirty(m_menu.pos.line, m_menu.size.line);
     m_menu.destroy();
     m_dirty = true;
 
@@ -959,8 +1005,8 @@ void NCursesUI::menu_hide()
 }
 
 static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
-                             NCursesUI::Rect rect, NCursesUI::Rect to_avoid,
-                             bool prefer_above)
+                                NCursesUI::Rect rect, NCursesUI::Rect to_avoid,
+                                bool prefer_above)
 {
     DisplayCoord pos;
     if (prefer_above)
@@ -1137,11 +1183,12 @@ void NCursesUI::info_show(StringView title, StringView content,
 
     m_info.create(anchor, info_box.size);
 
-    wbkgd(m_info.win, COLOR_PAIR(get_color_pair(face)));
+    m_info.set_background_color(m_palette, face);
     for (auto line = 0_line; line < info_box.size.line; ++line)
     {
-        wmove(m_info.win, (int)line, 0);
-        add_str(m_info.win, info_box.contents[(int)line]);
+        m_info.move_cursor(line);
+        m_info.clear_to_end_of_line();
+        m_info.add_str(info_box.contents[(int)line]);
     }
     m_dirty = true;
 }
@@ -1150,14 +1197,9 @@ void NCursesUI::info_hide()
 {
     if (not m_info)
         return;
-    mark_dirty(m_info);
+    m_window.mark_dirty(m_info.pos.line, m_info.size.line);
     m_info.destroy();
     m_dirty = true;
-}
-
-void NCursesUI::mark_dirty(const Window& win)
-{
-    wredrawln(m_window, (int)win.pos.line, (int)win.size.line);
 }
 
 void NCursesUI::set_on_key(OnKeyCallback callback)
@@ -1246,20 +1288,13 @@ void NCursesUI::set_ui_options(const Options& options)
 
     {
         auto it = options.find("ncurses_change_colors"_sv);
-        auto value = it == options.end() or
-            (it->value == "yes" or it->value == "true");
-
-        if (can_change_color() and m_change_colors != value)
+        if (m_palette.set_change_colors(it == options.end() or
+                                        (it->value == "yes" or it->value == "true")))
         {
-            fputs("\033]104\007", stdout); // try to reset palette
-            fflush(stdout);
-            m_colorpairs.clear();
-            m_colors = default_colors;
-            m_next_color = 16;
-            m_next_pair = 1;
-            m_active_pair = -1;
+            m_window.m_active_pair = -1;
+            m_menu.m_active_pair = -1;
+            m_info.m_active_pair = -1;
         }
-        m_change_colors = value;
     }
 
     {
@@ -1286,7 +1321,7 @@ void NCursesUI::set_ui_options(const Options& options)
         m_builtin_key_parser = builtin_key_parser_it != options.end() and
                                (builtin_key_parser_it->value == "yes" or
                                 builtin_key_parser_it->value == "true");
-        keypad(m_window, not m_builtin_key_parser);
+        keypad(m_window.win, not m_builtin_key_parser);
     }
 }
 
