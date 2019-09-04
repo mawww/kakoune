@@ -46,6 +46,41 @@ namespace Kakoune
 
 extern const char* version;
 
+template<bool next>
+void cycle_buffer(const ParametersParser& parser, Context& context, const ShellContext&)
+{
+    Buffer* oldbuf = &context.buffer();
+    auto it = find_if(BufferManager::instance(),
+                      [oldbuf](const std::unique_ptr<Buffer>& lhs)
+                      { return lhs.get() == oldbuf; });
+    kak_assert(it != BufferManager::instance().end());
+
+    Buffer* newbuf = nullptr;
+    auto cycle = [&] {
+        if (not next)
+        {
+            if (it == BufferManager::instance().begin())
+                it = BufferManager::instance().end();
+            --it;
+        }
+        else
+        {
+            if (++it == BufferManager::instance().end())
+                it = BufferManager::instance().begin();
+        }
+        newbuf = it->get();
+    };
+    cycle();
+    while (newbuf != oldbuf and newbuf->flags() & Buffer::Flags::Debug)
+        cycle();
+
+    if (newbuf != oldbuf)
+    {
+        context.push_jump();
+        context.change_buffer(*newbuf);
+    }
+}
+
 namespace
 {
 
@@ -721,41 +756,6 @@ const CommandDesc buffer_cmd = {
         }
     }
 };
-
-template<bool next>
-void cycle_buffer(const ParametersParser& parser, Context& context, const ShellContext&)
-{
-    Buffer* oldbuf = &context.buffer();
-    auto it = find_if(BufferManager::instance(),
-                      [oldbuf](const std::unique_ptr<Buffer>& lhs)
-                      { return lhs.get() == oldbuf; });
-    kak_assert(it != BufferManager::instance().end());
-
-    Buffer* newbuf = nullptr;
-    auto cycle = [&] {
-        if (not next)
-        {
-            if (it == BufferManager::instance().begin())
-                it = BufferManager::instance().end();
-            --it;
-        }
-        else
-        {
-            if (++it == BufferManager::instance().end())
-                it = BufferManager::instance().begin();
-        }
-        newbuf = it->get();
-    };
-    cycle();
-    while (newbuf != oldbuf and newbuf->flags() & Buffer::Flags::Debug)
-        cycle();
-
-    if (newbuf != oldbuf)
-    {
-        context.push_jump();
-        context.change_buffer(*newbuf);
-    }
-}
 
 const CommandDesc buffer_next_cmd = {
     "buffer-next",

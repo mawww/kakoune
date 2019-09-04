@@ -280,6 +280,16 @@ void goto_commands(Context& context, NormalParams params)
                 context.change_buffer(*target);
                 break;
             }
+            case 'n':
+            {
+                cycle_buffer<true>(ParametersParser({}, {}), context, {});
+                break;
+            }
+            case 'p':
+            {
+                cycle_buffer<false>(ParametersParser({}, {}), context, {});
+                break;
+            }
             case 'f':
             {
                 auto filename = content(buffer, context.selections().main());
@@ -333,6 +343,8 @@ void goto_commands(Context& context, NormalParams params)
              {{'b'},    "window bottom"},
              {{'c'},    "window center"},
              {{'a'},    "last buffer"},
+             {{'n'},    "next buffer"},
+             {{'p'},    "previous buffer"},
              {{'f'},    "file"},
              {{'.'},    "last buffer change"}}));
     }
