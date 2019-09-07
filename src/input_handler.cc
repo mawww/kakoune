@@ -92,7 +92,8 @@ struct MouseHandler
         Buffer& buffer = context.buffer();
         BufferCoord cursor;
         auto& selections = context.selections();
-        switch (key.modifiers)
+        constexpr auto modifiers = Key::Modifiers::Control | Key::Modifiers::Alt | Key::Modifiers::Shift;
+        switch ((key.modifiers & ~modifiers).value)
         {
         case Key::Modifiers::MousePressRight:
             m_dragging = false;

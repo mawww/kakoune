@@ -1318,8 +1318,7 @@ void NCursesUI::enable_mouse(bool enabled)
         fputs("\033[?1002l", stdout);
         fputs("\033[?1000l", stdout);
         fputs("\033[?1004l", stdout);
-        if (m_builtin_key_parser)
-            fputs("\033[?1006l", stdout);
+        fputs("\033[?1006l", stdout);
     }
     fflush(stdout);
 }
