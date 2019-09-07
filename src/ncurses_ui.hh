@@ -163,6 +163,7 @@ private:
     int m_wheel_up_button = 4;
     int m_wheel_down_button = 5;
     int m_wheel_scroll_amount = 3;
+    int m_mouse_state = 0;
 
     static constexpr int default_shift_function_key = 12;
     int m_shift_function_key = default_shift_function_key;
