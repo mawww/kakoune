@@ -175,7 +175,7 @@ String key_to_str(Key key)
         named = true;
         res = it->name;
     }
-    else if (key.key >= Key::F1 and key.key < Key::F12)
+    else if (key.key >= Key::F1 and key.key <= Key::F12)
     {
         named = true;
         res = "F" + to_string((int)(key.key - Key::F1 + 1));
