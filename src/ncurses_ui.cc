@@ -144,16 +144,6 @@ void NCursesUI::Window::set_background_color(Palette& palette, Face face)
     wbkgdset(win, COLOR_PAIR(palette.get_color_pair(face)));
 }
 
-int NCursesUI::Window::get_char()
-{
-    return wgetch(win);
-}
-
-void NCursesUI::Window::set_blocking(bool blocking)
-{
-    wtimeout(win, blocking ? -1 : 0);
-}
-
 constexpr int NCursesUI::default_shift_function_key;
 
 static constexpr StringView assistant_cat[] =
@@ -385,6 +375,8 @@ NCursesUI::NCursesUI()
 
     enable_mouse(true);
 
+    fcntl(0, F_SETFL, fcntl(0, F_GETFL, 0) | O_NONBLOCK);
+
     set_signal_handler(SIGWINCH, &signal_handler<&resize_pending>);
     set_signal_handler(SIGHUP, &signal_handler<&sighup_raised>);
 
@@ -552,7 +544,6 @@ void NCursesUI::check_resize(bool force)
 
     m_window.create({0, 0}, {ws.ws_row, ws.ws_col});
     kak_assert(m_window);
-    keypad(m_window.win, not m_builtin_key_parser);
 
     m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
 
@@ -591,133 +582,61 @@ Optional<Key> NCursesUI::get_next_key()
         return resize(dimensions());
     }
 
-    m_window.set_blocking(false);
-    const int c = m_window.get_char();
-    m_window.set_blocking(true);
-
-    if (c == ERR)
-        return {};
-
-    if (c == KEY_MOUSE)
-    {
-        MEVENT ev;
-        if (getmouse(&ev) == OK)
-        {
-            const auto mask = ev.bstate;
-            auto coord = encode_coord({ ev.y - content_line_offset(), ev.x });
-
-            Key::Modifiers mod{};
-            if (mask & BUTTON_CTRL)
-                mod |= Key::Modifiers::Control;
-            if (mask & BUTTON_ALT)
-                mod |= Key::Modifiers::Alt;
-
-            if (BUTTON_PRESS(mask, 1))
-                return Key{mod | Key::Modifiers::MousePressLeft, coord};
-            if (BUTTON_PRESS(mask, 3))
-                return Key{mod | Key::Modifiers::MousePressRight, coord};
-            if (BUTTON_RELEASE(mask, 1))
-                return Key{mod | Key::Modifiers::MouseReleaseLeft, coord};
-            if (BUTTON_RELEASE(mask, 3))
-                return Key{mod | Key::Modifiers::MouseReleaseRight, coord};
-            if (BUTTON_PRESS(mask, m_wheel_down_button))
-                return Key{mod | Key::Modifiers::Scroll, static_cast<Codepoint>(m_wheel_scroll_amount)};
-            if (BUTTON_PRESS(mask, m_wheel_up_button))
-                return Key{mod | Key::Modifiers::Scroll, static_cast<Codepoint>(-m_wheel_scroll_amount)};
-            return Key{mod | Key::Modifiers::MousePos, coord};
-        }
-    }
-
-    auto parse_key = [this](int c) -> Optional<Key> {
-        switch (c)
-        {
-        case KEY_BACKSPACE: case 127: return {Key::Backspace};
-        case KEY_DC: return {Key::Delete};
-        case KEY_SDC: return shift(Key::Delete);
-        case KEY_UP: return {Key::Up};
-        case KEY_SR: return shift(Key::Up);
-        case KEY_DOWN: return {Key::Down};
-        case KEY_SF: return shift(Key::Down);
-        case KEY_LEFT: return {Key::Left};
-        case KEY_SLEFT: return shift(Key::Left);
-        case KEY_RIGHT: return {Key::Right};
-        case KEY_SRIGHT: return shift(Key::Right);
-        case KEY_PPAGE: return {Key::PageUp};
-        case KEY_SPREVIOUS: return shift(Key::PageUp);
-        case KEY_NPAGE: return {Key::PageDown};
-        case KEY_SNEXT: return shift(Key::PageDown);
-        case KEY_HOME: return {Key::Home};
-        case KEY_SHOME: return shift(Key::Home);
-        case KEY_END: return {Key::End};
-        case KEY_SEND: return shift(Key::End);
-        case KEY_IC: return {Key::Insert};
-        case KEY_SIC: return shift(Key::Insert);
-        case KEY_BTAB: return shift(Key::Tab);
-        case KEY_RESIZE: return resize(dimensions());
-        }
-
-        if (c > 0 and c < 27)
-        {
-            if (c == control('m') or c == control('j'))
-                return {Key::Return};
-            if (c == control('i'))
-                return {Key::Tab};
-            if (c == control('h'))
-                return {Key::Backspace};
-            if (c == control('z'))
-            {
-                bool mouse_enabled = m_mouse_enabled;
-                enable_mouse(false);
-
-                kill(0, SIGTSTP); // We suspend at this line
-
-                check_resize(true);
-                enable_mouse(mouse_enabled);
-                return {};
-            }
-            return ctrl(Codepoint(c) - 1 + 'a');
-        }
-
-        for (int i = 0; i < 12; ++i)
-        {
-            if (c == KEY_F(i + 1))
-                return {Key::F1 + i};
-            if (c == KEY_F(m_shift_function_key + i + 1))
-                return shift(Key::F1 + i);
-        }
-
-        if (c >= 0 and c < 256)
-        {
-           ungetch(c);
-           struct getch_iterator
-           {
-               getch_iterator(Window& win) : window(win) {}
-               int operator*() { return window.get_char(); }
-               getch_iterator& operator++() { return *this; }
-               getch_iterator& operator++(int) { return *this; }
-               bool operator== (const getch_iterator&) const { return false; }
-
-               Window& window;
-           };
-           return Key{utf8::codepoint(getch_iterator{m_window},
-                                      getch_iterator{m_window})};
-        }
+    static auto get_char = []() -> Optional<unsigned char> {
+        unsigned char c = 0;
+        if (read(0, &c, 1) == 1)
+            return c;
         return {};
     };
 
-    constexpr auto direction = make_array({Key::Up, Key::Down, Key::Right, Key::Left, Key::Home, Key::End});
-    constexpr auto special = make_array({Key::Insert, Key::Delete, Key::NamedKey{}, Key::PageUp, Key::PageDown, Key::Home, Key::End, Key::NamedKey{}, Key::NamedKey{},
-                                         Key::F1, Key::F2, Key::F3, Key::F4, Key::NamedKey{}, Key::F5, Key::F6, Key::F7, Key::F8, Key::F9, Key::F10, Key::NamedKey{}, Key::F11, Key::F12});
-    auto parse_csi = [this, &direction, &special]() -> Optional<Key> {
+    const auto c = get_char();
+    if (not c)
+        return {};
+
+    auto parse_key = [this](unsigned char c) -> Key {
+        if (c == control('m') or c == control('j'))
+            return {Key::Return};
+        if (c == control('i'))
+            return {Key::Tab};
+        if (c == control('h'))
+            return {Key::Backspace};
+        if (c == control('z'))
+        {
+            bool mouse_enabled = m_mouse_enabled;
+            enable_mouse(false);
+
+            kill(0, SIGTSTP); // We suspend at this line
+
+            check_resize(true);
+            enable_mouse(mouse_enabled);
+            return {};
+        }
+        if (c < 27)
+            return ctrl(Codepoint(c) - 1 + 'a');
+        if (c == 127)
+            return {Key::Backspace};
+
+       struct getch_iterator
+       {
+           unsigned char operator*() { return *c; }
+           getch_iterator& operator++() { c = get_char(); return *this; }
+           bool operator==(const getch_iterator&) const { return not c; }
+           Optional<unsigned char> c;
+       };
+       return Key{utf8::codepoint(getch_iterator{c}, getch_iterator{})};
+    };
+
+    auto parse_csi = [this]() -> Optional<Key> {
+        auto next_char = [] { return get_char().value_or((unsigned char)0xff); };
         int params[16] = {};
-        int c = m_window.get_char();
+        auto c = next_char();
         char private_mode = 0;
         if (c == '?' or c == '<' or c == '=' or c == '>')
         {
             private_mode = c;
-            c = m_window.get_char();
+            c = next_char();
         }
-        for (int count = 0; count < 16 and c >= 0x30 && c <= 0x3f; c = m_window.get_char())
+        for (int count = 0; count < 16 and c >= 0x30 && c <= 0x3f; c = next_char())
         {
             if ('0' <= 'c' and c <= '9')
                 params[count] = params[count] * 10 + c - '0';
@@ -730,7 +649,6 @@ Optional<Key> NCursesUI::get_next_key()
             return {};
 
         auto parse_mask = [](int mask) {
-            mask = std::max(0, mask - 1);
             Key::Modifiers mod = Key::Modifiers::None;
             if (mask & 1)
                 mod |= Key::Modifiers::Shift;
@@ -756,83 +674,88 @@ Optional<Key> NCursesUI::get_next_key()
             return Key{mod, coord};
         };
 
-        if (c >= 'A' and c <= 'F')
-            return Key{parse_mask(params[1]), direction[c - 'A']};
-        if (c == '~' and 2 <= params[0] and params[0] <= 24)
-            return Key{parse_mask(params[1]), special[params[0] - 2]};
-        if (c == 'Z')
-            return shift(Key::Tab);
-        if (c == 'I')
-            return {Key::FocusIn};
-        if (c == 'O')
-            return {Key::FocusOut};
-        if ((c == 'M' or c == 'm') and private_mode == '<')
+        auto mouse_scroll = [this](Key::Modifiers mod, bool down) -> Key {
+            return {mod | Key::Modifiers::Scroll,
+                    (Codepoint)((down ? 1 : -1) * m_wheel_scroll_amount)};
+        };
+
+        auto masked_key = [&](Codepoint key) { return Key{parse_mask(std::max(params[1] - 1, 0)), key}; };
+
+        switch (c)
         {
-            auto coord = encode_coord({params[2] - content_line_offset() - 1, params[1] - 1});
-            Key::Modifiers mod = parse_mask(1 + ((params[0] >> 2) & 0x7));
-            switch (params[0] & 0x43)
+        case 'A': return masked_key(Key::Up);
+        case 'B': return masked_key(Key::Down);
+        case 'C': return masked_key(Key::Right);
+        case 'D': return masked_key(Key::Left);
+        case 'F': return masked_key(Key::End);
+        case 'H': return masked_key(Key::Home);
+        case 'P': return masked_key(Key::F1);
+        case 'Q': return masked_key(Key::F2);
+        case 'R': return masked_key(Key::F3);
+        case 'S': return masked_key(Key::F4);
+        case '~':
+            switch (params[0])
             {
-            case 0:
-                return mouse_button(mod, coord, true, c == 'm');
-            case 2:
-                return mouse_button(mod, coord, false, c == 'm');
-            case 64:
-                return Key{mod | Key::Modifiers::Scroll,
-                           static_cast<Codepoint>(-m_wheel_scroll_amount)};
-            case 65:
-                return Key{mod | Key::Modifiers::Scroll,
-                           static_cast<Codepoint>(m_wheel_scroll_amount)};
+            case 2: return masked_key(Key::Insert);
+            case 3: return masked_key(Key::Delete);
+            case 5: return masked_key(Key::PageUp);
+            case 6: return masked_key(Key::PageDown);
+            case 7: return masked_key(Key::Home);
+            case 8: return masked_key(Key::End);
+            case 11: case 12: case 13: case 14: case 15:
+                return masked_key(Key::F1 + params[0] - 11);
+            case 17: case 18: case 19: case 20: case 21:
+                return masked_key(Key::F6 + params[0] - 17);
+            case 23: case 24:
+                return masked_key(Key::F11 + params[0] - 23);
             }
-        }
-        if (c == 'M')
-        {
-            const Codepoint b = m_window.get_char() - 32;
-            const int x = m_window.get_char() - 32 - 1;
-            const int y = m_window.get_char() - 32 - 1;
+            return {};
+        case 'Z': return shift(Key::Tab);
+        case 'I': return {Key::FocusIn};
+        case 'O': return {Key::FocusOut};
+        case 'M': case 'm':
+            const bool sgr = private_mode == '<';
+            if (not sgr and c != 'M')
+                return {};
+
+            const Codepoint b = sgr ? params[0] : next_char() - 32;
+            const int x = (sgr ? params[1] : next_char() - 32) - 1;
+            const int y = (sgr ? params[2] : next_char() - 32) - 1;
             auto coord = encode_coord({y - content_line_offset(), x});
-            Key::Modifiers mod = parse_mask(1 + ((b >> 2) & 0x7));
+            Key::Modifiers mod = parse_mask((b >> 2) & 0x7);
             switch (b & 0x43)
             {
-            case 0:
-                return mouse_button(mod, coord, true, false);
-            case 2:
-                return mouse_button(mod, coord, false, false);
+            case 0: return mouse_button(mod, coord, true, c == 'm');
+            case 2: return mouse_button(mod, coord, false, c == 'm');
             case 3:
+                if (sgr)
+                    return {};
                 if (m_mouse_state & 0x1)
                     return mouse_button(mod, coord, true, true);
                 else if (m_mouse_state & 0x2)
                     return mouse_button(mod, coord, false, true);
                 break;
-            case 64:
-                return Key{mod | Key::Modifiers::Scroll,
-                           static_cast<Codepoint>(-m_wheel_scroll_amount)};
-            case 65:
-                return Key{mod | Key::Modifiers::Scroll,
-                           static_cast<Codepoint>(m_wheel_scroll_amount)};
+            case 64: return mouse_scroll(mod, false);
+            case 65: return mouse_scroll(mod, true);
             }
             return Key{Key::Modifiers::MousePos, coord};
         }
         return {};
     };
 
-    if (c == 27)
+    if (*c != 27)
+        return parse_key(*c);
+
+    if (auto next = get_char())
     {
-        m_window.set_blocking(false);
-        const int new_c = m_window.get_char();
-        if (new_c == '[') // potential CSI
+        if (*next == '[') // potential CSI
         {
             if (auto key = parse_csi())
                 return key;
         }
-        m_window.set_blocking(true);
-
-        if (auto key = parse_key(new_c))
-            return alt(*key);
-        else
-            return {Key::Escape};
+        return alt(parse_key(*next));
     }
-
-    return parse_key(c);
+    return Key{Key::Escape};
 }
 
 template<typename T>
@@ -1300,11 +1223,8 @@ void NCursesUI::enable_mouse(bool enabled)
     m_mouse_enabled = enabled;
     if (enabled)
     {
-        mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
-        mouseinterval(0);
         // force SGR mode
-        if (m_builtin_key_parser)
-            fputs("\033[?1006h", stdout);
+        fputs("\033[?1006h", stdout);
         // force enable report focus events
         fputs("\033[?1004h", stdout);
         // enable mouse
@@ -1314,7 +1234,6 @@ void NCursesUI::enable_mouse(bool enabled)
     }
     else
     {
-        mousemask(0, nullptr);
         fputs("\033[?1002l", stdout);
         fputs("\033[?1000l", stdout);
         fputs("\033[?1004l", stdout);
@@ -1384,17 +1303,6 @@ void NCursesUI::set_ui_options(const Options& options)
         auto wheel_scroll_amount_it = options.find("ncurses_wheel_scroll_amount"_sv);
         m_wheel_scroll_amount = wheel_scroll_amount_it != options.end() ?
             str_to_int_ifp(wheel_scroll_amount_it->value).value_or(3) : 3;
-    }
-
-    {
-        auto builtin_key_parser_it = options.find("ncurses_builtin_key_parser"_sv);
-        bool mouse_enabled = m_mouse_enabled;
-        enable_mouse(false);
-        m_builtin_key_parser = builtin_key_parser_it != options.end() and
-                               (builtin_key_parser_it->value == "yes" or
-                                builtin_key_parser_it->value == "true");
-        keypad(m_window.win, not m_builtin_key_parser);
-        enable_mouse(mouse_enabled);
     }
 }
 

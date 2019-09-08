@@ -105,8 +105,6 @@ private:
         void clear_to_end_of_line();
         void set_face(Palette& palette, Face face, const Face& default_face);
         void set_background_color(Palette& palette, Face face);
-        int get_char();
-        void set_blocking(bool blocking);
 
         explicit operator bool() const { return win; }
 
@@ -169,7 +167,6 @@ private:
     int m_shift_function_key = default_shift_function_key;
 
     bool m_set_title = true;
-    bool m_builtin_key_parser = false;
 
     bool m_dirty = false;
 
