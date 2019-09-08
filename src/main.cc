@@ -107,8 +107,8 @@ struct startup_error : runtime_error
     using runtime_error::runtime_error;
 };
 
-inline void write_stdout(StringView str) { try { write(1, str); } catch (runtime_error&) {} }
-inline void write_stderr(StringView str) { try { write(2, str); } catch (runtime_error&) {} }
+inline void write_stdout(StringView str) { try { write(STDOUT_FILENO, str); } catch (runtime_error&) {} }
+inline void write_stderr(StringView str) { try { write(STDERR_FILENO, str); } catch (runtime_error&) {} }
 
 String runtime_directory()
 {

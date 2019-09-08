@@ -10,6 +10,8 @@
 #include "string.hh"
 #include "user_interface.hh"
 
+#include <termios.h>
+
 namespace Kakoune
 {
 
@@ -115,6 +117,7 @@ private:
     Window m_window;
 
     DisplayCoord m_dimensions;
+    termios m_original_termios;
 
     void mark_dirty(const Window& win);
 

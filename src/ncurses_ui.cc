@@ -16,7 +16,6 @@
 #include <fcntl.h>
 #include <csignal>
 #include <sys/ioctl.h>
-#include <termios.h>
 #include <unistd.h>
 
 constexpr char control(char c) { return c & 037; }
@@ -352,7 +351,7 @@ static void signal_handler(int)
 
 NCursesUI::NCursesUI()
     : m_cursor{CursorMode::Buffer, {}},
-      m_stdin_watcher{0, FdEvents::Read,
+      m_stdin_watcher{STDIN_FILENO, FdEvents::Read,
                       [this](FDWatcher&, FdEvents, EventMode) {
         if (not m_on_key)
             return;
@@ -362,26 +361,27 @@ NCursesUI::NCursesUI()
       }},
       m_assistant(assistant_clippy)
 {
+    fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0) | O_NONBLOCK);
+
+    tcgetattr(STDIN_FILENO, &m_original_termios);
+    termios attr = m_original_termios;
+    attr.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+    attr.c_oflag &= ~OPOST;
+    attr.c_cflag |= CS8;
+    attr.c_lflag &= ~(ECHO | ICANON | ISIG | IEXTEN);
+    attr.c_lflag |= NOFLSH;
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &attr);
+    enable_mouse(true);
+
     initscr();
-    raw();
-    noecho();
-    nonl();
     curs_set(0);
     start_color();
     use_default_colors();
-    set_escdelay(25);
-    intrflush(nullptr, false);
-    meta(nullptr, true);
-
-    enable_mouse(true);
-
-    fcntl(0, F_SETFL, fcntl(0, F_GETFL, 0) | O_NONBLOCK);
 
     set_signal_handler(SIGWINCH, &signal_handler<&resize_pending>);
     set_signal_handler(SIGHUP, &signal_handler<&sighup_raised>);
 
     check_resize(true);
-
     redraw(false);
 }
 
@@ -394,6 +394,7 @@ NCursesUI::~NCursesUI()
         fflush(stdout);
     }
     endwin();
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
     set_signal_handler(SIGWINCH, SIG_DFL);
     set_signal_handler(SIGCONT, SIG_DFL);
 }
@@ -584,7 +585,7 @@ Optional<Key> NCursesUI::get_next_key()
 
     static auto get_char = []() -> Optional<unsigned char> {
         unsigned char c = 0;
-        if (read(0, &c, 1) == 1)
+        if (read(STDIN_FILENO, &c, 1) == 1)
             return c;
         return {};
     };
