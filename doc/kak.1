@@ -40,6 +40,7 @@ kak \- a vim inspired, selection oriented code editor
 .PP
 .B kak
 [\fB\-c\fR \fIsession_id\fR|\fB\-s\fR \fIsession_id\fR]
+[\fB\-u\fR \fIconfig_dir\fR]
 [\fB\-n\fR] [\fB\-ro\fR]
 [\fB\-ui\fR \fIui_type\fR] [\fB\-e\fR \fIcommand\fR]
 [\fB\-E\fR \fIcommand\fR]
@@ -82,6 +83,10 @@ display kakoune version and quit
 .TP
 .BR \-n
 do not load resource files on startup (\fIkakrc\fR, \fIautoload\fR, \fIrc\fR etc)
+
+.TP
+.BR \-u " " \fIdirectory\fR
+load \fIkakrc\fR and other resource files from the specified \fIdirectory\fR
 
 .TP
 .BR \-l
@@ -146,12 +151,12 @@ line of the file
 one or more \fIfile\fRs to edit
 
 .PP
-At  startup, if \fB\-n\fR is not specified, Kakoune will try to source the file
-\fI../share/kak/kakrc\fR relative to the kak binary. This kak file will then
-try to recursively source any files in \fI$XDG_CONFIG_HOME/kak/autoload\fR
-(with \fI$XDG_CONFIG_HOME\fR defaulting to \fI$HOME/.config\fR, and falling back
-to \fI../share/kak/autoload\fR if that autoload directory does not exist),
-and finally \fI$XDG_CONFIG_HOME/kak/kakrc\fR.
+At  startup, if neither \fB\-n\fR nor \fB\-u\fR is specified, Kakoune will try
+to source the file \fI../share/kak/kakrc\fR relative to the kak binary. This kak
+file will then try to recursively source any files in
+\fI$XDG_CONFIG_HOME/kak/autoload\fR (with \fI$XDG_CONFIG_HOME\fR defaulting to
+\fI$HOME/.config\fR, and falling back to \fI../share/kak/autoload\fR if that
+autoload directory does not exist), and finally \fI$XDG_CONFIG_HOME/kak/kakrc\fR.
 
 That leads to the following behaviour: by default, with no user autoload
 directory, the system wide autoload directory is used, once the user wants

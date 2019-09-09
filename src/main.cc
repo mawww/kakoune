@@ -121,12 +121,18 @@ String runtime_directory()
     return "/usr/share/kak";
 }
 
+static StringView config_dir;
+
 String config_directory()
 {
-    StringView config_home = getenv("XDG_CONFIG_HOME");
-    if (config_home.empty())
-        return format("{}/.config/kak", homedir());
-    return format("{}/kak", config_home);
+    if (!config_dir.empty()) {
+        return format("{}", config_dir);
+    } else {
+        StringView config_home = getenv("XDG_CONFIG_HOME");
+        if (config_home.empty())
+            return format("{}/.config/kak", homedir());
+        return format("{}/kak", config_home);
+    }
 }
 
 static const EnvVarDesc builtin_env_vars[] = { {
@@ -966,6 +972,7 @@ int main(int argc, char* argv[])
                    { "e", { true,  "execute argument on client initialisation" } },
                    { "E", { true,  "execute argument on server initialisation" } },
                    { "n", { false, "do not source kakrc files on startup" } },
+                   { "u", { true,  "specify configuration directory containing kakrc"} },
                    { "s", { true,  "set session name" } },
                    { "d", { false, "run as a headless session (requires -s)" } },
                    { "p", { true,  "just send stdin as commands to the given session" } },
@@ -1031,7 +1038,7 @@ int main(int argc, char* argv[])
 
         if (auto session = parser.get_switch("p"))
         {
-            for (auto opt : { "c", "n", "s", "d", "e", "E", "ro" })
+            for (auto opt : { "c", "n", "s", "d", "e", "E", "ro", "u" })
             {
                 if (parser.get_switch(opt))
                 {
@@ -1060,6 +1067,17 @@ int main(int argc, char* argv[])
 
             return run_filter(*keys, files, (bool)parser.get_switch("q"),
                               parser.get_switch("i").value_or(StringView{}));
+        }
+
+        if (auto config_dir = parser.get_switch("u"))
+        {
+            if (parser.get_switch("n"))
+            {
+              write_stderr("error: -n is incompatible with -u\n");
+              return -1;
+            }
+
+            Kakoune::config_dir = config_dir.value_or("");
         }
 
         Vector<StringView> files;
@@ -1091,7 +1109,7 @@ int main(int argc, char* argv[])
 
         if (auto server_session = parser.get_switch("c"))
         {
-            for (auto opt : { "n", "s", "d", "E", "ro" })
+            for (auto opt : { "n", "s", "d", "E", "ro", "u" })
             {
                 if (parser.get_switch(opt))
                 {
