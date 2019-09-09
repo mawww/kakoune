@@ -644,14 +644,15 @@ Optional<Key> NCursesUI::get_next_key()
         if (c == 127)
             return {Key::Backspace};
 
-       struct getch_iterator
+       struct Sentinel{};
+       struct CharIterator
        {
-           unsigned char operator*() { return *c; }
-           getch_iterator& operator++() { c = get_char(); return *this; }
-           bool operator==(const getch_iterator&) const { return not c; }
+           unsigned char operator*() { if (not c) c = get_char().value_or((unsigned char)0); return *c; }
+           CharIterator& operator++() { c.reset(); return *this; }
+           bool operator==(const Sentinel&) const { return false; }
            Optional<unsigned char> c;
        };
-       return Key{utf8::codepoint(getch_iterator{c}, getch_iterator{})};
+       return Key{utf8::codepoint(CharIterator{c}, Sentinel{})};
     };
 
     auto parse_csi = [this]() -> Optional<Key> {
