@@ -17,7 +17,7 @@ namespace Kakoune
 
 struct NCursesWin;
 
-class NCursesUI : public UserInterface
+class NCursesUI : public UserInterface, public Singleton<NCursesUI>
 {
 public:
     NCursesUI();
@@ -56,6 +56,8 @@ public:
     void set_ui_options(const Options& options) override;
 
     static void abort();
+
+    void suspend();
 
     struct Rect
     {
@@ -117,7 +119,7 @@ private:
     Window m_window;
 
     DisplayCoord m_dimensions;
-    termios m_original_termios;
+    termios m_original_termios{};
 
     void set_raw_mode() const;
 

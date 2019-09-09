@@ -373,6 +373,7 @@ NCursesUI::NCursesUI()
 
     set_signal_handler(SIGWINCH, &signal_handler<&resize_pending>);
     set_signal_handler(SIGHUP, &signal_handler<&sighup_raised>);
+    set_signal_handler(SIGTSTP, [](int){ NCursesUI::instance().suspend(); });
 
     check_resize(true);
     redraw(false);
@@ -390,6 +391,29 @@ NCursesUI::~NCursesUI()
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
     set_signal_handler(SIGWINCH, SIG_DFL);
     set_signal_handler(SIGCONT, SIG_DFL);
+    set_signal_handler(SIGTSTP, SIG_DFL);
+}
+
+void NCursesUI::suspend()
+{
+    bool mouse_enabled = m_mouse_enabled;
+    enable_mouse(false);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
+
+    auto current = set_signal_handler(SIGTSTP, SIG_DFL);
+    sigset_t unblock_sigtstp, old_mask;
+    sigemptyset(&unblock_sigtstp);
+    sigaddset(&unblock_sigtstp, SIGTSTP);
+    sigprocmask(SIG_UNBLOCK, &unblock_sigtstp, &old_mask);
+
+    raise(SIGTSTP); // suspend here
+
+    set_signal_handler(SIGTSTP, current);
+    sigprocmask(SIG_SETMASK, &old_mask, nullptr);
+
+    check_resize(true);
+    set_raw_mode();
+    enable_mouse(mouse_enabled);
 }
 
 void NCursesUI::set_raw_mode() const
@@ -612,15 +636,7 @@ Optional<Key> NCursesUI::get_next_key()
             return {Key::Backspace};
         if (c == control('z'))
         {
-            bool mouse_enabled = m_mouse_enabled;
-            enable_mouse(false);
-            tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
-
             kill(0, SIGTSTP); // We suspend at this line
-
-            check_resize(true);
-            set_raw_mode();
-            enable_mouse(mouse_enabled);
             return {};
         }
         if (c < 27)
