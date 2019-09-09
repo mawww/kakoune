@@ -585,10 +585,8 @@ void NCursesUI::check_resize(bool force)
         putp(tparm(csr, 0, ws.ws_row));
 
     if (menu)
-    {
-        auto items = std::move(m_menu.items);
-        menu_show(items, m_menu.anchor, m_menu.fg, m_menu.bg, m_menu.style);
-    }
+        menu_show(Vector<DisplayLine>(std::move(m_menu.items)),
+                  m_menu.anchor, m_menu.fg, m_menu.bg, m_menu.style);
     if (info)
         info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
 
