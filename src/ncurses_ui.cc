@@ -361,22 +361,15 @@ NCursesUI::NCursesUI()
       }},
       m_assistant(assistant_clippy)
 {
-    fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0) | O_NONBLOCK);
-
     tcgetattr(STDIN_FILENO, &m_original_termios);
-    termios attr = m_original_termios;
-    attr.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-    attr.c_oflag &= ~OPOST;
-    attr.c_cflag |= CS8;
-    attr.c_lflag &= ~(ECHO | ICANON | ISIG | IEXTEN);
-    attr.c_lflag |= NOFLSH;
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &attr);
-    enable_mouse(true);
 
     initscr();
     curs_set(0);
     start_color();
     use_default_colors();
+
+    set_raw_mode();
+    enable_mouse(true);
 
     set_signal_handler(SIGWINCH, &signal_handler<&resize_pending>);
     set_signal_handler(SIGHUP, &signal_handler<&sighup_raised>);
@@ -397,6 +390,22 @@ NCursesUI::~NCursesUI()
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
     set_signal_handler(SIGWINCH, SIG_DFL);
     set_signal_handler(SIGCONT, SIG_DFL);
+}
+
+void NCursesUI::set_raw_mode() const
+{
+    fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0) | O_NONBLOCK);
+
+    termios attr = m_original_termios;
+    attr.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+    attr.c_oflag &= ~OPOST;
+    attr.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    attr.c_lflag |= NOFLSH;
+    attr.c_cflag &= ~(CSIZE | PARENB);
+    attr.c_cflag |= CS8;
+    attr.c_cc[VMIN] = attr.c_cc[VTIME] = 0;
+
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &attr);
 }
 
 void NCursesUI::redraw(bool force)
@@ -605,10 +614,12 @@ Optional<Key> NCursesUI::get_next_key()
         {
             bool mouse_enabled = m_mouse_enabled;
             enable_mouse(false);
+            tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
 
             kill(0, SIGTSTP); // We suspend at this line
 
             check_resize(true);
+            set_raw_mode();
             enable_mouse(mouse_enabled);
             return {};
         }
