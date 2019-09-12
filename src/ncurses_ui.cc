@@ -398,19 +398,22 @@ void NCursesUI::suspend()
 {
     bool mouse_enabled = m_mouse_enabled;
     enable_mouse(false);
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
+    endwin();
 
     auto current = set_signal_handler(SIGTSTP, SIG_DFL);
     sigset_t unblock_sigtstp, old_mask;
     sigemptyset(&unblock_sigtstp);
     sigaddset(&unblock_sigtstp, SIGTSTP);
     sigprocmask(SIG_UNBLOCK, &unblock_sigtstp, &old_mask);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
 
     raise(SIGTSTP); // suspend here
 
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
     set_signal_handler(SIGTSTP, current);
     sigprocmask(SIG_SETMASK, &old_mask, nullptr);
 
+    doupdate();
     check_resize(true);
     set_raw_mode();
     enable_mouse(mouse_enabled);
