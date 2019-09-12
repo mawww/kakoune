@@ -1,31 +1,34 @@
-declare-option -docstring "shell command to which the contents of the current buffer is piped" \
+declare-option -docstring "shell command used for the 'format-selections' and 'format-buffer' commands" \
     str formatcmd
 
-define-command format -docstring "Format the contents of the current buffer" %{ evaluate-commands -draft -no-hooks %{
+define-command format-buffer -docstring "Format the contents of the buffer" %{
+    evaluate-commands -draft %{
+        execute-keys '%'
+        format-selections
+    }
+}
+
+define-command format-selections -docstring "Format the selections individually" %{
     evaluate-commands %sh{
-        if [ -n "${kak_opt_formatcmd}" ]; then
-            path_file_tmp=$(mktemp "${TMPDIR:-/tmp}"/kak-formatter-XXXXXX)
-            printf %s\\n "
-                write -sync \"${path_file_tmp}\"
-
-                evaluate-commands %sh{
-                    readonly path_file_out=\$(mktemp \"${TMPDIR:-/tmp}\"/kak-formatter-XXXXXX)
-
-                    if cat \"${path_file_tmp}\" | eval \"${kak_opt_formatcmd}\" > \"\${path_file_out}\"; then
-                        printf '%s\\n' \"execute-keys \\%|cat<space>'\${path_file_out}'<ret>\"
-                        printf '%s\\n' \"nop %sh{ rm -f '\${path_file_out}' }\"
-                    else
-                        printf '%s\\n' \"
-                            evaluate-commands -client '${kak_client}' echo -markup '{Error}formatter returned an error (\$?)'
-                        \"
-                        rm -f \"\${path_file_out}\"
-                    fi
-
-                    rm -f \"${path_file_tmp}\"
-                }
-            "
-        else
-            printf '%s\n' "evaluate-commands -client '${kak_client}' echo -markup '{Error}formatcmd option not specified'"
+        if [ -z "${kak_opt_formatcmd}" ]; then
+            printf "fail 'The option ''formatcmd'' must be set'"
         fi
     }
-} }
+    evaluate-commands -draft -no-hooks -save-regs '|' %{
+        set-register '|' %{
+            format_in="$(mktemp "${TMPDIR:-/tmp}"/kak-formatter-XXXXXX)"
+            format_out="$(mktemp "${TMPDIR:-/tmp}"/kak-formatter-XXXXXX)"
+
+            cat > "$format_in"
+            eval "$kak_opt_formatcmd" < "$format_in" > "$format_out"
+            if [ $? -eq 0 ]; then
+                cat "$format_out"
+            else
+                printf 'eval -client %s %%{ echo -markup %%{{Error}formatter returned an error %s} }' "$kak_client" "$?" | kak -p "$kak_session"
+                cat "$format_in"
+            fi
+            rm -f "$format_in" "$format_out"
+        }
+        execute-keys '|<ret>'
+    }
+}
