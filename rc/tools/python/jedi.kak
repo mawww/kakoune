@@ -19,7 +19,7 @@ define-command jedi-complete -docstring "Complete the current selection" %{
     evaluate-commands %sh{
         dir=${kak_opt_jedi_tmp_dir}
         printf %s\\n "evaluate-commands -draft %{ edit! -fifo ${dir}/fifo *jedi-output* }"
-        (
+        ((
             cd $(dirname ${kak_buffile})
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
 
@@ -32,7 +32,7 @@ define-command jedi-complete -docstring "Complete the current selection" %{
             )
             printf %s\\n "evaluate-commands -client ${kak_client} %~echo completed; set-option %{buffer=${kak_buffile}} jedi_completions ${header} ${compl}~" | kak -p ${kak_session}
             rm -r ${dir}
-        ) > /dev/null 2>&1 < /dev/null &
+        ) & ) > /dev/null 2>&1 < /dev/null
     }
 }
 
