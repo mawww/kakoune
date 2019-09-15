@@ -337,6 +337,25 @@ void register_registers()
     register_manager.add_register('_', std::make_unique<NullRegister>());
 }
 
+void register_keymaps()
+{
+    auto& keymaps = GlobalScope::instance().keymaps();
+    keymaps.map_key(Key::Left, KeymapMode::Normal, {'h'}, "");
+    keymaps.map_key(Key::Right, KeymapMode::Normal, {'l'}, "");
+    keymaps.map_key(Key::Down, KeymapMode::Normal, {'j'}, "");
+    keymaps.map_key(Key::Up, KeymapMode::Normal, {'k'}, "");
+
+    keymaps.map_key(shift(Key::Left), KeymapMode::Normal, {'H'}, "");
+    keymaps.map_key(shift(Key::Right), KeymapMode::Normal, {'L'}, "");
+    keymaps.map_key(shift(Key::Down), KeymapMode::Normal, {'J'}, "");
+    keymaps.map_key(shift(Key::Up), KeymapMode::Normal, {'K'}, "");
+
+    keymaps.map_key(Key::End, KeymapMode::Normal, {alt('l')}, "");
+    keymaps.map_key(Key::Home, KeymapMode::Normal, {alt('h')}, "");
+    keymaps.map_key(shift(Key::End), KeymapMode::Normal, {alt('L')}, "");
+    keymaps.map_key(shift(Key::Home), KeymapMode::Normal, {alt('H')}, "");
+}
+
 static void check_tabstop(const int& val)
 {
     if (val < 1) throw runtime_error{"tabstop should be strictly positive"};
@@ -672,6 +691,7 @@ int run_server(StringView session, StringView server_init,
 
     register_options();
     register_registers();
+    register_keymaps();
     register_commands();
     register_highlighters();
 

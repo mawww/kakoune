@@ -3,6 +3,11 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development version
+
+* Arrow keys and `<home>`, `<end>` are not normal mode commands
+  anymore but default key mappings.
+
 == Kakoune 2019.07.01
 
 * Re-organized bundled script files directory hierarchy.

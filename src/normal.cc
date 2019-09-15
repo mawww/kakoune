@@ -2175,20 +2175,10 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'k'}, {"move up",  move_cursor<LineCount, Backward>} },
     { {'l'}, {"move right", move_cursor<CharCount, Forward>} },
 
-    { {Key::Left}, { "move left", move_cursor<CharCount, Backward>} },
-    { {Key::Down}, { "move down", move_cursor<LineCount, Forward>} },
-    { {Key::Up}, {   "move up", move_cursor<LineCount, Backward>} },
-    { {Key::Right}, {"move right", move_cursor<CharCount, Forward>} },
-
     { {'H'}, {"extend left", move_cursor<CharCount, Backward, SelectMode::Extend>} },
     { {'J'}, {"extend down", move_cursor<LineCount, Forward, SelectMode::Extend>} },
     { {'K'}, {"extend up", move_cursor<LineCount, Backward, SelectMode::Extend>} },
     { {'L'}, {"extend right", move_cursor<CharCount, Forward, SelectMode::Extend>} },
-
-    { shift(Key::Left), {"extend left", move_cursor<CharCount, Backward, SelectMode::Extend>} },
-    { shift(Key::Down), {"extend down", move_cursor<LineCount, Forward, SelectMode::Extend>} },
-    { shift(Key::Up), {"extend up", move_cursor<LineCount, Backward, SelectMode::Extend>} },
-    { shift(Key::Right), {"extend right", move_cursor<CharCount, Forward, SelectMode::Extend>} },
 
     { {'t'}, {"select to next character", select_to_next_char<SelectFlags::None>} },
     { {'f'}, {"select to next character included", select_to_next_char<SelectFlags::Inclusive>} },
@@ -2266,13 +2256,9 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {alt('B')}, {"extend to previous WORD start", repeated<select<SelectMode::Extend, select_to_previous_word<WORD>>>} },
 
     { {alt('l')}, {"select to line end", repeated<select<SelectMode::Replace, select_to_line_end<false>>>} },
-    { {Key::End}, {"select to line end", repeated<select<SelectMode::Replace, select_to_line_end<false>>>} },
     { {alt('L')}, {"extend to line end", repeated<select<SelectMode::Extend, select_to_line_end<false>>>} },
-    { shift(Key::End), {"extend to line end", repeated<select<SelectMode::Extend, select_to_line_end<false>>>} },
     { {alt('h')}, {"select to line begin", repeated<select<SelectMode::Replace, select_to_line_begin<false>>>} },
-    { {Key::Home}, {"select to line begin", repeated<select<SelectMode::Replace, select_to_line_begin<false>>>} },
     { {alt('H')}, {"extend to line begin", repeated<select<SelectMode::Extend, select_to_line_begin<false>>>} },
-    { shift(Key::Home), {"extend to line begin", repeated<select<SelectMode::Extend, select_to_line_begin<false>>>} },
 
     { {'x'}, {"select line", repeated<select<SelectMode::Replace, select_line>>} },
     { {'X'}, {"extend line", repeated<select<SelectMode::Extend, select_line>>} },
