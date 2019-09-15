@@ -50,33 +50,33 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                 compl=$(clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} \
                     -Xclang -code-completion-brief-comments -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/stderr |
                         awk -F ': ' '
-                            /^COMPLETION:/ && ! /\(Hidden\)/ {
-                                 id=$2
-                                 gsub(/ +$/, "", id)
-                                 gsub(/~/, "~~", id)
-                                 gsub(/\|/, "\\|", id)
+                            /^COMPLETION:/ && $2 !~ /[(,](Hidden|Inaccessible)[),]/ {
+                                 candidate=$3
+                                 gsub(/[[<{]#[^#]+#[]>}]/, "", candidate)
+                                 gsub(/~/, "~~", candidate)
+                                 gsub(/\|/, "\\|", candidate)
 
                                  gsub(/[[{<]#|#[}>]/, "", $3)
                                  gsub(/#]/, " ", $3)
                                  gsub(/:: /, "::", $3)
                                  gsub(/ +$/, "", $3)
-                                 desc=$4 ? $3 "\n" $4 : $3
+                                 docstring=$4 ? $3 "\n" $4 : $3
 
-                                 gsub(/~/, "~~", desc)
-                                 gsub(/!/, "!!", desc)
-                                 gsub(/\|/, "\\|", desc)
-                                 if (id in docstrings)
-                                     docstrings[id]=docstrings[id] "\n" desc
+                                 gsub(/~/, "~~", docstring)
+                                 gsub(/!/, "!!", docstring)
+                                 gsub(/\|/, "\\|", docstring)
+                                 if (candidate in candidates)
+                                     candidates[candidate]=candidates[candidate] "\n" docstring
                                  else
-                                     docstrings[id]=desc
+                                     candidates[candidate]=docstring
                             }
                             END {
-                                for (id in docstrings) {
-                                    menu=id
+                                for (candidate in candidates) {
+                                    menu=candidate
                                     gsub(/(^|[^[:alnum:]_])(operator|new|delete)($|[^{}_[:alnum:]]+)/, "{keyword}&{}", menu)
                                     gsub(/(^|[[:space:]])(int|size_t|bool|char|unsigned|signed|long)($|[[:space:]])/, "{type}&{}", menu)
                                     gsub(/[^{}_[:alnum:]]+/, "{operator}&{}", menu)
-                                    printf "%%~%s|info -style menu %!%s!|%s~ ", id, docstrings[id], menu
+                                    printf "%%~%s|info -style menu %!%s!|%s~ ", candidate, candidates[candidate], menu
                                 }
                             }')
                 printf %s\\n "evaluate-commands -client ${kak_client} echo 'clang completion done'
