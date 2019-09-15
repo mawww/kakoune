@@ -186,7 +186,7 @@ void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode, C
     });
 }
 
-void scroll_window(Context& context, LineCount offset);
+void scroll_window(Context& context, LineCount offset, bool adapt_cursor = true);
 
 }
 

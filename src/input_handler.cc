@@ -138,8 +138,7 @@ struct MouseHandler
             return true;
 
         case Key::Modifiers::Scroll:
-            m_dragging = false;
-            scroll_window(context, static_cast<int32_t>(key.key));
+            scroll_window(context, static_cast<int32_t>(key.key), not m_dragging);
             return true;
 
         default: return false;
@@ -1737,7 +1736,7 @@ void hide_auto_info_ifn(const Context& context, bool hide)
         context.client().info_hide();
 }
 
-void scroll_window(Context& context, LineCount offset)
+void scroll_window(Context& context, LineCount offset, bool adapt_cursor)
 {
     Window& window = context.window();
     Buffer& buffer = context.buffer();
@@ -1751,6 +1750,10 @@ void scroll_window(Context& context, LineCount offset)
 
     const LineCount line_count = buffer.line_count();
     win_pos.line = clamp(win_pos.line + offset, 0_line, line_count-1);
+    window.set_position(win_pos);
+
+    if (not adapt_cursor)
+        return;
 
     SelectionList& selections = context.selections();
     const BufferCoord cursor = selections.main().cursor();
@@ -1766,7 +1769,6 @@ void scroll_window(Context& context, LineCount offset)
                    buffer[line].length()-1);
 
     selections = SelectionList{buffer, BufferCoord{line, col}};
-    window.set_position(win_pos);
 }
 
 }
