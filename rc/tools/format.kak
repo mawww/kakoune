@@ -32,3 +32,5 @@ define-command format-selections -docstring "Format the selections individually"
         execute-keys '|<ret>'
     }
 }
+
+alias global format format-buffer
