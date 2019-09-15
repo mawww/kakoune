@@ -91,7 +91,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     }
 
     update_diff() {
-        git --no-pager diff -U0 "$kak_buffile" | perl -e '
+        ( cd "${kak_buffile%/*}" && git --no-pager diff -U0 "$kak_buffile" | perl -e '
             $flags = $ENV{"kak_timestamp"};
             foreach $line (<STDIN>) {
                 if ($line =~ /@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))?/) {
@@ -140,7 +140,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                 }
             }
             print "set-option buffer git_diff_flags $flags"
-        '
+        ' )
     }
 
    
