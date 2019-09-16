@@ -87,6 +87,7 @@ private:
 
     public:
         int get_color_pair(const Face& face);
+        bool get_change_colors() const { return m_change_colors; }
         bool set_change_colors(bool change_colors);
     };
 

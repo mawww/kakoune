@@ -382,11 +382,7 @@ NCursesUI::NCursesUI()
 NCursesUI::~NCursesUI()
 {
     enable_mouse(false);
-    if (can_change_color()) // try to reset palette
-    {
-        fputs("\033]104\007", stdout);
-        fflush(stdout);
-    }
+    m_palette.set_change_colors(false);
     endwin();
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
     set_signal_handler(SIGWINCH, SIG_DFL);
@@ -398,6 +394,8 @@ void NCursesUI::suspend()
 {
     bool mouse_enabled = m_mouse_enabled;
     enable_mouse(false);
+    bool change_color_enabled = m_palette.get_change_colors();
+    m_palette.set_change_colors(false);
     endwin();
 
     auto current = set_signal_handler(SIGTSTP, SIG_DFL);
@@ -416,6 +414,7 @@ void NCursesUI::suspend()
     doupdate();
     check_resize(true);
     set_raw_mode();
+    m_palette.set_change_colors(change_color_enabled);
     enable_mouse(mouse_enabled);
 }
 
