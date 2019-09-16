@@ -103,13 +103,8 @@ private:
         void mark_dirty(LineCount pos, LineCount count);
         void draw_line(Palette& palette,
                        const DisplayLine& line,
-                       ColumnCount col_index,
-                       ColumnCount max_column,
+                       ColumnCount width,
                        const Face& default_face);
-        void add_str(StringView str);
-        void clear_to_end_of_line();
-        void set_face(Palette& palette, Face face, const Face& default_face);
-        void set_background_color(Palette& palette, Face face);
 
         explicit operator bool() const { return win; }
 

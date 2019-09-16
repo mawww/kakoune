@@ -66,31 +66,50 @@ void NCursesUI::Window::move_cursor(DisplayCoord coord)
     wmove(win, (int)coord.line, (int)coord.column);
 }
 
-void NCursesUI::Window::add_str(StringView str)
-{
-    waddnstr(win, str.begin(), (int)str.length());
-}
-
-void NCursesUI::Window::clear_to_end_of_line()
-{
-    wclrtoeol(win);
-}
-
 void NCursesUI::Window::draw_line(Palette& palette,
                                   const DisplayLine& line,
-                                  ColumnCount col_index,
-                                  ColumnCount max_column,
+                                  ColumnCount width,
                                   const Face& default_face)
 {
+    auto add_str = [&](StringView str) { waddnstr(win, str.begin(), (int)str.length()); };
+
+    auto set_face = [&](Face face) {
+        if (m_active_pair != -1)
+            wattroff(win, COLOR_PAIR(m_active_pair));
+
+        face = merge_faces(default_face, face);
+
+        if (face.fg != Color::Default or face.bg != Color::Default)
+        {
+            m_active_pair = palette.get_color_pair(face);
+            wattron(win, COLOR_PAIR(m_active_pair));
+        }
+
+        auto set_attribute = [&](Attribute attr, int nc_attr) {
+            (face.attributes & attr) ?  wattron(win, nc_attr) : wattroff(win, nc_attr);
+        };
+
+        set_attribute(Attribute::Underline, A_UNDERLINE);
+        set_attribute(Attribute::Reverse, A_REVERSE);
+        set_attribute(Attribute::Blink, A_BLINK);
+        set_attribute(Attribute::Bold, A_BOLD);
+        set_attribute(Attribute::Dim, A_DIM);
+        #if defined(A_ITALIC)
+        set_attribute(Attribute::Italic, A_ITALIC);
+        #endif
+    };
+
+    wbkgdset(win, COLOR_PAIR(palette.get_color_pair(default_face)));
+    ColumnCount column = 0;
     for (const DisplayAtom& atom : line)
     {
-        set_face(palette, atom.face, default_face);
+        set_face(atom.face);
 
         StringView content = atom.content();
         if (content.empty())
             continue;
 
-        const auto remaining_columns = max_column - col_index;
+        const auto remaining_columns = width - column;
         if (content.back() == '\n' and
             content.column_length() - 1 < remaining_columns)
         {
@@ -101,46 +120,16 @@ void NCursesUI::Window::draw_line(Palette& palette,
         {
             content = content.substr(0_col, remaining_columns);
             add_str(content);
-            col_index += content.column_length();
+            column += content.column_length();
         }
     }
-}
-
-void NCursesUI::Window::set_face(Palette& palette, Face face, const Face& default_face)
-{
-    if (m_active_pair != -1)
-        wattroff(win, COLOR_PAIR(m_active_pair));
-
-    face = merge_faces(default_face, face);
-
-    if (face.fg != Color::Default or face.bg != Color::Default)
-    {
-        m_active_pair = palette.get_color_pair(face);
-        wattron(win, COLOR_PAIR(m_active_pair));
-    }
-
-    auto set_attribute = [&](Attribute attr, int nc_attr) {
-        (face.attributes & attr) ?  wattron(win, nc_attr) : wattroff(win, nc_attr);
-    };
-
-    set_attribute(Attribute::Underline, A_UNDERLINE);
-    set_attribute(Attribute::Reverse, A_REVERSE);
-    set_attribute(Attribute::Blink, A_BLINK);
-    set_attribute(Attribute::Bold, A_BOLD);
-    set_attribute(Attribute::Dim, A_DIM);
-    #if defined(A_ITALIC)
-    set_attribute(Attribute::Italic, A_ITALIC);
-    #endif
+    if (column < width)
+        wclrtoeol(win);
 }
 
 void NCursesUI::Window::mark_dirty(LineCount pos, LineCount count)
 {
     wredrawln(win, (int)pos, (int)count);
-}
-
-void NCursesUI::Window::set_background_color(Palette& palette, Face face)
-{
-    wbkgdset(win, COLOR_PAIR(palette.get_color_pair(face)));
 }
 
 constexpr int NCursesUI::default_shift_function_key;
@@ -468,8 +457,6 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
                      const Face& default_face,
                      const Face& padding_face)
 {
-    m_window.set_background_color(m_palette, default_face);
-
     check_resize();
 
     const DisplayCoord dim = dimensions();
@@ -478,19 +465,16 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     for (const DisplayLine& line : display_buffer.lines())
     {
         m_window.move_cursor(line_index);
-        m_window.clear_to_end_of_line();
-        m_window.draw_line(m_palette, line, 0, dim.column, default_face);
+        m_window.draw_line(m_palette, line, dim.column, default_face);
         ++line_index;
     }
 
-    m_window.set_background_color(m_palette, padding_face);
-    m_window.set_face(m_palette, padding_face, default_face);
-
+    auto face = merge_faces(default_face, padding_face);
+    DisplayLine line("~", {});
     while (line_index < dim.line + line_offset)
     {
         m_window.move_cursor(line_index++);
-        m_window.clear_to_end_of_line();
-        m_window.add_str('~');
+        m_window.draw_line(m_palette, line, dim.column, face);
     }
 
     m_dirty = true;
@@ -503,10 +487,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     const LineCount status_line_pos = m_status_on_top ? 0 : m_dimensions.line;
     m_window.move_cursor(status_line_pos);
 
-    m_window.set_background_color(m_palette, default_face);
-    m_window.clear_to_end_of_line();
-
-    m_window.draw_line(m_palette, status_line, 0, m_dimensions.column, default_face);
+    m_window.draw_line(m_palette, status_line, m_dimensions.column, default_face);
 
     const auto mode_len = mode_line.length();
     m_status_len = status_line.length();
@@ -515,7 +496,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     {
         ColumnCount col = m_dimensions.column - mode_len;
         m_window.move_cursor({status_line_pos, col});
-        m_window.draw_line(m_palette, mode_line, col, m_dimensions.column, default_face);
+        m_window.draw_line(m_palette, mode_line, m_dimensions.column - col, default_face);
     }
     else if (remaining > 2)
     {
@@ -526,7 +507,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
 
         ColumnCount col = m_dimensions.column - remaining + 1;
         m_window.move_cursor({status_line_pos, col});
-        m_window.draw_line(m_palette, trimmed_mode_line, col, m_dimensions.column, default_face);
+        m_window.draw_line(m_palette, trimmed_mode_line, m_dimensions.column - col, default_face);
     }
 
     if (m_set_title)
@@ -814,9 +795,6 @@ void NCursesUI::draw_menu()
     if (not m_menu)
         return;
 
-    m_menu.set_face(m_palette, m_menu.bg, {});
-    m_menu.set_background_color(m_palette, m_menu.bg);
-
     const int item_count = (int)m_menu.items.size();
     if (m_menu.columns == 0)
     {
@@ -825,30 +803,24 @@ void NCursesUI::draw_menu()
         ColumnCount pos = 0;
 
         m_menu.move_cursor({0, 0});
-        m_menu.add_str(m_menu.first_item > 0 ? "< " : "  ");
+        m_menu.draw_line(m_palette, DisplayLine(m_menu.first_item > 0 ? "< " : "  ", {}),
+                         m_menu.size.column, m_menu.bg);
 
         int i = m_menu.first_item;
         for (; i < item_count and pos < win_width; ++i)
         {
             const DisplayLine& item = m_menu.items[i];
             const ColumnCount item_width = item.length();
-            m_menu.draw_line(m_palette, item, 0, win_width - pos,
-                             i == m_menu.selected_item ? m_menu.fg : m_menu.bg);
-
-            if (item_width > win_width - pos)
-                m_menu.add_str("…");
-            else
-            {
-                m_menu.set_face(m_palette, m_menu.bg, {});
-                m_menu.add_str(String{" "});
-            }
+            auto& face = i == m_menu.selected_item ? m_menu.fg : m_menu.bg;
+            m_menu.draw_line(m_palette, item, win_width - pos, face);
+            m_menu.draw_line(m_palette, DisplayLine(item_width > win_width - pos ? "…" : " ", {}),
+                             win_width - pos - item_width, m_menu.bg);
             pos += item_width + 1;
         }
 
-        m_menu.set_face(m_palette, m_menu.bg, {});
-        if (pos <= win_width)
-            m_menu.add_str(String{' ', win_width - pos + 1});
-        m_menu.add_str(i == item_count ? " " : ">");
+        auto end_str = String{' ', pos > win_width ? 0 : win_width - pos + 1} + (i == item_count ? " " : ">");
+        m_menu.draw_line(m_palette, DisplayLine(end_str, {}), m_menu.size.column - pos, m_menu.bg);
+
         m_dirty = true;
         return;
     }
@@ -873,21 +845,19 @@ void NCursesUI::draw_menu()
         for (int col = 0; col < m_menu.columns; ++col)
         {
             int item_idx = (first_col + col) * (int)m_menu.size.line + (int)line;
-            if (item_idx >= item_count)
-                continue;
-
-            const DisplayLine& item = m_menu.items[item_idx];
-            m_menu.draw_line(m_palette, item, 0, column_width,
-                             item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg);
-            const ColumnCount pad = column_width - item.length();
-            m_menu.add_str(String{' ', pad});
+            auto& face = item_idx < item_count and item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg;
+            ColumnCount column = 0;
+            if (item_idx < item_count)
+            {
+                const DisplayLine& item = m_menu.items[item_idx];
+                m_menu.draw_line(m_palette, item, column_width, face);
+                column = item.length();
+            }
+            m_menu.draw_line(m_palette, DisplayLine(String{' ', column_width - column}, {}), column_width - column, face);
         }
-        const bool is_mark = line >= mark_line and
-                             line < mark_line + mark_height;
-        m_menu.clear_to_end_of_line();
+        const bool is_mark = line >= mark_line and line < mark_line + mark_height;
         m_menu.move_cursor({line, m_menu.size.column - 1});
-        m_menu.set_face(m_palette, m_menu.bg, {});
-        m_menu.add_str(is_mark ? "█" : "░");
+        m_menu.draw_line(m_palette, DisplayLine(is_mark ? "█" : "░", {}), 1, m_menu.bg);
     }
     m_dirty = true;
 }
@@ -1212,12 +1182,10 @@ void NCursesUI::info_show(StringView title, StringView content,
 
     m_info.create(anchor, info_box.size);
 
-    m_info.set_background_color(m_palette, face);
     for (auto line = 0_line; line < info_box.size.line; ++line)
     {
         m_info.move_cursor(line);
-        m_info.clear_to_end_of_line();
-        m_info.add_str(info_box.contents[(int)line]);
+        m_info.draw_line(m_palette, DisplayLine(info_box.contents[(int)line], {}), info_box.size.column, face);
     }
     m_dirty = true;
 }
