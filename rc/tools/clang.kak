@@ -7,6 +7,9 @@ provide-module clang %[
 declare-option -docstring "options to pass to the `clang` shell command" \
     str clang_options
 
+declare-option -docstring "directory from which to invoke clang" \
+    str clang_directory
+
 declare-option -hidden str clang_tmp_dir
 declare-option -hidden completions clang_completions
 declare-option -hidden line-specs clang_flags
@@ -37,6 +40,9 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
         # position and a buffer timestamp, only valid completions should be
         # displayed.
         ((
+            if [ -n "$kak_opt_clang_directory" ]; then
+                cd "$kak_opt_clang_directory"
+            fi
             case ${kak_opt_filetype} in
                 c) ft=c ;;
                 cpp) ft=c++ ;;
