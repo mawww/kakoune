@@ -38,11 +38,6 @@ void NCursesUI::Window::create(const DisplayCoord& p, const DisplayCoord& s)
 void NCursesUI::Window::destroy()
 {
     delwin(win);
-    invalidate();
-}
-
-void NCursesUI::Window::invalidate()
-{
     win = nullptr;
     pos = DisplayCoord{};
     size = DisplayCoord{};
@@ -101,25 +96,19 @@ void NCursesUI::Window::draw(Palette& palette, ConstArrayView<DisplayAtom> atoms
     ColumnCount column = 0;
     for (const DisplayAtom& atom : atoms)
     {
-        set_face(atom.face);
-
-        StringView content = atom.content();
+        StringView content = atom.content().substr(0_col, max_width - column);
         if (content.empty())
             continue;
 
-        const auto remaining_columns = max_width - column;
-        if (content.back() == '\n' and
-            content.column_length() - 1 < remaining_columns)
+        set_face(atom.face);
+        if (content.back() == '\n')
         {
             add_str(content.substr(0, content.length()-1));
             waddch(win, ' ');
         }
         else
-        {
-            content = content.substr(0_col, remaining_columns);
             add_str(content);
-            column += content.column_length();
-        }
+        column += content.column_length();
     }
     if (column < max_width)
         wclrtoeol(win);
@@ -579,7 +568,8 @@ Optional<Key> NCursesUI::get_next_key()
     {
         set_signal_handler(SIGWINCH, SIG_DFL);
         set_signal_handler(SIGCONT, SIG_DFL);
-        m_window.invalidate();
+        if (m_window)
+            m_window.destroy();
         m_stdin_watcher.disable();
         return {};
     }

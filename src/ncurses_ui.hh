@@ -99,7 +99,6 @@ private:
     {
         void create(const DisplayCoord& pos, const DisplayCoord& size);
         void destroy();
-        void invalidate();
         void refresh(bool force);
         void move_cursor(DisplayCoord coord);
         void mark_dirty(LineCount pos, LineCount count);
@@ -118,8 +117,6 @@ private:
     termios m_original_termios{};
 
     void set_raw_mode() const;
-
-    void mark_dirty(const Window& win);
 
     struct Menu : Window
     {
