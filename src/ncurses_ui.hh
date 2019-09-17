@@ -15,6 +15,8 @@
 namespace Kakoune
 {
 
+class DisplayAtom;
+
 struct NCursesWin;
 
 class NCursesUI : public UserInterface, public Singleton<NCursesUI>
@@ -101,10 +103,8 @@ private:
         void refresh(bool force);
         void move_cursor(DisplayCoord coord);
         void mark_dirty(LineCount pos, LineCount count);
-        void draw_line(Palette& palette,
-                       const DisplayLine& line,
-                       ColumnCount width,
-                       const Face& default_face);
+        void draw(Palette& palette, ConstArrayView<DisplayAtom> atoms,
+                  ColumnCount width, const Face& default_face);
 
         explicit operator bool() const { return win; }
 

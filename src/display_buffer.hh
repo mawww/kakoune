@@ -30,6 +30,9 @@ public:
     DisplayAtom(String str, Face face)
         : face(face), m_type(Text), m_text(std::move(str)) {}
 
+    explicit DisplayAtom(String str)
+        : DisplayAtom(std::move(str), Face{}) {}
+
     StringView content() const;
     ColumnCount length() const;
 
