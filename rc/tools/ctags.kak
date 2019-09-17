@@ -26,10 +26,11 @@ define-command -params ..1 \
             fi
             cat "$namecache"
         done} \
-    -docstring %{ctags-search [<symbol>]: jump to a symbol's definition
-If no symbol is passed then the current selection is used as symbol name} \
-    ctags-search \
-    %[ evaluate-commands %sh[
+    -docstring %{
+        ctags-search [<symbol>]: jump to a symbol's definition
+        If no symbol is passed then the current selection is used as symbol name
+    } \
+    ctags-search %[ evaluate-commands %sh[
         realpath() { ( cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
         export tagname="${1:-${kak_selection}}"
         eval "set -- $kak_quoted_opt_ctagsfiles"

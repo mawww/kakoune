@@ -23,31 +23,25 @@ String trim_indent(StringView str)
 {
     if (str.empty())
         return {};
-    else if (str[0_byte] != '\n')
-        return trim_whitespaces(str).str();
 
-    str = str.substr(1_byte);
-    const CharCount docstring_length = str.char_length();
+    if (str[0_byte] == '\n')
+        str = str.substr(1_byte);
+    while (not str.empty() and is_blank(str.back()))
+        str = str.substr(0, str.length() - 1);
 
-    CharCount level_indent = 0;
-    while (level_indent < docstring_length
-           and is_horizontal_blank(str[level_indent]))
-        level_indent++;
+    utf8::iterator it{str.begin(), str};
+    while (it != str.end() and is_horizontal_blank(*it))
+        it++;
 
-    if (level_indent >= docstring_length or not level_indent)
-        return trim_whitespaces(str).str();
+    const StringView indent{str.begin(), it.base()};
+    return accumulate(str | split_after<StringView>('\n') | transform([&](auto&& line) {
+            if (line == "\n")
+                return line;
+            else if (not prefix_match(line, indent))
+                throw runtime_error("inconsistent indentation in the string");
 
-    const auto str_indent = str.substr(0, level_indent);
-    auto s = str | split<StringView>('\n') | transform([&](auto&& line) {
-        if (line.empty())
-            return line;
-        else if (not prefix_match(line, str_indent))
-            throw runtime_error("inconsistent indentation in the string");
-
-        return line.substr(str_indent.char_length());
-    });
-
-    return trim_whitespaces(join(s, '\n', false)).str();
+            return line.substr(indent.length());
+        }), String{}, [](String& s, StringView l) -> decltype(auto) { return s += l; });
 }
 
 String escape(StringView str, StringView characters, char escape)
@@ -414,6 +408,7 @@ UnitTest test_string{[]()
     kak_assert(trim_indent("\nno-indent") == "no-indent");
     kak_assert(trim_indent("\n  indent\n  indent") == "indent\nindent");
     kak_assert(trim_indent("\n  indent\n    indent") == "indent\n  indent");
+    kak_assert(trim_indent("\n  indent\n  indent\n   ") == "indent\nindent");
 
     kak_expect_throw(runtime_error, trim_indent("\n  indent\nno-indent"));
 
