@@ -229,20 +229,28 @@ using the built-in `:doc` command.
                     selection then you can use the `P` key.
 
 
-                    =[ REPLACING SELECTIONS
+                    =[ DELETING / REPLACING SELECTIONS
 
                     Text replacement is a two step process in Kakoune, which
-                    involves selecting text to be replaced, and then erasing it
-        .---,       to insert the replacement text. After selections have been
-        | c |       made, you can simply hit the deletion primitive (`d`), then
-        `---'       either enter insert mode to write down the replacement text
-                    (`i`), or stay in command mode to paste the replacement
-                    text stored in the copy register. As deleting and entering
+        .---,       involves selecting text to be replaced, and then erasing it
+        | d |       to insert the replacement text. After selections have been
+        `---'       made, you can simply hit the deletion primitive (`d`), then
+        .---,       either enter insert mode to write down the replacement text
+        | c |       (`i`), or stay in command mode to paste the replacement
+        `---'       text stored in the copy register. As deleting and entering
         .---,       insert mode can be redundant, a primitive that implements
         | R |       deletion followed by insert mode entrance was implemented:
         `---'       `c`. You can also directly replace the current selection
                     with the content of the copy register using a primitive
                     also implemented for that purpose: `R`.
+
+
+                    =[ UNDO / REDO
+
+                    Mistakes or wrong decisions can happen while editing.
+        .---,       To go back to earlier states of the buffer, you can press
+        | u |       the `u` key several times. On the contrary, pressing `U`
+        `---'       allows traveling forward in the history tree.
 
 
 +=-------------------------------=+ ADVANCED +=-------------------------------=+
