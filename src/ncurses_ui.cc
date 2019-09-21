@@ -772,16 +772,32 @@ Optional<Key> NCursesUI::get_next_key()
         return {};
     };
 
+    auto parse_ss3 = [this]() -> Optional<Key> {
+        switch (get_char().value_or((unsigned char)0xff))
+        {
+        case 'A': return Key{Key::Up};
+        case 'B': return Key{Key::Down};
+        case 'C': return Key{Key::Right};
+        case 'D': return Key{Key::Left};
+        case 'F': return Key{Key::End};
+        case 'H': return Key{Key::Home};
+        case 'P': return Key{Key::F1};
+        case 'Q': return Key{Key::F2};
+        case 'R': return Key{Key::F3};
+        case 'S': return Key{Key::F4};
+        default: return {};
+        }
+    };
+
     if (*c != 27)
         return parse_key(*c);
 
     if (auto next = get_char())
     {
         if (*next == '[') // potential CSI
-        {
-            if (auto key = parse_csi())
-                return key;
-        }
+            return parse_csi().value_or(alt('['));
+        if (*next == 'O') // potential SS3
+            return parse_ss3().value_or(alt('O'));
         return alt(parse_key(*next));
     }
     return Key{Key::Escape};
