@@ -2,6 +2,8 @@ declare-option -docstring "shell command run to search for subtext in a file/dir
     str grepcmd 'grep -RHn'
 declare-option -docstring "name of the client in which utilities display information" \
     str toolsclient
+declare-option -docstring "scroll to bottom of results buffer each time grep is run" \
+	bool grepscroll true
 declare-option -hidden int grep_current_line 0
 
 define-command -params .. -file-completion \
@@ -16,8 +18,14 @@ All the optional arguments are forwarded to the grep utility} \
          ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
      fi
 
+     if [ $kak_opt_grepscroll = "true" ]; then
+     	scroll="-scroll"
+     else
+     	scroll=""
+ 	fi
+
      printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
-               edit! -fifo ${output} -scroll *grep*
+               edit! -fifo ${output} ${scroll} *grep*
                set-option buffer filetype grep
                set-option buffer grep_current_line 0
                hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
