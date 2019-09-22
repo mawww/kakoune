@@ -15,6 +15,8 @@ namespace Kakoune
 
 using RemoteBuffer = Vector<char, MemoryDomain::Remote>;
 
+String debug_dump(RemoteBuffer const& buffer);
+
 // Used to disambiguate types
 struct Raw {
     Raw(const RemoteBuffer& d) : data{d} {}

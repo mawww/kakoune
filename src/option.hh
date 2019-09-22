@@ -71,6 +71,7 @@ enum class DebugFlags
     Profile  = 1 << 2,
     Keys     = 1 << 3,
     Commands = 1 << 4,
+    Protocol = 1 << 5,
 };
 
 constexpr bool with_bit_ops(Meta::Type<DebugFlags>) { return true; }
@@ -83,6 +84,7 @@ constexpr auto enum_desc(Meta::Type<DebugFlags>)
         { DebugFlags::Profile, "profile" },
         { DebugFlags::Keys, "keys" },
         { DebugFlags::Commands, "commands" },
+        { DebugFlags::Protocol, "protocol" },
     });
 }
 

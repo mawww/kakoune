@@ -9,6 +9,7 @@
 #include "field_writer.hh"
 #include "file.hh"
 #include "hash_map.hh"
+#include "option_types.hh"
 #include "optional.hh"
 #include "path_manager.hh"
 #include "user_interface.hh"
@@ -76,6 +77,57 @@ enum class MessageType : uint8_t
     Twstat   = 126,
     Rwstat,
 };
+
+constexpr bool with_bit_ops(Meta::Type<MessageType>) { return false; }
+
+constexpr auto enum_desc(Meta::Type<MessageType>)
+{
+    return make_array<EnumDesc<MessageType>, 43>({
+        { MessageType::Unknown,    "Unknown"    },
+        { MessageType::Connect,    "Connect"    },
+        { MessageType::Command,    "Command"    },
+        { MessageType::MenuShow,   "MenuShow"   },
+        { MessageType::MenuSelect, "MenuSelect" },
+        { MessageType::MenuHide,   "MenuHide"   },
+        { MessageType::InfoShow,   "InfoShow"   },
+        { MessageType::InfoHide,   "InfoHide"   },
+        { MessageType::Draw,       "Draw"       },
+        { MessageType::DrawStatus, "DrawStatus" },
+        { MessageType::SetCursor,  "SetCursor"  },
+        { MessageType::Refresh,    "Refresh"    },
+        { MessageType::SetOptions, "SetOptions" },
+        { MessageType::Exit,       "Exit"       },
+        { MessageType::Key,        "Key"        },
+        { MessageType::Tversion,   "Tversion"   },
+        { MessageType::Rversion,   "Rversion"   },
+        { MessageType::Tauth,      "Tauth"      },
+        { MessageType::Rauth,      "Rauth"      },
+        { MessageType::Tattach,    "Tattach"    },
+        { MessageType::Rattach,    "Rattach"    },
+        { MessageType::Terror,     "Terror"     },
+        { MessageType::Rerror,     "Rerror"     },
+        { MessageType::Tflush,     "Tflush"     },
+        { MessageType::Rflush,     "Rflush"     },
+        { MessageType::Twalk,      "Twalk"      },
+        { MessageType::Rwalk,      "Rwalk"      },
+        { MessageType::Topen,      "Topen"      },
+        { MessageType::Ropen,      "Ropen"      },
+        { MessageType::Tcreate,    "Tcreate"    },
+        { MessageType::Rcreate,    "Rcreate"    },
+        { MessageType::Tread,      "Tread"      },
+        { MessageType::Rread,      "Rread"      },
+        { MessageType::Twrite,     "Twrite"     },
+        { MessageType::Rwrite,     "Rwrite"     },
+        { MessageType::Tclunk,     "Tclunk"     },
+        { MessageType::Rclunk,     "Rclunk"     },
+        { MessageType::Tremove,    "Tremove"    },
+        { MessageType::Rremove,    "Rremove"    },
+        { MessageType::Tstat,      "Tstat"      },
+        { MessageType::Rstat,      "Rstat"      },
+        { MessageType::Twstat,     "Twstat"     },
+        { MessageType::Rwstat,     "Rwstat"     },
+    });
+}
 
 typedef FieldWriter<uint32_t> KakouneFieldWriter;
 
@@ -147,6 +199,12 @@ public:
         m_stream.resize(0);
         m_write_pos = 0;
         m_read_pos = header_size;
+    }
+
+    String dump()
+    {
+        kak_assert(ready());
+        return debug_dump(RemoteBuffer{m_stream.begin(), m_stream.begin() + size()});
     }
 
 private:
@@ -777,6 +835,7 @@ private:
     void handle_events(FdEvents events, EventMode mode)
     {
         const int sock = m_socket_watcher.fd();
+        const bool debug_protocol = GlobalScope::instance().options()["debug"].get<DebugFlags>() & DebugFlags::Protocol;
         try
         {
             if (events & FdEvents::Write and send_data(sock, m_send_buffer))
@@ -790,6 +849,13 @@ private:
 
             KakouneFieldReader fields{m_reader};
             auto type = fields.read<MessageType>();
+
+            if (debug_protocol)
+            {
+                write_to_debug_buffer(format("received protocol message ({}):", option_to_string(type)));
+                write_to_debug_buffer(m_reader.dump());
+            }
+
             switch (type)
             {
             case MessageType::Connect:
@@ -950,12 +1016,20 @@ private:
     }
 
     template<typename ...Args>
-    void reply(Args&&... args)
+    void reply(MessageType type, Args&&... args)
     {
-        MsgWriter msg{m_send_buffer};
-        NinePFieldWriter fields{m_send_buffer};
-        fields.write(std::forward<Args>(args)...);
+        const RemoteBuffer::size_type start_size = m_send_buffer.size();
+        {
+            MsgWriter msg{m_send_buffer};
+            NinePFieldWriter fields{m_send_buffer};
+            fields.write(type, std::forward<Args>(args)...);
+        }
         m_socket_watcher.events() |= FdEvents::Write;
+        if (GlobalScope::instance().options()["debug"].get<DebugFlags>() & DebugFlags::Protocol)
+        {
+            write_to_debug_buffer(format("sending protocol message ({}):", option_to_string(type)));
+            write_to_debug_buffer(debug_dump(RemoteBuffer{m_send_buffer.begin()+start_size, m_send_buffer.end()}));
+        }
     }
 
     bool m_negotiating;
