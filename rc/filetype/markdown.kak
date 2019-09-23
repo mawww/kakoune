@@ -43,7 +43,7 @@ evaluate-commands %sh{
   languages="
     awk c cabal clojure coffee cpp css cucumber d diff dockerfile fish
     gas go haml haskell html ini java javascript json julia kak kickstart
-    latex lisp lua makefile markdown moon objc perl pug python ragel
+    latex lisp lua makefile markdown moon objc perl pug purescript python ragel
     ruby rust sass scala scss sh swift toml tupfile typescript yaml sql
   "
   for lang in ${languages}; do
