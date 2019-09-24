@@ -121,6 +121,7 @@ private:
 
     DisplayCoord m_dimensions;
     termios m_original_termios{};
+    int m_original_stdin_flags;
 
     void set_raw_mode() const;
 
