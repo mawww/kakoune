@@ -361,7 +361,6 @@ NCursesUI::NCursesUI()
       }},
       m_assistant(assistant_clippy)
 {
-    m_original_stdin_flags = fcntl(STDIN_FILENO, F_GETFL, 0);
     tcgetattr(STDIN_FILENO, &m_original_termios);
 
     initscr();
@@ -386,7 +385,6 @@ NCursesUI::~NCursesUI()
     m_palette.set_change_colors(false);
     endwin();
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
-    fcntl(STDIN_FILENO, F_SETFL, m_original_stdin_flags);
     set_signal_handler(SIGWINCH, SIG_DFL);
     set_signal_handler(SIGCONT, SIG_DFL);
     set_signal_handler(SIGTSTP, SIG_DFL);
@@ -406,11 +404,9 @@ void NCursesUI::suspend()
     sigaddset(&unblock_sigtstp, SIGTSTP);
     sigprocmask(SIG_UNBLOCK, &unblock_sigtstp, &old_mask);
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
-    fcntl(STDIN_FILENO, F_SETFL,  m_original_stdin_flags);
 
     raise(SIGTSTP); // suspend here
 
-    m_original_stdin_flags = fcntl(STDIN_FILENO, F_GETFL, 0);
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
     set_signal_handler(SIGTSTP, current);
     sigprocmask(SIG_SETMASK, &old_mask, nullptr);
@@ -424,8 +420,6 @@ void NCursesUI::suspend()
 
 void NCursesUI::set_raw_mode() const
 {
-    fcntl(STDIN_FILENO, F_SETFL,  m_original_stdin_flags | O_NONBLOCK);
-
     termios attr = m_original_termios;
     attr.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
     attr.c_oflag &= ~OPOST;
