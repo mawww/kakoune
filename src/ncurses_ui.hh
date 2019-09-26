@@ -101,7 +101,6 @@ private:
         void destroy();
         void refresh(bool force);
         void move_cursor(DisplayCoord coord);
-        void mark_dirty(LineCount pos, LineCount count);
         void draw(Palette& palette, ConstArrayView<DisplayAtom> atoms,
                   ColumnCount width, const Face& default_face);
 

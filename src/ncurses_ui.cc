@@ -114,11 +114,6 @@ void NCursesUI::Window::draw(Palette& palette, ConstArrayView<DisplayAtom> atoms
         wclrtoeol(win);
 }
 
-void NCursesUI::Window::mark_dirty(LineCount pos, LineCount count)
-{
-    wredrawln(win, (int)pos, (int)count);
-}
-
 constexpr int NCursesUI::default_shift_function_key;
 
 static constexpr StringView assistant_cat[] =
@@ -867,7 +862,6 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
 {
     if (m_menu)
     {
-        m_window.mark_dirty(m_menu.pos.line, m_menu.size.line);
         m_menu.destroy();
         m_dirty = true;
     }
@@ -981,7 +975,6 @@ void NCursesUI::menu_hide()
         return;
 
     m_menu.items.clear();
-    m_window.mark_dirty(m_menu.pos.line, m_menu.size.line);
     m_menu.destroy();
     m_dirty = true;
 
@@ -1181,7 +1174,6 @@ void NCursesUI::info_hide()
 {
     if (not m_info)
         return;
-    m_window.mark_dirty(m_info.pos.line, m_info.size.line);
     m_info.destroy();
     m_dirty = true;
 }

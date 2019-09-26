@@ -261,7 +261,7 @@ void Client::redraw_ifn()
     auto cursor = m_input_handler.get_cursor_info();
     m_ui->set_cursor(cursor.first, cursor.second);
 
-    m_ui->refresh(m_ui_pending | Refresh);
+    m_ui->refresh(m_ui_pending & Refresh);
     m_ui_pending = 0;
 }
 
