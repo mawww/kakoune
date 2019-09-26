@@ -17,7 +17,7 @@ All the optional arguments are forwarded to the grep utility} \
      fi
 
      printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
-               edit! -fifo ${output} -scroll *grep*
+               edit! -fifo ${output} *grep*
                set-option buffer filetype grep
                set-option buffer grep_current_line 0
                hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
