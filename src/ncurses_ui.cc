@@ -588,7 +588,7 @@ Optional<Key> NCursesUI::get_next_key()
     if (not c)
         return {};
 
-    auto parse_key = [this](unsigned char c) -> Key {
+    auto parse_key = [](unsigned char c) -> Key {
         if (c == control('m') or c == control('j'))
             return {Key::Return};
         if (c == control('i'))
@@ -733,7 +733,7 @@ Optional<Key> NCursesUI::get_next_key()
         return {};
     };
 
-    auto parse_ss3 = [this]() -> Optional<Key> {
+    auto parse_ss3 = []() -> Optional<Key> {
         switch (get_char().value_or((unsigned char)0xff))
         {
         case 'A': return Key{Key::Up};

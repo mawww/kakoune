@@ -15,7 +15,7 @@
 namespace Kakoune
 {
 
-class DisplayAtom;
+struct DisplayAtom;
 
 struct NCursesWin;
 
