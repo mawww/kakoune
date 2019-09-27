@@ -41,6 +41,9 @@ add-highlighter shared/elixir/comment       region '#'   '$'               fill 
 add-highlighter shared/elixir/double_string/base default-region fill string
 add-highlighter shared/elixir/double_string/interpolation region -recurse \{ \Q#{ \} fill builtin
 
+add-highlighter shared/elixir/code/ regex '\b(def)\s+([^\s;#<,\(\)\[\]]+)' 2:function
+add-highlighter shared/elixir/code/ regex '\b(defp)\s+([^\s;#<,\(\)\[\]]+)' 2:functionPrivate
+
 add-highlighter shared/elixir/code/ regex ':[\w_]+\b' 0:type
 add-highlighter shared/elixir/code/ regex '[\w_]+:' 0:type
 add-highlighter shared/elixir/code/ regex '[A-Z][\w_]+\b' 0:module
