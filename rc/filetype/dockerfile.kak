@@ -34,7 +34,7 @@ add-highlighter shared/dockerfile/double_string region '"' '(?<!\\)(\\\\)*"' fil
 add-highlighter shared/dockerfile/single_string region "'" "'"               fill string
 add-highlighter shared/dockerfile/comment region '#' $ fill comment
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     keywords="ADD|ARG|CMD|COPY|ENTRYPOINT|ENV|EXPOSE|FROM|HEALTHCHECK|LABEL"
     keywords="${keywords}|MAINTAINER|RUN|SHELL|STOPSIGNAL|USER|VOLUME|WORKDIR"

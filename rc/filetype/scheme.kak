@@ -47,7 +47,7 @@ add-highlighter shared/scheme/quoted-form region -recurse "\(" "'\(" "\)" fill v
 add-highlighter shared/scheme/code/ regex (#t|#f) 0:value
 add-highlighter shared/scheme/code/ regex \b[0-9]+\.[0-9]*\b 0:value
 
-evaluate-commands %sh{ exec awk -f - <<'EOF'
+evaluate-commands %cached{ exec awk -f - <<'EOF'
     BEGIN {
         # Primitive expressions that cannot be derived.
         split("define do let let* letrec if cond case and or begin lambda delay delay-force set!", keywords);

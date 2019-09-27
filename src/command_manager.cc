@@ -13,8 +13,12 @@
 #include "shell_manager.hh"
 #include "utils.hh"
 #include "unit_tests.hh"
+#include "file.hh"
 
 #include <algorithm>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
 
 namespace Kakoune
 {
@@ -191,6 +195,8 @@ Token::Type token_type(StringView type_name, bool throw_on_invalid)
         return Token::Type::RawQuoted;
     else if (type_name == "sh")
         return Token::Type::ShellExpand;
+    else if (type_name == "cached")
+        return Token::Type::ShellExpandCached;
     else if (type_name == "reg")
         return Token::Type::RegisterExpand;
     else if (type_name == "opt")
@@ -314,6 +320,22 @@ Vector<String> expand_arobase(ConstArrayView<String> params, std::false_type)
     return {params.begin(), params.end()};
 }
 
+String cache_directory()
+{
+    String cache_home;
+
+    StringView env = getenv("XDG_CACHE_HOME");
+    if (env.empty())
+        cache_home = format("{}/.cache/kak", homedir());
+    else
+        cache_home = format("{}/kak", env);
+
+    if (!file_exists(cache_home))
+        make_directory(cache_home, 01777);
+
+    return cache_home;
+}
+
 template<bool single>
 std::conditional_t<single, String, Vector<String>>
 expand_token(const Token& token, const Context& context, const ShellContext& shell_context)
@@ -323,10 +345,39 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
     switch (token.type)
     {
     case Token::Type::ShellExpand:
+    case Token::Type::ShellExpandCached:
     {
-        auto str = ShellManager::instance().eval(
-            content, context, {}, ShellManager::Flags::WaitForStdout,
-            shell_context).first;
+        String str;
+        String path;
+        if(token.type == Token::Type::ShellExpandCached)
+        {
+            auto hash = hash_value(content);
+            path = real_path(parse_filename(format("{}/{}", cache_directory(), hash)));
+            if(file_exists(path))
+            {
+                MappedFile cached_content{path};
+                str = String(cached_content);
+            }
+        }
+
+        if(str.empty())
+        {
+            str = ShellManager::instance().eval(
+                content, context, {}, ShellManager::Flags::WaitForStdout,
+                shell_context).first;
+
+            if(token.type == Token::Type::ShellExpandCached)
+            {
+                int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+                if (fd == -1)
+                    throw file_access_error(path, strerror(errno));
+
+                {
+                    auto close_fd = on_scope_end([fd]{ close(fd); });
+                    write(fd, str);
+                }
+            }
+        }
 
         int trailing_eol_count = 0;
         for (auto c : str | reverse())

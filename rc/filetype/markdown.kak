@@ -39,7 +39,7 @@ add-highlighter shared/markdown regions
 add-highlighter shared/markdown/inline default-region regions
 add-highlighter shared/markdown/inline/text default-region group
 
-evaluate-commands %sh{
+evaluate-commands %cached{
   languages="
     awk c cabal clojure coffee cpp css cucumber d diff dockerfile fish
     gas go haml haskell html ini java javascript json julia kak kickstart

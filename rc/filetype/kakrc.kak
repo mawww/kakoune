@@ -51,8 +51,12 @@ add-highlighter shared/kakrc/shell5 region -recurse '\{' '(^|\h)\K-shell-script-
 add-highlighter shared/kakrc/shell6 region -recurse '\(' '(^|\h)\K-shell-script-(completion|candidates)\h+%\(' '\)' ref sh
 add-highlighter shared/kakrc/shell7 region -recurse '\[' '(^|\h)\K-shell-script-(completion|candidates)\h+%\[' '\]' ref sh
 add-highlighter shared/kakrc/shell8 region -recurse '<'  '(^|\h)\K-shell-script-(completion|candidates)\h+%<'  '>'  ref sh
+add-highlighter shared/kakrc/shell9 region -recurse '\{' '(^|\h)\K%?%cached\{' '\}' ref sh
+add-highlighter shared/kakrc/shell10 region -recurse '\(' '(^|\h)\K%?%cached\(' '\)' ref sh
+add-highlighter shared/kakrc/shell11 region -recurse '\[' '(^|\h)\K%?%cached\[' '\]' ref sh
+add-highlighter shared/kakrc/shell12 region -recurse '<'  '(^|\h)\K%?%cached<'  '>'  ref sh
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     keywords="edit write write-all kill quit write-quit write-all-quit map unmap alias unalias
               buffer buffer-next buffer-previous delete-buffer add-highlighter remove-highlighter

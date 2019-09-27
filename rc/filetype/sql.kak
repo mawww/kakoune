@@ -35,7 +35,7 @@ add-highlighter shared/sql/comment1 region '--' '$' fill comment
 add-highlighter shared/sql/comment2 region '#' '$' fill comment
 add-highlighter shared/sql/comment3 region '/\*' '\*/' fill comment
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Keywords
     keywords="ALTER|AS|ASC|AUTO_INCREMENT|CHECK|CONSTRAINT|CREATE|DATABASE|DEFAULT|DELETE|DESC|DISTINCT|DROP"
     keywords="${keywords}|EXISTS|FOREIGN KEY|FROM|FULL JOIN|FULL OUTER JOIN|GROUP BY|HAVING|INDEX|INNER JOIN"

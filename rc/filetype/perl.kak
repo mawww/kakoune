@@ -42,7 +42,7 @@ add-highlighter shared/perl/double_string region (?<!\$)(?<!\\)"   (?<!\\)(\\\\)
 add-highlighter shared/perl/single_string region (?<!\$)(?<!\\\\)' (?<!\\)(\\\\)*' fill string
 add-highlighter shared/perl/comment       region (?<!\$)(?<!\\)#   $               fill comment
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     keywords="else lock qw elsif lt qx eq exp ne sub for no my not tr goto and foreach or break exit unless cmp ge package until continue gt while if qq xor do le qr return"
     attributes="END AUTOLOAD BEGIN CHECK UNITCHECK INIT DESTROY

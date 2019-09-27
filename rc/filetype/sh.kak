@@ -28,7 +28,7 @@ add-highlighter shared/sh/heredoc region -match-capture '<<-?''?(\w+)''?' '^\t*(
 
 add-highlighter shared/sh/double_string/fill fill string
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     keywords="alias bind builtin caller case cd command coproc declare do done
               echo elif else enable esac exit fi for function help

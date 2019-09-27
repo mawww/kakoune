@@ -185,7 +185,7 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel 
 ] ]
 
 # Regions definition are the same between c++ and objective-c
-evaluate-commands %sh{
+evaluate-commands %cached{
     for ft in c cpp objc; do
         if [ "${ft}" = "objc" ]; then
             maybe_at='@?'
@@ -212,7 +212,7 @@ evaluate-commands %sh{
 
 # c specific
 add-highlighter shared/c/code/numbers regex %{\b-?(0x[0-9a-fA-F]+|\d+)([uU][lL]{0,2}|[lL]{1,2}[uU]?|[fFdDiI]|([eE][-+]?\d+))?|'((\\.)?|[^'\\])'} 0:value
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     keywords='asm break case continue default do else for goto if return
               sizeof switch while offsetof alignas alignof'
@@ -298,7 +298,7 @@ add-highlighter shared/cpp/code/ regex %{(?i)(?<!\.)\b0x([\da-f]('?[\da-f]+)*)?\
 # character literals (no multi-character literals)
 add-highlighter shared/cpp/code/char regex %{(\b(u8|u|U|L)|\B)'((\\.)|[^'\\])'\B} 0:value
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     keywords='alignas alignof and and_eq asm bitand bitor break case catch
               compl const_cast continue decltype delete do dynamic_cast
@@ -330,7 +330,7 @@ evaluate-commands %sh{
 }
 
 # c and c++ compiler macros
-evaluate-commands %sh{
+evaluate-commands %cached{
     builtin_macros="__cplusplus|__STDC_HOSTED__|__FILE__|__LINE__|__DATE__|__TIME__|__STDCPP_DEFAULT_NEW_ALIGNMENT__"
 
     printf %s "
@@ -342,7 +342,7 @@ evaluate-commands %sh{
 # objective-c specific
 add-highlighter shared/objc/code/number regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     keywords='break case continue default do else for goto if return switch
               while'

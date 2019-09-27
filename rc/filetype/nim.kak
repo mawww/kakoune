@@ -45,7 +45,7 @@ add-highlighter shared/nim/string/fill fill string
 add-highlighter shared/nim/comment/fill fill comment
 add-highlighter shared/nim/comment_line/fill fill comment
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     opchars='[=+-/<>@$~&%|!?^.:\\*]'
     opnocol='[=+-/<>@$~&%|!?^.\\*]'

@@ -70,7 +70,7 @@ add-highlighter shared/ruby/backtick/interpolation region -recurse \{ \Q#{ \} fi
 add-highlighter shared/ruby/regex/ default-region fill meta
 add-highlighter shared/ruby/regex/interpolation region -recurse \{ \Q#{ \} fill meta
 
-evaluate-commands %sh{
+evaluate-commands %cached{
     # Grammar
     # Keywords are collected searching for keywords at
     # https://github.com/ruby/ruby/blob/trunk/parse.y
