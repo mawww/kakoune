@@ -44,6 +44,14 @@ add-highlighter shared/elixir/double_string/interpolation region -recurse \{ \Q#
 add-highlighter shared/elixir/code/ regex '\b(def)\s+([^\s;#<,\(\)\[\]]+)' 2:function
 add-highlighter shared/elixir/code/ regex '\b(defp)\s+([^\s;#<,\(\)\[\]]+)' 2:functionPrivate
 
+add-highlighter shared/elixir/code/ regex '(^|\s+)(!)' 2:operator
+add-highlighter shared/elixir/code/ regex '=' 0:operator
+add-highlighter shared/elixir/code/ regex '>' 0:operator
+add-highlighter shared/elixir/code/ regex '<' 0:operator
+add-highlighter shared/elixir/code/ regex '-' 0:operator
+add-highlighter shared/elixir/code/ regex '\|' 0:operator
+add-highlighter shared/elixir/code/ regex '(\.|\\\\|::|^|&|\+|\*|/|~~~|@)' 0:operator
+
 add-highlighter shared/elixir/code/ regex ':[\w_]+\b' 0:type
 add-highlighter shared/elixir/code/ regex '[\w_]+:' 0:type
 add-highlighter shared/elixir/code/ regex '[A-Z][\w_]+\b' 0:module
@@ -52,7 +60,6 @@ add-highlighter shared/elixir/code/ regex '\b_\b' 0:default
 add-highlighter shared/elixir/code/ regex '\b_[\w_]+\b' 0:default
 add-highlighter shared/elixir/code/ regex '~[a-zA-Z]\(.*\)' 0:string
 add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(true|false|nil)([\s;#<,\(\)\[\]]|$)' 2:value
-add-highlighter shared/elixir/code/ regex (->|<-|<<|>>|=>) 0:builtin
 add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(require|alias|use|import)([\s;#<,\(\)\[\]]|$)' 2:keyword
 add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(__MODULE__|__DIR__|__ENV__|__CALLER__)([\s;#<,\(\)\[\]]|$)' 2:value
 add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(def|defp|defmacro|defmacrop|defstruct|defmodule|defimpl|defprotocol|defoverridable)([\s;#<,\(\)\[\]]|$)' 2:keyword
