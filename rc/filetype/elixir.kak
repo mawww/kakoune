@@ -52,10 +52,11 @@ add-highlighter shared/elixir/code/ regex '-' 0:operator
 add-highlighter shared/elixir/code/ regex '\|' 0:operator
 add-highlighter shared/elixir/code/ regex '(\.|\\\\|::|^|&|\+|\*|/|~~~|@)' 0:operator
 
+add-highlighter shared/elixir/code/ regex '[A-Z][0-9A-Za-z_-]*' 0:module
+add-highlighter shared/elixir/code/ regex '\.[A-Z][0-9A-Za-z_-]*' 0:module
+
 add-highlighter shared/elixir/code/ regex ':[\w_]+\b' 0:type
 add-highlighter shared/elixir/code/ regex '[\w_]+:' 0:type
-add-highlighter shared/elixir/code/ regex '[A-Z][\w_]+\b' 0:module
-add-highlighter shared/elixir/code/ regex '(:[\w_]+)(\.)' 1:module
 add-highlighter shared/elixir/code/ regex '\b_\b' 0:default
 add-highlighter shared/elixir/code/ regex '\b_[\w_]+\b' 0:default
 add-highlighter shared/elixir/code/ regex '~[a-zA-Z]\(.*\)' 0:string
