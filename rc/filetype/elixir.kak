@@ -66,6 +66,7 @@ add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(def|defp|defmacro
 add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(fn|do|end|when|case|if|else|unless|var!|for|cond|quote|unquote|receive|with|raise|reraise|try|catch)([\s;#<,\(\)\[\]]|$)' 2:keyword
 add-highlighter shared/elixir/code/ regex '@[\w_]+\b' 0:attribute
 add-highlighter shared/elixir/code/ regex '\b\d+[\d_]*\b' 0:value
+add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(\?\w)' 2:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
