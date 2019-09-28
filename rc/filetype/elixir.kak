@@ -51,12 +51,12 @@ add-highlighter shared/elixir/code/ regex '(:[\w_]+)(\.)' 1:module
 add-highlighter shared/elixir/code/ regex '\b_\b' 0:default
 add-highlighter shared/elixir/code/ regex '\b_[\w_]+\b' 0:default
 add-highlighter shared/elixir/code/ regex '~[a-zA-Z]\(.*\)' 0:string
-add-highlighter shared/elixir/code/ regex \b(true|false|nil)\b 0:value
+add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(true|false|nil)([\s;#<,\(\)\[\]]|$)' 2:value
 add-highlighter shared/elixir/code/ regex (->|<-|<<|>>|=>) 0:builtin
-add-highlighter shared/elixir/code/ regex \b(require|alias|use|import)\b 0:keyword
-add-highlighter shared/elixir/code/ regex \b(__MODULE__|__DIR__|__ENV__|__CALLER__)\b 0:value
-add-highlighter shared/elixir/code/ regex \b(def|defp|defmacro|defmacrop|defstruct|defmodule|defimpl|defprotocol|defoverridable)\b 0:keyword
-add-highlighter shared/elixir/code/ regex \b(fn|do|end|when|case|if|else|unless|var!|for|cond|quote|unquote|receive|with|raise|reraise|try|catch)\b 0:keyword
+add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(require|alias|use|import)([\s;#<,\(\)\[\]]|$)' 2:keyword
+add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(__MODULE__|__DIR__|__ENV__|__CALLER__)([\s;#<,\(\)\[\]]|$)' 2:value
+add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(def|defp|defmacro|defmacrop|defstruct|defmodule|defimpl|defprotocol|defoverridable)([\s;#<,\(\)\[\]]|$)' 2:keyword
+add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(fn|do|end|when|case|if|else|unless|var!|for|cond|quote|unquote|receive|with|raise|reraise|try|catch)([\s;#<,\(\)\[\]]|$)' 2:keyword
 add-highlighter shared/elixir/code/ regex '@[\w_]+\b' 0:attribute
 add-highlighter shared/elixir/code/ regex '\b\d+[\d_]*\b' 0:value
 
