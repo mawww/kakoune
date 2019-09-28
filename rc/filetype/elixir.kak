@@ -63,7 +63,7 @@ add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(true|false|nil)([
 add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(require|alias|use|import)([\s;#<,\(\)\[\]]|$)' 2:keyword
 add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(__MODULE__|__DIR__|__ENV__|__CALLER__)([\s;#<,\(\)\[\]]|$)' 2:value
 add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(def|defp|defmacro|defmacrop|defstruct|defmodule|defimpl|defprotocol|defoverridable)([\s;#<,\(\)\[\]]|$)' 2:keyword
-add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(fn|do|end|when|case|if|else|unless|var!|for|cond|quote|unquote|receive|with|raise|reraise|try|catch)([\s;#<,\(\)\[\]]|$)' 2:keyword
+add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(fn|do|end|when|case|if|else|unless|var!|for|cond|quote|unquote|receive|with|raise|reraise|try|catch|and|or|in|not)([\s;#<,\(\)\[\]]|$)' 2:keyword
 add-highlighter shared/elixir/code/ regex '@[\w_]+\b' 0:attribute
 add-highlighter shared/elixir/code/ regex '\b\d+[\d_]*\b' 0:value
 add-highlighter shared/elixir/code/ regex '([\s;<,\(\)\[\]]|^)(\?\w)' 2:value
