@@ -341,6 +341,16 @@ struct CommandDesc
     void (*func)(const ParametersParser&, Context&, const ShellContext&);
 };
 
+Buffer* get_file_buffer(Context& context, String file, Buffer::Flags flags, bool file_must_exist)
+{
+    Buffer* buffer = file_must_exist ? open_file_buffer(file, flags)
+                                     : open_or_create_file_buffer(file, flags);
+    if (buffer->flags() & Buffer::Flags::New)
+        context.print_status({ format("new file '{}'", file), context.faces()["StatusLine"] });
+    buffer->flags() &= ~Buffer::Flags::NoHooks;
+    return buffer;
+}
+
 template<bool force_reload>
 void edit(const ParametersParser& parser, Context& context, const ShellContext&)
 {
@@ -387,17 +397,16 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
     else
     {
         if (auto fifo = parser.get_switch("fifo"))
+        {
             buffer = open_fifo(name, *fifo, flags, (bool)parser.get_switch("scroll"));
+            buffer->flags() &= ~Buffer::Flags::NoHooks;
+        }
         else if (not buffer)
         {
-            buffer = parser.get_switch("existing") ? open_file_buffer(name, flags)
-                                                   : open_or_create_file_buffer(name, flags);
-            if (buffer->flags() & Buffer::Flags::New)
-                context.print_status({ format("new file '{}'", name),
-                                       context.faces()["StatusLine"] });
+            bool file_must_exist = parser.get_switch("existing") ? true : false;
+            buffer = get_file_buffer(context, name, flags, file_must_exist);
         }
 
-        buffer->flags() &= ~Buffer::Flags::NoHooks;
         if (parser.get_switch("readonly"))
             buffer->flags() |= Buffer::Flags::ReadOnly;
     }
@@ -466,10 +475,7 @@ void convert_scratch_to_file_buffer(Context& context, String filename)
     Buffer* file_buffer = buffer_manager.get_buffer_ifp(filename);
     if (not file_buffer)
     {
-        file_buffer = open_or_create_file_buffer(filename, flags);
-        if (file_buffer->flags() & Buffer::Flags::New)
-            context.print_status({ format("new file '{}'", filename), context.faces()["StatusLine"] });
-        file_buffer->flags() &= ~Buffer::Flags::NoHooks;
+        file_buffer = get_file_buffer(context, filename, flags, false);
     }
     else
         reload_file_buffer(*file_buffer);
