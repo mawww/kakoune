@@ -470,15 +470,15 @@ const CommandDesc force_edit_cmd = {
 
 void convert_scratch_to_file_buffer(Context& context, String filename)
 {
-    const auto flags = context.hooks_disabled() ? Buffer::Flags::NoHooks : Buffer::Flags::None;
     auto& buffer_manager = BufferManager::instance();
     Buffer* file_buffer = buffer_manager.get_buffer_ifp(filename);
-    if (not file_buffer)
+    if (file_buffer)
+        reload_file_buffer(*file_buffer);
+    else
     {
+        const auto flags = context.hooks_disabled() ? Buffer::Flags::NoHooks : Buffer::Flags::None;
         file_buffer = get_file_buffer(context, filename, flags, false);
     }
-    else
-        reload_file_buffer(*file_buffer);
     buffer_manager.delete_buffer(context.buffer());
     context.change_buffer(*file_buffer);
 }
