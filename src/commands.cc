@@ -459,6 +459,24 @@ const CommandDesc force_edit_cmd = {
     edit<true>
 };
 
+void convert_scratch_to_file_buffer(Context& context, String filename)
+{
+    const auto flags = context.hooks_disabled() ? Buffer::Flags::NoHooks : Buffer::Flags::None;
+    auto& buffer_manager = BufferManager::instance();
+    Buffer* file_buffer = buffer_manager.get_buffer_ifp(filename);
+    if (not file_buffer)
+    {
+        file_buffer = open_or_create_file_buffer(filename, flags);
+        if (file_buffer->flags() & Buffer::Flags::New)
+            context.print_status({ format("new file '{}'", filename), context.faces()["StatusLine"] });
+        file_buffer->flags() &= ~Buffer::Flags::NoHooks;
+    }
+    else
+        reload_file_buffer(*file_buffer);
+    buffer_manager.delete_buffer(context.buffer());
+    context.change_buffer(*file_buffer);
+}
+
 const ParameterDesc write_params{
     { { "sync", { false, "force the synchronization of the file onto the filesystem" } } },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
@@ -483,6 +501,9 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
     context.hooks().run_hook(Hook::BufWritePre, effective_filename, context);
     write_buffer_to_file(buffer, effective_filename, mode, flags);
     context.hooks().run_hook(Hook::BufWritePost, effective_filename, context);
+
+    if (filename and !(buffer.flags() & Buffer::Flags::File))
+        convert_scratch_to_file_buffer(context, effective_filename);
 }
 
 template<bool force = false>
