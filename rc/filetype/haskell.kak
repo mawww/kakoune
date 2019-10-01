@@ -14,7 +14,7 @@ hook global BufCreate .*[.](hs) %{
 hook global WinSetOption filetype=haskell %{
     require-module haskell
 
-    set-option window extra_word_chars '_' "'"
+    set-option buffer extra_word_chars '_' "'"
     hook window ModeChange insert:.* -group haskell-trim-indent  haskell-trim-indent
     hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
 

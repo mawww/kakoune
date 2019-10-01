@@ -10,16 +10,10 @@ hook global BufCreate .*[.](clj|cljc|cljs|cljx|edn) %{
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-hook global WinSetOption filetype=clojure %[
+hook global WinSetOption filetype=clojure %{
     require-module clojure
-
-    set-option window static_words %opt{clojure_static_words}
-
-    hook window ModeChange insert:.* -group clojure-trim-indent  clojure-trim-indent
-    hook window InsertChar \n -group clojure-indent clojure-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window clojure-.+ }
-]
+    clojure-configure-window
+}
 
 hook -group clojure-highlight global WinSetOption filetype=clojure %{
     add-highlighter window/clojure ref clojure
@@ -47,10 +41,6 @@ add-highlighter shared/clojure/string  region '(?<!\\)(?:\\\\)*\K"' '(?<!\\)(?:\
 add-highlighter shared/clojure/code/ regex \b(nil|true|false)\b 0:value
 add-highlighter shared/clojure/code/ regex \
     \\(?:space|tab|newline|return|backspace|formfeed|u[0-9a-fA-F]{4}|o[0-3]?[0-7]{1,2}|.)\b 0:string
-
-hook global WinSetOption filetype=clojure %{
-    set-option window extra_word_chars '_' . / * ? + - < > ! : "'"
-}
 
 evaluate-commands %sh{
     exec awk -f - <<'EOF'
@@ -187,6 +177,16 @@ EOF
 
 # Commands
 # ‾‾‾‾‾‾‾‾
+
+define-command -hidden clojure-configure-window %{
+    set-option window static_words %opt{clojure_static_words}
+
+    hook window ModeChange insert:.* -group clojure-trim-indent  clojure-trim-indent
+    hook window InsertChar \n -group clojure-indent clojure-indent-on-new-line
+
+    set-option buffer extra_word_chars '_' . / * ? + - < > ! : "'"
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window clojure-.+ }
+}
 
 define-command -hidden clojure-trim-indent lisp-trim-indent
 

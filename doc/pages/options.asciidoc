@@ -235,7 +235,8 @@ are exclusively available to built-in options.
 
 *extra_word_chars* `codepoint-list`::
     a list of all additional codepoints that should be considered
-    as word character.
+    as word character. This must be set on the buffer, not the window,
+    for word completion to offer words containing these codepoints.
 
 *matching_pairs* `codepoint-list`::
     _default_ ( ) { } [ ] < > +
