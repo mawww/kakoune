@@ -84,6 +84,12 @@ add-highlighter shared/haskell/code/ regex \b(forall)\b[^.\n]*?(\.) 1:keyword 2:
 add-highlighter shared/haskell/code/ regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
 # this has to come after operators so '-' etc is correct
 
+# matches function names in type signatures
+add-highlighter shared/haskell/code/ regex ^\h*(?:(?:where|let|default)\h+)?([_a-z]['\w]*)\s+::\s 1:meta
+
+# matches quasiquotes
+add-highlighter shared/haskell/quasiquote region \[\b[\w]['\w]*\| \|\] fill string
+
 # Commands
 # ‾‾‾‾‾‾‾‾
 
