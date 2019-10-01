@@ -396,7 +396,7 @@ void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
             root.register_path({"global", env_var.str}, global_var_file_type);
         if (env_var.scopes & EnvVarDesc::Scopes::Buffer)
             root.register_path({"buffers", "$buffer_id", env_var.str}, buffer_var_file_type);
-        if (env_var.scopes & EnvVarDesc::Scopes::Window)
+        if (env_var.scopes & EnvVarDesc::Scopes::Buffer or env_var.scopes & EnvVarDesc::Scopes::Window)
             root.register_path({"windows", "$client_name", env_var.str}, window_var_file_type);
     }
     root.register_path({"global", "$opt"}, global_var_file_type);
