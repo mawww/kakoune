@@ -3,6 +3,7 @@
 #include "buffer_manager.hh"
 #include "client_manager.hh"
 #include "field_writer.hh"
+#include "register_manager.hh"
 #include "remote.hh"
 
 namespace Kakoune
@@ -93,14 +94,35 @@ struct OptNameGlobType : public GlobType
     }
 } opt_name_glob_type{};
 
+struct RegNameGlobType : public GlobType
+{
+    bool matches(StringView name, StringView text) const
+    {
+        if (text.length() < 4)
+            return false;
+        if (text.substr(0_byte, 4_byte) != "reg_")
+            return false;
+        auto reg_name = text.substr(4_byte);
+        auto it = find_if(RegisterManager::instance(),
+                          [&reg_name](auto& item) { return RegisterManager::name(item.key) == reg_name; });
+        return it != RegisterManager::instance().end();
+    }
+
+    Vector<String> expand(StringView name) const
+    {
+        Vector<String> res;
+        for (auto& register_entry : RegisterManager::instance())
+            res.push_back(format("reg_{}", RegisterManager::name(register_entry.key)));
+        return res;
+    }
+} reg_name_glob_type{};
+
 GlobType* GlobType::resolve(StringView name)
 {
-    if (name == "$buffer_id")
-        return &buffer_id_glob_type;
-    if (name == "$client_name")
-        return &client_name_glob_type;
-    if (name == "$opt")
-        return &opt_name_glob_type;
+    if (name == "$buffer_id")   return &buffer_id_glob_type;
+    if (name == "$client_name") return &client_name_glob_type;
+    if (name == "$opt")         return &opt_name_glob_type;
+    if (name == "$reg")         return &reg_name_glob_type;
     return &literal_glob_type;
 }
 
@@ -402,6 +424,7 @@ void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
     root.register_path({"global", "$opt"}, global_var_file_type);
     root.register_path({"buffers", "$buffer_id", "$opt"}, buffer_var_file_type);
     root.register_path({"windows", "$client_name", "$opt"}, window_var_file_type);
+    root.register_path({"windows", "$client_name", "$reg"}, window_var_file_type);
 }
 
 }

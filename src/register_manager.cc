@@ -41,6 +41,14 @@ Register& RegisterManager::operator[](Codepoint c) const
     return *(it->value);
 }
 
+String RegisterManager::name(Codepoint c)
+{
+    for (auto& entry : reg_names)
+        if (entry.value == c)
+            return entry.key;
+    return String{c};
+}
+
 void RegisterManager::add_register(Codepoint c, std::unique_ptr<Register> reg)
 {
     auto& reg_ptr = m_registers[c];

@@ -149,6 +149,12 @@ public:
     void add_register(Codepoint c, std::unique_ptr<Register> reg);
     CandidateList complete_register_name(StringView prefix, ByteCount cursor_pos) const;
 
+    static String name(Codepoint c);
+
+    using const_iterator = HashMap<Codepoint, std::unique_ptr<Register>, MemoryDomain::Registers>::const_iterator;
+    const_iterator begin() const { return m_registers.begin(); }
+    const_iterator end() const { return m_registers.end(); }
+
 protected:
     HashMap<Codepoint, std::unique_ptr<Register>, MemoryDomain::Registers> m_registers;
 };
