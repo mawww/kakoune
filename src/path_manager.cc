@@ -18,6 +18,34 @@ public:
     virtual Vector<String> expand(StringView name) const = 0;
 };
 
+template<typename BaseGlobType>
+struct GlobTypeWithPrefix : public GlobType
+{
+    GlobTypeWithPrefix(const char* prefix)
+        : m_prefix{prefix}
+    {}
+
+    bool matches(StringView name, StringView text) const
+    {
+        if (text.length() < m_prefix.length())
+            return false;
+        if (text.substr(0_byte, m_prefix.length()) != m_prefix)
+            return false;
+        return m_base_glob_type.matches(name, text.substr(m_prefix.length()));
+    }
+
+    Vector<String> expand(StringView name) const
+    {
+        return m_base_glob_type.expand(name)
+            | transform([this](const String& name) -> String { return format("{}{}", m_prefix, name); })
+            | gather<Vector<String>>();
+    }
+
+private:
+    BaseGlobType m_base_glob_type{};
+    StringView m_prefix;
+};
+
 struct LiteralGlobType : public GlobType
 {
     bool matches(StringView name, StringView text) const
@@ -75,36 +103,26 @@ struct ClientNameGlobType : public GlobType
     }
 } client_name_glob_type{};
 
-struct OptNameGlobType : public GlobType
+struct OptionNameGlobType : public GlobType
 {
     bool matches(StringView name, StringView text) const
     {
-        if (text.length() < 4)
-            return false;
-        if (text.substr(0_byte, 4_byte) != "opt_")
-            return false;
-        return GlobalScope::instance().option_registry().option_exists(text.substr(4_byte));
+        return GlobalScope::instance().option_registry().option_exists(text);
     }
 
     Vector<String> expand(StringView name) const
     {
         return GlobalScope::instance().option_registry().complete_option_name("", 0_byte)
-            | transform([](const String& name) -> String { return format("opt_{}", name); })
             | gather<Vector<String>>();
     }
-} opt_name_glob_type{};
+};
 
-struct RegNameGlobType : public GlobType
+struct RegisterNameGlobType : public GlobType
 {
     bool matches(StringView name, StringView text) const
     {
-        if (text.length() < 4)
-            return false;
-        if (text.substr(0_byte, 4_byte) != "reg_")
-            return false;
-        auto reg_name = text.substr(4_byte);
         auto it = find_if(RegisterManager::instance(),
-                          [&reg_name](auto& item) { return RegisterManager::name(item.key) == reg_name; });
+                          [&text](auto& item) { return RegisterManager::name(item.key) == text; });
         return it != RegisterManager::instance().end();
     }
 
@@ -112,10 +130,13 @@ struct RegNameGlobType : public GlobType
     {
         Vector<String> res;
         for (auto& register_entry : RegisterManager::instance())
-            res.push_back(format("reg_{}", RegisterManager::name(register_entry.key)));
+            res.push_back(RegisterManager::name(register_entry.key));
         return res;
     }
-} reg_name_glob_type{};
+};
+
+GlobTypeWithPrefix<OptionNameGlobType> opt_name_glob_type{"opt_"};
+GlobTypeWithPrefix<RegisterNameGlobType> reg_name_glob_type{"reg_"};
 
 GlobType* GlobType::resolve(StringView name)
 {
