@@ -36,15 +36,13 @@ add-highlighter shared/elm/string        region         '"'     (?<!\\)(\\\\)*" 
 add-highlighter shared/elm/line_comment  region         (--) $                        fill comment
 add-highlighter shared/elm/comment       region         -recurse \{- \{-   -\}        fill comment
 
-add-highlighter shared/elm/code/ regex (\b)+([A-Z]+[^\s]*)                                               0:type 
-add-highlighter shared/elm/code/ regex (\b)+([a-z]+[^\s]*)                                               0:variable
-add-highlighter shared/elm/code/ regex (^[a-z]+[^\s]*)                                                   0:function
-add-highlighter shared/elm/code/ regex "-?\b[0-9]*\.?[0-9]+"                                             0:value
-add-highlighter shared/elm/code/ regex \B(\+|\+\+|/|//|-|\*|=|==|&&|\|\||<\||\|>|->)\B                   0:operator
-add-highlighter shared/elm/code/ regex \b(import|exposing|as|module|where)\b                             0:meta
-add-highlighter shared/elm/code/ regex (\b(type|alias|if|then|else|case|of|let|in|infix|->)\b)|(\B(:)\B) 0:keyword
-
-
+add-highlighter shared/elm/code/ regex \b([A-Z]+[^\s]*)\b                                                  0:type 
+add-highlighter shared/elm/code/ regex \b([a-z]+[^\s]*)\b                                                  0:variable
+add-highlighter shared/elm/code/ regex \b(^[a-z]+[^\s]*)\b                                                 0:function
+add-highlighter shared/elm/code/ regex "-?\b[0-9]*\.?[0-9]+"                                               0:value
+add-highlighter shared/elm/code/ regex \B(\+|\+\+|\*|/|//|-|=|==|&&|\|\||<\||\|>)\B                        0:operator
+add-highlighter shared/elm/code/ regex \b(import|exposing|as|module|where)\b                               0:meta
+add-highlighter shared/elm/code/ regex (\b(type|alias|if|then|else|case|of|let|in|infix|_)\b)|(\B(->|:)\B) 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
