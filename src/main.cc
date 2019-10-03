@@ -1072,12 +1072,12 @@ int main(int argc, char* argv[])
                 auto colon = find(name, ':');
                 if (auto line = str_to_int_ifp({name.begin()+1, colon}))
                 {
-                    init_coord = BufferCoord{
+                    init_coord = std::max<BufferCoord>({0,0}, {
                         *line - 1,
                         colon != name.end() ?
                             str_to_int_ifp({colon+1, name.end()}).value_or(1) - 1
                           : 0
-                    };
+                    });
                     continue;
                 }
             }
