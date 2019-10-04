@@ -163,6 +163,10 @@ finished_commands() {
             '
 }
 
+_9p() {
+  9 9p -a "$(session_path "$session")" "$@"
+}
+
 fail() {
   if [ $failed -ne 0 ]; then
     return
@@ -210,7 +214,7 @@ fs() {
     case "$1" in
     -contains)
       shift
-      fs_contents="$(9 9p -a $(session_path "$session") read "$filename")"
+      fs_contents="$(_9p read "$filename")"
       if [ ! "$fs_contents" = "$1" ]; then
         fail "* ${filename} did not contain what we expected:" \
           "  ${green}- $1${none}" \
@@ -218,7 +222,7 @@ fs() {
       fi
       ;;
     -exists)
-      if ! 9 9p -a $(session_path "$session") stat "$filename" >/dev/null 2>/dev/null; then
+      if ! _9p stat "$filename" >/dev/null 2>/dev/null; then
         fail "* expected ${filename} to exist, but it does not."
       fi
       ;;

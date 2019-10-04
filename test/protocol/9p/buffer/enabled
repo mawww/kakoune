@@ -1,0 +1,2 @@
+#!/bin/sh
+command -v 9 >/dev/null

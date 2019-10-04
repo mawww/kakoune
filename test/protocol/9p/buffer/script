@@ -1,0 +1,6 @@
+ui_out '{ "jsonrpc": "2.0", "method": "set_ui_options", "params": [{}] }'
+fs buffers -exists
+buffer=$(_9p ls buffers |head -n 1)
+fs buffers/${buffer} -exists
+fs buffers/${buffer}/bufname -exists
+fs buffers/${buffer}/opt_BOM -contains "none"
