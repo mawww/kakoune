@@ -21,13 +21,6 @@ main() {
         }
         try %{ exec -with-maps -with-hooks "%sh{cat cmd}" }
         exec -with-hooks <c-l>
-        eval -buffer *debug* write debug
-        nop %sh{
-          printf %s\\n "$kak_quoted_selections"      > selections
-          printf %s\\n "$kak_quoted_selections_desc" > state
-        }
-        write out
-        quit!
       '
 
   root=$PWD
@@ -54,23 +47,40 @@ main() {
       continue
     fi
 
-    ui_in="${root}/${dir}/ui-in"
-    [ ! -f $ui_in ] && ui_in="/dev/null"
+    env_vars=$(cd "${root}/${dir}" && ls -1 kak_* 2>/dev/null)
 
+    mkfifo ui-in ui-out
     number_tests=$(($number_tests + 1))
     touch in; cp in out
     session="kak-tests"
     rm -f "$(session_path $session)"
-    $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > ui-out < "${ui_in}"
-    retval=$?
+    $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" >ui-out <ui-in &
+    kakpid=$!
+
     failed=0
+    exec 4<ui-out 3>ui-in
+
+    if [ -f "${root}/${dir}/script" ]; then
+      . "${root}/${dir}/script"
+    else
+      # At least wait for kak to initialize so we don't deadlock
+      ui_out '{ "jsonrpc": "2.0", "method": "set_ui_options", "params": [{}] }'
+    fi
+
+    finished_commands |$root/../src/kak -p "$session" 2>/dev/null
+
+    wait $kakpid
+    retval=$?
+
+    exec 3>&- 4<&-
+
     if [ ! -e error ]; then # failure not expected
       if [ $retval -ne 0 ]; then
         printf "${red}$indent%s${none}\n" "$name"
         echo "$indent  Kakoune returned error $retval"
         failed=1
       else
-        for file in out selections state ui-out; do
+        for file in out $env_vars; do
           if [ -f $root/$dir/$file ] && ! cmp -s $root/$dir/$file $file; then
             if [ $failed -eq 0 ]; then
               printf "${red}$indent%s${none}\n" "$name"
@@ -135,6 +145,51 @@ show_diff() {
       *) color=$none ;;
     esac
     printf "${color}%s${none}\n" "$line"
+  done
+}
+
+finished_commands() {
+  printf %s 'eval -client client0 %{
+               eval -buffer *debug* write debug
+               nop %sh{
+            '
+  for env_var in $env_vars; do
+    printf 'printf %%s\\\\n "$%s" >%s\n' "$env_var" "$env_var"
+  done
+  printf %s '  }
+               write out
+               quit!
+             }
+            '
+}
+
+# Script Assertions ├───────────────────────────────────────────────────────────
+
+ui_in() {
+  printf '%s\n' "$1" >&3
+}
+
+ui_out() {
+  while [ $# -ne 0 ]; do
+    case "$1" in
+    -ignore)
+      shift
+      skip_count="$1"
+      while [ $skip_count -gt 0 ]; do
+        read -r event <&4
+        skip_count=$(( skip_count - 1 ))
+      done
+      ;;
+    *)
+      read -r event <&4
+      if [ ! "$1" = "$event" ] && [ $failed -eq 0 ]; then
+        printf "${red}$indent%s${none}\n" "$name"
+        printf "${indent}  - %s\n${indent}  ${red}+ %s${none}\n" "$2" "$event"
+        failed=1
+      fi
+      ;;
+    esac
+    shift
   done
 }
 
