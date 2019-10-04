@@ -1,0 +1,4 @@
+ui_out '{ "jsonrpc": "2.0", "method": "set_ui_options", "params": [{}] }'
+fs global/version -exists
+fs global/session -contains "kak-tests"
+fs global/opt_BOM -contains "none"

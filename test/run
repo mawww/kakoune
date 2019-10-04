@@ -163,6 +163,18 @@ finished_commands() {
             '
 }
 
+fail() {
+  if [ $failed -ne 0 ]; then
+    return
+  fi
+  failed=1
+  printf "${red}$indent%s${none}\n" "$name"
+  while [ $# -ne 0 ]; do
+    printf "${indent}  $1\n"
+    shift
+  done
+}
+
 # Script Assertions ├───────────────────────────────────────────────────────────
 
 ui_in() {
@@ -182,11 +194,36 @@ ui_out() {
       ;;
     *)
       read -r event <&4
-      if [ ! "$1" = "$event" ] && [ $failed -eq 0 ]; then
-        printf "${red}$indent%s${none}\n" "$name"
-        printf "${indent}  ${red}- %s\n${indent}  ${green}+ %s${none}\n" "$1" "$event"
-        failed=1
+      if [ ! "$1" = "$event" ]; then
+        fail "${red}- $2" "${green}+ ${event}${none}"
       fi
+      ;;
+    esac
+    shift
+  done
+}
+
+fs() {
+  filename="$1"
+  shift
+  while [ $# -ne 0 ]; do
+    case "$1" in
+    -contains)
+      shift
+      fs_contents="$(9 9p -a $(session_path "$session") read "$filename")"
+      if [ ! "$fs_contents" = "$1" ]; then
+        fail "* ${filename} did not contain what we expected:" \
+          "  ${green}- $1${none}" \
+          "  ${red}+ ${fs_contents}${none}"
+      fi
+      ;;
+    -exists)
+      if ! 9 9p -a $(session_path "$session") stat "$filename" >/dev/null 2>/dev/null; then
+        fail "* expected ${filename} to exist, but it does not."
+      fi
+      ;;
+    -*)
+      fail "bad test $1"
       ;;
     esac
     shift
