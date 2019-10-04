@@ -60,7 +60,7 @@ main() {
     number_tests=$(($number_tests + 1))
     touch in; cp in out
     session="kak-tests"
-    rm -f $tmpdir/kakoune/$USER/$session
+    rm -f "$(session_path $session)"
     $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > ui-out < "${ui_in}"
     retval=$?
     failed=0
@@ -116,6 +116,14 @@ main() {
 }
 
 # Utility ├─────────────────────────────────────────────────────────────────────
+
+session_path() {
+  if [ -n "$XDG_RUNTIME_DIR" ]; then
+    printf %s "${XDG_RUNTIME_DIR}/kakoune/$1"
+  else
+    printf %s "${TMPDIR:-/tmp}/kakoune/${USER}/$1"
+  fi
+}
 
 show_diff() {
   diff -u $1 $2 | while IFS='' read -r line; do
