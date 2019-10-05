@@ -17,12 +17,12 @@ public:
     virtual UniqueContextPtr make_context() const = 0;
 };
 
-class GlobalContext : public ContextFinder
+class GlobalContextFinder : public ContextFinder
 {
 public:
-    GlobalContext()
+    GlobalContextFinder()
     {}
-    GlobalContext(Vector<String> const& path)
+    GlobalContextFinder(Vector<String> const& path)
     {}
 
     UniqueContextPtr make_context() const
@@ -32,13 +32,13 @@ public:
     }
 };
 
-class BufferContext : public ContextFinder
+class BufferContextFinder : public ContextFinder
 {
 public:
-    BufferContext(StringView buffer_id)
+    BufferContextFinder(StringView buffer_id)
         : m_buffer_id{buffer_id}
     {}
-    BufferContext(Vector<String> const& path)
+    BufferContextFinder(Vector<String> const& path)
         : m_buffer_id{path[1]}
     {}
 
@@ -64,13 +64,13 @@ private:
     String m_buffer_id;
 };
 
-class WindowContext : public ContextFinder
+class WindowContextFinder : public ContextFinder
 {
 public:
-    WindowContext(StringView client_name)
+    WindowContextFinder(StringView client_name)
         : m_client_name{client_name}
     {}
-    WindowContext(Vector<String> const& path)
+    WindowContextFinder(Vector<String> const& path)
         : m_client_name{path[1]}
     {}
 
@@ -448,9 +448,9 @@ private:
 
 void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
 {
-    auto* global_var_file_type = new VarFileType<GlobalContext>{builtin_env_vars};
-    auto* buffer_var_file_type = new VarFileType<BufferContext>{builtin_env_vars};
-    auto* window_var_file_type = new VarFileType<WindowContext>{builtin_env_vars};
+    auto* global_var_file_type = new VarFileType<GlobalContextFinder>{builtin_env_vars};
+    auto* buffer_var_file_type = new VarFileType<BufferContextFinder>{builtin_env_vars};
+    auto* window_var_file_type = new VarFileType<WindowContextFinder>{builtin_env_vars};
     for (auto& env_var : builtin_env_vars)
     {
         if (env_var.prefix)
