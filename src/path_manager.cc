@@ -25,7 +25,7 @@ public:
     GlobalContextFinder(Vector<String> const& path)
     {}
 
-    UniqueContextPtr make_context() const
+    UniqueContextPtr make_context() const override
     {
         return UniqueContextPtr(new Context{Context::EmptyContextFlag{}},
                                 [](Context *context) { delete context; });
@@ -42,7 +42,7 @@ public:
         : m_buffer_id{path[1]}
     {}
 
-    UniqueContextPtr make_context() const
+    UniqueContextPtr make_context() const override
     {
         Buffer *p = nullptr;
         if (0 == sscanf(m_buffer_id.c_str(), "%p", (void**)&p))
@@ -74,7 +74,7 @@ public:
         : m_client_name{path[1]}
     {}
 
-    UniqueContextPtr make_context() const
+    UniqueContextPtr make_context() const override
     {
         auto it = std::find_if(ClientManager::instance().begin(),
                                ClientManager::instance().end(),
