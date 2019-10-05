@@ -457,7 +457,7 @@ public:
     {
     }
 
-    RemoteBuffer read(const Vector<String>& path) const
+    RemoteBuffer read(const Vector<String>& path) const override
     {
         String varname = path.back();
         ContextFinder::UniqueContextPtr context_ptr = ContextPolicy(path).make_context();
