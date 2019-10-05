@@ -11,6 +11,7 @@ namespace Kakoune
 {
 
 class Glob;
+class ContextFinder;
 
 class File {
 public:
@@ -34,6 +35,7 @@ public:
     static_assert(sizeof(Qid) == 13, "compiler has added padding to Qid");
 
     File();
+    ~File();
 
     std::unique_ptr<File> walk(const String& name) const;
 
@@ -48,11 +50,12 @@ public:
     RemoteBuffer stat() const;
 
 private:
-    File(Vector<String> path, Glob* component);
+    File(Vector<String> path, Glob* component, std::shared_ptr<ContextFinder> context_finder);
 
 private:
     Vector<String> m_path;
     Glob* m_component;
+    std::shared_ptr<ContextFinder> m_context_finder;
 };
 
 void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars);

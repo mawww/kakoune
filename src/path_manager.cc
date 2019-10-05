@@ -102,6 +102,11 @@ public:
         auto names = expand(name);
         return find(names, text) != names.end();
     }
+
+    virtual std::unique_ptr<ContextFinder> override_context_finder(StringView name) const
+    {
+        return std::unique_ptr<ContextFinder>{};
+    }
 };
 
 template<typename BaseGlobType>
@@ -125,6 +130,11 @@ struct GlobTypeWithPrefix : public GlobType
         return m_base_glob_type.expand(name)
             | transform([this](const String& name) -> String { return format("{}{}", m_prefix, name); })
             | gather<Vector<String>>();
+    }
+
+    std::unique_ptr<ContextFinder> override_context_finder(StringView name) const override
+    {
+        return m_base_glob_type.override_context_finder(name);
     }
 
 private:
@@ -160,6 +170,11 @@ struct BufferIdGlobType : public GlobType
         }
         return res;
     }
+
+    std::unique_ptr<ContextFinder> override_context_finder(StringView name) const override
+    {
+        return std::make_unique<BufferContextFinder>(name);
+    }
 } buffer_id_glob_type{};
 
 struct ClientNameGlobType : public GlobType
@@ -170,6 +185,11 @@ struct ClientNameGlobType : public GlobType
         for (auto& client : ClientManager::instance())
             res.push_back(client->context().name());
         return res;
+    }
+
+    std::unique_ptr<ContextFinder> override_context_finder(StringView name) const override
+    {
+        return std::make_unique<WindowContextFinder>(name);
     }
 } client_name_glob_type{};
 
@@ -245,6 +265,14 @@ public:
         return GlobType::resolve(m_name)->expand(m_name);
     }
 
+    std::shared_ptr<ContextFinder> override_context_finder(StringView name, std::shared_ptr<ContextFinder> old_context_finder)
+    {
+        std::shared_ptr<ContextFinder> new_context_finder = GlobType::resolve(name)->override_context_finder(name);
+        if (new_context_finder)
+            return new_context_finder;
+        return old_context_finder;
+    }
+
     void register_path(Vector<StringView> path, FileType* type)
     {
         Glob* node = this;
@@ -283,12 +311,16 @@ Glob root{"/"};
 // File
 
 File::File()
-    : m_path{}, m_component{&root}
+    : m_path{}, m_component{&root}, m_context_finder{std::make_unique<GlobalContextFinder>()}
 {
 }
 
-File::File(Vector<String> path, Glob* component)
-    : m_path{path}, m_component{component}
+File::File(Vector<String> path, Glob* component, std::shared_ptr<ContextFinder> context_finder)
+    : m_path{path}, m_component{component}, m_context_finder{context_finder}
+{
+}
+
+File::~File()
 {
 }
 
@@ -300,7 +332,8 @@ std::unique_ptr<File> File::walk(const String& name) const
             continue;
         Vector<String> path{m_path};
         path.push_back(name);
-        return std::unique_ptr<File>(new File(std::move(path), child));
+        std::shared_ptr<ContextFinder> context_finder = child->override_context_finder(name, m_context_finder);
+        return std::unique_ptr<File>(new File(std::move(path), child, context_finder));
     }
     return {};
 }
@@ -321,8 +354,9 @@ Vector<RemoteBuffer> File::contents() const
             Vector<String> parts = child->expand();
             for (auto& basename : parts) {
                 Vector<String> path{m_path};
+                auto context_finder = child->override_context_finder(basename, m_context_finder); 
                 path.push_back(std::move(basename));
-                std::unique_ptr<File> file(new File(std::move(path), child));
+                std::unique_ptr<File> file(new File(std::move(path), child, context_finder));
                 res.push_back(file->stat());
             }
         }
