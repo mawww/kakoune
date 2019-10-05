@@ -235,7 +235,7 @@ GlobType* GlobType::resolve(StringView name)
 class FileType
 {
 public:
-    virtual RemoteBuffer read(const Vector<String>& path) const = 0;
+    virtual RemoteBuffer read(const Vector<String>& path, ContextFinder& context_finder) const = 0;
 };
 
 class Glob
@@ -343,7 +343,7 @@ Vector<RemoteBuffer> File::contents() const
     if (m_component->type())
     {
         Vector<RemoteBuffer> res;
-        res.push_back(m_component->type()->read(m_path));
+        res.push_back(m_component->type()->read(m_path, *m_context_finder));
         return res;
     }
     else
@@ -404,7 +404,7 @@ uint32_t File::mode() const
 uint64_t File::length() const
 {
     if (m_component->type())
-        return m_component->type()->read(m_path).size();
+        return m_component->type()->read(m_path, *m_context_finder).size();
     else
         return 0;
 }
@@ -457,7 +457,7 @@ public:
     {
     }
 
-    RemoteBuffer read(const Vector<String>& path) const override
+    RemoteBuffer read(const Vector<String>& path, ContextFinder& context_finder) const override
     {
         String varname = path.back();
         ContextFinder::UniqueContextPtr context_ptr = ContextPolicy(path).make_context();
