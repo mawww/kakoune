@@ -9,6 +9,87 @@
 namespace Kakoune
 {
 
+class ContextFinder
+{
+public:
+    using UniqueContextPtr = std::unique_ptr<Context, std::function<void(Context *)>>;
+
+    virtual UniqueContextPtr make_context() const = 0;
+};
+
+class GlobalContext : public ContextFinder
+{
+public:
+    GlobalContext()
+    {}
+    GlobalContext(Vector<String> const& path)
+    {}
+
+    UniqueContextPtr make_context() const
+    {
+        return UniqueContextPtr(new Context{Context::EmptyContextFlag{}},
+                                [](Context *context) { delete context; });
+    }
+};
+
+class BufferContext : public ContextFinder
+{
+public:
+    BufferContext(StringView buffer_id)
+        : m_buffer_id{buffer_id}
+    {}
+    BufferContext(Vector<String> const& path)
+        : m_buffer_id{path[1]}
+    {}
+
+    UniqueContextPtr make_context() const
+    {
+        Buffer *p = nullptr;
+        if (0 == sscanf(m_buffer_id.c_str(), "%p", (void**)&p))
+            throw runtime_error("Not found.");
+
+        auto& buffer_manager = BufferManager::instance();
+        auto it = std::find(buffer_manager.begin(), buffer_manager.end(), p);
+        if (it == buffer_manager.end())
+            throw runtime_error("Not found.");
+
+        Selection selection(BufferCoord{0, 0});
+        SelectionList selection_list(**it, selection);
+        InputHandler input_handler{selection_list, Context::Flags::Draft};
+        return UniqueContextPtr(new Context{input_handler, selection_list, Context::Flags::Draft},
+                                [](Context *context) { delete context; });
+    }
+
+private:
+    String m_buffer_id;
+};
+
+class WindowContext : public ContextFinder
+{
+public:
+    WindowContext(StringView client_name)
+        : m_client_name{client_name}
+    {}
+    WindowContext(Vector<String> const& path)
+        : m_client_name{path[1]}
+    {}
+
+    UniqueContextPtr make_context() const
+    {
+        auto it = std::find_if(ClientManager::instance().begin(),
+                               ClientManager::instance().end(),
+                               [&](auto& client) { return client->context().name() == m_client_name; });
+        if (it == ClientManager::instance().end())
+            throw runtime_error("Not found.");
+        auto& context = (*it)->context();
+        return UniqueContextPtr(&context, [](Context *) {});
+    }
+
+private:
+    String m_client_name;
+};
+
+
 class GlobType
 {
 public:
@@ -332,86 +413,6 @@ RemoteBuffer to_remote_buffer(const StringView& s)
 {
     return RemoteBuffer{ s.begin(), s.end() };
 }
-
-class ContextFinder
-{
-public:
-    using UniqueContextPtr = std::unique_ptr<Context, std::function<void(Context *)>>;
-
-    virtual UniqueContextPtr make_context() const = 0;
-};
-
-class GlobalContext : public ContextFinder
-{
-public:
-    GlobalContext()
-    {}
-    GlobalContext(Vector<String> const& path)
-    {}
-
-    UniqueContextPtr make_context() const
-    {
-        return UniqueContextPtr(new Context{Context::EmptyContextFlag{}},
-                                [](Context *context) { delete context; });
-    }
-};
-
-class BufferContext : public ContextFinder
-{
-public:
-    BufferContext(StringView buffer_id)
-        : m_buffer_id{buffer_id}
-    {}
-    BufferContext(Vector<String> const& path)
-        : m_buffer_id{path[1]}
-    {}
-
-    UniqueContextPtr make_context() const
-    {
-        Buffer *p = nullptr;
-        if (0 == sscanf(m_buffer_id.c_str(), "%p", (void**)&p))
-            throw runtime_error("Not found.");
-
-        auto& buffer_manager = BufferManager::instance();
-        auto it = std::find(buffer_manager.begin(), buffer_manager.end(), p);
-        if (it == buffer_manager.end())
-            throw runtime_error("Not found.");
-
-        Selection selection(BufferCoord{0, 0});
-        SelectionList selection_list(**it, selection);
-        InputHandler input_handler{selection_list, Context::Flags::Draft};
-        return UniqueContextPtr(new Context{input_handler, selection_list, Context::Flags::Draft},
-                                [](Context *context) { delete context; });
-    }
-
-private:
-    String m_buffer_id;
-};
-
-class WindowContext : public ContextFinder
-{
-public:
-    WindowContext(StringView client_name)
-        : m_client_name{client_name}
-    {}
-    WindowContext(Vector<String> const& path)
-        : m_client_name{path[1]}
-    {}
-
-    UniqueContextPtr make_context() const
-    {
-        auto it = std::find_if(ClientManager::instance().begin(),
-                               ClientManager::instance().end(),
-                               [&](auto& client) { return client->context().name() == m_client_name; });
-        if (it == ClientManager::instance().end())
-            throw runtime_error("Not found.");
-        auto& context = (*it)->context();
-        return UniqueContextPtr(&context, [](Context *) {});
-    }
-
-private:
-    String m_client_name;
-};
 
 template<typename ContextPolicy>
 class VarFileType : public FileType
