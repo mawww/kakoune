@@ -457,6 +457,14 @@ public:
     {
     }
 
+    RemoteBuffer read(const Vector<String>& path) const
+    {
+        String varname = path.back();
+        ContextFinder::UniqueContextPtr context_ptr = ContextPolicy(path).make_context();
+        return to_remote_buffer(find_env_var(varname).func(varname, *context_ptr, Quoting::Shell));
+    }
+
+private:
     const EnvVarDesc& find_env_var(StringView varname) const
     {
         for (auto& env_var : m_env_vars)
@@ -469,14 +477,6 @@ public:
         throw logic_error();
     }
 
-    RemoteBuffer read(const Vector<String>& path) const
-    {
-        String varname = path.back();
-        ContextFinder::UniqueContextPtr context_ptr = ContextPolicy(path).make_context();
-        return to_remote_buffer(find_env_var(varname).func(varname, *context_ptr, Quoting::Shell));
-    }
-
-private:
     ConstArrayView<EnvVarDesc> m_env_vars;
 };
 
