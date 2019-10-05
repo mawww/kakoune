@@ -14,8 +14,13 @@ class GlobType
 public:
     static GlobType* resolve(StringView name);
 
-    virtual bool matches(StringView name, StringView text) const = 0;
     virtual Vector<String> expand(StringView name) const = 0;
+
+    virtual bool matches(StringView name, StringView text) const
+    {
+        auto names = expand(name);
+        return find(names, text) != names.end();
+    }
 };
 
 template<typename BaseGlobType>
@@ -63,16 +68,6 @@ struct LiteralGlobType : public GlobType
 
 struct BufferIdGlobType : public GlobType
 {
-    bool matches(StringView name, StringView text) const
-    {
-        String s{text};
-        Buffer* p;
-        if (sscanf(s.c_str(), "%p", (void**)&p) <= 0)
-            return false;
-        auto it = find(BufferManager::instance(), p);
-        return it != BufferManager::instance().end();
-    }
-
     Vector<String> expand(StringView name) const
     {
         Vector<String> res;
@@ -88,12 +83,6 @@ struct BufferIdGlobType : public GlobType
 
 struct ClientNameGlobType : public GlobType
 {
-    bool matches(StringView name, StringView text) const
-    {
-        auto it = find_if(ClientManager::instance(), [&text](auto& client) { return client->context().name() == text; });
-        return it != ClientManager::instance().end();
-    }
-
     Vector<String> expand(StringView name) const
     {
         Vector<String> res;
@@ -119,13 +108,6 @@ struct OptionNameGlobType : public GlobType
 
 struct RegisterNameGlobType : public GlobType
 {
-    bool matches(StringView name, StringView text) const
-    {
-        auto it = find_if(RegisterManager::instance(),
-                          [&text](auto& item) { return RegisterManager::name(item.key) == text; });
-        return it != RegisterManager::instance().end();
-    }
-
     Vector<String> expand(StringView name) const
     {
         Vector<String> res;
