@@ -116,7 +116,7 @@ struct GlobTypeWithPrefix : public GlobType
         : m_prefix{prefix}
     {}
 
-    bool matches(StringView name, StringView text) const
+    bool matches(StringView name, StringView text) const override
     {
         if (text.length() < m_prefix.length())
             return false;
@@ -125,7 +125,7 @@ struct GlobTypeWithPrefix : public GlobType
         return m_base_glob_type.matches(name, text.substr(m_prefix.length()));
     }
 
-    Vector<String> expand(StringView name) const
+    Vector<String> expand(StringView name) const override
     {
         return m_base_glob_type.expand(name)
             | transform([this](const String& name) -> String { return format("{}{}", m_prefix, name); })
@@ -144,12 +144,12 @@ private:
 
 struct LiteralGlobType : public GlobType
 {
-    bool matches(StringView name, StringView text) const
+    bool matches(StringView name, StringView text) const override
     {
         return name == text;
     }
 
-    Vector<String> expand(StringView name) const
+    Vector<String> expand(StringView name) const override
     {
         Vector<String> res;
         res.push_back(String{name});
@@ -159,7 +159,7 @@ struct LiteralGlobType : public GlobType
 
 struct BufferIdGlobType : public GlobType
 {
-    Vector<String> expand(StringView name) const
+    Vector<String> expand(StringView name) const override
     {
         Vector<String> res;
         for (auto& buffer : BufferManager::instance())
@@ -179,7 +179,7 @@ struct BufferIdGlobType : public GlobType
 
 struct ClientNameGlobType : public GlobType
 {
-    Vector<String> expand(StringView name) const
+    Vector<String> expand(StringView name) const override
     {
         Vector<String> res;
         for (auto& client : ClientManager::instance())
@@ -195,12 +195,12 @@ struct ClientNameGlobType : public GlobType
 
 struct OptionNameGlobType : public GlobType
 {
-    bool matches(StringView name, StringView text) const
+    bool matches(StringView name, StringView text) const override
     {
         return GlobalScope::instance().option_registry().option_exists(text);
     }
 
-    Vector<String> expand(StringView name) const
+    Vector<String> expand(StringView name) const override
     {
         return GlobalScope::instance().option_registry().complete_option_name("", 0_byte)
             | gather<Vector<String>>();
@@ -209,7 +209,7 @@ struct OptionNameGlobType : public GlobType
 
 struct RegisterNameGlobType : public GlobType
 {
-    Vector<String> expand(StringView name) const
+    Vector<String> expand(StringView name) const override
     {
         Vector<String> res;
         for (auto& register_entry : RegisterManager::instance())
