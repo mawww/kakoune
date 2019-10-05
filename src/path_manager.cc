@@ -338,21 +338,13 @@ class ContextFinder
 public:
     using UniqueContextPtr = std::unique_ptr<Context, std::function<void(Context *)>>;
 
-    ContextFinder(Vector<String> const& path)
-        : m_path{path}
-    {}
-
     virtual UniqueContextPtr make_context() const = 0;
-
-protected:
-    Vector<String> const& m_path;
 };
 
 class GlobalContext : public ContextFinder
 {
 public:
     GlobalContext(Vector<String> const& path)
-        : ContextFinder{path}
     {}
 
     UniqueContextPtr make_context() const
@@ -366,7 +358,7 @@ class BufferContext : public ContextFinder
 {
 public:
     BufferContext(Vector<String> const& path)
-        : ContextFinder{path}
+        : m_path{path}
     {}
 
     UniqueContextPtr make_context() const
@@ -386,13 +378,16 @@ public:
         return UniqueContextPtr(new Context{input_handler, selection_list, Context::Flags::Draft},
                                 [](Context *context) { delete context; });
     }
+
+private:
+    Vector<String> const& m_path;
 };
 
 class WindowContext : public ContextFinder
 {
 public:
     WindowContext(Vector<String> const& path)
-        : ContextFinder{path}
+        : m_path{path}
     {}
 
     UniqueContextPtr make_context() const
@@ -405,6 +400,9 @@ public:
         auto& context = (*it)->context();
         return UniqueContextPtr(&context, [](Context *) {});
     }
+
+private:
+    Vector<String> const& m_path;
 };
 
 template<typename ContextPolicy>
