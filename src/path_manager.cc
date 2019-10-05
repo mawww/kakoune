@@ -344,6 +344,8 @@ public:
 class GlobalContext : public ContextFinder
 {
 public:
+    GlobalContext()
+    {}
     GlobalContext(Vector<String> const& path)
     {}
 
@@ -357,14 +359,17 @@ public:
 class BufferContext : public ContextFinder
 {
 public:
+    BufferContext(StringView buffer_id)
+        : m_buffer_id{buffer_id}
+    {}
     BufferContext(Vector<String> const& path)
-        : m_path{path}
+        : m_buffer_id{path[1]}
     {}
 
     UniqueContextPtr make_context() const
     {
         Buffer *p = nullptr;
-        if (0 == sscanf(m_path[1].c_str(), "%p", (void**)&p))
+        if (0 == sscanf(m_buffer_id.c_str(), "%p", (void**)&p))
             throw runtime_error("Not found.");
 
         auto& buffer_manager = BufferManager::instance();
@@ -380,21 +385,24 @@ public:
     }
 
 private:
-    Vector<String> const& m_path;
+    String m_buffer_id;
 };
 
 class WindowContext : public ContextFinder
 {
 public:
+    WindowContext(StringView client_name)
+        : m_client_name{client_name}
+    {}
     WindowContext(Vector<String> const& path)
-        : m_path{path}
+        : m_client_name{path[1]}
     {}
 
     UniqueContextPtr make_context() const
     {
         auto it = std::find_if(ClientManager::instance().begin(),
                                ClientManager::instance().end(),
-                               [&](auto& client) { return client->context().name() == m_path[1]; });
+                               [&](auto& client) { return client->context().name() == m_client_name; });
         if (it == ClientManager::instance().end())
             throw runtime_error("Not found.");
         auto& context = (*it)->context();
@@ -402,7 +410,7 @@ public:
     }
 
 private:
-    Vector<String> const& m_path;
+    String m_client_name;
 };
 
 template<typename ContextPolicy>
