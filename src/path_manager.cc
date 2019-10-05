@@ -333,21 +333,46 @@ RemoteBuffer to_remote_buffer(const StringView& s)
     return RemoteBuffer{ s.begin(), s.end() };
 }
 
-struct GlobalContext
+class ContextFinder
 {
-    static RemoteBuffer with_context(const Vector<String>& path, std::function<RemoteBuffer (Context&)> f)
+public:
+    using UniqueContextPtr = std::unique_ptr<Context, std::function<void(Context *)>>;
+
+    ContextFinder(Vector<String> const& path)
+        : m_path{path}
+    {}
+
+    virtual UniqueContextPtr make_context() const = 0;
+
+protected:
+    Vector<String> const& m_path;
+};
+
+class GlobalContext : public ContextFinder
+{
+public:
+    GlobalContext(Vector<String> const& path)
+        : ContextFinder{path}
+    {}
+
+    UniqueContextPtr make_context() const
     {
-        Context context{Context::EmptyContextFlag{}};
-        return f(context);
+        return UniqueContextPtr(new Context{Context::EmptyContextFlag{}},
+                                [](Context *context) { delete context; });
     }
 };
 
-struct BufferContext
+class BufferContext : public ContextFinder
 {
-    static RemoteBuffer with_context(const Vector<String>& path, std::function<RemoteBuffer (Context&)> f)
+public:
+    BufferContext(Vector<String> const& path)
+        : ContextFinder{path}
+    {}
+
+    UniqueContextPtr make_context() const
     {
         Buffer *p = nullptr;
-        if (0 == sscanf(path[1].c_str(), "%p", (void**)&p))
+        if (0 == sscanf(m_path[1].c_str(), "%p", (void**)&p))
             throw runtime_error("Not found.");
 
         auto& buffer_manager = BufferManager::instance();
@@ -358,22 +383,27 @@ struct BufferContext
         Selection selection(BufferCoord{0, 0});
         SelectionList selection_list(**it, selection);
         InputHandler input_handler{selection_list, Context::Flags::Draft};
-        Context context{input_handler, selection_list, Context::Flags::Draft};
-        return f(context);
+        return UniqueContextPtr(new Context{input_handler, selection_list, Context::Flags::Draft},
+                                [](Context *context) { delete context; });
     }
 };
 
-struct WindowContext
+class WindowContext : public ContextFinder
 {
-    static RemoteBuffer with_context(const Vector<String>& path, std::function<RemoteBuffer (Context&)> f)
+public:
+    WindowContext(Vector<String> const& path)
+        : ContextFinder{path}
+    {}
+
+    UniqueContextPtr make_context() const
     {
         auto it = std::find_if(ClientManager::instance().begin(),
                                ClientManager::instance().end(),
-                               [&](auto& client) { return client->context().name() == path[1]; });
+                               [&](auto& client) { return client->context().name() == m_path[1]; });
         if (it == ClientManager::instance().end())
             throw runtime_error("Not found.");
         auto& context = (*it)->context();
-        return f(context);
+        return UniqueContextPtr(&context, [](Context *) {});
     }
 };
 
@@ -401,9 +431,8 @@ public:
     RemoteBuffer read(const Vector<String>& path) const
     {
         String varname = path.back();
-        return ContextPolicy::with_context(path, [&](Context& context) -> RemoteBuffer {
-            return to_remote_buffer(find_env_var(varname).func(varname, context, Quoting::Shell));
-        });
+        ContextFinder::UniqueContextPtr context_ptr = ContextPolicy(path).make_context();
+        return to_remote_buffer(find_env_var(varname).func(varname, *context_ptr, Quoting::Shell));
     }
 
 private:
