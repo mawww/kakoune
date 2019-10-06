@@ -22,8 +22,6 @@ class GlobalContextFinder : public ContextFinder
 public:
     GlobalContextFinder()
     {}
-    GlobalContextFinder(Vector<String> const& path)
-    {}
 
     UniqueContextPtr make_context() const override
     {
@@ -37,9 +35,6 @@ class BufferContextFinder : public ContextFinder
 public:
     BufferContextFinder(StringView buffer_id)
         : m_buffer_id{buffer_id}
-    {}
-    BufferContextFinder(Vector<String> const& path)
-        : m_buffer_id{path[1]}
     {}
 
     UniqueContextPtr make_context() const override
@@ -69,9 +64,6 @@ class WindowContextFinder : public ContextFinder
 public:
     WindowContextFinder(StringView client_name)
         : m_client_name{client_name}
-    {}
-    WindowContextFinder(Vector<String> const& path)
-        : m_client_name{path[1]}
     {}
 
     UniqueContextPtr make_context() const override
