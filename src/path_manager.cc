@@ -9,79 +9,6 @@
 namespace Kakoune
 {
 
-class ContextFinder
-{
-public:
-    using UniqueContextPtr = std::unique_ptr<Context, std::function<void(Context *)>>;
-
-    virtual UniqueContextPtr make_context() const = 0;
-};
-
-class GlobalContextFinder : public ContextFinder
-{
-public:
-    GlobalContextFinder()
-    {}
-
-    UniqueContextPtr make_context() const override
-    {
-        return UniqueContextPtr(new Context{Context::EmptyContextFlag{}},
-                                [](Context *context) { delete context; });
-    }
-};
-
-class BufferContextFinder : public ContextFinder
-{
-public:
-    BufferContextFinder(StringView buffer_id)
-        : m_buffer_id{buffer_id}
-    {}
-
-    UniqueContextPtr make_context() const override
-    {
-        Buffer *p = nullptr;
-        if (0 == sscanf(m_buffer_id.c_str(), "%p", (void**)&p))
-            throw runtime_error("Not found.");
-
-        auto& buffer_manager = BufferManager::instance();
-        auto it = std::find(buffer_manager.begin(), buffer_manager.end(), p);
-        if (it == buffer_manager.end())
-            throw runtime_error("Not found.");
-
-        Selection selection(BufferCoord{0, 0});
-        SelectionList selection_list(**it, selection);
-        InputHandler input_handler{selection_list, Context::Flags::Draft};
-        return UniqueContextPtr(new Context{input_handler, selection_list, Context::Flags::Draft},
-                                [](Context *context) { delete context; });
-    }
-
-private:
-    String m_buffer_id;
-};
-
-class WindowContextFinder : public ContextFinder
-{
-public:
-    WindowContextFinder(StringView client_name)
-        : m_client_name{client_name}
-    {}
-
-    UniqueContextPtr make_context() const override
-    {
-        auto it = std::find_if(ClientManager::instance().begin(),
-                               ClientManager::instance().end(),
-                               [&](auto& client) { return client->context().name() == m_client_name; });
-        if (it == ClientManager::instance().end())
-            throw runtime_error("Not found.");
-        auto& context = (*it)->context();
-        return UniqueContextPtr(&context, [](Context *) {});
-    }
-
-private:
-    String m_client_name;
-};
-
-
 class GlobType
 {
 public:
@@ -95,9 +22,9 @@ public:
         return find(names, text) != names.end();
     }
 
-    virtual std::unique_ptr<ContextFinder> override_context_finder(StringView name) const
+    virtual ContextGetter override_context_finder(StringView name) const
     {
-        return std::unique_ptr<ContextFinder>{};
+        return ContextGetter{};
     }
 };
 
@@ -124,7 +51,7 @@ struct GlobTypeWithPrefix : public GlobType
             | gather<Vector<String>>();
     }
 
-    std::unique_ptr<ContextFinder> override_context_finder(StringView name) const override
+    ContextGetter override_context_finder(StringView name) const override
     {
         return m_base_glob_type.override_context_finder(name);
     }
@@ -163,9 +90,25 @@ struct BufferIdGlobType : public GlobType
         return res;
     }
 
-    std::unique_ptr<ContextFinder> override_context_finder(StringView name) const override
+    ContextGetter override_context_finder(StringView name) const override
     {
-        return std::make_unique<BufferContextFinder>(name);
+        String buffer_id{name};
+        return [buffer_id]() {
+            Buffer *p = nullptr;
+            if (0 == sscanf(buffer_id.c_str(), "%p", (void**)&p))
+                throw runtime_error("Not found.");
+
+            auto& buffer_manager = BufferManager::instance();
+            auto it = std::find(buffer_manager.begin(), buffer_manager.end(), p);
+            if (it == buffer_manager.end())
+                throw runtime_error("Not found.");
+
+            Selection selection(BufferCoord{0, 0});
+            SelectionList selection_list(**it, selection);
+            InputHandler input_handler{selection_list, Context::Flags::Draft};
+            return UniqueContextPtr(new Context{input_handler, selection_list, Context::Flags::Draft},
+                                    [](Context *context) { delete context; });
+        };
     }
 } buffer_id_glob_type{};
 
@@ -179,9 +122,18 @@ struct ClientNameGlobType : public GlobType
         return res;
     }
 
-    std::unique_ptr<ContextFinder> override_context_finder(StringView name) const override
+    ContextGetter override_context_finder(StringView name) const override
     {
-        return std::make_unique<WindowContextFinder>(name);
+        String client_name{name};
+        return [client_name]() {
+            auto it = std::find_if(ClientManager::instance().begin(),
+                                   ClientManager::instance().end(),
+                                   [&](auto& client) { return client->context().name() == client_name; });
+            if (it == ClientManager::instance().end())
+                throw runtime_error("Not found.");
+            auto& context = (*it)->context();
+            return UniqueContextPtr(&context, [](Context *) {});
+        };
     }
 } client_name_glob_type{};
 
@@ -227,7 +179,7 @@ GlobType* GlobType::resolve(StringView name)
 class FileType
 {
 public:
-    virtual RemoteBuffer read(const Vector<String>& path, ContextFinder& context_finder) const = 0;
+    virtual RemoteBuffer read(const Vector<String>& path, ContextGetter context_finder) const = 0;
 };
 
 class Glob
@@ -257,9 +209,9 @@ public:
         return GlobType::resolve(m_name)->expand(m_name);
     }
 
-    std::shared_ptr<ContextFinder> override_context_finder(StringView name, std::shared_ptr<ContextFinder> old_context_finder)
+    ContextGetter override_context_finder(StringView name, ContextGetter old_context_finder)
     {
-        std::shared_ptr<ContextFinder> new_context_finder = GlobType::resolve(m_name)->override_context_finder(name);
+        ContextGetter new_context_finder = GlobType::resolve(m_name)->override_context_finder(name);
         if (new_context_finder)
             return new_context_finder;
         return old_context_finder;
@@ -303,11 +255,14 @@ Glob root{"/"};
 // File
 
 File::File()
-    : m_path{}, m_component{&root}, m_context_finder{std::make_unique<GlobalContextFinder>()}
+    : m_path{}, m_component{&root}, m_context_finder{[]() {
+        return UniqueContextPtr(new Context{Context::EmptyContextFlag{}},
+                                [](Context *context) { delete context; });
+    }}
 {
 }
 
-File::File(Vector<String> path, Glob* component, std::shared_ptr<ContextFinder> context_finder)
+File::File(Vector<String> path, Glob* component, ContextGetter context_finder)
     : m_path{path}, m_component{component}, m_context_finder{context_finder}
 {
 }
@@ -324,7 +279,7 @@ std::unique_ptr<File> File::walk(const String& name) const
             continue;
         Vector<String> path{m_path};
         path.push_back(name);
-        std::shared_ptr<ContextFinder> context_finder = child->override_context_finder(name, m_context_finder);
+        ContextGetter context_finder = child->override_context_finder(name, m_context_finder);
         return std::unique_ptr<File>(new File(std::move(path), child, context_finder));
     }
     return {};
@@ -335,7 +290,7 @@ Vector<RemoteBuffer> File::contents() const
     if (m_component->type())
     {
         Vector<RemoteBuffer> res;
-        res.push_back(m_component->type()->read(m_path, *m_context_finder));
+        res.push_back(m_component->type()->read(m_path, m_context_finder));
         return res;
     }
     else
@@ -396,7 +351,7 @@ uint32_t File::mode() const
 uint64_t File::length() const
 {
     if (m_component->type())
-        return m_component->type()->read(m_path, *m_context_finder).size();
+        return m_component->type()->read(m_path, m_context_finder).size();
     else
         return 0;
 }
@@ -448,10 +403,10 @@ public:
     {
     }
 
-    RemoteBuffer read(const Vector<String>& path, ContextFinder& context_finder) const override
+    RemoteBuffer read(const Vector<String>& path, ContextGetter context_finder) const override
     {
         String varname = path.back();
-        ContextFinder::UniqueContextPtr context_ptr = context_finder.make_context();
+        UniqueContextPtr context_ptr = context_finder();
         return to_remote_buffer(find_env_var(varname).func(varname, *context_ptr, Quoting::Shell));
     }
 

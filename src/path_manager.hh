@@ -10,8 +10,11 @@
 namespace Kakoune
 {
 
+using ContextDeleter = std::function<void (Context*)>;
+using UniqueContextPtr = std::unique_ptr<Context, std::function<void(Context *)>>;
+using ContextGetter = std::function<UniqueContextPtr()>;
+
 class Glob;
-class ContextFinder;
 
 class File {
 public:
@@ -50,12 +53,12 @@ public:
     RemoteBuffer stat() const;
 
 private:
-    File(Vector<String> path, Glob* component, std::shared_ptr<ContextFinder> context_finder);
+    File(Vector<String> path, Glob* component, ContextGetter context_finder);
 
 private:
     Vector<String> m_path;
     Glob* m_component;
-    std::shared_ptr<ContextFinder> m_context_finder;
+    ContextGetter m_context_finder;
 };
 
 void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars);
