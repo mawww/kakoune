@@ -481,25 +481,23 @@ private:
 
 void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
 {
-    auto* global_var_file_type = new VarFileType{builtin_env_vars};
-    auto* buffer_var_file_type = new VarFileType{builtin_env_vars};
-    auto* window_var_file_type = new VarFileType{builtin_env_vars};
+    auto* var_file_type = new VarFileType{builtin_env_vars};
     for (auto& env_var : builtin_env_vars)
     {
         if (env_var.prefix)
             continue;
         if (env_var.scopes & EnvVarDesc::Scopes::Global)
-            root.register_path({"global", env_var.str}, global_var_file_type);
+            root.register_path({"global", env_var.str}, var_file_type);
         if (env_var.scopes & EnvVarDesc::Scopes::Buffer)
-            root.register_path({"buffers", "$buffer_id", env_var.str}, buffer_var_file_type);
+            root.register_path({"buffers", "$buffer_id", env_var.str}, var_file_type);
         if (env_var.scopes & EnvVarDesc::Scopes::Buffer or env_var.scopes & EnvVarDesc::Scopes::Window)
-            root.register_path({"windows", "$client_name", env_var.str}, window_var_file_type);
+            root.register_path({"windows", "$client_name", env_var.str}, var_file_type);
     }
-    root.register_path({"global", "$opt"}, global_var_file_type);
-    root.register_path({"buffers", "$buffer_id", "$opt"}, buffer_var_file_type);
-    root.register_path({"windows", "$client_name", "$opt"}, window_var_file_type);
-    root.register_path({"windows", "$client_name", "$main_reg"}, window_var_file_type);
-    root.register_path({"windows", "$client_name", "$reg"}, window_var_file_type);
+    root.register_path({"global", "$opt"}, var_file_type);
+    root.register_path({"buffers", "$buffer_id", "$opt"}, var_file_type);
+    root.register_path({"windows", "$client_name", "$opt"}, var_file_type);
+    root.register_path({"windows", "$client_name", "$main_reg"}, var_file_type);
+    root.register_path({"windows", "$client_name", "$reg"}, var_file_type);
 }
 
 }
