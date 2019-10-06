@@ -4,3 +4,4 @@ fs windows/client0 -exists
 fs windows/client0/opt_BOM -contains "none"
 fs windows/client0/reg_arobase -contains "'jjkkl'"
 fs windows/client0/main_reg_arobase -contains "jjkkl"
+fs windows/client0/client_env_USER -contains "$USER"

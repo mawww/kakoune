@@ -112,6 +112,15 @@ struct BufferIdGlobType : public GlobType
     }
 } buffer_id_glob_type{};
 
+struct ClientEnvGlobType : public GlobType
+{
+    Vector<String> expand(ContextGetter context_getter, StringView name) const override
+    {
+        UniqueContextPtr context_ptr = context_getter();
+        return context_ptr->client().env_var_names();
+    }
+};
+
 struct ClientNameGlobType : public GlobType
 {
     Vector<String> expand(ContextGetter context_getter, StringView name) const override
@@ -162,13 +171,15 @@ struct RegisterNameGlobType : public GlobType
     }
 };
 
+GlobTypeWithPrefix<ClientEnvGlobType> client_env_glob_type{"client_env_"};
+GlobTypeWithPrefix<RegisterNameGlobType> main_reg_name_glob_type{"main_reg_"};
 GlobTypeWithPrefix<OptionNameGlobType> opt_name_glob_type{"opt_"};
 GlobTypeWithPrefix<RegisterNameGlobType> reg_name_glob_type{"reg_"};
-GlobTypeWithPrefix<RegisterNameGlobType> main_reg_name_glob_type{"main_reg_"};
 
 GlobType* GlobType::resolve(StringView name)
 {
     if (name == "$buffer_id")   return &buffer_id_glob_type;
+    if (name == "$client_env")  return &client_env_glob_type;
     if (name == "$client_name") return &client_name_glob_type;
     if (name == "$main_reg")    return &main_reg_name_glob_type;
     if (name == "$opt")         return &opt_name_glob_type;
@@ -439,8 +450,9 @@ void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
     }
     root.register_path({"global", "$opt"}, var_file_type);
     root.register_path({"buffers", "$buffer_id", "$opt"}, var_file_type);
-    root.register_path({"windows", "$client_name", "$opt"}, var_file_type);
+    root.register_path({"windows", "$client_name", "$client_env"}, var_file_type);
     root.register_path({"windows", "$client_name", "$main_reg"}, var_file_type);
+    root.register_path({"windows", "$client_name", "$opt"}, var_file_type);
     root.register_path({"windows", "$client_name", "$reg"}, var_file_type);
 }
 

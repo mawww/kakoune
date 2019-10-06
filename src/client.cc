@@ -382,6 +382,13 @@ void Client::check_if_buffer_needs_reloading()
         reload_buffer();
 }
 
+Vector<String> Client::env_var_names() const
+{
+    return m_env_vars
+        | transform([](HashItem<String, String> const& item) { return item.key; })
+        | gather<Vector<String>>();
+}
+
 StringView Client::get_env_var(StringView name) const
 {
     auto it = m_env_vars.find(name);

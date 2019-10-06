@@ -67,6 +67,7 @@ public:
 
     void change_buffer(Buffer& buffer);
 
+    Vector<String> env_var_names() const;
     StringView get_env_var(StringView name) const;
 
     void exit(int status) { m_on_exit(status); }
