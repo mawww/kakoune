@@ -267,7 +267,7 @@ public:
 
     std::shared_ptr<ContextFinder> override_context_finder(StringView name, std::shared_ptr<ContextFinder> old_context_finder)
     {
-        std::shared_ptr<ContextFinder> new_context_finder = GlobType::resolve(name)->override_context_finder(name);
+        std::shared_ptr<ContextFinder> new_context_finder = GlobType::resolve(m_name)->override_context_finder(name);
         if (new_context_finder)
             return new_context_finder;
         return old_context_finder;
@@ -460,7 +460,7 @@ public:
     RemoteBuffer read(const Vector<String>& path, ContextFinder& context_finder) const override
     {
         String varname = path.back();
-        ContextFinder::UniqueContextPtr context_ptr = ContextPolicy(path).make_context();
+        ContextFinder::UniqueContextPtr context_ptr = context_finder.make_context();
         return to_remote_buffer(find_env_var(varname).func(varname, *context_ptr, Quoting::Shell));
     }
 
