@@ -448,7 +448,6 @@ RemoteBuffer to_remote_buffer(const StringView& s)
     return RemoteBuffer{ s.begin(), s.end() };
 }
 
-template<typename ContextPolicy>
 class VarFileType : public FileType
 {
 public:
@@ -482,9 +481,9 @@ private:
 
 void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars)
 {
-    auto* global_var_file_type = new VarFileType<GlobalContextFinder>{builtin_env_vars};
-    auto* buffer_var_file_type = new VarFileType<BufferContextFinder>{builtin_env_vars};
-    auto* window_var_file_type = new VarFileType<WindowContextFinder>{builtin_env_vars};
+    auto* global_var_file_type = new VarFileType{builtin_env_vars};
+    auto* buffer_var_file_type = new VarFileType{builtin_env_vars};
+    auto* window_var_file_type = new VarFileType{builtin_env_vars};
     for (auto& env_var : builtin_env_vars)
     {
         if (env_var.prefix)
