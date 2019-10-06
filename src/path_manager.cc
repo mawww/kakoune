@@ -22,9 +22,9 @@ public:
         return find(names, text) != names.end();
     }
 
-    virtual ContextGetter override_context_getter(StringView name) const
+    virtual ContextGetter override_context(ContextGetter original, StringView name) const
     {
-        return ContextGetter{};
+        return original;
     }
 };
 
@@ -51,9 +51,9 @@ struct GlobTypeWithPrefix : public GlobType
             | gather<Vector<String>>();
     }
 
-    ContextGetter override_context_getter(StringView name) const override
+    ContextGetter override_context(ContextGetter original, StringView name) const override
     {
-        return m_base_glob_type.override_context_getter(name);
+        return m_base_glob_type.override_context(original, name);
     }
 
 private:
@@ -90,7 +90,7 @@ struct BufferIdGlobType : public GlobType
         return res;
     }
 
-    ContextGetter override_context_getter(StringView name) const override
+    ContextGetter override_context(ContextGetter original, StringView name) const override
     {
         String buffer_id{name};
         return [buffer_id]() {
@@ -122,7 +122,7 @@ struct ClientNameGlobType : public GlobType
         return res;
     }
 
-    ContextGetter override_context_getter(StringView name) const override
+    ContextGetter override_context(ContextGetter original, StringView name) const override
     {
         String client_name{name};
         return [client_name]() {
@@ -209,12 +209,9 @@ public:
         return GlobType::resolve(m_name)->expand(m_name);
     }
 
-    ContextGetter override_context_getter(StringView name, ContextGetter old_context_getter)
+    ContextGetter override_context(ContextGetter original, StringView name)
     {
-        ContextGetter new_context_getter = GlobType::resolve(m_name)->override_context_getter(name);
-        if (new_context_getter)
-            return new_context_getter;
-        return old_context_getter;
+        return GlobType::resolve(m_name)->override_context(original, name);
     }
 
     void register_path(Vector<StringView> path, FileType* type)
@@ -279,7 +276,7 @@ std::unique_ptr<File> File::walk(const String& name) const
             continue;
         Vector<String> path{m_path};
         path.push_back(name);
-        ContextGetter context_getter = child->override_context_getter(name, m_context_getter);
+        ContextGetter context_getter = child->override_context(m_context_getter, name);
         return std::unique_ptr<File>(new File(std::move(path), child, context_getter));
     }
     return {};
@@ -301,7 +298,7 @@ Vector<RemoteBuffer> File::contents() const
             Vector<String> parts = child->expand();
             for (auto& basename : parts) {
                 Vector<String> path{m_path};
-                auto context_getter = child->override_context_getter(basename, m_context_getter); 
+                auto context_getter = child->override_context(m_context_getter, basename);
                 path.push_back(std::move(basename));
                 std::unique_ptr<File> file(new File(std::move(path), child, context_getter));
                 res.push_back(file->stat());
