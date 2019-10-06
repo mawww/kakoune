@@ -14,11 +14,11 @@ class GlobType
 public:
     static GlobType* resolve(StringView name);
 
-    virtual Vector<String> expand(StringView name) const = 0;
+    virtual Vector<String> expand(ContextGetter context_getter, StringView name) const = 0;
 
     virtual bool matches(ContextGetter context_getter, StringView name, StringView text) const
     {
-        auto names = expand(name);
+        auto names = expand(context_getter, name);
         return find(names, text) != names.end();
     }
 
@@ -44,9 +44,9 @@ struct GlobTypeWithPrefix : public GlobType
         return m_base_glob_type.matches(context_getter, name, text.substr(m_prefix.length()));
     }
 
-    Vector<String> expand(StringView name) const override
+    Vector<String> expand(ContextGetter context_getter, StringView name) const override
     {
-        return m_base_glob_type.expand(name)
+        return m_base_glob_type.expand(context_getter, name)
             | transform([this](const String& name) -> String { return format("{}{}", m_prefix, name); })
             | gather<Vector<String>>();
     }
@@ -68,7 +68,7 @@ struct LiteralGlobType : public GlobType
         return name == text;
     }
 
-    Vector<String> expand(StringView name) const override
+    Vector<String> expand(ContextGetter context_getter, StringView name) const override
     {
         Vector<String> res;
         res.push_back(String{name});
@@ -78,7 +78,7 @@ struct LiteralGlobType : public GlobType
 
 struct BufferIdGlobType : public GlobType
 {
-    Vector<String> expand(StringView name) const override
+    Vector<String> expand(ContextGetter context_getter, StringView name) const override
     {
         Vector<String> res;
         for (auto& buffer : BufferManager::instance())
@@ -114,7 +114,7 @@ struct BufferIdGlobType : public GlobType
 
 struct ClientNameGlobType : public GlobType
 {
-    Vector<String> expand(StringView name) const override
+    Vector<String> expand(ContextGetter context_getter, StringView name) const override
     {
         Vector<String> res;
         for (auto& client : ClientManager::instance())
@@ -144,7 +144,7 @@ struct OptionNameGlobType : public GlobType
         return GlobalScope::instance().option_registry().option_exists(text);
     }
 
-    Vector<String> expand(StringView name) const override
+    Vector<String> expand(ContextGetter context_getter, StringView name) const override
     {
         return GlobalScope::instance().option_registry().complete_option_name("", 0_byte)
             | gather<Vector<String>>();
@@ -153,7 +153,7 @@ struct OptionNameGlobType : public GlobType
 
 struct RegisterNameGlobType : public GlobType
 {
-    Vector<String> expand(StringView name) const override
+    Vector<String> expand(ContextGetter context_getter, StringView name) const override
     {
         Vector<String> res;
         for (auto& register_entry : RegisterManager::instance())
@@ -204,9 +204,9 @@ public:
         return GlobType::resolve(m_name)->matches(context_getter, m_name, text);
     }
 
-    Vector<String> expand() const
+    Vector<String> expand(ContextGetter context_getter) const
     {
-        return GlobType::resolve(m_name)->expand(m_name);
+        return GlobType::resolve(m_name)->expand(context_getter, m_name);
     }
 
     ContextGetter override_context(ContextGetter original, StringView name)
@@ -295,7 +295,7 @@ Vector<RemoteBuffer> File::contents() const
         Vector<RemoteBuffer> res;
         for (const auto& child : m_component->children())
         {
-            Vector<String> parts = child->expand();
+            Vector<String> parts = child->expand(m_context_getter);
             for (auto& basename : parts) {
                 Vector<String> path{m_path};
                 auto context_getter = child->override_context(m_context_getter, basename);
