@@ -295,28 +295,16 @@ std::unique_ptr<File> File::walk(const String& name) const
 
 Vector<RemoteBuffer> File::contents() const
 {
+    Vector<RemoteBuffer> res;
     if (m_component->type())
-    {
-        Vector<RemoteBuffer> res;
         res.push_back(m_component->type()->read(m_path, m_context_getter));
-        return res;
-    }
     else
     {
-        Vector<RemoteBuffer> res;
         for (const auto& child : m_component->children())
-        {
-            Vector<String> parts = child->expand(m_context_getter);
-            for (auto& basename : parts) {
-                Vector<String> path{m_path};
-                auto context_getter = child->override_context(m_context_getter, basename);
-                path.push_back(std::move(basename));
-                std::unique_ptr<File> file(new File(std::move(path), child, context_getter));
-                res.push_back(file->stat());
-            }
-        }
-        return res;
+            for (auto& basename : child->expand(m_context_getter))
+                res.push_back(walk(basename)->stat());
     }
+    return res;
 }
 
 File::Type File::type() const
