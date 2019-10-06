@@ -16,7 +16,7 @@ public:
 
     virtual Vector<String> expand(StringView name) const = 0;
 
-    virtual bool matches(StringView name, StringView text) const
+    virtual bool matches(ContextGetter context_getter, StringView name, StringView text) const
     {
         auto names = expand(name);
         return find(names, text) != names.end();
@@ -35,13 +35,13 @@ struct GlobTypeWithPrefix : public GlobType
         : m_prefix{prefix}
     {}
 
-    bool matches(StringView name, StringView text) const override
+    bool matches(ContextGetter context_getter, StringView name, StringView text) const override
     {
         if (text.length() < m_prefix.length())
             return false;
         if (text.substr(0_byte, m_prefix.length()) != m_prefix)
             return false;
-        return m_base_glob_type.matches(name, text.substr(m_prefix.length()));
+        return m_base_glob_type.matches(context_getter, name, text.substr(m_prefix.length()));
     }
 
     Vector<String> expand(StringView name) const override
@@ -63,7 +63,7 @@ private:
 
 struct LiteralGlobType : public GlobType
 {
-    bool matches(StringView name, StringView text) const override
+    bool matches(ContextGetter context_getter, StringView name, StringView text) const override
     {
         return name == text;
     }
@@ -139,7 +139,7 @@ struct ClientNameGlobType : public GlobType
 
 struct OptionNameGlobType : public GlobType
 {
-    bool matches(StringView name, StringView text) const override
+    bool matches(ContextGetter context_getter, StringView name, StringView text) const override
     {
         return GlobalScope::instance().option_registry().option_exists(text);
     }
@@ -199,9 +199,9 @@ public:
         return m_children;
     }
 
-    bool matches(StringView text) const
+    bool matches(ContextGetter context_getter, StringView text) const
     {
-        return GlobType::resolve(m_name)->matches(m_name, text);
+        return GlobType::resolve(m_name)->matches(context_getter, m_name, text);
     }
 
     Vector<String> expand() const
@@ -272,7 +272,7 @@ std::unique_ptr<File> File::walk(const String& name) const
 {
     for (const auto& child : m_component->children())
     {
-        if (not child->matches(name))
+        if (not child->matches(m_context_getter, name))
             continue;
         Vector<String> path{m_path};
         path.push_back(name);
