@@ -54,7 +54,7 @@ struct Server : public Singleton<Server>
     ~Server();
     const String& session() const { return m_session; }
 
-    bool rename_session(StringView name);
+    bool rename_session(StringView name, bool force = false);
     void close_session(bool do_unlink = true);
 
     bool negotiating() const { return not m_accepters.empty(); }

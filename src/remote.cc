@@ -832,7 +832,7 @@ Server::Server(String session_name)
     m_listener.reset(new FDWatcher{listen_sock, FdEvents::Read, accepter});
 }
 
-bool Server::rename_session(StringView name)
+bool Server::rename_session(StringView name, bool force)
 {
     if (not all_of(name, is_identifier))
         throw runtime_error{format("invalid session name: '{}'", name)};
@@ -840,10 +840,9 @@ bool Server::rename_session(StringView name)
     String old_socket_file = session_path(m_session);
     String new_socket_file = session_path(name);
 
-    if (file_exists(new_socket_file))
-        return false;
-
-    if (rename(old_socket_file.c_str(), new_socket_file.c_str()) != 0)
+    if ((file_exists(new_socket_file) or
+         rename(old_socket_file.c_str(), new_socket_file.c_str()) != 0)
+         and not force)
         return false;
 
     m_session = name.str();

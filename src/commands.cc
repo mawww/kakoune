@@ -2359,6 +2359,13 @@ const CommandDesc change_directory_cmd = {
     }
 };
 
+template<bool force>
+static void rename_session(const ParametersParser& parser, Context& context, const ShellContext&)
+{
+    if (not Server::instance().rename_session(parser[0], force))
+        throw runtime_error(format("unable to rename current session: '{}' may be already in use", parser[0]));
+}
+
 const CommandDesc rename_session_cmd = {
     "rename-session",
     nullptr,
@@ -2367,11 +2374,18 @@ const CommandDesc rename_session_cmd = {
     CommandFlags::None,
     CommandHelper{},
     make_single_word_completer([](const Context&){ return Server::instance().session(); }),
-    [](const ParametersParser& parser, Context&, const ShellContext&)
-    {
-        if (not Server::instance().rename_session(parser[0]))
-            throw runtime_error(format("unable to rename current session: '{}' may be already in use", parser[0]));
-    }
+    rename_session<false>,
+};
+
+const CommandDesc force_rename_session_cmd = {
+    "rename-session!",
+    nullptr,
+    "rename-session! <name>: change remote session name, ignore errors",
+    single_param,
+    CommandFlags::None,
+    CommandHelper{},
+    make_single_word_completer([](const Context&){ return Server::instance().session(); }),
+    rename_session<true>,
 };
 
 const CommandDesc fail_cmd = {
@@ -2560,6 +2574,7 @@ void register_commands()
     register_command(select_cmd);
     register_command(change_directory_cmd);
     register_command(rename_session_cmd);
+    register_command(force_rename_session_cmd);
     register_command(fail_cmd);
     register_command(declare_user_mode_cmd);
     register_command(enter_user_mode_cmd);
