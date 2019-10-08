@@ -102,11 +102,11 @@ define-command ruby-alternative-file -docstring 'Jump to the alternate file (imp
     case $kak_buffile in
         *spec/*_spec.rb)
             altfile=$(eval echo $(echo $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
-            [ ! -f $altfile ] && echo "echo -markup '{Error}implementation file not found'" && exit
+            [ ! -f $altfile ] && echo "fail 'implementation file not found'" && exit
         ;;
         *test/*_test.rb)
             altfile=$(eval echo $(echo $kak_buffile | sed s+test/+'*'/+';'s/_test//))
-            [ ! -f $altfile ] && echo "echo -markup '{Error}implementation file not found'" && exit
+            [ ! -f $altfile ] && echo "fail 'implementation file not found'" && exit
         ;;
         *.rb)
             path=$kak_buffile
@@ -119,10 +119,10 @@ define-command ruby-alternative-file -docstring 'Jump to the alternate file (imp
                     break
                 fi
             done
-            [ ! -d $altdir ] && echo "echo -markup '{Error}spec/ and test/ not found'" && exit
+            [ ! -d $altdir ] && echo "fail 'spec/ and test/ not found'" && exit
         ;;
         *)
-            echo "echo -markup '{Error}alternative file not found'" && exit
+            echo "fail 'alternative file not found'" && exit
         ;;
     esac
     echo "edit $altfile"

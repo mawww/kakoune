@@ -428,11 +428,11 @@ define-command -hidden c-family-alternative-file %{
                 done
             ;;
             *)
-                echo "echo -markup '{Error}extension not recognized'"
+                echo "fail 'extension not recognized'"
                 exit
             ;;
         esac
-        echo "echo -markup '{Error}alternative file not found'"
+        echo "fail 'alternative file not found'"
     }
 }
 
