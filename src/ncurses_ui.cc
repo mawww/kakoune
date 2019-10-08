@@ -5,6 +5,7 @@
 #include "keys.hh"
 #include "ranges.hh"
 #include "string_utils.hh"
+#include "file.hh"
 
 #include <algorithm>
 
@@ -579,7 +580,7 @@ Optional<Key> NCursesUI::get_next_key()
 
     static auto get_char = []() -> Optional<unsigned char> {
         unsigned char c = 0;
-        if (read(STDIN_FILENO, &c, 1) == 1)
+        if (fd_readable(STDIN_FILENO) and read(STDIN_FILENO, &c, 1) == 1)
             return c;
         return {};
     };
