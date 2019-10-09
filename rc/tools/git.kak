@@ -99,6 +99,14 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         ) > /dev/null 2>&1 < /dev/null &
     }
 
+    run_git_cmd() {
+        if git "${@}" > /dev/null 2>&1; then
+          printf %s "echo -markup '{Information}git $1 succeeded'"
+        else
+          printf %s "echo -markup '{Error}git $1 failed'"
+        fi
+    }
+
     update_diff() {
         (
             cd_bufdir
@@ -154,7 +162,6 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         ' )
     }
 
-   
     commit() {
         # Handle case where message needs not to be edited
         if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit|--fixup.*|--squash.*"; then
@@ -182,44 +189,46 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     }
 
     case "$1" in
-       show|log|diff|status) show_git_cmd_output "$@" ;;
-       blame) shift; run_git_blame "$@" ;;
-       hide-blame)
+        show|log|diff|status)
+            show_git_cmd_output "$@"
+            ;;
+        blame)
+            shift
+            run_git_blame "$@"
+            ;;
+        hide-blame)
             printf %s "try %{
                 set-option buffer=$kak_bufname git_blame_flags $kak_timestamp
                 remove-highlighter window/git-blame
             }"
             ;;
-       show-diff)
-           echo 'try %{ add-highlighter window/git-diff flag-lines Default git_diff_flags }'
-           update_diff
-           ;;
-       hide-diff)
-           echo 'try %{ remove-highlighter window/git-diff }'
-           ;;
-       update-diff) update_diff ;;
-       commit) shift; commit "$@" ;;
-       init) shift; git init "$@" > /dev/null 2>&1 ;;
-       checkout)
-           name="${2:-${kak_buffile}}"
-           git checkout "${name}" > /dev/null 2>&1
-           ;;
-       add)
-           name="${2:-${kak_buffile}}"
-           if git add -- "${name}" > /dev/null 2>&1; then
-              printf %s "echo -markup '{Information}git: added ${name}'"
-           else
-              printf %s "echo -markup '{Error}git: unable to add ${name}'"
-           fi
-           ;;
-       rm)
-           name="${2:-${kak_buffile}}"
-           if git rm -- "${name}" > /dev/null 2>&1; then
-              printf %s "echo -markup '{Information}git: removed ${name}'"
-           else
-              printf %s "echo -markup '{Error}git: unable to remove ${name}'"
-           fi
-           ;;
-       *) printf %s "echo -markup %{{Error}unknown git command '$1'}"; exit ;;
+        show-diff)
+            echo 'try %{ add-highlighter window/git-diff flag-lines Default git_diff_flags }'
+            update_diff
+            ;;
+        hide-diff)
+            echo 'try %{ remove-highlighter window/git-diff }'
+            ;;
+        update-diff) update_diff ;;
+        commit)
+            shift
+            commit "$@"
+            ;;
+        init)
+            shift
+            git init "$@" > /dev/null 2>&1
+            ;;
+        add|rm)
+            cmd="$1"
+            shift
+            run_git_cmd $cmd "${@:-${kak_buffile}}"
+            ;;
+        reset|checkout)
+            run_git_cmd "$@"
+            ;;
+        *)
+            printf %s "echo -markup %{{Error}unknown git command '$1'}"
+            exit
+            ;;
     esac
 }}
