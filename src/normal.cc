@@ -1849,7 +1849,7 @@ void combine_selection(const Buffer& buffer, Selection& sel, const Selection& ot
 }
 
 template<typename Func>
-void combine_selections(Context& context, SelectionList list, Func func)
+void combine_selections(Context& context, SelectionList list, Func func, StringView title)
 {
     if (&context.buffer() != &list.buffer())
         throw runtime_error{"cannot combine selections from different buffers"};
@@ -1880,7 +1880,7 @@ void combine_selections(Context& context, SelectionList list, Func func)
                                      list.set_main_index(sels.main_index());
                                  }
                                  func(context, std::move(list));
-                             }, "enter combining operator",
+                             }, title,
                              "'a': append lists\n"
                              "'u': union\n"
                              "'i': intersection\n"
@@ -1912,7 +1912,7 @@ void save_selections(Context& context, NormalParams params)
     };
 
     if (combine and not empty)
-        combine_selections(context, read_selections_from_register(reg, context), save_to_reg);
+        combine_selections(context, read_selections_from_register(reg, context), save_to_reg, "combine selections to register");
     else
         save_to_reg(context, context.selections());
 }
@@ -1938,7 +1938,7 @@ void restore_selections(Context& context, NormalParams params)
         set_selections(context, std::move(selections));
     }
     else
-        combine_selections(context, std::move(selections), set_selections);
+        combine_selections(context, std::move(selections), set_selections, "combine selections from register");
 }
 
 void undo(Context& context, NormalParams params)
