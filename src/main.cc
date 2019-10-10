@@ -123,10 +123,11 @@ String runtime_directory()
 
 String config_directory()
 {
-    StringView config_home = getenv("XDG_CONFIG_HOME");
-    if (config_home.empty())
-        return format("{}/.config/kak", homedir());
-    return format("{}/kak", config_home);
+    if (StringView kak_cfg_dir = getenv("KAKOUNE_CONFIG_DIR"); not kak_cfg_dir.empty())
+        return kak_cfg_dir.str();
+    if (StringView xdg_cfg_home = getenv("XDG_CONFIG_HOME"); not xdg_cfg_home.empty())
+        return format("{}/kak", xdg_cfg_home);
+    return format("{}/.config/kak", homedir());
 }
 
 static const EnvVarDesc builtin_env_vars[] = { {
