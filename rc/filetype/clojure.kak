@@ -222,13 +222,35 @@ e.g. '(src|test|dev)'} regex clojure_source_directories '(src|test|dev)'
 
 define-command -docstring %{clojure-insert-ns: Insert namespace directive at top of Clojure source file} \
     clojure-insert-ns %{
-    evaluate-commands -draft %{
-        execute-keys -save-regs '' 'gk\O' "%val{bufname}" '<esc>giZ'
-        try %{ execute-keys 'z<a-l>s\.clj[csx]?$<ret><a-d>' }
-        try %{ execute-keys 'z<a-l>s^' "%opt{clojure_source_directories}" '/<ret><a-d>' }
-        try %{ execute-keys 'z<a-l>s/<ret>r.' }
-        try %{ execute-keys 'z<a-l>s_<ret>r-' }
-        execute-keys 'z<a-l>\c(ns <c-r>")<ret><esc>'
+    evaluate-commands -draft %sh{
+        project_root_files='project.clj boot.build deps.edn pom.xml build.xml package.json .git'
+        is_project_root() {
+            for file in $project_root_files; do
+                if [ -e "$1/$file" ]; then
+                    return 0
+                fi
+            done
+            return 1
+        }
+        find_buffile_relative_to_project_root() {
+            relative_buffile="${kak_buffile##*/}"
+            project_root="${kak_buffile%/*}"
+            while [ -n "$project_root" ] && ! is_project_root "$project_root"; do
+                relative_buffile="${project_root##*/}/${relative_buffile}"
+                project_root="${project_root%/*}"
+            done
+            [ -n "$project_root" ]
+        }
+        if [ "${kak_buffile#/}" = "${kak_buffile}" ]; then
+            printf 'fail "buffer has a non-absolute path (is it a scratch buffer?)"\n'
+            exit
+        fi
+        if ! find_buffile_relative_to_project_root; then
+            printf 'fail "unable to find project root"\n'
+            exit
+        fi
+        namespace="$(printf "${relative_buffile}" |kak -f 's\.clj[csx]?$<ret>d%s^[^/]*/<ret>d%s/<ret>r.%s_<ret>r-')"
+        printf 'execute-keys -draft %%{gg\O(ns %s)<esc>}' "$namespace"
     }
 }
 
