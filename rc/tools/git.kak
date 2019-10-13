@@ -25,15 +25,25 @@ define-command -params 1.. \
 All the optional arguments are forwarded to the git utility
 Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  hide-diff\n  init\n  log\n  show\n  show-diff\n  status\n  update-diff'} \
   -shell-script-candidates %{
-    if [ $kak_token_to_complete -eq 0 ]; then
-        printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nshow\nshow-diff\ninit\nstatus\nupdate-diff\n"
-    else
-        case "$1" in
-            commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
-            add) git ls-files -dmo --exclude-standard ;;
-            rm) git ls-files -c ;;
+    i=0
+    state='want_command'
+    while [ $i -lt $kak_token_to_complete ] && [ $# -gt 0 ]; do
+        case "$state:$1" in
+            want_command:-C) state='want_path';;
+            want_path:*)     state='want_command';;
+            want_command:-*) state='want_command';;
+            want_command:*)  state="$1" ; break ;;
         esac
-    fi
+        shift
+        i=$(( i + 1 ))
+    done
+    case "$state" in
+        want_command) printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nshow\nshow-diff\ninit\nstatus\nupdate-diff\n" ;;
+        want_path)    ls -1d */ |tr -d / ;;
+        commit)       printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; run_git ls-files -m ;;
+        add)          run_git ls-files -dmo --exclude-standard ;;
+        rm)           run_git ls-files -c ;;
+    esac
   } \
   git %{ evaluate-commands %sh{
     cd_bufdir() {
@@ -53,7 +63,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         esac
         output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
         mkfifo ${output}
-        ( git "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
+        ( run_git "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
         printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
@@ -69,7 +79,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                       try %{ add-highlighter window/git-blame flag-lines Information git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
-                  git blame "$@" --incremental ${kak_buffile} | awk '
+                  run_git blame "$@" --incremental ${kak_buffile} | awk '
                   function send_flags(text, flag, i) {
                       if (line == "") { return; }
                       text=substr(sha,1,8) " " dates[sha] " " authors[sha]
@@ -99,8 +109,12 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         ) > /dev/null 2>&1 < /dev/null &
     }
 
+    run_git() {
+        git $git_driver_args "${@}"
+    }
+
     run_git_cmd() {
-        if git "${@}" > /dev/null 2>&1; then
+        if run_git "${@}" > /dev/null 2>&1; then
           printf %s "echo -markup '{Information}git $1 succeeded'"
         else
           printf %s "echo -markup '{Error}git $1 failed'"
@@ -110,7 +124,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     update_diff() {
         (
             cd_bufdir
-            git --no-pager diff -U0 "$kak_buffile" | perl -e '
+            run_git --no-pager diff -U0 "$kak_buffile" | perl -e '
             $flags = $ENV{"kak_timestamp"};
             foreach $line (<STDIN>) {
                 if ($line =~ /@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))?/) {
@@ -165,7 +179,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     commit() {
         # Handle case where message needs not to be edited
         if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit|--fixup.*|--squash.*"; then
-            if git commit "$@" > /dev/null 2>&1; then
+            if run_git commit "$@" > /dev/null 2>&1; then
                 echo 'echo -markup "{Information}Commit succeeded"'
             else
                 echo 'echo -markup "{Error}Commit failed"'
@@ -176,17 +190,33 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
 		EOF
 
         # fails, and generate COMMIT_EDITMSG
-        GIT_EDITOR='' EDITOR='' git commit "$@" > /dev/null 2>&1
+        GIT_EDITOR='' EDITOR='' run_git commit "$@" > /dev/null 2>&1
         msgfile="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
         printf %s "edit '$msgfile'
               hook buffer BufWritePost '.*\Q$msgfile\E' %{ evaluate-commands %sh{
-                  if git commit -F '$msgfile' --cleanup=strip $* > /dev/null; then
+                  if git $git_driver_args commit -F '$msgfile' --cleanup=strip $* > /dev/null; then
                      printf %s 'evaluate-commands -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
                   else
                      printf %s 'evaluate-commands -client $kak_client echo -markup %{{Error}Commit failed}'
                   fi
               } }"
     }
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -C)
+                git_driver_args="$1 $2"
+                shift 2
+                ;;
+            -C*)
+                git_driver_args="$1"
+                shift 1
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
 
     case "$1" in
         show|log|diff|status)
