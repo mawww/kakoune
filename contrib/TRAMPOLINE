@@ -453,10 +453,10 @@ using the built-in `:doc` command.
         `---'       non-interactively. The middle ground between the two
         .---,       solutions is to record the modifications made to one
         | Q |       chunk interactively, and replay the sequence of keys
-        `---'       at will. The sequence in question is a macro: the `q`
+        `---'       at will. The sequence in question is a macro: the `Q`
                     primitive will create a new one (i.e. record all the keys
 .---, .---,         hit henceforth until the escape key `<esc>` is hit), and
-|ctl|+| r |_.       the `Q` primitive will replay the keys saved in the macro.
+|ctl|+| r |_.       the `q` primitive will replay the keys saved in the macro.
 `---' `---'  `.---,
               | @ | Notes: macros can easily be translated into a proper
               `---' script, as they are saved in the `@` register, which you
