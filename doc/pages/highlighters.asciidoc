@@ -275,8 +275,8 @@ The common case would be to create a named shared group, or regions and then
 fill it with highlighters:
 
 ---------------------------------------
-add-highlighter shared/ group <name>
-add-highlighter shared/<name> regex ...
+add-highlighter shared/<name> group
+add-highlighter shared/<name>/ regex ...
 ---------------------------------------
 
 It can then be referenced in a window using the ref highlighter.
