@@ -824,19 +824,18 @@ void NCursesUI::draw_menu()
 
     for (auto line = 0_line; line < win_height; ++line)
     {
-        m_menu.move_cursor(line);
         for (int col = 0; col < m_menu.columns; ++col)
         {
+            m_menu.move_cursor({line, col * column_width});
             int item_idx = (first_col + col) * (int)m_menu.size.line + (int)line;
             auto& face = item_idx < item_count and item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg;
-            ColumnCount column = 0;
             if (item_idx < item_count)
             {
                 const DisplayLine& item = m_menu.items[item_idx];
                 m_menu.draw(m_palette, item.atoms(), column_width, face);
-                column = item.length();
             }
-            m_menu.draw(m_palette, DisplayAtom(String{' ', column_width - column}), column_width - column, face);
+            else
+                m_menu.draw(m_palette, DisplayAtom(String{}), column_width, face);
         }
         const bool is_mark = line >= mark_line and line < mark_line + mark_height;
         m_menu.move_cursor({line, m_menu.size.column - 1});
