@@ -115,12 +115,11 @@ InsertCompletion complete_word(const SelectionList& sels,
 
         const Buffer* buffer;
     };
-    Vector<RankedMatchAndBuffer> matches;
 
     auto& word_db = get_word_db(buffer);
-    for (auto& m : word_db.find_matching(prefix))
-        matches.push_back({ m, &buffer });
-
+    Vector<RankedMatchAndBuffer> matches = word_db.find_matching(prefix)
+                                         | transform([&](auto& m) { return RankedMatchAndBuffer{m, &buffer}; })
+                                         | gather<Vector>();
     // Remove words that are being edited
     for (auto& word_count : sel_word_counts)
     {
