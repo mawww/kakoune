@@ -14,7 +14,7 @@ hook global BufCreate .*[.](ya?ml) %{
 hook global WinSetOption filetype=yaml %{
     require-module yaml
 
-    hook window ModeChange insert:.* -group yaml-trim-indent yaml-trim-indent
+    hook window ModeChange pop:insert:.* -group yaml-trim-indent yaml-trim-indent
     hook window InsertChar \n -group yaml-indent yaml-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window yaml-.+ }
 }

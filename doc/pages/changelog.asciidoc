@@ -7,6 +7,10 @@ released versions.
 
 * Arrow keys and `<home>`, `<end>` are not normal mode commands
   anymore but default key mappings.
+  
+* `ModeChange` hook parameter now takes `push:` or `pop:` prefix,
+  `InsertBegin`, `InsertEnd`, `NormalBegin` and `NormalEnd`
+  were removed.
 
 == Kakoune 2019.07.01
 

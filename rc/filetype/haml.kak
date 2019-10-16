@@ -14,7 +14,7 @@ hook global BufCreate .*[.](haml) %{
 hook global WinSetOption filetype=haml %{
     require-module haml
 
-    hook window ModeChange insert:.* -group haml-trim-indent  haml-trim-indent
+    hook window ModeChange pop:insert:.* -group haml-trim-indent  haml-trim-indent
     hook window InsertChar \n -group haml-indent haml-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haml-.+ }

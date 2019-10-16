@@ -44,6 +44,10 @@ struct {
     unsigned int version;
     const char* notes;
 } constexpr version_notes[] = { {
+        0,
+        "» ModeChange parameter has changed to contain push/pop\n"
+        "  ${Mode}Begin/${Mode}End hooks were removed\n"
+    }, {
         20190701,
         "» %file{...} expansions to read files\n"
         "» echo -to-file <filename> to write to file\n"

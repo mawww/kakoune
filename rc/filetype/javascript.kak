@@ -15,7 +15,7 @@ hook global BufCreate .*[.](ts)x? %{
 hook global WinSetOption filetype=(javascript|typescript) %{
     require-module javascript
 
-    hook window ModeChange insert:.* -group "%val{hook_param_capture_1}-trim-indent" javascript-trim-indent
+    hook window ModeChange pop:insert:.* -group "%val{hook_param_capture_1}-trim-indent" javascript-trim-indent
     hook window InsertChar .* -group "%val{hook_param_capture_1}-indent" javascript-indent-on-char
     hook window InsertChar \n -group "%val{hook_param_capture_1}-indent" javascript-indent-on-new-line
 

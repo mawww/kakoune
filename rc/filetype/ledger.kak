@@ -13,7 +13,7 @@ hook global WinSetOption filetype=ledger %{
     require-module ledger
 
     hook window InsertChar \n -group ledger-indent ledger-indent-on-new-line
-    hook window ModeChange insert:.* -group ledger-trim-indent ledger-trim-indent
+    hook window ModeChange pop:insert:.* -group ledger-trim-indent ledger-trim-indent
 
     hook -once -always window WinSetOption filetype=.* %{
         remove-hooks window ledger-.+

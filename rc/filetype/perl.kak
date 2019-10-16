@@ -17,7 +17,7 @@ hook global WinSetOption filetype=perl %{
     set-option window static_words %opt{perl_static_words}
 
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group perl-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange pop:insert:.* -group perl-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group perl-indent perl-indent-on-new-line
     hook window InsertChar \{ -group perl-indent perl-indent-on-opening-curly-brace
     hook window InsertChar \} -group perl-indent perl-indent-on-closing-curly-brace

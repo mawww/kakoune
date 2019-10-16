@@ -11,7 +11,7 @@ hook global BufCreate .*[.](hbs) %{
 hook global WinSetOption filetype=hbs %{
     require-module hbs
 
-    hook window ModeChange insert:.* -group hbs-trim-indent hbs-trim-indent
+    hook window ModeChange pop:insert:.* -group hbs-trim-indent hbs-trim-indent
     hook window InsertChar \n -group hbs-indent hbs-indent-on-new-line
     hook window InsertChar .* -group hbs-indent hbs-indent-on-char
     hook window InsertChar '>' -group hbs-indent html-indent-on-greater-than

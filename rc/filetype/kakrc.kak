@@ -20,7 +20,7 @@ hook global WinSetOption filetype=kak %~
     hook window InsertChar [>)}\]] -group kak-indent kak-indent-on-closing-matching
     hook window InsertChar (?![[{(<>)}\]])[^\s\w] -group kak-indent kak-indent-on-closing-char
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group kak-trim-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange pop:insert:.* -group kak-trim-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
     set-option buffer extra_word_chars '_' '-'
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window kak-.+ }

@@ -48,23 +48,11 @@ name. Hooks with no description will always use an empty string.
 *NormalIdle*::
     a certain duration has passed since the last keypress in normal mode
 
-*NormalBegin*::
-    entering normal mode
-
-*NormalEnd*::
-    leaving normal mode
-
 *NormalKey* `key`::
     a key is received in normal mode
 
 *InsertIdle*::
     a certain duration has passed since the last keypress in insert mode
-
-*InsertBegin*::
-    entering insert mode
-
-*InsertEnd*::
-    leaving insert mode
 
 *InsertKey* `key`::
     a key is received in insert mode
@@ -150,8 +138,8 @@ name. Hooks with no description will always use an empty string.
 *RuntimeError* `error message`::
     an error was encountered while executing a user command
 
-*ModeChange* `<old mode>:<new mode>`::
-    Triggered whenever the current input mode changes
+*ModeChange* `[push|pop]:<old mode>:<new mode>`::
+    Triggered whenever a mode is pushed or removed from the mode stack.
 
 *KakBegin* `session name`::
     kakoune has started, this hook is called just after reading the user

@@ -9,7 +9,7 @@ hook global WinSetOption filetype=java %{
     require-module java
 
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group java-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange pop:insert:.* -group java-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group java-indent java-indent-on-new-line
     hook window InsertChar \{ -group java-indent java-indent-on-opening-curly-brace
     hook window InsertChar \} -group java-indent java-indent-on-closing-curly-brace

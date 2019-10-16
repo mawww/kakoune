@@ -6,7 +6,7 @@ hook global WinSetOption filetype=sh %{
     require-module sh
     set-option window static_words %opt{sh_static_words}
 
-    hook window ModeChange insert:.* -group sh-trim-indent sh-trim-indent
+    hook window ModeChange pop:insert:.* -group sh-trim-indent sh-trim-indent
     hook window InsertChar \n -group sh-indent sh-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window sh-.+ }
 }

@@ -14,7 +14,7 @@ hook global BufCreate .*[.](moon) %{
 hook global WinSetOption filetype=moon %{
     require-module moon
 
-    hook window ModeChange insert:.* -group moon-trim-indent  moon-trim-indent
+    hook window ModeChange pop:insert:.* -group moon-trim-indent  moon-trim-indent
     hook window InsertChar .* -group moon-indent moon-indent-on-char
     hook window InsertChar \n -group moon-indent moon-indent-on-new-line
 

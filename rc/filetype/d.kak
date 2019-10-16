@@ -17,7 +17,7 @@ hook global WinSetOption filetype=d %{
     set-option window static_words %opt{d_static_words}
 
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group d-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange pop:insert:.* -group d-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group d-indent d-indent-on-new-line
     hook window InsertChar \{ -group d-indent d-indent-on-opening-curly-brace
     hook window InsertChar \} -group d-indent d-indent-on-closing-curly-brace
@@ -77,7 +77,7 @@ evaluate-commands %sh{
     types="${types}|string|ubyte|ucent|uint|ulong|ushort|void|wchar|wstring"
     values="true|false|null"
     tokens="__FILE__|__MODULE__|__LINE__|__FUNCTION__"
-    tokens="${tokens}|__PRETTY_FUNCTION__|__DATE__|__EOF__|__TIME__"
+    tokens="${tokens}|__Change|pop:__DATE__|__EOF__|__TIME__"
     tokens="${tokens}|__TIMESTAMP__|__VENDOR__|__VERSION__|#line"
     properties="this|init|sizeof|alignof|mangleof|stringof|infinity|nan|dig|epsilon|mant_dig"
     properties="${properties}|max_10_exp|min_exp|max|min_normal|re|im|classinfo"

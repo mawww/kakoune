@@ -13,7 +13,7 @@ hook global BufCreate .*[.](rust|rs) %{
 
 hook global WinSetOption filetype=rust %[
     require-module rust
-    hook window InsertEnd .* -group rust-trim-indent rust-trim-indent
+    hook window ModeChange pop:insert:.* -group rust-trim-indent rust-trim-indent
     hook window InsertChar \n -group rust-indent rust-indent-on-new-line
     hook window InsertChar \{ -group rust-indent rust-indent-on-opening-curly-brace
     hook window InsertChar [)}] -group rust-indent rust-indent-on-closing

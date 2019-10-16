@@ -14,7 +14,7 @@ hook global BufCreate .*[.](scss) %{
 hook global WinSetOption filetype=scss %[
     require-module scss
 
-    hook window ModeChange insert:.* -group scss-trim-indent  scss-trim-indent
+    hook window ModeChange pop:insert:.* -group scss-trim-indent  scss-trim-indent
     hook window InsertChar \n -group scss-indent scss-indent-on-new-line
     hook window InsertChar \} -group scss-indent scss-indent-on-closing-curly-brace
     set-option buffer extra_word_chars '_' '-'

@@ -18,7 +18,7 @@ hook global BufCreate .*\.xml %{
 hook global WinSetOption filetype=(html|xml) %{
     require-module html
 
-    hook window ModeChange insert:.* -group "%val{hook_param_capture_1}-trim-indent"  html-trim-indent
+    hook window ModeChange pop:insert:.* -group "%val{hook_param_capture_1}-trim-indent"  html-trim-indent
     hook window InsertChar '>' -group "%val{hook_param_capture_1}-indent" html-indent-on-greater-than
     hook window InsertChar \n -group "%val{hook_param_capture_1}-indent" html-indent-on-new-line
 

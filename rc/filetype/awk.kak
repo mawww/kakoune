@@ -12,7 +12,7 @@ hook global WinSetOption filetype=awk %{
     require-module awk
     
     hook window InsertChar \n -group awk-indent awk-indent-on-new-line
-    hook window ModeChange insert:.* -group awk-trim-indent awk-trim-indent
+    hook window ModeChange pop:insert:.* -group awk-trim-indent awk-trim-indent
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window awk-.+ }
 }

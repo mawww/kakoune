@@ -14,7 +14,7 @@ hook global BufCreate .*[.](sass) %{
 hook global WinSetOption filetype=sass %{
     require-module sass
 
-    hook window ModeChange insert:.* -group sass-trim-indent  sass-trim-indent
+    hook window ModeChange pop:insert:.* -group sass-trim-indent  sass-trim-indent
     hook window InsertChar \n -group sass-indent sass-indent-on-new-line
     set-option buffer extra_word_chars '_' '-'
 

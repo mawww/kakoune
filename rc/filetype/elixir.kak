@@ -14,7 +14,7 @@ hook global BufCreate .*[.](ex|exs) %{
 hook global WinSetOption filetype=elixir %{
     require-module elixir
 
-    hook window ModeChange insert:.* -group elixir-trim-indent  elixir-trim-indent
+    hook window ModeChange pop:insert:.* -group elixir-trim-indent  elixir-trim-indent
     hook window InsertChar \n -group elixir-indent elixir-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elixir-.+ }

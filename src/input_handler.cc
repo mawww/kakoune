@@ -203,8 +203,6 @@ public:
             context().hooks_disabled().unset();
             m_hooks_disabled = false;
         }
-
-        context().hooks().run_hook(Hook::NormalBegin, "", context());
     }
 
     void on_disabled(bool temporary) override
@@ -217,8 +215,6 @@ public:
             context().hooks_disabled().unset();
             m_hooks_disabled = false;
         }
-
-        context().hooks().run_hook(Hook::NormalEnd, "", context());
     }
 
     void on_key(Key key) override
@@ -1153,7 +1149,6 @@ public:
         last_insert().keys.clear();
         last_insert().disable_hooks = context().hooks_disabled();
         last_insert().count = count;
-        context().hooks().run_hook(Hook::InsertBegin, "", context());
         prepare(mode, count);
     }
 
@@ -1197,11 +1192,6 @@ public:
         }
         else if (key == Key::Escape or key == ctrl('c'))
         {
-            if (m_in_end)
-                throw runtime_error("asked to exit insert mode while running InsertEnd hook");
-            m_in_end = true;
-            context().hooks().run_hook(Hook::InsertEnd, "", context());
-
             m_completer.reset();
             pop_mode();
         }
@@ -1496,7 +1486,6 @@ private:
     const bool      m_restore_cursor;
     bool            m_auto_complete;
     Timer           m_idle_timer;
-    bool            m_in_end = false;
     MouseHandler    m_mouse_handler;
     ScopedSetBool   m_disable_hooks;
 };
@@ -1520,7 +1509,7 @@ void InputHandler::push_mode(InputMode* new_mode)
     m_mode_stack.emplace_back(new_mode);
     new_mode->on_enabled();
 
-    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, new_mode->name()), context());
+    context().hooks().run_hook(Hook::ModeChange, format("push:{}:{}", prev_name, new_mode->name()), context());
 }
 
 void InputHandler::pop_mode(InputMode* mode)
@@ -1534,7 +1523,7 @@ void InputHandler::pop_mode(InputMode* mode)
     m_mode_stack.pop_back();
     current_mode().on_enabled();
 
-    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()), context());
+    context().hooks().run_hook(Hook::ModeChange, format("pop:{}:{}", prev_name, current_mode().name()), context());
 }
 
 void InputHandler::reset_normal_mode()
@@ -1543,12 +1532,8 @@ void InputHandler::reset_normal_mode()
     if (m_mode_stack.size() == 1)
         return;
 
-    StringView prev_name = current_mode().name();
-    current_mode().on_disabled(false);
-    m_mode_stack.resize(1);
-    current_mode().on_enabled();
-
-    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()), context());
+    while (m_mode_stack.size() > 1)
+        pop_mode(m_mode_stack.back().get());
 }
 
 void InputHandler::insert(InsertMode mode, int count)

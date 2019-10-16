@@ -17,7 +17,7 @@ hook global WinSetOption filetype=dart %{
     set-option window static_words %opt{dart_static_words}
 
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group dart-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange pop:insert:.* -group dart-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group dart-indent dart-indent-on-new-line
     hook window InsertChar \{ -group dart-indent dart-indent-on-opening-curly-brace
     hook window InsertChar \} -group dart-indent dart-indent-on-closing-curly-brace

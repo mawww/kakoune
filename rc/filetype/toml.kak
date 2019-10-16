@@ -14,7 +14,7 @@ hook global BufCreate .*\.(toml) %{
 hook global WinSetOption filetype=toml %{
     require-module toml
 
-    hook window ModeChange insert:.* -group toml-trim-indent toml-trim-indent
+    hook window ModeChange pop:insert:.* -group toml-trim-indent toml-trim-indent
     hook window InsertChar \n -group toml-indent toml-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window toml-.+ }

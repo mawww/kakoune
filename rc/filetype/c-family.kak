@@ -29,7 +29,7 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
 
     evaluate-commands "set-option window static_words %%opt{%val{hook_param_capture_1}_static_words}"
 
-    hook -group "%val{hook_param_capture_1}-trim-indent" window ModeChange insert:.* c-family-trim-indent
+    hook -group "%val{hook_param_capture_1}-trim-indent" window ModeChange pop:insert:.* c-family-trim-indent
     hook -group "%val{hook_param_capture_1}-insert" window InsertChar \n c-family-insert-on-newline
     hook -group "%val{hook_param_capture_1}-indent" window InsertChar \n c-family-indent-on-newline
     hook -group "%val{hook_param_capture_1}-indent" window InsertChar \{ c-family-indent-on-opening-curly-brace

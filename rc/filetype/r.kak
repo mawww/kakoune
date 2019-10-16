@@ -133,7 +133,7 @@ hook -group r-highlight global WinSetOption filetype=r %{
 }
 
 hook global WinSetOption filetype=r %~
-    hook window ModeChange insert:.* r-trim-indent
+    hook window ModeChange pop:insert:.* r-trim-indent
     hook window InsertChar \n        r-insert-on-newline
     hook window InsertChar \n        r-indent-on-newline
     hook window InsertChar \{        r-indent-on-opening-curly-brace
