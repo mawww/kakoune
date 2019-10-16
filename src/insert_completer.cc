@@ -154,6 +154,7 @@ InsertCompletion complete_word(const SelectionList& sels,
                                     [](const CharCount& lhs, const RankedMatchAndBuffer& rhs)
                                     { return std::max(lhs, rhs.candidate().char_length()); });
 
+    auto limit = [](StringView s, ColumnCount l) { return s.column_length() <= l ? s.str() : "…" + s.substr(s.column_length() - (l + 1)); };
     constexpr size_t max_count = 100;
     // Gather best max_count matches
     InsertCompletion::CandidateList candidates;
@@ -169,7 +170,7 @@ InsertCompletion complete_word(const SelectionList& sels,
             const auto pad_len = longest + 1 - m.candidate().char_length();
             menu_entry.push_back({ m.candidate().str(), {} });
             menu_entry.push_back({ String{' ', pad_len}, {} });
-            menu_entry.push_back({ m.buffer->display_name(), faces["MenuInfo"] });
+            menu_entry.push_back({ limit(m.buffer->display_name(), 20), faces["MenuInfo"] });
         }
         else
             menu_entry.push_back({ m.candidate().str(), {} });
