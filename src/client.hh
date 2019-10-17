@@ -140,7 +140,7 @@ enum class Autoreload
 
 constexpr auto enum_desc(Meta::Type<Autoreload>)
 {
-    return make_array<EnumDesc<Autoreload>, 5>({
+    return make_array<EnumDesc<Autoreload>>({
         { Autoreload::Yes, "yes" },
         { Autoreload::No, "no" },
         { Autoreload::Ask, "ask" },

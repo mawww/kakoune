@@ -60,7 +60,7 @@ enum class WriteMethod
 };
 constexpr auto enum_desc(Meta::Type<WriteMethod>)
 {
-    return make_array<EnumDesc<WriteMethod>, 2>({
+    return make_array<EnumDesc<WriteMethod>>({
         { WriteMethod::Overwrite, "overwrite" },
         { WriteMethod::Replace, "replace" },
     });

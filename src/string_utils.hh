@@ -147,7 +147,7 @@ enum class Quoting
 
 constexpr auto enum_desc(Meta::Type<Quoting>)
 {
-    return make_array<EnumDesc<Quoting>, 3>({
+    return make_array<EnumDesc<Quoting>>({
         { Quoting::Raw, "raw" },
         { Quoting::Kakoune, "kakoune" },
         { Quoting::Shell, "shell" }

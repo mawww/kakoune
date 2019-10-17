@@ -40,7 +40,7 @@ enum class SelectMode
 
 constexpr auto enum_desc(Meta::Type<SelectMode>)
 {
-    return make_array<EnumDesc<SelectMode>, 3>({
+    return make_array<EnumDesc<SelectMode>>({
         { SelectMode::Replace, "replace" },
         { SelectMode::Extend, "extend" },
         { SelectMode::Append, "append" },

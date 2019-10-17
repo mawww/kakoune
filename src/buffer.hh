@@ -25,7 +25,7 @@ enum class EolFormat
 
 constexpr auto enum_desc(Meta::Type<EolFormat>)
 {
-    return make_array<EnumDesc<EolFormat>, 2>({
+    return make_array<EnumDesc<EolFormat>>({
         { EolFormat::Lf, "lf" },
         { EolFormat::Crlf, "crlf" },
     });
@@ -39,7 +39,7 @@ enum class ByteOrderMark
 
 constexpr auto enum_desc(Meta::Type<ByteOrderMark>)
 {
-    return make_array<EnumDesc<ByteOrderMark>, 2>({
+    return make_array<EnumDesc<ByteOrderMark>>({
         { ByteOrderMark::None, "none" },
         { ByteOrderMark::Utf8, "utf8" },
     });

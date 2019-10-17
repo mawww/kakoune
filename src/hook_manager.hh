@@ -58,7 +58,7 @@ enum class Hook
 
 constexpr auto enum_desc(Meta::Type<Hook>)
 {
-    return make_array<EnumDesc<Hook>, 38>({
+    return make_array<EnumDesc<Hook>>({
         {Hook::BufCreate, "BufCreate"},
         {Hook::BufNewFile, "BufNewFile"},
         {Hook::BufOpenFile, "BufOpenFile"},

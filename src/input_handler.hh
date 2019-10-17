@@ -148,7 +148,7 @@ constexpr bool with_bit_ops(Meta::Type<AutoInfo>) { return true; }
 
 constexpr auto enum_desc(Meta::Type<AutoInfo>)
 {
-    return make_array<EnumDesc<AutoInfo>, 3>({
+    return make_array<EnumDesc<AutoInfo>>({
         { AutoInfo::Command, "command"},
         { AutoInfo::OnKey, "onkey"},
         { AutoInfo::Normal, "normal" }
@@ -165,7 +165,7 @@ constexpr bool with_bit_ops(Meta::Type<AutoComplete>) { return true; }
 
 constexpr auto enum_desc(Meta::Type<AutoComplete>)
 {
-    return make_array<EnumDesc<AutoComplete>, 3>({
+    return make_array<EnumDesc<AutoComplete>>({
         { AutoComplete::Insert, "insert"},
         { AutoComplete::Prompt, "prompt" }
     });
