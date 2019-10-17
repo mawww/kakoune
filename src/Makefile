@@ -22,12 +22,12 @@ else
 endif
 
 ifneq (,$(findstring address,$(sanitize)))
-    CPPFLAGS += -fsanitize=address
+    CXXFLAGS += -fsanitize=address
     LDFLAGS += -lasan
     sanitize_suffix := $(sanitize_suffix)a
 endif
 ifneq (,$(findstring undefined,$(sanitize)))
-    CPPFLAGS += -fsanitize=undefined
+    CXXFLAGS += -fsanitize=undefined
     LDFLAGS += -lubsan
     sanitize_suffix := $(sanitize_suffix)u
 endif
@@ -88,7 +88,14 @@ else
     LDFLAGS += -rdynamic
 endif
 
-CXXFLAGS += -pedantic -std=c++17 -g -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-address -Wno-init-list-lifetime
+CXXFLAGS += -pedantic -std=c++17 -g -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-address
+
+compiler := $(shell $(CXX) --version)
+ifneq (,$(findstring clang,$(compiler)))
+    CXXFLAGS += -frelaxed-template-template-args
+else ifneq (,$(findstring GCC,$(compiler)))
+    CXXFLAGS += -Wno-init-list-lifetime
+endif
 
 all : kak
 
