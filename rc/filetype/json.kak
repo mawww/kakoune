@@ -32,11 +32,10 @@ provide-module json %(
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/json regions
-add-highlighter shared/json/code default-region group
-add-highlighter shared/json/string region '"' (?<!\\)(\\\\)*" fill string
-
-add-highlighter shared/json/code/ regex \b(true|false|null|\d+(?:\.\d+)?(?:[eE][+-]?\d*)?)\b 0:value
+add-highlighter shared/json group
+add-highlighter shared/json/string regex (?<!\\)("(?:[^"\\]|\\\\|\\")*") 1:string
+add-highlighter shared/json/key regex (?<!\\)("(?:[^"\\]|\\\\|\\")*")\s*: 1:keyword
+add-highlighter shared/json/literal region '"' (?<!\\)(\\\\)*" regex \b(true|false|null|\d+(?:\.\d+)?(?:[eE][+-]?\d*)?)\b 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
