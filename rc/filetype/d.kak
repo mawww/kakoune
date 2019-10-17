@@ -77,7 +77,7 @@ evaluate-commands %sh{
     types="${types}|string|ubyte|ucent|uint|ulong|ushort|void|wchar|wstring"
     values="true|false|null"
     tokens="__FILE__|__MODULE__|__LINE__|__FUNCTION__"
-    tokens="${tokens}|__Change|pop:__DATE__|__EOF__|__TIME__"
+    tokens="${tokens}|__PRETTY_FUNCTION__|__DATE__|__EOF__|__TIME__"
     tokens="${tokens}|__TIMESTAMP__|__VENDOR__|__VERSION__|#line"
     properties="this|init|sizeof|alignof|mangleof|stringof|infinity|nan|dig|epsilon|mant_dig"
     properties="${properties}|max_10_exp|min_exp|max|min_normal|re|im|classinfo"
