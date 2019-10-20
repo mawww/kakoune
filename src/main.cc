@@ -78,7 +78,7 @@ void show_startup_info(Client* local_client, int last_version)
     }
     if (not info.empty())
     {
-        info += "See the `:doc options startup-info` to control this message\n";
+        info += "Refer to the `:doc options startup-info` documentation page to control this message, and to `:doc changelog` for a complete changelog\n";
         local_client->info_show(format("Kakoune {}", version), info, {}, InfoStyle::Prompt);
     }
 }
