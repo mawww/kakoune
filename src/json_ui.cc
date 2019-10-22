@@ -257,7 +257,7 @@ void JsonUI::set_on_key(OnKeyCallback callback)
 using JsonArray = Vector<Value>;
 using JsonObject = HashMap<String, Value>;
 
-static bool is_digit(char c) { return c >= '0' and c <= '9'; }
+static bool is_digit_or_minus(char c) { return (c >= '0' and c <= '9') or c == '-'; }
 
 struct JsonResult { Value value; const char* new_pos; };
 
@@ -266,10 +266,10 @@ JsonResult parse_json(const char* pos, const char* end)
     if (not skip_while(pos, end, is_blank))
         return {};
 
-    if (is_digit(*pos))
+    if (is_digit_or_minus(*pos))
     {
         auto digit_end = pos;
-        skip_while(digit_end, end, is_digit);
+        skip_while(digit_end, end, is_digit_or_minus);
         return { Value{str_to_int({pos, digit_end})}, digit_end };
     }
     if (end - pos > 4 and StringView{pos, pos+4} == "true")
@@ -521,6 +521,11 @@ UnitTest test_json_parser{[]()
         auto value = parse_json("[10,20]").value;
         kak_assert(value and value.is_a<JsonArray>());
         kak_assert(value.as<JsonArray>().at(1).as<int>() == 20);
+    }
+
+    {
+        auto value = parse_json("-1").value;
+        kak_assert(value.as<int>() == -1);
     }
 
     {
