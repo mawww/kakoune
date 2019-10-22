@@ -72,7 +72,7 @@ define-command -hidden i3-indent-on-new-line %~
         # copy # comments prefix
         try %{ execute-keys -draft k<a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
-        try %{ execute-keys -draft \;K<a-&> }
+        try %{ execute-keys -draft <semicolon>K<a-&> }
         # indent after lines ending with {
         try %[ execute-keys -draft k<a-x> <a-k> \{\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line

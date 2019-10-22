@@ -18,7 +18,7 @@ hook global WinSetOption filetype=nim %{
 
     hook window InsertChar \n -group nim-indent nim-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange pop:insert:.* -group nim-trim-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange pop:insert:.* -group nim-trim-indent %{ try %{ exec -draft <semicolon> <a-x> s ^\h+$ <ret> d } }
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window nim-.+ }
 }
@@ -111,7 +111,7 @@ def -hidden nim-indent-on-new-line %{
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ exec -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
         try %{ exec -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with enum, tuple, object, type, import, export, const, let, var, ':' or '='

@@ -58,9 +58,9 @@ define-command -hidden fish-trim-indent %{
 define-command -hidden fish-indent-on-char %{
     evaluate-commands -no-hooks -draft -itersel %{
         # align middle and end structures to start and indent when necessary
-        try %{ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-\;><a-?>^\h*(if)<ret>s\A|.\z<ret>1<a-&> }
-        try %{ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-\;><a-?>^\h*(begin|for|function|if|switch|while)<ret>s\A|.\z<ret>1<a-&> }
-        try %{ execute-keys -draft <a-x><a-k>^\h*(case)$<ret><a-\;><a-?>^\h*(switch)<ret>s\A|.\z<ret>1<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-semicolon><a-?>^\h*(if)<ret>s\A|.\z<ret>1<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-semicolon><a-?>^\h*(begin|for|function|if|switch|while)<ret>s\A|.\z<ret>1<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(case)$<ret><a-semicolon><a-?>^\h*(switch)<ret>s\A|.\z<ret>1<a-&> }
     }
 }
 
@@ -69,7 +69,7 @@ define-command -hidden fish-indent-on-new-line %{
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
         try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
         # indent after start structure

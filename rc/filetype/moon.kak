@@ -88,11 +88,11 @@ define-command -hidden moon-trim-indent %{
 define-command -hidden moon-indent-on-char %{
     evaluate-commands -draft -itersel %{
         # align _else_ statements to start
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else(if)?) $ <ret> <a-\;> <a-?> ^ \h * (if|unless|when) <ret> s \A | \z <ret> ) <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else(if)?) $ <ret> <a-semicolon> <a-?> ^ \h * (if|unless|when) <ret> s \A | \z <ret> ) <a-&> }
         # align _when_ to _switch_ then indent
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when) $ <ret> <a-\;> <a-?> ^ \h * (switch) <ret> s \A | \z <ret> ) <a-&> ) <space> <gt> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when) $ <ret> <a-semicolon> <a-?> ^ \h * (switch) <ret> s \A | \z <ret> ) <a-&> ) <space> <gt> }
         # align _catch_ and _finally_ to _try_
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (catch|finally) $ <ret> <a-\;> <a-?> ^ \h * (try) <ret> s \A | \z <ret> ) <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (catch|finally) $ <ret> <a-semicolon> <a-?> ^ \h * (try) <ret> s \A | \z <ret> ) <a-&> }
     }
 }
 
@@ -101,7 +101,7 @@ define-command -hidden moon-indent-on-new-line %{
         # copy -- comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^ \h * \K -- \h * <ret> y gh j P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : moon-trim-indent <ret> }
         # indent after start structure

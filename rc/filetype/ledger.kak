@@ -127,7 +127,7 @@ add-highlighter shared/ledger/tag/assert     regex '^\h*assert' 0:function
 define-command -hidden ledger-indent-on-new-line %[
     evaluate-commands -draft -itersel %[
         # preserve previous line indent
-        try %[ execute-keys -draft \; K <a-&> ]
+        try %[ execute-keys -draft <semicolon> K <a-&> ]
         # cleanup trailing whitespaces from previous line
         try %[ execute-keys -draft k <a-x> s \h+$ <ret> d ]
         # indent after the first line of a transaction
@@ -136,7 +136,7 @@ define-command -hidden ledger-indent-on-new-line %[
 ]
 
 define-command -hidden ledger-trim-indent %{
-    try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d }
+    try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d }
 }
 
 ]
