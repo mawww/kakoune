@@ -66,7 +66,7 @@ define-command -hidden css-trim-indent %{
 define-command -hidden css-indent-on-new-line %[
     evaluate-commands -draft -itersel %[
         # preserve previous line indent
-        try %[ execute-keys -draft \; K <a-&> ]
+        try %[ execute-keys -draft <semicolon> K <a-&> ]
         # filter previous line
         try %[ execute-keys -draft k : css-trim-indent <ret> ]
         # indent after lines ending with with {

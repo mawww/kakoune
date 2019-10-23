@@ -68,14 +68,14 @@ define-command -hidden c-family-trim-indent %{
 }
 
 define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -itersel %<
-    execute-keys \;
+    execute-keys <semicolon>
     try %<
         # if previous line is part of a comment, do nothing
         execute-keys -draft <a-?>/\*<ret> <a-K>^\h*[^/*\h]<ret>
     > catch %<
         # else if previous line closed a paren (possibly followed by words and a comment),
         # copy indent of the opening paren line
-        execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?(?://[^\n]+)?\n\z<ret> m<a-\;>J <a-S> 1<a-&>
+        execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?(?://[^\n]+)?\n\z<ret> m<a-semicolon>J <a-S> 1<a-&>
     > catch %<
         # else indent new lines with the same level as the previous one
         execute-keys -draft K <a-&>
@@ -88,7 +88,7 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
     try %< execute-keys -draft k <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> >
     # indent after a statement not followed by an opening brace
     try %< execute-keys -draft k <a-x> s\)\h*(?://[^\n]+)?\n\z<ret> \
-                               <a-\;>mB <a-k>\A\b(if|for|while)\b<ret> <a-\;>j <a-gt> >
+                               <a-semicolon>mB <a-k>\A\b(if|for|while)\b<ret> <a-semicolon>j <a-gt> >
     try %< execute-keys -draft k <a-x> s \belse\b\h*(?://[^\n]+)?\n\z<ret> \
                                j <a-gt> >
     # deindent after a single line statement end
@@ -104,7 +104,7 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
         # Go to opening parenthesis and opening brace, then select the most nested one
         try %< execute-keys [c [({],[)}] <ret> >
         # Validate selection and get first and last char
-        execute-keys <a-k>\A[{(](\h*\S+)+\n<ret> <a-K>"(([^"]*"){2})*<ret> <a-K>'(([^']*'){2})*<ret> <a-:><a-\;>L <a-S>
+        execute-keys <a-k>\A[{(](\h*\S+)+\n<ret> <a-K>"(([^"]*"){2})*<ret> <a-K>'(([^']*'){2})*<ret> <a-:><a-semicolon>L <a-S>
         # Remove possibly incorrect indent from new line which was copied from previous line
         try %< execute-keys -draft <space> <a-h> s\h+<ret> d >
         # Now indent and align that new line with the opening parenthesis/brace
@@ -136,7 +136,7 @@ define-command -hidden c-family-insert-on-closing-curly-brace %[
 ]
 
 define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel -draft %[
-    execute-keys \;
+    execute-keys <semicolon>
     try %[
         evaluate-commands -draft -save-regs '/"' %[
             # copy the commenting prefix

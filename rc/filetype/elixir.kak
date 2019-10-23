@@ -70,13 +70,13 @@ define-command -hidden elixir-indent-on-new-line %{
         # copy -- comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # indent after line ending with:
 	# try %{ execute-keys -draft k x <a-k> (do|else|->)$ <ret> & }
 	# filter previous line
         try %{ execute-keys -draft k : elixir-trim-indent <ret> }
         # indent after lines ending with do or ->
-        try %{ execute-keys -draft \\; k x <a-k> ^.+(do|->)$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <semicolon> k x <a-k> ^.+(do|->)$ <ret> j <a-gt> }
     }
 }
 

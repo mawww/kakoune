@@ -69,13 +69,13 @@ evaluate-commands %sh{
 define-command -hidden protobuf-indent-on-newline %~
     evaluate-commands -draft -itersel %[
         # preserve previous line indent
-        try %{ execute-keys -draft \;K<a-&> }
+        try %{ execute-keys -draft <semicolon>K<a-&> }
         # indent after lines ending with {
         try %[ execute-keys -draft k<a-x> <a-k> \{\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line
         try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
         # copy // comments prefix
-        try %{ execute-keys -draft \;<c-s>k<a-x> s ^\h*\K/{2,}(\h*(?=\S))? <ret> y<c-o>P<esc> }
+        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,}(\h*(?=\S))? <ret> y<c-o>P<esc> }
     ]
 ~
 

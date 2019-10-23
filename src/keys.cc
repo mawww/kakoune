@@ -78,6 +78,7 @@ static constexpr KeyAndName keynamemap[] = {
     { "del", Key::Delete },
     { "plus", '+' },
     { "minus", '-' },
+    { "semicolon", ';' },
 };
 
 KeyList parse_keys(StringView str)

@@ -78,7 +78,7 @@ define-command -hidden hbs-indent-on-new-line %{
         # copy '/' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y j p }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : hbs-trim-indent <ret> }
         # indent after lines beginning with : or -
