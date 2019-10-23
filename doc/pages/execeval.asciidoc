@@ -55,6 +55,10 @@ when the commands have been executed: */*, *"*, *|*, *^*, *@*.
     disable hook execution while executing the keys/commands
     (See <<hooks#disabling-hooks,`:doc hooks`>>)
 
+*-verbatim*::
+    do not reparse and split positional arguments. Forward them
+    exactly as given to the `evaluate-commands` command.
+
 == execute-keys specific switches
 
 *-with-maps*::

@@ -12,6 +12,9 @@ released versions.
   `InsertBegin`, `InsertEnd`, `NormalBegin` and `NormalEnd`
   were removed.
 
+* `-verbatim` switch in `evaluate-commands` for perfect command
+  forwarding to another context.
+
 == Kakoune 2019.07.01
 
 * Re-organized bundled script files directory hierarchy.

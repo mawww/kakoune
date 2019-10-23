@@ -1910,7 +1910,10 @@ const CommandDesc eval_string_cmd = {
     "evaluate-commands",
     "eval",
     "evaluate-commands [<switches>] <commands>...: execute commands as if entered by user",
-    make_context_wrap_params<1>({{{"no-hooks", { false, "disable hooks while executing commands" }}}}),
+    make_context_wrap_params<2>({{
+        {"no-hooks", { false, "disable hooks while executing commands" }},
+        {"verbatim", { false, "do not reparse argument" }}
+    }}),
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -1920,7 +1923,10 @@ const CommandDesc eval_string_cmd = {
             const bool no_hooks = context.hooks_disabled() or parser.get_switch("no-hooks");
             ScopedSetBool disable_hoooks(context.hooks_disabled(), no_hooks);
 
-            CommandManager::instance().execute(join(parser, ' ', false), context, shell_context);
+            if (parser.get_switch("verbatim"))
+                CommandManager::instance().execute_single_command(parser | gather<Vector>(), context, shell_context);
+            else
+                CommandManager::instance().execute(join(parser, ' ', false), context, shell_context);
         });
     }
 };

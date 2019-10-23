@@ -100,6 +100,12 @@ public:
     void execute(StringView command_line, Context& context,
                  const ShellContext& shell_context = ShellContext{});
 
+    void execute_single_command(CommandParameters params,
+                                Context& context,
+                                const ShellContext& shell_context,
+                                BufferCoord pos = {});
+
+
     Completions complete(const Context& context, CompletionFlags flags,
                          StringView command_line, ByteCount cursor_pos);
 
@@ -132,11 +138,6 @@ public:
     Completions complete_module_name(StringView query) const;
 
 private:
-    void execute_single_command(CommandParameters params,
-                                Context& context,
-                                const ShellContext& shell_context,
-                                BufferCoord pos);
-
     struct Command
     {
         CommandFunc func;
