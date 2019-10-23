@@ -145,20 +145,75 @@ line of the file
 .BR file
 one or more \fIfile\fRs to edit
 
-.PP
-At  startup, if \fB\-n\fR is not specified, Kakoune will try to source the file
-\fI../share/kak/kakrc\fR relative to the kak binary. This kak file will then
-try to recursively source any files in \fI$KAKOUNE_CONFIG_DIR/autoload\fR
-(with \fI$KAKOUNE_CONFIG_DIR\fR defaulting to \fI$XDG_CONFIG_HOME/kak\fR
-if \fI$XDG_CONFIG_HOME\fR is set, \fI$HOME/.config/kak\fR if it is not,
-and falling back to \fI../share/kak/autoload\fR if that autoload directory
-does not exist), and finally \fI$XDG_CONFIG_HOME/kak/kakrc\fR.
+.SH ENVIRONMENT
 
-That leads to the following behaviour: by default, with no user autoload
-directory, the system wide autoload directory is used, once the user wants
-control on autoloading, they can create an autoload directory and eventually
-symlink individual scripts, or the whole system wide autoload directory. They
-can as well add any new scripts not provided with Kakoune.
+.TP
+.BR KAKOUNE_POSIX_SHELL
+Overrides the posix shell binary path to use for \fI%sh{...}\fR expansion.
+
+.TP
+.BR KAKOUNE_CONFIG_DIR
+Overrides the location of the directory containing kakoune user configuration,
+defaults to \fI$XDG_CONFIG_HOME/kak\fR if unset.
+
+.TP
+.BR XDG_CONFIG_HOME
+Path to the user configuration directory, defaults to \fI$HOME/.config/kak\fR
+if unset.
+
+.TP
+.BR XDG_RUNTIME_DIR
+Path to the user session sockets, defaults to \fI$TMPDIR/kakoune\fR if unset.
+
+.SH FILES
+
+In the paths documented below, \fI<rtdir>\fR refers to the runtime directory,
+whose value is determined in relation to the path to the \fBkak\fR binary:
+\fI<rtdir>\fR = \fI<path_to_kak_binary>/../share/kak\fR.
+
+If not started with the \fB\-n\fR switch, Kakoune will first load
+\fI<rtdir>/kakrc\fR, which will in turn load the following additional files:
+
+.nf
+.RS
+if the \fI$KAKOUNE_CONFIG_DIR/kak/autoload\fR directory exists, recursively load every
+\fI*.kak\fR files in it and its sub-directories
+.RE
+.fi
+
+.nf
+.RS
+if it does not exist, fall back to the system\-wide autoload directory
+in \fI<rtdir>/autoload\fR, and recursively load all files in a similar way
+.RE
+.fi
+
+.nf
+.RS
+\fI<rtdir>/kakrc.local\fR, if it exists; this is a user\-defined system\-wide
+configuration
+.RE
+.fi
+
+.nf
+.RS
+\fI$KAKOUNE_CONFIG_DIR/kak/kakrc\fR, if it exists; this is the user configuration
+.RE
+.fi
+
+Consequently, if the \fI$KAKOUNE_CONFIG_DIR/kak/autoload\fR directory exists,
+only scripts stored within that directory will be loaded \- the built-in
+\fI*.kak\fR files \fBwill not be\fR.
+
+Users who still want to have the built\-in scripts loaded along their own
+can create a symbolic link to \fI<rtdir>/autoload\fR (or to individual
+scripts in it) in their user\-configuration directory:
+
+.nf
+.RS
+ln -s \fI<rtdir>\fR/autoload "${XDG_CONFIG_HOME:-$HOME/.config}"/kak/autoload
+.RE
+.fi
 
 .SH EXAMPLES
 
@@ -189,40 +244,6 @@ source code files:
 kak \-f "ggO// kak: tabstop=8<esc>" *.c
 .RE
 .fi
-
-.SH ENVIRONMENT
-
-.TP
-.BR KAKOUNE_POSIX_SHELL
-Overrides the posix shell binary path to use for \fI%sh{...}\fR expansion.
-
-.TP
-.BR KAKOUNE_CONFIG_DIR
-Overrides the location of the directory containing kakoune user configuration.
-
-.SH FILES
-
-If not started with the \fB\-n\fR switch, Kakoune will source the \fI../share/kak/kakrc\fR file relative to the kak binary,
-which will source additional files:
-
-.nf
-.RS
-if the \fI$XDG_CONFIG_HOME/kak/autoload\fR directory exists, load every
-\fI*.kak\fR files in it, and load recursively any subdirectory
-.RE
-.fi
-
-.nf
-.RS
-if it does not exist, fall back to the system wide autoload directory
-in \fI../share/kak/autoload\fR
-.RE
-.fi
-
-After that, if it exists, source the \fI$XDG_CONFIG_HOME/kak/kakrc\fR file
-which should be used for user configuration. In order to continue autoloading
-site\-wide files with a local autoload directory, just add a symbolic link
-to \fI../share/kak/autoload\fR into your local autoload directory.
 
 .SH SEE ALSO
 
