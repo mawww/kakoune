@@ -53,7 +53,10 @@ define-command -hidden tmux-repl-disabled %{ evaluate-commands %sh{
 } }
 
 evaluate-commands %sh{
-    VERSION_TMUX=$(tmux -V | cut -d' ' -f2)
+    VERSION_TMUX=$(tmux -V)
+    VERSION_TMUX=${VERSION_TMUX##* }
+    VERSION_TMUX=${VERSION_TMUX#next-}
+    VERSION_TMUX=${VERSION_TMUX%-rc*}
     VERSION_TMUX=${VERSION_TMUX%%.*}
 
     if [ "${VERSION_TMUX}" = "master" ] \
