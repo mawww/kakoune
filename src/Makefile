@@ -83,7 +83,7 @@ else
     	$(error "pkg-config not found in PATH")
     endif
 
-    LIBS += $(shell $(PKG_CONFIG) $(PKG_CONFIG_FLAGS) --libs ncursesw)
+    LIBS += -lrt $(shell $(PKG_CONFIG) $(PKG_CONFIG_FLAGS) --libs ncursesw)
     NCURSES_CFLAGS += $(shell $(PKG_CONFIG) $(PKG_CONFIG_FLAGS) --cflags ncursesw)
     LDFLAGS += -rdynamic
 endif

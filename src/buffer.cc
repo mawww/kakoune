@@ -8,14 +8,20 @@
 #include "diff.hh"
 #include "file.hh"
 #include "flags.hh"
+#include "md5.hh"
 #include "option_types.hh"
 #include "ranges.hh"
+#include "remote.hh"
 #include "shared_string.hh"
 #include "unit_tests.hh"
 #include "utils.hh"
 #include "window.hh"
 
 #include <algorithm>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 namespace Kakoune
 {
@@ -65,6 +71,27 @@ static void apply_options(OptionManager& options, const ParsedLines& parsed_line
     options.get_local_option("BOM").set(parsed_lines.bom);
 }
 
+static String get_journal_from_name(String& name)
+{
+    md5::Hash digest;
+    md5::calculate(name.data(), (int) name.length(), &digest);
+    char buf[MD5_HEX_SIZE];
+    md5::hash_to_hex(digest, buf, MD5_HEX_SIZE);
+    const auto session = Server::instance().session();
+    return "kakoune_" + session + "_" + String(buf);
+}
+
+static int open_journal(const char* name)
+{
+    return shm_open(name, O_RDWR | O_CREAT | O_TRUNC, 0600);
+}
+
+static void close_journal(const char* name, int fd)
+{
+    close(fd);
+    shm_unlink(name);
+}
+
 Buffer::HistoryNode::HistoryNode(HistoryId parent)
     : parent{parent}, timepoint{Clock::now()}
 {}
@@ -78,8 +105,10 @@ Buffer::Buffer(String name, Flags flags, StringView data,
       m_history{{HistoryId::Invalid}},
       m_history_id{HistoryId::First},
       m_last_save_history_id{HistoryId::First},
-      m_fs_timestamp{fs_timestamp.tv_sec, fs_timestamp.tv_nsec}
+      m_fs_timestamp{fs_timestamp.tv_sec, fs_timestamp.tv_nsec},
+      m_journal{get_journal_from_name(m_name)}
 {
+    m_journal_fd = open_journal(m_journal.c_str());
     ParsedLines parsed_lines = parse_lines(data);
 
     #ifdef KAK_DEBUG
@@ -144,6 +173,7 @@ void Buffer::on_unregistered()
 
 Buffer::~Buffer()
 {
+    close_journal(m_journal.c_str(), m_journal_fd);
     m_values.clear();
 }
 
@@ -608,6 +638,9 @@ void Buffer::notify_saved()
     m_flags &= ~Flags::New;
     m_last_save_history_id = m_history_id;
     m_fs_timestamp = get_fs_timestamp(m_name);
+    auto name = m_journal.c_str();
+    close_journal(name, m_journal_fd);
+    m_journal_fd = open_journal(name);
 }
 
 BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const

@@ -257,6 +257,8 @@ private:
     LineList m_lines;
 
     String m_name;
+    String m_journal;
+    int m_journal_fd;
     String m_display_name;
     Flags  m_flags;
 
