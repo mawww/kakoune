@@ -140,9 +140,6 @@ static void *TransformFunction(Context *ctx, void const *data,
   ctx->c = c;
   ctx->d = d;
 
-#undef GET
-#undef SET
-
   return ptr;
 }
 
