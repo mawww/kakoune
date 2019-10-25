@@ -1,0 +1,145 @@
+= Tools
+
+== Description
+
+Easily making programs cooperate with each others is one of the main strength
+of the Unix environment. Kakoune is designed to integrate nicely with
+tools available on a POSIX system.
+
+This documentation presents the commands offered out of the box by Kakoune
+to interact with them. Explore the files in the `rc/tools` directory to learn more.
+
+== Autorestore
+
+*autorestore-restore-buffer*::
+    restore the backup for the current file if it exists
+
+*autorestore-purge-backups*::
+    remove all the backups of the current buffer
+
+*autorestore-disable*::
+    disable automatic backup recovering
+
+== Autowrap
+
+*autowrap-enable*::
+    automatically wrap the lines in which characters are inserted
+
+*autowrap-disable*::
+    disable automatic line wrapping
+
+== Clang
+
+*clang-complete*::
+
+*clang-diagnostics-next*::
+
+*clang-disable-autocomplete*::
+
+*clang-disable-diagnostics*::
+
+*clang-enable-autocomplete*::
+
+*clang-enable-diagnostics*::
+
+*clang-parse*::
+
+== Comment
+
+*comment-block*::
+
+*comment-line*::
+
+== Ctags
+
+*ctags-complete*::
+
+*ctags-disable-autocomplete*::
+
+*ctags-disable-autoinfo*::
+
+*ctags-enable-autocomplete*::
+
+*ctags-enable-autoinfo*::
+
+*ctags-funcinfo*::
+
+*ctags-generate*::
+
+*ctags-search*::
+
+*ctags-update-tags*::
+
+== Format
+
+*formatcmd* `str`::
+    shell command used for the 'format-selections' and 'format-buffer' commands
+
+*format-buffer*::
+    format the contents of the buffer
+
+*format-selection*::
+    format the selections individually
+
+== Git
+
+*git*::
+
+== Grep
+
+*grepcmd* `str`::
+    _default_ grep -RHn +
+    shell command run to search for subtext in a file/directory
+
+*grep* [<pattern>]::
+    populate a debug buffer with all matches
+
+*grep-next-match*::
+    jump to the next grep match
+
+*grep-previous-match*::
+    jump to the previous grep match
+
+== Lint
+
+*lint*::
+
+*lint-disable*::
+
+*lint-enable*::
+
+*lint-next-error*::
+
+*lint-previous-error*::
+
+== Make
+
+*make*::
+
+*make-next-error*::
+
+*make-previous-error*::
+
+== Man
+
+*man*::
+
+*man-jump*::
+
+*man-link-next*::
+    go to next man page link
+
+*man-link-prev*::
+    go to previous man page link
+
+*man-search*::
+
+== Spell
+
+*spell*::
+
+*spell-clear*::
+
+*spell-next*::
+
+*spell-replace*::
