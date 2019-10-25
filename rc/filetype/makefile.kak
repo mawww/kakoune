@@ -1,7 +1,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*(/?[mM]akefile|\.mk) %{
+hook global BufCreate .*(/?[mM]akefile|\.mk|\.make) %{
     set-option buffer filetype makefile
 }
 
