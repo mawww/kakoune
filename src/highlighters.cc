@@ -673,7 +673,7 @@ struct WrapHighlighter : Highlighter
         const int tabstop = context.context.options()["tabstop"].get<int>();
         const LineCount win_height = context.context.window().dimensions().line;
         const ColumnCount marker_len = zero_if_greater(m_marker.column_length(), wrap_column);
-        const Face face_marker = context.context.faces()["StatusLineInfo"];
+        const Face face_marker = context.context.faces()["WrapMarker"];
         for (auto it = display_buffer.lines().begin();
              it != display_buffer.lines().end(); ++it)
         {

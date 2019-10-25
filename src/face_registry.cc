@@ -162,6 +162,7 @@ FaceRegistry::FaceRegistry()
         { "LineNumbers", {Face{ Color::Default, Color::Default }} },
         { "LineNumberCursor", {Face{ Color::Default, Color::Default, Attribute::Reverse }} },
         { "LineNumbersWrapped", {Face{ Color::Default, Color::Default, Attribute::Italic }} },
+        { "WrapMarker", {Face{ Color::Blue, Color::Default }} },
         { "MenuForeground", {Face{ Color::White, Color::Blue }} },
         { "MenuBackground", {Face{ Color::Blue, Color::White }} },
         { "MenuInfo", {Face{ Color::Cyan, Color::Default }} },
