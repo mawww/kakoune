@@ -18,11 +18,17 @@ hook global WinSetOption filetype=markdown %{
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window markdown-.+ }
 }
 
+define-command -hidden markdown-load-languages %{
+    evaluate-commands -draft %{ try %{
+        execute-keys 'gtGbGls```\h*\K[^\s]+<ret>'
+        evaluate-commands -itersel %{ require-module %val{selection} }
+    }}
+}
+
 hook -group markdown-load-languages global WinSetOption filetype=markdown %{
     hook -group markdown-load-languages window NormalIdle .* markdown-load-languages
     hook -group markdown-load-languages window InsertIdle .* markdown-load-languages
 }
-
 
 hook -group markdown-highlight global WinSetOption filetype=markdown %{
     add-highlighter window/markdown ref markdown
@@ -93,13 +99,6 @@ define-command -hidden markdown-indent-on-new-line %{
         # remove trailing white spaces
         try %{ execute-keys -draft -itersel %{ k<a-x> s \h+$ <ret> d } }
     }
-}
-
-define-command -hidden markdown-load-languages %{
-    evaluate-commands -draft %{ try %{
-        execute-keys 'gtGbGls```\h*\K[^\s]+<ret>'
-        evaluate-commands -itersel %{ require-module %val{selection} }
-    }}
 }
 
 }
