@@ -35,8 +35,6 @@ provide-module purescript %[
 add-highlighter shared/purescript regions
 add-highlighter shared/purescript/code default-region group
 add-highlighter shared/purescript/string       region (?<!'\\)(?<!')"                 (?<!\\)(\\\\)*"  fill string
-add-highlighter shared/purescript/macro        region ^\h*?\K#                        (?<!\\)\n        fill meta
-add-highlighter shared/purescript/pragma       region -recurse \{- \{-#               '#-\}'           fill meta
 add-highlighter shared/purescript/comment      region -recurse \{- \{-                  -\}            fill comment
 add-highlighter shared/purescript/line_comment region --(?:[^!#$%&*+./<>?@\\\^|~=]|$) $                fill comment
 
