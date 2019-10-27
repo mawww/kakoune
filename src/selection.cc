@@ -27,13 +27,6 @@ SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list, size_t time
 SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list)
     : SelectionList(buffer, std::move(list), buffer.timestamp()) {}
 
-SelectionList::SelectionList(SelectionList::UnsortedTag, Buffer& buffer, Vector<Selection> list, size_t timestamp, size_t main)
-    : m_selections(std::move(list)), m_buffer(&buffer), m_timestamp(timestamp)
-{
-    sort_and_merge_overlapping();
-    check_invariant();
-}
-
 void SelectionList::remove(size_t index)
 {
     m_selections.erase(begin() + index);
@@ -516,16 +509,6 @@ Selection selection_from_string(StringView desc)
         throw runtime_error(format("coordinates must be >= 1: '{}'", desc));
 
     return Selection{anchor, cursor};
-}
-
-SelectionList selection_list_from_string(Buffer& buffer, ConstArrayView<String> descs, size_t timestamp)
-{
-    if (descs.empty())
-        throw runtime_error{"empty selection description"};
-
-    auto sels = descs | transform([&](auto&& d) { auto s = selection_from_string(d); clamp(s, buffer); return s; })
-                      | gather<Vector<Selection>>();
-    return {SelectionList::UnsortedTag{}, buffer, std::move(sels), timestamp, 0};
 }
 
 }
