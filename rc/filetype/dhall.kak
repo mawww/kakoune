@@ -40,14 +40,17 @@ add-highlighter shared/dhall/line_comment region -- $ fill comment
 # Matches multi-line string literals
 add-highlighter shared/dhall/multiline_string region \Q''\E$ [^']''[^'] fill string
 
+# Matches quoted labels
+add-highlighter shared/dhall/quoted_label region ` ` fill normal
+
 # Matches built-in types
-add-highlighter shared/dhall/code/ regex \b(Location|Sort|Kind|Type|Text|Bool|Natural|Integer|Double|List|Optional)\b 0:type
+add-highlighter shared/dhall/code/ regex \b(Location|Sort|Kind|Type|Text|Bool|Natural|Integer|Double|List|Optional|\{\})\b 0:type
 
 # Matches built-in keywords
 add-highlighter shared/dhall/code/ regex \b(if|then|else|let|in|using|missing|as|merge|toMap)\b 0:keyword
 
 # Matches bulit-in values
-add-highlighter shared/dhall/code/ regex \b(True|False|Some|None|-?Infinity||NaN)\b 0:value 
+add-highlighter shared/dhall/code/ regex \b(True|False|Some|None|-?Infinity|\{=\}|NaN)\b 0:value
 
 # Matches built-in operators
 add-highlighter shared/dhall/code/ regex (,|:|\|\||&&|==|!=|=|\+|\*|\+\+|#|⩓|//\\\\|→|->|\?|λ|\\|\^|⫽|//|\[|\]|\{|\}) 0:operator
