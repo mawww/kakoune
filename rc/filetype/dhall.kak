@@ -37,6 +37,9 @@ add-highlighter shared/dhall/string  region          '"'          (?<!\\)(\\\\)*
 add-highlighter shared/dhall/comment region -recurse \{- \{-      -\}             fill comment
 add-highlighter shared/dhall/line_comment region -- $ fill comment
 
+# Matches multi-line string literals
+add-highlighter shared/dhall/multiline_string region \Q''\E$ [^']''[^'] fill string
+
 # Matches built-in types
 add-highlighter shared/dhall/code/ regex \b(Location|Sort|Kind|Type|Text|Bool|Natural|Integer|Double|List|Optional)\b 0:type
 
