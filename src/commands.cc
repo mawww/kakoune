@@ -187,6 +187,7 @@ auto make_single_word_completer(std::function<String (const Context&)> func)
 const ParameterDesc no_params{ {}, ParameterDesc::Flags::None, 0, 0 };
 const ParameterDesc single_param{ {}, ParameterDesc::Flags::None, 1, 1 };
 const ParameterDesc single_optional_param{ {}, ParameterDesc::Flags::None, 0, 1 };
+const ParameterDesc double_params{ {}, ParameterDesc::Flags::None, 2, 2 };
 
 static constexpr auto scopes = { "global", "buffer", "window" };
 
@@ -937,7 +938,7 @@ const CommandDesc remove_highlighter_cmd = {
     "remove-highlighter",
     "rmhl",
     "remove-highlighter <path>: remove highlighter identified by <path>",
-    { {}, ParameterDesc::Flags::None, 1, 1 },
+    single_param,
     CommandFlags::None,
     CommandHelper{},
     highlighter_cmd_completer<false>,
@@ -1013,7 +1014,7 @@ const CommandDesc remove_hook_cmd = {
     "remove-hooks",
     "rmhooks",
     "remove-hooks <scope> <group>: remove all hooks whose group matches the regex <group>",
-    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    double_params,
     CommandFlags::None,
     CommandHelper{},
     [](const Context& context, CompletionFlags flags,
@@ -1522,7 +1523,7 @@ const CommandDesc unset_option_cmd = {
     "unset-option <scope> <name>: remove <name> option from scope, falling back on parent scope value\n"
     "<scope> can be buffer, window, or current which refers to the narrowest "
     "scope the option is set in",
-    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    double_params,
     CommandFlags::None,
     option_doc_helper,
     complete_option,
@@ -1542,7 +1543,7 @@ const CommandDesc update_option_cmd = {
     "some option types, such as line-specs or range-specs can be updated to latest buffer timestamp\n"
     "<scope> can be buffer, window, or current which refers to the narrowest "
     "scope the option is set in",
-    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    double_params,
     CommandFlags::None,
     option_doc_helper,
     complete_option,
@@ -2274,7 +2275,7 @@ const CommandDesc unset_face_cmd = {
     "unset-face",
     nullptr,
     "unset-face <scope> <name>: remove <face> from <scope>",
-    ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
+    double_params,
     CommandFlags::None,
     face_doc_helper,
     make_completer(complete_scope, complete_face),
@@ -2491,7 +2492,7 @@ const CommandDesc require_module_cmd = {
     "require-module",
     nullptr,
     "require-module <name>: ensures that <name> module has been loaded",
-    ParameterDesc{ {}, ParameterDesc::Flags::None, 1, 1 },
+    single_param,
     CommandFlags::None,
     CommandHelper{},
     make_completer(
