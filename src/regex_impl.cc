@@ -161,7 +161,7 @@ struct RegexParser
 private:
     struct InvalidPolicy
     {
-        Codepoint operator()(Codepoint cp) { throw regex_error{"Invalid utf8 in regex"}; }
+        Codepoint operator()(Codepoint cp) const { throw regex_error{"Invalid utf8 in regex"}; }
     };
 
     enum class Flags
@@ -425,7 +425,7 @@ private:
         parse_error(format("unknown atom escape '{}'", cp));
     }
 
-    void normalize_ranges(Vector<CharacterClass::Range, MemoryDomain::Regex>& ranges)
+    static void normalize_ranges(Vector<CharacterClass::Range, MemoryDomain::Regex>& ranges)
     {
         if (ranges.empty())
             return;
@@ -1140,7 +1140,7 @@ String dump_regex(const CompiledRegex& program)
                 res += "match\n";
         }
     }
-    auto dump_start_desc = [&](CompiledRegex::StartDesc& desc, StringView name) {
+    auto dump_start_desc = [&](const CompiledRegex::StartDesc& desc, StringView name) {
         res += name + " start desc: [";
         for (size_t c = 0; c < CompiledRegex::StartDesc::count; ++c)
         {

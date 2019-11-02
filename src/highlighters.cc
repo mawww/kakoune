@@ -899,9 +899,9 @@ struct WrapHighlighter : Highlighter
         }
 
         return pos;
-    };
+    }
 
-    ColumnCount line_indent(const Buffer& buffer, int tabstop, LineCount line) const
+    static ColumnCount line_indent(const Buffer& buffer, int tabstop, LineCount line)
     {
         StringView l = buffer[line];
         auto col = 0_byte;
@@ -947,7 +947,7 @@ struct TabulationHighlighter : Highlighter
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
         const ColumnCount tabstop = context.context.options()["tabstop"].get<int>();
-        auto& buffer = context.context.buffer();
+        const auto& buffer = context.context.buffer();
         auto win_column = context.setup.window_pos.column;
         for (auto& line : display_buffer.lines())
         {
@@ -1033,7 +1033,7 @@ private:
     {
         const int tabstop = context.context.options()["tabstop"].get<int>();
         auto whitespaceface = context.context.faces()["Whitespace"];
-        auto& buffer = context.context.buffer();
+        const auto& buffer = context.context.buffer();
         auto win_column = context.setup.window_pos.column;
         for (auto& line : display_buffer.lines())
         {
@@ -1112,7 +1112,7 @@ private:
         if (contains(context.disabled_ids, ms_id))
             return;
 
-        auto& faces = context.context.faces();
+        const auto& faces = context.context.faces();
         const Face face = faces["LineNumbers"];
         const Face face_wrapped = faces["LineNumbersWrapped"];
         const Face face_absolute = faces["LineNumberCursor"];
@@ -1153,7 +1153,7 @@ private:
         unique_ids.push_back(ms_id);
     }
 
-    int compute_digit_count(const Context& context) const
+    static int compute_digit_count(const Context& context)
     {
         int digit_count = 0;
         LineCount last_line = context.buffer().line_count();
@@ -1268,7 +1268,7 @@ void highlight_selections(HighlightContext context, DisplayBuffer& display_buffe
 
 void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
-    auto& buffer = context.context.buffer();
+    const auto& buffer = context.context.buffer();
     auto error = context.context.faces()["Error"];
     for (auto& line : display_buffer.lines())
     {
@@ -1367,7 +1367,7 @@ private:
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
         auto& line_flags = context.context.options()[m_option_name].get_mutable<LineAndSpecList>();
-        auto& buffer = context.context.buffer();
+        const auto& buffer = context.context.buffer();
         update_line_specs_ifn(buffer, line_flags);
 
         auto def_face = context.context.faces()[m_default_face];
@@ -1417,7 +1417,7 @@ private:
     void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
     {
         auto& line_flags = context.context.options()[m_option_name].get_mutable<LineAndSpecList>();
-        auto& buffer = context.context.buffer();
+        const auto& buffer = context.context.buffer();
         update_line_specs_ifn(buffer, line_flags);
 
         ColumnCount width = 0;

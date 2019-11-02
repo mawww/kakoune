@@ -111,7 +111,7 @@ Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsF
 BufferCoord& get_first(Selection& sel) { return sel.min(); }
 BufferCoord& get_last(Selection& sel) { return sel.max(); }
 
-Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
+Vector<Selection> compute_modified_ranges(const Buffer& buffer, size_t timestamp)
 {
     Vector<Selection> ranges;
     auto changes = buffer.changes_since(timestamp);
@@ -211,7 +211,7 @@ void clamp_selections(Vector<Selection>& selections, const Buffer& buffer)
         clamp(sel, buffer);
 }
 
-void update_selections(Vector<Selection>& selections, size_t& main, Buffer& buffer, size_t timestamp, bool merge)
+void update_selections(Vector<Selection>& selections, size_t& main, const Buffer& buffer, size_t timestamp, bool merge)
 {
     if (timestamp == buffer.timestamp())
         return;
@@ -474,8 +474,8 @@ void SelectionList::erase()
 
 String selection_to_string(const Selection& selection)
 {
-    auto& cursor = selection.cursor();
-    auto& anchor = selection.anchor();
+    const auto& cursor = selection.cursor();
+    const auto& anchor = selection.anchor();
     return format("{}.{},{}.{}", anchor.line + 1, anchor.column + 1,
                   cursor.line + 1, cursor.column + 1);
 }

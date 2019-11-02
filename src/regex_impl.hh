@@ -521,7 +521,7 @@ private:
         }
     }
 
-    void to_next_start(Iterator& start, const ExecConfig& config, const StartDesc& start_desc)
+    static void to_next_start(Iterator& start, const ExecConfig& config, const StartDesc& start_desc)
     {
         while (start != config.end)
         {
@@ -540,7 +540,7 @@ private:
     {
         using Lookaround = CompiledRegex::Lookaround;
 
-        if (not look_forward) 
+        if (not look_forward)
         {
             if (pos == config.subject_begin)
                 return m_program.lookarounds[index] == Lookaround::EndOfLookaround;

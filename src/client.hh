@@ -49,7 +49,7 @@ public:
     void info_hide(bool even_modal = false);
 
     void print_status(DisplayLine status_line);
-    const DisplayLine& current_status() { return m_status_line; }
+    const DisplayLine& current_status() const { return m_status_line; }
 
     DisplayCoord dimensions() const;
 

@@ -280,7 +280,7 @@ ColumnCount find_display_column(const DisplayLine& line, const Buffer& buffer,
 BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
                               ColumnCount column)
 {
-    auto& range = line.range();
+    const auto& range = line.range();
     for (auto& atom : line)
     {
         ColumnCount len = atom.length();

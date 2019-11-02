@@ -195,12 +195,12 @@ BufferCoord Buffer::clamp(BufferCoord coord) const
     return coord;
 }
 
-BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool)
+BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool) const
 {
     return utf8::advance(iterator_at(coord), offset < 0 ? begin() : end()-1, offset).coord();
 }
 
-BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol)
+BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol) const
 {
     const auto column = coord.target == -1 ? get_column(*this, tabstop, coord) : coord.target;
     const auto line = Kakoune::clamp(coord.line + offset, 0_line, line_count()-1);

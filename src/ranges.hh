@@ -356,7 +356,7 @@ struct ConcatView
         RangeIt2 m_it2;
     };
 
-    ConcatView(Range1& range1, Range2& range2)
+    ConcatView(const Range1& range1, const Range2& range2)
         : m_range1(range1), m_range2(range2) {}
 
     Iterator begin() const { return {m_range1.begin(), m_range1.end(), m_range2.begin()}; }

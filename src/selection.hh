@@ -65,7 +65,7 @@ inline bool overlaps(const Selection& lhs, const Selection& rhs)
 }
 
 void update_selections(Vector<Selection>& selections, size_t& main,
-                       Buffer& buffer, size_t timestamp, bool merge = true);
+                       const Buffer& buffer, size_t timestamp, bool merge = true);
 
 bool compare_selections(const Selection& lhs, const Selection& rhs);
 void sort_selections(Vector<Selection>& selections, size_t& main);
@@ -155,7 +155,7 @@ private:
     size_t m_timestamp;
 };
 
-Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp);
+Vector<Selection> compute_modified_ranges(const Buffer& buffer, size_t timestamp);
 
 String selection_to_string(const Selection& selection);
 String selection_list_to_string(const SelectionList& selection);

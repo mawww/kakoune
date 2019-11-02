@@ -545,7 +545,7 @@ void InsertCompleter::on_option_changed(const Option& opt)
         m_current_candidate != m_completions.candidates.size() - 1)
         return;
 
-    auto& completers = m_options["completers"].get<InsertCompleterDescList>();
+    const auto& completers = m_options["completers"].get<InsertCompleterDescList>();
     for (auto& completer : completers)
     {
         if (completer.mode == InsertCompleterDesc::Option and
