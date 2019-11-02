@@ -638,7 +638,7 @@ Optional<Key> NCursesUI::get_next_key()
         }
         for (int count = 0; count < 16 and c >= 0x30 && c <= 0x3f; c = next_char())
         {
-            if ('0' <= 'c' and c <= '9')
+            if (isdigit(c))
                 params[count] = params[count] * 10 + c - '0';
             else if (c == ';')
                 ++count;
