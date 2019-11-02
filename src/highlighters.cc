@@ -1029,7 +1029,7 @@ struct ShowWhitespacesHighlighter : Highlighter
     }
 
 private:
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
         const int tabstop = context.context.options()["tabstop"].get<int>();
         auto whitespaceface = context.context.faces()["Whitespace"];

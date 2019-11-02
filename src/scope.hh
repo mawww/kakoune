@@ -57,7 +57,7 @@ class GlobalScope : public Scope, public OptionManagerWatcher, public Singleton<
         OptionsRegistry& option_registry() { return m_option_registry; }
         const OptionsRegistry& option_registry() const { return m_option_registry; }
     private:
-        void on_option_changed(const Option& option);
+        void on_option_changed(const Option& option) override;
 
         OptionsRegistry m_option_registry;
 };
