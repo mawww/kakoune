@@ -45,7 +45,7 @@ void SelectionList::set(Vector<Selection> list, size_t main)
 
 bool compare_selections(const Selection& lhs, const Selection& rhs)
 {
-    const auto lmin = lhs.min(), rmin = rhs.min();
+    const auto& lmin = lhs.min(), rmin = rhs.min();
     return lmin == rmin ? lhs.max() < rhs.max() : lmin < rmin;
 }
 
