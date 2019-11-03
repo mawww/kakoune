@@ -159,7 +159,7 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp);
 
 String selection_to_string(const Selection& selection);
 String selection_list_to_string(const SelectionList& selection);
-Selection selection_from_string(StringView desc);
+Selection selection_from_string(const Buffer& buffer, StringView desc, size_t timestamp);
 
 template<class StringArray>
 SelectionList selection_list_from_strings(Buffer& buffer, StringArray&& descs, size_t timestamp, size_t main)
@@ -167,7 +167,10 @@ SelectionList selection_list_from_strings(Buffer& buffer, StringArray&& descs, s
     if (timestamp > buffer.timestamp())
         throw runtime_error{format("invalid timestamp '{}'", timestamp)};
 
-    auto sels = descs | transform(selection_from_string) | gather<Vector<Selection>>();
+    auto parse_selection = [&buffer, timestamp](StringView desc) {
+        return selection_from_string(buffer, desc, timestamp);
+    };
+    auto sels = descs | transform(parse_selection) | gather<Vector<Selection>>();
     if (sels.empty())
         throw runtime_error{"empty selection description"};
     if (main >= sels.size())

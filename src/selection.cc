@@ -489,26 +489,41 @@ String selection_list_to_string(const SelectionList& selections)
                 transform(selection_to_string), ' ', false);
 }
 
-Selection selection_from_string(StringView desc)
+static BufferCoord buffer_coord_from_string(const Buffer& buffer, StringView desc, size_t timestamp)
 {
-    auto comma = find(desc, ',');
-    auto dot_anchor = find(StringView{desc.begin(), comma}, '.');
-    auto dot_cursor = find(StringView{comma, desc.end()}, '.');
+    auto dot = find(desc, '.');
+    if (dot == desc.end())
+        throw runtime_error(format("'{}' does not follow <line>.<column>[bc] format", desc));
 
-    if (comma == desc.end() or dot_anchor == comma or dot_cursor == desc.end())
-        throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> format", desc));
+    auto is_suffix = [](char ch) {
+        return ch == 'b' || ch == 'c';
+    };
+    auto suffix = std::find_if(dot+1, desc.end(), is_suffix);
+    if (suffix != desc.end() and suffix+1 != desc.end())
+        throw runtime_error(format("'{}' does not follow <line>.<column>[bc] format", desc));
 
-    BufferCoord anchor{str_to_int({desc.begin(), dot_anchor}) - 1,
-                       str_to_int({dot_anchor+1, comma}) - 1};
-
-    BufferCoord cursor{str_to_int({comma+1, dot_cursor}) - 1,
-                       str_to_int({dot_cursor+1, desc.end()}) - 1};
-
-    if (anchor.line < 0 or anchor.column < 0 or
-        cursor.line < 0 or cursor.column < 0)
+    const int line = str_to_int({desc.begin(), dot}) - 1;
+    const int column = str_to_int({dot+1, suffix}) - 1;
+    if (line < 0 or column < 0)
         throw runtime_error(format("coordinates must be >= 1: '{}'", desc));
 
-    return Selection{anchor, cursor};
+    if (suffix == desc.end() or *suffix == 'b')
+        return BufferCoord{line, column};
+    else
+    {
+        if (timestamp != buffer.timestamp())
+            throw runtime_error("codepoint columns are only allowed on latest timestamp");
+        return BufferCoord{line, buffer[line].byte_count_to(CharCount{column})};
+    }
+}
+
+Selection selection_from_string(const Buffer& buffer, StringView desc, size_t timestamp)
+{
+    auto comma = find(desc, ',');
+    if (comma == desc.end())
+        throw runtime_error(format("'{}' does not follow <line>.<column>[bc],<line>.<column>[bc] format", desc));
+    return {buffer_coord_from_string(buffer, {desc.begin(), comma}, timestamp),
+            buffer_coord_from_string(buffer, {comma+1, desc.end()}, timestamp)};
 }
 
 }
