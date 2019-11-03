@@ -75,6 +75,7 @@
             "gallery:11": $("[tid-fr='gallery:11']").html(),
             "gallery:12": $("[tid-fr='gallery:12']").html(),
             "gallery:13": $("[tid-fr='gallery:13']").html(),
+            "gallery:14": $("[tid-fr='gallery:14']").html(),
 
             "plugins:malwareWarning": $("[tid-fr='plugins:malwareWarning']").html(),
             "plugins:infoContribute": $("[tid-fr='plugins:infoContribute']").html(),
