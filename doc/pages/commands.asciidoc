@@ -41,7 +41,9 @@ of the file onto the filesystem
 
     *-scratch*:::
         Creates a new buffer named <filename>, which doesn't correspond to any
-        file on disk.
+        file on disk. If no filename is given, the buffer name will be
+        generated based on format `\*scratch-$ID\*`, where `$ID` is an
+        integer automatically incremented for new buffers.
         (See <<buffers#scratch-buffers,`:doc buffers scratch-buffers`>>)
 
     *-scroll*:::
