@@ -101,8 +101,9 @@ private:
         void destroy();
         void refresh(bool force);
         void move_cursor(DisplayCoord coord);
+        void clear_to_eol(Palette& palette, const Face& face);
         void draw(Palette& palette, ConstArrayView<DisplayAtom> atoms,
-                  ColumnCount width, const Face& default_face);
+                  const Face& default_face);
 
         explicit operator bool() const { return win; }
 

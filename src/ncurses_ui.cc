@@ -62,8 +62,14 @@ void NCursesUI::Window::move_cursor(DisplayCoord coord)
     wmove(win, (int)coord.line, (int)coord.column);
 }
 
+void NCursesUI::Window::clear_to_eol(Palette& palette, const Face& face)
+{
+    wbkgdset(win, COLOR_PAIR(palette.get_color_pair(face)));
+    wclrtoeol(win);
+}
+
 void NCursesUI::Window::draw(Palette& palette, ConstArrayView<DisplayAtom> atoms,
-                             ColumnCount max_width, const Face& default_face)
+                             const Face& default_face)
 {
     auto add_str = [&](StringView str) { waddnstr(win, str.begin(), (int)str.length()); };
 
@@ -93,11 +99,10 @@ void NCursesUI::Window::draw(Palette& palette, ConstArrayView<DisplayAtom> atoms
         #endif
     };
 
-    wbkgdset(win, COLOR_PAIR(palette.get_color_pair(default_face)));
     ColumnCount column = 0;
     for (const DisplayAtom& atom : atoms)
     {
-        StringView content = atom.content().substr(0_col, max_width - column);
+        StringView content = atom.content();
         if (content.empty())
             continue;
 
@@ -111,8 +116,6 @@ void NCursesUI::Window::draw(Palette& palette, ConstArrayView<DisplayAtom> atoms
             add_str(content);
         column += content.column_length();
     }
-    if (column < max_width)
-        wclrtoeol(win);
 }
 
 constexpr int NCursesUI::default_shift_function_key;
@@ -448,7 +451,8 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     for (const DisplayLine& line : display_buffer.lines())
     {
         m_window.move_cursor(line_index);
-        m_window.draw(m_palette, line.atoms(), dim.column, default_face);
+        m_window.draw(m_palette, line.atoms(), default_face);
+        m_window.clear_to_eol(m_palette, default_face);
         ++line_index;
     }
 
@@ -456,7 +460,8 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     while (line_index < dim.line + line_offset)
     {
         m_window.move_cursor(line_index++);
-        m_window.draw(m_palette, DisplayAtom("~"), dim.column, face);
+        m_window.draw(m_palette, DisplayAtom("~"), face);
+        m_window.clear_to_eol(m_palette, face);
     }
 
     m_dirty = true;
@@ -469,7 +474,8 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     const LineCount status_line_pos = m_status_on_top ? 0 : m_dimensions.line;
     m_window.move_cursor(status_line_pos);
 
-    m_window.draw(m_palette, status_line.atoms(), m_dimensions.column, default_face);
+    m_window.draw(m_palette, status_line.atoms(), default_face);
+    m_window.clear_to_eol(m_palette, default_face);
 
     const auto mode_len = mode_line.length();
     m_status_len = status_line.length();
@@ -478,7 +484,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     {
         ColumnCount col = m_dimensions.column - mode_len;
         m_window.move_cursor({status_line_pos, col});
-        m_window.draw(m_palette, mode_line.atoms(), m_dimensions.column - col, default_face);
+        m_window.draw(m_palette, mode_line.atoms(), default_face);
     }
     else if (remaining > 2)
     {
@@ -489,7 +495,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
 
         ColumnCount col = m_dimensions.column - remaining + 1;
         m_window.move_cursor({status_line_pos, col});
-        m_window.draw(m_palette, trimmed_mode_line.atoms(), m_dimensions.column - col, default_face);
+        m_window.draw(m_palette, trimmed_mode_line.atoms(), default_face);
     }
 
     if (m_set_title)
@@ -554,8 +560,7 @@ void NCursesUI::check_resize(bool force)
         info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
 
     set_resize_pending();
-    clearok(curscr, true);
-    werase(curscr);
+    wclear(curscr);
 }
 
 Optional<Key> NCursesUI::get_next_key()
@@ -701,6 +706,8 @@ Optional<Key> NCursesUI::get_next_key()
                 return masked_key(Key::F11 + params[0] - 23);
             }
             return {};
+        case 'u':
+            return masked_key(static_cast<Codepoint>(params[0]));
         case 'Z': return shift(Key::Tab);
         case 'I': return {Key::FocusIn};
         case 'O': return {Key::FocusOut};
@@ -786,8 +793,7 @@ void NCursesUI::draw_menu()
         ColumnCount pos = 0;
 
         m_menu.move_cursor({0, 0});
-        m_menu.draw(m_palette, DisplayAtom(m_menu.first_item > 0 ? "< " : "  "),
-                    m_menu.size.column, m_menu.bg);
+        m_menu.draw(m_palette, DisplayAtom(m_menu.first_item > 0 ? "< " : "  "), m_menu.bg);
 
         int i = m_menu.first_item;
         for (; i < item_count and pos < win_width; ++i)
@@ -795,14 +801,14 @@ void NCursesUI::draw_menu()
             const DisplayLine& item = m_menu.items[i];
             const ColumnCount item_width = item.length();
             auto& face = i == m_menu.selected_item ? m_menu.fg : m_menu.bg;
-            m_menu.draw(m_palette, item.atoms(), win_width - pos, face);
+            m_menu.draw(m_palette, item.atoms(), face);
             m_menu.draw(m_palette, DisplayAtom(item_width > win_width - pos ? "…" : " "),
-                             win_width - pos - item_width, m_menu.bg);
+                        m_menu.bg);
             pos += item_width + 1;
         }
 
         auto end_str = String{' ', pos > win_width ? 0 : win_width - pos + 1} + (i == item_count ? " " : ">");
-        m_menu.draw(m_palette, DisplayAtom(end_str), m_menu.size.column - pos, m_menu.bg);
+        m_menu.draw(m_palette, DisplayAtom(end_str), m_menu.bg);
 
         m_dirty = true;
         return;
@@ -830,16 +836,12 @@ void NCursesUI::draw_menu()
             int item_idx = (first_col + col) * (int)m_menu.size.line + (int)line;
             auto& face = item_idx < item_count and item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg;
             if (item_idx < item_count)
-            {
-                const DisplayLine& item = m_menu.items[item_idx];
-                m_menu.draw(m_palette, item.atoms(), column_width, face);
-            }
-            else
-                m_menu.draw(m_palette, DisplayAtom(String{}), column_width, face);
+                m_menu.draw(m_palette, m_menu.items[item_idx].atoms(), face);
+            m_menu.clear_to_eol(m_palette, face);
         }
         const bool is_mark = line >= mark_line and line < mark_line + mark_height;
         m_menu.move_cursor({line, m_menu.size.column - 1});
-        m_menu.draw(m_palette, DisplayAtom(is_mark ? "█" : "░"), 1, m_menu.bg);
+        m_menu.draw(m_palette, DisplayAtom(is_mark ? "█" : "░"), m_menu.bg);
     }
     m_dirty = true;
 }
@@ -1165,7 +1167,8 @@ void NCursesUI::info_show(StringView title, StringView content,
     for (auto line = 0_line; line < info_box.size.line; ++line)
     {
         m_info.move_cursor(line);
-        m_info.draw(m_palette, DisplayAtom(info_box.contents[(int)line]), info_box.size.column, face);
+        m_info.draw(m_palette, DisplayAtom(info_box.contents[(int)line]), face);
+        m_info.clear_to_eol(m_palette, face);
     }
     m_dirty = true;
 }
