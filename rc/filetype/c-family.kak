@@ -204,7 +204,7 @@ evaluate-commands %sh{
             add-highlighter shared/$ft/macro region %{^\\h*?\\K#} %{(?<!\\\\)(?=\\n)|(?=//)} group
 
             add-highlighter shared/$ft/macro/ fill meta
-            add-highlighter shared/$ft/macro/ regex ^\\h*#include\\h+(\\S*) 1:module
+            add-highlighter shared/$ft/macro/ regex ^\\h*#\\h*include\\h+(\\S*) 1:module
             add-highlighter shared/$ft/macro/ regex /\\*.*?\\*/ 0:comment
 	EOF
     done
