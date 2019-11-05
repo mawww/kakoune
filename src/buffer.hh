@@ -234,6 +234,7 @@ private:
 
     struct Modification;
 
+    void write_modifaction(const Modification &modification);
     void apply_modification(const Modification& modification);
     void revert_modification(const Modification& modification);
 
@@ -257,8 +258,6 @@ private:
     LineList m_lines;
 
     String m_name;
-    String m_journal;
-    int m_journal_fd;
     String m_display_name;
     Flags  m_flags;
 
@@ -291,6 +290,11 @@ private:
     // Values are just data holding by the buffer, they are not part of its
     // observable state
     mutable ValueMap m_values;
+
+    // TODO: Check if refactor is needed
+    String m_journal;
+    int m_journal_fd;
+    Vector<char, MemoryDomain::Remote> m_mod_buffer;
 };
 
 }

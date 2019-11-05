@@ -259,6 +259,7 @@ String Buffer::string(BufferCoord begin, BufferCoord end) const
 // A Modification holds a single atomic modification to Buffer
 struct Buffer::Modification
 {
+    typedef Vector<char, MemoryDomain::Remote> Stream;
     enum Type { Insert, Erase };
 
     Type type;
@@ -269,6 +270,26 @@ struct Buffer::Modification
     {
         return {type == Insert ? Erase : Insert, coord, content};
     }
+
+    void serialize(Stream &stream) const {
+        // TODO: This feels dangerous, think it through
+        auto write_raw = [&stream](const char* val, size_t size)
+        {
+            stream.insert(stream.end(), val, val + size);
+        };
+        auto write_field = [&stream, write_raw] (auto val)
+        {
+            write_raw((const char*)&val, sizeof(val));
+        };
+
+        write_field(type);
+        write_field(coord.line);
+        write_field(coord.column);
+        write_field(content->length);
+        const char* data = content->data();
+        stream.insert(stream.end(), data, data + content->length);
+    }
+
 };
 
 void Buffer::reload(StringView data, timespec fs_timestamp)
@@ -542,6 +563,12 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
     return next;
 }
 
+void Buffer::write_modifaction(const Modification &modification) {
+    m_mod_buffer.resize(0);
+    modification.serialize(m_mod_buffer);
+    auto res = ::write(m_journal_fd, m_mod_buffer.data(), m_mod_buffer.size());
+}
+
 void Buffer::apply_modification(const Modification& modification)
 {
     StringView content = modification.content->strview();
@@ -582,8 +609,11 @@ BufferCoord Buffer::insert(BufferCoord pos, StringView content)
     // for undo and redo purpose it is better to use one past last line rather
     // than one past last char coord.
     auto coord = is_end(pos) ? line_count() : pos;
+
+    Modification modification = {Modification::Insert, coord, real_content};
+    write_modifaction(modification);
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.push_back({Modification::Insert, coord, real_content});
+        m_current_undo_group.push_back(modification);
     return do_insert(pos, real_content->strview());
 }
 
@@ -600,9 +630,10 @@ BufferCoord Buffer::erase(BufferCoord begin, BufferCoord end)
     if (begin >= end) // use >= to handle case where begin is {line_count}
         return begin;
 
+    Modification modification = {Modification::Erase, begin, intern(string(begin, end))};
+    write_modifaction(modification);
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.push_back({Modification::Erase, begin,
-                                        intern(string(begin, end))});
+        m_current_undo_group.push_back(modification);
     return do_erase(begin, end);
 }
 
