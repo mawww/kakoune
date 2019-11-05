@@ -451,8 +451,8 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     for (const DisplayLine& line : display_buffer.lines())
     {
         m_window.move_cursor(line_index);
-        m_window.draw(m_palette, line.atoms(), default_face);
         m_window.clear_to_eol(m_palette, default_face);
+        m_window.draw(m_palette, line.atoms(), default_face);
         ++line_index;
     }
 
@@ -460,8 +460,8 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     while (line_index < dim.line + line_offset)
     {
         m_window.move_cursor(line_index++);
-        m_window.draw(m_palette, DisplayAtom("~"), face);
         m_window.clear_to_eol(m_palette, face);
+        m_window.draw(m_palette, DisplayAtom("~"), face);
     }
 
     m_dirty = true;
@@ -474,8 +474,8 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     const LineCount status_line_pos = m_status_on_top ? 0 : m_dimensions.line;
     m_window.move_cursor(status_line_pos);
 
-    m_window.draw(m_palette, status_line.atoms(), default_face);
     m_window.clear_to_eol(m_palette, default_face);
+    m_window.draw(m_palette, status_line.atoms(), default_face);
 
     const auto mode_len = mode_line.length();
     m_status_len = status_line.length();
@@ -835,9 +835,9 @@ void NCursesUI::draw_menu()
             m_menu.move_cursor({line, col * column_width});
             int item_idx = (first_col + col) * (int)m_menu.size.line + (int)line;
             auto& face = item_idx < item_count and item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg;
+            m_menu.clear_to_eol(m_palette, face);
             if (item_idx < item_count)
                 m_menu.draw(m_palette, m_menu.items[item_idx].atoms(), face);
-            m_menu.clear_to_eol(m_palette, face);
         }
         const bool is_mark = line >= mark_line and line < mark_line + mark_height;
         m_menu.move_cursor({line, m_menu.size.column - 1});
@@ -1167,8 +1167,8 @@ void NCursesUI::info_show(StringView title, StringView content,
     for (auto line = 0_line; line < info_box.size.line; ++line)
     {
         m_info.move_cursor(line);
-        m_info.draw(m_palette, DisplayAtom(info_box.contents[(int)line]), face);
         m_info.clear_to_eol(m_palette, face);
+        m_info.draw(m_palette, DisplayAtom(info_box.contents[(int)line]), face);
     }
     m_dirty = true;
 }
