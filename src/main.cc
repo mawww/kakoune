@@ -1104,6 +1104,9 @@ int main(int argc, char* argv[])
             for (auto name : files)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
+            if (not isatty(1))
+                throw startup_error("stdout is not a tty");
+
             return run_client(*server_session, {}, new_files + client_init, init_coord, ui_type, false);
         }
         else
