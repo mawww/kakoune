@@ -349,6 +349,29 @@ private:
         }
     }
 
+    Codepoint read_hex(size_t count)
+    {
+        Codepoint res = 0;
+        for (int i = 0; i < count; ++i)
+        {
+            if (at_end())
+                parse_error("unterminated hex sequence");
+            Codepoint digit = *m_pos++;
+            Codepoint digit_value;
+            if ('0' <= digit and digit <= '9')
+                digit_value = digit - '0';
+            else if ('a' <= digit and digit <= 'f')
+                digit_value = 0xa + digit - 'a';
+            else if ('A' <= digit and digit <= 'F')
+                digit_value = 0xa + digit - 'A';
+            else
+                parse_error(format("invalid hex digit '{}'", digit));
+
+            res = res * 16 + digit_value;
+        }
+        return res;
+    }
+
     NodeIndex atom_escape()
     {
         const Codepoint cp = *m_pos++;
@@ -381,29 +404,6 @@ private:
                 return new_node(ParsedRegex::Literal, control.value);
         }
 
-        auto read_hex = [this](size_t count)
-        {
-            Codepoint res = 0;
-            for (int i = 0; i < count; ++i)
-            {
-                if (at_end())
-                    parse_error("unterminated hex sequence");
-                Codepoint digit = *m_pos++;
-                Codepoint digit_value;
-                if ('0' <= digit and digit <= '9')
-                    digit_value = digit - '0';
-                else if ('a' <= digit and digit <= 'f')
-                    digit_value = 0xa + digit - 'a';
-                else if ('A' <= digit and digit <= 'F')
-                    digit_value = 0xa + digit - 'A';
-                else
-                    parse_error(format("invalid hex digit '{}'", digit));
-
-                res = res * 16 + digit_value;
-            }
-            return res;
-        };
-
         if (cp == '0')
             return new_node(ParsedRegex::Literal, '\0');
         else if (cp == 'c')
@@ -418,7 +418,7 @@ private:
         else if (cp == 'x')
             return new_node(ParsedRegex::Literal, read_hex(2));
         else if (cp == 'u')
-            return new_node(ParsedRegex::Literal, read_hex(4));
+            return new_node(ParsedRegex::Literal, read_hex(6));
 
         if (contains("^$\\.*+?()[]{}|", cp)) // SyntaxCharacter
             return new_node(ParsedRegex::Literal, cp);
@@ -470,6 +470,20 @@ private:
             if (at_end())
                 break;
 
+            auto read_escaped_char = [this]() {
+                Codepoint cp = *m_pos++;
+                auto it = find_if(control_escapes, [cp](auto&& t) { return t.name == cp; });
+                if (it != std::end(control_escapes))
+                    return it->value;
+                if (cp == 'x')
+                    return read_hex(2);
+                if (cp == 'u')
+                    return read_hex(6);
+                if (not contains("^$\\.*+?()[]{}|-", cp)) // SyntaxCharacter and -
+                    parse_error(format("unknown character class escape '{}'", cp));
+                return cp;
+            };
+
             if (cp == '\\')
             {
                 auto it = find_if(character_class_escapes,
@@ -481,14 +495,7 @@ private:
                     continue;
                 }
                 else // its an escaped character
-                {
-                    cp = *m_pos++;
-                    auto it = find_if(control_escapes, [cp](auto&& t) { return t.name == cp; });
-                    if (it != std::end(control_escapes))
-                        cp = it->value;
-                    else if (not contains("^$\\.*+?()[]{}|-", cp)) // SyntaxCharacter and -
-                        parse_error(format("unknown character class escape '{}'", cp));
-                }
+                    cp = read_escaped_char();
             }
 
             CharacterClass::Range range = { cp, cp };
@@ -498,7 +505,10 @@ private:
                     break;
                 if (*m_pos != ']')
                 {
-                    range.max = *m_pos++;
+                    cp = *m_pos++;
+                    if (cp == '\\')
+                        cp = read_escaped_char();
+                    range.max = cp;
                     if (range.min > range.max)
                         parse_error("invalid range specified");
                 }
@@ -1523,12 +1533,31 @@ auto test_regex = UnitTest{[]{
     }
 
     {
+        TestVM<> vm{R"([\t-\r]+)"};
+        kak_assert(vm.exec("\t\n\v\f\r"));
+    }
+
+    {
+        TestVM<> vm{R"([^\x00-\x7F]+)"};
+        kak_assert(not vm.exec("ascii"));
+        kak_assert(vm.exec("←↑→↓"));
+        kak_assert(vm.exec("😄😊😉"));
+    }
+
+    {
+        TestVM<> vm{R"([^\u000000-\u00ffff]+)"};
+        kak_assert(not vm.exec("ascii"));
+        kak_assert(not vm.exec("←↑→↓"));
+        kak_assert(vm.exec("😄😊😉"));
+    }
+
+    {
         TestVM<RegexMode::Forward | RegexMode::Search> vm{R"(д)"};
         kak_assert(vm.exec("д", RegexExecFlags::None));
     }
 
     {
-        TestVM<> vm{R"(\0\x0A\u260e\u260F)"};
+        TestVM<> vm{R"(\0\x0A\u00260e\u00260F)"};
         const char str[] = "\0\n☎☏"; // work around the null byte in the literal
         kak_assert(vm.exec({str, str + sizeof(str)-1}));
     }

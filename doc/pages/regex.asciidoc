@@ -23,7 +23,7 @@ Some literals are available as escape sequences:
 * `\0` matches the null character.
 * `\cX` matches the control-X character (X can be in `[A-Za-z]`).
 * `\xXX` matches the character whose codepoint is XX (in hexadecimal).
-* `\uXXXX` matches the character whose codepoint is XXXX (in hexadecimal).
+* `\uXXXXXX` matches the character whose codepoint is XXXXXX (in hexadecimal).
 
 == Character classes
 
@@ -185,3 +185,5 @@ exists for ease of use or performance reasons:
   escapes, identity escapes like `\X` with X a non-special character
   are not accepted, to avoid confusions between `\h` meaning literal
   `h` in ECMAScript, and horizontal blank in Kakoune.
+* `\uXXXXXX` uses 6 digits to cover all of unicode, instead of relying
+  on ECMAScript UTF-16 surrogate pairs with 4 digits.
