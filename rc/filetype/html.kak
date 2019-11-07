@@ -80,8 +80,8 @@ define-command -hidden html-indent-on-new-line %{
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : html-trim-indent <ret> }
-        # indent after lines ending with opening tag
-        try %{ execute-keys -draft k <a-x> <a-k> <lt>(?!area)(?!base)(?!br)(?!col)(?!command)(?!embed)(?!hr)(?!img)(?!input)(?!keygen)(?!link)(?!menuitem)(?!meta)(?!param)(?!source)(?!track)(?!wbr)(?!/)(?!>)[a-zA-Z0-9_-]+[^>]*?>$ <ret> j <a-gt> } }
+        # indent after lines ending with opening tag except when it starts with a closing tag
+        try %{ execute-keys -draft k <a-x> <a-k> <lt>(?!area)(?!base)(?!br)(?!col)(?!command)(?!embed)(?!hr)(?!img)(?!input)(?!keygen)(?!link)(?!menuitem)(?!meta)(?!param)(?!source)(?!track)(?!wbr)(?!/)(?!>)[a-zA-Z0-9_-]+[^>]*?>$ <ret>j<a-x><a-K>^\s*<lt>/<ret><a-gt> } }
 }
 
 ]
