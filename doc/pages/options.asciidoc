@@ -222,8 +222,9 @@ are exclusively available to built-in options.
         which tries to detect when a filename is being entered and
         provides completion based on local filesystem
 
-    *line*:::
-        which complete using lines in current buffer
+    *line=all*, *line=buffer*:::
+        which complete using lines in all buffers (*line=all*)
+        or only the current one (*line=buffer*)
 
     *option=<opt-name>*:::
         where *opt-name* is an option of type 'completions' whose
