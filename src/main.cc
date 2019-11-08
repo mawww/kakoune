@@ -106,11 +106,6 @@ void show_startup_info(Client* local_client, int last_version)
     }
 }
 
-struct startup_error : runtime_error
-{
-    using runtime_error::runtime_error;
-};
-
 inline void write_stdout(StringView str) { try { write(STDOUT_FILENO, str); } catch (runtime_error&) {} }
 inline void write_stderr(StringView str) { try { write(STDERR_FILENO, str); } catch (runtime_error&) {} }
 
@@ -577,9 +572,6 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
             }
         }
     };
-
-    if (not isatty(1))
-        throw startup_error("stdout is not a tty");
 
     if (not isatty(0))
     {
@@ -1104,9 +1096,6 @@ int main(int argc, char* argv[])
             for (auto name : files)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
-            if (not isatty(1))
-                throw startup_error("stdout is not a tty");
-
             return run_client(*server_session, {}, new_files + client_init, init_coord, ui_type, false);
         }
         else
@@ -1137,14 +1126,9 @@ int main(int argc, char* argv[])
                             generate_switches_doc(param_desc.switches)));
        return -1;
     }
-    catch (startup_error& error)
-    {
-        write_stderr(format("Could not start kakoune: {}\n", error.what()));
-        return -1;
-    }
     catch (Kakoune::exception& error)
     {
-        write_stderr(format("uncaught exception ({}):\n{}\n", typeid(error).name(), error.what()));
+        write_stderr(format("Fatal error: {}\n", error.what()));
         return -1;
     }
     catch (std::exception& error)

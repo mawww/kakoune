@@ -2,10 +2,11 @@
 
 #include "display_buffer.hh"
 #include "event_manager.hh"
+#include "exception.hh"
+#include "file.hh"
 #include "keys.hh"
 #include "ranges.hh"
 #include "string_utils.hh"
-#include "file.hh"
 
 #include <algorithm>
 
@@ -336,6 +337,9 @@ NCursesUI::NCursesUI()
       }},
       m_assistant(assistant_clippy)
 {
+    if (not isatty(1))
+        throw runtime_error("stdout is not a tty");
+
     tcgetattr(STDIN_FILENO, &m_original_termios);
 
     initscr();
