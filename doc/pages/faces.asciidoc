@@ -136,6 +136,9 @@ The following faces are used by builtin highlighters if enabled.
 *Whitespace*::
     face used by the `show-whitespaces` highlighter
 
+*WrapMarker*::
+    face used by the `wrap -marker` highlighter
+
 == Markup strings
 
 In certain contexts, Kakoune can take a markup string, which is a string
