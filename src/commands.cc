@@ -2337,7 +2337,7 @@ const CommandDesc select_cmd = {
     {
         auto& buffer = context.buffer();
         const size_t timestamp = parser.get_switch("timestamp").map(str_to_int_ifp).cast<size_t>().value_or(buffer.timestamp());
-        context.selections_write_only() = selection_list_from_string(buffer, parser.positionals_from(0), timestamp);
+        context.selections_write_only() = selection_list_from_strings(buffer, parser.positionals_from(0), timestamp, 0);
     }
 };
 

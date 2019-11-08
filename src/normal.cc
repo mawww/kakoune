@@ -1774,20 +1774,7 @@ SelectionList read_selections_from_register(char reg, Context& context)
     const size_t timestamp = str_to_int(desc[1]);
     size_t main = str_to_int(desc[2]);
 
-    if (timestamp > buffer.timestamp())
-        throw runtime_error{"register '{}' refers to an invalid timestamp"};
-
-    auto sels = content | skip(1) | transform(selection_from_string) | gather<Vector<Selection>>();
-    sort_selections(sels, main);
-    merge_overlapping_selections(sels, main);
-    if (timestamp < buffer.timestamp())
-        update_selections(sels, main, buffer, timestamp);
-    else
-        clamp_selections(sels, buffer);
-
-    SelectionList res{buffer, std::move(sels)};
-    res.set_main_index(main);
-    return res;
+    return selection_list_from_strings(buffer, content | skip(1), timestamp, main);
 }
 
 enum class CombineOp

@@ -94,9 +94,6 @@ struct SelectionList
     SelectionList(Buffer& buffer, Vector<Selection> s);
     SelectionList(Buffer& buffer, Vector<Selection> s, size_t timestamp);
 
-    struct UnsortedTag {};
-    SelectionList(UnsortedTag, Buffer& buffer, Vector<Selection> s, size_t timestamp, size_t main);
-
     void update(bool merge = true);
 
     void check_invariant() const;
@@ -163,7 +160,30 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp);
 String selection_to_string(const Selection& selection);
 String selection_list_to_string(const SelectionList& selection);
 Selection selection_from_string(StringView desc);
-SelectionList selection_list_from_string(Buffer& buffer, ConstArrayView<String> descs, size_t timestamp);
+
+template<class StringArray>
+SelectionList selection_list_from_strings(Buffer& buffer, StringArray&& descs, size_t timestamp, size_t main)
+{
+    if (timestamp > buffer.timestamp())
+        throw runtime_error{format("invalid timestamp '{}'", timestamp)};
+
+    auto sels = descs | transform(selection_from_string) | gather<Vector<Selection>>();
+    if (sels.empty())
+        throw runtime_error{"empty selection description"};
+    if (main >= sels.size())
+        throw runtime_error{"invalid main selection index"};
+
+    sort_selections(sels, main);
+    merge_overlapping_selections(sels, main);
+    if (timestamp < buffer.timestamp())
+        update_selections(sels, main, buffer, timestamp);
+    else
+        clamp_selections(sels, buffer);
+
+    SelectionList res{buffer, std::move(sels)};
+    res.set_main_index(main);
+    return res;
+}
 
 }
 
