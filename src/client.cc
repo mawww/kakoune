@@ -212,7 +212,7 @@ void Client::redraw_ifn()
     if (m_ui_pending == 0)
         return;
 
-    auto& faces = context().faces();
+    const auto& faces = context().faces();
 
     if (m_ui_pending & Draw)
         m_ui->draw(window.update_display_buffer(context()),

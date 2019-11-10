@@ -166,7 +166,7 @@ void repeat_last_select(Context& context, NormalParams)
     context.repeat_last_select();
 }
 
-String build_autoinfo_for_mapping(Context& context, KeymapMode mode,
+String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
                                   ConstArrayView<KeyInfo> built_ins)
 {
     auto& keymaps = context.keymaps();
@@ -445,7 +445,7 @@ void for_each_codepoint(Context& context, NormalParams)
     selections.insert(strings, InsertMode::Replace);
 }
 
-void command(Context& context, EnvVarMap env_vars)
+void command(const Context& context, EnvVarMap env_vars)
 {
     if (not CommandManager::has_instance())
         throw runtime_error{"commands are not supported"};
@@ -1190,7 +1190,7 @@ void deindent(Context& context, NormalParams params)
         indent_width = tabstop;
     indent_width = indent_width * count;
 
-    auto& buffer = context.buffer();
+    const auto& buffer = context.buffer();
     Vector<Selection> sels;
     LineCount last_line = 0;
     for (auto& sel : context.selections())
@@ -1378,7 +1378,7 @@ enum Direction { Backward = -1, Forward = 1 };
 template<Direction direction, bool half = false>
 void scroll(Context& context, NormalParams params)
 {
-    Window& window = context.window();
+    const Window& window = context.window();
     const int count = params.count ? params.count : 1;
     const LineCount offset = (window.dimensions().line - 2) / (half ? 2 : 1) * count;
 

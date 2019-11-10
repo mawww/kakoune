@@ -94,7 +94,7 @@ public:
     }
 
     template<typename U>
-    auto cast() -> Optional<U>
+    auto cast() const -> Optional<U>
     {
         if (not m_valid)
             return {};

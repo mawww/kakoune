@@ -19,7 +19,7 @@ namespace Kakoune
 {
 
 struct invalid_rpc_request : runtime_error {
-    invalid_rpc_request(String message)
+    invalid_rpc_request(const String& message)
         : runtime_error(format("invalid json rpc request ({})", message)) {}
 };
 

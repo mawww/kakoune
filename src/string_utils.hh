@@ -9,7 +9,6 @@
 namespace Kakoune
 {
 
-StringView trim_whitespaces(StringView str);
 String trim_indent(StringView str);
 
 String escape(StringView str, StringView characters, char escape);

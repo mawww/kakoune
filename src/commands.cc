@@ -278,7 +278,7 @@ struct ShellCandidatesCompleter
         CandidateList res;
         // Gather best max_count matches
         for_n_best(matches, max_count, [](auto& lhs, auto& rhs) { return rhs < lhs; },
-                   [&] (RankedMatch& m) {
+                   [&] (const RankedMatch& m) {
             if (not res.empty() and res.back() == m.candidate())
                 return false;
             res.push_back(m.candidate().str());
@@ -519,7 +519,7 @@ const CommandDesc force_write_cmd = {
     write_buffer<true>,
 };
 
-void write_all_buffers(Context& context, bool sync = false)
+void write_all_buffers(const Context& context, bool sync = false)
 {
     // Copy buffer list because hooks might be creating/deleting buffers
     Vector<SafePtr<Buffer>> buffers;
@@ -1105,7 +1105,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
                        size_t token_to_complete, ByteCount pos_in_token)
         {
              const String& prefix = params[token_to_complete];
-             auto& ignored_files = context.options()["ignored_files"].get<Regex>();
+             const auto& ignored_files = context.options()["ignored_files"].get<Regex>();
              return Completions{0_byte, pos_in_token,
                                 complete_filename(prefix, ignored_files,
                                                   pos_in_token, FilenameFlags::Expand),
@@ -1739,7 +1739,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
         (int)(bool)parser.get_switch("try-client") > 1)
         throw runtime_error{"only one of -buffer, -client or -try-client can be specified"};
 
-    auto& register_manager = RegisterManager::instance();
+    const auto& register_manager = RegisterManager::instance();
     auto make_register_restorer = [&](char c) {
         return on_scope_end([&, c, save=register_manager[c].save(context)] {
             try
