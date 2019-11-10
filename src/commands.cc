@@ -2108,9 +2108,13 @@ const CommandDesc menu_cmd = {
 const CommandDesc on_key_cmd = {
     "on-key",
     nullptr,
-    "on-key <command>: wait for next user key and then execute <command>, "
-    "with key available in the `key` value",
-    single_param,
+    "on-key [-info <info>] <command>: wait for the next user key and then execute <command>, "
+    "with the key available in the `key` value; "
+    "if specified, <info> will first be displayed in an information box until a key is hit",
+    ParameterDesc{
+        { { "info", { true, "" } } },
+        ParameterDesc::Flags::None, 0, 1
+    },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -2118,12 +2122,16 @@ const CommandDesc on_key_cmd = {
     {
         String command = parser[0];
 
+        if (auto info = parser.get_switch("info"))
+            context.client().info_show({}, info->str(), {}, InfoStyle::Prompt);
+
         CapturedShellContext sc{shell_context};
         context.input_handler().on_next_key(
             KeymapMode::None, [=](Key key, Context& context) mutable {
             sc.env_vars["key"_sv] = key_to_str(key);
             ScopedSetBool disable_history{context.history_disabled()};
 
+            context.client().info_hide();
             CommandManager::instance().execute(command, context, sc);
         });
     }
