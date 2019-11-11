@@ -33,7 +33,7 @@ provide-module fsharp %§
 add-highlighter shared/fsharp regions
 add-highlighter shared/fsharp/code default-region group
 add-highlighter shared/fsharp/docstring region \(\*(?!\)) (\*\)) regions
-add-highlighter shared/fsharp/double_string region @?" (?<!\\)(\\\\)*"B? fill string
+add-highlighter shared/fsharp/double_string region @?(?<!')" (?<!\\)(\\\\)*"B? fill string
 add-highlighter shared/fsharp/comment region '//' '$' fill comment
 # https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/attributes 
 add-highlighter shared/fsharp/attributes region "\[<" ">\]" fill meta
