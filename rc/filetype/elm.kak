@@ -25,10 +25,6 @@ hook -group elm-highlight global WinSetOption filetype=elm %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/elm }
 }
 
-hook global WinSetOption filetype=elm %{
-    set-option window formatcmd 'elm-format --stdin'
-}
-
 
 provide-module elm %[
 
