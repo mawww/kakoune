@@ -25,14 +25,6 @@ hook -group rust-highlight global WinSetOption filetype=rust %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/rust }
 }
 
-# Configuration
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook global WinSetOption filetype=rust %{
-    set window formatcmd 'rustfmt'
-}
-
-
 provide-module rust %§
 
 # Highlighters
