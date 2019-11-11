@@ -47,7 +47,7 @@ add-highlighter shared/elm/code/ regex \b([a-z]+[^\s]*)\b                       
 add-highlighter shared/elm/code/ regex \b(^[a-z]+[^\s]*)\b                                                 0:function
 add-highlighter shared/elm/code/ regex "-?\b[0-9]*\.?[0-9]+"                                               0:value
 add-highlighter shared/elm/code/ regex \B[-+<>!@#$%^&*=:/\\|]+\B                                           0:operator
-add-highlighter shared/elm/code/ regex \b(import|exposing|as|module|where)\b                               0:meta
+add-highlighter shared/elm/code/ regex \b(import|exposing|as|module|port)\b                                0:meta
 add-highlighter shared/elm/code/ regex \b(type|alias|if|then|else|case|of|let|in|infix|_)\b)               0:keyword
 add-highlighter shared/elm/code/ regex (?<![-+<>!@#$%^&*=:/\\|])(->|:|=|\|)(?![-+<>!@#$%^&*=:/\\|])        0:keyword
 
