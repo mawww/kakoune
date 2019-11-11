@@ -2413,9 +2413,10 @@ const CommandDesc declare_user_mode_cmd = {
     }
 };
 
-void enter_user_mode(Context& context, StringView mode_name, KeymapMode mode, bool lock)
+// We need ownership of the mode_name in the lock case
+void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool lock)
 {
-    on_next_key_with_autoinfo(context, format("user:{}", mode_name), KeymapMode::None,
+    on_next_key_with_autoinfo(context, format("user.{}", mode_name), KeymapMode::None,
                              [mode_name, mode, lock](Key key, Context& context) mutable {
         if (key == Key::Escape)
             return;
