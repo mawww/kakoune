@@ -80,7 +80,7 @@ public:
 
     // execute callback on next keypress and returns to normal mode
     // if callback does not change the mode itself
-    void on_next_key(KeymapMode mode, KeyCallback callback);
+    void on_next_key(StringView mode_name, KeymapMode mode, KeyCallback callback);
 
     // process the given key
     void handle_key(Key key);
@@ -175,11 +175,12 @@ bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const 
 void hide_auto_info_ifn(const Context& context, bool hide);
 
 template<typename Cmd>
-void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode, Cmd cmd,
+void on_next_key_with_autoinfo(const Context& context, StringView mode_name,
+                               KeymapMode keymap_mode, Cmd cmd,
                                StringView title, StringView info)
 {
     const bool hide = show_auto_info_ifn(title, info, AutoInfo::OnKey, context);
-    context.input_handler().on_next_key(
+    context.input_handler().on_next_key(mode_name,
         keymap_mode, [hide,cmd](Key key, Context& context) mutable {
             hide_auto_info_ifn(context, hide);
             cmd(key, context);

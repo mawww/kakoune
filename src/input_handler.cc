@@ -262,7 +262,7 @@ public:
         }
         else if (key == '"')
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
                 [this](Key key, Context& context) {
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
@@ -806,7 +806,7 @@ public:
         }
         else if (key == ctrl('r'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
                 [this](Key key, Context&) {
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
@@ -823,7 +823,7 @@ public:
         }
         else if (key == ctrl('v'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(context(), "raw-key", KeymapMode::None,
                 [this](Key key, Context&) {
                     if (auto cp = get_raw_codepoint(key))
                     {
@@ -1100,8 +1100,8 @@ private:
 class NextKey : public InputMode
 {
 public:
-    NextKey(InputHandler& input_handler, KeymapMode keymap_mode, KeyCallback callback)
-        : InputMode(input_handler), m_callback(std::move(callback)), m_keymap_mode(keymap_mode) {}
+    NextKey(InputHandler& input_handler, String name, KeymapMode keymap_mode, KeyCallback callback)
+        : InputMode(input_handler), m_name{std::move(name)}, m_callback(std::move(callback)), m_keymap_mode(keymap_mode) {}
 
     void on_key(Key key) override
     {
@@ -1119,9 +1119,10 @@ public:
 
     KeymapMode keymap_mode() const override { return m_keymap_mode; }
 
-    StringView name() const override { return "next-key"; }
+    StringView name() const override { return m_name; }
 
 private:
+    String m_name;
     KeyCallback m_callback;
     KeymapMode m_keymap_mode;
 };
@@ -1267,7 +1268,7 @@ public:
             insert(*cp);
         else if (key == ctrl('r'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
                 [this](Key key, Context&) {
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
@@ -1296,7 +1297,7 @@ public:
         }
         else if (key == ctrl('x'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(context(), "explicit-completion", KeymapMode::None,
                 [this](Key key, Context&) {
                     if (key.key == 'f')
                         m_completer.explicit_file_complete();
@@ -1330,7 +1331,7 @@ public:
         }
         else if (key == ctrl('v'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(context(), "raw-insert", KeymapMode::None,
                 [this, transient](Key key, Context&) {
                     if (auto cp = get_raw_codepoint(key))
                     {
@@ -1587,9 +1588,9 @@ void InputHandler::menu(Vector<DisplayLine> choices, MenuCallback callback)
     push_mode(new InputModes::Menu(*this, std::move(choices), std::move(callback)));
 }
 
-void InputHandler::on_next_key(KeymapMode keymap_mode, KeyCallback callback)
+void InputHandler::on_next_key(StringView mode_name, KeymapMode keymap_mode, KeyCallback callback)
 {
-    push_mode(new InputModes::NextKey(*this, keymap_mode, std::move(callback)));
+    push_mode(new InputModes::NextKey(*this, format("next-key[{}]", mode_name), keymap_mode, std::move(callback)));
 }
 
 InputHandler::ScopedForceNormal::ScopedForceNormal(InputHandler& handler, NormalParams params)

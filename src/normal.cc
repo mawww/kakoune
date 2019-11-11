@@ -215,7 +215,7 @@ void goto_commands(Context& context, NormalParams params)
     }
     else
     {
-        on_next_key_with_autoinfo(context, KeymapMode::Goto,
+        on_next_key_with_autoinfo(context, "goto", KeymapMode::Goto,
                                  [](Key key, Context& context) {
             auto cp = key.codepoint();
             if (not cp or key == Key::Escape)
@@ -342,7 +342,7 @@ template<bool lock>
 void view_commands(Context& context, NormalParams params)
 {
     const int count = params.count;
-    on_next_key_with_autoinfo(context, KeymapMode::View,
+    on_next_key_with_autoinfo(context, "view", KeymapMode::View,
                              [count](Key key, Context& context) {
         if (key == Key::Escape)
             return;
@@ -399,7 +399,7 @@ void view_commands(Context& context, NormalParams params)
 
 void replace_with_char(Context& context, NormalParams)
 {
-    on_next_key_with_autoinfo(context, KeymapMode::None,
+    on_next_key_with_autoinfo(context, "replace-char", KeymapMode::None,
                              [](Key key, Context& context) {
         auto cp = key.codepoint();
         if (not cp or key == Key::Escape)
@@ -1244,7 +1244,7 @@ void select_object(Context& context, NormalParams params)
                       whole ? "" : (flags & ObjectFlags::ToBegin ? " begin" : " end"));
     };
 
-    on_next_key_with_autoinfo(context, KeymapMode::Object,
+    on_next_key_with_autoinfo(context,"text-object",  KeymapMode::Object,
                              [params](Key key, Context& context) {
         if (key == Key::Escape)
             return;
@@ -1494,7 +1494,7 @@ void select_to_next_char(Context& context, NormalParams params)
                       flags & SelectFlags::Reverse ? "previous" : "next");
     };
 
-    on_next_key_with_autoinfo(context, KeymapMode::None,
+    on_next_key_with_autoinfo(context, "to-char", KeymapMode::None,
                              [params](Key key, Context& context) {
         auto cp = key.codepoint();
         if (not cp or key == Key::Escape)
@@ -1841,7 +1841,7 @@ void combine_selections(Context& context, SelectionList list, Func func, StringV
     if (&context.buffer() != &list.buffer())
         throw runtime_error{"cannot combine selections from different buffers"};
 
-    on_next_key_with_autoinfo(context, KeymapMode::None,
+    on_next_key_with_autoinfo(context, "compbine-selections", KeymapMode::None,
                              [func, list](Key key, Context& context) mutable {
                                  if (key == Key::Escape)
                                      return;
@@ -1981,7 +1981,7 @@ void move_in_history(Context& context, NormalParams params)
 
 void exec_user_mappings(Context& context, NormalParams params)
 {
-    on_next_key_with_autoinfo(context, KeymapMode::None,
+    on_next_key_with_autoinfo(context, "user-mapping", KeymapMode::None,
                              [params](Key key, Context& context) mutable {
         if (not context.keymaps().is_mapped(key, KeymapMode::User))
             return;

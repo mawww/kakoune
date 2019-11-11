@@ -322,7 +322,7 @@ void Client::on_buffer_reload_key(Key key)
     {
         print_status({ format("'{}' is not a valid choice", key_to_str(key)),
                        context().faces()["Error"] });
-        m_input_handler.on_next_key(KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
+        m_input_handler.on_next_key("buffer-reload", KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
         return;
     }
 
@@ -367,7 +367,7 @@ void Client::check_if_buffer_needs_reloading()
                          bufname), {}, InfoStyle::Modal);
 
         m_buffer_reload_dialog_opened = true;
-        m_input_handler.on_next_key(KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
+        m_input_handler.on_next_key("buffer-reload", KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
     }
     else
         reload_buffer();

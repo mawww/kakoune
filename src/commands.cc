@@ -2110,7 +2110,10 @@ const CommandDesc on_key_cmd = {
     nullptr,
     "on-key <command>: wait for next user key and then execute <command>, "
     "with key available in the `key` value",
-    single_param,
+    ParameterDesc{
+        { { "mode-name", { true, "set mode name to use" } } },
+        ParameterDesc::Flags::None, 1, 1
+    },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -2120,6 +2123,7 @@ const CommandDesc on_key_cmd = {
 
         CapturedShellContext sc{shell_context};
         context.input_handler().on_next_key(
+            parser.get_switch("mode-name").value_or("on-key"),
             KeymapMode::None, [=](Key key, Context& context) mutable {
             sc.env_vars["key"_sv] = key_to_str(key);
             ScopedSetBool disable_history{context.history_disabled()};
@@ -2409,9 +2413,9 @@ const CommandDesc declare_user_mode_cmd = {
     }
 };
 
-void enter_user_mode(Context& context, const String mode_name, KeymapMode mode, bool lock)
+void enter_user_mode(Context& context, StringView mode_name, KeymapMode mode, bool lock)
 {
-    on_next_key_with_autoinfo(context, KeymapMode::None,
+    on_next_key_with_autoinfo(context, format("user:{}", mode_name), KeymapMode::None,
                              [mode_name, mode, lock](Key key, Context& context) mutable {
         if (key == Key::Escape)
             return;
