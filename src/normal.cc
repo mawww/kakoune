@@ -1841,7 +1841,7 @@ void combine_selections(Context& context, SelectionList list, Func func, StringV
     if (&context.buffer() != &list.buffer())
         throw runtime_error{"cannot combine selections from different buffers"};
 
-    on_next_key_with_autoinfo(context, "compbine-selections", KeymapMode::None,
+    on_next_key_with_autoinfo(context, "combine-selections", KeymapMode::None,
                              [func, list](Key key, Context& context) mutable {
                                  if (key == Key::Escape)
                                      return;
