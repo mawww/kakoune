@@ -317,6 +317,12 @@ The following expansions are supported (with required context _in italics_):
     `%val{selection_desc}`, except that the columns are in codepoints rather
     than bytes
 
+*%val{selections_display_column_desc}*::
+    _in window scope_ +
+    unquoted list of the ranges of all selections, in the same format as
+    `%val{selection_desc}`, except that the columns are in display columns rather
+    than bytes
+
 *%val{selections_desc}*::
     _in window scope_ +
     unquoted list of the ranges of all selections, in the same format as

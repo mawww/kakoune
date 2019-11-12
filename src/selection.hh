@@ -156,22 +156,26 @@ private:
 
 Vector<Selection> compute_modified_ranges(const Buffer& buffer, size_t timestamp);
 
-Selection selection_from_string(StringView desc);
-Selection selection_from_string_char(const Buffer& buffer, StringView desc);
-String selection_to_string(const Selection& selection);
-String selection_to_string_char(const Buffer& buffer, const Selection& selection);
+enum class ColumnType
+{
+    Byte,
+    Codepoint,
+    DisplayColumn
+};
 
-String selection_list_to_string(bool char_columns, const SelectionList& selections);
+Selection selection_from_string(ColumnType column_type, const Buffer& buffer, StringView desc);
+String selection_to_string(ColumnType column_type, const Buffer& buffer, const Selection& selection);
+
+String selection_list_to_string(ColumnType column_type, const SelectionList& selections);
 
 template<typename StringArray>
-SelectionList selection_list_from_strings(Buffer& buffer, bool char_columns, StringArray&& descs, size_t timestamp, size_t main)
+SelectionList selection_list_from_strings(Buffer& buffer, ColumnType column_type, StringArray&& descs, size_t timestamp, size_t main)
 {
-    if ((char_columns and timestamp != buffer.timestamp()) or timestamp > buffer.timestamp())
+    if ((column_type != ColumnType::Byte and timestamp != buffer.timestamp()) or timestamp > buffer.timestamp())
         throw runtime_error{format("invalid timestamp '{}'", timestamp)};
 
     auto from_string = [&](StringView desc) {
-        return char_columns ? selection_from_string_char(buffer, desc)
-                            : selection_from_string(desc);
+        return selection_from_string(column_type, buffer, desc);
     };
 
     auto sels = descs | transform(from_string) | gather<Vector<Selection>>();

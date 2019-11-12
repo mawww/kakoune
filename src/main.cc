@@ -248,15 +248,20 @@ static const EnvVarDesc builtin_env_vars[] = { {
     }, {
         "selection_desc", false,
         [](StringView name, const Context& context, Quoting quoting)
-        { return selection_to_string(context.selections().main()); }
+        { return selection_to_string(ColumnType::Byte, context.buffer(),
+                                     context.selections().main()); }
     }, {
         "selections_desc", false,
         [](StringView name, const Context& context, Quoting quoting)
-        { return selection_list_to_string(false, context.selections()); }
+        { return selection_list_to_string(ColumnType::Byte, context.selections()); }
     }, {
         "selections_char_desc", false,
         [](StringView name, const Context& context, Quoting quoting)
-        { return selection_list_to_string(true, context.selections()); }
+        { return selection_list_to_string(ColumnType::Codepoint, context.selections()); }
+    }, {
+        "selections_display_column_desc", false,
+        [](StringView name, const Context& context, Quoting quoting)
+        { return selection_list_to_string(ColumnType::DisplayColumn, context.selections()); }
     }, {
         "selection_length", false,
         [](StringView name, const Context& context, Quoting quoting) -> String
@@ -795,9 +800,10 @@ int run_server(StringView session, StringView server_init,
             else if (convert_to_client_pending)
             {
                 kak_assert(local_client);
-                const String client_name = local_client->context().name();
-                const String buffer_name = local_client->context().buffer().name();
-                const String selections = selection_list_to_string(false, local_client->context().selections());
+                auto& local_context = local_client->context();
+                const String client_name = local_context.name();
+                const String buffer_name = local_context.buffer().name();
+                const String selections = selection_list_to_string(ColumnType::Byte, local_context.selections());
 
                 ClientManager::instance().remove_client(*local_client, true, 0);
                 client_manager.clear_client_trash();

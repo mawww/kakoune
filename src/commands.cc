@@ -2330,10 +2330,10 @@ const CommandDesc select_cmd = {
     "select <selection_desc>...: select given selections\n"
     "\n"
     "selection_desc format is <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>",
-    ParameterDesc{
-        {
+    ParameterDesc{{
             {"timestamp", {true, "specify buffer timestamp at which those selections are valid"}},
-            {"codepoint", {false, "columns are specified in codepoints, not bytes"}}
+            {"codepoint", {false, "columns are specified in codepoints, not bytes"}},
+            {"display-column", {false, "columns are specified in display columns, not bytes"}}
         },
         ParameterDesc::Flags::SwitchesOnlyAtStart, 1
     },
@@ -2344,7 +2344,12 @@ const CommandDesc select_cmd = {
     {
         auto& buffer = context.buffer();
         const size_t timestamp = parser.get_switch("timestamp").map(str_to_int_ifp).cast<size_t>().value_or(buffer.timestamp());
-        context.selections_write_only() = selection_list_from_strings(buffer, (bool)parser.get_switch("codepoint"), parser.positionals_from(0), timestamp, 0);
+        ColumnType column_type = ColumnType::Byte;
+        if (parser.get_switch("codepoint"))
+            column_type = ColumnType::Codepoint;
+        else if (parser.get_switch("display-column"))
+            column_type = ColumnType::DisplayColumn;
+        context.selections_write_only() = selection_list_from_strings(buffer, column_type, parser.positionals_from(0), timestamp, 0);
     }
 };
 

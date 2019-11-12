@@ -163,8 +163,9 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
 
         if (insert_coord != buffer->back_coord())
         {
-            buffer->run_hook_in_own_context(Hook::BufReadFifo,
-                                            selection_to_string({insert_coord, buffer->back_coord()}));
+            buffer->run_hook_in_own_context(
+                Hook::BufReadFifo,
+                selection_to_string(ColumnType::Byte, *buffer, {insert_coord, buffer->back_coord()}));
         }
 
         if (closed)

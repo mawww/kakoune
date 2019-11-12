@@ -472,31 +472,34 @@ void SelectionList::erase()
     m_buffer->check_invariant();
 }
 
-String selection_to_string(const Selection& selection)
+String selection_to_string(ColumnType column_type, const Buffer& buffer, const Selection& selection)
 {
     const auto& cursor = selection.cursor();
     const auto& anchor = selection.anchor();
-    return format("{}.{},{}.{}", anchor.line + 1, anchor.column + 1,
-                  cursor.line + 1, cursor.column + 1);
+    switch (column_type)
+    {
+    default:
+    case ColumnType::Byte:
+        return format("{}.{},{}.{}", anchor.line + 1, anchor.column + 1,
+                      cursor.line + 1, cursor.column + 1);
+    case ColumnType::Codepoint:
+        return format("{}.{},{}.{}",
+                      anchor.line + 1, buffer[anchor.line].char_count_to(anchor.column) + 1,
+                      cursor.line + 1, buffer[cursor.line].char_count_to(cursor.column) + 1);
+    case ColumnType::DisplayColumn:
+        return format("{}.{},{}.{}",
+                      anchor.line + 1, buffer[anchor.line].column_count_to(anchor.column) + 1,
+                      cursor.line + 1, buffer[cursor.line].column_count_to(cursor.column) + 1);
+    }
 }
 
-String selection_to_string_char(const Buffer& buffer, const Selection& selection)
-{
-    const auto& cursor = selection.cursor();
-    const auto& anchor = selection.anchor();
-    return format("{}.{},{}.{}",
-                  anchor.line + 1, buffer[anchor.line].char_count_to(anchor.column) + 1,
-                  cursor.line + 1, buffer[cursor.line].char_count_to(cursor.column) + 1);
-}
-
-String selection_list_to_string(bool char_columns, const SelectionList& selections)
+String selection_list_to_string(ColumnType column_type, const SelectionList& selections)
 {
     auto& buffer = selections.buffer();
     kak_assert(selections.timestamp() == buffer.timestamp());
 
     auto to_string = [&](const Selection& selection) {
-        return char_columns ? selection_to_string_char(buffer, selection)
-                            : selection_to_string(selection);
+        return selection_to_string(column_type, buffer, selection);
     };
 
     auto beg = &*selections.begin(), end = &*selections.end();
@@ -506,8 +509,7 @@ String selection_list_to_string(bool char_columns, const SelectionList& selectio
                 transform(to_string), ' ', false);
 }
 
-template<typename ComputeCoord>
-Selection selection_from_string_impl(StringView desc, ComputeCoord compute_coord)
+Selection selection_from_string(ColumnType column_type, const Buffer& buffer, StringView desc)
 {
     auto comma = find(desc, ',');
     auto dot_anchor = find(StringView{desc.begin(), comma}, '.');
@@ -516,6 +518,24 @@ Selection selection_from_string_impl(StringView desc, ComputeCoord compute_coord
     if (comma == desc.end() or dot_anchor == comma or dot_cursor == desc.end())
         throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> format", desc));
 
+    auto compute_coord = [&](int line, int column) -> BufferCoord {
+        if (line < 0 or column < 0)
+            throw runtime_error(format("coordinate {}.{} does exist in buffer", line, column));
+
+        switch (column_type)
+        {
+        default:
+        case ColumnType::Byte: return {line, column};
+        case ColumnType::Codepoint:
+            if (buffer.line_count() <= line or buffer[line].char_length() <= column)
+                throw runtime_error(format("coordinate {}.{} does exist in buffer", line, column));
+            return {line, buffer[line].byte_count_to(CharCount{column})};
+        case ColumnType::DisplayColumn:
+            if (buffer.line_count() <= line or buffer[line].column_length() <= column)
+                throw runtime_error(format("coordinate {}.{} does exist in buffer", line, column));
+            return {line, buffer[line].byte_count_to(ColumnCount{column})};
+        }
+    };
 
     auto anchor = compute_coord(str_to_int({desc.begin(), dot_anchor}) - 1,
                                 str_to_int({dot_anchor+1, comma}) - 1);
@@ -523,29 +543,7 @@ Selection selection_from_string_impl(StringView desc, ComputeCoord compute_coord
     auto cursor = compute_coord(str_to_int({comma+1, dot_cursor}) - 1,
                                 str_to_int({dot_cursor+1, desc.end()}) - 1);
 
-    if (anchor.line < 0 or anchor.column < 0 or
-        cursor.line < 0 or cursor.column < 0)
-        throw runtime_error(format("coordinates must be >= 1: '{}'", desc));
-
     return Selection{anchor, cursor};
-}
-
-Selection selection_from_string(StringView desc)
-{
-    return selection_from_string_impl(desc, [](int line, int column) {
-        return BufferCoord{line, column};
-    });
-}
-
-Selection selection_from_string_char(const Buffer& buffer, StringView desc)
-{
-    return selection_from_string_impl(desc, [&](int line, int column) {
-        if (line < 0 or buffer.line_count() <= line or
-            column < 0 or buffer[line].char_length() <= column)
-            throw runtime_error(format("coordinate {}.{} does exist in buffer", line, column));
-
-        return BufferCoord{line, buffer[line].byte_count_to(CharCount{column})};
-    });
 }
 
 }

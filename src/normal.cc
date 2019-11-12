@@ -1774,7 +1774,7 @@ SelectionList read_selections_from_register(char reg, Context& context)
     const size_t timestamp = str_to_int(desc[1]);
     size_t main = str_to_int(desc[2]);
 
-    return selection_list_from_strings(buffer, false, content | skip(1), timestamp, main);
+    return selection_list_from_strings(buffer, ColumnType::Byte, content | skip(1), timestamp, main);
 }
 
 enum class CombineOp
@@ -1889,8 +1889,9 @@ void save_selections(Context& context, NormalParams params)
 
     auto save_to_reg = [reg](Context& context, const SelectionList& sels) {
         auto& buffer = context.buffer();
+        auto to_string = [&] (const Selection& sel) { return selection_to_string(ColumnType::Byte, buffer, sel); };
         auto descs = concatenated(ConstArrayView<String>{format("{}@{}@{}", buffer.name(), buffer.timestamp(), sels.main_index())},
-                                  sels | transform(selection_to_string)) | gather<Vector<String>>();
+                                  sels | transform(to_string)) | gather<Vector<String>>();
         RegisterManager::instance()[reg].set(context, descs);
 
         context.print_status({format("{} {} selections to register '{}'",
