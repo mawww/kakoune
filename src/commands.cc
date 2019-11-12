@@ -2331,7 +2331,10 @@ const CommandDesc select_cmd = {
     "\n"
     "selection_desc format is <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>",
     ParameterDesc{
-        {{"timestamp", {true, "specify buffer timestamp at which those selections are valid"}}},
+        {
+            {"timestamp", {true, "specify buffer timestamp at which those selections are valid"}},
+            {"codepoint", {false, "columns are specified in codepoints, not bytes"}}
+        },
         ParameterDesc::Flags::SwitchesOnlyAtStart, 1
     },
     CommandFlags::None,
@@ -2341,7 +2344,7 @@ const CommandDesc select_cmd = {
     {
         auto& buffer = context.buffer();
         const size_t timestamp = parser.get_switch("timestamp").map(str_to_int_ifp).cast<size_t>().value_or(buffer.timestamp());
-        context.selections_write_only() = selection_list_from_strings(buffer, parser.positionals_from(0), timestamp, 0);
+        context.selections_write_only() = selection_list_from_strings(buffer, (bool)parser.get_switch("codepoint"), parser.positionals_from(0), timestamp, 0);
     }
 };
 

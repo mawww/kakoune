@@ -489,7 +489,25 @@ String selection_to_string_char(const Buffer& buffer, const Selection& selection
                   cursor.line + 1, buffer[cursor.line].char_count_to(cursor.column) + 1);
 }
 
-Selection selection_from_string(StringView desc)
+String selection_list_to_string(bool char_columns, const SelectionList& selections)
+{
+    auto& buffer = selections.buffer();
+    kak_assert(selections.timestamp() == buffer.timestamp());
+
+    auto to_string = [&](const Selection& selection) {
+        return char_columns ? selection_to_string_char(buffer, selection)
+                            : selection_to_string(selection);
+    };
+
+    auto beg = &*selections.begin(), end = &*selections.end();
+    auto main = beg + selections.main_index();
+    using View = ConstArrayView<Selection>;
+    return join(concatenated(View{main, end}, View{beg, main}) |
+                transform(to_string), ' ', false);
+}
+
+template<typename ComputeCoord>
+Selection selection_from_string_impl(StringView desc, ComputeCoord compute_coord)
 {
     auto comma = find(desc, ',');
     auto dot_anchor = find(StringView{desc.begin(), comma}, '.');
@@ -498,17 +516,36 @@ Selection selection_from_string(StringView desc)
     if (comma == desc.end() or dot_anchor == comma or dot_cursor == desc.end())
         throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> format", desc));
 
-    BufferCoord anchor{str_to_int({desc.begin(), dot_anchor}) - 1,
-                       str_to_int({dot_anchor+1, comma}) - 1};
 
-    BufferCoord cursor{str_to_int({comma+1, dot_cursor}) - 1,
-                       str_to_int({dot_cursor+1, desc.end()}) - 1};
+    auto anchor = compute_coord(str_to_int({desc.begin(), dot_anchor}) - 1,
+                                str_to_int({dot_anchor+1, comma}) - 1);
+
+    auto cursor = compute_coord(str_to_int({comma+1, dot_cursor}) - 1,
+                                str_to_int({dot_cursor+1, desc.end()}) - 1);
 
     if (anchor.line < 0 or anchor.column < 0 or
         cursor.line < 0 or cursor.column < 0)
         throw runtime_error(format("coordinates must be >= 1: '{}'", desc));
 
     return Selection{anchor, cursor};
+}
+
+Selection selection_from_string(StringView desc)
+{
+    return selection_from_string_impl(desc, [](int line, int column) {
+        return BufferCoord{line, column};
+    });
+}
+
+Selection selection_from_string_char(const Buffer& buffer, StringView desc)
+{
+    return selection_from_string_impl(desc, [&](int line, int column) {
+        if (line < 0 or buffer.line_count() <= line or
+            column < 0 or buffer[line].char_length() <= column)
+            throw runtime_error(format("coordinate {}.{} does exist in buffer", line, column));
+
+        return BufferCoord{line, buffer[line].byte_count_to(CharCount{column})};
+    });
 }
 
 }

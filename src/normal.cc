@@ -1774,7 +1774,7 @@ SelectionList read_selections_from_register(char reg, Context& context)
     const size_t timestamp = str_to_int(desc[1]);
     size_t main = str_to_int(desc[2]);
 
-    return selection_list_from_strings(buffer, content | skip(1), timestamp, main);
+    return selection_list_from_strings(buffer, false, content | skip(1), timestamp, main);
 }
 
 enum class CombineOp
