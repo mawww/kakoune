@@ -94,6 +94,13 @@ struct BufferCoord : LineAndColumn<BufferCoord, LineCount, ByteCount>
         : LineAndColumn{line, column} {}
 };
 
+struct CharCoord : LineAndColumn<CharCoord, LineCount, CharCount>
+{
+    [[gnu::always_inline]]
+    constexpr CharCoord(LineCount line = 0, CharCount column = 0)
+        : LineAndColumn{line, column} {}
+};
+
 struct DisplayCoord : LineAndColumn<DisplayCoord, LineCount, ColumnCount>
 {
     [[gnu::always_inline]]
@@ -112,6 +119,19 @@ struct BufferCoordAndTarget : BufferCoord
     [[gnu::always_inline]]
     constexpr BufferCoordAndTarget(BufferCoord coord, ColumnCount target = -1)
         : BufferCoord{coord}, target{target} {}
+
+    ColumnCount target;
+};
+
+struct CharCoordAndTarget : CharCoord
+{
+    [[gnu::always_inline]]
+    constexpr CharCoordAndTarget(LineCount line = 0, CharCount column = 0, ColumnCount target = -1)
+        : CharCoord{line, column}, target{target} {}
+
+    [[gnu::always_inline]]
+    constexpr CharCoordAndTarget(CharCoord coord, ColumnCount target = -1)
+        : CharCoord{coord}, target{target} {}
 
     ColumnCount target;
 };

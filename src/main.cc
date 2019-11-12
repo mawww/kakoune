@@ -254,6 +254,13 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context, Quoting quoting)
         { return selection_list_to_string(context.selections()); }
     }, {
+        "selections_char_desc", false,
+        [](StringView name, const Context& context, Quoting quoting)
+        { const auto& buffer = context.buffer();
+          return join(context.selections() |
+                      transform([&buffer](auto& s)
+                                { return char_selection_to_string(char_selection(buffer, s)); }), ' ', false); }
+    }, {
         "selection_length", false,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(char_length(context.buffer(), context.selections().main())); }

@@ -7,6 +7,16 @@
 namespace Kakoune
 {
 
+CharSelection char_selection(const Buffer& buffer, const Selection& selection)
+{
+    return CharSelection{CharCoord{selection.anchor().line,
+                                   buffer[selection.anchor().line].char_count_to(selection.anchor().column)},
+                         CharCoordAndTarget{selection.cursor().line,
+                                            buffer[selection.cursor().line].char_count_to(selection.cursor().column),
+                                            selection.cursor().target},
+                         selection.captures()};
+}
+
 SelectionList::SelectionList(Buffer& buffer, Selection s, size_t timestamp)
     : m_selections({ std::move(s) }), m_buffer(&buffer), m_timestamp(timestamp)
 {
@@ -473,6 +483,14 @@ void SelectionList::erase()
 }
 
 String selection_to_string(const Selection& selection)
+{
+    const auto& cursor = selection.cursor();
+    const auto& anchor = selection.anchor();
+    return format("{}.{},{}.{}", anchor.line + 1, anchor.column + 1,
+                  cursor.line + 1, cursor.column + 1);
+}
+
+String char_selection_to_string(const CharSelection& selection)
 {
     const auto& cursor = selection.cursor();
     const auto& anchor = selection.anchor();

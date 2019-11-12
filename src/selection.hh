@@ -11,52 +11,75 @@ using CaptureList = Vector<String, MemoryDomain::Selections>;
 constexpr ColumnCount max_column{std::numeric_limits<int>::max()};
 
 // A selection is a Selection, associated with a CaptureList
-struct Selection
+template<typename EffectiveType, typename CoordType, typename CoordAndTargetType>
+struct SelectionImpl
 {
     static constexpr MemoryDomain Domain = MemoryDomain::Selections;
 
-    Selection() = default;
-    Selection(BufferCoord pos) : Selection(pos,pos) {}
-    Selection(BufferCoord anchor, BufferCoordAndTarget cursor,
-              CaptureList captures = {})
+    SelectionImpl() = default;
+    SelectionImpl(CoordType pos) : SelectionImpl(pos,pos) {}
+    SelectionImpl(CoordType anchor, CoordAndTargetType cursor,
+                  CaptureList captures = {})
         : m_anchor{anchor}, m_cursor{cursor},
           m_captures(std::move(captures)) {}
 
-    BufferCoord& anchor() { return m_anchor; }
-    BufferCoordAndTarget& cursor() { return m_cursor; }
+    CoordType& anchor() { return m_anchor; }
+    CoordAndTargetType& cursor() { return m_cursor; }
 
-    const BufferCoord& anchor() const { return m_anchor; }
-    const BufferCoordAndTarget& cursor() const { return m_cursor; }
+    const CoordType& anchor() const { return m_anchor; }
+    const CoordAndTargetType& cursor() const { return m_cursor; }
 
-    void set(BufferCoord anchor, BufferCoord cursor)
+    void set(CoordType anchor, CoordType cursor)
     {
         m_anchor = anchor;
         m_cursor = cursor;
     }
 
-    void set(BufferCoord coord) { set(coord, coord); }
+    void set(CoordType coord) { set(coord, coord); }
 
     CaptureList& captures() { return m_captures; }
     const CaptureList& captures() const { return m_captures; }
 
-    bool operator== (const Selection& other) const
+    bool operator== (const EffectiveType& other) const
     {
         return m_anchor == other.m_anchor and m_cursor == other.m_cursor;
     }
 
     // When selections are single char, we want the anchor to be considered min, and cursor max
-    const BufferCoord& min() const { return m_anchor <= m_cursor ? m_anchor : m_cursor; }
-    const BufferCoord& max() const { return m_anchor <= m_cursor ? m_cursor : m_anchor; }
+    const CoordType& min() const { return m_anchor <= m_cursor ? m_anchor : m_cursor; }
+    const CoordType& max() const { return m_anchor <= m_cursor ? m_cursor : m_anchor; }
 
-    BufferCoord& min() { return m_anchor <= m_cursor ? m_anchor : m_cursor; }
-    BufferCoord& max() { return m_anchor <= m_cursor ? m_cursor : m_anchor; }
+    CoordType& min() { return m_anchor <= m_cursor ? m_anchor : m_cursor; }
+    CoordType& max() { return m_anchor <= m_cursor ? m_cursor : m_anchor; }
 
 private:
-    BufferCoord m_anchor;
-    BufferCoordAndTarget m_cursor;
+    CoordType m_anchor;
+    CoordAndTargetType m_cursor;
 
     CaptureList m_captures;
 };
+
+struct Selection : public SelectionImpl<Selection, BufferCoord, BufferCoordAndTarget>
+{
+    Selection()
+        : SelectionImpl{} {}
+    Selection(BufferCoord pos)
+        : SelectionImpl{pos} {}
+    Selection(BufferCoord anchor, BufferCoordAndTarget cursor, CaptureList captures = {})
+        : SelectionImpl{anchor, cursor, captures} {}
+};
+
+struct CharSelection : public SelectionImpl<CharSelection, CharCoord, CharCoordAndTarget>
+{
+    CharSelection()
+        : SelectionImpl{} {}
+    CharSelection(CharCoord pos)
+        : SelectionImpl{pos} {}
+    CharSelection(CharCoord anchor, CharCoordAndTarget cursor, CaptureList captures = {})
+        : SelectionImpl{anchor, cursor, captures} {}
+};
+
+CharSelection char_selection(const Buffer& buffer, const Selection& selection);
 
 inline bool overlaps(const Selection& lhs, const Selection& rhs)
 {
@@ -158,6 +181,7 @@ private:
 Vector<Selection> compute_modified_ranges(const Buffer& buffer, size_t timestamp);
 
 String selection_to_string(const Selection& selection);
+String char_selection_to_string(const CharSelection& selection);
 String selection_list_to_string(const SelectionList& selection);
 Selection selection_from_string(StringView desc);
 
