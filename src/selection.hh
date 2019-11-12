@@ -95,7 +95,6 @@ struct SelectionList
     SelectionList(Buffer& buffer, Vector<Selection> s, size_t timestamp);
 
     void update(bool merge = true);
-
     void check_invariant() const;
 
     const Selection& main() const { return (*this)[m_main]; }
@@ -157,9 +156,27 @@ private:
 
 Vector<Selection> compute_modified_ranges(const Buffer& buffer, size_t timestamp);
 
-String selection_to_string(const Selection& selection);
-String selection_list_to_string(const SelectionList& selection);
 Selection selection_from_string(StringView desc);
+String selection_to_string(const Selection& selection);
+String selection_to_string_char(const Buffer& buffer, const Selection& selection);
+
+template<bool char_columns>
+String selection_list_to_string(const SelectionList& selections)
+{
+    auto& buffer = selections.buffer();
+    kak_assert(selections.timestamp() == buffer.timestamp());
+
+    auto to_string = [&](const Selection& selection) {
+        return char_columns ? selection_to_string_char(buffer, selection)
+                            : selection_to_string(selection);
+    };
+
+    auto beg = &*selections.begin(), end = &*selections.end();
+    auto main = beg + selections.main_index();
+    using View = ConstArrayView<Selection>;
+    return join(concatenated(View{main, end}, View{beg, main}) |
+                transform(to_string), ' ', false);
+}
 
 template<class StringArray>
 SelectionList selection_list_from_strings(Buffer& buffer, StringArray&& descs, size_t timestamp, size_t main)

@@ -311,6 +311,12 @@ The following expansions are supported (with required context _in italics_):
     the number of bytes from the start of the line to the cursor (like
     `%val{cursor_column}`), and all are 1-based decimal integers
 
+*%val{selections_char_desc}*::
+    _in window scope_ +
+    unquoted list of the ranges of all selections, in the same format as
+    `%val{selection_desc}`, except that the columns are in codepoints rather
+    than bytes
+
 *%val{selections_desc}*::
     _in window scope_ +
     unquoted list of the ranges of all selections, in the same format as

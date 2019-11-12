@@ -480,13 +480,13 @@ String selection_to_string(const Selection& selection)
                   cursor.line + 1, cursor.column + 1);
 }
 
-String selection_list_to_string(const SelectionList& selections)
+String selection_to_string_char(const Buffer& buffer, const Selection& selection)
 {
-    auto beg = &*selections.begin(), end = &*selections.end();
-    auto main = beg + selections.main_index();
-    using View = ConstArrayView<Selection>;
-    return join(concatenated(View{main, end}, View{beg, main}) |
-                transform(selection_to_string), ' ', false);
+    const auto& cursor = selection.cursor();
+    const auto& anchor = selection.anchor();
+    return format("{}.{},{}.{}",
+                  anchor.line + 1, buffer[anchor.line].char_count_to(anchor.column) + 1,
+                  cursor.line + 1, buffer[cursor.line].char_count_to(cursor.column) + 1);
 }
 
 Selection selection_from_string(StringView desc)

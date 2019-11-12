@@ -252,7 +252,11 @@ static const EnvVarDesc builtin_env_vars[] = { {
     }, {
         "selections_desc", false,
         [](StringView name, const Context& context, Quoting quoting)
-        { return selection_list_to_string(context.selections()); }
+        { return selection_list_to_string<false>(context.selections()); }
+    }, {
+        "selections_char_desc", false,
+        [](StringView name, const Context& context, Quoting quoting)
+        { return selection_list_to_string<true>(context.selections()); }
     }, {
         "selection_length", false,
         [](StringView name, const Context& context, Quoting quoting) -> String
@@ -793,7 +797,7 @@ int run_server(StringView session, StringView server_init,
                 kak_assert(local_client);
                 const String client_name = local_client->context().name();
                 const String buffer_name = local_client->context().buffer().name();
-                const String selections = selection_list_to_string(local_client->context().selections());
+                const String selections = selection_list_to_string<false>(local_client->context().selections());
 
                 ClientManager::instance().remove_client(*local_client, true, 0);
                 client_manager.clear_client_trash();

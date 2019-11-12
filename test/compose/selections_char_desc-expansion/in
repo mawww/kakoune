@@ -1,0 +1,4 @@
+sin%(gle)-byte
+%(λx.)λy.y x - start on wide char
+	∃e∈%(C.∀)g∈C.g⊗e≡e⊗g≡e - tabs, ending on wide char
+	%(x̦̏)- combining characters
