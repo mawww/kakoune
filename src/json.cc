@@ -40,10 +40,15 @@ String to_json(StringView str)
 
 static bool is_digit(char c) { return c >= '0' and c <= '9'; }
 
-JsonResult parse_json(const char* pos, const char* end)
+static constexpr size_t max_parsing_depth = 100;
+
+JsonResult parse_json_impl(const char* pos, const char* end, size_t depth)
 {
     if (not skip_while(pos, end, is_blank))
         return {};
+
+    if (depth >= max_parsing_depth)
+        throw runtime_error("maximum parsing depth reached");
 
     if (is_digit(*pos) or *pos == '-')
     {
@@ -90,7 +95,7 @@ JsonResult parse_json(const char* pos, const char* end)
 
         while (true)
         {
-            auto [element, new_pos] = parse_json(pos, end);
+            auto [element, new_pos] = parse_json_impl(pos, end, depth+1);
             if (not element)
                 return {};
             pos = new_pos;
@@ -116,7 +121,7 @@ JsonResult parse_json(const char* pos, const char* end)
 
         while (true)
         {
-            auto [name_value, name_end] = parse_json(pos, end);
+            auto [name_value, name_end] = parse_json_impl(pos, end, depth+1);
             if (not name_value)
                 return {};
             pos = name_end;
@@ -126,7 +131,7 @@ JsonResult parse_json(const char* pos, const char* end)
             if (*pos++ != ':')
                 throw runtime_error("expected :");
 
-            auto [element, element_end] = parse_json(pos, end);
+            auto [element, element_end] = parse_json_impl(pos, end, depth+1);
             if (not element)
                 return {};
             pos = element_end;
@@ -145,7 +150,8 @@ JsonResult parse_json(const char* pos, const char* end)
     throw runtime_error("unable to parse json");
 }
 
-JsonResult parse_json(StringView json) { return parse_json(json.begin(), json.end()); }
+JsonResult parse_json(const char* pos, const char* end) { return parse_json_impl(pos,          end,        0); }
+JsonResult parse_json(StringView json)                  { return parse_json_impl(json.begin(), json.end(), 0); }
 
 UnitTest test_json_parser{[]()
 {
@@ -169,6 +175,16 @@ UnitTest test_json_parser{[]()
         auto value = parse_json("{}").value;
         kak_assert(value and value.is_a<JsonObject>());
         kak_assert(value.as<JsonObject>().empty());
+    }
+
+    {
+        String big_nested_array = {"", max_parsing_depth*2+2};
+        for (size_t i = 0; i < max_parsing_depth+1; i++)
+        {
+            big_nested_array[i] = '[';
+            big_nested_array[i+max_parsing_depth+1] = ']';
+        }
+        kak_expect_throw(runtime_error, parse_json(big_nested_array));
     }
 }};
 
