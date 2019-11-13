@@ -985,7 +985,7 @@ int run_pipe(StringView session)
 
 void signal_handler(int signal)
 {
-    NCursesUI::abort();
+    NCursesUI::restore_terminal();
     const char* text = nullptr;
     switch (signal)
     {

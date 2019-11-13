@@ -10,11 +10,6 @@
 
 #include <algorithm>
 
-#define NCURSES_OPAQUE 0
-#define NCURSES_INTERNALS
-
-#include <ncurses.h>
-
 #include <fcntl.h>
 #include <csignal>
 #include <sys/ioctl.h>
@@ -28,94 +23,110 @@ namespace Kakoune
 using std::min;
 using std::max;
 
-struct NCursesWin : WINDOW {};
+static void set_cursor_pos(DisplayCoord coord)
+{
+    printf("\033[%d;%dH", (int)coord.line + 1, (int)coord.column + 1);
+}
 
 void NCursesUI::Window::create(const DisplayCoord& p, const DisplayCoord& s)
 {
     pos = p;
     size = s;
-    win = (NCursesWin*)newpad((int)size.line, (int)size.column);
+    lines.resize((int)size.line);
 }
 
 void NCursesUI::Window::destroy()
 {
-    delwin(win);
-    win = nullptr;
     pos = DisplayCoord{};
     size = DisplayCoord{};
+    lines.clear();
 }
 
 void NCursesUI::Window::refresh(bool force)
 {
-    if (not win)
+    if (lines.empty())
         return;
 
-    if (force)
-        redrawwin(win);
+    static constexpr int fg_table[]{ 39, 30, 31, 32, 33, 34, 35, 36, 37, 90, 91, 92, 93, 94, 95, 96, 97 };
+    static constexpr int bg_table[]{ 49, 40, 41, 42, 43, 44, 45, 46, 47, 100, 101, 102, 103, 104, 105, 106, 107 };
+    static constexpr int attr_table[]{ 0, 4, 7, 5, 1, 2, 3 };
+    auto set_color = [](bool fg, const Color& color) {
+        if (color.isRGB())
+            printf(";%d;2;%d;%d;%d", fg ? 38 : 48, color.r, color.g, color.b);
+        else
+            printf(";%d", (fg ? fg_table : bg_table)[(int)(char)color.color]);
+    };
 
-    DisplayCoord max_pos = pos + size - DisplayCoord{1,1};
-    pnoutrefresh(win, 0, 0, (int)pos.line, (int)pos.column,
-                 (int)max_pos.line, (int)max_pos.column);
+    auto set_attributes = [](const Attribute& attributes) {
+        for (int i = 0; i < sizeof(attr_table) / sizeof(int); ++i)
+        {
+            if (attributes & (Attribute)(1 << i))
+                printf(";%d", attr_table[i]);
+        }
+    };
+
+    DisplayCoord cursor_pos = pos;
+    for (auto& line : lines)
+    {
+        set_cursor_pos(cursor_pos);
+        for (auto& atom : line)
+        {
+            printf("\033[");
+            set_attributes(atom.face.attributes);
+            set_color(true, atom.face.fg);
+            set_color(false, atom.face.bg);
+            printf("m");
+            fputs(atom.text.c_str(), stdout);
+        }
+        ++cursor_pos.line;
+    }
 }
 
 void NCursesUI::Window::move_cursor(DisplayCoord coord)
 {
-    wmove(win, (int)coord.line, (int)coord.column);
+    cursor = coord;
 }
 
-void NCursesUI::Window::draw(Palette& palette, ConstArrayView<DisplayAtom> atoms,
+void NCursesUI::Window::clear_line()
+{
+    auto& line = lines[(int)cursor.line];
+    auto it = line.begin();
+    ColumnCount column = 0;
+    for (; it != line.end() and column < cursor.column; ++it)
+        column += it->text.column_length();
+
+    line.erase(it, line.end());
+    if (column > cursor.column)
+    {
+        auto& text = line.back().text;
+        auto new_length = text.column_length() - (column - cursor.column);
+        text.resize(text.byte_count_to(new_length), 0);
+    }
+}
+
+void NCursesUI::Window::draw(ConstArrayView<DisplayAtom> atoms,
                              const Face& default_face)
 {
-    auto add_str = [&](StringView str) { waddnstr(win, str.begin(), (int)str.length()); };
-
-    auto set_face = [&](Face face) {
-        if (m_active_pair != -1)
-            wattroff(win, COLOR_PAIR(m_active_pair));
-
-        face = merge_faces(default_face, face);
-
-        if (face.fg != Color::Default or face.bg != Color::Default)
-        {
-            m_active_pair = palette.get_color_pair(face);
-            wattron(win, COLOR_PAIR(m_active_pair));
-        }
-
-        auto set_attribute = [&](Attribute attr, int nc_attr) {
-            (face.attributes & attr) ?  wattron(win, nc_attr) : wattroff(win, nc_attr);
-        };
-
-        set_attribute(Attribute::Underline, A_UNDERLINE);
-        set_attribute(Attribute::Reverse, A_REVERSE);
-        set_attribute(Attribute::Blink, A_BLINK);
-        set_attribute(Attribute::Bold, A_BOLD);
-        set_attribute(Attribute::Dim, A_DIM);
-        #if defined(A_ITALIC)
-        set_attribute(Attribute::Italic, A_ITALIC);
-        #endif
-    };
-
-    wbkgdset(win, COLOR_PAIR(palette.get_color_pair(default_face)));
-
-    ColumnCount column = getcurx(win);
+    clear_line();
     for (const DisplayAtom& atom : atoms)
     {
         StringView content = atom.content();
         if (content.empty())
             continue;
 
-        set_face(atom.face);
+        auto face = merge_faces(default_face, atom.face);
         if (content.back() == '\n')
         {
-            add_str(content.substr(0, content.length()-1));
-            waddch(win, ' ');
+            lines[(int)cursor.line].push_back({content.substr(0, content.length()-1).str(), face});
+            lines[(int)cursor.line].push_back({" ", face});
         }
         else
-            add_str(content);
-        column += content.column_length();
+            lines[(int)cursor.line].push_back({content.str(), face});
+        cursor.column += content.column_length();
     }
 
-    if (column < size.column)
-        wclrtoeol(win);
+    if (cursor.column < size.column)
+        lines[(int)cursor.line].push_back({String(' ', size.column - cursor.column), default_face});
 }
 
 constexpr int NCursesUI::default_shift_function_key;
@@ -157,163 +168,6 @@ static constexpr StringView assistant_dilbert[] =
 
 template<typename T> T sq(T x) { return x * x; }
 
-constexpr struct { unsigned char r, g, b; } builtin_colors[] = {
-    {0x00,0x00,0x00}, {0x80,0x00,0x00}, {0x00,0x80,0x00}, {0x80,0x80,0x00},
-    {0x00,0x00,0x80}, {0x80,0x00,0x80}, {0x00,0x80,0x80}, {0xc0,0xc0,0xc0},
-    {0x80,0x80,0x80}, {0xff,0x00,0x00}, {0x00,0xff,0x00}, {0xff,0xff,0x00},
-    {0x00,0x00,0xff}, {0xff,0x00,0xff}, {0x00,0xff,0xff}, {0xff,0xff,0xff},
-    {0x00,0x00,0x00}, {0x00,0x00,0x5f}, {0x00,0x00,0x87}, {0x00,0x00,0xaf},
-    {0x00,0x00,0xd7}, {0x00,0x00,0xff}, {0x00,0x5f,0x00}, {0x00,0x5f,0x5f},
-    {0x00,0x5f,0x87}, {0x00,0x5f,0xaf}, {0x00,0x5f,0xd7}, {0x00,0x5f,0xff},
-    {0x00,0x87,0x00}, {0x00,0x87,0x5f}, {0x00,0x87,0x87}, {0x00,0x87,0xaf},
-    {0x00,0x87,0xd7}, {0x00,0x87,0xff}, {0x00,0xaf,0x00}, {0x00,0xaf,0x5f},
-    {0x00,0xaf,0x87}, {0x00,0xaf,0xaf}, {0x00,0xaf,0xd7}, {0x00,0xaf,0xff},
-    {0x00,0xd7,0x00}, {0x00,0xd7,0x5f}, {0x00,0xd7,0x87}, {0x00,0xd7,0xaf},
-    {0x00,0xd7,0xd7}, {0x00,0xd7,0xff}, {0x00,0xff,0x00}, {0x00,0xff,0x5f},
-    {0x00,0xff,0x87}, {0x00,0xff,0xaf}, {0x00,0xff,0xd7}, {0x00,0xff,0xff},
-    {0x5f,0x00,0x00}, {0x5f,0x00,0x5f}, {0x5f,0x00,0x87}, {0x5f,0x00,0xaf},
-    {0x5f,0x00,0xd7}, {0x5f,0x00,0xff}, {0x5f,0x5f,0x00}, {0x5f,0x5f,0x5f},
-    {0x5f,0x5f,0x87}, {0x5f,0x5f,0xaf}, {0x5f,0x5f,0xd7}, {0x5f,0x5f,0xff},
-    {0x5f,0x87,0x00}, {0x5f,0x87,0x5f}, {0x5f,0x87,0x87}, {0x5f,0x87,0xaf},
-    {0x5f,0x87,0xd7}, {0x5f,0x87,0xff}, {0x5f,0xaf,0x00}, {0x5f,0xaf,0x5f},
-    {0x5f,0xaf,0x87}, {0x5f,0xaf,0xaf}, {0x5f,0xaf,0xd7}, {0x5f,0xaf,0xff},
-    {0x5f,0xd7,0x00}, {0x5f,0xd7,0x5f}, {0x5f,0xd7,0x87}, {0x5f,0xd7,0xaf},
-    {0x5f,0xd7,0xd7}, {0x5f,0xd7,0xff}, {0x5f,0xff,0x00}, {0x5f,0xff,0x5f},
-    {0x5f,0xff,0x87}, {0x5f,0xff,0xaf}, {0x5f,0xff,0xd7}, {0x5f,0xff,0xff},
-    {0x87,0x00,0x00}, {0x87,0x00,0x5f}, {0x87,0x00,0x87}, {0x87,0x00,0xaf},
-    {0x87,0x00,0xd7}, {0x87,0x00,0xff}, {0x87,0x5f,0x00}, {0x87,0x5f,0x5f},
-    {0x87,0x5f,0x87}, {0x87,0x5f,0xaf}, {0x87,0x5f,0xd7}, {0x87,0x5f,0xff},
-    {0x87,0x87,0x00}, {0x87,0x87,0x5f}, {0x87,0x87,0x87}, {0x87,0x87,0xaf},
-    {0x87,0x87,0xd7}, {0x87,0x87,0xff}, {0x87,0xaf,0x00}, {0x87,0xaf,0x5f},
-    {0x87,0xaf,0x87}, {0x87,0xaf,0xaf}, {0x87,0xaf,0xd7}, {0x87,0xaf,0xff},
-    {0x87,0xd7,0x00}, {0x87,0xd7,0x5f}, {0x87,0xd7,0x87}, {0x87,0xd7,0xaf},
-    {0x87,0xd7,0xd7}, {0x87,0xd7,0xff}, {0x87,0xff,0x00}, {0x87,0xff,0x5f},
-    {0x87,0xff,0x87}, {0x87,0xff,0xaf}, {0x87,0xff,0xd7}, {0x87,0xff,0xff},
-    {0xaf,0x00,0x00}, {0xaf,0x00,0x5f}, {0xaf,0x00,0x87}, {0xaf,0x00,0xaf},
-    {0xaf,0x00,0xd7}, {0xaf,0x00,0xff}, {0xaf,0x5f,0x00}, {0xaf,0x5f,0x5f},
-    {0xaf,0x5f,0x87}, {0xaf,0x5f,0xaf}, {0xaf,0x5f,0xd7}, {0xaf,0x5f,0xff},
-    {0xaf,0x87,0x00}, {0xaf,0x87,0x5f}, {0xaf,0x87,0x87}, {0xaf,0x87,0xaf},
-    {0xaf,0x87,0xd7}, {0xaf,0x87,0xff}, {0xaf,0xaf,0x00}, {0xaf,0xaf,0x5f},
-    {0xaf,0xaf,0x87}, {0xaf,0xaf,0xaf}, {0xaf,0xaf,0xd7}, {0xaf,0xaf,0xff},
-    {0xaf,0xd7,0x00}, {0xaf,0xd7,0x5f}, {0xaf,0xd7,0x87}, {0xaf,0xd7,0xaf},
-    {0xaf,0xd7,0xd7}, {0xaf,0xd7,0xff}, {0xaf,0xff,0x00}, {0xaf,0xff,0x5f},
-    {0xaf,0xff,0x87}, {0xaf,0xff,0xaf}, {0xaf,0xff,0xd7}, {0xaf,0xff,0xff},
-    {0xd7,0x00,0x00}, {0xd7,0x00,0x5f}, {0xd7,0x00,0x87}, {0xd7,0x00,0xaf},
-    {0xd7,0x00,0xd7}, {0xd7,0x00,0xff}, {0xd7,0x5f,0x00}, {0xd7,0x5f,0x5f},
-    {0xd7,0x5f,0x87}, {0xd7,0x5f,0xaf}, {0xd7,0x5f,0xd7}, {0xd7,0x5f,0xff},
-    {0xd7,0x87,0x00}, {0xd7,0x87,0x5f}, {0xd7,0x87,0x87}, {0xd7,0x87,0xaf},
-    {0xd7,0x87,0xd7}, {0xd7,0x87,0xff}, {0xd7,0xaf,0x00}, {0xd7,0xaf,0x5f},
-    {0xd7,0xaf,0x87}, {0xd7,0xaf,0xaf}, {0xd7,0xaf,0xd7}, {0xd7,0xaf,0xff},
-    {0xd7,0xd7,0x00}, {0xd7,0xd7,0x5f}, {0xd7,0xd7,0x87}, {0xd7,0xd7,0xaf},
-    {0xd7,0xd7,0xd7}, {0xd7,0xd7,0xff}, {0xd7,0xff,0x00}, {0xd7,0xff,0x5f},
-    {0xd7,0xff,0x87}, {0xd7,0xff,0xaf}, {0xd7,0xff,0xd7}, {0xd7,0xff,0xff},
-    {0xff,0x00,0x00}, {0xff,0x00,0x5f}, {0xff,0x00,0x87}, {0xff,0x00,0xaf},
-    {0xff,0x00,0xd7}, {0xff,0x00,0xff}, {0xff,0x5f,0x00}, {0xff,0x5f,0x5f},
-    {0xff,0x5f,0x87}, {0xff,0x5f,0xaf}, {0xff,0x5f,0xd7}, {0xff,0x5f,0xff},
-    {0xff,0x87,0x00}, {0xff,0x87,0x5f}, {0xff,0x87,0x87}, {0xff,0x87,0xaf},
-    {0xff,0x87,0xd7}, {0xff,0x87,0xff}, {0xff,0xaf,0x00}, {0xff,0xaf,0x5f},
-    {0xff,0xaf,0x87}, {0xff,0xaf,0xaf}, {0xff,0xaf,0xd7}, {0xff,0xaf,0xff},
-    {0xff,0xd7,0x00}, {0xff,0xd7,0x5f}, {0xff,0xd7,0x87}, {0xff,0xd7,0xaf},
-    {0xff,0xd7,0xd7}, {0xff,0xd7,0xff}, {0xff,0xff,0x00}, {0xff,0xff,0x5f},
-    {0xff,0xff,0x87}, {0xff,0xff,0xaf}, {0xff,0xff,0xd7}, {0xff,0xff,0xff},
-    {0x08,0x08,0x08}, {0x12,0x12,0x12}, {0x1c,0x1c,0x1c}, {0x26,0x26,0x26},
-    {0x30,0x30,0x30}, {0x3a,0x3a,0x3a}, {0x44,0x44,0x44}, {0x4e,0x4e,0x4e},
-    {0x58,0x58,0x58}, {0x60,0x60,0x60}, {0x66,0x66,0x66}, {0x76,0x76,0x76},
-    {0x80,0x80,0x80}, {0x8a,0x8a,0x8a}, {0x94,0x94,0x94}, {0x9e,0x9e,0x9e},
-    {0xa8,0xa8,0xa8}, {0xb2,0xb2,0xb2}, {0xbc,0xbc,0xbc}, {0xc6,0xc6,0xc6},
-    {0xd0,0xd0,0xd0}, {0xda,0xda,0xda}, {0xe4,0xe4,0xe4}, {0xee,0xee,0xee},
-};
-
-const std::initializer_list<HashMap<Kakoune::Color, int>::Item>
-NCursesUI::Palette::default_colors = {
-    { Color::Default,       -1 },
-    { Color::Black,          0 },
-    { Color::Red,            1 },
-    { Color::Green,          2 },
-    { Color::Yellow,         3 },
-    { Color::Blue,           4 },
-    { Color::Magenta,        5 },
-    { Color::Cyan,           6 },
-    { Color::White,          7 },
-    { Color::BrightBlack,    8 },
-    { Color::BrightRed,      9 },
-    { Color::BrightGreen,   10 },
-    { Color::BrightYellow,  11 },
-    { Color::BrightBlue,    12 },
-    { Color::BrightMagenta, 13 },
-    { Color::BrightCyan,    14 },
-    { Color::BrightWhite,   15 },
-};
-
-int NCursesUI::Palette::get_color(Color color)
-{
-    auto it = m_colors.find(color);
-    if (it != m_colors.end())
-        return it->value;
-    else if (m_change_colors and can_change_color() and COLORS > 16)
-    {
-        kak_assert(color.isRGB());
-        if (m_next_color > COLORS)
-            m_next_color = 16;
-        init_color(m_next_color,
-                   color.r * 1000 / 255,
-                   color.g * 1000 / 255,
-                   color.b * 1000 / 255);
-        m_colors[color] = m_next_color;
-        return m_next_color++;
-    }
-    else
-    {
-        kak_assert(color.isRGB());
-        int lowestDist = INT_MAX;
-        int closestCol = -1;
-        for (int i = 0; i < std::min(256, COLORS); ++i)
-        {
-            auto& col = builtin_colors[i];
-            int dist = sq(color.r - col.r)
-                     + sq(color.g - col.g)
-                     + sq(color.b - col.b);
-            if (dist < lowestDist)
-            {
-                lowestDist = dist;
-                closestCol = i;
-            }
-        }
-        return closestCol;
-    }
-}
-
-int NCursesUI::Palette::get_color_pair(const Face& face)
-{
-    ColorPair colors{face.fg, face.bg};
-    auto it = m_colorpairs.find(colors);
-    if (it != m_colorpairs.end())
-        return it->value;
-    else
-    {
-        init_pair(m_next_pair, get_color(face.fg), get_color(face.bg));
-        m_colorpairs[colors] = m_next_pair;
-        return m_next_pair++;
-    }
-}
-
-bool NCursesUI::Palette::set_change_colors(bool change_colors)
-{
-    bool reset = false;
-    if (can_change_color() and m_change_colors != change_colors)
-    {
-        fputs("\033]104\007", stdout); // try to reset palette
-        fflush(stdout);
-        m_colorpairs.clear();
-        m_colors = default_colors;
-        m_next_color = 16;
-        m_next_pair = 1;
-        reset = true;
-    }
-    m_change_colors = change_colors;
-    return reset;
-}
-
 static sig_atomic_t resize_pending = 0;
 static sig_atomic_t sighup_raised = 0;
 
@@ -341,12 +195,8 @@ NCursesUI::NCursesUI()
 
     tcgetattr(STDIN_FILENO, &m_original_termios);
 
-    initscr();
-    curs_set(0);
-    start_color();
-    use_default_colors();
-
-    set_terminal_mode();
+    setup_terminal();
+    set_raw_mode();
     enable_mouse(true);
 
     set_signal_handler(SIGWINCH, &signal_handler<&resize_pending>);
@@ -360,9 +210,8 @@ NCursesUI::NCursesUI()
 NCursesUI::~NCursesUI()
 {
     enable_mouse(false);
-    m_palette.set_change_colors(false);
-    endwin();
-    restore_terminal_mode();
+    restore_terminal();
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
     set_signal_handler(SIGWINCH, SIG_DFL);
     set_signal_handler(SIGHUP, SIG_DFL);
     set_signal_handler(SIGTSTP, SIG_DFL);
@@ -372,16 +221,13 @@ void NCursesUI::suspend()
 {
     bool mouse_enabled = m_mouse_enabled;
     enable_mouse(false);
-    bool change_color_enabled = m_palette.get_change_colors();
-    m_palette.set_change_colors(false);
-    endwin();
+    restore_terminal();
 
     auto current = set_signal_handler(SIGTSTP, SIG_DFL);
     sigset_t unblock_sigtstp, old_mask;
     sigemptyset(&unblock_sigtstp);
     sigaddset(&unblock_sigtstp, SIGTSTP);
     sigprocmask(SIG_UNBLOCK, &unblock_sigtstp, &old_mask);
-    restore_terminal_mode();
 
     raise(SIGTSTP); // suspend here
 
@@ -389,14 +235,15 @@ void NCursesUI::suspend()
     set_signal_handler(SIGTSTP, current);
     sigprocmask(SIG_SETMASK, &old_mask, nullptr);
 
-    doupdate();
+    setup_terminal();
     check_resize(true);
-    set_terminal_mode();
-    m_palette.set_change_colors(change_color_enabled);
+    set_raw_mode();
     enable_mouse(mouse_enabled);
+
+    refresh(true);
 }
 
-void NCursesUI::set_terminal_mode() const
+void NCursesUI::set_raw_mode() const
 {
     termios attr = m_original_termios;
     attr.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
@@ -408,18 +255,6 @@ void NCursesUI::set_terminal_mode() const
     attr.c_cc[VMIN] = attr.c_cc[VTIME] = 0;
 
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &attr);
-    fputs("\033=", stdout);
-    // force enable report focus events
-    fputs("\033[?1004h", stdout);
-    fflush(stdout);
-}
-
-void NCursesUI::restore_terminal_mode() const
-{
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
-    fputs("\033>", stdout);
-    fputs("\033[?1004l", stdout);
-    fflush(stdout);
 }
 
 void NCursesUI::redraw(bool force)
@@ -431,13 +266,12 @@ void NCursesUI::redraw(bool force)
 
     m_info.refresh(false);
 
-    Window screen{{}, static_cast<NCursesWin*>(newscr)};
     if (m_cursor.mode == CursorMode::Prompt)
-        screen.move_cursor({m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column});
+        set_cursor_pos({m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column});
     else
-        screen.move_cursor(m_cursor.coord + content_line_offset());
+        set_cursor_pos(m_cursor.coord + content_line_offset());
 
-    doupdate();
+    fflush(stdout);
 }
 
 void NCursesUI::set_cursor(CursorMode mode, DisplayCoord coord)
@@ -466,14 +300,14 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     for (const DisplayLine& line : display_buffer.lines())
     {
         m_window.move_cursor(line_index++);
-        m_window.draw(m_palette, line.atoms(), default_face);
+        m_window.draw(line.atoms(), default_face);
     }
 
     auto face = merge_faces(default_face, padding_face);
     while (line_index < dim.line + line_offset)
     {
         m_window.move_cursor(line_index++);
-        m_window.draw(m_palette, DisplayAtom("~"), face);
+        m_window.draw(DisplayAtom("~"), face);
     }
 
     m_dirty = true;
@@ -486,7 +320,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     const LineCount status_line_pos = m_status_on_top ? 0 : m_dimensions.line;
     m_window.move_cursor(status_line_pos);
 
-    m_window.draw(m_palette, status_line.atoms(), default_face);
+    m_window.draw(status_line.atoms(), default_face);
 
     const auto mode_len = mode_line.length();
     m_status_len = status_line.length();
@@ -495,7 +329,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     {
         ColumnCount col = m_dimensions.column - mode_len;
         m_window.move_cursor({status_line_pos, col});
-        m_window.draw(m_palette, mode_line.atoms(), default_face);
+        m_window.draw(mode_line.atoms(), default_face);
     }
     else if (remaining > 2)
     {
@@ -506,7 +340,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
 
         ColumnCount col = m_dimensions.column - remaining + 1;
         m_window.move_cursor({status_line_pos, col});
-        m_window.draw(m_palette, trimmed_mode_line.atoms(), default_face);
+        m_window.draw(trimmed_mode_line.atoms(), default_face);
     }
 
     if (m_set_title)
@@ -554,15 +388,13 @@ void NCursesUI::check_resize(bool force)
     if (info) m_info.destroy();
     if (menu) m_menu.destroy();
 
-    resize_term(ws.ws_row, ws.ws_col);
-
     m_window.create({0, 0}, {ws.ws_row, ws.ws_col});
     kak_assert(m_window);
 
     m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
 
-    if (char* csr = tigetstr((char*)"csr"))
-        putp(tparm(csr, 0, ws.ws_row));
+    // if (char* csr = tigetstr((char*)"csr"))
+    //     putp(tparm(csr, 0, ws.ws_row));
 
     if (menu)
         menu_show(Vector<DisplayLine>(std::move(m_menu.items)),
@@ -571,7 +403,6 @@ void NCursesUI::check_resize(bool force)
         info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
 
     set_resize_pending();
-    wclear(curscr);
 }
 
 Optional<Key> NCursesUI::get_next_key()
@@ -824,7 +655,7 @@ void NCursesUI::draw_menu()
         ColumnCount pos = 0;
 
         m_menu.move_cursor({0, 0});
-        m_menu.draw(m_palette, DisplayAtom(m_menu.first_item > 0 ? "< " : "  "), m_menu.bg);
+        m_menu.draw(DisplayAtom(m_menu.first_item > 0 ? "< " : "  "), m_menu.bg);
 
         int i = m_menu.first_item;
         for (; i < item_count and pos < win_width; ++i)
@@ -832,19 +663,19 @@ void NCursesUI::draw_menu()
             const DisplayLine& item = m_menu.items[i];
             const ColumnCount item_width = item.length();
             auto& face = i == m_menu.selected_item ? m_menu.fg : m_menu.bg;
-            m_menu.draw(m_palette, item.atoms(), face);
+            m_menu.draw(item.atoms(), face);
             if (pos + item_width < win_width)
-                m_menu.draw(m_palette, DisplayAtom(" "), m_menu.bg);
+                m_menu.draw(DisplayAtom(" "), m_menu.bg);
             else
             {
                 m_menu.move_cursor({0, win_width+2});
-                m_menu.draw(m_palette, DisplayAtom("…"), m_menu.bg);
+                m_menu.draw(DisplayAtom("…"), m_menu.bg);
             }
             pos += item_width + 1;
         }
 
         m_menu.move_cursor({0, win_width+3});
-        m_menu.draw(m_palette, DisplayAtom(i == item_count ? " " : ">"), m_menu.bg);
+        m_menu.draw(DisplayAtom(i == item_count ? " " : ">"), m_menu.bg);
 
         m_dirty = true;
         return;
@@ -872,11 +703,11 @@ void NCursesUI::draw_menu()
             int item_idx = (first_col + col) * (int)m_menu.size.line + (int)line;
             auto& face = item_idx < item_count and item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg;
             auto atoms = item_idx < item_count ? m_menu.items[item_idx].atoms() : ConstArrayView<DisplayAtom>{};
-            m_menu.draw(m_palette, atoms, face);
+            m_menu.draw(atoms, face);
         }
         const bool is_mark = line >= mark_line and line < mark_line + mark_height;
         m_menu.move_cursor({line, m_menu.size.column - 1});
-        m_menu.draw(m_palette, DisplayAtom(is_mark ? "█" : "░"), m_menu.bg);
+        m_menu.draw(DisplayAtom(is_mark ? "█" : "░"), m_menu.bg);
     }
     m_dirty = true;
 }
@@ -1172,8 +1003,8 @@ void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& conte
     m_info.create(anchor, size);
     auto draw_atoms = [&](auto&&... args) {
         auto draw = overload(
-            [&](String str) { m_info.draw(m_palette, DisplayAtom{std::move(str)}, face); },
-            [&](const DisplayLine& atoms) { m_info.draw(m_palette, atoms.atoms(), face); });
+            [&](String str) { m_info.draw(DisplayAtom{std::move(str)}, face); },
+            [&](const DisplayLine& atoms) { m_info.draw(atoms.atoms(), face); });
 
         (draw(args), ...);
     };
@@ -1251,9 +1082,23 @@ void NCursesUI::set_resize_pending()
     EventManager::instance().force_signal(0);
 }
 
-void NCursesUI::abort()
+void NCursesUI::setup_terminal()
 {
-    endwin();
+    fputs("\033[?1049h", stdout);
+    fputs("\033[?1004h", stdout);
+    fputs("\033[?25l", stdout);
+    fputs("\033=", stdout);
+    fflush(stdout);
+}
+
+void NCursesUI::restore_terminal()
+{
+    fputs("\033[?1049l", stdout);
+    fputs("\033[?1004l", stdout);
+    fputs("\033[?25h", stdout);
+    fputs("\033>", stdout);
+    fputs("\033[m", stdout);
+    fflush(stdout);
 }
 
 void NCursesUI::enable_mouse(bool enabled)
@@ -1311,17 +1156,6 @@ void NCursesUI::set_ui_options(const Options& options)
         m_shift_function_key = it != options.end() ?
             str_to_int_ifp(it->value).value_or(default_shift_function_key)
           : default_shift_function_key;
-    }
-
-    {
-        auto it = options.find("ncurses_change_colors"_sv);
-        if (m_palette.set_change_colors(it == options.end() or
-                                        (it->value == "yes" or it->value == "true")))
-        {
-            m_window.m_active_pair = -1;
-            m_menu.m_active_pair = -1;
-            m_info.m_active_pair = -1;
-        }
     }
 
     {

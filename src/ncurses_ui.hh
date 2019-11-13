@@ -18,8 +18,6 @@ namespace Kakoune
 
 struct DisplayAtom;
 
-struct NCursesWin;
-
 class NCursesUI : public UserInterface, public Singleton<NCursesUI>
 {
 public:
@@ -58,7 +56,8 @@ public:
     void set_on_key(OnKeyCallback callback) override;
     void set_ui_options(const Options& options) override;
 
-    static void abort();
+    static void setup_terminal();
+    static void restore_terminal();
 
     void suspend();
 
@@ -74,41 +73,25 @@ private:
 
     Optional<Key> get_next_key();
 
-    struct Palette
-    {
-    private:
-        static const std::initializer_list<HashMap<Kakoune::Color, int>::Item> default_colors;
-
-        using ColorPair = std::pair<Color, Color>;
-        HashMap<Color, int, MemoryDomain::Faces> m_colors = default_colors;
-        HashMap<ColorPair, int, MemoryDomain::Faces> m_colorpairs;
-        int m_next_color = 16;
-        int m_next_pair = 1;
-        bool m_change_colors = true;
-
-        int get_color(Color color);
-
-    public:
-        int get_color_pair(const Face& face);
-        bool get_change_colors() const { return m_change_colors; }
-        bool set_change_colors(bool change_colors);
-    };
-
-    Palette m_palette;
-
     struct Window : Rect
     {
         void create(const DisplayCoord& pos, const DisplayCoord& size);
         void destroy();
         void refresh(bool force);
         void move_cursor(DisplayCoord coord);
-        void draw(Palette& palette, ConstArrayView<DisplayAtom> atoms,
-                  const Face& default_face);
+        void draw(ConstArrayView<DisplayAtom> atoms, const Face& default_face);
 
-        explicit operator bool() const { return win; }
+        explicit operator bool() const { return not lines.empty(); }
 
-        NCursesWin* win = nullptr;
-        int m_active_pair = -1;
+        struct Atom
+        {
+            String text;
+            Face face;
+        };
+        Vector<Vector<Atom>> lines;
+        DisplayCoord cursor;
+
+        void clear_line();
     };
 
     Window m_window;
@@ -116,8 +99,7 @@ private:
     DisplayCoord m_dimensions;
     termios m_original_termios{};
 
-    void set_terminal_mode() const;
-    void restore_terminal_mode() const;
+    void set_raw_mode() const;
 
     struct Menu : Window
     {
