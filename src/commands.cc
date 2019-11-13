@@ -2349,7 +2349,8 @@ const CommandDesc select_cmd = {
             column_type = ColumnType::Codepoint;
         else if (parser.get_switch("display-column"))
             column_type = ColumnType::DisplayColumn;
-        context.selections_write_only() = selection_list_from_strings(buffer, column_type, parser.positionals_from(0), timestamp, 0);
+        ColumnCount tabstop = context.options()["tabstop"].get<int>();
+        context.selections_write_only() = selection_list_from_strings(buffer, column_type, parser.positionals_from(0), timestamp, 0, tabstop);
     }
 };
 

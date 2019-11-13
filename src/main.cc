@@ -261,7 +261,9 @@ static const EnvVarDesc builtin_env_vars[] = { {
     }, {
         "selections_display_column_desc", false,
         [](StringView name, const Context& context, Quoting quoting)
-        { return selection_list_to_string(ColumnType::DisplayColumn, context.selections()); }
+        { return selection_list_to_string(ColumnType::DisplayColumn,
+                                          context.selections(),
+                                          context.options()["tabstop"].get<int>()); }
     }, {
         "selection_length", false,
         [](StringView name, const Context& context, Quoting quoting) -> String

@@ -163,19 +163,19 @@ enum class ColumnType
     DisplayColumn
 };
 
-Selection selection_from_string(ColumnType column_type, const Buffer& buffer, StringView desc);
-String selection_to_string(ColumnType column_type, const Buffer& buffer, const Selection& selection);
+Selection selection_from_string(ColumnType column_type, const Buffer& buffer, StringView desc, ColumnCount tabstop = -1);
+String selection_to_string(ColumnType column_type, const Buffer& buffer, const Selection& selection, ColumnCount tabstop = -1);
 
-String selection_list_to_string(ColumnType column_type, const SelectionList& selections);
+String selection_list_to_string(ColumnType column_type, const SelectionList& selections, ColumnCount tabstop = -1);
 
 template<typename StringArray>
-SelectionList selection_list_from_strings(Buffer& buffer, ColumnType column_type, StringArray&& descs, size_t timestamp, size_t main)
+SelectionList selection_list_from_strings(Buffer& buffer, ColumnType column_type, StringArray&& descs, size_t timestamp, size_t main, ColumnCount tabstop = -1)
 {
     if ((column_type != ColumnType::Byte and timestamp != buffer.timestamp()) or timestamp > buffer.timestamp())
         throw runtime_error{format("invalid timestamp '{}'", timestamp)};
 
     auto from_string = [&](StringView desc) {
-        return selection_from_string(column_type, buffer, desc);
+        return selection_from_string(column_type, buffer, desc, tabstop);
     };
 
     auto sels = descs | transform(from_string) | gather<Vector<Selection>>();

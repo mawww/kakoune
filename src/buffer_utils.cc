@@ -34,6 +34,11 @@ ColumnCount get_column(const Buffer& buffer,
     return col;
 }
 
+ColumnCount column_length(const Buffer& buffer, ColumnCount tabstop, LineCount line)
+{
+    return get_column(buffer, tabstop, BufferCoord{line, ByteCount{INT_MAX}});
+}
+
 ByteCount get_byte_to_column(const Buffer& buffer, ColumnCount tabstop, DisplayCoord coord)
 {
     auto line = buffer[coord.line];

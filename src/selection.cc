@@ -472,7 +472,7 @@ void SelectionList::erase()
     m_buffer->check_invariant();
 }
 
-String selection_to_string(ColumnType column_type, const Buffer& buffer, const Selection& selection)
+String selection_to_string(ColumnType column_type, const Buffer& buffer, const Selection& selection, ColumnCount tabstop)
 {
     const auto& cursor = selection.cursor();
     const auto& anchor = selection.anchor();
@@ -487,19 +487,20 @@ String selection_to_string(ColumnType column_type, const Buffer& buffer, const S
                       anchor.line + 1, buffer[anchor.line].char_count_to(anchor.column) + 1,
                       cursor.line + 1, buffer[cursor.line].char_count_to(cursor.column) + 1);
     case ColumnType::DisplayColumn:
+        kak_assert(tabstop != -1);
         return format("{}.{},{}.{}",
-                      anchor.line + 1, buffer[anchor.line].column_count_to(anchor.column) + 1,
-                      cursor.line + 1, buffer[cursor.line].column_count_to(cursor.column) + 1);
+                      anchor.line + 1, get_column(buffer, tabstop, anchor) + 1,
+                      cursor.line + 1, get_column(buffer, tabstop, cursor) + 1);
     }
 }
 
-String selection_list_to_string(ColumnType column_type, const SelectionList& selections)
+String selection_list_to_string(ColumnType column_type, const SelectionList& selections, ColumnCount tabstop)
 {
     auto& buffer = selections.buffer();
     kak_assert(selections.timestamp() == buffer.timestamp());
 
     auto to_string = [&](const Selection& selection) {
-        return selection_to_string(column_type, buffer, selection);
+        return selection_to_string(column_type, buffer, selection, tabstop);
     };
 
     auto beg = &*selections.begin(), end = &*selections.end();
@@ -509,7 +510,7 @@ String selection_list_to_string(ColumnType column_type, const SelectionList& sel
                 transform(to_string), ' ', false);
 }
 
-Selection selection_from_string(ColumnType column_type, const Buffer& buffer, StringView desc)
+Selection selection_from_string(ColumnType column_type, const Buffer& buffer, StringView desc, ColumnCount tabstop)
 {
     auto comma = find(desc, ',');
     auto dot_anchor = find(StringView{desc.begin(), comma}, '.');
@@ -520,7 +521,7 @@ Selection selection_from_string(ColumnType column_type, const Buffer& buffer, St
 
     auto compute_coord = [&](int line, int column) -> BufferCoord {
         if (line < 0 or column < 0)
-            throw runtime_error(format("coordinate {}.{} does exist in buffer", line, column));
+            throw runtime_error(format("coordinate {}.{} does not exist in buffer", line + 1, column + 1));
 
         switch (column_type)
         {
@@ -528,12 +529,13 @@ Selection selection_from_string(ColumnType column_type, const Buffer& buffer, St
         case ColumnType::Byte: return {line, column};
         case ColumnType::Codepoint:
             if (buffer.line_count() <= line or buffer[line].char_length() <= column)
-                throw runtime_error(format("coordinate {}.{} does exist in buffer", line, column));
+                throw runtime_error(format("coordinate {}.{} does not exist in buffer", line + 1, column + 1));
             return {line, buffer[line].byte_count_to(CharCount{column})};
         case ColumnType::DisplayColumn:
-            if (buffer.line_count() <= line or buffer[line].column_length() <= column)
-                throw runtime_error(format("coordinate {}.{} does exist in buffer", line, column));
-            return {line, buffer[line].byte_count_to(ColumnCount{column})};
+            kak_assert(tabstop != -1);
+            if (buffer.line_count() <= line or column_length(buffer, tabstop, line) <= column)
+                throw runtime_error(format("coordinate {}.{} does not exist in buffer", line + 1, column + 1));
+            return {line, get_byte_to_column(buffer, tabstop, DisplayCoord{line, ColumnCount{column}})};
         }
     };
 
