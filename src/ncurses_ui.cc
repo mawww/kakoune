@@ -63,12 +63,6 @@ void NCursesUI::Window::move_cursor(DisplayCoord coord)
     wmove(win, (int)coord.line, (int)coord.column);
 }
 
-void NCursesUI::Window::clear_to_eol(Palette& palette, const Face& face)
-{
-    wbkgdset(win, COLOR_PAIR(palette.get_color_pair(face)));
-    wclrtoeol(win);
-}
-
 void NCursesUI::Window::draw(Palette& palette, ConstArrayView<DisplayAtom> atoms,
                              const Face& default_face)
 {
@@ -100,7 +94,7 @@ void NCursesUI::Window::draw(Palette& palette, ConstArrayView<DisplayAtom> atoms
         #endif
     };
 
-    ColumnCount column = 0;
+    ColumnCount column = getcurx(win);
     for (const DisplayAtom& atom : atoms)
     {
         StringView content = atom.content();
@@ -116,6 +110,12 @@ void NCursesUI::Window::draw(Palette& palette, ConstArrayView<DisplayAtom> atoms
         else
             add_str(content);
         column += content.column_length();
+    }
+
+    if (column < size.column)
+    {
+        wbkgdset(win, COLOR_PAIR(palette.get_color_pair(default_face)));
+        wclrtoeol(win);
     }
 }
 
@@ -454,17 +454,14 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     LineCount line_index = line_offset;
     for (const DisplayLine& line : display_buffer.lines())
     {
-        m_window.move_cursor(line_index);
-        m_window.clear_to_eol(m_palette, default_face);
+        m_window.move_cursor(line_index++);
         m_window.draw(m_palette, line.atoms(), default_face);
-        ++line_index;
     }
 
     auto face = merge_faces(default_face, padding_face);
     while (line_index < dim.line + line_offset)
     {
         m_window.move_cursor(line_index++);
-        m_window.clear_to_eol(m_palette, face);
         m_window.draw(m_palette, DisplayAtom("~"), face);
     }
 
@@ -478,7 +475,6 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     const LineCount status_line_pos = m_status_on_top ? 0 : m_dimensions.line;
     m_window.move_cursor(status_line_pos);
 
-    m_window.clear_to_eol(m_palette, default_face);
     m_window.draw(m_palette, status_line.atoms(), default_face);
 
     const auto mode_len = mode_line.length();
@@ -839,9 +835,8 @@ void NCursesUI::draw_menu()
             m_menu.move_cursor({line, col * column_width});
             int item_idx = (first_col + col) * (int)m_menu.size.line + (int)line;
             auto& face = item_idx < item_count and item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg;
-            m_menu.clear_to_eol(m_palette, face);
-            if (item_idx < item_count)
-                m_menu.draw(m_palette, m_menu.items[item_idx].atoms(), face);
+            auto atoms = item_idx < item_count ? m_menu.items[item_idx].atoms() : ConstArrayView<DisplayAtom>{};
+            m_menu.draw(m_palette, atoms, face);
         }
         const bool is_mark = line >= mark_line and line < mark_line + mark_height;
         m_menu.move_cursor({line, m_menu.size.column - 1});
@@ -1171,7 +1166,6 @@ void NCursesUI::info_show(StringView title, StringView content,
     for (auto line = 0_line; line < info_box.size.line; ++line)
     {
         m_info.move_cursor(line);
-        m_info.clear_to_eol(m_palette, face);
         m_info.draw(m_palette, DisplayAtom(info_box.contents[(int)line]), face);
     }
     m_dirty = true;

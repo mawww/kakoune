@@ -101,7 +101,6 @@ private:
         void destroy();
         void refresh(bool force);
         void move_cursor(DisplayCoord coord);
-        void clear_to_eol(Palette& palette, const Face& face);
         void draw(Palette& palette, ConstArrayView<DisplayAtom> atoms,
                   const Face& default_face);
 
