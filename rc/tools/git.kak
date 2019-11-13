@@ -19,14 +19,15 @@ hook -group git-status-highlight global WinSetOption filetype=git-status %{
 
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden line-specs git_diff_flags
+declare-option -hidden int-list git_hunk_list
 
 define-command -params 1.. \
   -docstring %sh{printf 'git [<arguments>]: git wrapping helper
 All the optional arguments are forwarded to the git utility
-Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  hide-diff\n  init\n  log\n  show\n  show-diff\n  status\n  update-diff'} \
+Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  hide-diff\n  init\n  log\n  next-hunk\n  previous-hunk\n  show\n  show-diff\n  status\n  update-diff'} \
   -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
-        printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nshow\nshow-diff\ninit\nstatus\nupdate-diff\n"
+        printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-diff\ninit\nstatus\nupdate-diff\n"
     else
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
@@ -162,6 +163,50 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         ' )
     }
 
+    jump_hunk() {
+        direction=$1
+        set -- ${kak_opt_git_diff_flags}
+        shift
+
+        if [ $# -lt 1 ]; then
+            exit
+        fi
+
+        # Update hunk list if required
+        if [ "$kak_timestamp" != "${kak_opt_git_hunk_list%% *}" ]; then
+            hunks=$kak_timestamp
+
+            prev_line="-1"
+            for line in "$@"; do
+                line="${line%%|*}"
+                if [ "$((line - prev_line))" -gt 1 ]; then
+                    hunks="$hunks $line"
+                fi
+                prev_line="$line"
+            done
+            echo "set-option buffer git_hunk_list $hunks"
+        else
+            hunks=${kak_opt_git_hunk_list#* }
+        fi
+
+        prev_hunk=""
+        next_hunk=""
+        for hunk in ${hunks}; do
+            if   [ "$hunk" -lt "$kak_cursor_line" ]; then
+                prev_hunk=$hunk
+            elif [ "$hunk" -gt "$kak_cursor_line" ]; then
+                next_hunk=$hunk
+                break
+            fi
+        done
+
+        if   [ "$direction" = "next" ] && [ -n "$next_hunk" ]; then
+            echo "select $next_hunk.1,$next_hunk.1"
+        elif [ "$direction" = "prev" ] && [ -n "$prev_hunk" ]; then
+            echo "select $prev_hunk.1,$prev_hunk.1"
+        fi
+    }
+
     commit() {
         # Handle case where message needs not to be edited
         if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit|--fixup.*|--squash.*"; then
@@ -210,6 +255,8 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
             echo 'try %{ remove-highlighter window/git-diff }'
             ;;
         update-diff) update_diff ;;
+        next-hunk) jump_hunk next ;;
+        prev-hunk) jump_hunk prev ;;
         commit)
             shift
             commit "$@"
