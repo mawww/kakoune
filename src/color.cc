@@ -65,7 +65,8 @@ String to_string(Color color)
     if (color.color == Color::RGB)
     {
         char buffer[11];
-        sprintf(buffer, "rgb:%02x%02x%02x", color.r, color.g, color.b);
+        int res = snprintf(buffer, sizeof(buffer), "rgb:%02x%02x%02x", color.r, color.g, color.b);
+        kak_assert(0 <= res && res < sizeof(buffer));
         return buffer;
     }
     else
