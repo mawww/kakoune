@@ -1,0 +1,15 @@
+#!/bin/sh
+if ! locale | grep LC_CTYPE | grep -qi 'utf-*8'; then
+    exit 1
+fi
+if ! ldd --version >/dev/null 2>&1; then
+    # not glibc environment
+    exit 0
+fi
+ldd --version |awk 'NR == 1{
+    if ($2 " " $3 != "(GNU libc)")
+        exit(0);
+    split($4, version, ".");
+    if ((version[1] * 10000 + version[2]) <= 20022)
+        exit(1);
+}'
