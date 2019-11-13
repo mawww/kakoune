@@ -69,8 +69,8 @@ inline bool is_eow(const Buffer& buffer, BufferCoord coord)
     return is_word(*(it-1)) and not is_word(*it);
 }
 
-ColumnCount get_column(const Buffer& buffer,
-                       ColumnCount tabstop, BufferCoord coord);
+ColumnCount get_column(const Buffer& buffer, ColumnCount tabstop, BufferCoord coord);
+ColumnCount column_length(const Buffer& buffer, ColumnCount tabstop, LineCount line);
 
 ByteCount get_byte_to_column(const Buffer& buffer, ColumnCount tabstop,
                              DisplayCoord coord);
