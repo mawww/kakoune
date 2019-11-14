@@ -188,7 +188,7 @@ define-command clang-diagnostics-next -docstring "Jump to the next line that con
         if [ -n "$line" ]; then
             printf %s\\n "execute-keys ${line} g"
         else
-            echo "echo -markup '{Error}no next clang diagnostic'"
+            echo "fail no next clang diagnostic"
         fi
     } }
 

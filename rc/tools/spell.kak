@@ -56,7 +56,7 @@ define-command -params ..1 -docstring %{
                             ;;
                         '') line_num=$((line_num + 1));;
                         \*) ;;
-                        *) printf 'echo -markup %%{{Error}%s}\n' "${line}" | kak -p "${kak_session}";;
+                        *) printf 'fail %s\n' "${line}" | kak -p "${kak_session}";;
                     esac
                 done
                 printf 'set-option "buffer=%s" spell_regions %s' "${kak_bufname}" "${regions}" \

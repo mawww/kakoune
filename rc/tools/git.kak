@@ -39,7 +39,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     cd_bufdir() {
         dirname_buffer="${kak_buffile%/*}"
         cd "${dirname_buffer}" 2>/dev/null || {
-            printf 'echo -markup {Error}Unable to change the current working directory to: %s' "${dirname_buffer}"
+            printf 'fail Unable to change the current working directory to: %s\n' "${dirname_buffer}"
             exit 1
         }
     }
@@ -103,7 +103,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         if git "${@}" > /dev/null 2>&1; then
           printf %s "echo -markup '{Information}git $1 succeeded'"
         else
-          printf %s "echo -markup '{Error}git $1 failed'"
+          printf 'fail git %s failed\n' "$1"
         fi
     }
 
@@ -168,7 +168,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
             if git commit "$@" > /dev/null 2>&1; then
                 echo 'echo -markup "{Information}Commit succeeded"'
             else
-                echo 'echo -markup "{Error}Commit failed"'
+                echo 'fail Commit failed'
             fi
             exit
         fi <<-EOF
@@ -183,7 +183,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                   if git commit -F '$msgfile' --cleanup=strip $* > /dev/null; then
                      printf %s 'evaluate-commands -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
                   else
-                     printf %s 'evaluate-commands -client $kak_client echo -markup %{{Error}Commit failed}'
+                     printf 'evaluate-commands -client %s fail Commit failed\n' "$kak_client"
                   fi
               } }"
     }
@@ -227,7 +227,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
             run_git_cmd "$@"
             ;;
         *)
-            printf %s "echo -markup %{{Error}unknown git command '$1'}"
+            printf "fail unknown git command '%s'\n" "$1"
             exit
             ;;
     esac
