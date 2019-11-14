@@ -52,12 +52,12 @@ public:
     RemoteBuffer stat() const;
 
 private:
-    File(Vector<String> path, Glob* component, Contextualizer context_getter);
+    File(Vector<String> path, Glob* component, Contextualizer contextualize);
 
 private:
     Vector<String> m_path;
     Glob* m_component;
-    Contextualizer m_context_getter;
+    Contextualizer m_contextualize;
 };
 
 void register_paths(ConstArrayView<EnvVarDesc> builtin_env_vars);

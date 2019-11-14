@@ -14,11 +14,11 @@ class GlobType
 public:
     static GlobType* resolve(StringView name);
 
-    virtual Vector<String> expand(Contextualizer context_getter, StringView name) const = 0;
+    virtual Vector<String> expand(Contextualizer contextualize, StringView name) const = 0;
 
-    virtual bool matches(Contextualizer context_getter, StringView name, StringView text) const
+    virtual bool matches(Contextualizer contextualize, StringView name, StringView text) const
     {
-        auto names = expand(context_getter, name);
+        auto names = expand(contextualize, name);
         return find(names, text) != names.end();
     }
 
@@ -35,18 +35,18 @@ struct GlobTypeWithPrefix : public GlobType
         : m_prefix{prefix}
     {}
 
-    bool matches(Contextualizer context_getter, StringView name, StringView text) const override
+    bool matches(Contextualizer contextualize, StringView name, StringView text) const override
     {
         if (text.length() < m_prefix.length())
             return false;
         if (text.substr(0_byte, m_prefix.length()) != m_prefix)
             return false;
-        return m_base_glob_type.matches(context_getter, name, text.substr(m_prefix.length()));
+        return m_base_glob_type.matches(contextualize, name, text.substr(m_prefix.length()));
     }
 
-    Vector<String> expand(Contextualizer context_getter, StringView name) const override
+    Vector<String> expand(Contextualizer contextualize, StringView name) const override
     {
-        return m_base_glob_type.expand(context_getter, name)
+        return m_base_glob_type.expand(contextualize, name)
             | transform([this](const String& name) -> String { return format("{}{}", m_prefix, name); })
             | gather<Vector<String>>();
     }
@@ -63,12 +63,12 @@ private:
 
 struct LiteralGlobType : public GlobType
 {
-    bool matches(Contextualizer context_getter, StringView name, StringView text) const override
+    bool matches(Contextualizer contextualize, StringView name, StringView text) const override
     {
         return name == text;
     }
 
-    Vector<String> expand(Contextualizer context_getter, StringView name) const override
+    Vector<String> expand(Contextualizer contextualize, StringView name) const override
     {
         Vector<String> res;
         res.push_back(String{name});
@@ -78,7 +78,7 @@ struct LiteralGlobType : public GlobType
 
 struct BufferIdGlobType : public GlobType
 {
-    Vector<String> expand(Contextualizer context_getter, StringView name) const override
+    Vector<String> expand(Contextualizer contextualize, StringView name) const override
     {
         Vector<String> res;
         for (auto& buffer : BufferManager::instance())
@@ -114,10 +114,10 @@ struct BufferIdGlobType : public GlobType
 
 struct ClientEnvGlobType : public GlobType
 {
-    Vector<String> expand(Contextualizer context_getter, StringView name) const override
+    Vector<String> expand(Contextualizer contextualize, StringView name) const override
     {
         Vector<String> result;
-        context_getter([&result](Context& context) {
+        contextualize([&result](Context& context) {
             result = context.client().env_var_names();
         });
         return result;
@@ -126,7 +126,7 @@ struct ClientEnvGlobType : public GlobType
 
 struct ClientNameGlobType : public GlobType
 {
-    Vector<String> expand(Contextualizer context_getter, StringView name) const override
+    Vector<String> expand(Contextualizer contextualize, StringView name) const override
     {
         Vector<String> res;
         for (auto& client : ClientManager::instance())
@@ -150,12 +150,12 @@ struct ClientNameGlobType : public GlobType
 
 struct OptionNameGlobType : public GlobType
 {
-    bool matches(Contextualizer context_getter, StringView name, StringView text) const override
+    bool matches(Contextualizer contextualize, StringView name, StringView text) const override
     {
         return GlobalScope::instance().option_registry().option_exists(text);
     }
 
-    Vector<String> expand(Contextualizer context_getter, StringView name) const override
+    Vector<String> expand(Contextualizer contextualize, StringView name) const override
     {
         return GlobalScope::instance().option_registry().complete_option_name("", 0_byte)
             | gather<Vector<String>>();
@@ -164,7 +164,7 @@ struct OptionNameGlobType : public GlobType
 
 struct RegisterNameGlobType : public GlobType
 {
-    Vector<String> expand(Contextualizer context_getter, StringView name) const override
+    Vector<String> expand(Contextualizer contextualize, StringView name) const override
     {
         Vector<String> res;
         for (auto& register_entry : RegisterManager::instance())
@@ -192,7 +192,7 @@ GlobType* GlobType::resolve(StringView name)
 class FileType
 {
 public:
-    virtual RemoteBuffer read(const Vector<String>& path, Contextualizer context_getter) const = 0;
+    virtual RemoteBuffer read(const Vector<String>& path, Contextualizer contextualize) const = 0;
 };
 
 class Glob
@@ -212,14 +212,14 @@ public:
         return m_children;
     }
 
-    bool matches(Contextualizer context_getter, StringView text) const
+    bool matches(Contextualizer contextualize, StringView text) const
     {
-        return GlobType::resolve(m_name)->matches(context_getter, m_name, text);
+        return GlobType::resolve(m_name)->matches(contextualize, m_name, text);
     }
 
-    Vector<String> expand(Contextualizer context_getter) const
+    Vector<String> expand(Contextualizer contextualize) const
     {
-        return GlobType::resolve(m_name)->expand(context_getter, m_name);
+        return GlobType::resolve(m_name)->expand(contextualize, m_name);
     }
 
     Contextualizer override_context(Contextualizer original, StringView name)
@@ -265,15 +265,15 @@ Glob root{"/"};
 // File
 
 File::File()
-    : m_path{}, m_component{&root}, m_context_getter{[](const ContextualAction& action) {
+    : m_path{}, m_component{&root}, m_contextualize{[](const ContextualAction& action) {
         Context context{Context::EmptyContextFlag{}};
         action(context);
     }}
 {
 }
 
-File::File(Vector<String> path, Glob* component, Contextualizer context_getter)
-    : m_path{path}, m_component{component}, m_context_getter{context_getter}
+File::File(Vector<String> path, Glob* component, Contextualizer contextualize)
+    : m_path{path}, m_component{component}, m_contextualize{contextualize}
 {
 }
 
@@ -285,12 +285,12 @@ std::unique_ptr<File> File::walk(const String& name) const
 {
     for (const auto& child : m_component->children())
     {
-        if (not child->matches(m_context_getter, name))
+        if (not child->matches(m_contextualize, name))
             continue;
         Vector<String> path{m_path};
         path.push_back(name);
-        Contextualizer context_getter = child->override_context(m_context_getter, name);
-        return std::unique_ptr<File>(new File(std::move(path), child, context_getter));
+        Contextualizer contextualize = child->override_context(m_contextualize, name);
+        return std::unique_ptr<File>(new File(std::move(path), child, contextualize));
     }
     return {};
 }
@@ -299,11 +299,11 @@ Vector<RemoteBuffer> File::contents() const
 {
     Vector<RemoteBuffer> res;
     if (m_component->type())
-        res.push_back(m_component->type()->read(m_path, m_context_getter));
+        res.push_back(m_component->type()->read(m_path, m_contextualize));
     else
     {
         for (const auto& child : m_component->children())
-            for (auto& basename : child->expand(m_context_getter))
+            for (auto& basename : child->expand(m_contextualize))
                 res.push_back(walk(basename)->stat());
     }
     return res;
@@ -349,7 +349,7 @@ uint32_t File::mode() const
 uint64_t File::length() const
 {
     if (m_component->type())
-        return m_component->type()->read(m_path, m_context_getter).size();
+        return m_component->type()->read(m_path, m_contextualize).size();
     else
         return 0;
 }
@@ -401,11 +401,11 @@ public:
     {
     }
 
-    RemoteBuffer read(const Vector<String>& path, Contextualizer context_getter) const override
+    RemoteBuffer read(const Vector<String>& path, Contextualizer contextualize) const override
     {
         String varname = path.back();
         RemoteBuffer result;
-        context_getter([&](const Context& context) {
+        contextualize([&](const Context& context) {
             result = to_remote_buffer(find_env_var(varname).func(varname, context, Quoting::Shell));
         });
         return result;
