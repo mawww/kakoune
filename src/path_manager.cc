@@ -264,11 +264,14 @@ Glob root{"/"};
 
 // File
 
-File::File()
-    : m_path{}, m_component{&root}, m_contextualize{[](const ContextualAction& action) {
+static void empty_contextualize(const ContextualAction& action)
+{
         Context context{Context::EmptyContextFlag{}};
         action(context);
-    }}
+}
+
+File::File()
+    : m_path{}, m_component{&root}, m_contextualize{empty_contextualize}
 {
 }
 
