@@ -93,7 +93,7 @@ struct BufferIdGlobType : public GlobType
     ContextGetter override_context(ContextGetter original, StringView name) const override
     {
         String buffer_id{name};
-        return [buffer_id](const ContextAction& action) {
+        return [buffer_id](const ContextualAction& action) {
             Buffer *p = nullptr;
             if (0 == sscanf(buffer_id.c_str(), "%p", (void**)&p))
                 throw runtime_error("Not found.");
@@ -137,7 +137,7 @@ struct ClientNameGlobType : public GlobType
     ContextGetter override_context(ContextGetter original, StringView name) const override
     {
         String client_name{name};
-        return [client_name](const ContextAction& action) {
+        return [client_name](const ContextualAction& action) {
             auto it = std::find_if(ClientManager::instance().begin(),
                                    ClientManager::instance().end(),
                                    [&](auto& client) { return client->context().name() == client_name; });
@@ -265,7 +265,7 @@ Glob root{"/"};
 // File
 
 File::File()
-    : m_path{}, m_component{&root}, m_context_getter{[](const ContextAction& action) {
+    : m_path{}, m_component{&root}, m_context_getter{[](const ContextualAction& action) {
         Context context{Context::EmptyContextFlag{}};
         action(context);
     }}

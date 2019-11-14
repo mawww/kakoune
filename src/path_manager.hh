@@ -10,8 +10,8 @@
 namespace Kakoune
 {
 
-using ContextAction = std::function<void(Context&)>;
-using ContextGetter = std::function<void(const ContextAction&)>;
+using ContextualAction = std::function<void(Context&)>;
+using ContextGetter = std::function<void(const ContextualAction&)>;
 
 class Glob;
 
