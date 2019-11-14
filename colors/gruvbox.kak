@@ -1,6 +1,8 @@
 # gruvbox theme
 
 evaluate-commands %sh{
+    scope="${1:-global}"
+
     gray="rgb:928374"
     red="rgb:fb4934"
     green="rgb:b8bb26"
@@ -24,53 +26,53 @@ evaluate-commands %sh{
 
     echo "
         # Code highlighting
-        face global value     ${purple}
-        face global type      ${yellow}
-        face global variable  ${blue}
-        face global module    ${green}
-        face global function  ${fg}
-        face global string    ${green}
-        face global keyword   ${red}
-        face global operator  ${fg}
-        face global attribute ${orange}
-        face global comment   ${gray}+i
-        face global meta      ${aqua}
-        face global builtin   ${fg}+b
+        face ${scope} value     ${purple}
+        face ${scope} type      ${yellow}
+        face ${scope} variable  ${blue}
+        face ${scope} module    ${green}
+        face ${scope} function  ${fg}
+        face ${scope} string    ${green}
+        face ${scope} keyword   ${red}
+        face ${scope} operator  ${fg}
+        face ${scope} attribute ${orange}
+        face ${scope} comment   ${gray}+i
+        face ${scope} meta      ${aqua}
+        face ${scope} builtin   ${fg}+b
 
         # Markdown highlighting
-        face global title     ${green}+b
-        face global header    ${orange}
-        face global bold      ${fg}+b
-        face global italic    ${fg}+i
-        face global mono      ${fg4}
-        face global block     ${aqua}
-        face global link      ${blue}+u
-        face global bullet    ${yellow}
-        face global list      ${fg}
+        face ${scope} title     ${green}+b
+        face ${scope} header    ${orange}
+        face ${scope} bold      ${fg}+b
+        face ${scope} italic    ${fg}+i
+        face ${scope} mono      ${fg4}
+        face ${scope} block     ${aqua}
+        face ${scope} link      ${blue}+u
+        face ${scope} bullet    ${yellow}
+        face ${scope} list      ${fg}
 
-        face global Default            ${fg},${bg}
-        face global PrimarySelection   ${fg},${blue}+fg
-        face global SecondarySelection ${bg},${blue}+fg
-        face global PrimaryCursor      ${bg},${fg}+fg
-        face global SecondaryCursor    ${bg},${bg4}+fg
-        face global PrimaryCursorEol   ${bg},${fg4}+fg
-        face global SecondaryCursorEol ${bg},${bg2}+fg
-        face global LineNumbers        ${bg4}
-        face global LineNumberCursor   ${yellow},${bg1}
-        face global LineNumbersWrapped ${bg1}
-        face global MenuForeground     ${bg2},${blue}
-        face global MenuBackground     ${fg},${bg2}
-        face global MenuInfo           ${bg}
-        face global Information        ${bg},${fg}
-        face global Error              ${bg},${red}
-        face global StatusLine         ${fg},${bg}
-        face global StatusLineMode     ${yellow}+b
-        face global StatusLineInfo     ${purple}
-        face global StatusLineValue    ${red}
-        face global StatusCursor       ${bg},${fg}
-        face global Prompt             ${yellow}
-        face global MatchingChar       ${fg},${bg3}+b
-        face global BufferPadding      ${bg2},${bg}
-        face global Whitespace         ${bg2}+f
+        face ${scope} Default            ${fg},${bg}
+        face ${scope} PrimarySelection   ${fg},${blue}+fg
+        face ${scope} SecondarySelection ${bg},${blue}+fg
+        face ${scope} PrimaryCursor      ${bg},${fg}+fg
+        face ${scope} SecondaryCursor    ${bg},${bg4}+fg
+        face ${scope} PrimaryCursorEol   ${bg},${fg4}+fg
+        face ${scope} SecondaryCursorEol ${bg},${bg2}+fg
+        face ${scope} LineNumbers        ${bg4}
+        face ${scope} LineNumberCursor   ${yellow},${bg1}
+        face ${scope} LineNumbersWrapped ${bg1}
+        face ${scope} MenuForeground     ${bg2},${blue}
+        face ${scope} MenuBackground     ${fg},${bg2}
+        face ${scope} MenuInfo           ${bg}
+        face ${scope} Information        ${bg},${fg}
+        face ${scope} Error              ${bg},${red}
+        face ${scope} StatusLine         ${fg},${bg}
+        face ${scope} StatusLineMode     ${yellow}+b
+        face ${scope} StatusLineInfo     ${purple}
+        face ${scope} StatusLineValue    ${red}
+        face ${scope} StatusCursor       ${bg},${fg}
+        face ${scope} Prompt             ${yellow}
+        face ${scope} MatchingChar       ${fg},${bg3}+b
+        face ${scope} BufferPadding      ${bg2},${bg}
+        face ${scope} Whitespace         ${bg2}+f
     "
 }

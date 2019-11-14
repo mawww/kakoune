@@ -3,6 +3,8 @@
 ##
 
 evaluate-commands %sh{
+    scope="${1:-global}"
+
     foreground="rgb:c5c8c6"
     background="rgb:272727"
     selection="rgb:373b41"
@@ -23,57 +25,57 @@ evaluate-commands %sh{
 
     ## code
     echo "
-        face global value ${orange}
-        face global type ${yellow}
-        face global variable ${magenta}
-        face global module ${green}
-        face global function ${aqua}
-        face global string ${green_dark}
-        face global keyword ${purple}
-        face global operator ${aqua}
-        face global attribute ${purple}
-        face global comment ${comment}
-        face global meta ${purple}
-        face global builtin ${orange}
+        face $scope value ${orange}
+        face $scope type ${yellow}
+        face $scope variable ${magenta}
+        face $scope module ${green}
+        face $scope function ${aqua}
+        face $scope string ${green_dark}
+        face $scope keyword ${purple}
+        face $scope operator ${aqua}
+        face $scope attribute ${purple}
+        face $scope comment ${comment}
+        face $scope meta ${purple}
+        face $scope builtin ${orange}
     "
 
     ## markup
     echo "
-        face global title blue
-        face global header ${aqua}
-        face global bold ${yellow}
-        face global italic ${orange}
-        face global mono ${green_dark}
-        face global block ${orange}
-        face global link blue
-        face global bullet ${red}
-        face global list ${red}
+        face $scope title blue
+        face $scope header ${aqua}
+        face $scope bold ${yellow}
+        face $scope italic ${orange}
+        face $scope mono ${green_dark}
+        face $scope block ${orange}
+        face $scope link blue
+        face $scope bullet ${red}
+        face $scope list ${red}
     "
 
     ## builtin
     echo "
-        face global Default ${text},${background}
-        face global PrimarySelection default,${selection}+fg
-        face global SecondarySelection default,${selection}+fg
-        face global PrimaryCursor black,${aqua}+fg
-        face global SecondaryCursor black,${aqua}+fg
-        face global PrimaryCursorEol black,${green_dark}+fg
-        face global SecondaryCursorEol black,${green_dark}+fg
-        face global LineNumbers ${text_light},${background}
-        face global LineNumberCursor ${yellow},rgb:282828+b
-        face global MenuForeground ${text_light},blue
-        face global MenuBackground ${aqua},${window}
-        face global MenuInfo ${aqua}
-        face global Information white,${window}
-        face global Error white,${red}
-        face global StatusLine ${text},${window}
-        face global StatusLineMode ${yellow}+b
-        face global StatusLineInfo ${aqua}
-        face global StatusLineValue ${green_dark}
-        face global StatusCursor ${window},${aqua}
-        face global Prompt ${background},${aqua}
-        face global MatchingChar ${yellow},${background}+b
-        face global BufferPadding ${aqua},${background}
-        face global Whitespace ${text_light}+f
+        face $scope Default ${text},${background}
+        face $scope PrimarySelection default,${selection}+fg
+        face $scope SecondarySelection default,${selection}+fg
+        face $scope PrimaryCursor black,${aqua}+fg
+        face $scope SecondaryCursor black,${aqua}+fg
+        face $scope PrimaryCursorEol black,${green_dark}+fg
+        face $scope SecondaryCursorEol black,${green_dark}+fg
+        face $scope LineNumbers ${text_light},${background}
+        face $scope LineNumberCursor ${yellow},rgb:282828+b
+        face $scope MenuForeground ${text_light},blue
+        face $scope MenuBackground ${aqua},${window}
+        face $scope MenuInfo ${aqua}
+        face $scope Information white,${window}
+        face $scope Error white,${red}
+        face $scope StatusLine ${text},${window}
+        face $scope StatusLineMode ${yellow}+b
+        face $scope StatusLineInfo ${aqua}
+        face $scope StatusLineValue ${green_dark}
+        face $scope StatusCursor ${window},${aqua}
+        face $scope Prompt ${background},${aqua}
+        face $scope MatchingChar ${yellow},${background}+b
+        face $scope BufferPadding ${aqua},${background}
+        face $scope Whitespace ${text_light}+f
     "
 }

@@ -1,49 +1,57 @@
 # Kakoune simple colors, mostly default
 
-# For default
-face global value default
-face global type default
-face global identifier default
-face global string blue
-face global keyword default
-face global operator default
-face global attribute default
-face global comment blue
-face global meta default
-face global builtin default
+evaluate-commands %sh{
+    scope="${1:-global}"
+
+    cat <<- EOF
+
+    # For default
+    set-face "${scope}" value default
+    set-face "${scope}" type default
+    set-face "${scope}" identifier default
+    set-face "${scope}" string blue
+    set-face "${scope}" keyword default
+    set-face "${scope}" operator default
+    set-face "${scope}" attribute default
+    set-face "${scope}" comment blue
+    set-face "${scope}" meta default
+    set-face "${scope}" builtin default
 
 
-# For default
-face global title default
-face global header default
-face global bold default
-face global italic default
-face global mono default
-face global block default
-face global link blue
-face global bullet default
-face global list default
+    # For default
+    set-face "${scope}" title default
+    set-face "${scope}" header default
+    set-face "${scope}" bold default
+    set-face "${scope}" italic default
+    set-face "${scope}" mono default
+    set-face "${scope}" block default
+    set-face "${scope}" link blue
+    set-face "${scope}" bullet default
+    set-face "${scope}" list default
 
-# builtin default
-face global Default default,default
-face global PrimarySelection white,blue
-face global SecondarySelection black,blue
-face global PrimaryCursor black,white
-face global SecondaryCursor white,blue
-face global PrimaryCursorEol default
-face global SecondaryCursorEol default
-face global LineNumbers default
-face global LineNumberCursor default
-face global MenuForeground default
-face global MenuBackground default
-face global MenuInfo default
-face global Information default
-face global Error default
-face global StatusLine default
-face global StatusLineMode default
-face global StatusLineInfo default
-face global StatusLineValue default
-face global StatusCursor default+r
-face global Prompt default
-face global MatchingChar default
-face global BufferPadding default
+    # builtin default
+    set-face "${scope}" Default default,default
+    set-face "${scope}" PrimarySelection white,blue
+    set-face "${scope}" SecondarySelection black,blue
+    set-face "${scope}" PrimaryCursor black,white
+    set-face "${scope}" SecondaryCursor white,blue
+    set-face "${scope}" PrimaryCursorEol default
+    set-face "${scope}" SecondaryCursorEol default
+    set-face "${scope}" LineNumbers default
+    set-face "${scope}" LineNumberCursor default
+    set-face "${scope}" MenuForeground default
+    set-face "${scope}" MenuBackground default
+    set-face "${scope}" MenuInfo default
+    set-face "${scope}" Information default
+    set-face "${scope}" Error default
+    set-face "${scope}" StatusLine default
+    set-face "${scope}" StatusLineMode default
+    set-face "${scope}" StatusLineInfo default
+    set-face "${scope}" StatusLineValue default
+    set-face "${scope}" StatusCursor default+r
+    set-face "${scope}" Prompt default
+    set-face "${scope}" MatchingChar default
+    set-face "${scope}" BufferPadding default
+
+EOF
+}

@@ -1,6 +1,8 @@
 # Solarized Light
 
 evaluate-commands %sh{
+	scope="${1:-global}"
+
 	base03='rgb:002b36'
 	base02='rgb:073642'
 	base01='rgb:586e75'
@@ -20,54 +22,54 @@ evaluate-commands %sh{
 
     echo "
         # code
-        face global value              ${cyan}
-        face global type               ${red}
-        face global variable           ${blue}
-        face global module             ${cyan}
-        face global function           ${blue}
-        face global string             ${cyan}
-        face global keyword            ${green}
-        face global operator           ${yellow}
-        face global attribute          ${violet}
-        face global comment            ${base1}
-        face global meta               ${orange}
-        face global builtin            default+b
+        face ${scope} value              ${cyan}
+        face ${scope} type               ${red}
+        face ${scope} variable           ${blue}
+        face ${scope} module             ${cyan}
+        face ${scope} function           ${blue}
+        face ${scope} string             ${cyan}
+        face ${scope} keyword            ${green}
+        face ${scope} operator           ${yellow}
+        face ${scope} attribute          ${violet}
+        face ${scope} comment            ${base1}
+        face ${scope} meta               ${orange}
+        face ${scope} builtin            default+b
 
         # markup
-        face global title              ${blue}+b
-        face global header             ${blue}
-        face global bold               ${base01}+b
-        face global italic             ${base01}+i
-        face global mono               ${base1}
-        face global block              ${cyan}
-        face global link               ${base01}
-        face global bullet             ${yellow}
-        face global list               ${green}
+        face ${scope} title              ${blue}+b
+        face ${scope} header             ${blue}
+        face ${scope} bold               ${base01}+b
+        face ${scope} italic             ${base01}+i
+        face ${scope} mono               ${base1}
+        face ${scope} block              ${cyan}
+        face ${scope} link               ${base01}
+        face ${scope} bullet             ${yellow}
+        face ${scope} list               ${green}
 
         # builtin
-        face global Default            ${base00},${base3}
-        face global PrimarySelection   ${base3},${blue}+fg
-        face global SecondarySelection ${base1},${base01}+fg
-        face global PrimaryCursor      ${base3},${base00}+fg
-        face global SecondaryCursor    ${base3},${base1}+fg
-        face global PrimaryCursorEol   ${base3},${yellow}+fg
-        face global SecondaryCursorEol ${base3},${orange}+fg
-        face global LineNumbers        ${base1},${base2}
-        face global LineNumberCursor   ${base01},${base2}
-        face global LineNumbersWrapped ${base2},${base2}
-        face global MenuForeground     ${base3},${yellow}
-        face global MenuBackground     ${base01},${base2}
-        face global MenuInfo           ${base1}
-        face global Information        ${base2},${base1}
-        face global Error              ${red},default+b
-        face global StatusLine         ${base01},${base2}+b
-        face global StatusLineMode     ${orange}
-        face global StatusLineInfo     ${cyan}
-        face global StatusLineValue    ${green}
-        face global StatusCursor       ${base0},${base03}
-        face global Prompt             ${yellow}+b
-        face global MatchingChar       ${red},${base2}+b
-        face global BufferPadding      ${base1},${base3}
-        face global Whitespace         ${base1}+f
+        face ${scope} Default            ${base00},${base3}
+        face ${scope} PrimarySelection   ${base3},${blue}+fg
+        face ${scope} SecondarySelection ${base1},${base01}+fg
+        face ${scope} PrimaryCursor      ${base3},${base00}+fg
+        face ${scope} SecondaryCursor    ${base3},${base1}+fg
+        face ${scope} PrimaryCursorEol   ${base3},${yellow}+fg
+        face ${scope} SecondaryCursorEol ${base3},${orange}+fg
+        face ${scope} LineNumbers        ${base1},${base2}
+        face ${scope} LineNumberCursor   ${base01},${base2}
+        face ${scope} LineNumbersWrapped ${base2},${base2}
+        face ${scope} MenuForeground     ${base3},${yellow}
+        face ${scope} MenuBackground     ${base01},${base2}
+        face ${scope} MenuInfo           ${base1}
+        face ${scope} Information        ${base2},${base1}
+        face ${scope} Error              ${red},default+b
+        face ${scope} StatusLine         ${base01},${base2}+b
+        face ${scope} StatusLineMode     ${orange}
+        face ${scope} StatusLineInfo     ${cyan}
+        face ${scope} StatusLineValue    ${green}
+        face ${scope} StatusCursor       ${base0},${base03}
+        face ${scope} Prompt             ${yellow}+b
+        face ${scope} MatchingChar       ${red},${base2}+b
+        face ${scope} BufferPadding      ${base1},${base3}
+        face ${scope} Whitespace         ${base1}+f
     "
 }

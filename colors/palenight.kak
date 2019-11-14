@@ -3,6 +3,8 @@
 # This was ported from https://github.com/drewtempelmeyer/palenight.vim
 
 evaluate-commands %sh{
+    scope="${1:-global}"
+
     red=rgb:ff5370
     light_red=rgb:ff869a
     dark_red=rgb:be5046
@@ -25,72 +27,72 @@ evaluate-commands %sh{
 
     printf "%s\n" "
     # Code
-    face global value      $dark_yellow
-    face global type       $yellow
-    face global function   $blue
-    face global variable   $blue
-    face global identifier $blue
-    face global string     $green
-    face global error      rgb:c3bf9f+b
-    face global keyword    $purple
-    face global operator   $cyan
-    face global attribute  rgb:eedc82
-    face global comment    $comment_grey+i
+    face ${scope} value      $dark_yellow
+    face ${scope} type       $yellow
+    face ${scope} function   $blue
+    face ${scope} variable   $blue
+    face ${scope} identifier $blue
+    face ${scope} string     $green
+    face ${scope} error      rgb:c3bf9f+b
+    face ${scope} keyword    $purple
+    face ${scope} operator   $cyan
+    face ${scope} attribute  rgb:eedc82
+    face ${scope} comment    $comment_grey+i
 
     # #include <...>
-    face global meta       $yellow
+    face ${scope} meta       $yellow
 
     # Markup
-    face global title  $blue
-    face global header $cyan
-    face global bold   $red
-    face global italic $yellow
-    face global mono   $green
-    face global block  $purple
-    face global link   $cyan
-    face global bullet $cyan
-    face global list   $yellow
+    face ${scope} title  $blue
+    face ${scope} header $cyan
+    face ${scope} bold   $red
+    face ${scope} italic $yellow
+    face ${scope} mono   $green
+    face ${scope} block  $purple
+    face ${scope} link   $cyan
+    face ${scope} bullet $cyan
+    face ${scope} list   $yellow
 
     # Builtin
-    face global Default            $white,$black
+    face ${scope} Default            $white,$black
 
-    face global PrimarySelection   $black,$white+bfg
-    face global SecondarySelection $black,$white+fg
+    face ${scope} PrimarySelection   $black,$white+bfg
+    face ${scope} SecondarySelection $black,$white+fg
 
-    face global PrimaryCursor      white,$purple+bfg
-    face global SecondaryCursor    $black,$purple+fg
+    face ${scope} PrimaryCursor      white,$purple+bfg
+    face ${scope} SecondaryCursor    $black,$purple+fg
 
-    face global PrimaryCursorEol   $black,$green+fg
-    face global SecondaryCursorEol $black,$green+fg
+    face ${scope} PrimaryCursorEol   $black,$green+fg
+    face ${scope} SecondaryCursorEol $black,$green+fg
 
-    face global LineNumbers        $gutter_fg_grey
-    face global LineNumberCursor   $yellow,default+b
+    face ${scope} LineNumbers        $gutter_fg_grey
+    face ${scope} LineNumberCursor   $yellow,default+b
 
     # Bottom menu:
     # text + background
-    face global MenuBackground     $black,$white
-    face global MenuForeground     $black,$purple
+    face ${scope} MenuBackground     $black,$white
+    face ${scope} MenuForeground     $black,$purple
 
     # completion menu info
-    face global MenuInfo           $black,$white+i
+    face ${scope} MenuInfo           $black,$white+i
 
     # assistant, [+]
-    face global Information        $white,$visual_grey
+    face ${scope} Information        $white,$visual_grey
 
-    face global Error              $white,$red
-    face global StatusLine         $white,$black
+    face ${scope} Error              $white,$red
+    face ${scope} StatusLine         $white,$black
 
     # Status line
-    face global StatusLineMode     $black,$purple      # insert, prompt, enter key ...
-    face global StatusLineInfo     $white,$visual_grey # 1 sel
-    face global StatusLineValue    $visual_grey,$green # param=value, reg=value. ex: \"ey
-    face global StatusCursor       white,$purple+bg
+    face ${scope} StatusLineMode     $black,$purple      # insert, prompt, enter key ...
+    face ${scope} StatusLineInfo     $white,$visual_grey # 1 sel
+    face ${scope} StatusLineValue    $visual_grey,$green # param=value, reg=value. ex: \"ey
+    face ${scope} StatusCursor       white,$purple+bg
 
-    face global Prompt             $purple,$black # :
-    face global MatchingChar       $red+b         # (), {}
-    face global BufferPadding      $gutter_fg_grey,$black   # EOF tildas (~)
+    face ${scope} Prompt             $purple,$black # :
+    face ${scope} MatchingChar       $red+b         # (), {}
+    face ${scope} BufferPadding      $gutter_fg_grey,$black   # EOF tildas (~)
 
     # Whitespace characters
-    face global Whitespace         $gutter_fg_grey,$black+fg
+    face ${scope} Whitespace         $gutter_fg_grey,$black+fg
     "
 }

@@ -1,82 +1,90 @@
 # desertex theme
 
-# Code
-face global value      rgb:fa8072
-face global type       rgb:dfdfbf
-face global identifier rgb:87ceeb
-face global string     rgb:fa8072
-face global error      rgb:c3bf9f+b
-face global keyword    rgb:eedc82
-face global operator   rgb:87ceeb
-face global attribute  rgb:eedc82
-face global comment    rgb:7ccd7c+i
+evaluate-commands %sh{
+    scope="${1:-global}"
 
-# #include <...>
-face global meta rgb:ee799f
+    cat <<- EOF
 
-# Markup
-face global title  blue
-face global header cyan
-face global bold   red
-face global italic yellow
-face global mono   green
-face global block  magenta
-face global link   cyan
-face global bullet cyan
-face global list   yellow
+    # Code
+    set-face "${scope}" value      rgb:fa8072
+    set-face "${scope}" type       rgb:dfdfbf
+    set-face "${scope}" identifier rgb:87ceeb
+    set-face "${scope}" string     rgb:fa8072
+    set-face "${scope}" error      rgb:c3bf9f+b
+    set-face "${scope}" keyword    rgb:eedc82
+    set-face "${scope}" operator   rgb:87ceeb
+    set-face "${scope}" attribute  rgb:eedc82
+    set-face "${scope}" comment    rgb:7ccd7c+i
 
-# Builtin
-# fg,bg+attributes
-# face global Default default,rgb:262626 <- change the terminal bg color instead
-face global Default default,default
+    # #include <...>
+    set-face "${scope}" meta rgb:ee799f
 
-face global PrimarySelection   white,blue+fg
-face global SecondarySelection black,blue+fg
+    # Markup
+    set-face "${scope}" title  blue
+    set-face "${scope}" header cyan
+    set-face "${scope}" bold   red
+    set-face "${scope}" italic yellow
+    set-face "${scope}" mono   green
+    set-face "${scope}" block  magenta
+    set-face "${scope}" link   cyan
+    set-face "${scope}" bullet cyan
+    set-face "${scope}" list   yellow
 
-face global PrimaryCursor   black,white+fg
-face global SecondaryCursor black,white+fg
+    # Builtin
+    # fg,bg+attributes
+    set-# face "${scope}" Default default,rgb:262626 <- change the terminal bg color instead
+    set-face "${scope}" Default default,default
 
-face global PrimaryCursorEol   black,rgb:7ccd7c+fg
-face global SecondaryCursorEol black,rgb:7ccd7c+fg
+    set-face "${scope}" PrimarySelection   white,blue+fg
+    set-face "${scope}" SecondarySelection black,blue+fg
 
-face global LineNumbers      rgb:605958
-face global LineNumberCursor yellow,default+b
+    set-face "${scope}" PrimaryCursor   black,white+fg
+    set-face "${scope}" SecondaryCursor black,white+fg
 
-# Bottom menu:
-# text + background
-face global MenuBackground black,rgb:c2bfa5+b
-# selected entry in the menu (use 302028 when true color support is fixed)
-face global MenuForeground rgb:f0a0c0,magenta
+    set-face "${scope}" PrimaryCursorEol   black,rgb:7ccd7c+fg
+    set-face "${scope}" SecondaryCursorEol black,rgb:7ccd7c+fg
 
-# completion menu info
-face global MenuInfo white,rgb:445599
+    set-face "${scope}" LineNumbers      rgb:605958
+    set-face "${scope}" LineNumberCursor yellow,default+b
 
-# assistant, [+]
-face global Information black,yellow
+    # Bottom menu:
+    # text + background
+    set-face "${scope}" MenuBackground black,rgb:c2bfa5+b
+    # selected entry in the menu (use 302028 when true color support is fixed)
+    set-face "${scope}" MenuForeground rgb:f0a0c0,magenta
 
-face global Error      white,red
-face global StatusLine cyan,default
+    # completion menu info
+    set-face "${scope}" MenuInfo white,rgb:445599
 
-# Status line modes and prompts:
-# insert, prompt, enter key...
-face global StatusLineMode rgb:ffd75f,default
+    # assistant, [+]
+    set-face "${scope}" Information black,yellow
 
-# 1 sel
-face global StatusLineInfo blue,default
+    set-face "${scope}" Error      white,red
+    set-face "${scope}" StatusLine cyan,default
 
-# param=value, reg=value. ex: "ey
-face global StatusLineValue green,default
+    # Status line modes and prompts:
+    # insert, prompt, enter key...
+    set-face "${scope}" StatusLineMode rgb:ffd75f,default
 
-face global StatusCursor black,cyan
+    # 1 sel
+    set-face "${scope}" StatusLineInfo blue,default
 
-# :
-face global Prompt blue
+    # param=value, reg=value. ex: "ey
+    set-face "${scope}" StatusLineValue green,default
 
-# (), {}
-face global MatchingChar cyan+b
+    set-face "${scope}" StatusCursor black,cyan
 
-# EOF tildas (~)
-face global BufferPadding blue,default
+    # :
+    set-face "${scope}" Prompt blue
 
-# Whitespace characters
-face global Whitespace default+f
+    # (), {}
+    set-face "${scope}" MatchingChar cyan+b
+
+    # EOF tildas (~)
+    set-face "${scope}" BufferPadding blue,default
+
+    # Whitespace characters
+    set-face "${scope}" Whitespace default+f
+
+EOF
+}
