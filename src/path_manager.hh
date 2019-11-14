@@ -10,9 +10,8 @@
 namespace Kakoune
 {
 
-using ContextDeleter = std::function<void (Context*)>;
-using UniqueContextPtr = std::unique_ptr<Context, std::function<void(Context *)>>;
-using ContextGetter = std::function<UniqueContextPtr()>;
+using ContextAction = std::function<void(Context&)>;
+using ContextGetter = std::function<void(const ContextAction&)>;
 
 class Glob;
 

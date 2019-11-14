@@ -93,7 +93,7 @@ struct BufferIdGlobType : public GlobType
     ContextGetter override_context(ContextGetter original, StringView name) const override
     {
         String buffer_id{name};
-        return [buffer_id]() {
+        return [buffer_id](const ContextAction& action) {
             Buffer *p = nullptr;
             if (0 == sscanf(buffer_id.c_str(), "%p", (void**)&p))
                 throw runtime_error("Not found.");
@@ -106,8 +106,8 @@ struct BufferIdGlobType : public GlobType
             Selection selection(BufferCoord{0, 0});
             SelectionList selection_list(**it, selection);
             InputHandler input_handler{selection_list, Context::Flags::Draft};
-            return UniqueContextPtr(new Context{input_handler, selection_list, Context::Flags::Draft},
-                                    [](Context *context) { delete context; });
+            Context context{input_handler, selection_list, Context::Flags::Draft};
+            action(context);
         };
     }
 } buffer_id_glob_type{};
@@ -116,8 +116,11 @@ struct ClientEnvGlobType : public GlobType
 {
     Vector<String> expand(ContextGetter context_getter, StringView name) const override
     {
-        UniqueContextPtr context_ptr = context_getter();
-        return context_ptr->client().env_var_names();
+        Vector<String> result;
+        context_getter([&result](Context& context) {
+            result = context.client().env_var_names();
+        });
+        return result;
     }
 };
 
@@ -134,14 +137,13 @@ struct ClientNameGlobType : public GlobType
     ContextGetter override_context(ContextGetter original, StringView name) const override
     {
         String client_name{name};
-        return [client_name]() {
+        return [client_name](const ContextAction& action) {
             auto it = std::find_if(ClientManager::instance().begin(),
                                    ClientManager::instance().end(),
                                    [&](auto& client) { return client->context().name() == client_name; });
             if (it == ClientManager::instance().end())
                 throw runtime_error("Not found.");
-            auto& context = (*it)->context();
-            return UniqueContextPtr(&context, [](Context *) {});
+            action((*it)->context());
         };
     }
 } client_name_glob_type{};
@@ -263,9 +265,9 @@ Glob root{"/"};
 // File
 
 File::File()
-    : m_path{}, m_component{&root}, m_context_getter{[]() {
-        return UniqueContextPtr(new Context{Context::EmptyContextFlag{}},
-                                [](Context *context) { delete context; });
+    : m_path{}, m_component{&root}, m_context_getter{[](const ContextAction& action) {
+        Context context{Context::EmptyContextFlag{}};
+        action(context);
     }}
 {
 }
@@ -402,8 +404,11 @@ public:
     RemoteBuffer read(const Vector<String>& path, ContextGetter context_getter) const override
     {
         String varname = path.back();
-        UniqueContextPtr context_ptr = context_getter();
-        return to_remote_buffer(find_env_var(varname).func(varname, *context_ptr, Quoting::Shell));
+        RemoteBuffer result;
+        context_getter([&](const Context& context) {
+            result = to_remote_buffer(find_env_var(varname).func(varname, context, Quoting::Shell));
+        });
+        return result;
     }
 
 private:
