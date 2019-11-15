@@ -186,6 +186,12 @@ public:
         return res;
     }
 
+    MessageType peek_type() const
+    {
+        kak_assert(m_write_pos >= header_size + sizeof(MessageType));
+        return (MessageType)m_stream.data()[4];
+    }
+
     void read(char* buffer, size_t size)
     {
         if (m_read_pos + size > m_stream.size())
@@ -844,11 +850,15 @@ private:
             while (events & FdEvents::Read and not m_reader.ready() and fd_readable(sock))
                 m_reader.read_available(sock);
 
-            if (mode != EventMode::Normal or not m_reader.ready())
+            if (not m_reader.ready())
+                return;
+
+            auto type = m_reader.peek_type();
+            if (mode != EventMode::Normal and (type == MessageType::Connect or type == MessageType::Command))
                 return;
 
             KakouneFieldReader fields{m_reader};
-            auto type = fields.read<MessageType>();
+            fields.read<MessageType>();
 
             if (debug_protocol)
             {
