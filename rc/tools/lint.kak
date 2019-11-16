@@ -11,7 +11,7 @@ declare-option -hidden int lint_warning_count
 define-command lint -docstring 'Parse the current buffer with a linter' %{
     evaluate-commands %sh{
         if [ -z "${kak_opt_lintcmd}" ]; then
-            printf %s\\n 'echo -markup {Error}The `lintcmd` option is not set'
+            echo 'fail The `lintcmd` option is not set'
             exit 1
         fi
 
@@ -139,7 +139,7 @@ define-command lint-next-error -docstring "Jump to the next line that contains a
         if [ -n "${range}" ]; then
             printf 'select %s\n' "${range}"
         else
-            printf 'echo -markup "{Error}no lint diagnostics"\n'
+            echo 'fail no lint diagnostics'
         fi
     }
 }
@@ -167,7 +167,7 @@ define-command lint-previous-error -docstring "Jump to the previous line that co
             range="${range:-${1%%|*}}"
             printf 'select %s\n' "${range}"
         else
-            printf 'echo -markup "{Error}no lint diagnostics"\n'
+            echo 'fail no lint diagnostics'
         fi
     }
 }

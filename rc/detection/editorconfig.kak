@@ -13,7 +13,7 @@ hook global BufCreate .*[.](editorconfig) %{
 
 define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file]: set formatting behavior according to editorconfig" %{
     evaluate-commands %sh{
-        command -v editorconfig >/dev/null 2>&1 || { printf %s\\n 'echo -markup "{Error}editorconfig could not be found"'; exit 1; }
+        command -v editorconfig >/dev/null 2>&1 || { echo "fail editorconfig could not be found"; exit 1; }
 
         file="${1:-$kak_buffile}"
         case $file in

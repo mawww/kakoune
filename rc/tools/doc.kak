@@ -67,7 +67,7 @@ define-command doc-jump-to-anchor -params 1 %{
                 exit
             fi
         done
-        printf "echo -markup {Error}No such anchor '%s'" "${anchor}"
+        printf "fail No such anchor '%s'\n" "${anchor}"
     }
 }
 
@@ -157,7 +157,7 @@ An optional keyword argument can be passed to the function, which will be automa
             fi
             printf %s\\n "evaluate-commands -try-client %opt{docsclient} %{ doc-render ${page}; ${jump_cmd} }"
         else
-            printf %s\\n "echo -markup '{Error}No such doc file: ${page}'"
+            printf 'fail No such doc file: %s\n' "${page}"
         fi
     }
 }

@@ -45,16 +45,11 @@ define-command -hidden -params 2..3 man-impl %{ evaluate-commands %sh{
                 set-option buffer filetype man
                 set-option window manpage $buffer_name $*
         "
-    elif [ "${retval}" -eq 16 ]; then
-        printf %s\\n "
-        echo -markup %{{Error}$(cat $manerr)}
-        nop %sh{ rm ${colout}; rm ${manerr} }
-        "
     else
-        printf %s\\n "
-        fail $(cat $manerr)
-        nop %sh{ rm ${colout}; rm ${manerr} }
-        "
+        printf '
+            fail %%{%s}
+            nop %%sh{ rm "%s"; rm "%s" }
+        ' "$(cat "$manerr")" "${colout}" "${manerr}"
     fi
 } }
 

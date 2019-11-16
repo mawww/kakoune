@@ -49,7 +49,7 @@ define-command -params ..1 \
                 menu_item = $2; gsub("!", "!!", menu_item);
                 edit_path = path($2); gsub("&", "&&", edit_path); gsub("#", "##", edit_path); gsub("\\|", "||", edit_path);
                 select = $1; gsub(/</, "<lt>", select); gsub(/\t/, "<c-v><c-i>", select); gsub("!", "!!", select); gsub("&", "&&", select); gsub("#", "##", select); gsub("\\|", "||", select);
-                out = out "%!" menu_item ": {MenuInfo}" menu_info "! %!evaluate-commands %# try %& edit -existing %|" edit_path "|; execute-keys %|/\\Q" keys "<ret>vc| & catch %& echo -markup %|{Error}unable to find tag| &; try %& execute-keys %|s\\Q" select "<ret>| & # !"
+                out = out "%!" menu_item ": {MenuInfo}" menu_info "! %!evaluate-commands %# try %& edit -existing %|" edit_path "|; execute-keys %|/\\Q" keys "<ret>vc| & catch %& fail unable to find tag &; try %& execute-keys %|s\\Q" select "<ret>| & # !"
             }
             /[^\t]+\t[^\t]+\t[0-9]+/ {
                 menu_item = $2; gsub("!", "!!", menu_item);
@@ -57,9 +57,9 @@ define-command -params ..1 \
                 menu_info = $3; gsub("!", "!!", menu_info); gsub("{", "\\{", menu_info);
                 edit_path = path($2); gsub("!", "!!", edit_path); gsub("#", "##", edit_path); gsub("&", "&&", edit_path); gsub("\\|", "||", edit_path);
                 line_number = $3;
-                out = out "%!" menu_item ": {MenuInfo}" menu_info "! %!evaluate-commands %# try %& edit -existing %|" edit_path "|; execute-keys %|" line_number "gx| & catch %& echo -markup %|{Error}unable to find tag| &; try %& execute-keys %|s\\Q" select "<ret>| & # !"
+                out = out "%!" menu_item ": {MenuInfo}" menu_info "! %!evaluate-commands %# try %& edit -existing %|" edit_path "|; execute-keys %|" line_number "gx| & catch %& fail unable to find tag &; try %& execute-keys %|s\\Q" select "<ret>| & # !"
             }
-            END { print ( length(out) == 0 ? "echo -markup %{{Error}no such tag " ENVIRON["tagname"] "}" : "menu -markup -auto-single " out ) }
+            END { print ( length(out) == 0 ? "fail no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out ) }
             # Ensure x is an absolute file path, by prepending with tagroot
             function path(x) { return x ~/^\// ? x : tagroot x }'
     ]]

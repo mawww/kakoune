@@ -12,7 +12,7 @@ declare-option -docstring "tmux pane id in which the REPL is running" str tmux_r
 define-command -hidden -params 1..2 tmux-repl-impl %{
     evaluate-commands %sh{
         if [ -z "$TMUX" ]; then
-            echo "echo -markup '{Error}This command is only available in a tmux session'"
+            echo 'fail This command is only available in a tmux session'
             exit
         fi
         tmux_args="$1"
@@ -49,7 +49,7 @@ define-command -hidden tmux-send-text -params 0..1 -docstring "tmux-send-text [t
 
 define-command -hidden tmux-repl-disabled %{ evaluate-commands %sh{
     VERSION_TMUX=$(tmux -V)
-    printf %s "echo -markup %{{Error}The version of tmux is too old: got ${VERSION_TMUX}, expected >= 2.x}"
+    printf 'fail The version of tmux is too old: got %s, expected >= 2.x\n' "${VERSION_TMUX}"
 } }
 
 evaluate-commands %sh{

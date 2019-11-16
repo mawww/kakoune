@@ -11,7 +11,7 @@ All optional parameters are forwarded to the new window} \
     -shell-completion \
     x11-repl %{ evaluate-commands %sh{
         if [ -z "${kak_opt_termcmd}" ]; then
-           echo "echo -markup '{Error}termcmd option is not set'"
+           echo 'fail termcmd option is not set'
            exit
         fi
         if [ $# -eq 0 ]; then cmd="${SHELL:-sh}"; else cmd="$@"; fi
