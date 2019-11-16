@@ -20,6 +20,8 @@ released versions.
 
 * Daemon mode (`-d` switch) does not fork anymore.
 
+* Replace NCursesUI with a custom terminal UI implementation
+
 == Kakoune 2020.08.04
 
 * Introduce `User` hook support.

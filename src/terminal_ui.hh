@@ -1,5 +1,5 @@
-#ifndef ncurses_hh_INCLUDED
-#define ncurses_hh_INCLUDED
+#ifndef terminal_hh_INCLUDED
+#define terminal_hh_INCLUDED
 
 #include "array_view.hh"
 #include "coord.hh"
@@ -18,14 +18,14 @@ namespace Kakoune
 
 struct DisplayAtom;
 
-class NCursesUI : public UserInterface, public Singleton<NCursesUI>
+class TerminalUI : public UserInterface, public Singleton<TerminalUI>
 {
 public:
-    NCursesUI();
-    ~NCursesUI() override;
+    TerminalUI();
+    ~TerminalUI() override;
 
-    NCursesUI(const NCursesUI&) = delete;
-    NCursesUI& operator=(const NCursesUI&) = delete;
+    TerminalUI(const TerminalUI&) = delete;
+    TerminalUI& operator=(const TerminalUI&) = delete;
 
     bool is_ok() const override { return (bool)m_window; }
 
@@ -161,4 +161,4 @@ private:
 
 }
 
-#endif // ncurses_hh_INCLUDED
+#endif // terminal_hh_INCLUDED
