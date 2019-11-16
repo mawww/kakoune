@@ -308,29 +308,29 @@ are exclusively available to built-in options.
     a list of `key=value` pairs that are forwarded to the user
     interface implementation. The NCurses UI support the following options:
 
-        *ncurses_set_title*:::
+        *terminal_set_title*:::
             if *yes* or *true*, the terminal emulator title will
             be changed
 
-        *ncurses_status_on_top*:::
+        *terminal_status_on_top*:::
             if *yes*, or *true* the status line will be placed
             at the top of the terminal rather than at the bottom
 
-        *ncurses_assistant*:::
+        *terminal_assistant*:::
             specify the nice assistant displayed in info boxes,
             can be *clippy* (the default), *cat*, *dilbert* or *none*
 
-        *ncurses_enable_mouse*:::
+        *terminal_enable_mouse*:::
             boolean option that enables mouse support
 
-        *ncurses_change_colors*:::
+        *terminal_change_colors*:::
             boolean option that can disable color palette changing if the
             terminfo enables it but the terminal does not support it.
 
-        *ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
+        *terminal_wheel_down_button*, *terminal_wheel_up_button*:::
             specify which button send for wheel down/up events
 
-        *ncurses_shift_function_key*:::
+        *terminal_shift_function_key*:::
             Function key from which shifted function key start, if the
             terminal sends F13 for <s-F1>, this should be set to 12.
 
