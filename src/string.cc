@@ -147,6 +147,7 @@ void String::resize(ByteCount size, char c)
         for (auto i = current_size; i < target_size; ++i)
             m_data.data()[i] = c;
     }
+    data()[target_size] = 0;
 }
 
 void String::Data::set_size(size_t size)
