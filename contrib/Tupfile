@@ -34,18 +34,11 @@ ifeq ($(static),yes)
 	LDFLAGS += -static -pthread
 endif
 
-ifeq (@(TUP_PLATFORM),macosx)
-	LIBS += -lncurses
-	CPPFLAGS += -I/usr/local/opt/ncurses/include
-	LDFLAGS += -L/usr/local/opt/ncurses/lib
-else
+ifneq (@(TUP_PLATFORM),macosx)
 	ifeq (@(TUP_PLATFORM),win32)
-		LIBS += -lncursesw -ldbghelp
+		LIBS += -ldbghelp
 		CPPFLAGS += -D_XOPEN_SOURCE=700
 	else
-		LIBS += `pkg-config --libs ncursesw`
-		CPPFLAGS += `pkg-config --cflags ncursesw`
-
 		ifeq ($(CXX),g++)
 			LDFLAGS += -rdynamic
 		endif

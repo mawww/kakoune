@@ -107,7 +107,6 @@ Kakoune dependencies are:
 
  * A {cpp}17 compliant compiler (GCC >= 7 or clang >= 6) along with its
    associated {cpp} standard library (libstdc{pp} or libc{pp})
- * ncurses with wide-characters support (>= 5.3, generally referred to as libncursesw)
 
 To build, just type *make* in the src directory.
 To generate man pages, type *make man* in the src directory.
@@ -199,7 +198,6 @@ Building on Ubuntu 16.04 and 18.04.
 Make sure you have .local/bin in your path to make the kak binary available from your shell.
 
 ----------------------------------------------------------------
-sudo apt install libncursesw5-dev pkg-config
 git clone https://github.com/mawww/kakoune.git && cd kakoune/src
 make
 PREFIX=$HOME/.local make install
