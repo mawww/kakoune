@@ -13,7 +13,7 @@
 #include "highlighters.hh"
 #include "insert_completer.hh"
 #include "json_ui.hh"
-#include "ncurses_ui.hh"
+#include "terminal_ui.hh"
 #include "option_types.hh"
 #include "parameters_parser.hh"
 #include "ranges.hh"
@@ -515,17 +515,17 @@ void register_options()
                        "space separated list of <key>=<value> options that are "
                        "passed to and interpreted by the user interface\n"
                        "\n"
-                       "The ncurses ui supports the following options:\n"
+                       "The terminal ui supports the following options:\n"
                        "    <key>:                        <value>:\n"
-                       "    ncurses_assistant             clippy|cat|dilbert|none|off\n"
-                       "    ncurses_status_on_top         bool\n"
-                       "    ncurses_set_title             bool\n"
-                       "    ncurses_enable_mouse          bool\n"
-                       "    ncurses_change_colors         bool\n"
-                       "    ncurses_wheel_up_button       int\n"
-                       "    ncurses_wheel_down_button     int\n"
-                       "    ncurses_wheel_scroll_amount   int\n"
-                       "    ncurses_shift_function_key    int\n",
+                       "    terminal_assistant             clippy|cat|dilbert|none|off\n"
+                       "    terminal_status_on_top         bool\n"
+                       "    terminal_set_title             bool\n"
+                       "    terminal_enable_mouse          bool\n"
+                       "    terminal_change_colors         bool\n"
+                       "    terminal_wheel_up_button       int\n"
+                       "    terminal_wheel_down_button     int\n"
+                       "    terminal_wheel_scroll_amount   int\n"
+                       "    terminal_shift_function_key    int\n",
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]"_str);
@@ -549,14 +549,14 @@ static bool convert_to_client_pending = false;
 
 enum class UIType
 {
-    NCurses,
+    Terminal,
     Json,
     Dummy,
 };
 
 UIType parse_ui_type(StringView ui_name)
 {
-    if (ui_name == "ncurses") return UIType::NCurses;
+    if (ui_name == "terminal") return UIType::Terminal;
     if (ui_name == "json") return UIType::Json;
     if (ui_name == "dummy") return UIType::Dummy;
 
@@ -588,7 +588,7 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
 
     switch (ui_type)
     {
-        case UIType::NCurses: return std::make_unique<NCursesUI>();
+        case UIType::Terminal: return std::make_unique<TerminalUI>();
         case UIType::Json: return std::make_unique<JsonUI>();
         case UIType::Dummy: return std::make_unique<DummyUI>();
     }
@@ -611,17 +611,17 @@ pid_t fork_server_to_background()
 
 std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 {
-    if (ui_type != UIType::NCurses)
+    if (ui_type != UIType::Terminal)
         return make_ui(ui_type);
 
-    struct LocalUI : NCursesUI
+    struct LocalUI : TerminalUI
     {
         LocalUI()
         {
             set_signal_handler(SIGTSTP, [](int) {
                 if (ClientManager::instance().count() == 1 and
                     *ClientManager::instance().begin() == local_client)
-                    NCursesUI::instance().suspend();
+                    TerminalUI::instance().suspend();
                 else
                     convert_to_client_pending = true;
            });
@@ -636,7 +636,7 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 
             if (fork_server_to_background())
             {
-                this->NCursesUI::~NCursesUI();
+                this->TerminalUI::~TerminalUI();
                 exit(local_client_exit);
             }
         }
@@ -985,7 +985,7 @@ int run_pipe(StringView session)
 
 void signal_handler(int signal)
 {
-    NCursesUI::restore_terminal();
+    TerminalUI::restore_terminal();
     const char* text = nullptr;
     switch (signal)
     {
@@ -1048,7 +1048,7 @@ int main(int argc, char* argv[])
                    { "f", { true,  "filter: for each file, select the entire buffer and execute the given keys" } },
                    { "i", { true, "backup the files on which a filter is applied using the given suffix" } },
                    { "q", { false, "in filter mode, be quiet about errors applying keys" } },
-                   { "ui", { true, "set the type of user interface to use (ncurses, dummy, or json)" } },
+                   { "ui", { true, "set the type of user interface to use (terminal, dummy, or json)" } },
                    { "l", { false, "list existing sessions" } },
                    { "clear", { false, "clear dead sessions" } },
                    { "debug", { true, "initial debug option value" } },
@@ -1120,7 +1120,7 @@ int main(int argc, char* argv[])
 
         auto client_init = parser.get_switch("e").value_or(StringView{});
         auto server_init = parser.get_switch("E").value_or(StringView{});
-        const UIType ui_type = parse_ui_type(parser.get_switch("ui").value_or("ncurses"));
+        const UIType ui_type = parse_ui_type(parser.get_switch("ui").value_or("terminal"));
 
         if (auto keys = parser.get_switch("f"))
         {

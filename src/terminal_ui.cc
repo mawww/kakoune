@@ -1,4 +1,4 @@
-#include "ncurses_ui.hh"
+#include "terminal_ui.hh"
 
 #include "display_buffer.hh"
 #include "event_manager.hh"
@@ -28,21 +28,21 @@ static void set_cursor_pos(DisplayCoord coord)
     printf("\033[%d;%dH", (int)coord.line + 1, (int)coord.column + 1);
 }
 
-void NCursesUI::Window::create(const DisplayCoord& p, const DisplayCoord& s)
+void TerminalUI::Window::create(const DisplayCoord& p, const DisplayCoord& s)
 {
     pos = p;
     size = s;
     lines.resize((int)size.line);
 }
 
-void NCursesUI::Window::destroy()
+void TerminalUI::Window::destroy()
 {
     pos = DisplayCoord{};
     size = DisplayCoord{};
     lines.clear();
 }
 
-void NCursesUI::Window::refresh(bool force)
+void TerminalUI::Window::refresh(bool force)
 {
     if (lines.empty())
         return;
@@ -82,12 +82,12 @@ void NCursesUI::Window::refresh(bool force)
     }
 }
 
-void NCursesUI::Window::move_cursor(DisplayCoord coord)
+void TerminalUI::Window::move_cursor(DisplayCoord coord)
 {
     cursor = coord;
 }
 
-void NCursesUI::Window::clear_line()
+void TerminalUI::Window::clear_line()
 {
     auto& line = lines[(int)cursor.line];
     auto it = line.begin();
@@ -104,7 +104,7 @@ void NCursesUI::Window::clear_line()
     }
 }
 
-void NCursesUI::Window::draw(ConstArrayView<DisplayAtom> atoms,
+void TerminalUI::Window::draw(ConstArrayView<DisplayAtom> atoms,
                              const Face& default_face)
 {
     clear_line();
@@ -129,7 +129,7 @@ void NCursesUI::Window::draw(ConstArrayView<DisplayAtom> atoms,
         lines[(int)cursor.line].push_back({String(' ', size.column - cursor.column), default_face});
 }
 
-constexpr int NCursesUI::default_shift_function_key;
+constexpr int TerminalUI::default_shift_function_key;
 
 static constexpr StringView assistant_cat[] =
     { R"(  ___            )",
@@ -178,7 +178,7 @@ static void signal_handler(int)
     EventManager::instance().force_signal(0);
 }
 
-NCursesUI::NCursesUI()
+TerminalUI::TerminalUI()
     : m_cursor{CursorMode::Buffer, {}},
       m_stdin_watcher{STDIN_FILENO, FdEvents::Read,
                       [this](FDWatcher&, FdEvents, EventMode) {
@@ -201,13 +201,13 @@ NCursesUI::NCursesUI()
 
     set_signal_handler(SIGWINCH, &signal_handler<&resize_pending>);
     set_signal_handler(SIGHUP, &signal_handler<&sighup_raised>);
-    set_signal_handler(SIGTSTP, [](int){ NCursesUI::instance().suspend(); });
+    set_signal_handler(SIGTSTP, [](int){ TerminalUI::instance().suspend(); });
 
     check_resize(true);
     redraw(false);
 }
 
-NCursesUI::~NCursesUI()
+TerminalUI::~TerminalUI()
 {
     enable_mouse(false);
     restore_terminal();
@@ -217,7 +217,7 @@ NCursesUI::~NCursesUI()
     set_signal_handler(SIGTSTP, SIG_DFL);
 }
 
-void NCursesUI::suspend()
+void TerminalUI::suspend()
 {
     bool mouse_enabled = m_mouse_enabled;
     enable_mouse(false);
@@ -243,7 +243,7 @@ void NCursesUI::suspend()
     refresh(true);
 }
 
-void NCursesUI::set_raw_mode() const
+void TerminalUI::set_raw_mode() const
 {
     termios attr = m_original_termios;
     attr.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
@@ -257,7 +257,7 @@ void NCursesUI::set_raw_mode() const
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &attr);
 }
 
-void NCursesUI::redraw(bool force)
+void TerminalUI::redraw(bool force)
 {
     m_window.refresh(force);
 
@@ -274,12 +274,12 @@ void NCursesUI::redraw(bool force)
     fflush(stdout);
 }
 
-void NCursesUI::set_cursor(CursorMode mode, DisplayCoord coord)
+void TerminalUI::set_cursor(CursorMode mode, DisplayCoord coord)
 {
     m_cursor = Cursor{mode, coord};
 }
 
-void NCursesUI::refresh(bool force)
+void TerminalUI::refresh(bool force)
 {
     if (m_dirty or force)
         redraw(force);
@@ -288,7 +288,7 @@ void NCursesUI::refresh(bool force)
 
 static const DisplayLine empty_line = { String(" "), {} };
 
-void NCursesUI::draw(const DisplayBuffer& display_buffer,
+void TerminalUI::draw(const DisplayBuffer& display_buffer,
                      const Face& default_face,
                      const Face& padding_face)
 {
@@ -313,7 +313,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     m_dirty = true;
 }
 
-void NCursesUI::draw_status(const DisplayLine& status_line,
+void TerminalUI::draw_status(const DisplayLine& status_line,
                             const DisplayLine& mode_line,
                             const Face& default_face)
 {
@@ -366,7 +366,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     m_dirty = true;
 }
 
-void NCursesUI::check_resize(bool force)
+void TerminalUI::check_resize(bool force)
 {
     if (not force and not resize_pending)
         return;
@@ -405,7 +405,7 @@ void NCursesUI::check_resize(bool force)
     set_resize_pending();
 }
 
-Optional<Key> NCursesUI::get_next_key()
+Optional<Key> TerminalUI::get_next_key()
 {
     if (sighup_raised)
     {
@@ -640,7 +640,7 @@ T div_round_up(T a, T b)
     return (a - T(1)) / b + T(1);
 }
 
-void NCursesUI::draw_menu()
+void TerminalUI::draw_menu()
 {
     // menu show may have not created the window if it did not fit.
     // so be tolerant.
@@ -724,7 +724,7 @@ static LineCount height_limit(MenuStyle style)
     return 0_line;
 }
 
-void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
+void TerminalUI::menu_show(ConstArrayView<DisplayLine> items,
                           DisplayCoord anchor, Face fg, Face bg,
                           MenuStyle style)
 {
@@ -796,7 +796,7 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
                   m_info.anchor, m_info.face, m_info.style);
 }
 
-void NCursesUI::menu_select(int selected)
+void TerminalUI::menu_select(int selected)
 {
     const int item_count = m_menu.items.size();
     if (selected < 0 or selected >= item_count)
@@ -837,7 +837,7 @@ void NCursesUI::menu_select(int selected)
     draw_menu();
 }
 
-void NCursesUI::menu_hide()
+void TerminalUI::menu_hide()
 {
     if (not m_menu)
         return;
@@ -852,7 +852,7 @@ void NCursesUI::menu_hide()
 }
 
 static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
-                                NCursesUI::Rect rect, NCursesUI::Rect to_avoid,
+                                TerminalUI::Rect rect, TerminalUI::Rect to_avoid,
                                 bool prefer_above)
 {
     DisplayCoord pos;
@@ -924,7 +924,7 @@ static DisplayLineList wrap_lines(const DisplayLineList& lines, ColumnCount max_
     return result;
 }
 
-void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& content,
+void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& content,
                           DisplayCoord anchor, Face face, InfoStyle style)
 {
     info_hide();
@@ -1052,7 +1052,7 @@ void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& conte
     m_dirty = true;
 }
 
-void NCursesUI::info_hide()
+void TerminalUI::info_hide()
 {
     if (not m_info)
         return;
@@ -1060,29 +1060,29 @@ void NCursesUI::info_hide()
     m_dirty = true;
 }
 
-void NCursesUI::set_on_key(OnKeyCallback callback)
+void TerminalUI::set_on_key(OnKeyCallback callback)
 {
     m_on_key = std::move(callback);
     EventManager::instance().force_signal(0);
 }
 
-DisplayCoord NCursesUI::dimensions()
+DisplayCoord TerminalUI::dimensions()
 {
     return m_dimensions;
 }
 
-LineCount NCursesUI::content_line_offset() const
+LineCount TerminalUI::content_line_offset() const
 {
     return m_status_on_top ? 1 : 0;
 }
 
-void NCursesUI::set_resize_pending()
+void TerminalUI::set_resize_pending()
 {
     m_resize_pending = true;
     EventManager::instance().force_signal(0);
 }
 
-void NCursesUI::setup_terminal()
+void TerminalUI::setup_terminal()
 {
     fputs("\033[?1049h", stdout);
     fputs("\033[?1004h", stdout);
@@ -1091,7 +1091,7 @@ void NCursesUI::setup_terminal()
     fflush(stdout);
 }
 
-void NCursesUI::restore_terminal()
+void TerminalUI::restore_terminal()
 {
     fputs("\033[?1049l", stdout);
     fputs("\033[?1004l", stdout);
@@ -1101,7 +1101,7 @@ void NCursesUI::restore_terminal()
     fflush(stdout);
 }
 
-void NCursesUI::enable_mouse(bool enabled)
+void TerminalUI::enable_mouse(bool enabled)
 {
     if (enabled == m_mouse_enabled)
         return;
@@ -1125,10 +1125,10 @@ void NCursesUI::enable_mouse(bool enabled)
     fflush(stdout);
 }
 
-void NCursesUI::set_ui_options(const Options& options)
+void TerminalUI::set_ui_options(const Options& options)
 {
     {
-        auto it = options.find("ncurses_assistant"_sv);
+        auto it = options.find("terminal_assistant"_sv);
         if (it == options.end() or it->value == "clippy")
             m_assistant = assistant_clippy;
         else if (it->value == "cat")
@@ -1140,39 +1140,39 @@ void NCursesUI::set_ui_options(const Options& options)
     }
 
     {
-        auto it = options.find("ncurses_status_on_top"_sv);
+        auto it = options.find("terminal_status_on_top"_sv);
         m_status_on_top = it != options.end() and
             (it->value == "yes" or it->value == "true");
     }
 
     {
-        auto it = options.find("ncurses_set_title"_sv);
+        auto it = options.find("terminal_set_title"_sv);
         m_set_title = it == options.end() or
             (it->value == "yes" or it->value == "true");
     }
 
     {
-        auto it = options.find("ncurses_shift_function_key"_sv);
+        auto it = options.find("terminal_shift_function_key"_sv);
         m_shift_function_key = it != options.end() ?
             str_to_int_ifp(it->value).value_or(default_shift_function_key)
           : default_shift_function_key;
     }
 
     {
-        auto enable_mouse_it = options.find("ncurses_enable_mouse"_sv);
+        auto enable_mouse_it = options.find("terminal_enable_mouse"_sv);
         enable_mouse(enable_mouse_it == options.end() or
                      enable_mouse_it->value == "yes" or
                      enable_mouse_it->value == "true");
 
-        auto wheel_up_it = options.find("ncurses_wheel_up_button"_sv);
+        auto wheel_up_it = options.find("terminal_wheel_up_button"_sv);
         m_wheel_up_button = wheel_up_it != options.end() ?
             str_to_int_ifp(wheel_up_it->value).value_or(4) : 4;
 
-        auto wheel_down_it = options.find("ncurses_wheel_down_button"_sv);
+        auto wheel_down_it = options.find("terminal_wheel_down_button"_sv);
         m_wheel_down_button = wheel_down_it != options.end() ?
             str_to_int_ifp(wheel_down_it->value).value_or(5) : 5;
 
-        auto wheel_scroll_amount_it = options.find("ncurses_wheel_scroll_amount"_sv);
+        auto wheel_scroll_amount_it = options.find("terminal_wheel_scroll_amount"_sv);
         m_wheel_scroll_amount = wheel_scroll_amount_it != options.end() ?
             str_to_int_ifp(wheel_scroll_amount_it->value).value_or(3) : 3;
     }
