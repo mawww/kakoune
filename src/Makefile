@@ -44,10 +44,7 @@ sources := $(sort $(wildcard *.cc))
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
 deps := $(addprefix ., $(sources:.cc=$(suffix).d))
 
-PKG_CONFIG ?= $(shell command -v pkg-config 2>/dev/null)
-
 ifeq ($(static),yes)
-    PKG_CONFIG_FLAGS += --static
     LDFLAGS += -static -pthread
 endif
 
@@ -62,31 +59,21 @@ mandir := $(DESTDIR)$(PREFIX)/share/man/man1
 os := $(shell uname)
 
 ifeq ($(os),Darwin)
-    LIBS += -lncurses
-    NCURSES_CFLAGS += -I$(PREFIX)/opt/ncurses/include 
     CPPFLAGS += -I/opt/local/include
-    LDFLAGS += -L$(PREFIX)/opt/ncurses/lib -L/opt/local/lib
+    LDFLAGS += -L/opt/local/lib
 else ifeq ($(os),FreeBSD)
-    LIBS += -ltinfow -lncursesw
     CPPFLAGS += -I/usr/local/include
     LDFLAGS += -L/usr/local/lib
 else ifeq ($(os),Haiku)
-    LIBS += -lncursesw -lnetwork -lbe
+    LIBS += -lnetwork -lbe
 else ifeq ($(os),OpenBSD)
-    LIBS += -lncursesw
     CPPFLAGS += -D'KAK_BIN_PATH="$(bindir)/kak"' -I/usr/local/include
     LDFLAGS += -L/usr/local/lib
     mandir := $(DESTDIR)$(PREFIX)/man/man1
 else ifneq (,$(findstring CYGWIN,$(os)))
     CPPFLAGS += -D_XOPEN_SOURCE=700
-    LIBS += -lncursesw -ldbghelp
+    LIBS += -ldbghelp
 else
-    ifeq ($(PKG_CONFIG),)
-    	$(error "pkg-config not found in PATH")
-    endif
-
-    LIBS += $(shell $(PKG_CONFIG) $(PKG_CONFIG_FLAGS) --libs ncursesw)
-    NCURSES_CFLAGS += $(shell $(PKG_CONFIG) $(PKG_CONFIG_FLAGS) --cflags ncursesw)
     LDFLAGS += -rdynamic
 endif
 
@@ -111,8 +98,6 @@ kak$(suffix) : $(objects) .version.o
 
 .%$(suffix).o: %.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
-
-.ncurses_ui$(suffix).o: CPPFLAGS += $(NCURSES_CFLAGS)
 
 .version.o: .version.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
