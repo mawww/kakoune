@@ -802,13 +802,18 @@ void NCursesUI::draw_menu()
             const ColumnCount item_width = item.length();
             auto& face = i == m_menu.selected_item ? m_menu.fg : m_menu.bg;
             m_menu.draw(m_palette, item.atoms(), face);
-            m_menu.draw(m_palette, DisplayAtom(item_width > win_width - pos ? "…" : " "),
-                        m_menu.bg);
+            if (pos + item_width < win_width)
+                m_menu.draw(m_palette, DisplayAtom(" "), m_menu.bg);
+            else
+            {
+                m_menu.move_cursor({0, win_width+2});
+                m_menu.draw(m_palette, DisplayAtom("…"), m_menu.bg);
+            }
             pos += item_width + 1;
         }
 
-        auto end_str = String{' ', pos > win_width ? 0 : win_width - pos + 1} + (i == item_count ? " " : ">");
-        m_menu.draw(m_palette, DisplayAtom(end_str), m_menu.bg);
+        m_menu.move_cursor({0, win_width+3});
+        m_menu.draw(m_palette, DisplayAtom(i == item_count ? " " : ">"), m_menu.bg);
 
         m_dirty = true;
         return;
