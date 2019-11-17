@@ -543,6 +543,7 @@ pid_t fork_server_to_background()
     if (pid_t pid = fork())
         return pid;
 
+    setsid();
     if (fork()) // double fork to orphan the server
         exit(0);
 
