@@ -76,7 +76,7 @@ add-highlighter shared/haskell/code/ regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])[~<=>|:
 add-highlighter shared/haskell/code/ regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])(@|~|<-|->|=>|::|=|:|[|])(?![~<=>|:!?/.@$*&#%+\^\-\\]) 1:keyword
 # matches: forall [..variables..] .
 # not the variables
-add-highlighter shared/haskell/code/ regex \b(forall)\b[^.\n]*?(\.) 1:keyword 2:keyword
+add-highlighter shared/haskell/code/ regex \b(forall|∀)\b[^.\n]*?(\.) 1:keyword 2:keyword
 
 # matches 'x' '\\' '\'' '\n' '\0'
 # not incomplete literals: '\'
@@ -88,7 +88,11 @@ add-highlighter shared/haskell/code/ regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
 add-highlighter shared/haskell/code/ regex ^\h*(?:(?:where|let|default)\h+)?([_a-z]['\w]*)\s+::\s 1:meta
 
 # matches quasiquotes
-add-highlighter shared/haskell/quasiquote region \[\b[\w]['\w]*\| \|\] fill string
+add-highlighter shared/haskell/code/ regex \[\b[\w]['\w]*\|(.*)\|\] 1:string
+
+# matches deriving strategies
+add-highlighter shared/haskell/code/ regex \bderiving\s+\b(stock|newtype|anyclass|via)\b 1:keyword
+add-highlighter shared/haskell/code/ regex \bderiving\s+[^\s]+?\s+\b(via)\b 1:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
