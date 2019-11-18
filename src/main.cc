@@ -966,6 +966,7 @@ int main(int argc, char* argv[])
     set_signal_handler(SIGPIPE, [](int){});
     set_signal_handler(SIGINT, [](int){});
     set_signal_handler(SIGCHLD, [](int){});
+    set_signal_handler(SIGTTOU, SIG_IGN);
 
     const ParameterDesc param_desc{
         SwitchMap{ { "c", { true,  "connect to given session" } },
