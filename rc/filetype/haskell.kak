@@ -76,7 +76,7 @@ add-highlighter shared/haskell/code/ regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])[~<=>|:
 add-highlighter shared/haskell/code/ regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])(@|~|<-|->|=>|::|=|:|[|])(?![~<=>|:!?/.@$*&#%+\^\-\\]) 1:keyword
 # matches: forall [..variables..] .
 # not the variables
-add-highlighter shared/haskell/code/ regex \b(forall)\b[^.\n]*?(\.) 1:keyword 2:keyword
+add-highlighter shared/haskell/code/ regex \b(forall|∀)\b[^.\n]*?(\.) 1:keyword 2:keyword
 
 # matches 'x' '\\' '\'' '\n' '\0'
 # not incomplete literals: '\'
