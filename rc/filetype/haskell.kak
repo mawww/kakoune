@@ -88,7 +88,7 @@ add-highlighter shared/haskell/code/ regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
 add-highlighter shared/haskell/code/ regex ^\h*(?:(?:where|let|default)\h+)?([_a-z]['\w]*)\s+::\s 1:meta
 
 # matches quasiquotes
-add-highlighter shared/haskell/quasiquote region \[\b[\w]['\w]*\| \|\] fill string
+add-highlighter shared/haskell/code/ regex \[\b[\w]['\w]*\|(.*)\|\] 1:string
 
 # Commands
 # ‾‾‾‾‾‾‾‾
