@@ -94,6 +94,8 @@ void NCursesUI::Window::draw(Palette& palette, ConstArrayView<DisplayAtom> atoms
         #endif
     };
 
+    wbkgdset(win, COLOR_PAIR(palette.get_color_pair(default_face)));
+
     ColumnCount column = getcurx(win);
     for (const DisplayAtom& atom : atoms)
     {
@@ -113,10 +115,7 @@ void NCursesUI::Window::draw(Palette& palette, ConstArrayView<DisplayAtom> atoms
     }
 
     if (column < size.column)
-    {
-        wbkgdset(win, COLOR_PAIR(palette.get_color_pair(default_face)));
         wclrtoeol(win);
-    }
 }
 
 constexpr int NCursesUI::default_shift_function_key;
