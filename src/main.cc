@@ -283,6 +283,22 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return to_string(context.window().dimensions().line); }
     }, {
+        "window_left", false,
+        [](StringView name, const Context& context, Quoting quoting) -> String
+        { return to_string(context.window().position().column + 1); }
+    }, {
+        "window_top", false,
+        [](StringView name, const Context& context, Quoting quoting) -> String
+        { return to_string(context.window().position().line + 1); }
+    }, {
+        "window_right", false,
+        [](StringView name, const Context& context, Quoting quoting) -> String
+        { return to_string(context.window().position().column + context.window().dimensions().column); }
+    }, {
+        "window_bottom", false,
+        [](StringView name, const Context& context, Quoting quoting) -> String
+        { return to_string(context.window().position().line + context.window().dimensions().line); }
+    }, {
         "user_modes", false,
         [](StringView name, const Context& context, Quoting quoting) -> String
         { return join(context.keymaps().user_modes(), ' ', false); }
