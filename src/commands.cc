@@ -461,11 +461,14 @@ const CommandDesc force_edit_cmd = {
 };
 
 const ParameterDesc write_params{
-    { { "sync", { false, "force the synchronization of the file onto the filesystem" } } },
+    {
+        { "sync", { false, "force the synchronization of the file onto the filesystem" } },
+        { "atomic", { false, "force the writemethod to replace" } },
+    },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
 };
 
-void do_write_buffer(Context& context, Optional<String> filename, WriteFlags flags)
+void do_write_buffer(Context& context, Optional<String> filename, WriteFlags flags, bool atomic = false)
 {
     Buffer& buffer = context.buffer();
 
@@ -479,7 +482,7 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
         throw runtime_error("cannot overwrite the buffer when in readonly mode");
 
     auto effective_filename = not filename ? buffer.name() : parse_filename(*filename);
-    auto mode = context.options()["writemethod"].get<WriteMethod>();
+    auto mode = atomic ? WriteMethod::Replace : context.options()["writemethod"].get<WriteMethod>();
 
     context.hooks().run_hook(Hook::BufWritePre, effective_filename, context);
     write_buffer_to_file(buffer, effective_filename, mode, flags);
@@ -492,7 +495,8 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
     return do_write_buffer(context,
                            parser.positional_count() > 0 ? parser[0] : Optional<String>{},
                            (parser.get_switch("sync") ? WriteFlags::Sync : WriteFlags::None) |
-                           (force ? WriteFlags::Force : WriteFlags::None));
+                           (force ? WriteFlags::Force : WriteFlags::None),
+                           (bool)parser.get_switch("atomic"));
 }
 
 const CommandDesc write_cmd = {

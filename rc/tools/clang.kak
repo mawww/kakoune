@@ -10,7 +10,6 @@ declare-option -docstring "options to pass to the `clang` shell command" \
 declare-option -docstring "directory from which to invoke clang" \
     str clang_directory
 
-declare-option -hidden str clang_tmp_dir
 declare-option -hidden completions clang_completions
 declare-option -hidden line-specs clang_flags
 declare-option -hidden line-specs clang_errors
@@ -22,24 +21,22 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
     evaluate-commands %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
-        printf %s\\n "set-option buffer clang_tmp_dir ${dir}"
-        printf %s\\n "evaluate-commands -no-hooks write -sync ${dir}/buf"
-    }
-    # end the previous %sh{} so that its output gets interpreted by kakoune
-    # before launching the following as a background task.
-    evaluate-commands %sh{
-        dir=${kak_opt_clang_tmp_dir}
-        printf %s\\n "evaluate-commands -draft %{
-                  edit! -fifo ${dir}/fifo -debug *clang-output*
-                  set-option buffer filetype make
-                  set-option buffer make_current_error_line 0
-                  hook -once -always buffer BufCloseFifo .* %{ nop %sh{ rm -r ${dir} } }
-              }"
+        printf %s\\n "
+            evaluate-commands -no-hooks write -sync -atomic ${dir}/buf
+            evaluate-commands -draft %{
+                edit! -fifo ${dir}/fifo -debug *clang-output*
+                set-option buffer filetype make
+                set-option buffer make_current_error_line 0
+                hook -once -always buffer BufCloseFifo .* %{ nop %sh{ rm -r ${dir} } }
+            }"
+
         # this runs in a detached shell, asynchronously, so that kakoune does
         # not hang while clang is running. As completions references a cursor
         # position and a buffer timestamp, only valid completions should be
         # displayed.
         ((
+            until [ -f ${dir}/buf ]; do :; done # wait for the buffer to be written
+
             if [ -n "$kak_opt_clang_directory" ]; then
                 cd "$kak_opt_clang_directory"
             fi

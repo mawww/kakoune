@@ -52,12 +52,19 @@ of the file onto the filesystem
         Otherwise, does nothing.
 
 
-*write[!]* [-sync] [<filename>]::
+*write[!]* [-sync] [-atomic] [<filename>]::
     *alias* w +
     write buffer to <filename> or use its name if filename is not
     given. If the file is write-protected, its permissions are temporarily
     changed to allow saving the buffer and restored afterwards when
     the write! command is used.
+
+    *-sync*:::
+        Synchronise the filesystem after the write
+
+    *-stomic*:::
+        Force writing to a temoprary file then renaming to the target file
+        so that the modification appears automatically.
 
 *write-all* [-sync]::
     *alias* wa +
