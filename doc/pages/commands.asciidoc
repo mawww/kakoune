@@ -62,8 +62,8 @@ of the file onto the filesystem
     *-sync*:::
         Synchronise the filesystem after the write
 
-    *-stomic*:::
-        Force writing to a temoprary file then renaming to the target file
+    *-atomic*:::
+        Force writing to a temporary file then renaming to the target file
         so that the modification appears automatically.
 
 *write-all* [-sync]::
