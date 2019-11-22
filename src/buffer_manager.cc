@@ -48,15 +48,16 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
 void BufferManager::delete_buffer(Buffer& buffer)
 {
     auto it = find_if(m_buffers, [&](auto& p) { return p.get() == &buffer; });
-    kak_assert(it != m_buffers.end());
-
-    buffer.on_unregistered();
+    if (it == m_buffers.end()) // we might be trying to recursively delete this buffer
+        return;
 
     m_buffer_trash.emplace_back(std::move(*it));
     m_buffers.erase(it);
 
     if (ClientManager::has_instance())
         ClientManager::instance().ensure_no_client_uses_buffer(buffer);
+
+    buffer.on_unregistered();
 }
 
 Buffer* BufferManager::get_buffer_ifp(StringView name)

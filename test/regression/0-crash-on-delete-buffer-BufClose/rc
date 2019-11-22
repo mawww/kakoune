@@ -1,0 +1,7 @@
+edit -scratch buf1
+edit -scratch buf2
+hook buffer BufClose buf2 %{
+    delete-buffer
+    delete-buffer buf1
+}
+delete-buffer
