@@ -411,7 +411,7 @@ void Client::menu_hide()
     m_ui_pending &= ~(MenuShow | MenuSelect);
 }
 
-void Client::info_show(String title, String content, BufferCoord anchor, InfoStyle style)
+void Client::info_show(DisplayLine title, DisplayLineList content, BufferCoord anchor, InfoStyle style)
 {
     if (m_info.style == InfoStyle::Modal) // We already have a modal info opened, do not touch it.
         return;
@@ -419,6 +419,15 @@ void Client::info_show(String title, String content, BufferCoord anchor, InfoSty
     m_info = Info{ std::move(title), std::move(content), anchor, {}, style };
     m_ui_pending |= InfoShow;
     m_ui_pending &= ~InfoHide;
+}
+
+void Client::info_show(StringView title, StringView content, BufferCoord anchor, InfoStyle style)
+{
+    info_show({title.str(), Face{}},
+              content | split<StringView>('\n')
+                      | transform([](StringView s) { return DisplayLine{s.str(), Face{}}; })
+                      | gather<DisplayLineList>(),
+              anchor, style);
 }
 
 void Client::info_hide(bool even_modal)

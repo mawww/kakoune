@@ -17,6 +17,8 @@ released versions.
 
 * `WrapMarker` face used by `wrap -marker` highlighter
 
+* `info` supports markup with the `-markup` switch
+
 == Kakoune 2019.07.01
 
 * Re-organized bundled script files directory hierarchy.

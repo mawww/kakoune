@@ -356,7 +356,7 @@ public:
     void menu_select(int selected) override;
     void menu_hide() override;
 
-    void info_show(StringView title, StringView content,
+    void info_show(const DisplayLine& title, const DisplayLineList& content,
                    DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
@@ -483,7 +483,7 @@ void RemoteUI::menu_hide()
     send_message(MessageType::MenuHide);
 }
 
-void RemoteUI::info_show(StringView title, StringView content,
+void RemoteUI::info_show(const DisplayLine& title, const DisplayLineList& content,
                          DisplayCoord anchor, Face face,
                          InfoStyle style)
 {
@@ -643,8 +643,8 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
                 break;
             case MessageType::InfoShow:
             {
-                auto title = reader.read<String>();
-                auto content = reader.read<String>();
+                auto title = reader.read<DisplayLine>();
+                auto content = reader.read<DisplayLineList>();
                 auto anchor = reader.read<DisplayCoord>();
                 auto face = reader.read<Face>();
                 auto style = reader.read<InfoStyle>();

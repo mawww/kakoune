@@ -135,7 +135,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
         }
     }
 
-    DisplayBuffer::LineList& lines = m_display_buffer.lines();
+    DisplayLineList& lines = m_display_buffer.lines();
     m_display_buffer.set_timestamp(buffer().timestamp());
     lines.clear();
 

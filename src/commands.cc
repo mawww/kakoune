@@ -2144,6 +2144,7 @@ const CommandDesc info_cmd = {
     ParameterDesc{
         { { "anchor", { true, "set info anchoring <line>.<column>" } },
           { "style", { true, "set info style (above, below, menu, modal)" } },
+          { "markup", { false, "parse markup" } },
           { "title", { true, "set info title" } } },
         ParameterDesc::Flags::None, 0, 1
     },
@@ -2179,7 +2180,16 @@ const CommandDesc info_cmd = {
             }).value_or(BufferCoord{});
 
         auto title = parser.get_switch("title").value_or(StringView{});
-        context.client().info_show(title.str(), parser[0], pos, style);
+        if (parser.get_switch("markup"))
+            context.client().info_show(parse_display_line(title, context.faces()),
+                                       parser[0] | split<StringView>('\n')
+                                                 | transform([&](StringView s) {
+                                                       return parse_display_line(s, context.faces());
+                                                   })
+                                                 | gather<DisplayLineList>(),
+                                       pos, style);
+        else
+            context.client().info_show(title.str(), parser[0], pos, style);
     }
 };
 

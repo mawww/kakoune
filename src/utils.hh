@@ -186,6 +186,18 @@ private:
     Invoker* m_invoker;
 };
 
+template<typename... Funcs>
+struct Overload : Funcs...
+{
+    using Funcs::operator()...;
+};
+
+template<typename... Funcs>
+auto overload(Funcs&&... funcs)
+{
+    return Overload<std::decay_t<Funcs>...>{std::forward<Funcs>(funcs)...};
+}
+
 }
 
 #endif // utils_hh_INCLUDED

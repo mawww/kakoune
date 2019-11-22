@@ -133,7 +133,7 @@ void apply_highlighter(HighlightContext context,
     if (begin == end)
         return;
 
-    using LineIterator = DisplayBuffer::LineList::iterator;
+    using LineIterator = DisplayLineList::iterator;
     LineIterator first_line;
     Vector<size_t> insert_idx;
     auto line_end = display_buffer.lines().end();

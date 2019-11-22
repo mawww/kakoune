@@ -517,7 +517,7 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
         void menu_select(int) override {}
         void menu_hide() override {}
 
-        void info_show(StringView, StringView, DisplayCoord, Face, InfoStyle) override {}
+        void info_show(const DisplayLine&, const DisplayLineList&, DisplayCoord, Face, InfoStyle) override {}
         void info_hide() override {}
 
         void draw(const DisplayBuffer&, const Face&, const Face&) override {}

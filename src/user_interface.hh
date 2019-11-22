@@ -12,6 +12,7 @@ namespace Kakoune
 class String;
 class DisplayBuffer;
 class DisplayLine;
+using DisplayLineList = Vector<DisplayLine, MemoryDomain::Display>;
 struct DisplayCoord;
 struct Face;
 struct Key;
@@ -56,7 +57,8 @@ public:
     virtual void menu_select(int selected) = 0;
     virtual void menu_hide() = 0;
 
-    virtual void info_show(StringView title, StringView content,
+    virtual void info_show(const DisplayLine& title,
+                           const DisplayLineList& content,
                            DisplayCoord anchor, Face face,
                            InfoStyle style) = 0;
     virtual void info_hide() = 0;

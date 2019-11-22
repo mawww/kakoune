@@ -35,7 +35,7 @@ public:
     void menu_select(int selected) override;
     void menu_hide() override;
 
-    void info_show(StringView title, StringView content,
+    void info_show(const DisplayLine& title, const DisplayLineList& content,
                    DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;

@@ -1032,11 +1032,26 @@ static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
 struct InfoBox
 {
     DisplayCoord size;
-    Vector<String> contents;
+    DisplayLineList contents;
 };
 
-InfoBox make_info_box(StringView title, StringView message, ColumnCount max_width,
-                      ConstArrayView<StringView> assistant)
+template<typename... Args>
+void append_atoms(DisplayLine& line, Args&&... args)
+{
+    auto append = overload(
+        [](DisplayLine& line, String str) {
+            line.push_back(DisplayAtom{std::move(str)});
+        },
+        [](DisplayLine& line, const DisplayLine& atoms) {
+            for (auto& atom : atoms)
+                line.push_back(atom);
+        });
+
+    (append(line, args), ...);
+}
+
+InfoBox make_info_box(const DisplayLine& title, const DisplayLineList& content,
+                      ColumnCount max_width, ConstArrayView<StringView> assistant)
 {
     DisplayCoord assistant_size;
     if (not assistant.empty())
@@ -1048,71 +1063,70 @@ InfoBox make_info_box(StringView title, StringView message, ColumnCount max_widt
     if (max_bubble_width < 4)
         return result;
 
-    Vector<StringView> lines = wrap_lines(message, max_bubble_width);
+    ColumnCount bubble_width = title.length() + 2;
+    for (auto& line : content)
+        bubble_width = max(bubble_width, line.length());
 
-    ColumnCount bubble_width = title.column_length() + 2;
-    for (auto& line : lines)
-        bubble_width = max(bubble_width, line.column_length());
-
-    auto line_count = max(assistant_size.line-1, LineCount{(int)lines.size()} + 2);
+    auto line_count = max(assistant_size.line-1, LineCount{(int)content.size()} + 2);
     result.size = DisplayCoord{line_count, bubble_width + assistant_size.column + 4};
     const auto assistant_top_margin = (line_count - assistant_size.line+1) / 2;
     for (LineCount i = 0; i < line_count; ++i)
     {
-        String line;
         constexpr Codepoint dash{L'─'};
+        DisplayLine line;
         if (not assistant.empty())
         {
-            if (i >= assistant_top_margin)
-                line += assistant[(int)min(i - assistant_top_margin, assistant_size.line-1)];
-            else
-                line += assistant[(int)assistant_size.line-1];
+            StringView assistant_line = (i >= assistant_top_margin) ?
+                assistant[(int)min(i - assistant_top_margin, assistant_size.line-1)]
+              : assistant[(int)assistant_size.line-1];
+
+            append_atoms(line, assistant_line.str());
         }
         if (i == 0)
         {
-            if (title.empty())
-                line += "╭─" + String{dash, bubble_width} + "─╮";
+            if (title.atoms().empty())
+                append_atoms(line, "╭─" + String{dash, bubble_width} + "─╮");
             else
             {
-                auto dash_count = bubble_width - title.column_length() - 2;
+                auto dash_count = bubble_width - title.length() - 2;
                 String left{dash, dash_count / 2};
                 String right{dash, dash_count - dash_count / 2};
-                line += "╭─" + left + "┤" + title +"├" + right +"─╮";
+                append_atoms(line, "╭─" + left + "┤", title, "├" + right +"─╮");
             }
         }
-        else if (i < lines.size() + 1)
+        else if (i < content.size() + 1)
         {
-            auto& info_line = lines[(int)i - 1];
-            const ColumnCount padding = bubble_width - info_line.column_length();
-            line += "│ " + info_line + String{' ', padding} + " │";
+            auto& info_line = content[(int)i - 1];
+            const ColumnCount padding = bubble_width - info_line.length();
+            append_atoms(line, "│ ", info_line, String{' ', padding} + " │");
         }
-        else if (i == lines.size() + 1)
-            line += "╰─" + String(dash, bubble_width) + "─╯";
+        else if (i == content.size() + 1)
+            append_atoms(line, "╰─" + String(dash, bubble_width) + "─╯");
 
         result.contents.push_back(std::move(line));
     }
     return result;
 }
 
-InfoBox make_simple_info_box(StringView contents, ColumnCount max_width)
+InfoBox make_simple_info_box(const DisplayLineList& content, ColumnCount max_width)
 {
     InfoBox info_box{};
-    for (auto& line : wrap_lines(contents, max_width))
+    for (auto& line : content)
     {
         ++info_box.size.line;
-        info_box.size.column = std::max(line.column_length(), info_box.size.column);
-        info_box.contents.push_back(line.str());
+        info_box.size.column = std::max(line.length(), info_box.size.column);
+        info_box.contents.push_back(line);
     }
     return info_box;
 }
 
-void NCursesUI::info_show(StringView title, StringView content,
+void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& content,
                           DisplayCoord anchor, Face face, InfoStyle style)
 {
     info_hide();
 
-    m_info.title = title.str();
-    m_info.content = content.str();
+    m_info.title = title;
+    m_info.content = content;
     m_info.anchor = anchor;
     m_info.face = face;
     m_info.style = style;
@@ -1170,7 +1184,7 @@ void NCursesUI::info_show(StringView title, StringView content,
     for (auto line = 0_line; line < info_box.size.line; ++line)
     {
         m_info.move_cursor(line);
-        m_info.draw(m_palette, DisplayAtom(info_box.contents[(int)line]), face);
+        m_info.draw(m_palette, info_box.contents[(int)line].atoms(), face);
     }
     m_dirty = true;
 }

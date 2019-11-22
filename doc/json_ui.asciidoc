@@ -35,7 +35,7 @@ Here are the requests that can be written by the json ui on stdout:
   - inline: display the menu next to (above or below) the anchor coordinate
 * menu_select(int selected)
 * menu_hide()
-* info_show(String title, String content, Coord anchor, Face face, String style)
+* info_show(Line title, Array<Line> content, Coord anchor, Face face, String style)
   style can be:
   - prompt: display the info as a prompt info (anchor is ignored)
   - inline: display the info next to (above or below) the anchor coordinate

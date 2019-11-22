@@ -3,6 +3,7 @@
 
 #include "array_view.hh"
 #include "coord.hh"
+#include "display_buffer.hh"
 #include "event_manager.hh"
 #include "face.hh"
 #include "hash_map.hh"
@@ -44,7 +45,7 @@ public:
     void menu_select(int selected) override;
     void menu_hide() override;
 
-    void info_show(StringView title, StringView content,
+    void info_show(const DisplayLine& title, const DisplayLineList& content,
                    DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
@@ -135,8 +136,8 @@ private:
 
     struct Info : Window
     {
-        String title;
-        String content;
+        DisplayLine title;
+        DisplayLineList content;
         Face face;
         DisplayCoord anchor;
         InfoStyle style;

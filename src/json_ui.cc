@@ -217,7 +217,7 @@ void JsonUI::menu_hide()
     rpc_call("menu_hide");
 }
 
-void JsonUI::info_show(StringView title, StringView content,
+void JsonUI::info_show(const DisplayLine& title, const DisplayLineList& content,
                        DisplayCoord anchor, Face face,
                        InfoStyle style)
 {

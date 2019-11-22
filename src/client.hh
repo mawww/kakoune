@@ -45,7 +45,8 @@ public:
     void menu_select(int selected);
     void menu_hide();
 
-    void info_show(String title, String content, BufferCoord anchor, InfoStyle style);
+    void info_show(DisplayLine title, DisplayLineList content, BufferCoord anchor, InfoStyle style);
+    void info_show(StringView title, StringView content, BufferCoord anchor, InfoStyle style);
     void info_hide(bool even_modal = false);
 
     void print_status(DisplayLine status_line);
@@ -119,8 +120,8 @@ private:
 
     struct Info
     {
-        String title;
-        String content;
+        DisplayLine title;
+        DisplayLineList content;
         BufferCoord anchor;
         Optional<DisplayCoord> ui_anchor;
         InfoStyle style;
