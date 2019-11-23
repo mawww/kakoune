@@ -3,6 +3,8 @@
 ##
 
 evaluate-commands %sh{
+    scope="${1:-global}"
+
     black="rgb:000000"
     blue="rgb:81a2be"
 
@@ -33,57 +35,57 @@ evaluate-commands %sh{
 
     ## code
     echo "
-        face global value ${orange2}
-        face global type ${gray2}
-        face global variable ${orange1}
-        face global module ${gray2}
-        face global function ${yellow1}
-        face global string ${tan2}
-        face global keyword ${light_orange1}
-        face global operator ${yellow1}
-        face global attribute ${tan1}
-        face global comment ${gray1}
-        face global meta ${gray2}
-        face global builtin ${tan1}
+        face ${scope} value ${orange2}
+        face ${scope} type ${gray2}
+        face ${scope} variable ${orange1}
+        face ${scope} module ${gray2}
+        face ${scope} function ${yellow1}
+        face ${scope} string ${tan2}
+        face ${scope} keyword ${light_orange1}
+        face ${scope} operator ${yellow1}
+        face ${scope} attribute ${tan1}
+        face ${scope} comment ${gray1}
+        face ${scope} meta ${gray2}
+        face ${scope} builtin ${tan1}
     "
 
     ## markup
     echo "
-        face global title blue
-        face global header ${orange1}
-        face global bold ${orange2}
-        face global italic ${orange3}
-        face global mono ${yellow1}
-        face global block ${tan1}
-        face global link blue
-        face global bullet ${gray1}
-        face global list ${gray1}
+        face ${scope} title blue
+        face ${scope} header ${orange1}
+        face ${scope} bold ${orange2}
+        face ${scope} italic ${orange3}
+        face ${scope} mono ${yellow1}
+        face ${scope} block ${tan1}
+        face ${scope} link blue
+        face ${scope} bullet ${gray1}
+        face ${scope} list ${gray1}
     "
 
     ## builtin
     echo "
-        face global Default ${text},${background}
-        face global PrimarySelection default,${selection}+fg
-        face global SecondarySelection default,${selection}+fg
-        face global PrimaryCursor black,${tan1}+fg
-        face global SecondaryCursor black,${tan2}+fg
-        face global PrimaryCursorEol black,${orange1}+fg
-        face global SecondaryCursorEol black,${orange2}+fg
-        face global LineNumbers ${text_light},${background}
-        face global LineNumberCursor ${text},${gray1}+b
-        face global MenuForeground ${text_light},blue
-        face global MenuBackground ${orange1},${window}
-        face global MenuInfo ${gray1}
-        face global Information white,${window}
-        face global Error white,${gray1}
-        face global StatusLine ${text},${window}
-        face global StatusLineMode ${yellow1}+b
-        face global StatusLineInfo ${orange2}
-        face global StatusLineValue ${orange2}
-        face global StatusCursor ${window},${orange2}
-        face global Prompt ${background},${orange2}
-        face global MatchingChar ${orange3},${background}+b
-        face global BufferPadding ${orange2},${background}
-        face global Whitespace default+f
+        face ${scope} Default ${text},${background}
+        face ${scope} PrimarySelection default,${selection}+fg
+        face ${scope} SecondarySelection default,${selection}+fg
+        face ${scope} PrimaryCursor black,${tan1}+fg
+        face ${scope} SecondaryCursor black,${tan2}+fg
+        face ${scope} PrimaryCursorEol black,${orange1}+fg
+        face ${scope} SecondaryCursorEol black,${orange2}+fg
+        face ${scope} LineNumbers ${text_light},${background}
+        face ${scope} LineNumberCursor ${text},${gray1}+b
+        face ${scope} MenuForeground ${text_light},blue
+        face ${scope} MenuBackground ${orange1},${window}
+        face ${scope} MenuInfo ${gray1}
+        face ${scope} Information white,${window}
+        face ${scope} Error white,${gray1}
+        face ${scope} StatusLine ${text},${window}
+        face ${scope} StatusLineMode ${yellow1}+b
+        face ${scope} StatusLineInfo ${orange2}
+        face ${scope} StatusLineValue ${orange2}
+        face ${scope} StatusCursor ${window},${orange2}
+        face ${scope} Prompt ${background},${orange2}
+        face ${scope} MatchingChar ${orange3},${background}+b
+        face ${scope} BufferPadding ${orange2},${background}
+        face ${scope} Whitespace default+f
     "
 }

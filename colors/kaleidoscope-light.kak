@@ -2,6 +2,8 @@
 # https://personal.sron.nl/~pault/
 
 evaluate-commands %sh{
+    scope="${1:-global}"
+
     # NOTE: tone down black and white for aesthetics,
     # ideally those should be pure #000 and #FFF
     black="rgb:1C1C1C"
@@ -73,59 +75,59 @@ evaluate-commands %sh{
     cat <<- EOF
 
     # For Code
-    set-face global keyword ${muted_indigo}
-    set-face global attribute ${muted_purple}
-    set-face global type ${vibrant_blue}
-    set-face global string ${muted_wine}
-    set-face global value ${muted_rose}
-    set-face global meta ${muted_olive}
-    set-face global builtin ${muted_indigo}+b
-    set-face global module ${vibrant_orange}
-    set-face global comment ${muted_green}+i
-    set-face global function Default
-    set-face global operator Default
-    set-face global variable Default
+    set-face "${scope}" keyword ${muted_indigo}
+    set-face "${scope}" attribute ${muted_purple}
+    set-face "${scope}" type ${vibrant_blue}
+    set-face "${scope}" string ${muted_wine}
+    set-face "${scope}" value ${muted_rose}
+    set-face "${scope}" meta ${muted_olive}
+    set-face "${scope}" builtin ${muted_indigo}+b
+    set-face "${scope}" module ${vibrant_orange}
+    set-face "${scope}" comment ${muted_green}+i
+    set-face "${scope}" function Default
+    set-face "${scope}" operator Default
+    set-face "${scope}" variable Default
 
     # For markup
-    set-face global title ${muted_indigo}+b
-    set-face global header ${high_contrast_blue}
-    set-face global block ${vibrant_magenta}
-    set-face global mono ${vibrant_red}
-    set-face global link ${vibrant_blue}+u
-    set-face global list Default
-    set-face global bullet +b
-    set-face global bold +b
-    set-face global italic +i
+    set-face "${scope}" title ${muted_indigo}+b
+    set-face "${scope}" header ${high_contrast_blue}
+    set-face "${scope}" block ${vibrant_magenta}
+    set-face "${scope}" mono ${vibrant_red}
+    set-face "${scope}" link ${vibrant_blue}+u
+    set-face "${scope}" list Default
+    set-face "${scope}" bullet +b
+    set-face "${scope}" bold +b
+    set-face "${scope}" italic +i
 
     # Built-in faces
-    set-face global Default ${black},${white}
-    set-face global PrimarySelection ${black},${pale_blue}+fg
-    set-face global SecondarySelection ${black},${pale_cyan}+fg
-    set-face global PrimaryCursor ${white},${dark_blue}+fg
-    set-face global SecondaryCursor ${white},${dark_cyan}+fg
-    set-face global PrimaryCursorEol ${white},${dark_grey}+fg
-    set-face global SecondaryCursorEol ${white},${vibrant_grey}+fg
+    set-face "${scope}" Default ${black},${white}
+    set-face "${scope}" PrimarySelection ${black},${pale_blue}+fg
+    set-face "${scope}" SecondarySelection ${black},${pale_cyan}+fg
+    set-face "${scope}" PrimaryCursor ${white},${dark_blue}+fg
+    set-face "${scope}" SecondaryCursor ${white},${dark_cyan}+fg
+    set-face "${scope}" PrimaryCursorEol ${white},${dark_grey}+fg
+    set-face "${scope}" SecondaryCursorEol ${white},${vibrant_grey}+fg
 
-    set-face global StatusLine ${white},${dark_grey}
-    set-face global StatusLineMode ${black},${pale_blue}
-    set-face global StatusLineInfo ${black},${muted_sand}
-    set-face global StatusLineValue ${vibrant_orange},${muted_sand}+b
-    set-face global StatusCursor ${black},${high_contrast_yellow}
-    set-face global Prompt ${black},${muted_sand}
-    set-face global MenuForeground ${black},${muted_sand}
-    set-face global MenuBackground ${black},${pale_grey}
-    set-face global MenuInfo ${high_contrast_blue}+i
+    set-face "${scope}" StatusLine ${white},${dark_grey}
+    set-face "${scope}" StatusLineMode ${black},${pale_blue}
+    set-face "${scope}" StatusLineInfo ${black},${muted_sand}
+    set-face "${scope}" StatusLineValue ${vibrant_orange},${muted_sand}+b
+    set-face "${scope}" StatusCursor ${black},${high_contrast_yellow}
+    set-face "${scope}" Prompt ${black},${muted_sand}
+    set-face "${scope}" MenuForeground ${black},${muted_sand}
+    set-face "${scope}" MenuBackground ${black},${pale_grey}
+    set-face "${scope}" MenuInfo ${high_contrast_blue}+i
 
-    set-face global LineNumbers ${black},${pale_grey}
-    set-face global LineNumbersWrapped ${black},${vibrant_grey}+i
-    set-face global LineNumberCursor ${white},${dark_grey}+b
-    set-face global MatchingChar ${white},${dark_grey}
-    set-face global Whitespace ${vibrant_grey}+f
-    set-face global WrapMarker ${vibrant_grey}+f
+    set-face "${scope}" LineNumbers ${black},${pale_grey}
+    set-face "${scope}" LineNumbersWrapped ${black},${vibrant_grey}+i
+    set-face "${scope}" LineNumberCursor ${white},${dark_grey}+b
+    set-face "${scope}" MatchingChar ${white},${dark_grey}
+    set-face "${scope}" Whitespace ${vibrant_grey}+f
+    set-face "${scope}" WrapMarker ${vibrant_grey}+f
 
-    set-face global Information ${black},${muted_sand}
-    set-face global Error ${white},${vibrant_red}
-    set-face global BufferPadding ${vibrant_grey}
+    set-face "${scope}" Information ${black},${muted_sand}
+    set-face "${scope}" Error ${white},${vibrant_red}
+    set-face "${scope}" BufferPadding ${vibrant_grey}
 
 EOF
 }

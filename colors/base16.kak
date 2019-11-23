@@ -3,6 +3,8 @@
 ##
 
 evaluate-commands %sh{
+    scope="${1:-global}"
+
     black_lighterer='rgb:383838'
     black_lighter='rgb:2D2D2D'
     black_light='rgb:1C1C1C'
@@ -18,57 +20,57 @@ evaluate-commands %sh{
 
     ## code
     echo "
-        face global value ${orange_dark}+b
-        face global type ${orange_light}
-        face global variable ${magenta_dark}
-        face global module ${green_dark}
-        face global function ${cyan_light}
-        face global string ${green_dark}
-        face global keyword ${purple_dark}+b
-        face global operator ${cyan_light}
-        face global attribute ${orange_dark}
-        face global comment ${grey_dark}
-        face global meta ${orange_light}
-        face global builtin default+b
+        face ${scope} value ${orange_dark}+b
+        face ${scope} type ${orange_light}
+        face ${scope} variable ${magenta_dark}
+        face ${scope} module ${green_dark}
+        face ${scope} function ${cyan_light}
+        face ${scope} string ${green_dark}
+        face ${scope} keyword ${purple_dark}+b
+        face ${scope} operator ${cyan_light}
+        face ${scope} attribute ${orange_dark}
+        face ${scope} comment ${grey_dark}
+        face ${scope} meta ${orange_light}
+        face ${scope} builtin default+b
     "
 
     ## markup
     echo "
-        face global title blue
-        face global header ${cyan_light}
-        face global bold ${orange_light}
-        face global italic ${orange_dark}
-        face global mono ${green_dark}
-        face global block ${orange_dark}
-        face global link blue
-        face global bullet ${magenta_light}
-        face global list ${magenta_dark}
+        face ${scope} title blue
+        face ${scope} header ${cyan_light}
+        face ${scope} bold ${orange_light}
+        face ${scope} italic ${orange_dark}
+        face ${scope} mono ${green_dark}
+        face ${scope} block ${orange_dark}
+        face ${scope} link blue
+        face ${scope} bullet ${magenta_light}
+        face ${scope} list ${magenta_dark}
     "
 
     ## builtin
     echo "
-        face global Default ${grey_light},${black_lighter}
-        face global PrimarySelection white,blue+fg
-        face global SecondarySelection black,blue+fg
-        face global PrimaryCursor black,white+fg
-        face global SecondaryCursor black,white+fg
-        face global PrimaryCursorEol black,${cyan_light}+fg
-        face global SecondaryCursorEol black,${cyan_light}+fg
-        face global LineNumbers ${grey_light},${black_lighter}
-        face global LineNumberCursor ${grey_light},rgb:282828+b
-        face global MenuForeground ${grey_light},blue
-        face global MenuBackground blue,${grey_light}
-        face global MenuInfo ${cyan_light}
-        face global Information ${black_light},${cyan_light}
-        face global Error ${grey_light},${magenta_light}
-        face global StatusLine ${grey_light},${black_lighterer}
-        face global StatusLineMode ${orange_dark}
-        face global StatusLineInfo ${cyan_light}
-        face global StatusLineValue ${green_dark}
-        face global StatusCursor ${black_lighterer},${cyan_light}
-        face global Prompt ${black_light},${cyan_light}
-        face global MatchingChar ${cyan_light},${black_light}+b
-        face global BufferPadding ${cyan_light},${black_lighter}
-        face global Whitespace ${grey_dark}+f
+        face ${scope} Default ${grey_light},${black_lighter}
+        face ${scope} PrimarySelection white,blue+fg
+        face ${scope} SecondarySelection black,blue+fg
+        face ${scope} PrimaryCursor black,white+fg
+        face ${scope} SecondaryCursor black,white+fg
+        face ${scope} PrimaryCursorEol black,${cyan_light}+fg
+        face ${scope} SecondaryCursorEol black,${cyan_light}+fg
+        face ${scope} LineNumbers ${grey_light},${black_lighter}
+        face ${scope} LineNumberCursor ${grey_light},rgb:282828+b
+        face ${scope} MenuForeground ${grey_light},blue
+        face ${scope} MenuBackground blue,${grey_light}
+        face ${scope} MenuInfo ${cyan_light}
+        face ${scope} Information ${black_light},${cyan_light}
+        face ${scope} Error ${grey_light},${magenta_light}
+        face ${scope} StatusLine ${grey_light},${black_lighterer}
+        face ${scope} StatusLineMode ${orange_dark}
+        face ${scope} StatusLineInfo ${cyan_light}
+        face ${scope} StatusLineValue ${green_dark}
+        face ${scope} StatusCursor ${black_lighterer},${cyan_light}
+        face ${scope} Prompt ${black_light},${cyan_light}
+        face ${scope} MatchingChar ${cyan_light},${black_light}+b
+        face ${scope} BufferPadding ${cyan_light},${black_lighter}
+        face ${scope} Whitespace ${grey_dark}+f
     "
 }

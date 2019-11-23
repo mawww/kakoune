@@ -1,6 +1,8 @@
 # zenburn theme
 
 evaluate-commands %sh{
+    scope="${1:-global}"
+
     # define some named colors
     zentext="rgb:cfcfcf"
     zenselectionbg="rgb:3f7fcc"
@@ -31,53 +33,53 @@ evaluate-commands %sh{
 
     echo "
         # then we map them to code
-        face global value ${zenconstant}
-        face global type ${zentype}
-        face global variable ${zenvariable}
-        face global module ${zenstring}
-        face global function ${zenfunction}
-        face global string ${zenstring}
-        face global keyword ${zenkeyword}
-        face global operator ${zenfunction}
-        face global attribute ${zenstatement}
-        face global comment ${zencomment}
-        face global meta ${zenspecial}
-        face global builtin default+b
+        face ${scope} value ${zenconstant}
+        face ${scope} type ${zentype}
+        face ${scope} variable ${zenvariable}
+        face ${scope} module ${zenstring}
+        face ${scope} function ${zenfunction}
+        face ${scope} string ${zenstring}
+        face ${scope} keyword ${zenkeyword}
+        face ${scope} operator ${zenfunction}
+        face ${scope} attribute ${zenstatement}
+        face ${scope} comment ${zencomment}
+        face ${scope} meta ${zenspecial}
+        face ${scope} builtin default+b
 
         # and markup
-        face global title ${zenkeyword}
-        face global header ${zenconstant}
-        face global bold ${zenstorageClass}
-        face global italic ${zenfunction}
-        face global mono ${zennumber}
-        face global block ${zenstatement}
-        face global link ${zenstring}
-        face global bullet ${zenvariable}
-        face global list ${zentype}
+        face ${scope} title ${zenkeyword}
+        face ${scope} header ${zenconstant}
+        face ${scope} bold ${zenstorageClass}
+        face ${scope} italic ${zenfunction}
+        face ${scope} mono ${zennumber}
+        face ${scope} block ${zenstatement}
+        face ${scope} link ${zenstring}
+        face ${scope} bullet ${zenvariable}
+        face ${scope} list ${zentype}
 
         # and built in faces
-        face global Default ${zendefault}
-        face global PrimarySelection ${zentext},${zenselectionbg}+fg
-        face global SecondarySelection ${zensecondaryfg},${zenselectionbg}+fg
-        face global PrimaryCursor ${zencursor}+fg
-        face global SecondaryCursor ${zencursor}+fg
-        face global PrimaryCursorEol ${zencursoreol}+fg
-        face global SecondaryCursorEol ${zencursoreol}+fg
-        face global LineNumbers ${zendefault}
-        face global LineNumberCursor ${zenstatus}
-        face global MenuForeground ${zenmenufg}
-        face global MenuBackground ${zenmenubg}
-        face global MenuInfo rgb:cc9393
-        face global Information ${zeninfo}
-        face global Error default,red
-        face global StatusLine ${zenstatus}
-        face global StatusLineMode ${zencomment}
-        face global StatusLineInfo ${zenspecial}
-        face global StatusLineValue ${zennumber}
-        face global StatusCursor ${zenstatuscursor}
-        face global Prompt ${zenconstant}
-        face global MatchingChar default+b
-        face global BufferPadding ${zenpadding}
-        face global Whitespace ${zensecondaryfg}+f
+        face ${scope} Default ${zendefault}
+        face ${scope} PrimarySelection ${zentext},${zenselectionbg}+fg
+        face ${scope} SecondarySelection ${zensecondaryfg},${zenselectionbg}+fg
+        face ${scope} PrimaryCursor ${zencursor}+fg
+        face ${scope} SecondaryCursor ${zencursor}+fg
+        face ${scope} PrimaryCursorEol ${zencursoreol}+fg
+        face ${scope} SecondaryCursorEol ${zencursoreol}+fg
+        face ${scope} LineNumbers ${zendefault}
+        face ${scope} LineNumberCursor ${zenstatus}
+        face ${scope} MenuForeground ${zenmenufg}
+        face ${scope} MenuBackground ${zenmenubg}
+        face ${scope} MenuInfo rgb:cc9393
+        face ${scope} Information ${zeninfo}
+        face ${scope} Error default,red
+        face ${scope} StatusLine ${zenstatus}
+        face ${scope} StatusLineMode ${zencomment}
+        face ${scope} StatusLineInfo ${zenspecial}
+        face ${scope} StatusLineValue ${zennumber}
+        face ${scope} StatusCursor ${zenstatuscursor}
+        face ${scope} Prompt ${zenconstant}
+        face ${scope} MatchingChar default+b
+        face ${scope} BufferPadding ${zenpadding}
+        face ${scope} Whitespace ${zensecondaryfg}+f
     "
 }

@@ -1,4 +1,4 @@
-def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
+def -params 1.. -docstring "colorscheme <name> [scope]: enable named colorscheme in the given scope" \
     -shell-script-candidates %{
     find -L "${kak_runtime}/colors" "${kak_config}/colors" -type f -name '*\.kak' \
         | while read -r filename; do
@@ -18,8 +18,14 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
         filename=$(find_colorscheme "${kak_runtime}/colors" "${1}")
     fi
 
+    case "${2}" in
+        "");;
+        global|buffer|window);;
+        *) echo "fail Invalid scope:" "${2}";;
+    esac
+
     if [ -n "${filename}" ]; then
-        printf 'source %%{%s}' "${filename}"
+        printf 'source %%{%s} %s' "${filename}" "${2:-global}"
     else
         echo "fail 'No such colorscheme'"
     fi

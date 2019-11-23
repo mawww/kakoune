@@ -1,6 +1,8 @@
 # lucius theme
 
 evaluate-commands %sh{
+    scope="${1:-global}"
+
     # first we define the lucius colors as named colors
     lucius_darker_grey="rgb:303030"
     lucius_dark_grey="rgb:444444"
@@ -24,53 +26,53 @@ evaluate-commands %sh{
 
     echo "
         # then we map them to code
-        face global value ${lucius_light_green}
-        face global type ${lucius_blue}
-        face global variable ${lucius_green}
-        face global module ${lucius_green}
-        face global function ${lucius_light_blue}
-        face global string ${lucius_light_green}
-        face global keyword ${lucius_light_blue}
-        face global operator ${lucius_green}
-        face global attribute ${lucius_light_blue}
-        face global comment ${lucius_grey}
-        face global meta ${lucius_purple}
-        face global builtin default+b
+        face ${scope} value ${lucius_light_green}
+        face ${scope} type ${lucius_blue}
+        face ${scope} variable ${lucius_green}
+        face ${scope} module ${lucius_green}
+        face ${scope} function ${lucius_light_blue}
+        face ${scope} string ${lucius_light_green}
+        face ${scope} keyword ${lucius_light_blue}
+        face ${scope} operator ${lucius_green}
+        face ${scope} attribute ${lucius_light_blue}
+        face ${scope} comment ${lucius_grey}
+        face ${scope} meta ${lucius_purple}
+        face ${scope} builtin default+b
 
         # and markup
-        face global title ${lucius_light_blue}
-        face global header ${lucius_light_green}
-        face global bold ${lucius_blue}
-        face global italic ${lucius_green}
-        face global mono ${lucius_light_green}
-        face global block ${lucius_light_blue}
-        face global link ${lucius_light_green}
-        face global bullet ${lucius_green}
-        face global list ${lucius_blue}
+        face ${scope} title ${lucius_light_blue}
+        face ${scope} header ${lucius_light_green}
+        face ${scope} bold ${lucius_blue}
+        face ${scope} italic ${lucius_green}
+        face ${scope} mono ${lucius_light_green}
+        face ${scope} block ${lucius_light_blue}
+        face ${scope} link ${lucius_light_green}
+        face ${scope} bullet ${lucius_green}
+        face ${scope} list ${lucius_blue}
 
         # and built in faces
-        face global Default ${lucius_lighter_grey},${lucius_darker_grey}
-        face global PrimarySelection ${lucius_darker_grey},${lucius_orange}+fg
-        face global SecondarySelection  ${lucius_lighter_grey},${lucius_dark_blue}+fg
-        face global PrimaryCursor ${lucius_darker_grey},${lucius_lighter_grey}+fg
-        face global SecondaryCursor ${lucius_darker_grey},${lucius_lighter_grey}+fg
-        face global PrimaryCursorEol ${lucius_darker_grey},${lucius_dark_green}+fg
-        face global SecondaryCursorEol ${lucius_darker_grey},${lucius_dark_green}+fg
-        face global LineNumbers ${lucius_grey},${lucius_dark_grey}
-        face global LineNumberCursor ${lucius_grey},${lucius_dark_grey}+b
-        face global MenuForeground ${lucius_blue},${lucius_dark_blue}
-        face global MenuBackground ${lucius_darker_grey},${lucius_light_grey}
-        face global MenuInfo ${lucius_grey}
-        face global Information ${lucius_lighter_grey},${lucius_dark_green}
-        face global Error ${lucius_light_red},${lucius_dark_red}
-        face global StatusLine ${lucius_lighter_grey},${lucius_dark_grey}
-        face global StatusLineMode ${lucius_lighter_grey},${lucius_dark_green}+b
-        face global StatusLineInfo ${lucius_dark_grey},${lucius_lighter_grey}
-        face global StatusLineValue ${lucius_lighter_grey}
-        face global StatusCursor default,${lucius_blue}
-        face global Prompt ${lucius_lighter_grey}
-        face global MatchingChar ${lucius_lighter_grey},${lucius_bright_green}
-        face global BufferPadding ${lucius_green},${lucius_darker_grey}
-        face global Whitespace ${lucius_grey}+f
+        face ${scope} Default ${lucius_lighter_grey},${lucius_darker_grey}
+        face ${scope} PrimarySelection ${lucius_darker_grey},${lucius_orange}+fg
+        face ${scope} SecondarySelection  ${lucius_lighter_grey},${lucius_dark_blue}+fg
+        face ${scope} PrimaryCursor ${lucius_darker_grey},${lucius_lighter_grey}+fg
+        face ${scope} SecondaryCursor ${lucius_darker_grey},${lucius_lighter_grey}+fg
+        face ${scope} PrimaryCursorEol ${lucius_darker_grey},${lucius_dark_green}+fg
+        face ${scope} SecondaryCursorEol ${lucius_darker_grey},${lucius_dark_green}+fg
+        face ${scope} LineNumbers ${lucius_grey},${lucius_dark_grey}
+        face ${scope} LineNumberCursor ${lucius_grey},${lucius_dark_grey}+b
+        face ${scope} MenuForeground ${lucius_blue},${lucius_dark_blue}
+        face ${scope} MenuBackground ${lucius_darker_grey},${lucius_light_grey}
+        face ${scope} MenuInfo ${lucius_grey}
+        face ${scope} Information ${lucius_lighter_grey},${lucius_dark_green}
+        face ${scope} Error ${lucius_light_red},${lucius_dark_red}
+        face ${scope} StatusLine ${lucius_lighter_grey},${lucius_dark_grey}
+        face ${scope} StatusLineMode ${lucius_lighter_grey},${lucius_dark_green}+b
+        face ${scope} StatusLineInfo ${lucius_dark_grey},${lucius_lighter_grey}
+        face ${scope} StatusLineValue ${lucius_lighter_grey}
+        face ${scope} StatusCursor default,${lucius_blue}
+        face ${scope} Prompt ${lucius_lighter_grey}
+        face ${scope} MatchingChar ${lucius_lighter_grey},${lucius_bright_green}
+        face ${scope} BufferPadding ${lucius_green},${lucius_darker_grey}
+        face ${scope} Whitespace ${lucius_grey}+f
     "
 }

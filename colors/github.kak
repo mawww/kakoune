@@ -3,49 +3,57 @@
 ## v1.0
 ##
 
-## code
-face global value rgb:0086B3+b
-face global type rgb:795DA3
-face global variable rgb:0086B3
-face global module rgb:0086B3
-face global function rgb:A71D5D
-face global string rgb:183691
-face global keyword rgb:A71D5D+b
-face global operator yellow
-face global attribute rgb:A71D5D
-face global comment rgb:AAAAAA
-face global meta rgb:183691
-face global builtin default+b
+evaluate-commands %sh{
+    scope="${1:-global}"
 
-## markup
-face global title blue
-face global header cyan
-face global bold red
-face global italic yellow
-face global mono green
-face global block magenta
-face global link cyan
-face global bullet cyan
-face global list yellow
+    cat <<- EOF
 
-## builtin
-face global Default rgb:121213,rgb:F8F8FF
-face global PrimarySelection default,rgb:A6F3A6+fg
-face global SecondarySelection default,rgb:DBFFDB+fg
-face global PrimaryCursor black,rgb:888888+fg
-face global SecondaryCursor black,rgb:888888+fg
-face global PrimaryCursorEol black,rgb:A71D5D+fg
-face global SecondaryCursorEol black,rgb:A71D5D+fg
-face global LineNumbers rgb:A0A0A0,rgb:ECECEC
-face global LineNumberCursor rgb:434343,rgb:DDDDDD
-face global MenuForeground rgb:434343,rgb:CDCDFD
-face global MenuBackground rgb:F8F8FF,rgb:808080
-face global Information rgb:F8F8FF,rgb:4078C0
-face global Error rgb:F8F8FF,rgb:BD2C00
-face global StatusLine rgb:434343,rgb:DDDDDD
-face global StatusCursor rgb:434343,rgb:CDCDFD
-face global Prompt rgb:F8F8FF,rgb:4078C0
-face global MatchingChar rgb:F8F8FF,rgb:4078C0+b
-face global Search default,default+u
-face global BufferPadding rgb:A0A0A0,rgb:F8F8FF
-face global Whitespace rgb:A0A0A0+f
+    ## code
+    set-face "${scope}" value rgb:0086B3+b
+    set-face "${scope}" type rgb:795DA3
+    set-face "${scope}" variable rgb:0086B3
+    set-face "${scope}" module rgb:0086B3
+    set-face "${scope}" function rgb:A71D5D
+    set-face "${scope}" string rgb:183691
+    set-face "${scope}" keyword rgb:A71D5D+b
+    set-face "${scope}" operator yellow
+    set-face "${scope}" attribute rgb:A71D5D
+    set-face "${scope}" comment rgb:AAAAAA
+    set-face "${scope}" meta rgb:183691
+    set-face "${scope}" builtin default+b
+
+    ## markup
+    set-face "${scope}" title blue
+    set-face "${scope}" header cyan
+    set-face "${scope}" bold red
+    set-face "${scope}" italic yellow
+    set-face "${scope}" mono green
+    set-face "${scope}" block magenta
+    set-face "${scope}" link cyan
+    set-face "${scope}" bullet cyan
+    set-face "${scope}" list yellow
+
+    ## builtin
+    set-face "${scope}" Default rgb:121213,rgb:F8F8FF
+    set-face "${scope}" PrimarySelection default,rgb:A6F3A6+fg
+    set-face "${scope}" SecondarySelection default,rgb:DBFFDB+fg
+    set-face "${scope}" PrimaryCursor black,rgb:888888+fg
+    set-face "${scope}" SecondaryCursor black,rgb:888888+fg
+    set-face "${scope}" PrimaryCursorEol black,rgb:A71D5D+fg
+    set-face "${scope}" SecondaryCursorEol black,rgb:A71D5D+fg
+    set-face "${scope}" LineNumbers rgb:A0A0A0,rgb:ECECEC
+    set-face "${scope}" LineNumberCursor rgb:434343,rgb:DDDDDD
+    set-face "${scope}" MenuForeground rgb:434343,rgb:CDCDFD
+    set-face "${scope}" MenuBackground rgb:F8F8FF,rgb:808080
+    set-face "${scope}" Information rgb:F8F8FF,rgb:4078C0
+    set-face "${scope}" Error rgb:F8F8FF,rgb:BD2C00
+    set-face "${scope}" StatusLine rgb:434343,rgb:DDDDDD
+    set-face "${scope}" StatusCursor rgb:434343,rgb:CDCDFD
+    set-face "${scope}" Prompt rgb:F8F8FF,rgb:4078C0
+    set-face "${scope}" MatchingChar rgb:F8F8FF,rgb:4078C0+b
+    set-face "${scope}" Search default,default+u
+    set-face "${scope}" BufferPadding rgb:A0A0A0,rgb:F8F8FF
+    set-face "${scope}" Whitespace rgb:A0A0A0+f
+
+EOF
+}
