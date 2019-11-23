@@ -4,6 +4,7 @@
 #include "string.hh"
 #include "enum.hh"
 #include "vector.hh"
+#include "ranges.hh"
 #include "optional.hh"
 
 namespace Kakoune
@@ -61,7 +62,39 @@ bool subsequence_match(StringView str, StringView subseq);
 
 String expand_tabs(StringView line, ColumnCount tabstop, ColumnCount col = 0);
 
-Vector<StringView> wrap_lines(StringView text, ColumnCount max_width);
+struct WrapView
+{
+    struct Iterator : std::iterator<std::forward_iterator_tag, StringView>
+    {
+        Iterator(StringView text, ColumnCount max_width);
+
+        Iterator& operator++();
+        Iterator operator++(int) { auto copy = *this; ++(*this); return copy; }
+
+        bool operator==(Iterator other) const { return m_remaining == other.m_remaining and m_current == other.m_current; }
+        bool operator!=(Iterator other) const { return not (*this == other); }
+
+        StringView operator*() { return m_current; }
+
+    private:
+        StringView m_current;
+        StringView m_remaining;
+        ColumnCount m_max_width;
+    };
+
+    Iterator begin() const { return {text, max_width}; }
+    Iterator end()   const { return {{}, 1}; }
+
+    StringView text;
+    ColumnCount max_width;
+};
+
+inline auto wrap_at(ColumnCount max_width)
+{
+    return make_view_factory([=](StringView text) {
+        return WrapView{text, max_width};
+    });
+}
 
 int str_to_int(StringView str); // throws on error
 Optional<int> str_to_int_ifp(StringView str);
