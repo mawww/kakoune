@@ -86,7 +86,15 @@ Vector<String> list_files(StringView directory);
 
 void make_directory(StringView dir, mode_t mode);
 
+struct FsStatus
+{
+    timespec timestamp;
+    ByteCount file_size;
+    size_t hash;
+};
+
 timespec get_fs_timestamp(StringView filename);
+FsStatus get_fs_status(StringView filename);
 
 constexpr bool operator==(const timespec& lhs, const timespec& rhs)
 {

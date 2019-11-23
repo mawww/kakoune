@@ -610,6 +610,13 @@ timespec get_fs_timestamp(StringView filename)
     return st.st_mtim;
 }
 
+FsStatus get_fs_status(StringView filename)
+{
+    MappedFile fd{filename};
+
+    return {fd.st.st_mtim, fd.st.st_size, hash_data(fd.data, fd.st.st_size)};
+}
+
 String get_kak_binary_path()
 {
     char buffer[2048];
