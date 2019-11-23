@@ -9,6 +9,7 @@
 #include "optional.hh"
 #include "option_types.hh"
 #include "ranges.hh"
+#include "regex.hh"
 #include "register_manager.hh"
 #include "shell_manager.hh"
 #include "utils.hh"
@@ -688,6 +689,13 @@ Completions CommandManager::complete(const Context& context,
         return {start , cursor_pos,
                 ShellManager::instance().complete_env_var(
                     token.content, cursor_pos_in_token) };
+
+    case Token::Type::FileExpand:
+    {
+        const auto& ignored_files = context.options()["ignored_files"].get<Regex>();
+        return {start , cursor_pos, complete_filename(
+                token.content, ignored_files, cursor_pos_in_token, FilenameFlags::Expand) };
+    }
 
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
