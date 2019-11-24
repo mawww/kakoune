@@ -423,6 +423,8 @@ void Client::info_show(DisplayLine title, DisplayLineList content, BufferCoord a
 
 void Client::info_show(StringView title, StringView content, BufferCoord anchor, InfoStyle style)
 {
+    if (not content.empty() and content.back() == '\n')
+        content = content.substr(0, content.length() - 1);
     info_show({title.str(), Face{}},
               content | split<StringView>('\n')
                       | transform([](StringView s) { return DisplayLine{s.str(), Face{}}; })

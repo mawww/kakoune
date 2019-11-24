@@ -179,7 +179,7 @@ ColumnCount DisplayLine::length() const
     return len;
 }
 
-void DisplayLine::trim(ColumnCount first_col, ColumnCount col_count)
+bool DisplayLine::trim(ColumnCount first_col, ColumnCount col_count)
 {
     for (auto it = begin(); first_col > 0 and it != end(); )
     {
@@ -199,11 +199,13 @@ void DisplayLine::trim(ColumnCount first_col, ColumnCount col_count)
     for (; it != end() and col_count > 0; ++it)
         col_count -= it->length();
 
+    bool did_trim = it != end() || col_count < 0;
     if (col_count < 0)
         (it-1)->trim_end(-col_count);
     m_atoms.erase(it, end());
 
     compute_range();
+    return did_trim;
 }
 
 const BufferRange init_range{ {INT_MAX, INT_MAX}, {INT_MIN, INT_MIN} };

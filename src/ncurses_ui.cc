@@ -1029,97 +1029,6 @@ static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
     return pos;
 }
 
-struct InfoBox
-{
-    DisplayCoord size;
-    DisplayLineList contents;
-};
-
-template<typename... Args>
-void append_atoms(DisplayLine& line, Args&&... args)
-{
-    auto append = overload(
-        [](DisplayLine& line, String str) {
-            line.push_back(DisplayAtom{std::move(str)});
-        },
-        [](DisplayLine& line, const DisplayLine& atoms) {
-            for (auto& atom : atoms)
-                line.push_back(atom);
-        });
-
-    (append(line, args), ...);
-}
-
-InfoBox make_info_box(const DisplayLine& title, const DisplayLineList& content,
-                      ColumnCount max_width, ConstArrayView<StringView> assistant)
-{
-    DisplayCoord assistant_size;
-    if (not assistant.empty())
-        assistant_size = { (int)assistant.size(), assistant[0].column_length() };
-
-    InfoBox result{};
-
-    const ColumnCount max_bubble_width = max_width - assistant_size.column - 6;
-    if (max_bubble_width < 4)
-        return result;
-
-    ColumnCount bubble_width = title.length() + 2;
-    for (auto& line : content)
-        bubble_width = max(bubble_width, line.length());
-
-    auto line_count = max(assistant_size.line-1, LineCount{(int)content.size()} + 2);
-    result.size = DisplayCoord{line_count, bubble_width + assistant_size.column + 4};
-    const auto assistant_top_margin = (line_count - assistant_size.line+1) / 2;
-    for (LineCount i = 0; i < line_count; ++i)
-    {
-        constexpr Codepoint dash{L'─'};
-        DisplayLine line;
-        if (not assistant.empty())
-        {
-            StringView assistant_line = (i >= assistant_top_margin) ?
-                assistant[(int)min(i - assistant_top_margin, assistant_size.line-1)]
-              : assistant[(int)assistant_size.line-1];
-
-            append_atoms(line, assistant_line.str());
-        }
-        if (i == 0)
-        {
-            if (title.atoms().empty())
-                append_atoms(line, "╭─" + String{dash, bubble_width} + "─╮");
-            else
-            {
-                auto dash_count = bubble_width - title.length() - 2;
-                String left{dash, dash_count / 2};
-                String right{dash, dash_count - dash_count / 2};
-                append_atoms(line, "╭─" + left + "┤", title, "├" + right +"─╮");
-            }
-        }
-        else if (i < content.size() + 1)
-        {
-            auto& info_line = content[(int)i - 1];
-            const ColumnCount padding = bubble_width - info_line.length();
-            append_atoms(line, "│ ", info_line, String{' ', padding} + " │");
-        }
-        else if (i == content.size() + 1)
-            append_atoms(line, "╰─" + String(dash, bubble_width) + "─╯");
-
-        result.contents.push_back(std::move(line));
-    }
-    return result;
-}
-
-InfoBox make_simple_info_box(const DisplayLineList& content, ColumnCount max_width)
-{
-    InfoBox info_box{};
-    for (auto& line : content)
-    {
-        ++info_box.size.line;
-        info_box.size.column = std::max(line.length(), info_box.size.column);
-        info_box.contents.push_back(line);
-    }
-    return info_box;
-}
-
 void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& content,
                           DisplayCoord anchor, Face face, InfoStyle style)
 {
@@ -1131,60 +1040,104 @@ void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& conte
     m_info.face = face;
     m_info.style = style;
 
+    DisplayCoord max_size = m_dimensions;
+    if (style == InfoStyle::MenuDoc)
+        max_size.column = std::max(m_dimensions.column - (m_menu.pos.column + m_menu.size.column),
+                                   m_menu.pos.column);
+    else if (style != InfoStyle::Modal)
+        max_size.line -= m_menu.size.line;
+
+    const bool framed = style == InfoStyle::Prompt or style == InfoStyle::Modal;
+    const bool assisted = style == InfoStyle::Prompt and m_assistant.size() != 0;
+    DisplayCoord size{(int)content.size(), accumulate(content, 0_col, [](ColumnCount c, const DisplayLine& l) {
+            return std::max(c, l.length());
+        })};
+    if (framed)
+        size += {2, 4};
+    if (assisted)
+        size = {std::max(LineCount{(int)m_assistant.size()-1}, size.line), size.column + m_assistant[0].column_length()};
+
+    size = {std::min(max_size.line, size.line), std::min(max_size.column, size.column)};
+
+    const auto content_width = size.column - (framed ? 4 : 2) - (assisted ? m_assistant[0].column_length() : 0);
+    if (content_width < 4 or (framed and size.line < 3) or size.line <= 0)
+        return;
+
     const Rect rect = {content_line_offset(), m_dimensions};
-    InfoBox info_box;
     if (style == InfoStyle::Prompt)
     {
-        info_box = make_info_box(m_info.title, m_info.content, m_dimensions.column, m_assistant);
         anchor = DisplayCoord{m_status_on_top ? 0 : m_dimensions.line, m_dimensions.column-1};
-        anchor = compute_pos(anchor, info_box.size, rect, m_menu, style == InfoStyle::InlineAbove);
+        anchor = compute_pos(anchor, size, rect, m_menu, style == InfoStyle::InlineAbove);
     }
     else if (style == InfoStyle::Modal)
     {
-        info_box = make_info_box(m_info.title, m_info.content, m_dimensions.column, {});
         auto half = [](const DisplayCoord& c) { return DisplayCoord{c.line / 2, c.column / 2}; };
-        anchor = rect.pos + half(rect.size) - half(info_box.size);
+        anchor = rect.pos + half(rect.size) - half(size);
     }
     else if (style == InfoStyle::MenuDoc)
     {
-        if (not m_menu)
-            return;
-
         const auto right_max_width = m_dimensions.column - (m_menu.pos.column + m_menu.size.column);
         const auto left_max_width = m_menu.pos.column;
-        const auto max_width = std::max(right_max_width, left_max_width);
-        if (max_width < 4)
-            return;
-
-        info_box = make_simple_info_box(m_info.content, max_width);
         anchor.line = m_menu.pos.line;
-        if (info_box.size.column <= right_max_width or right_max_width >= left_max_width)
+        if (size.column <= right_max_width or right_max_width >= left_max_width)
             anchor.column = m_menu.pos.column + m_menu.size.column;
         else
-            anchor.column = m_menu.pos.column - info_box.size.column;
+            anchor.column = m_menu.pos.column - size.column;
     }
     else
     {
-        const ColumnCount max_width = m_dimensions.column - anchor.column;
-        if (max_width < 4)
-            return;
-
-        info_box = make_simple_info_box(m_info.content, max_width);
-        anchor = compute_pos(anchor, info_box.size, rect, m_menu, style == InfoStyle::InlineAbove);
-
+        anchor = compute_pos(anchor, size, rect, m_menu, style == InfoStyle::InlineAbove);
         anchor.line += content_line_offset();
     }
 
-    // The info box does not fit
-    if (anchor < rect.pos or anchor + info_box.size > rect.pos + rect.size)
-        return;
+    m_info.create(anchor, size);
+    auto draw_atoms = [&](auto&&... args) {
+        auto draw = overload(
+            [&](String str) { m_info.draw(m_palette, DisplayAtom{std::move(str)}, face); },
+            [&](const DisplayLine& atoms) { m_info.draw(m_palette, atoms.atoms(), face); });
 
-    m_info.create(anchor, info_box.size);
+        (draw(args), ...);
+    };
 
-    for (auto line = 0_line; line < info_box.size.line; ++line)
+    for (auto line = 0_line; line < size.line; ++line)
     {
+        constexpr Codepoint dash{L'─'};
+        constexpr Codepoint dotted_dash{L'┄'};
         m_info.move_cursor(line);
-        m_info.draw(m_palette, info_box.contents[(int)line].atoms(), face);
+        if (assisted)
+        {
+            const auto assistant_top_margin = (size.line - m_assistant.size()+1) / 2;
+            StringView assistant_line = (line >= assistant_top_margin) ?
+                m_assistant[(int)min(line - assistant_top_margin, LineCount{(int)m_assistant.size()}-1)]
+              : m_assistant[(int)m_assistant.size()-1];
+
+            draw_atoms(assistant_line.str());
+        }
+        if (not framed)
+            draw_atoms(content[(int)line]);
+        else if (line == 0)
+        {
+            if (title.atoms().empty())
+                draw_atoms("╭─" + String{dash, content_width} + "─╮");
+            else
+            {
+                auto trimmed_title = title;
+                trimmed_title.trim(0, content_width - 2);
+                auto dash_count = content_width - trimmed_title.length() - 2;
+                String left{dash, dash_count / 2};
+                String right{dash, dash_count - dash_count / 2};
+                draw_atoms("╭─" + left + "┤", trimmed_title, "├" + right +"─╮");
+            }
+        }
+        else if (line < size.line - 1 and line <= content.size())
+        {
+            auto info_line = content[(int)line - 1];
+            const bool trimmed = info_line.trim(0, content_width);
+            const ColumnCount padding = content_width - info_line.length();
+            draw_atoms("│ ", info_line, String{' ', padding} + (trimmed ? "…│" : " │"));
+        }
+        else if (line == std::min<LineCount>((int)content.size() + 1, size.line - 1))
+            draw_atoms("╰─" + String(line > content.size() ? dash : dotted_dash, content_width) + "─╯");
     }
     m_dirty = true;
 }
