@@ -184,7 +184,7 @@ ui_out() {
       read -r event <&4
       if [ ! "$1" = "$event" ] && [ $failed -eq 0 ]; then
         printf "${red}$indent%s${none}\n" "$name"
-        printf "${indent}  - %s\n${indent}  ${red}+ %s${none}\n" "$2" "$event"
+        printf "${indent}  ${red}- %s\n${indent}  ${green}+ %s${none}\n" "$1" "$event"
         failed=1
       fi
       ;;
