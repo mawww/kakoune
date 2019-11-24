@@ -826,7 +826,7 @@ const CommandDesc rename_buffer_cmd = {
     single_param,
     CommandFlags::None,
     CommandHelper{},
-    make_single_word_completer([](const Context& context){ return context.buffer().display_name(); }),
+    filename_completer<false>,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (not context.buffer().set_name(parser[0]))
