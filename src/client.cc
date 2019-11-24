@@ -425,9 +425,9 @@ void Client::info_show(StringView title, StringView content, BufferCoord anchor,
 {
     if (not content.empty() and content.back() == '\n')
         content = content.substr(0, content.length() - 1);
-    info_show({title.str(), Face{}},
+    info_show(title.empty() ? DisplayLine{} : DisplayLine{title.str(), Face{}},
               content | split<StringView>('\n')
-                      | transform([](StringView s) { return DisplayLine{s.str(), Face{}}; })
+                      | transform([](StringView s) { return DisplayLine{replace(s, '\t', ' '), Face{}}; })
                       | gather<DisplayLineList>(),
               anchor, style);
 }

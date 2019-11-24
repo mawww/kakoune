@@ -286,7 +286,7 @@ DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const
                 pos = closing + 1;
             }
         }
-        if (c == '\n') // line breaks are forbidden, replace with space
+        if (c == '\n' or c == '\t') // line breaks and tabs are forbidden, replace with space
         {
             content += StringView{pos, it+1};
             content.back() = ' ';

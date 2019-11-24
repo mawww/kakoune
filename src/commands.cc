@@ -1277,7 +1277,7 @@ const CommandDesc echo_cmd = {
         else if (parser.get_switch("markup"))
             context.print_status(parse_display_line(message, context.faces()));
         else
-            context.print_status({ std::move(message), context.faces()["StatusLine"] });
+            context.print_status({replace(message, '\t', ' '), context.faces()["StatusLine"]});
     }
 };
 
