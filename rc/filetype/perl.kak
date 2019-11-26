@@ -42,6 +42,17 @@ add-highlighter shared/perl/double_string region (?<!\$)(?<!\\)"   (?<!\\)(\\\\)
 add-highlighter shared/perl/single_string region (?<!\$)(?<!\\\\)' (?<!\\)(\\\\)*' fill string
 add-highlighter shared/perl/comment       region (?<!\$)(?<!\\)#   $               fill comment
 
+add-highlighter shared/perl/regex         region m?/[^/\n]+(?=/)        /\w?       fill meta
+add-highlighter shared/perl/sregex        region s/[^/\n]+/[^/\n]+(?=/) /\w?       fill meta
+
+add-highlighter shared/perl/q1            region -recurse \{ q\{ \}                fill string
+add-highlighter shared/perl/q2            region -recurse \( q\( \)                fill string
+add-highlighter shared/perl/q3            region -recurse \[ q\[ \]                fill string
+
+add-highlighter shared/perl/qq1           region -recurse \{ qq\{ \}               fill string
+add-highlighter shared/perl/qq2           region -recurse \( qq\( \)               fill string
+add-highlighter shared/perl/qq3           region -recurse \[ qq\[ \]               fill string
+
 evaluate-commands %sh{
     # Grammar
     keywords="else lock qw elsif lt qx eq exp ne sub for no my not tr goto and foreach or break exit unless cmp ge package until continue gt while if qq xor do le qr return"
