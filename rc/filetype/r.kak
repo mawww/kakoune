@@ -8,6 +8,8 @@ hook global BufCreate (.*/)?(\.Rprofile|.*\.[rR]) %{
     set-option buffer filetype r
 }
 
+provide-module r %§
+
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -124,15 +126,19 @@ define-command -hidden r-insert-on-newline %[ evaluate-commands -itersel -draft 
     ]
 ] ]
 
+§
+
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook -group r-highlight global WinSetOption filetype=r %{
+    require-module r
     add-highlighter window/r ref r
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/r }
 }
 
 hook global WinSetOption filetype=r %~
+    require-module r
     hook window ModeChange pop:insert:.* r-trim-indent
     hook window InsertChar \n        r-insert-on-newline
     hook window InsertChar \n        r-indent-on-newline
