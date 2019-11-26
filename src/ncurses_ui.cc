@@ -1052,6 +1052,7 @@ void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& conte
     DisplayCoord size{(int)content.size(), accumulate(content, 0_col, [](ColumnCount c, const DisplayLine& l) {
             return std::max(c, l.length());
         })};
+    size.column = std::max(size.column, title.length() + (framed ? 2 : 0));
     if (framed)
         size += {2, 4};
     if (assisted)
@@ -1060,7 +1061,7 @@ void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& conte
     size = {std::min(max_size.line, size.line), std::min(max_size.column, size.column)};
 
     const auto content_width = size.column - (framed ? 4 : 2) - (assisted ? m_assistant[0].column_length() : 0);
-    if (content_width < 4 or (framed and size.line < 3) or size.line <= 0)
+    if (content_width <= 0 or (framed and size.line < 3) or size.line <= 0)
         return;
 
     const Rect rect = {content_line_offset(), m_dimensions};
@@ -1117,7 +1118,7 @@ void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& conte
             draw_atoms(content[(int)line]);
         else if (line == 0)
         {
-            if (title.atoms().empty())
+            if (title.atoms().empty() or content_width < 2)
                 draw_atoms("╭─" + String{dash, content_width} + "─╮");
             else
             {
