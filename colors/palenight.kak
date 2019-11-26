@@ -18,7 +18,7 @@ evaluate-commands %sh{
     gutter_fg_grey=rgb:4b5263
     cursor_grey=rgb:2c323c
     visual_grey=rgb:3e4452
-    menu_grey=rgb:3e4452
+    menu_grey=rgb:697098
     special_grey=rgb:3b4048
     vertsplit=rgb:181a1f
     visual_black=default
@@ -72,7 +72,7 @@ evaluate-commands %sh{
     face global MenuForeground     $black,$purple
 
     # completion menu info
-    face global MenuInfo           $black,$white+i
+    face global MenuInfo           $menu_grey,default+i
 
     # assistant, [+]
     face global Information        $white,$visual_grey
