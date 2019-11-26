@@ -282,7 +282,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
                         parsed_lines.lines[(int)(d.posB + line)]});
 
                 m_changes.push_back({ Change::Insert, cur_line, cur_line + d.len });
-                m_lines.insert(it, &parsed_lines.lines[d.posB], &parsed_lines.lines[d.posB + d.len]);
+                m_lines.insert(it, parsed_lines.lines.begin() + d.posB, parsed_lines.lines.begin() + d.posB + d.len);
                 it = m_lines.begin() + (int)(cur_line + d.len);
             }
             else if (d.mode == Diff::Remove)

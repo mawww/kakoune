@@ -512,7 +512,7 @@ BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, Strin
                            lines_after.begin(), (int)lines_after.size());
 
     auto byte_count = [](auto&& lines, int first, int count) {
-        return std::accumulate(&lines[first], &lines[first+count], 0_byte,
+        return std::accumulate(lines.begin() + first, lines.begin() + first + count, 0_byte,
                                [](ByteCount l, StringView s) { return l + s.length(); });
     };
 
