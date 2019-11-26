@@ -676,6 +676,11 @@ Completions CommandManager::complete(const Context& context,
 
     switch (token.type)
     {
+    case Token::Type::RegisterExpand:
+        return {start , cursor_pos,
+                RegisterManager::instance().complete_register_name(
+                    token.content, cursor_pos_in_token) };
+
     case Token::Type::OptionExpand:
         return {start , cursor_pos,
                 GlobalScope::instance().option_registry().complete_option_name(
