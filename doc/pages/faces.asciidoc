@@ -156,3 +156,14 @@ echo -markup 'default {Error}error{Default} default'
 Inside a markup string, a literal `{` character is written `\{`, and a
 literal backslash (`\`) that precedes a '{' character is escaped as well
 (`\\`).
+
+The `{\}` string disables markup processing for the rest of the line,
+and can be used to avoid having to escape text that might be mistaken
+for markup instructions.
+
+For example this will prevent any '{' in the current buffer name from
+being incorrectly interpreted as markup instructions.
+
+----
+echo -markup "{Information}name:{\} %val{bufname}"
+----

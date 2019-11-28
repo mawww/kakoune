@@ -280,6 +280,11 @@ DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const
                     // closing is now at the first char of "}}", advance it to the second
                     ++closing;
                 }
+                else if (closing == it+2 and *(it+1) == '\\')
+                {
+                    pos = closing + 1;
+                    break;
+                }
                 else
                     face = faces[{it+1, closing}];
                 it = closing;

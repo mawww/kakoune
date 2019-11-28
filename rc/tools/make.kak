@@ -44,7 +44,7 @@ declare-option -docstring "name of the client in which all source code jumps wil
 define-command -hidden make-open-error -params 4 %{
     evaluate-commands -try-client %opt{jumpclient} %{
         edit -existing "%arg{1}" %arg{2} %arg{3}
-        echo -markup "{Information}%arg{4}"
+        echo -markup "{Information}{\}%arg{4}"
         try %{ focus }
     }
 }
