@@ -84,7 +84,7 @@ void TerminalUI::Window::refresh(bool force)
 
 void TerminalUI::Window::move_cursor(DisplayCoord coord)
 {
-    cursor = coord;
+    cursor = {std::min(size.line-1, coord.line), std::min(size.column-1, coord.column)};
 }
 
 void TerminalUI::Window::clear_line()
