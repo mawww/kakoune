@@ -55,18 +55,16 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                         awk -F ': ' '
                             /^COMPLETION:/ && $2 !~ /[(,](Hidden|Inaccessible)[),]/ {
                                  candidate=$3
-                                 gsub(/[[<{]#[^#]+#[]>}]/, "", candidate)
+                                 gsub(/[[<{]#.+?#[]>}]/, "", candidate)
                                  gsub(/~/, "~~", candidate)
                                  gsub(/\|/, "\\|", candidate)
 
-                                 gsub(/[[{<]#|#[}>]/, "", $3)
-                                 gsub(/#]/, " ", $3)
+                                 gsub(/[[{<]#|#[]}>]/, "", $3)
                                  gsub(/:: /, "::", $3)
                                  gsub(/ +$/, "", $3)
                                  docstring=$4 ? $3 "\n" $4 : $3
 
-                                 gsub(/~/, "~~", docstring)
-                                 gsub(/!/, "!!", docstring)
+                                 gsub(/~|!/, "&&", docstring)
                                  gsub(/\|/, "\\|", docstring)
                                  if (candidate in candidates)
                                      candidates[candidate]=candidates[candidate] "\n" docstring
