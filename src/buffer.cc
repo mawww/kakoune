@@ -262,17 +262,20 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
     }
     else
     {
-        auto diff = find_diff(m_lines.begin(), m_lines.size(),
-                              parsed_lines.lines.begin(), parsed_lines.lines.size(),
-                              [](const StringDataPtr& lhs, const StringDataPtr& rhs)
-                              { return lhs->strview() == rhs->strview(); });
+        Vector<Diff> diff;
+        for_each_diff(m_lines.begin(), m_lines.size(),
+                      parsed_lines.lines.begin(), parsed_lines.lines.size(),
+                      [&diff](DiffOp op, int len, int posB)
+                      { diff.push_back({op, len, posB}); },
+                      [](const StringDataPtr& lhs, const StringDataPtr& rhs)
+                      { return lhs->strview() == rhs->strview(); });
 
         auto it = m_lines.begin();
         for (auto& d : diff)
         {
-            if (d.mode == Diff::Keep)
+            if (d.op == DiffOp::Keep)
                 it += d.len;
-            else if (d.mode == Diff::Add)
+            else if (d.op == DiffOp::Add)
             {
                 const LineCount cur_line = (int)(it - m_lines.begin());
 
@@ -285,7 +288,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
                 m_lines.insert(it, parsed_lines.lines.begin() + d.posB, parsed_lines.lines.begin() + d.posB + d.len);
                 it = m_lines.begin() + (int)(cur_line + d.len);
             }
-            else if (d.mode == Diff::Remove)
+            else if (d.op == DiffOp::Remove)
             {
                 const LineCount cur_line = (int)(it - m_lines.begin());
 

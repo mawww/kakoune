@@ -6,10 +6,10 @@
 // (http://xmailserver.org/diff2.pdf)
 
 #include "array_view.hh"
-#include "vector.hh"
 
 #include <functional>
 #include <iterator>
+#include <memory>
 
 namespace Kakoune
 {
@@ -101,32 +101,24 @@ Snake find_middle_snake(Iterator a, int N, Iterator b, int M,
     return best;
 }
 
-struct Diff
+enum class DiffOp
 {
-    enum { Keep, Add, Remove } mode;
-    int len;
-    int posB;
+    Keep,
+    Add,
+    Remove
 };
 
-inline void append_diff(Vector<Diff>& diffs, Diff diff)
-{
-    if (diff.len == 0)
-        return;
-
-    if (not diffs.empty() and diffs.back().mode == diff.mode
-        and (diff.mode != Diff::Add or
-             diffs.back().posB + diffs.back().len == diff.posB))
-        diffs.back().len += diff.len;
-    else
-        diffs.push_back(diff);
-}
-
-template<typename Iterator, typename Equal>
+template<typename Iterator, typename Equal, typename OnDiff>
 void find_diff_rec(Iterator a, int begA, int endA,
                    Iterator b, int begB, int endB,
                    int* V1, int* V2, int cost_limit,
-                   Equal eq, Vector<Diff>& diffs)
+                   Equal eq, OnDiff&& on_diff)
 {
+    auto on_diff_ifn = [&](DiffOp op, int len, int posB) {
+        if (len != 0)
+            on_diff(op, len, posB);
+    };
+
     int prefix_len = 0;
     while (begA != endA and begB != endB and eq(a[begA], b[begB]))
          ++begA, ++begB, ++prefix_len;
@@ -135,14 +127,14 @@ void find_diff_rec(Iterator a, int begA, int endA,
     while (begA != endA and begB != endB and eq(a[endA-1], b[endB-1]))
         --endA, --endB, ++suffix_len;
 
-    append_diff(diffs, {Diff::Keep, prefix_len, 0});
+    on_diff_ifn(DiffOp::Keep, prefix_len, 0);
 
     const auto lenA = endA - begA, lenB = endB - begB;
 
     if (lenA == 0)
-        append_diff(diffs, {Diff::Add, lenB, begB});
+        on_diff_ifn(DiffOp::Add, lenB, begB);
     else if (lenB == 0)
-        append_diff(diffs, {Diff::Remove, lenA, 0});
+        on_diff_ifn(DiffOp::Remove, lenA, 0);
     else
     {
         auto snake = find_middle_snake(a + begA, lenA, b + begB, lenB, V1, V2, cost_limit, eq);
@@ -150,38 +142,56 @@ void find_diff_rec(Iterator a, int begA, int endA,
 
         find_diff_rec(a, begA, begA + snake.x - (int)(snake.op == Snake::Del),
                       b, begB, begB + snake.y - (int)(snake.op == Snake::Add),
-                      V1, V2, cost_limit, eq, diffs);
+                      V1, V2, cost_limit, eq, on_diff);
 
         if (snake.op == Snake::Add)
-            append_diff(diffs, {Diff::Add, 1, begB + snake.y - 1});
+            on_diff_ifn(DiffOp::Add, 1, begB + snake.y - 1);
         if (snake.op == Snake::Del)
-            append_diff(diffs, {Diff::Remove, 1, 0});
+            on_diff_ifn(DiffOp::Remove, 1, 0);
 
-        append_diff(diffs, {Diff::Keep, snake.u - snake.x, 0});
+        on_diff_ifn(DiffOp::Keep, snake.u - snake.x, 0);
 
         if (snake.op == Snake::RevAdd)
-            append_diff(diffs, {Diff::Add, 1, begB + snake.v});
+            on_diff_ifn(DiffOp::Add, 1, begB + snake.v);
         if (snake.op == Snake::RevDel)
-            append_diff(diffs, {Diff::Remove, 1, 0});
+            on_diff_ifn(DiffOp::Remove, 1, 0);
 
         find_diff_rec(a, begA + snake.u + (int)(snake.op == Snake::RevDel), endA,
                       b, begB + snake.v + (int)(snake.op == Snake::RevAdd), endB,
-                      V1, V2, cost_limit, eq, diffs);
+                      V1, V2, cost_limit, eq, on_diff);
     }
 
-    append_diff(diffs, {Diff::Keep, suffix_len, 0});
+    on_diff_ifn(DiffOp::Keep, suffix_len, 0);
 }
 
-template<typename Iterator, typename Equal = std::equal_to<>>
-Vector<Diff> find_diff(Iterator a, int N, Iterator b, int M, Equal eq = Equal{})
+struct Diff
+{
+    DiffOp op;
+    int len;
+    int posB;
+};
+
+template<typename Iterator, typename OnDiff, typename Equal = std::equal_to<>>
+void for_each_diff(Iterator a, int N, Iterator b, int M, OnDiff&& on_diff, Equal eq = Equal{})
 {
     const int max = 2 * (N + M) + 1;
-    Vector<int> data(2*max);
-    Vector<Diff> diffs;
+    std::unique_ptr<int[]> data(new int[2*max]);
     constexpr int cost_limit = 1000;
-    find_diff_rec(a, 0, N, b, 0, M, &data[N+M], &data[max + N+M], cost_limit, eq, diffs);
 
-    return diffs;
+    Diff last{};
+    find_diff_rec(a, 0, N, b, 0, M, &data[N+M], &data[max + N+M], cost_limit, eq,
+                  [&last, &on_diff](DiffOp op, int len, int posB) {
+                      if (last.op == op and (op != DiffOp::Add or last.posB + last.len == posB))
+                          last.len += len;
+                      else
+                      {
+                          if (last.op != DiffOp{} or last.len != 0 or last.posB != 0) 
+                              on_diff(last.op, last.len, last.posB);
+                          last = Diff{op, len, posB};
+                      }
+                  });
+    if (last.op != DiffOp{} or last.len != 0 or last.posB != 0) 
+        on_diff(last.op, last.len, last.posB);
 }
 
 }

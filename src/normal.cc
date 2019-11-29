@@ -508,33 +508,30 @@ BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, Strin
     const auto lines_before = before | split_after<StringView>('\n') | gather<Vector<StringView>>();
     const auto lines_after = after | split_after<StringView>('\n') | gather<Vector<StringView>>();
 
-    auto diffs = find_diff(lines_before.begin(), (int)lines_before.size(),
-                           lines_after.begin(), (int)lines_after.size());
-
     auto byte_count = [](auto&& lines, int first, int count) {
         return std::accumulate(lines.begin() + first, lines.begin() + first + count, 0_byte,
                                [](ByteCount l, StringView s) { return l + s.length(); });
     };
 
-    int posA = 0;
-    for (auto& diff : diffs)
-    {
-        switch (diff.mode)
+    for_each_diff(lines_before.begin(), (int)lines_before.size(),
+                  lines_after.begin(), (int)lines_after.size(),
+                  [&, posA = 0](DiffOp op, int len, int posB) mutable {
+        switch (op)
         {
-        case Diff::Keep:
-            pos = buffer.advance(pos, byte_count(lines_before, posA, diff.len));
-            posA += diff.len;
+        case DiffOp::Keep:
+            pos = buffer.advance(pos, byte_count(lines_before, posA, len));
+            posA += len;
             break;
-        case Diff::Add:
-            pos = buffer.insert(pos, {lines_after[diff.posB].begin(),
-                                      lines_after[diff.posB + diff.len - 1].end()});
+        case DiffOp::Add:
+            pos = buffer.insert(pos, {lines_after[posB].begin(),
+                                      lines_after[posB + len - 1].end()});
             break;
-        case Diff::Remove:
-            pos = buffer.erase(pos, buffer.advance(pos, byte_count(lines_before, posA, diff.len)));
-            posA += diff.len;
+        case DiffOp::Remove:
+            pos = buffer.erase(pos, buffer.advance(pos, byte_count(lines_before, posA, len)));
+            posA += len;
             break;
         }
-    }
+    });
     return pos;
 }
 
