@@ -42,7 +42,86 @@ void TerminalUI::Window::destroy()
     lines.clear();
 }
 
-void TerminalUI::Window::refresh(bool force)
+struct TerminalUI::Window::Line
+{
+    struct Atom
+    {
+        String text;
+        Face face;
+    };
+
+    void resize(ColumnCount width)
+    {
+        auto it = atoms.begin();
+        ColumnCount column = 0;
+        for (; it != atoms.end() and column < width; ++it)
+            column += it->text.column_length();
+
+        if (column < width)
+            atoms.push_back(Atom{String{' ', width - column}, atoms.empty() ? Face{} : atoms.back().face});
+        else
+        {
+            atoms.erase(it, atoms.end());
+            if (column > width)
+            {
+                auto& text = atoms.back().text;
+                auto new_length = text.column_length() - (column - width);
+                text.resize(text.byte_count_to(new_length), 0);
+            }
+        }
+    }
+
+    Vector<Atom>::iterator erase_range(ColumnCount pos, ColumnCount len)
+    {
+        struct Pos{ Vector<Atom>::iterator it; ByteCount byte; };
+        auto find_col = [pos=0_col, it=atoms.begin(), end=atoms.end()](ColumnCount col) mutable {
+            for (; it != end; ++it)
+            {
+                auto atom_len = it->text.column_length();
+                if (pos + atom_len >= col)
+                    return Pos{it, it->text.byte_count_to(col - pos)};
+                pos += atom_len;
+            }
+            return Pos{it, 0_byte};
+        };
+        Pos begin = find_col(pos);
+        Pos end = find_col(pos+len);
+
+        if (begin.it == end.it)
+        {
+            auto end_text = begin.it->text.substr(end.byte).str();
+            begin.it->text.resize(begin.byte, 0);
+            return end_text.empty() ? begin.it+1 : atoms.insert(begin.it+1, {std::move(end_text), begin.it->face});
+        }
+
+        begin.it->text.resize(begin.byte, 0);
+        if (end.byte > 0)
+        {
+            if (end.byte == end.it->text.length())
+                ++end.it;
+            else
+                end.it->text = end.it->text.substr(end.byte).str();
+        }
+        return atoms.erase(begin.it+1, end.it);
+    }
+
+    Vector<Atom> atoms;
+};
+
+void TerminalUI::Window::blit(Window& target)
+{
+    auto target_line = target.lines.begin() + (size_t)pos.line;
+    for (auto& line : lines)
+    {
+        line.resize(size.column);
+        target_line->resize(target.size.column);
+        target_line->atoms.insert(target_line->erase_range(pos.column, size.column),
+                                  line.atoms.begin(), line.atoms.end());
+        ++target_line;
+    }
+}
+
+void TerminalUI::Window::output()
 {
     if (lines.empty())
         return;
@@ -69,7 +148,7 @@ void TerminalUI::Window::refresh(bool force)
     for (auto& line : lines)
     {
         set_cursor_pos(cursor_pos);
-        for (auto& atom : line)
+        for (auto& atom : line.atoms)
         {
             printf("\033[");
             set_attributes(atom.face.attributes);
@@ -87,27 +166,10 @@ void TerminalUI::Window::move_cursor(DisplayCoord coord)
     cursor = {std::min(size.line-1, coord.line), std::min(size.column-1, coord.column)};
 }
 
-void TerminalUI::Window::clear_line()
-{
-    auto& line = lines[(int)cursor.line];
-    auto it = line.begin();
-    ColumnCount column = 0;
-    for (; it != line.end() and column < cursor.column; ++it)
-        column += it->text.column_length();
-
-    line.erase(it, line.end());
-    if (column > cursor.column)
-    {
-        auto& text = line.back().text;
-        auto new_length = text.column_length() - (column - cursor.column);
-        text.resize(text.byte_count_to(new_length), 0);
-    }
-}
-
 void TerminalUI::Window::draw(ConstArrayView<DisplayAtom> atoms,
                              const Face& default_face)
 {
-    clear_line();
+    lines[(size_t)cursor.line].resize(cursor.column);
     for (const DisplayAtom& atom : atoms)
     {
         StringView content = atom.content();
@@ -117,16 +179,16 @@ void TerminalUI::Window::draw(ConstArrayView<DisplayAtom> atoms,
         auto face = merge_faces(default_face, atom.face);
         if (content.back() == '\n')
         {
-            lines[(int)cursor.line].push_back({content.substr(0, content.length()-1).str(), face});
-            lines[(int)cursor.line].push_back({" ", face});
+            lines[(int)cursor.line].atoms.push_back({content.substr(0, content.length()-1).str(), face});
+            lines[(int)cursor.line].atoms.push_back({" ", face});
         }
         else
-            lines[(int)cursor.line].push_back({content.str(), face});
+            lines[(int)cursor.line].atoms.push_back({content.str(), face});
         cursor.column += content.column_length();
     }
 
     if (cursor.column < size.column)
-        lines[(int)cursor.line].push_back({String(' ', size.column - cursor.column), default_face});
+        lines[(int)cursor.line].atoms.push_back({String(' ', size.column - cursor.column), default_face});
 }
 
 constexpr int TerminalUI::default_shift_function_key;
@@ -259,13 +321,14 @@ void TerminalUI::set_raw_mode() const
 
 void TerminalUI::redraw(bool force)
 {
-    m_window.refresh(force);
+    m_window.blit(m_screen);
 
     if (m_menu.columns != 0 or m_menu.pos.column > m_status_len)
-        m_menu.refresh(false);
+        m_menu.blit(m_screen);
 
-    m_info.refresh(false);
+    m_info.blit(m_screen);
 
+    m_screen.output();
     if (m_cursor.mode == CursorMode::Prompt)
         set_cursor_pos({m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column});
     else
@@ -389,6 +452,7 @@ void TerminalUI::check_resize(bool force)
     if (menu) m_menu.destroy();
 
     m_window.create({0, 0}, {ws.ws_row, ws.ws_col});
+    m_screen.create({0, 0}, {ws.ws_row, ws.ws_col});
     kak_assert(m_window);
 
     m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
