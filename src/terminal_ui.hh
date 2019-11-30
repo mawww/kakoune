@@ -77,24 +77,20 @@ private:
     {
         void create(const DisplayCoord& pos, const DisplayCoord& size);
         void destroy();
-        void refresh(bool force);
+        void blit(Window& target);
+        void output();
         void move_cursor(DisplayCoord coord);
         void draw(ConstArrayView<DisplayAtom> atoms, const Face& default_face);
 
         explicit operator bool() const { return not lines.empty(); }
 
-        struct Atom
-        {
-            String text;
-            Face face;
-        };
-        Vector<Vector<Atom>> lines;
+        struct Line;
+        Vector<Line> lines;
         DisplayCoord cursor;
-
-        void clear_line();
     };
 
     Window m_window;
+    Window m_screen;
 
     DisplayCoord m_dimensions;
     termios m_original_termios{};
