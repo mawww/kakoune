@@ -48,7 +48,19 @@ struct TerminalUI::Window::Line
     {
         String text;
         Face face;
+
+        friend bool operator==(const Atom& lhs, const Atom& rhs) { return lhs.text == rhs.text and lhs.face == rhs.face; }
+        friend bool operator!=(const Atom& lhs, const Atom& rhs) { return not (lhs == rhs); }
+        friend size_t hash_value(const Atom& atom) { return hash_values(atom.text, atom.face); }
     };
+
+    void append(String text, Face face)
+    {
+        if (not atoms.empty() and atoms.back().face == face)
+            atoms.back().text += text;
+        else
+            atoms.push_back({std::move(text), face});
+    }
 
     void resize(ColumnCount width)
     {
@@ -58,7 +70,7 @@ struct TerminalUI::Window::Line
             column += it->text.column_length();
 
         if (column < width)
-            atoms.push_back(Atom{String{' ', width - column}, atoms.empty() ? Face{} : atoms.back().face});
+            append(String{' ', width - column}, atoms.empty() ? Face{} : atoms.back().face);
         else
         {
             atoms.erase(it, atoms.end());
@@ -121,7 +133,37 @@ void TerminalUI::Window::blit(Window& target)
     }
 }
 
-void TerminalUI::Window::output()
+void TerminalUI::Window::move_cursor(DisplayCoord coord)
+{
+    cursor = {std::min(size.line-1, coord.line), std::min(size.column-1, coord.column)};
+}
+
+void TerminalUI::Window::draw(ConstArrayView<DisplayAtom> atoms,
+                             const Face& default_face)
+{
+    lines[(size_t)cursor.line].resize(cursor.column);
+    for (const DisplayAtom& atom : atoms)
+    {
+        StringView content = atom.content();
+        if (content.empty())
+            continue;
+
+        auto face = merge_faces(default_face, atom.face);
+        if (content.back() == '\n')
+        {
+            lines[(int)cursor.line].append(content.substr(0, content.length()-1).str(), face);
+            lines[(int)cursor.line].append(" ", face);
+        }
+        else
+            lines[(int)cursor.line].append(content.str(), face);
+        cursor.column += content.column_length();
+    }
+
+    if (cursor.column < size.column)
+        lines[(int)cursor.line].append(String(' ', size.column - cursor.column), default_face);
+}
+
+void TerminalUI::Screen::output(bool force)
 {
     if (lines.empty())
         return;
@@ -147,48 +189,27 @@ void TerminalUI::Window::output()
     DisplayCoord cursor_pos = pos;
     for (auto& line : lines)
     {
-        set_cursor_pos(cursor_pos);
-        for (auto& atom : line.atoms)
+        auto line_hash = hash_value(line.atoms);
+        if (force or cursor_pos.line >= hashes.size() or
+            line_hash != hashes[(size_t)cursor_pos.line])
         {
-            printf("\033[");
-            set_attributes(atom.face.attributes);
-            set_color(true, atom.face.fg);
-            set_color(false, atom.face.bg);
-            printf("m");
-            fputs(atom.text.c_str(), stdout);
+            set_cursor_pos(cursor_pos);
+            for (auto& atom : line.atoms)
+            {
+                printf("\033[");
+                set_attributes(atom.face.attributes);
+                set_color(true, atom.face.fg);
+                set_color(false, atom.face.bg);
+                printf("m");
+                fputs(atom.text.c_str(), stdout);
+            }
         }
+        if (hashes.size() <= cursor_pos.line)
+            hashes.push_back(line_hash);
+        else
+            hashes[(size_t)cursor_pos.line] = line_hash;
         ++cursor_pos.line;
     }
-}
-
-void TerminalUI::Window::move_cursor(DisplayCoord coord)
-{
-    cursor = {std::min(size.line-1, coord.line), std::min(size.column-1, coord.column)};
-}
-
-void TerminalUI::Window::draw(ConstArrayView<DisplayAtom> atoms,
-                             const Face& default_face)
-{
-    lines[(size_t)cursor.line].resize(cursor.column);
-    for (const DisplayAtom& atom : atoms)
-    {
-        StringView content = atom.content();
-        if (content.empty())
-            continue;
-
-        auto face = merge_faces(default_face, atom.face);
-        if (content.back() == '\n')
-        {
-            lines[(int)cursor.line].atoms.push_back({content.substr(0, content.length()-1).str(), face});
-            lines[(int)cursor.line].atoms.push_back({" ", face});
-        }
-        else
-            lines[(int)cursor.line].atoms.push_back({content.str(), face});
-        cursor.column += content.column_length();
-    }
-
-    if (cursor.column < size.column)
-        lines[(int)cursor.line].atoms.push_back({String(' ', size.column - cursor.column), default_face});
 }
 
 constexpr int TerminalUI::default_shift_function_key;
@@ -328,7 +349,7 @@ void TerminalUI::redraw(bool force)
 
     m_info.blit(m_screen);
 
-    m_screen.output();
+    m_screen.output(force);
     if (m_cursor.mode == CursorMode::Prompt)
         set_cursor_pos({m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column});
     else
@@ -453,6 +474,7 @@ void TerminalUI::check_resize(bool force)
 
     m_window.create({0, 0}, {ws.ws_row, ws.ws_col});
     m_screen.create({0, 0}, {ws.ws_row, ws.ws_col});
+    m_screen.hashes.clear();
     kak_assert(m_window);
 
     m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
