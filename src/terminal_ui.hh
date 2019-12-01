@@ -78,7 +78,6 @@ private:
         void create(const DisplayCoord& pos, const DisplayCoord& size);
         void destroy();
         void blit(Window& target);
-        void output();
         void move_cursor(DisplayCoord coord);
         void draw(ConstArrayView<DisplayAtom> atoms, const Face& default_face);
 
@@ -89,8 +88,14 @@ private:
         DisplayCoord cursor;
     };
 
+    struct Screen : Window
+    {
+        void output(bool force);
+        Vector<size_t> hashes;
+    };
+
     Window m_window;
-    Window m_screen;
+    Screen m_screen;
 
     DisplayCoord m_dimensions;
     termios m_original_termios{};
