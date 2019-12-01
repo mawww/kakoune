@@ -468,9 +468,24 @@ void InsertCompleter::reset()
 {
     if (m_explicit_completer or m_completions.is_valid())
     {
-        String selected_item;
-        if (m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size())
-            selected_item = std::move(m_completions.candidates[m_current_candidate].completion);
+        String hook_param;
+        if (m_context.has_client() and m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size() - 1)
+        {
+            auto& buffer = m_context.buffer();
+            auto ref = buffer.string(m_completions.begin, m_completions.end);
+            const auto& cursor_pos = m_context.selections().main().cursor();
+            const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
+            const auto suffix_len = std::max(0_byte, buffer.distance(cursor_pos, m_completions.end));
+            hook_param = join(m_context.selections() |
+                transform([&](const auto& sel) { return buffer.iterator_at(sel.cursor()); }) |
+                filter([&](const auto& pos) {
+                    return pos.coord().column >= prefix_len and (pos + suffix_len) != buffer.end() and
+                        std::equal(ref.begin(), ref.end(), pos - prefix_len);
+                }) |
+                transform([&](const auto& pos) {
+                    return selection_to_string(ColumnType::Byte, buffer, {(pos - prefix_len).coord(), buffer.char_prev((pos + suffix_len).coord())});
+                }), ' ');
+        }
 
         m_explicit_completer = nullptr;
         m_completions = InsertCompletion{};
@@ -478,7 +493,7 @@ void InsertCompleter::reset()
         {
             m_context.client().menu_hide();
             m_context.client().info_hide();
-            m_context.hooks().run_hook(Hook::InsertCompletionHide, selected_item, m_context);
+            m_context.hooks().run_hook(Hook::InsertCompletionHide, hook_param, m_context);
         }
     }
 }
