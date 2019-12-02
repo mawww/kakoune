@@ -47,6 +47,7 @@ add-highlighter shared/haskell/code/ regex (?<!')\b(import|hiding|qualified|modu
 add-highlighter shared/haskell/code/ regex (?<!')\b(import)(?!')\b[^\n]+(?<!')\b(as)(?!')\b 2:keyword
 add-highlighter shared/haskell/code/ regex (?<!')\b(class|data|default|deriving|infix|infixl|infixr|instance|module|newtype|pattern|type|where)(?!')\b 0:keyword
 add-highlighter shared/haskell/code/ regex (?<!')\b(case|do|else|if|in|let|mdo|of|proc|rec|then)(?!')\b 0:attribute
+add-highlighter shared/haskell/code/ regex (?<!')\b(type|data)\b\s+(\bfamily\b)?(?!') 0:keyword
 
 # The complications below is because period has many uses:
 # As function composition operator (possibly without spaces) like "." and "f.g"
