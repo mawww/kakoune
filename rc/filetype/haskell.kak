@@ -39,6 +39,7 @@ add-highlighter shared/haskell/macro        region ^\h*?\K#                     
 add-highlighter shared/haskell/pragma       region -recurse \{- \{-#               '#-\}'           fill meta
 add-highlighter shared/haskell/comment      region -recurse \{- \{-                  -\}            fill comment
 add-highlighter shared/haskell/line_comment region --(?:[^!#$%&*+./<>?@\\\^|~=]|$) $                fill comment
+add-highlighter shared/haskell/quasiquote   region \[\b[_a-z]['\w]*#?\| \|\]                        fill string
 
 add-highlighter shared/haskell/code/ regex (?<!')\b0x+[A-Fa-f0-9]+ 0:value
 add-highlighter shared/haskell/code/ regex (?<!')\b\d+([.]\d+)? 0:value
@@ -87,8 +88,6 @@ add-highlighter shared/haskell/code/ regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
 # matches function names in type signatures
 add-highlighter shared/haskell/code/ regex ^\h*(?:(?:where|let|default)\h+)?([_a-z]['\w]*)\s+::\s 1:meta
 
-# matches quasiquotes
-add-highlighter shared/haskell/code/ regex \[\b[\w]['\w]*\|(.*)\|\] 1:string
 
 # matches deriving strategies
 add-highlighter shared/haskell/code/ regex \bderiving\s+\b(stock|newtype|anyclass|via)\b 1:keyword
