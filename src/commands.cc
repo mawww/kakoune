@@ -2268,14 +2268,15 @@ const CommandDesc set_face_cmd = {
     "face",
     "set-face <scope> <name> <facespec>: set face <name> to refer to <facespec> in <scope>\n"
     "\n"
-    "facespec format is <fg color>[,<bg color>][+<attributes>]\n"
+    "facespec format is <fg color>[,<bg color>][+<attributes>][@<base>]\n"
     "colors are either a color name, or rgb:###### values.\n"
     "attributes is a combination of:\n"
     "    u: underline, i: italic, b: bold, r: reverse,\n"
     "    B: blink, d: dim,\n"
     "    f: final foreground, g: final background,\n"
     "    a: final attributes, F: same as +fga\n"
-    "facespec can as well just be the name of another face",
+    "facespec can as well just be the name of another face.\n"
+    "if a base face is specified, colors and attributes are applied on top of it",
     ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     face_doc_helper,
