@@ -10,7 +10,7 @@ Kakoune's regex always run on Unicode codepoint sequences, not on bytes.
 == Literals
 
 Every character except the syntax characters `\^$.*+?[]{}|().` match
-themselves. Syntax characters can be escaped with a backspace so `\$`
+themselves. Syntax characters can be escaped with a backslash so `\$`
 will match a literal `$` and `\\` will match a literal `\`.
 
 Some literals are available as escape sequences:
