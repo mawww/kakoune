@@ -12,6 +12,7 @@
 #include "value.hh"
 #include "vector.hh"
 
+#include <sys/types.h>
 #include <ctime>
 
 namespace Kakoune
