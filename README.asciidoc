@@ -131,11 +131,16 @@ brew install kakoune
 [TIP]
 .Fedora supported versions and Rawhide
 ====
-Use the https://copr.fedoraproject.org/coprs/jkonecny/kakoune/[copr]
-repository.
-
 ---------------------------------
-dnf copr enable jkonecny/kakoune
+dnf install kakoune
+---------------------------------
+====
+
+[TIP]
+.RHEL/CentOS 8
+====
+Kakoune can be found in the https://src.fedoraproject.org/rpms/kakoune/tree/epel8[EPEL8 repositories].
+---------------------------------
 dnf install kakoune
 ---------------------------------
 ====
