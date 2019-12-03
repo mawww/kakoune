@@ -7,6 +7,7 @@
 
 #include "array_view.hh"
 
+#include <algorithm>
 #include <functional>
 #include <iterator>
 #include <memory>
