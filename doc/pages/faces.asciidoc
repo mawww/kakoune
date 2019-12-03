@@ -7,7 +7,7 @@ color, a background color, and some attributes. The value of a face has the
 following format:
 
 ---------------------------------------
-fg_color[,bg_color][+attributes][@base]
+[fg_color][,bg_color][+attributes][@base]
 ---------------------------------------
 
 'fg_color', 'bg_color'::
@@ -20,6 +20,7 @@ fg_color[,bg_color][+attributes][@base]
             keep the existing color
         *rgb:RRGGBB*:::
             hexadecimal value
+    if unspecified, *default* is used.
 
 'attributes'::
     string whose individual letters set an attribute:
