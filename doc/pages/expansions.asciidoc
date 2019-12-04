@@ -367,6 +367,12 @@ The following expansions are supported (with required context _in italics_):
     _in window scope_ +
     width of the current Kakoune window
 
+*%val{window_range}*::
+    _in window scope_ +
+    list of coordinates and dimensions of the buffer-space
+    available on the current window, in the following format:
+    `<coord_x> <coord_y> <width> <height>`
+
 Values in the above list that do not mention a context are available
 everywhere.
 
