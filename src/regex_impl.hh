@@ -235,8 +235,8 @@ public:
             }
             else if (start != config.end)
             {
-                const Codepoint cp = codepoint(start, config);
-                 if (not start_desc->map[cp < StartDesc::count ? cp : StartDesc::other])
+                const unsigned char c = forward ? *start : *utf8::previous(start, config.end);
+                 if (not start_desc->map[(c < StartDesc::count) ? c : StartDesc::other])
                     return false;
             }
         }
@@ -525,12 +525,21 @@ private:
     {
         while (start != config.end)
         {
-            const Codepoint cp = read_codepoint(start, config);
-            if (start_desc.map[(cp >= 0 and cp < StartDesc::count) ? cp : StartDesc::other])
+            static_assert(StartDesc::count <= 128, "start desc should be ascii only");
+            if constexpr (forward)
             {
-                forward ? utf8::to_previous(start, config.subject_begin)
-                        : utf8::to_next(start, config.subject_end);
-                return;
+                const unsigned char c = *start;
+                if (start_desc.map[(c < StartDesc::count) ? c : StartDesc::other])
+                    return;
+                utf8::to_next(start, config.end);
+            }
+            else
+            {
+                auto prev = utf8::previous(start, config.end);
+                const unsigned char c = *prev;
+                if (start_desc.map[(c < StartDesc::count) ? c : StartDesc::other])
+                    return;
+                start = prev;
             }
         }
     }
@@ -610,17 +619,6 @@ private:
             return not (config.flags & RegexExecFlags::NotEndOfWord);
         return is_word(utf8::codepoint(utf8::previous(pos, config.subject_begin), config.subject_end)) !=
                is_word(utf8::codepoint(pos, config.subject_end));
-    }
-
-    static Codepoint read_codepoint(Iterator& it, const ExecConfig& config)
-    {
-        if (forward)
-            return utf8::read_codepoint(it, config.subject_end);
-        else
-        {
-            utf8::to_previous(it, config.subject_begin);
-            return utf8::codepoint(it, config.subject_end);
-        }
     }
 
     static Codepoint codepoint(const Iterator& it, const ExecConfig& config)
