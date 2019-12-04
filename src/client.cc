@@ -287,7 +287,7 @@ void Client::reload_buffer()
     {
         context().print_status({ format("error while reloading buffer: '{}'", error.what()),
                                  context().faces()["Error"] });
-        buffer.set_fs_timestamp(get_fs_timestamp(buffer.name()));
+        buffer.set_fs_status(get_fs_status(buffer.name()));
     }
 }
 
@@ -312,7 +312,7 @@ void Client::on_buffer_reload_key(Key key)
     else if (key == 'n' or key == 'N' or key == Key::Escape)
     {
         // reread timestamp in case the file was modified again
-        buffer.set_fs_timestamp(get_fs_timestamp(buffer.name()));
+        buffer.set_fs_status(get_fs_status(buffer.name()));
         print_status({ format("'{}' kept", buffer.display_name()),
                        context().faces()["Information"] });
         if (key == 'N')
@@ -354,9 +354,16 @@ void Client::check_if_buffer_needs_reloading()
         return;
 
     const String& filename = buffer.name();
-    timespec ts = get_fs_timestamp(filename);
-    if (ts == InvalidTime or ts == buffer.fs_timestamp())
+    const timespec ts = get_fs_timestamp(filename);
+    const auto status = buffer.fs_status();
+
+    if (ts == InvalidTime or ts == status.timestamp)
         return;
+
+    if (MappedFile fd{filename};
+        fd.st.st_size == status.file_size and hash_data(fd.data, fd.st.st_size) == status.hash)
+        return;
+
     if (reload == Autoreload::Ask)
     {
         StringView bufname = buffer.display_name();

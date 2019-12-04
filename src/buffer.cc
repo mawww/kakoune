@@ -78,7 +78,7 @@ Buffer::Buffer(String name, Flags flags, StringView data,
       m_history{{HistoryId::Invalid}},
       m_history_id{HistoryId::First},
       m_last_save_history_id{HistoryId::First},
-      m_fs_timestamp{fs_timestamp.tv_sec, fs_timestamp.tv_nsec}
+      m_fs_status{fs_timestamp, data.length(), hash_value(data)}
 {
     ParsedLines parsed_lines = parse_lines(data);
 
@@ -122,7 +122,7 @@ void Buffer::on_registered()
             run_hook_in_own_context(Hook::BufNewFile, m_name);
         else
         {
-            kak_assert(m_fs_timestamp != InvalidTime);
+            kak_assert(m_fs_status.timestamp != InvalidTime);
             run_hook_in_own_context(Hook::BufOpenFile, m_name);
         }
     }
@@ -308,7 +308,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
     apply_options(options(), parsed_lines);
 
     m_last_save_history_id = m_history_id;
-    m_fs_timestamp = fs_timestamp;
+    m_fs_status = {fs_timestamp, data.length(), hash_value(data)};
 }
 
 void Buffer::commit_undo_group()
@@ -610,7 +610,7 @@ void Buffer::notify_saved()
 
     m_flags &= ~Flags::New;
     m_last_save_history_id = m_history_id;
-    m_fs_timestamp = get_fs_timestamp(m_name);
+    m_fs_status.timestamp = get_fs_timestamp(m_name);
 }
 
 BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
@@ -666,16 +666,16 @@ BufferCoord Buffer::char_prev(BufferCoord coord) const
     return { coord.line, column };
 }
 
-timespec Buffer::fs_timestamp() const
+void Buffer::set_fs_status(FsStatus status)
 {
     kak_assert(m_flags & Flags::File);
-    return m_fs_timestamp;
+    m_fs_status = std::move(status);
 }
 
-void Buffer::set_fs_timestamp(timespec ts)
+const FsStatus& Buffer::fs_status() const
 {
     kak_assert(m_flags & Flags::File);
-    m_fs_timestamp = ts;
+    return m_fs_status;
 }
 
 void Buffer::on_option_changed(const Option& option)

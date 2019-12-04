@@ -5,6 +5,7 @@
 #include "coord.hh"
 #include "constexpr_utils.hh"
 #include "enum.hh"
+#include "file.hh"
 #include "optional.hh"
 #include "safe_ptr.hh"
 #include "scope.hh"
@@ -142,9 +143,9 @@ public:
     BufferCoord erase(BufferCoord begin, BufferCoord end);
     BufferCoord replace(BufferCoord begin, BufferCoord end, StringView content);
 
-    size_t         timestamp() const;
-    timespec       fs_timestamp() const;
-    void           set_fs_timestamp(timespec ts);
+    size_t          timestamp() const;
+    void            set_fs_status(FsStatus);
+    const FsStatus& fs_status() const;
 
     void           commit_undo_group();
     bool           undo(size_t count = 1);
@@ -285,7 +286,7 @@ private:
 
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 
-    timespec m_fs_timestamp;
+    FsStatus m_fs_status;
 
     // Values are just data holding by the buffer, they are not part of its
     // observable state
