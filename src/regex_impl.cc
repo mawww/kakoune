@@ -695,6 +695,7 @@ struct RegexCompiler
         {
             m_program.forward_start_desc = compute_start_desc<RegexMode::Forward>();
             compile_node<RegexMode::Forward>(0);
+            optimize(0, m_program.instructions.size());
             push_inst(CompiledRegex::Match);
         }
 
@@ -703,6 +704,7 @@ struct RegexCompiler
             m_program.first_backward_inst = m_program.instructions.size();
             m_program.backward_start_desc = compute_start_desc<RegexMode::Backward>();
             compile_node<RegexMode::Backward>(0);
+            optimize(m_program.first_backward_inst, m_program.instructions.size());
             push_inst(CompiledRegex::Match);
         }
         else
@@ -1028,6 +1030,43 @@ private:
             return nullptr;
 
         return std::make_unique<CompiledRegex::StartDesc>(start_desc);
+    }
+
+    void optimize(size_t begin, size_t end)
+    {
+        if (not (m_flags & RegexCompileFlags::Optimize))
+            return;
+
+        auto is_jump = [](CompiledRegex::Op op) { return op >= CompiledRegex::Op::Jump and op <= CompiledRegex::Op::Split_PrioritizeChild; };
+        for (auto i = begin; i < end; ++i)
+        {
+            auto& inst = m_program.instructions[i];
+            if (is_jump(inst.op))
+                m_program.instructions[inst.param].last_step = 0xffff; // tag as jump target
+        }
+
+        for (auto block_begin = begin; block_begin < end; )
+        {
+            auto block_end = block_begin + 1;
+            while (block_end < end and
+                   not is_jump(m_program.instructions[block_end].op) and
+                   m_program.instructions[block_end].last_step != 0xffff)
+                ++block_end;
+            peephole_optimize(block_begin, block_end);
+            block_begin = block_end;
+        }
+    }
+
+    void peephole_optimize(size_t begin, size_t end)
+    {
+        // Move saves after all assertions on the same character
+        auto is_assertion = [](CompiledRegex::Op op) { return op >= CompiledRegex::LineStart; };
+        for (auto i = begin, j = begin + 1; j < end; ++i, ++j)
+        {
+            if (m_program.instructions[i].op == CompiledRegex::Save and
+                is_assertion(m_program.instructions[j].op))
+                std::swap(m_program.instructions[i], m_program.instructions[j]);
+        }
     }
 
     const ParsedRegex::Node& get_node(ParsedRegex::NodeIndex index) const
