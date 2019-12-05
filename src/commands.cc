@@ -1396,7 +1396,7 @@ const CommandDesc debug_cmd = {
                 throw runtime_error("expected a regex");
 
             write_to_debug_buffer(format(" * {}:\n{}",
-                                  parser[1], dump_regex(compile_regex(parser[1], RegexCompileFlags::None))));
+                                  parser[1], dump_regex(compile_regex(parser[1], RegexCompileFlags::Optimize))));
         }
         else
             throw runtime_error(format("no such debug command: '{}'", parser[0]));
