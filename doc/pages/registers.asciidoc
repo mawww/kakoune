@@ -44,7 +44,8 @@ All normal-mode commands using a register default to a specific one if not speci
 *^* (caret)::
     default mark register, used by:
     *z*, *<a-z>*, *Z* and *<a-Z>*
-    (see <<keys#marks, `:doc keys marks`>>)
+    (see <<keys#marks, `:doc keys marks`>>
+    and <<registers#marks, `:doc registers marks`>>)
 
 *|* (pipe)::
     default shell command register, used by commands that spawn a subshell:
@@ -82,3 +83,33 @@ month in register *3*, but select the entire date:
 --------------------
 (\w+) (\w+) (\d+) .+
 --------------------
+
+== Marks
+
+When a register is used to store a set of selections with the *Z* key (see
+<<keys#marks, `:doc keys marks`>>), the selections are stored as a list of
+spans, in a format similar to `%val{selections_desc}` (see
+<<expansions#value-expansions, `:doc expansions value-expansions`). However,
+the very first item of the list is of the form:
+
+---------------------
+/path/to/file@123@456
+---------------------
+
+...where:
+
+/path/to/file::
+    represents the filesystem path of the file where the selections were saved,
+    like `%val{buffile}`.
+
+123::
+    represents the value of `%val{timestamp}` when the selections were saved,
+    so the selections can still be restored after the buffer has been modified,
+    or modifications undone.
+
+456::
+    indicates which was the main selection, when the selections were saved
+    (zero-based).
+
+You can examine the content of a mark register by using `<a-p>` to paste it,
+so you can see all its items, not limited to the current number of selections.
