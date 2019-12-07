@@ -58,29 +58,6 @@ struct {
         20190120,
         "» named capture groups in regex\n"
         "» auto_complete option renamed to autocomplete\n"
-    }, {
-        20181027,
-        "» define-commands -shell-completion and -shell-candidates has been renamed\n"
-        "» exclusive face attributes is replaced with final (fg/bg/attr)\n"
-        "» <a-M> (merge consecutive) moved to <a-_> to make <a-M> backward <a-m>\n"
-        "» remove-hooks now takes a regex parameter\n"
-    }, {
-        20180904,
-        "» Big breaking refactoring of various Kakoune features,\n"
-        "  configuration might need to be updated see `:doc changelog` for details\n"
-        "» define-command -allow-override switch has been renamed -override\n"
-    }, {
-        20180413,
-        "» ModeChange hook has been introduced and is expected to replace\n"
-        "  the various ${MODE}Begin/${MODE}End hooks, consider those deprecated.\n"
-        "» '*' Does not strip whitespaces anymore, use built-in '_' to strip them\n"
-        "» 'l' on eol will go to next line, 'h' on first char will go to previous\n"
-        "» selections merging behaviour is now a bit more complex again\n"
-        "» 'x' will only jump to next line if full line is already selected\n"
-        "» WORD text object moved to <a-w> instead of W for consistency\n"
-        "» rotate main selection moved to ), rotate content to <a-)>, ( for backward\n"
-        "» faces are now scoped, set-face command takes an additional scope parameter\n"
-        "» <backtab> key is gone, use <s-tab> instead\n"
 } };
 
 void show_startup_info(Client* local_client, int last_version)
@@ -101,7 +78,7 @@ void show_startup_info(Client* local_client, int last_version)
     }
     if (not info.empty())
     {
-        info += "See the `:doc options startup-info` to control this message\n";
+        info += "Refer to the `:doc options startup-info` documentation page to control this message, and to `:doc changelog` for a complete changelog\n";
         local_client->info_show(format("Kakoune {}", version), info, {}, InfoStyle::Prompt);
     }
 }
