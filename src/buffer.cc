@@ -156,6 +156,11 @@ bool Buffer::set_name(String name)
         {
             m_name = real_path(name);
             m_display_name = compact_path(m_name);
+            if (m_flags & Buffer::Flags::File and not file_exists(m_name))
+            {
+                m_flags |= Buffer::Flags::New;
+                m_last_save_history_id = HistoryId::Invalid;
+            }
         }
         else
         {
