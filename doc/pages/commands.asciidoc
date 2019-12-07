@@ -106,8 +106,9 @@ of the file onto the filesystem
     *alias* db +
     delete current buffer or the buffer <name> if specified
 
-*rename-buffer* <name>::
-    set current buffer name
+*rename-buffer* [-file|-scratch] <name>::
+    set current buffer name, if *-scratch* or *-file* is given, ensure
+    the buffer is set to the corresponding type.
 
 *source* <filename> <param>...::
     execute commands in <filename>

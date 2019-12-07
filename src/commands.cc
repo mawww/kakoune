@@ -823,13 +823,28 @@ const CommandDesc rename_buffer_cmd = {
     "rename-buffer",
     nullptr,
     "rename-buffer <name>: change current buffer name",
-    single_param,
+    ParameterDesc{
+        {
+            { "scratch",  { false, "convert a file buffer to a scratch buffer" } },
+            { "file",  { false, "convert a scratch buffer to a file buffer" } }
+        },
+        ParameterDesc::Flags::None, 1, 1
+    },
     CommandFlags::None,
     CommandHelper{},
     filename_completer<false>,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        if (not context.buffer().set_name(parser[0]))
+        if (parser.get_switch("scratch") and parser.get_switch("file"))
+            throw runtime_error("scratch and file are incompatible switches");
+
+        auto& buffer = context.buffer();
+        if (parser.get_switch("scratch"))
+            buffer.flags() &= ~(Buffer::Flags::File | Buffer::Flags::New);
+        if (parser.get_switch("file"))
+            buffer.flags() |= Buffer::Flags::File;
+
+        if (not buffer.set_name(parser[0]))
             throw runtime_error(format("unable to change buffer name to '{}': a buffer with this name already exists", parser[0]));
     }
 };
