@@ -9,6 +9,7 @@
 #include "ranges.hh"
 #include "string_utils.hh"
 
+#include <cstdio>
 #include <utility>
 
 #include <unistd.h>
