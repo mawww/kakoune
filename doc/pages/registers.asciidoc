@@ -92,24 +92,17 @@ spans, in a format similar to `%val{selections_desc}` (see
 <<expansions#value-expansions, `:doc expansions value-expansions`). However,
 the very first item of the list is of the form:
 
----------------------
-/path/to/file@123@456
----------------------
+------------------------------------------
+<buffer name>@<timestamp>@<main sel index>
+------------------------------------------
 
-...where:
+with:
 
-/path/to/file::
-    represents the filesystem path of the file where the selections were saved,
-    like `%val{buffile}`.
+*buffer name*::
+    `%val{buffile}` of the buffer selections relate to
 
-123::
-    represents the value of `%val{timestamp}` when the selections were saved,
-    so the selections can still be restored after the buffer has been modified,
-    or modifications undone.
+*timestamp*::
+    `%val{timestamp}` at which the selection apply to
 
-456::
-    indicates which was the main selection, when the selections were saved
-    (zero-based).
-
-You can examine the content of a mark register by using `<a-p>` to paste it,
-so you can see all its items, not limited to the current number of selections.
+*main sel index*::
+    0-based index of the main selection
