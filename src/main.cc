@@ -44,42 +44,57 @@ struct {
     unsigned int version;
     const char* notes;
 } constexpr version_notes[] = { {
-        0,
+        20191210,
         "» ModeChange parameter has changed to contain push/pop\n"
         "  ${Mode}Begin/${Mode}End hooks were removed\n"
     }, {
         20190701,
         "» %file{...} expansions to read files\n"
         "» echo -to-file <filename> to write to file\n"
-        "» completions option have an on select command instead of a docstring\n"
+        "» completions option have an on select command instead of\n"
+        "  a docstring\n"
         "» Function key syntax do not accept lower case f anymore\n"
-        "» shell quoting of list options is now opt-in with $kak_quoted_...\n"
+        "» shell quoting of list options is now opt-in with\n"
+        "  $kak_quoted_...\n"
     }, {
         20190120,
         "» named capture groups in regex\n"
         "» auto_complete option renamed to autocomplete\n"
     }, {
         20181027,
-        "» define-commands -shell-completion and -shell-candidates has been renamed\n"
-        "» exclusive face attributes is replaced with final (fg/bg/attr)\n"
-        "» <a-M> (merge consecutive) moved to <a-_> to make <a-M> backward <a-m>\n"
+        "» define-commands -shell-completion and -shell-candidates\n"
+        "  has been renamed\n"
+        "» exclusive face attributes is replaced with final\n"
+        "  (fg/bg/attr)\n"
+        "» <a-M> (merge consecutive) moved to <a-_> to make <a-M>\n"
+        "  backward <a-m>\n"
         "» remove-hooks now takes a regex parameter\n"
     }, {
         20180904,
         "» Big breaking refactoring of various Kakoune features,\n"
-        "  configuration might need to be updated see `:doc changelog` for details\n"
-        "» define-command -allow-override switch has been renamed -override\n"
+        "  configuration might need to be updated see `:doc changelog`\n"
+        "  for details\n"
+        "» define-command -allow-override switch has been renamed\n"
+        "  -override\n"
     }, {
         20180413,
-        "» ModeChange hook has been introduced and is expected to replace\n"
-        "  the various ${MODE}Begin/${MODE}End hooks, consider those deprecated.\n"
-        "» '*' Does not strip whitespaces anymore, use built-in '_' to strip them\n"
-        "» 'l' on eol will go to next line, 'h' on first char will go to previous\n"
-        "» selections merging behaviour is now a bit more complex again\n"
-        "» 'x' will only jump to next line if full line is already selected\n"
-        "» WORD text object moved to <a-w> instead of W for consistency\n"
-        "» rotate main selection moved to ), rotate content to <a-)>, ( for backward\n"
-        "» faces are now scoped, set-face command takes an additional scope parameter\n"
+        "» ModeChange hook has been introduced and is expected\n"
+        "  to replace the various ${MODE}Begin/${MODE}End hooks,\n"
+        "  consider those deprecated.\n"
+        "» '*' Does not strip whitespaces anymore, use built-in\n"
+        "  '_' to strip them\n"
+        "» 'l' on eol will go to next line, 'h' on first char will\n"
+        "  go to previous\n"
+        "» selections merging behaviour is now a bit more complex\n"
+        "  again\n"
+        "» 'x' will only jump to next line if full line is already\n"
+        "  selected\n"
+        "» WORD text object moved to <a-w> instead of W for\n"
+        "  consistency\n"
+        "» rotate main selection moved to ), rotate content to <a-)>,\n"
+        "  ( for backward\n"
+        "» faces are now scoped, set-face command takes an additional\n"
+        "  scope parameter\n"
         "» <backtab> key is gone, use <s-tab> instead\n"
 } };
 

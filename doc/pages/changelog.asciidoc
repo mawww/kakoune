@@ -3,7 +3,7 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development version
+== Kakoune 2019.12.10
 
 * Arrow keys and `<home>`, `<end>` are not normal mode commands
   anymore but default key mappings.
@@ -18,6 +18,9 @@ released versions.
 * `WrapMarker` face used by `wrap -marker` highlighter
 
 * `info` supports markup with the `-markup` switch
+
+* `rename-buffer` gained `-file` and `-scratch` switches
+  to support converting buffer types.  
 
 == Kakoune 2019.07.01
 
