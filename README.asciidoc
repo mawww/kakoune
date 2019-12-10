@@ -1,9 +1,11 @@
-= image:{logo}[K,30,30,link="{website}",title="Kakoune logo by p0nce"] Kakoune image:{travis-img}[link="{travis-url}"] image:{irc-img}[link="{irc-url}"]
+= image:{logo}[K,30,30,link="{website}",title="Kakoune logo by p0nce"] Kakoune image:{travis-img}[link="{travis-url}"] image:{cirrus-img}[link="{cirrus-url}"] image:{irc-img}[link="{irc-url}"]
 ifdef::env-github,env-browser[:outfilesuffix: .asciidoc]
 :logo: https://rawgit.com/mawww/kakoune/master/doc/kakoune_logo.svg
 :website: http://kakoune.org
 :travis-img: https://travis-ci.org/mawww/kakoune.svg?branch=master
 :travis-url: https://travis-ci.org/mawww/kakoune
+:cirrus-img: https://cirrus-ci.com/github/mawww/kakoune.svg
+:cirrus-url: https://cirrus-ci.com/github/mawww/kakoune
 :irc-img: https://img.shields.io/badge/IRC-%23kakoune-blue.svg
 :irc-url: https://webchat.freenode.net/?channels=kakoune
 :icons: font
