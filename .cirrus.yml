@@ -1,0 +1,41 @@
+freebsd_task:
+    freebsd_instance:
+        image_family: freebsd-12-1
+    gmake_script: pkg install -y gmake
+    matrix:
+        - name: freebsd_clang
+        - name: freebsd_gcc
+          gcc_script: pkg install -y gcc
+          env:
+              CXX: g++
+    test_script: gmake test
+    env:
+        LC_ALL: en_US.UTF-8
+
+linux_task:
+    container:
+        image: gcc:7
+    locales_script:
+        - apt-get update && apt-get -y install locales
+        - echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+        - locale-gen en_US.UTF-8
+    matrix:
+        - name: linux_clang
+          env:
+              CXX: clang++
+          clang_script:
+              - apt-get -y install clang
+        - name: linux_gcc
+    test_script: make test
+    env:
+        LC_ALL: en_US.UTF-8
+
+macos_task:
+    osx_instance:
+        image: mojave-base
+    matrix:
+        - name: macos_clang
+          env:
+              CXX: clang++
+        - name: macos_gcc
+    test_script: make test
