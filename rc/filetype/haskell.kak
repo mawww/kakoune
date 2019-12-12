@@ -91,7 +91,7 @@ add-highlighter shared/haskell/code/ regex ^\s*(?:where\s+|let\s+|default\s+)?([
 
 # matches deriving strategies
 add-highlighter shared/haskell/code/ regex \bderiving\s+\b(stock|newtype|anyclass|via)\b 1:keyword
-add-highlighter shared/haskell/code/ regex \bderiving\s+[^\s]+?\s+\b(via)\b 1:keyword
+add-highlighter shared/haskell/code/ regex \bderiving\b\s+(?:[A-Z]['\w]+|\([',\w\s]+?\))\s+\b(via)\b 1:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
