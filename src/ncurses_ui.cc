@@ -682,8 +682,8 @@ Optional<Key> NCursesUI::get_next_key()
         case 'B': return masked_key(Key::Down);
         case 'C': return masked_key(Key::Right);
         case 'D': return masked_key(Key::Left);
-        case 'F': return masked_key(Key::End);
-        case 'H': return masked_key(Key::Home);
+        case 'F': return masked_key(Key::End);   // PC/xterm style
+        case 'H': return masked_key(Key::Home);  // PC/xterm style
         case 'P': return masked_key(Key::F1);
         case 'Q': return masked_key(Key::F2);
         case 'R': return masked_key(Key::F3);
@@ -691,12 +691,14 @@ Optional<Key> NCursesUI::get_next_key()
         case '~':
             switch (params[0])
             {
+            case 1: return masked_key(Key::Home);     // VT220/tmux style
             case 2: return masked_key(Key::Insert);
             case 3: return masked_key(Key::Delete);
+            case 4: return masked_key(Key::End);      // VT220/tmux style
             case 5: return masked_key(Key::PageUp);
             case 6: return masked_key(Key::PageDown);
-            case 7: return masked_key(Key::Home);
-            case 8: return masked_key(Key::End);
+            case 7: return masked_key(Key::Home);     // rxvt style
+            case 8: return masked_key(Key::End);      // rxvt style
             case 11: case 12: case 13: case 14: case 15:
                 return masked_key(Key::F1 + params[0] - 11);
             case 17: case 18: case 19: case 20: case 21:
