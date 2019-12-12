@@ -1,5 +1,6 @@
 # http://tmux.github.io/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+# Tmux version >= 2 is required to use this module
 
 hook global ModuleLoaded tmux %{
     require-module tmux-repl
@@ -47,30 +48,7 @@ define-command -hidden tmux-send-text -params 0..1 -docstring "tmux-send-text [t
     }
 }
 
-define-command -hidden tmux-repl-disabled %{ evaluate-commands %sh{
-    VERSION_TMUX=$(tmux -V)
-    printf 'fail The version of tmux is too old: got %s, expected >= 2.x\n' "${VERSION_TMUX}"
-} }
-
-evaluate-commands %sh{
-    VERSION_TMUX=$(tmux -V)
-    VERSION_TMUX=${VERSION_TMUX##* }
-    VERSION_TMUX=${VERSION_TMUX#next-}
-    VERSION_TMUX=${VERSION_TMUX%-rc*}
-    VERSION_TMUX=${VERSION_TMUX%%.*}
-
-    if [ "${VERSION_TMUX}" = "master" ] \
-        || [ "${VERSION_TMUX}" -ge 2 ]; then
-        echo "
-            alias global repl tmux-repl-horizontal
-            alias global send-text tmux-send-text
-        "
-    else
-        echo "
-            alias global repl tmux-repl-disabled
-            alias global send-text tmux-repl-disabled
-        "
-    fi
-}
+alias global repl tmux-repl-horizontal
+alias global send-text tmux-send-text
 
 }
