@@ -638,22 +638,15 @@ void insert_output(Context& context, NormalParams)
                 return;
 
             ScopedEdition edition(context);
-            Buffer& buffer = context.buffer();
-            auto& shell_manager = ShellManager::instance();
             auto& selections = context.selections();
-            Vector<String> ins;
             const size_t old_main = selections.main_index();
 
-            for (size_t i = 0; i < selections.size(); i++)
-            {
-                selections.set_main_index(i);
-
-                auto& sel = selections.main();
-                auto str = shell_manager.eval(cmdline, context, content(buffer, sel),
-                                       ShellManager::Flags::WaitForStdout).first;
-
-                ins.emplace_back(str);
-            }
+            auto ins = selections | transform([&, i=0](auto& sel) mutable {
+                selections.set_main_index(i++);
+                return ShellManager::instance().eval(
+                    cmdline, context, content(context.buffer(), sel),
+                    ShellManager::Flags::WaitForStdout).first;
+            }) | gather<Vector>();
 
             selections.set_main_index(old_main);
             selections.insert(ins, mode);
