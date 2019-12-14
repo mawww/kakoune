@@ -712,6 +712,14 @@ Optional<Key> NCursesUI::get_next_key()
                 return masked_key(Key::F6 + params[0] - 17);
             case 23: case 24:
                 return masked_key(Key::F11 + params[0] - 23);
+            case 25: case 26:
+                return Key{Key::Modifiers::Shift, Key::F3 + params[0] - 25}; // rxvt style
+            case 28: case 29:
+                return Key{Key::Modifiers::Shift, Key::F5 + params[0] - 28}; // rxvt style
+            case 31: case 32:
+                return Key{Key::Modifiers::Shift, Key::F7 + params[0] - 31}; // rxvt style
+            case 33: case 34:
+                return Key{Key::Modifiers::Shift, Key::F9 + params[0] - 33}; // rxvt style
             }
             return {};
         case 'u':
