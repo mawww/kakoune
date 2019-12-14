@@ -179,6 +179,10 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context, Quoting quoting)
         { return join(context.selections_content() | transform(quoter(quoting)), ' ', false); }
     }, {
+        "binary_path", false,
+        [](StringView name, const Context& context, Quoting quoting)
+        { return get_kak_binary_path(); }
+    }, {
         "runtime", false,
         [](StringView name, const Context& context, Quoting quoting)
         { return runtime_directory(); }
