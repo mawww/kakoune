@@ -640,7 +640,7 @@ Optional<Key> NCursesUI::get_next_key()
             else
                 return {};
         }
-        if (c < 0x40 or c > 0x7e)
+        if (c != '$' and (c < 0x40 or c > 0x7e))
             return {};
 
         auto parse_mask = [](int mask) {
@@ -678,6 +678,13 @@ Optional<Key> NCursesUI::get_next_key()
 
         switch (c)
         {
+        case '$':
+            switch (params[0])
+            {
+            case 23: case 24:
+                return Key{Key::Modifiers::Shift, Key::F11 + params[0] - 23}; // rxvt style
+            }
+            return {};
         case 'A': return masked_key(Key::Up);
         case 'B': return masked_key(Key::Down);
         case 'C': return masked_key(Key::Right);
