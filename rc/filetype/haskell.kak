@@ -39,6 +39,7 @@ add-highlighter shared/haskell/macro        region ^\h*?\K#                     
 add-highlighter shared/haskell/pragma       region -recurse \{- \{-#               '#-\}'           fill meta
 add-highlighter shared/haskell/comment      region -recurse \{- \{-                  -\}            fill comment
 add-highlighter shared/haskell/line_comment region --(?:[^!#$%&*+./<>?@\\\^|~=]|$) $                fill comment
+add-highlighter shared/haskell/quasiquote   region \[\b[_a-z]['\w]*#?\| \|\]                        regex \[\b[_a-z]['\w]*#?\|(.*?)\|\] 1:string
 
 add-highlighter shared/haskell/code/ regex (?<!')\b0x+[A-Fa-f0-9]+ 0:value
 add-highlighter shared/haskell/code/ regex (?<!')\b\d+([.]\d+)? 0:value
@@ -46,6 +47,7 @@ add-highlighter shared/haskell/code/ regex (?<!')\b(import|hiding|qualified|modu
 add-highlighter shared/haskell/code/ regex (?<!')\b(import)(?!')\b[^\n]+(?<!')\b(as)(?!')\b 2:keyword
 add-highlighter shared/haskell/code/ regex (?<!')\b(class|data|default|deriving|infix|infixl|infixr|instance|module|newtype|pattern|type|where)(?!')\b 0:keyword
 add-highlighter shared/haskell/code/ regex (?<!')\b(case|do|else|if|in|let|mdo|of|proc|rec|then)(?!')\b 0:attribute
+add-highlighter shared/haskell/code/ regex (?<!')\b(type|data)\b\s+(\bfamily\b)?(?!') 0:keyword
 
 # The complications below is because period has many uses:
 # As function composition operator (possibly without spaces) like "." and "f.g"
@@ -85,14 +87,11 @@ add-highlighter shared/haskell/code/ regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
 # this has to come after operators so '-' etc is correct
 
 # matches function names in type signatures
-add-highlighter shared/haskell/code/ regex ^\h*(?:(?:where|let|default)\h+)?([_a-z]['\w]*)\s+::\s 1:meta
-
-# matches quasiquotes
-add-highlighter shared/haskell/code/ regex \[\b[\w]['\w]*\|(.*)\|\] 1:string
+add-highlighter shared/haskell/code/ regex ^\s*(?:where\s+|let\s+|default\s+)?([_a-z]['\w]*#?(?:,\s*[_a-z]['\w]*#?)*)\s+::\s 1:meta
 
 # matches deriving strategies
 add-highlighter shared/haskell/code/ regex \bderiving\s+\b(stock|newtype|anyclass|via)\b 1:keyword
-add-highlighter shared/haskell/code/ regex \bderiving\s+[^\s]+?\s+\b(via)\b 1:keyword
+add-highlighter shared/haskell/code/ regex \bderiving\b\s+(?:[A-Z]['\w]+|\([',\w\s]+?\))\s+\b(via)\b 1:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
