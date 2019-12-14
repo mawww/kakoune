@@ -62,6 +62,11 @@ from the remaining parameters.
         specify a string to separate the line numbers column with
         the rest of the buffer (default is '|')
 
+    *-min-digits* <num>:::
+        always reserve room for at least *num* digits,
+        so text doesn't jump around as lines are added or removed
+        (default is 2)
+
 *wrap* [options]::
     soft wrap buffer text at window width, with the following *options*:
 

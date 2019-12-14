@@ -1079,17 +1079,19 @@ private:
 
 struct LineNumbersHighlighter : Highlighter
 {
-    LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator)
+    LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator, int min_digits)
       : Highlighter{HighlightPass::Move},
         m_relative{relative},
         m_hl_cursor_line{hl_cursor_line},
-        m_separator{std::move(separator)} {}
+        m_separator{std::move(separator)},
+        m_min_digits{min_digits} {}
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         static const ParameterDesc param_desc{
             { { "relative", { false, "" } },
               { "separator", { true, "" } },
+              { "min-digits", { true, "" } },
               { "hlcursor", { false, "" } } },
             ParameterDesc::Flags::None, 0, 0
         };
@@ -1099,7 +1101,13 @@ struct LineNumbersHighlighter : Highlighter
         if (separator.length() > 10)
             throw runtime_error("separator length is limited to 10 bytes");
 
-        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str());
+        int min_digits = parser.get_switch("min-digits").map(str_to_int).value_or(2);
+        if (min_digits < 0)
+            throw runtime_error("min digits must be positive");
+        if (min_digits > 10)
+            throw runtime_error("min digits is limited to 10");
+
+        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str(), min_digits);
     }
 
 private:
@@ -1151,18 +1159,19 @@ private:
         unique_ids.push_back(ms_id);
     }
 
-    static int compute_digit_count(const Context& context)
+    int compute_digit_count(const Context& context) const
     {
         int digit_count = 0;
         LineCount last_line = context.buffer().line_count();
         for (LineCount c = last_line; c > 0; c /= 10)
             ++digit_count;
-        return digit_count;
+        return std::max(digit_count, m_min_digits);
     }
 
     const bool m_relative;
     const bool m_hl_cursor_line;
     const String m_separator;
+    const int m_min_digits;
 };
 
 constexpr StringView LineNumbersHighlighter::ms_id;
@@ -2194,7 +2203,7 @@ void register_highlighters()
         "number-lines",
         { LineNumbersHighlighter::create,
           "Display line numbers \n"
-          "Parameters: -relative, -hlcursor, -separator <separator text>\n" } });
+          "Parameters: -relative, -hlcursor, -separator <separator text>, -min-digits <cols>\n" } });
     registry.insert({
         "show-matching",
         { create_matching_char_highlighter,
