@@ -49,13 +49,19 @@ name. Hooks with no description will always use an empty string.
     a certain duration has passed since the last keypress in normal mode
 
 *NormalKey* `key`::
-    a key is received in normal mode
+    a key is received in normal mode. This hook will not trigger when the user
+    presses a key on the left-hand side of a normal-mode mapping (see
+    <<mapping#,`:doc mapping`>>), but will trigger for keys on the right-hand
+    side. See also `RawKey` below.
 
 *InsertIdle*::
     a certain duration has passed since the last keypress in insert mode
 
 *InsertKey* `key`::
-    a key is received in insert mode
+    a key is received in insert mode. This hook will not trigger when the user
+    presses a key on the left-hand side of a insert-mode mapping (see
+    <<mapping#,`:doc mapping`>>), but will trigger for keys on the right-hand
+    side. See also `RawKey` below.
 
 *InsertChar* `char`::
     a character is received in insert mode
@@ -162,7 +168,11 @@ name. Hooks with no description will always use an empty string.
     completion text is passed as filtering text.
 
 *RawKey* `key`::
-    Triggered whenever a key is pressed by the user
+    Triggered whenever a key is pressed by the user, regardless of what mode
+    Kakoune is in, or what mappings are present (see
+    <<mapping#,`:doc mapping`>>). It cannot triggered by `execute-keys`,
+    even with the `-with-hooks` option (see
+    <<execeval#execute-keys-specific-switches,`:doc execeval execute-keys-specific-switches`>>).
 
 *ModuleLoaded* `module`::
     Triggered after a module is evaluated by the first `require-module` call
