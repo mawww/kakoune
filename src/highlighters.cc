@@ -920,10 +920,8 @@ struct WrapHighlighter : Highlighter
             ParameterDesc::Flags::None, 0, 0
         };
         ParametersParser parser(params, param_desc);
-
-        ColumnCount max_width{std::numeric_limits<int>::max()};
-        if (auto width = parser.get_switch("width"))
-            max_width = str_to_int(*width);
+        ColumnCount max_width = parser.get_switch("width").map(str_to_int)
+            .value_or(std::numeric_limits<int>::max());
 
         return std::make_unique<WrapHighlighter>(max_width, (bool)parser.get_switch("word"),
                                                  (bool)parser.get_switch("indent"),
@@ -1162,9 +1160,9 @@ private:
         return digit_count;
     }
 
-   const bool m_relative;
-   const bool m_hl_cursor_line;
-   const String m_separator;
+    const bool m_relative;
+    const bool m_hl_cursor_line;
+    const String m_separator;
 };
 
 constexpr StringView LineNumbersHighlighter::ms_id;
