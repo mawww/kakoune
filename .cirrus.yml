@@ -4,29 +4,33 @@ freebsd_task:
     gmake_script: pkg install -y gmake
     matrix:
         - name: freebsd_clang
+          env:
+              CXX: clang++
         - name: freebsd_gcc
           gcc_script: pkg install -y gcc
           env:
               CXX: g++
-    test_script: gmake test
+    test_script: gmake -j4 test
     env:
         LC_ALL: en_US.UTF-8
 
 linux_task:
-    container:
-        image: gcc:7
     locales_script:
         - apt-get update && apt-get -y install locales
         - echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
         - locale-gen en_US.UTF-8
     matrix:
         - name: linux_clang
+          container:
+              image: silkeh/clang:5
+          clang_script:
+              - apt-get -y install pkg-config libncursesw5-dev
           env:
               CXX: clang++
-          clang_script:
-              - apt-get -y install clang
         - name: linux_gcc
-    test_script: make test
+          container:
+              image: gcc:7
+    test_script: make -j4 test
     env:
         LC_ALL: en_US.UTF-8
 
@@ -38,4 +42,7 @@ macos_task:
           env:
               CXX: clang++
         - name: macos_gcc
-    test_script: make test
+          gcc_script: brew install gcc@7
+          env:
+              CXX: g++-7
+    test_script: make -j4 test
