@@ -10,7 +10,7 @@ freebsd_task:
           gcc_script: pkg install -y gcc
           env:
               CXX: g++
-    test_script: gmake test
+    test_script: gmake -j4 test
     env:
         LC_ALL: en_US.UTF-8
 
@@ -30,7 +30,7 @@ linux_task:
         - name: linux_gcc
           container:
               image: gcc:7
-    test_script: make test
+    test_script: make -j4 test
     env:
         LC_ALL: en_US.UTF-8
 
@@ -45,4 +45,4 @@ macos_task:
           gcc_script: brew install gcc@7
           env:
               CXX: g++-7
-    test_script: make test
+    test_script: make -j4 test
