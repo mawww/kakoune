@@ -48,6 +48,8 @@ public:
     void set_client(Client* client) { m_client = client; }
 
     void clear_display_buffer();
+    void run_resize_hook_ifn();
+
 private:
     Window(const Window&) = delete;
 
@@ -66,6 +68,7 @@ private:
     DisplayBuffer m_display_buffer;
 
     Highlighters m_builtin_highlighters;
+    bool m_resize_hook_pending = false;
 
     struct Setup
     {

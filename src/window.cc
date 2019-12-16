@@ -193,8 +193,17 @@ void Window::set_dimensions(DisplayCoord dimensions)
     if (m_dimensions != dimensions)
     {
         m_dimensions = dimensions;
-        run_hook_in_own_context(Hook::WinResize, format("{}.{}", dimensions.line,
-                                                    dimensions.column));
+        m_resize_hook_pending = true;
+    }
+}
+
+void Window::run_resize_hook_ifn()
+{
+    if (m_resize_hook_pending)
+    {
+        m_resize_hook_pending = false;
+        run_hook_in_own_context(Hook::WinResize,
+                                format("{}.{}", m_dimensions.line, m_dimensions.column));
     }
 }
 

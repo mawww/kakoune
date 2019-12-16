@@ -80,6 +80,7 @@ bool Client::is_ui_ok() const
 bool Client::process_pending_inputs()
 {
     const bool debug_keys = (bool)(context().options()["debug"].get<DebugFlags>() & DebugFlags::Keys);
+    m_window->run_resize_hook_ifn();
     // steal keys as we might receive new keys while handling them.
     Vector<Key, MemoryDomain::Client> keys = std::move(m_pending_keys);
     for (auto& key : keys)
