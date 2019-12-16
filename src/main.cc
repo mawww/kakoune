@@ -305,12 +305,9 @@ static const EnvVarDesc builtin_env_vars[] = { {
         "window_range", false,
         [](StringView name, const Context& context, Quoting quoting) -> String
         {
-            const auto top_left = context.window().display_position({0, 0});
-            const auto window_dim = context.window().dimensions();
-
-            return format("{} {} {} {}", top_left->line, top_left->column,
-                                         window_dim.line - top_left->line,
-                                         window_dim.column - top_left->column);
+            auto setup = context.window().compute_display_setup(context);
+            return format("{} {} {} {}", setup.window_pos.line, setup.window_pos.column,
+                                         setup.window_range.line, setup.window_range.column);
         }
     }
 };

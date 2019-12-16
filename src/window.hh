@@ -50,11 +50,11 @@ public:
     void clear_display_buffer();
     void run_resize_hook_ifn();
 
+    DisplaySetup compute_display_setup(const Context& context) const;
 private:
     Window(const Window&) = delete;
 
     void on_option_changed(const Option& option) override;
-    DisplaySetup compute_display_setup(const Context& context) const;
 
     friend class ClientManager;
     void run_hook_in_own_context(Hook hook, StringView param,
