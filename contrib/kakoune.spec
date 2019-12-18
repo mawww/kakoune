@@ -1,44 +1,97 @@
+%bcond_without tests
+
+### Enable LTO. Profit ~8%
+%global optflags        %{optflags} -flto
+%global build_ldflags   %{build_ldflags} -flto
+
 Name:           kakoune
-Version:        2019.01.20
+Version:        2019.12.10
 Release:        1%{?dist}
-Summary:        Vim inspired editor
+Summary:        Code editor heavily inspired by Vim
 
 License:        Unlicense
-URL:            http://kakoune.org/
-Source0:        %{name}-%{version}.tar.bz2
+URL:            https://kakoune.org/
+Source0:        https://github.com/mawww/kakoune/archive/v%{version}/%{name}-%{version}.tar.gz
 
-BuildRequires:  ncurses-devel >= 5.3
 BuildRequires:  asciidoc
-BuildRequires:  gcc-c++
+BuildRequires:  gcc-c++ >= 7
 BuildRequires:  glibc-langpack-en
-Requires:       ncurses-libs >= 5.3
+BuildRequires:  pkgconfig(ncurses) >= 5.3
 
 %description
-Kakoune is a code editor heavily inspired by Vim
+- Modal editor
+- Faster as in fewer keystrokes 
+- Multiple selections
+- Orthogonal design
+
+Kakoune is a code editor that implements Vi’s "keystrokes as a text editing
+language" model. As it’s also a modal editor, it is somewhat similar to the Vim
+editor (after which Kakoune was originally inspired).
+
+Kakoune can operate in two modes, normal and insertion. In insertion mode, keys
+are directly inserted into the current buffer. In normal mode, keys are used to
+manipulate the current selection and to enter insertion mode.
+
+Kakoune has a strong focus on interactivity, most commands provide immediate
+and incremental results, while still being competitive (as in keystroke count)
+with Vim.
+
+Kakoune works on selections, which are oriented, inclusive range of characters,
+selections have an anchor and a cursor character. Most commands move both of
+them, except when extending selection where the anchor character stays fixed
+and the cursor one moves around.
+
 
 %prep
-%setup -qn %{name}-%{version}
+%autosetup -p1
+
+### Use default Fedora build flags
+sed -i '/CXXFLAGS += -O3/d' src/Makefile
+
+### Install doc files in proper location
+sed -i 's!$(PREFIX)/share/doc/kak!$(PREFIX)/share/doc/%{name}!' src/Makefile
+
 
 %build
-cd src
-make %{?_smp_mflags}
+%set_build_flags
+pushd src
+%make_build
+popd
 
-%check
-cd src
-LANG=en_US.utf8 make test
 
 %install
-cd src
-%make_install PREFIX=/usr
+pushd src
+%make_install PREFIX=%{_prefix}
+popd
+
+
+%if %{with tests}
+%check
+%set_build_flags
+pushd src
+LANG=en_US.utf8 %make_build test
+popd
+%endif
+
 
 %files
-%doc
-%{_bindir}/*
-%{_mandir}/man1/kak*
-%{_datadir}/doc/kak/*
-%{_datadir}/kak/*
+%license UNLICENSE
+%doc README.asciidoc CONTRIBUTING VIMTOKAK
+%{_bindir}/kak
+%{_datadir}/kak/
+%{_mandir}/man1/*
+
 
 %changelog
+* Tue Dec 10 2019 Artem Polishchuk <ego.cordatus@gmail.com> - 2019.12.10-1
+- Update to 2019.12.10
+
+* Tue Nov 26 2019 Artem Polishchuk <ego.cordatus@gmail.com> - 2019.07.01-4
+- Add patch to pass tests with default Fedora build flags
+
+* Fri Nov 22 2019 Artem Polishchuk <ego.cordatus@gmail.com> - 2019.07.01-2
+- Packaging fixes
+
 * Wed Apr 24 2019 Jiri Konecny <jkonecny@redhat.com> - v2019.01.20-1
 - Add a new build dependency (glibc-langpack-en) required for Fedora 30 and later
 - Update version
