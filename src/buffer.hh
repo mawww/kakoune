@@ -7,6 +7,7 @@
 #include "enum.hh"
 #include "file.hh"
 #include "optional.hh"
+#include "range.hh"
 #include "safe_ptr.hh"
 #include "scope.hh"
 #include "shared_string.hh"
@@ -103,6 +104,7 @@ private:
 };
 
 using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;
+using BufferRange = Range<BufferCoord>;
 
 // A Buffer is a in-memory representation of a file
 //
@@ -139,9 +141,9 @@ public:
     bool set_name(String name);
     void update_display_name();
 
-    BufferCoord insert(BufferCoord pos, StringView content);
+    BufferRange insert(BufferCoord pos, StringView content);
     BufferCoord erase(BufferCoord begin, BufferCoord end);
-    BufferCoord replace(BufferCoord begin, BufferCoord end, StringView content);
+    BufferRange replace(BufferCoord begin, BufferCoord end, StringView content);
 
     size_t          timestamp() const;
     void            set_fs_status(FsStatus);
@@ -231,7 +233,7 @@ public:
 private:
     void on_option_changed(const Option& option) override;
 
-    BufferCoord do_insert(BufferCoord pos, StringView content);
+    BufferRange do_insert(BufferCoord pos, StringView content);
     BufferCoord do_erase(BufferCoord begin, BufferCoord end);
 
     struct Modification;

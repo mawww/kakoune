@@ -20,7 +20,7 @@ inline BufferCoord erase(Buffer& buffer, const Selection& range)
     return buffer.erase(range.min(), buffer.char_next(range.max()));
 }
 
-inline BufferCoord replace(Buffer& buffer, const Selection& range, StringView content)
+inline BufferRange replace(Buffer& buffer, const Selection& range, StringView content)
 {
     return buffer.replace(range.min(), buffer.char_next(range.max()), content);
 }

@@ -524,7 +524,7 @@ BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, Strin
             break;
         case DiffOp::Add:
             pos = buffer.insert(pos, {lines_after[posB].begin(),
-                                      lines_after[posB + len - 1].end()});
+                                      lines_after[posB + len - 1].end()}).end;
             break;
         case DiffOp::Remove:
             pos = buffer.erase(pos, buffer.advance(pos, byte_count(lines_before, posA, len)));

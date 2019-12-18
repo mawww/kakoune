@@ -444,12 +444,12 @@ void Buffer::check_invariant() const
 #endif
 }
 
-BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
+BufferRange Buffer::do_insert(BufferCoord pos, StringView content)
 {
     kak_assert(is_valid(pos));
 
     if (content.empty())
-        return pos;
+        return {pos, pos};
 
     const bool at_end = is_end(pos);
     const bool append_lines = at_end and (m_lines.empty() or byte_at(back_coord()) == '\n');
@@ -489,7 +489,7 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
                             : BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
 
     m_changes.push_back({ Change::Insert, pos, end });
-    return end;
+    return {pos, end};
 }
 
 BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
@@ -543,13 +543,13 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-BufferCoord Buffer::insert(BufferCoord pos, StringView content)
+BufferRange Buffer::insert(BufferCoord pos, StringView content)
 {
     throw_if_read_only();
 
     kak_assert(is_valid(pos));
     if (content.empty())
-        return pos;
+        return {pos, pos};
 
     StringDataPtr real_content;
     if (is_end(pos) and content.back() != '\n')
@@ -584,21 +584,20 @@ BufferCoord Buffer::erase(BufferCoord begin, BufferCoord end)
     return do_erase(begin, end);
 }
 
-BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end, StringView content)
+BufferRange Buffer::replace(BufferCoord begin, BufferCoord end, StringView content)
 {
     throw_if_read_only();
 
+    if (std::equal(iterator_at(begin), iterator_at(end), content.begin(), content.end()))
+        return {begin, end};
+
     if (is_end(end) and not content.empty() and content.back() == '\n')
     {
-        end = back_coord();
-        content = content.substr(0, content.length() - 1);
+        auto pos = insert(erase(begin, back_coord()),
+                          content.substr(0, content.length() - 1)).begin;
+        return {pos, end_coord()};
     }
-
-    if (std::equal(iterator_at(begin), iterator_at(end), content.begin(), content.end()))
-        return begin;
-
-    auto pos = erase(begin, end);
-    return insert(pos, content);
+    return insert(erase(begin, end), content);
 }
 
 bool Buffer::is_modified() const

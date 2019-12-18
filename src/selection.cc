@@ -407,38 +407,24 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
             sel.min() : changes_tracker.get_new_coord(insert_pos[index]);
 
         if (mode == InsertMode::Replace)
-            replace(*m_buffer, sel, str);
+        {
+            auto range = replace(*m_buffer, sel, str);
+            // we want min and max from *before* we do any change
+            auto& min = sel.min();
+            auto& max = sel.max();
+            min = range.begin;
+            max = m_buffer->char_prev(range.end);
+        }
         else
-            m_buffer->insert(pos, str);
+        {
+            auto range = m_buffer->insert(pos, str);
+            sel.anchor() = m_buffer->clamp(update_insert(sel.anchor(), range.begin, range.end));
+            sel.cursor() = m_buffer->clamp(update_insert(sel.cursor(), range.begin, range.end));
+        }
 
-        size_t old_timestamp = m_timestamp;
         changes_tracker.update(*m_buffer, m_timestamp);
-
         if (out_insert_pos)
             out_insert_pos->push_back(pos);
-
-        if (mode == InsertMode::Replace)
-        {
-            auto changes = m_buffer->changes_since(old_timestamp);
-            if (changes.size() == 1) // Nothing got inserted, either str was empty, or just \n at end of buffer
-                sel.anchor() = sel.cursor() = m_buffer->clamp(pos);
-            else if (changes.size() == 2)
-            {
-                // we want min and max from *before* we do any change
-                auto& min = sel.min();
-                auto& max = sel.max();
-                min = changes.back().begin;
-                max = m_buffer->char_prev(changes.back().end);
-            }
-            else
-                kak_assert(changes.empty());
-        }
-        else if (not str.empty())
-        {
-            auto& change = m_buffer->changes_since(0).back();
-            sel.anchor() = m_buffer->clamp(update_insert(sel.anchor(), change.begin, change.end));
-            sel.cursor() = m_buffer->clamp(update_insert(sel.cursor(), change.begin, change.end));
-        }
     }
 
     // We might just have been deleting text if strings were empty,
