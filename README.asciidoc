@@ -139,6 +139,16 @@ dnf install kakoune
 ====
 
 [TIP]
+.Fedora daily builds
+====
+Use the https://copr.fedoraproject.org/coprs/jkonecny/kakoune/[copr] repository.
+---------------------------------
+dnf copr enable jkonecny/kakoune
+dnf install kakoune
+---------------------------------
+====
+
+[TIP]
 .RHEL/CentOS 8
 ====
 Kakoune can be found in the https://src.fedoraproject.org/rpms/kakoune/tree/epel8[EPEL8 repositories].
@@ -175,7 +185,7 @@ cave resolve -x kakoune
 [TIP]
 .openSUSE
 ====
-kakoune can be found in the https://software.opensuse.org/package/kakoune[repositories].
+Kakoune can be found in the https://software.opensuse.org/package/kakoune[repositories].
 
 ---------------------------
 sudo zypper install kakoune
