@@ -219,6 +219,27 @@ pkg install kakoune
 ====
 
 [TIP]
+.OpenBSD
+====
+Building on OpenBSD 6.6 amd64.
+
+--------------------------------------------------
+# pkg_add git gmake
+# git clone https://github.com/mawww/kakoune
+# cd kakoune
+# export CXX=clang++
+# gmake install
+--------------------------------------------------
+
+Running with support for plugins.
+--------------------------------------------------
+# pkg_add dash
+$ export KAKOUNE_POSIX_SHELL=/usr/local/bin/dash 
+$ kak
+--------------------------------------------------
+====
+
+[TIP]
 .Solus
 ====
 Kakoune is available in the Solus stable repository.
