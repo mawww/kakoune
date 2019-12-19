@@ -1,6 +1,8 @@
 debug ?= no
 static ?= no
 gzip_man ?= yes
+# to get format compatible with GitHub archive use "gzip -S .gz" here
+compress_bin ?= bzip2
 
 ifneq ($(gzip_man),yes)
     ifneq ($(gzip_man),no)
@@ -148,7 +150,7 @@ dist:
 	echo "$(version)" > src/.version;                                         \
 	tar --transform "s,^,$${basename}/," -rf $${basename}.tar src/.version;   \
 	rm src/.version;                                                          \
-	bzip2 $${basename}.tar;
+	$(compress_bin) $${basename}.tar;
 
 distclean: clean
 	rm -f kak kak$(suffix)
