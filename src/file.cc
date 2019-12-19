@@ -392,7 +392,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
 
     if ((buffer.flags() & Buffer::Flags::File) and
         real_path(filename) == real_path(buffer.name()))
-        buffer.notify_saved();
+        buffer.notify_saved(get_fs_status(real_path(filename)));
 }
 
 void write_buffer_to_backup_file(Buffer& buffer)

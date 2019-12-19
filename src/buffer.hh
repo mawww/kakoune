@@ -203,7 +203,7 @@ public:
     bool is_modified() const;
 
     // notify the buffer that it was saved in the current state
-    void notify_saved();
+    void notify_saved(FsStatus status);
 
     ValueMap& values() const { return m_values; }
 

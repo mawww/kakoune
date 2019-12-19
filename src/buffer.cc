@@ -607,14 +607,14 @@ bool Buffer::is_modified() const
             not m_current_undo_group.empty());
 }
 
-void Buffer::notify_saved()
+void Buffer::notify_saved(FsStatus status)
 {
     if (not m_current_undo_group.empty())
         commit_undo_group();
 
     m_flags &= ~Flags::New;
     m_last_save_history_id = m_history_id;
-    m_fs_status.timestamp = get_fs_timestamp(m_name);
+    m_fs_status = status;
 }
 
 BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
