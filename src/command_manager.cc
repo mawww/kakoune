@@ -92,9 +92,23 @@ Reader& Reader::operator++()
 {
     kak_assert(pos < str.end());
     if (*pos == '\n')
+    {
         ++line;
+        line_start = ++pos;
+        return *this;
+    }
     utf8::to_next(pos, str.end());
     return *this;
+}
+
+void Reader::next_byte()
+{
+    kak_assert(pos < str.end());
+    if (*pos++ == '\n')
+    {
+        ++line;
+        line_start = pos;
+    }
 }
 
 namespace
@@ -152,10 +166,10 @@ QuotedResult parse_quoted_balanced(Reader& reader, char opening_delimiter,
         else if (c == closing_delimiter and level-- == 0)
         {
             auto content = reader.substr_from(start);
-            ++reader.pos;
+            reader.next_byte();
             return {String{String::NoCopy{}, content}, true};
         }
-        ++reader.pos;
+        reader.next_byte();
     }
     return {String{String::NoCopy{}, reader.substr_from(start)}, false};
 }
@@ -179,7 +193,7 @@ String parse_unquoted(Reader& reader)
             else
                 return str;
         }
-        ++reader.pos;
+        reader.next_byte();
     }
     if (beg < reader.str.end())
         str += reader.substr_from(beg);
