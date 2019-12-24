@@ -138,7 +138,7 @@ static constexpr StringView assistant_clippy_festive[] =
       R"(   /    \   )",
       R"(  /   ,, \ ╭)",
       R"( /____| \| │)",
-      R"( \____/ (*)│)",
+      R"( {____} (*)│)",
       R"(  │  │     │)",
       R"(  @  @     │)",
       R"(  ││ ││    │)",
