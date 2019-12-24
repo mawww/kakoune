@@ -133,6 +133,20 @@ static constexpr StringView assistant_cat[] =
       R"(      \_\   \_\  )",
       R"(                 )"};
 
+static constexpr StringView assistant_clippy_festive[] =
+    { R"(    ____    )",
+      R"(   /    \   )",
+      R"(  /   ,, \ ╭)",
+      R"( /____| \| │)",
+      R"( \____/ (*)│)",
+      R"(  │  │     │)",
+      R"(  @  @     │)",
+      R"(  ││ ││    │)",
+      R"(  ││ ││ ───╯)",
+      R"(  │╰─╯│     )",
+      R"(  ╰───╯     )",
+      R"(            )"};
+
 static constexpr StringView assistant_clippy[] =
     { " ╭──╮   ",
       " │  │   ",
@@ -1211,8 +1225,21 @@ void NCursesUI::set_ui_options(const Options& options)
 {
     {
         auto it = options.find("ncurses_assistant"_sv);
+        auto festive_it = options.find("ncurses_assistant_festive"_sv);
+        bool festive = festive_it == options.end() or
+                       festive_it->value == "yes" or
+                       festive_it->value == "true";
         if (it == options.end() or it->value == "clippy")
+        {
             m_assistant = assistant_clippy;
+            if (festive)
+            {
+                auto t = time(nullptr);
+                auto tm = *localtime(&t);
+                if (tm.tm_mon == 11) // december
+                    m_assistant = assistant_clippy_festive;
+            }
+        }
         else if (it->value == "cat")
             m_assistant = assistant_cat;
         else if (it->value == "dilbert")
