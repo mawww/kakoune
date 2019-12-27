@@ -175,10 +175,11 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
     return { 0, cursor_pos, res };
 }
 
-auto make_single_word_completer(std::function<String (const Context&)> func)
+template<typename Func>
+auto make_single_word_completer(Func&& func)
 {
     return make_completer(
-        [func](const Context& context, CompletionFlags flags,
+        [func = std::move(func)](const Context& context, CompletionFlags flags,
                const String& prefix, ByteCount cursor_pos) -> Completions {
             auto candidate = { func(context) };
             return { 0_byte, cursor_pos, complete(prefix, cursor_pos, candidate) }; });
