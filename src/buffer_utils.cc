@@ -97,7 +97,7 @@ void reload_file_buffer(Buffer& buffer)
 
 Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll)
 {
-    static ValueId s_fifo_watcher_id = get_free_value_id();
+    static ValueId fifo_watcher_id = get_free_value_id();
 
     auto& buffer_manager = BufferManager::instance();
     Buffer* buffer = buffer_manager.get_buffer_ifp(name);
@@ -110,74 +110,80 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
         buffer = buffer_manager.create_buffer(
             std::move(name), flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
 
-    auto watcher_deleter = [buffer](FDWatcher* watcher) {
-        kak_assert(buffer->flags() & Buffer::Flags::Fifo);
-        watcher->close_fd();
-        buffer->run_hook_in_own_context(Hook::BufCloseFifo, "");
-        buffer->flags() &= ~(Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
-        delete watcher;
+    struct FifoWatcher : FDWatcher
+    {
+        FifoWatcher(int fd, Buffer& buffer, bool scroll)
+            : FDWatcher(fd, FdEvents::Read,
+                        [](FDWatcher& watcher, FdEvents, EventMode mode) {
+                            if (mode == EventMode::Normal)
+                                static_cast<FifoWatcher&>(watcher).read_fifo();
+                        }),
+              m_buffer(buffer), m_scroll(scroll)
+        {}
+
+        ~FifoWatcher()
+        {
+            kak_assert(m_buffer.flags() & Buffer::Flags::Fifo);
+            close_fd();
+            m_buffer.run_hook_in_own_context(Hook::BufCloseFifo, "");
+            m_buffer.flags() &= ~(Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
+        }
+
+        void read_fifo() const
+        {
+            kak_assert(m_buffer.flags() & Buffer::Flags::Fifo);
+
+            constexpr size_t buffer_size = 2048;
+            // if we read data slower than it arrives in the fifo, limiting the
+            // iteration number allows us to go back go back to the event loop and
+            // handle other events sources (such as input)
+            constexpr size_t max_loop = 16;
+            bool closed = false;
+            size_t loop = 0;
+            char data[buffer_size];
+            BufferCoord insert_coord = m_buffer.back_coord();
+            const int fifo = fd();
+            do
+            {
+                const ssize_t count = ::read(fifo, data, buffer_size);
+                if (count <= 0)
+                {
+                    closed = true;
+                    break;
+                }
+
+                auto pos = m_buffer.back_coord();
+                const bool prevent_scrolling = pos == BufferCoord{0,0} and not m_scroll;
+                if (prevent_scrolling)
+                    pos = m_buffer.next(pos);
+
+                m_buffer.insert(pos, StringView(data, data+count));
+
+                if (prevent_scrolling)
+                {
+                    m_buffer.erase({0,0}, m_buffer.next({0,0}));
+                    // in the other case, the buffer will have automatically
+                    // inserted a \n to guarantee its invariant.
+                    if (data[count-1] == '\n')
+                        m_buffer.insert(m_buffer.end_coord(), "\n");
+                }
+            }
+            while (++loop < max_loop  and fd_readable(fifo));
+
+            if (insert_coord != m_buffer.back_coord())
+                m_buffer.run_hook_in_own_context(
+                    Hook::BufReadFifo,
+                    selection_to_string(ColumnType::Byte, m_buffer, {insert_coord, m_buffer.back_coord()}));
+
+            if (closed)
+                m_buffer.values().erase(fifo_watcher_id); // will delete this
+        }
+
+        Buffer& m_buffer;
+        bool m_scroll;
     };
 
-    // capture a non static one to silence a warning.
-    ValueId fifo_watcher_id = s_fifo_watcher_id;
-
-    std::unique_ptr<FDWatcher, decltype(watcher_deleter)> watcher(
-        new FDWatcher(fd, FdEvents::Read,
-                      [buffer, scroll, fifo_watcher_id](FDWatcher& watcher, FdEvents, EventMode mode) {
-        if (mode != EventMode::Normal)
-            return;
-
-        kak_assert(buffer->flags() & Buffer::Flags::Fifo);
-
-        constexpr size_t buffer_size = 2048;
-        // if we read data slower than it arrives in the fifo, limiting the
-        // iteration number allows us to go back go back to the event loop and
-        // handle other events sources (such as input)
-        constexpr size_t max_loop = 16;
-        bool closed = false;
-        size_t loop = 0;
-        char data[buffer_size];
-        BufferCoord insert_coord = buffer->back_coord();
-        const int fifo = watcher.fd();
-        do
-        {
-            const ssize_t count = ::read(fifo, data, buffer_size);
-            if (count <= 0)
-            {
-                closed = true;
-                break;
-            }
-
-            auto pos = buffer->back_coord();
-            const bool prevent_scrolling = pos == BufferCoord{0,0} and not scroll;
-            if (prevent_scrolling)
-                pos = buffer->next(pos);
-
-            buffer->insert(pos, StringView(data, data+count));
-
-            if (prevent_scrolling)
-            {
-                buffer->erase({0,0}, buffer->next({0,0}));
-                // in the other case, the buffer will have automatically
-                // inserted a \n to guarantee its invariant.
-                if (data[count-1] == '\n')
-                    buffer->insert(buffer->end_coord(), "\n");
-            }
-        }
-        while (++loop < max_loop  and fd_readable(fifo));
-
-        if (insert_coord != buffer->back_coord())
-        {
-            buffer->run_hook_in_own_context(
-                Hook::BufReadFifo,
-                selection_to_string(ColumnType::Byte, *buffer, {insert_coord, buffer->back_coord()}));
-        }
-
-        if (closed)
-            buffer->values().erase(fifo_watcher_id); // will delete this
-    }), std::move(watcher_deleter));
-
-    buffer->values()[fifo_watcher_id] = Value(std::move(watcher));
+    buffer->values()[fifo_watcher_id] = Value(std::make_unique<FifoWatcher>(fd, *buffer, scroll));
     buffer->flags() = flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo;
     buffer->run_hook_in_own_context(Hook::BufOpenFifo, buffer->name());
 
