@@ -178,7 +178,6 @@ void Context::change_buffer(Buffer& buffer)
         m_last_buffer = contains(BufferManager::instance(), current) ? current : nullptr;
     }
 
-    m_window.reset();
     if (has_client())
     {
         client().info_hide();
@@ -186,7 +185,10 @@ void Context::change_buffer(Buffer& buffer)
         client().change_buffer(buffer);
     }
     else
+    {
+        m_window.reset();
         m_selections = SelectionList{buffer, Selection{}};
+    }
 
     if (has_input_handler())
         input_handler().reset_normal_mode();

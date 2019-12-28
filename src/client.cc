@@ -171,20 +171,21 @@ void Client::change_buffer(Buffer& buffer)
         close_buffer_reload_dialog();
 
     auto& client_manager = ClientManager::instance();
+    WindowAndSelections ws = client_manager.get_free_window(buffer);
+
     m_window->options().unregister_watcher(*this);
     m_window->set_client(nullptr);
-
-    WindowAndSelections ws = client_manager.get_free_window(buffer);
     client_manager.add_free_window(std::move(m_window),
                                    std::move(context().selections()));
+
     m_window = std::move(ws.window);
     m_window->set_client(this);
     m_window->options().register_watcher(*this);
-    m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
-
     context().selections_write_only() = std::move(ws.selections);
     context().set_window(*m_window);
+
     m_window->set_dimensions(m_ui->dimensions());
+    m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
 
     m_window->hooks().run_hook(Hook::WinDisplay, buffer.name(), context());
     force_redraw();

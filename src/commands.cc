@@ -900,6 +900,27 @@ Highlighter& get_highlighter(const Context& context, StringView path)
     return *root;
 }
 
+static void redraw_relevant_clients(Context& context, StringView highlighter_path)
+{
+    StringView scope{highlighter_path.begin(), find(highlighter_path, '/')};
+    if (scope == "window")
+        context.window().force_redraw();
+    else if (scope == "buffer" or prefix_match(scope, "buffer="))
+    {
+        auto& buffer = scope == "buffer" ? context.buffer() : BufferManager::instance().get_buffer(scope.substr(7_byte));
+        for (auto&& client : ClientManager::instance())
+        {
+            if (&client->context().buffer() == &buffer)
+                client->context().window().force_redraw();
+        }
+    }
+    else
+    {
+        for (auto&& client : ClientManager::instance())
+            client->context().window().force_redraw();
+    }
+}
+
 const CommandDesc add_highlighter_cmd = {
     "add-highlighter",
     "addhl",
@@ -948,9 +969,7 @@ const CommandDesc add_highlighter_cmd = {
         parent.add_child(name.empty() ? auto_name(parser.positionals_from(1)) : std::move(name),
                             it->value.factory(highlighter_params, &parent));
 
-        // TODO: better, this will fail if we touch scopes highlighters that impact multiple windows
-        if (context.has_window())
-            context.window().force_redraw();
+        redraw_relevant_clients(context, path);
     }
 };
 
@@ -973,9 +992,7 @@ const CommandDesc remove_highlighter_cmd = {
         if (sep_it == rev_path.end())
             return;
         get_highlighter(context, {path.begin(), sep_it.base()}).remove_child({sep_it.base(), path.end()});
-
-        if (context.has_window())
-            context.window().force_redraw();
+        redraw_relevant_clients(context, path);
     }
 };
 
