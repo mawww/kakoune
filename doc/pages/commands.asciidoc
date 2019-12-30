@@ -107,6 +107,7 @@ of the file onto the filesystem
     delete current buffer or the buffer <name> if specified
 
 *rename-buffer* [-file|-scratch] <name>::
+    *alias* nb +
     set current buffer name, if *-scratch* or *-file* is given, ensure
     the buffer is set to the corresponding type.
 
