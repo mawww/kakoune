@@ -121,6 +121,7 @@ of the file onto the filesystem
     set current client name
 
 *rename-session* <name>::
+    *alias* ns +
     set current session name
 
 *kill[!]* [<exit status>]::

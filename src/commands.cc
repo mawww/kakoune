@@ -2411,7 +2411,7 @@ const CommandDesc change_directory_cmd = {
 
 const CommandDesc rename_session_cmd = {
     "rename-session",
-    nullptr,
+    "ns",
     "rename-session <name>: change remote session name",
     single_param,
     CommandFlags::None,
