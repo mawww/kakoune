@@ -413,7 +413,7 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
             auto& min = sel.min();
             auto& max = sel.max();
             min = range.begin;
-            max = m_buffer->char_prev(range.end);
+            max = range.end > range.begin ? m_buffer->char_prev(range.end) : range.begin;
         }
         else
         {
