@@ -104,7 +104,7 @@ Why Kakoune
 -----------
 
 Up to now, I have used vi as an example for modal text editor, mostly because
-I expect most programmers have at least heard of it. However, I dont believe
+I expect most programmers have at least heard of it. However, I don't believe
 vi and clones are the best modal text editor out there.
 
 I have been working, for the last 5 years, on a new modal editor called
@@ -118,7 +118,7 @@ Improving on the editing model
 vi basic grammar is *verb* followed by *object*; it's nice because it matches
 well with the order we use in English, "delete word". On the other hand,
 it does not match well with the nature of what we express: There is only
-a handfull of *verbs* in text editing (**d**elete, **y**ank, **p**aste,
+a handful of *verbs* in text editing (**d**elete, **y**ank, **p**aste,
 **i**nsert...), and they don't compose, contrarily to *objects* which can be
 arbitrarily complex, and difficult to express. That means that errors are
 not handled well. If you express your object wrongly with a delete verb,
@@ -131,7 +131,7 @@ errors on the go.
 
 Kakoune tries hard to fix one of the big problems with the vi model: its
 lack of interactivity. Because of the *verb* followed by *object* grammar,
-vi changes are made in the dark, we dont see their effect until the whole
+vi changes are made in the dark, we don't see their effect until the whole
 editing *sentence* is finished. `5dw` will delete to next five words, if
 you then realize that was one word too many, you need to undo, go back to
 your initial position, and try again with `4dw`. In Kakoune, you would do
@@ -162,7 +162,7 @@ mode to do your change. Globally replacing foo with bar would be done with
 .Global replace
 video::video/global-replace.webm[align="center", options="autoplay,loop"]
 
-Multiple selections provides us with a very powerfull to express structural
+Multiple selections provides us with a very powerful to express structural
 selection: we can subselect matches inside the current selections, keep
 selections containing/not containing a match, split selections on a regex,
 swap selections contents...
@@ -172,7 +172,7 @@ by selecting the word (with `w` for example) then subselecting underscores
 in the word with `s_<ret>`, deleting these with `d`, then upper casing the
 selected characters with `~`. The inverse operation could be done by selecting
 the word, then subselecting the upper case characters with `s[A-Z]<ret>`
-lower casing them with ` and then inserting an underscode before them with
+lower casing them with ` and then inserting an underscore before them with
 `i_<esc>` This operation could be put in a macro, and would be reusable
 easily to convert any identifier.
 
@@ -200,13 +200,13 @@ places and regroup it in another place, thanks to a special form of pasting
 .Regrouping manager objects together
 video::video/regroup.webm[align="center", options="autoplay,loop"]
 
-Interactive, predictible and fast
+Interactive, predictable and fast
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A design goal of Kakoune is to beat vim at its own game, while providing a
 cleaner editing model. The combination of multiple selections and cleaned up
-grammar shows thats its possible to have text edition that is interactive,
-predictible, and fast at the same time.
+grammar shows that it's possible to have text edition that is interactive,
+predictable, and fast at the same time.
 
 Interactivity comes by providing feedback on every commands, the inverted
 *object* then *verb* grammar makes that possible, every selection modification
@@ -214,11 +214,11 @@ has direct visual feedback, regex based selections incrementally show what
 will get selected, including when the regular expression is invalid, and even
 yanking some text displays a message notifying how many selections were yanked.
 
-Predictibilty comes from the simple effect of most commands. Each command is
+Predictability comes from the simple effect of most commands. Each command is
 conceptually simple, doing one single thing. `d` deletes whatever is selected,
 nothing more. `%` selects the whole buffer, `s` prompts for a regex and
 selects matches in the previous selection. It is the combination of these
-building blocks that allows for complex, but predictible, actions on the text.
+building blocks that allows for complex, but predictable, actions on the text.
 
 Being fast, as in less keystrokes, is provided by carefully designing the set
 of editing commands so that they interact well together, and by sometimes
@@ -333,7 +333,7 @@ come through the `fifo`.
 
 Kakoune also tries to limit its scope to code editing: in particular, it does
 not try to manage windows, and lets the system's window manager, or terminal
-multiplexer (such as tmux), handle that responsiblity. This is achieved through
+multiplexer (such as tmux), handle that responsibility. This is achieved through
 a client/server design: An editing session runs on a server process, and
 multiple clients can connect to that session to display different buffers.
 
@@ -343,7 +343,7 @@ video::video/async.webm[align="center", options="autoplay,loop"]
 Final Thoughts
 --------------
 
-Kakoune provides an efficient code editing environment, both very predictible,
+Kakoune provides an efficient code editing environment, both very predictable,
 hence scriptable, and very interactive. Its learning curve is considerably
 easier than Vim thanks to a more consistent design associated with strong
 discoverability, while still being faster (as in less keystrokes) in most
