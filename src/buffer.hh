@@ -230,13 +230,39 @@ public:
     void on_unregistered();
 
     void throw_if_read_only() const;
+
+    // A Modification holds a single atomic modification to Buffer
+    struct Modification
+    {
+        enum Type { Insert, Erase };
+
+        Type type;
+        BufferCoord coord;
+        StringDataPtr content;
+
+        Modification inverse() const;
+    };
+
+    using UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
+
+    struct HistoryNode : UseMemoryDomain<MemoryDomain::BufferMeta>
+    {
+        HistoryNode(HistoryId parent);
+
+        HistoryId parent;
+        HistoryId redo_child = HistoryId::Invalid;
+        TimePoint committed;
+        UndoGroup undo_group;
+    };
+
+    const Vector<HistoryNode>& history() const { return m_history; }
+    const UndoGroup& current_undo_group() const { return m_current_undo_group; }
+
 private:
     void on_option_changed(const Option& option) override;
 
     BufferRange do_insert(BufferCoord pos, StringView content);
     BufferCoord do_erase(BufferCoord begin, BufferCoord end);
-
-    struct Modification;
 
     void apply_modification(const Modification& modification);
     void revert_modification(const Modification& modification);
@@ -263,18 +289,6 @@ private:
     String m_name;
     String m_display_name;
     Flags  m_flags;
-
-    using UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
-
-    struct HistoryNode : UseMemoryDomain<MemoryDomain::BufferMeta>
-    {
-        HistoryNode(HistoryId parent);
-
-        HistoryId parent;
-        HistoryId redo_child = HistoryId::Invalid;
-        TimePoint timepoint;
-        UndoGroup undo_group;
-    };
 
     Vector<HistoryNode> m_history;
     HistoryId           m_history_id = HistoryId::Invalid;

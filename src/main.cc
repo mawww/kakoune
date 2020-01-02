@@ -309,6 +309,14 @@ static const EnvVarDesc builtin_env_vars[] = { {
             return format("{} {} {} {}", setup.window_pos.line, setup.window_pos.column,
                                          setup.window_range.line, setup.window_range.column);
         }
+    }, {
+        "history", false,
+        [](StringView name, const Context& context, Quoting quoting) -> String
+        { return history_as_string(context.buffer().history(), quoting); }
+    }, {
+        "uncommitted_modifications", false,
+        [](StringView name, const Context& context, Quoting quoting) -> String
+        { return undo_group_as_string(context.buffer().current_undo_group(), quoting); }
     }
 };
 
