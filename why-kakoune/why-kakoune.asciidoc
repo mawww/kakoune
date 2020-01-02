@@ -208,23 +208,23 @@ cleaner editing model. The combination of multiple selections and cleaned up
 grammar shows that it's possible to have text edition that is interactive,
 predictable, and fast at the same time.
 
-Interactivity comes by providing feedback on every commands, the inverted
-*object* then *verb* grammar makes that possible, every selection modification
-has direct visual feedback, regex based selections incrementally show what
-will get selected, including when the regular expression is invalid, and even
+Interactivity comes from providing feedback on every command, made possible by
+the inverted *object* then *verb* grammar. Every selection modification
+has direct visual feedback; regex-based selections incrementally show what
+will get selected, including when the regular expression is invalid; and even
 yanking some text displays a message notifying how many selections were yanked.
 
 Predictability comes from the simple effect of most commands. Each command is
 conceptually simple, doing one single thing. `d` deletes whatever is selected,
-nothing more. `%` selects the whole buffer, `s` prompts for a regex and
+nothing more. `%` selects the whole buffer. `s` prompts for a regex and
 selects matches in the previous selection. It is the combination of these
 building blocks that allows for complex, but predictable, actions on the text.
 
-Being fast, as in less keystrokes, is provided by carefully designing the set
-of editing commands so that they interact well together, and by sometimes
+Being fast, as in requiring fewer keystrokes, is provided by carefully designing
+the set of editing commands so that they interact well together, and by sometimes
 sacrificing beauty for useability. For example, `<a-s>` is equivalent to
-`S^<ret>`, they both split on new lines, but this is a so common use case that
-it deserves to have its own key. As shown in http://github.com/mawww/golf,
+`S^<ret>`: they both split on new lines, but this is such a common use case that
+it deserves to have its own key shortcut. As shown in http://github.com/mawww/golf,
 Kakoune manages to beat Vim at the keystroke count game in most cases,
 using much more idiomatic commands.
 
