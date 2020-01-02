@@ -221,23 +221,9 @@ void write_to_debug_buffer(StringView str)
 
 InplaceString<23> to_string(Buffer::HistoryId id)
 {
-    if (id == Buffer::HistoryId::Invalid) {
-        InplaceString<23> res;
-        res.m_data[0] = '-';
-        res.m_length = 1;
-        return res;
-    } else {
-        return to_string(static_cast<size_t>(id));
-    }
-}
-
-String format_modification(const Buffer::Modification& modification, Quoting quoting)
-{
-    auto quote = quoter(quoting);
-    return quote(format("{}{}.{}|{}",
-                        modification.type == Buffer::Modification::Type::Insert ? '+' : '-',
-                        modification.coord.line, modification.coord.column,
-                        modification.content->strview()));
+    if (id == Buffer::HistoryId::Invalid)
+        return InplaceString<23>{1, "-"};
+    return to_string(static_cast<size_t>(id));
 }
 
 String history_as_string(const Vector<Buffer::HistoryNode>& history, Quoting quoting)
@@ -251,15 +237,19 @@ String history_as_string(const Vector<Buffer::HistoryNode>& history, Quoting quo
                       node.undo_group.empty() ? "" : " ",
                       undo_group_as_string(node.undo_group, quoting));
     };
-    return join(history |transform(format_history_node), ' ', false);
+    return join(history | transform(format_history_node), ' ', false);
 }
 
 String undo_group_as_string(const Buffer::UndoGroup& undo_group, Quoting quoting)
 {
     auto modification_as_string = [&](const Buffer::Modification& modification) {
-        return format_modification(modification, quoting);
+        auto quote = quoter(quoting);
+        return quote(format("{}{}.{}|{}",
+                            modification.type == Buffer::Modification::Type::Insert ? '+' : '-',
+                            modification.coord.line, modification.coord.column,
+                            modification.content->strview()));
     };
-    return join(undo_group |transform(modification_as_string), ' ', false);
+    return join(undo_group | transform(modification_as_string), ' ', false);
 }
 
 }

@@ -3,6 +3,11 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development version
+
+* Expose history tree through `$kak_history` and
+  `$kak_uncommitted_modifications`
+
 == Kakoune 2019.12.10
 
 * Arrow keys and `<home>`, `<end>` are not normal mode commands

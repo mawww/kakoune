@@ -85,7 +85,6 @@ void reload_file_buffer(Buffer& buffer);
 void write_to_debug_buffer(StringView str);
 
 InplaceString<23> to_string(Buffer::HistoryId id);
-String format_modification(const Buffer::Modification& modification, Quoting quoting);
 String history_as_string(const Vector<Buffer::HistoryNode>& history, Quoting quoting);
 String undo_group_as_string(const Buffer::UndoGroup& undo_group, Quoting quoting);
 

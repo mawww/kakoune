@@ -1,7 +1,6 @@
 # Make our expansion have a predictable timestamp
 hook global ClientClose .* %{
-    evaluate-commands %sh{
-        kak -f 'ghf<space>ec$timestamp<esc>2f<space>ec$timestamp<esc>' <kak_quoted_history >tmp
-        mv tmp kak_quoted_history
+    nop %sh{
+        kak -f 'ghf<space>ec$timestamp<esc>2f<space>ec$timestamp<esc>' kak_quoted_history
     }
 }
