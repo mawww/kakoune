@@ -1,7 +1,7 @@
 = image:{logo}[K,30,30,link="{website}",title="Kakoune logo by p0nce"] Kakoune image:{travis-img}[link="{travis-url}"] image:{cirrus-img}[link="{cirrus-url}"] image:{irc-img}[link="{irc-url}"]
 ifdef::env-github,env-browser[:outfilesuffix: .asciidoc]
 :logo: https://rawgit.com/mawww/kakoune/master/doc/kakoune_logo.svg
-:website: http://kakoune.org
+:website: https://kakoune.org
 :travis-img: https://travis-ci.org/mawww/kakoune.svg?branch=master
 :travis-url: https://travis-ci.org/mawww/kakoune
 :cirrus-img: https://api.cirrus-ci.com/github/mawww/kakoune.svg
@@ -21,13 +21,13 @@ TL;DR
 *Multiple selections* -- *Orthogonal design*
 
 ---------------------------------------------
-git clone http://github.com/mawww/kakoune.git
+git clone https://github.com/mawww/kakoune.git
 cd kakoune/src
 make
 ./kak
 ---------------------------------------------
 
-See http://github.com/mawww/golf for kakoune solutions to vimgolf challenges,
+See https://github.com/mawww/golf for Kakoune solutions to vimgolf challenges,
 regularly beating the best Vim solution.
 
 See the link:doc/design.asciidoc[design document] for more information on
@@ -55,7 +55,7 @@ selections have an anchor and a cursor character. Most commands move both of
 them, except when extending selection where the anchor character stays fixed
 and the cursor one moves around.
 
-See http://vimeo.com/82711574
+See https://vimeo.com/82711574
 
 Join us on freenode IRC `#Kakoune`
 
