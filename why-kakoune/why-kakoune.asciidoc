@@ -1,0 +1,362 @@
+Why Kakoune -- The quest for a better code editor
+=================================================
+Maxime Coste <mawww@kakoune.org>
+
+image::kakoune_logo.svg[align="center", link="http://kakoune.org"]
+
+Why invest time into text editing
+---------------------------------
+
+While discussing with fellow developers, I was asked the following question
+a few times: We spend most of our time as developers thinking, not editing
+code; so, why invest time into mastering a complicated code editor, and why
+lose some cognitive resources on thinking about text editing instead of
+about the real programming problem?
+
+I think this point of view is misguided, for a few reasons:
+
+* Despite their name, code editors are not only about editing, but also about
+code navigation. Programming is a hard task partly due to the huge amount of
+context we have to keep in mind, and being able to quickly navigate code helps
+us refresh that context, by looking at definitions, implementations, and comments.
+
+* Although code editing itself is not the most important part of programming,
+it still takes non-negligible time to perform, and can be optimized by using
+better tools.
+
+* Finally, a programming career spans a few decades, so investing a few weeks
+to improving our editing and navigating speed is definitely worth it.
+
+Why a modal text editor
+-----------------------
+
+What is modal text editing
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now that we have established that investing time into mastering text editing
+is worth it, let's focus on why I think modal text editors are the way to go.
+
+A modal text editor can be, as its name implies, in different modes. Depending
+on the current mode, keys have different effects: in *insert* mode most keys
+insert their character in the buffer, as in non-modal editors, but in *normal*
+(default) mode, keys have a different effect. For example, `w` can move the
+cursor to the next word, `y` can yank (copy) the current selection, `p` can
+paste, `u` can undo, `g` followed by `f` can open the filename under the cursor...
+
+Some commands from *normal* mode would change the mode, for example `i` would
+enter *insert* mode, from which the `<esc>` key would return to *normal* mode.
+
+The first thing to realize is that non-modal text editors are extremely biased
+towards insertion. They make insertion easy (by making the default behaviour of
+most keys to insert a character into the buffer) at the expense of making most
+other operations suboptimal, by requiring hard to reach keys or modifiers (or,
+even worse, moving your hand all the way to your mouse).
+
+Insertion is a key part of text editing, and is worth optimizing, which is
+the whole point of completion systems. But it is only a small part of text
+editing, we spend a huge amount of our editing time navigating, moving code
+around, copying, pasting and reformating.
+
+A modal text editor makes all these operations much more accessible, and easier
+to express. But they are not only about having convenient shortcuts.
+
+Modal editing as a text editing language
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Many vi users have an epiphany when they realize that vi does not just
+provide a set of modes making various text editing shortcuts easier to type,
+but actually provides a text editing language.
+
+Commands are composable in order to express complex changes, `dw` in vi is
+not just a shortcut to delete a word, it is the combination of a *verb*: `d`
+for delete, with an *object* `w` for word. There are more complex objects like
+`ib` (inside block) refers to the content of the parenthesis surrounding
+the cursor, so `yib` would yank (copy) the text inside the surround
+parenthesis.
+
+This language allows the programmer to express their intent much more closely
+than in other editors; most editors can express "delete the word after the
+next parenthesis", but more often than not, expressing that intent is more
+cumbersome than simply doing an ad-hoc edit. Text editing as a language
+changes that, by making clearly expressing your intent the fastest and easiest
+way to do your edit.
+
+This is a desirable property because a lot of text editing operations are
+repetitive, but only on structurally similar text: the subject text are
+different, but they follow the same structure. Being able to express the
+text editing at the structural level allows for reusable commands, and makes
+the computer do the repetitive job.
+
+Another often overlooked property of using a text editing language is that
+it's fun. Programmers are problem solvers, we enjoy solving problems, and
+we enjoy even more solving them with a clean and efficient solution. This
+kind of text editor transform a dull and repetitive edition task into an
+interesting puzzle to solve, and that is an engaging thing.
+
+Think about it this way: Yes, programming is about thinking, concentrating
+on a design problem, or on a bug, understanding what needs to be done,
+designing a solution, and then writing it. More often that not, once you get
+to the writing phase, most of the thinking, problem solving, part is done,
+now the remaining task is just editing the code.  Modal editors make this
+phase both faster, and more fun.
+
+Why Kakoune
+-----------
+
+Up to now, I have used vi as an example for modal text editor, mostly because
+I expect most programmers have at least heard of it. However, I dont believe
+vi and clones are the best modal text editor out there.
+
+I have been working, for the last 5 years, on a new modal editor called
+Kakoune. It first started as a reimplementation of Vim (the most popular vi
+clone) whose source code is quite dated. But, I soon realized that we could
+improve a lot on vi editing model.
+
+Improving on the editing model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+vi basic grammar is *verb* followed by *object*; it's nice because it matches
+well with the order we use in English, "delete word". On the other hand,
+it does not match well with the nature of what we express: There is only
+a handfull of *verbs* in text editing (**d**elete, **y**ank, **p**aste,
+**i**nsert...), and they don't compose, contrarily to *objects* which can be
+arbitrarily complex, and difficult to express. That means that errors are
+not handled well. If you express your object wrongly with a delete verb,
+the wrong text will get deleted, you will need to undo, and try again.
+
+Kakoune's grammar is *object* followed by *verb*, combined with instantaneous
+feedback, that means you always see the current object (In Kakoune we call
+that the selection) before you apply your change, which allows you to correct
+errors on the go.
+
+Kakoune tries hard to fix one of the big problems with the vi model: its
+lack of interactivity. Because of the *verb* followed by *object* grammar,
+vi changes are made in the dark, we dont see their effect until the whole
+editing *sentence* is finished. `5dw` will delete to next five words, if
+you then realize that was one word too many, you need to undo, go back to
+your initial position, and try again with `4dw`. In Kakoune, you would do
+`5W`, see immediately that one more word than expected was selected, type
+`BH` to remove that word from the selection, then `d` to delete.  At each
+step you get visual feedback, and have the opportunity to correct it.
+
+At the lower level, the problem is that vi treats moving around and selecting
+an object as two different things. Kakoune unifies that, moving *is* selecting.
+`w` does not just go to the next word, it selects from current position to
+the next word. By convention, capital commands tend to expand the selection,
+so `W` would expand the current selection to the next word.
+
+Multiple selections
+~~~~~~~~~~~~~~~~~~~
+
+Another particular feature of Kakoune is its support for, and emphasis
+towards the use of multiple selections. Multiple selections in Kakoune
+are not just one additional feature, it is the central way of interacting
+with your text. For example there is no such thing as a "global replace" in
+Kakoune. What you would do is select the whole buffer with the `%` command,
+then select all matches for a regex in the current selections (that is the
+whole buffer here) with the `s` command, which prompts for a regex. You would
+end up with one selection for each match of your regex and use the insert
+mode to do your change. Globally replacing foo with bar would be done with
+`%sfoo<ret>cbar<esc>` which is just the combination of basic building blocks.
+
+.Global replace
+video::video/global-replace.webm[align="center", options="autoplay,loop"]
+
+Multiple selections provides us with a very powerfull to express structural
+selection: we can subselect matches inside the current selections, keep
+selections containing/not containing a match, split selections on a regex,
+swap selections contents...
+
+For example, convert from `snake_case_style` to `camelCaseStyle` can be done
+by selecting the word (with `w` for example) then subselecting underscores
+in the word with `s_<ret>`, deleting these with `d`, then upper casing the
+selected characters with `~`. The inverse operation could be done by selecting
+the word, then subselecting the upper case characters with `s[A-Z]<ret>`
+lower casing them with ` and then inserting an underscode before them with
+`i_<esc>` This operation could be put in a macro, and would be reusable
+easily to convert any identifier.
+
+.Camel case to snake case
+video::video/camel.webm[align="center", options="autoplay,loop"]
+
+Another example would be parameter swapping, if you had `func(arg2, arg1);`
+you could select the contents of the parenthesis with `<a-i>(`, split the
+selection on comma with `S, <ret>`, and swap selection contents with `<a-)>`.
+
+.Swapping arguments
+video::video/args-swap.webm[align="center", options="autoplay,loop"]
+
+It is as well easy to use multiple selections for alignment, as the `&`
+command will align all selection cursors by inserting blanks before
+selection start
+
+.Aligning variables
+video::video/align.webm[align="center", options="autoplay,loop"]
+
+Or to use multiple selections as a way to gather some text from different
+places and regroup it in another place, thanks to a special form of pasting
+`<a-p>` that will paste every yanked selections instead of the first one.
+
+.Regrouping manager objects together
+video::video/regroup.webm[align="center", options="autoplay,loop"]
+
+Interactive, predictible and fast
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A design goal of Kakoune is to beat vim at its own game, while providing a
+cleaner editing model. The combination of multiple selections and cleaned up
+grammar shows thats its possible to have text edition that is interactive,
+predictible, and fast at the same time.
+
+Interactivity comes by providing feedback on every commands, the inverted
+*object* then *verb* grammar makes that possible, every selection modification
+has direct visual feedback, regex based selections incrementally show what
+will get selected, including when the regular expression is invalid, and even
+yanking some text displays a message notifying how many selections were yanked.
+
+Predictibilty comes from the simple effect of most commands. Each command is
+conceptually simple, doing one single thing. `d` deletes whatever is selected,
+nothing more. `%` selects the whole buffer, `s` prompts for a regex and
+selects matches in the previous selection. It is the combination of these
+building blocks that allows for complex, but predictible, actions on the text.
+
+Being fast, as in less keystrokes, is provided by carefully designing the set
+of editing commands so that they interact well together, and by sometimes
+sacrificing beauty for useability. For example, `<a-s>` is equivalent to
+`S^<ret>`, they both split on new lines, but this is a so common use case that
+it deserves to have its own key. As shown in http://github.com/mawww/golf,
+Kakoune manages to beat Vim at the keystroke count game in most cases,
+using much more idiomatic commands.
+
+
+Discoverability
+~~~~~~~~~~~~~~~
+
+Keyboard oriented programs tend to be at a disadvantage compared to GUI
+applications because they are less discoverable; there is no menu bar on
+which to click to see the available options, no tooltip appearing when you
+hover above a button explaining what it does.
+
+Kakoune solves this problem through the use of two mechanisms: extensive
+completion support, and auto-information display.
+
+When a command is written in a prompt, Kakoune will automatically open a menu
+providing you with the available completions for the current parameter. It
+will know if the parameter is supposed to be a word against a fixed set
+of word, the name of a buffer, a filename, etc... Actually, as soon as `:`
+is typed, entering command prompt mode, the list of existing commands will
+be displayed in the completion menu.
+
+Additionally, Kakoune will display an information box, describing what the
+command does, what optional switches it can take, what they do...
+
+.Command discoverability
+video::video/discoverability.webm[align="center", options="autoplay,loop"]
+
+That information box gets displayed in other cases, for example if the `g`
+key is hit, which then waits for another key (`g` is the *goto* commands
+prefix), an information box will display all the recognized keys, informing
+the user that Kakoune is waiting on a keystroke, and listing the available
+options.
+
+To go even further in discoverability, the auto information system can
+be set to display an information box after each normal mode keystroke,
+explaining what the key pressed just did.
+
+Extensive completion support
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Keyboard oriented programs are much easier to work with when they provide
+extensive completion support. For a long time, completion has been prefix
+based, and that has been working very well.
+
+More recently, we started to see more and more programs using the so called
+fuzzy completion. Fuzzy completion tends to be subsequence based, instead
+of prefix based, which means the typed query needs to be a subsequence of
+a candidate to be considered matching, instead of a prefix. That will generate
+more candidates (all prefix matches are also subsequence matches), so it
+needs a good ranking algorithm to sort the matches and put the best ones first.
+
+Kakoune embraces fuzzy matching for its completion support, which kicks in both
+during insert mode, and prompt mode.
+
+.Word completion support
+video::video/completion.webm[align="center", options="autoplay,loop"]
+
+Insert mode completion provides completion suggestions while inserting in the
+buffer, it can complete words from the buffer, or from all buffers, lines,
+filenames, or get completion candidates from an external source, making it
+possible to implement intelligent code completion.
+
+.Language specific completion support
+video::video/cpp-completion.webm[align="center", options="autoplay,loop"]
+
+Prompt completion is displayed whenever we enter command mode, and provides
+completion candidates that are adapted to the command being entered, and to
+the current argument being edited.
+
+A better unix citizen
+~~~~~~~~~~~~~~~~~~~~~
+
+Easily making programs cooperate with each others is one of the main strength
+of the Unix environment. Kakoune is designed to integrate nicely with a POSIX
+system: various text editing commands give direct access to the power of POSIX
+tools, like `|`, which prompts for a shell command and pipe selections through
+it, replacing their contents with the command output, or `$` that prompts for
+a command, and keeps selections for which the command returned success.
+
+.Using external commands as filters
+video::video/filters.webm[align="center", options="autoplay,loop"]
+
+This is only the tip of the iceberg. Kakoune is very easily controllable from
+the shell, just pipe whatever commands you like to `kak -p <session>`, and the
+target Kakoune session will execute these.
+
+Kakoune command line also supports shell expansion, similar to what `$(...)`
+does in a shell. If you type `echo %sh{ echo hello }` in the command prompt,
+"hello" will get displayed in the status line. Various values from Kakoune
+can be accessed in these expand through environment variables, which, along
+with shell scripting forms the basis of Kakoune extension model.
+
+.Interaction with external shell
+video::video/external.webm[align="center", options="autoplay,loop"]
+
+This model, although a bit less familiar than integrating a scripting language,
+is conceptually very simple, relatively simple implementation-wise, and is
+expressive enough to implement a custom code completer, linters, formatters...
+
+Moreover, combined with support for `fifo` buffers, that read data from a
+named `fifo`, Kakoune ends up with an extension model that easily support
+asynchronous tasks, by forking a shell in the background to do long lived
+work (`grep` or `make` for example) while displaying the result as they
+come through the `fifo`.
+
+Kakoune also tries to limit its scope to code editing: in particular, it does
+not try to manage windows, and lets the system's window manager, or terminal
+multiplexer (such as tmux), handle that responsiblity. This is achieved through
+a client/server design: An editing session runs on a server process, and
+multiple clients can connect to that session to display different buffers.
+
+.Asynchronous make and multiple clients in tmux
+video::video/async.webm[align="center", options="autoplay,loop"]
+
+Final Thoughts
+--------------
+
+Kakoune provides an efficient code editing environment, both very predictible,
+hence scriptable, and very interactive. Its learning curve is considerably
+easier than Vim thanks to a more consistent design associated with strong
+discoverability, while still being faster (as in less keystrokes) in most
+use cases.
+
+Although easier to learn than Vim, the learning curve is still quite steep,
+however we have established that investing time into optimizing the text
+editing workflow is worth it for programmers. Moreover, Kakoune simply makes
+code editing a fun and rewarding experience.
+
+Kakoune is still evolving, getting better as we get more users, and gathering
+more use cases to cater for. It's already a very good code editor, and we need
+you to use it so that it can be made even better.
+
+Kakoune is available at http://github.com/mawww/kakoune and has a website at
+http://kakoune.org
