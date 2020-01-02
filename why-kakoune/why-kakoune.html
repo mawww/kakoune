@@ -581,7 +581,7 @@ phase both faster, and more fun.</p>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Up to now, I have used vi as an example for modal text editor, mostly because
-I expect most programmers have at least heard of it. However, I dont believe
+I expect most programmers have at least heard of it. However, I don&#8217;t believe
 vi and clones are the best modal text editor out there.</p>
 </div>
 <div class="paragraph">
@@ -596,7 +596,7 @@ improve a lot on vi editing model.</p>
 <p>vi basic grammar is <strong>verb</strong> followed by <strong>object</strong>; it&#8217;s nice because it matches
 well with the order we use in English, "delete word". On the other hand,
 it does not match well with the nature of what we express: There is only
-a handfull of <strong>verbs</strong> in text editing (<strong>d</strong>elete, <strong>y</strong>ank, <strong>p</strong>aste,
+a handful of <strong>verbs</strong> in text editing (<strong>d</strong>elete, <strong>y</strong>ank, <strong>p</strong>aste,
 <strong>i</strong>nsert&#8230;&#8203;), and they don&#8217;t compose, contrarily to <strong>objects</strong> which can be
 arbitrarily complex, and difficult to express. That means that errors are
 not handled well. If you express your object wrongly with a delete verb,
@@ -611,7 +611,7 @@ errors on the go.</p>
 <div class="paragraph">
 <p>Kakoune tries hard to fix one of the big problems with the vi model: its
 lack of interactivity. Because of the <strong>verb</strong> followed by <strong>object</strong> grammar,
-vi changes are made in the dark, we dont see their effect until the whole
+vi changes are made in the dark, we don&#8217;t see their effect until the whole
 editing <strong>sentence</strong> is finished. <code>5dw</code> will delete to next five words, if
 you then realize that was one word too many, you need to undo, go back to
 your initial position, and try again with <code>4dw</code>. In Kakoune, you would do
@@ -650,7 +650,7 @@ Your browser does not support the video tag.
 </div>
 </div>
 <div class="paragraph">
-<p>Multiple selections provides us with a very powerfull to express structural
+<p>Multiple selections provides us with a very powerful to express structural
 selection: we can subselect matches inside the current selections, keep
 selections containing/not containing a match, split selections on a regex,
 swap selections contents&#8230;&#8203;</p>
@@ -661,7 +661,7 @@ by selecting the word (with <code>w</code> for example) then subselecting unders
 in the word with <code>s_&lt;ret&gt;</code>, deleting these with <code>d</code>, then upper casing the
 selected characters with <code>~</code>. The inverse operation could be done by selecting
 the word, then subselecting the upper case characters with <code>s[A-Z]&lt;ret&gt;</code>
-lower casing them with ` and then inserting an underscode before them with
+lower casing them with ` and then inserting an underscore before them with
 <code>i_&lt;esc&gt;</code> This operation could be put in a macro, and would be reusable
 easily to convert any identifier.</p>
 </div>
@@ -714,33 +714,33 @@ Your browser does not support the video tag.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_interactive_predictible_and_fast">Interactive, predictible and fast</h3>
+<h3 id="_interactive_predictable_and_fast">Interactive, predictable and fast</h3>
 <div class="paragraph">
 <p>A design goal of Kakoune is to beat vim at its own game, while providing a
 cleaner editing model. The combination of multiple selections and cleaned up
-grammar shows thats its possible to have text edition that is interactive,
-predictible, and fast at the same time.</p>
+grammar shows that it&#8217;s possible to have text edition that is interactive,
+predictable, and fast at the same time.</p>
 </div>
 <div class="paragraph">
-<p>Interactivity comes by providing feedback on every commands, the inverted
-<strong>object</strong> then <strong>verb</strong> grammar makes that possible, every selection modification
-has direct visual feedback, regex based selections incrementally show what
-will get selected, including when the regular expression is invalid, and even
+<p>Interactivity comes from providing feedback on every command, made possible by
+the inverted <strong>object</strong> then <strong>verb</strong> grammar. Every selection modification
+has direct visual feedback; regex-based selections incrementally show what
+will get selected, including when the regular expression is invalid; and even
 yanking some text displays a message notifying how many selections were yanked.</p>
 </div>
 <div class="paragraph">
-<p>Predictibilty comes from the simple effect of most commands. Each command is
+<p>Predictability comes from the simple effect of most commands. Each command is
 conceptually simple, doing one single thing. <code>d</code> deletes whatever is selected,
-nothing more. <code>%</code> selects the whole buffer, <code>s</code> prompts for a regex and
+nothing more. <code>%</code> selects the whole buffer. <code>s</code> prompts for a regex and
 selects matches in the previous selection. It is the combination of these
-building blocks that allows for complex, but predictible, actions on the text.</p>
+building blocks that allows for complex, but predictable, actions on the text.</p>
 </div>
 <div class="paragraph">
-<p>Being fast, as in less keystrokes, is provided by carefully designing the set
-of editing commands so that they interact well together, and by sometimes
+<p>Being fast, as in requiring fewer keystrokes, is provided by carefully designing
+the set of editing commands so that they interact well together, and by sometimes
 sacrificing beauty for useability. For example, <code>&lt;a-s&gt;</code> is equivalent to
-<code>S^&lt;ret&gt;</code>, they both split on new lines, but this is a so common use case that
-it deserves to have its own key. As shown in <a href="http://github.com/mawww/golf" class="bare">http://github.com/mawww/golf</a>,
+<code>S^&lt;ret&gt;</code>: they both split on new lines, but this is such a common use case that
+it deserves to have its own key shortcut. As shown in <a href="http://github.com/mawww/golf" class="bare">http://github.com/mawww/golf</a>,
 Kakoune manages to beat Vim at the keystroke count game in most cases,
 using much more idiomatic commands.</p>
 </div>
@@ -890,7 +890,7 @@ come through the <code>fifo</code>.</p>
 <div class="paragraph">
 <p>Kakoune also tries to limit its scope to code editing: in particular, it does
 not try to manage windows, and lets the system&#8217;s window manager, or terminal
-multiplexer (such as tmux), handle that responsiblity. This is achieved through
+multiplexer (such as tmux), handle that responsibility. This is achieved through
 a client/server design: An editing session runs on a server process, and
 multiple clients can connect to that session to display different buffers.</p>
 </div>
@@ -909,7 +909,7 @@ Your browser does not support the video tag.
 <h2 id="_final_thoughts">Final Thoughts</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Kakoune provides an efficient code editing environment, both very predictible,
+<p>Kakoune provides an efficient code editing environment, both very predictable,
 hence scriptable, and very interactive. Its learning curve is considerably
 easier than Vim thanks to a more consistent design associated with strong
 discoverability, while still being faster (as in less keystrokes) in most
@@ -935,7 +935,7 @@ you to use it so that it can be made even better.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-02 22:49:49 +1100
+Last updated 2020-01-03 19:17:51 +1100
 </div>
 </div>
 </body>
