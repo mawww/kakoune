@@ -1,0 +1,3 @@
+source "%val{runtime}/rc/filetype/lisp.kak"
+source "%val{runtime}/rc/filetype/clojure.kak"
+set buffer filetype clojure

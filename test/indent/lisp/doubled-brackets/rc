@@ -1,0 +1,2 @@
+source "%val{runtime}/rc/filetype/lisp.kak"
+set buffer filetype lisp
