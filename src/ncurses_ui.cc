@@ -1031,6 +1031,38 @@ static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
     return pos;
 }
 
+static DisplayLineList wrap_lines(const DisplayLineList& lines, ColumnCount max_width)
+{
+    DisplayLineList result;
+    for (auto line : lines)
+    {
+        ColumnCount column = 0;
+        for (auto it = line.begin(); it != line.end(); )
+        {
+            auto length = it->length();
+            column += length;
+            if (column > max_width)
+            {
+                auto content = it->content().substr(0, length - (column - max_width));
+                auto pos = find_if(content | reverse(), [](char c) { return not is_word(c); });
+                if (pos != content.rend())
+                    content = {content.begin(), pos.base()};
+
+                if (not content.empty())
+                    it = ++line.split(it, content.column_length());
+                result.push_back(AtomList(std::make_move_iterator(line.begin()),
+                                          std::make_move_iterator(it)));
+                it = line.erase(line.begin(), it);
+                column = 0;
+            }
+            else
+                ++it;
+        }
+        result.push_back(std::move(line));
+    }
+    return result;
+}
+
 void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& content,
                           DisplayCoord anchor, Face face, InfoStyle style)
 {
@@ -1042,6 +1074,9 @@ void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& conte
     m_info.face = face;
     m_info.style = style;
 
+    const bool framed = style == InfoStyle::Prompt or style == InfoStyle::Modal;
+    const bool assisted = style == InfoStyle::Prompt and m_assistant.size() != 0;
+
     DisplayCoord max_size = m_dimensions;
     if (style == InfoStyle::MenuDoc)
         max_size.column = std::max(m_dimensions.column - (m_menu.pos.column + m_menu.size.column),
@@ -1049,21 +1084,32 @@ void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& conte
     else if (style != InfoStyle::Modal)
         max_size.line -= m_menu.size.line;
 
-    const bool framed = style == InfoStyle::Prompt or style == InfoStyle::Modal;
-    const bool assisted = style == InfoStyle::Prompt and m_assistant.size() != 0;
-    DisplayCoord size{(int)content.size(), accumulate(content, 0_col, [](ColumnCount c, const DisplayLine& l) {
-            return std::max(c, l.length());
-        })};
-    size.column = std::max(size.column, title.length() + (framed ? 2 : 0));
+    const auto max_content_width = max_size.column - (framed ? 4 : 2) - (assisted ? m_assistant[0].column_length() : 0);
+    if (max_content_width <= 0)
+        return;
+
+    auto compute_size = [](const DisplayLineList& lines) -> DisplayCoord {
+        return {(int)lines.size(), accumulate(lines, 0_col, [](ColumnCount c, const DisplayLine& l) { return std::max(c, l.length()); })};
+    };
+
+    DisplayCoord content_size = compute_size(content);
+    const bool wrap = content_size.column > max_content_width;
+    DisplayLineList wrapped_content;
+    if (wrap)
+    {
+        wrapped_content = wrap_lines(content, max_content_width);
+        content_size = compute_size(wrapped_content);
+    }
+    const auto& lines = wrap ? wrapped_content : content;
+
+    DisplayCoord size{content_size.line, std::max(content_size.column, title.length() + (framed ? 2 : 0))};
     if (framed)
         size += {2, 4};
     if (assisted)
         size = {std::max(LineCount{(int)m_assistant.size()-1}, size.line), size.column + m_assistant[0].column_length()};
-
     size = {std::min(max_size.line, size.line), std::min(max_size.column, size.column)};
 
-    const auto content_width = size.column - (framed ? 4 : 2) - (assisted ? m_assistant[0].column_length() : 0);
-    if (content_width <= 0 or (framed and size.line < 3) or size.line <= 0)
+    if ((framed and size.line < 3) or size.line <= 0)
         return;
 
     const Rect rect = {content_line_offset(), m_dimensions};
@@ -1117,30 +1163,30 @@ void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& conte
             draw_atoms(assistant_line.str());
         }
         if (not framed)
-            draw_atoms(content[(int)line]);
+            draw_atoms(lines[(int)line]);
         else if (line == 0)
         {
-            if (title.atoms().empty() or content_width < 2)
-                draw_atoms("╭─" + String{dash, content_width} + "─╮");
+            if (title.atoms().empty() or content_size.column < 2)
+                draw_atoms("╭─" + String{dash, content_size.column} + "─╮");
             else
             {
                 auto trimmed_title = title;
-                trimmed_title.trim(0, content_width - 2);
-                auto dash_count = content_width - trimmed_title.length() - 2;
+                trimmed_title.trim(0, content_size.column - 2);
+                auto dash_count = content_size.column - trimmed_title.length() - 2;
                 String left{dash, dash_count / 2};
                 String right{dash, dash_count - dash_count / 2};
                 draw_atoms("╭─" + left + "┤", trimmed_title, "├" + right +"─╮");
             }
         }
-        else if (line < size.line - 1 and line <= content.size())
+        else if (line < size.line - 1 and line <= lines.size())
         {
-            auto info_line = content[(int)line - 1];
-            const bool trimmed = info_line.trim(0, content_width);
-            const ColumnCount padding = content_width - info_line.length();
+            auto info_line = lines[(int)line - 1];
+            const bool trimmed = info_line.trim(0, content_size.column);
+            const ColumnCount padding = content_size.column - info_line.length();
             draw_atoms("│ ", info_line, String{' ', padding} + (trimmed ? "…│" : " │"));
         }
-        else if (line == std::min<LineCount>((int)content.size() + 1, size.line - 1))
-            draw_atoms("╰─" + String(line > content.size() ? dash : dotted_dash, content_width) + "─╯");
+        else if (line == std::min<LineCount>((int)lines.size() + 1, size.line - 1))
+            draw_atoms("╰─" + String(line > lines.size() ? dash : dotted_dash, content_size.column) + "─╯");
     }
     m_dirty = true;
 }
