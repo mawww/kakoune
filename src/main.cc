@@ -42,82 +42,91 @@ extern const char* version;
 
 struct {
     unsigned int version;
-    const char* notes;
+    StringView notes;
 } constexpr version_notes[] = { {
         20191210,
-        "» ModeChange parameter has changed to contain push/pop\n"
-        "  ${Mode}Begin/${Mode}End hooks were removed\n"
+        "» {+u}ModeChange{} parameter has changed to contain push/pop "
+        "{+ui}Mode{+u}Begin{}/{+ui}Mode{+u}End{} hooks were removed\n"
     }, {
         20190701,
-        "» %file{...} expansions to read files\n"
-        "» echo -to-file <filename> to write to file\n"
-        "» completions option have an on select command instead of\n"
-        "  a docstring\n"
+        "» {+u}%file\\{<filename>}{} expansions to read files\n"
+        "» {+u}echo -to-file <filename>{} to write to file\n"
+        "» completions option have an on select command instead of "
+        "a docstring\n"
         "» Function key syntax do not accept lower case f anymore\n"
-        "» shell quoting of list options is now opt-in with\n"
-        "  $kak_quoted_...\n"
+        "» shell quoting of list options is now opt-in with "
+        "{+u}$kak_quoted_...{}\n"
     }, {
         20190120,
         "» named capture groups in regex\n"
         "» auto_complete option renamed to autocomplete\n"
     }, {
         20181027,
-        "» define-commands -shell-completion and -shell-candidates\n"
-        "  has been renamed\n"
-        "» exclusive face attributes is replaced with final\n"
-        "  (fg/bg/attr)\n"
-        "» <a-M> (merge consecutive) moved to <a-_> to make <a-M>\n"
-        "  backward <a-m>\n"
-        "» remove-hooks now takes a regex parameter\n"
+        "» {+u}define-commands{} {+i}-shell-completion{} and {+i}-shell-candidates{} "
+        "has been renamed\n"
+        "» exclusive face attributes is replaced with final "
+        "(fg/bg/attr)\n"
+        "» {+b}<a-M>{} (merge consecutive) moved to {+b}<a-_>{} to make {+b}<a-M>{} "
+        "backward {+b}<a-m>{}\n"
+        "» {+u}remove-hooks{} now takes a regex parameter\n"
     }, {
         20180904,
-        "» Big breaking refactoring of various Kakoune features,\n"
-        "  configuration might need to be updated see `:doc changelog`\n"
-        "  for details\n"
-        "» define-command -allow-override switch has been renamed\n"
-        "  -override\n"
+        "» Big breaking refactoring of various Kakoune features, "
+        "configuration might need to be updated see `:doc changelog` "
+        "for details\n"
+        "» {+u}define-command{} {+i}-allow-override{} switch has been renamed "
+        "{+i}-override{}\n"
     }, {
         20180413,
-        "» ModeChange hook has been introduced and is expected\n"
-        "  to replace the various ${MODE}Begin/${MODE}End hooks,\n"
-        "  consider those deprecated.\n"
-        "» '*' Does not strip whitespaces anymore, use built-in\n"
-        "  '_' to strip them\n"
-        "» 'l' on eol will go to next line, 'h' on first char will\n"
-        "  go to previous\n"
-        "» selections merging behaviour is now a bit more complex\n"
-        "  again\n"
-        "» 'x' will only jump to next line if full line is already\n"
-        "  selected\n"
-        "» WORD text object moved to <a-w> instead of W for\n"
-        "  consistency\n"
-        "» rotate main selection moved to ), rotate content to <a-)>,\n"
-        "  ( for backward\n"
-        "» faces are now scoped, set-face command takes an additional\n"
-        "  scope parameter\n"
-        "» <backtab> key is gone, use <s-tab> instead\n"
+        "» {+u}ModeChange{} hook has been introduced and is expected "
+        "to replace the various {+ui}Mode{+u}Begin{}/{+ui}Mode{+u}End{} hooks, "
+        "consider those deprecated.\n"
+        "» {+b}*{} Does not strip whitespaces anymore, use built-in "
+        "{+b}_{} to strip them\n"
+        "» {+b}l{} on eol will go to next line, {+b}h{} on first char will "
+        "go to previous\n"
+        "» selections merging behaviour is now a bit more complex "
+        "again\n"
+        "» {+b}x{} will only jump to next line if full line is already "
+        "selected\n"
+        "» {+i}WORD{} text object moved to {+b}<a-w>{} instead of {+b}W{} for "
+        "consistency\n"
+        "» rotate main selection moved to {+b}){}, rotate content to {+b}<a-)>{}, "
+        "{+b}({} for backward\n"
+        "» faces are now scoped, {+u}set-face{} command takes an additional "
+        "scope parameter\n"
+        "» {+b}<backtab>{} key is gone, use {+b}<s-tab>{} instead\n"
 } };
 
 void show_startup_info(Client* local_client, int last_version)
 {
-    String info;
+    const Face version_face{Color::Default, Color::Default, Attribute::Bold};
+    DisplayLineList info;
     for (auto note : version_notes)
     {
+        if (note.version and note.version < last_version)
+            continue;
+
         if (not note.version)
-            info += format("• Development version\n{}\n", note.notes);
-        else if (note.version > last_version)
+            info.push_back({"• Development version", version_face});
+        else
         {
             const auto year = note.version / 10000;
             const auto month = (note.version / 100) % 100;
             const auto day = note.version % 100;
-            info += format("• Kakoune v{}.{}{}.{}{}\n{}\n",
-                           year, month < 10 ? "0" : "", month, day < 10 ? "0" : "", day, note.notes);
+            info.push_back({format("• Kakoune v{}.{}{}.{}{}",
+                                   year, month < 10 ? "0" : "", month, day < 10 ? "0" : "", day),
+                            version_face});
         }
+
+        for (auto&& line : note.notes | split<StringView>('\n'))
+            info.push_back(parse_display_line(line, GlobalScope::instance().faces()));
     }
     if (not info.empty())
     {
-        info += "See the `:doc options startup-info` to control this message\n";
-        local_client->info_show(format("Kakoune {}", version), info, {}, InfoStyle::Prompt);
+        info.push_back({"See the `:doc options startup-info` to control this message",
+                        Face{Color::Default, Color::Default, Attribute::Italic}});
+        local_client->info_show({format("Kakoune {}", version), version_face}, info, {}, InfoStyle::Prompt);
     }
 }
 
