@@ -1,0 +1,5 @@
+add-highlighter shared/test regions
+add-highlighter shared/test/base default-region regions
+add-highlighter shared/test/base/base default-region regex _[^_]+_ 0:+b
+add-highlighter shared/test/item region '^- \K' $ ref test/base
+add-highlighter window/ ref test

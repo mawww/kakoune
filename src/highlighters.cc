@@ -333,7 +333,8 @@ private:
         size_t m_timestamp = -1;
         size_t m_regex_version = -1;
         struct RangeAndMatches { BufferRange range; MatchList matches; };
-        Vector<RangeAndMatches, MemoryDomain::Highlight> m_matches;
+        using RangeAndMatchesList = Vector<RangeAndMatches, MemoryDomain::Highlight>;
+        HashMap<BufferRange, RangeAndMatchesList, MemoryDomain::Highlight> m_matches;
     };
     BufferSideCache<Cache> m_cache;
 
@@ -377,16 +378,17 @@ private:
     const MatchList& get_matches(const Buffer& buffer, BufferRange display_range, BufferRange buffer_range)
     {
         Cache& cache = m_cache.get(buffer);
-        auto& matches = cache.m_matches;
 
         if (cache.m_regex_version != m_regex_version or
             cache.m_timestamp != buffer.timestamp() or
-            matches.size() > 1000)
+            accumulate(cache.m_matches, (size_t)0, [](size_t c, auto&& m) { return c + m.value.size(); }) > 1000)
         {
-            matches.clear();
+            cache.m_matches.clear();
             cache.m_timestamp = buffer.timestamp();
             cache.m_regex_version = m_regex_version;
         }
+
+        auto& matches = cache.m_matches[buffer_range];
 
         const LineCount line_offset = 3;
         BufferRange range{std::max<BufferCoord>(buffer_range.begin, display_range.begin.line - line_offset),
@@ -1833,7 +1835,7 @@ public:
         const bool apply_default = default_region_it != m_regions.end();
 
         auto last_begin = (begin == regions.begin()) ?
-                             BufferCoord{0,0} : (begin-1)->end;
+                             range.begin : (begin-1)->end;
         kak_assert(begin <= end);
         for (; begin != end; ++begin)
         {
