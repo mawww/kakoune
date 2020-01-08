@@ -464,6 +464,9 @@ void InsertCompleter::update(bool allow_implicit)
         setup_ifn();
 }
 
+auto& get_first(InsertCompletion& completions) { return completions.begin; }
+auto& get_last(InsertCompletion& completions) { return completions.end; }
+
 void InsertCompleter::reset()
 {
     if (m_explicit_completer or m_completions.is_valid())
@@ -472,6 +475,8 @@ void InsertCompleter::reset()
         if (m_context.has_client() and m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size() - 1)
         {
             auto& buffer = m_context.buffer();
+            update_ranges(buffer, m_completions.timestamp,
+                          ArrayView<InsertCompletion>(m_completions));
             auto ref = buffer.string(m_completions.begin, m_completions.end);
             const auto& cursor_pos = m_context.selections().main().cursor();
             const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
