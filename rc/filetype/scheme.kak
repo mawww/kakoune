@@ -38,14 +38,15 @@ require-module lisp
 add-highlighter shared/scheme regions
 add-highlighter shared/scheme/code default-region group
 
-add-highlighter shared/scheme/string region '"' (?<!\\)(\\\\)*" fill string
-add-highlighter shared/scheme/comment region ';' '$' fill comment
+add-highlighter shared/scheme/string region %{(?<!#\\)"} (?<!\\)(\\\\)*" fill string
+add-highlighter shared/scheme/comment region %{(?<!#\\);} '$' fill comment
 add-highlighter shared/scheme/comment-form region -recurse "\(" "#;\(" "\)" fill comment
 add-highlighter shared/scheme/comment-block region "#\|" "\|#" fill comment
 add-highlighter shared/scheme/quoted-form region -recurse "\(" "'\(" "\)" fill variable
 
 add-highlighter shared/scheme/code/ regex (#t|#f) 0:value
 add-highlighter shared/scheme/code/ regex \b[0-9]+\.[0-9]*\b 0:value
+add-highlighter shared/scheme/code/ regex (#\\((\w+)|(.))) 0:value
 
 evaluate-commands %sh{ exec awk -f - <<'EOF'
     BEGIN {
