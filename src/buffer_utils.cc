@@ -219,10 +219,12 @@ void write_to_debug_buffer(StringView str)
     }
 }
 
-InplaceString<23> to_string(Buffer::HistoryId id)
+
+auto to_string(Buffer::HistoryId id)
 {
+    using Result = decltype(to_string(size_t{}));
     if (id == Buffer::HistoryId::Invalid)
-        return InplaceString<23>{1, "-"};
+        return Result{1, "-"};
     return to_string(static_cast<size_t>(id));
 }
 
