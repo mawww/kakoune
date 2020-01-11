@@ -364,7 +364,7 @@ NCursesUI::~NCursesUI()
     endwin();
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
     set_signal_handler(SIGWINCH, SIG_DFL);
-    set_signal_handler(SIGCONT, SIG_DFL);
+    set_signal_handler(SIGHUP, SIG_DFL);
     set_signal_handler(SIGTSTP, SIG_DFL);
 }
 
@@ -567,7 +567,7 @@ Optional<Key> NCursesUI::get_next_key()
     if (sighup_raised)
     {
         set_signal_handler(SIGWINCH, SIG_DFL);
-        set_signal_handler(SIGCONT, SIG_DFL);
+        set_signal_handler(SIGHUP, SIG_DFL);
         if (m_window)
             m_window.destroy();
         m_stdin_watcher.disable();
