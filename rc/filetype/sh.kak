@@ -30,11 +30,9 @@ add-highlighter shared/sh/double_string/fill fill string
 
 evaluate-commands %sh{
     # Grammar
-    keywords="alias bind builtin caller case cd command coproc declare do done
-              echo elif else enable esac exit fi for function help
-              if in let local logout mapfile printf read readarray
-              readonly return select set shift source test then
-              time type typeset ulimit unalias until while break continue"
+    # Generated with `compgen -k` in bash
+    keywords="if then else elif fi case esac for select while until do done in
+             function time coproc"
 
     join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
@@ -43,10 +41,30 @@ evaluate-commands %sh{
 
     # Highlight keywords
     printf %s "add-highlighter shared/sh/code/ regex \b($(join "${keywords}" '|'))\b 0:keyword"
+
+}
+
+# For some reasons this needs to be in its own %sh block
+evaluate-commands %sh{
+    # Generated with `compgen -b` in bash
+    builtins="alias bg bind break builtin caller cd command compgen complete
+             compopt continue declare dirs disown echo enable eval exec
+             exit export false fc fg getopts hash help history jobs kill
+             let local logout mapfile popd printf pushd pwd read readarray
+             readonly return set shift shopt source suspend test times trap
+             true type typeset ulimit umask unalias unset wait"
+
+    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*";  }
+
+    # Add the language's grammar to the static completion list
+    printf %s\\n "set-option -add global sh_static_words $(join "${builtins}" ' ')"
+
+    # Highlight builtins
+    printf %s "add-highlighter shared/sh/code/builtin regex \b($(join "${builtins}" '|'))\b 0:builtin"
 }
 
 add-highlighter shared/sh/code/operators regex [\[\]\(\)&|]{1,2} 0:operator
-add-highlighter shared/sh/code/variable regex (\w+)= 1:variable
+add-highlighter shared/sh/code/variable regex (\S+)= 1:variable
 add-highlighter shared/sh/code/function regex ^\h*(\w+)\h*\(\) 1:function
 
 add-highlighter shared/sh/code/unscoped_expansion regex \$(\w+|#|@|\?|\$|!|-|\*) 0:value
