@@ -38,32 +38,15 @@ define-command x11-terminal -params 1.. -shell-completion -docstring '
 x11-terminal <program> [<arguments>]: create a new terminal as an x11 window
 The program passed as argument will be executed in the new terminal' \
 %{
-    evaluate-commands %sh{
-        if [ -z "${kak_opt_termcmd}" ]; then
-           echo "fail 'termcmd option is not set'"
-           exit
-        fi
-        # join arguments into a single string, in which they're delimited
-        # by single quotes, and with single quotes inside transformed to '\''
-        # so that sh -c "$args" will re-split the arguments properly
-        # example:
-        # $1 = ab
-        # $2 = foo bar
-        # $3 =
-        # $4 = foo'bar
-        # $args = 'ab' 'foo bar' '' 'foo'\''bar'
-        # would be nicer to do in a single sed/awk call but that's difficult
-        args=$(
-            for i in "$@"; do
-                # special case to preserve empty variables as sed will not touch these
-                if [ "$i" = '' ]; then
-                    printf "'' "
-                else
-                    printf %s "$i" | sed -e "s|'|'\\\\''|g; s|^|'|; s|$|' |"
-                fi
-            done
-        )
-        setsid ${kak_opt_termcmd} "$args" < /dev/null > /dev/null 2>&1 &
+    evaluate-commands -save-regs 'a' %{
+        set-register a %arg{@}
+        evaluate-commands %sh{
+            if [ -z "${kak_opt_termcmd}" ]; then
+                echo "fail 'termcmd option is not set'"
+                exit
+            fi
+            setsid ${kak_opt_termcmd} "$kak_quoted_reg_a" < /dev/null > /dev/null 2>&1 &
+        }
     }
 }
 
