@@ -34,18 +34,6 @@ evaluate-commands %sh{
     keywords="if then else elif fi case esac for select while until do done in
              function time coproc"
 
-    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
-
-    # Add the language's grammar to the static completion list
-    printf %s\\n "declare-option str-list sh_static_words $(join "${keywords}" ' ')"
-
-    # Highlight keywords
-    printf %s "add-highlighter shared/sh/code/ regex \b($(join "${keywords}" '|'))\b 0:keyword"
-
-}
-
-# For some reasons this needs to be in its own %sh block
-evaluate-commands %sh{
     # Generated with `compgen -b` in bash
     builtins="alias bg bind break builtin caller cd command compgen complete
              compopt continue declare dirs disown echo enable eval exec
@@ -54,10 +42,13 @@ evaluate-commands %sh{
              readonly return set shift shopt source suspend test times trap
              true type typeset ulimit umask unalias unset wait"
 
-    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*";  }
+    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
     # Add the language's grammar to the static completion list
-    printf %s\\n "set-option -add global sh_static_words $(join "${builtins}" ' ')"
+    printf %s\\n "declare-option str-list sh_static_words $(join "${keywords}" ' ') $(join "${builtins}" ' ')"
+
+    # Highlight keywords
+    printf %s\\n "add-highlighter shared/sh/code/ regex \b($(join "${keywords}" '|'))\b 0:keyword"
 
     # Highlight builtins
     printf %s "add-highlighter shared/sh/code/builtin regex \b($(join "${builtins}" '|'))\b 0:builtin"
