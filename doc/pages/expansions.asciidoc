@@ -268,7 +268,7 @@ The following expansions are supported (with required context _in italics_):
     of the  creation of the history entry, _redo_child_ is the index of the
     child which will be visited for `U` (always `-` at the leaves of the
     history), and each _modification_ is presented as in
-    `%val{uncommited_changes}`.
+    `%val{uncommitted_modifications}`.
 
 *%val{history_id}*::
     _in buffer, window scope_ +
