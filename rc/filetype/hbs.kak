@@ -29,6 +29,8 @@ hook -group hbs-highlight global WinSetOption filetype=hbs %{
 
 provide-module hbs %[
 
+require-module html
+
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
