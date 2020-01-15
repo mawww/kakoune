@@ -55,7 +55,7 @@ evaluate-commands %sh{
 }
 
 add-highlighter shared/sh/code/operators regex [\[\]\(\)&|]{1,2} 0:operator
-add-highlighter shared/sh/code/variable regex (\S+)= 1:variable
+add-highlighter shared/sh/code/variable regex ([\w-]+)= 1:variable
 add-highlighter shared/sh/code/function regex ^\h*(\w+)\h*\(\) 1:function
 
 add-highlighter shared/sh/code/unscoped_expansion regex \$(\w+|#|@|\?|\$|!|-|\*) 0:value
