@@ -44,6 +44,9 @@ add-highlighter shared/latex/content/ regex '(\$(\\\$|[^$])+\$)|(\$\$(\\\$|[^$])
 add-highlighter shared/latex/content/ regex '\\(emph|textit)\{([^}]+)\}' 2:default+i
 # Bold text
 add-highlighter shared/latex/content/ regex '\\textbf\{([^}]+)\}' 1:default+b
+# Section headings
+add-highlighter shared/latex/content/ regex '\\(part|section)\*?\{([^}]+)\}' 2:title
+add-highlighter shared/latex/content/ regex '\\(chapter|(sub)+section|(sub)*paragraph)\*?\{([^}]+)\}' 4:header
 
 
 # Indent
