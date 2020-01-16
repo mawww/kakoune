@@ -3,10 +3,13 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development version
+== Kakoune v2020.01.16
 
 * Expose history tree through `$kak_history` and
   `$kak_uncommitted_modifications`
+
+* `InsertCompletionHide` parameter is the list of inserted
+  ranges
 
 == Kakoune 2019.12.10
 

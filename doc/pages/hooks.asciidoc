@@ -164,8 +164,9 @@ name. Hooks with no description will always use an empty string.
     Triggered when the insert completion menu gets displayed
 
 *InsertCompletionHide* `completion`::
-    Triggered when the insert completion menu gets hidden, the inserted
-    completion text is passed as filtering text.
+    Triggered when the insert completion menu gets hidden, the list of
+    inserted completions text ranges is passed as filtering text, in the
+    same format the `select` command expects.
 
 *RawKey* `key`::
     Triggered whenever a key is pressed by the user, regardless of what mode

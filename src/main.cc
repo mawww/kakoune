@@ -44,6 +44,9 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
+        20200116,
+        "» {+u}InsertCompletionHide{} parameter is now the list of inserted ranges"
+    }, {
         20191210,
         "» {+u}ModeChange{} parameter has changed to contain push/pop "
         "{+ui}Mode{+u}Begin{}/{+ui}Mode{+u}End{} hooks were removed\n"
