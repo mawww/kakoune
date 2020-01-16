@@ -45,11 +45,11 @@ struct {
     StringView notes;
 } constexpr version_notes[] = { {
         20200116,
-        "» {+u}InsertCompletionHide{} parameter is now the list of inserted ranges"
+        "» {+u}InsertCompletionHide{} parameter is now the list of inserted ranges\n"
     }, {
         20191210,
-        "» {+u}ModeChange{} parameter has changed to contain push/pop "
-        "{+ui}Mode{+u}Begin{}/{+ui}Mode{+u}End{} hooks were removed\n"
+        "» {+u}ModeChange{} parameter has changed to contain push/pop\n"
+        "» {+u}ModeBegin{}/{+u}ModeEnd{} hooks were removed\n"
     }, {
         20190701,
         "» {+u}%file\\{<filename>}{} expansions to read files\n"
