@@ -8,7 +8,7 @@ hook global BufCreate '.*\.cr' %{
 hook global WinSetOption filetype=crystal %{
   require-module crystal
   evaluate-commands set-option window static_words %opt(crystal_keywords) %opt(crystal_attributes) %opt(crystal_objects)
-  add-highlighter window/ ref crystal
+  add-highlighter window/crystal ref crystal
   hook -group crystal window InsertChar '\n' crystal-new-line-inserted
   hook -always -once window WinSetOption filetype=.* %{
     remove-highlighter window/crystal
