@@ -25,18 +25,29 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     fi
 }}
 
-evaluate-commands %sh{
-    autoload_directory() {
-        find -L "$1" -type f -name '*\.kak' \
-            | sed 's/.*/try %{ source "&" } catch %{ echo -debug Autoload: could not load "&" }/'
+define-command source-recursive -params 1.. -file-completion -docstring 'Source recursively for .kak files in the given directories' %{
+    evaluate-commands %sh{
+        find -L "$@" -type f -name '*.kak' |
+        while read file; do
+            printf '
+                try %%{
+                    source %%{%s}
+                } catch %%{
+                    echo -debug %%{Could not load: %s}
+                }
+            ' "$file" "$file"
+        done
     }
+}
+
+evaluate-commands %sh{
 
     echo "colorscheme default"
 
     if [ -d "${kak_config}/autoload" ]; then
-        autoload_directory ${kak_config}/autoload
+        printf 'source-recursive %%{%s/autoload}\n' "$kak_config"
     elif [ -d "${kak_runtime}/autoload" ]; then
-        autoload_directory ${kak_runtime}/autoload
+        printf 'source-recursive %%{%s/autoload}\n' "$kak_runtime"
     fi
 
     if [ -f "${kak_runtime}/kakrc.local" ]; then

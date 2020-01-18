@@ -114,6 +114,9 @@ of the file onto the filesystem
     execute commands in <filename>
     parameters are available in the sourced script as `%arg{0}`, `%arg{1}`, …
 
+*source-recursive* <directory>...::
+    Source recursively for `.kak` files in the given directories.
+
 == Clients and Sessions
 
 *rename-client* <name>::
