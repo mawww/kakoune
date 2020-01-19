@@ -691,6 +691,7 @@ Optional<Key> NCursesUI::get_next_key()
         case 'D': return masked_key(Key::Left);
         case 'F': return masked_key(Key::End);   // PC/xterm style
         case 'H': return masked_key(Key::Home);  // PC/xterm style
+        case 'L': return Key{Key::Modifiers::Control, Key::Insert}; // st style
         case 'P': return masked_key(Key::F1);
         case 'Q': return masked_key(Key::F2);
         case 'R': return masked_key(Key::F3);
@@ -722,6 +723,14 @@ Optional<Key> NCursesUI::get_next_key()
                 return Key{Key::Modifiers::Shift, Key::F9 + params[0] - 33}; // rxvt style
             }
             return {};
+        case 'h':
+            if (params[0] == 4) // st style
+                return Key{Key::Insert};
+            break;
+        case 'l':
+            if (params[0] == 4) // st style
+                return Key{Key::Modifiers::Shift, Key::Insert};
+            break;
         case 'u':
             return masked_key(static_cast<Codepoint>(params[0]));
         case 'Z': return shift(Key::Tab);
