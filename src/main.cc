@@ -49,7 +49,7 @@ struct {
     }, {
         20191210,
         "» {+u}ModeChange{} parameter has changed to contain push/pop\n"
-        "» {+u}ModeBegin{}/{+u}ModeEnd{} hooks were removed\n"
+        "» {+ui}Mode{+u}Begin{}/{+ui}Mode{+u}End{} hooks were removed\n"
     }, {
         20190701,
         "» {+u}%file\\{<filename>}{} expansions to read files\n"
