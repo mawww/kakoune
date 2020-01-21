@@ -107,7 +107,7 @@ void show_startup_info(Client* local_client, int last_version)
     DisplayLineList info;
     for (auto note : version_notes)
     {
-        if (note.version and note.version < last_version)
+        if (note.version and note.version <= last_version)
             continue;
 
         if (not note.version)
