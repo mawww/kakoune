@@ -161,9 +161,13 @@ provide-module crystal %🐈
 
   define-command -hidden crystal-new-line-inserted %{
     # Copy previous line indent
-    try %(execute-keys -draft 'K<a-&>')
+    try %{
+      execute-keys -draft 'K<a-&>'
+    }
     # Remove empty line indent
-    try %(execute-keys -draft 'k<a-x>s^\h+$<ret>d')
+    try %{
+      execute-keys -draft 'k<a-x>s^\h+$<ret>d'
+    }
   }
   define-command -hidden crystal-fetch-keywords %{
     set-register dquote %sh{
