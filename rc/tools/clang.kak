@@ -88,12 +88,12 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                 printf %s\\n "evaluate-commands -client ${kak_client} echo 'clang parsing done'" | kak -p ${kak_session}
             fi
 
-            flags=$(cat ${dir}/stderr | sed -rne "
+            flags=$(cat ${dir}/stderr | sed -Ene "
                         /^<stdin>:[0-9]+:([0-9]+:)? (fatal )?error/ { s/^<stdin>:([0-9]+):.*/'\1|{red}█'/; p }
                         /^<stdin>:[0-9]+:([0-9]+:)? warning/ { s/^<stdin>:([0-9]+):.*/'\1|{yellow}█'/; p }
                     " | paste -s -d ' ' -)
 
-            errors=$(cat ${dir}/stderr | sed -rne "
+            errors=$(cat ${dir}/stderr | sed -Ene "
                         /^<stdin>:[0-9]+:([0-9]+:)? ((fatal )?error|warning)/ {
                             s/'/''/g; s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/'\1|\3'/; p
                         }" | sort -n | paste -s -d ' ' -)
