@@ -1160,10 +1160,11 @@ int main(int argc, char* argv[])
             StringView session = parser.get_switch("s").value_or(StringView{});
             try
             {
-                auto flags = (parser.get_switch("n") ? ServerFlags::IgnoreKakrc : ServerFlags::None) |
-                             (parser.get_switch("d") ? ServerFlags::Daemon : ServerFlags::None) |
-                             (parser.get_switch("ro") ? ServerFlags::ReadOnly : ServerFlags::None) |
-                             (argc == 1 and isatty(0) ? ServerFlags::StartupInfo : ServerFlags::None);
+                auto ignore_kakrc = (bool)parser.get_switch("n");
+                auto flags = (ignore_kakrc                               ? ServerFlags::IgnoreKakrc : ServerFlags::None) |
+                             (parser.get_switch("d")                     ? ServerFlags::Daemon      : ServerFlags::None) |
+                             (parser.get_switch("ro")                    ? ServerFlags::ReadOnly    : ServerFlags::None) |
+                             ((argc == 2 and ignore_kakrc) and isatty(0) ? ServerFlags::StartupInfo : ServerFlags::None);
                 auto debug_flags = option_from_string(Meta::Type<DebugFlags>{}, parser.get_switch("debug").value_or(""));
                 return run_server(session, server_init, client_init, init_coord, flags, ui_type, debug_flags, files);
             }
