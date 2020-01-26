@@ -73,6 +73,24 @@ inline auto skip(size_t count)
     });
 }
 
+template<typename Range>
+struct DropView
+{
+    auto begin() const { return std::begin(m_range); }
+    auto end()   const { return std::end(m_range) - m_drop_count; }
+
+    Range m_range;
+    size_t m_drop_count;
+};
+
+inline auto drop(size_t count)
+{
+    return make_view_factory([count](auto&& range) {
+        using Range = decltype(range);
+        return DropView<decay_range<Range>>{std::forward<Range>(range), count};
+    });
+}
+
 template<typename Range, typename Filter>
 struct FilterView
 {
