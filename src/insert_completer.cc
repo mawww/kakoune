@@ -592,32 +592,32 @@ bool InsertCompleter::try_complete(Func complete_func)
 
 void InsertCompleter::explicit_file_complete()
 {
-    try_complete(complete_filename<false>);
-    m_explicit_completer = complete_filename<false>;
+    if (try_complete(complete_filename<false>))
+        m_explicit_completer = complete_filename<false>;
 }
 
 void InsertCompleter::explicit_word_buffer_complete()
 {
-    try_complete(complete_word<false>);
-    m_explicit_completer = complete_word<false>;
+    if (try_complete(complete_word<false>))
+        m_explicit_completer = complete_word<false>;
 }
 
 void InsertCompleter::explicit_word_all_complete()
 {
-    try_complete(complete_word<true>);
-    m_explicit_completer = complete_word<true>;
+    if (try_complete(complete_word<true>))
+        m_explicit_completer = complete_word<true>;
 }
 
 void InsertCompleter::explicit_line_buffer_complete()
 {
-    try_complete(complete_line<false>);
-    m_explicit_completer = complete_line<false>;
+    if (try_complete(complete_line<false>))
+        m_explicit_completer = complete_line<false>;
 }
 
 void InsertCompleter::explicit_line_all_complete()
 {
-    try_complete(complete_line<true>);
-    m_explicit_completer = complete_line<true>;
+    if (try_complete(complete_line<true>))
+        m_explicit_completer = complete_line<true>;
 }
 
 }
