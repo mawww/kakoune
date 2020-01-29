@@ -190,6 +190,9 @@ name. Hooks with no description will always use an empty string.
     Triggered  via the `trigger-user-hook` command. Provides a way for plugins
     to introduce custom hooks by specifying what *param* would be.
 
+*InsertUserCompletion* `option_name`::
+    Triggered when a user completion mapping is hit, before the option associated with it is read to return a list of completion candidates (See <<commands#commands-and-keys,`:doc commands commands-and-keys`>>)
+
 Note that some hooks will not consider underlying scopes depending on what
 context they are bound to be run into, e.g. the `BufWritePost` hook is a buffer
 hook, and will not consider the `window` scope.

@@ -45,6 +45,7 @@ namespace Kakoune
 {
 
 extern const char* version;
+extern UserCompletionMappings user_completion_mappings;
 
 namespace
 {
@@ -2657,6 +2658,38 @@ const CommandDesc require_module_cmd = {
     }
 };
 
+const CommandDesc complete_cmd = {
+    "complete",
+    nullptr,
+    "complete [<switches>] <key> <option>: declare a user completion mapping",
+    ParameterDesc{
+        { { "docstring", { true,  "user completion mapping description" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 2, 2
+    },
+    CommandFlags::None,
+    CommandHelper{},
+    make_completer(complete_nothing, [](const Context&, CompletionFlags,
+                                        const String& prefix, ByteCount cursor_pos) -> Completions
+    {
+        return { 0_byte, prefix.length(),
+                 GlobalScope::instance().option_registry().complete_option_name(prefix, cursor_pos) };
+    }),
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        const auto docstring = parser.get_switch("docstring").value_or("").str();
+
+        auto keys = parse_keys(parser[0]);
+        if (keys.size() != 1)
+            throw runtime_error("only a single key can be mapped");
+
+        const auto& option_name = parser[1];
+        if (not context.options()[option_name].is_of_type<StaticWords>())
+            throw runtime_error{format("option '{}' must be of type str-list", option_name)};
+
+        user_completion_mappings[keys[0]] = UserCompletionMapping{option_name, docstring};
+    }
+};
+
 }
 
 void register_commands()
@@ -2727,6 +2760,7 @@ void register_commands()
     register_command(enter_user_mode_cmd);
     register_command(provide_module_cmd);
     register_command(require_module_cmd);
+    register_command(complete_cmd);
 }
 
 }

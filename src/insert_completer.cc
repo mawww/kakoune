@@ -22,6 +22,7 @@
 namespace Kakoune
 {
 
+using namespace std::placeholders;
 using StringList = Vector<String, MemoryDomain::Options>;
 
 String option_to_string(const InsertCompleterDesc& opt)
@@ -68,7 +69,8 @@ namespace
 template<bool other_buffers>
 InsertCompletion complete_word(const SelectionList& sels,
                                const OptionManager& options,
-                               const FaceRegistry& faces)
+                               const FaceRegistry& faces,
+                               StringView = {})
 {
     ConstArrayView<Codepoint> extra_word_chars = options["extra_word_chars"].get<Vector<Codepoint, MemoryDomain::Options>>();
     auto is_word_pred = [extra_word_chars](Codepoint c) { return is_word(c, extra_word_chars); };
@@ -150,7 +152,6 @@ InsertCompletion complete_word(const SelectionList& sels,
         }
     }
 
-    using StaticWords = Vector<String, MemoryDomain::Options>;
     for (auto& word : options["static_words"].get<StaticWords>())
         if (RankedMatch match{word, prefix})
             matches.emplace_back(match, nullptr);
@@ -191,7 +192,8 @@ InsertCompletion complete_word(const SelectionList& sels,
 template<bool require_slash>
 InsertCompletion complete_filename(const SelectionList& sels,
                                    const OptionManager& options,
-                                   const FaceRegistry&)
+                                   const FaceRegistry&,
+                                   StringView = {})
 {
     const Buffer& buffer = sels.buffer();
     auto pos = buffer.iterator_at(sels.main().cursor());
@@ -340,7 +342,8 @@ InsertCompletion complete_option(const SelectionList& sels,
 template<bool other_buffers>
 InsertCompletion complete_line(const SelectionList& sels,
                                const OptionManager& options,
-                               const FaceRegistry&)
+                               const FaceRegistry&,
+                               StringView = {})
 {
     const Buffer& buffer = sels.buffer();
     BufferCoord cursor_pos = sels.main().cursor();
@@ -390,6 +393,43 @@ InsertCompletion complete_line(const SelectionList& sels,
     std::sort(candidates.begin(), candidates.end());
     candidates.erase(std::unique(candidates.begin(), candidates.end()), candidates.end());
     return { std::move(candidates), replace_begin, cursor_pos, buffer.timestamp() };
+}
+
+InsertCompletion complete_from_option(const SelectionList& sels,
+                                      const OptionManager& options,
+                                      const FaceRegistry&,
+                                      StringView option_name)
+{
+    const Buffer& buffer = sels.buffer();
+    BufferCoord cursor_pos = sels.main().cursor();
+
+    const ColumnCount tabstop = options["tabstop"].get<int>();
+    const ColumnCount column = get_column(buffer, tabstop, cursor_pos);
+
+    StringView prefix = buffer[cursor_pos.line].substr(0_byte, cursor_pos.column);
+    InsertCompletion::CandidateList candidates;
+
+    const auto& option = options[option_name];
+
+    for (auto& word : option.get<StaticWords>())
+    {
+        if (word.length() > prefix.length() and
+            prefix == word.substr(0_byte, prefix.length()))
+        {
+            StringView candidate = word.substr(0_byte, word.length());
+            candidates.push_back({candidate.str(), "",
+                                  {expand_tabs(candidate, tabstop, column), {}}});
+            // perf: it's unlikely the user intends to search among >10 candidates anyway
+            if (candidates.size() >= 100)
+                break;
+        }
+    }
+
+    if (candidates.empty())
+        return {};
+    std::sort(candidates.begin(), candidates.end());
+    candidates.erase(std::unique(candidates.begin(), candidates.end()), candidates.end());
+    return { std::move(candidates), cursor_pos.line, cursor_pos, buffer.timestamp() };
 }
 
 }
@@ -503,11 +543,7 @@ bool InsertCompleter::setup_ifn()
                 try_complete(complete_filename<true>))
                 return true;
             if (completer.mode == InsertCompleterDesc::Option and
-                try_complete([&](const SelectionList& sels,
-                                 const OptionManager& options,
-                                 const FaceRegistry& faces) {
-                   return complete_option(sels, options, faces, *completer.param);
-                }))
+                try_complete(complete_option, *completer.param))
                 return true;
             if (completer.mode == InsertCompleterDesc::Word and
                 *completer.param == "buffer" and
@@ -567,13 +603,13 @@ void InsertCompleter::on_option_changed(const Option& opt)
 }
 
 template<typename Func>
-bool InsertCompleter::try_complete(Func complete_func)
+bool InsertCompleter::try_complete(Func complete_func, StringView param)
 {
     auto& sels = m_context.selections();
     try
     {
         reset();
-        m_completions = complete_func(sels, m_options, m_faces);
+        m_completions = complete_func(sels, m_options, m_faces, param);
     }
     catch (runtime_error& e)
     {
@@ -618,6 +654,12 @@ void InsertCompleter::explicit_line_all_complete()
 {
     if (try_complete(complete_line<true>))
         m_explicit_completer = complete_line<true>;
+}
+
+void InsertCompleter::explicit_option_complete(StringView option)
+{
+    if (try_complete(complete_from_option, option))
+        m_explicit_completer = std::bind(complete_from_option, _1, _2, _3, option);
 }
 
 }

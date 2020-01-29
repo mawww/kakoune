@@ -75,6 +75,8 @@ the value specified in the `idle_timeout` option is reached.
     *L*:::
         explicit line completion (all buffers)
 
+    User completion mappings (if any) will also be selectable in that menu (See <<commands#commands-and-keys,`:doc commands commands-and-keys`>>)
+
 == Using Counts
 
 In normal mode, commands can be prefixed with a numeric `count`, which can control

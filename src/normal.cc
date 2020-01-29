@@ -157,10 +157,12 @@ void select_coord(Buffer& buffer, BufferCoord coord, SelectionList& selections)
     }
 }
 
+UserCompletionMappings user_completion_mappings;
+
 template<InsertMode mode>
 void enter_insert_mode(Context& context, NormalParams params)
 {
-    context.input_handler().insert(mode, params.count);
+    context.input_handler().insert(mode, params.count, &user_completion_mappings);
 }
 
 void repeat_last_insert(Context& context, NormalParams)

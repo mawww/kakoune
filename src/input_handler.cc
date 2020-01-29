@@ -1209,7 +1209,7 @@ private:
 class Insert : public InputMode
 {
 public:
-    Insert(InputHandler& input_handler, InsertMode mode, int count)
+    Insert(InputHandler& input_handler, InsertMode mode, int count, const UserCompletionMappings* user_completion_mappings)
         : InputMode(input_handler),
           m_edition(context()),
           m_completer(context()),
@@ -1221,7 +1221,8 @@ public:
                            m_completer.update(m_auto_complete);
                            context().hooks().run_hook(Hook::InsertIdle, "", context());
                        }},
-          m_disable_hooks{context().hooks_disabled(), context().hooks_disabled()}
+          m_disable_hooks{context().hooks_disabled(), context().hooks_disabled()},
+          m_user_completion_mappings(user_completion_mappings)
     {
         context().buffer().throw_if_read_only();
 
@@ -1230,6 +1231,7 @@ public:
         last_insert().keys.clear();
         last_insert().disable_hooks = context().hooks_disabled();
         last_insert().count = count;
+        last_insert().user_completion_mappings = user_completion_mappings;
         prepare(mode, count);
     }
 
@@ -1389,12 +1391,21 @@ public:
                         m_completer.explicit_line_buffer_complete();
                     else if (key.key == 'L')
                         m_completer.explicit_line_all_complete();
+                    else if (const auto& it = m_user_completion_mappings->find(key);
+                             it != m_user_completion_mappings->end())
+                    {
+                        context().hooks().run_hook(Hook::InsertUserCompletion, it->value.option_name, context());
+                        m_completer.explicit_option_complete(it->value.option_name);
+                    }
             }, "enter completion type",
             "f: filename\n"
             "w: word (current buffer)\n"
             "W: word (all buffers)\n"
             "l: line (current buffer)\n"
-            "L: line (all buffers)\n");
+            "L: line (all buffers)\n" +
+            join(*m_user_completion_mappings | transform([](auto& i) {
+                return format("{}: {}", i.key.key, i.value.docstring);
+            }), '\n'));
             update_completions = false;
         }
         else if (key == ctrl('o'))
@@ -1560,13 +1571,14 @@ private:
         buffer.check_invariant();
     }
 
-    ScopedEdition   m_edition;
-    InsertCompleter m_completer;
-    const bool      m_restore_cursor;
-    bool            m_auto_complete;
-    Timer           m_idle_timer;
-    MouseHandler    m_mouse_handler;
-    ScopedSetBool   m_disable_hooks;
+    ScopedEdition                 m_edition;
+    InsertCompleter               m_completer;
+    const bool                    m_restore_cursor;
+    bool                          m_auto_complete;
+    Timer                         m_idle_timer;
+    MouseHandler                  m_mouse_handler;
+    ScopedSetBool                 m_disable_hooks;
+    const UserCompletionMappings* m_user_completion_mappings;
 };
 
 }
@@ -1616,9 +1628,9 @@ void InputHandler::reset_normal_mode()
         pop_mode(m_mode_stack.back().get());
 }
 
-void InputHandler::insert(InsertMode mode, int count)
+void InputHandler::insert(InsertMode mode, int count, const UserCompletionMappings* user_completion_mappings)
 {
-    push_mode(new InputModes::Insert(*this, mode, count));
+    push_mode(new InputModes::Insert(*this, mode, count, user_completion_mappings));
 }
 
 void InputHandler::repeat_last_insert()
@@ -1635,7 +1647,8 @@ void InputHandler::repeat_last_insert()
     ScopedSetBool disable_hooks(context().hooks_disabled(),
                                 m_last_insert.disable_hooks);
 
-    push_mode(new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count));
+    push_mode(new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count,
+                                     m_last_insert.user_completion_mappings));
     for (auto& key : keys)
     {
         // refill last_insert,  this is very inefficient, but necessary at the moment
