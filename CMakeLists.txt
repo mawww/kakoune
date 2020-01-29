@@ -34,9 +34,17 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 # dependencies of kak
-set(CURSES_NEED_NCURSES TRUE)
-# set(CURSES_NEED_WIDE TRUE)
+set(CURSES_NEED_WIDE TRUE)
 find_package(Curses REQUIRED)
-target_include_directories(kak PUBLIC ${CURSES_INCLUDE_DIR})
-target_link_libraries(kak ${CURSES_LIBRARIES})
+# target_include_directories(kak PUBLIC ${CURSES_INCLUDE_DIR})
+# target_link_libraries(kak ${CURSES_LIBRARIES})
+# Force flag (avoid bug on Gentoo)
+if (CURSES_HAVE_NCURSES_NCURSES_H)
+  target_link_options(kak PRIVATE "-lncursesw")
+endif()
+if (CURSES_EXTRA_LIBRARY)
+  # generalize
+  target_link_options(kak PRIVATE "-ltinfow")
+endif()
+
 
