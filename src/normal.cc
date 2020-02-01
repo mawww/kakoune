@@ -1778,18 +1778,15 @@ SelectionList read_selections_from_register(char reg, Context& context)
 
     // Use the last two values for timestamp and main_index to allow the buffer
     // name to have @ symbols
-    struct error : runtime_error { error() : runtime_error{"expected <buffer>@<timestamp>@main_index"} {} };
-    const auto desc = content[0] | split<StringView>('@') | gather<Vector>();
-    const size_t desc_size = desc.size();
-    if (desc_size < 3)
-        throw new error;
-    auto const buffer_name_view = desc | drop(2);
-    auto const buffer_name_temp = accumulate (buffer_name_view, ""_str,
-        [](auto str1, auto str2) { return str1 + "@"_str + str2; });
-    auto const buffer_name = buffer_name_temp.substr (CharCount (1));
+    struct error : runtime_error { error(size_t) : runtime_error{"expected <buffer>@<timestamp>@main_index"} {} };
+    auto end_content = content[0] | reverse() | split('@') | transform([] (auto bounds) {
+        return StringView{bounds.second.base(), bounds.first.base()};
+    }) | static_gather<error, 2, false>();
+
+    const size_t main = str_to_int(end_content[0]);
+    const size_t timestamp = str_to_int(end_content[1]);
+    const auto buffer_name = StringView{ content[0].begin (), end_content[1].begin () - 1 };
     Buffer& buffer = BufferManager::instance().get_buffer(buffer_name);
-    const size_t timestamp = str_to_int(desc[desc_size - 2]);
-    size_t main = str_to_int(desc[desc_size - 1]);
 
     return selection_list_from_strings(buffer, ColumnType::Byte, content | skip(1), timestamp, main);
 }
