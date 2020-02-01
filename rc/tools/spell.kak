@@ -40,9 +40,11 @@ define-command -params ..1 -docstring %{
             sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell --byte-offsets -a $options" 2>&1 | {
                 line_num=1
                 regions=$kak_timestamp
-                read line # drop the identification message
                 while read -r line; do
                     case "$line" in
+                        @\(\#\)*)
+                            # drop the identification message
+                        ;;
                         [\#\&]*)
                             if expr "$line" : '^&' >/dev/null; then
                                pos=$(printf %s\\n "$line" | cut -d ' ' -f 4 | sed 's/:$//')
