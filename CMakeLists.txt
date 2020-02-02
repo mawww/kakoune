@@ -1,8 +1,18 @@
 cmake_minimum_required(VERSION 3.11)
-project(Kakoune VERSION 0.1 LANGUAGES CXX)
+project(Kakoune LANGUAGES CXX)
 
 # prerequisites
 set(CMAKE_CXX_STANDARD 17)
+
+# Version
+option(MANUAL_VERSION "Use a manually defined version instead of the date" FALSE)
+mark_as_advanced(MANUAL_VERSION)
+if(${MANUAL_VERSION})
+  set(KAKOUNE_VERSION "0.0" CACHE STRING "Kakoune version")
+else()
+  string(TIMESTAMP KAKOUNE_VERSION "%Y.%m.%d")
+endif()
+project(Kakoune VERSION ${KAKOUNE_VERSION})
 
 # Global options
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -16,7 +26,6 @@ option(BUILD_SHARED_LIBS "Use static or shared libs" TRUE)
 add_executable(kak)
 add_subdirectory(src)
 # speial case of the version.cc.in file
-set(KAKOUNE_VERSION ${PROJECT_VERSION})
 configure_file(src/version.cc.in src/version.cc)
 list(APPEND KAKOUNE_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/src/version.cc)
 # add cc files
