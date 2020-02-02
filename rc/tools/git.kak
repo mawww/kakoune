@@ -58,8 +58,8 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     show_git_cmd_output() {
         local filetype
         case "$1" in
-           show|diff) filetype=diff ;;
-           log)  filetype=git-log ;;
+           diff) filetype=diff ;;
+           log|show)  filetype=git-log ;;
            status)  filetype=git-status ;;
         esac
         output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
