@@ -1,7 +1,8 @@
-declare-option -docstring %{shell command to which the path of a copy of the current buffer will be passed
-The output returned by this command is expected to comply with the following format:
- {filename}:{line}:{column}: {kind}: {message}} \
-    str lintcmd
+declare-option -docstring %{
+    shell command to which the path of a copy of the current buffer will be passed
+    The output returned by this command is expected to comply with the following format:
+        {filename}:{line}:{column}: {kind}: {message}
+} str lintcmd
 
 declare-option -hidden line-specs lint_flags
 declare-option -hidden range-specs lint_errors

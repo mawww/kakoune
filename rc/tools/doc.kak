@@ -147,8 +147,10 @@ define-command -params 1..2 \
             fi
         fi
     } \
-    doc -docstring %{doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
-An optional keyword argument can be passed to the function, which will be automatically selected in the documentation} %{
+    doc -docstring %{
+        doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
+        An optional keyword argument can be passed to the function, which will be automatically selected in the documentation
+    } %{
     evaluate-commands %sh{
         readonly page="${kak_runtime}/doc/${1}.asciidoc"
         if [ -f "${page}" ]; then

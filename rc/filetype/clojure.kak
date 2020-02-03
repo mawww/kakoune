@@ -217,8 +217,10 @@ define-command -hidden clojure-indent-on-new-line %{
     }
 }
 
-declare-option -docstring %{top-level directories which can contain clojure files
-e.g. '(src|test|dev)'} regex clojure_source_directories '(src|test|dev)'
+declare-option -docstring %{
+    top-level directories which can contain clojure files
+    e.g. '(src|test|dev)'
+} regex clojure_source_directories '(src|test|dev)'
 
 define-command -docstring %{clojure-insert-ns: Insert namespace directive at top of Clojure source file} \
     clojure-insert-ns %{

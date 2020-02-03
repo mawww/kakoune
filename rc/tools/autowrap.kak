@@ -1,12 +1,14 @@
 declare-option -docstring "maximum amount of characters per line, after which a newline character will be inserted" \
     int autowrap_column 80
 
-declare-option -docstring %{when enabled, paragraph formatting will reformat the whole paragraph in which characters are being inserted
-This can potentially break formatting of documents containing markup (e.g. markdown)} \
-    bool autowrap_format_paragraph no
-declare-option -docstring %{command to which the paragraphs to wrap will be passed
-all occurences of '%c' are replaced with `autowrap_column`} \
-    str autowrap_fmtcmd 'fold -s -w %c'
+declare-option -docstring %{
+    when enabled, paragraph formatting will reformat the whole paragraph in which characters are being inserted
+    This can potentially break formatting of documents containing markup (e.g. markdown)
+} bool autowrap_format_paragraph no
+declare-option -docstring %{
+    command to which the paragraphs to wrap will be passed
+    all occurences of '%c' are replaced with `autowrap_column`
+} str autowrap_fmtcmd 'fold -s -w %c'
 
 define-command -hidden autowrap-cursor %{ evaluate-commands -save-regs '/"|^@m' %{
     try %{

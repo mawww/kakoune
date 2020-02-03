@@ -22,10 +22,27 @@ declare-option -hidden line-specs git_diff_flags
 declare-option -hidden int-list git_hunk_list
 
 define-command -params 1.. \
-  -docstring %sh{printf 'git [<arguments>]: git wrapping helper
-All the optional arguments are forwarded to the git utility
-Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  hide-diff\n  init\n  log\n  next-hunk\n  previous-hunk\n  show\n  show-diff\n  status\n  update-diff'} \
-  -shell-script-candidates %{
+    -docstring %{
+        git [<arguments>]: git wrapping helper
+        All the optional arguments are forwarded to the git utility
+        Available commands:
+            add
+            rm
+            blame
+            commit
+            checkout
+            diff
+            hide-blame
+            hide-diff
+            init
+            log
+            next-hunk
+            previous-hunk
+            show
+            show-diff
+            status
+            update-diff
+    } -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
         printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-diff\ninit\nstatus\nupdate-diff\n"
     else

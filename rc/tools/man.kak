@@ -54,13 +54,14 @@ define-command -hidden -params 2..3 man-impl %{ evaluate-commands %sh{
 } }
 
 define-command -params ..1 \
-  -shell-script-candidates %{
-      find /usr/share/man/ -name '*.[1-8]*' | sed 's,^.*/\(.*\)\.\([1-8][a-zA-Z]*\).*$,\1(\2),'
-  } \
-  -docstring %{man [<page>]: manpage viewer wrapper
-If no argument is passed to the command, the selection will be used as page
-The page can be a word, or a word directly followed by a section number between parenthesis, e.g. kak(1)} \
-    man %{ evaluate-commands %sh{
+    -shell-script-candidates %{
+        find /usr/share/man/ -name '*.[1-8]*' | sed 's,^.*/\(.*\)\.\([1-8][a-zA-Z]*\).*$,\1(\2),'
+    } \
+    -docstring %{
+        man [<page>]: manpage viewer wrapper
+        If no argument is passed to the command, the selection will be used as page
+        The page can be a word, or a word directly followed by a section number between parenthesis, e.g. kak(1)
+    } man %{ evaluate-commands %sh{
     subject=${1-$kak_selection}
 
     ## The completion suggestions display the page number, strip them if present
