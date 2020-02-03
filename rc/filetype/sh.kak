@@ -48,10 +48,10 @@ evaluate-commands %sh{
     printf %s\\n "declare-option str-list sh_static_words $(join "${keywords}" ' ') $(join "${builtins}" ' ')"
 
     # Highlight keywords
-    printf %s\\n "add-highlighter shared/sh/code/ regex \b($(join "${keywords}" '|'))\b 0:keyword"
+    printf %s\\n "add-highlighter shared/sh/code/ regex (?<!-)\b($(join "${keywords}" '|'))\b(?!-) 0:keyword"
 
     # Highlight builtins
-    printf %s "add-highlighter shared/sh/code/builtin regex \b($(join "${builtins}" '|'))\b 0:builtin"
+    printf %s "add-highlighter shared/sh/code/builtin regex (?<!-)\b($(join "${builtins}" '|'))\b(?!-) 0:builtin"
 }
 
 add-highlighter shared/sh/code/operators regex [\[\]\(\)&|]{1,2} 0:operator
