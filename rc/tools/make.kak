@@ -44,7 +44,7 @@ declare-option -docstring "name of the client in which all source code jumps wil
 define-command -hidden make-open-error -params 4 %{
     evaluate-commands -try-client %opt{jumpclient} %{
         edit -existing "%arg{1}" %arg{2} %arg{3}
-        echo -markup "{Information}{\}%arg{4}"
+        info "%arg{4}"
         try %{ focus }
     }
 }
@@ -54,11 +54,11 @@ define-command -hidden make-jump %{
         try %{
             execute-keys gl<a-?> "Entering directory" <ret><a-:>
             # Try to parse the error into capture groups, failing on absolute paths
-            execute-keys s "Entering directory [`']([^']+)'.*\n([^:/][^:]*):(\d+):(?:(\d+):)?([^\n]+)\z" <ret>l
+            execute-keys s "Entering directory [`']([^']+)'.*\n([^:/][^:]*):(\d+):(?:(\d+):)?\s*([^\n]+)\z" <ret>l
             set-option buffer make_current_error_line %val{cursor_line}
             make-open-error "%reg{1}/%reg{2}" "%reg{3}" "%reg{4}" "%reg{5}"
         } catch %{
-            execute-keys <a-h><a-l> s "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?([^\n]+)\z" <ret>l
+            execute-keys <a-h><a-l> s "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?\s*([^\n]+)\z" <ret>l
             set-option buffer make_current_error_line %val{cursor_line}
             make-open-error "%reg{1}" "%reg{2}" "%reg{3}" "%reg{4}"
         }
