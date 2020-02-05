@@ -57,7 +57,7 @@ define-command -params ..1 \
                 menu_info = $3; gsub("!", "!!", menu_info);
                 edit_path = path($2); gsub("!", "!!", edit_path); gsub("#", "##", edit_path); gsub("&", "&&", edit_path); gsub("\\|", "||", edit_path);
                 line_number = $3;
-                out = out "%!" menu_item ": {MenuInfo}{\}" menu_info "! %!evaluate-commands %# try %& edit -existing %|" edit_path "|; execute-keys %|" line_number "gx| & catch %& fail unable to find tag &; try %& execute-keys %|s\\Q" select "<ret>| & # !"
+                out = out "%!" menu_item ": {MenuInfo}{\\}" menu_info "! %!evaluate-commands %# try %& edit -existing %|" edit_path "|; execute-keys %|" line_number "gx| & catch %& fail unable to find tag &; try %& execute-keys %|s\\Q" select "<ret>| & # !"
             }
             END { print ( length(out) == 0 ? "fail no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out ) }
             # Ensure x is an absolute file path, by prepending with tagroot
