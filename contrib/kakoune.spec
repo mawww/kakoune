@@ -1,11 +1,11 @@
 %bcond_without tests
 
-### Enable LTO. Profit ~8%
+# Enable LTO. Profit ~8%
 %global optflags        %{optflags} -flto
 %global build_ldflags   %{build_ldflags} -flto
 
 Name:           kakoune
-Version:        2019.12.10
+Version:        2020.01.16
 Release:        1%{?dist}
 Summary:        Code editor heavily inspired by Vim
 
@@ -32,24 +32,24 @@ Kakoune can operate in two modes, normal and insertion. In insertion mode, keys
 are directly inserted into the current buffer. In normal mode, keys are used to
 manipulate the current selection and to enter insertion mode.
 
-Kakoune has a strong focus on interactivity, most commands provide immediate
-and incremental results, while still being competitive (as in keystroke count)
-with Vim.
+Kakoune has a strong focus on interactivity, most commands provide immediate and
+incremental results, while still being competitive (as in keystroke count) with
+Vim.
 
 Kakoune works on selections, which are oriented, inclusive range of characters,
 selections have an anchor and a cursor character. Most commands move both of
-them, except when extending selection where the anchor character stays fixed
-and the cursor one moves around.
+them, except when extending selection where the anchor character stays fixed and
+the cursor one moves around.
 
 
 %prep
 %autosetup -p1
 
-### Use default Fedora build flags
+# Use default Fedora build flags
 sed -i '/CXXFLAGS += -O3/d' src/Makefile
 
-### Install doc files in proper location
-sed -i 's!$(PREFIX)/share/doc/kak!$(PREFIX)/share/doc/%{name}!' src/Makefile
+# Install doc files in proper location
+sed -i 's|$(PREFIX)/share/doc/kak|$(PREFIX)/share/doc/%{name}|' src/Makefile
 
 
 %build
@@ -83,6 +83,9 @@ popd
 
 
 %changelog
+* Thu Jan 16 2020 Artem Polishchuk <ego.cordatus@gmail.com> - 2020.01.16-1
+- Update to 2020.01.16
+
 * Tue Dec 10 2019 Artem Polishchuk <ego.cordatus@gmail.com> - 2019.12.10-1
 - Update to 2019.12.10
 
