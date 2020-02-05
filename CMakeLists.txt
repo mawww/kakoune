@@ -50,6 +50,8 @@ find_package(Curses REQUIRED)
 # Force flag (avoid bug on Gentoo)
 if (CURSES_HAVE_NCURSES_NCURSES_H)
   target_link_options(kak PRIVATE "-lncursesw")
+else()
+  target_link_options(kak PRIVATE "-lncurses")
 endif()
 if (CURSES_EXTRA_LIBRARY)
   # generalize
