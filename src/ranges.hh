@@ -37,6 +37,12 @@ struct ReverseView
 {
     decltype(auto) begin() { return m_range.rbegin(); }
     decltype(auto) end()   { return m_range.rend(); }
+    decltype(auto) rbegin() { return m_range.begin(); }
+    decltype(auto) rend()   { return m_range.end(); }
+    decltype(auto) begin() const { return m_range.rbegin(); }
+    decltype(auto) end() const  { return m_range.rend(); }
+    decltype(auto) rbegin() const { return m_range.begin(); }
+    decltype(auto) rend() const  { return m_range.end(); }
 
     Range m_range;
 };
@@ -70,6 +76,24 @@ inline auto skip(size_t count)
     return make_view_factory([count](auto&& range) {
         using Range = decltype(range);
         return SkipView<decay_range<Range>>{std::forward<Range>(range), count};
+    });
+}
+
+template<typename Range>
+struct DropView
+{
+    auto begin() const { return std::begin(m_range); }
+    auto end()   const { return std::end(m_range) - m_drop_count; }
+
+    Range m_range;
+    size_t m_drop_count;
+};
+
+inline auto drop(size_t count)
+{
+    return make_view_factory([count](auto&& range) {
+        using Range = decltype(range);
+        return DropView<decay_range<Range>>{std::forward<Range>(range), count};
     });
 }
 
@@ -477,15 +501,15 @@ auto elements(bool exact_size = false)
 }
 
 template<typename ExceptionType, size_t... Indexes>
-auto static_gather_impl(std::index_sequence<Indexes...>)
+auto static_gather_impl(std::index_sequence<Indexes...>, bool exact_size)
 {
-    return elements<ExceptionType, Indexes...>(true);
+    return elements<ExceptionType, Indexes...>(exact_size);
 }
 
-template<typename ExceptionType, size_t size>
+template<typename ExceptionType, size_t size, bool exact_size=true>
 auto static_gather()
 {
-    return static_gather_impl<ExceptionType>(std::make_index_sequence<size>());
+    return static_gather_impl<ExceptionType>(std::make_index_sequence<size>(), exact_size);
 }
 
 }

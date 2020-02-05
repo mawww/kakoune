@@ -1,5 +1,7 @@
 #include "normal.hh"
 
+#include <functional>
+
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
@@ -1774,11 +1776,17 @@ SelectionList read_selections_from_register(char reg, Context& context)
     if (content.size() < 2)
         throw runtime_error(format("register '{}' does not contain a selections desc", reg));
 
+    // Use the last two values for timestamp and main_index to allow the buffer
+    // name to have @ symbols
     struct error : runtime_error { error(size_t) : runtime_error{"expected <buffer>@<timestamp>@main_index"} {} };
-    const auto desc = content[0] | split<StringView>('@') | static_gather<error, 3>();
-    Buffer& buffer = BufferManager::instance().get_buffer(desc[0]);
-    const size_t timestamp = str_to_int(desc[1]);
-    size_t main = str_to_int(desc[2]);
+    auto end_content = content[0] | reverse() | split('@') | transform([] (auto bounds) {
+        return StringView{bounds.second.base(), bounds.first.base()};
+    }) | static_gather<error, 2, false>();
+
+    const size_t main = str_to_int(end_content[0]);
+    const size_t timestamp = str_to_int(end_content[1]);
+    const auto buffer_name = StringView{ content[0].begin (), end_content[1].begin () - 1 };
+    Buffer& buffer = BufferManager::instance().get_buffer(buffer_name);
 
     return selection_list_from_strings(buffer, ColumnType::Byte, content | skip(1), timestamp, main);
 }
