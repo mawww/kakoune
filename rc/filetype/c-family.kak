@@ -370,11 +370,12 @@ evaluate-commands %sh{
     "
 }
 
-declare-option -docstring %{control the type of include guard to be inserted in empty headers
-Can be one of the following:
- ifdef: old style ifndef/define guard
- pragma: newer type of guard using "pragma once"} \
-    str c_include_guard_style "ifdef"
+declare-option -docstring %{
+    control the type of include guard to be inserted in empty headers
+    Can be one of the following:
+        ifdef: old style ifndef/define guard
+        pragma: newer type of guard using "pragma once"
+} str c_include_guard_style "ifdef"
 
 define-command -hidden c-family-insert-include-guards %{
     evaluate-commands %sh{

@@ -15,9 +15,10 @@ declare-option -hidden line-specs clang_flags
 declare-option -hidden line-specs clang_errors
 
 define-command -params ..1 \
-    -docstring %{Parse the contents of the current buffer
-The syntaxic errors detected during parsing are shown when auto-diagnostics are enabled} \
-    clang-parse %{
+    -docstring %{
+        Parse the contents of the current buffer
+        The syntaxic errors detected during parsing are shown when auto-diagnostics are enabled
+    } clang-parse %{
     evaluate-commands %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
