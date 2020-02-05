@@ -48,15 +48,16 @@ evaluate-commands %sh{
     printf %s\\n "declare-option str-list sh_static_words $(join "${keywords}" ' ') $(join "${builtins}" ' ')"
 
     # Highlight keywords
-    printf %s\\n "add-highlighter shared/sh/code/ regex \b($(join "${keywords}" '|'))\b 0:keyword"
+    printf %s\\n "add-highlighter shared/sh/code/ regex (?<!-)\b($(join "${keywords}" '|'))\b(?!-) 0:keyword"
 
     # Highlight builtins
-    printf %s "add-highlighter shared/sh/code/builtin regex \b($(join "${builtins}" '|'))\b 0:builtin"
+    printf %s "add-highlighter shared/sh/code/builtin regex (?<!-)\b($(join "${builtins}" '|'))\b(?!-) 0:builtin"
 }
 
 add-highlighter shared/sh/code/operators regex [\[\]\(\)&|]{1,2} 0:operator
-add-highlighter shared/sh/code/variable regex ([\w-]+)= 1:variable
-add-highlighter shared/sh/code/function regex ^\h*(\w+)\h*\(\) 1:function
+add-highlighter shared/sh/code/variable regex ((?<![-:])\b\w+)= 1:variable
+add-highlighter shared/sh/code/alias regex \balias(\h+[-+]\w)*\h+([\w-.]+)= 2:variable
+add-highlighter shared/sh/code/function regex ^\h*(\S+)\h*\(\) 1:function
 
 add-highlighter shared/sh/code/unscoped_expansion regex \$(\w+|#|@|\?|\$|!|-|\*) 0:value
 add-highlighter shared/sh/double_string/expansion regex \$(\w+|\{.+?\}) 0:value
