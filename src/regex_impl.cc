@@ -952,7 +952,9 @@ private:
             case ParsedRegex::Class:
             {
                 auto& character_class = m_parsed_regex.character_classes[node.value];
-                if (character_class.ctypes == CharacterType::None and not character_class.negative)
+                if (character_class.ctypes == CharacterType::None and
+                    not character_class.negative and
+                    not character_class.ignore_case)
                 {
                     for (auto& range : character_class.ranges)
                     {
@@ -1438,6 +1440,11 @@ auto test_regex = UnitTest{[]{
     {
         TestVM<> vm{R"(Foo(?i)f[oB]+)"};
         kak_assert(vm.exec("FooFOoBb"));
+    }
+
+    {
+        TestVM<> vm{R"((?i)[a-z]+)"};
+        kak_assert(vm.exec("ABC"));
     }
 
     {
