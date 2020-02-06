@@ -81,7 +81,6 @@ evaluate-commands %sh{
 }
 
 add-highlighter shared/kakrc/code/colors regex \brgb:[0-9a-fA-F]{6}\b 0:value
-add-highlighter shared/kakrc/code/scopes regex \b(global|shared|buffer|window)(?:\b|/) 0:value
 
 add-highlighter shared/kakrc/double_string/fill fill string
 add-highlighter shared/kakrc/double_string/escape regex '""' 0:default+b
