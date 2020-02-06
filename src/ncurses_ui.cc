@@ -691,8 +691,25 @@ Optional<Key> NCursesUI::get_next_key()
         case 'D': return masked_key(Key::Left);
         case 'F': return masked_key(Key::End);   // PC/xterm style
         case 'H': return masked_key(Key::Home);  // PC/xterm style
+        case 'J':
+            switch (params[0])
+            {
+            case 0: return Key{Key::Modifiers::Control, Key::End};  // st style
+            case 2: return Key{Key::Modifiers::Shift, Key::Home};   // st style
+            }
+            break;
+        case 'K':
+            switch (params[0])
+            {
+            case 0: return Key{Key::Modifiers::Shift, Key::End};    // st style
+            case 2: return Key{Key::Modifiers::Shift, Key::Delete}; // st style
+            }
+            break;
         case 'L': return Key{Key::Modifiers::Control, Key::Insert}; // st style
-        case 'P': return masked_key(Key::F1);
+        case 'P':
+            if (params[0])
+                return masked_key(Key::F1);
+            return Key{Key::Delete};          // st style
         case 'Q': return masked_key(Key::F2);
         case 'R': return masked_key(Key::F3);
         case 'S': return masked_key(Key::F4);
@@ -736,7 +753,11 @@ Optional<Key> NCursesUI::get_next_key()
         case 'Z': return shift(Key::Tab);
         case 'I': return {Key::FocusIn};
         case 'O': return {Key::FocusOut};
-        case 'M': case 'm':
+        case 'M':
+            if (not private_mode and not params[0])
+                return Key{Key::Modifiers::Control, Key::Delete}; // st style
+            [[fallthrough]];
+        case 'm':
             const bool sgr = private_mode == '<';
             if (not sgr and c != 'M')
                 return {};
