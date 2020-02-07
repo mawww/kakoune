@@ -279,7 +279,7 @@ but not really useful in that context.
     by the *define-command* command, see
     <<declaring-new-commands,Declaring new commands>>.
 
-    For *-shell-script-completions* and *-shell-script-candidates*
+    For *-shell-script-completion* and *-shell-script-candidates*
     completions, token_to_complete will always be 1, and the full
     prompt content will be passed as a single token. In other words,
     word splitting does not take place.
