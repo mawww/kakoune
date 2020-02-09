@@ -503,7 +503,7 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
 const CommandDesc write_cmd = {
     "write",
     "w",
-    "write [-sync] [<filename>]: write the current buffer to its file "
+    "write [<switches>] [<filename>]: write the current buffer to its file "
     "or to <filename> if specified",
     write_params,
     CommandFlags::None,
@@ -515,7 +515,7 @@ const CommandDesc write_cmd = {
 const CommandDesc force_write_cmd = {
     "write!",
     "w!",
-    "write! [-sync] [<filename>]: write the current buffer to its file "
+    "write! [<switches>] [<filename>]: write the current buffer to its file "
     "or to <filename> if specified, even when the file is write protected",
     write_params,
     CommandFlags::None,
@@ -524,7 +524,7 @@ const CommandDesc force_write_cmd = {
     write_buffer<true>,
 };
 
-void write_all_buffers(const Context& context, bool sync = false)
+void write_all_buffers(const Context& context, bool sync = false, bool atomic = false)
 {
     // Copy buffer list because hooks might be creating/deleting buffers
     Vector<SafePtr<Buffer>> buffers;
@@ -538,9 +538,10 @@ void write_all_buffers(const Context& context, bool sync = false)
              buffer->is_modified())
             and !(buffer->flags() & Buffer::Flags::ReadOnly))
         {
-            auto mode = context.options()["writemethod"].get<WriteMethod>();
+            auto mode = atomic ? WriteMethod::Replace : context.options()["writemethod"].get<WriteMethod>();
+            auto flags = sync ? WriteFlags::Sync : WriteFlags::None;
             buffer->run_hook_in_own_context(Hook::BufWritePre, buffer->name(), context.name());
-            write_buffer_to_file(*buffer, buffer->name(), mode, sync ? WriteFlags::Sync : WriteFlags::None);
+            write_buffer_to_file(*buffer, buffer->name(), mode, flags);
             buffer->run_hook_in_own_context(Hook::BufWritePost, buffer->name(), context.name());
         }
     }
@@ -549,16 +550,17 @@ void write_all_buffers(const Context& context, bool sync = false)
 const CommandDesc write_all_cmd = {
     "write-all",
     "wa",
-    "write-all [-sync]: write all changed buffers that are associated to a file",
+    "write-all [<switches>]: write all changed buffers that are associated to a file",
     ParameterDesc{
-        { { "sync", { false, "force the synchronization of the file onto the filesystem" } } },
+        write_params.switches,
         ParameterDesc::Flags::None, 0, 0
     },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&){
-        write_all_buffers(context, (bool)parser.get_switch("sync"));
+        write_all_buffers(context,
+                          (bool)parser.get_switch("sync"), (bool)parser.get_switch("atomic"));
     }
 };
 
