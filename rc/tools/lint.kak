@@ -37,11 +37,7 @@ define-command \
     # Create a temporary directory to keep all our state.
     evaluate-commands %sh{
         # This is going to come in handy later.
-        kakquote() {
-            printf "'"
-            printf "%s" "$*" | sed "s/'/''/g"
-            printf "'"
-        }
+        kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
 
         # Before we clobber our arguments,
         # let's record the lintcmd we were given.
@@ -65,7 +61,7 @@ define-command \
               }"
 
         # Write all the selection descriptions to files.
-        eval set -- "$kak_quoted_selections_desc"
+        eval set -- "$kak_selections_desc"
         i=0
         for desc; do
             mkdir -p "$dir"/sel-"$i"
@@ -260,11 +256,7 @@ define-command \
 
         evaluate-commands %sh{
             # This is going to come in handy later.
-            kakquote() {
-                printf "'"
-                printf "%s" "$*" | sed "s/'/''/g"
-                printf "'"
-            }
+            kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
 
             if [ "$1" = "-command" ]; then
                 if [ -z "$2" ]; then
@@ -307,11 +299,7 @@ define-command -hidden lint-show %{
     update-option buffer lint_messages
     evaluate-commands %sh{
         # This is going to come in handy later.
-        kakquote() {
-            printf "'"
-            printf "%s" "$*" | sed "s/'/''/g"
-            printf "'"
-        }
+        kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
 
         eval set -- "${kak_quoted_opt_lint_messages}"
         shift # skip the timestamp
