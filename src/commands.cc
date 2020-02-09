@@ -2365,7 +2365,12 @@ const CommandDesc set_register_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::SwitchesAsPositional, 1},
     CommandFlags::None,
     CommandHelper{},
-    CommandCompleter{},
+    make_completer(
+         [](const Context& context, CompletionFlags flags,
+            const String& prefix, ByteCount cursor_pos) -> Completions {
+             return { 0_byte, cursor_pos,
+                      RegisterManager::instance().complete_register_name(prefix, cursor_pos) };
+        }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         RegisterManager::instance()[parser[0]].set(context, parser.positionals_from(1));
