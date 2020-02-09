@@ -115,8 +115,9 @@ define-command \
         done
 
         # Load all the linter messages into Kakoune options.
-        # Yes, shellcheck, we do want line-continuation backslashes
-        # inside the string.
+        # shellcheck warns us that the shell doesn't need
+        # backslash-continuation chars in a single-quoted string,
+        # but awk still needs them.
         # shellcheck disable=SC1004
         awk -v file="$kak_buffile" -v client="$kak_client" '
             function kakquote(text) {
@@ -160,10 +161,9 @@ define-command \
                 # so that information is not lost.
                 msg = msg "(col " $3 ")"
 
-                # FIXME: I *think* this line is left over from a time
-                # when Kakoune used pipes to delimit items in a list
-                # option. If so, it is entirely useless now... but I
-                # am not 100% sure.
+                # Messages will be stored in a line-specs option,
+                # and each record in the option uses "|"
+                # as a field delimiter, so we need to escape them.
                 gsub(/\|/, "\\|", msg)
 
                 if ($2 in messages_by_line) {
@@ -282,7 +282,7 @@ define-command \
                 lintcmd="$kak_opt_lintcmd"
             fi
 
-            printf '%s\n' "lint-cleaned-selections $(kakquote "$lintcmd")"
+            printf 'lint-cleaned-selections %s\n' "$(kakquote "$lintcmd")"
         }
     }
 }
@@ -380,10 +380,6 @@ define-command \
     }
 }
 
-# lint-next-message was previously known as lint-next-error,
-# but it includes warnings too, not just errors.
-alias global lint-next-error lint-next-message
-
 # FIXME: Is there some way we can re-use make-previous-error
 # instead of re-implementing it?
 define-command \
@@ -422,7 +418,3 @@ define-command \
         # FIXME: should we wrap around like make-previous-error?
     }
 }
-
-# lint-previous-message was previously known as lint-previous-error,
-# but it includes warnings too, not just errors.
-alias global lint-previous-error lint-previous-message
