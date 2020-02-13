@@ -344,6 +344,9 @@ define-command \
     update-option buffer lint_messages
 
     evaluate-commands %sh{
+        # This is going to come in handy later.
+        kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
+
         eval "set -- ${kak_quoted_opt_lint_messages}"
         shift
 
@@ -377,6 +380,9 @@ define-command \
     update-option buffer lint_messages
 
     evaluate-commands %sh{
+        # This is going to come in handy later.
+        kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
+
         eval "set -- ${kak_quoted_opt_lint_messages}"
         shift
 
