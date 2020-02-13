@@ -355,19 +355,34 @@ define-command \
             exit
         fi
 
+        first_lineno=""
+        first_msg=""
+
         for lint_message; do
             lineno="${lint_message%%|*}"
             msg="${lint_message#*|}"
+
+            if [ -z "$first_lineno" ]; then
+                first_lineno=$lineno
+                first_msg=$msg
+            fi
 
             if [ "$lineno" -gt "$kak_cursor_line" ]; then
                 printf "execute-keys %dg\n" "$lineno"
                 printf "info -anchor %d.%d %s\n" \
                     "$lineno" "1" "$(kakquote "$msg")"
-                break
+                exit
             fi
         done
 
-        # FIXME: should we wrap around like make-next-error?
+        # We didn't find any messages after the current line,
+        # let's wrap around to the beginning.
+        printf "execute-keys %dg\n" "$first_lineno"
+        printf "info -anchor %d.%d %s\n" \
+            "$first_lineno" "1" "$(kakquote "$first_msg")"
+        printf "echo -markup \
+            {Information}lint message search wrapped around buffer\n"
+
     }
 }
 
@@ -391,24 +406,46 @@ define-command \
             exit
         fi
 
-        last_lineno="$kak_cursor_line"
-        last_msg="no previous message"
+        prev_lineno=""
+        prev_msg=""
 
         for lint_message; do
             lineno="${lint_message%%|*}"
             msg="${lint_message#*|}"
 
+            # If this message comes on or after the cursor position...
             if [ "$lineno" -ge "${kak_cursor_line}" ]; then
-                printf "execute-keys %dg\n" "$last_lineno"
-                printf "info -anchor %d.%d %s\n" \
-                    "$lineno" "1" "$(kakquote "$last_msg")"
-                break
+                # ...and we had a previous message...
+                if [ -n "$prev_lineno" ]; then
+                    # ...then go to the previous message and display it.
+                    printf "execute-keys %dg\n" "$prev_lineno"
+                    printf "info -anchor %d.%d %s\n" \
+                        "$lineno" "1" "$(kakquote "$prev_msg")"
+                    exit
+
+                # We are after the cursor position, but there has been
+                # no previous message; we'll need to do something else.
+                else
+                    break
+                fi
             fi
 
-            last_lineno="$last_lineno"
-            last_msg="$msg"
+            # We have not yet reached the cursor position, stash this message
+            # and try the next.
+            prev_lineno="$lineno"
+            prev_msg="$msg"
         done
 
-        # FIXME: should we wrap around like make-previous-error?
+        # There is no message before the cursor position,
+        # let's wrap around to the end.
+        shift $(( $# - 1 ))
+        last_lineno="${1%%|*}"
+        last_msg="${1#*|}"
+
+        printf "execute-keys %dg\n" "$last_lineno"
+        printf "info -anchor %d.%d %s\n" \
+            "$last_lineno" "1" "$(kakquote "$last_msg")"
+        printf "echo -markup \
+            {Information}lint message search wrapped around buffer\n"
     }
 }
