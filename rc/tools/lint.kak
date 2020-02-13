@@ -111,8 +111,8 @@ define-command \
         done
 
         # Load all the linter messages into Kakoune options.
-        # shellcheck warns us that the shell doesn't need
-        # backslash-continuation chars in a single-quoted string,
+        # Inside this block, shellcheck warns us that the shell doesn't
+        # need backslash-continuation chars in a single-quoted string,
         # but awk still needs them.
         # shellcheck disable=SC1004
         awk -v file="$kak_buffile" -v client="$kak_client" '
