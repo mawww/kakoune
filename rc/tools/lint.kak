@@ -357,7 +357,7 @@ define-command \
 
         for lint_message; do
             lineno="${lint_message%%|*}"
-            msg="${lint_message##*|}"
+            msg="${lint_message#*|}"
 
             if [ "$lineno" -gt "$kak_cursor_line" ]; then
                 printf "execute-keys %dg\n" "$lineno"
@@ -396,7 +396,7 @@ define-command \
 
         for lint_message; do
             lineno="${lint_message%%|*}"
-            msg="${lint_message##*|}"
+            msg="${lint_message#*|}"
 
             if [ "$lineno" -ge "${kak_cursor_line}" ]; then
                 printf "execute-keys %dg\n" "$last_lineno"
