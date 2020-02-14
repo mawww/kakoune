@@ -133,7 +133,7 @@ define-command \
                 # Remember that an error or a warning occurs on this line..
                 if ($4 ~ /[Ee]rror/) {
                     # We definitely have an error on this line.
-                    flags_by_line[$2] = "{Error}!"
+                    flags_by_line[$2] = "{Error}x"
                     error_count++
                 } else if (flags_by_line[$2] ~ /Error/) {
                     # We have a warning on this line,
@@ -142,7 +142,7 @@ define-command \
                 } else {
                     # We have a warning on this line,
                     # and no previous error.
-                    flags_by_line[$2] = "{Information}?"
+                    flags_by_line[$2] = "{Information}!"
                     warning_count++
                 }
 
