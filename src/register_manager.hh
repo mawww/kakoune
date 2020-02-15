@@ -48,7 +48,8 @@ public:
 
     const String& get_main(const Context& context, size_t main_index) override
     {
-        return get(context)[std::min(main_index, m_content.size() - 1)];
+        auto content = get(context);
+        return content[std::min(main_index, content.size() - 1)];
     }
 
 protected:
