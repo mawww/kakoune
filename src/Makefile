@@ -139,7 +139,7 @@ tags:
 	ctags -R
 
 clean:
-	rm -f .*.o .*.d
+	rm -f $(objects) $(deps)
 
 dist:
 	@if ! [ -d ../.git ]; then echo "make dist can only run from a git repo";  false; fi
