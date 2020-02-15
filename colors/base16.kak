@@ -28,6 +28,7 @@ evaluate-commands %sh{
         face global operator ${cyan_light}
         face global attribute ${orange_dark}
         face global comment ${grey_dark}
+        face global documentation comment
         face global meta ${orange_light}
         face global builtin default+b
     "

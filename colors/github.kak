@@ -14,6 +14,7 @@ face global keyword rgb:A71D5D+b
 face global operator yellow
 face global attribute rgb:A71D5D
 face global comment rgb:AAAAAA
+face global documentation comment
 face global meta rgb:183691
 face global builtin default+b
 

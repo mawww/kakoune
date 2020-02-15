@@ -24,18 +24,19 @@ evaluate-commands %sh{
 
     echo "
         # Code highlighting
-        face global value     ${purple}
-        face global type      ${yellow}
-        face global variable  ${blue}
-        face global module    ${green}
-        face global function  ${fg}
-        face global string    ${green}
-        face global keyword   ${red}
-        face global operator  ${fg}
-        face global attribute ${orange}
-        face global comment   ${gray}+i
-        face global meta      ${aqua}
-        face global builtin   ${fg}+b
+        face global value         ${purple}
+        face global type          ${yellow}
+        face global variable      ${blue}
+        face global module        ${green}
+        face global function      ${fg}
+        face global string        ${green}
+        face global keyword       ${red}
+        face global operator      ${fg}
+        face global attribute     ${orange}
+        face global comment       ${gray}+i
+        face global documentation comment
+        face global meta          ${aqua}
+        face global builtin       ${fg}+b
 
         # Markdown highlighting
         face global title     ${green}+b

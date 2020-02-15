@@ -35,6 +35,7 @@ add-highlighter shared/rust/code default-region group
 add-highlighter shared/rust/string           region %{(?<!')"} (?<!\\)(\\\\)*"              fill string
 add-highlighter shared/rust/raw_string       region -match-capture %{(?<!')r(#*)"} %{"(#*)} fill string
 add-highlighter shared/rust/comment          region -recurse "/\*" "/\*" "\*/"              fill comment
+add-highlighter shared/rust/documentation    region "//[!/]" "$"                            fill documentation
 add-highlighter shared/rust/line_comment     region "//" "$"                                fill comment
 
 add-highlighter shared/rust/macro_attributes region -recurse "\[" "#!?\[" "\]" regions

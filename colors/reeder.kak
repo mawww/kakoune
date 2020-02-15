@@ -22,18 +22,19 @@ evaluate-commands %sh{
     # Base color definitions
     echo "
         # then we map them to code
-        face global value      ${orange_light}+b
-        face global type       ${orange}
-        face global variable   default
-        face global module     ${green}
-        face global function   default
-        face global string     ${green}
-        face global keyword    ${brown_dark}
-        face global operator   default
-        face global attribute  ${green}
-        face global comment    ${brown_light}
-        face global meta       ${brown_dark}
-        face global builtin   default+b
+        face global value         ${orange_light}+b
+        face global type          ${orange}
+        face global variable      default
+        face global module        ${green}
+        face global function      default
+        face global string        ${green}
+        face global keyword       ${brown_dark}
+        face global operator      default
+        face global attribute     ${green}
+        face global comment       ${brown_light}
+        face global documentation comment
+        face global meta          ${brown_dark}
+        face global builtin       default+b
 
         # and markup
         face global title      ${orange}+b

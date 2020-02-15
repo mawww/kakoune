@@ -1,4 +1,4 @@
-# Kaleidoscope: colorblind-friendly light colorscheme
+# Kaleidoscope: colorblind-friendly dark colorscheme
 # https://personal.sron.nl/~pault/
 
 evaluate-commands %sh{
@@ -82,6 +82,7 @@ evaluate-commands %sh{
     set-face global builtin ${vibrant_blue}+b
     set-face global module ${vibrant_orange}
     set-face global comment ${bright_green}+i
+    set-face global documentation comment
     set-face global function Default
     set-face global operator Default
     set-face global variable Default

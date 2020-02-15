@@ -82,6 +82,7 @@ evaluate-commands %sh{
     set-face global builtin ${muted_indigo}+b
     set-face global module ${vibrant_orange}
     set-face global comment ${muted_green}+i
+    set-face global documentation comment
     set-face global function Default
     set-face global operator Default
     set-face global variable Default
