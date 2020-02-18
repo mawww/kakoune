@@ -7,6 +7,7 @@
 #include "keys.hh"
 #include "ranges.hh"
 #include "string_utils.hh"
+#include "diff.hh"
 
 #include <algorithm>
 
@@ -186,29 +187,46 @@ void TerminalUI::Screen::output(bool force)
         }
     };
 
-    DisplayCoord cursor_pos = pos;
-    for (auto& line : lines)
-    {
-        auto line_hash = hash_value(line.atoms);
-        if (force or cursor_pos.line >= hashes.size() or
-            line_hash != hashes[(size_t)cursor_pos.line])
+    struct Add { int pos; int len; };
+    Vector<Add> adds;
+    auto new_hashes = lines | transform([](auto& line) { return hash_value(line.atoms); }) | gather<Vector>();
+    for_each_diff(hashes.begin(), hashes.size(),
+                  new_hashes.begin(), new_hashes.size(),
+                  [&, line=0, posB=0](DiffOp op, int len) mutable {
+        switch (op)
         {
-            set_cursor_pos(cursor_pos);
-            for (auto& atom : line.atoms)
+            case DiffOp::Keep:
+                line += len;
+                posB += len;
+                break;
+            case DiffOp::Add:
+                adds.push_back({posB, len});
+                posB += len;
+                break;
+            case DiffOp::Remove:
+                printf("\033[%dH\033[%dM", line+1, len);
+                break;
+        }
+    });
+    hashes = std::move(new_hashes);
+
+    for (auto& add : adds)
+    {
+        printf("\033[%dH\033[%dL", add.pos + 1, add.len);
+        for (int i = 0; i < add.len; ++i)
+        {
+            if (i != 0)
+                printf("\033[%dH", add.pos + i + 1);
+            for (auto& atom : lines[add.pos + i].atoms)
             {
-                printf("\033[");
+                fputs("\033[", stdout);
                 set_attributes(atom.face.attributes);
                 set_color(true, atom.face.fg);
                 set_color(false, atom.face.bg);
-                printf("m");
+                fputs("m", stdout);
                 fputs(atom.text.c_str(), stdout);
             }
         }
-        if (hashes.size() <= cursor_pos.line)
-            hashes.push_back(line_hash);
-        else
-            hashes[(size_t)cursor_pos.line] = line_hash;
-        ++cursor_pos.line;
     }
 }
 
