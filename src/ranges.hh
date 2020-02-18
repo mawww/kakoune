@@ -184,8 +184,8 @@ struct TransformView
         Iterator& operator+=(difference_type diff) { m_it += diff; return *this; }
         Iterator& operator-=(difference_type diff) { m_it -= diff; return *this; }
 
-        Iterator operator+(difference_type diff) { return {*m_transform, m_it + diff}; }
-        Iterator operator-(difference_type diff) { return {*m_transform, m_it - diff}; }
+        Iterator operator+(difference_type diff) const { return {*m_transform, m_it + diff}; }
+        Iterator operator-(difference_type diff) const { return {*m_transform, m_it - diff}; }
 
         friend bool operator==(const Iterator& lhs, const Iterator& rhs) { return lhs.m_it == rhs.m_it; }
         friend bool operator!=(const Iterator& lhs, const Iterator& rhs) { return not (lhs == rhs); }
@@ -480,8 +480,8 @@ auto gather()
     });
 }
 
-template<typename ExceptionType, size_t... Indexes>
-auto elements(bool exact_size = false)
+template<typename ExceptionType, bool exact_size, size_t... Indexes>
+auto elements()
 {
     return make_view_factory([=] (auto&& range) {
         using std::begin; using std::end;
@@ -500,16 +500,16 @@ auto elements(bool exact_size = false)
     });
 }
 
-template<typename ExceptionType, size_t... Indexes>
-auto static_gather_impl(std::index_sequence<Indexes...>, bool exact_size)
+template<typename ExceptionType, bool exact_size, size_t... Indexes>
+auto static_gather_impl(std::index_sequence<Indexes...>)
 {
-    return elements<ExceptionType, Indexes...>(exact_size);
+    return elements<ExceptionType, exact_size, Indexes...>();
 }
 
-template<typename ExceptionType, size_t size, bool exact_size=true>
+template<typename ExceptionType, size_t size, bool exact_size = true>
 auto static_gather()
 {
-    return static_gather_impl<ExceptionType>(std::make_index_sequence<size>(), exact_size);
+    return static_gather_impl<ExceptionType, exact_size>(std::make_index_sequence<size>());
 }
 
 }
