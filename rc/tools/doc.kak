@@ -105,7 +105,7 @@ define-command -params 1 -hidden doc-render %{
 
     # Join paragraphs together
     try %{
-        execute-keys -draft '%S\n{2,}|(?<=\+)\n|^[^\n]+::\n|^\h*[*-]\h+<ret>' \
+        execute-keys -draft '%S\n{2,}|(?<lt>=\+)\n|^[^\n]+::\n|^\h*[*-]\h+<ret>' \
             <a-K>^\h*-{2,}(\n|\z)<ret> S\n\z<ret> <a-k>\n<ret> <a-j>
     }
 
