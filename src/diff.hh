@@ -5,11 +5,8 @@
 // "An O(ND) Difference Algorithm and Its Variations"
 // (http://xmailserver.org/diff2.pdf)
 
-#include "array_view.hh"
-
 #include <algorithm>
 #include <functional>
-#include <iterator>
 #include <memory>
 
 namespace Kakoune
@@ -24,7 +21,7 @@ struct Snake
     enum Op { Add, Del, RevAdd, RevDel } op;
 };
 
-template<typename IteratorA, typename IteratorB, typename Equal>
+template<bool forward, typename IteratorA, typename IteratorB, typename Equal>
 Snake find_end_snake_of_further_reaching_dpath(IteratorA a, int N, IteratorB b, int M,
                                                const int* V, const int D, const int k, Equal eq)
 {
@@ -37,9 +34,13 @@ Snake find_end_snake_of_further_reaching_dpath(IteratorA a, int N, IteratorB b, 
     // we are by construction on diagonal k, so our position along b (y) is x - k.
     const int y = x - k;
 
+    auto at = [](auto&& base, int index, int size) -> decltype(auto) {
+        return forward ? base[index] : base[size - 1 - index];
+    };
+
     int u = x, v = y;
     // follow end snake along diagonal k
-    while (u < N and v < M and eq(a[u], b[v]))
+    while (u < N and v < M and eq(at(a, u, N), at(b, v, M)))
         ++u, ++v;
 
     return { x, y, u, v, add ? Snake::Add : Snake::Del };
@@ -53,14 +54,12 @@ Snake find_middle_snake(IteratorA a, int N, IteratorB b, int M,
     V1[1] = 0;
     V2[1] = 0;
 
-    std::reverse_iterator<IteratorA> ra{a + N};
-    std::reverse_iterator<IteratorB> rb{b + M};
     const int max_D = std::min((M + N + 1) / 2 + 1, cost_limit);
     for (int D = 0; D < max_D; ++D)
     {
         for (int k1 = -D; k1 <= D; k1 += 2)
         {
-            auto p = find_end_snake_of_further_reaching_dpath(a, N, b, M, V1, D, k1, eq);
+            auto p = find_end_snake_of_further_reaching_dpath<true>(a, N, b, M, V1, D, k1, eq);
             V1[k1] = p.u;
 
             const int k2 = -(k1 - delta);
@@ -70,7 +69,7 @@ Snake find_middle_snake(IteratorA a, int N, IteratorB b, int M,
 
         for (int k2 = -D; k2 <= D; k2 += 2)
         {
-            auto p = find_end_snake_of_further_reaching_dpath(ra, N, rb, M, V2, D, k2, eq);
+            auto p = find_end_snake_of_further_reaching_dpath<false>(a, N, b, M, V2, D, k2, eq);
             V2[k2] = p.u;
 
             const int k1 = -(k2 - delta);
@@ -85,14 +84,14 @@ Snake find_middle_snake(IteratorA a, int N, IteratorB b, int M,
     auto score = [](const Snake& s) { return s.u + s.v; };
     for (int k1 = -max_D; k1 <= max_D; k1 += 2)
     {
-        auto p = find_end_snake_of_further_reaching_dpath(a, N, b, M, V1, max_D, k1, eq);
+        auto p = find_end_snake_of_further_reaching_dpath<true>(a, N, b, M, V1, max_D, k1, eq);
         V1[k1] = p.u;
         if ((delta % 2 != 0) and p.u <= N and p.v <= M and score(p) >= score(best))
             best = p;
     }
     for (int k2 = -max_D; k2 <= max_D; k2 += 2)
     {
-        auto p = find_end_snake_of_further_reaching_dpath(ra, N, rb, M, V2, max_D, k2, eq);
+        auto p = find_end_snake_of_further_reaching_dpath<false>(a, N, b, M, V2, max_D, k2, eq);
         V2[k2] = p.u;
         if ((delta % 2 == 0) and p.u <= N and p.v <= M and score(p) >= score(best))
             best = {p.x, p.y, p.u, p.v, (Snake::Op)(p.op + Snake::RevAdd)};
