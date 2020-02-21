@@ -106,8 +106,8 @@ evaluate-commands %sh{
               finally for global if in is lambda nonlocal not or pass print
               raise return try while with yield"
 
-    types="bool buffer bytearray bytes complex dict file float frozenset int
-           list long memoryview object set str tuple unicode xrange"
+    types="bool bytearray bytes complex dict file float frozenset int
+           list long memoryview object set str tuple unicode range"
 
     functions="abs all any ascii bin breakpoint callable chr classmethod compile complex
                delattr dict dir divmod enumerate eval exec filter
