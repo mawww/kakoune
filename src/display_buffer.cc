@@ -325,10 +325,10 @@ String fix_atom_text(StringView str)
     for (auto it = str.begin(), end = str.end(); it != end; ++it)
     {
         char c = *it;
-        if (c == '\n' or c == '\r')
+        if (c <= 0x21)
         {
             res += StringView{pos, it};
-            res += c == '\n' ? "␤" : "␍";
+            res += String{Codepoint{(uint32_t)(0x2400 + c)}};
             pos = it+1;
         }
     }
