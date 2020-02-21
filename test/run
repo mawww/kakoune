@@ -24,9 +24,21 @@ main() {
       '
 
   root=$PWD
+  kak_exec=$root/../src/kak
   tmpdir="${TMPDIR:-/tmp}"
   work=$(mktemp -d $tmpdir/kak-tests.XXXXXXXX)
   trap "rm -R $work" EXIT
+
+  # We can specify kakoune executable with -k
+  while getopts 'k::' c
+  do
+    case $c in
+      k) kak_exec=${OPTARG}; shift 2 ;;
+    esac
+  done
+
+  # Ensure kak_exec is absolute path
+  [ "$kak_exec" != "${kak_exec#/}" ] || kak_exec=$root/$kak_exec
 
   number_tests=0
   number_failures=0
@@ -54,7 +66,7 @@ main() {
     touch in; cp in out
     session="kak-tests"
     rm -f "$(session_path $session)"
-    $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" >ui-out <ui-in &
+    $kak_exec out -n -s "$session" -ui json -e "$kak_commands" >ui-out <ui-in &
     kakpid=$!
 
     failed=0
@@ -67,7 +79,7 @@ main() {
       ui_out '{ "jsonrpc": "2.0", "method": "set_ui_options", "params": [{}] }'
     fi
 
-    finished_commands |$root/../src/kak -p "$session" 2>/dev/null
+    finished_commands |$kak_exec -p "$session" 2>/dev/null
 
     wait $kakpid
     retval=$?
