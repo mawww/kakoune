@@ -105,4 +105,29 @@ void BufferManager::clear_buffer_trash()
     m_buffer_trash.clear();
 }
 
+void BufferManager::arrange_buffers(ConstArrayView<String> first_ones)
+{
+    Vector<size_t> indices;
+    for (const auto& name : first_ones)
+    {
+        auto it = find_if(m_buffers, [&](auto& buf) { return buf->name() == name or buf->display_name() == name; });
+        if (it == m_buffers.end())
+            throw runtime_error{format("no such buffer '{}'", name)};
+        size_t index = it - m_buffers.begin();
+        if (contains(indices, index))
+            throw runtime_error{format("buffer '{}' appears more than once", name)};
+        indices.push_back(index);
+    }
+
+    BufferList res;
+    for (size_t index : indices)
+        res.push_back(std::move(m_buffers[index]));
+    for (auto& buf : m_buffers)
+    {
+        if (buf)
+            res.push_back(std::move(buf));
+    }
+    m_buffers = std::move(res);
+}
+
 }
