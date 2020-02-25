@@ -325,7 +325,7 @@ String fix_atom_text(StringView str)
     for (auto it = str.begin(), end = str.end(); it != end; ++it)
     {
         char c = *it;
-        if (c <= 0x21)
+        if (c <= 0x21 and c != ' ')
         {
             res += StringView{pos, it};
             res += String{Codepoint{(uint32_t)(0x2400 + c)}};
