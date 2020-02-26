@@ -495,6 +495,8 @@ void register_options()
     reg.declare_option<int, check_timeout>(
         "idle_timeout", "timeout, in milliseconds, before idle hooks are triggered", 50);
     reg.declare_option<int, check_timeout>(
+        "next_key_idle_timeout", "timeout, in milliseconds, before next-key suggestions are displayed", 250);
+    reg.declare_option<int, check_timeout>(
         "fs_check_timeout", "timeout, in milliseconds, between file system buffer modification checks",
         500);
     reg.declare_option("ui_options",
