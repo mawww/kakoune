@@ -361,6 +361,7 @@ NCursesUI::~NCursesUI()
 {
     enable_mouse(false);
     m_palette.set_change_colors(false);
+    fputs("\033>", stdout);
     endwin();
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
     set_signal_handler(SIGWINCH, SIG_DFL);
@@ -374,6 +375,7 @@ void NCursesUI::suspend()
     enable_mouse(false);
     bool change_color_enabled = m_palette.get_change_colors();
     m_palette.set_change_colors(false);
+    fputs("\033>", stdout);
     endwin();
 
     auto current = set_signal_handler(SIGTSTP, SIG_DFL);
@@ -408,6 +410,7 @@ void NCursesUI::set_raw_mode() const
     attr.c_cc[VMIN] = attr.c_cc[VTIME] = 0;
 
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &attr);
+    fputs("\033=", stdout);
 }
 
 void NCursesUI::redraw(bool force)
@@ -691,25 +694,6 @@ Optional<Key> NCursesUI::get_next_key()
         case 'D': return masked_key(Key::Left);
         case 'F': return masked_key(Key::End);   // PC/xterm style
         case 'H': return masked_key(Key::Home);  // PC/xterm style
-        case 'J':
-            switch (params[0])
-            {
-            case 0: return Key{Key::Modifiers::Control, Key::End};  // st style
-            case 2: return Key{Key::Modifiers::Shift, Key::Home};   // st style
-            }
-            break;
-        case 'K':
-            switch (params[0])
-            {
-            case 0: return Key{Key::Modifiers::Shift, Key::End};    // st style
-            case 2: return Key{Key::Modifiers::Shift, Key::Delete}; // st style
-            }
-            break;
-        case 'L': return Key{Key::Modifiers::Control, Key::Insert}; // st style
-        case 'P':
-            if (params[0])
-                return masked_key(Key::F1);
-            return Key{Key::Delete};          // st style
         case 'Q': return masked_key(Key::F2);
         case 'R': return masked_key(Key::F3);
         case 'S': return masked_key(Key::F4);
@@ -740,24 +724,12 @@ Optional<Key> NCursesUI::get_next_key()
                 return Key{Key::Modifiers::Shift, Key::F9 + params[0] - 33}; // rxvt style
             }
             return {};
-        case 'h':
-            if (params[0] == 4) // st style
-                return Key{Key::Insert};
-            break;
-        case 'l':
-            if (params[0] == 4) // st style
-                return Key{Key::Modifiers::Shift, Key::Insert};
-            break;
         case 'u':
             return masked_key(static_cast<Codepoint>(params[0]));
         case 'Z': return shift(Key::Tab);
         case 'I': return {Key::FocusIn};
         case 'O': return {Key::FocusOut};
-        case 'M':
-            if (not private_mode and not params[0])
-                return Key{Key::Modifiers::Control, Key::Delete}; // st style
-            [[fallthrough]];
-        case 'm':
+        case 'M': case 'm':
             const bool sgr = private_mode == '<';
             if (not sgr and c != 'M')
                 return {};
