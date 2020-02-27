@@ -1881,7 +1881,7 @@ void combine_selections(Context& context, SelectionList list, Func func, StringV
                                      list.set_main_index(sels.main_index());
                                  }
                                  func(context, std::move(list));
-                             }, title,
+                             }, title.str(),
                              "'a': append lists\n"
                              "'u': union\n"
                              "'i': intersection\n"
