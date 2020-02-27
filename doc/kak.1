@@ -99,15 +99,27 @@ after the server initialization phase.
 Enter in
 .Sq filter mode :
 select the whole file, then execute
-.Ar keys .
+.Ar keys
+and print the resulting buffer. The exit code is set to 2 if errors have
+occurred when applying
+.Ar keys
+to any given buffer, or to 1 if other errors have
+occurred. The resulting buffer is not printed in either case. Note that
+.Ar keys
+will be applied to all the given files even if an error has been
+raised while processing any of them.
 .
 .It Fl i Ar suffix
-Backup the files on which a filter is applied, using the given suffix.
+In
+.Sq filter mode ,
+backup the target file by appending
+.Ar suffix
+to the extension.
 .
 .It Fl q
-When in
+In
 .Sq filter mode ,
-don't print any errors
+don't print any errors that occurred while executing keys.
 .
 .It Fl p Ar session_id
 Send the commands written on the standard input to session
