@@ -370,8 +370,8 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
     Buffer* buffer = buffer_manager.get_buffer_ifp(name);
     if (scratch)
     {
-        if (parser.get_switch("readonly") or parser.get_switch("fifo") or parser.get_switch("scroll"))
-            throw runtime_error("scratch is not compatible with readonly, fifo or scroll");
+        if (parser.get_switch("readonly") or parser.get_switch("background") or parser.get_switch("fifo") or parser.get_switch("scroll"))
+            throw runtime_error("scratch is not compatible with readonly, background, fifo or scroll");
 
         if (buffer == nullptr or force_reload)
         {
@@ -410,7 +410,7 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
     if (current_buffer and (buffer != current_buffer or param_count > 1))
         context.push_jump();
 
-    if (buffer != current_buffer)
+    if (buffer != current_buffer && !parser.get_switch("background"))
         context.change_buffer(*buffer);
     buffer = &context.buffer(); // change_buffer hooks might change the buffer again
 
@@ -430,12 +430,13 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
 }
 
 ParameterDesc edit_params{
-    { { "existing", { false, "fail if the file does not exist, do not open a new file" } },
-      { "scratch",  { false, "create a scratch buffer, not linked to a file" } },
-      { "debug",    { false, "create buffer as debug output" } },
-      { "fifo",     { true,  "create a buffer reading its content from a named fifo" } },
-      { "readonly", { false, "create a buffer in readonly mode" } },
-      { "scroll",   { false, "place the initial cursor so that the fifo will scroll to show new data" } } },
+    { { "existing",   { false, "fail if the file does not exist, do not open a new file" } },
+      { "scratch",    { false, "create a scratch buffer, not linked to a file" } },
+      { "debug",      { false, "create buffer as debug output" } },
+      { "fifo",       { true,  "create a buffer reading its content from a named fifo" } },
+      { "readonly",   { false, "create a buffer in readonly mode" } },
+      { "scroll",     { false, "place the initial cursor so that the fifo will scroll to show new data" } },
+      { "background", { false, "open the buffer in the background" } } },
       ParameterDesc::Flags::None, 0, 3
 };
 const CommandDesc edit_cmd = {
