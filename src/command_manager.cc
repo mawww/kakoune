@@ -362,7 +362,10 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
         auto it = shell_context.env_vars.find(content);
         if (it != shell_context.env_vars.end())
             return {it->value};
-        return {ShellManager::instance().get_val(content, context, Quoting::Kakoune)};
+        if constexpr (single)
+            return join(ShellManager::instance().get_val(content, context), false, ' ');
+        else
+            return ShellManager::instance().get_val(content, context);
     }
     case Token::Type::ArgExpand:
     {

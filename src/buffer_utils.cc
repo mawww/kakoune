@@ -228,30 +228,35 @@ auto to_string(Buffer::HistoryId id)
     return to_string(static_cast<size_t>(id));
 }
 
-String history_as_string(const Vector<Buffer::HistoryNode>& history, Quoting quoting)
+static String modification_as_string(const Buffer::Modification& modification)
 {
-    auto format_history_node = [&](const Buffer::HistoryNode& node) {
-        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(node.committed.time_since_epoch());
-        return format("{} {} {}{}{}",
-                      node.parent,
-                      seconds.count(),
-                      node.redo_child,
-                      node.undo_group.empty() ? "" : " ",
-                      undo_group_as_string(node.undo_group, quoting));
-    };
-    return join(history | transform(format_history_node), ' ', false);
+    return format("{}{}.{}|{}",
+                  modification.type == Buffer::Modification::Type::Insert ? '+' : '-',
+                  modification.coord.line, modification.coord.column,
+                  modification.content->strview());
 }
 
-String undo_group_as_string(const Buffer::UndoGroup& undo_group, Quoting quoting)
+Vector<String> history_as_strings(const Vector<Buffer::HistoryNode>& history)
 {
-    auto modification_as_string = [&](const Buffer::Modification& modification) {
-        auto quote = quoter(quoting);
-        return quote(format("{}{}.{}|{}",
-                            modification.type == Buffer::Modification::Type::Insert ? '+' : '-',
-                            modification.coord.line, modification.coord.column,
-                            modification.content->strview()));
+    Vector<String> res;
+    for (auto& node : history)
+    {
+        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(node.committed.time_since_epoch());
+        res.push_back(to_string(node.parent));
+        res.push_back(to_string(seconds.count()));
+        res.push_back(to_string(node.redo_child));
+        for (auto& modification : node.undo_group)
+            res.push_back(modification_as_string(modification));
     };
-    return join(undo_group | transform(modification_as_string), ' ', false);
+    return res;
+}
+
+Vector<String> undo_group_as_strings(const Buffer::UndoGroup& undo_group)
+{
+    Vector<String> res;
+    for (auto& modification : undo_group)
+        res.push_back(modification_as_string(modification));
+    return res;
 }
 
 }

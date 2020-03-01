@@ -156,179 +156,193 @@ String config_directory()
     return format("{}/.config/kak", homedir());
 }
 
+static auto main_sel_first(const SelectionList& selections)
+{
+    auto beg = &*selections.begin(), end = &*selections.end();
+    auto main = beg + selections.main_index();
+    using View = ConstArrayView<Selection>;
+    return concatenated(View{main, end}, View{beg, main});
+}
+
 static const EnvVarDesc builtin_env_vars[] = { {
         "bufname", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return context.buffer().display_name(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.buffer().display_name()}; }
     }, {
         "buffile", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return context.buffer().name(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.buffer().name()}; }
     }, {
         "buflist", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return join(BufferManager::instance() |
-                      transform(&Buffer::display_name) | transform(quoter(quoting)), ' ', false); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return BufferManager::instance() | transform(&Buffer::display_name) | gather<Vector>(); }
     }, {
         "buf_line_count", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.buffer().line_count()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.buffer().line_count())}; }
     }, {
         "timestamp", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.buffer().timestamp()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.buffer().timestamp())}; }
     }, {
         "history_id", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string((size_t)context.buffer().current_history_id()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string((size_t)context.buffer().current_history_id())}; }
     }, {
         "selection", false,
-        [](StringView name, const Context& context, Quoting quoting)
+        [](StringView name, const Context& context) -> Vector<String>
         { const Selection& sel = context.selections().main();
-          return content(context.buffer(), sel); }
+          return {content(context.buffer(), sel)}; }
     }, {
         "selections", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return join(context.selections_content() | transform(quoter(quoting)), ' ', false); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return context.selections_content(); }
     }, {
         "runtime", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return runtime_directory(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {runtime_directory()}; }
     }, {
         "config", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return config_directory(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {config_directory()}; }
     }, {
         "version", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return version; }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {version}; }
     }, {
         "opt_", true,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return context.options()[name.substr(4_byte)].get_as_string(quoting); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return context.options()[name.substr(4_byte)].get_as_strings(); }
     }, {
         "main_reg_", true,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return context.main_sel_register_value(name.substr(9_byte)).str(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.main_sel_register_value(name.substr(9_byte)).str()}; }
     }, {
         "reg_", true,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return join(RegisterManager::instance()[name.substr(4_byte)].get(context) |
-                      transform(quoter(quoting)), ' ', false); }
+        [](StringView name, const Context& context)
+        { return RegisterManager::instance()[name.substr(4_byte)].get(context) |
+                     gather<Vector<String>>(); }
     }, {
         "client_env_", true,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return context.client().get_env_var(name.substr(11_byte)).str(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.client().get_env_var(name.substr(11_byte)).str()}; }
     }, {
         "session", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return Server::instance().session(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {Server::instance().session()}; }
     }, {
         "client", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return context.name(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.name()}; }
     }, {
         "client_pid", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.client().pid()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.client().pid())}; }
     }, {
         "client_list", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return join(ClientManager::instance() |
+        [](StringView name, const Context& context) -> Vector<String>
+        { return ClientManager::instance() |
                       transform([](const std::unique_ptr<Client>& c) -> const String&
-                               { return c->context().name(); }), ' ', false); }
+                                { return c->context().name(); }) | gather<Vector>(); }
     }, {
         "modified", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return context.buffer().is_modified() ? "true" : "false"; }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.buffer().is_modified() ? "true" : "false"}; }
     }, {
         "cursor_line", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.selections().main().cursor().line + 1); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.selections().main().cursor().line + 1)}; }
     }, {
         "cursor_column", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.selections().main().cursor().column + 1); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.selections().main().cursor().column + 1)}; }
     }, {
         "cursor_char_value", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
+        [](StringView name, const Context& context) -> Vector<String>
         { auto coord = context.selections().main().cursor();
           auto& buffer = context.buffer();
-          return to_string((size_t)utf8::codepoint(buffer.iterator_at(coord), buffer.end())); }
+          return {to_string((size_t)utf8::codepoint(buffer.iterator_at(coord), buffer.end()))}; }
     }, {
         "cursor_char_column", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
+        [](StringView name, const Context& context) -> Vector<String>
         { auto coord = context.selections().main().cursor();
-          return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
+          return {to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1)}; }
     }, {
         "cursor_display_column", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
+        [](StringView name, const Context& context) -> Vector<String>
         { auto coord = context.selections().main().cursor();
-          return to_string(get_column(context.buffer(),
-                                      context.options()["tabstop"].get<int>(),
-                                      coord) + 1); }
+          return {to_string(get_column(context.buffer(),
+                                       context.options()["tabstop"].get<int>(),
+                                       coord) + 1)}; }
     }, {
         "cursor_byte_offset", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
+        [](StringView name, const Context& context) -> Vector<String>
         { auto cursor = context.selections().main().cursor();
-          return to_string(context.buffer().distance({0,0}, cursor)); }
+          return {to_string(context.buffer().distance({0,0}, cursor))}; }
     }, {
         "selection_desc", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return selection_to_string(ColumnType::Byte, context.buffer(),
-                                     context.selections().main()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {selection_to_string(ColumnType::Byte, context.buffer(), context.selections().main())}; }
     }, {
         "selections_desc", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return selection_list_to_string(ColumnType::Byte, context.selections()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return main_sel_first(context.selections()) |
+                     transform([&buffer=context.buffer()](const Selection& sel) {
+                         return selection_to_string(ColumnType::Byte, buffer, sel);
+                     }) | gather<Vector>(); }
     }, {
         "selections_char_desc", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return selection_list_to_string(ColumnType::Codepoint, context.selections()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return main_sel_first(context.selections()) |
+                     transform([&buffer=context.buffer()](const Selection& sel) {
+                         return selection_to_string(ColumnType::Codepoint, buffer, sel);
+                     }) | gather<Vector>(); }
     }, {
         "selections_display_column_desc", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return selection_list_to_string(ColumnType::DisplayColumn,
-                                          context.selections(),
-                                          context.options()["tabstop"].get<int>()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return main_sel_first(context.selections()) |
+                     transform([&buffer=context.buffer(), tabstop=context.options()["tabstop"].get<int>()](const Selection& sel) {
+                         return selection_to_string(ColumnType::DisplayColumn, buffer, sel, tabstop);
+                     }) | gather<Vector>(); }
     }, {
         "selection_length", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(char_length(context.buffer(), context.selections().main())); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(char_length(context.buffer(), context.selections().main()))}; }
     }, {
         "selections_length", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return join(context.selections() |
-                      transform([&](const Selection& s)
-                               { return to_string(char_length(context.buffer(), s)); }), ' ', false); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return context.selections() |
+                     transform([&](const Selection& s) {
+                         return to_string(char_length(context.buffer(), s));
+                     }) | gather<Vector<String>>(); }
     }, {
         "window_width", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.window().dimensions().column); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.window().dimensions().column)}; }
     }, {
         "window_height", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.window().dimensions().line); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.window().dimensions().line)}; }
     }, {
         "user_modes", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return join(context.keymaps().user_modes(), ' ', false); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return context.keymaps().user_modes(); }
     }, {
         "window_range", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
+        [](StringView name, const Context& context) -> Vector<String>
         {
             auto setup = context.window().compute_display_setup(context);
-            return format("{} {} {} {}", setup.window_pos.line, setup.window_pos.column,
-                                         setup.window_range.line, setup.window_range.column);
+            return {format("{} {} {} {}", setup.window_pos.line, setup.window_pos.column,
+                                          setup.window_range.line, setup.window_range.column)};
         }
     }, {
         "history", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return history_as_string(context.buffer().history(), quoting); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return history_as_strings(context.buffer().history()); }
     }, {
         "uncommitted_modifications", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return undo_group_as_string(context.buffer().current_undo_group(), quoting); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return undo_group_as_strings(context.buffer().current_undo_group()); }
     }
 };
 

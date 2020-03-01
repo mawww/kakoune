@@ -3,6 +3,11 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development version
+
+* `%var{...}` now expands to list of strings, `$kak_quoted_...` now work
+  as expected with these.
+
 == Kakoune v2020.01.16
 
 * Expose history tree through `$kak_history` and
