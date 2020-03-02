@@ -28,12 +28,6 @@ define-command \
     } \
     lint-cleaned-selections \
 %{
-    # Clear the current contents of the various options.
-    set-option buffer lint_flags %val{timestamp}
-    set-option buffer lint_messages %val{timestamp}
-    set-option buffer lint_error_count 0
-    set-option buffer lint_warning_count 0
-
     # Create a temporary directory to keep all our state.
     evaluate-commands %sh{
         # This is going to come in handy later.
@@ -115,7 +109,7 @@ define-command \
         # need backslash-continuation chars in a single-quoted string,
         # but awk still needs them.
         # shellcheck disable=SC1004
-        awk -v file="$kak_buffile" -v client="$kak_client" '
+        awk -v file="$kak_buffile" -v stamp="$kak_timestamp" -v client="$kak_client" '
             function kakquote(text) {
                 # \x27 is apostrophe, escaped for shell-quoting reasons.
                 gsub(/\x27/, "\x27\x27", text)
@@ -173,23 +167,19 @@ define-command \
             }
 
             END {
+                printf("set-option %s lint_flags %s", kakquote("buffer=" file), stamp);
                 for (line in flags_by_line) {
                     flag = flags_by_line[line]
-
-                    print "set-option -add " \
-                        kakquote("buffer=" file) " " \
-                        "lint_flags " \
-                        kakquote(line "|" flag)
+                    printf(" %s", kakquote(line "|" flag));
                 }
+                printf("\n");
 
+                printf("set-option %s lint_messages %s", kakquote("buffer=" file), stamp);
                 for (line in messages_by_line) {
                     msg = messages_by_line[line]
-
-                    print "set-option -add " \
-                        kakquote("buffer=" file) " " \
-                        "lint_messages " \
-                        kakquote(line "|" msg)
+                    printf(" %s", kakquote(line "|" msg));
                 }
+                printf("\n");
 
                 print "set-option " \
                     kakquote("buffer=" file) " " \
