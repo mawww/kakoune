@@ -273,7 +273,7 @@ public:
                         context.print_status(
                             { format("invalid register '{}'", *cp),
                               context.faces()["Error"] });
-                }, "enter target register", register_doc);
+                }, "enter target register", register_doc.str());
         }
         else
         {
@@ -817,7 +817,7 @@ public:
                     display();
                     m_line_changed = true;
                     m_refresh_completion_pending = true;
-                }, "enter register name", register_doc);
+                }, "enter register name", register_doc.str());
             display();
             return;
         }
@@ -1100,8 +1100,10 @@ private:
 class NextKey : public InputMode
 {
 public:
-    NextKey(InputHandler& input_handler, String name, KeymapMode keymap_mode, KeyCallback callback)
-        : InputMode(input_handler), m_name{std::move(name)}, m_callback(std::move(callback)), m_keymap_mode(keymap_mode) {}
+    NextKey(InputHandler& input_handler, String name, KeymapMode keymap_mode, KeyCallback callback,
+            Timer::Callback idle_callback)
+        : InputMode(input_handler), m_name{std::move(name)}, m_callback(std::move(callback)), m_keymap_mode(keymap_mode),
+          m_idle_timer{Clock::now() + get_idle_timeout(context()), std::move(idle_callback)} {}
 
     void on_key(Key key) override
     {
@@ -1122,9 +1124,10 @@ public:
     StringView name() const override { return m_name; }
 
 private:
-    String m_name;
-    KeyCallback m_callback;
-    KeymapMode m_keymap_mode;
+    String         m_name;
+    KeyCallback    m_callback;
+    KeymapMode     m_keymap_mode;
+    Timer          m_idle_timer;
 };
 
 class Insert : public InputMode
@@ -1274,7 +1277,7 @@ public:
                     if (not cp or key == Key::Escape)
                         return;
                     insert(RegisterManager::instance()[*cp].get(context()));
-                }, "enter register name", register_doc);
+                }, "enter register name", register_doc.str());
             update_completions = false;
         }
         else if (key == ctrl('n'))
@@ -1588,9 +1591,11 @@ void InputHandler::menu(Vector<DisplayLine> choices, MenuCallback callback)
     push_mode(new InputModes::Menu(*this, std::move(choices), std::move(callback)));
 }
 
-void InputHandler::on_next_key(StringView mode_name, KeymapMode keymap_mode, KeyCallback callback)
+void InputHandler::on_next_key(StringView mode_name, KeymapMode keymap_mode, KeyCallback callback,
+                               Timer::Callback idle_callback)
 {
-    push_mode(new InputModes::NextKey(*this, format("next-key[{}]", mode_name), keymap_mode, std::move(callback)));
+    push_mode(new InputModes::NextKey(*this, format("next-key[{}]", mode_name), keymap_mode, std::move(callback),
+                                      std::move(idle_callback)));
 }
 
 InputHandler::ScopedForceNormal::ScopedForceNormal(InputHandler& handler, NormalParams params)
@@ -1706,10 +1711,14 @@ std::pair<CursorMode, DisplayCoord> InputHandler::get_cursor_info() const
     return current_mode().get_cursor_info();
 }
 
+bool should_show_info(AutoInfo mask, const Context& context)
+{
+  return (context.options()["autoinfo"].get<AutoInfo>() & mask) and context.has_client();
+}
+
 bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context)
 {
-    if (not (context.options()["autoinfo"].get<AutoInfo>() & mask) or
-        not context.has_client())
+    if (not should_show_info(mask, context))
         return false;
 
     context.client().info_show(title.str(), info.str(), {}, InfoStyle::Prompt);
