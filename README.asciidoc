@@ -105,7 +105,7 @@ Building
 
 Kakoune dependencies are:
 
- * A {cpp}17 compliant compiler (GCC >= 7 or clang >= 5) along with its
+ * A {cpp}17 compliant compiler (GCC >= 7 or clang >= 6) along with its
    associated {cpp} standard library (libstdc{pp} or libc{pp})
  * ncurses with wide-characters support (>= 5.3, generally referred to as libncursesw)
 
