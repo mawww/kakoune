@@ -694,6 +694,7 @@ Optional<Key> NCursesUI::get_next_key()
         case 'D': return masked_key(Key::Left);
         case 'F': return masked_key(Key::End);   // PC/xterm style
         case 'H': return masked_key(Key::Home);  // PC/xterm style
+        case 'P': return masked_key(Key::F1);
         case 'Q': return masked_key(Key::F2);
         case 'R': return masked_key(Key::F3);
         case 'S': return masked_key(Key::F4);
