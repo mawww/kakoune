@@ -118,7 +118,7 @@ kak$(suffix) : $(objects) .version.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 .version.cc: FORCE
-	@printf "%s" 'namespace Kakoune { const char* version = "$(version)"; }' > .version.cc.tmp
+	@printf 'namespace Kakoune { const char* version = "%s"; }' "$(version)" > .version.cc.tmp
 	@if cmp -s .version.cc.tmp .version.cc; then rm .version.cc.tmp; else mv .version.cc.tmp .version.cc; fi
 
 # Generate the man page
