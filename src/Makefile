@@ -38,7 +38,7 @@ ifneq (,$(sanitize_suffix))
     suffix := $(suffix).san_$(sanitize_suffix)
 endif
 
-version ?= $(shell if [ -f .version ]; then cat .version; elif  [ -d ../.git ]; then git describe --tags HEAD; else echo "unknown"; fi)
+version ?= $(shell git describe --tags HEAD 2>/dev/null || cat .version)
 
 sources := $(sort $(wildcard *.cc))
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
@@ -149,7 +149,7 @@ dist:
 	git archive --format=tar --prefix=$${basename}/ HEAD -o $${basename}.tar; \
 	echo "$(version)" > src/.version;                                         \
 	tar --transform "s,^,$${basename}/," -rf $${basename}.tar src/.version;   \
-	rm src/.version;                                                          \
+	git checkout src/.version;                                                \
 	$(compress_bin) $${basename}.tar;
 
 distclean: clean
