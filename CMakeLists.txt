@@ -82,6 +82,9 @@ install(DIRECTORY doc/pages/ DESTINATION share/kak/doc/)
 
 # Package configuration
 include(InstallRequiredSystemLibraries)
+set(CPACK_CMAKE_GENERATOR "Unix Makefiles")
+set(CPACK_GENERATOR "TGZ;ZIP")
+set(CPACK_PACKAGE_EXECUTABLES "kak")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Selection-oriented code editor inspired by vim")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.asciidoc")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/UNLICENSE")
