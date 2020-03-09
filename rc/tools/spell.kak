@@ -37,33 +37,48 @@ define-command -params ..1 -docstring %{
         fi
 
         {
-            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell --byte-offsets -a $options" 2>&1 | {
-                line_num=1
-                regions=$kak_timestamp
-                while read -r line; do
-                    case "$line" in
-                        @\(\#\)*)
-                            # drop the identification message
-                        ;;
-                        [\#\&]*)
-                            if expr "$line" : '^&' >/dev/null; then
-                               pos=$(printf %s\\n "$line" | cut -d ' ' -f 4 | sed 's/:$//')
-                            else
-                               pos=$(printf %s\\n "$line" | cut -d ' ' -f 3)
-                            fi
-                            word=$(printf %s\\n "$line" | cut -d ' ' -f 2)
-                            # trim whitespace to make `wc` output consistent across implementations
-                            len=$(($(printf %s "$word" | wc -c)))
-                            regions="$regions $line_num.$pos+${len}|Error"
-                            ;;
-                        '') line_num=$((line_num + 1));;
-                        \*) ;;
-                        *) printf 'fail %s\n' "${line}" | kak -p "${kak_session}";;
-                    esac
-                done
-                printf 'set-option "buffer=%s" spell_regions %s' "${kak_bufname}" "${regions}" \
-                    | kak -p "${kak_session}"
-            }
+            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell --byte-offsets -a $options" 2>&1 | awk '
+                BEGIN {
+                    line_num = 1
+                    regions = ENVIRON["kak_timestamp"]
+                    server_command = sprintf("kak -p \"%s\"", ENVIRON["kak_session"])
+                }
+
+                {
+                    if (/^@\(#\)/) {
+                        /* drop the identification message */
+                    }
+
+                    else if (/^\*/) {
+                        /* nothing */
+                    }
+
+                    else if (/^$/) {
+                        line_num++
+                    }
+
+                    else if (/^[#&]/) {
+                        word_len = length($2)
+                        word_pos = substr($0, 1, 1) == "&" ? substr($4, 1, length($4) - 1) : $3;
+                        regions = regions " " line_num "." word_pos "+" word_len "|Error"
+                    }
+
+                    else {
+                        line = $0
+                        gsub(/"/, "&&", line)
+                        command = "fail \"" line "\""
+                        exit
+                    }
+                }
+
+                END {
+                    if (!length(command))
+                        command = "set-option \"buffer=" ENVIRON["kak_bufname"] "\" spell_regions " regions
+
+                    print command | server_command
+                    close(server_command)
+                }
+            '
             rm -rf $(dirname "$kak_opt_spell_tmp_file")
         } </dev/null >/dev/null 2>&1 &
     }
