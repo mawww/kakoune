@@ -759,7 +759,9 @@ Completions CommandManager::complete(const Context& context,
         if (not (completions.flags & Completions::Flags::Quoted) and token.type == Token::Type::Raw)
         {
             for (auto& c : completions.candidates)
-                c = (not c.empty() and contains("%'\"", c[0]) ? "\\" : "") + escape(c, "; \t", '\\');
+                c = (not c.empty() and c[0] == '%') or
+                        any_of(c, [](auto i) { return contains("; \t'\"", i); }) ?
+                            format("'{}'", replace(c, "'", "''")) : c;
         }
 
         return completions;
