@@ -101,7 +101,7 @@ Reader& Reader::operator++()
     return *this;
 }
 
-void Reader::next_byte()
+Reader& Reader::next_byte()
 {
     kak_assert(pos < str.end());
     if (*pos++ == '\n')
@@ -109,6 +109,7 @@ void Reader::next_byte()
         ++line;
         line_start = pos;
     }
+    return *this;
 }
 
 namespace
@@ -226,16 +227,16 @@ void skip_blanks_and_comments(Reader& reader)
 {
     while (reader)
     {
-        const Codepoint c = *reader;
+        const Codepoint c = *reader.pos;
         if (is_horizontal_blank(c))
-            ++reader;
+            reader.next_byte();
         else if (c == '\\' and reader.pos + 1 != reader.str.end() and
                  *(reader.pos + 1) == '\n')
-            ++(++reader);
+            reader.next_byte().next_byte();
         else if (c == '#')
         {
             while (reader and *reader != '\n')
-                ++reader;
+                reader.next_byte();
         }
         else
             break;
@@ -404,10 +405,10 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
     const char* start = m_reader.pos;
     auto coord = m_reader.coord();
 
-    const Codepoint c = *m_reader;
+    const char c = *m_reader.pos;
     if (c == '"' or c == '\'')
     {
-        start = (++m_reader).pos;
+        start = m_reader.next_byte().pos;
         QuotedResult quoted = parse_quoted(m_reader, c);
         if (throw_on_unterminated and not quoted.terminated)
             throw parse_error{format("unterminated string {0}...{0}", c)};
@@ -420,9 +421,9 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
         auto token = parse_percent_token(m_reader, throw_on_unterminated);
         return token;
     }
-    else if (is_command_separator(*m_reader))
+    else if (is_command_separator(c))
     {
-        ++m_reader;
+        m_reader.next_byte();
         return Token{Token::Type::CommandSeparator,
                      m_reader.pos - line.begin(), coord, {}};
     }
@@ -432,7 +433,7 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
         {
             auto next = m_reader.peek_next();
             if (next == '%' or next == '\'' or next == '"')
-                ++m_reader;
+                m_reader.next_byte();
         }
         return Token{Token::Type::Raw, start - line.begin(),
                      coord, parse_unquoted(m_reader)};

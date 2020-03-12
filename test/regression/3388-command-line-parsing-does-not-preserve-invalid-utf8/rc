@@ -1,0 +1,1 @@
+evaluate-commands %sh{ printf 'set-register a "\xbd\xb2\x3d\xbc\x20\xe2\x8c\x98"' }

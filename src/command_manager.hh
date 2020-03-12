@@ -69,7 +69,7 @@ public:
     Codepoint operator*() const;
     Codepoint peek_next() const;
     Reader& operator++();
-    void next_byte();
+    Reader&  next_byte();
 
     explicit operator bool() const { return pos < str.end(); }
     StringView substr_from(const char* start) const { return {start, pos}; }
