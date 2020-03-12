@@ -95,7 +95,7 @@ CXXFLAGS += -pedantic -std=c++17 -g -Wall -Wextra -Wno-unused-parameter -Wno-sig
 compiler := $(shell $(CXX) --version)
 ifneq (,$(findstring clang,$(compiler)))
     CXXFLAGS += -frelaxed-template-template-args
-else ifneq (,$(findstring GCC,$(compiler)))
+else ifneq (,$(findstring g++,$(compiler)))
     CXXFLAGS += -Wno-init-list-lifetime
 endif
 
