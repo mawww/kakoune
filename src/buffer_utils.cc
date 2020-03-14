@@ -143,32 +143,38 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
             char data[buffer_size];
             BufferCoord insert_coord = m_buffer.back_coord();
             const int fifo = fd();
-            do
+
             {
-                const ssize_t count = ::read(fifo, data, buffer_size);
-                if (count <= 0)
+                auto restore_flags = on_scope_end([this, flags=m_buffer.flags()] { m_buffer.flags() = flags; });
+                m_buffer.flags() &= ~Buffer::Flags::ReadOnly;
+                do
                 {
-                    closed = true;
-                    break;
+
+                    const ssize_t count = ::read(fifo, data, buffer_size);
+                    if (count <= 0)
+                    {
+                        closed = true;
+                        break;
+                    }
+
+                    auto pos = m_buffer.back_coord();
+                    const bool prevent_scrolling = pos == BufferCoord{0,0} and not m_scroll;
+                    if (prevent_scrolling)
+                        pos = m_buffer.next(pos);
+
+                    m_buffer.insert(pos, StringView(data, data+count));
+
+                    if (prevent_scrolling)
+                    {
+                        m_buffer.erase({0,0}, m_buffer.next({0,0}));
+                        // in the other case, the buffer will have automatically
+                        // inserted a \n to guarantee its invariant.
+                        if (data[count-1] == '\n')
+                            m_buffer.insert(m_buffer.end_coord(), "\n");
+                    }
                 }
-
-                auto pos = m_buffer.back_coord();
-                const bool prevent_scrolling = pos == BufferCoord{0,0} and not m_scroll;
-                if (prevent_scrolling)
-                    pos = m_buffer.next(pos);
-
-                m_buffer.insert(pos, StringView(data, data+count));
-
-                if (prevent_scrolling)
-                {
-                    m_buffer.erase({0,0}, m_buffer.next({0,0}));
-                    // in the other case, the buffer will have automatically
-                    // inserted a \n to guarantee its invariant.
-                    if (data[count-1] == '\n')
-                        m_buffer.insert(m_buffer.end_coord(), "\n");
-                }
+                while (++loop < max_loop  and fd_readable(fifo));
             }
-            while (++loop < max_loop  and fd_readable(fifo));
 
             if (insert_coord != m_buffer.back_coord())
                 m_buffer.run_hook_in_own_context(

@@ -472,14 +472,16 @@ const ParameterDesc write_params{
 void do_write_buffer(Context& context, Optional<String> filename, WriteFlags flags, bool atomic = false)
 {
     Buffer& buffer = context.buffer();
+    const bool is_file = (bool)(buffer.flags() & Buffer::Flags::File);
 
-    if (not filename and !(buffer.flags() & Buffer::Flags::File))
+    if (not filename and !is_file)
         throw runtime_error("cannot write a non file buffer without a filename");
 
+    const bool is_readonly = (bool)(context.buffer().flags() & Buffer::Flags::ReadOnly);
     // if the buffer is in read-only mode and we try to save it directly
     // or we try to write to it indirectly using e.g. a symlink, throw an error
-    if ((context.buffer().flags() & Buffer::Flags::ReadOnly)
-        and (not filename or real_path(*filename) == buffer.name()))
+    if (is_file and is_readonly and 
+        (not filename or real_path(*filename) == buffer.name()))
         throw runtime_error("cannot overwrite the buffer when in readonly mode");
 
     auto effective_filename = not filename ? buffer.name() : parse_filename(*filename);
