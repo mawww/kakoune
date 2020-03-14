@@ -267,12 +267,6 @@ InsertCompletion complete_option(const SelectionList& sels,
                          str_to_int({match[2].first, match[2].second}) - 1 };
         if (not buffer.is_valid(coord))
             return {};
-        auto end = cursor_pos;
-        if (match[3].matched)
-        {
-            ByteCount len = str_to_int({match[3].first, match[3].second});
-            end = buffer.advance(coord, len);
-        }
         size_t timestamp = (size_t)str_to_int({match[4].first, match[4].second});
         auto changes = buffer.changes_since(timestamp);
         if (any_of(changes, [&](auto&& change) { return change.begin < coord; }))
@@ -327,6 +321,12 @@ InsertCompletion complete_option(const SelectionList& sels,
                 std::pop_heap(first, last--, greater);
             }
 
+            auto end = cursor_pos;
+            if (match[3].matched)
+            {
+                ByteCount len = str_to_int({match[3].first, match[3].second});
+                end = buffer.advance(coord, len);
+            }
             return { std::move(candidates), coord, end, timestamp };
         }
     }
