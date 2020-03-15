@@ -138,7 +138,7 @@ struct MouseHandler
             return true;
 
         case Key::Modifiers::Scroll:
-            scroll_window(context, static_cast<int32_t>(key.key), not m_dragging);
+            scroll_window(context, static_cast<int32_t>(key.key), m_dragging);
             return true;
 
         default: return false;
@@ -1731,31 +1731,33 @@ void hide_auto_info_ifn(const Context& context, bool hide)
         context.client().info_hide();
 }
 
-void scroll_window(Context& context, LineCount offset, bool adapt_cursor)
+void scroll_window(Context& context, LineCount offset, bool mouse_dragging)
 {
     Window& window = context.window();
     Buffer& buffer = context.buffer();
+    const LineCount line_count = buffer.line_count();
 
     DisplayCoord win_pos = window.position();
     DisplayCoord win_dim = window.dimensions();
+
+    if ((offset < 0 and win_pos.line == 0) or (offset > 0 and win_pos.line == line_count - 1))
+        return;
 
     const DisplayCoord max_offset{(win_dim.line - 1)/2, (win_dim.column - 1)/2};
     const DisplayCoord scrolloff =
         std::min(context.options()["scrolloff"].get<DisplayCoord>(), max_offset);
 
-    const LineCount line_count = buffer.line_count();
     win_pos.line = clamp(win_pos.line + offset, 0_line, line_count-1);
-    window.set_position(win_pos);
 
-    if (not adapt_cursor)
-        return;
+    Selection& main_selection = context.selections().main();
+    const BufferCoord anchor = main_selection.anchor();
+    const BufferCoord cursor = main_selection.cursor();
 
-    SelectionList& selections = context.selections();
-    const BufferCoord cursor = selections.main().cursor();
+    auto cursor_off = mouse_dragging ? win_pos.line - window.position().line : 0;
 
-    auto line = clamp(cursor.line, win_pos.line + scrolloff.line,
+    auto line = clamp(cursor.line + cursor_off, win_pos.line + scrolloff.line,
                       win_pos.line + win_dim.line - 1 - scrolloff.line);
-    line = clamp(line, 0_line, line_count-1);
+    line = clamp(line, 0_line, buffer.line_count() - 1);
 
     using std::min; using std::max;
     // This is not exactly a clamp, and must be done in this order as
@@ -1763,7 +1765,11 @@ void scroll_window(Context& context, LineCount offset, bool adapt_cursor)
     auto col = min(max(cursor.column, buffer[line].byte_count_to(win_pos.column)),
                    buffer[line].length()-1);
 
-    selections = SelectionList{buffer, BufferCoord{line, col}};
+    BufferCoord new_cursor = { line, col };
+    BufferCoord new_anchor = (mouse_dragging or new_cursor == cursor) ? anchor : new_cursor;
+
+    window.set_position(win_pos);
+    main_selection = { new_anchor, new_cursor };
 }
 
 }

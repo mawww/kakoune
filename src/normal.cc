@@ -378,10 +378,10 @@ void view_commands(Context& context, NormalParams params)
             window.scroll(-std::max<ColumnCount>(1, count));
             break;
         case 'j':
-            window.scroll( std::max<LineCount>(1, count));
+            scroll_window(context,  std::max<LineCount>(1, count));
             break;
         case 'k':
-            window.scroll(-std::max<LineCount>(1, count));
+            scroll_window(context, -std::max<LineCount>(1, count));
             break;
         case 'l':
             window.scroll( std::max<ColumnCount>(1, count));

@@ -192,7 +192,7 @@ void on_next_key_with_autoinfo(const Context& context, StringView mode_name,
     });
 }
 
-void scroll_window(Context& context, LineCount offset, bool adapt_cursor = true);
+void scroll_window(Context& context, LineCount offset, bool mouse_dragging = false);
 
 }
 
