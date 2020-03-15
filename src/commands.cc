@@ -925,6 +925,25 @@ static void redraw_relevant_clients(Context& context, StringView highlighter_pat
     }
 }
 
+const CommandDesc arrange_buffers_cmd = {
+    "arrange-buffers",
+    nullptr,
+    "arrange-buffers <buffer>...: reorder the buffers in the buffers list\n"
+    "    the named buffers will be moved to the front of the buffer list, in the order given\n"
+    "    buffers that do not appear in the parameters will remain at the end of the list, keeping their current order",
+    ParameterDesc{{}, ParameterDesc::Flags::None, 1},
+    CommandFlags::None,
+    CommandHelper{},
+    [](const Context& context, CompletionFlags flags, CommandParameters params, size_t, ByteCount cursor_pos)
+    {
+        return complete_buffer_name<false>(context, flags, params.back(), cursor_pos);
+    },
+    [](const ParametersParser& parser, Context&, const ShellContext&)
+    {
+        BufferManager::instance().arrange_buffers(parser.positionals_from(0));
+    }
+};
+
 const CommandDesc add_highlighter_cmd = {
     "add-highlighter",
     "addhl",
@@ -2608,6 +2627,7 @@ void register_commands()
     register_command(delete_buffer_cmd);
     register_command(force_delete_buffer_cmd);
     register_command(rename_buffer_cmd);
+    register_command(arrange_buffers_cmd);
     register_command(add_highlighter_cmd);
     register_command(remove_highlighter_cmd);
     register_command(add_hook_cmd);
