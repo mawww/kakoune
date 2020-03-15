@@ -196,6 +196,7 @@ define-command -params 1.. \
         shift
 
         if [ $# -lt 1 ]; then
+            echo "fail 'no git hunks found'"
             exit
         fi
 
@@ -212,6 +213,7 @@ define-command -params 1.. \
                 prev_line="$line"
             done
             echo "set-option buffer git_hunk_list $hunks"
+            hunks=${hunks#* }
         else
             hunks=${kak_opt_git_hunk_list#* }
         fi
@@ -227,10 +229,26 @@ define-command -params 1.. \
             fi
         done
 
-        if   [ "$direction" = "next" ] && [ -n "$next_hunk" ]; then
-            echo "select $next_hunk.1,$next_hunk.1"
-        elif [ "$direction" = "prev" ] && [ -n "$prev_hunk" ]; then
-            echo "select $prev_hunk.1,$prev_hunk.1"
+        if [ "$direction" = "next" ]; then
+            if [ -z "$next_hunk" ]; then
+                next_hunk=${hunks%% *}
+                wrapped=true
+            fi
+            if [ -n "$next_hunk" ]; then
+                echo "select $next_hunk.1,$next_hunk.1"
+            fi
+        elif [ "$direction" = "prev" ]; then
+            if [ -z "$prev_hunk" ]; then
+                wrapped=true
+                prev_hunk=${hunks##* }
+            fi
+            if [ -n "$prev_hunk" ]; then
+                echo "select $prev_hunk.1,$prev_hunk.1"
+            fi
+        fi
+
+        if [ "$wrapped" = true ]; then
+            echo "echo -markup '{Information}git hunk search wrapped around buffer'"
         fi
     }
 
