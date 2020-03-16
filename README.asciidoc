@@ -109,7 +109,8 @@ Kakoune dependencies are:
    associated {cpp} standard library (libstdc{pp} or libc{pp})
  * ncurses with wide-characters support (>= 5.3, generally referred to as libncursesw)
 
-To build, just type *make* in the src directory.
+
+To build, download the latest release from link:https://github.com/mawww/kakoune/releases[here], then just type *make* in the src directory.
 To generate man pages, type *make man* in the src directory.
 
 Kakoune can be built on Linux, MacOS, and Cygwin. Due to Kakoune relying heavily
