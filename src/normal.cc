@@ -517,16 +517,18 @@ BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, Strin
 
     for_each_diff(lines_before.begin(), (int)lines_before.size(),
                   lines_after.begin(), (int)lines_after.size(),
-                  [&, posA = 0](DiffOp op, int len, int posB) mutable {
+                  [&, posA = 0, posB = 0](DiffOp op, int len) mutable {
         switch (op)
         {
         case DiffOp::Keep:
             pos = buffer.advance(pos, byte_count(lines_before, posA, len));
             posA += len;
+            posB += len;
             break;
         case DiffOp::Add:
             pos = buffer.insert(pos, {lines_after[posB].begin(),
                                       lines_after[posB + len - 1].end()}).end;
+            posB += len;
             break;
         case DiffOp::Remove:
             pos = buffer.erase(pos, buffer.advance(pos, byte_count(lines_before, posA, len)));

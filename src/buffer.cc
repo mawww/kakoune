@@ -260,28 +260,31 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
         Vector<Diff> diff;
         for_each_diff(m_lines.begin(), m_lines.size(),
                       parsed_lines.lines.begin(), parsed_lines.lines.size(),
-                      [&diff](DiffOp op, int len, int posB)
-                      { diff.push_back({op, len, posB}); },
+                      [&diff](DiffOp op, int len)
+                      { diff.push_back({op, len}); },
                       [](const StringDataPtr& lhs, const StringDataPtr& rhs)
                       { return lhs->strview() == rhs->strview(); });
 
         auto it = m_lines.begin();
+        auto new_it = parsed_lines.lines.begin();
         for (auto& d : diff)
         {
             if (d.op == DiffOp::Keep)
+            {
                 it += d.len;
+                new_it += d.len;
+            }
             else if (d.op == DiffOp::Add)
             {
                 const LineCount cur_line = (int)(it - m_lines.begin());
 
                 for (LineCount line = 0; line < d.len; ++line)
-                    m_current_undo_group.push_back({
-                        Modification::Insert, cur_line + line,
-                        parsed_lines.lines[(int)(d.posB + line)]});
+                    m_current_undo_group.push_back({Modification::Insert, cur_line + line, *(new_it + (int)line)});
 
-                m_changes.push_back({ Change::Insert, cur_line, cur_line + d.len });
-                m_lines.insert(it, parsed_lines.lines.begin() + d.posB, parsed_lines.lines.begin() + d.posB + d.len);
+                m_changes.push_back({Change::Insert, cur_line, cur_line + d.len});
+                m_lines.insert(it, new_it, new_it + d.len);
                 it = m_lines.begin() + (int)(cur_line + d.len);
+                new_it += d.len;
             }
             else if (d.op == DiffOp::Remove)
             {

@@ -115,9 +115,9 @@ void find_diff_rec(IteratorA a, int begA, int endA,
                    int* V1, int* V2, int cost_limit,
                    Equal eq, OnDiff&& on_diff)
 {
-    auto on_diff_ifn = [&](DiffOp op, int len, int posB) {
+    auto on_diff_ifn = [&](DiffOp op, int len) {
         if (len != 0)
-            on_diff(op, len, posB);
+            on_diff(op, len);
     };
 
     int prefix_len = 0;
@@ -128,14 +128,14 @@ void find_diff_rec(IteratorA a, int begA, int endA,
     while (begA != endA and begB != endB and eq(a[endA-1], b[endB-1]))
         --endA, --endB, ++suffix_len;
 
-    on_diff_ifn(DiffOp::Keep, prefix_len, 0);
+    on_diff_ifn(DiffOp::Keep, prefix_len);
 
     const auto lenA = endA - begA, lenB = endB - begB;
 
     if (lenA == 0)
-        on_diff_ifn(DiffOp::Add, lenB, begB);
+        on_diff_ifn(DiffOp::Add, lenB);
     else if (lenB == 0)
-        on_diff_ifn(DiffOp::Remove, lenA, 0);
+        on_diff_ifn(DiffOp::Remove, lenA);
     else
     {
         auto snake = find_middle_snake(a + begA, lenA, b + begB, lenB, V1, V2, cost_limit, eq);
@@ -146,30 +146,29 @@ void find_diff_rec(IteratorA a, int begA, int endA,
                       V1, V2, cost_limit, eq, on_diff);
 
         if (snake.op == Snake::Add)
-            on_diff_ifn(DiffOp::Add, 1, begB + snake.y - 1);
+            on_diff_ifn(DiffOp::Add, 1);
         if (snake.op == Snake::Del)
-            on_diff_ifn(DiffOp::Remove, 1, 0);
+            on_diff_ifn(DiffOp::Remove, 1);
 
-        on_diff_ifn(DiffOp::Keep, snake.u - snake.x, 0);
+        on_diff_ifn(DiffOp::Keep, snake.u - snake.x);
 
         if (snake.op == Snake::RevAdd)
-            on_diff_ifn(DiffOp::Add, 1, begB + snake.v);
+            on_diff_ifn(DiffOp::Add, 1);
         if (snake.op == Snake::RevDel)
-            on_diff_ifn(DiffOp::Remove, 1, 0);
+            on_diff_ifn(DiffOp::Remove, 1);
 
         find_diff_rec(a, begA + snake.u + (int)(snake.op == Snake::RevDel), endA,
                       b, begB + snake.v + (int)(snake.op == Snake::RevAdd), endB,
                       V1, V2, cost_limit, eq, on_diff);
     }
 
-    on_diff_ifn(DiffOp::Keep, suffix_len, 0);
+    on_diff_ifn(DiffOp::Keep, suffix_len);
 }
 
 struct Diff
 {
     DiffOp op;
     int len;
-    int posB;
 };
 
 template<typename IteratorA, typename IteratorB, typename OnDiff, typename Equal = std::equal_to<>>
@@ -181,18 +180,18 @@ void for_each_diff(IteratorA a, int N, IteratorB b, int M, OnDiff&& on_diff, Equ
 
     Diff last{};
     find_diff_rec(a, 0, N, b, 0, M, &data[N+M], &data[max + N+M], cost_limit, eq,
-                  [&last, &on_diff](DiffOp op, int len, int posB) {
-                      if (last.op == op and (op != DiffOp::Add or last.posB + last.len == posB))
+                  [&last, &on_diff](DiffOp op, int len) {
+                      if (last.op == op)
                           last.len += len;
                       else
                       {
-                          if (last.op != DiffOp{} or last.len != 0 or last.posB != 0) 
-                              on_diff(last.op, last.len, last.posB);
-                          last = Diff{op, len, posB};
+                          if (last.len != 0)
+                              on_diff(last.op, last.len);
+                          last = Diff{op, len};
                       }
                   });
-    if (last.op != DiffOp{} or last.len != 0 or last.posB != 0) 
-        on_diff(last.op, last.len, last.posB);
+    if (last.op != DiffOp{} or last.len != 0)
+        on_diff(last.op, last.len);
 }
 
 }
