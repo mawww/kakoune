@@ -123,6 +123,7 @@ struct TerminalUI::Window::Line
 
 void TerminalUI::Window::blit(Window& target)
 {
+    kak_assert(pos.line + lines.size() <= target.lines.size());
     auto target_line = target.lines.begin() + (size_t)pos.line;
     for (auto& line : lines)
     {
@@ -130,7 +131,7 @@ void TerminalUI::Window::blit(Window& target)
         target_line->resize(target.size.column);
         target_line->atoms.insert(target_line->erase_range(pos.column, size.column),
                                   line.atoms.begin(), line.atoms.end());
-        ++target_line;
+	++target_line;
     }
 }
 
@@ -970,10 +971,10 @@ static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
     if (not prefer_above)
     {
         pos = anchor + DisplayCoord{1_line};
-        if (pos.line + size.line > rect_end.line)
+        if (pos.line + size.line >= rect_end.line)
             pos.line = max(rect.pos.line, anchor.line - size.line);
     }
-    if (pos.column + size.column > rect_end.column)
+    if (pos.column + size.column >= rect_end.column)
         pos.column = max(rect.pos.column, rect_end.column - size.column);
 
     if (to_avoid.size != DisplayCoord{})
