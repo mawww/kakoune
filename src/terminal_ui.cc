@@ -209,12 +209,12 @@ void TerminalUI::Screen::output(bool force)
     hashes = std::move(new_hashes);
 
     for (auto& add : adds)
-    {
         printf("\033[%dH\033[%dL", add.pos + 1, add.len);
+    for (auto& add : adds)
+    {
         for (int i = 0; i < add.len; ++i)
         {
-            if (i != 0)
-                printf("\033[%dH", add.pos + i + 1);
+            printf("\033[%dH", add.pos + i + 1);
             for (auto& atom : lines[add.pos + i].atoms)
             {
                 fputs("\033[", stdout);
