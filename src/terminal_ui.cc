@@ -962,7 +962,7 @@ static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
         if (pos.line < 0)
             prefer_above = false;
     }
-    auto rect_end = rect.pos + rect.size;
+    auto rect_end = rect.pos + rect.size - DisplayCoord{1,1};
     if (not prefer_above)
     {
         pos = anchor + DisplayCoord{1_line};
