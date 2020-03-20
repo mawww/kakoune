@@ -14,6 +14,7 @@ hook global BufCreate .*[.](lua) %{
 hook global WinSetOption filetype=lua %{
     require-module lua
 
+    hook window ModeChange pop:insert:.* -group lua-indent lua-trim-indent
     hook window InsertChar .* -group lua-indent lua-indent-on-char
     hook window InsertChar \n -group lua-indent lua-indent-on-new-line
     hook window InsertChar \n -group lua-insert lua-insert-on-new-line
@@ -47,7 +48,7 @@ add-highlighter shared/lua/comment       region '--'  $                 fill com
 
 add-highlighter shared/lua/code/keyword regex \b(and|break|do|else|elseif|end|for|function|goto|if|in|not|or|repeat|return|then|until|while)\b 0:keyword
 add-highlighter shared/lua/code/value regex \b(false|nil|true|[0-9]+(:?\.[0-9])?(:?[eE]-?[0-9]+)?|0x[0-9a-fA-F])\b 0:value
-add-highlighter shared/lua/code/operator regex (\+|-|\*|/|%|\^|==?|~=|<=?|>=?|\.\.|#) 0:operator
+add-highlighter shared/lua/code/operator regex (\+|-|\*|/|%|\^|==?|~=|<=?|>=?|\.\.|\.\.\.|#) 0:operator
 add-highlighter shared/lua/code/builtin regex \b(_G|_E)\b 0:builtin
 add-highlighter shared/lua/code/module regex \b(_G|_E)\b 0:module
 add-highlighter shared/lua/code/attribute regex \b(local)\b 0:attribute
@@ -82,22 +83,27 @@ define-command lua-alternative-file -docstring 'Jump to the alternate file (impl
     printf %s\\n "edit $altfile"
 }}
 
+define-command -hidden lua-trim-indent %{
+    # remove trailing whitespaces
+    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+}
+
 define-command -hidden lua-indent-on-char %{
     evaluate-commands -no-hooks -draft -itersel %{
         # align middle and end structures to start and indent when necessary, elseif is already covered by else
-        try %{ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-semicolon><a-?>^\h*(if)<ret>s\A|\z<ret>)<a-&> }
-        try %{ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-semicolon><a-?>^\h*(for|function|if|while)<ret>s\A|\z<ret>)<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-semicolon><a-?>^\h*(if)<ret>s\A|.\z<ret>)<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-semicolon><a-?>^\h*(for|function|if|while)<ret>s\A|.\z<ret>)<a-&> }
     }
 }
 
 define-command -hidden lua-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
-        # preserve previous line indent
-        try %{ execute-keys -draft <space>K<a-&> }
+        # preserve previous non-empty line indent
+        try %{ execute-keys -draft <space><a-?>^[^\n]+$<ret>s\A|.\z<ret>)<a-&> }
         # remove trailing white spaces from previous line
         try %{ execute-keys -draft k<a-x>s\h+$<ret>d }
         # indent after start structure
-        try %{ execute-keys -draft k<a-x><a-k>^\h*(else|elseif|for|function|if|while)\b<ret>j<a-gt> }
+        try %{ execute-keys -draft <a-?>^[^\n]*\w+[^\n]*$<ret><a-k>^\h*(else|elseif|for|function|if|while)\b<ret><a-:><semicolon><a-gt> }
     }
 }
 
