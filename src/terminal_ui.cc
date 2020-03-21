@@ -131,7 +131,7 @@ void TerminalUI::Window::blit(Window& target)
         target_line->resize(target.size.column);
         target_line->atoms.insert(target_line->erase_range(pos.column, size.column),
                                   line.atoms.begin(), line.atoms.end());
-	++target_line;
+        ++target_line;
     }
 }
 
