@@ -214,12 +214,12 @@ void TerminalUI::Screen::output(bool force)
     });
     hashes = std::move(new_hashes);
 
-    int added = 0;
+    int offset = 0;
     for (auto& change : changes)
     {
         if (change.del > change.add)
-            printf("\033[%dH\033[%dM", change.pos - added + 1, change.del - change.add);
-        added += change.add;
+            printf("\033[%dH\033[%dM", change.pos - offset + 1, change.del - change.add);
+        offset += change.add - change.del;
     }
 
     for (auto& change : changes)
