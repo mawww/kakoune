@@ -188,37 +188,50 @@ void TerminalUI::Screen::output(bool force)
         }
     };
 
-    struct Add { int pos; int len; };
-    Vector<Add> adds;
+    struct Change { int pos; int add; int del; };
+    Vector<Change> changes{Change{}};
     auto new_hashes = lines | transform([](auto& line) { return hash_value(line.atoms); }) | gather<Vector>();
     for_each_diff(hashes.begin(), hashes.size(),
                   new_hashes.begin(), new_hashes.size(),
-                  [&, line=0, posB=0](DiffOp op, int len) mutable {
+                  [&, pos=0](DiffOp op, int len) mutable {
         switch (op)
         {
             case DiffOp::Keep:
-                line += len;
-                posB += len;
+                pos += len;
+                if (changes.back().add != 0 || changes.back().del != 0)
+                    changes.push_back({pos, 0, 0});
                 break;
             case DiffOp::Add:
-                adds.push_back({posB, len});
-                posB += len;
+                if (changes.back().add == 0)
+                    changes.back().pos = pos;
+                changes.back().add += len;
+                pos += len;
                 break;
             case DiffOp::Remove:
-                printf("\033[%dH\033[%dM", line+1, len);
+                changes.back().del += len;
                 break;
         }
     });
     hashes = std::move(new_hashes);
 
-    for (auto& add : adds)
+    int added = 0;
+    for (auto& change : changes)
     {
-        printf("\033[%dH\033[%dL", add.pos + 1, add.len);
-        for (int i = 0; i < add.len; ++i)
+        if (change.del > change.add)
+            printf("\033[%dH\033[%dM", change.pos - added + 1, change.del - change.add);
+        added += change.add;
+    }
+
+    for (auto& change : changes)
+    {
+        for (int i = 0; i < change.add; ++i)
         {
-            if (i != 0)
-                printf("\033[%dH", add.pos + i + 1);
-            for (auto& atom : lines[add.pos + i].atoms)
+            if (i == 0 and change.add > change.del)
+                printf("\033[%dH\033[%dL", change.pos + 1, change.add - change.del);
+            else
+                printf("\033[%dH", change.pos + i + 1);
+
+            for (auto& atom : lines[change.pos + i].atoms)
             {
                 fputs("\033[", stdout);
                 set_attributes(atom.face.attributes);
