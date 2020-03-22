@@ -23,10 +23,11 @@ add-highlighter shared/zig/string_double    region '"' (?<!\\)(\\\\)*" fill stri
 add-highlighter shared/zig/string_single    region "'" (?<!\\)(\\\\)*' fill string
 add-highlighter shared/zig/string_multiline region '\\\\' '$'          fill string
 
-# storage
-add-highlighter shared/zig/code/ regex '\b(?:const|var|extern|packed|export|pub|noalias|inline|noinline|comptime|callconv|volatile|allowzero|align|linksection|threadlocal)\b' 0:keyword
-# srtucture
-add-highlighter shared/zig/code/ regex '\b(?:struct|enum|union|error)\b' 0:keyword
+# attributes
+add-highlighter shared/zig/code/ regex '\b(?:const|var|extern|packed|export|pub|noalias|inline|noinline|comptime|callconv|volatile|allowzero|align|linksection|threadlocal)\b' 0:attribute
+# structures
+add-highlighter shared/zig/code/ regex '\b(?:struct|enum|union|error)\b' 0:attribute
+
 # statement
 add-highlighter shared/zig/code/ regex '\b(?:break|return|continue|asm|defer|errdefer|unreachable|try|catch|async|noasync|await|suspend|resume)\b' 0:keyword
 # conditional
