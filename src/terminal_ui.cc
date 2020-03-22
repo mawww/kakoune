@@ -202,12 +202,14 @@ void TerminalUI::Screen::output(bool force)
                     changes.push_back({pos, 0, 0});
                 break;
             case DiffOp::Add:
-                if (changes.back().add == 0)
+                if (changes.back().add == 0 && changes.back().del == 0)
                     changes.back().pos = pos;
                 changes.back().add += len;
                 pos += len;
                 break;
             case DiffOp::Remove:
+                if (changes.back().add == 0 && changes.back().del == 0)
+                    changes.back().pos = pos;
                 changes.back().del += len;
                 break;
         }
