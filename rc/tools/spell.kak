@@ -46,11 +46,11 @@ define-command -params ..1 -docstring %{
 
                 {
                     if (/^@\(#\)/) {
-                        /* drop the identification message */
+                        # drop the identification message
                     }
 
                     else if (/^\*/) {
-                        /* nothing */
+                        # nothing
                     }
 
                     else if (/^$/) {
