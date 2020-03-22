@@ -111,9 +111,11 @@ define-command -hidden zig-trim-indent %{
 
 define-command -hidden zig-indent-on-new-line %<
     evaluate-commands -draft -itersel %<
-        # copy // or /// comments prefix and following white spaces
         try %<
+            # copy // or /// comments prefix and following whitespace
             execute-keys -draft k <a-x> s ^\h*\K///?\h* <ret> y gh j P
+            # preserve indent level
+            try %< execute-keys -draft <semicolon> K <a-&> >
         > catch %<
             # preserve indent level
             try %< execute-keys -draft <semicolon> K <a-&> >
