@@ -3,11 +3,18 @@
 # based off of https://github.com/ziglang/zig.vim/blob/master/syntax/zig.vim
 # as well as https://ziglang.org/documentation/master/#Grammar
 
+# Detection
+# ‾‾‾‾‾‾‾‾‾
+
 hook global BufCreate .*[.]zig %{
   set-option buffer filetype zig
 }
 
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
 hook global WinSetOption filetype=zig %<
+    require-module zig
     hook window ModeChange pop:insert:.* -group zig-trim-indent zig-trim-indent
     hook window InsertChar \n -group zig-indent zig-indent-on-new-line
     hook window InsertChar \} -group zig-indent zig-indent-on-closing
@@ -16,9 +23,15 @@ hook global WinSetOption filetype=zig %<
 >
 
 hook -group zig-highlight global WinSetOption filetype=zig %{
+    require-module zig
     add-highlighter window/zig ref zig
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/zig }
 }
+
+provide-module zig %§
+
+# Highlighters
+# ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter shared/zig regions
 add-highlighter shared/zig/code default-region group
@@ -88,6 +101,9 @@ add-highlighter shared/zig/code/ regex "@(?:truncate|typeId|typeInfo|typeName|Ty
 add-highlighter shared/zig/code/ regex "@(?:intToError|errorToInt|intToEnum|enumToInt|setAlignStack|frame|Frame|frameSize|bitReverse|Vector)\b" 0:function
 add-highlighter shared/zig/code/ regex "@(?:sin|cos|exp|exp2|log|log2|log10|fabs|floor|ceil|trunc|round)\b" 0:function
 
+# Commands
+# ‾‾‾‾‾‾‾‾
+
 define-command -hidden zig-trim-indent %{
     # delete trailing whitespace
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
@@ -113,3 +129,5 @@ define-command -hidden zig-indent-on-closing %<
     # align lone } to indent level of opening line
     try %< execute-keys -draft -itersel <a-h> <a-k> ^\h*\}$ <ret> h m <a-S> 1<a-&> >
 >
+
+§
