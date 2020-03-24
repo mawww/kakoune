@@ -188,52 +188,51 @@ void TerminalUI::Screen::output(bool force)
         }
     };
 
-    struct Change { int pos; int add; int del; };
+    struct Change { int keep; int add; int del; };
     Vector<Change> changes{Change{}};
     auto new_hashes = lines | transform([](auto& line) { return hash_value(line.atoms); }) | gather<Vector>();
     for_each_diff(hashes.begin(), hashes.size(),
                   new_hashes.begin(), new_hashes.size(),
-                  [&, pos=0](DiffOp op, int len) mutable {
+                  [&changes](DiffOp op, int len) mutable {
         switch (op)
         {
             case DiffOp::Keep:
-                pos += len;
-                if (changes.back().add != 0 || changes.back().del != 0)
-                    changes.push_back({pos, 0, 0});
+                changes.push_back({len, 0, 0});
                 break;
             case DiffOp::Add:
-                if (changes.back().add == 0 && changes.back().del == 0)
-                    changes.back().pos = pos;
                 changes.back().add += len;
-                pos += len;
                 break;
             case DiffOp::Remove:
-                if (changes.back().add == 0 && changes.back().del == 0)
-                    changes.back().pos = pos;
                 changes.back().del += len;
                 break;
         }
     });
     hashes = std::move(new_hashes);
 
-    int offset = 0;
+    int line = 0;
     for (auto& change : changes)
     {
-        if (change.del > change.add)
-            printf("\033[%dH\033[%dM", change.pos - offset + 1, change.del - change.add);
-        offset += change.add - change.del;
+        line += change.keep;
+        if (int del = std::max(change.del - change.add, 0); del > 0)
+        {
+            printf("\033[%dH\033[%dM", line + 1, del);
+            line -= del;
+        }
+        line += change.del;
     }
 
+    line = 0;
     for (auto& change : changes)
     {
+        line += change.keep;
         for (int i = 0; i < change.add; ++i)
         {
-            if (i == 0 and change.add > change.del)
-                printf("\033[%dH\033[%dL", change.pos + 1, change.add - change.del);
+            if (int add = std::max(0, change.add - change.del); i == 0 and add > 0)
+                printf("\033[%dH\033[%dL", line + 1, add);
             else
-                printf("\033[%dH", change.pos + i + 1);
+                printf("\033[%dH", line + 1);
 
-            for (auto& atom : lines[change.pos + i].atoms)
+            for (auto& atom : lines[line++].atoms)
             {
                 fputs("\033[", stdout);
                 set_attributes(atom.face.attributes);
