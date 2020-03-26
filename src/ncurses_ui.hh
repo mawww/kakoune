@@ -116,7 +116,8 @@ private:
     DisplayCoord m_dimensions;
     termios m_original_termios{};
 
-    void set_raw_mode() const;
+    void set_terminal_mode() const;
+    void restore_terminal_mode() const;
 
     struct Menu : Window
     {

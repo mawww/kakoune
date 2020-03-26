@@ -346,7 +346,7 @@ NCursesUI::NCursesUI()
     start_color();
     use_default_colors();
 
-    set_raw_mode();
+    set_terminal_mode();
     enable_mouse(true);
 
     set_signal_handler(SIGWINCH, &signal_handler<&resize_pending>);
@@ -361,9 +361,8 @@ NCursesUI::~NCursesUI()
 {
     enable_mouse(false);
     m_palette.set_change_colors(false);
-    fputs("\033>", stdout);
     endwin();
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
+    restore_terminal_mode();
     set_signal_handler(SIGWINCH, SIG_DFL);
     set_signal_handler(SIGHUP, SIG_DFL);
     set_signal_handler(SIGTSTP, SIG_DFL);
@@ -375,7 +374,6 @@ void NCursesUI::suspend()
     enable_mouse(false);
     bool change_color_enabled = m_palette.get_change_colors();
     m_palette.set_change_colors(false);
-    fputs("\033>", stdout);
     endwin();
 
     auto current = set_signal_handler(SIGTSTP, SIG_DFL);
@@ -383,7 +381,7 @@ void NCursesUI::suspend()
     sigemptyset(&unblock_sigtstp);
     sigaddset(&unblock_sigtstp, SIGTSTP);
     sigprocmask(SIG_UNBLOCK, &unblock_sigtstp, &old_mask);
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
+    restore_terminal_mode();
 
     raise(SIGTSTP); // suspend here
 
@@ -393,12 +391,12 @@ void NCursesUI::suspend()
 
     doupdate();
     check_resize(true);
-    set_raw_mode();
+    set_terminal_mode();
     m_palette.set_change_colors(change_color_enabled);
     enable_mouse(mouse_enabled);
 }
 
-void NCursesUI::set_raw_mode() const
+void NCursesUI::set_terminal_mode() const
 {
     termios attr = m_original_termios;
     attr.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
@@ -411,6 +409,17 @@ void NCursesUI::set_raw_mode() const
 
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &attr);
     fputs("\033=", stdout);
+    // force enable report focus events
+    fputs("\033[?1004h", stdout);
+    fflush(stdout);
+}
+
+void NCursesUI::restore_terminal_mode() const
+{
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
+    fputs("\033>", stdout);
+    fputs("\033[?1004l", stdout);
+    fflush(stdout);
 }
 
 void NCursesUI::redraw(bool force)
@@ -1254,8 +1263,6 @@ void NCursesUI::enable_mouse(bool enabled)
     {
         // force SGR mode
         fputs("\033[?1006h", stdout);
-        // force enable report focus events
-        fputs("\033[?1004h", stdout);
         // enable mouse
         fputs("\033[?1000h", stdout);
         // force enable report mouse position
@@ -1265,7 +1272,6 @@ void NCursesUI::enable_mouse(bool enabled)
     {
         fputs("\033[?1002l", stdout);
         fputs("\033[?1000l", stdout);
-        fputs("\033[?1004l", stdout);
         fputs("\033[?1006l", stdout);
     }
     fflush(stdout);
