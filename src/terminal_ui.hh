@@ -78,14 +78,12 @@ private:
         void create(const DisplayCoord& pos, const DisplayCoord& size);
         void destroy();
         void blit(Window& target);
-        void move_cursor(DisplayCoord coord);
-        void draw(ConstArrayView<DisplayAtom> atoms, const Face& default_face);
+        void draw(DisplayCoord pos, ConstArrayView<DisplayAtom> atoms, const Face& default_face);
 
         explicit operator bool() const { return not lines.empty(); }
 
         struct Line;
         Vector<Line> lines;
-        DisplayCoord cursor;
     };
 
     struct Screen : Window
@@ -152,7 +150,7 @@ private:
 
     bool m_set_title = true;
 
-    DisplayAtom m_padding_char = DisplayAtom("~");
+    Codepoint m_padding_char = '~';
     bool m_padding_fill = false;
 
     bool m_dirty = false;
