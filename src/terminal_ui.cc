@@ -135,15 +135,11 @@ void TerminalUI::Window::blit(Window& target)
     }
 }
 
-void TerminalUI::Window::move_cursor(DisplayCoord coord)
-{
-    cursor = {std::min(size.line-1, coord.line), std::min(size.column-1, coord.column)};
-}
-
-void TerminalUI::Window::draw(ConstArrayView<DisplayAtom> atoms,
+void TerminalUI::Window::draw(DisplayCoord pos,
+                              ConstArrayView<DisplayAtom> atoms,
                              const Face& default_face)
 {
-    lines[(size_t)cursor.line].resize(cursor.column);
+    lines[(size_t)pos.line].resize(pos.column);
     for (const DisplayAtom& atom : atoms)
     {
         StringView content = atom.content();
@@ -153,16 +149,16 @@ void TerminalUI::Window::draw(ConstArrayView<DisplayAtom> atoms,
         auto face = merge_faces(default_face, atom.face);
         if (content.back() == '\n')
         {
-            lines[(int)cursor.line].append(content.substr(0, content.length()-1).str(), face);
-            lines[(int)cursor.line].append(" ", face);
+            lines[(int)pos.line].append(content.substr(0, content.length()-1).str(), face);
+            lines[(int)pos.line].append(" ", face);
         }
         else
-            lines[(int)cursor.line].append(content.str(), face);
-        cursor.column += content.column_length();
+            lines[(int)pos.line].append(content.str(), face);
+        pos.column += content.column_length();
     }
 
-    if (cursor.column < size.column)
-        lines[(int)cursor.line].append(String(' ', size.column - cursor.column), default_face);
+    if (pos.column < size.column)
+        lines[(int)pos.line].append(String(' ', size.column - pos.column), default_face);
 }
 
 void TerminalUI::Screen::output(bool force)
@@ -415,17 +411,11 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
     const LineCount line_offset = content_line_offset();
     LineCount line_index = line_offset;
     for (const DisplayLine& line : display_buffer.lines())
-    {
-        m_window.move_cursor(line_index++);
-        m_window.draw(line.atoms(), default_face);
-    }
+        m_window.draw(line_index++, line.atoms(), default_face);
 
     auto face = merge_faces(default_face, padding_face);
     while (line_index < dim.line + line_offset)
-    {
-        m_window.move_cursor(line_index++);
-        m_window.draw(DisplayAtom("~"), face);
-    }
+        m_window.draw(line_index++, DisplayAtom("~"), face);
 
     m_dirty = true;
 }
@@ -435,9 +425,7 @@ void TerminalUI::draw_status(const DisplayLine& status_line,
                             const Face& default_face)
 {
     const LineCount status_line_pos = m_status_on_top ? 0 : m_dimensions.line;
-    m_window.move_cursor(status_line_pos);
-
-    m_window.draw(status_line.atoms(), default_face);
+    m_window.draw(status_line_pos, status_line.atoms(), default_face);
 
     const auto mode_len = mode_line.length();
     m_status_len = status_line.length();
@@ -445,8 +433,7 @@ void TerminalUI::draw_status(const DisplayLine& status_line,
     if (mode_len < remaining)
     {
         ColumnCount col = m_dimensions.column - mode_len;
-        m_window.move_cursor({status_line_pos, col});
-        m_window.draw(mode_line.atoms(), default_face);
+        m_window.draw({status_line_pos, col}, mode_line.atoms(), default_face);
     }
     else if (remaining > 2)
     {
@@ -456,8 +443,7 @@ void TerminalUI::draw_status(const DisplayLine& status_line,
         kak_assert(trimmed_mode_line.length() == remaining - 1);
 
         ColumnCount col = m_dimensions.column - remaining + 1;
-        m_window.move_cursor({status_line_pos, col});
-        m_window.draw(trimmed_mode_line.atoms(), default_face);
+        m_window.draw({status_line_pos, col}, trimmed_mode_line.atoms(), default_face);
     }
 
     if (m_set_title)
@@ -773,8 +759,7 @@ void TerminalUI::draw_menu()
         kak_assert(m_menu.size.line == 1);
         ColumnCount pos = 0;
 
-        m_menu.move_cursor({0, 0});
-        m_menu.draw(DisplayAtom(m_menu.first_item > 0 ? "< " : "  "), m_menu.bg);
+        m_menu.draw({0, 0}, DisplayAtom(m_menu.first_item > 0 ? "< " : "  "), m_menu.bg);
 
         int i = m_menu.first_item;
         for (; i < item_count and pos < win_width; ++i)
@@ -782,19 +767,15 @@ void TerminalUI::draw_menu()
             const DisplayLine& item = m_menu.items[i];
             const ColumnCount item_width = item.length();
             auto& face = i == m_menu.selected_item ? m_menu.fg : m_menu.bg;
-            m_menu.draw(item.atoms(), face);
+            m_menu.draw({0, pos+2}, item.atoms(), face);
             if (pos + item_width < win_width)
-                m_menu.draw(DisplayAtom(" "), m_menu.bg);
+                m_menu.draw({0, pos + item_width + 2}, DisplayAtom(" "), m_menu.bg);
             else
-            {
-                m_menu.move_cursor({0, win_width+2});
-                m_menu.draw(DisplayAtom("…"), m_menu.bg);
-            }
+                m_menu.draw({0, win_width+2}, DisplayAtom("…"), m_menu.bg);
             pos += item_width + 1;
         }
 
-        m_menu.move_cursor({0, win_width+3});
-        m_menu.draw(DisplayAtom(i == item_count ? " " : ">"), m_menu.bg);
+        m_menu.draw({0, win_width+3}, DisplayAtom(i == item_count ? " " : ">"), m_menu.bg);
 
         m_dirty = true;
         return;
@@ -818,15 +799,13 @@ void TerminalUI::draw_menu()
     {
         for (int col = 0; col < m_menu.columns; ++col)
         {
-            m_menu.move_cursor({line, col * column_width});
             int item_idx = (first_col + col) * (int)m_menu.size.line + (int)line;
             auto& face = item_idx < item_count and item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg;
             auto atoms = item_idx < item_count ? m_menu.items[item_idx].atoms() : ConstArrayView<DisplayAtom>{};
-            m_menu.draw(atoms, face);
+            m_menu.draw({line, col * column_width}, atoms, face);
         }
         const bool is_mark = line >= mark_line and line < mark_line + mark_height;
-        m_menu.move_cursor({line, m_menu.size.column - 1});
-        m_menu.draw(DisplayAtom(is_mark ? "█" : "░"), m_menu.bg);
+        m_menu.draw({line, m_menu.size.column - 1}, DisplayAtom(is_mark ? "█" : "░"), m_menu.bg);
     }
     m_dirty = true;
 }
@@ -1120,19 +1099,24 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
     }
 
     m_info.create(anchor, size);
-    auto draw_atoms = [&](auto&&... args) {
-        auto draw = overload(
-            [&](String str) { m_info.draw(DisplayAtom{std::move(str)}, face); },
-            [&](const DisplayLine& atoms) { m_info.draw(atoms.atoms(), face); });
-
-        (draw(args), ...);
-    };
-
     for (auto line = 0_line; line < size.line; ++line)
     {
+        auto draw_atoms = [&, this, pos=DisplayCoord{line}](auto&&... args) mutable {
+            auto draw = overload(
+                [&](String str) {
+                    auto len = str.column_length();
+                    m_info.draw(pos, DisplayAtom{std::move(str)}, face);
+                    pos.column += len;
+                },
+                [&](const DisplayLine& atoms) {
+                    m_info.draw(pos, atoms.atoms(), face);
+                    pos.column += atoms.length();
+                });
+            (draw(args), ...);
+        };
+
         constexpr Codepoint dash{L'─'};
         constexpr Codepoint dotted_dash{L'┄'};
-        m_info.move_cursor(line);
         if (assisted)
         {
             const auto assistant_top_margin = (size.line - m_assistant.size()+1) / 2;
