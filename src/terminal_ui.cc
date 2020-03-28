@@ -48,19 +48,36 @@ struct TerminalUI::Window::Line
     struct Atom
     {
         String text;
+        ColumnCount skip = 0;
         Face face;
 
-        friend bool operator==(const Atom& lhs, const Atom& rhs) { return lhs.text == rhs.text and lhs.face == rhs.face; }
+        ColumnCount length() const { return text.column_length() + skip; }
+        void resize(ColumnCount size)
+        {
+            auto text_len = text.column_length();
+            if (size < text_len)
+            {
+                text.resize(text.byte_count_to(size), 0);
+                skip = 0;
+            }
+            else
+                skip = size - text_len; 
+        }
+
+        friend bool operator==(const Atom& lhs, const Atom& rhs) { return lhs.text == rhs.text and lhs.skip == rhs.skip and lhs.face == rhs.face; }
         friend bool operator!=(const Atom& lhs, const Atom& rhs) { return not (lhs == rhs); }
-        friend size_t hash_value(const Atom& atom) { return hash_values(atom.text, atom.face); }
+        friend size_t hash_value(const Atom& atom) { return hash_values(atom.text, atom.skip, atom.face); }
     };
 
-    void append(String text, Face face)
+    void append(String text, ColumnCount skip, Face face)
     {
-        if (not atoms.empty() and atoms.back().face == face)
+        if (not atoms.empty() and atoms.back().face == face and (atoms.back().skip == 0 or text.empty()))
+        {
             atoms.back().text += text;
+            atoms.back().skip += skip;
+        }
         else
-            atoms.push_back({std::move(text), face});
+            atoms.push_back({std::move(text), skip, face});
     }
 
     void resize(ColumnCount width)
@@ -68,52 +85,55 @@ struct TerminalUI::Window::Line
         auto it = atoms.begin();
         ColumnCount column = 0;
         for (; it != atoms.end() and column < width; ++it)
-            column += it->text.column_length();
+            column += it->length();
 
         if (column < width)
-            append(String{' ', width - column}, atoms.empty() ? Face{} : atoms.back().face);
+            append({}, width - column, atoms.empty() ? Face{} : atoms.back().face);
         else
         {
             atoms.erase(it, atoms.end());
             if (column > width)
-            {
-                auto& text = atoms.back().text;
-                auto new_length = text.column_length() - (column - width);
-                text.resize(text.byte_count_to(new_length), 0);
-            }
+                atoms.back().resize(atoms.back().length() - (column - width));
         }
     }
 
     Vector<Atom>::iterator erase_range(ColumnCount pos, ColumnCount len)
     {
-        struct Pos{ Vector<Atom>::iterator it; ByteCount byte; };
+        struct Pos{ Vector<Atom>::iterator it; ColumnCount column; };
         auto find_col = [pos=0_col, it=atoms.begin(), end=atoms.end()](ColumnCount col) mutable {
             for (; it != end; ++it)
             {
-                auto atom_len = it->text.column_length();
+                auto atom_len = it->length();
                 if (pos + atom_len >= col)
-                    return Pos{it, it->text.byte_count_to(col - pos)};
+                    return Pos{it, col - pos};
                 pos += atom_len;
             }
-            return Pos{it, 0_byte};
+            return Pos{it, 0_col};
         };
         Pos begin = find_col(pos);
         Pos end = find_col(pos+len);
 
+        auto make_tail = [](const Atom& atom, ColumnCount from) {
+            if (atom.text.column_length() > from)
+                return Atom{atom.text.substr(atom.text.byte_count_to(from)).str(), atom.skip, atom.face};
+            else
+                return Atom{{}, atom.length() - from, atom.face};
+        };
+
         if (begin.it == end.it)
         {
-            auto end_text = begin.it->text.substr(end.byte).str();
-            begin.it->text.resize(begin.byte, 0);
-            return end_text.empty() ? begin.it+1 : atoms.insert(begin.it+1, {std::move(end_text), begin.it->face});
+            Atom tail = make_tail(*begin.it, end.column);
+            begin.it->resize(begin.column);
+            return (tail.text.empty() and tail.skip == 0) ? begin.it+1 : atoms.insert(begin.it+1, tail);
         }
 
-        begin.it->text.resize(begin.byte, 0);
-        if (end.byte > 0)
+        begin.it->resize(begin.column);
+        if (end.column > 0)
         {
-            if (end.byte == end.it->text.length())
+            if (end.column == end.it->length())
                 ++end.it;
             else
-                end.it->text = end.it->text.substr(end.byte).str();
+                *end.it = make_tail(*end.it, end.column);
         }
         return atoms.erase(begin.it+1, end.it);
     }
@@ -148,17 +168,14 @@ void TerminalUI::Window::draw(DisplayCoord pos,
 
         auto face = merge_faces(default_face, atom.face);
         if (content.back() == '\n')
-        {
-            lines[(int)pos.line].append(content.substr(0, content.length()-1).str(), face);
-            lines[(int)pos.line].append(" ", face);
-        }
+            lines[(int)pos.line].append(content.substr(0, content.length()-1).str(), 1, face);
         else
-            lines[(int)pos.line].append(content.str(), face);
+            lines[(int)pos.line].append(content.str(), 0, face);
         pos.column += content.column_length();
     }
 
     if (pos.column < size.column)
-        lines[(int)pos.line].append(String(' ', size.column - pos.column), default_face);
+        lines[(int)pos.line].append({}, size.column - pos.column, default_face);
 }
 
 void TerminalUI::Screen::output(bool force)
@@ -228,14 +245,30 @@ void TerminalUI::Screen::output(bool force)
             else
                 printf("\033[%dH", line + 1);
 
+            ColumnCount pending_move = 0;
             for (auto& atom : lines[line++].atoms)
             {
+                if (pending_move != 0)
+                {
+                    printf("\033[%dC", (int)pending_move);
+                    pending_move = 0;
+                }
                 fputs("\033[", stdout);
                 set_attributes(atom.face.attributes);
                 set_color(true, atom.face.fg);
                 set_color(false, atom.face.bg);
                 fputs("m", stdout);
                 fputs(atom.text.c_str(), stdout);
+                if (atom.skip > 0)
+                {
+                    if (atom.skip > 4 and atom.face.attributes == Attribute{})
+                    {
+                        printf("\033[%d@", (int)atom.skip);
+                        pending_move = atom.skip;
+                    }
+                    else for (ColumnCount c = 0; c < atom.skip; ++c)
+                        fputs(" ", stdout);
+                }
             }
         }
     }
