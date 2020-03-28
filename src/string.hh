@@ -204,7 +204,7 @@ public:
 
     private:
         void release();
-        void set_empty() { s.size = 1; }
+        void set_empty() { s.size = 1; s.string[0] = 0; }
         void set_short(const char* data, size_t size);
     };
 
