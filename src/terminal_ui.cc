@@ -806,7 +806,7 @@ void TerminalUI::draw_menu()
         kak_assert(m_menu.size.line == 1);
         ColumnCount pos = 0;
 
-        m_menu.draw({0, 0}, DisplayAtom(m_menu.first_item > 0 ? "< " : "  "), m_menu.bg);
+        m_menu.draw({0, 0}, DisplayAtom(m_menu.first_item > 0 ? "< " : ""), m_menu.bg);
 
         int i = m_menu.first_item;
         for (; i < item_count and pos < win_width; ++i)
@@ -815,14 +815,13 @@ void TerminalUI::draw_menu()
             const ColumnCount item_width = item.length();
             auto& face = i == m_menu.selected_item ? m_menu.fg : m_menu.bg;
             m_menu.draw({0, pos+2}, item.atoms(), face);
-            if (pos + item_width < win_width)
-                m_menu.draw({0, pos + item_width + 2}, DisplayAtom(" "), m_menu.bg);
-            else
+            if (pos + item_width >= win_width)
                 m_menu.draw({0, win_width+2}, DisplayAtom("…"), m_menu.bg);
             pos += item_width + 1;
         }
 
-        m_menu.draw({0, win_width+3}, DisplayAtom(i == item_count ? " " : ">"), m_menu.bg);
+        if (i != item_count)
+            m_menu.draw({0, win_width+3}, DisplayAtom(">"), m_menu.bg);
 
         m_dirty = true;
         return;
@@ -1150,6 +1149,9 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
     {
         auto draw_atoms = [&, this, pos=DisplayCoord{line}](auto&&... args) mutable {
             auto draw = overload(
+                [&](ColumnCount padding) {
+                    pos.column += padding;
+                },
                 [&](String str) {
                     auto len = str.column_length();
                     m_info.draw(pos, DisplayAtom{std::move(str)}, face);
@@ -1194,10 +1196,10 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
             auto info_line = lines[(int)line - 1];
             const bool trimmed = info_line.trim(0, content_size.column);
             const ColumnCount padding = content_size.column - info_line.length();
-            draw_atoms("│ ", info_line, String{' ', padding} + (trimmed ? "…│" : " │"));
+            draw_atoms("│ ", info_line, padding, (trimmed ? "…│" : " │"));
         }
         else if (line == std::min<LineCount>((int)lines.size() + 1, size.line - 1))
-            draw_atoms("╰─" + String(line > lines.size() ? dash : dotted_dash, content_size.column) + "─╯");
+            draw_atoms("╰─", String(line > lines.size() ? dash : dotted_dash, content_size.column), "─╯");
     }
     m_dirty = true;
 }
