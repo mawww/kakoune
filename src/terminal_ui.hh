@@ -78,14 +78,12 @@ private:
         void create(const DisplayCoord& pos, const DisplayCoord& size);
         void destroy();
         void blit(Window& target);
-        void move_cursor(DisplayCoord coord);
-        void draw(ConstArrayView<DisplayAtom> atoms, const Face& default_face);
+        void draw(DisplayCoord pos, ConstArrayView<DisplayAtom> atoms, const Face& default_face);
 
         explicit operator bool() const { return not lines.empty(); }
 
         struct Line;
         Vector<Line> lines;
-        DisplayCoord cursor;
     };
 
     struct Screen : Window
