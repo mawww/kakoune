@@ -89,7 +89,10 @@ private:
     struct Screen : Window
     {
         void output(bool force);
+        void set_face(const Face& face);
+
         Vector<size_t> hashes;
+        Face m_active_face;
     };
 
     Window m_window;

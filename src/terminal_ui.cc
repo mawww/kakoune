@@ -178,28 +178,52 @@ void TerminalUI::Window::draw(DisplayCoord pos,
         lines[(int)pos.line].append({}, size.column - pos.column, default_face);
 }
 
+void TerminalUI::Screen::set_face(const Face& face)
+{
+    static constexpr int fg_table[]{ 39, 30, 31, 32, 33, 34, 35, 36, 37, 90, 91, 92, 93, 94, 95, 96, 97 };
+    static constexpr int bg_table[]{ 49, 40, 41, 42, 43, 44, 45, 46, 47, 100, 101, 102, 103, 104, 105, 106, 107 };
+    static constexpr int attr_table[]{ 0, 4, 7, 5, 1, 2, 3 };
+
+    auto set_color = [](bool fg, const Color& color, bool join) {
+        if (join)
+            fputs(";", stdout);
+        if (color.isRGB())
+            printf("%d;2;%d;%d;%d", fg ? 38 : 48, color.r, color.g, color.b);
+        else
+            printf("%d", (fg ? fg_table : bg_table)[(int)(char)color.color]);
+    };
+
+    if (m_active_face == face)
+        return;
+
+    fputs("\033[", stdout);
+    bool join = false;
+    if (face.attributes != m_active_face.attributes)
+    {
+        for (int i = 0; i < sizeof(attr_table) / sizeof(int); ++i)
+        {
+            if (face.attributes & (Attribute)(1 << i))
+                printf(";%d", attr_table[i]);
+        }
+        m_active_face = Face{{}, {}, face.attributes};
+        join = true;
+    }
+    if (m_active_face.fg != face.fg)
+    {
+        set_color(true, face.fg, join);
+        join = true;
+    }
+    if (m_active_face.bg != face.bg)
+        set_color(false, face.bg, join);
+    fputs("m", stdout);
+
+    m_active_face = face;
+}
+
 void TerminalUI::Screen::output(bool force)
 {
     if (lines.empty())
         return;
-
-    static constexpr int fg_table[]{ 39, 30, 31, 32, 33, 34, 35, 36, 37, 90, 91, 92, 93, 94, 95, 96, 97 };
-    static constexpr int bg_table[]{ 49, 40, 41, 42, 43, 44, 45, 46, 47, 100, 101, 102, 103, 104, 105, 106, 107 };
-    static constexpr int attr_table[]{ 0, 4, 7, 5, 1, 2, 3 };
-    auto set_color = [](bool fg, const Color& color) {
-        if (color.isRGB())
-            printf(";%d;2;%d;%d;%d", fg ? 38 : 48, color.r, color.g, color.b);
-        else
-            printf(";%d", (fg ? fg_table : bg_table)[(int)(char)color.color]);
-    };
-
-    auto set_attributes = [](const Attribute& attributes) {
-        for (int i = 0; i < sizeof(attr_table) / sizeof(int); ++i)
-        {
-            if (attributes & (Attribute)(1 << i))
-                printf(";%d", attr_table[i]);
-        }
-    };
 
     struct Change { int keep; int add; int del; };
     Vector<Change> changes{Change{}};
@@ -253,11 +277,7 @@ void TerminalUI::Screen::output(bool force)
                     printf("\033[%dC", (int)pending_move);
                     pending_move = 0;
                 }
-                fputs("\033[", stdout);
-                set_attributes(atom.face.attributes);
-                set_color(true, atom.face.fg);
-                set_color(false, atom.face.bg);
-                fputs("m", stdout);
+                set_face(atom.face);
                 fputs(atom.text.c_str(), stdout);
                 if (atom.skip > 0)
                 {
