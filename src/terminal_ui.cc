@@ -270,25 +270,25 @@ void TerminalUI::Screen::output(bool force)
                 printf("\033[%dH", line + 1);
 
             ColumnCount pending_move = 0;
-            for (auto& atom : lines[line++].atoms)
+            for (auto& [text, skip, face] : lines[line++].atoms)
             {
+                if (text.empty() and skip == 0)
+                    continue;
+
                 if (pending_move != 0)
                 {
                     printf("\033[%dC", (int)pending_move);
                     pending_move = 0;
                 }
-                set_face(atom.face);
-                fputs(atom.text.c_str(), stdout);
-                if (atom.skip > 0)
+                set_face(face);
+                fputs(text.c_str(), stdout);
+                if (skip > 3 and face.attributes == Attribute{})
                 {
-                    if (atom.skip > 4 and atom.face.attributes == Attribute{})
-                    {
-                        printf("\033[%d@", (int)atom.skip);
-                        pending_move = atom.skip;
-                    }
-                    else for (ColumnCount c = 0; c < atom.skip; ++c)
-                        fputs(" ", stdout);
+                    fputs("\033[K", stdout);
+                    pending_move = skip;
                 }
+                else if (skip > 0)
+                    fputs(String{' ', skip}.c_str(), stdout);
             }
         }
     }
