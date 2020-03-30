@@ -1873,11 +1873,12 @@ public:
             return it->value->get_child({sep_it+1, path.end()});
     }
 
-    void add_child(String name, std::unique_ptr<Highlighter>&& hl) override
+    void add_child(String name, std::unique_ptr<Highlighter>&& hl, bool override) override
     {
         if (not dynamic_cast<RegionHighlighter*>(hl.get()))
             throw runtime_error{"only region highlighter can be added as child of a regions highlighter"};
-        if (m_regions.contains(name))
+        auto it = m_regions.find(name);
+        if (not override and it != m_regions.end())
             throw runtime_error{format("duplicate id: '{}'", name)};
 
         std::unique_ptr<RegionHighlighter> region_hl{dynamic_cast<RegionHighlighter*>(hl.release())};
@@ -1888,7 +1889,10 @@ public:
             m_default_region = name;
         }
 
-        m_regions.insert({std::move(name), std::move(region_hl)});
+        if (it != m_regions.end())
+            it->value = std::move(region_hl);
+        else
+            m_regions.insert({std::move(name), std::move(region_hl)});
         ++m_regions_timestamp;
     }
 
@@ -2132,9 +2136,9 @@ private:
             return m_delegate->get_child(path);
         }
 
-        void add_child(String name, std::unique_ptr<Highlighter>&& hl) override
+        void add_child(String name, std::unique_ptr<Highlighter>&& hl, bool override) override
         {
-            return m_delegate->add_child(name, std::move(hl));
+            return m_delegate->add_child(name, std::move(hl), override);
         }
 
         void remove_child(StringView id) override

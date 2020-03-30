@@ -252,12 +252,12 @@ of the file onto the filesystem
 *colorscheme* <name>::
     load named colorscheme
 
-*add-highlighter* <highlighter_name> <highlighter_parameters> ...::
+*add-highlighter* [<switches>] <highlighter_path> <highlighter_parameters> ...::
     *alias* addhl +
     add a highlighter to the current window
     (See <<highlighters#,`:doc highlighters`>>)
 
-*remove-highlighter* <highlighter_id>::
+*remove-highlighter* <highlighter_path>::
     *alias* rmhl +
     remove the highlighter whose id is *highlighter_id*
     (See <<highlighters#,`:doc highlighters`>>)

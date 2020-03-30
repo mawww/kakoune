@@ -5,9 +5,9 @@
 Manipulation of the displayed text is done through highlighters, which can
 be added or removed with the following commands:
 
------------------------------------------------------
-add-highlighter <path>/<name> <type> <parameters> ...
------------------------------------------------------
+-----------------------------------------------------------------
+add-highlighter [-override] <path>/<name> <type> <parameters> ...
+-----------------------------------------------------------------
 
 and
 
@@ -22,6 +22,9 @@ separated path starting with a scope. Scopes are *global*, *buffer*,
 *name* is the name of the highlighter, if name is omitted in
 `add-highlighter` (the path ends with a `/`), it will be auto-generated
 from the remaining parameters.
+
+if `-override` is specified and the given name already exists, that
+highlighter is replaced with the new one.
 
 == Convenient highlighters
 
