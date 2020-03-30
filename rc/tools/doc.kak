@@ -192,3 +192,100 @@ define-command -params 0..2 \
 }
 
 alias global help doc
+
+define-command -params 1.. -docstring %{
+        doc-search <pattern> [topic...]: search for a pattern in the documentation
+        Display a menu listing all the search matches in the given topics, or the whole documentation if unspecified
+    } \
+    -shell-script-candidates %{
+        case "${kak_token_to_complete}" in
+            0) ;;
+            *) find "${kak_runtime}/doc/" -type f -name '*\.asciidoc' | sed 's,.*/,,; s,\.[^/]*$,,';;
+        esac
+    } doc-search %{ evaluate-commands %sh{
+        readonly SELECTIONS_FILE=$(mktemp "${TMPDIR:-/tmp}"/kak-doc-search.XXXXXXXX)
+        readonly SEARCH_PATTERN="${1}"
+
+        shift
+        if [ $# -eq 0 ]; then
+            eval set -- $(ls "${kak_runtime}/doc"/*.asciidoc | sed 's,.*/,,; s,\.[^/]*$,,')
+        else
+            for topic; do
+                if [ ! -e "${kak_runtime}/doc/${topic}.asciidoc" ]; then
+                    printf 'fail No such topic %%{%s}' "${topic}"
+                    exit 1
+                fi
+            done
+        fi
+
+        # NOTE: don't rely on the PATH to make sure the `kak` instance we run implements doc-searching
+        env KAK_DOC_SEARCH_TMP="${SELECTIONS_FILE}" \
+            KAK_DOC_SEARCH="${SEARCH_PATTERN}" \
+            "${kak_runtime}"/../../bin/kak -ui dummy -e "doc-search-impl $*"
+
+        awk -F'\a' '
+            BEGIN {
+                Q = "\047"
+            }
+
+            {
+                context = $3
+                gsub(Q, "&&", context)
+                candidates = candidates " " Q "{MenuInfo}" $1 "{default}{\\} " context Q " " Q "doc " $1 "; select " $2 Q
+            }
+
+            END {
+                if (candidates)
+                    print "menu -markup" candidates
+            }
+        ' "${SELECTIONS_FILE}"
+
+        rm -f "${SELECTIONS_FILE}"
+} }
+
+define-command -hidden -params .. doc-search-impl %{
+    evaluate-commands %sh{
+        readonly SEARCH_PATTERN_ESC=$(printf %s "${KAK_DOC_SEARCH}" | sed "s/'/&&/g")
+
+        for topic; do
+            printf "doc-search-impl-helper %s '%s'\n" "${topic}" "${SEARCH_PATTERN_ESC}"
+        done
+    }
+
+    kill!
+}
+
+define-command -hidden -params 2 doc-search-impl-helper %{ try %{
+    doc %arg{1}
+
+    execute-keys \% s "%arg{2}" <ret> )
+
+    evaluate-commands -save-regs 'mn' %{
+        set-register m %val{selections_desc}
+        set-register n ''
+
+        # For each search match, grab the line on which it lies for context
+        evaluate-commands -draft -itersel %{
+            execute-keys <a-x>H
+            set-register n %reg{n} %val{selection}
+        }
+
+        nop %sh{
+            readonly TOPIC="${1}"
+
+            {
+                desc="${kak_reg_m}"
+
+                eval "set -- ${kak_quoted_reg_n}"
+                # XXX: the first item is an empty string
+                shift
+                for sel; do
+                    printf '%s\a%s\a%s\n' "${TOPIC}" "${desc%% *}" "${sel}"
+                    desc="${desc#* }"
+                done
+            } >> "${KAK_DOC_SEARCH_TMP}"
+        }
+    }
+
+    delete-buffer!
+} }
