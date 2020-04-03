@@ -1448,14 +1448,17 @@ private:
     String m_default_face;
 };
 
-String option_to_string(InclusiveBufferRange range)
+String option_to_string(BufferRange range)
 {
-    return format("{}.{},{}.{}",
-                  range.first.line+1, range.first.column+1,
-                  range.last.line+1, range.last.column+1);
+    if (range.begin == range.end)
+        return format("{}.{}+0", range.begin.line+1, range.begin.column+1);
+    else
+        return format("{}.{},{}.{}",
+                  range.begin.line+1, range.begin.column+1,
+                  range.end.line+1, range.end.column);
 }
 
-InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, StringView str)
+BufferRange option_from_string(Meta::Type<BufferRange>, StringView str)
 {
     auto sep = find_if(str, [](char c){ return c == ',' or c == '+'; });
     auto dot_beg = find(StringView{str.begin(), sep}, '.');
@@ -1470,8 +1473,8 @@ InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, String
 
     const bool len = (*sep == '+');
     const BufferCoord last{len ? first.line : str_to_int({sep+1, dot_end}) - 1,
-                           len ? first.column + str_to_int({sep+1, str.end()}) - 1
-                               : str_to_int({dot_end+1, str.end()}) - 1 };
+                           len ? first.column + str_to_int({sep+1, str.end()})
+                               : str_to_int({dot_end+1, str.end()})};
 
     if (first.line < 0 or first.column < 0 or last.line < 0 or last.column < 0)
         throw runtime_error("coordinates elements should be >= 1");
@@ -1479,16 +1482,16 @@ InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, String
     return { std::min(first, last), std::max(first, last) };
 }
 
-BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).first; }
-BufferCoord& get_last(RangeAndString& r) { return std::get<0>(r).last; }
+BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).begin; }
+BufferCoord& get_last(RangeAndString& r) { return std::get<0>(r).end; }
 
 void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt)
 {
     std::sort(opt.begin(), opt.end(),
               [](auto& lhs, auto& rhs) {
-        return std::get<0>(lhs).first == std::get<0>(rhs).first ?
-            std::get<0>(lhs).last < std::get<0>(rhs).last
-          : std::get<0>(lhs).first < std::get<0>(rhs).first;
+        return get_first(lhs) == get_first(rhs)
+             ? get_last(lhs) < get_last(rhs)
+             : get_first(lhs) < get_first(rhs);
     });
 }
 
@@ -1527,8 +1530,8 @@ private:
             try
             {
                 auto& r = std::get<0>(range);
-                if (buffer.is_valid(r.first) and (buffer.is_valid(r.last) and not buffer.is_end(r.last)))
-                    highlight_range(display_buffer, r.first, buffer.char_next(r.last), false,
+                if (buffer.is_valid(r.begin) and (buffer.is_valid(r.end) and not buffer.is_end(r.end)))
+                    highlight_range(display_buffer, r.begin, r.end, false,
                                     apply_face(context.context.faces()[std::get<1>(range)]));
             }
             catch (runtime_error&)
@@ -1569,12 +1572,12 @@ private:
             try
             {
                 auto& r = std::get<0>(range);
-                if (buffer.is_valid(r.first) and buffer.is_valid(r.last))
+                if (buffer.is_valid(r.begin) and buffer.is_valid(r.end))
                 {
                     auto replacement = parse_display_line(std::get<1>(range), context.context.faces());
-                    replace_range(display_buffer, r.first, buffer.char_next(r.last),
+                    replace_range(display_buffer, r.begin, buffer.char_next(r.end),
                                   [&](DisplayLine& line, int beg_idx, int end_idx){
-                                      auto it = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
+                                      auto it = line.erase(line.begin() + beg_idx, line.begin() + end_idx - 1);
                                       for (auto& atom : replacement)
                                           it = ++line.insert(it, std::move(atom));
                                   });

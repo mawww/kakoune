@@ -10,14 +10,8 @@ namespace Kakoune
 
 void register_highlighters();
 
-struct InclusiveBufferRange{ BufferCoord first, last; };
-
-inline bool operator==(const InclusiveBufferRange& lhs, const InclusiveBufferRange& rhs)
-{
-    return lhs.first == rhs.first and lhs.last == rhs.last;
-}
-String option_to_string(InclusiveBufferRange range);
-InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, StringView str);
+String option_to_string(BufferRange range);
+BufferRange option_from_string(Meta::Type<BufferRange>, StringView str);
 
 using LineAndSpec = std::tuple<LineCount, String>;
 using LineAndSpecList = TimestampedList<LineAndSpec>;
@@ -29,7 +23,7 @@ constexpr StringView option_type_name(Meta::Type<LineAndSpecList>)
 void option_update(LineAndSpecList& opt, const Context& context);
 void option_list_postprocess(Vector<LineAndSpec, MemoryDomain::Options>& opt);
 
-using RangeAndString = std::tuple<InclusiveBufferRange, String>;
+using RangeAndString = std::tuple<BufferRange, String>;
 using RangeAndStringList = TimestampedList<RangeAndString>;
 
 constexpr StringView option_type_name(Meta::Type<RangeAndStringList>)
