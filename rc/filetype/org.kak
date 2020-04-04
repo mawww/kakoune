@@ -245,11 +245,10 @@ org-parse-file %{ evaluate-commands -save-regs '"/' %{
                                                                                          }' }
     }
     # Parse priority items
-    try %{
-        # this `execute-keys' selects first three letters in `#+PRIORITIES' line
-        execute-keys -draft '/(?i)^\h*#\+PRIORITIES:[^\n]+<ret><a-h>f:l<a-l>s\h*\w(\s+)?(\w)?(\s+)?(\w)?\s<ret>y: set-option buffer org_priority %reg{dquote}<ret>'
-        set-option buffer org_priority %sh{ printf "%s\n" "${kak_opt_org_priority}" | sed -E "s/ /|/g" }
-    }
+    try %{ evaluate-commands -save-regs 'p' %{
+        execute-keys -draft /(?i)^\h*#\+PRIORITIES:[^\n]+<ret><a-h>f:l<a-i><space>l<a-l>"py
+        set-option buffer org_priority %sh{ printf "%s\n" "${kak_reg_p}" | sed -E "s/\s+$//;s/\s+/|/g" }
+    }}
 }}
 
 define-command -hidden org-load-languages %{
