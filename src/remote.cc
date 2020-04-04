@@ -356,7 +356,7 @@ public:
     void menu_select(int selected) override;
     void menu_hide() override;
 
-    void info_show(StringView title, StringView content,
+    void info_show(const DisplayLine& title, const DisplayLineList& content,
                    DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
@@ -483,7 +483,7 @@ void RemoteUI::menu_hide()
     send_message(MessageType::MenuHide);
 }
 
-void RemoteUI::info_show(StringView title, StringView content,
+void RemoteUI::info_show(const DisplayLine& title, const DisplayLineList& content,
                          DisplayCoord anchor, Face face,
                          InfoStyle style)
 {
@@ -537,18 +537,38 @@ String get_user_name()
     return getenv("USER");
 }
 
+String session_directory()
+{
+    StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
+    if (xdg_runtime_dir.empty())
+        return format("{}/kakoune/{}", tmpdir(), get_user_name());
+    else
+        return format("{}/kakoune", xdg_runtime_dir);
+}
+
+void make_session_directory()
+{
+    StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
+    if (xdg_runtime_dir.empty())
+    {
+        // set sticky bit on the shared kakoune directory
+        make_directory(format("{}/kakoune", tmpdir()), 01777);
+    }
+    make_directory(session_directory(), 0711);
+}
+
+String session_path(StringView session)
+{
+    if (contains(session, '/'))
+        throw runtime_error{"session names cannot have slashes"};
+    return format("{}/{}", session_directory(), session);
+}
+
 static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    auto slash_count = std::count(session.begin(), session.end(), '/');
-    if (slash_count > 1)
-        throw runtime_error{"session names are either <user>/<name> or <name>"};
-    else if (slash_count == 1)
-        format_to(addr.sun_path, "{}/kakoune/{}", tmpdir(), session);
-    else
-        format_to(addr.sun_path, "{}/kakoune/{}/{}", tmpdir(),
-                  get_user_name(), session);
+    strcpy(addr.sun_path, session_path(session).c_str());
     return addr;
 }
 
@@ -623,8 +643,8 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
                 break;
             case MessageType::InfoShow:
             {
-                auto title = reader.read<String>();
-                auto content = reader.read<String>();
+                auto title = reader.read<DisplayLine>();
+                auto content = reader.read<DisplayLineList>();
                 auto anchor = reader.read<DisplayCoord>();
                 auto face = reader.read<Face>();
                 auto style = reader.read<InfoStyle>();
@@ -784,9 +804,7 @@ Server::Server(String session_name)
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
     sockaddr_un addr = session_addr(m_session);
 
-    // set sticky bit on the shared kakoune directory
-    make_directory(format("{}/kakoune", tmpdir()), 01777);
-    make_directory(split_path(addr.sun_path).first, 0711);
+    make_session_directory();
 
     // Do not give any access to the socket to other users by default
     auto old_mask = umask(0077);
@@ -819,10 +837,8 @@ bool Server::rename_session(StringView name)
     if (not all_of(name, is_identifier))
         throw runtime_error{format("invalid session name: '{}'", name)};
 
-    String old_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
-                                    get_user_name(), m_session);
-    String new_socket_file = format("{}/kakoune/{}/{}", tmpdir(),
-                                    get_user_name(), name);
+    String old_socket_file = session_path(m_session);
+    String new_socket_file = session_path(name);
 
     if (file_exists(new_socket_file))
         return false;
@@ -838,8 +854,7 @@ void Server::close_session(bool do_unlink)
 {
     if (do_unlink)
     {
-        String socket_file = format("{}/kakoune/{}/{}", tmpdir(),
-                                    get_user_name(), m_session);
+        String socket_file = session_path(m_session);
         unlink(socket_file.c_str());
     }
     m_listener->close_fd();

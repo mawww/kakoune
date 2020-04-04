@@ -18,7 +18,7 @@ hook global BufCreate .*\.xml %{
 hook global WinSetOption filetype=(html|xml) %{
     require-module html
 
-    hook window ModeChange insert:.* -group "%val{hook_param_capture_1}-trim-indent"  html-trim-indent
+    hook window ModeChange pop:insert:.* -group "%val{hook_param_capture_1}-trim-indent"  html-trim-indent
     hook window InsertChar '>' -group "%val{hook_param_capture_1}-indent" html-indent-on-greater-than
     hook window InsertChar \n -group "%val{hook_param_capture_1}-indent" html-indent-on-new-line
 
@@ -77,11 +77,11 @@ define-command -hidden html-indent-on-greater-than %[
 define-command -hidden html-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : html-trim-indent <ret> }
-        # indent after lines ending with opening tag
-        try %{ execute-keys -draft k <a-x> <a-k> <lt>(?!area)(?!base)(?!br)(?!col)(?!command)(?!embed)(?!hr)(?!img)(?!input)(?!keygen)(?!link)(?!menuitem)(?!meta)(?!param)(?!source)(?!track)(?!wbr)(?!/)(?!>)[a-zA-Z0-9_-]+[^>]*?>$ <ret> j <a-gt> } }
+        # indent after lines ending with opening tag except when it starts with a closing tag
+        try %{ execute-keys -draft k <a-x> <a-k> <lt>(?!area)(?!base)(?!br)(?!col)(?!command)(?!embed)(?!hr)(?!img)(?!input)(?!keygen)(?!link)(?!menuitem)(?!meta)(?!param)(?!source)(?!track)(?!wbr)(?!/)(?!>)[a-zA-Z0-9_-]+[^>]*?>$ <ret>j<a-x><a-K>^\s*<lt>/<ret><a-gt> } }
 }
 
 ]

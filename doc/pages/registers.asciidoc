@@ -4,7 +4,8 @@
 
 Registers are named lists of text -instead of simply text- in order to interact
 well with multiselection. They are used for various purposes, like storing
-the last yanked text, or the captured groups associated with the selections.
+yanked text, the locations of selections in a buffer, or groups captured by a
+regular expression.
 
 == Interacting
 
@@ -27,23 +28,29 @@ All normal-mode commands using a register default to a specific one if not speci
 *"* (dquote)::
     default delete / copy / paste / replace register, used by:
     *c*, *d*, *y*, *p*, *<a-p>*, *<P>*, *<a-P>*, *R* and *<a-R>*
+    (see <<keys#changes, `:doc keys changes`>>)
 
 */* (slash)::
     default search / regex register, used by:
     */*, *<a-/>*, *?*, *<a-?>*, *n*, *<a-n>*, *N*, *<a-N>*, ***, *<a-*>*,
     *s*, *S*, *<a-k>* and *<a-K>*
+    (see <<keys#searching, `:doc keys searching`>>)
 
 *@* (arobase)::
     default macro register, used by:
     *q* and *Q*
+    (see <<keys#macros, `:doc keys macros`>>)
 
 *^* (caret)::
     default mark register, used by:
     *z*, *<a-z>*, *Z* and *<a-Z>*
+    (see <<keys#marks, `:doc keys marks`>>
+    and <<registers#marks, `:doc registers marks`>>)
 
 *|* (pipe)::
     default shell command register, used by commands that spawn a subshell:
     *|*, *<a-|>*, *!* and *<a-!>*
+    (see <<keys#changes-through-external-programs, `:doc keys changes-through-external-programs`>>)
 
 == Special registers
 
@@ -76,3 +83,26 @@ month in register *3*, but select the entire date:
 --------------------
 (\w+) (\w+) (\d+) .+
 --------------------
+
+== Marks
+
+When a register is used to store a set of selections with the *Z* key (see
+<<keys#marks, `:doc keys marks`>>), the selections are stored as a list of
+spans, in a format similar to `%val{selections_desc}` (see
+<<expansions#value-expansions, `:doc expansions value-expansions`). However,
+the very first item of the list is of the form:
+
+------------------------------------------
+<buffer name>@<timestamp>@<main sel index>
+------------------------------------------
+
+with:
+
+*buffer name*::
+    `%val{buffile}` of the buffer selections relate to
+
+*timestamp*::
+    `%val{timestamp}` at which the selection apply to
+
+*main sel index*::
+    0-based index of the main selection

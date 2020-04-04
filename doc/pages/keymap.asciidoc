@@ -23,11 +23,11 @@
 ┃Ctrl      ┃          ┃Alt      ┃                                           ┃AltGr     ┃          ┃         ┃Ctrl      ┃
 ┗━━━━━━━━━━┻━━━━━━━━━━┻━━━━━━━━━┹───────────────────────────────────────────┺━━━━━━━━━━┻━━━━━━━━━━┻━━━━━━━━━┻━━━━━━━━━━┛
 
- ʳ: alt reverse direction
+ ʳ: alt reverses direction
  ʷ: alt uses WORD instead of word (that is non blank instead of [a-z_])
  ᵐ: move, shifted will append to selection, alt will use alternate behaviour.
  ˡ: alt goes to begin/end of line
- ᵍ: the g key prefix different goto location functionalities, such as going
+ ᵍ: the g key prefixes different goto location functionalities, such as going
     to begin/end of the file, opening the file whose name is selected, etc…
- ᵛ: the v key prefix different view related functionalities, such as scrolling
+ ᵛ: the v key prefixes different view related functionalities, such as scrolling
 ---

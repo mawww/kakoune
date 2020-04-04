@@ -7,36 +7,40 @@ provide-module clang %[
 declare-option -docstring "options to pass to the `clang` shell command" \
     str clang_options
 
-declare-option -hidden str clang_tmp_dir
+declare-option -docstring "directory from which to invoke clang" \
+    str clang_directory
+
 declare-option -hidden completions clang_completions
 declare-option -hidden line-specs clang_flags
 declare-option -hidden line-specs clang_errors
 
 define-command -params ..1 \
-    -docstring %{Parse the contents of the current buffer
-The syntaxic errors detected during parsing are shown when auto-diagnostics are enabled} \
-    clang-parse %{
+    -docstring %{
+        Parse the contents of the current buffer
+        The syntaxic errors detected during parsing are shown when auto-diagnostics are enabled
+    } clang-parse %{
     evaluate-commands %sh{
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
-        printf %s\\n "set-option buffer clang_tmp_dir ${dir}"
-        printf %s\\n "evaluate-commands -no-hooks write -sync ${dir}/buf"
-    }
-    # end the previous %sh{} so that its output gets interpreted by kakoune
-    # before launching the following as a background task.
-    evaluate-commands %sh{
-        dir=${kak_opt_clang_tmp_dir}
-        printf %s\\n "evaluate-commands -draft %{
-                  edit! -fifo ${dir}/fifo -debug *clang-output*
-                  set-option buffer filetype make
-                  set-option buffer make_current_error_line 0
-                  hook -once -always buffer BufCloseFifo .* %{ nop %sh{ rm -r ${dir} } }
-              }"
+        printf %s\\n "
+            evaluate-commands -no-hooks write -sync -atomic ${dir}/buf
+            evaluate-commands -draft %{
+                edit! -fifo ${dir}/fifo -debug *clang-output*
+                set-option buffer filetype make
+                set-option buffer make_current_error_line 0
+                hook -once -always buffer BufCloseFifo .* %{ nop %sh{ rm -r ${dir} } }
+            }"
+
         # this runs in a detached shell, asynchronously, so that kakoune does
         # not hang while clang is running. As completions references a cursor
         # position and a buffer timestamp, only valid completions should be
         # displayed.
-        (
+        ((
+            until [ -f ${dir}/buf ]; do :; done # wait for the buffer to be written
+
+            if [ -n "$kak_opt_clang_directory" ]; then
+                cd "$kak_opt_clang_directory"
+            fi
             case ${kak_opt_filetype} in
                 c) ft=c ;;
                 cpp) ft=c++ ;;
@@ -50,33 +54,32 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                 compl=$(clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} \
                     -Xclang -code-completion-brief-comments -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/stderr |
                         awk -F ': ' '
-                            /^COMPLETION:/ && ! /\(Hidden\)/ {
-                                 id=$2
-                                 gsub(/ +$/, "", id)
-                                 gsub(/~/, "~~", id)
-                                 gsub(/\|/, "\\|", id)
+                            /^COMPLETION:/ && $2 !~ /[(,](Hidden|Inaccessible)[),]/ {
+                                 candidate=$3
+                                 gsub(/[[<{]#[^#]*#[]>}]/, "", candidate)
+                                 gsub(/~/, "~~", candidate)
+                                 gsub(/\|/, "\\|", candidate)
 
-                                 gsub(/[[{<]#|#[}>]/, "", $3)
-                                 gsub(/#]/, " ", $3)
+                                 gsub(/[[{<]#|#[]}>]/, " ", $3)
                                  gsub(/:: /, "::", $3)
-                                 gsub(/ +$/, "", $3)
-                                 desc=$4 ? $3 "\n" $4 : $3
+                                 gsub(/ ,/, ",", $3)
+                                 gsub(/^ +| +$/, "", $3)
+                                 docstring=$4 ? $3 "\n" $4 : $3
 
-                                 gsub(/~/, "~~", desc)
-                                 gsub(/!/, "!!", desc)
-                                 gsub(/\|/, "\\|", desc)
-                                 if (id in docstrings)
-                                     docstrings[id]=docstrings[id] "\n" desc
+                                 gsub(/~|!/, "&&", docstring)
+                                 gsub(/\|/, "\\|", docstring)
+                                 if (candidate in candidates)
+                                     candidates[candidate]=candidates[candidate] "\n" docstring
                                  else
-                                     docstrings[id]=desc
+                                     candidates[candidate]=docstring
                             }
                             END {
-                                for (id in docstrings) {
-                                    menu=id
+                                for (candidate in candidates) {
+                                    menu=candidate
                                     gsub(/(^|[^[:alnum:]_])(operator|new|delete)($|[^{}_[:alnum:]]+)/, "{keyword}&{}", menu)
                                     gsub(/(^|[[:space:]])(int|size_t|bool|char|unsigned|signed|long)($|[[:space:]])/, "{type}&{}", menu)
                                     gsub(/[^{}_[:alnum:]]+/, "{operator}&{}", menu)
-                                    printf "%%~%s|info -style menu %!%s!|%s~ ", id, docstrings[id], menu
+                                    printf "%%~%s|info -style menu %!%s!|%s~ ", candidate, candidates[candidate], menu
                                 }
                             }')
                 printf %s\\n "evaluate-commands -client ${kak_client} echo 'clang completion done'
@@ -86,12 +89,12 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
                 printf %s\\n "evaluate-commands -client ${kak_client} echo 'clang parsing done'" | kak -p ${kak_session}
             fi
 
-            flags=$(cat ${dir}/stderr | sed -rne "
+            flags=$(cat ${dir}/stderr | sed -Ene "
                         /^<stdin>:[0-9]+:([0-9]+:)? (fatal )?error/ { s/^<stdin>:([0-9]+):.*/'\1|{red}█'/; p }
                         /^<stdin>:[0-9]+:([0-9]+:)? warning/ { s/^<stdin>:([0-9]+):.*/'\1|{yellow}█'/; p }
                     " | paste -s -d ' ' -)
 
-            errors=$(cat ${dir}/stderr | sed -rne "
+            errors=$(cat ${dir}/stderr | sed -Ene "
                         /^<stdin>:[0-9]+:([0-9]+:)? ((fatal )?error|warning)/ {
                             s/'/''/g; s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/'\1|\3'/; p
                         }" | sort -n | paste -s -d ' ' -)
@@ -100,7 +103,7 @@ The syntaxic errors detected during parsing are shown when auto-diagnostics are 
 
             printf %s\\n "set-option 'buffer=${kak_buffile}' clang_flags ${kak_timestamp} ${flags}
                   set-option 'buffer=${kak_buffile}' clang_errors ${kak_timestamp} ${errors}" | kak -p ${kak_session}
-        ) > /dev/null 2>&1 < /dev/null &
+        ) & ) > /dev/null 2>&1 < /dev/null
     }
 }
 
@@ -182,7 +185,7 @@ define-command clang-diagnostics-next -docstring "Jump to the next line that con
         if [ -n "$line" ]; then
             printf %s\\n "execute-keys ${line} g"
         else
-            echo "echo -markup '{Error}no next clang diagnostic'"
+            echo "fail no next clang diagnostic"
         fi
     } }
 

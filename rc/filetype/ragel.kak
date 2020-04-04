@@ -16,7 +16,7 @@ hook global BufCreate .*[.](ragel|rl) %{
 hook global WinSetOption filetype=ragel %{
     require-module ragel
 
-    hook window ModeChange insert:.* -group ragel-trim-indent  ragel-trim-indent
+    hook window ModeChange pop:insert:.* -group ragel-trim-indent  ragel-trim-indent
     hook window InsertChar .* -group ragel-indent ragel-indent-on-char
     hook window InsertChar \n -group ragel-indent ragel-indent-on-new-line
 
@@ -65,7 +65,7 @@ define-command -hidden ragel-indent-on-new-line %<
         # copy _#_ comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : ragel-trim-indent <ret> }
         # indent after lines ending with opener token

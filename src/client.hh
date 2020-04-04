@@ -45,11 +45,12 @@ public:
     void menu_select(int selected);
     void menu_hide();
 
-    void info_show(String title, String content, BufferCoord anchor, InfoStyle style);
+    void info_show(DisplayLine title, DisplayLineList content, BufferCoord anchor, InfoStyle style);
+    void info_show(StringView title, StringView content, BufferCoord anchor, InfoStyle style);
     void info_hide(bool even_modal = false);
 
     void print_status(DisplayLine status_line);
-    const DisplayLine& current_status() { return m_status_line; }
+    const DisplayLine& current_status() const { return m_status_line; }
 
     DisplayCoord dimensions() const;
 
@@ -119,8 +120,8 @@ private:
 
     struct Info
     {
-        String title;
-        String content;
+        DisplayLine title;
+        DisplayLineList content;
         BufferCoord anchor;
         Optional<DisplayCoord> ui_anchor;
         InfoStyle style;
@@ -140,7 +141,7 @@ enum class Autoreload
 
 constexpr auto enum_desc(Meta::Type<Autoreload>)
 {
-    return make_array<EnumDesc<Autoreload>, 5>({
+    return make_array<EnumDesc<Autoreload>>({
         { Autoreload::Yes, "yes" },
         { Autoreload::No, "no" },
         { Autoreload::Ask, "ask" },

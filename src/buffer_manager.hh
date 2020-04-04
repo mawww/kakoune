@@ -30,6 +30,8 @@ public:
     Buffer* get_buffer_ifp(StringView name);
     Buffer& get_buffer(StringView name);
 
+    void arrange_buffers(ConstArrayView<String> first_ones);
+
     Buffer& get_first_buffer();
 
     void backup_modified_buffers();

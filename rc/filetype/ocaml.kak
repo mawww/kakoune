@@ -28,8 +28,33 @@ provide-module ocaml %{
 
 add-highlighter shared/ocaml regions
 add-highlighter shared/ocaml/code default-region group
-add-highlighter shared/ocaml/string region '"' (?<!\\)(\\\\)*" fill string
-add-highlighter shared/ocaml/comment region \Q(* \Q*) fill comment
+add-highlighter shared/ocaml/string region (?<!')" (?<!\\)(\\\\)*" fill string
+add-highlighter shared/ocaml/comment region -recurse \Q(* \Q(* \Q*) fill comment
+
+add-highlighter shared/ocaml/code/char regex %{\B'([^'\\]|(\\[\\"'nrtb])|(\\\d{3})|(\\x[a-fA-F0-9]{2})|(\\o[0-7]{3}))'\B} 0:value
+
+# integer literals
+add-highlighter shared/ocaml/code/ regex \b[0-9][0-9_]*([lLn]?)\b                          0:value
+add-highlighter shared/ocaml/code/ regex \b0[xX][A-Fa-f0-9][A-Fa-f0-9_]*([lLn]?)\b         0:value
+add-highlighter shared/ocaml/code/ regex \b0[oO][0-7][0-7_]*([lLn]?)\b                     0:value
+add-highlighter shared/ocaml/code/ regex \b0[bB][01][01_]*([lLn]?)\b                       0:value
+# float literals
+add-highlighter shared/ocaml/code/ regex \b[0-9][0-9_]*(\.[0-9_]*)?([eE][+-]?[0-9][0-9_]*)?                       0:value
+add-highlighter shared/ocaml/code/ regex \b0[xX][A-Fa-f0-9][A-Fa-f0-9]*(\.[a-fA-F0-9_]*)?([pP][+-]?[0-9][0-9_]*)? 0:value
+# constructors. must be put before any module name highlighter, as a fallback for capitalized identifiers
+add-highlighter shared/ocaml/code/ regex \b[A-Z][a-zA-Z0-9_]*\b                            0:value
+# the module name in a module path, e.g. 'M' in 'M.x'
+add-highlighter shared/ocaml/code/ regex (\b[A-Z][a-zA-Z0-9_]*[\h\n]*)(?=\.)               0:module
+# (simple) module declarations
+add-highlighter shared/ocaml/code/ regex (?<=module)([\h\n]+[A-Z][a-zA-Z0-9_]*)            0:module
+# (simple) signature declarations. 'type' is also highlighted, due to the lack of quantifiers in lookarounds.
+# Hence we must put keyword highlighters after this to recover proper highlight for 'type'
+add-highlighter shared/ocaml/code/ regex (?<=module)([\h\n]+type[\h\n]+[A-Z][a-zA-Z0-9_]*) 0:module
+# (simple) open statements
+add-highlighter shared/ocaml/code/ regex (?<=open)([\h\n]+[A-Z][a-zA-Z0-9_]*)              0:module
+# operators
+add-highlighter shared/ocaml/code/ regex [@!$%%^&*\-+=|<>/?]+                              0:operator
+
 
 # Macro
 # ‾‾‾‾‾
@@ -42,6 +67,7 @@ evaluate-commands %sh{
 
   printf %s\\n "declare-option str-list ocaml_static_words ${keywords}" | tr '|' ' '
 
+# must be put at last, since we have highlighted some keywords ('type' in 'module type') to other things
   printf %s "
     add-highlighter shared/ocaml/code/ regex \b(${keywords})\b 0:keyword
   "

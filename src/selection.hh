@@ -65,7 +65,7 @@ inline bool overlaps(const Selection& lhs, const Selection& rhs)
 }
 
 void update_selections(Vector<Selection>& selections, size_t& main,
-                       Buffer& buffer, size_t timestamp, bool merge = true);
+                       const Buffer& buffer, size_t timestamp, bool merge = true);
 
 bool compare_selections(const Selection& lhs, const Selection& rhs);
 void sort_selections(Vector<Selection>& selections, size_t& main);
@@ -94,11 +94,7 @@ struct SelectionList
     SelectionList(Buffer& buffer, Vector<Selection> s);
     SelectionList(Buffer& buffer, Vector<Selection> s, size_t timestamp);
 
-    struct UnsortedTag {};
-    SelectionList(UnsortedTag, Buffer& buffer, Vector<Selection> s, size_t timestamp, size_t main);
-
     void update(bool merge = true);
-
     void check_invariant() const;
 
     const Selection& main() const { return (*this)[m_main]; }
@@ -158,12 +154,47 @@ private:
     size_t m_timestamp;
 };
 
-Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp);
+Vector<Selection> compute_modified_ranges(const Buffer& buffer, size_t timestamp);
 
-String selection_to_string(const Selection& selection);
-String selection_list_to_string(const SelectionList& selection);
-Selection selection_from_string(StringView desc);
-SelectionList selection_list_from_string(Buffer& buffer, ConstArrayView<String> descs, size_t timestamp);
+enum class ColumnType
+{
+    Byte,
+    Codepoint,
+    DisplayColumn
+};
+
+Selection selection_from_string(ColumnType column_type, const Buffer& buffer, StringView desc, ColumnCount tabstop = -1);
+String selection_to_string(ColumnType column_type, const Buffer& buffer, const Selection& selection, ColumnCount tabstop = -1);
+
+String selection_list_to_string(ColumnType column_type, const SelectionList& selections, ColumnCount tabstop = -1);
+
+template<typename StringArray>
+SelectionList selection_list_from_strings(Buffer& buffer, ColumnType column_type, StringArray&& descs, size_t timestamp, size_t main, ColumnCount tabstop = -1)
+{
+    if ((column_type != ColumnType::Byte and timestamp != buffer.timestamp()) or timestamp > buffer.timestamp())
+        throw runtime_error{format("invalid timestamp '{}'", timestamp)};
+
+    auto from_string = [&](StringView desc) {
+        return selection_from_string(column_type, buffer, desc, tabstop);
+    };
+
+    auto sels = descs | transform(from_string) | gather<Vector<Selection>>();
+    if (sels.empty())
+        throw runtime_error{"empty selection description"};
+    if (main >= sels.size())
+        throw runtime_error{"invalid main selection index"};
+
+    sort_selections(sels, main);
+    merge_overlapping_selections(sels, main);
+    if (timestamp < buffer.timestamp())
+        update_selections(sels, main, buffer, timestamp);
+    else
+        clamp_selections(sels, buffer);
+
+    SelectionList res{buffer, std::move(sels)};
+    res.set_main_index(main);
+    return res;
+}
 
 }
 

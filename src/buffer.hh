@@ -5,13 +5,16 @@
 #include "coord.hh"
 #include "constexpr_utils.hh"
 #include "enum.hh"
+#include "file.hh"
 #include "optional.hh"
+#include "range.hh"
 #include "safe_ptr.hh"
 #include "scope.hh"
 #include "shared_string.hh"
 #include "value.hh"
 #include "vector.hh"
 
+#include <sys/types.h>
 #include <ctime>
 
 namespace Kakoune
@@ -25,7 +28,7 @@ enum class EolFormat
 
 constexpr auto enum_desc(Meta::Type<EolFormat>)
 {
-    return make_array<EnumDesc<EolFormat>, 2>({
+    return make_array<EnumDesc<EolFormat>>({
         { EolFormat::Lf, "lf" },
         { EolFormat::Crlf, "crlf" },
     });
@@ -39,7 +42,7 @@ enum class ByteOrderMark
 
 constexpr auto enum_desc(Meta::Type<ByteOrderMark>)
 {
-    return make_array<EnumDesc<ByteOrderMark>, 2>({
+    return make_array<EnumDesc<ByteOrderMark>>({
         { ByteOrderMark::None, "none" },
         { ByteOrderMark::Utf8, "utf8" },
     });
@@ -101,6 +104,7 @@ private:
 };
 
 using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;
+using BufferRange = Range<BufferCoord>;
 
 // A Buffer is a in-memory representation of a file
 //
@@ -137,13 +141,13 @@ public:
     bool set_name(String name);
     void update_display_name();
 
-    BufferCoord insert(BufferCoord pos, StringView content);
+    BufferRange insert(BufferCoord pos, StringView content);
     BufferCoord erase(BufferCoord begin, BufferCoord end);
-    BufferCoord replace(BufferCoord begin, BufferCoord end, StringView content);
+    BufferRange replace(BufferCoord begin, BufferCoord end, StringView content);
 
-    size_t         timestamp() const;
-    timespec       fs_timestamp() const;
-    void           set_fs_timestamp(timespec ts);
+    size_t          timestamp() const;
+    void            set_fs_status(FsStatus);
+    const FsStatus& fs_status() const;
 
     void           commit_undo_group();
     bool           undo(size_t count = 1);
@@ -188,8 +192,8 @@ public:
     // returns nearest valid coordinates from given ones
     BufferCoord clamp(BufferCoord coord) const;
 
-    BufferCoord offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool);
-    BufferCoordAndTarget offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol);
+    BufferCoord offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool) const;
+    BufferCoordAndTarget offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol) const;
 
     const String& name() const { return m_name; }
     const String& display_name() const { return m_display_name; }
@@ -199,7 +203,7 @@ public:
     bool is_modified() const;
 
     // notify the buffer that it was saved in the current state
-    void notify_saved();
+    void notify_saved(FsStatus status);
 
     ValueMap& values() const { return m_values; }
 
@@ -226,13 +230,39 @@ public:
     void on_unregistered();
 
     void throw_if_read_only() const;
+
+    // A Modification holds a single atomic modification to Buffer
+    struct Modification
+    {
+        enum Type { Insert, Erase };
+
+        Type type;
+        BufferCoord coord;
+        StringDataPtr content;
+
+        Modification inverse() const;
+    };
+
+    using UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
+
+    struct HistoryNode : UseMemoryDomain<MemoryDomain::BufferMeta>
+    {
+        HistoryNode(HistoryId parent);
+
+        HistoryId parent;
+        HistoryId redo_child = HistoryId::Invalid;
+        TimePoint committed;
+        UndoGroup undo_group;
+    };
+
+    const Vector<HistoryNode>& history() const { return m_history; }
+    const UndoGroup& current_undo_group() const { return m_current_undo_group; }
+
 private:
     void on_option_changed(const Option& option) override;
 
-    BufferCoord do_insert(BufferCoord pos, StringView content);
+    BufferRange do_insert(BufferCoord pos, StringView content);
     BufferCoord do_erase(BufferCoord begin, BufferCoord end);
-
-    struct Modification;
 
     void apply_modification(const Modification& modification);
     void revert_modification(const Modification& modification);
@@ -260,18 +290,6 @@ private:
     String m_display_name;
     Flags  m_flags;
 
-    using UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
-
-    struct HistoryNode : UseMemoryDomain<MemoryDomain::BufferMeta>
-    {
-        HistoryNode(HistoryId parent);
-
-        HistoryId parent;
-        HistoryId redo_child = HistoryId::Invalid;
-        TimePoint timepoint;
-        UndoGroup undo_group;
-    };
-
     Vector<HistoryNode> m_history;
     HistoryId           m_history_id = HistoryId::Invalid;
     HistoryId           m_last_save_history_id = HistoryId::Invalid;
@@ -284,7 +302,7 @@ private:
 
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 
-    timespec m_fs_timestamp;
+    FsStatus m_fs_status;
 
     // Values are just data holding by the buffer, they are not part of its
     // observable state

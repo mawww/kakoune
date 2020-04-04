@@ -1,14 +1,17 @@
 declare-option -hidden range-specs spell_regions
-declare-option -hidden str spell_lang
+declare-option -hidden str spell_last_lang
 declare-option -hidden str spell_tmp_file
 
-define-command -params ..1 \
-    -docstring %{spell [<language>]: spell check the current buffer
-The first optional argument is the language against which the check will be performed
-Formats of language supported:
- - ISO language code, e.g. 'en'
- - language code above followed by a dash or underscore with an ISO country code, e.g. 'en-US'} \
-    spell %{
+declare-option -docstring "default language to use when none is passed to the spell-check command" str spell_lang
+
+define-command -params ..1 -docstring %{
+    spell [<language>]: spell check the current buffer
+
+    The first optional argument is the language against which the check will be performed (overrides `spell_lang`)
+    Formats of language supported:
+      - ISO language code, e.g. 'en'
+      - language code above followed by a dash or underscore with an ISO country code, e.g. 'en-US'
+    } spell %{
     try %{ add-highlighter window/ ranges 'spell_regions' }
     evaluate-commands %sh{
         file=$(mktemp -d "${TMPDIR:-/tmp}"/kak-spell.XXXXXXXX)/buffer
@@ -16,43 +19,66 @@ Formats of language supported:
         printf 'set-option buffer spell_tmp_file %s\n' "${file}"
     }
     evaluate-commands %sh{
-        if [ $# -ge 1 ]; then
-            if [ ${#1} -ne 2 ] && [ ${#1} -ne 5 ]; then
-                echo "echo -markup '{Error}Invalid language code (examples of expected format: en, en_US, en-US)'"
+        use_lang() {
+            if ! printf %s "$1" | grep -qE '^[a-z]{2,3}([_-][A-Z]{2})?$'; then
+                echo "fail 'Invalid language code (examples of expected format: en, en_US, en-US)'"
                 rm -rf "$(dirname "$kak_opt_spell_tmp_file")"
                 exit 1
             else
                 options="-l '$1'"
-                printf 'set-option buffer spell_lang %s\n' "$1"
+                printf 'set-option buffer spell_last_lang %s\n' "$1"
             fi
+        }
+
+        if [ $# -ge 1 ]; then
+            use_lang "$1"
+        elif [ -n "${kak_opt_spell_lang}" ]; then
+            use_lang "${kak_opt_spell_lang}"
         fi
 
         {
-            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell --byte-offsets -a $options" 2>&1 | {
-                line_num=1
-                regions=$kak_timestamp
-                read line # drop the identification message
-                while read -r line; do
-                    case "$line" in
-                        [\#\&]*)
-                            if expr "$line" : '^&' >/dev/null; then
-                               pos=$(printf %s\\n "$line" | cut -d ' ' -f 4 | sed 's/:$//')
-                            else
-                               pos=$(printf %s\\n "$line" | cut -d ' ' -f 3)
-                            fi
-                            word=$(printf %s\\n "$line" | cut -d ' ' -f 2)
-                            # trim whitespace to make `wc` output consistent across implementations
-                            len=$(($(printf %s "$word" | wc -c)))
-                            regions="$regions $line_num.$pos+${len}|Error"
-                            ;;
-                        '') line_num=$((line_num + 1));;
-                        \*) ;;
-                        *) printf 'echo -markup %%{{Error}%s}\n' "${line}" | kak -p "${kak_session}";;
-                    esac
-                done
-                printf 'set-option "buffer=%s" spell_regions %s' "${kak_bufname}" "${regions}" \
-                    | kak -p "${kak_session}"
-            }
+            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell --byte-offsets -a $options" 2>&1 | awk '
+                BEGIN {
+                    line_num = 1
+                    regions = ENVIRON["kak_timestamp"]
+                    server_command = sprintf("kak -p \"%s\"", ENVIRON["kak_session"])
+                }
+
+                {
+                    if (/^@\(#\)/) {
+                        /* drop the identification message */
+                    }
+
+                    else if (/^\*/) {
+                        /* nothing */
+                    }
+
+                    else if (/^$/) {
+                        line_num++
+                    }
+
+                    else if (/^[#&]/) {
+                        word_len = length($2)
+                        word_pos = substr($0, 1, 1) == "&" ? substr($4, 1, length($4) - 1) : $3;
+                        regions = regions " " line_num "." word_pos "+" word_len "|Error"
+                    }
+
+                    else {
+                        line = $0
+                        gsub(/"/, "&&", line)
+                        command = "fail \"" line "\""
+                        exit
+                    }
+                }
+
+                END {
+                    if (!length(command))
+                        command = "set-option \"buffer=" ENVIRON["kak_bufname"] "\" spell_regions " regions
+
+                    print command | server_command
+                    close(server_command)
+                }
+            '
             rm -rf $(dirname "$kak_opt_spell_tmp_file")
         } </dev/null >/dev/null 2>&1 &
     }
@@ -107,9 +133,11 @@ define-command spell-next %{ evaluate-commands %sh{
     fi
 } }
 
-define-command spell-replace %{ evaluate-commands %sh{
-    if [ -n "$kak_opt_spell_lang" ]; then
-        options="-l '$kak_opt_spell_lang'"
+define-command \
+    -docstring "Suggest replacement words for the current selection, against the last language used by the spell-check command" \
+    spell-replace %{ evaluate-commands %sh{
+    if [ -n "$kak_opt_spell_last_lang" ]; then
+        options="-l '$kak_opt_spell_last_lang'"
     fi
     suggestions=$(printf %s "$kak_selection" | eval "aspell -a $options" | grep '^&' | cut -d: -f2)
     menu=$(printf %s "${suggestions#?}" | awk -F', ' '

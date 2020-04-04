@@ -8,16 +8,16 @@ define-command -params .. -file-completion \
     -docstring %{grep [<arguments>]: grep utility wrapper
 All the optional arguments are forwarded to the grep utility} \
     grep %{ evaluate-commands %sh{
-     output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-grep.XXXXXXXX)/fifo
-     mkfifo ${output}
-     if [ $# -gt 0 ]; then
-         ( ${kak_opt_grepcmd} "$@" | tr -d '\r' > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
-     else
-         ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
+     if [ $# -eq 0 ]; then
+         set -- "${kak_selection}"
      fi
 
+     output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-grep.XXXXXXXX)/fifo
+     mkfifo ${output}
+     ( ${kak_opt_grepcmd} "$@" | tr -d '\r' > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
+
      printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
-               edit! -fifo ${output} -scroll *grep*
+               edit! -fifo ${output} *grep*
                set-option buffer filetype grep
                set-option buffer grep_current_line 0
                hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
@@ -44,7 +44,7 @@ define-command -hidden grep-jump %{
         try %{
             execute-keys '<a-x>s^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
             set-option buffer grep_current_line %val{cursor_line}
-            evaluate-commands -try-client %opt{jumpclient} edit -existing %reg{1} %reg{2} %reg{3}
+            evaluate-commands -try-client %opt{jumpclient} -verbatim -- edit -existing %reg{1} %reg{2} %reg{3}
             try %{ focus %opt{jumpclient} }
         }
     }

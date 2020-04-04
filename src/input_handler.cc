@@ -92,8 +92,8 @@ struct MouseHandler
         Buffer& buffer = context.buffer();
         BufferCoord cursor;
         auto& selections = context.selections();
-        const auto key_modifier = (Key::Modifiers)(key.modifiers & Key::Modifiers::MouseEvent);
-        switch (key_modifier)
+        constexpr auto modifiers = Key::Modifiers::Control | Key::Modifiers::Alt | Key::Modifiers::Shift;
+        switch ((key.modifiers & ~modifiers).value)
         {
         case Key::Modifiers::MousePressRight:
             m_dragging = false;
@@ -137,14 +137,8 @@ struct MouseHandler
             selections.sort_and_merge_overlapping();
             return true;
 
-        case Key::Modifiers::MouseWheelDown:
-            m_dragging = false;
-            scroll_window(context, 3);
-            return true;
-
-        case Key::Modifiers::MouseWheelUp:
-            m_dragging = false;
-            scroll_window(context, -3);
+        case Key::Modifiers::Scroll:
+            scroll_window(context, static_cast<int32_t>(key.key), m_dragging);
             return true;
 
         default: return false;
@@ -209,8 +203,6 @@ public:
             context().hooks_disabled().unset();
             m_hooks_disabled = false;
         }
-
-        context().hooks().run_hook(Hook::NormalBegin, "", context());
     }
 
     void on_disabled(bool temporary) override
@@ -223,24 +215,12 @@ public:
             context().hooks_disabled().unset();
             m_hooks_disabled = false;
         }
-
-        context().hooks().run_hook(Hook::NormalEnd, "", context());
     }
 
     void on_key(Key key) override
     {
         kak_assert(m_state != State::PopOnEnabled);
         ScopedSetBool set_in_on_key{m_in_on_key};
-
-        // Hack to parse keys sent by terminals using the 8th bit to mark the
-        // meta key. In normal mode, give priority to a potential alt-key than
-        // the accentuated character.
-        if (not (key.modifiers & Key::Modifiers::MouseEvent) and
-            key.key >= 127 and key.key < 256)
-        {
-            key.modifiers |= Key::Modifiers::Alt;
-            key.key &= 0x7f;
-        }
 
         bool do_restore_hooks = false;
         auto restore_hooks = on_scope_end([&, this]{
@@ -253,8 +233,6 @@ public:
 
         const bool transient = context().flags() & Context::Flags::Draft;
 
-        auto cp = key.codepoint();
-
         if (m_mouse_handler.handle_key(key, context()))
         {
             context().print_status({});
@@ -264,7 +242,7 @@ public:
             if (not transient)
                 m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
         }
-        else if (cp and isdigit(*cp))
+        else if (auto cp = key.codepoint(); cp and isdigit(*cp))
         {
             long long new_val = (long long)m_params.count * 10 + *cp - '0';
             if (new_val > std::numeric_limits<int>::max())
@@ -284,7 +262,7 @@ public:
         }
         else if (key == '"')
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
                 [this](Key key, Context& context) {
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
@@ -295,7 +273,7 @@ public:
                         context.print_status(
                             { format("invalid register '{}'", *cp),
                               context.faces()["Error"] });
-                }, "enter target register", register_doc);
+                }, "enter target register", register_doc.str());
         }
         else
         {
@@ -309,6 +287,15 @@ public:
             context().print_status({});
             if (context().has_client())
                 context().client().info_hide();
+
+            // Hack to parse keys sent by terminals using the 8th bit to mark the
+            // meta key. In normal mode, give priority to a potential alt-key than
+            // the accentuated character.
+            if (key.key >= 127 and key.key < 256)
+            {
+                key.modifiers |= Key::Modifiers::Alt;
+                key.key &= 0x7f;
+            }
 
             do_restore_hooks = true;
             if (auto command = get_normal_command(key))
@@ -819,7 +806,7 @@ public:
         }
         else if (key == ctrl('r'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
                 [this](Key key, Context&) {
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
@@ -830,13 +817,13 @@ public:
                     display();
                     m_line_changed = true;
                     m_refresh_completion_pending = true;
-                }, "enter register name", register_doc);
+                }, "enter register name", register_doc.str());
             display();
             return;
         }
         else if (key == ctrl('v'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(context(), "raw-key", KeymapMode::None,
                 [this](Key key, Context&) {
                     if (auto cp = get_raw_codepoint(key))
                     {
@@ -1113,8 +1100,10 @@ private:
 class NextKey : public InputMode
 {
 public:
-    NextKey(InputHandler& input_handler, KeymapMode keymap_mode, KeyCallback callback)
-        : InputMode(input_handler), m_callback(std::move(callback)), m_keymap_mode(keymap_mode) {}
+    NextKey(InputHandler& input_handler, String name, KeymapMode keymap_mode, KeyCallback callback,
+            Timer::Callback idle_callback)
+        : InputMode(input_handler), m_name{std::move(name)}, m_callback(std::move(callback)), m_keymap_mode(keymap_mode),
+          m_idle_timer{Clock::now() + get_idle_timeout(context()), std::move(idle_callback)} {}
 
     void on_key(Key key) override
     {
@@ -1132,11 +1121,13 @@ public:
 
     KeymapMode keymap_mode() const override { return m_keymap_mode; }
 
-    StringView name() const override { return "next-key"; }
+    StringView name() const override { return m_name; }
 
 private:
-    KeyCallback m_callback;
-    KeymapMode m_keymap_mode;
+    String         m_name;
+    KeyCallback    m_callback;
+    KeymapMode     m_keymap_mode;
+    Timer          m_idle_timer;
 };
 
 class Insert : public InputMode
@@ -1162,7 +1153,6 @@ public:
         last_insert().keys.clear();
         last_insert().disable_hooks = context().hooks_disabled();
         last_insert().count = count;
-        context().hooks().run_hook(Hook::InsertBegin, "", context());
         prepare(mode, count);
     }
 
@@ -1206,11 +1196,6 @@ public:
         }
         else if (key == Key::Escape or key == ctrl('c'))
         {
-            if (m_in_end)
-                throw runtime_error("asked to exit insert mode while running InsertEnd hook");
-            m_in_end = true;
-            context().hooks().run_hook(Hook::InsertEnd, "", context());
-
             m_completer.reset();
             pop_mode();
         }
@@ -1286,13 +1271,13 @@ public:
             insert(*cp);
         else if (key == ctrl('r'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
                 [this](Key key, Context&) {
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
                         return;
                     insert(RegisterManager::instance()[*cp].get(context()));
-                }, "enter register name", register_doc);
+                }, "enter register name", register_doc.str());
             update_completions = false;
         }
         else if (key == ctrl('n'))
@@ -1315,7 +1300,7 @@ public:
         }
         else if (key == ctrl('x'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(context(), "explicit-completion", KeymapMode::None,
                 [this](Key key, Context&) {
                     if (key.key == 'f')
                         m_completer.explicit_file_complete();
@@ -1349,7 +1334,7 @@ public:
         }
         else if (key == ctrl('v'))
         {
-            on_next_key_with_autoinfo(context(), KeymapMode::None,
+            on_next_key_with_autoinfo(context(), "raw-insert", KeymapMode::None,
                 [this, transient](Key key, Context&) {
                     if (auto cp = get_raw_codepoint(key))
                     {
@@ -1505,7 +1490,6 @@ private:
     const bool      m_restore_cursor;
     bool            m_auto_complete;
     Timer           m_idle_timer;
-    bool            m_in_end = false;
     MouseHandler    m_mouse_handler;
     ScopedSetBool   m_disable_hooks;
 };
@@ -1529,7 +1513,7 @@ void InputHandler::push_mode(InputMode* new_mode)
     m_mode_stack.emplace_back(new_mode);
     new_mode->on_enabled();
 
-    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, new_mode->name()), context());
+    context().hooks().run_hook(Hook::ModeChange, format("push:{}:{}", prev_name, new_mode->name()), context());
 }
 
 void InputHandler::pop_mode(InputMode* mode)
@@ -1543,7 +1527,7 @@ void InputHandler::pop_mode(InputMode* mode)
     m_mode_stack.pop_back();
     current_mode().on_enabled();
 
-    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()), context());
+    context().hooks().run_hook(Hook::ModeChange, format("pop:{}:{}", prev_name, current_mode().name()), context());
 }
 
 void InputHandler::reset_normal_mode()
@@ -1552,12 +1536,8 @@ void InputHandler::reset_normal_mode()
     if (m_mode_stack.size() == 1)
         return;
 
-    StringView prev_name = current_mode().name();
-    current_mode().on_disabled(false);
-    m_mode_stack.resize(1);
-    current_mode().on_enabled();
-
-    context().hooks().run_hook(Hook::ModeChange, format("{}:{}", prev_name, current_mode().name()), context());
+    while (m_mode_stack.size() > 1)
+        pop_mode(m_mode_stack.back().get());
 }
 
 void InputHandler::insert(InsertMode mode, int count)
@@ -1611,9 +1591,11 @@ void InputHandler::menu(Vector<DisplayLine> choices, MenuCallback callback)
     push_mode(new InputModes::Menu(*this, std::move(choices), std::move(callback)));
 }
 
-void InputHandler::on_next_key(KeymapMode keymap_mode, KeyCallback callback)
+void InputHandler::on_next_key(StringView mode_name, KeymapMode keymap_mode, KeyCallback callback,
+                               Timer::Callback idle_callback)
 {
-    push_mode(new InputModes::NextKey(*this, keymap_mode, std::move(callback)));
+    push_mode(new InputModes::NextKey(*this, format("next-key[{}]", mode_name), keymap_mode, std::move(callback),
+                                      std::move(idle_callback)));
 }
 
 InputHandler::ScopedForceNormal::ScopedForceNormal(InputHandler& handler, NormalParams params)
@@ -1729,10 +1711,14 @@ std::pair<CursorMode, DisplayCoord> InputHandler::get_cursor_info() const
     return current_mode().get_cursor_info();
 }
 
+bool should_show_info(AutoInfo mask, const Context& context)
+{
+  return (context.options()["autoinfo"].get<AutoInfo>() & mask) and context.has_client();
+}
+
 bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context)
 {
-    if (not (context.options()["autoinfo"].get<AutoInfo>() & mask) or
-        not context.has_client())
+    if (not should_show_info(mask, context))
         return false;
 
     context.client().info_show(title.str(), info.str(), {}, InfoStyle::Prompt);
@@ -1745,27 +1731,33 @@ void hide_auto_info_ifn(const Context& context, bool hide)
         context.client().info_hide();
 }
 
-void scroll_window(Context& context, LineCount offset)
+void scroll_window(Context& context, LineCount offset, bool mouse_dragging)
 {
     Window& window = context.window();
     Buffer& buffer = context.buffer();
+    const LineCount line_count = buffer.line_count();
 
     DisplayCoord win_pos = window.position();
     DisplayCoord win_dim = window.dimensions();
+
+    if ((offset < 0 and win_pos.line == 0) or (offset > 0 and win_pos.line == line_count - 1))
+        return;
 
     const DisplayCoord max_offset{(win_dim.line - 1)/2, (win_dim.column - 1)/2};
     const DisplayCoord scrolloff =
         std::min(context.options()["scrolloff"].get<DisplayCoord>(), max_offset);
 
-    const LineCount line_count = buffer.line_count();
     win_pos.line = clamp(win_pos.line + offset, 0_line, line_count-1);
 
-    SelectionList& selections = context.selections();
-    const BufferCoord cursor = selections.main().cursor();
+    Selection& main_selection = context.selections().main();
+    const BufferCoord anchor = main_selection.anchor();
+    const BufferCoord cursor = main_selection.cursor();
 
-    auto line = clamp(cursor.line, win_pos.line + scrolloff.line,
+    auto cursor_off = mouse_dragging ? win_pos.line - window.position().line : 0;
+
+    auto line = clamp(cursor.line + cursor_off, win_pos.line + scrolloff.line,
                       win_pos.line + win_dim.line - 1 - scrolloff.line);
-    line = clamp(line, 0_line, line_count-1);
+    line = clamp(line, 0_line, buffer.line_count() - 1);
 
     using std::min; using std::max;
     // This is not exactly a clamp, and must be done in this order as
@@ -1773,8 +1765,11 @@ void scroll_window(Context& context, LineCount offset)
     auto col = min(max(cursor.column, buffer[line].byte_count_to(win_pos.column)),
                    buffer[line].length()-1);
 
-    selections = SelectionList{buffer, BufferCoord{line, col}};
+    BufferCoord new_cursor = { line, col };
+    BufferCoord new_anchor = (mouse_dragging or new_cursor == cursor) ? anchor : new_cursor;
+
     window.set_position(win_pos);
+    main_selection = { new_anchor, new_cursor };
 }
 
 }

@@ -49,5 +49,5 @@ add-highlighter shared/git-notes regex '^\h*#[^\n]*$' 0:comment
 provide-module git-rebase %{
 add-highlighter shared/git-rebase group
 add-highlighter shared/git-rebase/ regex "#[^\n]*\n" 0:comment
-add-highlighter shared/git-rebase/ regex "^(pick|edit|reword|squash|fixup|exec|break|drop|label|reset|merge|[persfxbdltm]) (\w+)" 1:keyword 2:meta
+add-highlighter shared/git-rebase/ regex "^(?:(pick|p)|(edit|reword|squash|fixup|exec|break|drop|label|reset|merge|[ersfxbdltm])) (\w+)" 1:keyword 2:value 3:meta
 }

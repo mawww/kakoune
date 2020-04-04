@@ -1,9 +1,10 @@
 Json-Rpc user interface
 =======================
 
-Kakoune user interfaces can be implemented through the json-rpc 2.0 protocol.
+Kakoune user interfaces can be implemented through the
+https://www.jsonrpc.org/specification[json-rpc 2.0 protocol].
 
-By launching kakoune in client mode with the `-ui json` option, the launched
+By launching Kakoune in client mode with the `-ui json` option, the launched
 client will write newline separated json-rpc requests on stdout and read
 json-rpc requests on stdin.  Errors will be reported on stderr (not in
 json format).
@@ -34,7 +35,7 @@ Here are the requests that can be written by the json ui on stdout:
   - inline: display the menu next to (above or below) the anchor coordinate
 * menu_select(int selected)
 * menu_hide()
-* info_show(String title, String content, Coord anchor, Face face, String style)
+* info_show(Line title, Array<Line> content, Coord anchor, Face face, String style)
   style can be:
   - prompt: display the info as a prompt info (anchor is ignored)
   - inline: display the info next to (above or below) the anchor coordinate
@@ -57,7 +58,12 @@ The requests that the json ui can interpret on stdin are:
 
 * keys(String key1, String key2...): keystrokes
 * resize(int rows, int columns): notify ui resize
-* mouse(String type, int line, int column): mouse event, type
-  can be: 'move', 'press', 'release', 'wheel_up', 'wheel_down',
-  line, column is the cursor position.
+* scroll(int amount): scroll by given line amount
+* mouse(String type, int line, int column): mouse event. line and column relate to
+  the cursor position. type can be:
+  - 'move'
+  - 'press_left'
+  - 'press_right'
+  - 'release_left'
+  - 'release_right'
 * menu_select(int index): explicit select of given menu entry

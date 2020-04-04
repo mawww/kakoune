@@ -14,7 +14,7 @@ hook global BufCreate .*[.](cabal) %{
 hook global WinSetOption filetype=cabal %[
     require-module cabal
 
-    hook window ModeChange insert:.* -group cabal-trim-indent  cabal-trim-indent
+    hook window ModeChange pop:insert:.* -group cabal-trim-indent  cabal-trim-indent
     hook window InsertChar \n -group cabal-indent cabal-indent-on-new-line
     hook window InsertChar \{ -group cabal-indent cabal-indent-on-opening-curly-brace
     hook window InsertChar \} -group cabal-indent cabal-indent-on-closing-curly-brace
@@ -55,7 +55,7 @@ define-command -hidden cabal-indent-on-new-line %[
         # copy '#' comment prefix and following white spaces
         try %[ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P ]
         # preserve previous line indent
-        try %[ execute-keys -draft \; K <a-&> ]
+        try %[ execute-keys -draft <semicolon> K <a-&> ]
         # filter previous line
         try %[ execute-keys -draft k : cabal-trim-indent <ret> ]
         # indent after lines ending with { or :

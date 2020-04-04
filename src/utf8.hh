@@ -4,6 +4,7 @@
 #include "assert.hh"
 #include "unicode.hh"
 #include "units.hh"
+#include "optional.hh"
 
 #include <cstddef>
 
@@ -257,6 +258,17 @@ Iterator character_start(Iterator it, const Sentinel& begin) noexcept
         --it;
     return it;
 }
+
+// returns an optional iterator to the first byte of the previous character
+// or no value if it is at begin
+template<typename Iterator, typename Sentinel>
+static Optional<Codepoint> prev_codepoint(Iterator it, const Sentinel& begin) noexcept
+{
+    if (it <= begin)
+        return {};
+    return codepoint(character_start(it -1, begin), it);
+}
+
 
 template<typename OutputIterator, typename InvalidPolicy = utf8::InvalidPolicy::Pass>
 void dump(OutputIterator&& it, Codepoint cp)

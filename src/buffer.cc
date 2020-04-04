@@ -66,7 +66,7 @@ static void apply_options(OptionManager& options, const ParsedLines& parsed_line
 }
 
 Buffer::HistoryNode::HistoryNode(HistoryId parent)
-    : parent{parent}, timepoint{Clock::now()}
+    : parent{parent}, committed{Clock::now()}
 {}
 
 Buffer::Buffer(String name, Flags flags, StringView data,
@@ -78,7 +78,7 @@ Buffer::Buffer(String name, Flags flags, StringView data,
       m_history{{HistoryId::Invalid}},
       m_history_id{HistoryId::First},
       m_last_save_history_id{HistoryId::First},
-      m_fs_timestamp{fs_timestamp.tv_sec, fs_timestamp.tv_nsec}
+      m_fs_status{fs_timestamp, data.length(), hash_value(data)}
 {
     ParsedLines parsed_lines = parse_lines(data);
 
@@ -122,7 +122,7 @@ void Buffer::on_registered()
             run_hook_in_own_context(Hook::BufNewFile, m_name);
         else
         {
-            kak_assert(m_fs_timestamp != InvalidTime);
+            kak_assert(m_fs_status.timestamp != InvalidTime);
             run_hook_in_own_context(Hook::BufOpenFile, m_name);
         }
     }
@@ -156,6 +156,11 @@ bool Buffer::set_name(String name)
         {
             m_name = real_path(name);
             m_display_name = compact_path(m_name);
+            if (m_flags & Buffer::Flags::File and not file_exists(m_name))
+            {
+                m_flags |= Buffer::Flags::New;
+                m_last_save_history_id = HistoryId::Invalid;
+            }
         }
         else
         {
@@ -195,12 +200,12 @@ BufferCoord Buffer::clamp(BufferCoord coord) const
     return coord;
 }
 
-BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool)
+BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool) const
 {
     return utf8::advance(iterator_at(coord), offset < 0 ? begin() : end()-1, offset).coord();
 }
 
-BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol)
+BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol) const
 {
     const auto column = coord.target == -1 ? get_column(*this, tabstop, coord) : coord.target;
     const auto line = Kakoune::clamp(coord.line + offset, 0_line, line_count()-1);
@@ -226,20 +231,10 @@ String Buffer::string(BufferCoord begin, BufferCoord end) const
     return res;
 }
 
-// A Modification holds a single atomic modification to Buffer
-struct Buffer::Modification
+Buffer::Modification Buffer::Modification::inverse() const
 {
-    enum Type { Insert, Erase };
-
-    Type type;
-    BufferCoord coord;
-    StringDataPtr content;
-
-    Modification inverse() const
-    {
-        return {type == Insert ? Erase : Insert, coord, content};
-    }
-};
+    return {type == Insert ? Erase : Insert, coord, content};
+}
 
 void Buffer::reload(StringView data, timespec fs_timestamp)
 {
@@ -262,30 +257,36 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
     }
     else
     {
-        auto diff = find_diff(m_lines.begin(), m_lines.size(),
-                              parsed_lines.lines.begin(), parsed_lines.lines.size(),
-                              [](const StringDataPtr& lhs, const StringDataPtr& rhs)
-                              { return lhs->strview() == rhs->strview(); });
+        Vector<Diff> diff;
+        for_each_diff(m_lines.begin(), m_lines.size(),
+                      parsed_lines.lines.begin(), parsed_lines.lines.size(),
+                      [&diff](DiffOp op, int len)
+                      { diff.push_back({op, len}); },
+                      [](const StringDataPtr& lhs, const StringDataPtr& rhs)
+                      { return lhs->strview() == rhs->strview(); });
 
         auto it = m_lines.begin();
+        auto new_it = parsed_lines.lines.begin();
         for (auto& d : diff)
         {
-            if (d.mode == Diff::Keep)
+            if (d.op == DiffOp::Keep)
+            {
                 it += d.len;
-            else if (d.mode == Diff::Add)
+                new_it += d.len;
+            }
+            else if (d.op == DiffOp::Add)
             {
                 const LineCount cur_line = (int)(it - m_lines.begin());
 
                 for (LineCount line = 0; line < d.len; ++line)
-                    m_current_undo_group.push_back({
-                        Modification::Insert, cur_line + line,
-                        parsed_lines.lines[(int)(d.posB + line)]});
+                    m_current_undo_group.push_back({Modification::Insert, cur_line + line, *(new_it + (int)line)});
 
-                m_changes.push_back({ Change::Insert, cur_line, cur_line + d.len });
-                m_lines.insert(it, &parsed_lines.lines[d.posB], &parsed_lines.lines[d.posB + d.len]);
+                m_changes.push_back({Change::Insert, cur_line, cur_line + d.len});
+                m_lines.insert(it, new_it, new_it + d.len);
                 it = m_lines.begin() + (int)(cur_line + d.len);
+                new_it += d.len;
             }
-            else if (d.mode == Diff::Remove)
+            else if (d.op == DiffOp::Remove)
             {
                 const LineCount cur_line = (int)(it - m_lines.begin());
 
@@ -305,7 +306,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
     apply_options(options(), parsed_lines);
 
     m_last_save_history_id = m_history_id;
-    m_fs_timestamp = fs_timestamp;
+    m_fs_status = {fs_timestamp, data.length(), hash_value(data)};
 }
 
 void Buffer::commit_undo_group()
@@ -436,12 +437,12 @@ void Buffer::check_invariant() const
 #endif
 }
 
-BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
+BufferRange Buffer::do_insert(BufferCoord pos, StringView content)
 {
     kak_assert(is_valid(pos));
 
     if (content.empty())
-        return pos;
+        return {pos, pos};
 
     const bool at_end = is_end(pos);
     const bool append_lines = at_end and (m_lines.empty() or byte_at(back_coord()) == '\n');
@@ -481,7 +482,7 @@ BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
                             : BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
 
     m_changes.push_back({ Change::Insert, pos, end });
-    return end;
+    return {pos, end};
 }
 
 BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
@@ -535,13 +536,13 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-BufferCoord Buffer::insert(BufferCoord pos, StringView content)
+BufferRange Buffer::insert(BufferCoord pos, StringView content)
 {
     throw_if_read_only();
 
     kak_assert(is_valid(pos));
     if (content.empty())
-        return pos;
+        return {pos, pos};
 
     StringDataPtr real_content;
     if (is_end(pos) and content.back() != '\n')
@@ -576,21 +577,20 @@ BufferCoord Buffer::erase(BufferCoord begin, BufferCoord end)
     return do_erase(begin, end);
 }
 
-BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end, StringView content)
+BufferRange Buffer::replace(BufferCoord begin, BufferCoord end, StringView content)
 {
     throw_if_read_only();
 
+    if (std::equal(iterator_at(begin), iterator_at(end), content.begin(), content.end()))
+        return {begin, end};
+
     if (is_end(end) and not content.empty() and content.back() == '\n')
     {
-        end = back_coord();
-        content = content.substr(0, content.length() - 1);
+        auto pos = insert(erase(begin, back_coord()),
+                          content.substr(0, content.length() - 1)).begin;
+        return {pos, end_coord()};
     }
-
-    if (std::equal(iterator_at(begin), iterator_at(end), content.begin(), content.end()))
-        return begin;
-
-    auto pos = erase(begin, end);
-    return insert(pos, content);
+    return insert(erase(begin, end), content);
 }
 
 bool Buffer::is_modified() const
@@ -600,14 +600,14 @@ bool Buffer::is_modified() const
             not m_current_undo_group.empty());
 }
 
-void Buffer::notify_saved()
+void Buffer::notify_saved(FsStatus status)
 {
     if (not m_current_undo_group.empty())
         commit_undo_group();
 
     m_flags &= ~Flags::New;
     m_last_save_history_id = m_history_id;
-    m_fs_timestamp = get_fs_timestamp(m_name);
+    m_fs_status = status;
 }
 
 BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
@@ -663,16 +663,16 @@ BufferCoord Buffer::char_prev(BufferCoord coord) const
     return { coord.line, column };
 }
 
-timespec Buffer::fs_timestamp() const
+void Buffer::set_fs_status(FsStatus status)
 {
     kak_assert(m_flags & Flags::File);
-    return m_fs_timestamp;
+    m_fs_status = std::move(status);
 }
 
-void Buffer::set_fs_timestamp(timespec ts)
+const FsStatus& Buffer::fs_status() const
 {
     kak_assert(m_flags & Flags::File);
-    m_fs_timestamp = ts;
+    return m_fs_status;
 }
 
 void Buffer::on_option_changed(const Option& option)

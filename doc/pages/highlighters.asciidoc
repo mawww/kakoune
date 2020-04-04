@@ -5,9 +5,9 @@
 Manipulation of the displayed text is done through highlighters, which can
 be added or removed with the following commands:
 
------------------------------------------------------
-add-highlighter <path>/<name> <type> <parameters> ...
------------------------------------------------------
+-----------------------------------------------------------------
+add-highlighter [-override] <path>/<name> <type> <parameters> ...
+-----------------------------------------------------------------
 
 and
 
@@ -22,6 +22,9 @@ separated path starting with a scope. Scopes are *global*, *buffer*,
 *name* is the name of the highlighter, if name is omitted in
 `add-highlighter` (the path ends with a `/`), it will be auto-generated
 from the remaining parameters.
+
+if `-override` is specified and the given name already exists, that
+highlighter is replaced with the new one.
 
 == Convenient highlighters
 
@@ -61,6 +64,11 @@ from the remaining parameters.
     *-separator* <separator text>:::
         specify a string to separate the line numbers column with
         the rest of the buffer (default is '|')
+
+    *-min-digits* <num>:::
+        always reserve room for at least *num* digits,
+        so text doesn't jump around as lines are added or removed
+        (default is 2)
 
 *wrap* [options]::
     soft wrap buffer text at window width, with the following *options*:
@@ -275,8 +283,8 @@ The common case would be to create a named shared group, or regions and then
 fill it with highlighters:
 
 ---------------------------------------
-add-highlighter shared/ group <name>
-add-highlighter shared/<name> regex ...
+add-highlighter shared/<name> group
+add-highlighter shared/<name>/ regex ...
 ---------------------------------------
 
 It can then be referenced in a window using the ref highlighter.

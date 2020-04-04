@@ -65,7 +65,7 @@ constexpr bool with_bit_ops(Meta::Type<ObjectFlags>) { return true; }
 
 constexpr auto enum_desc(Meta::Type<ObjectFlags>)
 {
-    return make_array<EnumDesc<ObjectFlags>, 3>({
+    return make_array<EnumDesc<ObjectFlags>>({
         { ObjectFlags::ToBegin, "to_begin" },
         { ObjectFlags::ToEnd, "to_end" },
         { ObjectFlags::Inner, "inner" },

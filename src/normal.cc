@@ -1,5 +1,7 @@
 #include "normal.hh"
 
+#include <functional>
+
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
@@ -40,7 +42,7 @@ enum class SelectMode
 
 constexpr auto enum_desc(Meta::Type<SelectMode>)
 {
-    return make_array<EnumDesc<SelectMode>, 3>({
+    return make_array<EnumDesc<SelectMode>>({
         { SelectMode::Replace, "replace" },
         { SelectMode::Extend, "extend" },
         { SelectMode::Append, "append" },
@@ -166,7 +168,7 @@ void repeat_last_select(Context& context, NormalParams)
     context.repeat_last_select();
 }
 
-String build_autoinfo_for_mapping(Context& context, KeymapMode mode,
+String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
                                   ConstArrayView<KeyInfo> built_ins)
 {
     auto& keymaps = context.keymaps();
@@ -215,7 +217,7 @@ void goto_commands(Context& context, NormalParams params)
     }
     else
     {
-        on_next_key_with_autoinfo(context, KeymapMode::Goto,
+        on_next_key_with_autoinfo(context, "goto", KeymapMode::Goto,
                                  [](Key key, Context& context) {
             auto cp = key.codepoint();
             if (not cp or key == Key::Escape)
@@ -342,7 +344,7 @@ template<bool lock>
 void view_commands(Context& context, NormalParams params)
 {
     const int count = params.count;
-    on_next_key_with_autoinfo(context, KeymapMode::View,
+    on_next_key_with_autoinfo(context, "view", KeymapMode::View,
                              [count](Key key, Context& context) {
         if (key == Key::Escape)
             return;
@@ -376,10 +378,10 @@ void view_commands(Context& context, NormalParams params)
             window.scroll(-std::max<ColumnCount>(1, count));
             break;
         case 'j':
-            window.scroll( std::max<LineCount>(1, count));
+            scroll_window(context,  std::max<LineCount>(1, count));
             break;
         case 'k':
-            window.scroll(-std::max<LineCount>(1, count));
+            scroll_window(context, -std::max<LineCount>(1, count));
             break;
         case 'l':
             window.scroll( std::max<ColumnCount>(1, count));
@@ -399,7 +401,7 @@ void view_commands(Context& context, NormalParams params)
 
 void replace_with_char(Context& context, NormalParams)
 {
-    on_next_key_with_autoinfo(context, KeymapMode::None,
+    on_next_key_with_autoinfo(context, "replace-char", KeymapMode::None,
                              [](Key key, Context& context) {
         auto cp = key.codepoint();
         if (not cp or key == Key::Escape)
@@ -445,7 +447,7 @@ void for_each_codepoint(Context& context, NormalParams)
     selections.insert(strings, InsertMode::Replace);
 }
 
-void command(Context& context, EnvVarMap env_vars)
+void command(const Context& context, EnvVarMap env_vars)
 {
     if (not CommandManager::has_instance())
         throw runtime_error{"commands are not supported"};
@@ -508,33 +510,32 @@ BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, Strin
     const auto lines_before = before | split_after<StringView>('\n') | gather<Vector<StringView>>();
     const auto lines_after = after | split_after<StringView>('\n') | gather<Vector<StringView>>();
 
-    auto diffs = find_diff(lines_before.begin(), (int)lines_before.size(),
-                           lines_after.begin(), (int)lines_after.size());
-
     auto byte_count = [](auto&& lines, int first, int count) {
-        return std::accumulate(&lines[first], &lines[first+count], 0_byte,
+        return std::accumulate(lines.begin() + first, lines.begin() + first + count, 0_byte,
                                [](ByteCount l, StringView s) { return l + s.length(); });
     };
 
-    int posA = 0;
-    for (auto& diff : diffs)
-    {
-        switch (diff.mode)
+    for_each_diff(lines_before.begin(), (int)lines_before.size(),
+                  lines_after.begin(), (int)lines_after.size(),
+                  [&, posA = 0, posB = 0](DiffOp op, int len) mutable {
+        switch (op)
         {
-        case Diff::Keep:
-            pos = buffer.advance(pos, byte_count(lines_before, posA, diff.len));
-            posA += diff.len;
+        case DiffOp::Keep:
+            pos = buffer.advance(pos, byte_count(lines_before, posA, len));
+            posA += len;
+            posB += len;
             break;
-        case Diff::Add:
-            pos = buffer.insert(pos, {lines_after[diff.posB].begin(),
-                                      lines_after[diff.posB + diff.len - 1].end()});
+        case DiffOp::Add:
+            pos = buffer.insert(pos, {lines_after[posB].begin(),
+                                      lines_after[posB + len - 1].end()}).end;
+            posB += len;
             break;
-        case Diff::Remove:
-            pos = buffer.erase(pos, buffer.advance(pos, byte_count(lines_before, posA, diff.len)));
-            posA += diff.len;
+        case DiffOp::Remove:
+            pos = buffer.erase(pos, buffer.advance(pos, byte_count(lines_before, posA, len)));
+            posA += len;
             break;
         }
-    }
+    });
     return pos;
 }
 
@@ -640,10 +641,19 @@ void insert_output(Context& context, NormalParams)
             if (cmdline.empty())
                 return;
 
-            auto str = ShellManager::instance().eval(
-                cmdline, context, {}, ShellManager::Flags::WaitForStdout).first;
             ScopedEdition edition(context);
-            context.selections().insert(str, mode);
+            auto& selections = context.selections();
+            const size_t old_main = selections.main_index();
+
+            auto ins = selections | transform([&, i=0](auto& sel) mutable {
+                selections.set_main_index(i++);
+                return ShellManager::instance().eval(
+                    cmdline, context, content(context.buffer(), sel),
+                    ShellManager::Flags::WaitForStdout).first;
+            }) | gather<Vector>();
+
+            selections.set_main_index(old_main);
+            selections.insert(ins, mode);
         });
 }
 
@@ -1190,7 +1200,7 @@ void deindent(Context& context, NormalParams params)
         indent_width = tabstop;
     indent_width = indent_width * count;
 
-    auto& buffer = context.buffer();
+    const auto& buffer = context.buffer();
     Vector<Selection> sels;
     LineCount last_line = 0;
     for (auto& sel : context.selections())
@@ -1244,7 +1254,7 @@ void select_object(Context& context, NormalParams params)
                       whole ? "" : (flags & ObjectFlags::ToBegin ? " begin" : " end"));
     };
 
-    on_next_key_with_autoinfo(context, KeymapMode::Object,
+    on_next_key_with_autoinfo(context,"text-object",  KeymapMode::Object,
                              [params](Key key, Context& context) {
         if (key == Key::Escape)
             return;
@@ -1378,7 +1388,7 @@ enum Direction { Backward = -1, Forward = 1 };
 template<Direction direction, bool half = false>
 void scroll(Context& context, NormalParams params)
 {
-    Window& window = context.window();
+    const Window& window = context.window();
     const int count = params.count ? params.count : 1;
     const LineCount offset = (window.dimensions().line - 2) / (half ? 2 : 1) * count;
 
@@ -1494,7 +1504,7 @@ void select_to_next_char(Context& context, NormalParams params)
                       flags & SelectFlags::Reverse ? "previous" : "next");
     };
 
-    on_next_key_with_autoinfo(context, KeymapMode::None,
+    on_next_key_with_autoinfo(context, "to-char", KeymapMode::None,
                              [params](Key key, Context& context) {
         auto cp = key.codepoint();
         if (not cp or key == Key::Escape)
@@ -1768,26 +1778,19 @@ SelectionList read_selections_from_register(char reg, Context& context)
     if (content.size() < 2)
         throw runtime_error(format("register '{}' does not contain a selections desc", reg));
 
+    // Use the last two values for timestamp and main_index to allow the buffer
+    // name to have @ symbols
     struct error : runtime_error { error(size_t) : runtime_error{"expected <buffer>@<timestamp>@main_index"} {} };
-    const auto desc = content[0] | split<StringView>('@') | static_gather<error, 3>();
-    Buffer& buffer = BufferManager::instance().get_buffer(desc[0]);
-    const size_t timestamp = str_to_int(desc[1]);
-    size_t main = str_to_int(desc[2]);
+    auto end_content = content[0] | reverse() | split('@') | transform([] (auto bounds) {
+        return StringView{bounds.second.base(), bounds.first.base()};
+    }) | static_gather<error, 2, false>();
 
-    if (timestamp > buffer.timestamp())
-        throw runtime_error{"register '{}' refers to an invalid timestamp"};
+    const size_t main = str_to_int(end_content[0]);
+    const size_t timestamp = str_to_int(end_content[1]);
+    const auto buffer_name = StringView{ content[0].begin (), end_content[1].begin () - 1 };
+    Buffer& buffer = BufferManager::instance().get_buffer(buffer_name);
 
-    auto sels = content | skip(1) | transform(selection_from_string) | gather<Vector<Selection>>();
-    sort_selections(sels, main);
-    merge_overlapping_selections(sels, main);
-    if (timestamp < buffer.timestamp())
-        update_selections(sels, main, buffer, timestamp);
-    else
-        clamp_selections(sels, buffer);
-
-    SelectionList res{buffer, std::move(sels)};
-    res.set_main_index(main);
-    return res;
+    return selection_list_from_strings(buffer, ColumnType::Byte, content | skip(1), timestamp, main);
 }
 
 enum class CombineOp
@@ -1849,12 +1852,12 @@ void combine_selection(const Buffer& buffer, Selection& sel, const Selection& ot
 }
 
 template<typename Func>
-void combine_selections(Context& context, SelectionList list, Func func)
+void combine_selections(Context& context, SelectionList list, Func func, StringView title)
 {
     if (&context.buffer() != &list.buffer())
         throw runtime_error{"cannot combine selections from different buffers"};
 
-    on_next_key_with_autoinfo(context, KeymapMode::None,
+    on_next_key_with_autoinfo(context, "combine-selections", KeymapMode::None,
                              [func, list](Key key, Context& context) mutable {
                                  if (key == Key::Escape)
                                      return;
@@ -1880,7 +1883,7 @@ void combine_selections(Context& context, SelectionList list, Func func)
                                      list.set_main_index(sels.main_index());
                                  }
                                  func(context, std::move(list));
-                             }, "enter combining operator",
+                             }, title.str(),
                              "'a': append lists\n"
                              "'u': union\n"
                              "'i': intersection\n"
@@ -1902,8 +1905,9 @@ void save_selections(Context& context, NormalParams params)
 
     auto save_to_reg = [reg](Context& context, const SelectionList& sels) {
         auto& buffer = context.buffer();
+        auto to_string = [&] (const Selection& sel) { return selection_to_string(ColumnType::Byte, buffer, sel); };
         auto descs = concatenated(ConstArrayView<String>{format("{}@{}@{}", buffer.name(), buffer.timestamp(), sels.main_index())},
-                                  sels | transform(selection_to_string)) | gather<Vector<String>>();
+                                  sels | transform(to_string)) | gather<Vector<String>>();
         RegisterManager::instance()[reg].set(context, descs);
 
         context.print_status({format("{} {} selections to register '{}'",
@@ -1912,7 +1916,7 @@ void save_selections(Context& context, NormalParams params)
     };
 
     if (combine and not empty)
-        combine_selections(context, read_selections_from_register(reg, context), save_to_reg);
+        combine_selections(context, read_selections_from_register(reg, context), save_to_reg, "combine selections to register");
     else
         save_to_reg(context, context.selections());
 }
@@ -1938,7 +1942,7 @@ void restore_selections(Context& context, NormalParams params)
         set_selections(context, std::move(selections));
     }
     else
-        combine_selections(context, std::move(selections), set_selections);
+        combine_selections(context, std::move(selections), set_selections, "combine selections from register");
 }
 
 void undo(Context& context, NormalParams params)
@@ -1994,7 +1998,7 @@ void move_in_history(Context& context, NormalParams params)
 
 void exec_user_mappings(Context& context, NormalParams params)
 {
-    on_next_key_with_autoinfo(context, KeymapMode::None,
+    on_next_key_with_autoinfo(context, "user-mapping", KeymapMode::None,
                              [params](Key key, Context& context) mutable {
         if (not context.keymaps().is_mapped(key, KeymapMode::User))
             return;
@@ -2175,20 +2179,10 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'k'}, {"move up",  move_cursor<LineCount, Backward>} },
     { {'l'}, {"move right", move_cursor<CharCount, Forward>} },
 
-    { {Key::Left}, { "move left", move_cursor<CharCount, Backward>} },
-    { {Key::Down}, { "move down", move_cursor<LineCount, Forward>} },
-    { {Key::Up}, {   "move up", move_cursor<LineCount, Backward>} },
-    { {Key::Right}, {"move right", move_cursor<CharCount, Forward>} },
-
     { {'H'}, {"extend left", move_cursor<CharCount, Backward, SelectMode::Extend>} },
     { {'J'}, {"extend down", move_cursor<LineCount, Forward, SelectMode::Extend>} },
     { {'K'}, {"extend up", move_cursor<LineCount, Backward, SelectMode::Extend>} },
     { {'L'}, {"extend right", move_cursor<CharCount, Forward, SelectMode::Extend>} },
-
-    { shift(Key::Left), {"extend left", move_cursor<CharCount, Backward, SelectMode::Extend>} },
-    { shift(Key::Down), {"extend down", move_cursor<LineCount, Forward, SelectMode::Extend>} },
-    { shift(Key::Up), {"extend up", move_cursor<LineCount, Backward, SelectMode::Extend>} },
-    { shift(Key::Right), {"extend right", move_cursor<CharCount, Forward, SelectMode::Extend>} },
 
     { {'t'}, {"select to next character", select_to_next_char<SelectFlags::None>} },
     { {'f'}, {"select to next character included", select_to_next_char<SelectFlags::Inclusive>} },
@@ -2266,13 +2260,9 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {alt('B')}, {"extend to previous WORD start", repeated<select<SelectMode::Extend, select_to_previous_word<WORD>>>} },
 
     { {alt('l')}, {"select to line end", repeated<select<SelectMode::Replace, select_to_line_end<false>>>} },
-    { {Key::End}, {"select to line end", repeated<select<SelectMode::Replace, select_to_line_end<false>>>} },
     { {alt('L')}, {"extend to line end", repeated<select<SelectMode::Extend, select_to_line_end<false>>>} },
-    { shift(Key::End), {"extend to line end", repeated<select<SelectMode::Extend, select_to_line_end<false>>>} },
     { {alt('h')}, {"select to line begin", repeated<select<SelectMode::Replace, select_to_line_begin<false>>>} },
-    { {Key::Home}, {"select to line begin", repeated<select<SelectMode::Replace, select_to_line_begin<false>>>} },
     { {alt('H')}, {"extend to line begin", repeated<select<SelectMode::Extend, select_to_line_begin<false>>>} },
-    { shift(Key::Home), {"extend to line begin", repeated<select<SelectMode::Extend, select_to_line_begin<false>>>} },
 
     { {'x'}, {"select line", repeated<select<SelectMode::Replace, select_line>>} },
     { {'X'}, {"extend line", repeated<select<SelectMode::Extend, select_line>>} },

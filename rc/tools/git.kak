@@ -3,8 +3,9 @@ declare-option -docstring "name of the client in which documentation is to be di
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
     add-highlighter window/git-log group
-    add-highlighter window/git-log/ regex '^(commit) ([0-9a-f]+)( [^\n]+)?$' 1:keyword 2:meta 3:comment
-    add-highlighter window/git-log/ regex '^([a-zA-Z_-]+:) (.*?)$' 1:variable 2:value
+    add-highlighter window/git-log/ regex '^([*|\\ /_.-])*' 0:keyword
+    add-highlighter window/git-log/ regex '^( ?[*|\\ /_.-])*\h{,3}(commit )?(\b[0-9a-f]{4,40}\b)' 2:keyword 3:comment
+    add-highlighter window/git-log/ regex '^( ?[*|\\ /_.-])*\h{,3}([a-zA-Z_-]+:) (.*?)$' 2:variable 3:value
     add-highlighter window/git-log/ ref diff # highlight potential diffs from the -p option
 
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-log }
@@ -12,6 +13,15 @@ hook -group git-log-highlight global WinSetOption filetype=git-log %{
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
     add-highlighter window/git-status group
+    add-highlighter window/git-status/ regex '^## ' 0:comment
+    add-highlighter window/git-status/ regex '^## (\S*[^\s\.@])' 1:green
+    add-highlighter window/git-status/ regex '^## (\S*[^\s\.@])(\.\.+)(\S*[^\s\.@])' 1:green 2:comment 3:red
+    add-highlighter window/git-status/ regex '^(##) (No commits yet on) (\S*[^\s\.@])' 1:comment 2:Default 3:green
+    add-highlighter window/git-status/ regex '^## \S+ \[[^\n]*ahead (\d+)[^\n]*\]' 1:green
+    add-highlighter window/git-status/ regex '^## \S+ \[[^\n]*behind (\d+)[^\n]*\]' 1:red
+    add-highlighter window/git-status/ regex '^(?:([Aa])|([Cc])|([Dd!?])|([MUmu])|([Rr])|([Tt]))[ !\?ACDMRTUacdmrtu]\h' 1:green 2:blue 3:red 4:yellow 5:cyan 6:cyan
+    add-highlighter window/git-status/ regex '^[ !\?ACDMRTUacdmrtu](?:([Aa])|([Cc])|([Dd!?])|([MUmu])|([Rr])|([Tt]))\h' 1:green 2:blue 3:red 4:yellow 5:cyan 6:cyan
+    add-highlighter window/git-status/ regex '^R[ !\?ACDMRTUacdmrtu] [^\n]+( -> )' 1:cyan
     add-highlighter window/git-status/ regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
 
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-status }
@@ -19,14 +29,32 @@ hook -group git-status-highlight global WinSetOption filetype=git-status %{
 
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden line-specs git_diff_flags
+declare-option -hidden int-list git_hunk_list
 
 define-command -params 1.. \
-  -docstring %sh{printf 'git [<arguments>]: git wrapping helper
-All the optional arguments are forwarded to the git utility
-Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-blame\n  hide-diff\n  init\n  log\n  show\n  show-diff\n  status\n  update-diff'} \
-  -shell-script-candidates %{
+    -docstring %{
+        git [<arguments>]: git wrapping helper
+        All the optional arguments are forwarded to the git utility
+        Available commands:
+            add
+            rm
+            blame
+            commit
+            checkout
+            diff
+            hide-blame
+            hide-diff
+            init
+            log
+            next-hunk
+            previous-hunk
+            show
+            show-diff
+            status
+            update-diff
+    } -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
-        printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nshow\nshow-diff\ninit\nstatus\nupdate-diff\n"
+        printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-diff\ninit\nstatus\nupdate-diff\n"
     else
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
@@ -36,16 +64,24 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
     fi
   } \
   git %{ evaluate-commands %sh{
+    cd_bufdir() {
+        dirname_buffer="${kak_buffile%/*}"
+        cd "${dirname_buffer}" 2>/dev/null || {
+            printf 'fail Unable to change the current working directory to: %s\n' "${dirname_buffer}"
+            exit 1
+        }
+    }
+
     show_git_cmd_output() {
         local filetype
         case "$1" in
-           show|diff) filetype=diff ;;
-           log)  filetype=git-log ;;
+           diff) filetype=diff ;;
+           log|show)  filetype=git-log ;;
            status)  filetype=git-status ;;
         esac
         output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
         mkfifo ${output}
-        ( git "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
+        ( git "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
         printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
@@ -56,6 +92,7 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
 
     run_git_blame() {
         (
+            cd_bufdir
             printf %s "evaluate-commands -client '$kak_client' %{
                       try %{ add-highlighter window/git-blame flag-lines Information git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
@@ -90,8 +127,18 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
         ) > /dev/null 2>&1 < /dev/null &
     }
 
+    run_git_cmd() {
+        if git "${@}" > /dev/null 2>&1; then
+          printf %s "echo -markup '{Information}git $1 succeeded'"
+        else
+          printf 'fail git %s failed\n' "$1"
+        fi
+    }
+
     update_diff() {
-        git --no-pager diff -U0 "$kak_buffile" | perl -e '
+        (
+            cd_bufdir
+            git --no-pager diff -U0 "$kak_buffile" | perl -e '
             $flags = $ENV{"kak_timestamp"};
             foreach $line (<STDIN>) {
                 if ($line =~ /@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))?/) {
@@ -140,17 +187,78 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                 }
             }
             print "set-option buffer git_diff_flags $flags"
-        '
+        ' )
     }
 
-   
+    jump_hunk() {
+        direction=$1
+        set -- ${kak_opt_git_diff_flags}
+        shift
+
+        if [ $# -lt 1 ]; then
+            echo "fail 'no git hunks found'"
+            exit
+        fi
+
+        # Update hunk list if required
+        if [ "$kak_timestamp" != "${kak_opt_git_hunk_list%% *}" ]; then
+            hunks=$kak_timestamp
+
+            prev_line="-1"
+            for line in "$@"; do
+                line="${line%%|*}"
+                if [ "$((line - prev_line))" -gt 1 ]; then
+                    hunks="$hunks $line"
+                fi
+                prev_line="$line"
+            done
+            echo "set-option buffer git_hunk_list $hunks"
+            hunks=${hunks#* }
+        else
+            hunks=${kak_opt_git_hunk_list#* }
+        fi
+
+        prev_hunk=""
+        next_hunk=""
+        for hunk in ${hunks}; do
+            if   [ "$hunk" -lt "$kak_cursor_line" ]; then
+                prev_hunk=$hunk
+            elif [ "$hunk" -gt "$kak_cursor_line" ]; then
+                next_hunk=$hunk
+                break
+            fi
+        done
+
+        if [ "$direction" = "next" ]; then
+            if [ -z "$next_hunk" ]; then
+                next_hunk=${hunks%% *}
+                wrapped=true
+            fi
+            if [ -n "$next_hunk" ]; then
+                echo "select $next_hunk.1,$next_hunk.1"
+            fi
+        elif [ "$direction" = "prev" ]; then
+            if [ -z "$prev_hunk" ]; then
+                wrapped=true
+                prev_hunk=${hunks##* }
+            fi
+            if [ -n "$prev_hunk" ]; then
+                echo "select $prev_hunk.1,$prev_hunk.1"
+            fi
+        fi
+
+        if [ "$wrapped" = true ]; then
+            echo "echo -markup '{Information}git hunk search wrapped around buffer'"
+        fi
+    }
+
     commit() {
         # Handle case where message needs not to be edited
         if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit|--fixup.*|--squash.*"; then
             if git commit "$@" > /dev/null 2>&1; then
                 echo 'echo -markup "{Information}Commit succeeded"'
             else
-                echo 'echo -markup "{Error}Commit failed"'
+                echo 'fail Commit failed'
             fi
             exit
         fi <<-EOF
@@ -165,50 +273,54 @@ Available commands:\n  add\n  rm\n  blame\n  commit\n  checkout\n  diff\n  hide-
                   if git commit -F '$msgfile' --cleanup=strip $* > /dev/null; then
                      printf %s 'evaluate-commands -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
                   else
-                     printf %s 'evaluate-commands -client $kak_client echo -markup %{{Error}Commit failed}'
+                     printf 'evaluate-commands -client %s fail Commit failed\n' "$kak_client"
                   fi
               } }"
     }
 
     case "$1" in
-       show|log|diff|status) show_git_cmd_output "$@" ;;
-       blame) shift; run_git_blame "$@" ;;
-       hide-blame)
+        show|log|diff|status)
+            show_git_cmd_output "$@"
+            ;;
+        blame)
+            shift
+            run_git_blame "$@"
+            ;;
+        hide-blame)
             printf %s "try %{
                 set-option buffer=$kak_bufname git_blame_flags $kak_timestamp
                 remove-highlighter window/git-blame
             }"
             ;;
-       show-diff)
-           echo 'try %{ add-highlighter window/git-diff flag-lines Default git_diff_flags }'
-           update_diff
-           ;;
-       hide-diff)
-           echo 'try %{ remove-highlighter window/git-diff }'
-           ;;
-       update-diff) update_diff ;;
-       commit) shift; commit "$@" ;;
-       init) shift; git init "$@" > /dev/null 2>&1 ;;
-       checkout)
-           name="${2:-${kak_buffile}}"
-           git checkout "${name}" > /dev/null 2>&1
-           ;;
-       add)
-           name="${2:-${kak_buffile}}"
-           if git add -- "${name}" > /dev/null 2>&1; then
-              printf %s "echo -markup '{Information}git: added ${name}'"
-           else
-              printf %s "echo -markup '{Error}git: unable to add ${name}'"
-           fi
-           ;;
-       rm)
-           name="${2:-${kak_buffile}}"
-           if git rm -- "${name}" > /dev/null 2>&1; then
-              printf %s "echo -markup '{Information}git: removed ${name}'"
-           else
-              printf %s "echo -markup '{Error}git: unable to remove ${name}'"
-           fi
-           ;;
-       *) printf %s "echo -markup %{{Error}unknown git command '$1'}"; exit ;;
+        show-diff)
+            echo 'try %{ add-highlighter window/git-diff flag-lines Default git_diff_flags }'
+            update_diff
+            ;;
+        hide-diff)
+            echo 'try %{ remove-highlighter window/git-diff }'
+            ;;
+        update-diff) update_diff ;;
+        next-hunk) jump_hunk next ;;
+        prev-hunk) jump_hunk prev ;;
+        commit)
+            shift
+            commit "$@"
+            ;;
+        init)
+            shift
+            git init "$@" > /dev/null 2>&1
+            ;;
+        add|rm)
+            cmd="$1"
+            shift
+            run_git_cmd $cmd "${@:-${kak_buffile}}"
+            ;;
+        reset|checkout)
+            run_git_cmd "$@"
+            ;;
+        *)
+            printf "fail unknown git command '%s'\n" "$1"
+            exit
+            ;;
     esac
 }}

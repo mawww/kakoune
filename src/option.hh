@@ -77,7 +77,7 @@ constexpr bool with_bit_ops(Meta::Type<DebugFlags>) { return true; }
 
 constexpr auto enum_desc(Meta::Type<DebugFlags>)
 {
-    return make_array<EnumDesc<DebugFlags>, 5>({
+    return make_array<EnumDesc<DebugFlags>>({
         { DebugFlags::Hooks, "hooks" },
         { DebugFlags::Shell, "shell" },
         { DebugFlags::Profile, "profile" },

@@ -18,7 +18,7 @@ hook global WinSetOption filetype=nim %{
 
     hook window InsertChar \n -group nim-indent nim-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group nim-trim-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange pop:insert:.* -group nim-trim-indent %{ try %{ exec -draft <semicolon> <a-x> s ^\h+$ <ret> d } }
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window nim-.+ }
 }
@@ -37,8 +37,15 @@ add-highlighter shared/nim regions
 add-highlighter shared/nim/code default-region group
 add-highlighter shared/nim/triple_string region '([A-Za-z](_?\w)*)?"""' '"""(?!")' fill string
 add-highlighter shared/nim/raw_string region [A-Za-z](_?[A-Za-z])*" (?<!")"(?!") fill string
-add-highlighter shared/nim/string region (?<!'\\)"(?!') (?<!\\)(\\\\)*" fill string
-add-highlighter shared/nim/comment region '#?#\[' '\]##?' fill comment
+add-highlighter shared/nim/string region (?<!'\\)" ((?<!\\)(\\\\)*"|$) group
+add-highlighter shared/nim/inline_documentation region '##' $ fill documentation
+add-highlighter shared/nim/documentation region '##\[' '\]##' fill documentation
+add-highlighter shared/nim/comment region '#\[' '\]#' group
+add-highlighter shared/nim/comment_line region (?<![^'].')#(?!'\[) $ group
+
+add-highlighter shared/nim/string/fill fill string
+add-highlighter shared/nim/comment/fill fill comment
+add-highlighter shared/nim/comment_line/fill fill comment
 
 evaluate-commands %sh{
     # Grammar
@@ -66,7 +73,7 @@ evaluate-commands %sh{
     types="int int8 int16 int32 int64 uint uint8 uint16 uint32 uint64 float
     float32 float64 bool char object seq array cstring string tuple varargs
     typedesc pointer byte set typed untyped void auto"
-    values="false true"
+    values="false true on off"
 
     join() { sep=$2; set -- $1; IFS="$sep"; echo "$*"; }
 
@@ -96,8 +103,7 @@ evaluate-commands %sh{
 }
 
 add-highlighter shared/nim/code/ regex '(,|;|`|\(\.?|\.?\)|\[[.:]?|\.?\]|\{\.?|\.?\})' 0:meta
-add-highlighter shared/nim/code/ regex '#[^\n]+' 0:comment
-add-highlighter shared/nim/code/ regex %{'(\\([rcnlftvabe\\"']|0*[12]?\d?\d|x[0-9a-fA-F]{2})|[^'\n])'} 0:string
+add-highlighter shared/nim/code/ regex %{'(\\([rcnlftvabe\\"']|0*[12]?\d?\d|x[0-9a-fA-F]{2})|[^'\n])'} 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -107,11 +113,11 @@ def -hidden nim-indent-on-new-line %{
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
-        try %{ exec -draft \; K <a-&> }
+        try %{ exec -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
         try %{ exec -draft k <a-x> s \h+$ <ret> d }
-        # indent after line ending with type, import, export, const, let, var, ':' or '='
-        try %{ exec -draft <space> k x <a-k> (:|=|const|let|var|import|export|type)$ <ret> j <a-gt> }
+        # indent after line ending with enum, tuple, object, type, import, export, const, let, var, ':' or '='
+        try %{ exec -draft <space> k <a-x> <a-k> (:|=|enum|tuple|object|const|let|var|import|export|type)$ <ret> j <a-gt> }
     }
 }
 

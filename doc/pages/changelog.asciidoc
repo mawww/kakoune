@@ -3,6 +3,38 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development version
+
+* `%var{...}` now expands to list of strings, `$kak_quoted_...` now work
+  as expected with these.
+
+== Kakoune v2020.01.16
+
+* Expose history tree through `$kak_history` and
+  `$kak_uncommitted_modifications`
+
+* `InsertCompletionHide` parameter is the list of inserted
+  ranges
+
+== Kakoune 2019.12.10
+
+* Arrow keys and `<home>`, `<end>` are not normal mode commands
+  anymore but default key mappings.
+  
+* `ModeChange` hook parameter now takes `push:` or `pop:` prefix,
+  `InsertBegin`, `InsertEnd`, `NormalBegin` and `NormalEnd`
+  were removed.
+
+* `-verbatim` switch in `evaluate-commands` for perfect command
+  forwarding to another context.
+
+* `WrapMarker` face used by `wrap -marker` highlighter
+
+* `info` supports markup with the `-markup` switch
+
+* `rename-buffer` gained `-file` and `-scratch` switches
+  to support converting buffer types.  
+
 == Kakoune 2019.07.01
 
 * Re-organized bundled script files directory hierarchy.

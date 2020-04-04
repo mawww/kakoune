@@ -217,13 +217,12 @@ MappedFile::MappedFile(StringView filename)
 
     if (st.st_size == 0)
         return;
+    else if (st.st_size > std::numeric_limits<int>::max())
+        throw runtime_error("file is too big");
 
     data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (data == MAP_FAILED)
         throw file_access_error{filename, strerror(errno)};
-
-    if (st.st_size > std::numeric_limits<int>::max())
-        throw runtime_error("file is too big");
 }
 
 MappedFile::~MappedFile()
@@ -393,7 +392,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
 
     if ((buffer.flags() & Buffer::Flags::File) and
         real_path(filename) == real_path(buffer.name()))
-        buffer.notify_saved();
+        buffer.notify_saved(get_fs_status(real_path(filename)));
 }
 
 void write_buffer_to_backup_file(Buffer& buffer)
@@ -608,6 +607,13 @@ timespec get_fs_timestamp(StringView filename)
     if (stat(filename.zstr(), &st) != 0)
         return InvalidTime;
     return st.st_mtim;
+}
+
+FsStatus get_fs_status(StringView filename)
+{
+    MappedFile fd{filename};
+
+    return {fd.st.st_mtim, fd.st.st_size, hash_data(fd.data, fd.st.st_size)};
 }
 
 String get_kak_binary_path()

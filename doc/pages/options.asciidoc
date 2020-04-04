@@ -222,8 +222,9 @@ are exclusively available to built-in options.
         which tries to detect when a filename is being entered and
         provides completion based on local filesystem
 
-    *line*:::
-        which complete using lines in current buffer
+    *line=all*, *line=buffer*:::
+        which complete using lines in all buffers (*line=all*)
+        or only the current one (*line=buffer*)
 
     *option=<opt-name>*:::
         where *opt-name* is an option of type 'completions' whose
@@ -235,7 +236,8 @@ are exclusively available to built-in options.
 
 *extra_word_chars* `codepoint-list`::
     a list of all additional codepoints that should be considered
-    as word character.
+    as word character. This must be set on the buffer, not the window,
+    for word completion to offer words containing these codepoints.
 
 *matching_pairs* `codepoint-list`::
     _default_ ( ) { } [ ] < > +
@@ -313,9 +315,6 @@ are exclusively available to built-in options.
         *ncurses_shift_function_key*:::
             Function key from which shifted function key start, if the
             terminal sends F13 for <s-F1>, this should be set to 12.
-
-        *ncurses_builtin_key_parser*:::
-            Bypass ncurses key parser and use an internal one.
 
 [[startup-info]]
 *startup_info_version* `int`::

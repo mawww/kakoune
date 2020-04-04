@@ -5,13 +5,15 @@ hook global ModuleLoaded x11 %{
 provide-module x11-repl %{
 
 # termcmd should already be set in x11.kak
-define-command -docstring %{x11-repl [<arguments>]: create a new window for repl interaction
-All optional parameters are forwarded to the new window} \
+define-command -docstring %{
+    x11-repl [<arguments>]: create a new window for repl interaction
+    All optional parameters are forwarded to the new window
+} \
     -params .. \
     -shell-completion \
     x11-repl %{ evaluate-commands %sh{
         if [ -z "${kak_opt_termcmd}" ]; then
-           echo "echo -markup '{Error}termcmd option is not set'"
+           echo 'fail termcmd option is not set'
            exit
         fi
         if [ $# -eq 0 ]; then cmd="${SHELL:-sh}"; else cmd="$@"; fi

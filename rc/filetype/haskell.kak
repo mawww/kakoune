@@ -14,8 +14,8 @@ hook global BufCreate .*[.](hs) %{
 hook global WinSetOption filetype=haskell %{
     require-module haskell
 
-    set-option window extra_word_chars '_' "'"
-    hook window ModeChange insert:.* -group haskell-trim-indent  haskell-trim-indent
+    set-option buffer extra_word_chars '_' "'"
+    hook window ModeChange pop:insert:.* -group haskell-trim-indent  haskell-trim-indent
     hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haskell-.+ }
@@ -39,6 +39,7 @@ add-highlighter shared/haskell/macro        region ^\h*?\K#                     
 add-highlighter shared/haskell/pragma       region -recurse \{- \{-#               '#-\}'           fill meta
 add-highlighter shared/haskell/comment      region -recurse \{- \{-                  -\}            fill comment
 add-highlighter shared/haskell/line_comment region --(?:[^!#$%&*+./<>?@\\\^|~=]|$) $                fill comment
+add-highlighter shared/haskell/quasiquote   region \[\b[_a-z]['\w]*#?\| \|\]                        regex \[\b[_a-z]['\w]*#?\|(.*?)\|\] 1:string
 
 add-highlighter shared/haskell/code/ regex (?<!')\b0x+[A-Fa-f0-9]+ 0:value
 add-highlighter shared/haskell/code/ regex (?<!')\b\d+([.]\d+)? 0:value
@@ -46,6 +47,7 @@ add-highlighter shared/haskell/code/ regex (?<!')\b(import|hiding|qualified|modu
 add-highlighter shared/haskell/code/ regex (?<!')\b(import)(?!')\b[^\n]+(?<!')\b(as)(?!')\b 2:keyword
 add-highlighter shared/haskell/code/ regex (?<!')\b(class|data|default|deriving|infix|infixl|infixr|instance|module|newtype|pattern|type|where)(?!')\b 0:keyword
 add-highlighter shared/haskell/code/ regex (?<!')\b(case|do|else|if|in|let|mdo|of|proc|rec|then)(?!')\b 0:attribute
+add-highlighter shared/haskell/code/ regex (?<!')\b(type|data)\b\s+(\bfamily\b)?(?!') 0:keyword
 
 # The complications below is because period has many uses:
 # As function composition operator (possibly without spaces) like "." and "f.g"
@@ -76,13 +78,20 @@ add-highlighter shared/haskell/code/ regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])[~<=>|:
 add-highlighter shared/haskell/code/ regex (?<![~<=>|:!?/.@$*&#%+\^\-\\])(@|~|<-|->|=>|::|=|:|[|])(?![~<=>|:!?/.@$*&#%+\^\-\\]) 1:keyword
 # matches: forall [..variables..] .
 # not the variables
-add-highlighter shared/haskell/code/ regex \b(forall)\b[^.\n]*?(\.) 1:keyword 2:keyword
+add-highlighter shared/haskell/code/ regex \b(forall|∀)\b[^.\n]*?(\.) 1:keyword 2:keyword
 
 # matches 'x' '\\' '\'' '\n' '\0'
 # not incomplete literals: '\'
 # not valid identifiers:   w' _'
 add-highlighter shared/haskell/code/ regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
 # this has to come after operators so '-' etc is correct
+
+# matches function names in type signatures
+add-highlighter shared/haskell/code/ regex ^\s*(?:where\s+|let\s+|default\s+)?([_a-z]['\w]*#?(?:,\s*[_a-z]['\w]*#?)*)\s+::\s 1:meta
+
+# matches deriving strategies
+add-highlighter shared/haskell/code/ regex \bderiving\s+\b(stock|newtype|anyclass|via)\b 1:keyword
+add-highlighter shared/haskell/code/ regex \bderiving\b\s+(?:[A-Z]['\w]+|\([',\w\s]+?\))\s+\b(via)\b 1:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -99,13 +108,13 @@ define-command -hidden haskell-indent-on-new-line %{
         # copy -- comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # align to first clause
-        try %{ execute-keys -draft \; k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|do|let|where)\h+\K.* <ret> s \A|.\z <ret> & }
+        try %{ execute-keys -draft <semicolon> k x X s ^\h*(if|then|else)?\h*(([\w']+\h+)+=)?\h*(case\h+[\w']+\h+of|do|let|where)\h+\K.* <ret> s \A|.\z <ret> & }
         # filter previous line
         try %{ execute-keys -draft k : haskell-trim-indent <ret> }
         # indent after lines beginning with condition or ending with expression or =(
-        try %{ execute-keys -draft \; k x <a-k> ^\h*(if)|(case\h+[\w']+\h+of|do|let|where|[=(])$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <semicolon> k x <a-k> ^\h*(if)|(case\h+[\w']+\h+of|do|let|where|[=(])$ <ret> j <a-gt> }
     }
 }
 

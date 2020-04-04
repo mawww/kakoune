@@ -115,12 +115,11 @@ InsertCompletion complete_word(const SelectionList& sels,
 
         const Buffer* buffer;
     };
-    Vector<RankedMatchAndBuffer> matches;
 
     auto& word_db = get_word_db(buffer);
-    for (auto& m : word_db.find_matching(prefix))
-        matches.push_back({ m, &buffer });
-
+    Vector<RankedMatchAndBuffer> matches = word_db.find_matching(prefix)
+                                         | transform([&](auto& m) { return RankedMatchAndBuffer{m, &buffer}; })
+                                         | gather<Vector>();
     // Remove words that are being edited
     for (auto& word_count : sel_word_counts)
     {
@@ -155,6 +154,7 @@ InsertCompletion complete_word(const SelectionList& sels,
                                     [](const CharCount& lhs, const RankedMatchAndBuffer& rhs)
                                     { return std::max(lhs, rhs.candidate().char_length()); });
 
+    auto limit = [](StringView s, ColumnCount l) { return s.column_length() <= l ? s.str() : "…" + s.substr(s.column_length() - (l + 1)); };
     constexpr size_t max_count = 100;
     // Gather best max_count matches
     InsertCompletion::CandidateList candidates;
@@ -170,7 +170,7 @@ InsertCompletion complete_word(const SelectionList& sels,
             const auto pad_len = longest + 1 - m.candidate().char_length();
             menu_entry.push_back({ m.candidate().str(), {} });
             menu_entry.push_back({ String{' ', pad_len}, {} });
-            menu_entry.push_back({ m.buffer->display_name(), faces["MenuInfo"] });
+            menu_entry.push_back({ limit(m.buffer->display_name(), 20), faces["MenuInfo"] });
         }
         else
             menu_entry.push_back({ m.candidate().str(), {} });
@@ -267,12 +267,6 @@ InsertCompletion complete_option(const SelectionList& sels,
                          str_to_int({match[2].first, match[2].second}) - 1 };
         if (not buffer.is_valid(coord))
             return {};
-        auto end = cursor_pos;
-        if (match[3].matched)
-        {
-            ByteCount len = str_to_int({match[3].first, match[3].second});
-            end = buffer.advance(coord, len);
-        }
         size_t timestamp = (size_t)str_to_int({match[4].first, match[4].second});
         auto changes = buffer.changes_since(timestamp);
         if (any_of(changes, [&](auto&& change) { return change.begin < coord; }))
@@ -327,6 +321,12 @@ InsertCompletion complete_option(const SelectionList& sels,
                 std::pop_heap(first, last--, greater);
             }
 
+            auto end = cursor_pos;
+            if (match[3].matched)
+            {
+                ByteCount len = str_to_int({match[3].first, match[3].second});
+                end = buffer.advance(coord, len);
+            }
             return { std::move(candidates), coord, end, timestamp };
         }
     }
@@ -464,13 +464,33 @@ void InsertCompleter::update(bool allow_implicit)
         setup_ifn();
 }
 
+auto& get_first(InsertCompletion& completions) { return completions.begin; }
+auto& get_last(InsertCompletion& completions) { return completions.end; }
+
 void InsertCompleter::reset()
 {
     if (m_explicit_completer or m_completions.is_valid())
     {
-        String selected_item;
-        if (m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size())
-            selected_item = std::move(m_completions.candidates[m_current_candidate].completion);
+        String hook_param;
+        if (m_context.has_client() and m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size() - 1)
+        {
+            auto& buffer = m_context.buffer();
+            update_ranges(buffer, m_completions.timestamp,
+                          ArrayView<InsertCompletion>(m_completions));
+            auto ref = buffer.string(m_completions.begin, m_completions.end);
+            const auto& cursor_pos = m_context.selections().main().cursor();
+            const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
+            const auto suffix_len = std::max(0_byte, buffer.distance(cursor_pos, m_completions.end));
+            hook_param = join(m_context.selections() |
+                transform([&](const auto& sel) { return buffer.iterator_at(sel.cursor()); }) |
+                filter([&](const auto& pos) {
+                    return pos.coord().column >= prefix_len and (pos + suffix_len) != buffer.end() and
+                        std::equal(ref.begin(), ref.end(), pos - prefix_len);
+                }) |
+                transform([&](const auto& pos) {
+                    return selection_to_string(ColumnType::Byte, buffer, {(pos - prefix_len).coord(), buffer.char_prev((pos + suffix_len).coord())});
+                }), ' ');
+        }
 
         m_explicit_completer = nullptr;
         m_completions = InsertCompletion{};
@@ -478,7 +498,7 @@ void InsertCompleter::reset()
         {
             m_context.client().menu_hide();
             m_context.client().info_hide();
-            m_context.hooks().run_hook(Hook::InsertCompletionHide, selected_item, m_context);
+            m_context.hooks().run_hook(Hook::InsertCompletionHide, hook_param, m_context);
         }
     }
 }
@@ -545,7 +565,7 @@ void InsertCompleter::on_option_changed(const Option& opt)
         m_current_candidate != m_completions.candidates.size() - 1)
         return;
 
-    auto& completers = m_options["completers"].get<InsertCompleterDescList>();
+    const auto& completers = m_options["completers"].get<InsertCompleterDescList>();
     for (auto& completer : completers)
     {
         if (completer.mode == InsertCompleterDesc::Option and

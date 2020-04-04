@@ -14,6 +14,12 @@ command *q!* has to be used). Aliases are mentionned below each commands.
 For the following *write* commands, the *-sync* switch forces the synchronization
 of the file onto the filesystem
 
+*arrange-buffers* <buffer>...::
+    Reorder the buffers in the buffers list.
+    The named buffers will be moved to the front of the buffer list, in the order
+    given. Buffers that do not appear in the parameters will remain at the
+    end of the list, keeping their current order.
+
 *change-directory* [<directory>]::
     *alias* cd +
     change the current directory to *directory*, or the home directory if
@@ -41,7 +47,9 @@ of the file onto the filesystem
 
     *-scratch*:::
         Creates a new buffer named <filename>, which doesn't correspond to any
-        file on disk.
+        file on disk. If no filename is given, the buffer name will be
+        generated based on format `\*scratch-$ID\*`, where `$ID` is an
+        integer automatically incremented for new buffers.
         (See <<buffers#scratch-buffers,`:doc buffers scratch-buffers`>>)
 
     *-scroll*:::
@@ -50,12 +58,19 @@ of the file onto the filesystem
         Otherwise, does nothing.
 
 
-*write[!]* [-sync] [<filename>]::
+*write[!]* [-sync] [-atomic] [<filename>]::
     *alias* w +
     write buffer to <filename> or use its name if filename is not
     given. If the file is write-protected, its permissions are temporarily
     changed to allow saving the buffer and restored afterwards when
     the write! command is used.
+
+    *-sync*:::
+        Synchronise the filesystem after the write
+
+    *-atomic*:::
+        Force writing to a temporary file then renaming to the target file
+        so that the modification appears automatically.
 
 *write-all* [-sync]::
     *alias* wa +
@@ -97,8 +112,9 @@ of the file onto the filesystem
     *alias* db +
     delete current buffer or the buffer <name> if specified
 
-*rename-buffer* <name>::
-    set current buffer name
+*rename-buffer* [-file|-scratch] <name>::
+    set current buffer name, if *-scratch* or *-file* is given, ensure
+    the buffer is set to the corresponding type.
 
 *source* <filename> <param>...::
     execute commands in <filename>
@@ -236,12 +252,12 @@ of the file onto the filesystem
 *colorscheme* <name>::
     load named colorscheme
 
-*add-highlighter* <highlighter_name> <highlighter_parameters> ...::
+*add-highlighter* [<switches>] <highlighter_path> <highlighter_parameters> ...::
     *alias* addhl +
     add a highlighter to the current window
     (See <<highlighters#,`:doc highlighters`>>)
 
-*remove-highlighter* <highlighter_id>::
+*remove-highlighter* <highlighter_path>::
     *alias* rmhl +
     remove the highlighter whose id is *highlighter_id*
     (See <<highlighters#,`:doc highlighters`>>)
@@ -269,15 +285,24 @@ but not really useful in that context.
     by the *define-command* command, see
     <<declaring-new-commands,Declaring new commands>>.
 
-    For *-shell-script-completions* and *-shell-script-candidates*
+    For *-shell-script-completion* and *-shell-script-candidates*
     completions, token_to_complete will always be 1, and the full
     prompt content will be passed as a single token. In other words,
     word splitting does not take place.
+
+    NOTE: The prompt is displayed in and receives input from the
+    current client context, so inside a draft context like
+    `evaluate-commands -draft`, it is invisible and only responds to
+    an `execute-keys` command in the same context.
 
 *on-key* <command>::
     wait for next key from user, then execute <command>, the key is
     available through the `key` value, accessible through `$kak_key`
     in shells, or `%val{key}` in commands.
+
+    NOTE: The key press must come from the current client context,
+    so inside a draft context like `evaluate-commands -draft`, it only
+    responds to an `execute-keys` command in the same context.
 
 *menu* [<switches>] <label1> <commands1> <label2> <commands2> ...::
     display a menu using labels, the selected label’s commands are
@@ -286,6 +311,11 @@ but not really useful in that context.
     argument, in which case menu takes three argument per item, the
     last one being a command to execute when the item is selected (but
     not validated)
+
+    NOTE: The menu is displayed in and receives input from the
+    current client context, so inside a draft context like
+    `evaluate-commands -draft`, it is invisible and only responds to
+    an `execute-keys` command in the same context.
 
 *info* [<switches>] <text>::
     display text in an information box with the following *switches*:
@@ -315,6 +345,13 @@ but not really useful in that context.
     *-title* <text>:::
         set the title of the message box
 
+    *-markup*:::
+        parse markup in both title (if provided) and text. (See
+        <<faces#markup-strings,`:doc faces markup-strings`>>)
+
+    NOTE: The info box is displayed in the current client context,
+    so inside a draft context like `eval -draft`, it is invisible.
+
 *try* <commands> [catch <on_error_commands>]...::
     prevent an error in *commands* from aborting the whole command
     execution, execute *on_error_commands* instead. If nothing is to be
@@ -336,8 +373,21 @@ but not really useful in that context.
     set register *name* to *content*, each content parameter is assigned to
     a different string in the register. (See <<registers#,`:doc registers`>>)
 
-*select* <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>...::
+*select* [<switches>] <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>...::
     replace the current selections with the ones described in the arguments
+
+    *-timestamp* <timestamp>:::
+        specify which buffer timestamp those coordinates apply to. Uses current
+        buffer timestamp if not specified.
+
+    *-codepoint*::
+        provided columns are to be interpreted as codepoint counts, not byte counts.
+
+    *-display-column*::
+        provided columns are to be interpreted as display column counts, not byte counts.
+
+    both *-codepoint* and *-display-column* are only valid if *-timestamp*
+    matches the current buffer timestamp (or is not specified).
 
 *debug* {info,buffers,options,memory,shared-strings,profile-hash-maps,faces,mappings}::
     print some debug information in the *\*debug** buffer
@@ -362,7 +412,10 @@ but not really useful in that context.
 
 Commands (c.f. previous sections) can be chained, by being separated either
 by new lines or by semicolons, as such a semicolon must be escaped with a
-backslash (\;) to be considered as a literal semicolon argument
+backslash (\;) to be considered as a literal semicolon argument.
+
+To avoid trouble while writing `map` or `execute-keys` commands in scripts,
+the alternative key namings `<semicolon>` and `<a-semicolon>` can be used.
 
 == Declaring new commands
 

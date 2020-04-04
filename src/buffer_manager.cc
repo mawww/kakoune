@@ -48,15 +48,16 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
 void BufferManager::delete_buffer(Buffer& buffer)
 {
     auto it = find_if(m_buffers, [&](auto& p) { return p.get() == &buffer; });
-    kak_assert(it != m_buffers.end());
-
-    buffer.on_unregistered();
+    if (it == m_buffers.end()) // we might be trying to recursively delete this buffer
+        return;
 
     m_buffer_trash.emplace_back(std::move(*it));
     m_buffers.erase(it);
 
     if (ClientManager::has_instance())
         ClientManager::instance().ensure_no_client_uses_buffer(buffer);
+
+    buffer.on_unregistered();
 }
 
 Buffer* BufferManager::get_buffer_ifp(StringView name)
@@ -102,6 +103,31 @@ void BufferManager::backup_modified_buffers()
 void BufferManager::clear_buffer_trash()
 {
     m_buffer_trash.clear();
+}
+
+void BufferManager::arrange_buffers(ConstArrayView<String> first_ones)
+{
+    Vector<size_t> indices;
+    for (const auto& name : first_ones)
+    {
+        auto it = find_if(m_buffers, [&](auto& buf) { return buf->name() == name or buf->display_name() == name; });
+        if (it == m_buffers.end())
+            throw runtime_error{format("no such buffer '{}'", name)};
+        size_t index = it - m_buffers.begin();
+        if (contains(indices, index))
+            throw runtime_error{format("buffer '{}' appears more than once", name)};
+        indices.push_back(index);
+    }
+
+    BufferList res;
+    for (size_t index : indices)
+        res.push_back(std::move(m_buffers[index]));
+    for (auto& buf : m_buffers)
+    {
+        if (buf)
+            res.push_back(std::move(buf));
+    }
+    m_buffers = std::move(res);
 }
 
 }

@@ -78,9 +78,9 @@ static ConstArrayView<Codepoint> get_extra_word_chars(const Buffer& buffer)
     return buffer.options()["extra_word_chars"].get<Vector<Codepoint, MemoryDomain::Options>>();
 }
 
-void WordDB::add_words(StringView line)
+void WordDB::add_words(StringView line, ConstArrayView<Codepoint> extra_word_chars)
 {
-    for (auto&& w : WordSplitter{line, get_extra_word_chars(*m_buffer)})
+    for (auto&& w : WordSplitter{line, extra_word_chars})
     {
         auto it = m_words.find(w);
         if (it != m_words.end())
@@ -94,9 +94,9 @@ void WordDB::add_words(StringView line)
     }
 }
 
-void WordDB::remove_words(StringView line)
+void WordDB::remove_words(StringView line, ConstArrayView<Codepoint> extra_word_chars)
 {
-    for (auto&& w : WordSplitter{line, get_extra_word_chars(*m_buffer)})
+    for (auto&& w : WordSplitter{line, extra_word_chars})
     {
         auto it = m_words.find(w);
         kak_assert(it != m_words.end() and it->value.refcount > 0);
@@ -138,10 +138,11 @@ void WordDB::rebuild_db()
     m_words.clear();
     m_lines.clear();
     m_lines.reserve((int)buffer.line_count());
+    auto extra_word_chars = get_extra_word_chars(buffer);
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
     {
         m_lines.push_back(buffer.line_storage(line));
-        add_words(m_lines.back()->strview());
+        add_words(m_lines.back()->strview(), extra_word_chars);
     }
     m_timestamp = buffer.timestamp();
 }
@@ -159,6 +160,7 @@ void WordDB::update_db()
     Lines new_lines;
     new_lines.reserve((int)buffer.line_count());
 
+    auto extra_word_chars = get_extra_word_chars(buffer);
     auto old_line = 0_line;
     for (auto& modif : modifs)
     {
@@ -173,13 +175,13 @@ void WordDB::update_db()
         while (old_line < modif.old_line + modif.num_removed)
         {
             kak_assert(old_line < m_lines.size());
-            remove_words(m_lines[(int)old_line++]->strview());
+            remove_words(m_lines[(int)old_line++]->strview(), extra_word_chars);
         }
 
         for (auto l = 0_line; l < modif.num_added; ++l)
         {
             new_lines.push_back(buffer.line_storage(modif.new_line + l));
-            add_words(new_lines.back()->strview());
+            add_words(new_lines.back()->strview(), extra_word_chars);
         }
     }
     while (old_line != (int)m_lines.size())

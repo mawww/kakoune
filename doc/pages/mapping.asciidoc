@@ -142,3 +142,19 @@ NOTE: Although Kakoune allows many key combinations to be mapped, not every
 possible combination can be triggered. For example, due to limitations in
 the way terminals handle control characters, mappings like *<c-s-a>* are
 unlikely to work in Kakoune's terminal UI.
+
+== Default mappings
+
+Some mappings exist by default in the global scope:
+
+In normal mode:
+
+  * `<left>`  maps to `h`
+  * `<right>` maps to `l`
+  * `<up>`    maps to `k`
+  * `<down>`  maps to `j`
+  * `<home>`  maps to `<a-h>`
+  * `<end>`   maps to `<a-l>`
+
+Shift version of those mappings exist as well
+(for example `<s-left>` maps to `H`).

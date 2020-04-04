@@ -133,7 +133,7 @@ void apply_highlighter(HighlightContext context,
     if (begin == end)
         return;
 
-    using LineIterator = DisplayBuffer::LineList::iterator;
+    using LineIterator = DisplayLineList::iterator;
     LineIterator first_line;
     Vector<size_t> insert_idx;
     auto line_end = display_buffer.lines().end();
@@ -333,7 +333,8 @@ private:
         size_t m_timestamp = -1;
         size_t m_regex_version = -1;
         struct RangeAndMatches { BufferRange range; MatchList matches; };
-        Vector<RangeAndMatches, MemoryDomain::Highlight> m_matches;
+        using RangeAndMatchesList = Vector<RangeAndMatches, MemoryDomain::Highlight>;
+        HashMap<BufferRange, RangeAndMatchesList, MemoryDomain::Highlight> m_matches;
     };
     BufferSideCache<Cache> m_cache;
 
@@ -377,16 +378,17 @@ private:
     const MatchList& get_matches(const Buffer& buffer, BufferRange display_range, BufferRange buffer_range)
     {
         Cache& cache = m_cache.get(buffer);
-        auto& matches = cache.m_matches;
 
         if (cache.m_regex_version != m_regex_version or
             cache.m_timestamp != buffer.timestamp() or
-            matches.size() > 1000)
+            accumulate(cache.m_matches, (size_t)0, [](size_t c, auto&& m) { return c + m.value.size(); }) > 1000)
         {
-            matches.clear();
+            cache.m_matches.clear();
             cache.m_timestamp = buffer.timestamp();
             cache.m_regex_version = m_regex_version;
         }
+
+        auto& matches = cache.m_matches[buffer_range];
 
         const LineCount line_offset = 3;
         BufferRange range{std::max<BufferCoord>(buffer_range.begin, display_range.begin.line - line_offset),
@@ -673,7 +675,7 @@ struct WrapHighlighter : Highlighter
         const int tabstop = context.context.options()["tabstop"].get<int>();
         const LineCount win_height = context.context.window().dimensions().line;
         const ColumnCount marker_len = zero_if_greater(m_marker.column_length(), wrap_column);
-        const Face face_marker = context.context.faces()["StatusLineInfo"];
+        const Face face_marker = context.context.faces()["WrapMarker"];
         for (auto it = display_buffer.lines().begin();
              it != display_buffer.lines().end(); ++it)
         {
@@ -811,10 +813,10 @@ struct WrapHighlighter : Highlighter
             while (buf_line >= cursor.line and setup.window_pos.line < cursor.line and
                    setup.cursor_pos.line + setup.scroll_offset.line >= win_height)
             {
-                auto remove_count = std::min(win_height, 1 + line_wrap_count(setup.window_pos.line, indent));
+                auto remove_count = 1 + line_wrap_count(setup.window_pos.line, indent);
                 ++setup.window_pos.line;
                 --setup.window_range.line;
-                setup.cursor_pos.line -= remove_count;
+                setup.cursor_pos.line -= std::min(win_height, remove_count);
                 win_line -= remove_count;
                 kak_assert(setup.cursor_pos.line >= 0);
             }
@@ -833,7 +835,17 @@ struct WrapHighlighter : Highlighter
         StringView content = buffer[line];
 
         SplitPos pos = current;
-        SplitPos last_boundary = {0, 0};
+        SplitPos last_word_boundary = {0, 0};
+        SplitPos last_WORD_boundary = {0, 0};
+
+        auto update_boundaries = [&](Codepoint cp) {
+            if (not m_word_wrap)
+                return;
+            if (!is_word<Word>(cp))
+                last_word_boundary = pos;
+            if (!is_word<WORD>(cp))
+                last_WORD_boundary = pos;
+        };
 
         while (pos.byte < content.length() and pos.column < target_column)
         {
@@ -844,7 +856,7 @@ struct WrapHighlighter : Highlighter
                     break;
                 pos.column = next_column;
                 ++pos.byte;
-                last_boundary = pos;
+                last_word_boundary = last_WORD_boundary = pos;
             }
             else
             {
@@ -853,35 +865,45 @@ struct WrapHighlighter : Highlighter
                 const ColumnCount width = codepoint_width(cp);
                 if (pos.column + width > target_column and pos.byte != current.byte) // the target column was in the char
                 {
-                    if (!is_word<WORD>(cp))
-                        last_boundary = pos;
+                    update_boundaries(cp);
                     break;
                 }
                 pos.column += width;
                 pos.byte = (int)(it - content.begin());
-                if (!is_word<WORD>(cp))
-                    last_boundary = pos;
+                update_boundaries(cp);
             }
         }
 
-        if (m_word_wrap and pos.byte < content.length() and last_boundary.byte > 0)
+        if (m_word_wrap and pos.byte < content.length())
         {
-            // split at last word boundary if the word is shorter than our wrapping width
-            ColumnCount word_length = pos.column - last_boundary.column;
-            const char* it = &content[pos.byte]; 
-            while (it != content.end() and word_length < (wrap_column - prefix_len))
-            {
-                const Codepoint cp = utf8::read_codepoint(it, content.end());
-                if (not is_word<WORD>(cp))
-                    return last_boundary;
-                word_length += codepoint_width(cp);
-            }
+            auto find_split_pos = [&](SplitPos start_pos, auto is_word) -> Optional<SplitPos> {
+                if (start_pos.byte == 0)
+                    return {};
+                const char* it = &content[pos.byte]; 
+                // split at current position if is a word boundary 
+                if (not is_word(utf8::codepoint(it, content.end()), {'_'}))
+                    return pos;
+                // split at last word boundary if the word is shorter than our wrapping width
+                ColumnCount word_length = pos.column - start_pos.column;
+                while (it != content.end() and word_length <= (wrap_column - prefix_len))
+                {
+                    const Codepoint cp = utf8::read_codepoint(it, content.end());
+                    if (not is_word(cp, {'_'}))
+                        return start_pos;
+                    word_length += codepoint_width(cp);
+                }
+                return {};
+            };
+            if (auto split = find_split_pos(last_WORD_boundary, is_word<WORD>))
+                return *split;
+            if (auto split = find_split_pos(last_word_boundary, is_word<Word>))
+                return *split;
         }
 
         return pos;
-    };
+    }
 
-    ColumnCount line_indent(const Buffer& buffer, int tabstop, LineCount line) const
+    static ColumnCount line_indent(const Buffer& buffer, int tabstop, LineCount line)
     {
         StringView l = buffer[line];
         auto col = 0_byte;
@@ -900,10 +922,8 @@ struct WrapHighlighter : Highlighter
             ParameterDesc::Flags::None, 0, 0
         };
         ParametersParser parser(params, param_desc);
-
-        ColumnCount max_width{std::numeric_limits<int>::max()};
-        if (auto width = parser.get_switch("width"))
-            max_width = str_to_int(*width);
+        ColumnCount max_width = parser.get_switch("width").map(str_to_int)
+            .value_or(std::numeric_limits<int>::max());
 
         return std::make_unique<WrapHighlighter>(max_width, (bool)parser.get_switch("word"),
                                                  (bool)parser.get_switch("indent"),
@@ -927,7 +947,7 @@ struct TabulationHighlighter : Highlighter
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
         const ColumnCount tabstop = context.context.options()["tabstop"].get<int>();
-        auto& buffer = context.context.buffer();
+        const auto& buffer = context.context.buffer();
         auto win_column = context.setup.window_pos.column;
         for (auto& line : display_buffer.lines())
         {
@@ -1009,11 +1029,11 @@ struct ShowWhitespacesHighlighter : Highlighter
     }
 
 private:
-    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
         const int tabstop = context.context.options()["tabstop"].get<int>();
         auto whitespaceface = context.context.faces()["Whitespace"];
-        auto& buffer = context.context.buffer();
+        const auto& buffer = context.context.buffer();
         auto win_column = context.setup.window_pos.column;
         for (auto& line : display_buffer.lines())
         {
@@ -1061,17 +1081,19 @@ private:
 
 struct LineNumbersHighlighter : Highlighter
 {
-    LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator)
+    LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator, int min_digits)
       : Highlighter{HighlightPass::Move},
         m_relative{relative},
         m_hl_cursor_line{hl_cursor_line},
-        m_separator{std::move(separator)} {}
+        m_separator{std::move(separator)},
+        m_min_digits{min_digits} {}
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         static const ParameterDesc param_desc{
             { { "relative", { false, "" } },
               { "separator", { true, "" } },
+              { "min-digits", { true, "" } },
               { "hlcursor", { false, "" } } },
             ParameterDesc::Flags::None, 0, 0
         };
@@ -1081,7 +1103,13 @@ struct LineNumbersHighlighter : Highlighter
         if (separator.length() > 10)
             throw runtime_error("separator length is limited to 10 bytes");
 
-        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str());
+        int min_digits = parser.get_switch("min-digits").map(str_to_int).value_or(2);
+        if (min_digits < 0)
+            throw runtime_error("min digits must be positive");
+        if (min_digits > 10)
+            throw runtime_error("min digits is limited to 10");
+
+        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str(), min_digits);
     }
 
 private:
@@ -1092,7 +1120,7 @@ private:
         if (contains(context.disabled_ids, ms_id))
             return;
 
-        auto& faces = context.context.faces();
+        const auto& faces = context.context.faces();
         const Face face = faces["LineNumbers"];
         const Face face_wrapped = faces["LineNumbersWrapped"];
         const Face face_absolute = faces["LineNumberCursor"];
@@ -1139,12 +1167,13 @@ private:
         LineCount last_line = context.buffer().line_count();
         for (LineCount c = last_line; c > 0; c /= 10)
             ++digit_count;
-        return digit_count;
+        return std::max(digit_count, m_min_digits);
     }
 
-   const bool m_relative;
-   const bool m_hl_cursor_line;
-   const String m_separator;
+    const bool m_relative;
+    const bool m_hl_cursor_line;
+    const String m_separator;
+    const int m_min_digits;
 };
 
 constexpr StringView LineNumbersHighlighter::ms_id;
@@ -1248,7 +1277,7 @@ void highlight_selections(HighlightContext context, DisplayBuffer& display_buffe
 
 void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
-    auto& buffer = context.context.buffer();
+    const auto& buffer = context.context.buffer();
     auto error = context.context.faces()["Error"];
     for (auto& line : display_buffer.lines())
     {
@@ -1347,7 +1376,7 @@ private:
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
         auto& line_flags = context.context.options()[m_option_name].get_mutable<LineAndSpecList>();
-        auto& buffer = context.context.buffer();
+        const auto& buffer = context.context.buffer();
         update_line_specs_ifn(buffer, line_flags);
 
         auto def_face = context.context.faces()[m_default_face];
@@ -1397,7 +1426,7 @@ private:
     void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
     {
         auto& line_flags = context.context.options()[m_option_name].get_mutable<LineAndSpecList>();
-        auto& buffer = context.context.buffer();
+        const auto& buffer = context.context.buffer();
         update_line_specs_ifn(buffer, line_flags);
 
         ColumnCount width = 0;
@@ -1806,7 +1835,7 @@ public:
         const bool apply_default = default_region_it != m_regions.end();
 
         auto last_begin = (begin == regions.begin()) ?
-                             BufferCoord{0,0} : (begin-1)->end;
+                             range.begin : (begin-1)->end;
         kak_assert(begin <= end);
         for (; begin != end; ++begin)
         {
@@ -1844,11 +1873,12 @@ public:
             return it->value->get_child({sep_it+1, path.end()});
     }
 
-    void add_child(String name, std::unique_ptr<Highlighter>&& hl) override
+    void add_child(String name, std::unique_ptr<Highlighter>&& hl, bool override) override
     {
         if (not dynamic_cast<RegionHighlighter*>(hl.get()))
             throw runtime_error{"only region highlighter can be added as child of a regions highlighter"};
-        if (m_regions.contains(name))
+        auto it = m_regions.find(name);
+        if (not override and it != m_regions.end())
             throw runtime_error{format("duplicate id: '{}'", name)};
 
         std::unique_ptr<RegionHighlighter> region_hl{dynamic_cast<RegionHighlighter*>(hl.release())};
@@ -1859,7 +1889,10 @@ public:
             m_default_region = name;
         }
 
-        m_regions.insert({std::move(name), std::move(region_hl)});
+        if (it != m_regions.end())
+            it->value = std::move(region_hl);
+        else
+            m_regions.insert({std::move(name), std::move(region_hl)});
         ++m_regions_timestamp;
     }
 
@@ -2103,9 +2136,9 @@ private:
             return m_delegate->get_child(path);
         }
 
-        void add_child(String name, std::unique_ptr<Highlighter>&& hl) override
+        void add_child(String name, std::unique_ptr<Highlighter>&& hl, bool override) override
         {
-            return m_delegate->add_child(name, std::move(hl));
+            return m_delegate->add_child(name, std::move(hl), override);
         }
 
         void remove_child(StringView id) override
@@ -2176,7 +2209,7 @@ void register_highlighters()
         "number-lines",
         { LineNumbersHighlighter::create,
           "Display line numbers \n"
-          "Parameters: -relative, -hlcursor, -separator <separator text>\n" } });
+          "Parameters: -relative, -hlcursor, -separator <separator text>, -min-digits <cols>\n" } });
     registry.insert({
         "show-matching",
         { create_matching_char_highlighter,

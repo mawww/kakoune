@@ -14,13 +14,13 @@ hook global BufSetOption filetype=asciidoc %{
     set-option buffer comment_block_end '///'
 }
 
-hook global BufSetOption filetype=(c|cpp|dart|go|java|javascript|objc|php|rust|sass|scala|scss|swift|typescript) %{
+hook global BufSetOption filetype=(c|cpp|dart|gluon|go|java|javascript|objc|php|rust|sass|scala|scss|swift|typescript) %{
     set-option buffer comment_line '//'
     set-option buffer comment_block_begin '/*'
     set-option buffer comment_block_end '*/'
 }
 
-hook global BufSetOption filetype=(cabal|haskell|moon|idris|elm) %{
+hook global BufSetOption filetype=(cabal|haskell|moon|idris|elm|dhall) %{
     set-option buffer comment_line '--'
     set-option buffer comment_block_begin '{-'
     set-option buffer comment_block_end '-}'
@@ -85,8 +85,8 @@ hook global BufSetOption filetype=lua %{
 
 hook global BufSetOption filetype=markdown %{
     set-option buffer comment_line ''
-    set-option buffer comment_block_begin '[//]'
-    set-option buffer comment_block_end '# (:)'
+    set-option buffer comment_block_begin '[//]: # "'
+    set-option buffer comment_block_end '"'
 }
 
 hook global BufSetOption filetype=perl %{

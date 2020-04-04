@@ -11,7 +11,7 @@ hook global BufCreate .*[.](hbs) %{
 hook global WinSetOption filetype=hbs %{
     require-module hbs
 
-    hook window ModeChange insert:.* -group hbs-trim-indent hbs-trim-indent
+    hook window ModeChange pop:insert:.* -group hbs-trim-indent hbs-trim-indent
     hook window InsertChar \n -group hbs-indent hbs-indent-on-new-line
     hook window InsertChar .* -group hbs-indent hbs-indent-on-char
     hook window InsertChar '>' -group hbs-indent html-indent-on-greater-than
@@ -28,6 +28,8 @@ hook -group hbs-highlight global WinSetOption filetype=hbs %{
 
 
 provide-module hbs %[
+
+require-module html
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -78,7 +80,7 @@ define-command -hidden hbs-indent-on-new-line %{
         # copy '/' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y j p }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : hbs-trim-indent <ret> }
         # indent after lines beginning with : or -

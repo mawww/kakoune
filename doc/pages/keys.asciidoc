@@ -40,7 +40,7 @@ In order to bind some keys to arbitrary ones, refer to <<mapping#,`:doc mapping`
 *<c-u>*::
     commit changes up to now as a single undo group
 
-*<a-;>*::
+*<a-;>*, *<a-semicolon>*::
     escape to normal mode for a single command
 
 == Insert mode completion
@@ -99,17 +99,25 @@ is a sequence of non whitespace characters. Generally, a movement on it own
 will move each selection to cover the text moved over, while holding down
 the Shift modifier and moving will extend each selection instead.
 
-*h*, *<left>*::
+*h*::
     select the character on the left of the end of each selection
+    `<left>` maps to this by default.
+    (See <<mapping#default-mappings,`:doc mapping default-mappings`>>)
 
-*j*, *<down>*::
+*j*::
     select the character below the end of each selection
+    `<down>` maps to this by default.
+    (See <<mapping#default-mappings,`:doc mapping default-mappings`>>)
 
-*k*, *<up>*::
+*k*::
     select the character above the end of each selection
+    `<up>` maps to this by default.
+    (See <<mapping#default-mappings,`:doc mapping default-mappings`>>)
 
-*l*, *<right>*::
+*l*::
     select the character on the right of the end of each selection
+    `<right>` maps to this by default.
+    (See <<mapping#default-mappings,`:doc mapping default-mappings`>>)
 
 *w*::
     select the word and following whitespaces on the right of the end of each selection
@@ -165,11 +173,15 @@ the Shift modifier and moving will extend each selection instead.
 *%*::
     select whole buffer
 
-*<a-h>*, *<home>*::
+*<a-h>*::
     select to line begin
+    `<home>` maps to this by default.
+    (See <<mapping#default-mappings,`:doc mapping default-mappings`>>)
 
-*<a-l>*, *<end>*::
+*<a-l>*::
     select to line end
+    `<end>` maps to this by default.
+    (See <<mapping#default-mappings,`:doc mapping default-mappings`>>)
 
 *pageup, <c-b>*::
     scroll one page up
@@ -183,10 +195,10 @@ the Shift modifier and moving will extend each selection instead.
 *<c-d>*::
     scroll half a page down
 
-*;*::
+*;*, *<semicolon>*::
     reduce selections to their cursor
 
-*<a-;>*::
+*<a-;>*, *<a-semicolon>*::
     flip the direction of each selection
 
 *<a-:>*::
@@ -681,7 +693,7 @@ in order to specify the wanted object:
 *c*::
     select user defined object, will prompt for open and close text
 
-*<a-;>*::
+*<a-;>*, *<a-semicolon>*::
     run a command with additional expansions describing the selection
     context (See <<expansions#,`:doc expansions`>>)
 
@@ -785,5 +797,5 @@ The following keys are recognized by this mode to help with editing
     expand the typed expansions in currently entered text
     (See <<expansions#typed-expansions,`:doc expansions typed-expansions`>>)
 
-*<a-;>*::
+*<a-;>*, *<a-semicolon>*::
     escape to normal mode for a single command

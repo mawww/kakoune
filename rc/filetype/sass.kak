@@ -14,7 +14,7 @@ hook global BufCreate .*[.](sass) %{
 hook global WinSetOption filetype=sass %{
     require-module sass
 
-    hook window ModeChange insert:.* -group sass-trim-indent  sass-trim-indent
+    hook window ModeChange pop:insert:.* -group sass-trim-indent  sass-trim-indent
     hook window InsertChar \n -group sass-indent sass-indent-on-new-line
     set-option buffer extra_word_chars '_' '-'
 
@@ -58,7 +58,7 @@ define-command -hidden sass-indent-on-new-line %{
         # copy '/' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : sass-trim-indent <ret> }
         # avoid indent after properties and comments

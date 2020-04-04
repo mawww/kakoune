@@ -24,13 +24,19 @@ void HighlighterGroup::fill_unique_ids(Vector<StringView>& unique_ids) const
         hl.value->fill_unique_ids(unique_ids);
 }
 
-void HighlighterGroup::add_child(String name, std::unique_ptr<Highlighter>&& hl)
+void HighlighterGroup::add_child(String name, std::unique_ptr<Highlighter>&& hl, bool override)
 {
     if ((hl->passes() & passes()) != hl->passes())
         throw runtime_error{"cannot add that highlighter to this group, passes don't match"};
 
-    if (m_highlighters.contains(name))
-        throw runtime_error(format("duplicate id: '{}'", name));
+    auto it = m_highlighters.find(name);
+    if (it != m_highlighters.end())
+    {
+        if (not override)
+            throw runtime_error(format("duplicate id: '{}'", name));
+        it->value = std::move(hl);
+        return;
+    }
 
     m_highlighters.insert({std::move(name), std::move(hl)});
 }

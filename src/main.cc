@@ -42,73 +42,99 @@ extern const char* version;
 
 struct {
     unsigned int version;
-    const char* notes;
+    StringView notes;
 } constexpr version_notes[] = { {
+        20200116,
+        "» {+u}InsertCompletionHide{} parameter is now the list of inserted ranges\n"
+    }, {
+        20191210,
+        "» {+u}ModeChange{} parameter has changed to contain push/pop\n"
+        "» {+ui}Mode{+u}Begin{}/{+ui}Mode{+u}End{} hooks were removed\n"
+    }, {
         20190701,
-        "» %file{...} expansions to read files\n"
-        "» echo -to-file <filename> to write to file\n"
-        "» completions option have an on select command instead of a docstring\n"
+        "» {+u}%file\\{<filename>}{} expansions to read files\n"
+        "» {+u}echo -to-file <filename>{} to write to file\n"
+        "» completions option have an on select command instead of "
+        "a docstring\n"
         "» Function key syntax do not accept lower case f anymore\n"
-        "» shell quoting of list options is now opt-in with $kak_quoted_...\n"
+        "» shell quoting of list options is now opt-in with "
+        "{+u}$kak_quoted_...{}\n"
     }, {
         20190120,
         "» named capture groups in regex\n"
         "» auto_complete option renamed to autocomplete\n"
     }, {
         20181027,
-        "» define-commands -shell-completion and -shell-candidates has been renamed\n"
-        "» exclusive face attributes is replaced with final (fg/bg/attr)\n"
-        "» <a-M> (merge consecutive) moved to <a-_> to make <a-M> backward <a-m>\n"
-        "» remove-hooks now takes a regex parameter\n"
+        "» {+u}define-commands{} {+i}-shell-completion{} and {+i}-shell-candidates{} "
+        "has been renamed\n"
+        "» exclusive face attributes is replaced with final "
+        "(fg/bg/attr)\n"
+        "» {+b}<a-M>{} (merge consecutive) moved to {+b}<a-_>{} to make {+b}<a-M>{} "
+        "backward {+b}<a-m>{}\n"
+        "» {+u}remove-hooks{} now takes a regex parameter\n"
     }, {
         20180904,
-        "» Big breaking refactoring of various Kakoune features,\n"
-        "  configuration might need to be updated see `:doc changelog` for details\n"
-        "» define-command -allow-override switch has been renamed -override\n"
+        "» Big breaking refactoring of various Kakoune features, "
+        "configuration might need to be updated see `:doc changelog` "
+        "for details\n"
+        "» {+u}define-command{} {+i}-allow-override{} switch has been renamed "
+        "{+i}-override{}\n"
     }, {
         20180413,
-        "» ModeChange hook has been introduced and is expected to replace\n"
-        "  the various ${MODE}Begin/${MODE}End hooks, consider those deprecated.\n"
-        "» '*' Does not strip whitespaces anymore, use built-in '_' to strip them\n"
-        "» 'l' on eol will go to next line, 'h' on first char will go to previous\n"
-        "» selections merging behaviour is now a bit more complex again\n"
-        "» 'x' will only jump to next line if full line is already selected\n"
-        "» WORD text object moved to <a-w> instead of W for consistency\n"
-        "» rotate main selection moved to ), rotate content to <a-)>, ( for backward\n"
-        "» faces are now scoped, set-face command takes an additional scope parameter\n"
-        "» <backtab> key is gone, use <s-tab> instead\n"
+        "» {+u}ModeChange{} hook has been introduced and is expected "
+        "to replace the various {+ui}Mode{+u}Begin{}/{+ui}Mode{+u}End{} hooks, "
+        "consider those deprecated.\n"
+        "» {+b}*{} Does not strip whitespaces anymore, use built-in "
+        "{+b}_{} to strip them\n"
+        "» {+b}l{} on eol will go to next line, {+b}h{} on first char will "
+        "go to previous\n"
+        "» selections merging behaviour is now a bit more complex "
+        "again\n"
+        "» {+b}x{} will only jump to next line if full line is already "
+        "selected\n"
+        "» {+i}WORD{} text object moved to {+b}<a-w>{} instead of {+b}W{} for "
+        "consistency\n"
+        "» rotate main selection moved to {+b}){}, rotate content to {+b}<a-)>{}, "
+        "{+b}({} for backward\n"
+        "» faces are now scoped, {+u}set-face{} command takes an additional "
+        "scope parameter\n"
+        "» {+b}<backtab>{} key is gone, use {+b}<s-tab>{} instead\n"
 } };
 
 void show_startup_info(Client* local_client, int last_version)
 {
-    String info;
+    const Face version_face{Color::Default, Color::Default, Attribute::Bold};
+    DisplayLineList info;
     for (auto note : version_notes)
     {
+        if (note.version and note.version <= last_version)
+            continue;
+
         if (not note.version)
-            info += format("• Development version\n{}\n", note.notes);
-        else if (note.version > last_version)
+            info.push_back({"• Development version", version_face});
+        else
         {
             const auto year = note.version / 10000;
             const auto month = (note.version / 100) % 100;
             const auto day = note.version % 100;
-            info += format("• Kakoune v{}.{}{}.{}{}\n{}\n",
-                           year, month < 10 ? "0" : "", month, day < 10 ? "0" : "", day, note.notes);
+            info.push_back({format("• Kakoune v{}.{}{}.{}{}",
+                                   year, month < 10 ? "0" : "", month, day < 10 ? "0" : "", day),
+                            version_face});
         }
+
+        for (auto&& line : note.notes | split<StringView>('\n'))
+            info.push_back(parse_display_line(line, GlobalScope::instance().faces()));
     }
     if (not info.empty())
     {
-        info += "See the `:doc options startup-info` to control this message\n";
-        local_client->info_show(format("Kakoune {}", version), info, {}, InfoStyle::Prompt);
+        info.push_back({"See the `:doc options startup-info` to control this message",
+                        Face{Color::Default, Color::Default, Attribute::Italic}});
+        local_client->info_show({format("Kakoune {}", version), version_face}, info, {}, InfoStyle::Prompt);
     }
 }
 
-struct startup_error : runtime_error
-{
-    using runtime_error::runtime_error;
-};
-
-inline void write_stdout(StringView str) { try { write(1, str); } catch (runtime_error&) {} }
-inline void write_stderr(StringView str) { try { write(2, str); } catch (runtime_error&) {} }
+inline void write_stdout(StringView str) { try { write(STDOUT_FILENO, str); } catch (runtime_error&) {} }
+inline void write_stderr(StringView str) { try { write(STDERR_FILENO, str); } catch (runtime_error&) {} }
 
 String runtime_directory()
 {
@@ -123,158 +149,200 @@ String runtime_directory()
 
 String config_directory()
 {
-    StringView config_home = getenv("XDG_CONFIG_HOME");
-    if (config_home.empty())
-        return format("{}/.config/kak", homedir());
-    return format("{}/kak", config_home);
+    if (StringView kak_cfg_dir = getenv("KAKOUNE_CONFIG_DIR"); not kak_cfg_dir.empty())
+        return kak_cfg_dir.str();
+    if (StringView xdg_cfg_home = getenv("XDG_CONFIG_HOME"); not xdg_cfg_home.empty())
+        return format("{}/kak", xdg_cfg_home);
+    return format("{}/.config/kak", homedir());
+}
+
+static auto main_sel_first(const SelectionList& selections)
+{
+    auto beg = &*selections.begin(), end = &*selections.end();
+    auto main = beg + selections.main_index();
+    using View = ConstArrayView<Selection>;
+    return concatenated(View{main, end}, View{beg, main});
 }
 
 static const EnvVarDesc builtin_env_vars[] = { {
         "bufname", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return context.buffer().display_name(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.buffer().display_name()}; }
     }, {
         "buffile", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return context.buffer().name(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.buffer().name()}; }
     }, {
         "buflist", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return join(BufferManager::instance() |
-                      transform(&Buffer::display_name) | transform(quoter(quoting)), ' ', false); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return BufferManager::instance() | transform(&Buffer::display_name) | gather<Vector>(); }
     }, {
         "buf_line_count", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.buffer().line_count()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.buffer().line_count())}; }
     }, {
         "timestamp", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.buffer().timestamp()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.buffer().timestamp())}; }
     }, {
         "history_id", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string((size_t)context.buffer().current_history_id()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string((size_t)context.buffer().current_history_id())}; }
     }, {
         "selection", false,
-        [](StringView name, const Context& context, Quoting quoting)
+        [](StringView name, const Context& context) -> Vector<String>
         { const Selection& sel = context.selections().main();
-          return content(context.buffer(), sel); }
+          return {content(context.buffer(), sel)}; }
     }, {
         "selections", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return join(context.selections_content() | transform(quoter(quoting)), ' ', false); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return context.selections_content(); }
     }, {
         "runtime", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return runtime_directory(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {runtime_directory()}; }
     }, {
         "config", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return config_directory(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {config_directory()}; }
     }, {
         "version", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return version; }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {version}; }
     }, {
         "opt_", true,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return context.options()[name.substr(4_byte)].get_as_string(quoting); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return context.options()[name.substr(4_byte)].get_as_strings(); }
     }, {
         "main_reg_", true,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return context.main_sel_register_value(name.substr(9_byte)).str(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.main_sel_register_value(name.substr(9_byte)).str()}; }
     }, {
         "reg_", true,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return join(RegisterManager::instance()[name.substr(4_byte)].get(context) |
-                      transform(quoter(quoting)), ' ', false); }
+        [](StringView name, const Context& context)
+        { return RegisterManager::instance()[name.substr(4_byte)].get(context) |
+                     gather<Vector<String>>(); }
     }, {
         "client_env_", true,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return context.client().get_env_var(name.substr(11_byte)).str(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.client().get_env_var(name.substr(11_byte)).str()}; }
     }, {
         "session", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return Server::instance().session(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {Server::instance().session()}; }
     }, {
         "client", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return context.name(); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.name()}; }
     }, {
         "client_pid", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.client().pid()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.client().pid())}; }
     }, {
         "client_list", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return join(ClientManager::instance() |
+        [](StringView name, const Context& context) -> Vector<String>
+        { return ClientManager::instance() |
                       transform([](const std::unique_ptr<Client>& c) -> const String&
-                               { return c->context().name(); }), ' ', false); }
+                                { return c->context().name(); }) | gather<Vector>(); }
     }, {
         "modified", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return context.buffer().is_modified() ? "true" : "false"; }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.buffer().is_modified() ? "true" : "false"}; }
     }, {
         "cursor_line", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.selections().main().cursor().line + 1); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.selections().main().cursor().line + 1)}; }
     }, {
         "cursor_column", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.selections().main().cursor().column + 1); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.selections().main().cursor().column + 1)}; }
     }, {
         "cursor_char_value", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
+        [](StringView name, const Context& context) -> Vector<String>
         { auto coord = context.selections().main().cursor();
           auto& buffer = context.buffer();
-          return to_string((size_t)utf8::codepoint(buffer.iterator_at(coord), buffer.end())); }
+          return {to_string((size_t)utf8::codepoint(buffer.iterator_at(coord), buffer.end()))}; }
     }, {
         "cursor_char_column", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
+        [](StringView name, const Context& context) -> Vector<String>
         { auto coord = context.selections().main().cursor();
-          return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
+          return {to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1)}; }
     }, {
         "cursor_display_column", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
+        [](StringView name, const Context& context) -> Vector<String>
         { auto coord = context.selections().main().cursor();
-          return to_string(get_column(context.buffer(),
-                                      context.options()["tabstop"].get<int>(),
-                                      coord) + 1); }
+          return {to_string(get_column(context.buffer(),
+                                       context.options()["tabstop"].get<int>(),
+                                       coord) + 1)}; }
     }, {
         "cursor_byte_offset", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
+        [](StringView name, const Context& context) -> Vector<String>
         { auto cursor = context.selections().main().cursor();
-          return to_string(context.buffer().distance({0,0}, cursor)); }
+          return {to_string(context.buffer().distance({0,0}, cursor))}; }
     }, {
         "selection_desc", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return selection_to_string(context.selections().main()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {selection_to_string(ColumnType::Byte, context.buffer(), context.selections().main())}; }
     }, {
         "selections_desc", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return selection_list_to_string(context.selections()); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return main_sel_first(context.selections()) |
+                     transform([&buffer=context.buffer()](const Selection& sel) {
+                         return selection_to_string(ColumnType::Byte, buffer, sel);
+                     }) | gather<Vector>(); }
+    }, {
+        "selections_char_desc", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return main_sel_first(context.selections()) |
+                     transform([&buffer=context.buffer()](const Selection& sel) {
+                         return selection_to_string(ColumnType::Codepoint, buffer, sel);
+                     }) | gather<Vector>(); }
+    }, {
+        "selections_display_column_desc", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return main_sel_first(context.selections()) |
+                     transform([&buffer=context.buffer(), tabstop=context.options()["tabstop"].get<int>()](const Selection& sel) {
+                         return selection_to_string(ColumnType::DisplayColumn, buffer, sel, tabstop);
+                     }) | gather<Vector>(); }
     }, {
         "selection_length", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(char_length(context.buffer(), context.selections().main())); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(char_length(context.buffer(), context.selections().main()))}; }
     }, {
         "selections_length", false,
-        [](StringView name, const Context& context, Quoting quoting)
-        { return join(context.selections() |
-                      transform([&](const Selection& s)
-                               { return to_string(char_length(context.buffer(), s)); }), ' ', false); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return context.selections() |
+                     transform([&](const Selection& s) {
+                         return to_string(char_length(context.buffer(), s));
+                     }) | gather<Vector<String>>(); }
     }, {
         "window_width", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.window().dimensions().column); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.window().dimensions().column)}; }
     }, {
         "window_height", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return to_string(context.window().dimensions().line); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.window().dimensions().line)}; }
     }, {
         "user_modes", false,
-        [](StringView name, const Context& context, Quoting quoting) -> String
-        { return join(context.keymaps().user_modes(), ' ', false); }
+        [](StringView name, const Context& context) -> Vector<String>
+        { return context.keymaps().user_modes(); }
+    }, {
+        "window_range", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        {
+            auto setup = context.window().compute_display_setup(context);
+            return {format("{} {} {} {}", setup.window_pos.line, setup.window_pos.column,
+                                          setup.window_range.line, setup.window_range.column)};
+        }
+    }, {
+        "history", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return history_as_strings(context.buffer().history()); }
+    }, {
+        "uncommitted_modifications", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return undo_group_as_strings(context.buffer().current_undo_group()); }
     }
 };
 
@@ -335,6 +403,25 @@ void register_registers()
     }
 
     register_manager.add_register('_', std::make_unique<NullRegister>());
+}
+
+void register_keymaps()
+{
+    auto& keymaps = GlobalScope::instance().keymaps();
+    keymaps.map_key(Key::Left, KeymapMode::Normal, {'h'}, "");
+    keymaps.map_key(Key::Right, KeymapMode::Normal, {'l'}, "");
+    keymaps.map_key(Key::Down, KeymapMode::Normal, {'j'}, "");
+    keymaps.map_key(Key::Up, KeymapMode::Normal, {'k'}, "");
+
+    keymaps.map_key(shift(Key::Left), KeymapMode::Normal, {'H'}, "");
+    keymaps.map_key(shift(Key::Right), KeymapMode::Normal, {'L'}, "");
+    keymaps.map_key(shift(Key::Down), KeymapMode::Normal, {'J'}, "");
+    keymaps.map_key(shift(Key::Up), KeymapMode::Normal, {'K'}, "");
+
+    keymaps.map_key(Key::End, KeymapMode::Normal, {alt('l')}, "");
+    keymaps.map_key(Key::Home, KeymapMode::Normal, {alt('h')}, "");
+    keymaps.map_key(shift(Key::End), KeymapMode::Normal, {alt('L')}, "");
+    keymaps.map_key(shift(Key::Home), KeymapMode::Normal, {alt('H')}, "");
 }
 
 static void check_tabstop(const int& val)
@@ -437,8 +524,8 @@ void register_options()
                        "    ncurses_change_colors         bool\n"
                        "    ncurses_wheel_up_button       int\n"
                        "    ncurses_wheel_down_button     int\n"
-                       "    ncurses_shift_function_key    int\n"
-                       "    ncurses_builtin_key_parser    bool\n",
+                       "    ncurses_wheel_scroll_amount   int\n"
+                       "    ncurses_shift_function_key    int\n",
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]"_str);
@@ -458,7 +545,6 @@ void register_options()
 
 static Client* local_client = nullptr;
 static int local_client_exit = 0;
-static UserInterface* local_ui = nullptr;
 static bool convert_to_client_pending = false;
 
 enum class UIType
@@ -488,7 +574,7 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
         void menu_select(int) override {}
         void menu_hide() override {}
 
-        void info_show(StringView, StringView, DisplayCoord, Face, InfoStyle) override {}
+        void info_show(const DisplayLine&, const DisplayLineList&, DisplayCoord, Face, InfoStyle) override {}
         void info_hide() override {}
 
         void draw(const DisplayBuffer&, const Face&, const Face&) override {}
@@ -514,6 +600,7 @@ pid_t fork_server_to_background()
     if (pid_t pid = fork())
         return pid;
 
+    setsid();
     if (fork()) // double fork to orphan the server
         exit(0);
 
@@ -531,26 +618,10 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
     {
         LocalUI()
         {
-            kak_assert(not local_ui);
-            local_ui = this;
-
-            m_old_sigtstp = set_signal_handler(SIGTSTP, [](int) {
+            set_signal_handler(SIGTSTP, [](int) {
                 if (ClientManager::instance().count() == 1 and
                     *ClientManager::instance().begin() == local_client)
-                {
-                    // Suspend normally if we are the only client
-                    auto current = set_signal_handler(SIGTSTP, static_cast<LocalUI*>(local_ui)->m_old_sigtstp);
-
-                    sigset_t unblock_sigtstp, old_mask;
-                    sigemptyset(&unblock_sigtstp);
-                    sigaddset(&unblock_sigtstp, SIGTSTP);
-                    sigprocmask(SIG_UNBLOCK, &unblock_sigtstp, &old_mask);
-
-                    raise(SIGTSTP);
-
-                    set_signal_handler(SIGTSTP, current);
-                    sigprocmask(SIG_SETMASK, &old_mask, nullptr);
-                }
+                    NCursesUI::instance().suspend();
                 else
                     convert_to_client_pending = true;
            });
@@ -558,27 +629,18 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 
         ~LocalUI() override
         {
-            set_signal_handler(SIGTSTP, m_old_sigtstp);
             local_client = nullptr;
-            local_ui = nullptr;
-            if (not convert_to_client_pending and
-                not ClientManager::instance().empty())
+            if (convert_to_client_pending or
+                ClientManager::instance().empty())
+                return;
+
+            if (fork_server_to_background())
             {
-                if (fork_server_to_background())
-                {
-                    this->NCursesUI::~NCursesUI();
-                    exit(local_client_exit);
-                }
+                this->NCursesUI::~NCursesUI();
+                exit(local_client_exit);
             }
         }
-
-    private:
-        using SigHandler = void (*)(int);
-        SigHandler m_old_sigtstp;
     };
-
-    if (not isatty(1))
-        throw startup_error("stdout is not a tty");
 
     if (not isatty(0))
     {
@@ -671,6 +733,7 @@ int run_server(StringView session, StringView server_init,
 
     register_options();
     register_registers();
+    register_keymaps();
     register_commands();
     register_highlighters();
 
@@ -797,9 +860,10 @@ int run_server(StringView session, StringView server_init,
             else if (convert_to_client_pending)
             {
                 kak_assert(local_client);
-                const String client_name = local_client->context().name();
-                const String buffer_name = local_client->context().buffer().name();
-                const String selections = selection_list_to_string(local_client->context().selections());
+                auto& local_context = local_client->context();
+                const String client_name = local_context.name();
+                const String buffer_name = local_context.buffer().name();
+                const String selections = selection_list_to_string(ColumnType::Byte, local_context.selections());
 
                 ClientManager::instance().remove_client(*local_client, true, 0);
                 client_manager.clear_client_trash();
@@ -959,6 +1023,7 @@ int main(int argc, char* argv[])
     set_signal_handler(SIGPIPE, [](int){});
     set_signal_handler(SIGINT, [](int){});
     set_signal_handler(SIGCHLD, [](int){});
+    set_signal_handler(SIGTTOU, SIG_IGN);
 
     const ParameterDesc param_desc{
         SwitchMap{ { "c", { true,  "connect to given session" } },
@@ -1017,21 +1082,13 @@ int main(int argc, char* argv[])
         const bool clear_sessions = (bool)parser.get_switch("clear");
         if (list_sessions or clear_sessions)
         {
-            const String username = get_user_name();
-            const StringView tmp_dir = tmpdir();
-            for (auto& session : list_files(format("{}/kakoune/{}/", tmp_dir,
-                                                   username)))
+            for (auto& session : list_files(session_directory()))
             {
                 const bool valid = check_session(session);
                 if (list_sessions)
                     write_stdout(format("{}{}\n", session, valid ? "" : " (dead)"));
                 if (not valid and clear_sessions)
-                {
-                    char socket_file[128];
-                    format_to(socket_file, "{}/kakoune/{}/{}", tmp_dir,
-                              username, session);
-                    unlink(socket_file);
-                }
+                    unlink(session_path(session).c_str());
             }
             return 0;
         }
@@ -1083,12 +1140,12 @@ int main(int argc, char* argv[])
                 auto colon = find(name, ':');
                 if (auto line = str_to_int_ifp({name.begin()+1, colon}))
                 {
-                    init_coord = BufferCoord{
+                    init_coord = std::max<BufferCoord>({0,0}, {
                         *line - 1,
                         colon != name.end() ?
                             str_to_int_ifp({colon+1, name.end()}).value_or(1) - 1
                           : 0
-                    };
+                    });
                     continue;
                 }
             }
@@ -1117,10 +1174,12 @@ int main(int argc, char* argv[])
             StringView session = parser.get_switch("s").value_or(StringView{});
             try
             {
-                auto flags = (parser.get_switch("n") ? ServerFlags::IgnoreKakrc : ServerFlags::None) |
-                             (parser.get_switch("d") ? ServerFlags::Daemon : ServerFlags::None) |
-                             (parser.get_switch("ro") ? ServerFlags::ReadOnly : ServerFlags::None) |
-                             (argc == 1 and isatty(0) ? ServerFlags::StartupInfo : ServerFlags::None);
+                auto ignore_kakrc = (bool)parser.get_switch("n");
+                auto flags = (ignore_kakrc                                ? ServerFlags::IgnoreKakrc : ServerFlags::None) |
+                             (parser.get_switch("d")                      ? ServerFlags::Daemon      : ServerFlags::None) |
+                             (parser.get_switch("ro")                     ? ServerFlags::ReadOnly    : ServerFlags::None) |
+                             ((argc == 1 or (ignore_kakrc and argc == 2))
+                              and isatty(0)                               ? ServerFlags::StartupInfo : ServerFlags::None);
                 auto debug_flags = option_from_string(Meta::Type<DebugFlags>{}, parser.get_switch("debug").value_or(""));
                 return run_server(session, server_init, client_init, init_coord, flags, ui_type, debug_flags, files);
             }
@@ -1140,14 +1199,9 @@ int main(int argc, char* argv[])
                             generate_switches_doc(param_desc.switches)));
        return -1;
     }
-    catch (startup_error& error)
-    {
-        write_stderr(format("Could not start kakoune: {}\n", error.what()));
-        return -1;
-    }
     catch (Kakoune::exception& error)
     {
-        write_stderr(format("uncaught exception ({}):\n{}\n", typeid(error).name(), error.what()));
+        write_stderr(format("Fatal error: {}\n", error.what()));
         return -1;
     }
     catch (std::exception& error)

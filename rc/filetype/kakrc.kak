@@ -20,7 +20,7 @@ hook global WinSetOption filetype=kak %~
     hook window InsertChar [>)}\]] -group kak-indent kak-indent-on-closing-matching
     hook window InsertChar (?![[{(<>)}\]])[^\s\w] -group kak-indent kak-indent-on-closing-char
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group kak-trim-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange pop:insert:.* -group kak-trim-indent %{ try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d } }
     set-option buffer extra_word_chars '_' '-'
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window kak-.+ }
@@ -81,7 +81,6 @@ evaluate-commands %sh{
 }
 
 add-highlighter shared/kakrc/code/colors regex \brgb:[0-9a-fA-F]{6}\b 0:value
-add-highlighter shared/kakrc/code/scopes regex \b(global|shared|buffer|window)(?:\b|/) 0:value
 
 add-highlighter shared/kakrc/double_string/fill fill string
 add-highlighter shared/kakrc/double_string/escape regex '""' 0:default+b
@@ -96,7 +95,7 @@ define-command -hidden kak-indent-on-new-line %{
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
         try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with %\w*[^\s\w]

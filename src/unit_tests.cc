@@ -17,41 +17,30 @@ UnitTest test_utf8{[]()
 
 UnitTest test_diff{[]()
 {
-    auto eq = [](const Diff& lhs, const Diff& rhs) {
-        return lhs.mode == rhs.mode and lhs.len == rhs.len and lhs.posB == rhs.posB;
+    struct Diff{DiffOp op; int len;};
+    auto check_diff = [](StringView a, StringView b, std::initializer_list<Diff> diffs) {
+        size_t count = 0;
+        for_each_diff(a.begin(), (int)a.length(), b.begin(), (int)b.length(),
+                      [&](DiffOp op, int len) {
+                          kak_assert(count < diffs.size());
+                          auto& d = diffs.begin()[count++];
+                          kak_assert(d.op == op and d.len == len);
+                      });
+        kak_assert(count == diffs.size());
     };
+    check_diff("a?", "!", {{DiffOp::Remove, 1}, {DiffOp::Add, 1}, {DiffOp::Remove, 1}});
+    check_diff("abcde", "cd", {{DiffOp::Remove, 2}, {DiffOp::Keep, 2}, {DiffOp::Remove, 1}});
+    check_diff("abcd", "cdef", {{DiffOp::Remove, 2}, {DiffOp::Keep, 2}, {DiffOp::Add, 2}});
 
-    {
-        auto diff = find_diff("a?", 2, "!", 1);
-        kak_assert(diff.size() == 3 and
-                   eq(diff[0], {Diff::Remove, 1, 0}) and
-                   eq(diff[1], {Diff::Add, 1, 0}) and
-                   eq(diff[2], {Diff::Remove, 1, 0}));
-    }
+    check_diff("mais que fais la police", "mais ou va la police",
+               {{DiffOp::Keep, 5}, {DiffOp::Remove, 1}, {DiffOp::Add, 1}, {DiffOp::Keep, 1},
+                {DiffOp::Remove, 1}, {DiffOp::Keep, 1}, {DiffOp::Add, 1}, {DiffOp::Remove, 1},
+                {DiffOp::Keep, 1}, {DiffOp::Remove, 2}, {DiffOp::Keep, 10}} );
 
-    {
-        auto diff = find_diff("abcde", 5, "cd", 2);
-        kak_assert(diff.size() == 3 and
-                   eq(diff[0], {Diff::Remove, 2, 0}) and
-                   eq(diff[1], {Diff::Keep, 2, 0}) and
-                   eq(diff[2], {Diff::Remove, 1, 0}));
-    }
+    check_diff("abcdefghijk",  "1cdef2hij34",
+               {{DiffOp::Remove, 2}, {DiffOp::Add, 1}, {DiffOp::Keep, 4}, {DiffOp::Remove, 1},
+                {DiffOp::Add, 1}, {DiffOp::Keep, 3}, {DiffOp::Add, 2}, {DiffOp::Remove, 1}});
 
-    {
-        auto diff = find_diff("abcd", 4, "cdef", 4);
-        kak_assert(diff.size() == 3 and
-                   eq(diff[0], {Diff::Remove, 2, 0}) and
-                   eq(diff[1], {Diff::Keep, 2, 0}) and
-                   eq(diff[2], {Diff::Add, 2, 2}));
-    }
-
-    {
-        StringView s1 = "mais que fais la police";
-        StringView s2 = "mais ou va la police";
-
-        auto diff = find_diff(s1.begin(), (int)s1.length(), s2.begin(), (int)s2.length());
-        kak_assert(diff.size() == 11);
-    }
 }};
 
 UnitTest* UnitTest::list = nullptr;

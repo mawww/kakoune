@@ -37,7 +37,7 @@ struct KeyInfo
     StringView docstring;
 };
 
-String build_autoinfo_for_mapping(Context& context, KeymapMode mode,
+String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
                                   ConstArrayView<KeyInfo> built_ins);
 
 }

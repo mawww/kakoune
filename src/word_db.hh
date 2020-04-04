@@ -28,8 +28,8 @@ public:
     int get_word_occurences(StringView word) const;
 private:
     void update_db();
-    void add_words(StringView line);
-    void remove_words(StringView line);
+    void add_words(StringView line, ConstArrayView<Codepoint> extra_word_chars);
+    void remove_words(StringView line, ConstArrayView<Codepoint> extra_word_chars);
 
     void rebuild_db();
 

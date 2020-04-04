@@ -179,7 +179,7 @@ ColumnCount DisplayLine::length() const
     return len;
 }
 
-void DisplayLine::trim(ColumnCount first_col, ColumnCount col_count)
+bool DisplayLine::trim(ColumnCount first_col, ColumnCount col_count)
 {
     for (auto it = begin(); first_col > 0 and it != end(); )
     {
@@ -199,11 +199,13 @@ void DisplayLine::trim(ColumnCount first_col, ColumnCount col_count)
     for (; it != end() and col_count > 0; ++it)
         col_count -= it->length();
 
+    bool did_trim = it != end() || col_count < 0;
     if (col_count < 0)
         (it-1)->trim_end(-col_count);
     m_atoms.erase(it, end());
 
     compute_range();
+    return did_trim;
 }
 
 const BufferRange init_range{ {INT_MAX, INT_MAX}, {INT_MIN, INT_MIN} };
@@ -278,13 +280,18 @@ DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const
                     // closing is now at the first char of "}}", advance it to the second
                     ++closing;
                 }
+                else if (closing == it+2 and *(it+1) == '\\')
+                {
+                    pos = closing + 1;
+                    break;
+                }
                 else
                     face = faces[{it+1, closing}];
                 it = closing;
                 pos = closing + 1;
             }
         }
-        if (c == '\n') // line breaks are forbidden, replace with space
+        if (c == '\n' or c == '\t') // line breaks and tabs are forbidden, replace with space
         {
             content += StringView{pos, it+1};
             content.back() = ' ';
@@ -318,10 +325,10 @@ String fix_atom_text(StringView str)
     for (auto it = str.begin(), end = str.end(); it != end; ++it)
     {
         char c = *it;
-        if (c == '\n' or c == '\r')
+        if (c >= 0 and c <= 0x1F)
         {
             res += StringView{pos, it};
-            res += c == '\n' ? "␤" : "␍";
+            res += String{Codepoint{(uint32_t)(0x2400 + c)}};
             pos = it+1;
         }
     }

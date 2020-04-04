@@ -14,7 +14,7 @@ hook global BufCreate .*\.(toml) %{
 hook global WinSetOption filetype=toml %{
     require-module toml
 
-    hook window ModeChange insert:.* -group toml-trim-indent toml-trim-indent
+    hook window ModeChange pop:insert:.* -group toml-trim-indent toml-trim-indent
     hook window InsertChar \n -group toml-indent toml-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window toml-.+ }
@@ -61,7 +61,7 @@ define-command -hidden toml-indent-on-new-line %{
         # copy comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : toml-trim-indent <ret> }
     }

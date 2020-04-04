@@ -2,6 +2,7 @@
 #define register_manager_hh_INCLUDED
 
 #include "array_view.hh"
+#include "completion.hh"
 #include "exception.hh"
 #include "utils.hh"
 #include "hash_map.hh"
@@ -47,7 +48,8 @@ public:
 
     const String& get_main(const Context& context, size_t main_index) override
     {
-        return get(context)[std::min(main_index, m_content.size() - 1)];
+        auto content = get(context);
+        return content[std::min(main_index, content.size() - 1)];
     }
 
 protected:
@@ -146,6 +148,7 @@ public:
     Register& operator[](StringView reg) const;
     Register& operator[](Codepoint c) const;
     void add_register(Codepoint c, std::unique_ptr<Register> reg);
+    CandidateList complete_register_name(StringView prefix, ByteCount cursor_pos) const;
 
 protected:
     HashMap<Codepoint, std::unique_ptr<Register>, MemoryDomain::Registers> m_registers;

@@ -80,6 +80,7 @@ bool Client::is_ui_ok() const
 bool Client::process_pending_inputs()
 {
     const bool debug_keys = (bool)(context().options()["debug"].get<DebugFlags>() & DebugFlags::Keys);
+    m_window->run_resize_hook_ifn();
     // steal keys as we might receive new keys while handling them.
     Vector<Key, MemoryDomain::Client> keys = std::move(m_pending_keys);
     for (auto& key : keys)
@@ -170,20 +171,21 @@ void Client::change_buffer(Buffer& buffer)
         close_buffer_reload_dialog();
 
     auto& client_manager = ClientManager::instance();
+    WindowAndSelections ws = client_manager.get_free_window(buffer);
+
     m_window->options().unregister_watcher(*this);
     m_window->set_client(nullptr);
-
-    WindowAndSelections ws = client_manager.get_free_window(buffer);
     client_manager.add_free_window(std::move(m_window),
                                    std::move(context().selections()));
+
     m_window = std::move(ws.window);
     m_window->set_client(this);
     m_window->options().register_watcher(*this);
-    m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
-
     context().selections_write_only() = std::move(ws.selections);
     context().set_window(*m_window);
+
     m_window->set_dimensions(m_ui->dimensions());
+    m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
 
     m_window->hooks().run_hook(Hook::WinDisplay, buffer.name(), context());
     force_redraw();
@@ -212,7 +214,7 @@ void Client::redraw_ifn()
     if (m_ui_pending == 0)
         return;
 
-    auto& faces = context().faces();
+    const auto& faces = context().faces();
 
     if (m_ui_pending & Draw)
         m_ui->draw(window.update_display_buffer(context()),
@@ -261,7 +263,7 @@ void Client::redraw_ifn()
     auto cursor = m_input_handler.get_cursor_info();
     m_ui->set_cursor(cursor.first, cursor.second);
 
-    m_ui->refresh(m_ui_pending | Refresh);
+    m_ui->refresh(m_ui_pending & Refresh);
     m_ui_pending = 0;
 }
 
@@ -287,7 +289,7 @@ void Client::reload_buffer()
     {
         context().print_status({ format("error while reloading buffer: '{}'", error.what()),
                                  context().faces()["Error"] });
-        buffer.set_fs_timestamp(get_fs_timestamp(buffer.name()));
+        buffer.set_fs_status(get_fs_status(buffer.name()));
     }
 }
 
@@ -312,7 +314,7 @@ void Client::on_buffer_reload_key(Key key)
     else if (key == 'n' or key == 'N' or key == Key::Escape)
     {
         // reread timestamp in case the file was modified again
-        buffer.set_fs_timestamp(get_fs_timestamp(buffer.name()));
+        buffer.set_fs_status(get_fs_status(buffer.name()));
         print_status({ format("'{}' kept", buffer.display_name()),
                        context().faces()["Information"] });
         if (key == 'N')
@@ -322,7 +324,7 @@ void Client::on_buffer_reload_key(Key key)
     {
         print_status({ format("'{}' is not a valid choice", key_to_str(key)),
                        context().faces()["Error"] });
-        m_input_handler.on_next_key(KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
+        m_input_handler.on_next_key("buffer-reload", KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
         return;
     }
 
@@ -354,9 +356,16 @@ void Client::check_if_buffer_needs_reloading()
         return;
 
     const String& filename = buffer.name();
-    timespec ts = get_fs_timestamp(filename);
-    if (ts == InvalidTime or ts == buffer.fs_timestamp())
+    const timespec ts = get_fs_timestamp(filename);
+    const auto status = buffer.fs_status();
+
+    if (ts == InvalidTime or ts == status.timestamp)
         return;
+
+    if (MappedFile fd{filename};
+        fd.st.st_size == status.file_size and hash_data(fd.data, fd.st.st_size) == status.hash)
+        return;
+
     if (reload == Autoreload::Ask)
     {
         StringView bufname = buffer.display_name();
@@ -367,7 +376,7 @@ void Client::check_if_buffer_needs_reloading()
                          bufname), {}, InfoStyle::Modal);
 
         m_buffer_reload_dialog_opened = true;
-        m_input_handler.on_next_key(KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
+        m_input_handler.on_next_key("buffer-reload", KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
     }
     else
         reload_buffer();
@@ -411,7 +420,7 @@ void Client::menu_hide()
     m_ui_pending &= ~(MenuShow | MenuSelect);
 }
 
-void Client::info_show(String title, String content, BufferCoord anchor, InfoStyle style)
+void Client::info_show(DisplayLine title, DisplayLineList content, BufferCoord anchor, InfoStyle style)
 {
     if (m_info.style == InfoStyle::Modal) // We already have a modal info opened, do not touch it.
         return;
@@ -419,6 +428,17 @@ void Client::info_show(String title, String content, BufferCoord anchor, InfoSty
     m_info = Info{ std::move(title), std::move(content), anchor, {}, style };
     m_ui_pending |= InfoShow;
     m_ui_pending &= ~InfoHide;
+}
+
+void Client::info_show(StringView title, StringView content, BufferCoord anchor, InfoStyle style)
+{
+    if (not content.empty() and content.back() == '\n')
+        content = content.substr(0, content.length() - 1);
+    info_show(title.empty() ? DisplayLine{} : DisplayLine{title.str(), Face{}},
+              content | split<StringView>('\n')
+                      | transform([](StringView s) { return DisplayLine{replace(s, '\t', ' '), Face{}}; })
+                      | gather<DisplayLineList>(),
+              anchor, style);
 }
 
 void Client::info_hide(bool even_modal)

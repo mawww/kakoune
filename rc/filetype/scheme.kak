@@ -17,7 +17,7 @@ hook global WinSetOption filetype=scheme %{
     set-option window static_words %opt{scheme_static_words}
 
     set-option buffer extra_word_chars '_' '-' '!' '%' '?' '<' '>' '='
-    hook window InsertEnd  .* -group scheme-trim-indent  lisp-trim-indent
+    hook window ModeChange pop:insert:.* -group scheme-trim-indent  lisp-trim-indent
     hook window InsertChar \n -group scheme-indent lisp-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window scheme-.+ }
@@ -38,14 +38,15 @@ require-module lisp
 add-highlighter shared/scheme regions
 add-highlighter shared/scheme/code default-region group
 
-add-highlighter shared/scheme/string region '"' (?<!\\)(\\\\)*" fill string
-add-highlighter shared/scheme/comment region ';' '$' fill comment
+add-highlighter shared/scheme/string region %{(?<!#\\)"} (?<!\\)(\\\\)*" fill string
+add-highlighter shared/scheme/comment region %{(?<!#\\);} '$' fill comment
 add-highlighter shared/scheme/comment-form region -recurse "\(" "#;\(" "\)" fill comment
 add-highlighter shared/scheme/comment-block region "#\|" "\|#" fill comment
 add-highlighter shared/scheme/quoted-form region -recurse "\(" "'\(" "\)" fill variable
 
 add-highlighter shared/scheme/code/ regex (#t|#f) 0:value
 add-highlighter shared/scheme/code/ regex \b[0-9]+\.[0-9]*\b 0:value
+add-highlighter shared/scheme/code/ regex (#\\((\w+)|(.))) 0:value
 
 evaluate-commands %sh{ exec awk -f - <<'EOF'
     BEGIN {

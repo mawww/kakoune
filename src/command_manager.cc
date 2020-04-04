@@ -9,6 +9,7 @@
 #include "optional.hh"
 #include "option_types.hh"
 #include "ranges.hh"
+#include "regex.hh"
 #include "register_manager.hh"
 #include "shell_manager.hh"
 #include "utils.hh"
@@ -91,8 +92,23 @@ Reader& Reader::operator++()
 {
     kak_assert(pos < str.end());
     if (*pos == '\n')
+    {
         ++line;
+        line_start = ++pos;
+        return *this;
+    }
     utf8::to_next(pos, str.end());
+    return *this;
+}
+
+Reader& Reader::next_byte()
+{
+    kak_assert(pos < str.end());
+    if (*pos++ == '\n')
+    {
+        ++line;
+        line_start = pos;
+    }
     return *this;
 }
 
@@ -151,10 +167,10 @@ QuotedResult parse_quoted_balanced(Reader& reader, char opening_delimiter,
         else if (c == closing_delimiter and level-- == 0)
         {
             auto content = reader.substr_from(start);
-            ++reader.pos;
+            reader.next_byte();
             return {String{String::NoCopy{}, content}, true};
         }
-        ++reader.pos;
+        reader.next_byte();
     }
     return {String{String::NoCopy{}, reader.substr_from(start)}, false};
 }
@@ -178,7 +194,7 @@ String parse_unquoted(Reader& reader)
             else
                 return str;
         }
-        ++reader.pos;
+        reader.next_byte();
     }
     if (beg < reader.str.end())
         str += reader.substr_from(beg);
@@ -211,16 +227,16 @@ void skip_blanks_and_comments(Reader& reader)
 {
     while (reader)
     {
-        const Codepoint c = *reader;
+        const Codepoint c = *reader.pos;
         if (is_horizontal_blank(c))
-            ++reader;
+            reader.next_byte();
         else if (c == '\\' and reader.pos + 1 != reader.str.end() and
                  *(reader.pos + 1) == '\n')
-            ++(++reader);
+            reader.next_byte().next_byte();
         else if (c == '#')
         {
             while (reader and *reader != '\n')
-                ++reader;
+                reader.next_byte();
         }
         else
             break;
@@ -284,12 +300,12 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
     }
 }
 
-auto expand_option(Option& opt, std::true_type)
+auto expand_option(const Option& opt, std::true_type)
 {
     return opt.get_as_string(Quoting::Raw);
 }
 
-auto expand_option(Option& opt, std::false_type)
+auto expand_option(const Option& opt, std::false_type)
 {
     return opt.get_as_strings();
 }
@@ -347,7 +363,10 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
         auto it = shell_context.env_vars.find(content);
         if (it != shell_context.env_vars.end())
             return {it->value};
-        return {ShellManager::instance().get_val(content, context, Quoting::Kakoune)};
+        if constexpr (single)
+            return join(ShellManager::instance().get_val(content, context), false, ' ');
+        else
+            return ShellManager::instance().get_val(content, context);
     }
     case Token::Type::ArgExpand:
     {
@@ -386,10 +405,10 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
     const char* start = m_reader.pos;
     auto coord = m_reader.coord();
 
-    const Codepoint c = *m_reader;
+    const char c = *m_reader.pos;
     if (c == '"' or c == '\'')
     {
-        start = (++m_reader).pos;
+        start = m_reader.next_byte().pos;
         QuotedResult quoted = parse_quoted(m_reader, c);
         if (throw_on_unterminated and not quoted.terminated)
             throw parse_error{format("unterminated string {0}...{0}", c)};
@@ -402,9 +421,9 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
         auto token = parse_percent_token(m_reader, throw_on_unterminated);
         return token;
     }
-    else if (is_command_separator(*m_reader))
+    else if (is_command_separator(c))
     {
-        ++m_reader;
+        m_reader.next_byte();
         return Token{Token::Type::CommandSeparator,
                      m_reader.pos - line.begin(), coord, {}};
     }
@@ -414,7 +433,7 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
         {
             auto next = m_reader.peek_next();
             if (next == '%' or next == '\'' or next == '"')
-                ++m_reader;
+                m_reader.next_byte();
         }
         return Token{Token::Type::Raw, start - line.begin(),
                      coord, parse_unquoted(m_reader)};
@@ -462,10 +481,9 @@ String expand(StringView str, const Context& context,
 
 String expand(StringView str, const Context& context,
               const ShellContext& shell_context,
-              const std::function<String (String)>& postprocess)
+              const FunctionRef<String (String)>& postprocess)
 {
-    return expand_impl(str, context, shell_context,
-                       [&](String s) { return postprocess(std::move(s)); });
+    return expand_impl(str, context, shell_context, postprocess);
 }
 
 struct command_not_found : runtime_error
@@ -676,6 +694,11 @@ Completions CommandManager::complete(const Context& context,
 
     switch (token.type)
     {
+    case Token::Type::RegisterExpand:
+        return {start , cursor_pos,
+                RegisterManager::instance().complete_register_name(
+                    token.content, cursor_pos_in_token) };
+
     case Token::Type::OptionExpand:
         return {start , cursor_pos,
                 GlobalScope::instance().option_registry().complete_option_name(
@@ -689,6 +712,13 @@ Completions CommandManager::complete(const Context& context,
         return {start , cursor_pos,
                 ShellManager::instance().complete_env_var(
                     token.content, cursor_pos_in_token) };
+
+    case Token::Type::FileExpand:
+    {
+        const auto& ignored_files = context.options()["ignored_files"].get<Regex>();
+        return {start , cursor_pos, complete_filename(
+                token.content, ignored_files, cursor_pos_in_token, FilenameFlags::Expand) };
+    }
 
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
@@ -729,7 +759,9 @@ Completions CommandManager::complete(const Context& context,
         if (not (completions.flags & Completions::Flags::Quoted) and token.type == Token::Type::Raw)
         {
             for (auto& c : completions.candidates)
-                c = (not c.empty() and contains("%'\"", c[0]) ? "\\" : "") + escape(c, "; \t", '\\');
+                c = (not c.empty() and c[0] == '%') or
+                        any_of(c, [](auto i) { return contains("; \t'\"", i); }) ?
+                            format("'{}'", replace(c, "'", "''")) : c;
         }
 
         return completions;

@@ -1,0 +1,4 @@
+set-option global autocomplete insert
+declare-option -hidden completions my_completions
+set-option global completers option=my_completions
+set-option global my_completions "2.1+1@%val(timestamp)" "a||a"

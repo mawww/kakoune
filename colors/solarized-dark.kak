@@ -30,6 +30,7 @@ evaluate-commands %sh{
         face global operator           ${yellow}
         face global attribute          ${violet}
         face global comment            ${base01}
+        face global documentation      comment
         face global meta               ${orange}
         face global builtin            default+b
 

@@ -12,3 +12,7 @@ your name or nickname):
   large and to the detriment of my heirs and successors.  I intend this
   dedication to be an overt act of relinquishment in perpetuity of all
   present and future rights to this software under copyright law.
+
+The command to create an empty commit from the command-line is:
+
+  git commit --allow-empty

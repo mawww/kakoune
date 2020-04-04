@@ -14,7 +14,7 @@ hook global BufCreate .*[.](lisp) %{
 hook global WinSetOption filetype=lisp %{
     require-module lisp
 
-    hook window ModeChange insert:.* -group lisp-trim-indent  lisp-trim-indent
+    hook window ModeChange pop:insert:.* -group lisp-trim-indent  lisp-trim-indent
     hook window InsertChar \n -group lisp-indent lisp-indent-on-new-line
     set-option buffer extra_word_chars '_' '+' '-' '*' '/' '@' '$' '%' '^' '&' '_' '=' '<' '>' '~' '.'
 
@@ -69,7 +69,7 @@ define-command -hidden lisp-indent-on-new-line %{
                 execute-keys -draft '"wze<a-L>s.{' %sh{printf $(( kak_opt_indentwidth - 1 ))} '}\K.*<ret><a-;>;"i<a-Z><gt>'
             } catch %{
                 # If not "special" form and parameter appears on line 1, indent to parameter
-                execute-keys -draft '"wze<a-l>s\h\K[^\s].*<ret><a-;>;"i<a-Z><gt>'
+                execute-keys -draft '"wz<a-K>[()\[\]{}]<ret>e<a-l>s\h\K[^\s].*<ret><a-;>;"i<a-Z><gt>'
             }
         }
         try %{ execute-keys -draft '[rl"i<a-Z><gt>' }

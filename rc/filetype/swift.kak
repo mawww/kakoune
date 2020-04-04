@@ -21,7 +21,6 @@ add-highlighter shared/swift/comment region /\* \*/ group
 add-highlighter shared/swift/line_comment region // $ ref swift/comment
 
 add-highlighter shared/swift/comment/ fill comment
-add-highlighter shared/swift/comment/ regex "\b(TODO|XXX|MARK)\b" 0:red
 
 add-highlighter shared/swift/code/ regex %{\b(true|false|nil)\b|\b-?(?!\$)\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 add-highlighter shared/swift/code/ regex "\b(let|var|while|in|for|if|else|do|switch|case|default|break|continue|return|try|catch|throw|new|delete|and|or|not|operator|explicit|func|import|return|init|deinit|get|set)\b" 0:keyword

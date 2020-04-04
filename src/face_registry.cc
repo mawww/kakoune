@@ -9,7 +9,7 @@ namespace Kakoune
 
 static FaceRegistry::FaceSpec parse_face(StringView facedesc)
 {
-    constexpr StringView invalid_face_error = "invalid face description, expected <fg>[,<bg>][+<attr>][@base] or just [base]";
+    constexpr StringView invalid_face_error = "invalid face description, expected [<fg>][,<bg>][+<attr>][@base] or just [base]";
     if (all_of(facedesc, [](char c){ return is_word(c); }) and not is_color_name(facedesc))
         return {Face{}, facedesc.str()};
 
@@ -162,6 +162,7 @@ FaceRegistry::FaceRegistry()
         { "LineNumbers", {Face{ Color::Default, Color::Default }} },
         { "LineNumberCursor", {Face{ Color::Default, Color::Default, Attribute::Reverse }} },
         { "LineNumbersWrapped", {Face{ Color::Default, Color::Default, Attribute::Italic }} },
+        { "WrapMarker", {Face{ Color::Blue, Color::Default }} },
         { "MenuForeground", {Face{ Color::White, Color::Blue }} },
         { "MenuBackground", {Face{ Color::Blue, Color::White }} },
         { "MenuInfo", {Face{ Color::Cyan, Color::Default }} },

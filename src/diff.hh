@@ -5,11 +5,9 @@
 // "An O(ND) Difference Algorithm and Its Variations"
 // (http://xmailserver.org/diff2.pdf)
 
-#include "array_view.hh"
-#include "vector.hh"
-
+#include <algorithm>
 #include <functional>
-#include <iterator>
+#include <memory>
 
 namespace Kakoune
 {
@@ -23,8 +21,8 @@ struct Snake
     enum Op { Add, Del, RevAdd, RevDel } op;
 };
 
-template<typename Iterator, typename Equal>
-Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, int M,
+template<bool forward, typename IteratorA, typename IteratorB, typename Equal>
+Snake find_end_snake_of_further_reaching_dpath(IteratorA a, int N, IteratorB b, int M,
                                                const int* V, const int D, const int k, Equal eq)
 {
     const bool add = k == -D or (k != D and V[k-1] < V[k+1]);
@@ -36,29 +34,32 @@ Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, in
     // we are by construction on diagonal k, so our position along b (y) is x - k.
     const int y = x - k;
 
+    auto at = [](auto&& base, int index, int size) -> decltype(auto) {
+        return forward ? base[index] : base[size - 1 - index];
+    };
+
     int u = x, v = y;
     // follow end snake along diagonal k
-    while (u < N and v < M and eq(a[u], b[v]))
+    while (u < N and v < M and eq(at(a, u, N), at(b, v, M)))
         ++u, ++v;
 
     return { x, y, u, v, add ? Snake::Add : Snake::Del };
 }
 
-template<typename Iterator, typename Equal>
-Snake find_middle_snake(Iterator a, int N, Iterator b, int M,
+template<typename IteratorA, typename IteratorB, typename Equal>
+Snake find_middle_snake(IteratorA a, int N, IteratorB b, int M,
                         int* V1, int* V2, int cost_limit, Equal eq)
 {
     const int delta = N - M;
     V1[1] = 0;
     V2[1] = 0;
 
-    std::reverse_iterator<Iterator> ra{a + N}, rb{b + M};
     const int max_D = std::min((M + N + 1) / 2 + 1, cost_limit);
     for (int D = 0; D < max_D; ++D)
     {
         for (int k1 = -D; k1 <= D; k1 += 2)
         {
-            auto p = find_end_snake_of_further_reaching_dpath(a, N, b, M, V1, D, k1, eq);
+            auto p = find_end_snake_of_further_reaching_dpath<true>(a, N, b, M, V1, D, k1, eq);
             V1[k1] = p.u;
 
             const int k2 = -(k1 - delta);
@@ -68,7 +69,7 @@ Snake find_middle_snake(Iterator a, int N, Iterator b, int M,
 
         for (int k2 = -D; k2 <= D; k2 += 2)
         {
-            auto p = find_end_snake_of_further_reaching_dpath(ra, N, rb, M, V2, D, k2, eq);
+            auto p = find_end_snake_of_further_reaching_dpath<false>(a, N, b, M, V2, D, k2, eq);
             V2[k2] = p.u;
 
             const int k1 = -(k2 - delta);
@@ -83,14 +84,14 @@ Snake find_middle_snake(Iterator a, int N, Iterator b, int M,
     auto score = [](const Snake& s) { return s.u + s.v; };
     for (int k1 = -max_D; k1 <= max_D; k1 += 2)
     {
-        auto p = find_end_snake_of_further_reaching_dpath(a, N, b, M, V1, max_D, k1, eq);
+        auto p = find_end_snake_of_further_reaching_dpath<true>(a, N, b, M, V1, max_D, k1, eq);
         V1[k1] = p.u;
         if ((delta % 2 != 0) and p.u <= N and p.v <= M and score(p) >= score(best))
             best = p;
     }
     for (int k2 = -max_D; k2 <= max_D; k2 += 2)
     {
-        auto p = find_end_snake_of_further_reaching_dpath(ra, N, rb, M, V2, max_D, k2, eq);
+        auto p = find_end_snake_of_further_reaching_dpath<false>(a, N, b, M, V2, max_D, k2, eq);
         V2[k2] = p.u;
         if ((delta % 2 == 0) and p.u <= N and p.v <= M and score(p) >= score(best))
             best = {p.x, p.y, p.u, p.v, (Snake::Op)(p.op + Snake::RevAdd)};
@@ -101,32 +102,24 @@ Snake find_middle_snake(Iterator a, int N, Iterator b, int M,
     return best;
 }
 
-struct Diff
+enum class DiffOp
 {
-    enum { Keep, Add, Remove } mode;
-    int len;
-    int posB;
+    Keep,
+    Add,
+    Remove
 };
 
-inline void append_diff(Vector<Diff>& diffs, Diff diff)
-{
-    if (diff.len == 0)
-        return;
-
-    if (not diffs.empty() and diffs.back().mode == diff.mode
-        and (diff.mode != Diff::Add or
-             diffs.back().posB + diffs.back().len == diff.posB))
-        diffs.back().len += diff.len;
-    else
-        diffs.push_back(diff);
-}
-
-template<typename Iterator, typename Equal>
-void find_diff_rec(Iterator a, int begA, int endA,
-                   Iterator b, int begB, int endB,
+template<typename IteratorA, typename IteratorB, typename Equal, typename OnDiff>
+void find_diff_rec(IteratorA a, int begA, int endA,
+                   IteratorB b, int begB, int endB,
                    int* V1, int* V2, int cost_limit,
-                   Equal eq, Vector<Diff>& diffs)
+                   Equal eq, OnDiff&& on_diff)
 {
+    auto on_diff_ifn = [&](DiffOp op, int len) {
+        if (len != 0)
+            on_diff(op, len);
+    };
+
     int prefix_len = 0;
     while (begA != endA and begB != endB and eq(a[begA], b[begB]))
          ++begA, ++begB, ++prefix_len;
@@ -135,14 +128,14 @@ void find_diff_rec(Iterator a, int begA, int endA,
     while (begA != endA and begB != endB and eq(a[endA-1], b[endB-1]))
         --endA, --endB, ++suffix_len;
 
-    append_diff(diffs, {Diff::Keep, prefix_len, 0});
+    on_diff_ifn(DiffOp::Keep, prefix_len);
 
     const auto lenA = endA - begA, lenB = endB - begB;
 
     if (lenA == 0)
-        append_diff(diffs, {Diff::Add, lenB, begB});
+        on_diff_ifn(DiffOp::Add, lenB);
     else if (lenB == 0)
-        append_diff(diffs, {Diff::Remove, lenA, 0});
+        on_diff_ifn(DiffOp::Remove, lenA);
     else
     {
         auto snake = find_middle_snake(a + begA, lenA, b + begB, lenB, V1, V2, cost_limit, eq);
@@ -150,38 +143,55 @@ void find_diff_rec(Iterator a, int begA, int endA,
 
         find_diff_rec(a, begA, begA + snake.x - (int)(snake.op == Snake::Del),
                       b, begB, begB + snake.y - (int)(snake.op == Snake::Add),
-                      V1, V2, cost_limit, eq, diffs);
+                      V1, V2, cost_limit, eq, on_diff);
 
         if (snake.op == Snake::Add)
-            append_diff(diffs, {Diff::Add, 1, begB + snake.y - 1});
+            on_diff_ifn(DiffOp::Add, 1);
         if (snake.op == Snake::Del)
-            append_diff(diffs, {Diff::Remove, 1, 0});
+            on_diff_ifn(DiffOp::Remove, 1);
 
-        append_diff(diffs, {Diff::Keep, snake.u - snake.x, 0});
+        on_diff_ifn(DiffOp::Keep, snake.u - snake.x);
 
         if (snake.op == Snake::RevAdd)
-            append_diff(diffs, {Diff::Add, 1, begB + snake.v});
+            on_diff_ifn(DiffOp::Add, 1);
         if (snake.op == Snake::RevDel)
-            append_diff(diffs, {Diff::Remove, 1, 0});
+            on_diff_ifn(DiffOp::Remove, 1);
 
         find_diff_rec(a, begA + snake.u + (int)(snake.op == Snake::RevDel), endA,
                       b, begB + snake.v + (int)(snake.op == Snake::RevAdd), endB,
-                      V1, V2, cost_limit, eq, diffs);
+                      V1, V2, cost_limit, eq, on_diff);
     }
 
-    append_diff(diffs, {Diff::Keep, suffix_len, 0});
+    on_diff_ifn(DiffOp::Keep, suffix_len);
 }
 
-template<typename Iterator, typename Equal = std::equal_to<>>
-Vector<Diff> find_diff(Iterator a, int N, Iterator b, int M, Equal eq = Equal{})
+struct Diff
+{
+    DiffOp op;
+    int len;
+};
+
+template<typename IteratorA, typename IteratorB, typename OnDiff, typename Equal = std::equal_to<>>
+void for_each_diff(IteratorA a, int N, IteratorB b, int M, OnDiff&& on_diff, Equal eq = Equal{})
 {
     const int max = 2 * (N + M) + 1;
-    Vector<int> data(2*max);
-    Vector<Diff> diffs;
+    std::unique_ptr<int[]> data(new int[2*max]);
     constexpr int cost_limit = 1000;
-    find_diff_rec(a, 0, N, b, 0, M, &data[N+M], &data[max + N+M], cost_limit, eq, diffs);
 
-    return diffs;
+    Diff last{};
+    find_diff_rec(a, 0, N, b, 0, M, &data[N+M], &data[max + N+M], cost_limit, eq,
+                  [&last, &on_diff](DiffOp op, int len) {
+                      if (last.op == op)
+                          last.len += len;
+                      else
+                      {
+                          if (last.len != 0)
+                              on_diff(last.op, last.len);
+                          last = Diff{op, len};
+                      }
+                  });
+    if (last.op != DiffOp{} or last.len != 0)
+        on_diff(last.op, last.len);
 }
 
 }

@@ -34,6 +34,7 @@ define-command -hidden modeline-parse-impl %{
                 ft|filetype) tr="filetype ${value}";;
                 bomb) tr="BOM utf8";;
                 nobomb) tr="BOM none";;
+                spelllang|spl) tr="spell_lang ${value%%,*}";;
                 *) printf %s\\n "echo -debug 'Unsupported vim variable: ${key}'";;
             esac
 
@@ -46,7 +47,7 @@ define-command -hidden modeline-parse-impl %{
             readonly value="$2"
 
             case "${key}" in
-                scrolloff|tabstop|indentwidth|autowrap_column|eolformat|filetype|BOM);;
+                scrolloff|tabstop|indentwidth|autowrap_column|eolformat|filetype|BOM|spell_lang);;
                 *) printf %s\\n "echo -debug 'Unsupported kakoune variable: ${key}'"
                    return;;
             esac

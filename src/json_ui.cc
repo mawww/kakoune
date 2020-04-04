@@ -4,11 +4,10 @@
 #include "event_manager.hh"
 #include "exception.hh"
 #include "file.hh"
+#include "json.hh"
 #include "keys.hh"
 #include "ranges.hh"
 #include "string_utils.hh"
-#include "unit_tests.hh"
-#include "value.hh"
 
 #include <cstdio>
 #include <utility>
@@ -19,53 +18,9 @@ namespace Kakoune
 {
 
 struct invalid_rpc_request : runtime_error {
-    invalid_rpc_request(String message)
+    invalid_rpc_request(const String& message)
         : runtime_error(format("invalid json rpc request ({})", message)) {}
 };
-
-template<typename T>
-String to_json(ArrayView<const T> array)
-{
-    return "[" + join(array | transform([](auto&& elem) { return to_json(elem); }), ", ") + "]";
-}
-
-template<typename T, MemoryDomain D>
-String to_json(const Vector<T, D>& vec) { return to_json(ArrayView<const T>{vec}); }
-
-template<typename K, typename V, MemoryDomain D>
-String to_json(const HashMap<K, V, D>& map)
-{
-    return "{" + join(map | transform([](auto&& i) { return format("{}: {}", to_json(i.key), to_json(i.value)); }),
-                      ',', false) + "}";
-}
-
-String to_json(int i) { return to_string(i); }
-String to_json(bool b) { return b ? "true" : "false"; }
-String to_json(StringView str)
-{
-    String res;
-    res.reserve(str.length() + 4);
-    res += '"';
-    for (auto it = str.begin(), end = str.end(); it != end; )
-    {
-        auto next = std::find_if(it, end, [](char c) {
-            return c == '\\' or c == '"' or (c >= 0 and c <= 0x1F);
-        });
-
-        res += StringView{it, next};
-        if (next == end)
-            break;
-
-        char buf[7] = {'\\', *next, 0};
-        if (*next >= 0 and *next <= 0x1F)
-            sprintf(buf, "\\u%04x", *next);
-
-        res += buf;
-        it = next+1;
-    }
-    res += '"';
-    return res;
-}
 
 String to_json(Color color)
 {
@@ -217,7 +172,7 @@ void JsonUI::menu_hide()
     rpc_call("menu_hide");
 }
 
-void JsonUI::info_show(StringView title, StringView content,
+void JsonUI::info_show(const DisplayLine& title, const DisplayLineList& content,
                        DisplayCoord anchor, Face face,
                        InfoStyle style)
 {
@@ -253,120 +208,6 @@ void JsonUI::set_on_key(OnKeyCallback callback)
 {
     m_on_key = std::move(callback);
 }
-
-using JsonArray = Vector<Value>;
-using JsonObject = HashMap<String, Value>;
-
-static bool is_digit(char c) { return c >= '0' and c <= '9'; }
-
-struct JsonResult { Value value; const char* new_pos; };
-
-JsonResult parse_json(const char* pos, const char* end)
-{
-    if (not skip_while(pos, end, is_blank))
-        return {};
-
-    if (is_digit(*pos))
-    {
-        auto digit_end = pos;
-        skip_while(digit_end, end, is_digit);
-        return { Value{str_to_int({pos, digit_end})}, digit_end };
-    }
-    if (end - pos > 4 and StringView{pos, pos+4} == "true")
-        return { Value{true}, pos+4 };
-    if (end - pos > 5 and StringView{pos, pos+5} == "false")
-        return { Value{false}, pos+5 };
-    if (*pos == '"')
-    {
-        String value;
-        bool escaped = false;
-        ++pos;
-        for (auto string_end = pos; string_end != end; ++string_end)
-        {
-            if (escaped)
-            {
-                escaped = false;
-                value += StringView{pos, string_end};
-                value.back() = *string_end;
-                pos = string_end+1;
-                continue;
-            }
-            if (*string_end == '\\')
-                escaped = true;
-            if (*string_end == '"')
-            {
-                value += StringView{pos, string_end};
-                return {std::move(value), string_end+1};
-            }
-        }
-        return {};
-    }
-    if (*pos == '[')
-    {
-        JsonArray array;
-        if (++pos == end)
-            throw runtime_error("unable to parse array");
-        if (*pos == ']')
-            return {std::move(array), pos+1};
-
-        while (true)
-        {
-            auto [element, new_pos] = parse_json(pos, end);
-            if (not element)
-                return {};
-            pos = new_pos;
-            array.push_back(std::move(element));
-            if (not skip_while(pos, end, is_blank))
-                return {};
-
-            if (*pos == ',')
-                ++pos;
-            else if (*pos == ']')
-                return {std::move(array), pos+1};
-            else
-                throw runtime_error("unable to parse array, expected ',' or ']'");
-        }
-    }
-    if (*pos == '{')
-    {
-        if (++pos == end)
-            throw runtime_error("unable to parse object");
-        JsonObject object;
-        if (*pos == '}')
-            return {std::move(object), pos+1};
-
-        while (true)
-        {
-            auto [name_value, name_end] = parse_json(pos, end);
-            if (not name_value)
-                return {};
-            pos = name_end;
-            String& name = name_value.as<String>();
-            if (not skip_while(pos, end, is_blank))
-                return {};
-            if (*pos++ != ':')
-                throw runtime_error("expected :");
-
-            auto [element, element_end] = parse_json(pos, end);
-            if (not element)
-                return {};
-            pos = element_end;
-            object.insert({ std::move(name), std::move(element) });
-            if (not skip_while(pos, end, is_blank))
-                return {};
-
-            if (*pos == ',')
-                ++pos;
-            else if (*pos == '}')
-                return {std::move(object), pos+1};
-            else
-                throw runtime_error("unable to parse object, expected ',' or '}'");
-        }
-    }
-    throw runtime_error("unable to parse json");
-}
-
-auto parse_json(StringView json) { return parse_json(json.begin(), json.end()); }
 
 void JsonUI::eval_json(const Value& json)
 {
@@ -430,12 +271,17 @@ void JsonUI::eval_json(const Value& json)
             m_on_key({Key::Modifiers::MouseReleaseLeft, coord});
         else if (type == "release_right")
             m_on_key({Key::Modifiers::MouseReleaseRight, coord});
-        else if (type == "wheel_up")
-            m_on_key({Key::Modifiers::MouseWheelUp, coord});
-        else if (type == "wheel_down")
-            m_on_key({Key::Modifiers::MouseWheelDown, coord});
         else
             throw invalid_rpc_request(format("invalid mouse event type: {}", type));
+    }
+    else if (method == "scroll")
+    {
+        if (params.size() != 1)
+            throw invalid_rpc_request("scroll needs an amount");
+        else if (not params[0].is_a<int>())
+            throw invalid_rpc_request("scroll amount is not an integer");
+        m_on_key({Key::Modifiers::Scroll, (Codepoint)params[0].as<int>()});
+
     }
     else if (method == "menu_select")
     {
@@ -504,25 +350,5 @@ void JsonUI::parse_requests(EventMode mode)
         m_requests = String{pos, m_requests.end()};
     }
 }
-
-UnitTest test_json_parser{[]()
-{
-    {
-        auto value = parse_json(R"({ "jsonrpc": "2.0", "method": "keys", "params": [ "b", "l", "a", "h" ] })").value;
-        kak_assert(value);
-    }
-
-    {
-        auto value = parse_json("[10,20]").value;
-        kak_assert(value and value.is_a<JsonArray>());
-        kak_assert(value.as<JsonArray>().at(1).as<int>() == 20);
-    }
-
-    {
-        auto value = parse_json("{}").value;
-        kak_assert(value and value.is_a<JsonObject>());
-        kak_assert(value.as<JsonObject>().empty());
-    }
-}};
 
 }

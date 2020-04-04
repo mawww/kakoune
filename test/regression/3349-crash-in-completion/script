@@ -1,0 +1,2 @@
+ui_out -ignore 4
+sleep .2 # trigger insert completion auto update

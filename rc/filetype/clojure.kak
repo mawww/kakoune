@@ -10,20 +10,19 @@ hook global BufCreate .*[.](clj|cljc|cljs|cljx|edn) %{
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-hook global WinSetOption filetype=clojure %[
+hook global WinSetOption filetype=clojure %{
     require-module clojure
-
-    set-option window static_words %opt{clojure_static_words}
-
-    hook window ModeChange insert:.* -group clojure-trim-indent  clojure-trim-indent
-    hook window InsertChar \n -group clojure-indent clojure-indent-on-new-line
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window clojure-.+ }
-]
+    clojure-configure-window
+}
 
 hook -group clojure-highlight global WinSetOption filetype=clojure %{
     add-highlighter window/clojure ref clojure
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/clojure }
+}
+
+hook -group clojure-insert global BufNewFile .*[.](clj|cljc|cljs|cljx) %{
+    require-module clojure
+    clojure-insert-ns
 }
 
 provide-module clojure %{
@@ -42,10 +41,6 @@ add-highlighter shared/clojure/string  region '(?<!\\)(?:\\\\)*\K"' '(?<!\\)(?:\
 add-highlighter shared/clojure/code/ regex \b(nil|true|false)\b 0:value
 add-highlighter shared/clojure/code/ regex \
     \\(?:space|tab|newline|return|backspace|formfeed|u[0-9a-fA-F]{4}|o[0-3]?[0-7]{1,2}|.)\b 0:string
-
-hook global WinSetOption filetype=clojure %{
-    set-option window extra_word_chars '_' . / * ? + - < > ! : "'"
-}
 
 evaluate-commands %sh{
     exec awk -f - <<'EOF'
@@ -183,6 +178,16 @@ EOF
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden clojure-configure-window %{
+    set-option window static_words %opt{clojure_static_words}
+
+    hook window ModeChange pop:insert:.* -group clojure-trim-indent  clojure-trim-indent
+    hook window InsertChar \n -group clojure-indent clojure-indent-on-new-line
+
+    set-option buffer extra_word_chars '_' . / * ? + - < > ! : "'"
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window clojure-.+ }
+}
+
 define-command -hidden clojure-trim-indent lisp-trim-indent
 
 declare-option \
@@ -203,12 +208,29 @@ define-command -hidden clojure-indent-on-new-line %{
                 execute-keys -draft '"wze<a-L>s.{' %sh{printf $(( kak_opt_indentwidth - 1 ))} '}\K.*<ret><a-;>;"i<a-Z><gt>'
             } catch %{
                 # If not special and parameter appears on line 1, indent to parameter
-                execute-keys -draft '"wze<a-K>[\s()\[\]\{\}]<ret><a-l>s\h\K[^\s].*<ret><a-;>;"i<a-Z><gt>'
+                execute-keys -draft '"wz<a-K>[()[\]{}]<ret>e<a-K>[\s()\[\]\{\}]<ret><a-l>s\h\K[^\s].*<ret><a-;>;"i<a-Z><gt>'
             }
         }
         try %{ execute-keys -draft '[rl"i<a-Z><gt>' }
         try %{ execute-keys -draft '[Bl"i<a-Z><gt>' }
         execute-keys -draft ';"i<a-z>a&<space>'
+    }
+}
+
+declare-option -docstring %{
+    top-level directories which can contain clojure files
+    e.g. '(src|test|dev)'
+} regex clojure_source_directories '(src|test|dev)'
+
+define-command -docstring %{clojure-insert-ns: Insert namespace directive at top of Clojure source file} \
+    clojure-insert-ns %{
+    evaluate-commands -draft %{
+        execute-keys -save-regs '' 'gk\O' "%val{bufname}" '<esc>giZ'
+        try %{ execute-keys 'z<a-l>s\.clj[csx]?$<ret><a-d>' }
+        try %{ execute-keys 'z<a-l>s^' "%opt{clojure_source_directories}" '/<ret><a-d>' }
+        try %{ execute-keys 'z<a-l>s/<ret>r.' }
+        try %{ execute-keys 'z<a-l>s_<ret>r-' }
+        execute-keys 'z<a-l>\c(ns <c-r>")<ret><esc>'
     }
 }
 

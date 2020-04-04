@@ -13,7 +13,7 @@ hook global BufCreate .*[.](rust|rs) %{
 
 hook global WinSetOption filetype=rust %[
     require-module rust
-    hook window InsertEnd .* -group rust-trim-indent rust-trim-indent
+    hook window ModeChange pop:insert:.* -group rust-trim-indent rust-trim-indent
     hook window InsertChar \n -group rust-indent rust-indent-on-new-line
     hook window InsertChar \{ -group rust-indent rust-indent-on-opening-curly-brace
     hook window InsertChar [)}] -group rust-indent rust-indent-on-closing
@@ -25,14 +25,6 @@ hook -group rust-highlight global WinSetOption filetype=rust %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/rust }
 }
 
-# Configuration
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook global WinSetOption filetype=rust %{
-    set window formatcmd 'rustfmt'
-}
-
-
 provide-module rust %§
 
 # Highlighters
@@ -43,8 +35,13 @@ add-highlighter shared/rust/code default-region group
 add-highlighter shared/rust/string           region %{(?<!')"} (?<!\\)(\\\\)*"              fill string
 add-highlighter shared/rust/raw_string       region -match-capture %{(?<!')r(#*)"} %{"(#*)} fill string
 add-highlighter shared/rust/comment          region -recurse "/\*" "/\*" "\*/"              fill comment
+add-highlighter shared/rust/documentation    region "//[!/]" "$"                            fill documentation
 add-highlighter shared/rust/line_comment     region "//" "$"                                fill comment
-add-highlighter shared/rust/macro_attributes region "#!?\[" "\]"                            fill meta
+
+add-highlighter shared/rust/macro_attributes region -recurse "\[" "#!?\[" "\]" regions
+add-highlighter shared/rust/macro_attributes/ default-region fill meta
+add-highlighter shared/rust/macro_attributes/string region %{(?<!')"} (?<!\\)(\\\\)*" fill string
+add-highlighter shared/rust/macro_attributes/raw_string region -match-capture %{(?<!')r(#*)"} %{"(#*)} fill string
 
 add-highlighter shared/rust/code/byte_literal         regex "'\\\\?.'" 0:value
 add-highlighter shared/rust/code/long_quoted          regex "('\w+)[^']" 1:meta
@@ -77,15 +74,18 @@ define-command -hidden rust-trim-indent %{
 define-command -hidden rust-indent-on-new-line %~
     evaluate-commands -draft -itersel %<
         # copy // comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K//[!/]?\h* <ret> y gh j P }
-        # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{
+            execute-keys -draft k <a-x> s ^\h*\K//[!/]?\h* <ret> y gh j P
+        } catch %|
+            # preserve previous line indent
+            try %{ execute-keys -draft <semicolon> K <a-&> }
+            # indent after lines ending with { or (
+            try %[ execute-keys -draft k <a-x> <a-k> [{(]\h*$ <ret> j <a-gt> ]
+            # indent after lines ending with [{(].+ and move first parameter to own line
+            try %< execute-keys -draft [c[({],[)}] <ret> <a-k> \A[({][^\n]+\n[^\n]*\n?\z <ret> L i<ret><esc> <gt> <a-S> <a-&> >
+        |
         # filter previous line
         try %{ execute-keys -draft k : rust-trim-indent <ret> }
-        # indent after lines ending with { or (
-        try %[ execute-keys -draft k <a-x> <a-k> [{(]\h*$ <ret> j <a-gt> ]
-        # indent after lines ending with [{(].+ and move first parameter to own line
-        try %< execute-keys -draft [c[({],[)}] <ret> <a-k> \A[({][^\n]+\n[^\n]*\n?\z <ret> L i<ret><esc> <gt> <a-S> <a-&> >
     >
 ~
 

@@ -14,7 +14,7 @@ hook global BufCreate .*[.](moon) %{
 hook global WinSetOption filetype=moon %{
     require-module moon
 
-    hook window ModeChange insert:.* -group moon-trim-indent  moon-trim-indent
+    hook window ModeChange pop:insert:.* -group moon-trim-indent  moon-trim-indent
     hook window InsertChar .* -group moon-indent moon-indent-on-char
     hook window InsertChar \n -group moon-indent moon-indent-on-new-line
 
@@ -56,7 +56,7 @@ define-command moon-alternative-file -docstring 'Jump to the alternate file (imp
     case $kak_buffile in
         *spec/*_spec.moon)
             altfile=$(eval printf %s\\n $(printf %s\\n $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
-            [ ! -f $altfile ] && echo "echo -markup '{Error}implementation file not found'" && exit
+            [ ! -f $altfile ] && echo "fail 'implementation file not found'" && exit
         ;;
         *.moon)
             path=$kak_buffile
@@ -68,10 +68,10 @@ define-command moon-alternative-file -docstring 'Jump to the alternate file (imp
                     break
                 fi
             done
-            [ ! -d $altdir ] && echo "echo -markup '{Error}spec/ not found'" && exit
+            [ ! -d $altdir ] && echo "fail 'spec/ not found'" && exit
         ;;
         *)
-            echo "echo -markup '{Error}alternative file not found'" && exit
+            echo "fail 'alternative file not found'" && exit
         ;;
     esac
     printf %s\\n "edit $altfile"
@@ -88,11 +88,11 @@ define-command -hidden moon-trim-indent %{
 define-command -hidden moon-indent-on-char %{
     evaluate-commands -draft -itersel %{
         # align _else_ statements to start
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else(if)?) $ <ret> <a-\;> <a-?> ^ \h * (if|unless|when) <ret> s \A | \z <ret> ) <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else(if)?) $ <ret> <a-semicolon> <a-?> ^ \h * (if|unless|when) <ret> s \A | \z <ret> ) <a-&> }
         # align _when_ to _switch_ then indent
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when) $ <ret> <a-\;> <a-?> ^ \h * (switch) <ret> s \A | \z <ret> ) <a-&> ) <space> <gt> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when) $ <ret> <a-semicolon> <a-?> ^ \h * (switch) <ret> s \A | \z <ret> ) <a-&> ) <space> <gt> }
         # align _catch_ and _finally_ to _try_
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (catch|finally) $ <ret> <a-\;> <a-?> ^ \h * (try) <ret> s \A | \z <ret> ) <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (catch|finally) $ <ret> <a-semicolon> <a-?> ^ \h * (try) <ret> s \A | \z <ret> ) <a-&> }
     }
 }
 
@@ -101,7 +101,7 @@ define-command -hidden moon-indent-on-new-line %{
         # copy -- comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^ \h * \K -- \h * <ret> y gh j P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : moon-trim-indent <ret> }
         # indent after start structure

@@ -11,7 +11,7 @@ hook global BufCreate .*[.](php) %{
 hook global WinSetOption filetype=php %{
     require-module php
 
-    hook window ModeChange insert:.* -group php-trim-indent  php-trim-indent
+    hook window ModeChange pop:insert:.* -group php-trim-indent  php-trim-indent
     hook window InsertChar .* -group php-indent php-indent-on-char
     hook window InsertChar \n -group php-indent php-indent-on-new-line
 
@@ -86,7 +86,7 @@ define-command -hidden php-indent-on-new-line %<
         # copy // comments or docblock * prefix and following white spaces
         try %{ execute-keys -draft s [^/] <ret> k <a-x> s ^\h*\K(?://|[*][^/])\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : php-trim-indent <ret> }
         # indent after lines beginning / ending with opener token

@@ -20,7 +20,7 @@ inline BufferCoord erase(Buffer& buffer, const Selection& range)
     return buffer.erase(range.min(), buffer.char_next(range.max()));
 }
 
-inline BufferCoord replace(Buffer& buffer, const Selection& range, StringView content)
+inline BufferRange replace(Buffer& buffer, const Selection& range, StringView content)
 {
     return buffer.replace(range.min(), buffer.char_next(range.max()), content);
 }
@@ -69,8 +69,8 @@ inline bool is_eow(const Buffer& buffer, BufferCoord coord)
     return is_word(*(it-1)) and not is_word(*it);
 }
 
-ColumnCount get_column(const Buffer& buffer,
-                       ColumnCount tabstop, BufferCoord coord);
+ColumnCount get_column(const Buffer& buffer, ColumnCount tabstop, BufferCoord coord);
+ColumnCount column_length(const Buffer& buffer, ColumnCount tabstop, LineCount line);
 
 ByteCount get_byte_to_column(const Buffer& buffer, ColumnCount tabstop,
                              DisplayCoord coord);
@@ -83,6 +83,9 @@ Buffer* open_or_create_file_buffer(StringView filename,
 void reload_file_buffer(Buffer& buffer);
 
 void write_to_debug_buffer(StringView str);
+
+Vector<String> history_as_strings(const Vector<Buffer::HistoryNode>& history);
+Vector<String> undo_group_as_strings(const Buffer::UndoGroup& undo_group);
 
 }
 

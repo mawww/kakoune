@@ -37,6 +37,12 @@ struct ReverseView
 {
     decltype(auto) begin() { return m_range.rbegin(); }
     decltype(auto) end()   { return m_range.rend(); }
+    decltype(auto) rbegin() { return m_range.begin(); }
+    decltype(auto) rend()   { return m_range.end(); }
+    decltype(auto) begin() const { return m_range.rbegin(); }
+    decltype(auto) end() const  { return m_range.rend(); }
+    decltype(auto) rbegin() const { return m_range.begin(); }
+    decltype(auto) rend() const  { return m_range.end(); }
 
     Range m_range;
 };
@@ -70,6 +76,24 @@ inline auto skip(size_t count)
     return make_view_factory([count](auto&& range) {
         using Range = decltype(range);
         return SkipView<decay_range<Range>>{std::forward<Range>(range), count};
+    });
+}
+
+template<typename Range>
+struct DropView
+{
+    auto begin() const { return std::begin(m_range); }
+    auto end()   const { return std::end(m_range) - m_drop_count; }
+
+    Range m_range;
+    size_t m_drop_count;
+};
+
+inline auto drop(size_t count)
+{
+    return make_view_factory([count](auto&& range) {
+        using Range = decltype(range);
+        return DropView<decay_range<Range>>{std::forward<Range>(range), count};
     });
 }
 
@@ -160,8 +184,8 @@ struct TransformView
         Iterator& operator+=(difference_type diff) { m_it += diff; return *this; }
         Iterator& operator-=(difference_type diff) { m_it -= diff; return *this; }
 
-        Iterator operator+(difference_type diff) { return {*m_transform, m_it + diff}; }
-        Iterator operator-(difference_type diff) { return {*m_transform, m_it - diff}; }
+        Iterator operator+(difference_type diff) const { return {*m_transform, m_it + diff}; }
+        Iterator operator-(difference_type diff) const { return {*m_transform, m_it - diff}; }
 
         friend bool operator==(const Iterator& lhs, const Iterator& rhs) { return lhs.m_it == rhs.m_it; }
         friend bool operator!=(const Iterator& lhs, const Iterator& rhs) { return not (lhs == rhs); }
@@ -356,13 +380,9 @@ struct ConcatView
         RangeIt2 m_it2;
     };
 
-    ConcatView(Range1& range1, Range2& range2)
-        : m_range1(range1), m_range2(range2) {}
-
     Iterator begin() const { return {m_range1.begin(), m_range1.end(), m_range2.begin()}; }
     Iterator end()   const { return {m_range1.end(), m_range1.end(), m_range2.end()}; }
 
-private:
     Range1 m_range1;
     Range2 m_range2;
 };
@@ -460,8 +480,8 @@ auto gather()
     });
 }
 
-template<typename ExceptionType, size_t... Indexes>
-auto elements(bool exact_size = false)
+template<typename ExceptionType, bool exact_size, size_t... Indexes>
+auto elements()
 {
     return make_view_factory([=] (auto&& range) {
         using std::begin; using std::end;
@@ -480,16 +500,16 @@ auto elements(bool exact_size = false)
     });
 }
 
-template<typename ExceptionType, size_t... Indexes>
+template<typename ExceptionType, bool exact_size, size_t... Indexes>
 auto static_gather_impl(std::index_sequence<Indexes...>)
 {
-    return elements<ExceptionType, Indexes...>(true);
+    return elements<ExceptionType, exact_size, Indexes...>();
 }
 
-template<typename ExceptionType, size_t size>
+template<typename ExceptionType, size_t size, bool exact_size = true>
 auto static_gather()
 {
-    return static_gather_impl<ExceptionType>(std::make_index_sequence<size>());
+    return static_gather_impl<ExceptionType, exact_size>(std::make_index_sequence<size>());
 }
 
 }

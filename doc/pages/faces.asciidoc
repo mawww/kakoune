@@ -7,7 +7,7 @@ color, a background color, and some attributes. The value of a face has the
 following format:
 
 ---------------------------------------
-fg_color[,bg_color][+attributes][@base]
+[fg_color][,bg_color][+attributes][@base]
 ---------------------------------------
 
 'fg_color', 'bg_color'::
@@ -20,6 +20,7 @@ fg_color[,bg_color][+attributes][@base]
             keep the existing color
         *rgb:RRGGBB*:::
             hexadecimal value
+    if unspecified, *default* is used.
 
 'attributes'::
     string whose individual letters set an attribute:
@@ -136,6 +137,9 @@ The following faces are used by builtin highlighters if enabled.
 *Whitespace*::
     face used by the `show-whitespaces` highlighter
 
+*WrapMarker*::
+    face used by the `wrap -marker` highlighter
+
 == Markup strings
 
 In certain contexts, Kakoune can take a markup string, which is a string
@@ -153,3 +157,14 @@ echo -markup 'default {Error}error{Default} default'
 Inside a markup string, a literal `{` character is written `\{`, and a
 literal backslash (`\`) that precedes a '{' character is escaped as well
 (`\\`).
+
+The `{\}` string disables markup processing for the rest of the line,
+and can be used to avoid having to escape text that might be mistaken
+for markup instructions.
+
+For example this will prevent any '{' in the current buffer name from
+being incorrectly interpreted as markup instructions.
+
+----
+echo -markup "{Information}name:{\} %val{bufname}"
+----

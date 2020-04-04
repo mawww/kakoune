@@ -18,7 +18,7 @@ hook global WinSetOption filetype=python %{
 
     hook window InsertChar \n -group python-indent python-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group python-trim-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange pop:insert:.* -group python-trim-indent %{ try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d } }
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window python-.+ }
 }
 
@@ -37,6 +37,7 @@ add-highlighter shared/python/code default-region group
 add-highlighter shared/python/docstring     region -match-capture ("""|''') ("""|''') regions
 add-highlighter shared/python/double_string region '"'   (?<!\\)(\\\\)*"  fill string
 add-highlighter shared/python/single_string region "'"   (?<!\\)(\\\\)*'  fill string
+add-highlighter shared/python/documentation region '##'  '$'              fill documentation
 add-highlighter shared/python/comment       region '#'   '$'              fill comment
 
 # Integer formats
@@ -130,12 +131,13 @@ evaluate-commands %sh{
         add-highlighter shared/python/code/ regex '\b($(join "${keywords}" '|'))\b' 0:keyword
         add-highlighter shared/python/code/ regex '\b($(join "${functions}" '|'))\b\(' 1:builtin
         add-highlighter shared/python/code/ regex '\b($(join "${types}" '|'))\b' 0:type
-        add-highlighter shared/python/code/ regex '@[\w_]+\b' 0:attribute
+        add-highlighter shared/python/code/ regex '^\h*(@[\w_.]+))' 1:attribute
     "
 }
 
-add-highlighter shared/python/code/ regex (?<=[\w\s\d'"_])(<=|<<|>>|>=|<>|<|>|!=|==|\||\^|&|\+|-|\*\*|\*|//|/|%|~) 0:operator
+add-highlighter shared/python/code/ regex (?<=[\w\s\d\)\]'"_])(<=|<<|>>|>=|<>|<|>|!=|==|\||\^|&|\+|-|\*\*|\*|//?|%|~) 0:operator
 add-highlighter shared/python/code/ regex (?<=[\w\s\d'"_])((?<![=<>!])=(?![=])|[+*-]=) 0:builtin
+add-highlighter shared/python/code/ regex ^\h*(?:from|import)\h+(\S+) 1:module
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -145,7 +147,7 @@ define-command -hidden python-indent-on-new-line %{
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
         try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
         # indent after line ending with :

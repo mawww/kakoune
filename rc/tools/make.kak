@@ -8,12 +8,13 @@ declare-option -docstring "name of the client in which utilities display informa
 declare-option -hidden int make_current_error_line
 
 define-command -params .. \
-    -docstring %{make [<arguments>]: make utility wrapper
-All the optional arguments are forwarded to the make utility} \
-    make %{ evaluate-commands %sh{
+    -docstring %{
+        make [<arguments>]: make utility wrapper
+        All the optional arguments are forwarded to the make utility
+     } make %{ evaluate-commands %sh{
      output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-make.XXXXXXXX)/fifo
      mkfifo ${output}
-     ( eval ${kak_opt_makecmd} "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
+     ( eval ${kak_opt_makecmd} "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
      printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
                edit! -fifo ${output} -scroll *make*
@@ -44,7 +45,7 @@ declare-option -docstring "name of the client in which all source code jumps wil
 define-command -hidden make-open-error -params 4 %{
     evaluate-commands -try-client %opt{jumpclient} %{
         edit -existing "%arg{1}" %arg{2} %arg{3}
-        echo -markup "{Information}%arg{4}"
+        echo -markup "{Information}{\}%arg{4}"
         try %{ focus }
     }
 }

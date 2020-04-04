@@ -17,7 +17,7 @@ hook global WinSetOption filetype=dart %{
     set-option window static_words %opt{dart_static_words}
 
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange insert:.* -group dart-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange pop:insert:.* -group dart-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group dart-indent dart-indent-on-new-line
     hook window InsertChar \{ -group dart-indent dart-indent-on-opening-curly-brace
     hook window InsertChar \} -group dart-indent dart-indent-on-closing-curly-brace
@@ -84,7 +84,7 @@ evaluate-commands %sh{
 define-command -hidden dart-indent-on-new-line %~
     evaluate-commands -draft -itersel %=
         # preserve previous line indent
-        try %{ execute-keys -draft \;K<a-&> }
+        try %{ execute-keys -draft <semicolon>K<a-&> }
         # indent after lines ending with { or (
         try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line
@@ -92,11 +92,11 @@ define-command -hidden dart-indent-on-new-line %~
         # align to opening paren of previous line
         try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
         # copy // comments prefix
-        try %{ execute-keys -draft \;<c-s>k<a-x> s ^\h*\K/{2,} <ret> y<c-o>P<esc> }
+        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,} <ret> y<c-o>P<esc> }
         # indent after a switch's case/default statements
         try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
         # indent after if|else|while|for
-        try %[ execute-keys -draft \;<a-F>)MB <a-k> \A(if|else|while|for)\h*\(.*\)\h*\n\h*\n?\z <ret> s \A|.\z <ret> 1<a-&>1<a-space><a-gt> ]
+        try %[ execute-keys -draft <semicolon><a-F>)MB <a-k> \A(if|else|while|for)\h*\(.*\)\h*\n\h*\n?\z <ret> s \A|.\z <ret> 1<a-&>1<a-space><a-gt> ]
     =
 ~
 

@@ -29,7 +29,7 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
 
     evaluate-commands "set-option window static_words %%opt{%val{hook_param_capture_1}_static_words}"
 
-    hook -group "%val{hook_param_capture_1}-trim-indent" window ModeChange insert:.* c-family-trim-indent
+    hook -group "%val{hook_param_capture_1}-trim-indent" window ModeChange pop:insert:.* c-family-trim-indent
     hook -group "%val{hook_param_capture_1}-insert" window InsertChar \n c-family-insert-on-newline
     hook -group "%val{hook_param_capture_1}-indent" window InsertChar \n c-family-indent-on-newline
     hook -group "%val{hook_param_capture_1}-indent" window InsertChar \{ c-family-indent-on-opening-curly-brace
@@ -68,14 +68,14 @@ define-command -hidden c-family-trim-indent %{
 }
 
 define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -itersel %<
-    execute-keys \;
+    execute-keys <semicolon>
     try %<
         # if previous line is part of a comment, do nothing
         execute-keys -draft <a-?>/\*<ret> <a-K>^\h*[^/*\h]<ret>
     > catch %<
         # else if previous line closed a paren (possibly followed by words and a comment),
         # copy indent of the opening paren line
-        execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?(?://[^\n]+)?\n\z<ret> m<a-\;>J <a-S> 1<a-&>
+        execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?(?://[^\n]+)?\n\z<ret> m<a-semicolon>J <a-S> 1<a-&>
     > catch %<
         # else indent new lines with the same level as the previous one
         execute-keys -draft K <a-&>
@@ -88,7 +88,7 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
     try %< execute-keys -draft k <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> >
     # indent after a statement not followed by an opening brace
     try %< execute-keys -draft k <a-x> s\)\h*(?://[^\n]+)?\n\z<ret> \
-                               <a-\;>mB <a-k>\A\b(if|for|while)\b<ret> <a-\;>j <a-gt> >
+                               <a-semicolon>mB <a-k>\A\b(if|for|while)\b<ret> <a-semicolon>j <a-gt> >
     try %< execute-keys -draft k <a-x> s \belse\b\h*(?://[^\n]+)?\n\z<ret> \
                                j <a-gt> >
     # deindent after a single line statement end
@@ -104,7 +104,7 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
         # Go to opening parenthesis and opening brace, then select the most nested one
         try %< execute-keys [c [({],[)}] <ret> >
         # Validate selection and get first and last char
-        execute-keys <a-k>\A[{(](\h*\S+)+\n<ret> <a-K>"(([^"]*"){2})*<ret> <a-K>'(([^']*'){2})*<ret> <a-:><a-\;>L <a-S>
+        execute-keys <a-k>\A[{(](\h*\S+)+\n<ret> <a-K>"(([^"]*"){2})*<ret> <a-K>'(([^']*'){2})*<ret> <a-:><a-semicolon>L <a-S>
         # Remove possibly incorrect indent from new line which was copied from previous line
         try %< execute-keys -draft <space> <a-h> s\h+<ret> d >
         # Now indent and align that new line with the opening parenthesis/brace
@@ -136,7 +136,7 @@ define-command -hidden c-family-insert-on-closing-curly-brace %[
 ]
 
 define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel -draft %[
-    execute-keys \;
+    execute-keys <semicolon>
     try %[
         evaluate-commands -draft -save-regs '/"' %[
             # copy the commenting prefix
@@ -198,13 +198,17 @@ evaluate-commands %sh{
             add-highlighter shared/$ft/code default-region group
             add-highlighter shared/$ft/string region %{$maybe_at(?<!')(?<!'\\\\)"} %{(?<!\\\\)(?:\\\\\\\\)*"} fill string
             add-highlighter shared/$ft/raw_string region -match-capture %{R"([^(]*)\\(} %{\\)([^")]*)"} fill string
+            add-highlighter shared/$ft/javadoc region /\*\* \*/ fill documentation
+            add-highlighter shared/$ft/qtdoc region /\*! \*/ fill documentation
+            add-highlighter shared/$ft/inline_doc region /// $ fill documentation
+            add-highlighter shared/$ft/inline_qtdoc region //! $ fill documentation
             add-highlighter shared/$ft/comment region /\\* \\*/ fill comment
             add-highlighter shared/$ft/line_comment region // (?<!\\\\)(?=\\n) fill comment
             add-highlighter shared/$ft/disabled region -recurse "#\\h*if(?:def)?" ^\\h*?#\\h*if\\h+(?:0|FALSE)\\b "#\\h*(?:else|elif|endif)" fill comment
             add-highlighter shared/$ft/macro region %{^\\h*?\\K#} %{(?<!\\\\)(?=\\n)|(?=//)} group
 
             add-highlighter shared/$ft/macro/ fill meta
-            add-highlighter shared/$ft/macro/ regex ^\\h*#include\\h+(\\S*) 1:module
+            add-highlighter shared/$ft/macro/ regex ^\\h*#\\h*include\\h+(\\S*) 1:module
             add-highlighter shared/$ft/macro/ regex /\\*.*?\\*/ 0:comment
 	EOF
     done
@@ -370,11 +374,12 @@ evaluate-commands %sh{
     "
 }
 
-declare-option -docstring %{control the type of include guard to be inserted in empty headers
-Can be one of the following:
- ifdef: old style ifndef/define guard
- pragma: newer type of guard using "pragma once"} \
-    str c_include_guard_style "ifdef"
+declare-option -docstring %{
+    control the type of include guard to be inserted in empty headers
+    Can be one of the following:
+        ifdef: old style ifndef/define guard
+        pragma: newer type of guard using "pragma once"
+} str c_include_guard_style "ifdef"
 
 define-command -hidden c-family-insert-include-guards %{
     evaluate-commands %sh{
@@ -428,11 +433,11 @@ define-command -hidden c-family-alternative-file %{
                 done
             ;;
             *)
-                echo "echo -markup '{Error}extension not recognized'"
+                echo "fail 'extension not recognized'"
                 exit
             ;;
         esac
-        echo "echo -markup '{Error}alternative file not found'"
+        echo "fail 'alternative file not found'"
     }
 }
 

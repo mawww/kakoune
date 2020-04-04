@@ -1,0 +1,1 @@
+evaluate-commands %sh{ printf 'set-register a "\275\262\75\274\040\342\214\230"' }

@@ -67,7 +67,7 @@ define-command doc-jump-to-anchor -params 1 %{
                 exit
             fi
         done
-        printf "echo -markup {Error}No such anchor '%s'" "${anchor}"
+        printf "fail No such anchor '%s'\n" "${anchor}"
     }
 }
 
@@ -105,7 +105,7 @@ define-command -params 1 -hidden doc-render %{
 
     # Join paragraphs together
     try %{
-        execute-keys -draft '%S\n{2,}|(?<=\+)\n|^[^\n]+::\n|^\h*[*-]\h+<ret>' \
+        execute-keys -draft '%S\n{2,}|(?<lt>=\+)\n|^[^\n]+::\n|^\h*[*-]\h+<ret>' \
             <a-K>^\h*-{2,}(\n|\z)<ret> S\n\z<ret> <a-k>\n<ret> <a-j>
     }
 
@@ -147,8 +147,10 @@ define-command -params 1..2 \
             fi
         fi
     } \
-    doc -docstring %{doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
-An optional keyword argument can be passed to the function, which will be automatically selected in the documentation} %{
+    doc -docstring %{
+        doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
+        An optional keyword argument can be passed to the function, which will be automatically selected in the documentation
+    } %{
     evaluate-commands %sh{
         readonly page="${kak_runtime}/doc/${1}.asciidoc"
         if [ -f "${page}" ]; then
@@ -157,7 +159,7 @@ An optional keyword argument can be passed to the function, which will be automa
             fi
             printf %s\\n "evaluate-commands -try-client %opt{docsclient} %{ doc-render ${page}; ${jump_cmd} }"
         else
-            printf %s\\n "echo -markup '{Error}No such doc file: ${page}'"
+            printf 'fail No such doc file: %s\n' "${page}"
         fi
     }
 }

@@ -34,7 +34,7 @@ Highlighter& Highlighter::get_child(StringView path)
     throw runtime_error("this highlighter does not hold children");
 }
 
-void Highlighter::add_child(String name, std::unique_ptr<Highlighter>&& hl)
+void Highlighter::add_child(String, std::unique_ptr<Highlighter>&&, bool)
 {
     throw runtime_error("this highlighter does not hold children");
 }

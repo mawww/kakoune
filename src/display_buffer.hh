@@ -30,6 +30,9 @@ public:
     DisplayAtom(String str, Face face)
         : face(face), m_type(Text), m_text(std::move(str)) {}
 
+    explicit DisplayAtom(String str)
+        : DisplayAtom(std::move(str), Face{}) {}
+
     StringView content() const;
     ColumnCount length() const;
 
@@ -122,7 +125,7 @@ public:
 
     // remove first_col from the begining of the line, and make sure
     // the line is less that col_count character
-    void trim(ColumnCount first_col, ColumnCount col_count);
+    bool trim(ColumnCount first_col, ColumnCount col_count);
 
     // Merge together consecutive atoms sharing the same display attributes
     void     optimize();
@@ -132,6 +135,7 @@ private:
     AtomList  m_atoms;
 };
 
+using DisplayLineList = Vector<DisplayLine>;
 class FaceRegistry;
 
 String fix_atom_text(StringView str);
@@ -140,11 +144,10 @@ DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const
 class DisplayBuffer : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:
-    using LineList = Vector<DisplayLine>;
     DisplayBuffer() {}
 
-    LineList& lines() { return m_lines; }
-    const LineList& lines() const { return m_lines; }
+    DisplayLineList& lines() { return m_lines; }
+    const DisplayLineList& lines() const { return m_lines; }
 
     // returns the smallest BufferRange which contains every DisplayAtoms
     const BufferRange& range() const { return m_range; }
@@ -157,7 +160,7 @@ public:
     size_t timestamp() const { return m_timestamp; }
 
 private:
-    LineList m_lines;
+    DisplayLineList m_lines;
     BufferRange m_range;
     size_t m_timestamp = -1;
 };

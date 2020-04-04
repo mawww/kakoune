@@ -12,7 +12,7 @@ hook global WinSetOption filetype=awk %{
     require-module awk
     
     hook window InsertChar \n -group awk-indent awk-indent-on-new-line
-    hook window ModeChange insert:.* -group awk-trim-indent awk-trim-indent
+    hook window ModeChange pop:insert:.* -group awk-trim-indent awk-trim-indent
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window awk-.+ }
 }
@@ -71,7 +71,7 @@ evaluate-commands %sh{
 define-command -hidden awk-indent-on-new-line %[
     evaluate-commands -draft -itersel %[
         # preserve previous line indent
-        try %[ execute-keys -draft \; K <a-&> ]
+        try %[ execute-keys -draft <semicolon> K <a-&> ]
         # cleanup trailing whitespaces from previous line
         try %[ execute-keys -draft k <a-x> s \h+$ <ret> d ]
         # indent after line ending in opening curly brace
@@ -80,7 +80,7 @@ define-command -hidden awk-indent-on-new-line %[
 ]
 
 define-command -hidden awk-trim-indent %{
-    try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d }
+    try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d }
 }
 
 @

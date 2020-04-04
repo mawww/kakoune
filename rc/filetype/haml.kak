@@ -14,7 +14,7 @@ hook global BufCreate .*[.](haml) %{
 hook global WinSetOption filetype=haml %{
     require-module haml
 
-    hook window ModeChange insert:.* -group haml-trim-indent  haml-trim-indent
+    hook window ModeChange pop:insert:.* -group haml-trim-indent  haml-trim-indent
     hook window InsertChar \n -group haml-indent haml-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haml-.+ }
@@ -61,7 +61,7 @@ define-command -hidden haml-indent-on-new-line %{
         # copy '/' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : haml-trim-indent <ret> }
         # indent after lines beginning with : or -

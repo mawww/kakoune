@@ -40,7 +40,12 @@ main() {
 
     script=$(printf 'nop %%sh{ %s }' "${KAK_SCRIPT}" | sed "s,{{outfile}},\"${outfile}\",g")
 
-    for session in "${TMPDIR:-/tmp}/kakoune/${USER}"/*; do
+    sessions_dir="${TMPDIR:-/tmp}/kakoune/${USER}"
+    if [ -n "${XDG_RUNTIME_DIR}" ]; then
+        sessions_dir="${XDG_RUNTIME_DIR}/kakoune"
+    fi
+
+    for session in "${sessions_dir}"/*; do
         name_session="${session##*/}"
 
         if printf '' | socat - UNIX-CONNECT:"${session}",connect-timeout=1 2>/dev/null; then

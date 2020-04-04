@@ -43,6 +43,7 @@ evaluate-commands %sh{
         face global operator ${yellow1}
         face global attribute ${tan1}
         face global comment ${gray1}
+        face global documentation comment
         face global meta ${gray2}
         face global builtin ${tan1}
     "

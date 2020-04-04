@@ -18,24 +18,25 @@ evaluate-commands %sh{
     gutter_fg_grey=rgb:4b5263
     cursor_grey=rgb:2c323c
     visual_grey=rgb:3e4452
-    menu_grey=rgb:3e4452
+    menu_grey=rgb:697098
     special_grey=rgb:3b4048
     vertsplit=rgb:181a1f
     visual_black=default
 
     printf "%s\n" "
     # Code
-    face global value      $dark_yellow
-    face global type       $yellow
-    face global function   $blue
-    face global variable   $blue
-    face global identifier $blue
-    face global string     $green
-    face global error      rgb:c3bf9f+b
-    face global keyword    $purple
-    face global operator   $cyan
-    face global attribute  rgb:eedc82
-    face global comment    $comment_grey+i
+    face global value         $dark_yellow
+    face global type          $yellow
+    face global function      $blue
+    face global variable      $blue
+    face global identifier    $blue
+    face global string        $green
+    face global error         rgb:c3bf9f+b
+    face global keyword       $purple
+    face global operator      $cyan
+    face global attribute     rgb:eedc82
+    face global comment       $comment_grey+i
+    face global documentation comment
 
     # #include <...>
     face global meta       $yellow
@@ -72,7 +73,7 @@ evaluate-commands %sh{
     face global MenuForeground     $black,$purple
 
     # completion menu info
-    face global MenuInfo           $black,$white+i
+    face global MenuInfo           $menu_grey,default+i
 
     # assistant, [+]
     face global Information        $white,$visual_grey

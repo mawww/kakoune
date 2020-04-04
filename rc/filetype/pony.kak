@@ -18,7 +18,7 @@ hook global WinSetOption filetype=pony %{
 
     hook window InsertChar \n -group pony-indent pony-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange insert:.* -group pony-trim-indent %{ try %{ execute-keys -draft \; <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange pop:insert:.* -group pony-trim-indent %{ try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d } }
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pony-.+ }
 }

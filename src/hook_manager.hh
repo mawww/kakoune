@@ -30,10 +30,8 @@ enum class Hook
     BufSetOption,
     ClientCreate,
     ClientClose,
-    InsertBegin,
     InsertChar,
     InsertDelete,
-    InsertEnd,
     InsertIdle,
     InsertKey,
     InsertMove,
@@ -46,9 +44,8 @@ enum class Hook
     GlobalSetOption,
     RuntimeError,
     PromptIdle,
-    NormalBegin,
-    NormalEnd,
     NormalIdle,
+    NextKeyIdle,
     NormalKey,
     ModeChange,
     RawKey,
@@ -62,7 +59,7 @@ enum class Hook
 
 constexpr auto enum_desc(Meta::Type<Hook>)
 {
-    return make_array<EnumDesc<Hook>, 41>({
+    return make_array<EnumDesc<Hook>>({
         {Hook::BufCreate, "BufCreate"},
         {Hook::BufNewFile, "BufNewFile"},
         {Hook::BufOpenFile, "BufOpenFile"},
@@ -76,10 +73,8 @@ constexpr auto enum_desc(Meta::Type<Hook>)
         {Hook::BufSetOption, "BufSetOption"},
         {Hook::ClientCreate, "ClientCreate"},
         {Hook::ClientClose, "ClientClose"},
-        {Hook::InsertBegin, "InsertBegin"},
         {Hook::InsertChar, "InsertChar"},
         {Hook::InsertDelete, "InsertDelete"},
-        {Hook::InsertEnd, "InsertEnd"},
         {Hook::InsertIdle, "InsertIdle"},
         {Hook::InsertKey, "InsertKey"},
         {Hook::InsertMove, "InsertMove"},
@@ -92,9 +87,8 @@ constexpr auto enum_desc(Meta::Type<Hook>)
         {Hook::GlobalSetOption, "GlobalSetOption"},
         {Hook::RuntimeError, "RuntimeError"},
         {Hook::PromptIdle, "PromptIdle"},
-        {Hook::NormalBegin, "NormalBegin"},
-        {Hook::NormalEnd, "NormalEnd"},
         {Hook::NormalIdle, "NormalIdle"},
+        {Hook::NextKeyIdle, "NextKeyIdle"},
         {Hook::NormalKey, "NormalKey"},
         {Hook::ModeChange, "ModeChange"},
         {Hook::RawKey, "RawKey"},

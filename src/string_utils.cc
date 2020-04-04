@@ -9,16 +9,30 @@
 namespace Kakoune
 {
 
-StringView trim_whitespaces(StringView str)
+String trim_indent(StringView str)
 {
-    auto beg = str.begin(), end = str.end();
-    while (beg != end and is_blank(*beg))
-        ++beg;
-    while (beg != end and is_blank(*(end-1)))
-        --end;
-    return {beg, end};
-}
+    if (str.empty())
+        return {};
 
+    if (str[0_byte] == '\n')
+        str = str.substr(1_byte);
+    while (not str.empty() and is_blank(str.back()))
+        str = str.substr(0, str.length() - 1);
+
+    utf8::iterator it{str.begin(), str};
+    while (it != str.end() and is_horizontal_blank(*it))
+        it++;
+
+    const StringView indent{str.begin(), it.base()};
+    return accumulate(str | split_after<StringView>('\n') | transform([&](auto&& line) {
+            if (line == "\n")
+                return line;
+            else if (not prefix_match(line, indent))
+                throw runtime_error("inconsistent indentation in the string");
+
+            return line.substr(indent.length());
+        }), String{}, [](String& s, StringView l) -> decltype(auto) { return s += l; });
+}
 
 String escape(StringView str, StringView characters, char escape)
 {
@@ -221,58 +235,61 @@ String expand_tabs(StringView line, ColumnCount tabstop, ColumnCount col)
     return res;
 }
 
-Vector<StringView> wrap_lines(StringView text, ColumnCount max_width)
+WrapView::Iterator::Iterator(StringView text, ColumnCount max_width)
+  : m_remaining{text}, m_max_width{max_width}
 {
     if (max_width <= 0)
         throw runtime_error("Invalid max width");
+    ++*this;
+}
 
+WrapView::Iterator& WrapView::Iterator::operator++()
+{
     using Utf8It = utf8::iterator<const char*>;
-    Utf8It it{text.begin(), text};
-    Utf8It end{text.end(), text};
-    Utf8It line_begin = it;
+    Utf8It it{m_remaining.begin(), m_remaining};
     Utf8It last_word_end = it;
 
-    Vector<StringView> lines;
-    while (it != end)
+    while (it != m_remaining.end())
     {
         const CharCategories cat = categorize(*it, {'_'});
         if (cat == CharCategories::EndOfLine)
         {
-            lines.emplace_back(line_begin.base(), it.base());
-            line_begin = it = it+1;
-            continue;
+            m_current = StringView{m_remaining.begin(), it.base()};
+            m_remaining = StringView{(it+1).base(), m_remaining.end()};
+            return *this;
         }
 
         Utf8It word_end = it+1;
-        while (word_end != end and categorize(*word_end, {'_'}) == cat)
+        while (word_end != m_remaining.end() and categorize(*word_end, {'_'}) == cat)
             ++word_end;
 
-        while (word_end > line_begin and
-               utf8::column_distance(line_begin.base(), word_end.base()) >= max_width)
+        if (word_end > m_remaining.begin() and
+            utf8::column_distance(m_remaining.begin(), word_end.base()) >= m_max_width)
         {
-            auto line_end = last_word_end <= line_begin ?
-                Utf8It{utf8::advance(line_begin.base(), text.end(), max_width), text}
+            auto line_end = last_word_end <= m_remaining.begin() ?
+                Utf8It{utf8::advance(m_remaining.begin(), m_remaining.end(), m_max_width), m_remaining}
               : last_word_end;
 
-            lines.emplace_back(line_begin.base(), line_end.base());
+            m_current = StringView{m_remaining.begin(), line_end.base()};
 
-            while (line_end != end and is_horizontal_blank(*line_end))
+            while (line_end != m_remaining.end() and is_horizontal_blank(*line_end))
                 ++line_end;
 
-            if (line_end != end and *line_end == '\n')
+            if (line_end != m_remaining.end() and *line_end == '\n')
                 ++line_end;
 
-            it = line_begin = line_end;
+            m_remaining = StringView{line_end.base(), m_remaining.end()};
+            return *this;
         }
         if (cat == CharCategories::Word or cat == CharCategories::Punctuation)
             last_word_end = word_end;
 
-        if (word_end > line_begin)
+        if (word_end > m_remaining.begin())
             it = word_end;
     }
-    if (line_begin != end)
-        lines.emplace_back(line_begin.base(), text.end());
-    return lines;
+    m_current = m_remaining;
+    m_remaining = StringView{};
+    return *this;
 }
 
 template<typename AppendFunc>
@@ -364,7 +381,7 @@ UnitTest test_string{[]()
 {
     kak_assert(String("youpi ") + "matin" == "youpi matin");
 
-    Vector<StringView> wrapped = wrap_lines("wrap this paragraph\n respecting whitespaces and much_too_long_words", 16);
+    auto wrapped = "wrap this paragraph\n respecting whitespaces and much_too_long_words" | wrap_at(16) | gather<Vector>();
     kak_assert(wrapped.size() == 6);
     kak_assert(wrapped[0] == "wrap this");
     kak_assert(wrapped[1] == "paragraph");
@@ -373,11 +390,20 @@ UnitTest test_string{[]()
     kak_assert(wrapped[4] == "much_too_long_wo");
     kak_assert(wrapped[5] == "rds");
 
-    Vector<StringView> wrapped2 = wrap_lines("error: unknown type", 7);
+    auto wrapped2 = "error: unknown type" | wrap_at(7) | gather<Vector>();
     kak_assert(wrapped2.size() == 3);
     kak_assert(wrapped2[0] == "error:");
     kak_assert(wrapped2[1] == "unknown");
     kak_assert(wrapped2[2] == "type");
+
+    kak_assert(trim_indent(" ") == "");
+    kak_assert(trim_indent("no-indent") == "no-indent");
+    kak_assert(trim_indent("\nno-indent") == "no-indent");
+    kak_assert(trim_indent("\n  indent\n  indent") == "indent\nindent");
+    kak_assert(trim_indent("\n  indent\n    indent") == "indent\n  indent");
+    kak_assert(trim_indent("\n  indent\n  indent\n   ") == "indent\nindent");
+
+    kak_expect_throw(runtime_error, trim_indent("\n  indent\nno-indent"));
 
     kak_assert(escape(R"(\youpi:matin:tchou\:)", ":\\", '\\') == R"(\\youpi\:matin\:tchou\\\:)");
     kak_assert(unescape(R"(\\youpi\:matin\:tchou\\\:)", ":\\", '\\') == R"(\youpi:matin:tchou\:)");

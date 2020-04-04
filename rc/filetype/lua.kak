@@ -45,7 +45,14 @@ add-highlighter shared/lua/double_string region '"'   (?<!\\)(?:\\\\)*" fill str
 add-highlighter shared/lua/single_string region "'"   (?<!\\)(?:\\\\)*' fill string
 add-highlighter shared/lua/comment       region '--'  $                 fill comment
 
-add-highlighter shared/lua/code/ regex \b(and|break|do|else|elseif|end|false|for|function|goto|if|in|local|nil|not|or|repeat|return|then|true|until|while)\b 0:keyword
+add-highlighter shared/lua/code/keyword regex \b(and|break|do|else|elseif|end|for|function|goto|if|in|not|or|repeat|return|then|until|while)\b 0:keyword
+add-highlighter shared/lua/code/value regex \b(false|nil|true|[0-9]+(:?\.[0-9])?(:?[eE]-?[0-9]+)?|0x[0-9a-fA-F])\b 0:value
+add-highlighter shared/lua/code/operator regex (\+|-|\*|/|%|\^|==?|~=|<=?|>=?|\.\.|#) 0:operator
+add-highlighter shared/lua/code/builtin regex \b(_G|_E)\b 0:builtin
+add-highlighter shared/lua/code/module regex \b(_G|_E)\b 0:module
+add-highlighter shared/lua/code/attribute regex \b(local)\b 0:attribute
+add-highlighter shared/lua/code/function_declaration regex \b(?:function\h+)(?:\w+\h*\.\h*)*([a-zA-Z_]\w*)\( 1:function
+add-highlighter shared/lua/code/function_call regex \b([a-zA-Z_]\w*)\h*(?=[\(\{]) 1:function
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -54,7 +61,7 @@ define-command lua-alternative-file -docstring 'Jump to the alternate file (impl
     case $kak_buffile in
         *spec/*_spec.lua)
             altfile=$(eval printf %s\\n $(printf %s\\n $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
-            [ ! -f $altfile ] && echo "echo -markup '{Error}implementation file not found'" && exit
+            [ ! -f $altfile ] && echo "fail 'implementation file not found'" && exit
         ;;
         *.lua)
             path=$kak_buffile
@@ -66,10 +73,10 @@ define-command lua-alternative-file -docstring 'Jump to the alternate file (impl
                     break
                 fi
             done
-            [ ! -d $altdir ] && echo "echo -markup '{Error}spec/ not found'" && exit
+            [ ! -d $altdir ] && echo "fail 'spec/ not found'" && exit
         ;;
         *)
-            echo "echo -markup '{Error}alternative file not found'" && exit
+            echo "fail 'alternative file not found'" && exit
         ;;
     esac
     printf %s\\n "edit $altfile"
@@ -78,8 +85,8 @@ define-command lua-alternative-file -docstring 'Jump to the alternate file (impl
 define-command -hidden lua-indent-on-char %{
     evaluate-commands -no-hooks -draft -itersel %{
         # align middle and end structures to start and indent when necessary, elseif is already covered by else
-        try %{ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-\;><a-?>^\h*(if)<ret>s\A|\z<ret>)<a-&> }
-        try %{ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-\;><a-?>^\h*(for|function|if|while)<ret>s\A|\z<ret>)<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-semicolon><a-?>^\h*(if)<ret>s\A|\z<ret>)<a-&> }
+        try %{ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-semicolon><a-?>^\h*(for|function|if|while)<ret>s\A|\z<ret>)<a-&> }
     }
 }
 

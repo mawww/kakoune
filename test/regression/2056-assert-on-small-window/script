@@ -1,0 +1,2 @@
+ui_out '{ "jsonrpc": "2.0", "method": "set_ui_options", "params": [{}] }'
+ui_in '{ "jsonrpc": "2.0", "method": "resize", "params": [ 5, 2 ] }'

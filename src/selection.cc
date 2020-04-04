@@ -27,13 +27,6 @@ SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list, size_t time
 SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list)
     : SelectionList(buffer, std::move(list), buffer.timestamp()) {}
 
-SelectionList::SelectionList(SelectionList::UnsortedTag, Buffer& buffer, Vector<Selection> list, size_t timestamp, size_t main)
-    : m_selections(std::move(list)), m_buffer(&buffer), m_timestamp(timestamp)
-{
-    sort_and_merge_overlapping();
-    check_invariant();
-}
-
 void SelectionList::remove(size_t index)
 {
     m_selections.erase(begin() + index);
@@ -52,7 +45,7 @@ void SelectionList::set(Vector<Selection> list, size_t main)
 
 bool compare_selections(const Selection& lhs, const Selection& rhs)
 {
-    const auto lmin = lhs.min(), rmin = rhs.min();
+    const auto& lmin = lhs.min(), rmin = rhs.min();
     return lmin == rmin ? lhs.max() < rhs.max() : lmin < rmin;
 }
 
@@ -118,7 +111,7 @@ Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsF
 BufferCoord& get_first(Selection& sel) { return sel.min(); }
 BufferCoord& get_last(Selection& sel) { return sel.max(); }
 
-Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
+Vector<Selection> compute_modified_ranges(const Buffer& buffer, size_t timestamp)
 {
     Vector<Selection> ranges;
     auto changes = buffer.changes_since(timestamp);
@@ -218,7 +211,7 @@ void clamp_selections(Vector<Selection>& selections, const Buffer& buffer)
         clamp(sel, buffer);
 }
 
-void update_selections(Vector<Selection>& selections, size_t& main, Buffer& buffer, size_t timestamp, bool merge)
+void update_selections(Vector<Selection>& selections, size_t& main, const Buffer& buffer, size_t timestamp, bool merge)
 {
     if (timestamp == buffer.timestamp())
         return;
@@ -414,38 +407,24 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
             sel.min() : changes_tracker.get_new_coord(insert_pos[index]);
 
         if (mode == InsertMode::Replace)
-            replace(*m_buffer, sel, str);
+        {
+            auto range = replace(*m_buffer, sel, str);
+            // we want min and max from *before* we do any change
+            auto& min = sel.min();
+            auto& max = sel.max();
+            min = range.begin;
+            max = range.end > range.begin ? m_buffer->char_prev(range.end) : range.begin;
+        }
         else
-            m_buffer->insert(pos, str);
+        {
+            auto range = m_buffer->insert(pos, str);
+            sel.anchor() = m_buffer->clamp(update_insert(sel.anchor(), range.begin, range.end));
+            sel.cursor() = m_buffer->clamp(update_insert(sel.cursor(), range.begin, range.end));
+        }
 
-        size_t old_timestamp = m_timestamp;
         changes_tracker.update(*m_buffer, m_timestamp);
-
         if (out_insert_pos)
             out_insert_pos->push_back(pos);
-
-        if (mode == InsertMode::Replace)
-        {
-            auto changes = m_buffer->changes_since(old_timestamp);
-            if (changes.size() == 1) // Nothing got inserted, either str was empty, or just \n at end of buffer
-                sel.anchor() = sel.cursor() = m_buffer->clamp(pos);
-            else if (changes.size() == 2)
-            {
-                // we want min and max from *before* we do any change
-                auto& min = sel.min();
-                auto& max = sel.max();
-                min = changes.back().begin;
-                max = m_buffer->char_prev(changes.back().end);
-            }
-            else
-                kak_assert(changes.empty());
-        }
-        else if (not str.empty())
-        {
-            auto& change = m_buffer->changes_since(0).back();
-            sel.anchor() = m_buffer->clamp(update_insert(sel.anchor(), change.begin, change.end));
-            sel.cursor() = m_buffer->clamp(update_insert(sel.cursor(), change.begin, change.end));
-        }
     }
 
     // We might just have been deleting text if strings were empty,
@@ -479,24 +458,45 @@ void SelectionList::erase()
     m_buffer->check_invariant();
 }
 
-String selection_to_string(const Selection& selection)
+String selection_to_string(ColumnType column_type, const Buffer& buffer, const Selection& selection, ColumnCount tabstop)
 {
-    auto& cursor = selection.cursor();
-    auto& anchor = selection.anchor();
-    return format("{}.{},{}.{}", anchor.line + 1, anchor.column + 1,
-                  cursor.line + 1, cursor.column + 1);
+    const auto& cursor = selection.cursor();
+    const auto& anchor = selection.anchor();
+    switch (column_type)
+    {
+    default:
+    case ColumnType::Byte:
+        return format("{}.{},{}.{}", anchor.line + 1, anchor.column + 1,
+                      cursor.line + 1, cursor.column + 1);
+    case ColumnType::Codepoint:
+        return format("{}.{},{}.{}",
+                      anchor.line + 1, buffer[anchor.line].char_count_to(anchor.column) + 1,
+                      cursor.line + 1, buffer[cursor.line].char_count_to(cursor.column) + 1);
+    case ColumnType::DisplayColumn:
+        kak_assert(tabstop != -1);
+        return format("{}.{},{}.{}",
+                      anchor.line + 1, get_column(buffer, tabstop, anchor) + 1,
+                      cursor.line + 1, get_column(buffer, tabstop, cursor) + 1);
+    }
 }
 
-String selection_list_to_string(const SelectionList& selections)
+String selection_list_to_string(ColumnType column_type, const SelectionList& selections, ColumnCount tabstop)
 {
+    auto& buffer = selections.buffer();
+    kak_assert(selections.timestamp() == buffer.timestamp());
+
+    auto to_string = [&](const Selection& selection) {
+        return selection_to_string(column_type, buffer, selection, tabstop);
+    };
+
     auto beg = &*selections.begin(), end = &*selections.end();
     auto main = beg + selections.main_index();
     using View = ConstArrayView<Selection>;
     return join(concatenated(View{main, end}, View{beg, main}) |
-                transform(selection_to_string), ' ', false);
+                transform(to_string), ' ', false);
 }
 
-Selection selection_from_string(StringView desc)
+Selection selection_from_string(ColumnType column_type, const Buffer& buffer, StringView desc, ColumnCount tabstop)
 {
     auto comma = find(desc, ',');
     auto dot_anchor = find(StringView{desc.begin(), comma}, '.');
@@ -505,27 +505,33 @@ Selection selection_from_string(StringView desc)
     if (comma == desc.end() or dot_anchor == comma or dot_cursor == desc.end())
         throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> format", desc));
 
-    BufferCoord anchor{str_to_int({desc.begin(), dot_anchor}) - 1,
-                       str_to_int({dot_anchor+1, comma}) - 1};
+    auto compute_coord = [&](int line, int column) -> BufferCoord {
+        if (line < 0 or column < 0)
+            throw runtime_error(format("coordinate {}.{} does not exist in buffer", line + 1, column + 1));
 
-    BufferCoord cursor{str_to_int({comma+1, dot_cursor}) - 1,
-                       str_to_int({dot_cursor+1, desc.end()}) - 1};
+        switch (column_type)
+        {
+        default:
+        case ColumnType::Byte: return {line, column};
+        case ColumnType::Codepoint:
+            if (buffer.line_count() <= line or buffer[line].char_length() <= column)
+                throw runtime_error(format("coordinate {}.{} does not exist in buffer", line + 1, column + 1));
+            return {line, buffer[line].byte_count_to(CharCount{column})};
+        case ColumnType::DisplayColumn:
+            kak_assert(tabstop != -1);
+            if (buffer.line_count() <= line or column_length(buffer, tabstop, line) <= column)
+                throw runtime_error(format("coordinate {}.{} does not exist in buffer", line + 1, column + 1));
+            return {line, get_byte_to_column(buffer, tabstop, DisplayCoord{line, ColumnCount{column}})};
+        }
+    };
 
-    if (anchor.line < 0 or anchor.column < 0 or
-        cursor.line < 0 or cursor.column < 0)
-        throw runtime_error(format("coordinates must be >= 1: '{}'", desc));
+    auto anchor = compute_coord(str_to_int({desc.begin(), dot_anchor}) - 1,
+                                str_to_int({dot_anchor+1, comma}) - 1);
+
+    auto cursor = compute_coord(str_to_int({comma+1, dot_cursor}) - 1,
+                                str_to_int({dot_cursor+1, desc.end()}) - 1);
 
     return Selection{anchor, cursor};
-}
-
-SelectionList selection_list_from_string(Buffer& buffer, ConstArrayView<String> descs, size_t timestamp)
-{
-    if (descs.empty())
-        throw runtime_error{"empty selection description"};
-
-    auto sels = descs | transform([&](auto&& d) { auto s = selection_from_string(d); clamp(s, buffer); return s; })
-                      | gather<Vector<Selection>>();
-    return {SelectionList::UnsortedTag{}, buffer, std::move(sels), timestamp, 0};
 }
 
 }

@@ -18,7 +18,7 @@ hook global BufCreate .*[.](pug|jade) %{
 hook global WinSetOption filetype=pug %{
     require-module pug
 
-    hook window ModeChange insert:.* -group pug-trim-indent  pug-trim-indent
+    hook window ModeChange pop:insert:.* -group pug-trim-indent  pug-trim-indent
     hook window InsertChar \n -group pug-indent pug-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pug-.+ }
@@ -68,7 +68,7 @@ define-command -hidden pug-trim-indent %{
 define-command -hidden pug-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : pug-trim-indent <ret> }
         # copy '//', '|', '-' or '(!)=' prefix and following whitespace

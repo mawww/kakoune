@@ -14,7 +14,7 @@ hook global BufCreate .*[.](scala) %{
 hook global WinSetOption filetype=scala %[
     require-module scala
 
-    hook window ModeChange insert:.* -group scala-trim-indent  scala-trim-indent
+    hook window ModeChange pop:insert:.* -group scala-trim-indent  scala-trim-indent
     hook window InsertChar \n -group scala-indent scala-indent-on-new-line
     hook window InsertChar \} -group scala-indent scala-indent-on-closing-curly-brace
 
@@ -64,7 +64,7 @@ define-command -hidden scala-indent-on-new-line %[
         # copy // comments prefix and following white spaces
         try %[ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P ]
         # preserve previous line indent
-        try %[ execute-keys -draft \; K <a-&> ]
+        try %[ execute-keys -draft <semicolon> K <a-&> ]
         # filter previous line
         try %[ execute-keys -draft k : scala-trim-indent <ret> ]
         # indent after lines ending with {

@@ -3,6 +3,7 @@
 
 #include "array_view.hh"
 #include "coord.hh"
+#include "display_buffer.hh"
 #include "event_manager.hh"
 #include "face.hh"
 #include "hash_map.hh"
@@ -10,12 +11,16 @@
 #include "string.hh"
 #include "user_interface.hh"
 
+#include <termios.h>
+
 namespace Kakoune
 {
 
+struct DisplayAtom;
+
 struct NCursesWin;
 
-class NCursesUI : public UserInterface
+class NCursesUI : public UserInterface, public Singleton<NCursesUI>
 {
 public:
     NCursesUI();
@@ -24,7 +29,7 @@ public:
     NCursesUI(const NCursesUI&) = delete;
     NCursesUI& operator=(const NCursesUI&) = delete;
 
-    bool is_ok() const override { return m_window != nullptr; }
+    bool is_ok() const override { return (bool)m_window; }
 
     void draw(const DisplayBuffer& display_buffer,
               const Face& default_face,
@@ -40,7 +45,7 @@ public:
     void menu_select(int selected) override;
     void menu_hide() override;
 
-    void info_show(StringView title, StringView content,
+    void info_show(const DisplayLine& title, const DisplayLineList& content,
                    DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
@@ -55,6 +60,8 @@ public:
 
     static void abort();
 
+    void suspend();
+
     struct Rect
     {
         DisplayCoord pos;
@@ -63,40 +70,54 @@ public:
 
 private:
     void check_resize(bool force = false);
-    void redraw();
-
-    int get_color(Color color);
-    int get_color_pair(const Face& face);
-    void set_face(NCursesWin* window, Face face, const Face& default_face);
-    void draw_line(NCursesWin* window, const DisplayLine& line,
-                   ColumnCount col_index, ColumnCount max_column,
-                   const Face& default_face);
+    void redraw(bool force);
 
     Optional<Key> get_next_key();
 
-    NCursesWin* m_window = nullptr;
+    struct Palette
+    {
+    private:
+        static const std::initializer_list<HashMap<Kakoune::Color, int>::Item> default_colors;
 
-    DisplayCoord m_dimensions;
+        using ColorPair = std::pair<Color, Color>;
+        HashMap<Color, int, MemoryDomain::Faces> m_colors = default_colors;
+        HashMap<ColorPair, int, MemoryDomain::Faces> m_colorpairs;
+        int m_next_color = 16;
+        int m_next_pair = 1;
+        bool m_change_colors = true;
 
-    using ColorPair = std::pair<Color, Color>;
-    HashMap<Color, int, MemoryDomain::Faces> m_colors;
-    HashMap<ColorPair, int, MemoryDomain::Faces> m_colorpairs;
-    int m_next_color = 16;
-    int m_next_pair = 1;
-    int m_active_pair = -1;
+        int get_color(Color color);
+
+    public:
+        int get_color_pair(const Face& face);
+        bool get_change_colors() const { return m_change_colors; }
+        bool set_change_colors(bool change_colors);
+    };
+
+    Palette m_palette;
 
     struct Window : Rect
     {
         void create(const DisplayCoord& pos, const DisplayCoord& size);
         void destroy();
-        void refresh();
+        void refresh(bool force);
+        void move_cursor(DisplayCoord coord);
+        void draw(Palette& palette, ConstArrayView<DisplayAtom> atoms,
+                  const Face& default_face);
 
         explicit operator bool() const { return win; }
 
         NCursesWin* win = nullptr;
+        int m_active_pair = -1;
     };
 
-    void mark_dirty(const Window& win);
+    Window m_window;
+
+    DisplayCoord m_dimensions;
+    termios m_original_termios{};
+
+    void set_terminal_mode() const;
+    void restore_terminal_mode() const;
 
     struct Menu : Window
     {
@@ -116,8 +137,8 @@ private:
 
     struct Info : Window
     {
-        String title;
-        String content;
+        DisplayLine title;
+        DisplayLineList content;
         Face face;
         DisplayCoord anchor;
         InfoStyle style;
@@ -140,13 +161,13 @@ private:
     bool m_mouse_enabled = false;
     int m_wheel_up_button = 4;
     int m_wheel_down_button = 5;
+    int m_wheel_scroll_amount = 3;
+    int m_mouse_state = 0;
 
     static constexpr int default_shift_function_key = 12;
     int m_shift_function_key = default_shift_function_key;
 
     bool m_set_title = true;
-    bool m_change_colors = true;
-    bool m_builtin_key_parser = false;
 
     bool m_dirty = false;
 

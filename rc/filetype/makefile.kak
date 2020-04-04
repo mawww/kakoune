@@ -1,7 +1,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*(/?[mM]akefile|\.mk) %{
+hook global BufCreate .*(/?[mM]akefile|\.mk|\.make) %{
     set-option buffer filetype makefile
 }
 
@@ -33,7 +33,7 @@ add-highlighter shared/makefile/content default-region group
 add-highlighter shared/makefile/comment region '#' '$' fill comment
 add-highlighter shared/makefile/evaluate-commands region -recurse '\(' '\$\(' '\)' fill value
 
-add-highlighter shared/makefile/content/ regex ^[\w.%-]+\h*:\s 0:variable
+add-highlighter shared/makefile/content/ regex ^\S.*?(::|:|!)\s 0:variable
 add-highlighter shared/makefile/content/ regex [+?:]= 0:operator
 
 evaluate-commands %sh{
@@ -53,9 +53,9 @@ evaluate-commands %sh{
 define-command -hidden makefile-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # preserve previous line indent
-        try %{ execute-keys -draft \;K<a-&> }
+        try %{ execute-keys -draft <semicolon>K<a-&> }
         ## If the line above is a target indent with a tab
-        try %{ execute-keys -draft Z k<a-x> <a-k>^[^:]+:\s<ret> z i<tab> }
+        try %{ execute-keys -draft Z k<a-x> <a-k>^\S.*?(::|:|!)\s<ret> z i<tab> }
         # cleanup trailing white space son previous line
         try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
         # indent after some keywords

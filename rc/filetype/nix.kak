@@ -14,7 +14,7 @@ hook global BufCreate .*[.](nix) %{
 hook global WinSetOption filetype=nix %{
     require-module nix
 
-    hook window ModeChange insert:.* -group nix-trim-indent  nix-trim-indent
+    hook window ModeChange pop:insert:.* -group nix-trim-indent  nix-trim-indent
     hook window InsertChar .* -group nix-indent nix-indent-on-char
     hook window InsertChar \n -group nix-indent nix-indent-on-new-line
 
@@ -26,7 +26,7 @@ hook -group nix-highlight global WinSetOption filetype=nix %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/nix }
 }
 
-provide-module nix %(
+provide-module nix %§
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -77,7 +77,7 @@ add-highlighter shared/nix/code/ regex \bor\b      0:operator
 
 # override any operators matched before
 # path:
-add-highlighter shared/nix/code/ regex '\s(\.?\.?/[-A-Za-z0-9/_+.]+)[;?]?' 1:meta
+add-highlighter shared/nix/code/ regex '\s\(*(\.?\.?/[-A-Za-z0-9/_+.]+)[;?]?' 1:meta
 # imported path:
 add-highlighter shared/nix/code/ regex <[-A-Za-z0-9/_+.]+> 0:meta
 # RFC 2396 URIs can be used without quoting. Strangely, "string" ends URL but ''indented'' one doesn't
@@ -104,7 +104,7 @@ define-command -hidden nix-indent-on-new-line %<
         # copy // comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
         # preserve previous line indent
-        try %{ execute-keys -draft \; K <a-&> }
+        try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : nix-trim-indent <ret> }
         # indent after lines beginning / ending with opener token
@@ -112,4 +112,4 @@ define-command -hidden nix-indent-on-new-line %<
     >
 >
 
-)
+§

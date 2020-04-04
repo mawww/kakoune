@@ -1,6 +1,8 @@
 debug ?= no
 static ?= no
 gzip_man ?= yes
+# to get format compatible with GitHub archive use "gzip -S .gz" here
+compress_bin ?= bzip2
 
 ifneq ($(gzip_man),yes)
     ifneq ($(gzip_man),no)
@@ -22,12 +24,12 @@ else
 endif
 
 ifneq (,$(findstring address,$(sanitize)))
-    CPPFLAGS += -fsanitize=address
+    CXXFLAGS += -fsanitize=address
     LDFLAGS += -lasan
     sanitize_suffix := $(sanitize_suffix)a
 endif
 ifneq (,$(findstring undefined,$(sanitize)))
-    CPPFLAGS += -fsanitize=undefined
+    CXXFLAGS += -fsanitize=undefined
     LDFLAGS += -lubsan
     sanitize_suffix := $(sanitize_suffix)u
 endif
@@ -90,6 +92,13 @@ endif
 
 CXXFLAGS += -pedantic -std=c++17 -g -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-address
 
+compiler := $(shell $(CXX) --version)
+ifneq (,$(findstring clang,$(compiler)))
+    CXXFLAGS += -frelaxed-template-template-args
+else ifneq (,$(findstring g++,$(compiler)))
+    CXXFLAGS += -Wno-init-list-lifetime
+endif
+
 all : kak
 
 kak : kak$(suffix)
@@ -130,7 +139,7 @@ tags:
 	ctags -R
 
 clean:
-	rm -f .*.o .*.d
+	rm -f $(objects) $(deps)
 
 dist:
 	@if ! [ -d ../.git ]; then echo "make dist can only run from a git repo";  false; fi
@@ -141,7 +150,7 @@ dist:
 	echo "$(version)" > src/.version;                                         \
 	tar --transform "s,^,$${basename}/," -rf $${basename}.tar src/.version;   \
 	rm src/.version;                                                          \
-	bzip2 $${basename}.tar;
+	$(compress_bin) $${basename}.tar;
 
 distclean: clean
 	rm -f kak kak$(suffix)
