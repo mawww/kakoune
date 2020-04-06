@@ -28,6 +28,21 @@ struct ForwardChangesTracker
 const Buffer::Change* forward_sorted_until(const Buffer::Change* first, const Buffer::Change* last);
 const Buffer::Change* backward_sorted_until(const Buffer::Change* first, const Buffer::Change* last);
 
+template<typename Range, typename AdvanceFunc>
+auto update_range(ForwardChangesTracker& changes_tracker, Range& range, AdvanceFunc&& advance_while_relevant)
+{
+    auto& first = get_first(range);
+    auto& last = get_last(range);
+    advance_while_relevant(first);
+    first = changes_tracker.get_new_coord_tolerant(first);
+
+    if (last < BufferCoord{0,0})
+        return;
+
+    advance_while_relevant(last);
+    last = changes_tracker.get_new_coord_tolerant(last);
+}
+
 template<typename RangeContainer>
 void update_forward(ConstArrayView<Buffer::Change> changes, RangeContainer& ranges)
 {
@@ -39,15 +54,7 @@ void update_forward(ConstArrayView<Buffer::Change> changes, RangeContainer& rang
     };
 
     for (auto& range : ranges)
-    {
-        auto& first = get_first(range);
-        auto& last = get_last(range);
-        advance_while_relevant(first);
-        first = changes_tracker.get_new_coord_tolerant(first);
-
-        advance_while_relevant(last);
-        last = changes_tracker.get_new_coord_tolerant(last);
-    }
+        update_range(changes_tracker, range, advance_while_relevant);
 }
 
 template<typename RangeContainer>
@@ -69,15 +76,7 @@ void update_backward(ConstArrayView<Buffer::Change> changes, RangeContainer& ran
     };
 
     for (auto& range : ranges)
-    {
-        auto& first = get_first(range);
-        auto& last = get_last(range);
-        advance_while_relevant(first);
-        first = changes_tracker.get_new_coord_tolerant(first);
-
-        advance_while_relevant(last);
-        last = changes_tracker.get_new_coord_tolerant(last);
-    }
+        update_range(changes_tracker, range, advance_while_relevant);
 }
 
 template<typename RangeContainer>

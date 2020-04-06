@@ -89,8 +89,8 @@ void replace_range(DisplayBuffer& display_buffer,
                    BufferCoord begin, BufferCoord end, T func)
 {
     // tolerate begin > end as that can be triggered by wrong encodings
-    if (begin >= end or end <= display_buffer.range().begin
-                     or begin >= display_buffer.range().end)
+    if (begin > end or end <= display_buffer.range().begin
+                    or begin >= display_buffer.range().end)
         return;
 
     for (auto& line : display_buffer.lines())
@@ -112,7 +112,9 @@ void replace_range(DisplayBuffer& display_buffer,
                     atom_it = ++line.split(atom_it, begin);
                 beg_idx = atom_it - line.begin();
             }
-            if (end <= atom_it->end())
+            if (end == atom_it->begin())
+                end_idx = atom_it - line.begin();
+            else if (end <= atom_it->end())
             {
                 if (end < atom_it->end())
                     atom_it = line.split(atom_it, end);
@@ -1448,8 +1450,15 @@ private:
     String m_default_face;
 };
 
+bool is_empty(const InclusiveBufferRange& range)
+{
+    return range.last < BufferCoord{0,0};
+}
+
 String option_to_string(InclusiveBufferRange range)
 {
+    if (is_empty(range))
+        return format("{}.{}+0", range.first.line+1, range.first.column+1);
     return format("{}.{},{}.{}",
                   range.first.line+1, range.first.column+1,
                   range.last.line+1, range.last.column+1);
@@ -1468,12 +1477,17 @@ InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, String
     const BufferCoord first{str_to_int({str.begin(), dot_beg}) - 1,
                             str_to_int({dot_beg+1, sep}) - 1};
 
-    const bool len = (*sep == '+');
-    const BufferCoord last{len ? first.line : str_to_int({sep+1, dot_end}) - 1,
-                           len ? first.column + str_to_int({sep+1, str.end()}) - 1
-                               : str_to_int({dot_end+1, str.end()}) - 1 };
+    if (first.line < 0 or first.column < 0)
+        throw runtime_error("coordinates elements should be >= 1");
 
-    if (first.line < 0 or first.column < 0 or last.line < 0 or last.column < 0)
+    if (*sep == '+')
+    {
+        auto len = str_to_int({sep+1, str.end()});
+        return {first, len == 0 ? BufferCoord{-1,-1} : BufferCoord{first.line, first.column + len}};
+    }
+
+    const BufferCoord last{str_to_int({sep+1, dot_end}) - 1, str_to_int({dot_end+1, str.end()}) - 1};
+    if (last.line < 0 or last.column < 0)
         throw runtime_error("coordinates elements should be >= 1");
 
     return { std::min(first, last), std::max(first, last) };
@@ -1522,14 +1536,13 @@ private:
         auto& range_and_faces = context.context.options()[m_option_name].get_mutable<RangeAndStringList>();
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
 
-        for (auto& range : range_and_faces.list)
+        for (auto& [range, face] : range_and_faces.list)
         {
             try
             {
-                auto& r = std::get<0>(range);
-                if (buffer.is_valid(r.first) and (buffer.is_valid(r.last) and not buffer.is_end(r.last)))
-                    highlight_range(display_buffer, r.first, buffer.char_next(r.last), false,
-                                    apply_face(context.context.faces()[std::get<1>(range)]));
+                if (buffer.is_valid(range.first) and (buffer.is_valid(range.last) and not buffer.is_end(range.last)))
+                    highlight_range(display_buffer, range.first, buffer.char_next(range.last), false,
+                                    apply_face(context.context.faces()[face]));
             }
             catch (runtime_error&)
             {}
@@ -1564,15 +1577,14 @@ private:
         auto& range_and_faces = context.context.options()[m_option_name].get_mutable<RangeAndStringList>();
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
 
-        for (auto& range : range_and_faces.list)
+        for (auto& [range, spec] : range_and_faces.list)
         {
             try
             {
-                auto& r = std::get<0>(range);
-                if (buffer.is_valid(r.first) and buffer.is_valid(r.last))
+                if (buffer.is_valid(range.first) and (buffer.is_valid(range.last) or is_empty(range)))
                 {
-                    auto replacement = parse_display_line(std::get<1>(range), context.context.faces());
-                    replace_range(display_buffer, r.first, buffer.char_next(r.last),
+                    auto replacement = parse_display_line(spec, context.context.faces());
+                    replace_range(display_buffer, range.first, is_empty(range) ? range.first : buffer.char_next(range.last),
                                   [&](DisplayLine& line, int beg_idx, int end_idx){
                                       auto it = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
                                       for (auto& atom : replacement)
