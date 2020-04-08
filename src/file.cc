@@ -21,7 +21,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) or defined(__NetBSD__)
 #include <sys/sysctl.h>
 #endif
 
@@ -624,7 +624,7 @@ String get_kak_binary_path()
     kak_assert(res != -1);
     buffer[res] = '\0';
     return buffer;
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) or defined(__NetBSD__)
     int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
     size_t res = sizeof(buffer);
     sysctl(mib, 4, buffer, &res, NULL, 0);
