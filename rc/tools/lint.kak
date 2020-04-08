@@ -277,6 +277,12 @@ define-command \
     } \
     lint-buffer \
 %{
+    evaluate-commands %sh{
+        if [ -z "${kak_opt_lintcmd}" ]; then
+            echo 'fail The lintcmd option is not set'
+            exit 1
+        fi
+    }
     evaluate-commands -draft %{
         execute-keys '%'
         lint-cleaned-selections %opt{lintcmd}
