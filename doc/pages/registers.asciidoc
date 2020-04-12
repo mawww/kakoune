@@ -89,7 +89,7 @@ month in register *3*, but select the entire date:
 When a register is used to store a set of selections with the *Z* key (see
 <<keys#marks, `:doc keys marks`>>), the selections are stored as a list of
 spans, in a format similar to `%val{selections_desc}` (see
-<<expansions#value-expansions, `:doc expansions value-expansions`). However,
+<<expansions#value-expansions, `:doc expansions value-expansions`>>). However,
 the very first item of the list is of the form:
 
 ------------------------------------------
