@@ -86,7 +86,7 @@ evaluate-commands %sh{
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/ruby/code/ regex \b(${keywords})\b 0:keyword
+        add-highlighter shared/ruby/code/ regex \b(${keywords})[^0-9A-Za-z_!?] 1:keyword
         add-highlighter shared/ruby/code/ regex \b(${attributes})\b 0:attribute
         add-highlighter shared/ruby/code/ regex \b(${values})\b 0:value
         add-highlighter shared/ruby/code/ regex \b(${meta})\b 0:meta
@@ -153,7 +153,7 @@ define-command -hidden ruby-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : ruby-trim-indent <ret> }
         # indent after start structure
-        try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (begin|case|class|def|else|elsif|ensure|for|if|module|rescue|unless|until|when|while|.+\bdo$|.+\bdo\h\|.+(?=\|)) \b <ret> j <a-gt> }
+        try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (begin|case|class|def|else|elsif|ensure|for|if|module|rescue|unless|until|when|while|.+\bdo$|.+\bdo\h\|.+(?=\|)) [^0-9A-Za-z_!?] <ret> j <a-gt> }
     }
 }
 
@@ -167,9 +167,9 @@ define-command -hidden ruby-insert-on-new-line %[
             try %[
                 evaluate-commands -draft %[
                     # Check if previous line opens a block
-                    execute-keys -draft k<a-x> <a-k>^<c-r>x(begin|case|class|def|for|if|module|unless|until|while|.+\bdo$|.+\bdo\h\|.+(?=\|))\b<ret>
+                    execute-keys -draft k<a-x> <a-k>^<c-r>x(begin|case|class|def|for|if|module|unless|until|while|.+\bdo$|.+\bdo\h\|.+(?=\|))[^0-9A-Za-z_!?]<ret>
                     # Check that we do not already have an end for this indent level which is first set via `ruby-indent-on-new-line` hook
-                    execute-keys -draft }i J <a-x> <a-K> ^<c-r>x(end|else|elsif|rescue)\b<ret>
+                    execute-keys -draft }i J <a-x> <a-K> ^<c-r>x(end|else|elsif|rescue)[^0-9A-Za-z_!?]<ret>
                 ]
                 execute-keys -draft o<c-r>xend<esc> # insert a new line with containing end
             ]
