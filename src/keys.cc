@@ -89,7 +89,18 @@ KeyList parse_keys(StringView str)
     {
         if (*it != '<')
         {
-            result.emplace_back(Key::Modifiers::None, *it);
+            auto convert = [](Codepoint cp) -> Codepoint {
+                switch (cp)
+                {
+                    case '\n':   return Key::Return;
+                    case '\r':   return Key::Return;
+                    case '\b':   return Key::Backspace;
+                    case '\t':   return Key::Tab;
+                    case '\033': return Key::Escape;
+                    default:     return cp;
+                }
+            };
+            result.emplace_back(Key::Modifiers::None, convert(*it));
             continue;
         }
 
@@ -219,6 +230,7 @@ UnitTest test_keys{[]()
     kak_assert(parse_keys("X") == KeyList{ {'X'} });
     kak_assert(parse_keys("<s-up>") == KeyList{ shift({Key::Up}) });
     kak_assert(parse_keys("<s-tab>") == KeyList{ shift({Key::Tab}) });
+    kak_assert(parse_keys("\n") == KeyList{ Key::Return });
 
     kak_assert(key_to_str(shift({Key::Tab})) == "<s-tab>");
 
