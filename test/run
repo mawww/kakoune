@@ -19,7 +19,7 @@ main() {
             eval -buffer *debug* write debug
             quit!
         }
-        try %{ exec -with-maps -with-hooks "%file{cmd}" }
+        try %{ exec -with-maps -with-hooks "%sh{cat cmd}" }
         exec -with-hooks <c-l>
       '
 
