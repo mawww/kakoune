@@ -1940,7 +1940,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
     }
 }
 
-const CommandDesc exec_string_cmd = {
+const CommandDesc execute_keys_cmd = {
     "execute-keys",
     "exec",
     "execute-keys [<switches>] <keys>: execute given keys as if entered by user",
@@ -1970,7 +1970,7 @@ const CommandDesc exec_string_cmd = {
     }
 };
 
-const CommandDesc eval_string_cmd = {
+const CommandDesc evaluate_commands_cmd = {
     "evaluate-commands",
     "eval",
     "evaluate-commands [<switches>] <commands>...: execute commands as if entered by user",
@@ -2647,8 +2647,8 @@ void register_commands()
     register_command(declare_option_cmd);
     register_command(map_key_cmd);
     register_command(unmap_key_cmd);
-    register_command(exec_string_cmd);
-    register_command(eval_string_cmd);
+    register_command(execute_keys_cmd);
+    register_command(evaluate_commands_cmd);
     register_command(prompt_cmd);
     register_command(menu_cmd);
     register_command(on_key_cmd);
