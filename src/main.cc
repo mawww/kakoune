@@ -312,7 +312,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
         "selections_length", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return context.selections() |
-                     transform([&](const Selection& s) {
+                     transform([&](const Selection& s) -> String {
                          return to_string(char_length(context.buffer(), s));
                      }) | gather<Vector<String>>(); }
     }, {
