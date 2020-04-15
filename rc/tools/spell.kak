@@ -148,3 +148,21 @@ define-command \
     ')
     printf 'try %%{ menu -auto-single %s }' "${menu}"
 } }
+
+define-command -params 0.. \
+    -docstring "Add the current selection to the dictionary" \
+    spell-add %{ nop %sh{
+    if [ -n "$kak_opt_spell_last_lang" ]; then
+        options="-l '$kak_opt_spell_last_lang'"
+    fi
+    if [ $# -eq 0 ]; then
+        # use selections
+        eval set -- "$kak_quoted_selections"
+    fi
+    words=""
+    while [ $# -gt 0 ]; do
+        words="$words"$(printf '*%s\\n#\\n' "$1")
+        shift
+    done
+    printf %b\\n "$words" | eval "aspell -a $options" 
+}}
