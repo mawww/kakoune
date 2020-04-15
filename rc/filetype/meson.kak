@@ -6,7 +6,7 @@
 
 ## Detection
 
-hook global BufCreate (.*/|^)meson\.build %{
+hook global BufCreate (.*/|^)(meson\.build|meson_options\.txt) %{
   set-option buffer filetype meson
 }
 
