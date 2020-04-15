@@ -41,30 +41,8 @@ If no client is passed then the current one is used' \
     }
 }
 
-define-command kitty-repl -params .. -shell-completion -docstring '
-kitty-repl [<arguments>]: create a new window for repl interaction
-All optional parameters are forwarded to the new window' \
-%{
-    nop %sh{
-        if [ $# -eq 0 ]; then
-            cmd="${SHELL:-/bin/sh}"
-        else
-            cmd="$*"
-        fi
-        kitty @ new-window --no-response --window-type $kak_opt_kitty_window_type --title kak_repl_window --cwd "$PWD" $cmd < /dev/null > /dev/null 2>&1 &
-    }
-}
-
-define-command kitty-send-text -docstring "send the selected text to the repl window" %{
-    nop %sh{
-        kitty @ send-text -m=title:kak_repl_window "${kak_selection}"
-    }
-}
-
 alias global terminal kitty-terminal
 alias global terminal-tab kitty-terminal-tab
 alias global focus kitty-focus
-alias global repl kitty-repl
-alias global send-text kitty-send-text
 
 }
