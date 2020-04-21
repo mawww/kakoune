@@ -309,7 +309,7 @@ find_opening(Iterator pos, const Container& container,
     {
         if (nestable)
         {
-            for (auto m [[gnu::unused]] : RegexIt{match[0].second, pos, container.begin(), container.end(), closing})
+            for (auto m [[maybe_unused]] : RegexIt{match[0].second, pos, container.begin(), container.end(), closing})
                 ++level;
         }
 
@@ -327,17 +327,12 @@ find_closing(Iterator pos, const Container& container,
              const Regex& opening, const Regex& closing,
              int level, bool nestable)
 {
-    MatchResults<Iterator> res;
-    if (regex_search(pos, container.end(), container.begin(), container.end(),
-                     res, opening) and res[0].first == pos)
-        pos = res[0].second;
-
     using RegexIt = RegexIterator<Iterator, RegexMode::Forward>;
     for (auto match : RegexIt{pos, container.end(), container.begin(), container.end(), closing})
     {
         if (nestable)
         {
-            for (auto m [[gnu::unused]] : RegexIt{pos, match[0].first, container.begin(), container.end(), opening})
+            for (auto m [[maybe_unused]] : RegexIt{pos, match[0].first, container.begin(), container.end(), opening})
                 ++level;
         }
 
@@ -355,6 +350,7 @@ find_surrounding(const Container& container, Iterator pos,
                  const Regex& opening, const Regex& closing,
                  ObjectFlags flags, int level)
 {
+    auto empty = [](const std::pair<Iterator, Iterator>& m) { return m.first == m.second; };
     const bool nestable = opening != closing;
     auto first = pos;
     auto last = pos;
@@ -365,18 +361,23 @@ find_surrounding(const Container& container, Iterator pos,
             first = (flags & ObjectFlags::Inner) ? res->second : res->first;
             if (flags & ObjectFlags::ToEnd) // ensure we find the matching end
             {
-                last = res->first;
+                last = empty(*res) ? std::next(res->second) : res->second;
                 level = 0;
             }
         }
         else
             return {};
     }
+    else if (MatchResults<Iterator> res;
+             regex_search(pos, container.end(), container.begin(), container.end(), res, opening) and
+             res[0].first == pos) // Skip opening match if pos lies on it
+        last = empty(res[0]) ? std::next(res[0].second) : res[0].second;
+
     if (flags & ObjectFlags::ToEnd)
     {
         if (auto res = find_closing(last, container, opening, closing, level, nestable))
-            last = (flags & ObjectFlags::Inner) ? utf8::previous(res->first, container.begin())
-                                                : utf8::previous(res->second, container.begin());
+            last = utf8::previous((flags & ObjectFlags::Inner) ? res->first : res->second,
+                                  container.begin());
         else
             return {};
     }
