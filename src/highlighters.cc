@@ -89,13 +89,18 @@ void replace_range(DisplayBuffer& display_buffer,
                    BufferCoord begin, BufferCoord end, T func)
 {
     // tolerate begin > end as that can be triggered by wrong encodings
-    if (begin > end or end <= display_buffer.range().begin
-                    or begin >= display_buffer.range().end)
+    if (begin > end or end < display_buffer.range().begin or begin > display_buffer.range().end)
         return;
 
     for (auto& line : display_buffer.lines())
     {
         auto& range = line.range();
+        if ((begin == end) and begin == range.end)
+        {
+            func(line, line.atoms().size(), line.atoms().size());
+            continue;
+        }
+
         if (range.end <= begin or  end < range.begin)
             continue;
 
@@ -103,7 +108,7 @@ void replace_range(DisplayBuffer& display_buffer,
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
             if (not atom_it->has_buffer_range() or
-                end <= atom_it->begin() or begin >= atom_it->end())
+                end < atom_it->begin() or begin >= atom_it->end())
                 continue;
 
             if (begin >= atom_it->begin())
@@ -1573,20 +1578,22 @@ private:
         auto& range_and_faces = get_option(context);
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
 
+        auto is_valid = [&buffer](BufferCoord c) {
+            return c.line >= 0 and c.column >= 0 and c.line < buffer.line_count() and c.column <= buffer[c.line].length();
+        };
+
         for (auto& [range, spec] : range_and_faces.list)
         {
             try
             {
-                if (buffer.is_valid(range.first) and (buffer.is_valid(range.last) or is_empty(range)))
-                {
-                    auto replacement = parse_display_line(spec, context.context.faces());
-                    replace_range(display_buffer, range.first, is_empty(range) ? range.first : buffer.char_next(range.last),
-                                  [&](DisplayLine& line, int beg_idx, int end_idx){
-                                      auto it = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
-                                      for (auto& atom : replacement)
-                                          it = ++line.insert(it, std::move(atom));
-                                  });
-                }
+                if (!is_valid(range.first) or (!is_empty(range) and !is_valid(range.last)))
+                    continue;
+                auto replacement = parse_display_line(spec, context.context.faces());
+                replace_range(display_buffer, range.first, is_empty(range) ? range.first : buffer.char_next(range.last),
+                              [&](DisplayLine& line, int beg_idx, int end_idx){
+                                  auto it = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
+                                  std::move(replacement.begin(), replacement.end(), std::inserter(line, it));
+                              });
             }
             catch (runtime_error&)
             {}
