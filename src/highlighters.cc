@@ -1493,6 +1493,34 @@ InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, String
     return { std::min(first, last), std::max(first, last) };
 }
 
+template<typename OptionType, typename DerivedType>
+struct OptionBasedHighlighter : Highlighter
+{
+    OptionBasedHighlighter(String option_name)
+        : Highlighter{HighlightPass::Colorize}
+        , m_option_name{std::move(option_name)} {}
+
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    {
+        if (params.size() != 1)
+            throw runtime_error("wrong parameter count");
+
+        const String& option_name = params[0];
+        // throw if wrong option type
+        GlobalScope::instance().options()[option_name].get<OptionType>();
+
+        return std::make_unique<DerivedType>(option_name);
+    }
+
+    OptionType& get_option(const HighlightContext& context)
+    {
+        return context.context.options()[m_option_name].get_mutable<OptionType>();
+    }
+
+private:
+    const String m_option_name;
+};
+
 BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).first; }
 BufferCoord& get_last(RangeAndString& r) { return std::get<0>(r).last; }
 
@@ -1511,29 +1539,14 @@ void option_update(RangeAndStringList& opt, const Context& context)
     update_ranges(context.buffer(), opt.prefix, opt.list);
 }
 
-struct RangesHighlighter : Highlighter
+struct RangesHighlighter : OptionBasedHighlighter<RangeAndStringList, RangesHighlighter>
 {
-    RangesHighlighter(String option_name)
-        : Highlighter{HighlightPass::Colorize}
-        , m_option_name{std::move(option_name)} {}
-
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
-    {
-        if (params.size() != 1)
-            throw runtime_error("wrong parameter count");
-
-        const String& option_name = params[0];
-        // throw if wrong option type
-        GlobalScope::instance().options()[option_name].get<RangeAndStringList>();
-
-        return std::make_unique<RangesHighlighter>(option_name);
-    }
-
+    using RangesHighlighter::OptionBasedHighlighter::OptionBasedHighlighter;
 private:
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
         auto& buffer = context.context.buffer();
-        auto& range_and_faces = context.context.options()[m_option_name].get_mutable<RangeAndStringList>();
+        auto& range_and_faces = get_option(context);
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
 
         for (auto& [range, face] : range_and_faces.list)
@@ -1548,33 +1561,16 @@ private:
             {}
         }
     }
-
-    const String m_option_name;
 };
 
-struct ReplaceRangesHighlighter : Highlighter
+struct ReplaceRangesHighlighter : OptionBasedHighlighter<RangeAndStringList, ReplaceRangesHighlighter>
 {
-    ReplaceRangesHighlighter(String option_name)
-        : Highlighter{HighlightPass::Colorize}
-        , m_option_name{std::move(option_name)} {}
-
-    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
-    {
-        if (params.size() != 1)
-            throw runtime_error("wrong parameter count");
-
-        const String& option_name = params[0];
-        // throw if wrong option type
-        GlobalScope::instance().options()[option_name].get<RangeAndStringList>();
-
-        return std::make_unique<ReplaceRangesHighlighter>(option_name);
-    }
-
+    using ReplaceRangesHighlighter::OptionBasedHighlighter::OptionBasedHighlighter;
 private:
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
         auto& buffer = context.context.buffer();
-        auto& range_and_faces = context.context.options()[m_option_name].get_mutable<RangeAndStringList>();
+        auto& range_and_faces = get_option(context);
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
 
         for (auto& [range, spec] : range_and_faces.list)
@@ -1596,8 +1592,6 @@ private:
             {}
         }
     }
-
-    const String m_option_name;
 };
 
 HighlightPass parse_passes(StringView str)
