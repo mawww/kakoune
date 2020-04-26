@@ -55,6 +55,13 @@ public:
         m_text = std::move(text);
     }
 
+    void replace(const BufferRange& range)
+    {
+        kak_assert(m_type == Text);
+        m_type = ReplacedRange;
+        m_range = range;
+    }
+
     bool has_buffer_range() const
     {
         return m_type == Range or m_type == ReplacedRange;

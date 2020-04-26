@@ -265,7 +265,8 @@ DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const
             else
             {
                 content += StringView{pos, it};
-                res.push_back({std::move(content), face});
+                if (not content.empty())
+                    res.push_back({std::move(content), face});
                 content.clear();
                 auto closing = std::find(it+1, end, '}');
                 if (closing == end)

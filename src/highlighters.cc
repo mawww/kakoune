@@ -96,10 +96,7 @@ void replace_range(DisplayBuffer& display_buffer,
     {
         auto& range = line.range();
         if ((begin == end) and begin == range.end)
-        {
-            func(line, line.atoms().size(), line.atoms().size());
-            continue;
-        }
+            return func(line, line.end());
 
         if (range.end <= begin or  end < range.begin)
             continue;
@@ -128,7 +125,7 @@ void replace_range(DisplayBuffer& display_buffer,
         }
 
         if (beg_idx != -1 and end_idx != -1)
-            func(line, beg_idx, end_idx);
+            return func(line, line.erase(line.begin() + beg_idx, line.begin() + end_idx));
     }
 }
 
@@ -1582,17 +1579,28 @@ private:
             return c.line >= 0 and c.column >= 0 and c.line < buffer.line_count() and c.column <= buffer[c.line].length();
         };
 
+        auto is_fully_selected = [&sels=context.context.selections()](const InclusiveBufferRange& range) {
+            auto it = std::lower_bound(sels.begin(), sels.end(), range.first, [](const Selection& s, const BufferCoord& c) { return s.max() < c; });
+            if (it == sels.end())
+                return true;
+            return it->min() > range.last or (it->min() <= range.first and it->max() >= range.last);
+        };
+
         for (auto& [range, spec] : range_and_faces.list)
         {
             try
             {
-                if (!is_valid(range.first) or (!is_empty(range) and !is_valid(range.last)))
+                if (!is_valid(range.first) or (!is_empty(range) and !is_valid(range.last)) or !is_fully_selected(range))
                     continue;
                 auto replacement = parse_display_line(spec, context.context.faces());
-                replace_range(display_buffer, range.first, is_empty(range) ? range.first : buffer.char_next(range.last),
-                              [&](DisplayLine& line, int beg_idx, int end_idx){
-                                  auto it = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
-                                  std::move(replacement.begin(), replacement.end(), std::inserter(line, it));
+                auto end = is_empty(range) ? range.first : buffer.char_next(range.last);
+                replace_range(display_buffer, range.first, end,
+                              [&](DisplayLine& line, DisplayLine::iterator pos){
+                                  for (auto& atom : replacement)
+                                  {
+                                      atom.replace(BufferRange{range.first, end});
+                                      pos = ++line.insert(pos, std::move(atom));
+                                  }
                               });
             }
             catch (runtime_error&)
