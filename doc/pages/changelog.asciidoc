@@ -5,7 +5,7 @@ released versions.
 
 == Development version
 
-* replace-ranges highlighter now support empty ranges
+* replace-ranges highlighter now support empty and multi-lines ranges
 
 * `%var{...}` now expands to list of strings, `$kak_quoted_...` now work
   as expected with these.
