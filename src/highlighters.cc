@@ -1512,7 +1512,7 @@ struct OptionBasedHighlighter : Highlighter
 
     OptionType& get_option(const HighlightContext& context) const
     {
-        return context.context.options()[m_option_name].get_mutable<OptionType>();
+        return context.context.options()[m_option_name].template get_mutable<OptionType>();
     }
 
 private:
@@ -1594,10 +1594,11 @@ private:
                 auto replacement = parse_display_line(spec, context.context.faces());
                 auto end = is_empty(range) ? range.first : buffer.char_next(range.last);
                 replace_range(display_buffer, range.first, end,
-                              [&](DisplayLine& line, DisplayLine::iterator pos){
+                              [&, range=BufferRange{range.first, end}]
+                              (DisplayLine& line, DisplayLine::iterator pos){
                                   for (auto& atom : replacement)
                                   {
-                                      atom.replace(BufferRange{range.first, end});
+                                      atom.replace(range);
                                       pos = ++line.insert(pos, std::move(atom));
                                   }
                               });
