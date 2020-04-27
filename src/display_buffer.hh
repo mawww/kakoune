@@ -126,16 +126,27 @@ public:
     // returns an iterator to the first atom
     iterator split(iterator it, ColumnCount pos);
 
+    iterator split(BufferCoord pos);
+
     iterator insert(iterator it, DisplayAtom atom);
+
+    template<typename It>
+    iterator insert(iterator it, It beg, It end)
+    {
+        auto res = m_atoms.insert(it, beg, end);
+        compute_range();
+        return res;
+    }
+
     iterator erase(iterator beg, iterator end);
-    void     push_back(DisplayAtom atom);
+    void push_back(DisplayAtom atom);
 
     // remove first_col from the begining of the line, and make sure
     // the line is less that col_count character
     bool trim(ColumnCount first_col, ColumnCount col_count);
 
     // Merge together consecutive atoms sharing the same display attributes
-    void     optimize();
+    void optimize();
 private:
     void compute_range();
     BufferRange m_range = { { INT_MAX, INT_MAX }, { INT_MIN, INT_MIN } };
