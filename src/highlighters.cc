@@ -92,41 +92,37 @@ void replace_range(DisplayBuffer& display_buffer,
     if (begin > end or end < display_buffer.range().begin or begin > display_buffer.range().end)
         return;
 
-    for (auto& line : display_buffer.lines())
+    auto& lines = display_buffer.lines();
+    auto first_it = std::lower_bound(lines.begin(), lines.end(), begin, [](const DisplayLine& l, const BufferCoord& c) { return l.range().end < c; });
+    if (first_it == lines.end())
+        return;
+
+    auto first_atom_it = std::find_if(first_it->begin(), first_it->end(), [&begin](const DisplayAtom& a) { return a.has_buffer_range() and a.end() > begin; });
+    first_atom_it = first_it->split(begin);
+
+    auto last_it = std::lower_bound(first_it, lines.end(), end, [](const DisplayLine& l, const BufferCoord& c) { return l.range().end < c; });
+
+    if (first_it == last_it)
     {
-        auto& range = line.range();
-        if ((begin == end) and begin == range.end)
-            return func(line, line.end());
-
-        if (range.end <= begin or  end < range.begin)
-            continue;
-
-        int beg_idx = -1, end_idx = -1;
-        for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
-        {
-            if (not atom_it->has_buffer_range() or
-                end < atom_it->begin() or begin >= atom_it->end())
-                continue;
-
-            if (begin >= atom_it->begin())
-            {
-                if (begin > atom_it->begin())
-                    atom_it = ++line.split(atom_it, begin);
-                beg_idx = atom_it - line.begin();
-            }
-            if (end == atom_it->begin())
-                end_idx = atom_it - line.begin();
-            else if (end <= atom_it->end())
-            {
-                if (end < atom_it->end())
-                    atom_it = line.split(atom_it, end);
-                end_idx = (atom_it - line.begin()) + 1;
-            }
-        }
-
-        if (beg_idx != -1 and end_idx != -1)
-            return func(line, line.erase(line.begin() + beg_idx, line.begin() + end_idx));
+        auto first_atom_idx = first_atom_it - first_it->begin();
+        auto end_atom_it = first_it->split(end);
+        first_atom_it = first_it->erase(first_it->begin() + first_atom_idx, end_atom_it);
     }
+    else
+    {
+        first_atom_it = first_it->erase(first_atom_it, first_it->end());
+        if (last_it != lines.end())
+        {
+            auto end_atom_it = last_it->split(end);
+            end_atom_it = last_it->erase(last_it->begin(), end_atom_it);
+
+            first_atom_it = first_it->insert(first_atom_it, end_atom_it, last_it->end());
+            ++last_it;
+        }
+        first_it = --lines.erase(first_it+1, last_it);
+    }
+
+    func(*first_it, first_atom_it);
 }
 
 void apply_highlighter(HighlightContext context,
@@ -1495,11 +1491,11 @@ InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, String
     return { std::min(first, last), std::max(first, last) };
 }
 
-template<typename OptionType, typename DerivedType>
+template<typename OptionType, typename DerivedType, HighlightPass pass = HighlightPass::Colorize>
 struct OptionBasedHighlighter : Highlighter
 {
     OptionBasedHighlighter(String option_name)
-        : Highlighter{HighlightPass::Colorize}
+        : Highlighter{pass}
         , m_option_name{std::move(option_name)} {}
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
@@ -1514,7 +1510,7 @@ struct OptionBasedHighlighter : Highlighter
         return std::make_unique<DerivedType>(option_name);
     }
 
-    OptionType& get_option(const HighlightContext& context)
+    OptionType& get_option(const HighlightContext& context) const
     {
         return context.context.options()[m_option_name].get_mutable<OptionType>();
     }
@@ -1565,32 +1561,35 @@ private:
     }
 };
 
-struct ReplaceRangesHighlighter : OptionBasedHighlighter<RangeAndStringList, ReplaceRangesHighlighter>
+struct ReplaceRangesHighlighter : OptionBasedHighlighter<RangeAndStringList, ReplaceRangesHighlighter, HighlightPass::Move>
 {
     using ReplaceRangesHighlighter::OptionBasedHighlighter::OptionBasedHighlighter;
 private:
+    static bool is_valid(Buffer& buffer, BufferCoord c)
+    {
+        return c.line >= 0 and c.column >= 0 and c.line < buffer.line_count() and c.column <= buffer[c.line].length();
+    };
+
+    static bool is_fully_selected(const SelectionList& sels, const InclusiveBufferRange& range)
+    {
+        auto it = std::lower_bound(sels.begin(), sels.end(), range.first, [](const Selection& s, const BufferCoord& c) { return s.max() < c; });
+        if (it == sels.end())
+            return true;
+        return it->min() > range.last or (it->min() <= range.first and it->max() >= range.last);
+    };
+
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
         auto& buffer = context.context.buffer();
+        auto& sels = context.context.selections();
         auto& range_and_faces = get_option(context);
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
-
-        auto is_valid = [&buffer](BufferCoord c) {
-            return c.line >= 0 and c.column >= 0 and c.line < buffer.line_count() and c.column <= buffer[c.line].length();
-        };
-
-        auto is_fully_selected = [&sels=context.context.selections()](const InclusiveBufferRange& range) {
-            auto it = std::lower_bound(sels.begin(), sels.end(), range.first, [](const Selection& s, const BufferCoord& c) { return s.max() < c; });
-            if (it == sels.end())
-                return true;
-            return it->min() > range.last or (it->min() <= range.first and it->max() >= range.last);
-        };
 
         for (auto& [range, spec] : range_and_faces.list)
         {
             try
             {
-                if (!is_valid(range.first) or (!is_empty(range) and !is_valid(range.last)) or !is_fully_selected(range))
+                if (!is_valid(buffer, range.first) or (!is_empty(range) and !is_valid(buffer, range.last)) or !is_fully_selected(sels, range))
                     continue;
                 auto replacement = parse_display_line(spec, context.context.faces());
                 auto end = is_empty(range) ? range.first : buffer.char_next(range.last);
@@ -1605,6 +1604,31 @@ private:
             }
             catch (runtime_error&)
             {}
+        }
+    }
+
+    void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
+    {
+        auto& buffer = context.context.buffer();
+        auto& sels = context.context.selections();
+        auto& range_and_faces = get_option(context);
+        update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
+
+        for (auto& [range, spec] : range_and_faces.list)
+        {
+            if (!is_valid(buffer, range.first) or (!is_empty(range) and !is_valid(buffer, range.last)) or !is_fully_selected(sels, range))
+                continue;
+
+            if (range.first.line < setup.window_pos.line and range.last.line >= setup.window_pos.line)
+                setup.window_pos.line = range.first.line;
+
+            if (range.last.line >= setup.window_pos.line and
+                range.first.line <= setup.window_pos.line + setup.window_range.line and
+                range.first.line != range.last.line)
+            {
+                auto removed_count = range.last.line - range.first.line;
+                setup.window_range.line += removed_count;
+            }
         }
     }
 };

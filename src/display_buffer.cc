@@ -111,6 +111,14 @@ DisplayLine::iterator DisplayLine::split(iterator it, ColumnCount count)
     return split(it, pos);
 }
 
+DisplayLine::iterator DisplayLine::split(BufferCoord pos)
+{
+    auto it = find_if(begin(), end(), [pos](const DisplayAtom& a) { return a.type() == DisplayAtom::Range and a.end() > pos; });
+    if (it == end() or it->begin() >= pos)
+        return it;
+    return ++split(it, pos);
+}
+
 DisplayLine::iterator DisplayLine::insert(iterator it, DisplayAtom atom)
 {
     if (atom.has_buffer_range())
@@ -118,7 +126,9 @@ DisplayLine::iterator DisplayLine::insert(iterator it, DisplayAtom atom)
         m_range.begin  = std::min(m_range.begin, atom.begin());
         m_range.end = std::max(m_range.end, atom.end());
     }
-    return m_atoms.insert(it, std::move(atom));
+    auto res = m_atoms.insert(it, std::move(atom));
+    compute_range();
+    return res;
 }
 
 void DisplayLine::push_back(DisplayAtom atom)
