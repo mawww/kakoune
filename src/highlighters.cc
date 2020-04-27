@@ -1590,7 +1590,7 @@ private:
         {
             try
             {
-                if (!is_fully_selected(range) or !is_valid(range.first) or (!is_empty(range) and !is_valid(range.last)))
+                if (!is_valid(range.first) or (!is_empty(range) and !is_valid(range.last)) or !is_fully_selected(range))
                     continue;
                 auto replacement = parse_display_line(spec, context.context.faces());
                 auto end = is_empty(range) ? range.first : buffer.char_next(range.last);
