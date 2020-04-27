@@ -625,7 +625,11 @@ String get_kak_binary_path()
     buffer[res] = '\0';
     return buffer;
 #elif defined(__FreeBSD__) or defined(__NetBSD__)
+#if defined(__FreeBSD__)
     int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
+#elif defined(__NetBSD__)
+    int mib[] = {CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME};
+#endif
     size_t res = sizeof(buffer);
     sysctl(mib, 4, buffer, &res, NULL, 0);
     return buffer;
