@@ -224,7 +224,7 @@ matches are considered valid for a given region opening match only if they
 matched the same content for the capture 1.
 
 The *recurse* option is useful for regions that can be nested, for example
-the following contruct:
+the following construct:
 
 ----------
 %sh{ ... }

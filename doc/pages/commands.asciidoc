@@ -202,7 +202,7 @@ of the file onto the filesystem
 == Hooks
 
 *hook* [-group <group>] <scope> <hook_name> <filtering_regex> <command>::
-    execute *command* whenever an *hook_name* is triggered in *scope*
+    execute *command* whenever a *hook_name* is triggered in *scope*
     (See <<hooks#,`:doc hooks`>> and <<scopes#,`:doc scopes`>>)
 
 *remove-hooks* <scope> <group>::
