@@ -127,7 +127,7 @@ private:
     void write_field(Color color)
     {
         write_field(color.color);
-        if (color.color == Color::RGB)
+        if (color.isRGB())
         {
             write_field(color.r);
             write_field(color.g);
@@ -305,7 +305,7 @@ struct MsgReader::Reader<Color> {
     {
         Color res;
         res.color = Reader<Color::NamedColor>::read(reader);
-        if (res.color == Color::RGB)
+        if (res.isRGB())
         {
             res.r = Reader<unsigned char>::read(reader);
             res.g = Reader<unsigned char>::read(reader);

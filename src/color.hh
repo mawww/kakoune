@@ -3,6 +3,7 @@
 
 #include "hash.hh"
 #include "meta.hh"
+#include "assert.hh"
 
 namespace Kakoune
 {
@@ -12,7 +13,7 @@ class StringView;
 
 struct Color
 {
-    enum NamedColor : char
+    enum NamedColor : unsigned char
     {
         Default,
         Black,
@@ -34,15 +35,27 @@ struct Color
         RGB,
     };
 
-    NamedColor color;
+    union
+    {
+        NamedColor color;
+        unsigned char a;
+    };
     unsigned char r = 0;
     unsigned char g = 0;
     unsigned char b = 0;
 
+    constexpr bool isRGB() const { return a >= RGB; }
+
     constexpr Color() : Color{Default} {}
     constexpr Color(NamedColor c) : color{c} {}
-    constexpr Color(unsigned char r, unsigned char g, unsigned char b)
-        : color{RGB}, r{r}, g{g}, b{b} {}
+    constexpr Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255)
+        : a{a}, r{r}, g{g}, b{b}
+    {
+        validate_alpha();
+    }
+
+private:
+    void validate_alpha();
 };
 
 constexpr bool operator==(Color lhs, Color rhs)
@@ -66,8 +79,8 @@ bool is_color_name(StringView color);
 
 constexpr size_t hash_value(const Color& val)
 {
-    return val.color == Color::RGB ?
-        hash_values(val.color, val.r, val.g, val.b)
+    return val.isRGB() ?
+        hash_values(val.a, val.r, val.g, val.b)
       : hash_value(val.color);
 }
 

@@ -252,7 +252,7 @@ int NCursesUI::Palette::get_color(Color color)
         return it->value;
     else if (m_change_colors and can_change_color() and COLORS > 16)
     {
-        kak_assert(color.color == Color::RGB);
+        kak_assert(color.isRGB());
         if (m_next_color > COLORS)
             m_next_color = 16;
         init_color(m_next_color,
@@ -264,7 +264,7 @@ int NCursesUI::Palette::get_color(Color color)
     }
     else
     {
-        kak_assert(color.color == Color::RGB);
+        kak_assert(color.isRGB());
         int lowestDist = INT_MAX;
         int closestCol = -1;
         for (int i = 0; i < std::min(256, COLORS); ++i)

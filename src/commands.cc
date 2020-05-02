@@ -2328,7 +2328,7 @@ const CommandDesc set_face_cmd = {
     "set-face <scope> <name> <facespec>: set face <name> to refer to <facespec> in <scope>\n"
     "\n"
     "facespec format is <fg color>[,<bg color>][+<attributes>][@<base>]\n"
-    "colors are either a color name, or rgb:###### values.\n"
+    "colors are either a color name, rgb:######, or rgba:######## values.\n"
     "attributes is a combination of:\n"
     "    u: underline, i: italic, b: bold, r: reverse,\n"
     "    B: blink, d: dim,\n"

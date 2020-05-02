@@ -50,6 +50,14 @@ struct Face
 
 inline Face merge_faces(const Face& base, const Face& face)
 {
+    auto alpha_blend = [](Color base, Color color) {
+        auto blend = [&](unsigned char Color::*field) {
+            int blended = (base.*field * (255 - color.a) + color.*field * color.a) / 255;
+            return static_cast<unsigned char>(blended <= 255 ? blended : 255);
+        };
+        return Color{blend(&Color::r), blend(&Color::g), blend(&Color::b), base.a};
+    };
+
     auto choose = [&](Color Face::*color, Attribute final_attr) {
         if (face.attributes & final_attr)
             return face.*color;
@@ -57,6 +65,8 @@ inline Face merge_faces(const Face& base, const Face& face)
             return base.*color;
         if (face.*color == Color::Default)
             return base.*color;
+        if ((base.*color).isRGB() and (face.*color).isRGB() and (face.*color).a != 255)
+            return alpha_blend(base.*color, face.*color);
         return face.*color;
     };
 

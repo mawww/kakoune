@@ -34,6 +34,13 @@ bool is_color_name(StringView color)
     return contains(color_names, color);
 }
 
+void Color::validate_alpha()
+{
+    static_assert(RGB == 17);
+    if (a < RGB)
+        throw runtime_error("Colors alpha must be > 16");
+}
+
 Color str_to_color(StringView color)
 {
     auto it = find_if(color_names, [&](const char* c){ return color == c; });
@@ -55,6 +62,11 @@ Color str_to_color(StringView color)
         return { (unsigned char)(hval(color[4]) * 16 + hval(color[5])),
                  (unsigned char)(hval(color[6]) * 16 + hval(color[7])),
                  (unsigned char)(hval(color[8]) * 16 + hval(color[9])) };
+    if (color.length() == 13 and color.substr(0_byte, 5_byte) == "rgba:")
+        return { (unsigned char)(hval(color[5])  * 16 + hval(color[6])),
+                 (unsigned char)(hval(color[7])  * 16 + hval(color[8])),
+                 (unsigned char)(hval(color[9])  * 16 + hval(color[10])),
+                 (unsigned char)(hval(color[11]) * 16 + hval(color[12])) };
 
     throw runtime_error(format("unable to parse color: '{}'", color));
     return Color::Default;
@@ -62,10 +74,13 @@ Color str_to_color(StringView color)
 
 String to_string(Color color)
 {
-    if (color.color == Color::RGB)
+    if (color.isRGB())
     {
-        char buffer[11];
-        sprintf(buffer, "rgb:%02x%02x%02x", color.r, color.g, color.b);
+        char buffer[14];
+        if (color.a == 255)
+            sprintf(buffer, "rgb:%02x%02x%02x", color.r, color.g, color.b);
+        else
+            sprintf(buffer, "rgba:%02x%02x%02x%02x", color.r, color.g, color.b, color.a);
         return buffer;
     }
     else
