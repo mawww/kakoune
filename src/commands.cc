@@ -480,7 +480,7 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
     const bool is_readonly = (bool)(context.buffer().flags() & Buffer::Flags::ReadOnly);
     // if the buffer is in read-only mode and we try to save it directly
     // or we try to write to it indirectly using e.g. a symlink, throw an error
-    if (is_file and is_readonly and 
+    if (is_file and is_readonly and
         (not filename or real_path(*filename) == buffer.name()))
         throw runtime_error("cannot overwrite the buffer when in readonly mode");
 

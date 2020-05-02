@@ -879,8 +879,8 @@ struct WrapHighlighter : Highlighter
             auto find_split_pos = [&](SplitPos start_pos, auto is_word) -> Optional<SplitPos> {
                 if (start_pos.byte == 0)
                     return {};
-                const char* it = &content[pos.byte]; 
-                // split at current position if is a word boundary 
+                const char* it = &content[pos.byte];
+                // split at current position if is a word boundary
                 if (not is_word(utf8::codepoint(it, content.end()), {'_'}))
                     return pos;
                 // split at last word boundary if the word is shorter than our wrapping width

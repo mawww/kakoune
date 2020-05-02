@@ -151,7 +151,7 @@ void LineRangeSet::add_range(LineRange range, FunctionRef<void (LineRange)> on_n
                                [](LineRange range, LineCount line) { return range.end < line; });
     if (it == end() or it->begin > range.end)
         on_new_range(range);
-    else 
+    else
     {
         auto pos = range.begin;
         while (it != end() and it->begin <= range.end)
