@@ -316,7 +316,7 @@ Selections
 ~~~~~~~~~~
 
 The main concept in Kakoune is the selection. A selection is an inclusive,
-directed range of character. A selection has two ends, the anchor and the
+directed range of characters. A selection has two ends, the anchor and the
 cursor.
 
 There is always at least one selection, and a selection is always at least
@@ -760,7 +760,7 @@ Regex syntax
 ~~~~~~~~~~~~
 
 Kakoune regex syntax is based on the ECMAScript syntax (ECMA-262 standard).
-It always run on Unicode codepoint sequences, not on bytes.
+It always runs on Unicode codepoint sequences, not on bytes.
 
 See <<doc/pages/regex#,`:doc regex`>>.
 
