@@ -55,7 +55,7 @@ See insert commands <<keys#insert-mode,`:doc keys insert-mode`>>.
 === Goto mode
 
 Goto mode provides commands dedicated to jumping either inside a buffer
-(such as jumping to buffer start/end, window top/botton) or to another
+(such as jumping to buffer start/end, window top/bottom) or to another
 (such as jumping to the file whose path is currently selected).
 
 See goto commands <<keys#goto-commands,`:doc keys goto-commands`>>.
