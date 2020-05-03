@@ -46,6 +46,8 @@ require-module elixir
 
 add-highlighter shared/eex regions
 add-highlighter shared/eex/html default-region ref html
+add-highlighter shared/eex/comment region '<%#' '%>' fill comment
+add-highlighter shared/eex/quote region '<%%' '%>' ref html
 add-highlighter shared/eex/code region '<%=?' '%>' ref elixir
 }
 
