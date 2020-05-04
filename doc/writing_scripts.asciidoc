@@ -102,6 +102,8 @@ contain ambiguous characters:
 	echo "set global scrolloff 999,0"
 -------------------------------------
 
+For more information about portability issues related to `echo`, refer to https://www.etalabs.net/sh_tricks.html[Rich's sh tricks].
+
 Variable base name
 ~~~~~~~~~~~~~~~~~~
 
