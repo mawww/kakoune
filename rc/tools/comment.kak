@@ -157,14 +157,14 @@ define-command comment-line -docstring '(un)comment selected lines using line co
         }
 
         try %{
-            set-register / "\A\Q%opt{comment_line}\E\h?"
+            set-register / "\A\Q%opt{comment_line}\E"
 
             try %{
                 # See if there are any uncommented lines in the selection
                 execute-keys -draft <a-K><ret>
 
                 # There are uncommented lines, so comment everything
-                set-register '"' "%opt{comment_line} "
+                set-register '"' "%opt{comment_line}"
                 align-selections-left
                 execute-keys P
             } catch %{
