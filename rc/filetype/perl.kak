@@ -42,7 +42,7 @@ add-highlighter shared/perl/double_string region (?<!\$)(?<!\\)"   (?<!\\)(\\\\)
 add-highlighter shared/perl/single_string region (?<!\$)(?<!\\\\)' (?<!\\)(\\\\)*' fill string
 add-highlighter shared/perl/comment       region (?<!\$)(?<!\\)#   $               fill comment
 
-add-highlighter shared/perl/regex         region m?/[^/\n]+(?=/)        /\w?       fill meta
+add-highlighter shared/perl/regex         region m?(?<!/)/[^/\n]+(?=/)  /\w?       fill meta
 add-highlighter shared/perl/sregex        region s/[^/\n]+/[^/\n]+(?=/) /\w?       fill meta
 
 add-highlighter shared/perl/q1            region -recurse \{ q\{ \}                fill string
