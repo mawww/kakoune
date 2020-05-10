@@ -661,9 +661,21 @@ int run_client(StringView session, StringView name, StringView client_init,
 {
     try
     {
+        Optional<int> stdin_fd;
+        if (not isatty(0))
+        {
+            // move stdin to another fd, and restore tty as stdin
+            stdin_fd = dup(0);
+            int tty = open("/dev/tty", O_RDONLY);
+            dup2(tty, 0);
+            close(tty);
+        }
+
         EventManager event_manager;
         RemoteClient client{session, name, make_ui(ui_type), getpid(), get_env_vars(),
-                            client_init, std::move(init_coord)};
+                            client_init, std::move(init_coord), stdin_fd};
+        stdin_fd.map(close);
+
         if (suspend)
             raise(SIGTSTP);
         while (not client.exit_status() and client.is_ui_ok())

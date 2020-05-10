@@ -60,11 +60,12 @@ public:
     bool operator!=(const Optional& other) const { return !(*this == other); }
 
     template<typename... Args>
-    void emplace(Args&&... args)
+    T& emplace(Args&&... args)
     {
         destruct_ifn();
         new (&m_value) T{std::forward<Args>(args)...};
         m_valid = true;
+        return m_value;
     }
 
     T& operator*()

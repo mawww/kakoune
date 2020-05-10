@@ -32,7 +32,7 @@ class RemoteClient
 public:
     RemoteClient(StringView session, StringView name, std::unique_ptr<UserInterface>&& ui,
                  int pid, const EnvVarMap& env_vars, StringView init_command,
-                 Optional<BufferCoord> init_coord);
+                 Optional<BufferCoord> init_coord, Optional<int> stdin_fd);
 
     bool is_ui_ok() const;
     const Optional<int>& exit_status() const { return m_exit_status; }

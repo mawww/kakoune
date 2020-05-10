@@ -356,16 +356,8 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
        (parser.get_switch("debug") ? Buffer::Flags::Debug : Buffer::Flags::None);
 
     auto& buffer_manager = BufferManager::instance();
-    auto generate_scratch_name = [&] {
-        for (int i = 0; true; ++i)
-        {
-            String name = format("*scratch-{}*", i);
-            if (buffer_manager.get_buffer_ifp(name) == nullptr)
-                return name;
-        }
-    };
     const auto& name = parser.positional_count() > 0 ?
-        parser[0] : (scratch ? generate_scratch_name() : context.buffer().name());
+        parser[0] : (scratch ? generate_buffer_name("*scratch-{}*") : context.buffer().name());
 
     Buffer* buffer = buffer_manager.get_buffer_ifp(name);
     if (scratch)

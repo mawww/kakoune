@@ -87,6 +87,8 @@ void write_to_debug_buffer(StringView str);
 Vector<String> history_as_strings(const Vector<Buffer::HistoryNode>& history);
 Vector<String> undo_group_as_strings(const Buffer::UndoGroup& undo_group);
 
+String generate_buffer_name(StringView pattern);
+
 }
 
 #endif // buffer_utils_hh_INCLUDED

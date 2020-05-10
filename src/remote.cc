@@ -261,25 +261,56 @@ public:
         return Reader<T>::read(*this);
     }
 
+    Optional<int> ancillary_fd()
+    {
+        auto res = m_ancillary_fd;
+        m_ancillary_fd.reset();
+        return res;
+    }
+
+    ~MsgReader()
+    {
+        m_ancillary_fd.map(close);
+    }
+
     void reset()
     {
         m_stream.resize(0);
         m_write_pos = 0;
         m_read_pos = header_size;
+        m_ancillary_fd.map(close);
     }
 
 private:
     void read_from_socket(int sock, size_t size)
     {
         kak_assert(m_write_pos + size <= m_stream.size());
-        int res = ::read(sock, m_stream.data() + m_write_pos, size);
+        iovec io{m_stream.data() + m_write_pos, size};
+        alignas(cmsghdr) char fdbuf[CMSG_SPACE(sizeof(int))];
+
+        msghdr msg{};
+        msg.msg_iov = &io;
+        msg.msg_iovlen = 1;
+        msg.msg_control = fdbuf;
+        msg.msg_controllen = sizeof(fdbuf);
+
+        int res = recvmsg(sock, &msg, MSG_CMSG_CLOEXEC);
         if (res <= 0)
             throw disconnected{format("socket read failed: {}", strerror(errno))};
+
         m_write_pos += res;
+
+        if (cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
+            cmsg && cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS && cmsg->cmsg_len == CMSG_LEN(sizeof(int)))
+        {
+            m_ancillary_fd.map(close);
+            memcpy(&m_ancillary_fd.emplace(), CMSG_DATA(cmsg), sizeof(int));
+        }
     }
 
     static constexpr uint32_t header_size = sizeof(MessageType) + sizeof(uint32_t);
     Vector<char, MemoryDomain::Remote> m_stream;
+    Optional<int> m_ancillary_fd;
     uint32_t m_write_pos = 0;
     uint32_t m_read_pos = header_size;
 };
@@ -398,14 +429,32 @@ private:
     RemoteBuffer  m_send_buffer;
 };
 
-static bool send_data(int fd, RemoteBuffer& buffer)
+static bool send_data(int fd, RemoteBuffer& buffer, Optional<int> ancillary_fd = {})
 {
     while (not buffer.empty() and fd_writable(fd))
     {
-      int res = ::write(fd, buffer.data(), buffer.size());
-      if (res <= 0)
-          throw disconnected{format("socket write failed: {}", strerror(errno))};
-      buffer.erase(buffer.begin(), buffer.begin() + res);
+        iovec io{buffer.data(), buffer.size()};
+        alignas(cmsghdr) char fdbuf[CMSG_SPACE(sizeof(int))];
+
+        msghdr msg{};
+        msg.msg_iov = &io;
+        msg.msg_iovlen = 1;
+        if (ancillary_fd)
+        {
+            msg.msg_control = fdbuf;
+            msg.msg_controllen = sizeof(fdbuf);
+
+            cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
+            cmsg->cmsg_len = CMSG_LEN(sizeof(int));
+            cmsg->cmsg_level = SOL_SOCKET;
+            cmsg->cmsg_type = SCM_RIGHTS;
+            memcpy(CMSG_DATA(cmsg), &*ancillary_fd, sizeof(int));
+        }
+
+        int res = sendmsg(fd, &msg, 0);
+        if (res <= 0)
+              throw disconnected{format("socket write failed: {}", strerror(errno))};
+         buffer.erase(buffer.begin(), buffer.begin() + res);
     }
     return buffer.empty();
 }
@@ -592,7 +641,7 @@ bool check_session(StringView session)
 
 RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<UserInterface>&& ui,
                            int pid, const EnvVarMap& env_vars, StringView init_command,
-                           Optional<BufferCoord> init_coord)
+                           Optional<BufferCoord> init_coord, Optional<int> stdin_fd)
     : m_ui(std::move(ui))
 {
     int sock = connect_to(session);
@@ -601,6 +650,7 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
         MsgWriter msg{m_send_buffer, MessageType::Connect};
         msg.write(pid, name, init_command, init_coord, m_ui->dimensions(), env_vars);
     }
+    send_data(sock, m_send_buffer, stdin_fd);
 
     m_ui->set_on_key([this](Key key){
         MsgWriter msg(m_send_buffer, MessageType::Key);
@@ -750,6 +800,10 @@ private:
                 auto init_coord = m_reader.read<Optional<BufferCoord>>();
                 auto dimensions = m_reader.read<DisplayCoord>();
                 auto env_vars = m_reader.read<HashMap<String, String, MemoryDomain::EnvVars>>();
+
+                if (auto stdin_fd = m_reader.ancillary_fd())
+                    create_fifo_buffer(generate_buffer_name("*stdin-{}*"), *stdin_fd, Buffer::Flags::None);
+
                 auto* ui = new RemoteUI{sock, dimensions};
                 ClientManager::instance().create_client(
                     std::unique_ptr<UserInterface>(ui), pid, std::move(name),
