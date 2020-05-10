@@ -515,7 +515,7 @@ select_sentence(const Context& context, const Selection& selection,
             char prev = *(first-1);
             if (not is_horizontal_blank(cur))
                 saw_non_blank = true;
-            if (is_eol(prev) and is_eol(cur))
+            if (is_eol(prev) and is_eol(cur) and first + 1 != buffer.end())
             {
                 ++first;
                 break;
