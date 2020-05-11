@@ -605,22 +605,25 @@ Optional<Key> NCursesUI::get_next_key()
     if (not c)
         return {};
 
-    auto parse_key = [](unsigned char c) -> Key {
+    static constexpr auto convert = [](Codepoint c) -> Codepoint {
         if (c == control('m') or c == control('j'))
-            return {Key::Return};
+            return Key::Return;
         if (c == control('i'))
-            return {Key::Tab};
-        if (c == control('h'))
-            return {Key::Backspace};
+            return Key::Tab;
+        if (c == control('h') or c == 127)
+            return Key::Backspace;
+        return c;
+    };
+    auto parse_key = [](unsigned char c) -> Key {
+        if (Codepoint cp = convert(c); cp > 255)
+            return Key{cp};
         if (c == control('z'))
         {
             kill(0, SIGTSTP); // We suspend at this line
             return {};
         }
         if (c < 27)
-            return ctrl(Codepoint(c) - 1 + 'a');
-        if (c == 127)
-            return {Key::Backspace};
+            return ctrl(c - 1 + 'a');
 
        struct Sentinel{};
        struct CharIterator
@@ -735,7 +738,7 @@ Optional<Key> NCursesUI::get_next_key()
             }
             return {};
         case 'u':
-            return masked_key(static_cast<Codepoint>(params[0]));
+            return masked_key(convert(static_cast<Codepoint>(params[0])));
         case 'Z': return shift(Key::Tab);
         case 'I': return {Key::FocusIn};
         case 'O': return {Key::FocusOut};
