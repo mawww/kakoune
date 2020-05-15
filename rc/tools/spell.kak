@@ -121,7 +121,7 @@ define-command spell-next %{ evaluate-commands %sh{
     }
 
     # no selection descriptions are in `spell_regions`
-    if ! expr "${start_first}" : '[0-9][0-9]*\.[0-9][0-9]*,[0-9][0-9]*\.[0-9]' >/dev/null; then
+    if ! printf %s "${start_first}" | grep -qE '^[0-9]+\.[0-9]+,[0-9]+\.[0-9]+$'; then
         exit
     fi
 
