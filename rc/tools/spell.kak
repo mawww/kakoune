@@ -93,9 +93,8 @@ define-command spell-next %{ evaluate-commands %sh{
     anchor_col="${kak_selection_desc%%,*}"
     anchor_col="${anchor_col##*.}"
 
-    start_first="${kak_opt_spell_regions#* }"
-    start_first="${start_first%%|*}"
-    start_first="${start_first#\'}"
+    start_first="${kak_opt_spell_regions%%|*}"
+    start_first="${start_first#* }"
 
     find_next_word_desc() {
         ## XXX: the `spell` command adds sorted selection descriptions to the range
