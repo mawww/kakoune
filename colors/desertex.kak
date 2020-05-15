@@ -18,8 +18,6 @@ face global meta rgb:ee799f
 # Markup
 face global title  blue
 face global header cyan
-face global bold   red
-face global italic yellow
 face global mono   green
 face global block  magenta
 face global link   cyan

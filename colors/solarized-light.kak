@@ -37,8 +37,6 @@ evaluate-commands %sh{
         # markup
         face global title              ${blue}+b
         face global header             ${blue}
-        face global bold               ${base01}+b
-        face global italic             ${base01}+i
         face global mono               ${base1}
         face global block              ${cyan}
         face global link               ${base01}

@@ -95,8 +95,6 @@ evaluate-commands %sh{
     set-face global link ${bright_cyan}+u
     set-face global list Default
     set-face global bullet +b
-    set-face global bold +b
-    set-face global italic +i
 
     # Built-in faces
     set-face global Default ${white},${black}

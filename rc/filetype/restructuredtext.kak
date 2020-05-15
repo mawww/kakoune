@@ -75,8 +75,8 @@ add-highlighter shared/restructuredtext/content/ regex (\A|\n\n)(\}{3,}\n)?[^\n]
 add-highlighter shared/restructuredtext/content/ regex (\A|\n\n)(~{3,}\n)?[^\n]+\n(~{3,})$ 0:header
 
 # Inline markup
-add-highlighter shared/restructuredtext/content/ regex [^*](\*\*([^\s*]|([^\s*][^*]*[^\s*]))\*\*)[^*] 1:bold
-add-highlighter shared/restructuredtext/content/ regex [^*](\*([^\s*]|([^\s*][^*]*[^\s*]))\*)[^*] 1:italic
+add-highlighter shared/restructuredtext/content/ regex [^*](\*\*([^\s*]|([^\s*][^*]*[^\s*]))\*\*)[^*] 1:+b
+add-highlighter shared/restructuredtext/content/ regex [^*](\*([^\s*]|([^\s*][^*]*[^\s*]))\*)[^*] 1:+i
 add-highlighter shared/restructuredtext/content/ regex [^`](``([^\s`]|([^\s`][^`]*[^\s`]))``)[^`] 1:mono
 
 }
