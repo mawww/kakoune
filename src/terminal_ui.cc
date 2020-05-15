@@ -225,6 +225,9 @@ void TerminalUI::Screen::output(bool force)
     if (lines.empty())
         return;
 
+    // iTerm2 "begin synchronised update" sequence
+    printf("\033P=1s\033\\");
+
     struct Change { int keep; int add; int del; };
     Vector<Change> changes{Change{}};
     auto new_hashes = lines | transform([](auto& line) { return hash_value(line.atoms); }) | gather<Vector>();
@@ -292,6 +295,9 @@ void TerminalUI::Screen::output(bool force)
             }
         }
     }
+
+    // iTerm2 "endsynchronised update" sequence
+    printf("\033P=2s\033\\");
 }
 
 constexpr int TerminalUI::default_shift_function_key;
