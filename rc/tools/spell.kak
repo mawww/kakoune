@@ -101,7 +101,8 @@ define-command spell-next %{ evaluate-commands %sh{
         exit
     fi
 
-    printf %s "${kak_opt_spell_regions#* }" | awk -v anchor_line="${anchor_line}" \
+    printf %s "${kak_opt_spell_regions#* }" | awk -v start_first="${start_first}" \
+                                                  -v anchor_line="${anchor_line}" \
                                                   -v anchor_col="${anchor_col}" '
         BEGIN {
             anchor_line = int(anchor_line)
@@ -126,9 +127,16 @@ define-command spell-next %{ evaluate-commands %sh{
                     || (start_line == anchor_line && start_col <= anchor_col))
                     continue
 
-                printf "select %s\n", sel
+                target_sel = sel
                 break
             }
+        }
+
+        END {
+            if (!target_sel)
+                target_sel = start_first
+
+            printf "select %s\n", target_sel
         }'
 } }
 
