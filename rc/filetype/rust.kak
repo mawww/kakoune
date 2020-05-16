@@ -76,14 +76,21 @@ define-command -hidden rust-indent-on-new-line %~
         # copy // comments prefix and following white spaces
         try %{
             execute-keys -draft k <a-x> s ^\h*\K//[!/]?\h* <ret> y gh j P
-        } catch %|
+        } catch %`
             # preserve previous line indent
             try %{ execute-keys -draft <semicolon> K <a-&> }
             # indent after lines ending with { or (
             try %[ execute-keys -draft k <a-x> <a-k> [{(]\h*$ <ret> j <a-gt> ]
             # indent after lines ending with [{(].+ and move first parameter to own line
             try %< execute-keys -draft [c[({],[)}] <ret> <a-k> \A[({][^\n]+\n[^\n]*\n?\z <ret> L i<ret><esc> <gt> <a-S> <a-&> >
-        |
+            # dedent after lines starting with . and ending with , or ;
+            try %_ execute-keys -draft k <a-x> <a-k> ^\h*\..*[,<semicolon>]\h*$ <ret> j <a-lt> _
+            # todo dedent additional unmatched parenthesis
+            # try %& execute-keys -draft k <a-x> s \((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\) l Gl s\) %sh{
+                # count previous selections length
+                # printf "j $(echo $kak_selections_length | wc -w) <a-lt>"
+            # } &
+        `
         # filter previous line
         try %{ execute-keys -draft k : rust-trim-indent <ret> }
     >
