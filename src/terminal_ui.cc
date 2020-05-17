@@ -392,6 +392,7 @@ void TerminalUI::suspend()
 {
     bool mouse_enabled = m_mouse_enabled;
     enable_mouse(false);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
     restore_terminal();
 
     auto current = set_signal_handler(SIGTSTP, SIG_DFL);
@@ -402,7 +403,6 @@ void TerminalUI::suspend()
 
     raise(SIGTSTP); // suspend here
 
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
     set_signal_handler(SIGTSTP, current);
     sigprocmask(SIG_SETMASK, &old_mask, nullptr);
 
