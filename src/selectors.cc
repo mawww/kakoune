@@ -560,7 +560,7 @@ select_paragraph(const Context& context, const Selection& selection,
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
     if (not (flags & ObjectFlags::ToEnd) and first.coord() > BufferCoord{0,1} and
-        is_eol(*(first-1)) and is_eol(*(first-2)))
+        is_eol(*(first-1)) and first-1 != buffer.begin() and is_eol(*(first-2)))
         --first;
     else if ((flags & ObjectFlags::ToEnd) and
              first != buffer.begin() and (first+1) != buffer.end() and
