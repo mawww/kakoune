@@ -294,7 +294,7 @@ private:
         msg.msg_control = fdbuf;
         msg.msg_controllen = sizeof(fdbuf);
 
-        int res = recvmsg(sock, &msg, MSG_CMSG_CLOEXEC);
+        int res = recvmsg(sock, &msg, 0);
         if (res <= 0)
             throw disconnected{format("socket read failed: {}", strerror(errno))};
 
@@ -305,6 +305,7 @@ private:
         {
             m_ancillary_fd.map(close);
             memcpy(&m_ancillary_fd.emplace(), CMSG_DATA(cmsg), sizeof(int));
+            fcntl(*m_ancillary_fd, F_SETFD, FD_CLOEXEC);
         }
     }
 
