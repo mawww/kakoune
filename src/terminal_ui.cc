@@ -13,6 +13,7 @@
 
 #include <fcntl.h>
 #include <csignal>
+#include <stdio.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 
