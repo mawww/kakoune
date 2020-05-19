@@ -16,6 +16,7 @@ hook global WinSetOption filetype=python %{
 
     set-option window static_words %opt{python_static_words}
 
+    hook window InsertChar \n -group python-insert python-insert-on-new-line
     hook window InsertChar \n -group python-indent python-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
     hook window ModeChange pop:insert:.* -group python-trim-indent %{ try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d } }
@@ -142,10 +143,14 @@ add-highlighter shared/python/code/ regex ^\h*(?:from|import)\h+(\S+) 1:module
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden python-indent-on-new-line %{
+define-command -hidden python-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
+    }
+}
+define-command -hidden python-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
