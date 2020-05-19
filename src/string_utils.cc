@@ -111,6 +111,16 @@ String replace(StringView str, StringView substr, StringView replacement)
     return res;
 }
 
+String left_pad(StringView str, ColumnCount size, Codepoint c)
+{
+    return String(c, std::max(0_col, size - str.column_length())) + str.substr(0, size);
+}
+
+String right_pad(StringView str, ColumnCount size, Codepoint c)
+{
+    return str.substr(0, size) + String(c, std::max(0_col, size - str.column_length()));
+}
+
 Optional<int> str_to_int_ifp(StringView str)
 {
     bool negative = not str.empty() and str[0] == '-';

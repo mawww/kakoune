@@ -26,6 +26,9 @@ String indent(StringView str, StringView indent = "    ");
 
 String replace(StringView str, StringView substr, StringView replacement);
 
+String left_pad(StringView str, ColumnCount size, Codepoint c = ' ');
+String right_pad(StringView str, ColumnCount size, Codepoint c = ' ');
+
 template<typename Container>
 String join(const Container& container, char joiner, bool esc_joiner = true)
 {

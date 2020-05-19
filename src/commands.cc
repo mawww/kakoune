@@ -1397,17 +1397,25 @@ const CommandDesc debug_cmd = {
         {
             auto total = 0;
             write_to_debug_buffer("Memory usage:");
+            const ColumnCount column_size = 13;
+            write_to_debug_buffer(format("{} │{} │{} │{} ",
+                                         left_pad("domain", column_size),
+                                         left_pad("bytes", column_size),
+                                         left_pad("active allocs", column_size),
+                                         left_pad("total allocs", column_size)));
+            write_to_debug_buffer(format("{0}┼{0}┼{0}┼{0}", String(Codepoint{0x2500}, column_size + 1)));
+
             for (int domain = 0; domain < (int)MemoryDomain::Count; ++domain)
             {
                 auto& stats = memory_stats[domain];
                 total += stats.allocated_bytes;
-                write_to_debug_buffer(
-                    format("  {}: {} bytes, {} alloc active, {} alloc total",
-                           domain_name((MemoryDomain)domain),
-                           stats.allocated_bytes,
-                           stats.allocation_count,
-                           stats.total_allocation_count));
+                write_to_debug_buffer(format("{} │{} │{} │{} ",
+                                             left_pad(domain_name((MemoryDomain)domain), column_size),
+                                             left_pad(to_string(stats.allocated_bytes), column_size),
+                                             left_pad(to_string(stats.allocation_count), column_size),
+                                             left_pad(to_string(stats.total_allocation_count), column_size)));
             }
+            write_to_debug_buffer({});
             write_to_debug_buffer(format("  Total: {}", total));
             #if defined(__GLIBC__) || defined(__CYGWIN__)
             write_to_debug_buffer(format("  Malloced: {}", mallinfo().uordblks));
