@@ -193,7 +193,7 @@ vars are available:
 
 == Disabling Hooks
 
-Any normal mode command can be prefixed with `\ ` which will disable hook
+Any normal mode command can be prefixed with `\` which will disable hook
 execution for the duration for the command (including the duration of modes
 the command could move to, so `\i` will disable hooks for the whole insert
 session).
