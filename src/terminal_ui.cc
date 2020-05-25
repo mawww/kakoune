@@ -144,7 +144,7 @@ struct TerminalUI::Window::Line
 
 void TerminalUI::Window::blit(Window& target)
 {
-    kak_assert(pos.line + lines.size() <= target.lines.size());
+    kak_assert(pos.line < target.lines.size());
     auto target_line = target.lines.begin() + (size_t)pos.line;
     for (auto& line : lines)
     {
@@ -152,7 +152,8 @@ void TerminalUI::Window::blit(Window& target)
         target_line->resize(target.size.column);
         target_line->atoms.insert(target_line->erase_range(pos.column, size.column),
                                   line.atoms.begin(), line.atoms.end());
-        ++target_line;
+        if (++target_line == target.lines.end())
+            break;
     }
 }
 
