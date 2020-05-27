@@ -154,7 +154,8 @@ add-highlighter window/ ranges my_range
 *replace-ranges* <option_name>::
     use the data in the `range-specs` option of the given name to highlight
     the buffer. The string part of each tuple of the range-specs is
-    interpreted as a *display line* to display in place of the range.
+    interpreted as markup string (see <<faces#markup-strings,
+    `:doc faces markup-strings`>>) and displayed in place of the range.
     Here, the 3 first chars of the buffer will be replaced by the word 'red':
 
 --------------------------------------------------------
