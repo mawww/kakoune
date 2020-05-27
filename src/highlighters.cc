@@ -228,7 +228,7 @@ static std::unique_ptr<Highlighter> create_fill_highlighter(HighlighterParameter
     const String& facespec = params[0];
     auto func = [facespec](HighlightContext context, DisplayBuffer& display_buffer, BufferRange range)
     {
-        highlight_range(display_buffer, range.begin, range.end, false,
+        highlight_range(display_buffer, range.begin, range.end, true,
                         apply_face(context.context.faces()[facespec]));
     };
     return make_highlighter(std::move(func));
@@ -287,7 +287,7 @@ public:
 
             highlight_range(display_buffer,
                             matches[m].begin, matches[m].end,
-                            false, apply_face(face));
+                            true, apply_face(face));
         }
     }
 
@@ -1209,7 +1209,7 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
                 else if (*it == closing and --level == 0)
                 {
                     highlight_range(display_buffer, it.base().coord(), (it+1).base().coord(),
-                                    false, apply_face(face));
+                                    true, apply_face(face));
                     break;
                 }
                 ++it;
@@ -1226,7 +1226,7 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
                 else if (*it == opening and --level == 0)
                 {
                     highlight_range(display_buffer, it.base().coord(), (it+1).base().coord(),
-                                    false, apply_face(face));
+                                    true, apply_face(face));
                     break;
                 }
                 if (it == buffer.begin())
@@ -1261,8 +1261,8 @@ void highlight_selections(HighlightContext context, DisplayBuffer& display_buffe
         BufferCoord end   = forward ? (BufferCoord)sel.cursor() : buffer.char_next(sel.anchor());
 
         const bool primary = (i == selections.main_index());
-        highlight_range(display_buffer, begin, end, false,
-                        apply_face(sel_faces[primary ? 0 : 1]));
+        highlight_range(display_buffer, begin, end,
+                        false, apply_face(sel_faces[primary ? 0 : 1]));
     }
     for (size_t i = 0; i < selections.size(); ++i)
     {
@@ -1270,8 +1270,8 @@ void highlight_selections(HighlightContext context, DisplayBuffer& display_buffe
         const BufferCoord coord = sel.cursor();
         const bool primary = (i == selections.main_index());
         const bool eol = buffer[coord.line].length() - 1 == coord.column;
-        highlight_range(display_buffer, coord, buffer.char_next(coord), false,
-                        apply_face(sel_faces[2 + (eol ? 2 : 0) + (primary ? 0 : 1)]));
+        highlight_range(display_buffer, coord, buffer.char_next(coord),
+                        false, apply_face(sel_faces[2 + (eol ? 2 : 0) + (primary ? 0 : 1)]));
     }
 }
 
@@ -1552,8 +1552,8 @@ private:
             try
             {
                 if (buffer.is_valid(range.first) and (buffer.is_valid(range.last) and not buffer.is_end(range.last)))
-                    highlight_range(display_buffer, range.first, buffer.char_next(range.last), false,
-                                    apply_face(context.context.faces()[face]));
+                    highlight_range(display_buffer, range.first, buffer.char_next(range.last),
+                                    true, apply_face(context.context.faces()[face]));
             }
             catch (runtime_error&)
             {}

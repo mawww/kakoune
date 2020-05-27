@@ -1,0 +1,5 @@
+declare-option range-specs fold_ranges %val{timestamp} \
+    '2.1,2.11|    {yellow}--- 2 lines:{default} keyword'
+
+add-highlighter global/ replace-ranges fold_ranges
+add-highlighter global/ regex keyword 0:blue
