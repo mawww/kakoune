@@ -66,8 +66,8 @@ add-highlighter shared/markdown/listblock/content default-region ref markdown/in
 add-highlighter shared/markdown/inline/code region -match-capture (`+) (`+) fill mono
 
 # Setext-style header
-add-highlighter shared/markdown/inline/text/ regex (\A|\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
-add-highlighter shared/markdown/inline/text/ regex (\A|\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
+add-highlighter shared/markdown/inline/text/ regex (\A|^\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
+add-highlighter shared/markdown/inline/text/ regex (\A|^\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
 
 # Atx-style header
 add-highlighter shared/markdown/inline/text/ regex ^#[^\n]* 0:header
