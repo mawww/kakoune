@@ -1,0 +1,9 @@
+add-highlighter global/rs regions
+add-highlighter global/rs/r1 region \{ \} ref sub
+
+add-highlighter shared/sub regions
+add-highlighter shared/sub/r2 region  < > group
+add-highlighter shared/sub/r2/ regex X 0:red
+
+declare-option range-specs replaced_part 1 1.2,1.4|Placeholder
+add-highlighter global/ replace-ranges replaced_part

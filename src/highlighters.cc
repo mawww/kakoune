@@ -2131,16 +2131,16 @@ private:
             auto end_it = matches.find_matching_end(buffer, beg_it->end_coord(),
                                                     region.value->match_capture() ? beg_it->capture(buffer) : Optional<StringView>{});
 
-            if (end_it == matches.end_matches.end() or end_it->end_coord() >= range.end)
+            if (end_it == matches.end_matches.end() or end_it->end_coord() >= range.end) // region continue past range end
             {
-                regions.push_back({ {beg_it->line, beg_it->begin},
-                                    range.end,
-                                    region.key });
+                auto begin_coord = beg_it->begin_coord();
+                if (begin_coord < range.end)
+                    regions.push_back({begin_coord, range.end, region.key});
                 break;
             }
 
             auto end_coord = end_it->end_coord();
-            regions.push_back({ beg_it->begin_coord(), end_coord, region.key });
+            regions.push_back({beg_it->begin_coord(), end_coord, region.key});
 
             // With empty begin and end matches (for example if the regexes
             // are /"\K/ and /(?=")/), that case can happen, and would
