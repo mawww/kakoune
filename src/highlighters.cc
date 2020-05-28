@@ -2133,7 +2133,7 @@ private:
 
             if (end_it == matches.end_matches.end() or end_it->end_coord() >= range.end)
             {
-                regions.push_back({ {beg_it->line, beg_it->begin},
+                regions.push_back({ std::min<BufferCoord>({beg_it->line, beg_it->begin}, range.end),
                                     range.end,
                                     region.key });
                 break;
