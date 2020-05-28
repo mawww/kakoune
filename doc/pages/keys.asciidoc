@@ -144,7 +144,7 @@ the Shift modifier and moving will extend each selection instead.
     repeat last object or *f*/*t* selection command
 
 *m*::
-    select to the next sequence enclosed by matching character, see the
+    select to the next sequence enclosed by matching characters, see the
     `matching_pairs` option in <<options#,`:doc options`>>
 
 *M*::
@@ -152,12 +152,12 @@ the Shift modifier and moving will extend each selection instead.
     character, see the `matching_pairs` option in <<options#,`:doc options`>>
 
 *<a-m>*::
-    select to the previous sequence enclosed by matching character, see the
+    select to the previous sequence enclosed by matching characters, see the
     `matching_pairs` option in <<options#,`:doc options`>>
 
 *<a-M>*::
     extend the current selection to the previous sequence enclosed by matching
-    character, see the `matching_pairs` option in <<options#,`:doc options`>>
+    characters, see the `matching_pairs` option in <<options#,`:doc options`>>
 
 *x*::
     select line on which the end of each selection lies (or next line when end lies
@@ -292,10 +292,10 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
     indent selected lines, including empty lines
 
 *<*::
-    deindent selected lines
+    unindent selected lines
 
 *<a-<>*::
-    deindent selected lines, do not remove incomplete indent (3 leading
+    unindent selected lines, do not remove incomplete indent (3 leading
     spaces when indent is 4)
 
 *u*::
@@ -347,7 +347,7 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
     3<a-)>
 ----------
 
-    rotate (1, 2, 3) and (3, 4, 6) independently
+    rotates (1, 2, 3) and (3, 4, 6) independently
 
 *<a-(>*::
     rotate selections content backward

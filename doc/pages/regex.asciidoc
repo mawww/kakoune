@@ -147,8 +147,7 @@ More complex assertions can be expressed with lookarounds:
              not match the text preceding the current position
 
 For performance reasons lookaround contents must be sequence of literals,
-character classes or any-character (`.`); The use of quantifiers
-are not supported.
+character classes or any-character (`.`); Quantifiers are not supported.
 
 For example, `(?<!bar)(?=foo).` will match any character which is not
 preceded by `bar` and where `foo` matches from the current position
@@ -179,7 +178,7 @@ The syntax tries to follow the ECMAScript regex syntax as defined by
 https://www.ecma-international.org/ecma-262/8.0/ some divergences
 exists for ease of use or performance reasons:
 
-* lookarounds are not arbitrary, but lookbehind are supported.
+* lookarounds are not arbitrary, but lookbehind is supported.
 * `\K`, `\Q..\E`, `\A`, `\h` and `\z` are added.
 * Stricter handling of escaping, as we introduce additional
   escapes, identity escapes like `\X` with X a non-special character
