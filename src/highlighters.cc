@@ -57,7 +57,7 @@ void highlight_range(DisplayBuffer& display_buffer,
     for (auto& line : display_buffer.lines())
     {
         auto& range = line.range();
-        if (range.end <= begin or  end < range.begin)
+        if (range.end <= begin or end < range.begin)
             continue;
 
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -1568,7 +1568,7 @@ private:
     static bool is_valid(Buffer& buffer, BufferCoord c)
     {
         return c.line >= 0 and c.column >= 0 and c.line < buffer.line_count() and c.column <= buffer[c.line].length();
-    };
+    }
 
     static bool is_fully_selected(const SelectionList& sels, const InclusiveBufferRange& range)
     {
@@ -1576,7 +1576,7 @@ private:
         if (it == sels.end())
             return true;
         return it->min() > range.last or (it->min() <= range.first and it->max() >= range.last);
-    };
+    }
 
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
