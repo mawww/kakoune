@@ -1481,7 +1481,7 @@ InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, String
     if (*sep == '+')
     {
         auto len = str_to_int({sep+1, str.end()});
-        return {first, len == 0 ? BufferCoord{-1,-1} : BufferCoord{first.line, first.column + len}};
+        return {first, len == 0 ? BufferCoord{-1,-1} : BufferCoord{first.line, first.column + len - 1}};
     }
 
     const BufferCoord last{str_to_int({sep+1, dot_end}) - 1, str_to_int({dot_end+1, str.end()}) - 1};
