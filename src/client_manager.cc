@@ -170,13 +170,13 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
         client->context().forget_buffer(buffer);
 
     Vector<std::unique_ptr<Window>> removed_windows;
-    m_free_windows.erase(std::remove_if(m_free_windows.begin(), m_free_windows.end(),
-                                        [&buffer, &removed_windows](WindowAndSelections& ws) {
-                                            if (&ws.window->buffer() != &buffer)
-                                                return false;
-                                            removed_windows.push_back(std::move(ws.window));
-                                            return true;
-                                         }),
+    m_free_windows.erase(remove_if(m_free_windows,
+                                   [&buffer, &removed_windows](WindowAndSelections& ws) {
+                                       if (&ws.window->buffer() != &buffer)
+                                           return false;
+                                       removed_windows.push_back(std::move(ws.window));
+                                       return true;
+                                   }),
                          m_free_windows.end());
 
     for (auto&& removed_window : removed_windows)

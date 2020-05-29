@@ -142,7 +142,7 @@ void LineRangeSet::update(ConstArrayView<LineModification> modifs)
             }
         }
     };
-    erase(std::remove_if(begin(), end(), [](auto& r) { return r.begin >= r.end; }), end());
+    erase(remove_if(*this, [](auto& r) { return r.begin >= r.end; }), end());
 }
 
 void LineRangeSet::add_range(LineRange range, FunctionRef<void (LineRange)> on_new_range)

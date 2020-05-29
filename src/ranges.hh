@@ -428,6 +428,13 @@ bool any_of(Range&& range, T op)
     return std::any_of(begin(range), end(range), op);
 }
 
+template<typename Range, typename T>
+auto remove_if(Range&& range, T op)
+{
+    using std::begin; using std::end;
+    return std::remove_if(begin(range), end(range), op);
+}
+
 template<typename Range, typename U>
 void unordered_erase(Range&& vec, U&& value)
 {
