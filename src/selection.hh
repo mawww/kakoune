@@ -125,6 +125,7 @@ struct SelectionList
     const_iterator end() const { return m_selections.end(); }
 
     void remove(size_t index);
+    void remove_from(size_t index);
 
     const Selection* data() const { return m_selections.data(); }
     size_t size() const { return m_selections.size(); }

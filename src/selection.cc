@@ -33,6 +33,15 @@ void SelectionList::remove(size_t index)
     if (index < m_main or m_main == m_selections.size())
         --m_main;
 }
+
+void SelectionList::remove_from(size_t index)
+{
+    kak_assert(index > 0);
+    m_selections.erase(begin() + index, end());
+    if (index <= m_main)
+        m_main = m_selections.size() - 1;
+}
+
 void SelectionList::set(Vector<Selection> list, size_t main)
 {
     kak_assert(main < list.size());

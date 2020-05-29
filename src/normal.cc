@@ -92,14 +92,16 @@ void select(Context& context, T func)
     }
     else
     {
-        Vector<int> to_remove;
-        for (int i = 0; i < (int)selections.size(); ++i)
+        auto main_index = selections.main_index();
+        auto new_end = selections.begin();
+        for (size_t i = 0; i < selections.size(); ++i)
         {
             auto& sel = selections[i];
             auto res = func(context, sel);
             if (not res)
             {
-                to_remove.push_back(i);
+                if (i <= main_index and main_index != 0)
+                    --main_index;
                 continue;
             }
 
@@ -112,12 +114,13 @@ void select(Context& context, T func)
             }
             if (not res->captures().empty())
                 sel.captures() = std::move(res->captures());
+            *new_end++ = std::move(sel);
         }
-
-        if (to_remove.size() == selections.size())
+        if (new_end == selections.begin())
             throw no_selections_remaining{};
-        for (auto& i : to_remove | reverse())
-            selections.remove(i);
+
+        selections.set_main_index(main_index);
+        selections.remove_from(new_end - selections.begin());
     }
 
     selections.sort_and_merge_overlapping();
