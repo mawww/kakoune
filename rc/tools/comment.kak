@@ -94,7 +94,7 @@ hook global BufSetOption filetype=perl %{
     set-option buffer comment_block_end ']'
 }
 
-hook global BufSetOption filetype=pug %{
+hook global BufSetOption filetype=(pug|zig) %{
     set-option buffer comment_line '//'
 }
 
