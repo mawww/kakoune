@@ -68,10 +68,10 @@ add-highlighter shared/zig/code/ regex '\b(?:c_short|c_ushort|c_int|c_uint|c_lon
 add-highlighter shared/zig/code/ regex '\b(?:true|false|null|undefined)\b' 0:value
 
 # integer literals
-add-highlighter shared/zig/code/ regex '\b[0-9]+\b' 0:value
-add-highlighter shared/zig/code/ regex '\b0x[0-9a-fA-F]+\b' 0:value
-add-highlighter shared/zig/code/ regex '\b0o[0-7]+\b' 0:value
-add-highlighter shared/zig/code/ regex '\b0b[01]+\b' 0:value
+add-highlighter shared/zig/code/ regex '\b[0-9](_?[0-9])*\b' 0:value
+add-highlighter shared/zig/code/ regex '\b0x[0-9a-fA-F](_?[0-9a-fA-F])*\b' 0:value
+add-highlighter shared/zig/code/ regex '\b0o[0-7](_?[0-7])*\b' 0:value
+add-highlighter shared/zig/code/ regex '\b0b[01](_?[01])*\b' 0:value
 
 # float literals
 add-highlighter shared/zig/code/ regex '\b[0-9]+\.[0-9]+(?:[eE][-+]?[0-9]+)?\b' 0:value
