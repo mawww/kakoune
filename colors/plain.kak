@@ -17,8 +17,6 @@ face global builtin default
 # For default
 face global title default
 face global header default
-face global bold default
-face global italic default
 face global mono default
 face global block default
 face global link blue

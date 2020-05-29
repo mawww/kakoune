@@ -37,8 +37,6 @@ evaluate-commands %sh{
     echo "
         face global title blue
         face global header ${cyan_light}
-        face global bold ${orange_light}
-        face global italic ${orange_dark}
         face global mono ${green_dark}
         face global block ${orange_dark}
         face global link blue
