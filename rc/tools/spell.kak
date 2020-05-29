@@ -93,44 +93,51 @@ define-command spell-next %{ evaluate-commands %sh{
     anchor_col="${kak_selection_desc%%,*}"
     anchor_col="${anchor_col##*.}"
 
-    start_first="${kak_opt_spell_regions#* }"
-    start_first="${start_first%%|*}"
-    start_first="${start_first#\'}"
+    start_first="${kak_opt_spell_regions%%|*}"
+    start_first="${start_first#* }"
 
-    find_next_word_desc() {
-        ## XXX: the `spell` command adds sorted selection descriptions to the range
-        printf %s\\n "${1}" \
-            | sed -e "s/'//g" -e 's/^[0-9]* //' -e 's/|[^ ]*//g' \
-            | tr ' ' '\n' \
-            | while IFS=, read -r start end; do
-                start_line="${start%.*}"
-                start_col="${start#*.}"
-                end_line="${end%.*}"
-                end_col="${end#*.}"
-
-                if [ "${start_line}" -lt "${anchor_line}" ]; then
-                    continue
-                elif [ "${start_line}" -eq "${anchor_line}" ] \
-                    && [ "${start_col}" -le "${anchor_col}" ]; then
-                    continue
-                fi
-
-                printf 'select %s,%s\n' "${start}" "${end}"
-                break
-            done
-    }
-
-    # no selection descriptions are in `spell_regions`
-    if ! expr "${start_first}" : '[0-9][0-9]*\.[0-9][0-9]*,[0-9][0-9]*\.[0-9]' >/dev/null; then
+    # Make sure properly formatted selection descriptions are in `%opt{spell_regions}`
+    if ! printf %s "${start_first}" | grep -qE '^[0-9]+\.[0-9]+,[0-9]+\.[0-9]+$'; then
         exit
     fi
 
-    next_word_desc=$(find_next_word_desc "${kak_opt_spell_regions}")
-    if [ -n "${next_word_desc}" ]; then
-        printf %s\\n "${next_word_desc}"
-    else
-        printf 'select %s\n' "${start_first}"
-    fi
+    printf %s "${kak_opt_spell_regions#* }" | awk -v start_first="${start_first}" \
+                                                  -v anchor_line="${anchor_line}" \
+                                                  -v anchor_col="${anchor_col}" '
+        BEGIN {
+            anchor_line = int(anchor_line)
+            anchor_col = int(anchor_col)
+        }
+
+        {
+            for (i = 1; i <= NF; i++) {
+                sel = $i
+                sub(/\|.+$/, "", sel)
+
+                start_line = sel
+                sub(/\..+$/, "", start_line)
+                start_line = int(start_line)
+
+                start_col = sel
+                sub(/,.+$/, "", start_col)
+                sub(/^.+\./, "", start_col)
+                start_col = int(start_col)
+
+                if (start_line < anchor_line \
+                    || (start_line == anchor_line && start_col <= anchor_col))
+                    continue
+
+                target_sel = sel
+                break
+            }
+        }
+
+        END {
+            if (!target_sel)
+                target_sel = start_first
+
+            printf "select %s\n", target_sel
+        }'
 } }
 
 define-command \
