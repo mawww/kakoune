@@ -102,7 +102,7 @@ with:
     `%val{buffile}` of the buffer selections relate to
 
 *timestamp*::
-    `%val{timestamp}` at which the selection apply to
+    `%val{timestamp}` at which the selection applies to
 
 *main sel index*::
     0-based index of the main selection

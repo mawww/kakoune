@@ -31,7 +31,7 @@ command:
 unset-option <scope> <name>
 ---------------------------
 
-Unsetting an option will make it fallback to the value of its parent mode,
+Unsetting an option will make it fallback to the value of its parent scope,
 hence options cannot be unset from the *global* scope.
 
 [[declare-option]]
@@ -111,9 +111,9 @@ are exclusively available to built-in options.
 
     All numeric fields are 1-based.
 
-    When the `update-option` is used on an option of this type, its
-    ranges gets updated according to all the buffer modifications that
-    happened since its timestamp.
+    When the command `update-option` is used on an option of this type,
+    its ranges get updated according to all the buffer modifications
+    that happened since its timestamp.
 
     `set -add` appends the new pair to the list
 
@@ -122,8 +122,8 @@ are exclusively available to built-in options.
 *line-specs*::
     a list of a line number and a corresponding flag (`<line>|<flag
     text>`), except for the first element which is just the timestamp
-    of the buffer. When the `update-option` is used on an option of this
-    type, its lines gets updated according to all the buffer modifications
+    of the buffer. When `update-option` is used on an option of this
+    type, its lines get updated according to all the buffer modifications
     that happened since its timestamp.
     See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
     `set -add` appends the new spec to the list
@@ -134,7 +134,7 @@ are exclusively available to built-in options.
     `<line>.<column>[+<length>]@<timestamp>` format to define where the
     completion apply in the buffer.
 
-    Select commands are arbitrary kakoune commands that will be executed
+    Select commands are arbitrary Kakoune commands that will be executed
     each time the element is selected in the menu. The common use case is
     to display element specific documentation.
 

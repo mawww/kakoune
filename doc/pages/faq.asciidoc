@@ -3,7 +3,7 @@
 == How to pronounce the name of the project and what does it mean ?
 
 The name of the project is pronounced "Kak-oon", and is a word taken from a
-New Caledonian dialect based on french. It means a hard blow, usually a punch,
+New Caledonian dialect based on French. It means a hard blow, usually a punch,
 but generally refers to a blow into which all of one's strength went.
 
 == Is there going to be a Windows port of Kakoune ?
@@ -88,7 +88,7 @@ dedicated tool, as is the case with `clang` and C code: you can use the
 `clang-enable-autocomplete` and `clang-complete` builtin commands whenever
 editing a C/C++ file, and completion will work on function parameters.
 
-Note that the same features are available for python buffers, with the
+Note that the same features are available for Python buffers, with the
 `jedi` script.
 
 == Why aren't widely known command line shortcuts such as <c-w> or <c-u> available in Kakoune ?
@@ -145,7 +145,7 @@ possible.
 
 == My file seems to be highlighted with the wrong colors, I thought syntax highlighting was detected automatically ?
 
-The `file` utility has several short comings, such as detecting the
+The `file` utility has several shortcomings, such as detecting the
 wrong mimetype for a file containing data with different syntax, e.g.
 a Python script containing hardcoded HTML templates detected as an HTML
 file.
@@ -174,7 +174,7 @@ balanced against the ability to select data over several lines.
 
 As a fairly compliant follower of the UNIX philosophy, Kakoune does not
 try to implement features that are best handled by separate, dedicated
-tools. Windows splitting in terminals is a prime example of that
+tools. Window splitting in terminals is a prime example of that
 concept, where the editor provides commands to interact with several
 terminal multiplexers (e.g. `tmux`), as opposed to emulating their
 functionalities.

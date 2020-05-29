@@ -2,7 +2,7 @@
 
 == Declaration
 
-A 'face' refers how the specified text is displayed, it has a foreground
+A 'face' determines how text is displayed, it has a foreground
 color, a background color, and some attributes. The value of a face has the
 following format:
 
@@ -41,9 +41,9 @@ following format:
         *i*:::
             italic
         *F*:::
-            final, override the previous face instead of merging with it
-            an will only be replaced if another face with the final
-            attribute is applied
+            final, override the previous face instead of merging with it,
+            and this face will only be replaced if another face with
+            the final attribute is applied
         *f*:::
             final foreground, as final but only applies to face's
             foreground color
@@ -56,7 +56,7 @@ following format:
 
 'base'::
     The base face on which this face applies, which can be any face name,
-    as long as a cycle is not introduced. A face can reference itself, in
+    as long as no cycle is introduced. A face can reference itself, in
     which case it will apply on top of the parent scope version.
 
 == Builtin faces
@@ -80,10 +80,10 @@ areas of the user interface:
     cursor of the secondary selection
 
 *PrimaryCursorEol*::
-    cursor of the primary selection when it lies on and end of line character
+    cursor of the primary selection when it lies on an end of line character
 
 *SecondaryCursorEol*::
-    cursor of the secondary selection when it lies on and end of line character
+    cursor of the secondary selection when it lies on an end of line character
 
 *MenuForeground*::
     face for the selected element in menus
@@ -147,7 +147,7 @@ The following faces are used by builtin highlighters if enabled.
 == Markup strings
 
 In certain contexts, Kakoune can take a markup string, which is a string
-containing formatting informations. In these strings, the {facename}
+containing formatting information. In these strings, the {facename}
 syntax will enable the face facename until another face gets activated,
 or the end of the string is reached.
 
@@ -167,7 +167,7 @@ and can be used to avoid having to escape text that might be mistaken
 for markup instructions.
 
 For example this will prevent any '{' in the current buffer name from
-being incorrectly interpreted as markup instructions.
+being incorrectly interpreted as markup instruction.
 
 ----
 echo -markup "{Information}name:{\} %val{bufname}"

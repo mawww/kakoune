@@ -62,7 +62,7 @@ highlighter is replaced with the new one.
         highlight the cursor line with a separate face
 
     *-separator* <separator text>:::
-        specify a string to separate the line numbers column with
+        specify a string to separate the line numbers column from
         the rest of the buffer (default is '|')
 
     *-min-digits* <num>:::
@@ -123,7 +123,7 @@ add-highlighter window/ dynregex '%reg{/}' 0:+i
 == Specs highlighters
 
 The following highlighters are useful to add indicators like lint warnings,
-git blame output or spelling typos.
+git blame output or spelling mistakes.
 See <<options#types,`:doc options types`>> for the format of `line-specs`
 and `range-specs`.
 
@@ -154,7 +154,8 @@ add-highlighter window/ ranges my_range
 *replace-ranges* <option_name>::
     use the data in the `range-specs` option of the given name to highlight
     the buffer. The string part of each tuple of the range-specs is
-    interpreted as a *display line* to display in place of the range.
+    interpreted as markup string (see <<faces#markup-strings,
+    `:doc faces markup-strings`>>) and displayed in place of the range.
     Here, the 3 first chars of the buffer will be replaced by the word 'red':
 
 --------------------------------------------------------
@@ -216,7 +217,7 @@ add-highlighter <path>/<name>/<region_name> region \
     match of *end*, preventing it from closing the region.
 
 *type* and *params*::
-    An highlighter type, and associated params, as they would be passed
+    A highlighter type, and associated params, as they would be passed
     to `add-highlighter` if they were not applied as a region.
 
 If the *-match-capture* switch is passed, then region closing and recurse
@@ -248,7 +249,7 @@ another region.
 
 That matches the rule governing most programming language parsing.
 
-A default region, that will apply its given highlighter for segments of the
+A default region, that will apply its given highlighter to the segments of the
 buffer that are not in any defined region, can be added with the *default-region*
 highlighter type.
 

@@ -171,7 +171,7 @@ name. Hooks with no description will always use an empty string.
 *RawKey* `key`::
     Triggered whenever a key is pressed by the user, regardless of what mode
     Kakoune is in, or what mappings are present (see
-    <<mapping#,`:doc mapping`>>). It cannot triggered by `execute-keys`,
+    <<mapping#,`:doc mapping`>>). It cannot be triggered by `execute-keys`,
     even with the `-with-hooks` option (see
     <<execeval#execute-keys-specific-switches,`:doc execeval execute-keys-specific-switches`>>).
 
@@ -194,7 +194,7 @@ vars are available:
 == Disabling Hooks
 
 Any normal mode command can be prefixed with `\ ` which will disable hook
-execution for the duration for the command (including the duration of modes
+execution for the duration of the command (including the duration of modes
 the command could move to, so `\i` will disable hooks for the whole insert
 session).
 
