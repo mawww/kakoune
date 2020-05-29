@@ -697,6 +697,10 @@ in order to specify the wanted object:
     run a command with additional expansions describing the selection
     context (See <<expansions#,`:doc expansions`>>)
 
+If a punctuation character is entered, it will act as the delimiter.
+For instance, if the cursor is on the `o` of `/home/bar`, typing
+`<a-a>/` will select `/home/`.
+
 == Prompt commands
 
 When pressing `:` in normal mode, Kakoune will open a prompt to enter
