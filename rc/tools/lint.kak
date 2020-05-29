@@ -207,7 +207,7 @@ define-command \
                 "lint failed, see *debug* for details"
         else
             # No errors detected, show the results.
-            printf "eval -client %s lint-show-counters" \
+            printf "eval -client %s 'lint-show-diagnostics; lint-show-counters'" \
                 "$kak_client"
         fi | kak -p "$kak_session"
 
@@ -291,7 +291,7 @@ define-command \
 
 alias global lint lint-buffer
 
-define-command -hidden lint-show %{
+define-command -hidden lint-show-current-line %{
     update-option buffer lint_messages
     evaluate-commands %sh{
         # This is going to come in handy later.
@@ -320,13 +320,16 @@ define-command -hidden lint-show-counters %{
     echo -markup "linting results: {Error} %opt{lint_error_count} error(s) {Information} %opt{lint_warning_count} warning(s) "
 }
 
-define-command lint-enable -docstring "Activate automatic diagnostics of the code" %{
-    add-highlighter window/lint flag-lines default lint_flags
-    hook window -group lint-diagnostics NormalIdle .* %{ lint-show }
-    hook window -group lint-diagnostics WinSetOption lint_flags=.* %{ info; lint-show }
+define-command -hidden lint-show-diagnostics %{
+    try %{
+        # Assume that if the highlighter is set, then hooks also are
+        add-highlighter window/lint flag-lines default lint_flags
+        hook window -group lint-diagnostics NormalIdle .* %{ lint-show-current-line }
+        hook window -group lint-diagnostics WinSetOption lint_flags=.* %{ info; lint-show-current-line }
+    }
 }
 
-define-command lint-disable -docstring "Disable automatic diagnostics of the code" %{
+define-command lint-hide-diagnostics -docstring "Hide line markers and disable automatic diagnostic displaying" %{
     remove-highlighter window/lint
     remove-hooks window lint-diagnostics
 }
