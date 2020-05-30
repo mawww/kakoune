@@ -264,7 +264,10 @@ define-command -hidden -params 2 doc-search-impl %{
             set-option -add global doc_search_matches %arg{1} %val{selection_desc}
 
             # Search match context
-            execute-keys <a-x>H
+            execute-keys <a-x>
+            try %{
+                execute-keys <a-K>^$<ret> H
+            }
             set-option -add global doc_search_matches %val{selection}
         }
     }
