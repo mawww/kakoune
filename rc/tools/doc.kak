@@ -206,7 +206,7 @@ define-command -params 1.. -docstring %{
     -shell-script-candidates %{
         case "${kak_token_to_complete}" in
             0) ;;
-            *) find "${kak_runtime}/doc/" -type f -name '*\.asciidoc' | sed 's,.*/,,; s,\.[^/]*$,,';;
+            *) ls -1 -- "${kak_runtime}"/doc/*.asciidoc | awk '{gsub("^.+/|\\..+$", ""); print}';;
         esac
     } doc-search %{
     set-option global doc_search_matches
@@ -216,7 +216,7 @@ define-command -params 1.. -docstring %{
 
         shift
         if [ $# -eq 0 ]; then
-            eval set -- $(ls "${kak_runtime}/doc"/*.asciidoc | sed 's,.*/,,; s,\.[^/]*$,,')
+            set -- $(ls -1 -- "${kak_runtime}"/doc/*.asciidoc | awk '{gsub("^.+/|\\..+$", ""); print}')
         else
             for topic; do
                 if [ ! -e "${kak_runtime}/doc/${topic}.asciidoc" ]; then
