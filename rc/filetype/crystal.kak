@@ -7,7 +7,7 @@ hook global BufCreate '.*\.cr' %{
 
 hook global WinSetOption filetype=crystal %{
   require-module crystal
-  evaluate-commands set-option window static_words %opt(crystal_keywords) %opt(crystal_attributes) %opt(crystal_objects)
+  evaluate-commands set-option window static_words %opt{crystal_keywords} %opt{crystal_attributes} %opt{crystal_objects}
   add-highlighter window/crystal ref crystal
   hook -group crystal window InsertChar '\n' crystal-new-line-inserted
   hook -always -once window WinSetOption filetype=.* %{
@@ -169,18 +169,21 @@ provide-module crystal %🐈
       execute-keys -draft 'k<a-x>s^\h+$<ret>d'
     }
   }
+
   define-command -hidden crystal-fetch-keywords %{
     set-register dquote %sh{
       curl --location https://github.com/crystal-lang/crystal/raw/master/src/compiler/crystal/syntax/lexer.cr |
       kak -f '%1scheck_ident_or_keyword\(:(\w+\??), \w+\)<ret>y%<a-R>a<ret><esc><a-_>a<del><esc>|sort<ret>'
     }
   }
+
   define-command -hidden crystal-fetch-operators %{
     set-register dquote %sh{
       curl --location https://github.com/crystal-lang/crystal/raw/master/src/compiler/crystal/syntax/parser.cr |
       kak -f '/AtomicWithMethodCheck =<ret>x1s:"([^"]+)"<ret>y%<a-R>i''<esc>a''<ret><esc><a-_>a<del><esc>'
     }
   }
+
   define-command -hidden crystal-fetch-objects %{
     set-register dquote %sh{
       curl --location https://crystal-lang.org/api/ |
