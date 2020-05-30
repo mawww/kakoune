@@ -98,7 +98,6 @@ define-command doc-follow-link %{
 }
 
 define-command -params 1 -hidden doc-render %{
-    edit! -scratch "*doc-%sh{basename $1 .asciidoc}*"
     execute-keys "!cat %arg{1}<ret>gg"
 
     doc-parse-anchors
@@ -154,10 +153,13 @@ define-command -params 1..2 \
     evaluate-commands %sh{
         readonly page="${kak_runtime}/doc/${1}.asciidoc"
         if [ -f "${page}" ]; then
+            printf 'evaluate-commands -try-client %%opt{docsclient} %%{
+                edit! -scratch "*doc-%s*"
+                doc-render "%s"
+            }' "$(basename "$1" .asciidoc)" "${page}"
             if [ $# -eq 2 ]; then
-                jump_cmd="doc-jump-to-anchor '$2'"
+                printf "doc-jump-to-anchor '%s'" "$2"
             fi
-            printf %s\\n "evaluate-commands -try-client %opt{docsclient} %{ doc-render ${page}; ${jump_cmd} }"
         else
             printf 'fail No such doc file: %s\n' "${page}"
         fi
