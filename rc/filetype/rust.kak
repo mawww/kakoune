@@ -81,7 +81,7 @@ add-highlighter shared/rust/code/macro                regex \b[A-z0-9_]+! 0:meta
 # the number literals syntax is defined here:
 # https://doc.rust-lang.org/reference/tokens.html#numbers
 add-highlighter shared/rust/code/values regex \b(?:self|true|false|[0-9][_0-9]*(?:\.[0-9][_0-9]*|(?:\.[0-9][_0-9]*)?E[\+\-][_0-9]+)(?:f(?:32|64))?|(?:0x[_0-9a-fA-F]+|0o[_0-7]+|0b[_01]+|[0-9][_0-9]*)(?:(?:i|u|f)(?:8|16|32|64|128|size))?)\b 0:value
-add-highlighter shared/rust/code/attributes regex \b(?:trait|struct|enum|type|mut|ref|static|const)\b 0:attribute
+add-highlighter shared/rust/code/attributes regex \b(?:trait|struct|enum|type|mut|ref|static|const|default)\b 0:attribute
 # the language keywords are defined here, but many of them are reserved and unused yet:
 # https://doc.rust-lang.org/reference/keywords.html
 add-highlighter shared/rust/code/keywords             regex \b(?:let|as|fn|return|match|if|else|loop|for|in|while|break|continue|move|box|where|impl|dyn|pub|unsafe|async|await|mod|crate|use|extern)\b 0:keyword
