@@ -14,3 +14,8 @@
         .bar()
         .baz();
     bar
+
+    let t = "a
+    wah";
+    bar
+

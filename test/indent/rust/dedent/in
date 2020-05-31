@@ -10,3 +10,7 @@
     foo()
         .bar()
         .baz();%( )
+
+    let t = "a
+    wah";%( )
+
