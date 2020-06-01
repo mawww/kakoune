@@ -175,7 +175,7 @@ If not started with the \fB\-n\fR switch, Kakoune will first load
 
 .nf
 .RS
-if the \fI$KAKOUNE_CONFIG_DIR/kak/autoload\fR directory exists, recursively load every
+if the \fI$KAKOUNE_CONFIG_DIR/autoload\fR directory exists, recursively load every
 \fI*.kak\fR files in it and its sub-directories
 .RE
 .fi
@@ -196,11 +196,11 @@ configuration
 
 .nf
 .RS
-\fI$KAKOUNE_CONFIG_DIR/kak/kakrc\fR, if it exists; this is the user configuration
+\fI$KAKOUNE_CONFIG_DIR/kakrc\fR, if it exists; this is the user configuration
 .RE
 .fi
 
-Consequently, if the \fI$KAKOUNE_CONFIG_DIR/kak/autoload\fR directory exists,
+Consequently, if the \fI$KAKOUNE_CONFIG_DIR/autoload\fR directory exists,
 only scripts stored within that directory will be loaded \- the built-in
 \fI*.kak\fR files \fBwill not be\fR.
 
