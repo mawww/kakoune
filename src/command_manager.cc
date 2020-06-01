@@ -300,41 +300,10 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
     }
 }
 
-auto expand_option(const Option& opt, std::true_type)
-{
-    return opt.get_as_string(Quoting::Raw);
-}
-
-auto expand_option(const Option& opt, std::false_type)
-{
-    return opt.get_as_strings();
-}
-
-auto expand_register(StringView reg, const Context& context, std::true_type)
-{
-    return context.main_sel_register_value(reg).str();
-}
-
-auto expand_register(StringView reg, const Context& context, std::false_type)
-{
-    return RegisterManager::instance()[reg].get(context) | gather<Vector<String>>();
-}
-
-String expand_arobase(ConstArrayView<String> params, std::true_type)
-{
-    return join(params, ' ', false);
-}
-
-Vector<String> expand_arobase(ConstArrayView<String> params, std::false_type)
-{
-    return {params.begin(), params.end()};
-}
-
 template<bool single>
 std::conditional_t<single, String, Vector<String>>
 expand_token(const Token& token, const Context& context, const ShellContext& shell_context)
 {
-    using IsSingle = std::integral_constant<bool, single>;
     auto& content = token.content;
     switch (token.type)
     {
@@ -355,24 +324,40 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
         return {str};
     }
     case Token::Type::RegisterExpand:
-        return expand_register(content, context, IsSingle{});
+        if constexpr (single)
+            return context.main_sel_register_value(content).str();
+        else
+            return RegisterManager::instance()[content].get(context) | gather<Vector<String>>();
     case Token::Type::OptionExpand:
-        return expand_option(context.options()[content], IsSingle{});
+    {
+        auto& opt = context.options()[content];
+        if constexpr (single)
+            return opt.get_as_string(Quoting::Raw);
+        else
+            return opt.get_as_strings();
+    }
     case Token::Type::ValExpand:
     {
         auto it = shell_context.env_vars.find(content);
         if (it != shell_context.env_vars.end())
             return {it->value};
+
+        auto val = ShellManager::instance().get_val(content, context);
         if constexpr (single)
-            return join(ShellManager::instance().get_val(content, context), false, ' ');
+            return join(val, false, ' ');
         else
-            return ShellManager::instance().get_val(content, context);
+            return val;
     }
     case Token::Type::ArgExpand:
     {
         auto& params = shell_context.params;
         if (content == '@')
-            return expand_arobase(params, IsSingle{});
+        {
+            if constexpr (single)
+                return join(params, ' ', false);
+            else
+                return Vector<String>{params.begin(), params.end()};
+        }
 
         const int arg = str_to_int(content)-1;
         if (arg < 0)
