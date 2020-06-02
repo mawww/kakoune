@@ -34,9 +34,34 @@ add-highlighter shared/rust regions
 add-highlighter shared/rust/code default-region group
 add-highlighter shared/rust/string           region %{(?<!')"} (?<!\\)(\\\\)*"              fill string
 add-highlighter shared/rust/raw_string       region -match-capture %{(?<!')r(#*)"} %{"(#*)} fill string
-add-highlighter shared/rust/comment          region -recurse "/\*" "/\*" "\*/"              fill comment
-add-highlighter shared/rust/documentation    region "//[!/]" "$"                            fill documentation
-add-highlighter shared/rust/line_comment     region "//" "$"                                fill comment
+
+add-highlighter shared/rust/line_doctest region ^\h*//[!/]\h*```($|should_panic|no_run|ignore|allow_fail|rust|test_harness|compile_fail|E\d{4}|edition201[58]) ^\h*//[!/]\h*```$ regions
+add-highlighter shared/rust/line_doctest/marker region ```.* $ group
+add-highlighter shared/rust/line_doctest/marker/fence regex ``` 0:meta
+add-highlighter shared/rust/line_doctest/marker/keywords regex [\d\w] 0:meta # already matched above, just ignore comma
+add-highlighter shared/rust/line_doctest/inner region '^\h*//[!/]\h+#' ' ' group
+add-highlighter shared/rust/line_doctest/inner/comment regex //[!/] 0:documentation
+add-highlighter shared/rust/line_doctest/inner/hidden regex '#' 0:meta
+add-highlighter shared/rust/line_doctest/comment region ^\h*//[!/] ' '                      fill documentation
+add-highlighter shared/rust/line_doctest/code default-region ref rust
+add-highlighter shared/rust/line_code_rest   region ^\h*//[!/]\h*``` ^\h*//[!/]\h*```$      fill documentation # reset invalid doctest
+add-highlighter shared/rust/line_comment2    region //[!/]{2} $                             fill comment
+add-highlighter shared/rust/line_doc         region //[!/] $                                fill documentation
+add-highlighter shared/rust/line_comment1    region // $                                    fill comment
+
+add-highlighter shared/rust/block_comment2   region -recurse /\*\*\* /\*\*\* \*/            fill comment
+add-highlighter shared/rust/block_doc        region -recurse /\*\* /\*\* \*/ regions
+add-highlighter shared/rust/block_doc/doctest region ```($|should_panic|no_run|ignore|allow_fail|rust|test_harness|compile_fail|E\d{4}|edition201[58]) ```$ regions
+add-highlighter shared/rust/block_doc/doctest/marker region ```.* $ group
+add-highlighter shared/rust/block_doc/doctest/marker/fence regex ``` 0:meta
+add-highlighter shared/rust/block_doc/doctest/marker/keywords regex [\d\w] 0:meta # already matched above, just ignore comma
+add-highlighter shared/rust/block_doc/doctest/inner default-region group
+add-highlighter shared/rust/block_doc/doctest/inner/hidden regex '^\h*\**\h*#' 0:meta
+add-highlighter shared/rust/block_doc/doctest/inner/comment regex ^\h*\* 0:documentation
+add-highlighter shared/rust/block_doc/doctest/inner/code ref rust
+add-highlighter shared/rust/block_doc/code_rest region ``` ``` fill documentation
+add-highlighter shared/rust/block_doc/doc    default-region fill documentation
+add-highlighter shared/rust/block_comment1   region -recurse /\* /\* \*/                    fill comment
 
 add-highlighter shared/rust/macro_attributes region -recurse "\[" "#!?\[" "\]" regions
 add-highlighter shared/rust/macro_attributes/ default-region fill meta
@@ -54,11 +79,11 @@ add-highlighter shared/rust/code/function_declaration regex (?:fn\h+)(_?\w+)(?:<
 add-highlighter shared/rust/code/variable_declaration regex (?:let\h+(?:mut\h+)?)(_?\w+) 1:variable
 add-highlighter shared/rust/code/macro                regex \b[A-z0-9_]+! 0:meta
 # the number literals syntax is defined here:
-# https://doc.rust-lang.org/reference.html#number-literals
+# https://doc.rust-lang.org/reference/tokens.html#numbers
 add-highlighter shared/rust/code/values regex \b(?:self|true|false|[0-9][_0-9]*(?:\.[0-9][_0-9]*|(?:\.[0-9][_0-9]*)?E[\+\-][_0-9]+)(?:f(?:32|64))?|(?:0x[_0-9a-fA-F]+|0o[_0-7]+|0b[_01]+|[0-9][_0-9]*)(?:(?:i|u|f)(?:8|16|32|64|128|size))?)\b 0:value
-add-highlighter shared/rust/code/attributes regex \b(?:trait|struct|enum|type|mut|ref|static|const)\b 0:attribute
+add-highlighter shared/rust/code/attributes regex \b(?:trait|struct|enum|type|mut|ref|static|const|default)\b 0:attribute
 # the language keywords are defined here, but many of them are reserved and unused yet:
-# https://doc.rust-lang.org/grammar.html#keywords
+# https://doc.rust-lang.org/reference/keywords.html
 add-highlighter shared/rust/code/keywords             regex \b(?:let|as|fn|return|match|if|else|loop|for|in|while|break|continue|move|box|where|impl|dyn|pub|unsafe|async|await|mod|crate|use|extern)\b 0:keyword
 add-highlighter shared/rust/code/builtin_types        regex \b(?:u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64|bool|char|str|Self)\b 0:type
 add-highlighter shared/rust/code/return               regex \breturn\b 0:meta
