@@ -1,0 +1,16 @@
+    foo();%( )
+
+    foo(
+        bar().baz(),%( )
+
+    foo(
+        bar()
+            .baz(),%( )
+
+    foo()
+        .bar()
+        .baz();%( )
+
+    let t = "a
+    wah";%( )
+

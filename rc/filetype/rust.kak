@@ -75,15 +75,24 @@ define-command -hidden rust-indent-on-new-line %~
     evaluate-commands -draft -itersel %<
         # copy // comments prefix and following white spaces
         try %{
-            execute-keys -draft k <a-x> s ^\h*\K//[!/]?\h* <ret> y gh j P
-        } catch %|
+            execute-keys -draft k <a-x> s ^\h*//[!/]{0,2}\h* <ret> y gh j P
+        } catch %`
             # preserve previous line indent
             try %{ execute-keys -draft <semicolon> K <a-&> }
             # indent after lines ending with { or (
             try %[ execute-keys -draft k <a-x> <a-k> [{(]\h*$ <ret> j <a-gt> ]
             # indent after lines ending with [{(].+ and move first parameter to own line
             try %< execute-keys -draft [c[({],[)}] <ret> <a-k> \A[({][^\n]+\n[^\n]*\n?\z <ret> L i<ret><esc> <gt> <a-S> <a-&> >
-        |
+            # indent lines with a standalone where
+            try %+ execute-keys -draft k <a-x> <a-k> ^\h*where\h*$ <ret> j <a-gt> +
+            # dedent after lines starting with . and ending with , or ;
+            try %_ execute-keys -draft k <a-x> <a-k> ^\h*\..*[,<semicolon>]\h*$ <ret> j <a-lt> _
+            # todo dedent additional unmatched parenthesis
+            # try %& execute-keys -draft k <a-x> s \((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\) l Gl s\) %sh{
+                # count previous selections length
+                # printf "j $(echo $kak_selections_length | wc -w) <a-lt>"
+            # } &
+        `
         # filter previous line
         try %{ execute-keys -draft k : rust-trim-indent <ret> }
     >
@@ -93,6 +102,8 @@ define-command -hidden rust-indent-on-opening-curly-brace %[
     evaluate-commands -draft -itersel %_
         # align indent with opening paren when { is entered on a new line after the closing paren
         try %[ execute-keys -draft h <a-F> ) M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
+        # dedent standalone { after impl or fn block without any { in between
+        try %< execute-keys -draft hh <a-?> impl|fn|struct|enum|union <ret> <a-K> \{ <ret> <a-semicolon> <semicolon> ll <a-x> <a-k> ^\h*\{$ <ret> <a-lt> >
     _
 ]
 

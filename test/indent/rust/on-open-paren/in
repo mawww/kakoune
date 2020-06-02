@@ -1,0 +1,35 @@
+    fn foo<T>(x: T)
+    where
+        T: Debug
+        %( )
+
+    fn foo<T>(x: T) where T: Debug %( )
+
+    impl<T> X for T
+    where
+        T: Debug
+        %( )
+
+    impl<T> X for T where T: Debug %( )
+
+    struct X<T>
+    where
+        T: Debug
+        %( )
+
+    struct X<T> where T: Debug %( )
+
+    enum X<T>
+    where
+        T: Debug
+        %( )
+
+    enum X<T> where T: Debug %( )
+
+    union X<T>
+    where
+        T: Debug
+        %( )
+
+    union X<T> where T: Debug %( )
+

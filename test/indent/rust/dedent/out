@@ -1,0 +1,21 @@
+    foo();
+    bar
+
+    foo(
+        bar().baz(),
+        bar
+
+    foo(
+        bar()
+            .baz(),
+        bar
+
+    foo()
+        .bar()
+        .baz();
+    bar
+
+    let t = "a
+    wah";
+    bar
+

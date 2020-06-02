@@ -1,0 +1,12 @@
+    // foo%( )
+
+    //! foo%( )
+
+    //!! foo%( )
+
+    /// foo%( )
+
+    //// foo%( )
+
+    println!("hello world"); // foo%( )
+
