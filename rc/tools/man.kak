@@ -27,8 +27,11 @@ hook global WinSetOption filetype=man %{
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window man-hooks }
 }
 
-define-command -hidden -params 2..3 man-impl %{ evaluate-commands %sh{
+define-command -hidden -params ..3 man-impl %{ evaluate-commands %sh{
     buffer_name="$1"
+    if [ -z "${buffer_name}" ]; then
+        exit
+    fi
     shift
     manout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
     manerr=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
