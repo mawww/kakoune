@@ -9,6 +9,7 @@
 .Nm
 .Op Fl d
 .Op Fl n
+.Op Fl N
 .Op Fl ro
 .Op Fl c Ar session_id | Fl s Ar session_id
 .Op Fl ui Ar ui_type
@@ -77,6 +78,10 @@ Display Kakoune version and quit.
 .It Fl n
 Do not load the system's kakrc.
 .Pq often, Pa /usr/share/kak/kakrc
+.
+.It Fl N
+do not load user configuration files on startup
+.Pq conflicts with Fl n
 .
 .It Fl l
 List existing sessions.
