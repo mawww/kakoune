@@ -1250,9 +1250,13 @@ void TerminalUI::set_resize_pending()
 
 void TerminalUI::setup_terminal()
 {
+    // enable alternative screen buffer
     fputs("\033[?1049h", stdout);
+    // enable focus notify
     fputs("\033[?1004h", stdout);
+    // hide cursor
     fputs("\033[?25l", stdout);
+    // set application keypad mode, so the keypad keys send unique codes
     fputs("\033=", stdout);
     fflush(stdout);
 }
@@ -1263,6 +1267,7 @@ void TerminalUI::restore_terminal()
     fputs("\033[?1004l", stdout);
     fputs("\033[?25h", stdout);
     fputs("\033>", stdout);
+    // set the terminal output back to default colours and style 
     fputs("\033[m", stdout);
     fflush(stdout);
 }
