@@ -29,7 +29,7 @@ evaluate-commands %sh{
         face global variable      ${blue}
         face global module        ${green}
         face global function      ${fg}
-        face global string        ${green}
+        face global string        ${green}+i
         face global keyword       ${red}
         face global operator      ${fg}
         face global attribute     ${orange}
