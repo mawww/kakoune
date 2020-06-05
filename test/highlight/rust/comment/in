@@ -102,3 +102,16 @@ fn bar(s: &str) {
      * ```
      */
 
+    /// ```
+    /// println!("empty line");
+    ///
+    /// println!("continue line");
+    /// ```
+
+    /**
+     * ```
+     * println!("empty line");
+     *
+     * println!("continue line");
+     * ```
+     */

@@ -39,7 +39,7 @@ add-highlighter shared/rust/line_doctest region ^\h*//[!/]\h*```($|should_panic|
 add-highlighter shared/rust/line_doctest/marker region ```.* $ group
 add-highlighter shared/rust/line_doctest/marker/fence regex ``` 0:meta
 add-highlighter shared/rust/line_doctest/marker/keywords regex [\d\w] 0:meta # already matched above, just ignore comma
-add-highlighter shared/rust/line_doctest/inner region '^\h*//[!/]( #(?= )|)' ' ' group
+add-highlighter shared/rust/line_doctest/inner region '^\h*//[!/]( #(?= )|)' '$| ' group
 add-highlighter shared/rust/line_doctest/inner/comment regex //[!/] 0:documentation
 add-highlighter shared/rust/line_doctest/inner/hidden regex '#' 0:meta
 add-highlighter shared/rust/line_doctest/code default-region ref rust
