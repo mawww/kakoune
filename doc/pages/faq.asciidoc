@@ -125,6 +125,35 @@ have otherwise in an X11 environment.
 
 == Generic functionalities
 
+=== Something is wrong, how can I get more debug information?
+
+You can get quite a lot of information out of the editor at runtime. One
+way is through the `:debug` command, which will print out statistics and
+state data into the `\*debug*` buffer:
+
+----
+:debug <command>
+----
+
+Another way is to set flags on the `debug` option:
+
+----
+:set global debug <flags>
+----
+
+Make sure to read all possible values suggested by the completion engine,
+as you type out both commands in a prompt.
+
+If you want to troubleshoot a crash, you need to compile the editor with
+debug symbols enabled:
+
+----
+$ make debug=yes
+----
+
+The resulting binary should produce a stacktrace that you can, afterwards,
+post in an issue in unmangled form (c.f. `c++filt`).
+
 === How can I explore the filesystem the way Vim's NerdTree does ?
 
 The builtin file completion engine used when opening a file for editing
