@@ -29,12 +29,12 @@ face global list yellow
 
 ## builtin
 face global Default rgb:121213,rgb:F8F8FF
-face global PrimarySelection default,rgb:A6F3A6+fg
-face global SecondarySelection default,rgb:DBFFDB+fg
-face global PrimaryCursor black,rgb:888888+fg
-face global SecondaryCursor black,rgb:888888+fg
-face global PrimaryCursorEol black,rgb:A71D5D+fg
-face global SecondaryCursorEol black,rgb:A71D5D+fg
+face global PrimarySelection rgb:121213,rgb:A6F3A6+fg
+face global SecondarySelection rgb:121213,rgb:DBFFDB+fg
+face global PrimaryCursor rgb:121213,rgb:888888+fg
+face global SecondaryCursor rgb:121213,rgb:AAAAAA+fg
+face global PrimaryCursorEol rgb:121213,rgb:A71D5D+fg
+face global SecondaryCursorEol rgb:121213,rgb:A71D5D+fg
 face global LineNumbers rgb:A0A0A0,rgb:ECECEC
 face global LineNumberCursor rgb:434343,rgb:DDDDDD
 face global MenuForeground rgb:434343,rgb:CDCDFD
