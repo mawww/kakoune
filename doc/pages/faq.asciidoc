@@ -63,6 +63,45 @@ $ tic /path/to/kakoune/contrib/tmux-256color.terminfo
 
 Finally, quit all existing sessions (`tmux kill-server`), and restart `tmux`.
 
+=== Why do I see weird special characters (~T~@~U) around Clippy?
+
+You need a UTF-8 compliant locale, in order to render special characters.
+
+The way to do so might vary from distribution to another, but an easy way
+to verify that your locale is set correctly is to run the following command:
+
+----
+$ locale
+----
+
+The output should look similar to the following (with eventually another
+language set instead of `en_US`):
+
+----
+LANG=en_US.UTF-8
+LC_CTYPE="en_US.UTF-8"
+LC_NUMERIC="en_US.UTF-8"
+LC_TIME="en_US.UTF-8"
+LC_COLLATE="en_US.UTF-8"
+LC_MONETARY="en_US.UTF-8"
+LC_MESSAGES="en_US.UTF-8"
+LC_PAPER="en_US.UTF-8"
+LC_NAME="en_US.UTF-8"
+LC_ADDRESS="en_US.UTF-8"
+LC_TELEPHONE="en_US.UTF-8"
+LC_MEASUREMENT="en_US.UTF-8"
+LC_IDENTIFICATION="en_US.UTF-8"
+LC_ALL=
+----
+
+You can also run the project's test suite, which should display errors if
+your locale doesn't support UTF-8 rendering:
+
+----
+$ cd kakoune
+$ make test
+----
+
 === Why does leaving insert mode take more than half a second in `tmux` ?
 
 Upon hitting the escape key, `tmux` waits for a short period of time to
