@@ -93,7 +93,7 @@ void select(Context& context, T func)
     else
     {
         auto main_index = selections.main_index();
-        auto new_end = selections.begin();
+        size_t new_size = 0;
         for (size_t i = 0; i < selections.size(); ++i)
         {
             auto& sel = selections[i];
@@ -114,13 +114,15 @@ void select(Context& context, T func)
             }
             if (not res->captures().empty())
                 sel.captures() = std::move(res->captures());
-            *new_end++ = std::move(sel);
+            if (i != new_size)
+                selections[new_size] = std::move(sel);
+            ++new_size;
         }
-        if (new_end == selections.begin())
+        if (new_size == 0)
             throw no_selections_remaining{};
 
         selections.set_main_index(main_index);
-        selections.remove_from(new_end - selections.begin());
+        selections.remove_from(new_size);
     }
 
     selections.sort_and_merge_overlapping();
