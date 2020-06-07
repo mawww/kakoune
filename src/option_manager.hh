@@ -55,6 +55,7 @@ public:
 
     virtual String get_as_string(Quoting quoting) const = 0;
     virtual Vector<String> get_as_strings() const = 0;
+    virtual String get_desc_string() const = 0;
     virtual void set_from_strings(ConstArrayView<String> strs) = 0;
     virtual void add_from_strings(ConstArrayView<String> strs) = 0;
     virtual void update(const Context& context) = 0;
@@ -152,6 +153,14 @@ public:
     String get_as_string(Quoting quoting) const override
     {
         return option_to_string(m_value, quoting);
+    }
+
+    String get_desc_string() const override
+    {
+        if constexpr (std::is_same_v<int, T> or std::is_same_v<bool, T> or std::is_same_v<String, T>)
+            return option_to_string(m_value, Quoting::Raw);
+        else
+            return "...";
     }
 
     void set_from_strings(ConstArrayView<String> strs) override
