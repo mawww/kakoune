@@ -67,7 +67,6 @@ add-highlighter shared/rust/macro_attributes/ default-region fill meta
 add-highlighter shared/rust/macro_attributes/string region %{(?<!')"} (?<!\\)(\\\\)*" fill string
 add-highlighter shared/rust/macro_attributes/raw_string region -match-capture %{(?<!')r(#*)"} %{"(#*)} fill string
 
-add-highlighter shared/rust/code/byte_literal         regex "'\\\\?.'" 0:value
 add-highlighter shared/rust/code/long_quoted          regex "('\w+)[^']" 1:meta
 add-highlighter shared/rust/code/field_or_parameter   regex (_?\w+)(?::)(?!:) 1:variable
 add-highlighter shared/rust/code/namespace            regex [a-zA-Z](\w+)?(\h+)?(?=::) 0:module
@@ -84,6 +83,9 @@ add-highlighter shared/rust/code/attributes regex \b(?:trait|struct|enum|union|t
 # the language keywords are defined here, but many of them are reserved and unused yet:
 # https://doc.rust-lang.org/reference/keywords.html
 add-highlighter shared/rust/code/keywords             regex \b(?:let|as|fn|return|match|if|else|loop|for|in|while|break|continue|move|box|where|impl|dyn|pub|unsafe|async|await|mod|crate|use|extern)\b 0:keyword
+add-highlighter shared/rust/code/char_character       regex "'([^\\]|\\(.|x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]{1,6}\}))'" 0:green
+# TODO highlight error for unicode or single escape byte character
+add-highlighter shared/rust/code/byte_character       regex b'([\x00-\x5B\x5D-\x7F]|\\(.|x[0-9a-fA-F]{2}))' 0:yellow
 add-highlighter shared/rust/code/builtin_types        regex \b(?:u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64|bool|char|str|Self)\b 0:type
 add-highlighter shared/rust/code/return               regex \breturn\b 0:meta
 
