@@ -68,6 +68,7 @@ main() {
     fi
 
     finished_commands |$root/../src/kak -p "$session" 2>/dev/null
+    cat <&4 >/dev/null
 
     wait $kakpid
     retval=$?
