@@ -174,8 +174,9 @@ the language you're using with the help of the `|` key.
 
 Example: `%|indent<ret>` to indent an entire buffer with C code.
 
-Note that some languages have a default formatter set, which you can use
-with the `:format` command.
+Note that you can also set the `formatcmd` option, used by the `format`
+command to handle formatting in the current buffer without further
+interaction.
 
 === Can Kakoune automatically complete the parameters of my functions ?
 
