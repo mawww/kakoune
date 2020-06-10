@@ -207,6 +207,9 @@ However, you can easily declare key mappings in your configuration file
 to be able to use those control-based shortcuts in insert mode.
 (See <<mapping#,`:doc mapping`>>)
 
+Also note that a subset of "readline shortcuts" is implemented for command
+prompts.
+
 === Can I disable auto-indentation completely ?
 
 All the indentation hooks are conventionally named `<lang>-indent`, which
