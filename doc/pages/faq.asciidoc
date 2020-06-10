@@ -269,6 +269,9 @@ order to select data in a line without any trailing newline characters, one coul
 use the `[^\n]+` pattern, which is arguably a good compromise when
 balanced against the ability to select data over several lines.
 
+You can instruct the regex engine to stop matching newline characters with
+`.` by disabling the appropriate flag (`(?S)`).
+
 === Why does `a` extend the current selection, but `i` leaves it untouched ?
 
 Selections are ranges of characters whose delimiters are an "anchor" and
