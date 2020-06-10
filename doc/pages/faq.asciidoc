@@ -282,3 +282,16 @@ make room for characters, effectively extending the current selection since
 the anchor remains immobile, even when the anchor and the cursor are at the
 same location. By opposition, using the insert primitive (`i`) merely adds
 characters before the cursor, which never modifies the current selection.
+
+=== How to apply changes to all open buffers?
+
+The `:exec` and `:eval` commands can apply changes to a comma-separated
+list of buffers, passed as argument to the `-buffer` flag.
+
+In order to the editor figure out which buffers are open, the special value
+`*` is accepted as a wildcard. For example, in order to reload all open
+buffers:
+
+----
+:eval -buffer * e!
+----
