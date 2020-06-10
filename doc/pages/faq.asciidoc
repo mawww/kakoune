@@ -189,8 +189,13 @@ dedicated tool, as is the case with `clang` and C code: you can use the
 `clang-enable-autocomplete` and `clang-complete` builtin commands whenever
 editing a C/C++ file, and completion will work on function parameters.
 
-Note that the same features are available for Python buffers, with the
-`jedi` script.
+Other language-support scripts implement this functionality in a similar way,
+for example the `jedi` script for Python buffers.
+
+Another way to get automatic parameter completion that doesn't depend on
+built-in support in Kakoune is through the
+https://microsoft.github.io/language-server-protocol/[Language Server Protocol],
+for which you can find implementations that interact with the editor.
 
 === Why aren't widely known command line shortcuts such as <c-w> or <c-u> available in Kakoune ?
 
