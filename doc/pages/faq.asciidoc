@@ -6,16 +6,16 @@
 
 The name of the project is pronounced "Kak-oon", and is a word taken from a
 New Caledonian dialect based on French. It means a hard blow, usually a punch,
-but generally refers to a blow into which all of one's strength went.
+but generally refers to a strike into which all of one's strength went.
 
 === Is there going to be a Windows port of Kakoune ?
 
-As many features provided by UNIX systems would be missing, or if anything
-much less efficient on a Windows system, the incentive to porting the
-project to this operating system is pretty low.
+As many features provided by UNIX systems would be missing, or albeit much
+less efficient, on a Windows system, the incentive to porting the project
+to this operating system is low.
 
-Moreover, you can get pretty decent performance by using Kakoune on Cygwin
-(which is officially supported).
+Moreover, you can achieve pretty decent performance by using Kakoune on
+Cygwin (which is officially supported).
 
 == Interfacing
 
@@ -32,17 +32,17 @@ try experimental community-developed ones.
 
 === Why are colors misrendered in my Kakoune clients ?
 
-The most probable cause for that is a very widespread practice that consists
-in setting the `TERM` environment variable in the shell's configuration file.
-This variable should be set by the terminal emulator, and not overridden with
-an arbitrary value, otherwise it might interfere with general UI rendering on
-the terminal's window.
+The most probable cause for colors being misrendered is a widespread practice
+that consists in setting the `TERM` environment variable in the shell's
+configuration file. This variable should be set by the terminal emulator,
+and not overridden with an arbitrary value, otherwise it might interfere
+with general UI rendering on the terminal's window.
 
 === I'm using `tmux` and colors look weird
 
 If you're using a tool that doesn't support "palette switching", colors will
 still be slightly off: they are being rounded down to values supported by the
-regular color palette by Kakoune. Fortunately, on recent versions of `tmux`
+regular color palette of Kakoune. Fortunately, on recent versions of `tmux`
 (>=2.6), you can work around that by using the following configuration
 settings:
 
@@ -74,8 +74,8 @@ to verify that your locale is set correctly is to run the following command:
 $ locale
 ----
 
-The output should look similar to the following (with eventually another
-language set instead of `en_US`):
+The output should look similar to the following (with your own
+language/country code set, instead of `en_US`):
 
 ----
 LANG=en_US.UTF-8
@@ -114,7 +114,7 @@ to a short time, e.g. 25ms: `set -sg escape-time 25`
 As a fairly compliant follower of the UNIX philosophy, Kakoune does not
 try to implement features that are best handled by separate, dedicated
 tools. Window splitting in terminals is a prime example of that
-concept, where the editor provides commands to interact with several
+concept, whereby the editor provides commands to interact with several
 terminal multiplexers (e.g. `tmux`), as opposed to emulating their
 functionalities.
 
@@ -158,7 +158,7 @@ post in an issue in unmangled form (c.f. `c++filt`).
 
 The builtin file completion engine used when opening a file for editing
 (using the `:edit` command and letting the suggestions popup in the menu
-beneath) is much more convenient than Vim's, which should suit basic needs.
+beneath) is more convenient than Vim's, which should suit basic needs.
 
 However, if you need an actual explorer to interact with the editor,
 you can create a Kakoune script that will spawn the tool in question,
@@ -218,21 +218,20 @@ globally with the following command: `set global disabled_hooks '.+-indent'`
 
 === How to enable syntax highlighting ?
 
-The mimetype of the files opened in new buffers is detected using the
+The MIME type of the files opened in new buffers is detected using the
 `file` command, and syntax highlighting enabled automatically when
 possible.
 
 === My file seems to be highlighted with the wrong colors, I thought syntax highlighting was detected automatically ?
 
 The `file` utility has several shortcomings, such as detecting the
-wrong mimetype for a file containing data with different syntax, e.g.
+wrong MIME type for a file containing data with different syntax, e.g.
 a Python script containing hardcoded HTML templates detected as an HTML
 file.
 
-Kakoune does its best at detecting file types (using known extensions
-for a given format for instance), but not much can be done about those
-ambiguous cases. You might consider writing a custom `$HOME/.magic` file
-if needed.
+Kakoune does its best to detect file types (using known extensions for a
+given format for instance), but not much can be done about those ambiguous
+cases. You might consider writing a custom `$HOME/.magic` file if needed.
 
 === Can I disable syntax highlighting completely ?
 
@@ -254,10 +253,10 @@ one available by default.
 
 === What shell is used to expand `%sh{}` scopes ?
 
-The server expands shell scopes using the `sh` binary, stored in one of the
-directories where all the POSIX standard utilities can be found -this list
-of directories is stored in a system configuration variable, and queried
-by Kakoune at startup.
+The server expands shell scopes using the `sh` binary, located in one of
+the directories containing all the POSIX standard utilities. This list of
+directories is stored in a system configuration variable, and queried by
+Kakoune at startup.
 
 In most distributions, `/bin/sh` will end up being used.
 
@@ -275,7 +274,7 @@ You can instruct the regex engine to stop matching newline characters with
 === Why does `a` extend the current selection, but `i` leaves it untouched ?
 
 Selections are ranges of characters whose delimiters are an "anchor" and
-a "cursor", and inserting characters is always done before the cursor in
+a "cursor", and inserting characters is always done before the anchor in
 insert mode.
 
 Consequently, using the append primitive (`a`) nudges the cursor forward to
