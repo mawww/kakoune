@@ -10,9 +10,9 @@ but generally refers to a strike into which all of one's strength went.
 
 === Is there going to be a Windows port of Kakoune ?
 
-As many features provided by UNIX systems would be missing, or albeit much
-less efficient, on a Windows system, the incentive to porting the project
-to this operating system is low.
+As many features provided by UNIX systems are missing or less efficient on
+a Windows system, the incentive to porting the project to this operating
+system is low.
 
 Moreover, you can achieve pretty decent performance by using Kakoune on
 Cygwin (which is officially supported).
@@ -114,7 +114,7 @@ to a short time, e.g. 25ms: `set -sg escape-time 25`
 As a fairly compliant follower of the UNIX philosophy, Kakoune does not
 try to implement features that are best handled by separate, dedicated
 tools. Window splitting in terminals is a prime example of that
-concept, whereby the editor provides commands to interact with several
+concept, where the editor provides commands to interact with several
 terminal multiplexers (e.g. `tmux`), as opposed to emulating their
 functionalities.
 
@@ -157,7 +157,7 @@ post in an issue in unmangled form (c.f. `c++filt`).
 === How can I explore the filesystem the way Vim's NerdTree does?
 
 The builtin file completion engine used when opening a file for editing
-(using the `:edit` command and letting the suggestions popup in the menu
+(using the `:edit` command and letting the suggestions pop up in the menu
 beneath) is more convenient than Vim's, which should suit basic needs.
 
 However, if you need an actual explorer to interact with the editor,
@@ -174,9 +174,8 @@ the language you're using with the help of the `|` key.
 
 Example: `%|indent<ret>` to indent an entire buffer with C code.
 
-Note that you can also set the `formatcmd` option, used by the `format`
-command to handle formatting in the current buffer without further
-interaction.
+You can also set the `formatcmd` option and use the `:format` command to
+format the entire buffer.
 
 === Can Kakoune automatically complete the parameters of my functions?
 
@@ -288,9 +287,9 @@ characters before the cursor, which never modifies the current selection.
 The `:exec` and `:eval` commands can apply changes to a comma-separated
 list of buffers, passed as argument to the `-buffer` flag.
 
-In order to the editor figure out which buffers are open, the special value
-`*` is accepted as a wildcard. For example, in order to reload all open
-buffers:
+In order to let the editor figure out which buffers are open, the special
+value `*` is accepted as a wildcard. For example, in order to reload all
+open buffers:
 
 ----
 :eval -buffer * e!
