@@ -17,6 +17,9 @@ declare-option -hidden line-specs lint_messages
 declare-option -hidden int lint_error_count
 declare-option -hidden int lint_warning_count
 
+declare-option -docstring "name of the client in which utilities display information" \
+    str toolsclient
+
 define-command \
     -hidden \
     -params 1 \
@@ -46,9 +49,8 @@ define-command \
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-lint.XXXXXXXX)
 
         # A fifo to send the results back to a Kakoune buffer.
-        # FIXME: Should we put the lint output in toolsclient?
         mkfifo "$dir"/fifo
-        printf '%s\n' "evaluate-commands -draft %{
+        printf '%s\n' "evaluate-commands -try-client '$kak_opt_toolsclient' %{
                   edit! -fifo $(kakquote "$dir/fifo") -debug *lint-output*
                   set-option buffer filetype make
                   set-option buffer make_current_error_line 0
