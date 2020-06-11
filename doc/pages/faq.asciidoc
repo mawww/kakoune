@@ -25,12 +25,12 @@ Kakoune can be used as a pager, either by setting the `PAGER` environment
 variable to `kak`, or by writing data directly to its standard input using a
 shell pipeline.
 
-=== Are there any non-console based frontends available ?
+=== Are there any non-console based frontends available?
 
 No graphical frontend is currently officially maintained, you can however
 try experimental community-developed ones.
 
-=== Why are colors misrendered in my Kakoune clients ?
+=== Why are colors misrendered in my Kakoune clients?
 
 The most probable cause for colors being misrendered is a widespread practice
 that consists in setting the `TERM` environment variable in the shell's
@@ -102,14 +102,14 @@ $ cd kakoune
 $ make test
 ----
 
-=== Why does leaving insert mode take more than half a second in `tmux` ?
+=== Why does leaving insert mode take more than half a second in `tmux`?
 
 Upon hitting the escape key, `tmux` waits for a short period of time to
 determine whether it's part of a function or a meta key sequence. In order
 to fix this "lag", set the waiting period in your `tmux` configuration file
 to a short time, e.g. 25ms: `set -sg escape-time 25`
 
-=== Can I split the window to display different buffers in them ?
+=== Can I split the window to display different buffers in them?
 
 As a fairly compliant follower of the UNIX philosophy, Kakoune does not
 try to implement features that are best handled by separate, dedicated
@@ -154,7 +154,7 @@ $ make debug=yes
 The resulting binary should produce a stacktrace that you can, afterwards,
 post in an issue in unmangled form (c.f. `c++filt`).
 
-=== How can I explore the filesystem the way Vim's NerdTree does ?
+=== How can I explore the filesystem the way Vim's NerdTree does?
 
 The builtin file completion engine used when opening a file for editing
 (using the `:edit` command and letting the suggestions popup in the menu
@@ -166,7 +166,7 @@ which should in return send an "edit" command followed by the path of the
 file you selected to the current Kakoune session (e.g. `echo "eval -client
 $kak_client edit /path/to/file" | kak -p $kak_session`).
 
-=== How do I automatically indent code, as Vim does with `=` ?
+=== How do I automatically indent code, as Vim does with `=`?
 
 As `Kakoune` doesn't parse the contents of the buffers, there is no builtin
 equivalent for this Vim feature. Use a formatter/prettifier dedicated to
@@ -178,7 +178,7 @@ Note that you can also set the `formatcmd` option, used by the `format`
 command to handle formatting in the current buffer without further
 interaction.
 
-=== Can Kakoune automatically complete the parameters of my functions ?
+=== Can Kakoune automatically complete the parameters of my functions?
 
 As mentioned in the above question about Vim's `=` key, Kakoune does not
 parse the contents of a buffer by itself, which makes it impossible for
@@ -197,7 +197,7 @@ built-in support in Kakoune is through the
 https://microsoft.github.io/language-server-protocol/[Language Server Protocol],
 for which you can find implementations that interact with the editor.
 
-=== Why aren't widely known command line shortcuts such as <c-w> or <c-u> available in Kakoune ?
+=== Why aren't widely known command line shortcuts such as <c-w> or <c-u> available in Kakoune?
 
 Despite their widespread availability in multiple tools, those shortcuts do
 not fit the paradigm that Kakoune implements, which is based on selections
@@ -210,19 +210,19 @@ to be able to use those control-based shortcuts in insert mode.
 Also note that a subset of "readline shortcuts" is implemented for command
 prompts.
 
-=== Can I disable auto-indentation completely ?
+=== Can I disable auto-indentation completely?
 
 All the indentation hooks are conventionally named `<lang>-indent`, which
 allows us to use the `disabled_hooks` variable to disable indentation
 globally with the following command: `set global disabled_hooks '.+-indent'`
 
-=== How to enable syntax highlighting ?
+=== How to enable syntax highlighting?
 
 The MIME type of the files opened in new buffers is detected using the
 `file` command, and syntax highlighting enabled automatically when
 possible.
 
-=== My file seems to be highlighted with the wrong colors, I thought syntax highlighting was detected automatically ?
+=== My file seems to be highlighted with the wrong colors, I thought syntax highlighting was detected automatically?
 
 The `file` utility has several shortcomings, such as detecting the
 wrong MIME type for a file containing data with different syntax, e.g.
@@ -233,7 +233,7 @@ Kakoune does its best to detect file types (using known extensions for a
 given format for instance), but not much can be done about those ambiguous
 cases. You might consider writing a custom `$HOME/.magic` file if needed.
 
-=== Can I disable syntax highlighting completely ?
+=== Can I disable syntax highlighting completely?
 
 Similarly to the indentation hooks, the name format followed by the
 highlighting hooks is `<lang>-highlight`. You can thus disable syntax
@@ -242,7 +242,7 @@ highlighting using the following command: `set global disabled_hooks
 
 == The editing language
 
-=== Why aren't there other scopes similar to `%sh{}` e.g. python ?
+=== Why aren't there other scopes similar to `%sh{}` e.g. python?
 
 Supporting custom scopes would add hard dependencies to the project, which
 is too much of a drawback when balanced against the low cost of using
@@ -251,7 +251,7 @@ The shell scope allows users to spawn any interpreter they want, for a minimal
 cost in terms of performance, it is therefore the reason why it's the only
 one available by default.
 
-=== What shell is used to expand `%sh{}` scopes ?
+=== What shell is used to expand `%sh{}` scopes?
 
 The server expands shell scopes using the `sh` binary, located in one of
 the directories containing all the POSIX standard utilities. This list of
@@ -260,7 +260,7 @@ Kakoune at startup.
 
 In most distributions, `/bin/sh` will end up being used.
 
-=== Why does a dot `.` in a regex select newline characters ?
+=== Why does a dot `.` in a regex select newline characters?
 
 Data in buffers is a stream of characters, and newlines do not receive special
 treatment compared to other characters, with regards to regex matching. In
@@ -271,7 +271,7 @@ balanced against the ability to select data over several lines.
 You can instruct the regex engine to stop matching newline characters with
 `.` by disabling the appropriate flag (`(?S)`).
 
-=== Why does `a` extend the current selection, but `i` leaves it untouched ?
+=== Why does `a` extend the current selection, but `i` leaves it untouched?
 
 Selections are ranges of characters whose delimiters are an "anchor" and
 a "cursor", and inserting characters is always done before the anchor in
