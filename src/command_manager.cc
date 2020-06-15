@@ -49,10 +49,10 @@ bool CommandManager::module_defined(StringView module_name) const
 void CommandManager::register_module(String module_name, String commands)
 {
     auto module = m_modules.find(module_name);
-    if (module != m_modules.end() and module->value.loaded)
+    if (module != m_modules.end() and module->value.state != Module::State::Registered)
         throw runtime_error{format("module already loaded: '{}'", module_name)};
 
-    m_modules[module_name] = { false, std::move(commands) };
+    m_modules[module_name] = { Module::State::Registered, std::move(commands) };
 }
 
 void CommandManager::load_module(StringView module_name, Context& context)
@@ -60,13 +60,23 @@ void CommandManager::load_module(StringView module_name, Context& context)
     auto module = m_modules.find(module_name);
     if (module == m_modules.end())
         throw runtime_error{format("no such module: '{}'", module_name)};
-    if (module->value.loaded)
-        return;
+    switch (module->value.state)
+    {
+        case Module::State::Loading:
+            throw runtime_error(format("module '{}' loaded recursively", module_name));
+        case Module::State::Loaded: return;
+        case Module::State::Registered: default: break;
+    }
 
-    module->value.loaded = true;
-    Context empty_context{Context::EmptyContextFlag{}};
-    execute(module->value.commands, empty_context);
+    {
+        module->value.state = Module::State::Loading;
+        auto restore_state = on_scope_end([&] { module->value.state = Module::State::Registered; });
+
+        Context empty_context{Context::EmptyContextFlag{}};
+        execute(module->value.commands, empty_context);
+    }
     module->value.commands.clear();
+    module->value.state = Module::State::Loaded;
 
     context.hooks().run_hook(Hook::ModuleLoaded, module_name, context);
 }
@@ -630,7 +640,7 @@ Completions CommandManager::complete_command_name(const Context& context, String
 Completions CommandManager::complete_module_name(StringView query) const
 {
     return {0, query.length(),
-            Kakoune::complete(query, query.length(), m_modules | filter([](auto&& item) { return not item.value.loaded; })
+            Kakoune::complete(query, query.length(), m_modules | filter([](auto&& item) { return item.value.state == Module::State::Registered; })
                                                                | transform(&ModuleMap::Item::key))};
 }
 

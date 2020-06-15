@@ -155,7 +155,13 @@ private:
 
     struct Module
     {
-        bool loaded;
+        enum class State
+        {
+            Registered,
+            Loading,
+            Loaded
+        };
+        State state = State::Registered;
         String commands;
     };
     using ModuleMap = HashMap<String, Module, MemoryDomain::Commands>;
