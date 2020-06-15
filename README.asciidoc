@@ -221,7 +221,7 @@ pkg install kakoune
 [TIP]
 .OpenBSD
 ====
-Building on OpenBSD 6.6 amd64.
+Building on OpenBSD 6.7 amd64.
 
 --------------------------------------------------
 # pkg_add git gmake
@@ -229,6 +229,14 @@ Building on OpenBSD 6.6 amd64.
 # cd kakoune
 # export CXX=clang++
 # gmake install
+--------------------------------------------------
+
+Kakoune is available in the 6.7-current port tree as 
+http://cvsweb.openbsd.org/cgi-bin/cvsweb/ports/editors/kakoune/[editors/kakoune]
+
+A binary package is also available for -current snapshot and can be installed with
+--------------------------------------------------
+# pkg_add kakoune
 --------------------------------------------------
 
 Running with support for plugins.
