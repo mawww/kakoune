@@ -1,0 +1,8 @@
+// make sure the color does not break
+/// ```
+/// # use foo;
+/// foo::bar("Hello world");
+/// ```
+fn bar(s: &str) {
+    println!("{}", s);
+}
