@@ -126,7 +126,7 @@ evaluate-commands %sh{
     printf %s "
         add-highlighter shared/python/code/ regex '\b($(join "${values}" '|'))\b' 0:value
         add-highlighter shared/python/code/ regex '\b($(join "${meta}" '|'))\b' 0:meta
-        add-highlighter shared/python/code/ regex '\b($(join "${attribute}" '|'))\b' 0:attribute
+        add-highlighter shared/python/code/ regex '\b($(join "${attributes}" '|'))\b' 0:attribute
         add-highlighter shared/python/code/ regex '\bdef\s+($(join "${methods}" '|'))\b' 1:function
         add-highlighter shared/python/code/ regex '\b($(join "${exceptions}" '|'))\b' 0:function
         add-highlighter shared/python/code/ regex '\b($(join "${keywords}" '|'))\b' 0:keyword
