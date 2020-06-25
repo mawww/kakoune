@@ -5,6 +5,17 @@ released versions.
 
 == Development version
 
+* The `bold` and `italic` faces are no longer built-in. Highlighters
+  are expected to use face attributes (`+b` and `+i`, respectively) to
+  decorate text.
+
+* The `lint-enable` command no longer needs to be called to display
+  linting errors. The `lint-disable` command was renamed into
+  `lint-hide-diagnostics`.
+
+* The `+<length>` part of a `range-specs` highlighter consistently
+  refers to the length of the target range.
+
 * clients stdin is transferred to the server, making it possible
   to pipe into `kak -c <session>`
 
