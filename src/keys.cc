@@ -79,6 +79,7 @@ static constexpr KeyAndName keynamemap[] = {
     { "plus", '+' },
     { "minus", '-' },
     { "semicolon", ';' },
+    { "percent", '%' },
 };
 
 KeyList parse_keys(StringView str)
