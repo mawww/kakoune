@@ -16,7 +16,7 @@ hook global WinSetOption filetype=scheme %{
 
     set-option window static_words %opt{scheme_static_words}
 
-    set-option buffer extra_word_chars '!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '~'
+    set-option buffer extra_word_chars '!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '_' '~'
     hook window ModeChange pop:insert:.* -group scheme-trim-indent  lisp-trim-indent
     hook window InsertChar \n -group scheme-indent lisp-indent-on-new-line
 
@@ -118,7 +118,7 @@ evaluate-commands %sh{ exec awk -f - <<'EOF'
 
         non_word_chars="['\"\\s\\(\\)\\[\\]\\{\\};]";
 
-        normal_identifiers="-!$%&\\*\\+\\./:<=>\\?\\^_~a-zA-Z0-9";
+        normal_identifiers="-!$%&\\*\\+\\./:<=>\\?@\\^_~a-zA-Z0-9";
         identifier_chars="[" normal_identifiers "][" normal_identifiers ",#]*";
     }
     function kak_escape(s) {
