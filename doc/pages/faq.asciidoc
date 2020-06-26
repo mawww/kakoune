@@ -294,3 +294,16 @@ open buffers:
 ----
 :eval -buffer * e!
 ----
+
+=== Why is the text I pasted into a buffer completely mangled?
+
+In order to assist users with writing code, some buffers come with hooks that
+automatically indent the text inserted. Pasting the contents of the clipboard
+into a buffer in insert mode triggers this indentation functionality,
+resulting into mangled text.
+
+To prevent that from happening:
+
+* disable hooks and enter insert mode with `\i`
+* insert text into the buffer (e.g. paste the clipboard's contents)
+* exit insert-mode, restoring hooks with `<esc>`
