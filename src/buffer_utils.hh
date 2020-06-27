@@ -25,6 +25,8 @@ inline BufferRange replace(Buffer& buffer, const Selection& range, StringView co
     return buffer.replace(range.min(), buffer.char_next(range.max()), content);
 }
 
+void replace(Buffer& buffer, ArrayView<BufferRange> ranges, ConstArrayView<String> strings);
+
 inline CharCount char_length(const Buffer& buffer, const Selection& range)
 {
     return utf8::distance(buffer.iterator_at(range.min()),

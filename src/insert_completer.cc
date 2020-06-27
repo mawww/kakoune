@@ -413,31 +413,21 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
 
     auto ref = buffer.string(m_completions.begin, m_completions.end);
     ForwardChangesTracker changes_tracker;
-    size_t timestamp = buffer.timestamp();
-    Vector<BufferCoord> positions;
+    Vector<BufferRange> ranges;
     for (auto& sel : selections)
     {
-        auto pos = buffer.iterator_at(changes_tracker.get_new_coord_tolerant(sel.cursor()));
-        if (pos.coord().column >= prefix_len and (pos + suffix_len) != buffer.end() and
-            std::equal(ref.begin(), ref.end(), pos - prefix_len))
-        {
-            positions.push_back(buffer.erase((pos - prefix_len).coord(),
-                                             (pos + suffix_len).coord()));
-            changes_tracker.update(buffer, timestamp);
-        }
+        auto pos = buffer.iterator_at(sel.cursor());
+        if (pos.coord().column >= prefix_len and (pos + suffix_len) != buffer.end() and std::equal(ref.begin(), ref.end(), pos - prefix_len))
+            ranges.push_back({(pos - prefix_len).coord(), (pos + suffix_len).coord()});
     }
-
-    changes_tracker = ForwardChangesTracker{};
-    for (auto pos : positions)
-    {
-        buffer.insert(changes_tracker.get_new_coord_tolerant(pos), candidate.completion);
-        changes_tracker.update(buffer, timestamp);
-    }
+    replace(buffer, ranges, candidate.completion);
 
     selections.update();
     m_completions.end = cursor_pos;
     m_completions.begin = buffer.advance(cursor_pos, -candidate.completion.length());
     m_completions.timestamp = buffer.timestamp();
+    m_inserted_ranges = std::move(ranges);
+
     if (m_context.has_client())
     {
         m_context.client().menu_select(m_current_candidate);
@@ -464,8 +454,8 @@ void InsertCompleter::update(bool allow_implicit)
         setup_ifn();
 }
 
-auto& get_first(InsertCompletion& completions) { return completions.begin; }
-auto& get_last(InsertCompletion& completions) { return completions.end; }
+auto& get_first(BufferRange& range) { return range.begin; }
+auto& get_last(BufferRange& range) { return range.end; }
 
 void InsertCompleter::reset()
 {
@@ -475,20 +465,9 @@ void InsertCompleter::reset()
         if (m_context.has_client() and m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size() - 1)
         {
             auto& buffer = m_context.buffer();
-            update_ranges(buffer, m_completions.timestamp,
-                          ArrayView<InsertCompletion>(m_completions));
-            auto ref = buffer.string(m_completions.begin, m_completions.end);
-            const auto& cursor_pos = m_context.selections().main().cursor();
-            const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
-            const auto suffix_len = std::max(0_byte, buffer.distance(cursor_pos, m_completions.end));
-            hook_param = join(m_context.selections() |
-                transform([&](const auto& sel) { return buffer.iterator_at(sel.cursor()); }) |
-                filter([&](const auto& pos) {
-                    return pos.coord().column >= prefix_len and (pos + suffix_len) != buffer.end() and
-                        std::equal(ref.begin(), ref.end(), pos - prefix_len);
-                }) |
-                transform([&](const auto& pos) {
-                    return selection_to_string(ColumnType::Byte, buffer, {(pos - prefix_len).coord(), buffer.char_prev((pos + suffix_len).coord())});
+            update_ranges(buffer, m_completions.timestamp, m_inserted_ranges);
+            hook_param = join(m_inserted_ranges | filter([](auto&& r) { return not r.empty(); }) | transform([&](auto&& r) {
+                    return selection_to_string(ColumnType::Byte, buffer, {r.begin, buffer.char_prev(r.end)});
                 }), ' ');
         }
 

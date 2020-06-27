@@ -4,6 +4,7 @@
 #include "event_manager.hh"
 #include "file.hh"
 #include "selection.hh"
+#include "changes.hh"
 
 #include <unistd.h>
 
@@ -14,6 +15,25 @@
 
 namespace Kakoune
 {
+
+void replace(Buffer& buffer, ArrayView<BufferRange> ranges, ConstArrayView<String> strings)
+{
+    ForwardChangesTracker changes_tracker;
+    size_t timestamp  = buffer.timestamp();
+    for (size_t index = 0; index < ranges.size(); ++index)
+    {
+        auto& range = ranges[index];
+        range.begin = changes_tracker.get_new_coord_tolerant(range.begin);
+        range.end = changes_tracker.get_new_coord_tolerant(range.end);
+        kak_assert(buffer.is_valid(range.begin) and buffer.is_valid(range.end));
+
+        range = buffer.replace(range.begin, range.end, strings.empty() ? StringView{} : strings[std::min(index, strings.size()-1)]);
+        kak_assert(buffer.is_valid(range.begin) and buffer.is_valid(range.end));
+        changes_tracker.update(buffer, timestamp);
+    }
+
+    buffer.check_invariant();
+}
 
 ColumnCount get_column(const Buffer& buffer,
                        ColumnCount tabstop, BufferCoord coord)

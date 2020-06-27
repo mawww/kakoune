@@ -32,7 +32,7 @@ public:
 
     template<typename Container,
              typename = std::enable_if_t<sizeof(decltype(*std::declval<Container>().data())) == sizeof(T)>>
-    constexpr ArrayView(const Container& c)
+    constexpr ArrayView(Container&& c)
         : m_pointer(c.data()), m_size(c.size()) {}
 
     constexpr ArrayView(const std::initializer_list<T>& v)

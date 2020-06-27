@@ -24,6 +24,8 @@ struct Range
     {
         return hash_values(range.begin, range.end);
     }
+
+    bool empty() const { return begin == end; }
 };
 
 }

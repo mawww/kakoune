@@ -105,6 +105,7 @@ private:
     OptionManager&      m_options;
     const FaceRegistry& m_faces;
     InsertCompletion    m_completions;
+    Vector<BufferRange> m_inserted_ranges;
     int                 m_current_candidate = -1;
 
     using CompleteFunc = InsertCompletion (const SelectionList& sels,
