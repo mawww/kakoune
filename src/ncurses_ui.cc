@@ -753,7 +753,7 @@ Optional<Key> NCursesUI::get_next_key()
             const int y = (sgr ? params[2] : next_char() - 32) - 1;
             auto coord = encode_coord({y - content_line_offset(), x});
             Key::Modifiers mod = parse_mask((b >> 2) & 0x7);
-            switch (auto code = b & 0x43; code)
+            switch (const int code = b & 0x43; code)
             {
             case 0: case 1: case 2:
                 return mouse_button(mod, Key::MouseButton{code}, coord, c == 'm');
