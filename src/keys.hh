@@ -14,6 +14,12 @@ namespace Kakoune
 
 struct Key
 {
+    enum class MouseButton
+    {
+        Left,
+        Middle,
+        Right
+    };
     enum class Modifiers : int
     {
         None    = 0,
@@ -21,11 +27,11 @@ struct Key
         Alt     = 1 << 1,
         Shift   = 1 << 2,
 
-        MousePressLeft    = 1 << 3,
-        MousePressRight   = 1 << 4,
-        MouseReleaseLeft  = 1 << 5,
-        MouseReleaseRight = 1 << 6,
-        MousePos          = 1 << 7,
+        MousePress     = 1 << 3,
+        MouseRelease   = 1 << 4,
+        MousePos       = 1 << 5,
+        MouseButtonMask= 0b11 << 6,
+
         Scroll     = 1 << 8,
         Resize     = 1 << 9,
         MenuSelect = 1 << 10,
@@ -82,6 +88,8 @@ struct Key
     constexpr bool operator<(Key other) const { return val() < other.val(); }
 
     constexpr DisplayCoord coord() const { return {(int)((key & 0xFFFF0000) >> 16), (int)(key & 0x0000FFFF)}; }
+    constexpr MouseButton mouse_button() { return MouseButton{((int)modifiers & (int)Modifiers::MouseButtonMask) >> 6}; }
+    static Modifiers to_modifier(MouseButton button) { return Key::Modifiers{((int)button << 6) & (int)Modifiers::MouseButtonMask}; }
 
     Optional<Codepoint> codepoint() const;
 };
@@ -95,6 +103,8 @@ class StringView;
 
 KeyList parse_keys(StringView str);
 String  key_to_str(Key key);
+StringView button_to_str(Key::MouseButton button);
+Key::MouseButton str_to_button(StringView str);
 
 constexpr Key shift(Key key)
 {

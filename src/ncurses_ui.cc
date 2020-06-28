@@ -19,6 +19,7 @@
 #include <csignal>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <strings.h>
 
 constexpr char control(char c) { return c & 037; }
 
@@ -669,19 +670,19 @@ Optional<Key> NCursesUI::get_next_key()
             return mod;
         };
 
-        auto mouse_button = [this](Key::Modifiers mod, Codepoint coord, bool left, bool release) {
-            auto mask = left ? 0x1 : 0x2;
+        auto mouse_button = [this](Key::Modifiers mod, Key::MouseButton button, Codepoint coord, bool release) {
+            auto mask = 1 << (int)button;
             if (not release)
             {
-                mod |= (m_mouse_state & mask) ? Key::Modifiers::MousePos : (left ? Key::Modifiers::MousePressLeft : Key::Modifiers::MousePressRight);
+                mod |= (m_mouse_state & mask) ? Key::Modifiers::MousePos : Key::Modifiers::MousePress;
                 m_mouse_state |= mask;
             }
             else
             {
-                mod |= left ? Key::Modifiers::MouseReleaseLeft : Key::Modifiers::MouseReleaseRight;
+                mod |= Key::Modifiers::MouseRelease;
                 m_mouse_state &= ~mask;
             }
-            return Key{mod, coord};
+            return Key{mod | Key::to_modifier(button), coord};
         };
 
         auto mouse_scroll = [this](Key::Modifiers mod, bool down) -> Key {
@@ -752,17 +753,15 @@ Optional<Key> NCursesUI::get_next_key()
             const int y = (sgr ? params[2] : next_char() - 32) - 1;
             auto coord = encode_coord({y - content_line_offset(), x});
             Key::Modifiers mod = parse_mask((b >> 2) & 0x7);
-            switch (b & 0x43)
+            switch (auto code = b & 0x43; code)
             {
-            case 0: return mouse_button(mod, coord, true, c == 'm');
-            case 2: return mouse_button(mod, coord, false, c == 'm');
+            case 0: case 1: case 2:
+                return mouse_button(mod, Key::MouseButton{code}, coord, c == 'm');
             case 3:
                 if (sgr)
                     return {};
-                if (m_mouse_state & 0x1)
-                    return mouse_button(mod, coord, true, true);
-                else if (m_mouse_state & 0x2)
-                    return mouse_button(mod, coord, false, true);
+                else if (int guess = ffs(m_mouse_state) - 1; 0 <= guess and guess < 3)
+                    return mouse_button(mod, Key::MouseButton{guess}, coord, true);
                 break;
             case 64: return mouse_scroll(mod, false);
             case 65: return mouse_scroll(mod, true);

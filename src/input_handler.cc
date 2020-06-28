@@ -92,35 +92,40 @@ struct MouseHandler
         Buffer& buffer = context.buffer();
         BufferCoord cursor;
         auto& selections = context.selections();
-        constexpr auto modifiers = Key::Modifiers::Control | Key::Modifiers::Alt | Key::Modifiers::Shift;
+        constexpr auto modifiers = Key::Modifiers::Control | Key::Modifiers::Alt | Key::Modifiers::Shift | Key::Modifiers::MouseButtonMask;
         switch ((key.modifiers & ~modifiers).value)
         {
-        case Key::Modifiers::MousePressRight:
-            m_dragging = false;
-            cursor = context.window().buffer_coord(key.coord());
-            if (key.modifiers & Key::Modifiers::Control)
-                selections = {{selections.begin()->anchor(), cursor}};
-            else
-                selections.main() = {selections.main().anchor(), cursor};
-            selections.sort_and_merge_overlapping();
-            return true;
-
-        case Key::Modifiers::MousePressLeft:
-            m_dragging = true;
-            m_anchor = context.window().buffer_coord(key.coord());
-            if (not (key.modifiers & Key::Modifiers::Control))
-                context.selections_write_only() = { buffer, m_anchor};
-            else
+        case Key::Modifiers::MousePress:
+            switch (key.mouse_button())
             {
-                size_t main = selections.size();
-                selections.push_back({m_anchor});
-                selections.set_main_index(main);
+            case Key::MouseButton::Right:
+                m_dragging = false;
+                cursor = context.window().buffer_coord(key.coord());
+                if (key.modifiers & Key::Modifiers::Control)
+                    selections = {{selections.begin()->anchor(), cursor}};
+                else
+                    selections.main() = {selections.main().anchor(), cursor};
                 selections.sort_and_merge_overlapping();
-            }
-            return true;
+                return true;
 
-        case Key::Modifiers::MouseReleaseLeft:
-        case Key::Modifiers::MouseReleaseRight:
+            case Key::MouseButton::Left:
+                m_dragging = true;
+                m_anchor = context.window().buffer_coord(key.coord());
+                if (not (key.modifiers & Key::Modifiers::Control))
+                    context.selections_write_only() = { buffer, m_anchor};
+                else
+                {
+                    size_t main = selections.size();
+                    selections.push_back({m_anchor});
+                    selections.set_main_index(main);
+                    selections.sort_and_merge_overlapping();
+                }
+                return true;
+
+            default: return true;
+            }
+
+        case Key::Modifiers::MouseRelease:
             if (not m_dragging)
                 return true;
             m_dragging = false;

@@ -248,31 +248,30 @@ void JsonUI::eval_json(const Value& json)
                 m_on_key(key);
         }
     }
-    else if (method == "mouse")
+    else if (method == "mouse_move")
     {
-        if (params.size() != 3)
-            throw invalid_rpc_request("mouse type/coordinates not specified");
+        if (params.size() != 2)
+            throw invalid_rpc_request("mouse coordinates not specified");
 
-        if (not params[0].is_a<String>())
-            throw invalid_rpc_request("mouse type is not a string");
-        else if (not params[1].is_a<int>() or
-                 not params[2].is_a<int>())
+        if (not params[0].is_a<int>() or not params[1].is_a<int>())
             throw invalid_rpc_request("mouse coordinates are not integers");
 
-        const StringView type = params[0].as<String>();
-        const Codepoint coord = encode_coord({params[1].as<int>(), params[2].as<int>()});
-        if (type == "move")
-            m_on_key({Key::Modifiers::MousePos, coord});
-        else if (type == "press_left")
-            m_on_key({Key::Modifiers::MousePressLeft, coord});
-        else if (type == "press_right")
-            m_on_key({Key::Modifiers::MousePressRight, coord});
-        else if (type == "release_left")
-            m_on_key({Key::Modifiers::MouseReleaseLeft, coord});
-        else if (type == "release_right")
-            m_on_key({Key::Modifiers::MouseReleaseRight, coord});
-        else
-            throw invalid_rpc_request(format("invalid mouse event type: {}", type));
+        m_on_key({Key::Modifiers::MousePos, encode_coord({params[0].as<int>(), params[1].as<int>()})});
+    }
+    else if (method == "mouse_press" or method == "mouse_release")
+    {
+        if (params.size() != 3)
+            throw invalid_rpc_request("mouse button/coordinates not specified");
+
+        if (not params[0].is_a<String>())
+            throw invalid_rpc_request("mouse button is not a string");
+        if (not params[1].is_a<int>() or not params[2].is_a<int>())
+            throw invalid_rpc_request("mouse coordinates are not integers");
+
+        auto event = method == "mouse_press" ? Key::Modifiers::MousePress : Key::Modifiers::MouseRelease;
+        auto button = str_to_button(params[0].as<String>());
+
+        m_on_key({event | Key::to_modifier(button), encode_coord({params[1].as<int>(), params[2].as<int>()})});
     }
     else if (method == "scroll")
     {

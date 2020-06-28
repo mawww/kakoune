@@ -157,21 +157,36 @@ KeyList parse_keys(StringView str)
     return result;
 }
 
+StringView button_to_str(Key::MouseButton button)
+{
+    switch (button)
+    {
+        case Key::MouseButton::Left: return "left";
+        case Key::MouseButton::Middle: return "middle";
+        case Key::MouseButton::Right: return "right";
+        default: kak_assert(false); throw logic_error{};
+    }
+}
+
+Key::MouseButton str_to_button(StringView str)
+{
+    if (str == "left") return Key::MouseButton::Left;
+    if (str == "middle") return Key::MouseButton::Middle;
+    if (str == "right") return Key::MouseButton::Right;
+    throw runtime_error(format("invalid mouse button name {}", str));
+}
+
 String key_to_str(Key key)
 {
     const auto coord = key.coord() + DisplayCoord{1,1};
-    switch (key.modifiers)
+    switch (Key::Modifiers(key.modifiers & ~Key::Modifiers::MouseButtonMask))
     {
         case Key::Modifiers::MousePos:
             return format("<mouse:move:{}.{}>", coord.line, coord.column);
-        case Key::Modifiers::MousePressLeft:
-            return format("<mouse:press_left:{}.{}>", coord.line, coord.column);
-        case Key::Modifiers::MousePressRight:
-            return format("<mouse:press_right:{}.{}>", coord.line, coord.column);
-        case Key::Modifiers::MouseReleaseLeft:
-            return format("<mouse:release_left:{}.{}>", coord.line, coord.column);
-        case Key::Modifiers::MouseReleaseRight:
-            return format("<mouse:release_right:{}.{}>", coord.line, coord.column);
+        case Key::Modifiers::MousePress:
+            return format("<mouse:press:{}:{}.{}>", button_to_str(key.mouse_button()), coord.line, coord.column);
+        case Key::Modifiers::MouseRelease:
+            return format("<mouse:release:{}:{}.{}>", button_to_str(key.mouse_button()), coord.line, coord.column);
         case Key::Modifiers::Scroll:
             return format("<scroll:{}>", static_cast<int>(key.key));
         case Key::Modifiers::Resize:
