@@ -171,6 +171,13 @@ Kakoune uses a shell command, such as the `|`, `!` or `$` normal mode commands
 Expansions with the type `file` will expand to the content of the filename
 given in argument as read from the host filesystem.
 
+For example, this command stores the entire content of `/etc/passwd` into the
+`a` register.
+
+----
+set-register a %file{/etc/passwd}
+----
+
 == Value expansions
 
 Expansions with the type `val` give access to Kakoune internal data that is
