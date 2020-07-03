@@ -162,6 +162,9 @@ void TerminalUI::Window::draw(DisplayCoord pos,
                               ConstArrayView<DisplayAtom> atoms,
                              const Face& default_face)
 {
+    if (pos.line >= lines.size()) // We might receive an out of date draw command after a resize
+        return;
+
     lines[(size_t)pos.line].resize(pos.column);
     for (const DisplayAtom& atom : atoms)
     {
