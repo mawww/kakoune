@@ -8,6 +8,8 @@
 
 #include "optional.hh"
 
+#include <functional>
+
 namespace Kakoune
 {
 
@@ -53,6 +55,8 @@ inline StringView option_type_name(Meta::Type<CompletionList>)
     return "completions";
 }
 
+using StaticWords = Vector<String, MemoryDomain::Options>;
+
 struct InsertCompletion
 {
     struct Candidate
@@ -91,12 +95,13 @@ public:
     void explicit_word_all_complete();
     void explicit_line_buffer_complete();
     void explicit_line_all_complete();
+    void explicit_option_complete(StringView option);
 
 private:
     bool setup_ifn();
 
     template<typename Func>
-    bool try_complete(Func complete_func);
+    bool try_complete(Func complete_func, StringView param = {});
     void on_option_changed(const Option& opt) override;
 
     void menu_show();
@@ -110,8 +115,9 @@ private:
 
     using CompleteFunc = InsertCompletion (const SelectionList& sels,
                                            const OptionManager& options,
-                                           const FaceRegistry& faces);
-    CompleteFunc* m_explicit_completer = nullptr;
+                                           const FaceRegistry& faces,
+                                           StringView param);
+    std::function<CompleteFunc> m_explicit_completer = nullptr;
 };
 
 }
