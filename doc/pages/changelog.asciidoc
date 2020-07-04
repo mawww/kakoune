@@ -5,6 +5,8 @@ released versions.
 
 == Development version
 
+* Introduce `User` hook support.
+
 * The `bold` and `italic` faces are no longer built-in. Highlighters
   are expected to use face attributes (`+b` and `+i`, respectively) to
   decorate text.

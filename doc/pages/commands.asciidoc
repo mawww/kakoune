@@ -210,6 +210,10 @@ of the file onto the filesystem
     remove every hooks in *scope* that are part of the given *group*
     (See <<hooks#,`:doc hooks`>> and <<scopes#,`:doc scopes`>>)
 
+*trigger-user-hook* <param>::
+    trigger the `User` hook with the given *param* as filter string in
+    the current context. (See <<hooks#,`:doc hooks`>>)
+
 == Display
 
 *echo* [<switches>] <text>::

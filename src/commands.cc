@@ -1093,6 +1093,20 @@ const CommandDesc remove_hook_cmd = {
     }
 };
 
+const CommandDesc trigger_user_hook_cmd = {
+    "trigger-user-hook",
+    nullptr,
+    "trigger-user-hook <param>: run 'User' hook with <param> as filter string",
+    single_param,
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        context.hooks().run_hook(Hook::User, parser[0], context);
+    }
+};
+
 Vector<String> params_to_shell(const ParametersParser& parser)
 {
     Vector<String> vars;
@@ -2635,6 +2649,7 @@ void register_commands()
     register_command(remove_highlighter_cmd);
     register_command(add_hook_cmd);
     register_command(remove_hook_cmd);
+    register_command(trigger_user_hook_cmd);
     register_command(define_command_cmd);
     register_command(alias_cmd);
     register_command(unalias_cmd);

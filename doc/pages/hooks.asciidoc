@@ -178,6 +178,10 @@ name. Hooks with no description will always use an empty string.
 *ModuleLoaded* `module`::
     Triggered after a module is evaluated by the first `require-module` call
 
+*User* `param`::
+    Triggered  via the `trigger-user-hook` command. Provides a way for plugins
+    to introduce custom hooks by specifying what *param* would be.
+
 Note that some hooks will not consider underlying scopes depending on what
 context they are bound to be run into, e.g. the `BufWritePost` hook is a buffer
 hook, and will not consider the `window` scope.
