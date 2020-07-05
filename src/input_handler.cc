@@ -1754,7 +1754,8 @@ void scroll_window(Context& context, LineCount offset, bool mouse_dragging)
 
     win_pos.line = clamp(win_pos.line + offset, 0_line, line_count-1);
 
-    Selection& main_selection = context.selections().main();
+    SelectionList& selections = context.selections();
+    Selection& main_selection = selections.main();
     const BufferCoord anchor = main_selection.anchor();
     const BufferCoord cursor = main_selection.cursor();
 
@@ -1775,6 +1776,8 @@ void scroll_window(Context& context, LineCount offset, bool mouse_dragging)
 
     window.set_position(win_pos);
     main_selection = { new_anchor, new_cursor };
+
+    selections.sort_and_merge_overlapping();
 }
 
 }
