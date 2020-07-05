@@ -1,12 +1,11 @@
 # x11
 
-hook global KakBegin .* %sh{
-    if [ -n "$DISPLAY" ] && [ -z "$TMUX" ]; then
-        echo "require-module x11"
-    fi
-}
-
 provide-module x11 %{
+
+# ensure that we're running in the right environment
+evaluate-commands %sh{
+    [-z "${kak_opt_windowing_modules}" ] || [ -n "$DISPLAY" ] || echo 'fail DISPLAY is not set'
+}
 
 # termcmd should be set such as the next argument is the whole
 # command line to execute

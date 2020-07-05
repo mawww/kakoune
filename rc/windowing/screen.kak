@@ -1,12 +1,13 @@
 # http://gnu.org/software/screen/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group GNUscreen global KakBegin .* %sh{
-    [ -z "${STY}" ] && exit
-    echo "require-module screen"
-}
 
 provide-module screen %{
+
+# ensure that we're running under screen
+evaluate-commands %sh{
+    [-z "${kak_opt_windowing_modules}" ] || [ -n "$STY" ] || echo 'fail screen not detected'
+}
 
 define-command screen-terminal-impl -hidden -params 3.. %{
     nop %sh{

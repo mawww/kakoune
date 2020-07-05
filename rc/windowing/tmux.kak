@@ -1,13 +1,12 @@
 # http://tmux.github.io/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global KakBegin .* %sh{
-    if [ -n "$TMUX" ]; then
-        echo "require-module tmux"
-    fi
-}
-
 provide-module tmux %{
+
+# ensure we're running under tmux
+evaluate-commands %sh{
+    [ -z "${kak_opt_windowing_modules}" ] || [ -n "$TMUX" ] || echo 'fail tmux not detected'
+}
 
 define-command -hidden -params 2.. tmux-terminal-impl %{
     evaluate-commands %sh{
