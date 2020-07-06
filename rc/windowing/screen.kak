@@ -6,7 +6,7 @@ provide-module screen %{
 
 # ensure that we're running under screen
 evaluate-commands %sh{
-    [-z "${kak_opt_windowing_modules}" ] || [ -n "$STY" ] || echo 'fail screen not detected'
+    [ -z "${kak_opt_windowing_modules}" ] || [ -n "$STY" ] || echo 'fail screen not detected'
 }
 
 define-command screen-terminal-impl -hidden -params 3.. %{
