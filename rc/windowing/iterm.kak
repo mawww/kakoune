@@ -5,7 +5,7 @@ provide-module iterm %{
 
 # ensure that we're running on iTerm
 evaluate-commands %sh{
-    [-z "${kak_opt_windowing_modules}" ] || [ "$TERM_PROGRAM" = "iTerm.app" ] || echo 'fail iTerm not detected'
+    [ -z "${kak_opt_windowing_modules}" ] || [ "$TERM_PROGRAM" = "iTerm.app" ] || echo 'fail iTerm not detected'
 }
 
 define-command -hidden -params 2.. iterm-terminal-split-impl %{
