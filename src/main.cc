@@ -713,6 +713,7 @@ int run_server(StringView session, StringView server_init,
                ConstArrayView<StringView> files)
 {
     static bool terminate = false;
+    set_signal_handler(SIGTERM, [](int) { terminate = true; });
     if (flags & ServerFlags::Daemon)
     {
         if (session.empty())
@@ -727,7 +728,6 @@ int run_server(StringView session, StringView server_init,
                                 session, child));
             exit(0);
         }
-        set_signal_handler(SIGTERM, [](int) { terminate = true; });
     }
 
     EventManager        event_manager;
@@ -992,25 +992,19 @@ void signal_handler(int signal)
         case SIGSEGV: text = "SIGSEGV"; break;
         case SIGFPE:  text = "SIGFPE";  break;
         case SIGQUIT: text = "SIGQUIT"; break;
-        case SIGTERM: text = "SIGTERM"; break;
         case SIGPIPE: text = "SIGPIPE"; break;
     }
-    if (signal != SIGTERM)
-    {
-        auto msg = format("Received {}, exiting.\nPid: {}\nCallstack:\n{}",
-                          text, getpid(), Backtrace{}.desc());
-        write_stderr(msg);
-        notify_fatal_error(msg);
-    }
+    auto msg = format("Received {}, exiting.\nPid: {}\nCallstack:\n{}",
+                      text, getpid(), Backtrace{}.desc());
+    write_stderr(msg);
+    notify_fatal_error(msg);
 
     if (Server::has_instance())
         Server::instance().close_session();
     if (BufferManager::has_instance())
         BufferManager::instance().backup_modified_buffers();
 
-    if (signal == SIGTERM)
-        exit(-1);
-    else if (signal == SIGSEGV)
+    if (signal == SIGSEGV)
     {
         // generate core dump
         ::signal(SIGSEGV, SIG_DFL);
