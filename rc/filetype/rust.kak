@@ -99,9 +99,52 @@ define-command -hidden rust-trim-indent %{
 
 define-command -hidden rust-indent-on-new-line %~
     evaluate-commands -draft -itersel %<
-        # copy // comments prefix and following white spaces
         try %{
-            execute-keys -draft k <a-x> s ^\h*//[!/]{0,2}\h* <ret> y gh j P
+            try %[ # line comment
+                evaluate-commands -draft -save-regs '/"' %[
+                    # copy the commenting prefix
+                    execute-keys -save-regs '' k <a-x> s ^\h*//[!/]{0,2}\h* <ret> y
+                    try %[
+                        # if the previous comment isn't empty, create a new one
+                        execute-keys <a-x><a-K>^\h*//[!/]{0,2}$<ret> j<a-x>s^\h*<ret>P
+                    ] catch %[
+                        # TODO figure out a way to not delete empty comment in current line
+                        # if there is no space and text in the previous comment, remove it completely
+                        execute-keys s //.*<ret> d
+                    ]
+                ]
+            ] catch %[ # block comment
+                # if the previous line isn't within a comment scope, break
+                execute-keys -draft k<a-x> <a-k>^(\h*/\*|\h+\*(?!/))<ret>
+
+                # find comment opening, validate it was not closed, and check its using star prefixes
+                execute-keys -draft <a-?>/\*<ret><a-H> <a-K>\*/<ret> <a-k>\A\h*/\*([^\n]*\n\h*\*)*[^\n]*\n\h*.\z<ret>
+
+                try %[
+                    # if the previous line is opening the comment, insert star preceeded by space
+                    execute-keys -draft k<a-x><a-k>^\h*/\*<ret>
+                    execute-keys -draft i*<space><esc>
+                ] catch %[
+                    try %[
+                        # if the next line is a comment line insert a star
+                        execute-keys -draft j<a-x><a-k>^\h+\*<ret>
+                        execute-keys -draft i*<space><esc>
+                    ] catch %[
+                        try %[
+                            # if the previous line is an empty comment line, close the comment scope
+                            execute-keys -draft k<a-x><a-k>^\h+\*\h+$<ret> <a-x>1s\*(\h*)<ret>c/<esc>
+                        ] catch %[
+                            # if the previous line is a non-empty comment line, add a star
+                            execute-keys -draft i*<space><esc>
+                        ]
+                    ]
+                ]
+
+                # trim trailing whitespace on the previous line
+                try %[ execute-keys -draft s\h+$<ret> d ]
+                # align the new star with the previous one
+                execute-keys K<a-x>1s^[^*]*(\*)<ret>&
+            ]
         } catch %`
             # preserve previous line indent
             try %{ execute-keys -draft <semicolon> K <a-&> }
