@@ -38,8 +38,8 @@ class is negated, meaning that it matches every character not specified
 in the character class.
 
 Literals match themselves, including syntax characters, so `^`
-does not need to be escaped in a character class. `[*+]` matches both
-the `*` character and the `+` character. Literal escape sequences are
+does not need to be escaped in a character class. `[\*+]` matches both
+the `\*` character and the `+` character. Literal escape sequences are
 supported, so `[\n\r]` matches both the line feed and carriage return
 characters.
 
