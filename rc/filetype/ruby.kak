@@ -48,10 +48,10 @@ add-highlighter shared/ruby/backtick      region '(?<![$:])`' (?<!\\)(\\\\)*`   
 add-highlighter shared/ruby/regex         region '(?<![$:])/' (?<!\\)(\\\\)*/[imox]* regions
 add-highlighter shared/ruby/              region '#' '$'                             fill comment
 add-highlighter shared/ruby/              region ^=begin ^=end                       fill comment
-add-highlighter shared/ruby/              region -recurse \( '%[iqrswxIQRSWX]\(' \) fill meta
-add-highlighter shared/ruby/              region -recurse \{ '%[iqrswxIQRSWX]\{' \} fill meta
-add-highlighter shared/ruby/              region -recurse \[ '%[iqrswxIQRSWX]\[' \] fill meta
-add-highlighter shared/ruby/              region -recurse  < '%[iqrswxIQRSWX]<'   > fill meta
+add-highlighter shared/ruby/              region -recurse \( '%[iqrswxIQRSWX]?\(' \) fill meta
+add-highlighter shared/ruby/              region -recurse \{ '%[iqrswxIQRSWX]?\{' \} fill meta
+add-highlighter shared/ruby/              region -recurse \[ '%[iqrswxIQRSWX]?\[' \] fill meta
+add-highlighter shared/ruby/              region -recurse  < '%[iqrswxIQRSWX]?<'   > fill meta
 add-highlighter shared/ruby/heredoc region '<<[-~]?(?!self)(\w+)'      '^\h*(\w+)$' fill string
 add-highlighter shared/ruby/division region '[\w\)\]](/|(\h+/\h+))' '\w' group # Help Kakoune to better detect /…/ literals
 
