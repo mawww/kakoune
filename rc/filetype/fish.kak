@@ -35,7 +35,7 @@ add-highlighter shared/fish regions
 add-highlighter shared/fish/code default-region group
 add-highlighter shared/fish/double_string region (?<!\\)(?:\\\\)*\K" (?<!\\)(\\\\)*"  group
 add-highlighter shared/fish/single_string region (?<!\\)(?:\\\\)*\K' (?<!\\)(\\\\)*'  fill string
-add-highlighter shared/fish/comment       region '#' '$'              fill comment
+add-highlighter shared/fish/comment       region (?<!\\)(?:\\\\)*(?:^|\h)\K# '$' fill comment
 
 add-highlighter shared/fish/double_string/ fill string
 add-highlighter shared/fish/double_string/ regex (\$\w+)|(\{\$\w+\}) 0:variable
