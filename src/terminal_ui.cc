@@ -262,7 +262,7 @@ void TerminalUI::Screen::output(bool force)
     for (auto& change : changes)
     {
         line += change.keep;
-        if (int del = std::max(change.del - change.add, 0); del > 0)
+        if (int del = change.del - change.add; del > 0)
         {
             printf("\033[%dH\033[%dM", line + 1, del);
             line -= del;
@@ -276,7 +276,7 @@ void TerminalUI::Screen::output(bool force)
         line += change.keep;
         for (int i = 0; i < change.add; ++i)
         {
-            if (int add = std::max(0, change.add - change.del); i == 0 and add > 0)
+            if (int add = change.add - change.del; i == 0 and add > 0)
                 printf("\033[%dH\033[%dL", line + 1, add);
             else
                 printf("\033[%dH", line + 1);
