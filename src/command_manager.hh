@@ -166,9 +166,6 @@ private:
     };
     using ModuleMap = HashMap<String, Module, MemoryDomain::Commands>;
     ModuleMap m_modules;
-
-    CommandMap::const_iterator find_command(const Context& context,
-                                            StringView name) const;
 };
 
 String expand(StringView str, const Context& context,

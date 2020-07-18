@@ -2080,23 +2080,22 @@ const CommandDesc prompt_cmd = {
         const auto flags = parser.get_switch("password") ?
             PromptFlags::Password : PromptFlags::None;
 
-        String on_change = parser.get_switch("on-change").value_or("").str();
-        String on_abort = parser.get_switch("on-abort").value_or("").str();
-
-        CapturedShellContext sc{shell_context};
         context.input_handler().prompt(
             parser[0], initstr.str(), {}, context.faces()["Prompt"],
             flags, '_', std::move(completer),
-            [=](StringView str, PromptEvent event, Context& context) mutable
+            [command,
+             on_change = parser.get_switch("on-change").value_or("").str(),
+             on_abort = parser.get_switch("on-abort").value_or("").str(),
+             sc = CapturedShellContext{shell_context}]
+            (StringView str, PromptEvent event, Context& context) mutable
             {
                 if ((event == PromptEvent::Abort and on_abort.empty()) or
                     (event == PromptEvent::Change and on_change.empty()))
                     return;
 
-                auto& text = sc.env_vars["text"_sv] = str.str();
-                auto clear_password = on_scope_end([&] {
-                    if (flags & PromptFlags::Password)
-                        std::fill(text.begin(), text.end(), '\0');
+                sc.env_vars["text"_sv] = String{String::NoCopy{}, str};
+                auto remove_text = on_scope_end([&] {
+                    sc.env_vars.erase("text"_sv);
                 });
 
                 ScopedSetBool disable_history{context.history_disabled()};
@@ -2114,10 +2113,8 @@ const CommandDesc prompt_cmd = {
                 }
                 catch (Kakoune::runtime_error& error)
                 {
-                    context.print_status({ fix_atom_text(error.what().str()),
-                                           context.faces()["Error"] });
-                    context.hooks().run_hook(Hook::RuntimeError, error.what(),
-                                             context);
+                    context.print_status({fix_atom_text(error.what()), context.faces()["Error"]});
+                    context.hooks().run_hook(Hook::RuntimeError, error.what(), context);
                 }
             });
     }

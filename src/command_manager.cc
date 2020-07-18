@@ -487,13 +487,10 @@ struct command_not_found : runtime_error
         : runtime_error(format("no such command: '{}'", name)) {}
 };
 
-CommandManager::CommandMap::const_iterator
-CommandManager::find_command(const Context& context, StringView name) const
+StringView resolve_alias(const Context& context, StringView name)
 {
     auto alias = context.aliases()[name];
-    StringView cmd_name = alias.empty() ? name : alias;
-
-    return m_commands.find(cmd_name);
+    return alias.empty() ? name : alias;
 }
 
 void CommandManager::execute_single_command(CommandParameters params,
@@ -512,7 +509,7 @@ void CommandManager::execute_single_command(CommandParameters params,
     auto pop_cmd = on_scope_end([this] { --m_command_depth; });
 
     ParameterList param_view(params.begin()+1, params.end());
-    auto command_it = find_command(context, params[0]);
+    auto command_it = m_commands.find(resolve_alias(context, params[0]));
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);
 
@@ -587,7 +584,7 @@ Optional<CommandInfo> CommandManager::command_info(const Context& context, Strin
          tokens.front().type != Token::Type::RawQuoted))
         return {};
 
-    auto cmd = find_command(context, tokens.front().content);
+    auto cmd = m_commands.find(resolve_alias(context, tokens.front().content));
     if (cmd == m_commands.end())
         return {};
 
@@ -729,7 +726,7 @@ Completions CommandManager::complete(const Context& context,
             flags |= CompletionFlags::Start;
         }
 
-        auto command_it = find_command(context, command_name);
+        auto command_it = m_commands.find(resolve_alias(context, command_name));
         if (command_it == m_commands.end())
             return Completions{};
 
@@ -786,7 +783,7 @@ Completions CommandManager::complete(const Context& context,
             flags |= CompletionFlags::Start;
         }
 
-        auto command_it = find_command(context, command_name);
+        auto command_it = m_commands.find(resolve_alias(context, command_name));
         if (command_it != m_commands.end() and command_it->value.completer)
             return command_it->value.completer(
                 context, flags, params.subrange(1),

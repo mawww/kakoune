@@ -249,7 +249,8 @@ struct HashMap
         }
     }
 
-    constexpr void erase(const Key& key) { unordered_remove(key); }
+    template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
+    constexpr void erase(const KeyType& key) { unordered_remove(key); }
 
     template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
     constexpr void remove_all(const KeyType& key)
