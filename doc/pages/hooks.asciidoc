@@ -175,6 +175,9 @@ name. Hooks with no description will always use an empty string.
     even with the `-with-hooks` option (see
     <<execeval#execute-keys-specific-switches,`:doc execeval execute-keys-specific-switches`>>).
 
+*RegisterModified* `register`::
+    Triggered after a register has been written to.
+
 *ModuleLoaded* `module`::
     Triggered after a module is evaluated by the first `require-module` call
 

@@ -33,26 +33,14 @@ public:
 class StaticRegister : public Register
 {
 public:
-    void set(Context&, ConstArrayView<String> values, bool) override
-    {
-        m_content.assign(values.begin(), values.end());
-    }
+    StaticRegister(String name) : m_name{std::move(name)} {}
 
-    ConstArrayView<String> get(const Context&) override
-    {
-        if (m_content.empty())
-            return ConstArrayView<String>(String::ms_empty);
-        else
-            return ConstArrayView<String>(m_content);
-    }
-
-    const String& get_main(const Context& context, size_t main_index) override
-    {
-        auto content = get(context);
-        return content[std::min(main_index, content.size() - 1)];
-    }
+    void set(Context& context, ConstArrayView<String> values, bool) override;
+    ConstArrayView<String> get(const Context&) override;
+    const String& get_main(const Context& context, size_t main_index) override;
 
 protected:
+    String m_name;
     Vector<String, MemoryDomain::Registers> m_content;
 };
 
@@ -62,8 +50,8 @@ template<typename Getter, typename Setter>
 class DynamicRegister : public StaticRegister
 {
 public:
-    DynamicRegister(Getter getter, Setter setter)
-        : m_getter(std::move(getter)), m_setter(std::move(setter)) {}
+    DynamicRegister(String name, Getter getter, Setter setter)
+        : StaticRegister(std::move(name)), m_getter(std::move(getter)), m_setter(std::move(setter)) {}
 
     void set(Context& context, ConstArrayView<String> values, bool) override
     {
@@ -85,45 +73,26 @@ private:
 class HistoryRegister : public StaticRegister
 {
 public:
-    void set(Context& context, ConstArrayView<String> values, bool restoring) override
-    {
-        constexpr size_t size_limit = 100;
+    using StaticRegister::StaticRegister;
 
-        if (restoring)
-            return StaticRegister::set(context, values, true);
-
-        for (auto& entry : values)
-        {
-            m_content.erase(std::remove(m_content.begin(), m_content.end(), entry),
-                          m_content.end());
-            m_content.push_back(entry);
-        }
-
-        const size_t current_size = m_content.size();
-        if (current_size > size_limit)
-            m_content.erase(m_content.begin(), m_content.begin() + (current_size - size_limit));
-    }
-
-    const String& get_main(const Context&, size_t) override
-    {
-        return m_content.empty() ? String::ms_empty : m_content.back();
-    }
+    void set(Context& context, ConstArrayView<String> values, bool restoring) override;
+    const String& get_main(const Context&, size_t) override;
 };
 
 template<typename Func>
-std::unique_ptr<Register> make_dyn_reg(Func func)
+std::unique_ptr<Register> make_dyn_reg(String name, Func func)
 {
     auto setter = [](Context&, ConstArrayView<String>)
     {
         throw runtime_error("this register is not assignable");
     };
-    return std::make_unique<DynamicRegister<Func, decltype(setter)>>(std::move(func), setter);
+    return std::make_unique<DynamicRegister<Func, decltype(setter)>>(name, std::move(func), setter);
 }
 
 template<typename Getter, typename Setter>
-std::unique_ptr<Register> make_dyn_reg(Getter getter, Setter setter)
+std::unique_ptr<Register> make_dyn_reg(String name, Getter getter, Setter setter)
 {
-    return std::make_unique<DynamicRegister<Getter, Setter>>(std::move(getter), std::move(setter));
+    return std::make_unique<DynamicRegister<Getter, Setter>>(name, std::move(getter), std::move(setter));
 }
 
 class NullRegister : public Register

@@ -350,25 +350,28 @@ void register_registers()
 {
     RegisterManager& register_manager = RegisterManager::instance();
 
-    for (auto c : StringView{"abcdefghijklmnopqrstuvwxyz\"^@"})
-        register_manager.add_register(c, std::make_unique<StaticRegister>());
+    for (Codepoint c : StringView{"abcdefghijklmnopqrstuvwxyz\"^@"})
+        register_manager.add_register(c, std::make_unique<StaticRegister>(String{c}));
 
-    for (auto c : StringView{"/|:\\"})
-        register_manager.add_register(c, std::make_unique<HistoryRegister>());
+    for (Codepoint c : StringView{"/|:\\"})
+        register_manager.add_register(c, std::make_unique<HistoryRegister>(String{c}));
 
     using StringList = Vector<String, MemoryDomain::Registers>;
 
     register_manager.add_register('%', make_dyn_reg(
+        "%",
         [](const Context& context)
         { return StringList{{context.buffer().display_name()}}; }));
 
     register_manager.add_register('.', make_dyn_reg(
+        ".",
         [](const Context& context) {
             auto content = context.selections_content();
             return StringList{content.begin(), content.end()};
          }));
 
     register_manager.add_register('#', make_dyn_reg(
+        "#",
         [](const Context& context) {
             const size_t count = context.selections().size();
             StringList res;
@@ -381,6 +384,7 @@ void register_registers()
     for (size_t i = 0; i < 10; ++i)
     {
         register_manager.add_register('0'+i, make_dyn_reg(
+            String{Codepoint('0'+i)},
             [i](const Context& context) {
                 StringList result;
                 for (auto& sel : context.selections())

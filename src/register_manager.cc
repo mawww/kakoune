@@ -1,11 +1,58 @@
 #include "register_manager.hh"
 
 #include "assert.hh"
+#include "context.hh"
 #include "hash_map.hh"
 #include "string_utils.hh"
 
 namespace Kakoune
 {
+
+void StaticRegister::set(Context& context, ConstArrayView<String> values, bool)
+{
+    m_content.assign(values.begin(), values.end());
+    context.hooks().run_hook(Hook::RegisterModified, m_name, context);
+}
+
+ConstArrayView<String> StaticRegister::get(const Context&)
+{
+    if (m_content.empty())
+        return ConstArrayView<String>(String::ms_empty);
+    else
+        return ConstArrayView<String>(m_content);
+}
+
+const String& StaticRegister::get_main(const Context& context, size_t main_index)
+{
+    auto content = get(context);
+    return content[std::min(main_index, content.size() - 1)];
+}
+
+void HistoryRegister::set(Context& context, ConstArrayView<String> values, bool restoring)
+{
+    constexpr size_t size_limit = 100;
+
+    if (restoring)
+        return StaticRegister::set(context, values, true);
+
+    for (auto& entry : values)
+    {
+        m_content.erase(std::remove(m_content.begin(), m_content.end(), entry),
+                      m_content.end());
+        m_content.push_back(entry);
+    }
+
+    const size_t current_size = m_content.size();
+    if (current_size > size_limit)
+        m_content.erase(m_content.begin(), m_content.begin() + (current_size - size_limit));
+
+    context.hooks().run_hook(Hook::RegisterModified, m_name, context);
+}
+
+const String& HistoryRegister::get_main(const Context&, size_t)
+{
+    return m_content.empty() ? String::ms_empty : m_content.back();
+}
 
 static const HashMap<String, Codepoint> reg_names = {
     { "slash", '/' },
