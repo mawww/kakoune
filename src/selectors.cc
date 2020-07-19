@@ -558,51 +558,55 @@ select_paragraph(const Context& context, const Selection& selection,
 {
     auto& buffer = context.buffer();
     BufferIterator first = buffer.iterator_at(selection.cursor());
+    BufferIterator last;
 
-    if (not (flags & ObjectFlags::ToEnd) and first.coord() > BufferCoord{0,1} and
-        is_eol(*(first-1)) and first-1 != buffer.begin() and is_eol(*(first-2)))
-        --first;
-    else if ((flags & ObjectFlags::ToEnd) and
-             first != buffer.begin() and (first+1) != buffer.end() and
-             is_eol(*(first-1)) and is_eol(*first))
-        ++first;
-
-    BufferIterator last = first;
-
-    if ((flags & ObjectFlags::ToBegin) and first != buffer.begin())
+    for (++count; count > 0; --count)
     {
-        skip_while_reverse(first, buffer.begin(),
-                           [](Codepoint c){ return is_eol(c); });
-        if (flags & ObjectFlags::ToEnd)
-            last = first;
-        while (first != buffer.begin())
-        {
-            char cur = *first;
-            char prev = *(first-1);
-            if (is_eol(prev) and is_eol(cur))
-            {
-                ++first;
-                break;
-            }
+        if (not (flags & ObjectFlags::ToEnd) and first.coord() > BufferCoord{0,1} and
+            is_eol(*(first-1)) and first-1 != buffer.begin() and is_eol(*(first-2)))
             --first;
-        }
-    }
-    if (flags & ObjectFlags::ToEnd)
-    {
-        if (last != buffer.end() and is_eol(*last))
-            ++last;
-        while (last != buffer.end())
+        else if ((flags & ObjectFlags::ToEnd) and
+                 first != buffer.begin() and (first+1) != buffer.end() and
+                 is_eol(*(first-1)) and is_eol(*first))
+            ++first;
+        if (last == BufferIterator{})
+            last = first;
+
+        if ((flags & ObjectFlags::ToBegin) and first != buffer.begin())
         {
-            if (last != buffer.begin() and is_eol(*last) and is_eol(*(last-1)))
-            {
-                if (not (flags & ObjectFlags::Inner))
-                    skip_while(last, buffer.end(),
+            skip_while_reverse(first, buffer.begin(),
                                [](Codepoint c){ return is_eol(c); });
-                break;
+            if (flags & ObjectFlags::ToEnd)
+                last = first;
+            while (first != buffer.begin())
+            {
+                char cur = *first;
+                char prev = *(first-1);
+                if (is_eol(prev) and is_eol(cur))
+                {
+                    ++first;
+                    break;
+                }
+                --first;
             }
-            ++last;
         }
-        --last;
+        if (flags & ObjectFlags::ToEnd)
+        {
+            if (last != buffer.end() and is_eol(*last))
+                ++last;
+            while (last != buffer.end())
+            {
+                if (last != buffer.begin() and is_eol(*last) and is_eol(*(last-1)))
+                {
+                    if (not (flags & ObjectFlags::Inner))
+                        skip_while(last, buffer.end(),
+                                   [](Codepoint c){ return is_eol(c); });
+                    break;
+                }
+                ++last;
+            }
+            --last;
+        }
     }
     return (flags & ObjectFlags::ToEnd) ? Selection{first.coord(), last.coord()}
                                         : Selection{last.coord(), first.coord()};
