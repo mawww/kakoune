@@ -285,16 +285,16 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
 *<a-_>*::
     merge contiguous selections together (works across lines as well)
 
-*>*::
+*>*, *<gt>*::
     indent selected lines
 
-*<a\->>*::
+*<a\->>*, *<a-gt>*::
     indent selected lines, including empty lines
 
-*<*::
+*<*, *<lt>*::
     unindent selected lines
 
-*<a-<>*::
+*<a-<>*, *<a-lt>*::
     unindent selected lines, do not remove incomplete indent (3 leading
     spaces when indent is 4)
 
