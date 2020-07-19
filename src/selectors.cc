@@ -494,58 +494,63 @@ select_sentence(const Context& context, const Selection& selection,
 
     auto& buffer = context.buffer();
     BufferIterator first = buffer.iterator_at(selection.cursor());
+    BufferIterator last;
 
-    if (not (flags & ObjectFlags::ToEnd) and first != buffer.begin())
+    for (++count; count > 0; --count)
     {
-        BufferIterator prev_non_blank = first-1;
-        skip_while_reverse(prev_non_blank, buffer.begin(),
-                           [](char c) { return is_horizontal_blank(c) or is_eol(c); });
-        if (is_end_of_sentence(*prev_non_blank))
-            first = prev_non_blank;
-    }
-
-    BufferIterator last = first;
-
-    if (flags & ObjectFlags::ToBegin)
-    {
-        bool saw_non_blank = false;
-        while (first != buffer.begin())
+        if (not (flags & ObjectFlags::ToEnd) and first != buffer.begin())
         {
-            char cur = *first;
-            char prev = *(first-1);
-            if (not is_horizontal_blank(cur))
-                saw_non_blank = true;
-            if (is_eol(prev) and is_eol(cur) and first + 1 != buffer.end())
+            BufferIterator prev_non_blank = first-1;
+            skip_while_reverse(prev_non_blank, buffer.begin(),
+                               [](char c) { return is_horizontal_blank(c) or is_eol(c); });
+            if (is_end_of_sentence(*prev_non_blank))
+                first = prev_non_blank;
+        }
+
+        if (last == BufferIterator{})
+            last = first;
+
+        if (flags & ObjectFlags::ToBegin)
+        {
+            bool saw_non_blank = false;
+            while (first != buffer.begin())
             {
-                ++first;
-                break;
-            }
-            else if (is_end_of_sentence(prev))
-            {
-                if (saw_non_blank)
+                char cur = *first;
+                char prev = *(first-1);
+                if (not is_horizontal_blank(cur))
+                    saw_non_blank = true;
+                if (is_eol(prev) and is_eol(cur) and first + 1 != buffer.end())
+                {
+                    ++first;
                     break;
-                else if (flags & ObjectFlags::ToEnd)
-                    last = first-1;
+                }
+                else if (is_end_of_sentence(prev))
+                {
+                    if (saw_non_blank)
+                        break;
+                    else if (flags & ObjectFlags::ToEnd)
+                        last = first-1;
+                }
+                --first;
             }
-            --first;
+            skip_while(first, buffer.end(), is_horizontal_blank);
         }
-        skip_while(first, buffer.end(), is_horizontal_blank);
-    }
-    if (flags & ObjectFlags::ToEnd)
-    {
-        while (last != buffer.end())
+        if (flags & ObjectFlags::ToEnd)
         {
-            char cur = *last;
-            if (is_end_of_sentence(cur) or
-                (is_eol(cur) and (last+1 == buffer.end() or is_eol(*(last+1)))))
-                break;
-            ++last;
-        }
-        if (not (flags & ObjectFlags::Inner) and last != buffer.end())
-        {
-            ++last;
-            skip_while(last, buffer.end(), is_horizontal_blank);
-            --last;
+            while (last != buffer.end())
+            {
+                char cur = *last;
+                if (is_end_of_sentence(cur) or
+                    (is_eol(cur) and (last+1 == buffer.end() or is_eol(*(last+1)))))
+                    break;
+                ++last;
+            }
+            if (not (flags & ObjectFlags::Inner) and last != buffer.end())
+            {
+                ++last;
+                skip_while(last, buffer.end(), is_horizontal_blank);
+                --last;
+            }
         }
     }
     return (flags & ObjectFlags::ToEnd) ? Selection{first.coord(), last.coord()}
