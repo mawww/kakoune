@@ -107,6 +107,12 @@ struct ScopedSetBool
             m_nested_bool.set();
     }
 
+    ScopedSetBool(ScopedSetBool&& other)
+        : m_nested_bool(other.m_nested_bool), m_condition(other.m_condition)
+    {
+        other.m_condition = false;
+    }
+
     ~ScopedSetBool()
     {
         if (m_condition)

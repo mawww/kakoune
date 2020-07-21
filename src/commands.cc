@@ -1818,10 +1818,11 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
 
     const auto& register_manager = RegisterManager::instance();
     auto make_register_restorer = [&](char c) {
-        return on_scope_end([&, c, save=register_manager[c].save(context)] {
+        auto& reg = register_manager[c];
+        return on_scope_end([&, c, save=reg.save(context), d=ScopedSetBool{reg.modified_hook_disabled()}] {
             try
             {
-                RegisterManager::instance()[c].restore(context, save);
+                reg.restore(context, save);
             }
             catch (runtime_error& err)
             {

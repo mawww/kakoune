@@ -26,6 +26,11 @@ public:
     using RestoreInfo = Vector<String, MemoryDomain::Registers>;
     RestoreInfo save(const Context& context) { return get(context) | gather<RestoreInfo>(); }
     void restore(Context& context, const RestoreInfo& info) { set(context, info, true); }
+
+    NestedBool& modified_hook_disabled() { return m_disable_modified_hook; }
+
+protected:
+    NestedBool m_disable_modified_hook;
 };
 
 // static value register, which can be modified

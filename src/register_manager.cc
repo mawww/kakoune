@@ -11,7 +11,8 @@ namespace Kakoune
 void StaticRegister::set(Context& context, ConstArrayView<String> values, bool)
 {
     m_content.assign(values.begin(), values.end());
-    context.hooks().run_hook(Hook::RegisterModified, m_name, context);
+    if (not m_disable_modified_hook)
+        context.hooks().run_hook(Hook::RegisterModified, m_name, context);
 }
 
 ConstArrayView<String> StaticRegister::get(const Context&)
@@ -46,7 +47,8 @@ void HistoryRegister::set(Context& context, ConstArrayView<String> values, bool 
     if (current_size > size_limit)
         m_content.erase(m_content.begin(), m_content.begin() + (current_size - size_limit));
 
-    context.hooks().run_hook(Hook::RegisterModified, m_name, context);
+    if (not m_disable_modified_hook)
+        context.hooks().run_hook(Hook::RegisterModified, m_name, context);
 }
 
 const String& HistoryRegister::get_main(const Context&, size_t)
