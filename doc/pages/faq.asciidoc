@@ -286,7 +286,7 @@ You can instruct the regex engine to stop matching newline characters with
 === Why does `a` extend the current selection, but `i` leaves it untouched?
 
 Selections are ranges of characters whose delimiters are an "anchor" and
-a "cursor", and inserting characters is always done before the anchor in
+a "cursor", and inserting characters is always done before the cursor in
 insert mode.
 
 Consequently, using the append primitive (`a`) nudges the cursor forward to
