@@ -53,7 +53,7 @@ add-highlighter shared/ruby/              region -recurse \{ '%[iqrswxIQRSWX]?\{
 add-highlighter shared/ruby/              region -recurse \[ '%[iqrswxIQRSWX]?\[' \] fill meta
 add-highlighter shared/ruby/              region -recurse  < '%[iqrswxIQRSWX]?<'   > fill meta
 add-highlighter shared/ruby/heredoc region '<<[-~]?(?!self)(\w+)'      '^\h*(\w+)$' fill string
-add-highlighter shared/ruby/division region '[\w\)\]](/|(\h+/\h+))' '\w' group # Help Kakoune to better detect /…/ literals
+add-highlighter shared/ruby/division region '[\w\)\]]\K(/|(\h+/\h+))' '\w' group # Help Kakoune to better detect /…/ literals
 
 # Regular expression flags are: i → ignore case, m → multi-lines, o → only interpolate #{} blocks once, x → extended mode (ignore white spaces)
 # Literals are: i → array of symbols, q → string, r → regular expression, s → symbol, w → array of words, x → capture shell result
