@@ -231,11 +231,15 @@ void TerminalUI::Screen::output(bool force)
     if (lines.empty())
         return;
 
-    if (force)
-        hashes.clear();
-
     // iTerm2 "begin synchronised update" sequence
     printf("\033P=1s\033\\");
+
+    if (force)
+    {
+        hashes.clear();
+        printf("\033[m");
+        m_active_face = Face{};
+    }
 
     struct Change { int keep; int add; int del; };
     Vector<Change> changes{Change{}};
