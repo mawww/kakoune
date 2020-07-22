@@ -128,7 +128,7 @@ define-command -hidden sh-indent-on-new-line %[
         # indent after then
         try %{ execute-keys -draft <space> k <a-x> <a-k> then$ <ret> j <a-gt> }
         # deindent after fi
-        try %{ execute-keys -draft <space> k <a-x> <a-k> fi$ <ret> <a-lt> j K <a-&> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> fi$ <ret> K <a-&> j <a-lt> j K <a-&> }
         # deindent and reindent after else - deindent the else, then back
         # down and return to the previous indent level.
         try %{ execute-keys -draft <space> k <a-x> <a-k> else$ <ret> <a-lt> j }
