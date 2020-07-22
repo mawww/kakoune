@@ -14,6 +14,7 @@ hook global BufCreate .*\.nim(s|ble)? %{
 hook global WinSetOption filetype=nim %{
     require-module nim
 
+    set-option buffer indentwidth 2
     set-option window static_words %opt{nim_static_words}
 
     hook window InsertChar \n -group nim-indent nim-indent-on-new-line
