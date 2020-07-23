@@ -73,6 +73,10 @@ add-highlighter shared/asciidoc/ regex [^\\](\{[-\w]+\})[^\\]? 1:meta
 # Options
 add-highlighter shared/asciidoc/ regex ^\[[^\n]+\]$ 0:operator
 
+# Admonition pargraphs
+add-highlighter shared/asciidoc/ regex ^(NOTE|TIP|IMPORTANT|CAUTION|WARNING): 0:block
+add-highlighter shared/asciidoc/ regex ^\[(NOTE|TIP|IMPORTANT|CAUTION|WARNING)\]$ 0:block
+
 # Commands
 # ‾‾‾‾‾‾‾‾
 
