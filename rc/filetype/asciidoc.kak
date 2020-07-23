@@ -77,6 +77,12 @@ add-highlighter shared/asciidoc/ regex ^\[[^\n]+\]$ 0:operator
 add-highlighter shared/asciidoc/ regex ^(NOTE|TIP|IMPORTANT|CAUTION|WARNING): 0:block
 add-highlighter shared/asciidoc/ regex ^\[(NOTE|TIP|IMPORTANT|CAUTION|WARNING)\]$ 0:block
 
+# Links, inline macros
+add-highlighter shared/asciidoc/ regex \b((?:https?|ftp|irc://)[^\h\[]+)\[([^\n]*)?\] 1:link 2:+i
+add-highlighter shared/asciidoc/ regex (link|mailto):([^\n]+)(?:\[([^\n]*)\]) 1:keyword 2:link 3:+i
+add-highlighter shared/asciidoc/ regex (xref):([^\n]+)(?:\[([^\n]*)\]) 1:keyword 2:meta 3:+i
+add-highlighter shared/asciidoc/ regex (<<([^\n><]+)>>) 1:link 2:meta
+
 # Commands
 # ‾‾‾‾‾‾‾‾
 
