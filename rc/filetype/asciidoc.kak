@@ -65,6 +65,7 @@ add-highlighter shared/asciidoc/ regex \h\*{2}[^\n\*]+\*{2} 0:+b
 
 # Attributes
 add-highlighter shared/asciidoc/ regex ^:[-\w]+: 0:meta
+add-highlighter shared/asciidoc/ regex [^\\](\{[-\w]+\})[^\\]? 1:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
