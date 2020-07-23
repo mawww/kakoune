@@ -70,6 +70,9 @@ add-highlighter shared/asciidoc/ regex __[^\n]+?__ 0:+i
 add-highlighter shared/asciidoc/ regex ^:(?:(?<neg>!?)[-\w]+|[-\w]+(?<neg>!?)): 0:meta neg:operator
 add-highlighter shared/asciidoc/ regex [^\\](\{[-\w]+\})[^\\]? 1:meta
 
+# Options
+add-highlighter shared/asciidoc/ regex ^\[[^\n]+\]$ 0:operator
+
 # Commands
 # ‾‾‾‾‾‾‾‾
 
