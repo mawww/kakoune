@@ -39,6 +39,9 @@ add-highlighter shared/asciidoc/ regex (\A|\n\n)={2,}\h+[^\n]+$ 0:header
 add-highlighter shared/asciidoc/ regex ^//(?:[^\n/][^\n]*|)$ 0:comment
 add-highlighter shared/asciidoc/ regex ^(/{4,}).*?\n(/{4,})$ 0:comment
 
+# List titles
+add-highlighter shared/asciidoc/ regex ^\.[^\h\W][^\n]*$ 0:title
+
 # Bulleted lists
 add-highlighter shared/asciidoc/ regex ^\h*(?<bullet>[-\*])\h+[^\n]+$ 0:list bullet:bullet
 add-highlighter shared/asciidoc/ regex ^\h*(?<bullet>[-\*]+)\h+[^\n]+(\n\h+[^-\*\n]*)?$ 0:list bullet:bullet
