@@ -52,16 +52,16 @@ add-highlighter shared/asciidoc/ regex ^(\*{3,})\n[^\n\h].*?\n(\*{3,})$ 0:block
 # Monospaced text
 add-highlighter shared/asciidoc/ regex \B(?:\+[^\n]+?\+|`[^\n]+?`)\B 0:mono
 
-# Italics
-add-highlighter shared/asciidoc/ regex \b_[^\n]+?_\b 0:+i
-
 # Bolded text
 add-highlighter shared/asciidoc/ regex \s\*[^\n\*]+\*\B 0:+b
 add-highlighter shared/asciidoc/ regex \h\*[^\n\*]+\*\B 0:+b
-
-# Bolded text that transcends word boundaries
-add-highlighter shared/asciidoc/ regex ^\*{2}(?!\h)[^\n\*]+\*{2} 0:+b
+add-highlighter shared/asciidoc/ regex \*{2}(?!\h)[^\n\*]+\*{2} 0:+b
 add-highlighter shared/asciidoc/ regex \h\*{2}[^\n\*]+\*{2} 0:+b
+
+# Italicized text
+# (these are simpler since they aren't able to _also_ be bullet characters.)
+add-highlighter shared/asciidoc/ regex \b_[^\n]+?_\b 0:+i
+add-highlighter shared/asciidoc/ regex __[^\n]+?__ 0:+i
 
 # Attributes
 add-highlighter shared/asciidoc/ regex ^:[-\w]+: 0:meta
