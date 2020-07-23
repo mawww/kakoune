@@ -46,6 +46,8 @@ add-highlighter shared/asciidoc/ regex \B(?:\+[^\n]+?\+|`[^\n]+?`)\B 0:mono
 add-highlighter shared/asciidoc/ regex \b_[^\n]+?_\b 0:+i
 add-highlighter shared/asciidoc/ regex \s\*[^\n\*]+\*\B 0:+b
 add-highlighter shared/asciidoc/ regex \h\*[^\n\*]+\*\B 0:+b
+add-highlighter shared/asciidoc/ regex ^\*{2}(?!\h)[^\n\*]+\*{2} 0:+b
+add-highlighter shared/asciidoc/ regex \h\*{2}[^\n\*]+\*{2} 0:+b
 add-highlighter shared/asciidoc/ regex ^:[-\w]+: 0:meta
 
 # Commands
