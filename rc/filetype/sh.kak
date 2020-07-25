@@ -108,7 +108,7 @@ define-command -hidden sh-indent-on-new-line %[
         # indent after do
         try %{ execute-keys -draft <space> k <a-x> <a-k> do$ <ret> j <a-gt> }
         # deindent after done
-        try %{ execute-keys -draft <space> k <a-x> <a-k> done$ <ret> <a-lt> j K <a-&> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> done$ <ret> K <a-&> j <a-lt> j K <a-&> }
 
         # Indent if/then/else syntax, e.g.:
         # if [ $foo = $bar ]; then
