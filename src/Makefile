@@ -81,7 +81,7 @@ else
     LDFLAGS += -rdynamic
 endif
 
-CXXFLAGS += -pedantic -std=c++17 -g -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-address
+CXXFLAGS += -pedantic -std=c++2a -g -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-address
 
 compiler := $(shell $(CXX) --version)
 ifneq (,$(findstring clang,$(compiler)))

@@ -31,7 +31,7 @@ String trim_indent(StringView str)
                 throw runtime_error("inconsistent indentation in the string");
 
             return line.substr(indent.length());
-        }), String{}, [](String& s, StringView l) -> decltype(auto) { return s += l; });
+        }), String{}, [](String s, StringView l) { return s += l; });
 }
 
 String escape(StringView str, StringView characters, char escape)

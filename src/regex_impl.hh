@@ -50,29 +50,17 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     {
         Match,
         Literal,
-        Literal_IgnoreCase,
         AnyChar,
         AnyCharExceptNewLine,
-        Class,
-        CharacterType,
+        CharClass,
+        CharType,
         Jump,
-        Split_PrioritizeParent,
-        Split_PrioritizeChild,
+        Split,
         Save,
-        LineStart,
-        LineEnd,
+        LineAssertion,
+        SubjectAssertion,
         WordBoundary,
-        NotWordBoundary,
-        SubjectBegin,
-        SubjectEnd,
-        LookAhead,
-        NegativeLookAhead,
-        LookBehind,
-        NegativeLookBehind,
-        LookAhead_IgnoreCase,
-        NegativeLookAhead_IgnoreCase,
-        LookBehind_IgnoreCase,
-        NegativeLookBehind_IgnoreCase,
+        LookAround,
     };
 
     enum class Lookaround : Codepoint
@@ -86,15 +74,46 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
         EndOfLookaround      = static_cast<Codepoint>(-1)
     };
 
+    union Param
+    {
+        struct Literal
+        {
+            uint32_t codepoint : 24;
+            bool ignore_case : 1;
+        } literal;
+        int16_t character_class_index;
+        CharacterType character_type;
+        int16_t jump_target;
+        int16_t save_index;
+        struct Split
+        {
+            int16_t target;
+            bool prioritize_parent : 1;
+        } split;
+        bool line_start;
+        bool subject_begin;
+        bool word_boundary_positive;
+        struct Lookaround
+        {
+            int16_t index;
+            bool ahead : 1;
+            bool positive : 1;
+            bool ignore_case : 1;
+        } lookaround;
+    };
+    static_assert(sizeof(Param) == 4);
+
     struct Instruction
     {
         Op op;
         // Those mutables are used during execution
         mutable bool scheduled;
         mutable uint16_t last_step;
-        uint32_t param;
+        Param param;
     };
-    static_assert(sizeof(Instruction) == 8, "");
+    static_assert(sizeof(Instruction) == 8);
+
+    static constexpr uint32_t prioritize_parent{1 << 16};
 
     explicit operator bool() const { return not instructions.empty(); }
 
@@ -343,110 +362,6 @@ private:
 
             switch (inst.op)
             {
-                case CompiledRegex::Literal:
-                    if (pos != config.end and inst.param == codepoint(pos, config))
-                        return consumed();
-                    return failed();
-                case CompiledRegex::Literal_IgnoreCase:
-                    if (pos != config.end and inst.param == to_lower(codepoint(pos, config)))
-                        return consumed();
-                    return failed();
-                case CompiledRegex::AnyChar:
-                    return consumed();
-                case CompiledRegex::AnyCharExceptNewLine:
-                    if (pos != config.end and codepoint(pos, config) != '\n')
-                        return consumed();
-                    return failed();
-                case CompiledRegex::Jump:
-                    thread.inst = static_cast<int16_t>(inst.param);
-                    break;
-                case CompiledRegex::Split_PrioritizeParent:
-                {
-                    if (thread.saves >= 0)
-                        ++m_saves[thread.saves]->refcount;
-                    m_threads.push_current({static_cast<int16_t>(inst.param), thread.saves});
-                    break;
-                }
-                case CompiledRegex::Split_PrioritizeChild:
-                {
-                    if (thread.saves >= 0)
-                        ++m_saves[thread.saves]->refcount;
-                    m_threads.push_current({thread.inst, thread.saves});
-                    thread.inst = static_cast<uint16_t>(inst.param);
-                    break;
-                }
-                case CompiledRegex::Save:
-                {
-                    if (mode & RegexMode::NoSaves)
-                        break;
-                    if (thread.saves < 0)
-                        thread.saves = new_saves<false>(nullptr);
-                    else if (m_saves[thread.saves]->refcount > 1)
-                    {
-                        --m_saves[thread.saves]->refcount;
-                        thread.saves = new_saves<true>(m_saves[thread.saves]->pos);
-                    }
-                    m_saves[thread.saves]->pos[inst.param] = pos;
-                    break;
-                }
-                case CompiledRegex::Class:
-                    if (pos == config.end)
-                        return failed();
-                    return is_character_class(m_program.character_classes[inst.param], codepoint(pos, config)) ?
-                        consumed() : failed();
-                case CompiledRegex::CharacterType:
-                    if (pos == config.end)
-                        return failed();
-                    return is_ctype((CharacterType)inst.param, codepoint(pos, config)) ?
-                        consumed() : failed();
-                case CompiledRegex::LineStart:
-                    if (not is_line_start(pos, config))
-                        return failed();
-                    break;
-                case CompiledRegex::LineEnd:
-                    if (not is_line_end(pos, config))
-                        return failed();
-                    break;
-                case CompiledRegex::WordBoundary:
-                    if (not is_word_boundary(pos, config))
-                        return failed();
-                    break;
-                case CompiledRegex::NotWordBoundary:
-                    if (is_word_boundary(pos, config))
-                        return failed();
-                    break;
-                case CompiledRegex::SubjectBegin:
-                    if (pos != config.subject_begin)
-                        return failed();
-                    break;
-                case CompiledRegex::SubjectEnd:
-                    if (pos != config.subject_end)
-                        return failed();
-                    break;
-                case CompiledRegex::LookAhead:
-                case CompiledRegex::NegativeLookAhead:
-                    if (lookaround<true, false>(inst.param, pos, config) !=
-                        (inst.op == CompiledRegex::LookAhead))
-                        return failed();
-                    break;
-                case CompiledRegex::LookAhead_IgnoreCase:
-                case CompiledRegex::NegativeLookAhead_IgnoreCase:
-                    if (lookaround<true, true>(inst.param, pos, config) !=
-                        (inst.op == CompiledRegex::LookAhead_IgnoreCase))
-                        return failed();
-                    break;
-                case CompiledRegex::LookBehind:
-                case CompiledRegex::NegativeLookBehind:
-                    if (lookaround<false, false>(inst.param, pos, config) !=
-                        (inst.op == CompiledRegex::LookBehind))
-                        return failed();
-                    break;
-                case CompiledRegex::LookBehind_IgnoreCase:
-                case CompiledRegex::NegativeLookBehind_IgnoreCase:
-                    if (lookaround<false, true>(inst.param, pos, config) !=
-                        (inst.op == CompiledRegex::LookBehind_IgnoreCase))
-                        return failed();
-                    break;
                 case CompiledRegex::Match:
                     if ((pos != config.end and not (mode & RegexMode::Search)) or
                         (config.flags & RegexExecFlags::NotInitialNull and pos == config.begin))
@@ -460,6 +375,71 @@ private:
                     while (not m_threads.current_is_empty())
                         release_saves(m_threads.pop_current().saves);
                     return;
+                case CompiledRegex::Literal:
+                    if (pos != config.end and
+                        inst.param.literal.codepoint == (inst.param.literal.ignore_case ? to_lower(codepoint(pos, config))
+                                                                                        : codepoint(pos, config)))
+                        return consumed();
+                    return failed();
+                case CompiledRegex::AnyChar:
+                    return consumed();
+                case CompiledRegex::AnyCharExceptNewLine:
+                    if (pos != config.end and codepoint(pos, config) != '\n')
+                        return consumed();
+                    return failed();
+                case CompiledRegex::Jump:
+                    thread.inst = inst.param.jump_target;
+                    break;
+                case CompiledRegex::Split:
+                    if (thread.saves >= 0)
+                        ++m_saves[thread.saves]->refcount;
+
+                    if (inst.param.split.prioritize_parent)
+                        m_threads.push_current({inst.param.split.target, thread.saves});
+                    else
+                    {
+                        m_threads.push_current(thread);
+                        thread.inst = inst.param.split.target;
+                    }
+                    break;
+                case CompiledRegex::Save:
+                    if (mode & RegexMode::NoSaves)
+                        break;
+                    if (thread.saves < 0)
+                        thread.saves = new_saves<false>(nullptr);
+                    else if (m_saves[thread.saves]->refcount > 1)
+                    {
+                        --m_saves[thread.saves]->refcount;
+                        thread.saves = new_saves<true>(m_saves[thread.saves]->pos);
+                    }
+                    m_saves[thread.saves]->pos[inst.param.save_index] = pos;
+                    break;
+                case CompiledRegex::CharClass:
+                    if (pos == config.end)
+                        return failed();
+                    return is_character_class(m_program.character_classes[inst.param.character_class_index], codepoint(pos, config)) ?
+                        consumed() : failed();
+                case CompiledRegex::CharType:
+                    if (pos == config.end)
+                        return failed();
+                    return is_ctype(inst.param.character_type, codepoint(pos, config)) ?
+                        consumed() : failed();
+                case CompiledRegex::LineAssertion:
+                    if (not (inst.param.line_start ? is_line_start(pos, config) : is_line_end(pos, config)))
+                        return failed();
+                    break;
+                case CompiledRegex::SubjectAssertion:
+                    if (pos != (inst.param.subject_begin ? config.subject_begin : config.subject_end))
+                        return failed();
+                    break;
+                case CompiledRegex::WordBoundary:
+                    if (is_word_boundary(pos, config) != inst.param.word_boundary_positive)
+                        return failed();
+                    break;
+                case CompiledRegex::LookAround:
+                    if (lookaround(inst.param.lookaround, pos, config) != inst.param.lookaround.positive)
+                        return failed();
+                    break;
             }
         }
         return failed();
@@ -544,25 +524,24 @@ private:
         }
     }
 
-    template<bool look_forward, bool ignore_case>
-    bool lookaround(uint32_t index, Iterator pos, const ExecConfig& config) const
+    bool lookaround(CompiledRegex::Param::Lookaround param, Iterator pos, const ExecConfig& config) const
     {
         using Lookaround = CompiledRegex::Lookaround;
 
-        if (not look_forward)
+        if (not param.ahead)
         {
             if (pos == config.subject_begin)
-                return m_program.lookarounds[index] == Lookaround::EndOfLookaround;
+                return m_program.lookarounds[param.index] == Lookaround::EndOfLookaround;
             utf8::to_previous(pos, config.subject_begin);
         }
 
-        for (auto it = m_program.lookarounds.begin() + index; *it != Lookaround::EndOfLookaround; ++it)
+        for (auto it = m_program.lookarounds.begin() + param.index; *it != Lookaround::EndOfLookaround; ++it)
         {
-            if (look_forward and pos == config.subject_end)
+            if (param.ahead and pos == config.subject_end)
                 return false;
 
             Codepoint cp = utf8::codepoint(pos, config.subject_end);
-            if (ignore_case)
+            if (param.ignore_case)
                 cp = to_lower(cp);
 
             const Lookaround op = *it;
@@ -588,11 +567,11 @@ private:
             else if (static_cast<Codepoint>(op) != cp)
                 return false;
 
-            if (not look_forward and pos == config.subject_begin)
+            if (not param.ahead and pos == config.subject_begin)
                 return *++it == Lookaround::EndOfLookaround;
 
-            look_forward ? utf8::to_next(pos, config.subject_end)
-                         : utf8::to_previous(pos, config.subject_begin);
+            param.ahead ? utf8::to_next(pos, config.subject_end)
+                        : utf8::to_previous(pos, config.subject_begin);
         }
         return true;
     }
