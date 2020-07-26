@@ -708,6 +708,7 @@ enum class ServerFlags
     Daemon      = 1 << 1,
     ReadOnly    = 1 << 2,
     StartupInfo = 1 << 3,
+    NoFork      = 1 << 4,
 };
 constexpr bool with_bit_ops(Meta::Type<ServerFlags>) { return true; }
 
@@ -725,6 +726,8 @@ int run_server(StringView session, StringView server_init,
             write_stderr("-d needs a session name to be specified with -s\n");
             return -1;
         }
+        if (flags & ServerFlags::NoFork)
+	        goto nofork;
         if (pid_t child = fork())
         {
             write_stderr(format("Kakoune forked to background, for session '{}'\n"
@@ -733,6 +736,7 @@ int run_server(StringView session, StringView server_init,
             exit(0);
         }
     }
+nofork:
 
     EventManager        event_manager;
     Server              server{session.empty() ? to_string(getpid()) : session.str()};
@@ -1052,7 +1056,8 @@ int main(int argc, char* argv[])
                    { "debug", { true, "initial debug option value" } },
                    { "version", { false, "display kakoune version and exit" } },
                    { "ro", { false, "readonly mode" } },
-                   { "help", { false, "display a help message and quit" } } }
+                   { "help", { false, "display a help message and quit" } },
+                   { "no-fork", { false, "don't fork when running a headless daemon" } } }
     };
 
     try
@@ -1105,7 +1110,7 @@ int main(int argc, char* argv[])
 
         if (auto session = parser.get_switch("p"))
         {
-            for (auto opt : { "c", "n", "s", "d", "e", "E", "ro" })
+            for (auto opt : { "c", "n", "s", "d", "e", "E", "ro", "no-fork" })
             {
                 if (parser.get_switch(opt))
                 {
@@ -1165,7 +1170,7 @@ int main(int argc, char* argv[])
 
         if (auto server_session = parser.get_switch("c"))
         {
-            for (auto opt : { "n", "s", "d", "E", "ro" })
+            for (auto opt : { "n", "s", "d", "E", "ro", "no-fork" })
             {
                 if (parser.get_switch(opt))
                 {
@@ -1194,6 +1199,7 @@ int main(int argc, char* argv[])
                 auto flags = (ignore_kakrc                                ? ServerFlags::IgnoreKakrc : ServerFlags::None) |
                              (parser.get_switch("d")                      ? ServerFlags::Daemon      : ServerFlags::None) |
                              (parser.get_switch("ro")                     ? ServerFlags::ReadOnly    : ServerFlags::None) |
+                             (parser.get_switch("no-fork")                ? ServerFlags::NoFork      : ServerFlags::None) |
                              ((argc == 1 or (ignore_kakrc and argc == 2))
                               and isatty(0)                               ? ServerFlags::StartupInfo : ServerFlags::None);
                 auto debug_flags = option_from_string(Meta::Type<DebugFlags>{}, parser.get_switch("debug").value_or(""));
