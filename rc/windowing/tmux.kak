@@ -16,6 +16,9 @@ define-command -hidden -params 2.. tmux-terminal-impl %{
             exit
         fi
         tmux_args="$1"
+        if [ "${1%%-*}" = split ]; then
+            tmux_args="$tmux_args -t ${kak_client_env_TMUX_PANE}"
+        fi
         shift
         # ideally we should escape single ';' to stop tmux from interpreting it as a new command
         # but that's probably too rare to care
