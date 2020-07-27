@@ -15,3 +15,7 @@ func foo(x int) int {
 func foo(x int) int {
     bar()
 }
+
+  func foo(x int) int {
+          bar()
+  }
