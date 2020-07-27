@@ -89,6 +89,8 @@ define-command -hidden go-indent-on-new-line %~
         try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
         # indent after if|else|while|for
         try %[ execute-keys -draft <semicolon><a-F>)MB <a-k> \A(if|else|while|for)\h*\(.*\)\h*\n\h*\n?\z <ret> s \A|.\z <ret> 1<a-&>1<a-space><a-gt> ]
+        # deindent closing brace(s)
+        try %[ execute-keys -draft <a-x> <a-k>^\h*[})]+\h*$<ret> <a-lt> ]
     =
 ~
 
