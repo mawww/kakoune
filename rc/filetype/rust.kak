@@ -112,6 +112,8 @@ define-command -hidden rust-indent-on-new-line %~
             try %+ execute-keys -draft k <a-x> <a-k> ^\h*where\h*$ <ret> j <a-gt> +
             # dedent after lines starting with . and ending with , or ;
             try %_ execute-keys -draft k <a-x> <a-k> ^\h*\..*[,<semicolon>]\h*$ <ret> j <a-lt> _
+            # deindent closing brace(s)
+            try %< execute-keys -draft <a-x> <a-k>^\h*[})]+\h*$<ret> <a-lt> >
             # todo dedent additional unmatched parenthesis
             # try %& execute-keys -draft k <a-x> s \((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\) l Gl s\) %sh{
                 # count previous selections length
