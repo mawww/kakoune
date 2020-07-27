@@ -93,6 +93,8 @@ define-command -hidden gluon-indent-on-new-line %{
                 \; k x <a-k> (\(|\{|\[|=|->|then|else|rec|in)$ <ret> j <a-gt>
             # balance out brackets } ]
         }
+        # deindent closing brace(s) when after cursor
+        try %{ execute-keys -draft <a-x> <a-k>^\h*[})\]]+\h*$<ret> hm <a-S> 1<a-&> }
     }
 }
 
