@@ -99,7 +99,7 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
                                K <a-x> s \belse\b\h*(?://[^\n]+)?\n([^\n]*\n){2}\z<ret> \
                                <a-S>1<a-&> >
     # deindent closing brace(s) when after cursor
-    try %< execute-keys -draft <a-x> <a-k>^\h*[})]+\h*$<ret> <a-lt> >
+    try %< execute-keys -draft <a-x> <a-k>^\h*[})]+\h*$<ret> hm <a-S> 1<a-&> >
     # align to the opening parenthesis or opening brace (whichever is first)
     # on a previous line if its followed by text on the same line
     try %< evaluate-commands -draft %<
