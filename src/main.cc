@@ -718,7 +718,6 @@ int run_server(StringView session, StringView server_init,
                ConstArrayView<StringView> files)
 {
     static bool terminate = false;
-    set_signal_handler(SIGTERM, [](int) { terminate = true; });
     if (flags & ServerFlags::Daemon)
     {
         if (session.empty())
@@ -727,7 +726,10 @@ int run_server(StringView session, StringView server_init,
             return -1;
         }
         if (flags & ServerFlags::NoFork)
-	        goto nofork;
+        {
+            set_signal_handler(SIGINT, [](int) { write_stderr("Interrupt signal received\n"); terminate = true; });
+            goto nofork;
+        }
         if (pid_t child = fork())
         {
             write_stderr(format("Kakoune forked to background, for session '{}'\n"
