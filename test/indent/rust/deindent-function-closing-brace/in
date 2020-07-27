@@ -10,3 +10,6 @@ fn foo() -> i32 {%( )bar()
 
 fn foo() -> i32 {
     bar()%( )}
+
+  fn foo() -> i32 {
+           bar()%( )}

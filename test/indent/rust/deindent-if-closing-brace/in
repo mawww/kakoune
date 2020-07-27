@@ -10,3 +10,6 @@ if true {%( )bar()
 
 if true {
     bar()%( )}
+
+  if true {
+            bar()%( )}
