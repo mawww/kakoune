@@ -712,37 +712,6 @@ enum class ServerFlags
 };
 constexpr bool with_bit_ops(Meta::Type<ServerFlags>) { return true; }
 
-void signal_handler(int signal)
-{
-    NCursesUI::abort();
-    const char* text = nullptr;
-    switch (signal)
-    {
-        case SIGSEGV: text = "SIGSEGV"; break;
-        case SIGFPE:  text = "SIGFPE";  break;
-        case SIGQUIT: text = "SIGQUIT"; break;
-        case SIGPIPE: text = "SIGPIPE"; break;
-    }
-    auto msg = format("Received {}, exiting.\nPid: {}\nCallstack:\n{}",
-                      text, getpid(), Backtrace{}.desc());
-    write_stderr(msg);
-    notify_fatal_error(msg);
-
-    if (Server::has_instance())
-        Server::instance().close_session();
-    if (BufferManager::has_instance())
-        BufferManager::instance().backup_modified_buffers();
-
-    if (signal == SIGSEGV)
-    {
-        // generate core dump
-        ::signal(SIGSEGV, SIG_DFL);
-        ::kill(getpid(), SIGSEGV);
-    }
-    else
-        abort();
-}
-
 int run_server(StringView session, StringView server_init,
                StringView client_init, Optional<BufferCoord> init_coord,
                ServerFlags flags, UIType ui_type, DebugFlags debug_flags,
@@ -757,10 +726,8 @@ int run_server(StringView session, StringView server_init,
             write_stderr("-d needs a session name to be specified with -s\n");
             return -1;
         }
-        if (flags & ServerFlags::NoFork) {
-            set_signal_handler(SIGINT, signal_handler);
-            goto nofork;
-        }
+        if (flags & ServerFlags::NoFork)
+	        goto nofork;
         if (pid_t child = fork())
         {
             write_stderr(format("Kakoune forked to background, for session '{}'\n"
@@ -1022,6 +989,37 @@ int run_pipe(StringView session)
         return -1;
     }
     return 0;
+}
+
+void signal_handler(int signal)
+{
+    NCursesUI::abort();
+    const char* text = nullptr;
+    switch (signal)
+    {
+        case SIGSEGV: text = "SIGSEGV"; break;
+        case SIGFPE:  text = "SIGFPE";  break;
+        case SIGQUIT: text = "SIGQUIT"; break;
+        case SIGPIPE: text = "SIGPIPE"; break;
+    }
+    auto msg = format("Received {}, exiting.\nPid: {}\nCallstack:\n{}",
+                      text, getpid(), Backtrace{}.desc());
+    write_stderr(msg);
+    notify_fatal_error(msg);
+
+    if (Server::has_instance())
+        Server::instance().close_session();
+    if (BufferManager::has_instance())
+        BufferManager::instance().backup_modified_buffers();
+
+    if (signal == SIGSEGV)
+    {
+        // generate core dump
+        ::signal(SIGSEGV, SIG_DFL);
+        ::kill(getpid(), SIGSEGV);
+    }
+    else
+        abort();
 }
 
 }
