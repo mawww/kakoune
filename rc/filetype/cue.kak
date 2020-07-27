@@ -136,6 +136,8 @@ define-command -hidden cue-indent-on-new-line %~
             try %[ execute-keys -draft k <a-x> <a-k> [{(]\h*$ <ret> j <a-gt> ]
             # indent after lines ending with [{(].+ and move first parameter to own line
             try %< execute-keys -draft [c[({],[)}] <ret> <a-k> \A[({][^\n]+\n[^\n]*\n?\z <ret> L i<ret><esc> <gt> <a-S> <a-&> >
+            # deindent closing brace(s) when after cursor
+            try %< execute-keys -draft <a-x> <a-k>^\h*[})]+\h*$<ret> hm <a-S> 1<a-&> >
         |
         # filter previous line
         try %{ execute-keys -draft k : cue-trim-indent <ret> }
