@@ -60,6 +60,8 @@ define-command -hidden cabal-indent-on-new-line %[
         try %[ execute-keys -draft k : cabal-trim-indent <ret> ]
         # indent after lines ending with { or :
         try %[ execute-keys -draft <space> k <a-x> <a-k> [:{]$ <ret> j <a-gt> ]
+        # deindent closing brace when after cursor
+        try %[ execute-keys -draft <a-x> <a-k>\h*\}\h*(?:--.*)?$<ret> hm <a-S> 1<a-&> ]
     ]
 ]
 
