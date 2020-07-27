@@ -71,6 +71,8 @@ define-command -hidden css-indent-on-new-line %[
         try %[ execute-keys -draft k : css-trim-indent <ret> ]
         # indent after lines ending with with {
         try %[ execute-keys -draft k <a-x> <a-k> \{$ <ret> j <a-gt> ]
+        # deindent closing brace when after cursor
+        try %[ execute-keys -draft <a-x> <a-k>^\h*\}\h*$<ret> hm <a-S> 1<a-&> ]
     ]
 ]
 
