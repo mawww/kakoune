@@ -109,6 +109,8 @@ define-command -hidden nix-indent-on-new-line %<
         try %{ execute-keys -draft k : nix-trim-indent <ret> }
         # indent after lines beginning / ending with opener token
         try %_ execute-keys -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
+        # deindent closer token(s) when after cursor
+        try %_ execute-keys -draft <a-x> <a-k>^\h*[}\]]+\h*$<ret> hm <a-S> 1<a-&> _
     >
 >
 
