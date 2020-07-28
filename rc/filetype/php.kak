@@ -23,7 +23,7 @@ hook -group php-highlight global WinSetOption filetype=php %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/php-file }
 }
 
-provide-module php %(
+provide-module php %§
 require-module html
 
 # Highlighters
@@ -93,7 +93,9 @@ define-command -hidden php-indent-on-new-line %<
         try %_ execute-keys -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
         # append " * " on lines starting a multiline /** or /* comment
     	try %{ execute-keys -draft k <a-x> s ^\h*/[*][* ]? <ret> j gi i <space>*<space> }
+    	# deindent closer token(s) when after cursor
+    	try %_ execute-keys -draft <a-x> <a-k>^\h*[})]+\h*$<ret> hm <a-S> 1<a-&> _
     >
 >
 
-)
+§
