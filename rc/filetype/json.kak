@@ -59,8 +59,8 @@ define-command -hidden json-indent-on-new-line %<
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : json-trim-indent <ret> }
-        # indent after lines beginning with opener token
-        try %< execute-keys -draft k <a-x> <a-k> ^\h*[[{] <ret> j <a-gt> >
+        # indent after lines ending with opener token
+        try %< execute-keys -draft k <a-x> <a-k> [[{]\h*$ <ret> j <a-gt> >
         # deindent opener token(s) when after cursor
         try %< execute-keys -draft <a-x> <a-k>^\h*[}\]]+\h*$<ret> hm <a-S> 1<a-&> >
     >
