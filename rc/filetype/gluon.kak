@@ -90,7 +90,7 @@ define-command -hidden gluon-indent-on-new-line %{
         # or in
         try %{ execute-keys -draft \; k x <a-k> (\(|\{|\[|=|->|then|else|rec|in)$ <ret> j <a-gt> }
         # deindent closing brace(s) when after cursor
-        try %{ execute-keys -draft <a-x> <a-k>^\h*[})\]]+\h*$<ret> hm <a-S> 1<a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^\h*[})\]] <ret> gh / [})\]] <ret> m <a-S> 1<a-&> }
     }
 }
 
