@@ -94,7 +94,7 @@ define-command -hidden php-indent-on-new-line %<
         # append " * " on lines starting a multiline /** or /* comment
     	try %{ execute-keys -draft k <a-x> s ^\h*/[*][* ]? <ret> j gi i <space>*<space> }
     	# deindent closer token(s) when after cursor
-    	try %_ execute-keys -draft <a-x> <a-k>^\h*[})]+\h*(?://.*)?$<ret> \; <a-/> [})] <ret> m <a-S> 1<a-&> _
+    	try %_ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> _
     >
 >
 
