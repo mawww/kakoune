@@ -77,7 +77,7 @@ define-command -hidden php-trim-indent %{
 define-command -hidden php-indent-on-char %<
     evaluate-commands -draft -itersel %<
         # align closer token to its opener when alone on a line
-        try %/ execute-keys -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \A|.\z <ret> 1<a-&> /
+        try %/ execute-keys -draft <a-h> <a-k> ^\h+[\]}]$ <ret> m s \A|.\z <ret> 1<a-&> /
     >
 >
 
