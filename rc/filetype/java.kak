@@ -57,7 +57,7 @@ define-command -hidden java-indent-on-new-line %~
         # indent after keywords
         try %[ execute-keys -draft <semicolon><a-F>)MB <a-k> \A(if|else|while|for|try|catch)\h*\(.*\)\h*\n\h*\n?\z <ret> s \A|.\z <ret> 1<a-&>1<a-space><a-gt> ]
         # deindent closing brace(s) when after cursor
-        try %[ execute-keys -draft <a-x> <a-k>^\h*[})]+\h*$<ret> hm <a-S> 1<a-&> ]
+        try %[ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
     =
 ~
 
