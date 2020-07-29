@@ -101,9 +101,9 @@ define-command -hidden kak-indent-on-new-line %~
         # indent after line ending with %\w*[^\s\w]
         try %{ execute-keys -draft k <a-x> <a-k> \%\w*[^\s\w]$ <ret> j <a-gt> }
         # deindent closing brace when after cursor
-        try %_ execute-keys -draft <a-x> <a-k>^\h*[>)}\]]\h*$<ret> hm <a-S> 1<a-&> _
+        try %_ execute-keys -draft -itersel <a-x> <a-k>^\h*([>)}\]])\h*(?:\h#.*)?$<ret> <a-/> <c-r>1 <ret> m <a-S> 1<a-&> _
         # deindent closing char(s) 
-        try %{ execute-keys -draft -itersel <a-x> <a-k>^\h*([^\s\w])\h*$<ret> h <a-?><c-r>1<ret> <a-T>% <a-k>\w*<c-r>1$<ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft -itersel <a-x> <a-k>^\h*([^\s\w])\h*(?:\h#.*)?$<ret> <a-/><c-r>1<ret> <a-?><c-r>1<ret> <a-T>% <a-k>\w*<c-r>1$<ret> <a-S> 1<a-&> }
     =
 ~
 
