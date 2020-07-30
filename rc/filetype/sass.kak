@@ -61,8 +61,8 @@ define-command -hidden sass-indent-on-closing-brace %<
     >
 >
 
-define-command -hidden sass-indent-on-new-line %{
-    evaluate-commands -draft -itersel %{
+define-command -hidden sass-indent-on-new-line %<
+    evaluate-commands -draft -itersel %<
         # copy '/' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y gh j P }
         # preserve previous line indent
@@ -71,7 +71,9 @@ define-command -hidden sass-indent-on-new-line %{
         try %{ execute-keys -draft k : sass-trim-indent <ret> }
         # avoid indent after properties and comments
         try %{ execute-keys -draft k <a-x> <a-K> [:/] <ret> j <a-gt> }
-    }
-}
+        # deindent closing brace when after cursor
+        try %[ execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
+    >
+>
 
 §
