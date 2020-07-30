@@ -11,15 +11,16 @@ hook global BufCreate .*[.](sass) %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=sass %{
+hook global WinSetOption filetype=sass %<
     require-module sass
 
     hook window ModeChange pop:insert:.* -group sass-trim-indent  sass-trim-indent
+    hook window InsertChar \} -group sass-indent sass-indent-on-closing-brace
     hook window InsertChar \n -group sass-indent sass-indent-on-new-line
     set-option buffer extra_word_chars '_' '-'
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window sass-.+ }
-}
+>
 
 hook -group sass-highlight global WinSetOption filetype=sass %{
     add-highlighter window/sass ref sass
@@ -27,7 +28,7 @@ hook -group sass-highlight global WinSetOption filetype=sass %{
 }
 
 
-provide-module sass %{
+provide-module sass %§
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -53,6 +54,13 @@ define-command -hidden sass-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
+define-command -hidden sass-indent-on-closing-brace %<
+    evaluate-commands -draft -itersel %<
+        # align closing brace to same indentation as the line that the opening brace resides on
+        try %[ execute-keys -draft <a-h> <a-k> ^\h+\}$ <ret> m <a-S> 1<a-&> ]
+    >
+>
+
 define-command -hidden sass-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '/' comment prefix and following white spaces
@@ -66,4 +74,4 @@ define-command -hidden sass-indent-on-new-line %{
     }
 }
 
-}
+§
