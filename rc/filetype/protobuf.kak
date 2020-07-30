@@ -76,6 +76,8 @@ define-command -hidden protobuf-indent-on-newline %~
         try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
         # copy // comments prefix
         try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,}(\h*(?=\S))? <ret> y<c-o>P<esc> }
+        # deindent closing brace(s) when after cursor
+        try %[ execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
     ]
 ~
 
