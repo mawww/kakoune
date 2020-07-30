@@ -338,6 +338,7 @@ private:
     };
 
     // Steps a thread until it consumes the current character, matches or fail
+    [[gnu::always_inline]]
     void step_thread(const Iterator& pos, uint16_t current_step, Thread thread, const ExecConfig& config)
     {
         auto failed = [this, &thread]() {

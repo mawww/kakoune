@@ -1173,27 +1173,24 @@ bool is_character_class(const CharacterClass& character_class, Codepoint cp)
     if (character_class.ignore_case)
         cp = to_lower(cp);
 
-    auto it = std::lower_bound(character_class.ranges.begin(),
-                               character_class.ranges.end(), cp,
-                               [](auto& range, Codepoint cp)
-                               { return range.max < cp; });
+    auto it = std::find_if(character_class.ranges.begin(),
+                           character_class.ranges.end(),
+                           [cp](auto& range) { return range.min <= cp and cp <= range.max; });
 
-    auto found = (it != character_class.ranges.end() and it->min <= cp) or
-                 is_ctype(character_class.ctypes, cp);
-
+    bool found = it != character_class.ranges.end() or (character_class.ctypes != CharacterType::None and
+                                                        is_ctype(character_class.ctypes, cp));
     return found != character_class.negative;
 }
 
 bool is_ctype(CharacterType ctype, Codepoint cp)
 {
-    return ((ctype & CharacterType::Whitespace)              and     is_blank(cp))            or
-           ((ctype & CharacterType::HorizontalWhitespace)    and     is_horizontal_blank(cp)) or
-           ((ctype & CharacterType::Digit)                   and     iswdigit(cp))            or
-           ((ctype & CharacterType::Word)                    and     is_word(cp))             or
-           ((ctype & CharacterType::NotWhitespace)           and not is_blank(cp))            or
-           ((ctype & CharacterType::NotHorizontalWhitespace) and not is_horizontal_blank(cp)) or
-           ((ctype & CharacterType::NotDigit)                and not iswdigit(cp))            or
-           ((ctype & CharacterType::NotWord)                 and not is_word(cp));
+    auto check = [&](CharacterType bit, CharacterType not_bit, auto&& func) {
+        return (ctype & (bit | not_bit)) and func(cp) == (bool)(ctype & bit);
+    };
+    return check(CharacterType::Word, CharacterType::NotWord, [](Codepoint cp) { return is_word(cp); }) or
+           check(CharacterType::Whitespace, CharacterType::NotWhitespace, is_blank) or
+           check(CharacterType::HorizontalWhitespace, CharacterType::NotHorizontalWhitespace, is_horizontal_blank) or
+           check(CharacterType::Digit, CharacterType::NotDigit, iswdigit);
 }
 
 namespace
