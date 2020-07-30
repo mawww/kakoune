@@ -68,6 +68,8 @@ define-command -hidden latex-indent-newline %(
         try %{ execute-keys -draft k<a-x> s\h+$<ret> d }
         # indent after line ending with {
         try %( execute-keys -draft k<a-x> <a-k>\{$<ret> j<a-gt> )
+        # deindent closing brace(s) when after cursor
+        try %( execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> )
         # indent after line ending with \begin{...}[...]{...}, with multiple
         # sets of arguments possible
         try %(

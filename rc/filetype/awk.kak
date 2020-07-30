@@ -76,6 +76,8 @@ define-command -hidden awk-indent-on-new-line %[
         try %[ execute-keys -draft k <a-x> s \h+$ <ret> d ]
         # indent after line ending in opening curly brace
         try %[ execute-keys -draft k<a-x> <a-k>\{\h*(#.*)?$<ret> j<a-gt> ]
+        # deindent closing brace when after cursor
+        try %[ execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
     ]
 ]
 

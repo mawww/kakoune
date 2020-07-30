@@ -121,6 +121,8 @@ define-command -hidden zig-indent-on-new-line %<
             try %< execute-keys -draft <semicolon> K <a-&> >
             # indent after lines ending in {
             try %< execute-keys -draft k <a-x> <a-k> \{\h*$ <ret> j <a-gt> >
+            # deindent closing } when after cursor
+            try %< execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> >
         >
         # filter previous line
         try %< execute-keys -draft k : zig-trim-indent <ret> >

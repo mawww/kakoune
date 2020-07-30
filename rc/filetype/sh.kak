@@ -182,6 +182,8 @@ define-command -hidden sh-indent-on-new-line %[
         try %= execute-keys -draft <space> k <a-x> <a-k> (\s|^)\{$ <ret> j <a-gt> =
         # deindent closing }
         try %= execute-keys -draft <space> k <a-x> <a-k> ^\s*\}$ <ret> <a-lt> j K <a-&> =
+        # deindent closing } when after cursor
+        try %= execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> =
 
     ]
 ]

@@ -1,0 +1,17 @@
+if true {
+}
+
+if true {
+    
+}
+
+if true {
+    bar()}
+
+if true {
+    bar()
+}
+
+if true {
+    bar()
+}

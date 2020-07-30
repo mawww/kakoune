@@ -49,7 +49,7 @@ define-command -hidden json-trim-indent %{
 define-command -hidden json-indent-on-char %<
     evaluate-commands -draft -itersel %<
         # align closer token to its opener when alone on a line
-        try %< execute-keys -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \A|.\z <ret> 1<a-&> >
+        try %< execute-keys -draft <a-h> <a-k> ^\h+[\]}]$ <ret> m <a-S> 1<a-&> >
     >
 >
 
@@ -59,8 +59,10 @@ define-command -hidden json-indent-on-new-line %<
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : json-trim-indent <ret> }
-        # indent after lines beginning with opener token
-        try %< execute-keys -draft k <a-x> <a-k> ^\h*[[{] <ret> j <a-gt> >
+        # indent after lines ending with opener token
+        try %< execute-keys -draft k <a-x> <a-k> [[{]\h*$ <ret> j <a-gt> >
+        # deindent closer token(s) when after cursor
+        try %< execute-keys -draft <a-x> <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> >
     >
 >
 

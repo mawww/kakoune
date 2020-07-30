@@ -69,6 +69,8 @@ define-command -hidden scala-indent-on-new-line %[
         try %[ execute-keys -draft k : scala-trim-indent <ret> ]
         # indent after lines ending with {
         try %[ execute-keys -draft k <a-x> <a-k> \{$ <ret> j <a-gt> ]
+        # deindent closing brace when after cursor
+        try %[ execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
     ]
 ]
 
