@@ -28,7 +28,7 @@ hook -group python-highlight global WinSetOption filetype=python %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/python }
 }
 
-provide-module python %{
+provide-module python %§
 
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
@@ -149,8 +149,8 @@ define-command -hidden python-insert-on-new-line %{
         try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
     }
 }
-define-command -hidden python-indent-on-new-line %{
-    evaluate-commands -draft -itersel %{
+define-command -hidden python-indent-on-new-line %<
+    evaluate-commands -draft -itersel %<
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
@@ -159,7 +159,7 @@ define-command -hidden python-indent-on-new-line %{
         try %{ execute-keys -draft <space> k <a-x> <a-k> :$ <ret> j <a-gt> }
         # deindent closing brace/bracket when after cursor (for arrays and dictionaries)
         try %[ execute-keys -draft <a-x> <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> ]
-    }
-}
+    >
+>
 
-}
+§
