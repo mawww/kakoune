@@ -70,6 +70,8 @@ define-command -hidden ragel-indent-on-new-line %<
         try %{ execute-keys -draft k : ragel-trim-indent <ret> }
         # indent after lines ending with opener token
         try %< execute-keys -draft k <a-x> <a-k> [[{(*]$ <ret> j <a-gt> >
+        # align closer token to its opener when after cursor
+        try %< execute-keys -draft <a-x> <a-k> ^\h*[})\]] <ret> gh / [})\]] <ret> m <a-S> 1<a-&> >
     >
 >
 
