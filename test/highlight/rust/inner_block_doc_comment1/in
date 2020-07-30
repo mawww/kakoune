@@ -1,0 +1,17 @@
+    /**
+     * ```shell
+     * $ cargo install
+     * ```
+     *
+     * ```edition2018,no_run
+     * # use foo;
+     * foo::bar("Hello world");
+     * ```
+     */
+
+    /**
+     ```
+     # use foo;
+     foo::bar("Hello world");
+     ```
+     */
