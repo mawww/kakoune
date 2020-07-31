@@ -728,9 +728,8 @@ int run_server(StringView session, StringView server_init,
         if (flags & ServerFlags::NoFork)
         {
             set_signal_handler(SIGINT, [](int) { write_stderr("Interrupt signal received\n"); terminate = true; });
-            goto nofork;
         }
-        if (pid_t child = fork())
+        else if (pid_t child = fork())
         {
             write_stderr(format("Kakoune forked to background, for session '{}'\n"
                                 "send SIGTERM to process {} for closing the session\n",
@@ -738,7 +737,6 @@ int run_server(StringView session, StringView server_init,
             exit(0);
         }
     }
-nofork:
 
     EventManager        event_manager;
     Server              server{session.empty() ? to_string(getpid()) : session.str()};
