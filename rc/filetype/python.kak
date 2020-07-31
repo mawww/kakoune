@@ -158,7 +158,7 @@ define-command -hidden python-indent-on-new-line %<
         # indent after line ending with :
         try %{ execute-keys -draft <space> k <a-x> <a-k> :$ <ret> j <a-gt> }
         # deindent closing brace/bracket when after cursor (for arrays and dictionaries)
-        try %[ execute-keys -draft <a-x> <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> ]
+        try %< execute-keys -draft <a-x> <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> >
     >
 >
 
