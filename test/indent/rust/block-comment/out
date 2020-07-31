@@ -1,0 +1,18 @@
+    /* foo
+     * bar
+
+    /*! foo
+     * bar
+
+    /*!! foo
+     * bar
+
+    /** foo
+     * bar
+
+    /*** foo
+     * bar
+
+    println!("hello world"); /* foo
+    bar
+

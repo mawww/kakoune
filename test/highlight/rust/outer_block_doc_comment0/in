@@ -1,0 +1,14 @@
+//! # Hello World
+//!
+//! ```shell
+//! $ cargo install
+//! ```
+//!
+//! ```
+//! # use foo;
+//! foo::bar("Hello world");
+//! ```
+
+//!! ```
+//!! foo::bar("Hello world");
+//!! ```

@@ -23,7 +23,7 @@ add-highlighter shared/sh/code default-region group
 add-highlighter shared/sh/double_string region  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)(?:\\\\)*"} group
 add-highlighter shared/sh/single_string region %{(?<!\\)(?:\\\\)*\K'} %{'} fill string
 add-highlighter shared/sh/expansion region '\$\{' '\}|\n' fill value
-add-highlighter shared/sh/comment region '(?<!\$)(?<!\$\{)#' '$' fill comment
+add-highlighter shared/sh/comment region (?<!\\)(?:\\\\)*(?:^|\h)\K# '$' fill comment
 add-highlighter shared/sh/heredoc region -match-capture '<<-?\h*''?(\w+)''?' '^\t*(\w+)$' fill string
 
 add-highlighter shared/sh/double_string/fill fill string
@@ -108,7 +108,7 @@ define-command -hidden sh-indent-on-new-line %[
         # indent after do
         try %{ execute-keys -draft <space> k <a-x> <a-k> do$ <ret> j <a-gt> }
         # deindent after done
-        try %{ execute-keys -draft <space> k <a-x> <a-k> done$ <ret> <a-lt> j K <a-&> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> done$ <ret> K <a-&> j <a-lt> j K <a-&> }
 
         # Indent if/then/else syntax, e.g.:
         # if [ $foo = $bar ]; then
@@ -128,7 +128,7 @@ define-command -hidden sh-indent-on-new-line %[
         # indent after then
         try %{ execute-keys -draft <space> k <a-x> <a-k> then$ <ret> j <a-gt> }
         # deindent after fi
-        try %{ execute-keys -draft <space> k <a-x> <a-k> fi$ <ret> <a-lt> j K <a-&> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> fi$ <ret> K <a-&> j <a-lt> j K <a-&> }
         # deindent and reindent after else - deindent the else, then back
         # down and return to the previous indent level.
         try %{ execute-keys -draft <space> k <a-x> <a-k> else$ <ret> <a-lt> j }
@@ -182,6 +182,8 @@ define-command -hidden sh-indent-on-new-line %[
         try %= execute-keys -draft <space> k <a-x> <a-k> (\s|^)\{$ <ret> j <a-gt> =
         # deindent closing }
         try %= execute-keys -draft <space> k <a-x> <a-k> ^\s*\}$ <ret> <a-lt> j K <a-&> =
+        # deindent closing } when after cursor
+        try %= execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> =
 
     ]
 ]

@@ -95,7 +95,7 @@ define-command -hidden nix-trim-indent %{
 define-command -hidden nix-indent-on-char %<
     evaluate-commands -draft -itersel %<
         # align closer token to its opener when alone on a line
-        try %/ execute-keys -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \A|.\z <ret> 1<a-&> /
+        try %/ execute-keys -draft <a-h> <a-k> ^\h+[\]}]$ <ret> m s \A|.\z <ret> 1<a-&> /
     >
 >
 
@@ -109,6 +109,8 @@ define-command -hidden nix-indent-on-new-line %<
         try %{ execute-keys -draft k : nix-trim-indent <ret> }
         # indent after lines beginning / ending with opener token
         try %_ execute-keys -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
+        # deindent closer token(s) when after cursor
+        try %_ execute-keys -draft <a-x> <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> _
     >
 >
 

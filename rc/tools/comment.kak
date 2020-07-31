@@ -10,8 +10,9 @@ declare-option -docstring "characters inserted after a commented block" \
 
 # Default comments for all languages
 hook global BufSetOption filetype=asciidoc %{
-    set-option buffer comment_block_begin '///'
-    set-option buffer comment_block_end '///'
+    set-option buffer comment_line '//'
+    set-option buffer comment_block_begin '////'
+    set-option buffer comment_block_end '////'
 }
 
 hook global BufSetOption filetype=(c|cpp|dart|gluon|go|java|javascript|objc|php|rust|sass|scala|scss|swift|typescript) %{

@@ -30,7 +30,7 @@ provide-module makefile %{
 add-highlighter shared/makefile regions
 
 add-highlighter shared/makefile/content default-region group
-add-highlighter shared/makefile/comment region '#' '$' fill comment
+add-highlighter shared/makefile/comment region (?<!\\)(?:\\\\)*(?:^|\h)\K# '$' fill comment
 add-highlighter shared/makefile/evaluate-commands region -recurse '\(' '\$\(' '\)' fill value
 
 add-highlighter shared/makefile/content/ regex ^\S.*?(::|:|!)\s 0:variable

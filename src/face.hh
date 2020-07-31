@@ -55,7 +55,9 @@ inline Face merge_faces(const Face& base, const Face& face)
             int blended = (base.*field * (255 - color.a) + color.*field * color.a) / 255;
             return static_cast<unsigned char>(blended <= 255 ? blended : 255);
         };
-        return Color{blend(&Color::r), blend(&Color::g), blend(&Color::b), base.a};
+        int alpha = color.a + base.a * (255 - color.a) / 255;
+        return Color{blend(&Color::r), blend(&Color::g), blend(&Color::b),
+                     static_cast<unsigned char>(alpha <= 255 ? alpha : 255)};
     };
 
     auto choose = [&](Color Face::*color, Attribute final_attr) {

@@ -31,7 +31,7 @@ hook -group gluon-highlight global WinSetOption filetype=gluon %{
 }
 
 
-provide-module gluon %[
+provide-module gluon %§
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -78,8 +78,8 @@ define-command -hidden gluon-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden gluon-indent-on-new-line %{
-    evaluate-commands -draft -itersel %{
+define-command -hidden gluon-indent-on-new-line %~
+    evaluate-commands -draft -itersel %_
         # copy // and /// comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K///?\h* <ret> y gh j P }
         # preserve previous line indent
@@ -88,12 +88,10 @@ define-command -hidden gluon-indent-on-new-line %{
         try %{ execute-keys -draft k : gluon-trim-indent <ret> }
         # indent after lines ending with (open) braces, =, ->, condition, rec,
         # or in
-        try %{
-            execute-keys -draft \
-                \; k x <a-k> (\(|\{|\[|=|->|then|else|rec|in)$ <ret> j <a-gt>
-            # balance out brackets } ]
-        }
-    }
-}
+        try %{ execute-keys -draft \; k x <a-k> (\(|\{|\[|=|->|then|else|rec|in)$ <ret> j <a-gt> }
+        # deindent closing brace(s) when after cursor
+        try %< execute-keys -draft <a-x> <a-k> ^\h*[})\]] <ret> gh / \})\]] <ret> m <a-S> 1<a-&> >
+    _
+~
 
-]
+§

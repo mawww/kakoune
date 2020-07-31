@@ -488,9 +488,10 @@ New commands can be defined using the *define-command* command:
 Using shell expansion allows defining complex commands or accessing
 Kakoune's state:
 
---------------------------------------------------------
-def " print_selection %{ echo %sh{ ${kak_selection} } }"
---------------------------------------------------------
+---------------------------------------------------------------------
+# create a directory for current buffer if it does not exist
+define-command mkdir %{ nop %sh{ mkdir -p $(dirname $kak_buffile) } }
+---------------------------------------------------------------------
 
 == Aliases
 

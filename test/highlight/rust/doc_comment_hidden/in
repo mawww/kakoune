@@ -1,0 +1,15 @@
+    //! ```
+    //! // not hidden #
+    //! #![feature(x)]
+    //! # // hidden #
+    //! # #![feature(x)]
+    //! ```
+
+    /**
+     * ```
+     * // not hidden #
+     * #![feature(x)]
+     * # // hidden #
+     * # #![feature(x)]
+     * ```
+     */
