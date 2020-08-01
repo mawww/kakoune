@@ -25,7 +25,7 @@ hook global WinSetOption filetype=crystal %{
   }
 }
 
-provide-module crystal %🐈
+provide-module crystal %§
   declare-option -hidden str-list crystal_keywords 'abstract' 'alias' 'annotation' 'as' 'asm' 'begin' 'break' 'case' 'class' 'def' 'do' 'else' 'elsif' 'end' 'ensure' 'enum' 'extend' 'false' 'for' 'fun' 'if' 'include' 'instance_sizeof' 'is_a?' 'lib' 'macro' 'module' 'next' 'nil' 'nil?' 'of' 'offsetof' 'out' 'pointerof' 'private' 'protected' 'require' 'rescue' 'responds_to?' 'return' 'select' 'self' 'sizeof' 'struct' 'super' 'then' 'true' 'type' 'typeof' 'uninitialized' 'union' 'unless' 'until' 'verbatim' 'when' 'while' 'with' 'yield'
   # https://crystal-lang.org/reference/syntax_and_semantics/methods_and_instance_variables.html#getters-and-setters
   declare-option -hidden str-list crystal_attributes 'getter' 'setter' 'property'
@@ -206,4 +206,4 @@ provide-module crystal %🐈
       kak -f '%1sdata-id="github.com/crystal-lang/crystal/(\w+)"<ret>)<a-space>y%<a-R>a<ret><esc><a-_>a<del><esc>'
     }
   }
-🐈
+§
