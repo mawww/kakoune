@@ -17,7 +17,7 @@ hook global WinSetOption filetype=crystal %{
     add-highlighter window/crystal ref crystal
     evaluate-commands set-option window static_words %opt{crystal_keywords} %opt{crystal_attributes} %opt{crystal_objects}
 
-    hook window InsertChar '\n' -group crystal-indent crystal-new-line-inserted
+    hook window InsertChar '\n' -group crystal-indent crystal-indent-on-new-line
 
     hook -always -once window WinSetOption filetype=.* %{
         remove-highlighter window/crystal
@@ -175,7 +175,7 @@ evaluate-commands %sh[
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden crystal-new-line-inserted %{
+define-command -hidden crystal-indent-on-new-line %{
     # Copy previous line indent
     try %{
         execute-keys -draft 'K<a-&>'
