@@ -1,9 +1,15 @@
 # Crystal
 # https://crystal-lang.org
 
+# Detection
+# ‾‾‾‾‾‾‾‾‾
+
 hook global BufCreate '.*\.cr' %{
   set-option buffer filetype crystal
 }
+
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook global WinSetOption filetype=crystal %{
   require-module crystal
@@ -25,6 +31,9 @@ provide-module crystal %🐈
   declare-option -hidden str-list crystal_attributes 'getter' 'setter' 'property'
   declare-option -hidden str-list crystal_operators '+' '-' '*' '/' '//' '%' '|' '&' '^' '~' '**' '<<' '<' '<=' '==' '!=' '=~' '!~' '>>' '>' '>=' '<=>' '===' '[]' '[]=' '[]?' '[' '&+' '&-' '&*' '&**'
   declare-option -hidden str-list crystal_objects 'Adler32' 'ArgumentError' 'Array' 'Atomic' 'Base64' 'Benchmark' 'BigDecimal' 'BigFloat' 'BigInt' 'BigRational' 'BitArray' 'Bool' 'Box' 'Bytes' 'Channel' 'Char' 'Class' 'Colorize' 'Comparable' 'Complex' 'Concurrent' 'ConcurrentExecutionException' 'CRC32' 'Crypto' 'Crystal' 'CSV' 'Debug' 'Deprecated' 'Deque' 'Digest' 'Dir' 'DivisionByZeroError' 'DL' 'ECR' 'Enum' 'Enumerable' 'ENV' 'Errno' 'Exception' 'Fiber' 'File' 'FileUtils' 'Flags' 'Flate' 'Float' 'Float32' 'Float64' 'GC' 'Gzip' 'Hash' 'HTML' 'HTTP' 'Indexable' 'IndexError' 'INI' 'Int' 'Int128' 'Int16' 'Int32' 'Int64' 'Int8' 'InvalidBigDecimalException' 'InvalidByteSequenceError' 'IO' 'IPSocket' 'Iterable' 'Iterator' 'JSON' 'KeyError' 'Levenshtein' 'Link' 'LLVM' 'Logger' 'Markdown' 'Math' 'MIME' 'Mutex' 'NamedTuple' 'Nil' 'NilAssertionError' 'NotImplementedError' 'Number' 'OAuth' 'OAuth2' 'Object' 'OpenSSL' 'OptionParser' 'OverflowError' 'PartialComparable' 'Path' 'Pointer' 'PrettyPrint' 'Proc' 'Process' 'Random' 'Range' 'Readline' 'Reference' 'Reflect' 'Regex' 'SemanticVersion' 'Set' 'Signal' 'Slice' 'Socket' 'Spec' 'StaticArray' 'String' 'StringPool' 'StringScanner' 'Struct' 'Symbol' 'System' 'TCPServer' 'TCPSocket' 'Termios' 'Time' 'Tuple' 'TypeCastError' 'UDPSocket' 'UInt128' 'UInt16' 'UInt32' 'UInt64' 'UInt8' 'Unicode' 'Union' 'UNIXServer' 'UNIXSocket' 'URI' 'UUID' 'VaList' 'Value' 'WeakRef' 'XML' 'YAML' 'Zip' 'Zlib'
+
+  # Highlighters
+  # ‾‾‾‾‾‾‾‾‾‾‾‾
 
   add-highlighter shared/crystal regions
   add-highlighter shared/crystal/code default-region group
@@ -161,6 +170,9 @@ provide-module crystal %🐈
       "
     done
   ]
+
+  # Commands
+  # ‾‾‾‾‾‾‾‾
 
   define-command -hidden crystal-new-line-inserted %{
     # Copy previous line indent
