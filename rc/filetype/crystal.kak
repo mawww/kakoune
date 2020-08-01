@@ -192,6 +192,8 @@ define-command -hidden crystal-indent-on-new-line %{
         try %{ execute-keys -draft K <a-&> }
         # Remove previos line's trailing spaces
         try %{ execute-keys -draft k :ruby-trim-indent <ret> }
+        # Indent after start structure/opening statement
+        try %{ execute-keys -draft k <a-x> <a-k> ^\h*(?:begin|case|class|def|else|elsif|ensure|for|if|module|rescue|unless|until|when|while|.+\bdo$|.+\bdo\h\|.+(?=\|))[^0-9A-Za-z_!?] <ret> j <a-gt> }
     }
 }
 
@@ -204,7 +206,7 @@ define-command -hidden crystal-indent-on-char %{
 define-command -hidden crystal-fetch-keywords %{
     set-register dquote %sh{
         curl --location https://github.com/crystal-lang/crystal/raw/master/src/compiler/crystal/syntax/lexer.cr |
-    kak -f '%1scheck_ident_or_keyword\(:(\w+\??), \w+\)<ret>y%<a-R>a<ret><esc><a-_>a<del><esc>|sort<ret>'
+        kak -f '%1scheck_ident_or_keyword\(:(\w+\??), \w+\)<ret>y%<a-R>a<ret><esc><a-_>a<del><esc>|sort<ret>'
     }
 }
 
