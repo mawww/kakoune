@@ -33,7 +33,7 @@ hook -group ruby-highlight global WinSetOption filetype=ruby %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ruby }
 }
 
-provide-module ruby %[
+provide-module ruby %§
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -48,11 +48,21 @@ add-highlighter shared/ruby/backtick      region '(?<![$:])`' (?<!\\)(\\\\)*`   
 add-highlighter shared/ruby/regex         region '(?<![$:])/' (?<!\\)(\\\\)*/[imox]* regions
 add-highlighter shared/ruby/              region '#' '$'                             fill comment
 add-highlighter shared/ruby/              region ^=begin ^=end                       fill comment
-add-highlighter shared/ruby/              region -recurse \( '%[iqrswxIQRSWX]?\(' \) fill meta
-add-highlighter shared/ruby/              region -recurse \{ '%[iqrswxIQRSWX]?\{' \} fill meta
-add-highlighter shared/ruby/              region -recurse \[ '%[iqrswxIQRSWX]?\[' \] fill meta
-add-highlighter shared/ruby/              region -recurse  < '%[iqrswxIQRSWX]?<'   > fill meta
-add-highlighter shared/ruby/              region -match-capture '%[iqrswxIQRSWX]?([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill meta
+add-highlighter shared/ruby/              region -recurse \( '%[qwQW]?\(' \) fill string
+add-highlighter shared/ruby/              region -recurse \{ '%[qwQW]?\{' \} fill string
+add-highlighter shared/ruby/              region -recurse \[ '%[qwQW]?\[' \] fill string
+add-highlighter shared/ruby/              region -recurse  < '%[qwQW]?<'   > fill string
+add-highlighter shared/ruby/              region -recurse \( '%[isIS]\(' \) fill variable
+add-highlighter shared/ruby/              region -recurse \{ '%[isIS]\{' \} fill variable
+add-highlighter shared/ruby/              region -recurse \[ '%[isIS]\[' \] fill variable
+add-highlighter shared/ruby/              region -recurse  < '%[isIS]<'   > fill variable
+add-highlighter shared/ruby/              region -recurse \( '%[rxRX]\(' \) fill meta
+add-highlighter shared/ruby/              region -recurse \{ '%[rxRX]\{' \} fill meta
+add-highlighter shared/ruby/              region -recurse \[ '%[rxRX]\[' \] fill meta
+add-highlighter shared/ruby/              region -recurse  < '%[rxRX]<'   > fill meta
+add-highlighter shared/ruby/              region -match-capture '%[qwQW]?([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill string
+add-highlighter shared/ruby/              region -match-capture '%[isIS]([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill variable
+add-highlighter shared/ruby/              region -match-capture '%[rxRX]([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill meta
 add-highlighter shared/ruby/heredoc region '<<[-~]?(?!self)(\w+)'      '^\h*(\w+)$' fill string
 add-highlighter shared/ruby/division region '[\w\)\]]\K(/|(\h+/\h+))' '\w' group # Help Kakoune to better detect /…/ literals
 
@@ -178,4 +188,4 @@ define-command -hidden ruby-insert-on-new-line %[
     ]
 ]
 
-]
+§
