@@ -190,8 +190,8 @@ define-command -hidden crystal-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
         # Copy previous line indent
         try %{ execute-keys -draft K <a-&> }
-        # Remove empty line indent
-        try %{ execute-keys -draft k <a-x> s ^\h+$ <ret> d }
+        # Remove previos line's trailing spaces
+        try %{ execute-keys -draft k :ruby-trim-indent <ret> }
     }
 }
 
