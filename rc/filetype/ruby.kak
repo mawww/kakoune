@@ -48,18 +48,18 @@ add-highlighter shared/ruby/backtick      region '(?<![$:])`' (?<!\\)(\\\\)*`   
 add-highlighter shared/ruby/regex         region '(?<![$:])/' (?<!\\)(\\\\)*/[imox]* regions
 add-highlighter shared/ruby/              region '#' '$'                             fill comment
 add-highlighter shared/ruby/              region ^=begin ^=end                       fill comment
-add-highlighter shared/ruby/              region -recurse \( '%[qwQW]?\(' \) fill string
-add-highlighter shared/ruby/              region -recurse \{ '%[qwQW]?\{' \} fill string
-add-highlighter shared/ruby/              region -recurse \[ '%[qwQW]?\[' \] fill string
-add-highlighter shared/ruby/              region -recurse  < '%[qwQW]?<'   > fill string
-add-highlighter shared/ruby/              region -recurse \( '%[isIS]\(' \) fill variable
-add-highlighter shared/ruby/              region -recurse \{ '%[isIS]\{' \} fill variable
-add-highlighter shared/ruby/              region -recurse \[ '%[isIS]\[' \] fill variable
-add-highlighter shared/ruby/              region -recurse  < '%[isIS]<'   > fill variable
-add-highlighter shared/ruby/              region -recurse \( '%[rxRX]\(' \) fill meta
-add-highlighter shared/ruby/              region -recurse \{ '%[rxRX]\{' \} fill meta
-add-highlighter shared/ruby/              region -recurse \[ '%[rxRX]\[' \] fill meta
-add-highlighter shared/ruby/              region -recurse  < '%[rxRX]<'   > fill meta
+add-highlighter shared/ruby/              region -recurse \( '%[qwQW]?\(' \)         fill string
+add-highlighter shared/ruby/              region -recurse \{ '%[qwQW]?\{' \}         fill string
+add-highlighter shared/ruby/              region -recurse \[ '%[qwQW]?\[' \]         fill string
+add-highlighter shared/ruby/              region -recurse  < '%[qwQW]?<'   >         fill string
+add-highlighter shared/ruby/              region -recurse \( '%[isIS]\('  \)         fill variable
+add-highlighter shared/ruby/              region -recurse \{ '%[isIS]\{'  \}         fill variable
+add-highlighter shared/ruby/              region -recurse \[ '%[isIS]\['  \]         fill variable
+add-highlighter shared/ruby/              region -recurse  < '%[isIS]<'    >         fill variable
+add-highlighter shared/ruby/              region -recurse \( '%[rxRX]\('  \)         fill meta
+add-highlighter shared/ruby/              region -recurse \{ '%[rxRX]\{'  \}         fill meta
+add-highlighter shared/ruby/              region -recurse \[ '%[rxRX]\['  \]         fill meta
+add-highlighter shared/ruby/              region -recurse  < '%[rxRX]<'    >         fill meta
 add-highlighter shared/ruby/              region -match-capture '%[qwQW]?([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill string
 add-highlighter shared/ruby/              region -match-capture '%[isIS]([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill variable
 add-highlighter shared/ruby/              region -match-capture '%[rxRX]([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill meta
