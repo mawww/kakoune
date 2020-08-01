@@ -198,6 +198,10 @@ define-command -hidden crystal-indent-on-new-line %{
 }
 
 define-command -hidden crystal-insert-on-new-line %{
+    evaluate-commands -no-hooks -draft -itersel %{
+        # Copy comment prefix and following whitespaces
+        try %{ execute-keys -draft k <a-x> s '^\h*\K#\h*' <ret> y j gl p }
+    }
 }
 
 define-command -hidden crystal-indent-on-char %{
