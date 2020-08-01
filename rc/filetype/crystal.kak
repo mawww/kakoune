@@ -208,6 +208,8 @@ define-command -hidden crystal-indent-on-char %{
         try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:when)$ <ret> <a-semicolon> <a-?> ^\h*(?:case) <ret> <a-S> 1<a-&> }
         # align 'rescue' to 'begin/def'
         try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:rescue)$ <ret> <a-semicolon> <a-?> ^\h*(?:begin|def) <ret> <a-S> 1<a-&> }
+        # align 'end' to opening structure
+        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:end)$ <ret> <a-semicolon> <a-?> ^\h*(?:begin|case|class|def|for|if|module|unless|until|while) <ret> <a-S> 1<a-&> }
     }
 }
 
