@@ -181,9 +181,9 @@ evaluate-commands %sh[
 define-command -hidden crystal-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
         # Copy previous line indent
-        try %{ execute-keys -draft 'K<a-&>' }
+        try %{ execute-keys -draft K <a-&> }
         # Remove empty line indent
-        try %{ execute-keys -draft 'k<a-x>s^\h+$<ret>d' }
+        try %{ execute-keys -draft k <a-x> s ^\h+$ <ret> d }
     }
 }
 
