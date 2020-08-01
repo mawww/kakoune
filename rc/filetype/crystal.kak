@@ -17,7 +17,9 @@ hook global WinSetOption filetype=crystal %{
     add-highlighter window/crystal ref crystal
     evaluate-commands set-option window static_words %opt{crystal_keywords} %opt{crystal_attributes} %opt{crystal_objects}
 
+    hook window InsertChar .*   -group crystal-indent crystal-indent-on-char
     hook window InsertChar '\n' -group crystal-indent crystal-indent-on-new-line
+    hook window InsertChar '\n' -group crystal-insert crystal-insert-on-new-line
 
     hook -always -once window WinSetOption filetype=.* %{
         remove-highlighter window/crystal
@@ -184,6 +186,12 @@ define-command -hidden crystal-indent-on-new-line %{
     try %{
         execute-keys -draft 'k<a-x>s^\h+$<ret>d'
     }
+}
+
+define-command -hidden crystal-insert-on-new-line %{
+}
+
+define-command -hidden crystal-indent-on-char %{
 }
 
 define-command -hidden crystal-fetch-keywords %{
