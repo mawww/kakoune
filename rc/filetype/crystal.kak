@@ -178,6 +178,14 @@ evaluate-commands %sh[
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden crystal-trim-indent %{
+    evaluate-commands -no-hooks -draft -itersel %{
+        execute-keys <a-x>
+        # remove trailing white spaces
+        try %{ execute-keys -draft s \h+$ <ret> d }
+    }
+}
+
 define-command -hidden crystal-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
         # Copy previous line indent
@@ -196,7 +204,7 @@ define-command -hidden crystal-indent-on-char %{
 define-command -hidden crystal-fetch-keywords %{
     set-register dquote %sh{
         curl --location https://github.com/crystal-lang/crystal/raw/master/src/compiler/crystal/syntax/lexer.cr |
-        kak -f '%1scheck_ident_or_keyword\(:(\w+\??), \w+\)<ret>y%<a-R>a<ret><esc><a-_>a<del><esc>|sort<ret>'
+    kak -f '%1scheck_ident_or_keyword\(:(\w+\??), \w+\)<ret>y%<a-R>a<ret><esc><a-_>a<del><esc>|sort<ret>'
     }
 }
 
