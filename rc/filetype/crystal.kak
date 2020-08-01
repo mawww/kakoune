@@ -201,12 +201,16 @@ define-command -hidden crystal-insert-on-new-line %{
 }
 
 define-command -hidden crystal-indent-on-char %{
+    evaluate-commands -no-hooks -draft -itersel %{
+        # align 'else/elsif' to 'if'
+        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:else|elsif)$ <ret> <a-semicolon> <a-?> ^\h*(?:if) <ret> <a-S> 1<a-&> }
+    }
 }
 
 define-command -hidden crystal-fetch-keywords %{
     set-register dquote %sh{
         curl --location https://github.com/crystal-lang/crystal/raw/master/src/compiler/crystal/syntax/lexer.cr |
-        kak -f '%1scheck_ident_or_keyword\(:(\w+\??), \w+\)<ret>y%<a-R>a<ret><esc><a-_>a<del><esc>|sort<ret>'
+    kak -f '%1scheck_ident_or_keyword\(:(\w+\??), \w+\)<ret>y%<a-R>a<ret><esc><a-_>a<del><esc>|sort<ret>'
     }
 }
 
