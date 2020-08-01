@@ -186,6 +186,19 @@ define-command -hidden crystal-trim-indent %{
     }
 }
 
+define-command -hidden crystal-indent-on-char %{
+    evaluate-commands -no-hooks -draft -itersel %{
+        # align 'else/elsif' to 'if'
+        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:else|elsif)$ <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:if)                                                    <ret> <a-S> 1<a-&> }
+        # align 'when' to 'case'
+        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:when)$       <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:case)                                                  <ret> <a-S> 1<a-&> }
+        # align 'rescue' to 'begin/def'
+        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:rescue)$     <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:begin|def)                                             <ret> <a-S> 1<a-&> }
+        # align 'end' to opening structure
+        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:end)$        <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:begin|case|class|def|for|if|module|unless|until|while) <ret> <a-S> 1<a-&> }
+    }
+}
+
 define-command -hidden crystal-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
         # Copy previous line indent
@@ -201,19 +214,6 @@ define-command -hidden crystal-insert-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
         # Copy comment prefix and following whitespaces
         try %{ execute-keys -draft k <a-x> s '^\h*\K#\h*' <ret> y j gl p }
-    }
-}
-
-define-command -hidden crystal-indent-on-char %{
-    evaluate-commands -no-hooks -draft -itersel %{
-        # align 'else/elsif' to 'if'
-        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:else|elsif)$ <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:if)                                                    <ret> <a-S> 1<a-&> }
-        # align 'when' to 'case'
-        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:when)$       <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:case)                                                  <ret> <a-S> 1<a-&> }
-        # align 'rescue' to 'begin/def'
-        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:rescue)$     <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:begin|def)                                             <ret> <a-S> 1<a-&> }
-        # align 'end' to opening structure
-        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:end)$        <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:begin|case|class|def|for|if|module|unless|until|while) <ret> <a-S> 1<a-&> }
     }
 }
 
