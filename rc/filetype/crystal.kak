@@ -203,13 +203,13 @@ define-command -hidden crystal-insert-on-new-line %{
 define-command -hidden crystal-indent-on-char %{
     evaluate-commands -no-hooks -draft -itersel %{
         # align 'else/elsif' to 'if'
-        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:else|elsif)$ <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:if) <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:else|elsif)$ <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:if)                                                    <ret> <a-S> 1<a-&> }
         # align 'when' to 'case'
-        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:when)$ <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:case) <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:when)$       <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:case)                                                  <ret> <a-S> 1<a-&> }
         # align 'rescue' to 'begin/def'
-        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:rescue)$ <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:begin|def) <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:rescue)$     <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:begin|def)                                             <ret> <a-S> 1<a-&> }
         # align 'end' to opening structure
-        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:end)$ <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:begin|case|class|def|for|if|module|unless|until|while) <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^\h*(?:end)$        <ret> <a-a>i <a-semicolon> <a-?> ^\h*(?:begin|case|class|def|for|if|module|unless|until|while) <ret> <a-S> 1<a-&> }
     }
 }
 
