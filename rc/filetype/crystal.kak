@@ -53,19 +53,20 @@ add-highlighter shared/crystal/string region '"' '(?<!\\)"' regions
 # Percent string literals
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/string.html#percent-string-literals
 add-highlighter shared/crystal/parenthesis-string region -recurse '\(' '%Q?\(' '\)' regions
-add-highlighter shared/crystal/bracket-string region -recurse '\[' '%Q?\[' '\]' regions
-add-highlighter shared/crystal/brace-string region -recurse '\{' '%Q?\{' '\}' regions
-add-highlighter shared/crystal/angle-string region -recurse '<' '%Q?<' '>' regions
-add-highlighter shared/crystal/pipe-string region '%Q?\|' '\|' regions
+add-highlighter shared/crystal/bracket-string     region -recurse '\[' '%Q?\[' '\]' regions
+add-highlighter shared/crystal/brace-string       region -recurse '\{' '%Q?\{' '\}' regions
+add-highlighter shared/crystal/angle-string       region -recurse '<' '%Q?<' '>'    regions
+add-highlighter shared/crystal/pipe-string        region          '%Q?\|' '\|'      regions
+
 # Raw
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/string.html#percent-string-literals
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/string.html#percent-string-array-literal
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/symbol.html#percent-symbol-array-literal
 add-highlighter shared/crystal/raw-parenthesis-string region -recurse '\(' '%[qwi]\(' '\)' fill string
-add-highlighter shared/crystal/raw-bracket-string region -recurse '\[' '%[qwi]\[' '\]' fill string
-add-highlighter shared/crystal/raw-brace-string region -recurse '\{' '%[qwi]\{' '\}' fill string
-add-highlighter shared/crystal/raw-angle-string region -recurse '<' '%[qwi]<' '>' fill string
-add-highlighter shared/crystal/raw-pipe-string region '%[qwi]\|' '\|' fill string
+add-highlighter shared/crystal/raw-bracket-string     region -recurse '\[' '%[qwi]\[' '\]' fill string
+add-highlighter shared/crystal/raw-brace-string       region -recurse '\{' '%[qwi]\{' '\}' fill string
+add-highlighter shared/crystal/raw-angle-string       region -recurse '<' '%[qwi]<' '>'    fill string
+add-highlighter shared/crystal/raw-pipe-string        region          '%[qwi]\|' '\|'      fill string
 
 # Here document
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/string.html#heredoc
