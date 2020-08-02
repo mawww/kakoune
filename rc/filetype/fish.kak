@@ -43,7 +43,7 @@ add-highlighter shared/fish/double_string/ regex (\$\w+)|(\{\$\w+\}) 0:variable
 add-highlighter shared/fish/code/ regex (\$\w+)|(\{\$\w+\}) 0:variable
 
 # Command names are collected using `builtin --names`.
-add-highlighter shared/fish/code/ regex \b(and|argparse|begin|bg|bind|block|break|breakpoint|builtin|case|cd|command|commandline|complete|contains|continue|count|disown|echo|else|emit|end|eval|exec|exit|false|fg|for|function|functions|history|if|jobs|math|not|or|printf|pwd|random|read|realpath|return|set|set_color|source|status|switch|test|time|ulimit|wait|while)\b 0:keyword
+add-highlighter shared/fish/code/ regex \b(and|argparse|begin|bg|bind|block|break|breakpoint|builtin|case|cd|command|commandline|complete|contains|continue|count|disown|echo|else|emit|end|eval|exec|exit|false|fg|for|function|functions|history|if|jobs|math|not|or|printf|pwd|random|read|realpath|return|set|set_color|source|status|string|switch|test|time|true|ulimit|wait|while)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
