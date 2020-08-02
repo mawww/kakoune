@@ -150,10 +150,10 @@ define-command -hidden ruby-trim-indent %{
 define-command -hidden ruby-indent-on-char %{
     evaluate-commands -no-hooks -draft -itersel %{
         # align middle and end structures to start
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else|elsif) $ <ret> <a-semicolon> <a-?> ^ \h * (if)                                                       <ret> s \A | \z <ret> ) <a-&> }
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when)       $ <ret> <a-semicolon> <a-?> ^ \h * (case)                                                     <ret> s \A | \z <ret> ) <a-&> }
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (rescue)     $ <ret> <a-semicolon> <a-?> ^ \h * (begin)                                                    <ret> s \A | \z <ret> ) <a-&> }
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (end)        $ <ret> <a-semicolon> <a-?> ^ \h * (begin|case|class|def|for|if|module|unless|until|while) <ret> s \A | \z <ret> ) <a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else|elsif) $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (if)                                                       <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else|when)  $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (case)                                                     <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (rescue)     $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (begin|def)                                                <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (end)        $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (begin|case|class|def|for|if|module|unless|until|while)    <ret> <a-S> 1<a-&> }
     }
 }
 
@@ -180,7 +180,7 @@ define-command -hidden ruby-insert-on-new-line %[
                     # Check if previous line opens a block
                     execute-keys -draft k<a-x> <a-k>^<c-r>x(begin|case|class|def|for|if|module|unless|until|while|.+\bdo$|.+\bdo\h\|.+(?=\|))[^0-9A-Za-z_!?]<ret>
                     # Check that we do not already have an end for this indent level which is first set via `ruby-indent-on-new-line` hook
-                    execute-keys -draft }i J <a-x> <a-K> ^<c-r>x(end|else|elsif|rescue)[^0-9A-Za-z_!?]<ret>
+                    execute-keys -draft }i J <a-x> <a-K> ^<c-r>x(end|else|elsif|rescue|when)[^0-9A-Za-z_!?]<ret>
                 ]
                 execute-keys -draft o<c-r>xend<esc> # insert a new line with containing end
             ]
