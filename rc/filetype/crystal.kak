@@ -214,23 +214,19 @@ define-command -hidden crystal-indent-on-new-line %{
 
 define-command -hidden crystal-insert-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
-        # Copy comment prefix and following whitespaces
-        try %{ execute-keys -draft k <a-x> s '^\h*\K#\h*' <ret> y j gl p }
-
-        # Add `end` token if needs be
-        # The 'x' register is to save the leading whitespaces of the opening token
+        # copy _#_ comment prefix and following white spaces
+        try %{ execute-keys -draft k <a-x> s '^\h*\K#\h*' <ret> y j <a-x><semicolon> P }
+        # wisely add end structure
         evaluate-commands -save-regs x %[
-            # Save the leading whitespaces in register 'x'
-            try %{ execute-keys -draft k <a-x> s ^\h* <ret> \" x y }
+            try %{ execute-keys -draft k <a-x> s ^ \h + <ret> \" x y } catch %{ reg x '' }
             try %[
                 evaluate-commands -draft %[
-                    # Make sure previous line opens a block
-                    execute-keys -draft k <a-x> <a-k> ^<c-r>x(?:begin|case|class|def|for|if|module|unless|until|while|.+\bdo\h\|.+(?=\|))[^0-9A-Za-z_!?] <ret>
-                    # Make sure `end` doesn't already exist on indent level
-                    execute-keys -draft }i J <a-x> <a-K> ^<c-r>x(?:end|else|elsif|rescue|when)[^0-9A-Za-z_!?] <ret>
+                    # Check if previous line opens a block
+                    execute-keys -draft k<a-x> <a-k>^<c-r>x(?:begin|case|class|def|for|if|module|unless|until|while|.+\bdo$|.+\bdo\h\|.+(?=\|))[^0-9A-Za-z_!?]<ret>
+                    # Check that we do not already have an end for this indent level which is first set via `crystal-indent-on-new-line` hook
+                    execute-keys -draft }i J <a-x> <a-K> ^<c-r>x(?:end|else|elsif|rescue|when)[^0-9A-Za-z_!?]<ret>
                 ]
-                # Insert new line with end prepended by contents of register 'x'
-                execute-keys -draft o <c-r>x end <esc>
+                execute-keys -draft o<c-r>xend<esc> # insert a new line with containing end
             ]
         ]
     ]
