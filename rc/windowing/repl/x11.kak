@@ -23,9 +23,11 @@ define-command -docstring %{
 }}
 
 define-command x11-send-text -docstring "send the selected text to the repl window" %{
-    nop %sh{
-        printf %s\\n "${kak_selection}" | xsel -i
-        xdotool search --name kak_repl_window key --clearmodifiers Shift+Insert
+    evaluate-commands %sh{
+        printf %s\\n "${kak_selection}" | xsel -i ||
+        echo 'fail x11-send-text: failed to run xsel, see *debug* buffer for details' &&
+        xdotool search --name kak_repl_window key --clearmodifiers Shift+Insert ||
+        echo 'fail x11-send-text: failed to run xdotool, see *debug* buffer for details'
     }
 }
 
