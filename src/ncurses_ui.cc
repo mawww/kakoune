@@ -408,7 +408,7 @@ void NCursesUI::set_terminal_mode() const
     attr.c_cflag |= CS8;
     attr.c_cc[VMIN] = attr.c_cc[VTIME] = 0;
 
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &attr);
+    tcsetattr(STDIN_FILENO, TCSANOW, &attr);
     fputs("\033=", stdout);
     // force enable report focus events
     fputs("\033[?1004h", stdout);
