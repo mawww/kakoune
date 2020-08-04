@@ -44,6 +44,12 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
+        20200804,
+        "» {+u}User{} hook support\n"
+        "» Removed {+i}bold{} and {+i}italic{} faces from colorschemes\n"
+        "» Read from stdin support for clients\n"
+        "» {+u}rgba:RRGGBBAA{} faces and alpha blending\n"
+    }, {
         20200116,
         "» {+u}InsertCompletionHide{} parameter is now the list of inserted ranges\n"
     }, {
