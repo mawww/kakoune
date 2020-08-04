@@ -3,7 +3,7 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development version
+== Kakoune 2020.08.04
 
 * Introduce `User` hook support.
 
@@ -33,7 +33,7 @@ released versions.
   of int/str/bool types to avoid performance issue with generating those
   on more complex option types. 
 
-== Kakoune v2020.01.16
+== Kakoune 2020.01.16
 
 * Expose history tree through `$kak_history` and
   `$kak_uncommitted_modifications`
