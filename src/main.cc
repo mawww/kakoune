@@ -138,6 +138,9 @@ inline void write_stderr(StringView str) { try { write(STDERR_FILENO, str); } ca
 
 String runtime_directory()
 {
+    if (const char* runtime_directory = getenv("KAKOUNE_RUNTIME"))
+        return runtime_directory;
+
     char relpath[PATH_MAX+1];
     format_to(relpath, "{}../share/kak", split_path(get_kak_binary_path()).first);
     struct stat st;
