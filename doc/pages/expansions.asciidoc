@@ -306,8 +306,8 @@ The following expansions are supported (with required context _in italics_):
     current register when the mapping was triggered
 
 *%val{runtime}*::
-    directory containing the kak support files, determined from Kakoune's
-    binary location
+    the directory containing the kak support files, which is determined from
+    Kakoune's binary location if `$KAKOUNE_RUNTIME` is not set
 
 *%val{select_mode}*::
     _for commands executed from the object menu's `<a-;>` only_ +
