@@ -51,8 +51,8 @@ evaluate-commands %sh{
     # Grammar
     opchars='[=+-/<>@$~&%|!?^.:\\*]'
     opnocol='[=+-/<>@$~&%|!?^.\\*]'
-    suffix="('[iIuU](8|16|32|64)|'[fF](32|64)?|'[dDuU]|[fF])?"
-    floatsuffix="('[fF](32|64)?|'[dD]|[fF])?"
+    suffix="('?([iIuU](8|16|32|64)|[fF](32|64)?|[dDuU]|[fF]))?"
+    floatsuffix="('?([fF](32|64)?|[dD]|[fF]))?"
     hexdigit='[0-9a-fA-F]'
     octdigit='[0-7]'
     bindigit='[01]'
@@ -64,12 +64,12 @@ evaluate-commands %sh{
     exponent="([eE][+-]?${declit})"
     floatlit="\b${declit}(\.${declit}${exponent}?|${exponent})${floatsuffix}\b"
 
-    keywords="addr as asm bind block break case cast concept const continue
+    keywords="addr asm bind block break case cast concept const continue
     converter defer discard distinct do elif else end enum except export
-    finally for from func if import include interface iterator let macro
+    finally for func if import include interface iterator let macro
     method mixin nil out proc ptr raise ref return static template try type
     unsafeAddr using var when while yield with without atomic generic"
-    operators="or xor and is isnot in notin of div mod shl shr not"
+    operators="or xor and is isnot in notin of div mod shl shr not as from"
     types="int int8 int16 int32 int64 uint uint8 uint16 uint32 uint64 float
     float32 float64 bool char object seq array cstring string tuple varargs
     typedesc pointer byte set typed untyped void auto"
