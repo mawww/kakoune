@@ -864,7 +864,7 @@ Completions highlighter_cmd_completer(
         StringView scope{path.begin(), sep_it};
         HighlighterGroup* root = nullptr;
         if (scope == "shared")
-            root = &DefinedHighlighters::instance();
+            root = &SharedHighlighters::instance();
         else if (auto* s = get_scope_ifp(scope, context))
             root = &s->highlighters().group();
         else
@@ -889,7 +889,7 @@ Highlighter& get_highlighter(const Context& context, StringView path)
 
     auto sep_it = find(path, '/');
     StringView scope{path.begin(), sep_it};
-    auto* root = (scope == "shared") ? static_cast<HighlighterGroup*>(&DefinedHighlighters::instance())
+    auto* root = (scope == "shared") ? static_cast<HighlighterGroup*>(&SharedHighlighters::instance())
                                      : static_cast<HighlighterGroup*>(&get_scope(scope, context).highlighters().group());
     if (sep_it != path.end())
         return root->get_child(StringView{sep_it+1, path.end()});

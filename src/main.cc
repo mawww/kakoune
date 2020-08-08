@@ -752,7 +752,7 @@ int run_server(StringView session, StringView server_init,
     CommandManager      command_manager;
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
-    DefinedHighlighters defined_highlighters;
+    SharedHighlighters  defined_highlighters;
     ClientManager       client_manager;
     BufferManager       buffer_manager;
 

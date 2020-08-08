@@ -1695,7 +1695,7 @@ private:
 
         try
         {
-            DefinedHighlighters::instance().get_child(m_name).highlight(context, display_buffer, range);
+            SharedHighlighters::instance().get_child(m_name).highlight(context, display_buffer, range);
         }
         catch (child_not_found&)
         {}
@@ -1705,7 +1705,7 @@ private:
     {
         try
         {
-            DefinedHighlighters::instance().get_child(m_name).compute_display_setup(context, setup);
+            SharedHighlighters::instance().get_child(m_name).compute_display_setup(context, setup);
         }
         catch (child_not_found&)
         {}

@@ -57,10 +57,10 @@ private:
     HighlighterGroup m_group;
 };
 
-struct DefinedHighlighters : public HighlighterGroup,
-                             public Singleton<DefinedHighlighters>
+struct SharedHighlighters : public HighlighterGroup,
+                            public Singleton<SharedHighlighters>
 {
-    DefinedHighlighters() : HighlighterGroup{HighlightPass::All} {}
+    SharedHighlighters() : HighlighterGroup{HighlightPass::All} {}
 };
 
 }
