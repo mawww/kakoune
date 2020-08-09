@@ -1,4 +1,4 @@
-hook global BufCreate .*\.((z|ba|c|k|mk)?sh(rc|_profile)?|profile) %{
+hook global BufCreate .*(z|ba|c|k|mk)?sh(rc|_profile)? %{
     set-option buffer filetype sh
 }
 
@@ -147,6 +147,7 @@ define-command -hidden sh-indent-on-new-line %¶
         try %{ execute-keys -draft <space> k <a-x> <a-k> \bfi$ <ret> gh [c\bif\b,\bfi\b <ret> <a-x> <a-S> 1<a-&> <space> j K <a-&> }
         # copy the indentation of the matching if, and then re-indent afterwards
         try %{ execute-keys -draft <space> k <a-x> <a-k> \belse$ <ret> gh [c\bif\b,\bfi\b <ret> <a-x> <a-S> 1<a-&> <space> j K <a-&> j <a-gt> }
+
 
         # Indent case syntax, e.g.:
         # case "$foo" in
