@@ -254,6 +254,22 @@ not allowed.
 
 == The editing language
 
+=== The scripting language lacks keywords, when are you going to expand it?
+
+The scripting language is the smallest subset of statements/keywords that
+allows users to write plugins, commands, mappings.
+
+It's not intended to be a one-stop generic interface, but rather a glue
+between core Kakoune instructions and complex logic.
+
+Other editors generally come up with their own language or leverage existing
+ones (for example, VimL, LUA), whereas Kakoune interacts with the shell,
+through `%sh{…}` scopes.
+
+As arbitrary Kakoune data (options, selection etc.) can be shared with
+shell scopes through environment variables, users are free to process this
+data with pure shell scripting, or whatever interpreter they desire.
+
 === Why aren't there other scopes similar to `%sh{}` e.g. python?
 
 Supporting custom scopes would add hard dependencies to the project, which
