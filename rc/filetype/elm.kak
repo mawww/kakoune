@@ -58,7 +58,7 @@ define-command -hidden elm-trim-indent %{
 }
 
 define-command -hidden elm-indent-after "
- execute-keys -draft <semicolon> k x <a-k> ^\\h*(if)|(case\\h+[\\w']+\\h+of|let|in|\\{\\h+\\w+|\\w+\\h+->|[=(])$ <ret> j <a-gt>
+ execute-keys -draft <semicolon> k x <a-k> ^\\h*if|[=(]$|\\b(case\\h+[\\w']+\\h+of|let|in)$|(\\{\\h+\\w+|\\w+\\h+->)$ <ret> j <a-gt>
 "
 
 define-command -hidden elm-indent-on-new-line %{
