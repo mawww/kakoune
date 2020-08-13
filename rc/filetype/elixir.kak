@@ -52,7 +52,6 @@ add-highlighter shared/eex/code region '<%=?' '%>' ref elixir
 }
 
 provide-module elixir %[
-require-module eex
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
