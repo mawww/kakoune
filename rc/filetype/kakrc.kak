@@ -16,6 +16,7 @@ hook global WinSetOption filetype=kak %~
 
     set-option window static_words %opt{kak_static_words}
 
+    hook window InsertChar \n -group kak-insert kak-insert-on-new-line
     hook window InsertChar \n -group kak-indent kak-indent-on-new-line
     hook window InsertChar [>)}\]] -group kak-indent kak-indent-on-closing-matching
     hook window InsertChar (?![[{(<>)}\]])[^\s\w] -group kak-indent kak-indent-on-closing-char
@@ -90,10 +91,15 @@ add-highlighter shared/kakrc/single_string/escape regex "''" 0:default+b
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden kak-indent-on-new-line %~
+define-command -hidden kak-insert-on-new-line %~
     evaluate-commands -draft -itersel %=
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
+    =
+~
+
+define-command -hidden kak-indent-on-new-line %~
+    evaluate-commands -draft -itersel %=
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
