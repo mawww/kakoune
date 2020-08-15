@@ -7,6 +7,7 @@ hook global WinSetOption filetype=sh %{
     set-option window static_words %opt{sh_static_words}
 
     hook window ModeChange pop:insert:.* -group sh-trim-indent sh-trim-indent
+    hook window InsertChar \n -group sh-insert sh-insert-on-new-line
     hook window InsertChar \n -group sh-indent sh-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window sh-.+ }
 }
@@ -78,10 +79,15 @@ define-command -hidden sh-trim-indent %{
 # Of necessity, this is also fairly opinionated about indentation styles.
 # Doing it "properly" would require far more context awareness than we can
 # bring to this kind of thing.
-define-command -hidden sh-indent-on-new-line %[
+define-command -hidden sh-insert-on-new-line %[
     evaluate-commands -draft -itersel %[
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+    ]
+]
+
+define-command -hidden sh-indent-on-new-line %[
+    evaluate-commands -draft -itersel %[
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
