@@ -15,7 +15,7 @@ hook global WinSetOption filetype=crystal %{
     require-module crystal
 
     add-highlighter window/crystal ref crystal
-    evaluate-commands set-option window static_words %opt{crystal_keywords} %opt{crystal_attributes} %opt{crystal_objects}
+    evaluate-commands set-option window static_words %opt{crystal_keywords} %opt{crystal_macros} %opt{crystal_attributes} %opt{crystal_objects}
 
     hook window InsertChar .*   -group crystal-indent crystal-indent-on-char
     hook window InsertChar '\n' -group crystal-indent crystal-indent-on-new-line
@@ -30,6 +30,7 @@ hook global WinSetOption filetype=crystal %{
 provide-module crystal %§
 
 declare-option -hidden str-list crystal_keywords 'abstract' 'alias' 'annotation' 'as' 'asm' 'begin' 'break' 'case' 'class' 'def' 'do' 'else' 'elsif' 'end' 'ensure' 'enum' 'extend' 'false' 'for' 'fun' 'if' 'include' 'instance_sizeof' 'is_a?' 'lib' 'macro' 'module' 'next' 'nil' 'nil?' 'of' 'offsetof' 'out' 'pointerof' 'private' 'protected' 'require' 'rescue' 'responds_to?' 'return' 'select' 'self' 'sizeof' 'struct' 'super' 'then' 'true' 'type' 'typeof' 'uninitialized' 'union' 'unless' 'until' 'verbatim' 'when' 'while' 'with' 'yield'
+declare-option -hidden str-list crystal_macros 'debugger' 'p!' 'pp!' 'record' 'spawn'
 # https://crystal-lang.org/reference/syntax_and_semantics/methods_and_instance_variables.html#getters-and-setters
 declare-option -hidden str-list crystal_attributes 'getter' 'setter' 'property'
 declare-option -hidden str-list crystal_operators '+' '-' '*' '/' '//' '%' '|' '&' '^' '~' '**' '<<' '<' '<=' '==' '!=' '=~' '!~' '>>' '>' '>=' '<=>' '===' '[]' '[]=' '[]?' '[' '&+' '&-' '&*' '&**'
@@ -116,6 +117,16 @@ evaluate-commands %sh[
     done
     regex="$regex)\\b"
     printf 'add-highlighter shared/crystal/code/keywords regex %s 0:keyword\n' "$regex"
+
+    # Macros
+    eval "set -- $kak_quoted_opt_crystal_macros"
+    regex="\\b(?:\\Q$1\\E"
+    shift
+    for macro do
+        regex="$regex|\\Q$macro\\E"
+    done
+    regex="$regex)\\b"
+    printf 'add-highlighter shared/crystal/code/macros regex %s 0:keyword\n' "$regex"
 
     # Attributes
     eval "set -- $kak_quoted_opt_crystal_attributes"
@@ -236,6 +247,14 @@ define-command -hidden crystal-fetch-keywords %{
     set-register dquote %sh{
         curl --location https://github.com/crystal-lang/crystal/raw/master/src/compiler/crystal/syntax/lexer.cr |
         kak -f '%1scheck_ident_or_keyword\(:(\w+\??), \w+\)<ret>y%<a-R>a<ret><esc><a-_>a<del><esc>|sort<ret>'
+    }
+}
+
+# https://crystal-lang.org/api/toplevel.html#macro-detail
+define-command -hidden crystal-fetch-macros %{
+    set-register dquote %sh{
+        curl --location https://crystal-lang.org/api/toplevel.html |
+        kak -f '%1smacro\h+<lt>strong<gt>(\w+[?!]?)<lt>/strong<gt><ret>y%<a-R>a<ret><esc><a-_>a<del><esc>'
     }
 }
 
