@@ -44,6 +44,9 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
+        0,
+        "» daemon mode does not fork anymore\n"
+    }, {
         20200804,
         "» {+u}User{} hook support\n"
         "» Removed {+i}bold{} and {+i}italic{} faces from colorschemes\n"
@@ -727,20 +730,10 @@ int run_server(StringView session, StringView server_init,
 {
     static bool terminate = false;
     set_signal_handler(SIGTERM, [](int) { terminate = true; });
-    if (flags & ServerFlags::Daemon)
+    if ((flags & ServerFlags::Daemon) and session.empty())
     {
-        if (session.empty())
-        {
-            write_stderr("-d needs a session name to be specified with -s\n");
-            return -1;
-        }
-        if (pid_t child = fork())
-        {
-            write_stderr(format("Kakoune forked to background, for session '{}'\n"
-                                "send SIGTERM to process {} for closing the session\n",
-                                session, child));
-            exit(0);
-        }
+        write_stderr("-d needs a session name to be specified with -s\n");
+        return -1;
     }
 
     EventManager        event_manager;
