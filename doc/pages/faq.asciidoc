@@ -34,13 +34,27 @@ This variable should be set by the terminal emulator, and not overridden with
 an arbitrary value, otherwise it might interfere with general UI rendering on
 the terminal's window.
 
+Currently, Kakoune relies on "palette switching": redefining the standard
+256-color palette for true 24-bit RGB color support.
+If you're using a tool that doesn't support "palette switching", colors will
+be slightly off: they are being rounded down to values supported by the
+regular color palette by Kakoune.
+
+== Why are colors unreadable in `konsole`/`QTermWidget` or `st`?
+
+Even if the `TERM` environment variable is set correctly, most colorschemes look off.
+That's because these terminal emulators don't support "palette switching" (see above).
+
+It is also currently not possible for colorschemes to directly use the system's
+256-color palette. As a workaround, you may use a colorscheme that refers to only 
+the 16 predefined colornames rather than RGB values (like `default` or 
+`solarized-dark-termcolors`), and redefine the values of these colors in your 
+terminal emulator's settings.
+
 == I'm using `tmux` and colors look weird
 
-If you're using a tool that doesn't support "palette switching", colors will
-still be slightly off: they are being rounded down to values supported by the
-regular color palette by Kakoune. Fortunately, on recent versions of `tmux`
-(>=2.6), you can work around that by using the following configuration
-settings:
+Fortunately, on recent versions of `tmux` (>=2.6), 
+you can work around that by using the following configuration settings:
 
 .~/.tmux.conf
 ----
