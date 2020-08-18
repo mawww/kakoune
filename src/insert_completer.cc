@@ -473,6 +473,7 @@ void InsertCompleter::reset()
 
         m_explicit_completer = nullptr;
         m_completions = InsertCompletion{};
+        m_inserted_ranges.clear();
         if (m_context.has_client())
         {
             m_context.client().menu_hide();
@@ -563,6 +564,7 @@ bool InsertCompleter::try_complete(Func complete_func)
     auto& sels = m_context.selections();
     try
     {
+        m_inserted_ranges.clear();
         m_completions = complete_func(sels, m_options, m_faces);
     }
     catch (runtime_error& e)
