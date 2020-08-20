@@ -1,44 +1,48 @@
 = FAQ
 
-== How to pronounce the name of the project and what does it mean ?
+== The project
+
+=== How to pronounce the name of the project and what does it mean ?
 
 The name of the project is pronounced "Kak-oon", and is a word taken from a
 New Caledonian dialect based on French. It means a hard blow, usually a punch,
-but generally refers to a blow into which all of one's strength went.
+but generally refers to a strike into which all of one's strength went.
 
-== Is there going to be a Windows port of Kakoune ?
+=== Is there going to be a Windows port of Kakoune ?
 
-As many features provided by UNIX systems would be missing, or if anything
-much less efficient on a Windows system, the incentive to porting the
-project to this operating system is pretty low.
+As many features provided by UNIX systems are missing or less efficient on
+a Windows system, the incentive to porting the project to this operating
+system is low.
 
-Moreover, you can get pretty decent performance by using Kakoune on Cygwin
-(which is officially supported).
+Moreover, you can achieve pretty decent performance by using Kakoune on
+Cygwin (which is officially supported).
 
-== Can I use Kakoune as a pager ?
+== Interfacing
+
+=== Can I use Kakoune as a pager ?
 
 Kakoune can be used as a pager, either by setting the `PAGER` environment
 variable to `kak`, or by writing data directly to its standard input using a
 shell pipeline.
 
-== Are there any non-console based frontends available ?
+=== Are there any non-console based frontends available?
 
 No graphical frontend is currently officially maintained, you can however
 try experimental community-developed ones.
 
-== Why are colors misrendered in my Kakoune clients ?
+=== Why are colors misrendered in my Kakoune clients?
 
-The most probable cause for that is a very widespread practice that consists
-in setting the `TERM` environment variable in the shell's configuration file.
-This variable should be set by the terminal emulator, and not overridden with
-an arbitrary value, otherwise it might interfere with general UI rendering on
-the terminal's window.
+The most probable cause for colors being misrendered is a widespread practice
+that consists in setting the `TERM` environment variable in the shell's
+configuration file. This variable should be set by the terminal emulator,
+and not overridden with an arbitrary value, otherwise it might interfere
+with general UI rendering on the terminal's window.
 
-== I'm using `tmux` and colors look weird
+=== I'm using `tmux` and colors look weird
 
 If you're using a tool that doesn't support "palette switching", colors will
 still be slightly off: they are being rounded down to values supported by the
-regular color palette by Kakoune. Fortunately, on recent versions of `tmux`
+regular color palette of Kakoune. Fortunately, on recent versions of `tmux`
 (>=2.6), you can work around that by using the following configuration
 settings:
 
@@ -59,118 +63,53 @@ $ tic /path/to/kakoune/contrib/tmux-256color.terminfo
 
 Finally, quit all existing sessions (`tmux kill-server`), and restart `tmux`.
 
-== Why does leaving insert mode take more than half a second in `tmux` ?
+=== Why do I see weird special characters (~T~@~U) around Clippy?
+
+You need a UTF-8 compliant locale, in order to render special characters.
+
+The way to do so might vary from distribution to another, but an easy way
+to verify that your locale is set correctly is to run the following command:
+
+----
+$ locale
+----
+
+The output should look similar to the following (with your own
+language/country code set, instead of `en_US`):
+
+----
+LANG=en_US.UTF-8
+LC_CTYPE="en_US.UTF-8"
+LC_NUMERIC="en_US.UTF-8"
+LC_TIME="en_US.UTF-8"
+LC_COLLATE="en_US.UTF-8"
+LC_MONETARY="en_US.UTF-8"
+LC_MESSAGES="en_US.UTF-8"
+LC_PAPER="en_US.UTF-8"
+LC_NAME="en_US.UTF-8"
+LC_ADDRESS="en_US.UTF-8"
+LC_TELEPHONE="en_US.UTF-8"
+LC_MEASUREMENT="en_US.UTF-8"
+LC_IDENTIFICATION="en_US.UTF-8"
+LC_ALL=
+----
+
+You can also run the project's test suite, which should display errors if
+your locale doesn't support UTF-8 rendering:
+
+----
+$ cd kakoune
+$ make test
+----
+
+=== Why does leaving insert mode take more than half a second in `tmux`?
 
 Upon hitting the escape key, `tmux` waits for a short period of time to
 determine whether it's part of a function or a meta key sequence. In order
 to fix this "lag", set the waiting period in your `tmux` configuration file
 to a short time, e.g. 25ms: `set -sg escape-time 25`
 
-== How do I automatically indent code, as Vim does with `=` ?
-
-As `Kakoune` doesn't parse the contents of the buffers, there is no builtin
-equivalent for this Vim feature. Use a formatter/prettifier dedicated to
-the language you're using with the help of the `|` key.
-
-Example: `%|indent<ret>` to indent an entire buffer with C code.
-
-Note that some languages have a default formatter set, which you can use
-with the `:format` command.
-
-== Can Kakoune automatically complete the parameters of my functions ?
-
-As mentioned in the above question about Vim's `=` key, Kakoune does not
-parse the contents of a buffer by itself, which makes it impossible for
-the editor to propose candidates upon completion.
-
-However, support for such a feature can be achieved through the use of a
-dedicated tool, as is the case with `clang` and C code: you can use the
-`clang-enable-autocomplete` and `clang-complete` builtin commands whenever
-editing a C/C++ file, and completion will work on function parameters.
-
-Note that the same features are available for Python buffers, with the
-`jedi` script.
-
-== Why aren't widely known command line shortcuts such as <c-w> or <c-u> available in Kakoune ?
-
-Despite their widespread availability in multiple tools, those shortcuts do
-not fit the paradigm that Kakoune implements, which is based on selections
-first.
-
-However, you can easily declare key mappings in your configuration file
-to be able to use those control-based shortcuts in insert mode.
-(See <<mapping#,`:doc mapping`>>)
-
-== How can I explore the filesystem the way Vim's NerdTree does ?
-
-The builtin file completion engine used when opening a file for editing
-(using the `:edit` command and letting the suggestions popup in the menu
-beneath) is much more convenient than Vim's, which should suit basic needs.
-
-However, if you need an actual explorer to interact with the editor,
-you can create a Kakoune script that will spawn the tool in question,
-which should in return send an "edit" command followed by the path of the
-file you selected to the current Kakoune session (e.g. `echo "eval -client
-$kak_client edit /path/to/file" | kak -p $kak_session`).
-
-== Why aren't there other scopes similar to `%sh{}` e.g. python ?
-
-Supporting custom scopes would add hard dependencies to the project, which
-is too much of a drawback when balanced against the low cost of using
-an interpreter in a regular shell scope (e.g. `%sh{ python -c "..." }`).
-The shell scope allows users to spawn any interpreter they want, for a minimal
-cost in terms of performance, it is therefore the reason why it's the only
-one available by default.
-
-== What shell is used to expand `%sh{}` scopes ?
-
-The server expands shell scopes using the `sh` binary, stored in one of the
-directories where all the POSIX standard utilities can be found -this list
-of directories is stored in a system configuration variable, and queried
-by Kakoune at startup.
-
-In most distributions, `/bin/sh` will end up being used.
-
-== Can I disable auto-indentation completely ?
-
-All the indentation hooks are conventionally named `<lang>-indent`, which
-allows us to use the `disabled_hooks` variable to disable indentation
-globally with the following command: `set global disabled_hooks '.+-indent'`
-
-== How to enable syntax highlighting ?
-
-The mimetype of the files opened in new buffers is detected using the
-`file` command, and syntax highlighting enabled automatically when
-possible.
-
-== My file seems to be highlighted with the wrong colors, I thought syntax highlighting was detected automatically ?
-
-The `file` utility has several shortcomings, such as detecting the
-wrong mimetype for a file containing data with different syntax, e.g.
-a Python script containing hardcoded HTML templates detected as an HTML
-file.
-
-Kakoune does its best at detecting file types (using known extensions
-for a given format for instance), but not much can be done about those
-ambiguous cases. You might consider writing a custom `$HOME/.magic` file
-if needed.
-
-== Can I disable syntax highlighting completely ?
-
-Similarly to the indentation hooks, the name format followed by the
-highlighting hooks is `<lang>-highlight`. You can thus disable syntax
-highlighting using the following command: `set global disabled_hooks
-'.+-highlight'`
-
-== Why does a dot `.` in a regex select newline characters ?
-
-Data in buffers is a stream of characters, and newlines do not receive special
-treatment compared to other characters, with regards to regex matching. In
-order to select data in a line without any trailing newline characters, one could
-use the `[^\n]+` pattern, which is arguably a good compromise when
-balanced against the ability to select data over several lines.
-
-== Can I split the window to display different buffers in them ?
+=== Can I split the window to display different buffers in them?
 
 As a fairly compliant follower of the UNIX philosophy, Kakoune does not
 try to implement features that are best handled by separate, dedicated
@@ -184,7 +123,183 @@ In order to open buffers in the same window simultaneously using `tmux`
 and simply use the `:new` command to spawn new clients as you would
 have otherwise in an X11 environment.
 
-== Why does `a` extend the current selection, but `i` leaves it untouched ?
+== Generic functionalities
+
+=== Something is wrong, how can I get more debug information?
+
+You can get quite a lot of information out of the editor at runtime. One
+way is through the `:debug` command, which will print out statistics and
+state data into the `\*debug*` buffer:
+
+----
+:debug <command>
+----
+
+Another way is to set flags on the `debug` option:
+
+----
+:set global debug <flags>
+----
+
+Make sure to read all possible values suggested by the completion engine,
+as you type out both commands in a prompt.
+
+If you want to troubleshoot a crash, you need to compile the editor with
+debug symbols enabled:
+
+----
+$ make debug=yes
+----
+
+The resulting binary should produce a stacktrace that you can, afterwards,
+post in an issue in unmangled form (c.f. `c++filt`).
+
+=== How can I explore the filesystem the way Vim's NerdTree does?
+
+The builtin file completion engine used when opening a file for editing
+(using the `:edit` command and letting the suggestions pop up in the menu
+beneath) is more convenient than Vim's, which should suit basic needs.
+
+However, if you need an actual explorer to interact with the editor,
+you can create a Kakoune script that will spawn the tool in question,
+which should in return send an "edit" command followed by the path of the
+file you selected to the current Kakoune session (e.g. `echo "eval -client
+$kak_client edit /path/to/file" | kak -p $kak_session`).
+
+=== How do I automatically indent code, as Vim does with `=`?
+
+As `Kakoune` doesn't parse the contents of the buffers, there is no builtin
+equivalent for this Vim feature. Use a formatter/prettifier dedicated to
+the language you're using with the help of the `|` key.
+
+Example: `%|indent<ret>` to indent an entire buffer with C code.
+
+You can also set the `formatcmd` option and use the `:format` command to
+format the entire buffer.
+
+=== Can Kakoune automatically complete the parameters of my functions?
+
+As mentioned in the above question about Vim's `=` key, Kakoune does not
+parse the contents of a buffer by itself, which makes it impossible for
+the editor to propose candidates upon completion.
+
+However, support for such a feature can be achieved through the use of a
+dedicated tool, as is the case with `clang` and C code: you can use the
+`clang-enable-autocomplete` and `clang-complete` builtin commands whenever
+editing a C/C++ file, and completion will work on function parameters.
+
+Other language-support scripts implement this functionality in a similar way,
+for example the `jedi` script for Python buffers.
+
+Another way to get automatic parameter completion that doesn't depend on
+built-in support in Kakoune is through the
+https://microsoft.github.io/language-server-protocol/[Language Server Protocol],
+for which you can find implementations that interact with the editor.
+
+=== Why aren't widely known command line shortcuts such as <c-w> or <c-u> available in Kakoune?
+
+Despite their widespread availability in multiple tools, those shortcuts do
+not fit the paradigm that Kakoune implements, which is based on selections
+first.
+
+However, you can easily declare key mappings in your configuration file
+to be able to use those control-based shortcuts in insert mode.
+(See <<mapping#,`:doc mapping`>>)
+
+Also note that a subset of "readline shortcuts" is implemented for command
+prompts.
+
+=== Can I disable auto-indentation completely?
+
+All the indentation hooks are conventionally named `<lang>-indent`, which
+allows us to use the `disabled_hooks` variable to disable indentation
+globally with the following command: `set global disabled_hooks '.+-indent'`
+
+=== How to enable syntax highlighting?
+
+The MIME type of the files opened in new buffers is detected using the
+`file` command, and syntax highlighting enabled automatically when
+possible.
+
+=== My file seems to be highlighted with the wrong colors, I thought syntax highlighting was detected automatically?
+
+The `file` utility has several shortcomings, such as detecting the
+wrong MIME type for a file containing data with different syntax, e.g.
+a Python script containing hardcoded HTML templates detected as an HTML
+file.
+
+Kakoune does its best to detect file types (using known extensions for a
+given format for instance), but not much can be done about those ambiguous
+cases. You might consider writing a custom `$HOME/.magic` file if needed.
+
+=== Can I disable syntax highlighting completely?
+
+Similarly to the indentation hooks, the name format followed by the
+highlighting hooks is `<lang>-highlight`. You can thus disable syntax
+highlighting using the following command: `set global disabled_hooks
+'.+-highlight'`
+
+=== Can the cursor be rendered as a beam?
+
+Rendering the cursor as a beam is a common feature of other modal editors,
+it however doesn't fit within Kakoune's selection-first paradigm.
+
+There is a selection on screen at all times, containing either data selected
+by the user, or a newline character when the buffer is empty.
+
+A selection is bound by an anchor and a cursor. They can overlap, but
+ultimately must both be placed *over* a character. A beam cursor placed
+*between* two characters doesn't fulfil that requirement, and is thus
+not allowed.
+
+== The editing language
+
+=== The scripting language lacks keywords, when are you going to expand it?
+
+The scripting language is the smallest subset of statements/keywords that
+allows users to write plugins, commands, mappings.
+
+It's not intended to be a one-stop generic interface, but rather a glue
+between core Kakoune instructions and complex logic.
+
+Other editors generally come up with their own language or leverage existing
+ones (for example, VimL, LUA), whereas Kakoune interacts with the shell,
+through `%sh{…}` scopes.
+
+As arbitrary Kakoune data (options, selection etc.) can be shared with
+shell scopes through environment variables, users are free to process this
+data with pure shell scripting, or whatever interpreter they desire.
+
+=== Why aren't there other scopes similar to `%sh{}` e.g. python?
+
+Supporting custom scopes would add hard dependencies to the project, which
+is too much of a drawback when balanced against the low cost of using
+an interpreter in a regular shell scope (e.g. `%sh{ python -c "..." }`).
+The shell scope allows users to spawn any interpreter they want, for a minimal
+cost in terms of performance, it is therefore the reason why it's the only
+one available by default.
+
+=== What shell is used to expand `%sh{}` scopes?
+
+The server expands shell scopes using the `sh` binary, located in one of
+the directories containing all the POSIX standard utilities. This list of
+directories is stored in a system configuration variable, and queried by
+Kakoune at startup.
+
+In most distributions, `/bin/sh` will end up being used.
+
+=== Why does a dot `.` in a regex select newline characters?
+
+Data in buffers is a stream of characters, and newlines do not receive special
+treatment compared to other characters, with regards to regex matching. In
+order to select data in a line without any trailing newline characters, one could
+use the `[^\n]+` pattern, which is arguably a good compromise when
+balanced against the ability to select data over several lines.
+
+You can instruct the regex engine to stop matching newline characters with
+`.` by disabling the appropriate flag (`(?S)`).
+
+=== Why does `a` extend the current selection, but `i` leaves it untouched?
 
 Selections are ranges of characters whose delimiters are an "anchor" and
 a "cursor", and inserting characters is always done before the cursor in
@@ -195,3 +310,29 @@ make room for characters, effectively extending the current selection since
 the anchor remains immobile, even when the anchor and the cursor are at the
 same location. By opposition, using the insert primitive (`i`) merely adds
 characters before the cursor, which never modifies the current selection.
+
+=== How to apply changes to all open buffers?
+
+The `:exec` and `:eval` commands can apply changes to a comma-separated
+list of buffers, passed as argument to the `-buffer` flag.
+
+In order to let the editor figure out which buffers are open, the special
+value `*` is accepted as a wildcard. For example, in order to reload all
+open buffers:
+
+----
+:eval -buffer * e!
+----
+
+=== Why is the text I pasted into a buffer completely mangled?
+
+In order to assist users with writing code, some buffers come with hooks that
+automatically indent the text inserted. Pasting the contents of the clipboard
+into a buffer in insert mode triggers this indentation functionality,
+resulting into mangled text.
+
+To prevent that from happening:
+
+* disable hooks and enter insert mode with `\i`
+* insert text into the buffer (e.g. paste the clipboard's contents)
+* exit insert-mode, restoring hooks with `<esc>`
