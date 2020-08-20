@@ -207,6 +207,16 @@ PREFIX=$HOME/.local make install
 ====
 
 [TIP]
+.Debian
+====
+Kakoune can be found in Debian 9 (Stretch) and later releases.
+
+---------------------------
+sudo apt install kakoune
+---------------------------
+====
+
+[TIP]
 .FreeBSD
 ====
 Kakoune is available in the official ports tree as
