@@ -53,13 +53,18 @@ define-command -hidden grep-jump %{
 define-command grep-next-match -docstring 'Jump to the next grep match' %{
     evaluate-commands -try-client %opt{jumpclient} %{
         buffer '*grep*'
-        # First jump to enf of buffer so that if grep_current_line == 0
+        # First jump to end of buffer so that if grep_current_line == 0
         # 0g<a-l> will be a no-op and we'll jump to the first result.
         # Yeah, thats ugly...
         execute-keys "ge %opt{grep_current_line}g<a-l> /^[^:]+:\d+:<ret>"
         grep-jump
     }
-    try %{ evaluate-commands -client %opt{toolsclient} %{ execute-keys gg %opt{grep_current_line}g } }
+    try %{
+        evaluate-commands -client %opt{toolsclient} %{
+            buffer '*grep*'
+            execute-keys gg %opt{grep_current_line}g
+        }
+    }
 }
 
 define-command grep-previous-match -docstring 'Jump to the previous grep match' %{
@@ -69,5 +74,10 @@ define-command grep-previous-match -docstring 'Jump to the previous grep match' 
         execute-keys "ge %opt{grep_current_line}g<a-h> <a-/>^[^:]+:\d+:<ret>"
         grep-jump
     }
-    try %{ evaluate-commands -client %opt{toolsclient} %{ execute-keys gg %opt{grep_current_line}g } }
+    try %{
+        evaluate-commands -client %opt{toolsclient} %{
+            buffer '*grep*'
+            execute-keys gg %opt{grep_current_line}g
+        }
+    }
 }
