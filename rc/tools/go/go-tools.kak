@@ -116,6 +116,7 @@ define-command -hidden -params 1..2 gogetdoc-cmd %{
             cat ${dir}/buf | wc -c >> ${dir}/modified
             cat ${dir}/buf >> ${dir}/modified
 
+            args=""
             if [ "$2" = "1" ]; then
                 args="-json"
             fi

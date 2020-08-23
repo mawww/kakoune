@@ -143,6 +143,7 @@ define-command spell-next %{ evaluate-commands %sh{
 define-command \
     -docstring "Suggest replacement words for the current selection, against the last language used by the spell-check command" \
     spell-replace %{ evaluate-commands %sh{
+    options=""
     if [ -n "$kak_opt_spell_last_lang" ]; then
         options="-l '$kak_opt_spell_last_lang'"
     fi
@@ -159,6 +160,7 @@ define-command \
 define-command -params 0.. \
     -docstring "Add the current selection to the dictionary" \
     spell-add %{ evaluate-commands %sh{
+    options=""
     if [ -n "$kak_opt_spell_last_lang" ]; then
         options="-l '$kak_opt_spell_last_lang'"
     fi

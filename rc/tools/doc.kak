@@ -14,6 +14,7 @@ define-command -hidden -params 4 doc-render-regex %{
         evaluate-commands %sh{
             face="$4"
             eval "set -- $kak_quoted_selections_desc"
+            ranges=""
             for desc in "$@"; do ranges="$ranges '$desc|$face'"; done
             echo "update-option buffer doc_render_ranges"
             echo "set-option -add buffer doc_render_ranges $ranges"
@@ -154,6 +155,7 @@ define-command -params 1..2 \
     evaluate-commands %sh{
         readonly page="${kak_runtime}/doc/${1}.asciidoc"
         if [ -f "${page}" ]; then
+            jump_cmd=""
             if [ $# -eq 2 ]; then
                 jump_cmd="doc-jump-to-anchor '$2'"
             fi

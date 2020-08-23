@@ -9,11 +9,11 @@ define-command autorestore-restore-buffer -docstring "Restore the backup for the
 
         if [ -f "${kak_buffile}" ]; then
             newer=$(find "${buffer_dirname}"/".${buffer_basename}.kak."* -newer "${kak_buffile}" -exec ls -1t {} + 2>/dev/null | head -n 1)
-
             older=$(find "${buffer_dirname}"/".${buffer_basename}.kak."* \! -newer "${kak_buffile}" -exec ls -1t {} + 2>/dev/null | head -n 1)
         else
             # New buffers that were never written to disk.
             newer=$(ls -1t "${buffer_dirname}"/".${buffer_basename}.kak."* 2>/dev/null | head -n 1)
+            older=""
         fi
 
         if [ -z "${newer}" ]; then

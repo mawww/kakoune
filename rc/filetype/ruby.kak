@@ -120,6 +120,8 @@ define-command ruby-alternative-file -docstring 'Jump to the alternate file (imp
             [ ! -f $altfile ] && echo "fail 'implementation file not found'" && exit
         ;;
         *.rb)
+            altfile=""
+            altdir=""
             path=$kak_buffile
             dirs=$(while [ $path ]; do echo $path; path=${path%/*}; done | tail -n +2)
             for dir in $dirs; do
@@ -130,7 +132,7 @@ define-command ruby-alternative-file -docstring 'Jump to the alternate file (imp
                     break
                 fi
             done
-            [ ! -d $altdir ] && echo "fail 'spec/ and test/ not found'" && exit
+            [ ! -d "$altdir" ] && echo "fail 'spec/ and test/ not found'" && exit
         ;;
         *)
             echo "fail 'alternative file not found'" && exit

@@ -11,6 +11,7 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
         find -L "${1}" -type f -name "${2}".kak | head -n 1
     }
 
+    filename=""
     if [ -d "${kak_config}/colors" ]; then
         filename=$(find_colorscheme "${kak_config}/colors" "${1}")
     fi

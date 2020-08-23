@@ -65,6 +65,8 @@ define-command lua-alternative-file -docstring 'Jump to the alternate file (impl
             [ ! -f $altfile ] && echo "fail 'implementation file not found'" && exit
         ;;
         *.lua)
+            altfile=""
+            altdir=""
             path=$kak_buffile
             dirs=$(while [ $path ]; do printf %s\\n $path; path=${path%/*}; done | tail -n +2)
             for dir in $dirs; do
@@ -74,7 +76,7 @@ define-command lua-alternative-file -docstring 'Jump to the alternate file (impl
                     break
                 fi
             done
-            [ ! -d $altdir ] && echo "fail 'spec/ not found'" && exit
+            [ ! -d "$altdir" ] && echo "fail 'spec/ not found'" && exit
         ;;
         *)
             echo "fail 'alternative file not found'" && exit

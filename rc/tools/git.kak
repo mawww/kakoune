@@ -229,6 +229,7 @@ define-command -params 1.. \
             fi
         done
 
+        wrapped=false
         if [ "$direction" = "next" ]; then
             if [ -z "$next_hunk" ]; then
                 next_hunk=${hunks%% *}

@@ -173,6 +173,8 @@ define-command clang-diagnostics-next -docstring "Jump to the next line that con
     evaluate-commands %sh{
         eval "set -- ${kak_quoted_opt_clang_errors}"
         shift # skip timestamp
+        unset line
+        unset first_line
         for error in "$@"; do
             candidate=${error%%|*}
             first_line=${first_line-$candidate}

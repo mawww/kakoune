@@ -74,6 +74,9 @@ define-command -params ..1 \
             pagenum="${pagenum%\)}"
             subject="${subject%%\(*}"
             ;;
+        *)
+            pagenum=""
+            ;;
     esac
 
     printf %s\\n "evaluate-commands -try-client %opt{docsclient} man-impl man $pagenum $subject"

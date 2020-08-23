@@ -58,9 +58,8 @@ define-command -hidden modeline-parse-impl %{
         case "${kak_selection}" in
             *vi:*|*vim:*) type_selection="vim";;
             *kak:*|*kakoune:*) type_selection="kakoune";;
-            *) echo "echo -debug Unsupported modeline format";;
+            *) echo "echo -debug Unsupported modeline format"; exit 1 ;;
         esac
-        [ -n "${type_selection}" ] || exit 1
 
         # The following subshell will keep the actual options of the modeline, and strip:
         # - the text that leads the first option, according to the official vim modeline format
@@ -82,6 +81,7 @@ define-command -hidden modeline-parse-impl %{
             case "${type_selection}" in
                 vim) tr=$(translate_opt_vim "${name_option}" "${value_option}");;
                 kakoune) tr=$(translate_opt_kakoune "${name_option}" "${value_option}");;
+                *) tr="";;
             esac
 
             [ -n "${tr}" ] && printf %s\\n "${tr}"
