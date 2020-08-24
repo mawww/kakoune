@@ -22,14 +22,14 @@ linux_task:
     matrix:
         - name: linux_clang
           container:
-              image: silkeh/clang:6
+              image: silkeh/clang:7
           clang_script:
               - apt-get -y install pkg-config libncursesw5-dev
           env:
               CXX: clang++
         - name: linux_gcc
           container:
-              image: gcc:8
+              image: gcc:9
     test_script: make -j4 test
     env:
         LC_ALL: en_US.UTF-8
@@ -42,7 +42,7 @@ macos_task:
           env:
               CXX: clang++
         - name: macos_gcc
-          gcc_script: brew install gcc@8
+          gcc_script: brew install gcc@9
           env:
-              CXX: g++-8
+              CXX: g++-9
     test_script: make -j4 test
