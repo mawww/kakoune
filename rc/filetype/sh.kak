@@ -112,9 +112,9 @@ define-command -hidden sh-indent-on-new-line %[
         # done
         #
         # indent after do
-        try %{ execute-keys -draft <space> k <a-x> <a-k> do$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \bdo$ <ret> j <a-gt> }
         # deindent after done
-        try %{ execute-keys -draft <space> k <a-x> <a-k> done$ <ret> K <a-&> j <a-lt> j K <a-&> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \bdone$ <ret> K <a-&> j <a-lt> j K <a-&> }
 
         # Indent if/then/else syntax, e.g.:
         # if [ $foo = $bar ]; then
@@ -132,12 +132,12 @@ define-command -hidden sh-indent-on-new-line %[
         # fi
         #
         # indent after then
-        try %{ execute-keys -draft <space> k <a-x> <a-k> then$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \bthen$ <ret> j <a-gt> }
         # deindent after fi
-        try %{ execute-keys -draft <space> k <a-x> <a-k> fi$ <ret> K <a-&> j <a-lt> j K <a-&> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \bfi$ <ret> K <a-&> j <a-lt> j K <a-&> }
         # deindent and reindent after else - deindent the else, then back
         # down and return to the previous indent level.
-        try %{ execute-keys -draft <space> k <a-x> <a-k> else$ <ret> <a-lt> j }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \belse$ <ret> <a-lt> j }
 
         # Indent case syntax, e.g.:
         # case "$foo" in
@@ -157,9 +157,9 @@ define-command -hidden sh-indent-on-new-line %[
         # esac
         #
         # indent after in
-        try %{ execute-keys -draft <space> k <a-x> <a-k> in$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \bin$ <ret> j <a-gt> }
         # deindent after esac
-        try %{ execute-keys -draft <space> k <a-x> <a-k> esac$ <ret> <a-lt> j K <a-&> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \besac$ <ret> <a-lt> j K <a-&> }
         # indent after )
         try %{ execute-keys -draft <space> k <a-x> <a-k> ^\s*\(?[^(]+[^)]\)$ <ret> j <a-gt> }
         # deindent after ;;

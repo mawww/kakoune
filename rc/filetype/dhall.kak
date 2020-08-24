@@ -89,7 +89,7 @@ define-command -hidden dhall-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : dhall-trim-indent <ret> }
         # indent after lines ending with let, : or =
-        try %{ execute-keys -draft \; k x <a-k> (let|:|=)$ <ret> j <a-gt> }
+        try %{ execute-keys -draft \; k x <a-k> (\blet|:|=)$ <ret> j <a-gt> }
     }
 }
 

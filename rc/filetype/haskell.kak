@@ -114,7 +114,7 @@ define-command -hidden haskell-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : haskell-trim-indent <ret> }
         # indent after lines beginning with condition or ending with expression or =(
-        try %{ execute-keys -draft <semicolon> k x <a-k> ^\h*(if)|(case\h+[\w']+\h+of|do|let|where|[=(])$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <semicolon> k x <a-k> ^\h*if|[=(]$|\b(case\h+[\w']+\h+of|do|let|where)$ <ret> j <a-gt> }
     }
 }
 

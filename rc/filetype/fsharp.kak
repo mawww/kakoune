@@ -135,7 +135,7 @@ define-command -hidden fsharp-indent-on-new-line %{
         # indent after line ending with =
         try %{ execute-keys -draft <space> k <a-x> <a-k> =$ <ret> j <a-gt> }
         # indent after line ending with "do"
-        try %{ execute-keys -draft <space> k <a-x> <a-k> do$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \bdo$ <ret> j <a-gt> }
     }
 }
 
