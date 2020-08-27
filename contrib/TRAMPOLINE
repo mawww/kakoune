@@ -134,6 +134,8 @@ using the built-in `:doc` command.
         | s |       Example: to remove all occurrences of the word "foo", one
         `---'       would select the entire buffer (`%`), select occurrences of
                     the word (`s`, "\bfoo\b", `<ret>`), then remove it (`d`).
+                    To leave multiple selection mode (get single selection)
+                    press <space>.
 
                     ==[ SELECTING OBJECTS
 
