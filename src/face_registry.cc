@@ -76,8 +76,12 @@ String to_string(Attribute attributes)
     };
 
     auto filteredAttrs = attrs |
-                         filter([=](const Attr& a) { return attributes & a.attr; }) |
-                         transform([](const Attr& a) { return a.name; });
+                         filter([&](const Attr& a) {
+                             if ((attributes & a.attr) != a.attr)
+                                 return false;
+                             attributes &= ~a.attr;
+                             return true;
+                         }) | transform([](const Attr& a) { return a.name; });
 
     return accumulate(filteredAttrs, "+"_str, std::plus<>{});
 }
