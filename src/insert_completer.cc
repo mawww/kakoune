@@ -564,7 +564,7 @@ bool InsertCompleter::try_complete(Func complete_func)
     auto& sels = m_context.selections();
     try
     {
-        m_inserted_ranges.clear();
+        reset();
         m_completions = complete_func(sels, m_options, m_faces);
     }
     catch (runtime_error& e)
