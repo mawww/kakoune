@@ -11,13 +11,15 @@ evaluate-commands %sh{
     orange="rgb:fe8019"
 
     bg="rgb:282828"
+    bg_alpha="rgba:282828a0"
     bg1="rgb:3c3836"
     bg2="rgb:504945"
     bg3="rgb:665c54"
     bg4="rgb:7c6f64"
 
-    fg0="rgb:fbf1c7"
     fg="rgb:ebdbb2"
+    fg_alpha="rgba:ebdbb2a0"
+    fg0="rgb:fbf1c7"
     fg2="rgb:d5c4a1"
     fg3="rgb:bdae93"
     fg4="rgb:a89984"
@@ -48,8 +50,8 @@ evaluate-commands %sh{
         face global list      ${fg}
 
         face global Default            ${fg},${bg}
-        face global PrimarySelection   ${fg},${blue}+fg
-        face global SecondarySelection ${bg},${blue}+fg
+        face global PrimarySelection   ${fg_alpha},${blue}+g
+        face global SecondarySelection ${bg_alpha},${blue}+g
         face global PrimaryCursor      ${bg},${fg}+fg
         face global SecondaryCursor    ${bg},${bg4}+fg
         face global PrimaryCursorEol   ${bg},${fg4}+fg
