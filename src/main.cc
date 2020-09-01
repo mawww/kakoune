@@ -44,7 +44,7 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
-        0,
+        20200901,
         "» daemon mode does not fork anymore\n"
     }, {
         20200804,
