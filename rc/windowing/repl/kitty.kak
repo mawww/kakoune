@@ -38,7 +38,7 @@ define-command -hidden -params 0..1 \
     }
 }
 
-alias global repl kitty-repl
-alias global send-text kitty-send-text
+alias global repl-new kitty-repl
+alias global repl-send-text kitty-send-text
 
 }

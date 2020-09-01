@@ -5,6 +5,9 @@ released versions.
 
 == Development version
 
+* The `repl` and `send-text` aliases have been renamed respectively into
+  `repl-new` and `repl-send-text`.
+
 * Daemon mode (`-d` switch) does not fork anymore.
 
 == Kakoune 2020.08.04
