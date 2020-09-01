@@ -316,68 +316,7 @@ define-command -docstring %{
 } git-show-diff %{
     try %{ add-highlighter window/git-diff flag-lines Default git_diff_flags }
 
-    evaluate-commands %sh{
-        cd_bufdir() {
-            dirname_buffer="${kak_buffile%/*}"
-            if ! cd "${dirname_buffer}" 2>/dev/null; then
-                printf 'fail -- Unable to change the current working directory to: %s' "${dirname_buffer}"
-                exit 1
-            fi
-        }
-
-        (
-            cd_bufdir
-            git --no-pager diff -U0 "$kak_buffile" | perl -e '
-            $flags = $ENV{"kak_timestamp"};
-            foreach $line (<STDIN>) {
-                if ($line =~ /@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))?/) {
-                    $from_line = $1;
-                    $from_count = ($2 eq "" ? 1 : $2);
-                    $to_line = $3;
-                    $to_count = ($4 eq "" ? 1 : $4);
-
-                    if ($from_count == 0 and $to_count > 0) {
-                        for $i (0..$to_count - 1) {
-                            $line = $to_line + $i;
-                            $flags .= " $line|\{green\}+";
-                        }
-                    }
-                    elsif ($from_count > 0 and $to_count == 0) {
-                        if ($to_line == 0) {
-                            $flags .= " 1|\{red\}‾";
-                        } else {
-                            $flags .= " $to_line|\{red\}_";
-                        }
-                    }
-                    elsif ($from_count > 0 and $from_count == $to_count) {
-                        for $i (0..$to_count - 1) {
-                            $line = $to_line + $i;
-                            $flags .= " $line|\{blue\}~";
-                        }
-                    }
-                    elsif ($from_count > 0 and $from_count < $to_count) {
-                        for $i (0..$from_count - 1) {
-                            $line = $to_line + $i;
-                            $flags .= " $line|\{blue\}~";
-                        }
-                        for $i ($from_count..$to_count - 1) {
-                            $line = $to_line + $i;
-                            $flags .= " $line|\{green\}+";
-                        }
-                    }
-                    elsif ($to_count > 0 and $from_count > $to_count) {
-                        for $i (0..$to_count - 2) {
-                            $line = $to_line + $i;
-                            $flags .= " $line|\{blue\}~";
-                        }
-                        $last = $to_line + $to_count - 1;
-                        $flags .= " $last|\{blue+u\}~";
-                    }
-                }
-            }
-            print "set-option buffer git_diff_flags $flags"
-        ' )
-    }
+    git-update-diff
 }
 
 define-command -params .. -docstring %{
