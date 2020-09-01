@@ -31,6 +31,73 @@ declare-option -hidden line-specs git_blame_flags
 declare-option -hidden line-specs git_diff_flags
 declare-option -hidden int-list git_hunk_list
 
+define-command -hidden -params 1 git-jump-hunk %{ evaluate-commands %sh{
+    jump_hunk() {
+        direction=$1
+        set -- ${kak_opt_git_diff_flags}
+        shift
+
+        if [ $# -lt 1 ]; then
+            echo "fail 'no git hunks found'"
+            exit
+        fi
+
+        # Update hunk list if required
+        if [ "$kak_timestamp" != "${kak_opt_git_hunk_list%% *}" ]; then
+            hunks=$kak_timestamp
+
+            prev_line="-1"
+            for line in "$@"; do
+                line="${line%%|*}"
+                if [ "$((line - prev_line))" -gt 1 ]; then
+                    hunks="$hunks $line"
+                fi
+                prev_line="$line"
+            done
+            echo "set-option buffer git_hunk_list $hunks"
+            hunks=${hunks#* }
+        else
+            hunks=${kak_opt_git_hunk_list#* }
+        fi
+
+        prev_hunk=""
+        next_hunk=""
+        for hunk in ${hunks}; do
+            if   [ "$hunk" -lt "$kak_cursor_line" ]; then
+                prev_hunk=$hunk
+            elif [ "$hunk" -gt "$kak_cursor_line" ]; then
+                next_hunk=$hunk
+                break
+            fi
+        done
+
+        wrapped=false
+        if [ "$direction" = "next" ]; then
+            if [ -z "$next_hunk" ]; then
+                next_hunk=${hunks%% *}
+                wrapped=true
+            fi
+            if [ -n "$next_hunk" ]; then
+                echo "select $next_hunk.1,$next_hunk.1"
+            fi
+        elif [ "$direction" = "prev" ]; then
+            if [ -z "$prev_hunk" ]; then
+                wrapped=true
+                prev_hunk=${hunks##* }
+            fi
+            if [ -n "$prev_hunk" ]; then
+                echo "select $prev_hunk.1,$prev_hunk.1"
+            fi
+        fi
+
+        if [ "$wrapped" = true ]; then
+            echo "echo -markup '{Information}git hunk search wrapped around buffer'"
+        fi
+    }
+
+    jump_hunk "${1}"
+} }
+
 define-command -params .. -docstring %{
     git-add [<file>]...: add the given files, or the current buffer if unspecified
 } -shell-script-candidates %{
@@ -209,142 +276,16 @@ define-command -params .. -docstring %{
 define-command -docstring %{
     Jump to the next hunk
 } -shell-script-candidates %{
-} git-next-hunk %{ evaluate-commands %sh{
-    jump_hunk() {
-        direction=$1
-        set -- ${kak_opt_git_diff_flags}
-        shift
-
-        if [ $# -lt 1 ]; then
-            echo "fail 'no git hunks found'"
-            exit
-        fi
-
-        # Update hunk list if required
-        if [ "$kak_timestamp" != "${kak_opt_git_hunk_list%% *}" ]; then
-            hunks=$kak_timestamp
-
-            prev_line="-1"
-            for line in "$@"; do
-                line="${line%%|*}"
-                if [ "$((line - prev_line))" -gt 1 ]; then
-                    hunks="$hunks $line"
-                fi
-                prev_line="$line"
-            done
-            echo "set-option buffer git_hunk_list $hunks"
-            hunks=${hunks#* }
-        else
-            hunks=${kak_opt_git_hunk_list#* }
-        fi
-
-        prev_hunk=""
-        next_hunk=""
-        for hunk in ${hunks}; do
-            if   [ "$hunk" -lt "$kak_cursor_line" ]; then
-                prev_hunk=$hunk
-            elif [ "$hunk" -gt "$kak_cursor_line" ]; then
-                next_hunk=$hunk
-                break
-            fi
-        done
-
-        wrapped=false
-        if [ "$direction" = "next" ]; then
-            if [ -z "$next_hunk" ]; then
-                next_hunk=${hunks%% *}
-                wrapped=true
-            fi
-            if [ -n "$next_hunk" ]; then
-                echo "select $next_hunk.1,$next_hunk.1"
-            fi
-        elif [ "$direction" = "prev" ]; then
-            if [ -z "$prev_hunk" ]; then
-                wrapped=true
-                prev_hunk=${hunks##* }
-            fi
-            if [ -n "$prev_hunk" ]; then
-                echo "select $prev_hunk.1,$prev_hunk.1"
-            fi
-        fi
-
-        if [ "$wrapped" = true ]; then
-            echo "echo -markup '{Information}git hunk search wrapped around buffer'"
-        fi
-    }
-
-    jump_hunk next
-} }
+} git-next-hunk %{
+    git-jump-hunk next
+}
 
 define-command -docstring %{
     Jump to the previous hunk
 } -shell-script-candidates %{
-} git-previous-hunk %{ evaluate-commands %sh{
-    jump_hunk() {
-        direction=$1
-        set -- ${kak_opt_git_diff_flags}
-        shift
-
-        if [ $# -lt 1 ]; then
-            echo "fail 'no git hunks found'"
-            exit
-        fi
-
-        # Update hunk list if required
-        if [ "$kak_timestamp" != "${kak_opt_git_hunk_list%% *}" ]; then
-            hunks=$kak_timestamp
-
-            prev_line="-1"
-            for line in "$@"; do
-                line="${line%%|*}"
-                if [ "$((line - prev_line))" -gt 1 ]; then
-                    hunks="$hunks $line"
-                fi
-                prev_line="$line"
-            done
-            echo "set-option buffer git_hunk_list $hunks"
-            hunks=${hunks#* }
-        else
-            hunks=${kak_opt_git_hunk_list#* }
-        fi
-
-        prev_hunk=""
-        next_hunk=""
-        for hunk in ${hunks}; do
-            if   [ "$hunk" -lt "$kak_cursor_line" ]; then
-                prev_hunk=$hunk
-            elif [ "$hunk" -gt "$kak_cursor_line" ]; then
-                next_hunk=$hunk
-                break
-            fi
-        done
-
-        wrapped=false
-        if [ "$direction" = "next" ]; then
-            if [ -z "$next_hunk" ]; then
-                next_hunk=${hunks%% *}
-                wrapped=true
-            fi
-            if [ -n "$next_hunk" ]; then
-                echo "select $next_hunk.1,$next_hunk.1"
-            fi
-        elif [ "$direction" = "prev" ]; then
-            if [ -z "$prev_hunk" ]; then
-                wrapped=true
-                prev_hunk=${hunks##* }
-            fi
-            if [ -n "$prev_hunk" ]; then
-                echo "select $prev_hunk.1,$prev_hunk.1"
-            fi
-        fi
-
-        if [ "$wrapped" = true ]; then
-            echo "echo -markup '{Information}git hunk search wrapped around buffer'"
-        fi
-    }
-
-    jump_hunk prev
-} }
+} git-previous-hunk %{
+    git-jump-hunk prev
+}
 
 define-command -params .. -docstring %{
     git-reset [<file>]...: reset the given files
