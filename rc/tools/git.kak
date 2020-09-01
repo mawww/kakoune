@@ -348,9 +348,8 @@ define-command -docstring %{
         fi
     }
 
-    (
-        cd_bufdir
-        git --no-pager diff -U0 "$kak_buffile" | perl -e '
+    cd_bufdir
+    git --no-pager diff -U0 "$kak_buffile" | perl -e '
         $flags = $ENV{"kak_timestamp"};
         foreach $line (<STDIN>) {
             if ($line =~ /@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))?/) {
@@ -399,5 +398,5 @@ define-command -docstring %{
             }
         }
         print "set-option buffer git_diff_flags $flags"
-    ' )
+    '
 } }
