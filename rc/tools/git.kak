@@ -168,7 +168,7 @@ define-command -params .. -docstring %{
     ( git diff "$@" > "${output}" 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
     printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
-              edit! -fifo \"${output}\" *git*
+              edit! -fifo \"${output}\" *git-diff*
               set-option buffer filetype diff
               hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -f \"${output}\" } }
           }"
@@ -200,7 +200,7 @@ define-command -params .. -docstring %{
     ( git log "$@" > "${output}" 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
     printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
-              edit! -fifo \"${output}\" *git*
+              edit! -fifo \"${output}\" *git-log*
               set-option buffer filetype git-log
               hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -f \"${output}\" } }
           }"
@@ -364,7 +364,7 @@ define-command -params .. -docstring %{
     ( git show "$@" > "${output}" 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
     printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
-              edit! -fifo \"${output}\" *git*
+              edit! -fifo \"${output}\" *git-show*
               set-option buffer filetype git-log
               hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -f \"${output}\" } }
           }"
@@ -447,7 +447,7 @@ define-command -params .. -docstring %{
     ( git status "$@" > "${output}" 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
     printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
-              edit! -fifo \"${output}\" *git*
+              edit! -fifo \"${output}\" *git-status*
               set-option buffer filetype git-status
               hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -f \"${output}\" } }
           }"
