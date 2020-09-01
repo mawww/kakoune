@@ -80,35 +80,35 @@ define-command -params .. -docstring %{
         cd_bufdir
         printf %s "evaluate-commands -client '$kak_client' %{
                   try %{ add-highlighter window/git-blame flag-lines Information git_blame_flags }
-                  set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
-              }" | kak -p ${kak_session}
-              git blame "$@" --incremental ${kak_buffile} | awk '
-              function send_flags(text, flag, i) {
-                  if (line == "") { return; }
-                  text=substr(sha,1,8) " " dates[sha] " " authors[sha]
-                  # gsub("|", "\\|", text)
-                  gsub("~", "~~", text)
-                  flag="%~" line "|" text "~"
-                  for ( i=1; i < count; i++ ) {
-                      flag=flag " %~" line+i "|" text "~"
-                  }
-                  cmd = "kak -p " ENVIRON["kak_session"]
-                  print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags " flag | cmd
-                  close(cmd)
-              }
-              /^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/ {
-                  send_flags()
-                  sha=$1
-                  line=$3
-                  count=$4
-              }
-              /^author / { authors[sha]=substr($0,8) }
-              /^author-time ([0-9]*)/ {
-                   cmd = "date -d @" $2 " +\"%F %T\""
-                   cmd | getline dates[sha]
-                   close(cmd)
-              }
-              END { send_flags(); }'
+                  set-option \"buffer=$kak_bufname\" git_blame_flags '$kak_timestamp'
+              }" | kak -p "${kak_session}"
+        git blame "$@" --incremental "${kak_buffile}" | awk '
+        function send_flags(text, flag, i) {
+            if (line == "") { return; }
+            text=substr(sha,1,8) " " dates[sha] " " authors[sha]
+            # gsub("|", "\\|", text)
+            gsub("~", "~~", text)
+            flag="%~" line "|" text "~"
+            for ( i=1; i < count; i++ ) {
+                flag=flag " %~" line+i "|" text "~"
+            }
+            cmd = "kak -p " ENVIRON["kak_session"]
+            print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags " flag | cmd
+            close(cmd)
+        }
+        /^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/ {
+            send_flags()
+            sha=$1
+            line=$3
+            count=$4
+        }
+        /^author / { authors[sha]=substr($0,8) }
+        /^author-time ([0-9]*)/ {
+             cmd = "date -d @" $2 " +\"%F %T\""
+             cmd | getline dates[sha]
+             close(cmd)
+        }
+        END { send_flags(); }'
     ) > /dev/null 2>&1 < /dev/null &
 } }
 
@@ -127,7 +127,7 @@ define-command -params .. -docstring %{
 } git-commit %{ evaluate-commands %sh{
     # Handle case where message needs not to be edited
     if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit|--fixup.*|--squash.*"; then
-        if git commit "$@" > /dev/null 2>&1; then
+        if git commit "$@" >/dev/null; then
             printf 'echo -markup -- {Information}File(s) committed: %s' "$*"
         else
             printf 'fail -- Unable to commit file(s): %s' "$*"
@@ -163,14 +163,14 @@ define-command -params .. -docstring %{
 define-command -params .. -docstring %{
     git-diff [<file>]...: show the diff of the given files
 } git-diff %{ evaluate-commands %sh{
-    output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
-    mkfifo ${output}
-    ( git diff "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
+    output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git-diff.XXXXXXXX)/fifo
+    mkfifo "${output}"
+    ( git diff "$@" > "${output}" 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
     printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
-              edit! -fifo ${output} *git*
+              edit! -fifo \"${output}\" *git*
               set-option buffer filetype diff
-              hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+              hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname \"${output}\") } }
           }"
 } }
 
@@ -195,14 +195,14 @@ define-command -params .. -docstring %{
 define-command -params .. -docstring %{
     git-log [<file>]...: show the log of the given files
 } git-log %{ evaluate-commands %sh{
-    output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
-    mkfifo ${output}
-    ( git log "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
+    output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git-log.XXXXXXXX)/fifo
+    mkfifo "${output}"
+    ( git log "$@" > "${output}" 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
     printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
-              edit! -fifo ${output} *git*
+              edit! -fifo \"${output}\" *git*
               set-option buffer filetype git-log
-              hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+              hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname \"${output}\") } }
           }"
 } }
 
@@ -359,14 +359,14 @@ define-command -params .. -docstring %{
 define-command -params .. -docstring %{
     git-show [<file>]...: show the given files
 } git-show %{ evaluate-commands %sh{
-    output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
-    mkfifo ${output}
-    ( git show "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
+    output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git-show.XXXXXXXX)/fifo
+    mkfifo "${output}"
+    ( git show "$@" > "${output}" 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
     printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
-              edit! -fifo ${output} *git*
+              edit! -fifo \"${output}\" *git*
               set-option buffer filetype git-log
-              hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+              hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname \"${output}\") } }
           }"
 } }
 
@@ -442,14 +442,14 @@ define-command -docstring %{
 define-command -params .. -docstring %{
     git-status [<file>]...: show the status of the given files
 } git-status %{ evaluate-commands %sh{
-    output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
-    mkfifo ${output}
-    ( git status "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
+    output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git-status.XXXXXXXX)/fifo
+    mkfifo "${output}"
+    ( git status "$@" > "${output}" 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
     printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
-              edit! -fifo ${output} *git*
+              edit! -fifo \"${output}\" *git*
               set-option buffer filetype git-status
-              hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+              hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname \"${output}\") } }
           }"
 } }
 
