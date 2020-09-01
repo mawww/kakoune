@@ -79,7 +79,7 @@ add-highlighter shared/markdown/inline/text/ regex (?<!_)(__([^\s_]|([^\s_](\n?[
 add-highlighter shared/markdown/inline/text/ regex <(([a-z]+://.*?)|((mailto:)?[\w+-]+@[a-z]+[.][a-z]+))> 0:link
 add-highlighter shared/markdown/inline/text/ regex ^\[[^\]\n]*\]:\h*([^\n]*) 1:link
 add-highlighter shared/markdown/inline/text/ regex ^\h*(>\h*)+ 0:comment
-add-highlighter shared/markdown/inline/text/ regex \H\K\h\h$ 0:PrimarySelection
+add-highlighter shared/markdown/inline/text/ regex "\H( {2,})$" 1:+r@meta
 
 # Inline code
 add-highlighter shared/markdown/inline/text/ regex "^    [^\n]*" 0:meta
