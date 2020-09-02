@@ -2082,7 +2082,7 @@ void select_whole_buffer(Context& context, NormalParams)
 void keep_selection(Context& context, NormalParams p)
 {
     auto& selections = context.selections();
-    const int index = p.count ? p.count-1 : selections.main_index();
+    const int index = (selections.main_index() + p.count) % selections.size();
     if (index >= selections.size())
         throw runtime_error{format("invalid selection index: {}", index)};
 
