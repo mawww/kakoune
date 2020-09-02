@@ -1,0 +1,15 @@
+= Kakoune's online documentation
+
+== Commands
+
+*doc* <topic>::
+    *alias* help +
+    display documentation about a topic. The completion list displays the
+    available topics
+
+== Options
+
+*docsclient* (str)::
+    If set, the `:doc` command (and other commands that display documentation)
+    will try to display documentation in the Kakoune client with this name.
+    See <<commands#clients-and-sessions,`:doc commands clients-and-sessions`>>
