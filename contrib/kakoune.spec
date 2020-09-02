@@ -5,7 +5,7 @@
 %global build_ldflags   %{build_ldflags} -flto
 
 Name:           kakoune
-Version:        2020.08.04
+Version:        2020.09.01
 Release:        1%{?dist}
 Summary:        Code editor heavily inspired by Vim
 
@@ -83,6 +83,9 @@ popd
 
 
 %changelog
+* Wed Sep 2 2020 Jiri Konecny <jkonecny@redhat.com> - 2020.09.01-1
+- Update to 2020.09.01
+
 * Tue Aug 4 2020 Jiri Konecny <jkonecny@redhat.com> - 2020.08.04-1
 - Update to 2020.08.04
 
