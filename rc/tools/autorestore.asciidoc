@@ -5,19 +5,9 @@ files with predictable names. When you edit a file, if such a backup file
 exists, this plugin will automatically load the content of the backup file
 instead.
 
-== Commands
+By default, backup files are deleted when restored. You can set the
+`autorestore_purge_restored` option to `false` to prevent this.
 
-*autorestore-restore-buffer*::
-    Restore the backup for the current file if it exists.
-
-*autorestore-purge-backups*::
-    Remove all the backups of the current buffer.
-
-*autorestore-disable*::
-    Disable automatic backup recovering for this session.
-
-== Options
-
-*autorestore_purge_restored* (bool)::
-    *default* true +
-    If true, remove backups once they've been restored
+If you don't want backups to be restored automatically, use the
+`autorestore-disable` command to disable the feature for the current session,
+or put it in your `kakrc` to disable the feature forever.
