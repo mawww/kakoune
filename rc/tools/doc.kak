@@ -137,18 +137,20 @@ define-command -params 1 -hidden doc-render %{
 define-command -params 1..2 \
     -shell-script-candidates %{
         if [ "$kak_token_to_complete" -eq 0 ]; then
-            (
-                find "${kak_runtime}/doc/" -type f -name "*.asciidoc"
-                find "${kak_runtime}/rc/" -type f -name "*.asciidoc"
-                find "${kak_config}/autoload/" -type f -name "*.asciidoc"
-            ) | sed 's,.*/,,; s/\.[^/]*$//'
+            find -L \
+                "${kak_config}/autoload/" \
+                "${kak_runtime}/doc/" \
+                "${kak_runtime}/rc/" \
+                -type f -name "*.asciidoc" |
+                sed 's,.*/,,; s/\.[^.]*$//'
         elif [ "$kak_token_to_complete" -eq 1 ]; then
             page=$(
-                (
-                    find "${kak_runtime}/doc/" -type f -name "$1.asciidoc"
-                    find "${kak_runtime}/rc/" -type f -name "$1.asciidoc"
-                    find "${kak_config}/autoload/" -type f -name "$1.asciidoc"
-                ) | head -1
+                find -L \
+                    "${kak_config}/autoload/" \
+                    "${kak_runtime}/doc/" \
+                    "${kak_runtime}/rc/" \
+                    -type f -name "$1.asciidoc" |
+                    head -1
             )
             if [ -f "${page}" ]; then
                 awk '
@@ -164,11 +166,12 @@ define-command -params 1..2 \
     } %{
     evaluate-commands %sh{
         page=$(
-            (
-                find "${kak_runtime}/doc/" -type f -name "$1.asciidoc"
-                find "${kak_runtime}/rc/" -type f -name "$1.asciidoc"
-                find "${kak_config}/autoload/" -type f -name "$1.asciidoc"
-            ) | head -1
+            find -L \
+                "${kak_config}/autoload/" \
+                "${kak_runtime}/doc/" \
+                "${kak_runtime}/rc/" \
+                -type f -name "$1.asciidoc" |
+                head -1
         )
         if [ -f "${page}" ]; then
             jump_cmd=""

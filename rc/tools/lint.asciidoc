@@ -1,8 +1,8 @@
 = Integrate with tools that check files for problems.
 
 Many file-formats have "lint" tools that check for common problems and point out
-where they occur. Most of these tools produce output in the the traditional
-message format:
+where they occur. Most of these tools produce output in the traditional message
+format:
 
 ----
 {filename}:{line}:{column}: {kind}: {message}
@@ -15,7 +15,7 @@ This plugin can run such tools and collect the resulting messages. The complete
 output is collected in the `*lint-output*` buffer, and any lines in the current
 file with messages will have a marker displayed next to them in the left margin.
 When the cursor moves onto a line with the problem, the associated messages will
-be displayed in a tool tip..
+be displayed in a tool tip.
 
 == Commands
 
@@ -46,12 +46,11 @@ be displayed in a tool tip..
     The shell command used by lint-buffer and lint-selections.
     +
     It will be given the path to a file containing the text to be
-    linted, and must produce output in the format:
+    linted, and must produce output in the format described above.
 
 
 *toolsclient* (str)::
-    If set, the `:lint` command (and other commands that point out files and
-    line-numbers) will try to display its results in the Kakoune client with
-    this name.
+    If set, the `:lint` command will try to display its results in the Kakoune
+    client with this name.
     See <<commands#clients-and-sessions,`:doc commands clients-and-sessions`>>
 
