@@ -2,13 +2,7 @@ declare-option \
     -docstring %{
         The shell command used by lint-buffer and lint-selections.
 
-        It will be given the path to a file containing the text to be
-        linted, and must produce output in the format:
-
-            {filename}:{line}:{column}: {kind}: {message}
-
-        If the 'kind' field contains 'error', the message is treated
-        as an error, otherwise it is assumed to be a warning.
+        See `:doc lint` for details.
     } \
     str lintcmd
 
@@ -230,6 +224,8 @@ define-command \
         Switches:
             -command <cmd>      Use the given linter.
                                 If not given, the lintcmd option is used.
+
+        See `:doc lint` for details.
     } \
     lint-selections \
 %{
@@ -275,7 +271,7 @@ define-command \
     -docstring %{
         lint-buffer: Check the current buffer with a linter.
 
-        Set the lintcmd option to control which linter is used.
+        See `:doc lint` for details.
     } \
     lint-buffer \
 %{

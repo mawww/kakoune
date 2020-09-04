@@ -12,9 +12,10 @@ If the 'kind' field contains 'error', the message is treated as an error,
 otherwise it is assumed to be a warning.
 
 The `:lint-buffer` and `:lint-selections` commands will run the shell command
-specified in the `lintcmd` option, collect the result in the `*lint-output*`
-buffer, and analyze it. If `toolsclient` is set, the `*lint-output*` buffer will
-be displayed in the named client.
+specified in the `lintcmd` option, passing it the path to a temporary file
+containing the text to be linted. The results are collected in the
+`*lint-output*` buffer, and analyze it. If `toolsclient` is set, the
+`*lint-output*` buffer will be displayed in the named client.
 
 Each reported error or warning causes a marker to appear in the left-hand
 margin of the buffer that was checked. When the main cursor moves onto that

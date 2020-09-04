@@ -163,6 +163,8 @@ define-command -params 1..2 \
     doc -docstring %{
         doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
         An optional keyword argument can be passed to the function, which will be automatically selected in the documentation
+
+        See `:doc doc` for details.
     } %{
     evaluate-commands %sh{
         page=$(
