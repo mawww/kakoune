@@ -6,7 +6,8 @@ if true {
 }
 
 if true {
-    bar()}
+    bar()
+}
 
 if true {
     bar()

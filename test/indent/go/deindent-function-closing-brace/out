@@ -6,7 +6,8 @@ func foo(x int) int {
 }
 
 func foo(x int) int {
-    bar()}
+    bar()
+}
 
 func foo(x int) int {
     bar()

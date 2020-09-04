@@ -21,6 +21,7 @@ hook global WinSetOption filetype=go %{
     hook window InsertChar \n -group go-indent go-indent-on-new-line
     hook window InsertChar \{ -group go-indent go-indent-on-opening-curly-brace
     hook window InsertChar \} -group go-indent go-indent-on-closing-curly-brace
+    hook window InsertChar \n -group go-insert go-insert-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window go-.+ }
 }
@@ -67,6 +68,7 @@ evaluate-commands %sh{
         add-highlighter shared/go/code/ regex \b($(join "${types}" '|'))\b 0:type
         add-highlighter shared/go/code/ regex \b($(join "${values}" '|'))\b 0:value
         add-highlighter shared/go/code/ regex \b($(join "${functions}" '|'))\b 0:builtin
+        add-highlighter shared/go/code/ regex := 0:attribute
     "
 }
 
@@ -87,8 +89,6 @@ define-command -hidden go-indent-on-new-line %~
         try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,} <ret> y<c-o>P<esc> }
         # indent after a switch's case/default statements
         try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
-        # indent after if|else|while|for
-        try %[ execute-keys -draft <semicolon><a-F>)MB <a-k> \A(if|else|while|for)\h*\(.*\)\h*\n\h*\n?\z <ret> s \A|.\z <ret> 1<a-&>1<a-space><a-gt> ]
         # deindent closing brace(s) when after cursor
         try %[ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
     =
@@ -102,6 +102,38 @@ define-command -hidden go-indent-on-opening-curly-brace %[
 define-command -hidden go-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
+]
+
+define-command -hidden go-insert-on-new-line %[
+    evaluate-commands -no-hooks -draft -itersel %[
+        # Wisely add '}'.
+        evaluate-commands -save-regs x %[
+            # Save previous line indent in register x.
+            try %[ execute-keys -draft k<a-x>s^\h+<ret>"xy ] catch %[ reg x '' ]
+            try %[
+                # Validate previous line and that it is not closed yet.
+                execute-keys -draft k<a-x> <a-k>^<c-r>x.*\{\h*\(?\h*$<ret> J}iJ<a-x> <a-K>^<c-r>x(\)?\h*\})$<ret>
+                # Insert closing '}'.
+                execute-keys -draft o<c-r>x}<esc>
+                # Delete trailing '}' on the line below the '{'.
+                execute-keys -draft Xs\}$<ret>d
+            ]
+        ]
+
+        # Wisely add ')'.
+        evaluate-commands -save-regs x %[
+            # Save previous line indent in register x.
+            try %[ execute-keys -draft k<a-x>s^\h+<ret>"xy ] catch %[ reg x '' ]
+            try %[
+                # Validate previous line and that it is not closed yet.
+                execute-keys -draft k<a-x> <a-k>^<c-r>x.*\(\h*$<ret> J}iJ<a-x> <a-K>^<c-r>x(\)\h*\}?)$<ret>
+                # Insert closing ')'.
+                execute-keys -draft o<c-r>x)<esc>
+                # Delete trailing ')' on the line below the '('.
+                execute-keys -draft Xs\)\h*\}?\h*$<ret>d
+            ]
+        ]
+    ]
 ]
 
 §
