@@ -18,6 +18,7 @@ hook global WinSetOption filetype=latex %(
     hook window InsertChar \} -group latex-indent %{ latex-indent-closing-brace }
     hook window ModeChange pop:insert:.* -group latex-indent %{ latex-trim-indent }
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks latex-indent }
+    hook window InsertChar \n -group latex-insert latex-insert-on-new-line
 )
 
 hook -group latex-highlight global WinSetOption filetype=latex %{
@@ -89,6 +90,24 @@ define-command -hidden latex-indent-closing-brace %(
         try %(
             execute-keys -draft h<a-h> 1s\\end\h*\{([^\}]+)\}\z<ret> \
                 <a-?>\\begin\s*\{<c-r>.\}<ret> <a-S>1<a-&>
+        )
+    )
+)
+
+define-command -hidden latex-insert-on-new-line %(
+    evaluate-commands -no-hooks -draft -itersel %(
+        # Wisely add "\end{...}".
+        evaluate-commands -save-regs xz %(
+            # Save previous line indent in register x.
+            try %( execute-keys -draft k<a-x>s^\h+<ret>"xy ) catch %( reg x '' )
+            # Save item of begin in register z.
+            try %( execute-keys -draft k<a-x>s\{.*\}<ret>"zy ) catch %( reg z '' )
+            try %(
+                # Validate previous line and that it is not closed yet.
+                execute-keys -draft k<a-x> <a-k>^<c-r>x\h*\\begin\{.*\}<ret> J}iJ<a-x> <a-K>^<c-r>x(\\end\<c-r>z<backspace>\})<ret>
+                # Auto insert "\end{...}".
+                execute-keys -draft o<c-r>x\end<c-r>z<esc>
+            )
         )
     )
 )
