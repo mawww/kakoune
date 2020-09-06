@@ -12,6 +12,7 @@ hook global BufOpenFile .* %{ evaluate-commands %sh{
             text/*)   filetype="${mime#text/}" ;;
             application/x-*) filetype="${mime#application/x-}" ;;
             application/*) filetype="${mime#application/}" ;;
+            *) exit ;;
         esac
         if [ -n "${filetype}" ]; then
             printf "set-option buffer filetype '%s'\n" "${filetype}"

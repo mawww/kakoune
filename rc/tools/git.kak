@@ -78,6 +78,7 @@ define-command -params 1.. \
            diff) filetype=diff ;;
            log|show)  filetype=git-log ;;
            status)  filetype=git-status ;;
+           *) return 1 ;;
         esac
         output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
         mkfifo ${output}
