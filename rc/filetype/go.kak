@@ -22,7 +22,12 @@ hook global WinSetOption filetype=go %{
     hook window InsertChar \{ -group go-indent go-indent-on-opening-curly-brace
     hook window InsertChar \} -group go-indent go-indent-on-closing-curly-brace
 
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window go-.+ }
+    alias window alt go-alternative-file
+
+    hook -once -always window WinSetOption filetype=.* %{
+        remove-hooks window go-.+
+        unalias window alt go-alternative-file
+    }
 }
 
 hook -group go-highlight global WinSetOption filetype=go %{
@@ -72,6 +77,23 @@ evaluate-commands %sh{
 
 # Commands
 # ‾‾‾‾‾‾‾‾
+
+define-command go-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ evaluate-commands %sh{
+    case $kak_buffile in
+        *_test.go)
+            altfile=${kak_buffile%_test.go}.go
+            test ! -f "$altfile" && echo "fail 'implementation file not found'" && exit
+        ;;
+        *.go)
+            altfile=${kak_buffile%.go}_test.go
+            test ! -f "$altfile" && echo "fail 'test file not found'" && exit
+        ;;
+        *)
+            echo "fail 'alternative file not found'" && exit
+        ;;
+    esac
+    printf "edit -- '%s'" "$(printf %s "$altfile" | sed "s/'/''/g")"
+}}
 
 define-command -hidden go-indent-on-new-line %~
     evaluate-commands -draft -itersel %=
