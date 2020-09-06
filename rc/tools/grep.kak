@@ -4,10 +4,10 @@ declare-option -docstring "name of the client in which utilities display informa
     str toolsclient
 declare-option -hidden int grep_current_line 0
 
-define-command -params .. -file-completion \
-    -docstring %{grep [<arguments>]: grep utility wrapper
-All the optional arguments are forwarded to the grep utility} \
-    grep %{ evaluate-commands %sh{
+define-command -params .. -file-completion -docstring %{
+    grep [<arguments>]: grep utility wrapper
+    All optional arguments are forwarded to the grep utility
+} grep %{ evaluate-commands %sh{
      if [ $# -eq 0 ]; then
          set -- "${kak_selection}"
      fi
