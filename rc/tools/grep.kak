@@ -6,7 +6,7 @@ declare-option -hidden int grep_current_line 0
 
 define-command -params .. -file-completion -docstring %{
     grep [<arguments>]: grep utility wrapper
-    All the optional arguments are forwarded to the grep utility
+    All optional arguments are forwarded to the grep utility
 } grep %{ evaluate-commands %sh{
      if [ $# -eq 0 ]; then
          set -- "${kak_selection}"
