@@ -31,7 +31,7 @@ define-command x11-send-text -docstring "send the selected text to the repl wind
     }
 }
 
-alias global repl x11-repl
-alias global send-text x11-send-text
+alias global repl-new x11-repl
+alias global repl-send-text x11-send-text
 
 }

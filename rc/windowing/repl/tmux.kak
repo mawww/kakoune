@@ -49,7 +49,7 @@ define-command -hidden tmux-send-text -params 0..1 -docstring %{
     }
 }
 
-alias global repl tmux-repl-horizontal
-alias global send-text tmux-send-text
+alias global repl-new tmux-repl-horizontal
+alias global repl-send-text tmux-send-text
 
 }
