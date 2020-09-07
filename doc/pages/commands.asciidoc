@@ -70,7 +70,7 @@ of the file onto the filesystem
 
     *-atomic*:::
         Force writing to a temporary file then renaming to the target file
-        so that the modification appears automatically.
+        so that the modification appears atomically.
 
 *write-all* [-sync]::
     *alias* wa +
