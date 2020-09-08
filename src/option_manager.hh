@@ -9,6 +9,7 @@
 #include "utils.hh"
 #include "vector.hh"
 #include "string_utils.hh"
+#include "scope_member.hh"
 
 #include <memory>
 #include <utility>
@@ -83,7 +84,7 @@ public:
     virtual void on_option_changed(const Option& option) = 0;
 };
 
-class OptionManager final : private OptionManagerWatcher
+class OptionManager final : public SafeCountable, private OptionManagerWatcher, private ScopeMember<OptionManager>
 {
 public:
     OptionManager(OptionManager& parent);
@@ -113,15 +114,13 @@ public:
 
     void on_option_changed(const Option& option) override;
 private:
-    OptionManager()
-        : m_parent(nullptr) {}
+    OptionManager() = default;
     // the only one allowed to construct a root option manager
     friend class Scope;
     friend class OptionsRegistry;
     using OptionMap = HashMap<StringView, std::unique_ptr<Option>, MemoryDomain::Options>;
 
     OptionMap m_options;
-    OptionManager* m_parent;
 
     mutable Vector<OptionManagerWatcher*, MemoryDomain::Options> m_watchers;
 };

@@ -4,6 +4,7 @@
 #include "hash_map.hh"
 #include "completion.hh"
 #include "safe_ptr.hh"
+#include "scope_member.hh"
 #include "meta.hh"
 #include "enum.hh"
 
@@ -113,7 +114,7 @@ enum class HookFlags
 };
 constexpr bool with_bit_ops(Meta::Type<HookFlags>) { return true; }
 
-class HookManager : public SafeCountable
+class HookManager : public SafeCountable, private ScopeMember<HookManager>
 {
 public:
     HookManager(HookManager& parent);
@@ -132,7 +133,6 @@ private:
 
     struct HookData;
 
-    SafePtr<HookManager> m_parent;
     Array<Vector<std::unique_ptr<HookData>, MemoryDomain::Hooks>, enum_desc(Meta::Type<Hook>{}).size()> m_hooks;
 
     mutable Vector<std::pair<Hook, StringView>, MemoryDomain::Hooks> m_running_hooks;

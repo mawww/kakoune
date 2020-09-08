@@ -22,8 +22,8 @@ struct HookManager::HookData
     String commands;
 };
 
-HookManager::HookManager() : m_parent(nullptr) {}
-HookManager::HookManager(HookManager& parent) : SafeCountable{}, m_parent(&parent) {}
+HookManager::HookManager() = default;
+HookManager::HookManager(HookManager& parent) : SafeCountable{}, ScopeMember(parent) {}
 HookManager::~HookManager() = default;
 
 void HookManager::add_hook(Hook hook, String group, HookFlags flags, Regex filter, String commands)

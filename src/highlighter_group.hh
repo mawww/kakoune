@@ -6,6 +6,7 @@
 #include "highlighter.hh"
 #include "utils.hh"
 #include "safe_ptr.hh"
+#include "scope_member.hh"
 
 namespace Kakoune
 {
@@ -38,10 +39,10 @@ protected:
     HighlighterMap m_highlighters;
 };
 
-class Highlighters : public SafeCountable
+class Highlighters : public SafeCountable, private ScopeMember<Highlighters>
 {
 public:
-    Highlighters(Highlighters& parent) : SafeCountable{}, m_parent{&parent}, m_group{HighlightPass::All} {}
+    Highlighters(Highlighters& parent) : SafeCountable{}, ScopeMember{parent}, m_group{HighlightPass::All} {}
 
     HighlighterGroup& group() { return m_group; }
     const HighlighterGroup& group() const { return m_group; }
@@ -52,8 +53,6 @@ public:
 private:
     friend class Scope;
     Highlighters() : m_group{HighlightPass::All} {}
-
-    SafePtr<Highlighters> m_parent;
     HighlighterGroup m_group;
 };
 

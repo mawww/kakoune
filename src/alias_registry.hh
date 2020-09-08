@@ -3,15 +3,16 @@
 
 #include "safe_ptr.hh"
 #include "string.hh"
+#include "scope_member.hh"
 #include "hash_map.hh"
 
 namespace Kakoune
 {
 
-class AliasRegistry : public SafeCountable
+class AliasRegistry : public SafeCountable, private ScopeMember<AliasRegistry>
 {
 public:
-    AliasRegistry(AliasRegistry& parent) : SafeCountable{}, m_parent(&parent) {}
+    AliasRegistry(AliasRegistry& parent) : SafeCountable{}, ScopeMember(parent) {}
     void add_alias(String alias, String command);
     void remove_alias(StringView alias);
     StringView operator[](StringView alias) const;
@@ -35,7 +36,6 @@ private:
     friend class Scope;
     AliasRegistry() = default;
 
-    SafePtr<AliasRegistry> m_parent;
     using AliasMap = HashMap<String, String, MemoryDomain::Aliases>;
     AliasMap m_aliases;
 };

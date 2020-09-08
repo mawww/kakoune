@@ -15,7 +15,7 @@ Option::Option(const OptionDesc& desc, OptionManager& manager)
     : m_manager(manager), m_desc(desc) {}
 
 OptionManager::OptionManager(OptionManager& parent)
-    : m_parent(&parent)
+    : SafeCountable{}, ScopeMember(parent)
 {
     parent.register_watcher(*this);
 }

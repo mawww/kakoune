@@ -7,14 +7,15 @@
 #include "ranges.hh"
 #include "string.hh"
 #include "safe_ptr.hh"
+#include "scope_member.hh"
 
 namespace Kakoune
 {
 
-class FaceRegistry : public SafeCountable
+class FaceRegistry : public SafeCountable, private ScopeMember<FaceRegistry>
 {
 public:
-    FaceRegistry(FaceRegistry& parent) : SafeCountable{}, m_parent(&parent) {}
+    FaceRegistry(FaceRegistry& parent) : SafeCountable{}, ScopeMember(parent) {}
 
     Face operator[](StringView facedesc) const;
     void add_face(StringView name, StringView facedesc, bool override = false);
@@ -46,7 +47,6 @@ private:
     friend class Scope;
     FaceRegistry();
 
-    SafePtr<FaceRegistry> m_parent;
     FaceMap m_faces;
 };
 

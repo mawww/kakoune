@@ -36,8 +36,12 @@ public:
     Highlighters&        highlighters()       { return m_highlighters; }
     const Highlighters&  highlighters() const { return m_highlighters; }
 
+    void add_shared_scope(Scope& shared_scope);
+    void remove_shared_scope(Scope& shared_scope);
+
 private:
     friend class GlobalScope;
+    friend class SharedScope;
     Scope() = default;
 
     OptionManager m_options;
@@ -46,6 +50,14 @@ private:
     AliasRegistry m_aliases;
     FaceRegistry  m_faces;
     Highlighters  m_highlighters;
+
+    Vector<Scope*> m_shared_scopes;
+};
+
+class SharedScope : public Scope
+{
+public:
+    SharedScope() = default;
 };
 
 class GlobalScope : public Scope, public OptionManagerWatcher, public Singleton<GlobalScope>

@@ -5,6 +5,7 @@
 #include "keys.hh"
 #include "hash.hh"
 #include "string.hh"
+#include "scope_member.hh"
 #include "hash_map.hh"
 #include "vector.hh"
 
@@ -25,10 +26,10 @@ enum class KeymapMode : char
     FirstUserMode,
 };
 
-class KeymapManager
+class KeymapManager : public SafeCountable, private ScopeMember<KeymapManager>
 {
 public:
-    KeymapManager(KeymapManager& parent) : m_parent(&parent) {}
+    KeymapManager(KeymapManager& parent) : SafeCountable{}, ScopeMember(parent) {}
 
     using KeyList = Vector<Key, MemoryDomain::Mapping>;
     void map_key(Key key, KeymapMode mode, KeyList mapping, String docstring);
@@ -54,12 +55,10 @@ public:
     void add_user_mode(const String user_mode_name);
 
 private:
-    KeymapManager()
-        : m_parent(nullptr) {}
+    KeymapManager() = default;
     // the only one allowed to construct a root map manager
     friend class Scope;
 
-    KeymapManager* m_parent;
     using KeyAndMode = std::pair<Key, KeymapMode>;
     HashMap<KeyAndMode, KeymapInfo, MemoryDomain::Mapping> m_mapping;
 
