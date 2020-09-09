@@ -3,6 +3,10 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development version
+
+* `set-option -remove` support for substracting/removing from option values
+
 == Kakoune 2020.09.01
 
 * The `repl` and `send-text` aliases have been renamed respectively into

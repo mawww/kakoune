@@ -10,7 +10,7 @@ scripts.
 Options can be modified using the `set-option` command:
 
 --------------------------------------------
-set-option [-add] <scope> <name> <values>...
+set-option [-add|-remove] <scope> <name> <values>...
 --------------------------------------------
 
 <scope> can be *global*, *buffer*, *window* or *current* (See
@@ -20,8 +20,9 @@ which the option is already set.
 Multiple <values> can be given as separate arguments when the option is a
 list or map.
 
-If `-add` is specified, the new value is *added* to the current one
-instead of replacing it (the exact outcome depends on the type, see below).
+If `-add` or `-remove` is specified, the new value is respectively *added*
+to or *removed* from the current one instead of replacing it (the exact
+outcome depends on the type, see below).
 
 [[unset-option]]
 Options values can be unset in a specific scope with the `unset-option`
@@ -63,7 +64,9 @@ are exclusively available to built-in options.
 
 *int*::
     an integer number.
-    `set -add` performs a math addition
+
+    `set -add` performs a math addition. +
+    `set -remove` performs a math substraction. +
 
 *bool*::
     a boolean value, yes/true or no/false
@@ -81,7 +84,10 @@ are exclusively available to built-in options.
 
 *<type>-list*::
     a list, elements are specified as separate arguments to the command.
-    `set -add` appends the new element to the list
+
+    `set -add` appends the new element to the list. +
+    `set -remove` removes each given element from the list. +
+
     Only `int-list` and `str-list` options can be created with
     `declare-option`.
 
@@ -115,7 +121,8 @@ are exclusively available to built-in options.
     its ranges get updated according to all the buffer modifications
     that happened since its timestamp.
 
-    `set -add` appends the new pair to the list
+    `set -add` appends the new pairs to the list. +
+    `set -remove` removes the given pairs from the list. +
 
     See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
 
@@ -126,7 +133,9 @@ are exclusively available to built-in options.
     type, its lines get updated according to all the buffer modifications
     that happened since its timestamp.
     See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
-    `set -add` appends the new spec to the list
+
+    `set -add` appends the new specs to the list. +
+    `set -remove` removes the given specs from the list. +
 
 *completions*::
     a list of `<text>|<select cmd>|<menu text>` candidates,
@@ -141,7 +150,8 @@ are exclusively available to built-in options.
     Markup can be used in the menu text.
     (see <<faces#markup-strings,`:doc faces markup-strings`>>)
 
-    `set -add` adds a new completion to the list
+    `set -add` adds given completions to the list. +
+    `set -remove` removes given completions from the list. +
 
 *enum(value1|value2|...)*::
     an enum, taking one of the given values
@@ -150,13 +160,21 @@ are exclusively available to built-in options.
 *flags(value1|value2|...)*::
     a set of flags, taking a combination of the given values joined by a
     '|' character.
-    `set -add` adds the new flag to the combination
+
+    `set -add` adds the given flags to the combination. +
+    `set -remove` removes the given flags to the combination. +
+
     Cannot be used with `declare-option`
 
 *<type>-to-<type>-map*::
     a list of `key=value` pairs.
-    `set -add` adds the new pair to the hashmap or replace an already
-    existing key.
+
+    `set -add` adds the given pair to the hashmap or replace an already
+    existing key. +
+    `set -remove` removes the given pair from the hashmap, if only the
+    key is provided it removes that entry regardless of the associated
+    value. +
+
     Only `str-to-str-map` options can be created with `declare-option`.
 
 == Builtin options

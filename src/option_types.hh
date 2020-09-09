@@ -48,6 +48,12 @@ inline bool option_add(int& opt, StringView str)
     opt += val;
     return val != 0;
 }
+inline bool option_remove(int& opt, StringView str)
+{
+    auto val = str_to_int(str);
+    opt -= val;
+    return val != 0;
+}
 constexpr StringView option_type_name(Meta::Type<int>) { return "int"; }
 
 inline String option_to_string(size_t opt) { return to_string(opt); }
@@ -110,6 +116,21 @@ bool option_add_from_strings(Vector<T, domain>& opt, ConstArrayView<String> strs
     return not vec.empty();
 }
 
+template<typename T, MemoryDomain domain>
+bool option_remove_from_strings(Vector<T, domain>& opt, ConstArrayView<String> strs)
+{
+    bool did_remove = false;
+    for (auto&& val : strs | transform([](auto&& s) { return option_from_string(Meta::Type<T>{}, s); }))
+    {
+        auto it = find(opt, val);
+        if (it == opt.end())
+            continue;
+        opt.erase(it);
+        did_remove = true;
+    }
+    return did_remove;
+}
+
 template<typename T, MemoryDomain D>
 String option_type_name(Meta::Type<Vector<T, D>>)
 {
@@ -140,16 +161,38 @@ String option_to_string(const HashMap<Key, Value, domain>& opt, Quoting quoting)
 template<typename Key, typename Value, MemoryDomain domain>
 bool option_add_from_strings(HashMap<Key, Value, domain>& opt, ConstArrayView<String> strs)
 {
+    struct error : runtime_error { error(size_t) : runtime_error{"map option expects key=value"} {} };
+
     bool changed = false;
     for (auto&& str : strs)
     {
-        struct error : runtime_error { error(size_t) : runtime_error{"map option expects key=value"} {} };
         auto key_value = str | split<StringView>('=', '\\')
                              | transform(unescape<'=', '\\'>)
                              | static_gather<error, 2>();
 
         opt[option_from_string(Meta::Type<Key>{}, key_value[0])] = option_from_string(Meta::Type<Value>{}, key_value[1]);
         changed = true;
+    }
+    return changed;
+}
+
+template<typename Key, typename Value, MemoryDomain domain>
+bool option_remove_from_strings(HashMap<Key, Value, domain>& opt, ConstArrayView<String> strs)
+{
+    struct error : runtime_error { error(size_t) : runtime_error{"map option expects key=value"} {} };
+
+    bool changed = false;
+    for (auto&& str : strs)
+    {
+        auto key_value = str | split<StringView>('=', '\\')
+                             | transform(unescape<'=', '\\'>)
+                             | static_gather<error, 2>();
+
+        if (auto it = opt.find(key_value[0]); it != opt.end() and (key_value[1].empty() or key_value[1] == it->value))
+        {
+            opt.remove(it->key);
+            changed = true;
+        }
     }
     return changed;
 }
@@ -234,6 +277,11 @@ inline bool option_add(WorstMatch, StringView)
     throw runtime_error("no add operation supported for this option type");
 }
 
+inline bool option_remove(WorstMatch, StringView)
+{
+    throw runtime_error("no remove operation supported for this option type");
+}
+
 class Context;
 
 inline void option_update(WorstMatch, const Context&)
@@ -312,9 +360,17 @@ EnableIfWithoutBitOps<Enum, Enum> option_from_string(Meta::Type<Enum>, StringVie
 template<typename Flags, typename = decltype(enum_desc(Meta::Type<Flags>{}))>
 EnableIfWithBitOps<Flags, bool> option_add(Flags& opt, StringView str)
 {
-    const Flags res = option_from_string(Meta::Type<Flags>{}, str);
-    opt |= res;
-    return res != (Flags)0;
+    const Flags old = opt;
+    opt |= option_from_string(Meta::Type<Flags>{}, str);
+    return opt != old;
+}
+
+template<typename Flags, typename = decltype(enum_desc(Meta::Type<Flags>{}))>
+EnableIfWithBitOps<Flags, bool> option_remove(Flags& opt, StringView str)
+{
+    const Flags old = opt;
+    opt &= ~option_from_string(Meta::Type<Flags>{}, str);
+    return opt != old;
 }
 
 template<typename P, typename T>
@@ -346,6 +402,12 @@ template<typename P, typename T>
 inline bool option_add_from_strings(PrefixedList<P, T>& opt, ConstArrayView<String> str)
 {
     return option_add_from_strings(opt.list, str);
+}
+
+template<typename P, typename T>
+inline bool option_remove_from_strings(PrefixedList<P, T>& opt, ConstArrayView<String> str)
+{
+    return option_remove_from_strings(opt.list, str);
 }
 
 }

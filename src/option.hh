@@ -43,6 +43,15 @@ option_add_from_strings(T& opt, ConstArrayView<String> strs)
     return option_add(opt, strs[0]);
 }
 
+template<typename T>
+decltype(option_add(std::declval<T>(), std::declval<String>()))
+option_remove_from_strings(T& opt, ConstArrayView<String> strs)
+{
+    if (strs.size() != 1)
+        throw runtime_error("expected a single value for option");
+    return option_remove(opt, strs[0]);
+}
+
 template<typename P, typename T>
 struct PrefixedList
 {

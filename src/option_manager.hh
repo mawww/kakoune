@@ -58,6 +58,7 @@ public:
     virtual String get_desc_string() const = 0;
     virtual void set_from_strings(ConstArrayView<String> strs) = 0;
     virtual void add_from_strings(ConstArrayView<String> strs) = 0;
+    virtual void remove_from_strings(ConstArrayView<String> strs) = 0;
     virtual void update(const Context& context) = 0;
 
     virtual bool has_same_value(const Option& other) const = 0;
@@ -171,6 +172,12 @@ public:
     void add_from_strings(ConstArrayView<String> strs) override
     {
         if (option_add_from_strings(m_value, strs))
+            m_manager.on_option_changed(*this);
+    }
+
+    void remove_from_strings(ConstArrayView<String> strs) override
+    {
+        if (option_remove_from_strings(m_value, strs))
             m_manager.on_option_changed(*this);
     }
 

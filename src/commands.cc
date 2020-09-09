@@ -1539,7 +1539,8 @@ const CommandDesc set_option_cmd = {
     "<scope> can be global, buffer, window, or current which refers to the narrowest "
     "scope the option is set in",
     ParameterDesc{
-        { { "add", { false, "add to option rather than replacing it" } } },
+        { { "add",    { false, "add to option rather than replacing it" } },
+          { "remove", { false, "remove from option rather than replacing it" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart, 2, (size_t)-1
     },
     CommandFlags::None,
@@ -1571,9 +1572,16 @@ const CommandDesc set_option_cmd = {
     },
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
+        bool add = (bool)parser.get_switch("add");
+        bool remove = (bool)parser.get_switch("remove");
+        if (add and remove)
+            throw runtime_error("cannot add and remove at the same time");
+
         Option& opt = get_options(parser[0], context, parser[1]).get_local_option(parser[1]);
-        if (parser.get_switch("add"))
+        if (add)
             opt.add_from_strings(parser.positionals_from(2));
+        else if (remove)
+            opt.remove_from_strings(parser.positionals_from(2));
         else
             opt.set_from_strings(parser.positionals_from(2));
     }
