@@ -52,14 +52,14 @@ Option& OptionManager::get_local_option(StringView name)
     auto it = m_options.find(name);
     if (it != m_options.end())
         return *(it->value);
-    else if (m_parent)
+
+    if (m_parent)
     {
         auto* clone = (*m_parent)[name].clone(*this);
         return *m_options.insert({clone->name(), std::unique_ptr<Option>{clone}});
     }
-    else
-        throw option_not_found(name);
 
+    throw option_not_found(name);
 }
 
 Option& OptionManager::operator[](StringView name)
@@ -67,10 +67,11 @@ Option& OptionManager::operator[](StringView name)
     auto it = m_options.find(name);
     if (it != m_options.end())
         return *it->value;
-    else if (m_parent)
+
+    if (m_parent)
         return (*m_parent)[name];
-    else
-        throw option_not_found(name);
+
+    throw option_not_found(name);
 }
 
 const Option& OptionManager::operator[](StringView name) const

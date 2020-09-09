@@ -190,7 +190,7 @@ const ParameterDesc single_param{ {}, ParameterDesc::Flags::None, 1, 1 };
 const ParameterDesc single_optional_param{ {}, ParameterDesc::Flags::None, 0, 1 };
 const ParameterDesc double_params{ {}, ParameterDesc::Flags::None, 2, 2 };
 
-static constexpr auto scopes = { "global", "buffer", "window" };
+static constexpr auto scopes = { "global", "buffer", "window", "shared" };
 
 static Completions complete_scope(const Context&, CompletionFlags,
                                   const String& prefix, ByteCount cursor_pos)
@@ -321,6 +321,12 @@ Scope* get_scope_ifp(StringView scope, const Context& context)
         return &context.window();
     else if (prefix_match(scope, "buffer="))
         return &BufferManager::instance().get_buffer(scope.substr(7_byte));
+    else if (prefix_match(scope, "shared/"))
+    {
+        auto it = SharedScopes::instance().scopes.find(scope.substr(7_byte));
+        if (it != SharedScopes::instance().scopes.end())
+            return it->value.get();
+    }
     return nullptr;
 }
 
@@ -2649,6 +2655,81 @@ const CommandDesc require_module_cmd = {
     }
 };
 
+const CommandDesc declare_shared_scope_cmd = {
+    "declare-shared-scope",
+    nullptr,
+    "declare-shared-scope <shared-scope>: declare <shared-scope>",
+    ParameterDesc{
+        {},
+        ParameterDesc::Flags::None,
+        1, 1
+    },
+    CommandFlags::None,
+    CommandHelper{},
+    make_completer(complete_scope),
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        auto name = parser[0];
+        if (name.empty() or not all_of(name, is_identifier))
+            throw runtime_error(format("invalid shared scope name: '{}'", name));
+
+        if (SharedScopes::instance().scopes.contains(name))
+            throw runtime_error(format("duplicate  shared scope name: '{}'", name));
+
+        SharedScopes::instance().scopes.insert({name, std::make_unique<SharedScope>()});
+    }
+};
+
+static Completions complete_shared_scope(const Context&, CompletionFlags,
+                                  const String& prefix, ByteCount cursor_pos)
+{
+   return { 0_byte, cursor_pos, complete(prefix, cursor_pos, SharedScopes::instance().scopes | transform([](auto&& v) -> const String& { return v.key; })) };
+}
+
+SharedScope& get_shared_scope(StringView name)
+{
+    auto it = SharedScopes::instance().scopes.find(name);
+    if (it == SharedScopes::instance().scopes.end())
+        throw runtime_error(format("no such shared scope '{}'", name));
+    return *it->value;
+}
+
+const CommandDesc link_shared_scope_cmd = {
+    "link-shared-scope",
+    nullptr,
+    "link-shared-scope <scope> <shared-scope>: link <shared-scope> into <scope>",
+    ParameterDesc{
+        {},
+        ParameterDesc::Flags::None,
+        2, 2
+    },
+    CommandFlags::None,
+    CommandHelper{},
+    make_completer(complete_scope, complete_shared_scope),
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        get_scope(parser[0], context).add_shared_scope(get_shared_scope(parser[1]));
+    }
+};
+
+const CommandDesc unlink_shared_scope_cmd = {
+    "unlink-shared-scope",
+    nullptr,
+    "unlink-shared-scope <scope> <shared-scope>: unlink <shared-scope> into <scope>",
+    ParameterDesc{
+        {},
+        ParameterDesc::Flags::None,
+        2, 2
+    },
+    CommandFlags::None,
+    CommandHelper{},
+    make_completer(complete_scope, complete_shared_scope),
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        get_scope(parser[0], context).remove_shared_scope(get_shared_scope(parser[1]));
+    }
+};
+
 }
 
 void register_commands()
@@ -2718,6 +2799,9 @@ void register_commands()
     register_command(enter_user_mode_cmd);
     register_command(provide_module_cmd);
     register_command(require_module_cmd);
+    register_command(declare_shared_scope_cmd);
+    register_command(link_shared_scope_cmd);
+    register_command(unlink_shared_scope_cmd);
 }
 
 }

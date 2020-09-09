@@ -60,6 +60,12 @@ public:
     SharedScope() = default;
 };
 
+class SharedScopes : public Singleton<SharedScopes>
+{
+public:
+    HashMap<String, std::unique_ptr<SharedScope>> scopes;
+};
+
 class GlobalScope : public Scope, public OptionManagerWatcher, public Singleton<GlobalScope>
 {
     public:
@@ -72,6 +78,7 @@ class GlobalScope : public Scope, public OptionManagerWatcher, public Singleton<
         void on_option_changed(const Option& option) override;
 
         OptionsRegistry m_option_registry;
+        SharedScopes m_shared_scopes;
 };
 
 }

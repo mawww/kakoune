@@ -27,38 +27,9 @@ hook global BufCreate .*\.m %{
 hook global WinSetOption filetype=(c|cpp|objc) %[
     require-module c-family
 
-    evaluate-commands "set-option window static_words %%opt{%val{hook_param_capture_1}_static_words}"
-
-    hook -group "%val{hook_param_capture_1}-trim-indent" window ModeChange pop:insert:.* c-family-trim-indent
-    hook -group "%val{hook_param_capture_1}-insert" window InsertChar \n c-family-insert-on-newline
-    hook -group "%val{hook_param_capture_1}-indent" window InsertChar \n c-family-indent-on-newline
-    hook -group "%val{hook_param_capture_1}-indent" window InsertChar \{ c-family-indent-on-opening-curly-brace
-    hook -group "%val{hook_param_capture_1}-indent" window InsertChar \} c-family-indent-on-closing-curly-brace
-    hook -group "%val{hook_param_capture_1}-insert" window InsertChar \} c-family-insert-on-closing-curly-brace
-
-    alias window alt "%val{hook_param_capture_1}-alternative-file"
-
-    hook -once -always window WinSetOption filetype=.* "
-        remove-hooks window %val{hook_param_capture_1}-.+
-        unalias window alt %val{hook_param_capture_1}-alternative-file
-    "
+    link-shared-scope buffer %val{hook_param_capture_1}
+    hook -once -always window WinSetOption filetype=.* "unlink-shared-scope window %val{hook_param_capture_1}"
 ]
-
-hook -group c-highlight global WinSetOption filetype=c %{
-    add-highlighter window/c ref c
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/c }
-}
-
-hook -group cpp-highlight global WinSetOption filetype=cpp %{
-    add-highlighter window/cpp ref cpp
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/cpp }
-}
-
-hook -group objc-highlight global WinSetOption filetype=objc %{
-    add-highlighter window/objc ref objc
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/objc }
-}
-
 
 provide-module c-family %§
 
@@ -458,6 +429,27 @@ define-command cpp-alternative-file -docstring "Jump to the alternate cpp file (
 define-command objc-alternative-file -docstring "Jump to the alternate objc file (header/implementation)" %{
     c-family-alternative-file
 }
+
+evaluate-commands %sh[
+    for ft in c cpp objc; do
+    cat <<-EOF
+        declare-shared-scope $ft
+
+        add-highlighter shared/$ft/ ref $ft
+
+        evaluate-commands "set-option shared/$ft static_words %%opt{${ft}_static_words}"
+
+        hook -group "${ft}-trim-indent" shared/${ft} ModeChange pop:insert:.* c-family-trim-indent
+        hook -group "${ft}-insert" shared/${ft} InsertChar \n c-family-insert-on-newline
+        hook -group "${ft}-indent" shared/${ft} InsertChar \n c-family-indent-on-newline
+        hook -group "${ft}-indent" shared/${ft} InsertChar \{ c-family-indent-on-opening-curly-brace
+        hook -group "${ft}-indent" shared/${ft} InsertChar \} c-family-indent-on-closing-curly-brace
+        hook -group "${ft}-insert" shared/${ft} InsertChar \} c-family-insert-on-closing-curly-brace
+
+        alias shared/${ft} alt "${ft}-alternative-file"
+EOF
+    done
+]
 
 §
 

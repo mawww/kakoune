@@ -4,6 +4,7 @@
 #include "safe_ptr.hh"
 #include "vector.hh"
 #include "ranges.hh"
+#include "array_view.hh"
 
 namespace Kakoune
 {
@@ -25,6 +26,16 @@ protected:
     {
         auto it = find_if(m_shared, [&](const SafePtr<Derived>& ptr) { return ptr.get() == &derived; });
         m_shared.erase(it);
+    }
+
+    auto this_then_shared()
+    {
+        return concatenated(ArrayView{this, 1}, m_shared);
+    }
+
+    auto shared_then_this()
+    {
+        return concatenated(m_shared, ArrayView{this, 1});
     }
 
     SafePtr<Derived> m_parent;

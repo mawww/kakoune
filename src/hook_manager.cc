@@ -79,6 +79,9 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
             hooks_to_run.push_back({ hook.get(), std::move(captures) });
     }
 
+    for (auto& shared : m_shared)
+        m_shared->run_hook(hook, param, context);
+
     if (m_parent)
         m_parent->run_hook(hook, param, context);
 

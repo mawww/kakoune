@@ -85,6 +85,8 @@ void Highlighters::highlight(HighlightContext context, DisplayBuffer& display_bu
 
     if (m_parent)
         m_parent->highlight({context.context, context.setup, context.pass, disabled_ids}, display_buffer, range);
+    for (auto& shared : m_shared)
+        shared->highlight({context.context, context.setup, context.pass, disabled_ids}, display_buffer, range);
     m_group.highlight(context, display_buffer, range);
 }
 
@@ -95,6 +97,8 @@ void Highlighters::compute_display_setup(HighlightContext context, DisplaySetup&
 
     if (m_parent)
         m_parent->compute_display_setup({context.context, context.setup, context.pass, disabled_ids}, setup);
+    for (auto& shared : m_shared)
+        shared->compute_display_setup({context.context, context.setup, context.pass, disabled_ids}, setup);
     m_group.compute_display_setup(context, setup);
 }
 
