@@ -108,7 +108,8 @@ Buffer::Buffer(String name, Flags flags, Optional<StringView> data,
 
     m_changes.push_back({ Change::Insert, {0,0}, line_count() });
 
-    apply_options(options(), parsed_lines);
+    if (data)
+        apply_options(options(), parsed_lines);
 
     // now we may begin to record undo data
     if (not (flags & Flags::NoUndo))
