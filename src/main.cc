@@ -491,6 +491,8 @@ void register_options()
     reg.declare_option("eolformat", "end of line format", EolFormat::Lf);
     reg.declare_option("BOM", "byte order mark to use when writing buffer",
                        ByteOrderMark::None);
+    reg.declare_option("newline_at_eof", "write a newline at end of file when writing buffer",
+                       true);
     reg.declare_option("incsearch",
                        "incrementally apply search/select/split regex",
                        true);
@@ -963,7 +965,7 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
         if (not isatty(0))
         {
             Buffer& buffer = *buffer_manager.create_buffer(
-                "*stdin*", Buffer::Flags::NoHooks, read_fd(0), InvalidTime);
+                "*stdin*", Buffer::Flags::NoHooks, {read_fd(0)}, InvalidTime);
             apply_to_buffer(buffer);
             write_buffer_to_fd(buffer, 1);
             buffer_manager.delete_buffer(buffer);
