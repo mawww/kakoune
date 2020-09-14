@@ -3,6 +3,7 @@
 
 #include "color.hh"
 #include "highlighter.hh"
+#include "highlighter_group.hh"
 #include "option.hh"
 
 namespace Kakoune
@@ -38,6 +39,8 @@ constexpr StringView option_type_name(Meta::Type<RangeAndStringList>)
 }
 void option_update(RangeAndStringList& opt, const Context& context);
 void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt);
+
+void setup_builtin_highlighters(HighlighterGroup& group);
 
 }
 

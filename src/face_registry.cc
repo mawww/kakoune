@@ -56,7 +56,7 @@ static FaceRegistry::FaceSpec parse_face(StringView facedesc)
     return spec;
 }
 
-String to_string(Attribute attributes)
+static String to_string(Attribute attributes)
 {
     if (attributes == Attribute::Normal)
         return "";

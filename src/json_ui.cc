@@ -22,7 +22,7 @@ struct invalid_rpc_request : runtime_error {
         : runtime_error(format("invalid json rpc request ({})", message)) {}
 };
 
-String to_json(Color color)
+static String to_json(Color color)
 {
     if (color.color == Kakoune::Color::RGB)
     {
@@ -33,7 +33,7 @@ String to_json(Color color)
     return to_json(to_string(color));
 }
 
-String to_json(Attribute attributes)
+static String to_json(Attribute attributes)
 {
     struct Attr { Attribute attr; StringView name; }
     attrs[] {
@@ -54,28 +54,28 @@ String to_json(Attribute attributes)
                       ',', false) + "]";
 }
 
-String to_json(Face face)
+static String to_json(Face face)
 {
     return format(R"(\{ "fg": {}, "bg": {}, "attributes": {} })",
                   to_json(face.fg), to_json(face.bg), to_json(face.attributes));
 }
 
-String to_json(const DisplayAtom& atom)
+static String to_json(const DisplayAtom& atom)
 {
     return format(R"(\{ "face": {}, "contents": {} })", to_json(atom.face), to_json(atom.content()));
 }
 
-String to_json(const DisplayLine& line)
+static String to_json(const DisplayLine& line)
 {
     return to_json(line.atoms());
 }
 
-String to_json(DisplayCoord coord)
+static String to_json(DisplayCoord coord)
 {
     return format(R"(\{ "line": {}, "column": {} })", coord.line, coord.column);
 }
 
-String to_json(MenuStyle style)
+static String to_json(MenuStyle style)
 {
     switch (style)
     {
@@ -86,7 +86,7 @@ String to_json(MenuStyle style)
     return "";
 }
 
-String to_json(InfoStyle style)
+static String to_json(InfoStyle style)
 {
     switch (style)
     {
@@ -100,7 +100,7 @@ String to_json(InfoStyle style)
     return "";
 }
 
-String to_json(CursorMode mode)
+static String to_json(CursorMode mode)
 {
     switch (mode)
     {
@@ -110,7 +110,7 @@ String to_json(CursorMode mode)
     return "";
 }
 
-String concat()
+static String concat()
 {
     return "";
 }

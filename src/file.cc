@@ -332,7 +332,7 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
     }
 }
 
-int open_temp_file(StringView filename, char (&buffer)[PATH_MAX])
+static int open_temp_file(StringView filename, char (&buffer)[PATH_MAX])
 {
     String path = real_path(filename);
     auto [dir,file] = split_path(path);
@@ -345,7 +345,7 @@ int open_temp_file(StringView filename, char (&buffer)[PATH_MAX])
     return mkstemp(buffer);
 }
 
-int open_temp_file(StringView filename)
+static int open_temp_file(StringView filename)
 {
     char buffer[PATH_MAX];
     return open_temp_file(filename, buffer);

@@ -596,7 +596,7 @@ String session_directory()
         return format("{}/kakoune", xdg_runtime_dir);
 }
 
-void make_session_directory()
+static void make_session_directory()
 {
     StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
     if (xdg_runtime_dir.empty())

@@ -72,12 +72,12 @@ private:
 namespace InputModes
 {
 
-std::chrono::milliseconds get_idle_timeout(const Context& context)
+static std::chrono::milliseconds get_idle_timeout(const Context& context)
 {
     return std::chrono::milliseconds{context.options()["idle_timeout"].get<int>()};
 }
 
-std::chrono::milliseconds get_fs_check_timeout(const Context& context)
+static std::chrono::milliseconds get_fs_check_timeout(const Context& context)
 {
     return std::chrono::milliseconds{context.options()["fs_check_timeout"].get<int>()};
 }

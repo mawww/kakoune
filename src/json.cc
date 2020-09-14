@@ -42,7 +42,7 @@ static bool is_digit(char c) { return c >= '0' and c <= '9'; }
 
 static constexpr size_t max_parsing_depth = 100;
 
-JsonResult parse_json_impl(const char* pos, const char* end, size_t depth)
+static JsonResult parse_json_impl(const char* pos, const char* end, size_t depth)
 {
     if (not skip_while(pos, end, is_blank))
         return {};

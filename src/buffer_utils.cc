@@ -246,7 +246,7 @@ void write_to_debug_buffer(StringView str)
 }
 
 
-auto to_string(Buffer::HistoryId id)
+static auto to_string(Buffer::HistoryId id)
 {
     using Result = decltype(to_string(size_t{}));
     if (id == Buffer::HistoryId::Invalid)

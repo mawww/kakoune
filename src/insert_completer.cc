@@ -454,8 +454,8 @@ void InsertCompleter::update(bool allow_implicit)
         setup_ifn();
 }
 
-auto& get_first(BufferRange& range) { return range.begin; }
-auto& get_last(BufferRange& range) { return range.end; }
+static auto& get_first(BufferRange& range) { return range.begin; }
+static auto& get_last(BufferRange& range) { return range.end; }
 
 void InsertCompleter::reset()
 {

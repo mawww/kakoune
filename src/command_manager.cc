@@ -487,7 +487,7 @@ struct command_not_found : runtime_error
         : runtime_error(format("no such command: '{}'", name)) {}
 };
 
-StringView resolve_alias(const Context& context, StringView name)
+static StringView resolve_alias(const Context& context, StringView name)
 {
     auto alias = context.aliases()[name];
     return alias.empty() ? name : alias;
