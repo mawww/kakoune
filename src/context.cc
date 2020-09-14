@@ -26,7 +26,7 @@ Buffer& Context::buffer() const
 {
     if (not has_buffer())
         throw runtime_error("no buffer in context");
-    return const_cast<Buffer&>((*m_selections).buffer());
+    return m_selections->buffer();
 }
 
 Window& Context::window() const
