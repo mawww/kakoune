@@ -5,7 +5,7 @@ released versions.
 
 == Development version
 
-* `set-option -remove` support for substracting/removing from option values
+* `set-option -remove` support for subtracting/removing from option values
 
 == Kakoune 2020.09.01
 
