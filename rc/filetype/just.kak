@@ -51,10 +51,13 @@ add-highlighter shared/justfile/comment  region '#' '$'  fill comment
 
 add-highlighter shared/justfile/inline   region '`' '`' ref sh
 
-add-highlighter shared/justfile/shell  region '^\h+' '^[^\h]' group
-add-highlighter shared/justfile/shell/ ref sh
-add-highlighter shared/justfile/shell/ regex '(\{{2})([\w-]+)(\}{2})' 1:operator 2:variable 3:operator
-add-highlighter shared/justfile/shell/ regex '^\h+(@)' 1:operator
+add-highlighter shared/justfile/body  region '^\h+' '^[^\h]' group
+add-highlighter shared/justfile/body/interpreters regions
+add-highlighter shared/justfile/body/interpreters/defaultshell default-region group
+add-highlighter shared/justfile/body/interpreters/defaultshell/ ref sh
+add-highlighter shared/justfile/body/interpreters/defaultshell/ regex '^\h+(@)' 1:operator
+
+add-highlighter shared/justfile/body/ regex '(\{{2})([\w-]+)(\}{2})' 1:operator 2:variable 3:operator
 
 
 }
