@@ -57,6 +57,9 @@ add-highlighter shared/justfile/body/interpreters/defaultshell default-region gr
 add-highlighter shared/justfile/body/interpreters/defaultshell/ ref sh
 add-highlighter shared/justfile/body/interpreters/defaultshell/ regex '^\h+(@)' 1:operator
 
+add-highlighter shared/justfile/body/interpreters/bash region '^\h+#!\h?/usr/bin/env bash' '^[^\h]' ref sh
+add-highlighter shared/justfile/body/interpreters/sh region '^\h+#!\h?/usr/bin/env sh' '^[^\h]' ref sh
+
 add-highlighter shared/justfile/body/ regex '(\{{2})([\w-]+)(\}{2})' 1:operator 2:variable 3:operator
 
 
