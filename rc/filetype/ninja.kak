@@ -1,3 +1,5 @@
+# ref: https://ninja-build.org/manual.html#ref_ninja_file
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -54,10 +56,11 @@ add-highlighter shared/ninja/build region '^build' '\n' group
 add-highlighter shared/ninja/build/build regex '^build\h+' 0:keyword
 add-highlighter shared/ninja/build/rule regex ':\h+(\w+)' 0:function
 add-highlighter shared/ninja/build/colonpipe regex ':|\||\|\|' 0:operator
+add-highlighter shared/ninja/build/variables regex '\$\w+|\$\{\w+\}' 0:value
 
 # variables
-add-highlighter shared/ninja/variable region '^\h*\w+\h+=' '\n' group
-add-highlighter shared/ninja/variable/name regex '(\w+)\h+=' 0:variable
+add-highlighter shared/ninja/variable region '^\h*\w+\h*=' '\n' group
+add-highlighter shared/ninja/variable/name regex '(\w+)\h*=' 0:variable
 # TODO: toplevel builddir is conflicting with build
 add-highlighter shared/ninja/variable/equal regex '=' 0:operator
 
@@ -84,8 +87,8 @@ evaluate-commands %sh{
   "
 }
 
-# Commands
-# ‾‾‾‾‾‾‾‾
+# Indent
+# ‾‾‾‾‾‾
 
 define-command -hidden ninja-trim-indent %{
     # remove trailing white spaces
@@ -101,11 +104,8 @@ define-command -hidden ninja-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : ninja-trim-indent <ret> }
         # indent after lines begining with rule and pool (do people want build too ?)
-try %{ execute-keys -draft \; k x <a-k> ^(\brule|pool) <ret> j <a-gt> }
+        try %{ execute-keys -draft \; k x <a-k> ^(\brule|pool) <ret> j <a-gt> }
     }
 }
 
-
 }
-
-# ref: https://ninja-build.org/manual.html#ref_ninja_file
