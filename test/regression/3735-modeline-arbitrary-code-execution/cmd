@@ -1,0 +1,3 @@
+:modeline-parse<ret>
+%
+:exec c %opt{pwned}<ret>
