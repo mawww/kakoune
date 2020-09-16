@@ -12,6 +12,8 @@ declare-option -docstring "amount of lines that will be checked at the beginning
 
 define-command -hidden modeline-parse-impl %{
     evaluate-commands %sh{
+        kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
+
         # Translate a vim option into the corresponding kakoune one
         translate_opt_vim() {
             readonly key="$1"
@@ -19,11 +21,11 @@ define-command -hidden modeline-parse-impl %{
             tr=""
 
             case "${key}" in
-                so|scrolloff) tr="scrolloff ${value},${kak_opt_scrolloff##*,}";;
-                siso|sidescrolloff) tr="scrolloff ${kak_opt_scrolloff%%,*},${value}";;
-                ts|tabstop) tr="tabstop ${value}";;
-                sw|shiftwidth) tr="indentwidth ${value}";;
-                tw|textwidth) tr="autowrap_column ${value}";;
+                so|scrolloff) tr=$(kakquote scrolloff "${value},${kak_opt_scrolloff##*,}");;
+                siso|sidescrolloff) tr=$(kakquote scrolloff "${kak_opt_scrolloff%%,*},${value}");;
+                ts|tabstop) tr=$(kakquote tabstop "${value}");;
+                sw|shiftwidth) tr=$(kakquote indentwidth "${value}");;
+                tw|textwidth) tr=$(kakquote autowrap_column "${value}");;
                 ff|fileformat)
                     case "${value}" in
                         unix) tr="eolformat lf";;
@@ -31,10 +33,10 @@ define-command -hidden modeline-parse-impl %{
                         *) printf %s\\n "echo -debug 'Unsupported file format: ${value}'";;
                     esac
                 ;;
-                ft|filetype) tr="filetype ${value}";;
+                ft|filetype) tr=$(kakquote filetype "{value}");;
                 bomb) tr="BOM utf8";;
                 nobomb) tr="BOM none";;
-                spelllang|spl) tr="spell_lang ${value%%,*}";;
+                spelllang|spl) tr=$(kakquote spell_lang "{value%%,*}");;
                 *) printf %s\\n "echo -debug 'Unsupported vim variable: ${key}'";;
             esac
 
@@ -52,7 +54,7 @@ define-command -hidden modeline-parse-impl %{
                    return;;
             esac
 
-            printf %s\\n "set-option buffer ${key} ${value}"
+            printf 'set-option buffer %s' "$(kakquote "${key}" "${value}")"
         }
 
         case "${kak_selection}" in
