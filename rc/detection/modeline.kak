@@ -42,7 +42,9 @@ define-command -hidden modeline-parse-impl %{
                        | kak -p "${kak_session}";;
             esac
 
-            [ -n "${tr}" ] && printf %s\\n "set-option buffer ${tr}"
+            if [ -n "${tr}" ]; then
+                printf 'set-option buffer %s\n' "${tr}"
+            fi
         }
 
         # Pass a few whitelisted options to kakoune directly
@@ -82,7 +84,9 @@ define-command -hidden modeline-parse-impl %{
             name_option="${option%%=*}"
             value_option="${option#*=}"
 
-            [ -z "${option}" ] && continue
+            if [ -z "${option}" ]; then
+                continue
+            fi
 
             case "${type_selection}" in
                 vim) tr=$(translate_opt_vim "${name_option}" "${value_option}");;
@@ -90,7 +94,9 @@ define-command -hidden modeline-parse-impl %{
                 *) tr="";;
             esac
 
-            [ -n "${tr}" ] && printf %s\\n "${tr}"
+            if [ -n "${tr}" ]; then
+                printf %s\\n "${tr}"
+            fi
         done
     }
 }
