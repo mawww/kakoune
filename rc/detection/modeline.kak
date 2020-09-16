@@ -30,14 +30,16 @@ define-command -hidden modeline-parse-impl %{
                     case "${value}" in
                         unix) tr="eolformat lf";;
                         dos) tr="eolformat crlf";;
-                        *) printf %s\\n "echo -debug 'Unsupported file format: ${value}'";;
+                        *) printf 'echo -debug %s' "$(kakquote "Unsupported file format: ${value}")" \
+                               | kak -p "${kak_session}";;
                     esac
                 ;;
                 ft|filetype) tr=$(kakquote filetype "{value}");;
                 bomb) tr="BOM utf8";;
                 nobomb) tr="BOM none";;
                 spelllang|spl) tr=$(kakquote spell_lang "{value%%,*}");;
-                *) printf %s\\n "echo -debug 'Unsupported vim variable: ${key}'";;
+                *) printf 'echo -debug %s' "$(kakquote "Unsupported vim variable: ${key}")" \
+                       | kak -p "${kak_session}";;
             esac
 
             [ -n "${tr}" ] && printf %s\\n "set-option buffer ${tr}"
@@ -50,7 +52,8 @@ define-command -hidden modeline-parse-impl %{
 
             case "${key}" in
                 scrolloff|tabstop|indentwidth|autowrap_column|eolformat|filetype|BOM|spell_lang);;
-                *) printf %s\\n "echo -debug 'Unsupported kakoune variable: ${key}'"
+                *) printf 'echo -debug %s' "$(kakquote "Unsupported kakoune variable: ${key}")" \
+                       | kak -p "${kak_session}"
                    return;;
             esac
 
@@ -60,7 +63,8 @@ define-command -hidden modeline-parse-impl %{
         case "${kak_selection}" in
             *vi:*|*vim:*) type_selection="vim";;
             *kak:*|*kakoune:*) type_selection="kakoune";;
-            *) echo "echo -debug Unsupported modeline format"; exit 1 ;;
+            *) printf 'echo -debug Unsupported modeline format' \
+                   | kak -p "${kak_session}"; exit 1 ;;
         esac
 
         # The following subshell will keep the actual options of the modeline, and strip:
