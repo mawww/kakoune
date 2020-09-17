@@ -1,0 +1,2 @@
+source "%val{runtime}/rc/detection/modeline.kak"
+set-option global modelines 1
