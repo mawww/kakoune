@@ -56,3 +56,10 @@
       {(
   bar()
       )}
+
+13
+a := []int{
+    someFunction(
+        
+    ),
+}
