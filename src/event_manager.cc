@@ -3,6 +3,10 @@
 #include "flags.hh"
 #include "ranges.hh"
 
+#if defined(__sun__)
+#include <cstring>
+#endif
+
 #include <unistd.h>
 
 namespace Kakoune
