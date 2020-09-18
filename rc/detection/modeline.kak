@@ -102,14 +102,10 @@ define-command -hidden modeline-parse-impl %{
             fi
 
             case "${type_selection}" in
-                vim) tr=$(translate_opt_vim "${name_option}" "${value_option}");;
-                kakoune) tr=$(translate_opt_kakoune "${name_option}" "${value_option}");;
-                *) tr="";;
+                vim) translate_opt_vim "${name_option}" "${value_option}";;
+                kakoune) translate_opt_kakoune "${name_option}" "${value_option}";;
+                *) exit 1;;
             esac
-
-            if [ -n "${tr}" ]; then
-                printf %s\\n "${tr}"
-            fi
         done
     }
 }
