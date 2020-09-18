@@ -37,21 +37,25 @@ provide-module perl %§
 
 add-highlighter shared/perl regions
 add-highlighter shared/perl/code default-region group
-add-highlighter shared/perl/command       region (?<!\$)(?<!\\)`   (?<!\\)(\\\\)*` fill meta
-add-highlighter shared/perl/double_string region (?<!\$)(?<!\\)"   (?<!\\)(\\\\)*" fill string
-add-highlighter shared/perl/single_string region (?<!\$)(?<!\\\\)' (?<!\\)(\\\\)*' fill string
-add-highlighter shared/perl/comment       region (?<!\$)(?<!\\)#   $               fill comment
+add-highlighter shared/perl/command        region (?<!\$)(?<!\\)`   (?<!\\)(\\\\)*` fill meta
+add-highlighter shared/perl/double_string  region (?<!\$)(?<!\\)"   (?<!\\)(\\\\)*" fill string
+add-highlighter shared/perl/single_string  region (?<!\$)(?<!\\\\)' (?<!\\)(\\\\)*' fill string
+add-highlighter shared/perl/comment        region (?<!\$)(?<!\\)#   $               fill comment
 
-add-highlighter shared/perl/regex         region m?(?<!/)/[^/\n]+(?=/)  /\w?       fill meta
-add-highlighter shared/perl/sregex        region s/[^/\n]+/[^/\n]+(?=/) /\w?       fill meta
+add-highlighter shared/perl/regex          region m?(?<!/)(?<!qr)/[^/\n]+(?=/)  /\w?   fill meta
+add-highlighter shared/perl/sregex         region s/[^/\n]+/[^/\n]+(?=/) /\w?          fill meta
 
-add-highlighter shared/perl/q1            region -recurse \{ q\{ \}                fill string
-add-highlighter shared/perl/q2            region -recurse \( q\( \)                fill string
-add-highlighter shared/perl/q3            region -recurse \[ q\[ \]                fill string
+add-highlighter shared/perl/quote_brace    region -recurse \{ \bq[qrwx]?\{ \}          fill string
+add-highlighter shared/perl/quote_paren    region -recurse \( \bq[qrwx]?\( \)          fill string
+add-highlighter shared/perl/quote_brack    region -recurse \[ \bq[qrwx]?\[ \]          fill string
+add-highlighter shared/perl/quote_angle    region -recurse  < \bq[qrwx]?<   >          fill string
+add-highlighter shared/perl/quote_punct    region -match-capture '\bq[qwx]?([:;!@#$%^&*|,.?/~=+-])' '(.)' fill string
+add-highlighter shared/perl/quote_regex    region -match-capture      '\bqr([:;!@#$%^&*|,.?/~=+-])' '(.)' fill meta
 
-add-highlighter shared/perl/qq1           region -recurse \{ qq\{ \}               fill string
-add-highlighter shared/perl/qq2           region -recurse \( qq\( \)               fill string
-add-highlighter shared/perl/qq3           region -recurse \[ qq\[ \]               fill string
+add-highlighter shared/perl/double_heredoc region -match-capture <<~?\h*'(\w+)' ^\t*(\w+)\b fill string
+add-highlighter shared/perl/single_heredoc region -match-capture <<~?\h*"(\w+)" ^\t*(\w+)\b fill string
+add-highlighter shared/perl/bare_heredoc   region -match-capture <<~?(\w+)      ^\t*(\w+)\b fill string
+add-highlighter shared/perl/pod            region ^=\w+  ^=cut\b                            fill string
 
 evaluate-commands %sh{
     # Grammar
