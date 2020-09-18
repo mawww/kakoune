@@ -16,35 +16,48 @@ define-command -hidden modeline-parse-impl %{
 
         # Translate a vim option into the corresponding kakoune one
         translate_opt_vim() {
-            readonly key="$1"
-            readonly value="$2"
+            key="$1"
+            value="$2"
             tr=""
 
             case "${key}" in
-                so|scrolloff) tr=$(kakquote scrolloff "${value},${kak_opt_scrolloff##*,}");;
-                siso|sidescrolloff) tr=$(kakquote scrolloff "${kak_opt_scrolloff%%,*},${value}");;
-                ts|tabstop) tr=$(kakquote tabstop "${value}");;
-                sw|shiftwidth) tr=$(kakquote indentwidth "${value}");;
-                tw|textwidth) tr=$(kakquote autowrap_column "${value}");;
+                so|scrolloff)
+                    key="scrolloff";
+                    value="${value},${kak_opt_scrolloff##*,}";;
+                siso|sidescrolloff)
+                    key="scrolloff";
+                    value="${kak_opt_scrolloff%%,*},${value}";;
+                ts|tabstop) key="tabstop";;
+                sw|shiftwidth) key="indentwidth";;
+                tw|textwidth) key="autowrap_column";;
                 ff|fileformat)
+                    key="eolformat";
                     case "${value}" in
-                        unix) tr="eolformat lf";;
-                        dos) tr="eolformat crlf";;
-                        *) printf 'echo -debug %s' "$(kakquote "Unsupported file format: ${value}")" \
-                               | kak -p "${kak_session}";;
+                        unix) value="lf";;
+                        dos) value="crlf";;
+                        *)
+                            printf 'echo -debug %s' "$(kakquote "Unsupported file format: ${value}")" \
+                               | kak -p "${kak_session}";
+                            return;;
                     esac
                 ;;
-                ft|filetype) tr=$(kakquote filetype "{value}");;
-                bomb) tr="BOM utf8";;
-                nobomb) tr="BOM none";;
-                spelllang|spl) tr=$(kakquote spell_lang "{value%%,*}");;
-                *) printf 'echo -debug %s' "$(kakquote "Unsupported vim variable: ${key}")" \
-                       | kak -p "${kak_session}";;
+                ft|filetype) key="filetype";;
+                bomb)
+                    key="BOM";
+                    value="utf8";;
+                nobomb)
+                    key="BOM";
+                    value="none";;
+                spelllang|spl)
+                    key="spell_lang";
+                    value="${value%%,*}";;
+                *)
+                    printf 'echo -debug %s' "$(kakquote "Unsupported vim variable: ${key}")" \
+                       | kak -p "${kak_session}";
+                    return;;
             esac
 
-            if [ -n "${tr}" ]; then
-                printf 'set-option buffer %s\n' "${tr}"
-            fi
+            printf 'set-option buffer %s %s\n' "${key}" "$(kakquote "${value}")"
         }
 
         # Pass a few whitelisted options to kakoune directly
@@ -59,7 +72,7 @@ define-command -hidden modeline-parse-impl %{
                    return;;
             esac
 
-            printf 'set-option buffer %s' "$(kakquote "${key}" "${value}")"
+            printf 'set-option buffer %s %s\n' "${key}" "$(kakquote "${value}")"
         }
 
         case "${kak_selection}" in
