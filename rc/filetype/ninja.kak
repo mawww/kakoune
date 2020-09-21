@@ -77,7 +77,7 @@ add-highlighter shared/ninja/pool/pool regex '^pool' 0:keyword
 
 # keywords/builtin variable names
 evaluate-commands %sh{
-  keywords="rule build command default"
+  keywords="rule build command default subninja include"
   reserved_names="builddir ninja_required_version pool depfile deps depfile msvc_deps_prefix description dyndep generator restat rspfile rspfile_content"
 
   printf %s "
