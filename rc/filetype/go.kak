@@ -134,7 +134,7 @@ define-command -hidden go-insert-on-new-line %[
             try %[ execute-keys -draft k<a-x>s^\h+<ret>"xy ] catch %[ reg x '' ]
             try %[
                 # Validate previous line and that it is not closed yet.
-                execute-keys -draft k<a-x> <a-k>^<c-r>x.*\{\h*\(?\h*$<ret> J}iJ<a-x> <a-K>^<c-r>x(\)?\h*\})$<ret>
+                execute-keys -draft k<a-x> <a-k>^<c-r>x.*\{\h*\(?\h*$<ret> j}iJ<a-x> <a-K>^<c-r>x\)?\h*\}<ret>
                 # Insert closing '}'.
                 execute-keys -draft o<c-r>x}<esc>
                 # Delete trailing '}' on the line below the '{'.
@@ -148,7 +148,7 @@ define-command -hidden go-insert-on-new-line %[
             try %[ execute-keys -draft k<a-x>s^\h+<ret>"xy ] catch %[ reg x '' ]
             try %[
                 # Validate previous line and that it is not closed yet.
-                execute-keys -draft k<a-x> <a-k>^<c-r>x.*\(\h*$<ret> J}iJ<a-x> <a-K>^<c-r>x(\)\h*\}?)$<ret>
+                execute-keys -draft k<a-x> <a-k>^<c-r>x.*\(\h*$<ret> J}iJ<a-x> <a-K>^<c-r>x\)<ret>
                 # Insert closing ')'.
                 execute-keys -draft o<c-r>x)<esc>
                 # Delete trailing ')' on the line below the '('.
