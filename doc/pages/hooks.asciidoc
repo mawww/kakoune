@@ -146,6 +146,11 @@ name. Hooks with no description will always use an empty string.
 
 *ModeChange* `[push|pop]:<old mode>:<new mode>`::
     Triggered whenever a mode is pushed or removed from the mode stack.
+    The mode name can be things like 'normal' or 'insert' for regular
+    interactive modes, or 'next-key[<name>]' for sub-modes where Kakoune
+    prompts for a key. For example, `g` in normal mode pushes 'next-key[goto]'
+    mode, the `enter-user-mode foo` command pushes 'next-key[user.foo]' mode,
+    and the `on-key -mode-name bar` command pushes 'next-key[bar]' mode.
 
 *KakBegin* `session name`::
     kakoune has started, this hook is called just after reading the user
