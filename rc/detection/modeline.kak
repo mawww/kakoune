@@ -12,33 +12,52 @@ declare-option -docstring "amount of lines that will be checked at the beginning
 
 define-command -hidden modeline-parse-impl %{
     evaluate-commands %sh{
+        kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
+
         # Translate a vim option into the corresponding kakoune one
         translate_opt_vim() {
-            readonly key="$1"
-            readonly value="$2"
+            key="$1"
+            value="$2"
             tr=""
 
             case "${key}" in
-                so|scrolloff) tr="scrolloff ${value},${kak_opt_scrolloff##*,}";;
-                siso|sidescrolloff) tr="scrolloff ${kak_opt_scrolloff%%,*},${value}";;
-                ts|tabstop) tr="tabstop ${value}";;
-                sw|shiftwidth) tr="indentwidth ${value}";;
-                tw|textwidth) tr="autowrap_column ${value}";;
+                so|scrolloff)
+                    key="scrolloff";
+                    value="${value},${kak_opt_scrolloff##*,}";;
+                siso|sidescrolloff)
+                    key="scrolloff";
+                    value="${kak_opt_scrolloff%%,*},${value}";;
+                ts|tabstop) key="tabstop";;
+                sw|shiftwidth) key="indentwidth";;
+                tw|textwidth) key="autowrap_column";;
                 ff|fileformat)
+                    key="eolformat";
                     case "${value}" in
-                        unix) tr="eolformat lf";;
-                        dos) tr="eolformat crlf";;
-                        *) printf %s\\n "echo -debug 'Unsupported file format: ${value}'";;
+                        unix) value="lf";;
+                        dos) value="crlf";;
+                        *)
+                            printf 'echo -debug %s' "$(kakquote "Unsupported file format: ${value}")" \
+                               | kak -p "${kak_session}";
+                            return;;
                     esac
                 ;;
-                ft|filetype) tr="filetype ${value}";;
-                bomb) tr="BOM utf8";;
-                nobomb) tr="BOM none";;
-                spelllang|spl) tr="spell_lang ${value%%,*}";;
-                *) printf %s\\n "echo -debug 'Unsupported vim variable: ${key}'";;
+                ft|filetype) key="filetype";;
+                bomb)
+                    key="BOM";
+                    value="utf8";;
+                nobomb)
+                    key="BOM";
+                    value="none";;
+                spelllang|spl)
+                    key="spell_lang";
+                    value="${value%%,*}";;
+                *)
+                    printf 'echo -debug %s' "$(kakquote "Unsupported vim variable: ${key}")" \
+                       | kak -p "${kak_session}";
+                    return;;
             esac
 
-            [ -n "${tr}" ] && printf %s\\n "set-option buffer ${tr}"
+            printf 'set-option buffer %s %s\n' "${key}" "$(kakquote "${value}")"
         }
 
         # Pass a few whitelisted options to kakoune directly
@@ -48,17 +67,19 @@ define-command -hidden modeline-parse-impl %{
 
             case "${key}" in
                 scrolloff|tabstop|indentwidth|autowrap_column|eolformat|filetype|BOM|spell_lang);;
-                *) printf %s\\n "echo -debug 'Unsupported kakoune variable: ${key}'"
+                *) printf 'echo -debug %s' "$(kakquote "Unsupported kakoune variable: ${key}")" \
+                       | kak -p "${kak_session}"
                    return;;
             esac
 
-            printf %s\\n "set-option buffer ${key} ${value}"
+            printf 'set-option buffer %s %s\n' "${key}" "$(kakquote "${value}")"
         }
 
         case "${kak_selection}" in
             *vi:*|*vim:*) type_selection="vim";;
             *kak:*|*kakoune:*) type_selection="kakoune";;
-            *) echo "echo -debug Unsupported modeline format"; exit 1 ;;
+            *) printf 'echo -debug %s' "$(kakquote "Unsupported modeline format: ${kak_selection}")" \
+                   | kak -p "${kak_session}"; exit 1 ;;
         esac
 
         # The following subshell will keep the actual options of the modeline, and strip:
@@ -76,15 +97,15 @@ define-command -hidden modeline-parse-impl %{
             name_option="${option%%=*}"
             value_option="${option#*=}"
 
-            [ -z "${option}" ] && continue
+            if [ -z "${option}" ]; then
+                continue
+            fi
 
             case "${type_selection}" in
-                vim) tr=$(translate_opt_vim "${name_option}" "${value_option}");;
-                kakoune) tr=$(translate_opt_kakoune "${name_option}" "${value_option}");;
-                *) tr="";;
+                vim) translate_opt_vim "${name_option}" "${value_option}";;
+                kakoune) translate_opt_kakoune "${name_option}" "${value_option}";;
+                *) exit 1;;
             esac
-
-            [ -n "${tr}" ] && printf %s\\n "${tr}"
         done
     }
 }
@@ -97,7 +118,7 @@ define-command -hidden modeline-parse-impl %{
 define-command modeline-parse -docstring "Read and interpret vi-format modelines at the beginning/end of the buffer" %{
     try %{ evaluate-commands -draft %{
         execute-keys <percent> "s(?S)\A(.+\n){,%opt{modelines}}|(.+\n){,%opt{modelines}}\z<ret>" \
-             s^\S*?\s+?(vim?|kak(oune)?):\s?[^\n]+<ret> <a-x>
+             s^\S*?\s+?\w+:\s?[^\n]+<ret> <a-x>
         evaluate-commands -draft -itersel modeline-parse-impl
     } }
 }
