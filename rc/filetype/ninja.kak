@@ -52,7 +52,7 @@ add-highlighter shared/ninja/command/linebreak regex '\$$' 0:operator
 add-highlighter shared/ninja/command/variables regex '\$\w+|\$\{\w+\}' 0:value
 
 # `build`
-add-highlighter shared/ninja/build region '^build ' '\n' group
+add-highlighter shared/ninja/build region '^build\b' '\n' group
 add-highlighter shared/ninja/build/build regex '^build' 0:keyword
 add-highlighter shared/ninja/build/rule regex ':\h+(\w+)' 0:function
 add-highlighter shared/ninja/build/colonpipe regex ':|\||\|\|' 0:operator
