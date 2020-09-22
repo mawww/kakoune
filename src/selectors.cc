@@ -929,10 +929,10 @@ Selection find_next_match(const Context& context, const Selection& sel, const Re
 template Selection find_next_match<RegexMode::Forward>(const Context&, const Selection&, const Regex&, bool&);
 template Selection find_next_match<RegexMode::Backward>(const Context&, const Selection&, const Regex&, bool&);
 
-Vector<Selection> select_matches(const Buffer& buffer, ConstArrayView<Selection> selections, const Regex& regex, int capture)
+Vector<Selection> select_matches(const Buffer& buffer, ConstArrayView<Selection> selections, const Regex& regex, int capture_idx)
 {
     const int mark_count = (int)regex.mark_count();
-    if (capture < 0 or capture > mark_count)
+    if (capture_idx < 0 or capture_idx > mark_count)
         throw runtime_error("invalid capture number");
 
     Vector<Selection> result;
@@ -944,10 +944,9 @@ Vector<Selection> select_matches(const Buffer& buffer, ConstArrayView<Selection>
 
         for (auto&& match : RegexIterator{sel_beg, sel_end, vm, match_flags(buffer, sel_beg, sel_end)})
         {
-            auto begin = match[capture].first;
-            if (begin == sel_end)
+            auto capture = match[capture_idx];
+            if (not capture.matched or capture.first == sel_end)
                 continue;
-            auto end = match[capture].second;
 
             CaptureList captures;
             captures.reserve(mark_count);
@@ -955,6 +954,8 @@ Vector<Selection> select_matches(const Buffer& buffer, ConstArrayView<Selection>
                 captures.push_back(buffer.string(submatch.first.coord(),
                                                  submatch.second.coord()));
 
+            auto begin = capture.first, end = capture.second;
+            kak_assert(result.empty() or begin.coord() >= result.back().min());
             result.push_back(
                 keep_direction({ begin.coord(),
                                  (begin == end ? end : utf8::previous(end, begin)).coord(),
@@ -966,9 +967,9 @@ Vector<Selection> select_matches(const Buffer& buffer, ConstArrayView<Selection>
     return result;
 }
 
-Vector<Selection> split_on_matches(const Buffer& buffer, ConstArrayView<Selection> selections, const Regex& regex, int capture)
+Vector<Selection> split_on_matches(const Buffer& buffer, ConstArrayView<Selection> selections, const Regex& regex, int capture_idx)
 {
-    if (capture < 0 or capture > (int)regex.mark_count())
+    if (capture_idx < 0 or capture_idx > (int)regex.mark_count())
         throw runtime_error("invalid capture number");
 
     Vector<Selection> result;
@@ -982,7 +983,8 @@ Vector<Selection> split_on_matches(const Buffer& buffer, ConstArrayView<Selectio
 
         for (auto&& match : RegexIterator{begin, sel_end, vm, match_flags(buffer, begin, sel_end)})
         {
-            BufferIterator end = match[capture].first;
+            auto capture = match[capture_idx];
+            BufferIterator end = capture.first;
             if (end == buf_end)
                 continue;
 
@@ -991,7 +993,7 @@ Vector<Selection> split_on_matches(const Buffer& buffer, ConstArrayView<Selectio
                 auto sel_end = (begin == end) ? end : utf8::previous(end, begin);
                 result.push_back(keep_direction({ begin.coord(), sel_end.coord() }, sel));
             }
-            begin = match[capture].second;
+            begin = capture.second;
         }
         if (begin.coord() <= sel.max())
             result.push_back(keep_direction({ begin.coord(), sel.max() }, sel));

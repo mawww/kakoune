@@ -115,11 +115,11 @@ Selection find_next_match(const Context& context, const Selection& sel,
 
 Vector<Selection, MemoryDomain::Selections>
 select_matches(const Buffer& buffer, ConstArrayView<Selection> selections,
-               const Regex& regex, int capture = 0);
+               const Regex& regex, int capture_idx = 0);
 
 Vector<Selection, MemoryDomain::Selections>
 split_on_matches(const Buffer& buffer, ConstArrayView<Selection> selections,
-                 const Regex& regex, int capture = 0);
+                 const Regex& regex, int capture_idx = 0);
 
 Optional<Selection>
 select_surrounding(const Context& context, const Selection& selection,
