@@ -49,7 +49,7 @@ evaluate-commands %sh{
     "
 }
 
-add-highlighter shared/dockerfile/code/ regex '\$\{[\w_]+\}' 0:value
-add-highlighter shared/dockerfile/code/ regex '\$[\w_]+' 0:value
+add-highlighter shared/dockerfile/code/ regex (?<!\\)(?:\\\\)*\K\$\{[\w_]+\} 0:value
+add-highlighter shared/dockerfile/code/ regex (?<!\\)(?:\\\\)*\K\$[\w_]+ 0:value
 
 }

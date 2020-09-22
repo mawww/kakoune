@@ -38,9 +38,9 @@ add-highlighter shared/fish/single_string region (?<!\\)(?:\\\\)*\K' (?<!\\)(\\\
 add-highlighter shared/fish/comment       region (?<!\\)(?:\\\\)*(?:^|\h)\K# '$' fill comment
 
 add-highlighter shared/fish/double_string/ fill string
-add-highlighter shared/fish/double_string/ regex (\$\w+)|(\{\$\w+\}) 0:variable
+add-highlighter shared/fish/double_string/ regex ((?<!\\)(?:\\\\)*\K\$\w+)|(\{\$\w+\}) 0:variable
 
-add-highlighter shared/fish/code/ regex (\$\w+)|(\{\$\w+\}) 0:variable
+add-highlighter shared/fish/code/ regex (?<!\\)(?:\\\\)*\K(\$\w+)|(\{\$\w+\}) 0:variable
 
 # Command names are collected using `builtin --names`.
 add-highlighter shared/fish/code/ regex \b(and|argparse|begin|bg|bind|block|break|breakpoint|builtin|case|cd|command|commandline|complete|contains|continue|count|disown|echo|else|emit|end|eval|exec|exit|false|fg|for|function|functions|history|if|jobs|math|not|or|printf|pwd|random|read|realpath|return|set|set_color|source|status|string|switch|test|time|true|ulimit|wait|while)\b 0:keyword
