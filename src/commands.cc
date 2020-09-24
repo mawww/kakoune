@@ -469,6 +469,13 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
     if (not filename and !is_file)
         throw runtime_error("cannot write a non file buffer without a filename");
 
+    const bool force = (bool)(flags & WriteFlags::Force);
+    // if we try to overwerite an existing file with the buffer content and
+    // filename does not match the buffer name throw and error
+    if (filename and not force and file_exists(*filename) and
+        real_path(*filename) != buffer.name())
+        throw runtime_error("use w! to overwrite existing file with buffer content");
+
     const bool is_readonly = (bool)(context.buffer().flags() & Buffer::Flags::ReadOnly);
     // if the buffer is in read-only mode and we try to save it directly
     // or we try to write to it indirectly using e.g. a symlink, throw an error

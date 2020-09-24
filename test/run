@@ -158,7 +158,7 @@ finished_commands() {
     printf 'printf %%s\\\\n "$%s" >%s\n' "$env_var" "$env_var"
   done
   printf %s '  }
-               write out
+               write! out
                quit!
              }
             '
