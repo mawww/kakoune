@@ -461,7 +461,16 @@ const ParameterDesc write_params{
     ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
 };
 
-void do_write_buffer(Context& context, Optional<String> filename, WriteFlags flags, bool atomic = false)
+const ParameterDesc write_params_single{
+    {
+        { "sync", { false, "force the synchronization of the file onto the filesystem" } },
+        { "atomic", { false, "force the writemethod to replace" } },
+        { "existing", { false, "force overwriting of existing files" } },
+    },
+    ParameterDesc::Flags::None, 0, 1
+};
+
+void do_write_buffer(Context& context, Optional<String> filename, WriteFlags flags, bool atomic = false, const bool existing = false)
 {
     Buffer& buffer = context.buffer();
     const bool is_file = (bool)(buffer.flags() & Buffer::Flags::File);
@@ -472,9 +481,9 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
     const bool force = (bool)(flags & WriteFlags::Force);
     // if we try to overwerite an existing file with the buffer content and
     // filename does not match the buffer name throw and error
-    if (filename and not force and file_exists(*filename) and
+    if (filename and not(force or existing) and file_exists(*filename) and
         real_path(*filename) != buffer.name())
-        throw runtime_error("use w! to overwrite existing file with buffer content");
+        throw runtime_error("use write! or -existing to overwrite existing file with buffer content");
 
     const bool is_readonly = (bool)(context.buffer().flags() & Buffer::Flags::ReadOnly);
     // if the buffer is in read-only mode and we try to save it directly
@@ -498,7 +507,8 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
                            parser.positional_count() > 0 ? parser[0] : Optional<String>{},
                            (parser.get_switch("sync") ? WriteFlags::Sync : WriteFlags::None) |
                            (force ? WriteFlags::Force : WriteFlags::None),
-                           (bool)parser.get_switch("atomic"));
+                           (bool)parser.get_switch("atomic"),
+                           (bool)parser.get_switch("existing"));
 }
 
 const CommandDesc write_cmd = {
@@ -506,7 +516,7 @@ const CommandDesc write_cmd = {
     "w",
     "write [<switches>] [<filename>]: write the current buffer to its file "
     "or to <filename> if specified",
-    write_params,
+    write_params_single,
     CommandFlags::None,
     CommandHelper{},
     filename_completer<false>,
@@ -668,7 +678,7 @@ template<bool force>
 void write_quit(const ParametersParser& parser, Context& context,
                 const ShellContext& shell_context)
 {
-    do_write_buffer(context, {}, parser.get_switch("sync") ? WriteFlags::Sync : WriteFlags::None);
+    do_write_buffer(context, {}, parser.get_switch("sync") ? WriteFlags::Sync : WriteFlags::None, false);
     quit<force>(parser, context, shell_context);
 }
 
