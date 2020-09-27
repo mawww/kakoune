@@ -14,6 +14,8 @@ hook global BufCreate .*[.](fish) %{
 hook global WinSetOption filetype=fish %{
     require-module fish
 
+    set-option buffer extra_word_chars '_' '-'
+
     hook window InsertChar .* -group fish-indent fish-indent-on-char
     hook window InsertChar \n -group fish-indent fish-indent-on-new-line
 
@@ -43,7 +45,7 @@ add-highlighter shared/fish/double_string/ regex ((?<!\\)(?:\\\\)*\K\$\w+)|(\{\$
 add-highlighter shared/fish/code/ regex (?<!\\)(?:\\\\)*\K(\$\w+)|(\{\$\w+\}) 0:variable
 
 # Command names are collected using `builtin --names`.
-add-highlighter shared/fish/code/ regex \b(and|argparse|begin|bg|bind|block|break|breakpoint|builtin|case|cd|command|commandline|complete|contains|continue|count|disown|echo|else|emit|end|eval|exec|exit|false|fg|for|function|functions|history|if|jobs|math|not|or|printf|pwd|random|read|realpath|return|set|set_color|source|status|string|switch|test|time|true|ulimit|wait|while)\b 0:keyword
+add-highlighter shared/fish/code/ regex (?<!-)\b(and|argparse|begin|bg|bind|block|break|breakpoint|builtin|case|cd|command|commandline|complete|contains|continue|count|disown|echo|else|emit|end|eval|exec|exit|false|fg|for|function|functions|history|if|jobs|math|not|or|printf|pwd|random|read|realpath|return|set|set_color|source|status|string|switch|test|time|true|ulimit|wait|while)\b(?!-) 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾

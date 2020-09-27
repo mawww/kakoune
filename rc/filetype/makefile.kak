@@ -12,6 +12,7 @@ hook global WinSetOption filetype=makefile %{
     require-module makefile
 
     set-option window static_words %opt{makefile_static_words}
+    set-option buffer extra_word_chars '_' '-'
 
     hook window InsertChar \n -group makefile-indent makefile-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window makefile-.+ }
