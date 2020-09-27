@@ -146,6 +146,8 @@ define-command -hidden rust-indent-on-new-line %~
                 execute-keys K<a-x>1s^[^*]*(\*)<ret>&
             ]
         } catch %`
+            # re-indent previous line if it starts with where to match previous block
+            try %+ execute-keys -draft k <a-x> <a-k> ^\h*where\b <ret> hh <a-?> impl|fn|struct|enum|union <ret> <a-S> 1<a-&> +
             # preserve previous line indent
             try %{ execute-keys -draft <semicolon> K <a-&> }
             # indent after lines ending with [{(].+ and move first parameter to own line
