@@ -174,7 +174,7 @@ define-command -hidden rust-indent-on-opening-curly-brace %[
         # align indent with opening paren when { is entered on a new line after the closing paren
         try %[ execute-keys -draft h <a-F> ) M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
         # dedent standalone { after impl and related block without any { in between
-        try %< execute-keys -draft hh <a-?> impl|fn|struct|enum|union <ret> <a-K> \{ <ret> <a-semicolon> <semicolon> ll <a-x> <a-k> ^\h*\{$ <ret> <a-lt> >
+        try %< execute-keys -draft hh <a-?> impl|fn|struct|enum|union|if|for <ret> <a-K> \{ <ret> <a-semicolon> <semicolon> ll <a-x> <a-k> ^\h*\{$ <ret> <a-lt> >
     _
 ]
 
