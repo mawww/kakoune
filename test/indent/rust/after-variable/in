@@ -1,0 +1,6 @@
+    foo%( )
+
+    Foo(bar)%( )
+
+    Foo { bar }%( )
+

@@ -148,16 +148,15 @@ define-command -hidden rust-indent-on-new-line %~
         } catch %`
             # preserve previous line indent
             try %{ execute-keys -draft <semicolon> K <a-&> }
-            # indent after lines ending with { or (
-            try %[ execute-keys -draft k <a-x> <a-k> [{(]\h*$ <ret> j <a-gt> ]
             # indent after lines ending with [{(].+ and move first parameter to own line
             try %< execute-keys -draft [c[({],[)}] <ret> <a-k> \A[({][^\n]+\n[^\n]*\n?\z <ret> L i<ret><esc> <gt> <a-S> <a-&> >
-            # indent lines with a standalone where
-            try %+ execute-keys -draft k <a-x> <a-k> ^\h*where\h*$ <ret> j <a-gt> +
-            # dedent after lines starting with . and ending with , or ;
-            try %_ execute-keys -draft k <a-x> <a-k> ^\h*\..*[,<semicolon>]\h*$ <ret> j <a-lt> _
-            # deindent closing brace(s) when after cursor
-            try %= execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> =
+            # indent after non-empty lines not starting with operator and not ending with , or ;
+            # XXX s [^\h]* is workaround for broken negate match #3766, use this later
+            try %< execute-keys -draft k <a-x> s [^\h].+ <ret> <a-K> \A[-+*/&|^})<gt><lt>] <ret> <a-K> [,<semicolon>](\h*/[/*].*|)$ <ret> j <a-gt> >
+            # dedent after lines starting with . and ending with } or ) or , or ;
+            try %_ execute-keys -draft k <a-x> <a-k> ^\h*\..*[}),<semicolon>]\h*$ <ret> j <a-lt> _
+            # align to opening curly brace or paren when newline is inserted before a single closing
+            try %< execute-keys -draft <a-h> <a-k> ^\h*[)}] <ret> h m <a-S> 1<a-&> >
             # todo dedent additional unmatched parenthesis
             # try %& execute-keys -draft k <a-x> s \((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\) l Gl s\) %sh{
                 # count previous selections length

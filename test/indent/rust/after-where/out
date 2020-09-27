@@ -1,6 +1,3 @@
-    impl X for T where
-    bar
-
     impl X for T
     where
         bar
