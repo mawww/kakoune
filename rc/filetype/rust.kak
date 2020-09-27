@@ -151,7 +151,7 @@ define-command -hidden rust-indent-on-new-line %~
             # indent after lines ending with [{(].+ and move first parameter to own line
             try %< execute-keys -draft [c[({],[)}] <ret> <a-k> \A[({][^\n]+\n[^\n]*\n?\z <ret> L i<ret><esc> <gt> <a-S> <a-&> >
             # indent after non-empty lines not starting with operator and not ending with , or ;
-            # XXX s [^\h]* is workaround for broken negate match #3766, use this later
+            # XXX simplify this into a single <a-k> without s
             try %< execute-keys -draft k <a-x> s [^\h].+ <ret> <a-K> \A[-+*/&|^})<gt><lt>] <ret> <a-K> [,<semicolon>](\h*/[/*].*|)$ <ret> j <a-gt> >
             # dedent after lines starting with . and ending with } or ) or , or ;
             try %_ execute-keys -draft k <a-x> <a-k> ^\h*\..*[}),<semicolon>]\h*$ <ret> j <a-lt> _
