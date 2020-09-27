@@ -147,7 +147,7 @@ define-command -hidden rust-indent-on-new-line %~
             ]
         } catch %`
             # re-indent previous line if it starts with where to match previous block
-            try %+ execute-keys -draft k <a-x> <a-k> ^\h*where\b <ret> hh <a-?> impl|fn|struct|enum|union <ret> <a-S> 1<a-&> +
+            try %+ execute-keys -draft k <a-x> <a-k> ^\h*where\b <ret> hh <a-?> ^\h*\b(impl|fn|struct|enum|union)\b <ret> <a-S> 1<a-&> +
             # preserve previous line indent
             try %{ execute-keys -draft <semicolon> K <a-&> }
             # indent after lines ending with [{(].+ and move first parameter to own line
@@ -175,7 +175,7 @@ define-command -hidden rust-indent-on-opening-curly-brace %[
         # align indent with opening paren when { is entered on a new line after the closing paren
         try %[ execute-keys -draft h <a-F> ) M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
         # dedent standalone { after impl and related block without any { in between
-        try %< execute-keys -draft hh <a-?> impl|fn|struct|enum|union|if|for <ret> <a-K> \{ <ret> <a-semicolon> <semicolon> ll <a-x> <a-k> ^\h*\{$ <ret> <a-lt> >
+        try %< execute-keys -draft hh <a-?> ^\h*\b(impl|fn|struct|enum|union|if|for)\b <ret> <a-K> \{ <ret> <a-semicolon> <semicolon> ll <a-x> <a-k> ^\h*\{$ <ret> <a-lt> >
     _
 ]
 
