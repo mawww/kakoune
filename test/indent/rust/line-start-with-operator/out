@@ -37,3 +37,6 @@
     > foo
     bar
 
+    #[derive(Debug)]
+    bar
+

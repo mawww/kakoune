@@ -24,3 +24,5 @@
 
     > foo%( )
 
+    #[derive(Debug)]%( )
+
