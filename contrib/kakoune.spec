@@ -36,10 +36,10 @@ Kakoune has a strong focus on interactivity, most commands provide immediate and
 incremental results, while still being competitive (as in keystroke count) with
 Vim.
 
-Kakoune works on selections, which are oriented, inclusive range of characters,
-selections have an anchor and a cursor character. Most commands move both of
-them, except when extending selection where the anchor character stays fixed and
-the cursor one moves around.
+Kakoune works on selections, which are oriented, inclusive ranges of characters.
+Selections have an anchor and a cursor. Most commands move both of
+them except when extending selections, where the anchor character stays fixed and
+the cursor moves around.
 
 
 %prep
