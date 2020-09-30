@@ -17,7 +17,8 @@ hook -group sh-highlight global WinSetOption filetype=sh %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sh }
 }
 
-provide-module sh %[
+# using non-ascii characters here so that we can use the '[' command
+provide-module sh %§
 
 add-highlighter shared/sh regions
 add-highlighter shared/sh/code default-region group
@@ -86,8 +87,13 @@ define-command -hidden sh-insert-on-new-line %[
     ]
 ]
 
-define-command -hidden sh-indent-on-new-line %[
-    evaluate-commands -draft -itersel %[
+# Use custom object matching to copy indentation for the various logical
+# blocks.
+#
+# Note that we're using a weird non-ascii character instead of [ or { here
+# because the '[' and '{' characters need to be available for the commands.
+define-command -hidden sh-indent-on-new-line %¶
+    evaluate-commands -draft -itersel %@
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
@@ -113,8 +119,10 @@ define-command -hidden sh-indent-on-new-line %[
         #
         # indent after do
         try %{ execute-keys -draft <space> k <a-x> <a-k> \bdo$ <ret> j <a-gt> }
-        # deindent after done
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \bdone$ <ret> K <a-&> j <a-lt> j K <a-&> }
+        # copy the indentation of the matching for/when - matching on the do
+        # statement, so we don't need to duplicate this for the two loop
+        # structures.
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \bdone$ <ret> gh [c\bdo\b,\bdone\b <ret> <a-x> <a-S> 1<a-&> <space> j K <a-&> }
 
         # Indent if/then/else syntax, e.g.:
         # if [ $foo = $bar ]; then
@@ -133,11 +141,10 @@ define-command -hidden sh-indent-on-new-line %[
         #
         # indent after then
         try %{ execute-keys -draft <space> k <a-x> <a-k> \bthen$ <ret> j <a-gt> }
-        # deindent after fi
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \bfi$ <ret> K <a-&> j <a-lt> j K <a-&> }
-        # deindent and reindent after else - deindent the else, then back
-        # down and return to the previous indent level.
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \belse$ <ret> <a-lt> j }
+        # copy the indentation of the matching if
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \bfi$ <ret> gh [c\bif\b,\bfi\b <ret> <a-x> <a-S> 1<a-&> <space> j K <a-&> }
+        # copy the indentation of the matching if, and then re-indent afterwards
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \belse$ <ret> gh [c\bif\b,\bfi\b <ret> <a-x> <a-S> 1<a-&> <space> j K <a-&> j <a-gt> }
 
         # Indent case syntax, e.g.:
         # case "$foo" in
@@ -158,8 +165,8 @@ define-command -hidden sh-indent-on-new-line %[
         #
         # indent after in
         try %{ execute-keys -draft <space> k <a-x> <a-k> \bin$ <ret> j <a-gt> }
-        # deindent after esac
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \besac$ <ret> <a-lt> j K <a-&> }
+        # copy the indentation of the matching case
+        try %{ execute-keys -draft <space> k <a-x> <a-k> \besac$ <ret> gh [c\bcase\b,\besac\b <ret> <a-x> <a-S> 1<a-&> <space> j K <a-&> }
         # indent after )
         try %{ execute-keys -draft <space> k <a-x> <a-k> ^\s*\(?[^(]+[^)]\)$ <ret> j <a-gt> }
         # deindent after ;;
@@ -191,7 +198,7 @@ define-command -hidden sh-indent-on-new-line %[
         # deindent closing } when after cursor
         try %= execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> =
 
-    ]
-]
+    @
+¶
 
-]
+§
