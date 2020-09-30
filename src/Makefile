@@ -80,6 +80,9 @@ else ifeq ($(os),OpenBSD)
 else ifneq (,$(findstring CYGWIN,$(os)))
     CPPFLAGS += -D_XOPEN_SOURCE=700
     LIBS += -lncursesw -ldbghelp
+else ifeq ($(os),SunOS)
+    LIBS += -lncursesw 
+    LDFLAGS += -lsocket -rdynamic
 else
     ifeq ($(PKG_CONFIG),)
     	$(error "pkg-config not found in PATH")

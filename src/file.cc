@@ -654,6 +654,11 @@ String get_kak_binary_path()
     return buffer;
 #elif defined(__OpenBSD__)
     return KAK_BIN_PATH;
+#elif defined(__sun__)
+    ssize_t res = readlink("/proc/self/path/a.out", buffer, 2048);
+    kak_assert(res != -1);
+    buffer[res] = '\0';
+    return buffer;
 #else
 # error "finding executable path is not implemented on this platform"
 #endif
