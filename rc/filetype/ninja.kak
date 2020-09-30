@@ -52,8 +52,8 @@ add-highlighter shared/ninja/command/linebreak regex '\$$' 0:operator
 add-highlighter shared/ninja/command/variables regex '\$\w+|\$\{\w+\}' 0:value
 
 # `build`
-add-highlighter shared/ninja/build region '^build' '\n' group
-add-highlighter shared/ninja/build/build regex '^build\h+' 0:keyword
+add-highlighter shared/ninja/build region '^build\b' '\n' group
+add-highlighter shared/ninja/build/build regex '^build' 0:keyword
 add-highlighter shared/ninja/build/rule regex ':\h+(\w+)' 0:function
 add-highlighter shared/ninja/build/colonpipe regex ':|\||\|\|' 0:operator
 add-highlighter shared/ninja/build/variables regex '\$\w+|\$\{\w+\}' 0:value
@@ -61,12 +61,15 @@ add-highlighter shared/ninja/build/variables regex '\$\w+|\$\{\w+\}' 0:value
 # variables
 add-highlighter shared/ninja/variable region '^\h*\w+\h*=' '\n' group
 add-highlighter shared/ninja/variable/name regex '(\w+)\h*=' 0:variable
-# TODO: toplevel builddir is conflicting with build
 add-highlighter shared/ninja/variable/equal regex '=' 0:operator
 
 # `default`
 add-highlighter shared/ninja/default region '^default' '\n' group
 add-highlighter shared/ninja/default/default regex '^default' 0:keyword
+
+# `subninja` and `include`
+add-highlighter shared/ninja/subinc region '^subninja|include' '\n' group
+add-highlighter shared/ninja/subinc/default regex '^subninja|include' 0:module
 
 # `pool`
 add-highlighter shared/ninja/pool region '^pool' '\n' group
@@ -74,7 +77,7 @@ add-highlighter shared/ninja/pool/pool regex '^pool' 0:keyword
 
 # keywords/builtin variable names
 evaluate-commands %sh{
-  keywords="rule build command default"
+  keywords="rule build command default subninja include"
   reserved_names="builddir ninja_required_version pool depfile deps depfile msvc_deps_prefix description dyndep generator restat rspfile rspfile_content"
 
   printf %s "
