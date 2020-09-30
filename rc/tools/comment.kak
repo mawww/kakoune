@@ -64,7 +64,7 @@ hook global BufSetOption filetype=(html|xml) %{
     set-option buffer comment_block_end '-->'
 }
 
-hook global BufSetOption filetype=latex %{
+hook global BufSetOption filetype=(latex|mercury) %{
     set-option buffer comment_line '%'
 }
 
