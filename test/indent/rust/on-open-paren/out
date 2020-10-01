@@ -33,3 +33,12 @@
 
     union X<T> where T: Debug {
 
+    if foo()
+        && bar()
+    {
+
+    for x in group
+        .iter()
+        .sorted_by(|a, b| Ord::cmp(&a.0, &b.0))
+    {
+

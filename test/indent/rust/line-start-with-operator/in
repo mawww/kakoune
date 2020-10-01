@@ -1,0 +1,28 @@
+    .foo%( )
+
+    .foo()%( )
+
+    + foo%( )
+
+    - foo%( )
+
+    * foo%( )
+
+    / foo%( )
+
+    & foo%( )
+
+    | foo%( )
+
+    ^ foo%( )
+
+    && foo%( )
+
+    || foo%( )
+
+    < foo%( )
+
+    > foo%( )
+
+    #[derive(Debug)]%( )
+

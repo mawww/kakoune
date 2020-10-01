@@ -1,5 +1,3 @@
-    impl X for T where%( )
-
     impl X for T
     where%( )
 

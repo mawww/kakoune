@@ -1,0 +1,42 @@
+    .foo
+        bar
+
+    .foo()
+    bar
+
+    + foo
+    bar
+
+    - foo
+    bar
+
+    * foo
+    bar
+
+    / foo
+    bar
+
+    & foo
+    bar
+
+    | foo
+    bar
+
+    ^ foo
+    bar
+
+    && foo
+    bar
+
+    || foo
+    bar
+
+    < foo
+    bar
+
+    > foo
+    bar
+
+    #[derive(Debug)]
+    bar
+
