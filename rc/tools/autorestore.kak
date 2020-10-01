@@ -1,8 +1,18 @@
-declare-option -docstring "remove backups once they've been restored" \
+declare-option -docstring %{
+        Remove backups once they've been restored
+
+        See `:doc autorestore` for details.
+    } \
     bool autorestore_purge_restored true
 
 ## Insert the content of the backup file into the current buffer, if a suitable one is found
-define-command autorestore-restore-buffer -docstring "Restore the backup for the current file if it exists" %{
+define-command autorestore-restore-buffer \
+    -docstring %{
+        Restore the backup for the current file if it exists
+
+        See `:doc autorestore` for details.
+    } \
+%{
     evaluate-commands %sh{
         buffer_basename="${kak_buffile##*/}"
         buffer_dirname=$(dirname "${kak_buffile}")
@@ -48,7 +58,13 @@ define-command autorestore-restore-buffer -docstring "Restore the backup for the
 }
 
 ## Remove all the backups that have been created for the current buffer
-define-command autorestore-purge-backups -docstring "Remove all the backups of the current buffer" %{
+define-command autorestore-purge-backups \
+    -docstring %{
+        Remove all the backups of the current buffer
+
+        See `:doc autorestore` for details.
+    } \
+%{
     evaluate-commands %sh{
         [ ! -f "${kak_buffile}" ] && exit
 
@@ -64,7 +80,13 @@ define-command autorestore-purge-backups -docstring "Remove all the backups of t
 }
 
 ## If for some reason, backup files need to be ignored
-define-command autorestore-disable -docstring "Disable automatic backup recovering" %{
+define-command autorestore-disable \
+    -docstring %{
+        Disable automatic backup recovering
+
+        See `:doc autorestore` for details.
+    } \
+%{
     remove-hooks global autorestore
 }
 

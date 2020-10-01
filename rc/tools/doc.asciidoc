@@ -1,0 +1,46 @@
+= Kakoune's online documentation
+
+This is Kakoune's online documentation system.
+
+To see what documentation topics are available, type `:doc` and look at the
+completion menu. To view the a particular documentation topic, type the topic
+name or choose it from the completion menu and hit Enter.
+
+Documentation will be displayed in the client named in the `docsclient` option.
+
+== Using the documentation browser
+
+Documentation buffers are like any other buffer, so you can scroll through them
+as normal, search within a topic with `/`, etc. However, they can also contain
+links, <<doc#demonstration-target,like this>>. When you see a link, you can
+follow it by moving the cursor onto it and pressing Enter. If the link takes you
+to a different documentation topic, you can get back by using the `:buffer`
+command.
+
+== Writing documentation
+
+Documentation must be in AsciiDoc format, with the extension `.asciidoc`,
+and stored somewhere within <<doc#sources,the documentation search path>>.
+Kakoune's built-in documentation renderer does not necessarily support every
+feature, so don't go overboard with formatting.
+
+To create a link to another documentation topic, the URL should be the topic-
+name, just like `:doc` uses. Because topics are identified
+only by their basename, you should take care that your topic's name does not
+collide with any of the names used by other plugins or Kakoune's standard
+library.
+
+== Sources
+
+The `:doc` command searches within the following locations for
+documents in the AsciiDoc format (`*.asciidoc`):
+
+* The user plugin directory, `"%val{config}/autoload"`
+* The system documentation directory, `"%val{runtime}/doc"`
+* The system plugin directory, `"%val{runtime}/rc"`
+
+It searches recursively, and follows symlinks.
+
+== Demonstration target
+
+Well done! You can <<doc#using-the-documentation-browser,go back now>>!

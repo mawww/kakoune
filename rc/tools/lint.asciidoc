@@ -1,0 +1,26 @@
+= Integrate with tools that check files for problems.
+
+Many file-formats have "lint" tools that check for common problems and point out
+where they occur. Most of these tools produce output in the traditional message
+format:
+
+----
+{filename}:{line}:{column}: {kind}: {message}
+----
+
+If the 'kind' field contains 'error', the message is treated as an error,
+otherwise it is assumed to be a warning.
+
+The `:lint-buffer` and `:lint-selections` commands will run the shell command
+specified in the `lintcmd` option, passing it the path to a temporary file
+containing the text to be linted. The results are collected in the
+`*lint-output*` buffer, and analyze it. If `toolsclient` is set, the
+`*lint-output*` buffer will be displayed in the named client.
+
+Each reported error or warning causes a marker to appear in the left-hand
+margin of the buffer that was checked. When the main cursor moves onto that
+line, the associated messages are displayed. If they get distracting, you can
+turn off the markers and messages with the `:lint-hide-diagnostics` command.
+
+You can also use `:lint-next-message` and `:lint-previous-message` to jump
+between the lines with messages.

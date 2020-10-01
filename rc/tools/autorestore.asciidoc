@@ -1,0 +1,13 @@
+= Automatically restore unsaved work after a crash.
+
+When Kakoune crashes, it automatically writes out unsaved changes to backup
+files with predictable names. When you edit a file, if such a backup file
+exists, this plugin will automatically load the content of the backup file
+instead.
+
+By default, backup files are deleted when restored. You can set the
+`autorestore_purge_restored` option to `false` to prevent this.
+
+If you don't want backups to be restored automatically, use the
+`autorestore-disable` command to disable the feature for the current session,
+or put it in your `kakrc` to disable the feature forever.
