@@ -18,6 +18,7 @@
             "navbar:community": "Communauté",
             "navbar:wiki": "Wiki",
             "navbar:forums": "Forums",
+            "navbar:communityWritings": "Ecrits de la communauté",
             "navbar:translation": "Traduction",
             "navbar:translation:english": "Anglais",
             "navbar:translation:french": "Français",
@@ -30,6 +31,7 @@
             "menu:features": "Fonctionnalités",
             "menu:screenshots": "Captures d'écran",
             "menu:gallery": "Galerie",
+            "menu:communityWritings": "Ecrits de la communauté",
 
             "feature:multipleSelections": "Sélections multiples",
             "feature:multipleSelectionsText": $("[tid-fr='feature:multipleSelectionsText']").html(),
@@ -79,6 +81,8 @@
 
             "plugins:malwareWarning": $("[tid-fr='plugins:malwareWarning']").html(),
             "plugins:infoContribute": $("[tid-fr='plugins:infoContribute']").html(),
+
+            "writings:introduction": $("[tid-fr='writings:introduction']").html(),
         },
         "hu": {
             "head:indexPageTitle": "Kakoune - Hivatalos oldal",
@@ -94,6 +98,7 @@
             "navbar:community": "Közösség",
             "navbar:wiki": "Wiki",
             "navbar:forums": "Forums",
+            "navbar:communityWritings": "",
             "navbar:translation": "Fordítás",
             "navbar:translation:english": "Angol",
             "navbar:translation:french": "Francia",
@@ -106,6 +111,7 @@
             "menu:features": "Képességek",
             "menu:screenshots": "Képernyőképek",
             "menu:gallery": "Galéria",
+            "menu:communityWritings": "",
 
             "feature:multipleSelections": "Több kijelölés",
             "feature:multipleSelectionsText": $("[tid-hu='feature:multipleSelectionsText']").html(),
@@ -154,6 +160,8 @@
 
             "plugins:malwareWarning": $("[tid-hu='plugins:malwareWarning']").html(),
             "plugins:infoContribute": $("[tid-hu='plugins:infoContribute']").html(),
+
+            "writings:introduction": $("[tid-hu='writings:introduction']").html(),
         },
         "it": {
             "head:indexPageTitle": "Kakoune - Sito ufficiale",
@@ -169,6 +177,7 @@
             "navbar:community": "Community",
             "navbar:wiki": "Wiki",
             "navbar:forums": "Forum",
+            "navbar:communityWritings": "",
             "navbar:translation": "Traduzioni",
             "navbar:translation:english": "Inglese",
             "navbar:translation:french": "Francese",
@@ -181,7 +190,7 @@
             "menu:features": "Funzionalità",
             "menu:screenshots": "Screenshot",
             "menu:gallery": "Galleria",
-
+            "menu:communityWritings": "",
             "feature:multipleSelections": "Selezioni multiple",
             "feature:multipleSelectionsText": $("[tid-it='feature:multipleSelectionsText']").html(),
             "feature:textEditingTools": "Strumenti per la modifica del testo",
@@ -228,6 +237,8 @@
 
             "plugins:malwareWarning": $("[tid-it='plugins:malwareWarning']").html(),
             "plugins:infoContribute": $("[tid-it='plugins:infoContribute']").html(),
+
+            "writings:introduction": $("[tid-it='writings:introduction']").html(),
         },
     }
 
