@@ -155,6 +155,8 @@ define-command -hidden rust-indent-on-new-line %~
             # indent after non-empty lines not starting with operator and not ending with , or ;
             # XXX simplify this into a single <a-k> without s
             try %< execute-keys -draft k <a-x> s [^\h].+ <ret> <a-K> \A[-+*/&|^})<gt><lt>#] <ret> <a-K> [,<semicolon>](\h*/[/*].*|)$ <ret> j <a-gt> >
+            # addition to previous case where it starts with ) and ends with {
+            try %< execute-keys -draft k <a-x> s [^\h].+ <ret> <a-k> \A\) <ret> <a-k> \{$ <ret> j <a-gt> >
             # dedent after lines starting with . and ending with } or ) or , or ;
             try %_ execute-keys -draft k <a-x> <a-k> ^\h*\..*[}),<semicolon>]\h*$ <ret> j <a-lt> _
             # align to opening curly brace or paren when newline is inserted before a single closing
