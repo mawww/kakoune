@@ -803,3 +803,9 @@ The following keys are recognized by this mode to help with editing
 
 *<a-;>*, *<a-semicolon>*::
     escape to normal mode for a single command
+
+== User commands
+
+*,*::
+    enter default `user mode` to access custom commands
+    (See <<modes#user-mode,`:doc modes user-mode`>>)
