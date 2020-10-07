@@ -22,6 +22,15 @@ provide-module sh %§
 
 add-highlighter shared/sh regions
 add-highlighter shared/sh/code default-region group
+
+# Languages
+try %{
+require-module python
+add-highlighter shared/sh/python region 'python.*?-c *"' '[^\\]"' regions
+add-highlighter shared/sh/python/ default-region fill meta
+add-highlighter shared/sh/python/inner region python.*?-c\h*"\K [^\\](?=") ref python
+}
+
 add-highlighter shared/sh/double_string region  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)(?:\\\\)*"} group
 add-highlighter shared/sh/single_string region %{(?<!\\)(?:\\\\)*\K'} %{'} fill string
 add-highlighter shared/sh/expansion region -recurse (?<!\\)(?:\\\\)*\K\$\{ (?<!\\)(?:\\\\)*\K\$\{ \}|\n fill value
