@@ -14,7 +14,7 @@ hook global BufCreate .*[.](lua) %{
 hook global WinSetOption filetype=lua %{
     require-module lua
 
-    hook window ModeChange pop:insert:.* -group lua-indent lua-trim-indent
+    hook window ModeChange pop:insert:.* -group lua-trim-indent lua-trim-indent
     hook window InsertChar .* -group lua-indent lua-indent-on-char
     hook window InsertChar \n -group lua-indent lua-indent-on-new-line
     hook window InsertChar \n -group lua-insert lua-insert-on-new-line
@@ -100,10 +100,10 @@ define-command -hidden lua-indent-on-char %{
 
 define-command -hidden lua-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
+        # remove trailing white spaces from previous line
+        try %{ execute-keys -draft k : lua-trim-indent <ret> }
         # preserve previous non-empty line indent
         try %{ execute-keys -draft <space><a-?>^[^\n]+$<ret>s\A|.\z<ret>)<a-&> }
-        # remove trailing white spaces from previous line
-        try %{ execute-keys -draft k<a-x>s\h+$<ret>d }
         # indent after start structure
         try %{ execute-keys -draft <a-?>^[^\n]*\w+[^\n]*$<ret><a-k>^\h*(else|elseif|for|function|if|while)\b<ret><a-:><semicolon><a-gt> }
     }
