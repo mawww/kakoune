@@ -75,6 +75,8 @@ define-command make-next-error -docstring 'Jump to the next make error' %{
     try %{ evaluate-commands -client %opt{toolsclient} %{ execute-keys %opt{make_current_error_line}g } }
 }
 
+alias global mn make-next-error
+
 define-command make-previous-error -docstring 'Jump to the previous make error' %{
     evaluate-commands -try-client %opt{jumpclient} %{
         buffer '*make*'
@@ -83,3 +85,5 @@ define-command make-previous-error -docstring 'Jump to the previous make error' 
     }
     try %{ evaluate-commands -client %opt{toolsclient} %{ execute-keys %opt{make_current_error_line}g } }
 }
+
+alias global mp make-previous-error
