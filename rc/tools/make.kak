@@ -35,7 +35,7 @@ hook -group make-highlight global WinSetOption filetype=make %{
 }
 
 hook global WinSetOption filetype=make %{
-    hook buffer -group make-hooks NormalKey <ret> make-jump
+    map -docstring 'make-jump' window global <ret> ': make-jump<ret>'
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks buffer make-hooks }
 }
 
