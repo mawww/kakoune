@@ -40,3 +40,10 @@
     #[derive(Debug)]
     bar
 
+    fn foo(
+    ) -> {
+        bar
+
+    } else {
+        bar
+
