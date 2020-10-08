@@ -32,7 +32,7 @@ hook -group grep-highlight global WinSetOption filetype=grep %{
 }
 
 hook global WinSetOption filetype=grep %{
-    hook buffer -group grep-hooks NormalKey <ret> grep-jump
+    map -docstring 'grep-jump' window normal <ret> ': grep-jump<ret>'
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks buffer grep-hooks }
 }
 
