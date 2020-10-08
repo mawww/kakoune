@@ -818,7 +818,7 @@ const CommandDesc force_delete_buffer_cmd = {
 
 const CommandDesc rename_buffer_cmd = {
     "rename-buffer",
-    nullptr,
+    "nb",
     "rename-buffer <name>: change current buffer name",
     ParameterDesc{
         {
@@ -2480,7 +2480,7 @@ const CommandDesc change_directory_cmd = {
 
 const CommandDesc rename_session_cmd = {
     "rename-session",
-    nullptr,
+    "ns",
     "rename-session <name>: change remote session name",
     single_param,
     CommandFlags::None,
