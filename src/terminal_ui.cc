@@ -18,18 +18,11 @@
 #include <unistd.h>
 #include <strings.h>
 
-constexpr char control(char c) { return c & 037; }
-
 namespace Kakoune
 {
 
 using std::min;
 using std::max;
-
-static void set_cursor_pos(DisplayCoord coord)
-{
-    printf("\033[%d;%dH", (int)coord.line + 1, (int)coord.column + 1);
-}
 
 void TerminalUI::Window::create(const DisplayCoord& p, const DisplayCoord& s)
 {
@@ -160,7 +153,7 @@ void TerminalUI::Window::blit(Window& target)
 
 void TerminalUI::Window::draw(DisplayCoord pos,
                               ConstArrayView<DisplayAtom> atoms,
-                             const Face& default_face)
+                              const Face& default_face)
 {
     if (pos.line >= lines.size()) // We might receive an out of date draw command after a resize
         return;
@@ -451,6 +444,10 @@ void TerminalUI::redraw(bool force)
     m_info.blit(m_screen);
 
     m_screen.output(force);
+
+    auto set_cursor_pos = [](DisplayCoord c) {
+        printf("\033[%d;%dH", (int)c.line + 1, (int)c.column + 1);
+    };
     if (m_cursor.mode == CursorMode::Prompt)
         set_cursor_pos({m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column});
     else
@@ -474,8 +471,8 @@ void TerminalUI::refresh(bool force)
 static const DisplayLine empty_line = { String(" "), {} };
 
 void TerminalUI::draw(const DisplayBuffer& display_buffer,
-                     const Face& default_face,
-                     const Face& padding_face)
+                      const Face& default_face,
+                      const Face& padding_face)
 {
     check_resize();
 
@@ -493,8 +490,8 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
 }
 
 void TerminalUI::draw_status(const DisplayLine& status_line,
-                            const DisplayLine& mode_line,
-                            const Face& default_face)
+                             const DisplayLine& mode_line,
+                             const Face& default_face)
 {
     const LineCount status_line_pos = m_status_on_top ? 0 : m_dimensions.line;
     m_window.draw(status_line_pos, status_line.atoms(), default_face);
@@ -616,6 +613,8 @@ Optional<Key> TerminalUI::get_next_key()
     const auto c = get_char();
     if (not c)
         return {};
+
+    static constexpr auto control = [](char c) { return c & 037; };
 
     static constexpr auto convert = [](Codepoint c) -> Codepoint {
         if (c == control('m') or c == control('j'))
@@ -907,8 +906,8 @@ static LineCount height_limit(MenuStyle style)
 }
 
 void TerminalUI::menu_show(ConstArrayView<DisplayLine> items,
-                          DisplayCoord anchor, Face fg, Face bg,
-                          MenuStyle style)
+                           DisplayCoord anchor, Face fg, Face bg,
+                           MenuStyle style)
 {
     if (m_menu)
     {
@@ -1107,7 +1106,7 @@ static DisplayLineList wrap_lines(const DisplayLineList& lines, ColumnCount max_
 }
 
 void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& content,
-                          DisplayCoord anchor, Face face, InfoStyle style)
+                           DisplayCoord anchor, Face face, InfoStyle style)
 {
     info_hide();
 
