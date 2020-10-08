@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        <title tid="head:pluginsPageTitle">Kakoune - Plugins</title>
+        <title tid="head:pluginsPageTitle">Kakoune - Writings</title>
 
         <meta name="description" content="The official website of Kakoune, a selection-first modal code editor">
         <meta name="author" content="@lenormf">
@@ -14,13 +14,6 @@
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
         <link rel="stylesheet" href="css/default.css">
-
-        <style>
-            .media .media-object {
-                width: 64px;
-                height: 64px;
-            }
-        </style>
     </head>
 
     <body class="pt-2">
@@ -121,43 +114,57 @@
         </nav>
 
         <div class="container">
-            <div class="alert alert-warning alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <div class="row-fluid">
+                <h2 tid="writings:communityWritings">Community writings</h2>
+                <hr>
 
-                <span tid="plugins:malwareWarning">
-                    <strong>Warning!</strong> The following plugins are fetched from <a href="https://github.com/">Github</a> automatically, and have not necessarily been reviewed or approved by Kakoune developers. Use them at your own risks!
+                <p tid="writings:introduction">
+                    The following links point to articles, written by the community, about Kakoune in general. If you've written an article or a blog and want to contribute to the list beneath, create an <a href="https://github.com/mawww/kakoune/issues/new/?title=[website]%20Add%20my%20article%20to%20community%20writings">issue</a> on the project's page. Similarly, if you'd want a link removed from the list, let us know via an <a href="https://github.com/mawww/kakoune/issues/new/?title=[website]%20Remove%20my%20article%20from%20community%20writings">issue</a>.
+                </p>
+                <span tid-fr="writings:introduction" class="d-none">
                 </span>
-                <span tid-fr="plugins:malwareWarning" class="d-none">
-                    <strong>Attention!</strong> Les extensions suivantes sont collectées sur <a href="https://github.com/">Github</a> automatiquement, et n'ont pas nécessairement été révisées ou approuvées par les développeurs de Kakoune. Utilisez-les à vos risques et périls !
+                <span tid-hu="writings:introduction" class="d-none">
                 </span>
-                <span tid-hu="plugins:malwareWarning" class="d-none">
-                    <strong>Figyelem!</strong> Ezek a kiegészítők automatikusan lettek a <a href="https://github.com/">Github</a>-ról lekérdezve, és nem feltétlen lettek ellenőrizve vagy elfogadva a Kakoune fejlesztői által. Használatuk csak saját felelősségre!
+                <span tid-it="writings:introduction" class="d-none">
                 </span>
-                <span tid-it="plugins:malwareWarning" class="d-none">
-                    <strong>Attenzione!</strong> Le seguenti estensioni sono prese da <a href="https://github.com/">Github</a> automaticamente, e non sono state necessariamente revisionate o approvate dagli sviluppatori di Kakoune. Usale a tuo rischio e pericolo!
-                </span>
-            </div>
 
-            <div class="alert alert-info alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h3>
+                    <img src="img/flags/shiny/24/United-Kingdom.png">
+                    English
+                </h3>
 
-                <span tid="plugins:infoContribute">
-                    <strong>Have your plugin shown in that list!</strong> Your repository will be included in the page automatically if it has both the <i><strong>kakoune</strong></i> and <i><strong>plugin</strong></i> topics. Have a look at <a href="https://github.com/search?q=topic%3Akakoune+topic%3Aplugin" class="alert-link">the official Github search page</a>, that's where we fetch our data from!
-                </span>
-                <span tid-fr="plugins:infoContribute" class="d-none">
-                    <strong>Incluez votre extension dans cette liste!</strong> Votre dépôt sera inclu automatiquement s'il a les deux sujets <i><strong>kakoune</strong></i> et <i><strong>plugin</strong></i> associés. Consultez <a href="https://github.com/search?q=topic%3Akakoune+topic%3Aplugin" class="alert-link">la page de recherche Github officielle</a>, c'est de là que nous téléchargeons nos données !
-                </span>
-                <span tid-hu="plugins:infoContribute" class="d-none">
-                    <strong>Kerüljön be a te kiegészítőd is a listába!</strong> A kiegészítő tárolója automatikusan meg fog jelenni ezen az oldalon, ha a <i><strong>kakoune</strong></i> és <i><strong>plugin</strong></i> címkék be vannak állítva. Lásd <a href="https://github.com/search?q=topic%3Akakoune+topic%3Aplugin" class="alert-link">a Github keresési oldalt</a>, ahonnan ez a lista is le van kérdezve!
-                </span>
-                <span tid-it="plugins:infoContribute" class="d-none">
-                    <strong>Aggiungi la tua estensione alla lista!</strong> Il tuo repository verrà aggiunto alla pagina automaticamente se avrà tra i topic <i><strong>kakoune</strong></i> e <i><strong>plugin</strong></i>. Consulta <a href="https://github.com/search?q=topic%3Akakoune+topic%3Aplugin" class="alert-link">la pagina di ricerca ufficiale di Github</a>, è da lì che prendiamo i dati!
-                </span>
-            </div>
+                <ul class="list-unstyled pl-lg-5">
+                    <li>
+                        <a href="https://cosine.blue/2019-09-06-kakoune.html">The Vim-Inspired Editor with a Linguistic Twist</a> — Gregory Chamberlain
+                    </li>
 
-            <!-- NOTE: we split the list and its container in order to be able to get the row's height, which remains at 0 when all of its content is floating -->
-            <div id="pluginsListContainer">
-                <div class="row" id="pluginsList"></div>
+                    <li>
+                        <a href="https://brhfl.com/2018/07/kakoune/">Kakoune</a> — Bri Hefele
+                    </li>
+                </ul>
+
+
+                <h3>
+                    <img src="img/flags/shiny/24/France.png">
+                    French
+                </h3>
+
+                <ul class="list-unstyled pl-lg-5">
+                    <li>
+                        <a href="https://lord.re/posts/114-kakoune/">Kakoune</a> — Lord
+                    </li>
+                </ul>
+
+                <h3>
+                    <img src="img/flags/shiny/24/Japan.png">
+                    Japanese
+                </h3>
+
+                <ul class="list-unstyled pl-lg-5">
+                    <li>
+                        <a href="https://www.soum.co.jp/misc/vim-advanced/2/">第2回 Kakoune テキストエディタ</a> — Vim
+                    </li>
+                </ul>
             </div>
 
             <div class="row-fluid">
@@ -171,41 +178,6 @@
         <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT" crossorigin="anonymous"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
         <script type="text/javascript" src="vendor/jquery-template/1.5.10/jquery.loadTemplate.min.js"></script>
-
-        <script type="text/html" id="pluginTmpl">
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card shadow-sm mb-3">
-                    <div class="card-body p-3">
-                        <div class="media">
-                            <div class="mr-3">
-                                <a data-href="owner.profile_url">
-                                    <img class="media-object border" data-src="owner.avatar_url" data-alt="owner.username">
-                                </a>
-                            </div>
-
-                            <div class="media-body">
-                                <div class="row justify-items-between">
-                                    <div class="col">
-                                        <a data-href="plugin.repository_url" data-content="plugin.name"></a>
-                                    </div>
-
-                                    <div class="col text-right text-secondary">
-                                        <span class="text-nowrap">
-                                            <i class="fa fa-fw fa-star"></i>
-                                            <span data-content="plugin.stars"></span>
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <span class="text-justify" data-content="plugin.description"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </script>
-
-        <script type="text/javascript" src="js/plugins.js"></script>
         <script type="text/javascript" src="js/translate.js"></script>
     </body>
 </html>
