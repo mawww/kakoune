@@ -67,6 +67,8 @@ define-command grep-next-match -docstring 'Jump to the next grep match' %{
     }
 }
 
+alias global gn grep-next-match
+
 define-command grep-previous-match -docstring 'Jump to the previous grep match' %{
     evaluate-commands -try-client %opt{jumpclient} %{
         buffer '*grep*'
@@ -81,3 +83,5 @@ define-command grep-previous-match -docstring 'Jump to the previous grep match' 
         }
     }
 }
+
+alias global gp grep-previous-match
