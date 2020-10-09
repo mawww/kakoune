@@ -44,6 +44,7 @@ add-highlighter shared/perl/comment        region (?<!\$)(?<!\\)#   $           
 
 add-highlighter shared/perl/regex          region m?(?<!/)(?<!qr)/[^/\n]+(?=/)  /\w?   fill meta
 add-highlighter shared/perl/sregex         region s/[^/\n]+/[^/\n]+(?=/) /\w?          fill meta
+add-highlighter shared/perl/bregex         region s\{[^\}\n]+\}\{[^\}\n]+(?=\}) /\w?   fill meta
 
 add-highlighter shared/perl/quote_brace    region -recurse \{ \bq[qrwx]?\{ \}          fill string
 add-highlighter shared/perl/quote_paren    region -recurse \( \bq[qrwx]?\( \)          fill string
