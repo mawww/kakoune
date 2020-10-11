@@ -53,9 +53,9 @@ add-highlighter shared/perl/quote_angle    region -recurse  < \bq[qrwx]?<   >   
 add-highlighter shared/perl/quote_punct    region -match-capture '\bq[qwx]?([:;!@#$%^&*|,.?/~=+-])' '(.)' fill string
 add-highlighter shared/perl/quote_regex    region -match-capture      '\bqr([:;!@#$%^&*|,.?/~=+-])' '(.)' fill meta
 
-add-highlighter shared/perl/double_heredoc region -match-capture <<~?\h*'(\w+)' ^\t*(\w+)\b fill string
-add-highlighter shared/perl/single_heredoc region -match-capture <<~?\h*"(\w+)" ^\t*(\w+)\b fill string
-add-highlighter shared/perl/bare_heredoc   region -match-capture <<~?(\w+)      ^\t*(\w+)\b fill string
+add-highlighter shared/perl/double_heredoc region -match-capture <<~?\h*'(\w*)' ^\t*(\w*)$ fill string
+add-highlighter shared/perl/single_heredoc region -match-capture <<~?\h*"(\w*)" ^\t*(\w*)$ fill string
+add-highlighter shared/perl/bare_heredoc   region -match-capture <<~?(\w+)      ^\t*(\w+)$ fill string
 add-highlighter shared/perl/pod            region ^=\w+  ^=cut\b                            fill string
 
 evaluate-commands %sh{
