@@ -36,10 +36,10 @@ add-highlighter shared/rust/string           region %{(?<!')"} (?<!\\)(\\\\)*"  
 add-highlighter shared/rust/raw_string       region -match-capture %{(?<!')r(#*)"} %{"(#*)} fill string
 
 add-highlighter shared/rust/line_doctest region ^\h*//[!/]\h*```($|should_panic|no_run|ignore|allow_fail|rust|test_harness|compile_fail|E\d{4}|edition201[58]) ^\h*//[!/]\h*```$ regions
-add-highlighter shared/rust/line_doctest/marker region ```.* $ group
+add-highlighter shared/rust/line_doctest/marker region ``` $ group
 add-highlighter shared/rust/line_doctest/marker/fence regex ``` 0:meta
 add-highlighter shared/rust/line_doctest/marker/keywords regex [\d\w] 0:meta # already matched above, just ignore comma
-add-highlighter shared/rust/line_doctest/inner region '^\h*//[!/]( #(?= )|)' '$| ' group
+add-highlighter shared/rust/line_doctest/inner region '^\h*//[!/]( #(?= ))?' '$| ' group
 add-highlighter shared/rust/line_doctest/inner/comment regex //[!/] 0:documentation
 add-highlighter shared/rust/line_doctest/inner/hidden regex '#' 0:meta
 add-highlighter shared/rust/line_doctest/code default-region ref rust
@@ -51,7 +51,7 @@ add-highlighter shared/rust/line_comment1    region // $                        
 add-highlighter shared/rust/block_comment2   region -recurse /\*\*\* /\*\*\* \*/            fill comment
 add-highlighter shared/rust/block_doc        region -recurse /\*\* /\*\* \*/ regions
 add-highlighter shared/rust/block_doc/doctest region ```($|should_panic|no_run|ignore|allow_fail|rust|test_harness|compile_fail|E\d{4}|edition201[58]) ```$ regions
-add-highlighter shared/rust/block_doc/doctest/marker region ```.* $ group
+add-highlighter shared/rust/block_doc/doctest/marker region ``` $ group
 add-highlighter shared/rust/block_doc/doctest/marker/fence regex ``` 0:meta
 add-highlighter shared/rust/block_doc/doctest/marker/keywords regex [\d\w] 0:meta # already matched above, just ignore comma
 add-highlighter shared/rust/block_doc/doctest/inner default-region group
