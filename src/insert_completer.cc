@@ -261,76 +261,74 @@ InsertCompletion complete_option(const SelectionList& sels,
     auto& desc = opt.prefix;
     static const Regex re(R"((\d+)\.(\d+)(?:\+(\d+))?@(\d+))");
     MatchResults<String::const_iterator> match;
-    if (regex_match(desc.begin(), desc.end(), match, re))
+    if (not regex_match(desc.begin(), desc.end(), match, re))
+        return {};
+
+    BufferCoord coord{str_to_int({match[1].first, match[1].second}) - 1,
+                      str_to_int({match[2].first, match[2].second}) - 1};
+    if (not buffer.is_valid(coord))
+        return {};
+    size_t timestamp = (size_t)str_to_int({match[4].first, match[4].second});
+    auto changes = buffer.changes_since(timestamp);
+    if (any_of(changes, [&](auto&& change) { return change.begin < coord; }))
+        return {};
+
+    if (cursor_pos.line != coord.line or cursor_pos.column < coord.column)
+        return {};
+
+    const ColumnCount tabstop = options["tabstop"].get<int>();
+    const ColumnCount column = get_column(buffer, tabstop, cursor_pos);
+
+    struct RankedMatchAndInfo : RankedMatch
     {
-        BufferCoord coord{ str_to_int({match[1].first, match[1].second}) - 1,
-                         str_to_int({match[2].first, match[2].second}) - 1 };
-        if (not buffer.is_valid(coord))
-            return {};
-        size_t timestamp = (size_t)str_to_int({match[4].first, match[4].second});
-        auto changes = buffer.changes_since(timestamp);
-        if (any_of(changes, [&](auto&& change) { return change.begin < coord; }))
-            return {};
+        using RankedMatch::RankedMatch;
+        using RankedMatch::operator==;
+        using RankedMatch::operator<;
 
-        if (cursor_pos.line == coord.line and cursor_pos.column >= coord.column)
+        StringView on_select;
+        DisplayLine menu_entry;
+    };
+
+    StringView query = buffer.substr(coord, cursor_pos);
+    Vector<RankedMatchAndInfo> matches;
+
+    for (auto& candidate : opt.list)
+    {
+        if (RankedMatchAndInfo match{std::get<0>(candidate), query})
         {
-            StringView query = buffer.substr(coord, cursor_pos);
+            match.on_select = std::get<1>(candidate);
+            auto& menu = std::get<2>(candidate);
+            match.menu_entry = not menu.empty() ?
+                parse_display_line(expand_tabs(menu, tabstop, column), faces)
+              : DisplayLine{String{}, {}};
 
-            const ColumnCount tabstop = options["tabstop"].get<int>();
-            const ColumnCount column = get_column(buffer, tabstop, cursor_pos);
-
-            struct RankedMatchAndInfo : RankedMatch
-            {
-                using RankedMatch::RankedMatch;
-                using RankedMatch::operator==;
-                using RankedMatch::operator<;
-
-                StringView on_select;
-                DisplayLine menu_entry;
-            };
-
-            Vector<RankedMatchAndInfo> matches;
-
-            for (auto& candidate : opt.list)
-            {
-                if (RankedMatchAndInfo match{std::get<0>(candidate), query})
-                {
-                    match.on_select = std::get<1>(candidate);
-                    auto& menu = std::get<2>(candidate);
-                    match.menu_entry = not menu.empty() ?
-                        parse_display_line(expand_tabs(menu, tabstop, column), faces)
-                      : DisplayLine{ expand_tabs(menu, tabstop, column), {} };
-
-                    matches.push_back(std::move(match));
-                }
-            }
-
-            constexpr size_t max_count = 100;
-            // Gather best max_count matches
-            auto greater = [](auto& lhs, auto& rhs) { return rhs < lhs; };
-            auto first = matches.begin(), last = matches.end();
-            std::make_heap(first, last, greater);
-            InsertCompletion::CandidateList candidates;
-            candidates.reserve(std::min(matches.size(), max_count));
-            candidates.reserve(matches.size());
-            while (candidates.size() < max_count and first != last)
-            {
-                if (candidates.empty() or candidates.back().completion != first->candidate())
-                    candidates.push_back({ first->candidate().str(), first->on_select.str(),
-                                           std::move(first->menu_entry) });
-                std::pop_heap(first, last--, greater);
-            }
-
-            auto end = cursor_pos;
-            if (match[3].matched)
-            {
-                ByteCount len = str_to_int({match[3].first, match[3].second});
-                end = buffer.advance(coord, len);
-            }
-            return { std::move(candidates), coord, end, timestamp };
+            matches.push_back(std::move(match));
         }
     }
-    return {};
+
+    constexpr size_t max_count = 100;
+    // Gather best max_count matches
+    auto greater = [](auto& lhs, auto& rhs) { return rhs < lhs; };
+    auto first = matches.begin(), last = matches.end();
+    std::make_heap(first, last, greater);
+    InsertCompletion::CandidateList candidates;
+    candidates.reserve(std::min(matches.size(), max_count));
+    candidates.reserve(matches.size());
+    while (candidates.size() < max_count and first != last)
+    {
+        if (candidates.empty() or candidates.back().completion != first->candidate())
+            candidates.push_back({ first->candidate().str(), first->on_select.str(),
+                                   std::move(first->menu_entry) });
+        std::pop_heap(first, last--, greater);
+    }
+
+    auto end = cursor_pos;
+    if (match[3].matched)
+    {
+        ByteCount len = str_to_int({match[3].first, match[3].second});
+        end = buffer.advance(coord, len);
+    }
+    return { std::move(candidates), coord, end, timestamp };
 }
 
 template<bool other_buffers>
