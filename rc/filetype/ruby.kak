@@ -63,7 +63,7 @@ add-highlighter shared/ruby/              region -recurse  < '%[rxRX]<'    >    
 add-highlighter shared/ruby/              region -match-capture '%[qwQW]?([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill string
 add-highlighter shared/ruby/              region -match-capture '%[isIS]([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill variable
 add-highlighter shared/ruby/              region -match-capture '%[rxRX]([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill meta
-add-highlighter shared/ruby/heredoc region '<<[-~]?(?!self)(\w+)'      '^\h*(\w+)$' fill string
+add-highlighter shared/ruby/heredoc region -match-capture '<<[-~]?(?!self)(\w+)'      '^\h*(\w+)$' fill string
 add-highlighter shared/ruby/division region '[\w\)\]]\K(/|(\h+/\h+))' '\w' group # Help Kakoune to better detect /…/ literals
 
 # Regular expression flags are: i → ignore case, m → multi-lines, o → only interpolate #{} blocks once, x → extended mode (ignore white spaces)
