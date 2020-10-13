@@ -76,7 +76,7 @@ keystrokes, and fast to execute.
  * Kakoune be designed with asynchronicity in mind, launching a background
    process and using its result when available should not block the editor.
 
- * Kakoune should be implemented with speed in mind, a slow editor is a
+ * Kakoune should be implemented with speed in mind, a slow editor is an
    useless one.
 
 Simplicity
