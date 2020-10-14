@@ -100,7 +100,7 @@ evaluate-commands %sh{
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/sql/code/ regex '(?i)\b(${functions})\(.*\)' 0:function
+        add-highlighter shared/sql/code/ regex '(?i)\b(${functions})\(.*?\)' 0:function
         add-highlighter shared/sql/code/ regex '(?i)\b(${data_types_fn})\(.*?\)' 0:type
         add-highlighter shared/sql/code/ regex '(?i)\b(${keywords})\b' 0:keyword
         add-highlighter shared/sql/code/ regex '(?i)\b(${operators})\b' 0:operator
