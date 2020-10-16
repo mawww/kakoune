@@ -55,22 +55,22 @@ define-command -hidden -params 1 gopls-cmd %{
     gopls-prepare
     evaluate-commands %sh{
         dir=${kak_opt_gopls_tmp_dir}
-        gopls $1 -w ${kak_buffile} 2> "${dir}/stderr"
+        gopls "$1" -w "${kak_buffile}" 2> "${dir}/stderr"
         if [ $? -ne 0 ]; then
             # show error messages in *debug* buffer
-            printf %s\\n "echo -debug %file{ '${dir}/stderr' }"
+            printf %s\\n "echo -debug %file{${dir}/stderr}"
         fi
-        rm -r "${dir}"
     }
     edit!
+    evaluate-commands %sh{ rm -r "${kak_opt_gopls_tmp_dir}" }
 }
 
 # gopls definition
 define-command -hidden -params 0 gopls-def %{
     evaluate-commands %sh{
-        jump=$( gopls definition ${kak_buffile}:${kak_cursor_line}:${kak_cursor_column} \
-            |sed -e 's/-.*//; s/:/ /g; q' 2> /dev/null )
-        if [ "cat ${jump}" != "" ]; then
+        jump=$( gopls definition "${kak_buffile}:${kak_cursor_line}:${kak_cursor_column}" 2> /dev/null \
+            |sed -e 's/-.*//; s/:/ /g; q' )
+        if [ -n "${jump}" ]; then
             printf %s\\n "evaluate-commands -try-client '${kak_opt_jumpclient}' %{
                 edit ${jump}
             }"
@@ -84,7 +84,7 @@ define-command -hidden -params 0 gopls-ref %{
     evaluate-commands %sh{
         dir=${kak_opt_gopls_tmp_dir}
         mkfifo "${dir}/fifo"
-        ( gopls references ${kak_buffile}:${kak_cursor_line}:${kak_cursor_column} \
+        ( gopls references "${kak_buffile}:${kak_cursor_line}:${kak_cursor_column}" \
             > "${dir}/fifo" 2> /dev/null & ) > /dev/null 2>&1 < /dev/null
         # using filetype=grep for nice hilight and <ret> mapping
         printf %s\\n "evaluate-commands -try-client '${kak_opt_toolsclient}' %{
