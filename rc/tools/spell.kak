@@ -37,7 +37,7 @@ define-command -params ..1 -docstring %{
         fi
 
         {
-            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell --byte-offsets -a $options" 2>&1 | awk '
+            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell --byte-offsets -a $options" 2>&1 | awk -b '
                 BEGIN {
                     line_num = 1
                     regions = ENVIRON["kak_timestamp"]
@@ -49,7 +49,7 @@ define-command -params ..1 -docstring %{
                         # drop the identification message
                     }
 
-                    else if (/^\*/) {
+                    else if (/^[-*+]/) {
                         # nothing
                     }
 
