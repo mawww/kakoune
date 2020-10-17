@@ -62,7 +62,7 @@ define-command -hidden -params 1 gopls-cmd %{
         fi
     }
     edit!
-    evaluate-commands %sh{ rm -r "${kak_opt_gopls_tmp_dir}" }
+    nop %sh{ rm -rf "${kak_opt_gopls_tmp_dir}" }
 }
 
 # gopls definition
