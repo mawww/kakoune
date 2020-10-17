@@ -135,7 +135,13 @@ public:
 
     void repeat_last_select() { if (m_last_select) m_last_select(*this); }
 
-    Buffer* last_buffer() const { return m_last_buffer.get(); }
+    Buffer* last_accessed_buffer() const { return m_last_accessed_buffer.get(); }
+
+    Buffer* last_modified_buffer() const {
+        return has_buffer() and m_last_modified_buffer1.get() == &buffer()
+            ? m_last_modified_buffer2.get()
+            : m_last_modified_buffer1.get();
+    }
 private:
     void begin_edition();
     void end_edition();
@@ -149,7 +155,9 @@ private:
     SafePtr<InputHandler> m_input_handler;
     SafePtr<Window>       m_window;
     SafePtr<Client>       m_client;
-    SafePtr<Buffer>       m_last_buffer;
+    SafePtr<Buffer>       m_last_accessed_buffer;
+    SafePtr<Buffer>       m_last_modified_buffer1;
+    SafePtr<Buffer>       m_last_modified_buffer2;
 
     Optional<SelectionList> m_selections;
 
