@@ -596,7 +596,7 @@ String session_directory()
         return format("{}/kakoune", xdg_runtime_dir);
 }
 
-void make_session_directory()
+static void make_session_directory()
 {
     StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
     if (xdg_runtime_dir.empty())
@@ -764,9 +764,9 @@ void send_command(StringView session, StringView command)
 
 
 // A client accepter handle a connection until it closes or a nul byte is
-// recieved. Everything recieved before is considered to be a command.
+// recieved. Everything received before is considered to be a command.
 //
-// * When a nul byte is recieved, the socket is handed to a new Client along
+// * When a nul byte is received, the socket is handed to a new Client along
 //   with the command.
 // * When the connection is closed, the command is run in an empty context.
 class Server::Accepter

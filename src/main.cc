@@ -113,7 +113,7 @@ struct {
         "» {+b}<backtab>{} key is gone, use {+b}<s-tab>{} instead\n"
 } };
 
-void show_startup_info(Client* local_client, int last_version)
+static void show_startup_info(Client* local_client, int last_version)
 {
     const Face version_face{Color::Default, Color::Default, Attribute::Bold};
     DisplayLineList info;
@@ -148,7 +148,7 @@ void show_startup_info(Client* local_client, int last_version)
 inline void write_stdout(StringView str) { try { write(STDOUT_FILENO, str); } catch (runtime_error&) {} }
 inline void write_stderr(StringView str) { try { write(STDERR_FILENO, str); } catch (runtime_error&) {} }
 
-String runtime_directory()
+static String runtime_directory()
 {
     if (const char* runtime_directory = getenv("KAKOUNE_RUNTIME"))
         return runtime_directory;
@@ -162,7 +162,7 @@ String runtime_directory()
     return "/usr/share/kak";
 }
 
-String config_directory()
+static String config_directory()
 {
     if (StringView kak_cfg_dir = getenv("KAKOUNE_CONFIG_DIR"); not kak_cfg_dir.empty())
         return kak_cfg_dir.str();
@@ -361,7 +361,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
     }
 };
 
-void register_registers()
+static void register_registers()
 {
     RegisterManager& register_manager = RegisterManager::instance();
 
@@ -424,7 +424,7 @@ void register_registers()
     register_manager.add_register('_', std::make_unique<NullRegister>());
 }
 
-void register_keymaps()
+static void register_keymaps()
 {
     auto& keymaps = GlobalScope::instance().keymaps();
     keymaps.map_key(Key::Left, KeymapMode::Normal, {'h'}, "");
@@ -479,7 +479,7 @@ static void check_matching_pairs(const Vector<Codepoint, MemoryDomain::Options>&
         throw runtime_error{"matching pairs can only be punctuation"};
 }
 
-void register_options()
+static void register_options()
 {
     OptionsRegistry& reg = GlobalScope::instance().option_registry();
 
@@ -573,7 +573,7 @@ enum class UIType
     Dummy,
 };
 
-UIType parse_ui_type(StringView ui_name)
+static UIType parse_ui_type(StringView ui_name)
 {
     if (ui_name == "ncurses") return UIType::NCurses;
     if (ui_name == "json") return UIType::Json;
@@ -582,7 +582,7 @@ UIType parse_ui_type(StringView ui_name)
     throw parameter_error(format("error: unknown ui type: '{}'", ui_name));
 }
 
-std::unique_ptr<UserInterface> make_ui(UIType ui_type)
+static std::unique_ptr<UserInterface> make_ui(UIType ui_type)
 {
     struct DummyUI : UserInterface
     {
@@ -614,7 +614,7 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
     throw logic_error{};
 }
 
-pid_t fork_server_to_background()
+static pid_t fork_server_to_background()
 {
     if (pid_t pid = fork())
         return pid;
@@ -628,7 +628,7 @@ pid_t fork_server_to_background()
     return 0;
 }
 
-std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
+static std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 {
     if (ui_type != UIType::NCurses)
         return make_ui(ui_type);
@@ -674,7 +674,7 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
     return std::make_unique<LocalUI>();
 }
 
-int run_client(StringView session, StringView name, StringView client_init,
+static int run_client(StringView session, StringView name, StringView client_init,
                Optional<BufferCoord> init_coord, UIType ui_type,
                bool suspend)
 {
@@ -726,7 +726,7 @@ enum class ServerFlags
 };
 constexpr bool with_bit_ops(Meta::Type<ServerFlags>) { return true; }
 
-int run_server(StringView session, StringView server_init,
+static int run_server(StringView session, StringView server_init,
                StringView client_init, Optional<BufferCoord> init_coord,
                ServerFlags flags, UIType ui_type, DebugFlags debug_flags,
                ConstArrayView<StringView> files)
@@ -913,7 +913,7 @@ int run_server(StringView session, StringView server_init,
     return local_client_exit;
 }
 
-int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, StringView suffix_backup)
+static int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, StringView suffix_backup)
 {
     StringRegistry  string_registry;
     GlobalScope     global_scope;
@@ -978,7 +978,7 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
     return 0;
 }
 
-int run_pipe(StringView session)
+static int run_pipe(StringView session)
 {
     try
     {
@@ -992,7 +992,7 @@ int run_pipe(StringView session)
     return 0;
 }
 
-void signal_handler(int signal)
+static void signal_handler(int signal)
 {
     NCursesUI::abort();
     const char* text = nullptr;

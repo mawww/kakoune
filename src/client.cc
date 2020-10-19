@@ -123,7 +123,7 @@ DisplayCoord Client::dimensions() const
     return m_ui->dimensions();
 }
 
-String generate_context_info(const Context& context)
+static String generate_context_info(const Context& context)
 {
     String s = "";
     if (context.buffer().is_modified())

@@ -890,7 +890,7 @@ Highlighter& get_highlighter(const Context& context, StringView path)
     auto sep_it = find(path, '/');
     StringView scope{path.begin(), sep_it};
     auto* root = (scope == "shared") ? static_cast<HighlighterGroup*>(&SharedHighlighters::instance())
-                                     : static_cast<HighlighterGroup*>(&get_scope(scope, context).highlighters().group());
+                                     : &get_scope(scope, context).highlighters().group();
     if (sep_it != path.end())
         return root->get_child(StringView{sep_it+1, path.end()});
     return *root;

@@ -125,7 +125,7 @@ void replace_range(DisplayBuffer& display_buffer,
     func(*first_it, first_atom_it);
 }
 
-void apply_highlighter(HighlightContext context,
+static void apply_highlighter(HighlightContext context,
                        DisplayBuffer& display_buffer,
                        BufferCoord begin, BufferCoord end,
                        Highlighter& highlighter)
@@ -478,7 +478,7 @@ private:
     RegexHighlighter m_highlighter;
 };
 
-std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParameters params, Highlighter*)
+static std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParameters params, Highlighter*)
 {
     if (params.size() < 2)
         throw runtime_error("wrong parameter count");
@@ -543,7 +543,7 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
     return make_hl(get_regex, get_face);
 }
 
-std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters params, Highlighter*)
+static std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters params, Highlighter*)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -590,7 +590,7 @@ std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters param
     return make_highlighter(std::move(func));
 }
 
-std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters params, Highlighter*)
+static std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters params, Highlighter*)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -1179,7 +1179,7 @@ private:
 constexpr StringView LineNumbersHighlighter::ms_id;
 
 
-void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
+static void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
     const Face face = context.context.faces()["MatchingChar"];
     const auto& matching_pairs = context.context.options()["matching_pairs"].get<Vector<Codepoint, MemoryDomain::Options>>();
@@ -1237,12 +1237,12 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
     }
 }
 
-std::unique_ptr<Highlighter> create_matching_char_highlighter(HighlighterParameters params, Highlighter*)
+static std::unique_ptr<Highlighter> create_matching_char_highlighter(HighlighterParameters params, Highlighter*)
 {
     return make_highlighter(show_matching_char);
 }
 
-void highlight_selections(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
+static void highlight_selections(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
     const auto& buffer = context.context.buffer();
     const auto& faces = context.context.faces();
@@ -1275,7 +1275,7 @@ void highlight_selections(HighlightContext context, DisplayBuffer& display_buffe
     }
 }
 
-void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
+static void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
     const auto& buffer = context.context.buffer();
     auto error = context.context.faces()["Error"];
@@ -1448,7 +1448,7 @@ private:
     String m_default_face;
 };
 
-bool is_empty(const InclusiveBufferRange& range)
+static bool is_empty(const InclusiveBufferRange& range)
 {
     return range.last < BufferCoord{0,0};
 }
@@ -1519,8 +1519,8 @@ private:
     const String m_option_name;
 };
 
-BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).first; }
-BufferCoord& get_last(RangeAndString& r) { return std::get<0>(r).last; }
+static BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).first; }
+static BufferCoord& get_last(RangeAndString& r) { return std::get<0>(r).last; }
 
 void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt)
 {
@@ -1634,7 +1634,7 @@ private:
     }
 };
 
-HighlightPass parse_passes(StringView str)
+static HighlightPass parse_passes(StringView str)
 {
     HighlightPass passes{};
     for (auto pass : str | split<StringView>('|'))
@@ -1654,7 +1654,7 @@ HighlightPass parse_passes(StringView str)
     return passes;
 }
 
-std::unique_ptr<Highlighter> create_highlighter_group(HighlighterParameters params, Highlighter*)
+static std::unique_ptr<Highlighter> create_highlighter_group(HighlighterParameters params, Highlighter*)
 {
     static const ParameterDesc param_desc{
         { { "passes", { true, "" } } },
@@ -1736,7 +1736,7 @@ struct RegexMatch
 
 using RegexMatchList = Vector<RegexMatch, MemoryDomain::Regions>;
 
-void insert_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex, bool capture, LineRange range)
+static void insert_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex, bool capture, LineRange range)
 {
     size_t pivot = matches.size();
     capture = capture and regex.mark_count() > 0;
@@ -1767,7 +1767,7 @@ void insert_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& 
     std::rotate(pos, matches.begin() + pivot, matches.end());
 }
 
-void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modifs,
+static void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modifs,
                     RegexMatchList& matches)
 {
     // remove out of date matches and update line for others

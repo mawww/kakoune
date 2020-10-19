@@ -117,8 +117,8 @@ Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsF
 
 }
 
-BufferCoord& get_first(Selection& sel) { return sel.min(); }
-BufferCoord& get_last(Selection& sel) { return sel.max(); }
+static BufferCoord& get_first(Selection& sel) { return sel.min(); }
+static BufferCoord& get_last(Selection& sel) { return sel.max(); }
 
 Vector<Selection> compute_modified_ranges(const Buffer& buffer, size_t timestamp)
 {
@@ -351,7 +351,7 @@ void SelectionList::sort_and_merge_overlapping()
     merge_overlapping();
 }
 
-BufferCoord get_insert_pos(const Buffer& buffer, const Selection& sel,
+static BufferCoord get_insert_pos(const Buffer& buffer, const Selection& sel,
                            InsertMode mode)
 {
     switch (mode)

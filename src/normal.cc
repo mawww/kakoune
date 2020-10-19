@@ -48,7 +48,7 @@ constexpr auto enum_desc(Meta::Type<SelectMode>)
         { SelectMode::Append, "append" },
     });
 }
-void merge_selections(Selection& sel, const Selection& new_sel)
+static void merge_selections(Selection& sel, const Selection& new_sel)
 {
     const bool forward = sel.cursor() >= sel.anchor();
     const bool new_forward = new_sel.cursor() > new_sel.anchor();
@@ -163,12 +163,12 @@ void enter_insert_mode(Context& context, NormalParams params)
     context.input_handler().insert(mode, params.count);
 }
 
-void repeat_last_insert(Context& context, NormalParams)
+static void repeat_last_insert(Context& context, NormalParams)
 {
     context.input_handler().repeat_last_insert();
 }
 
-void repeat_last_select(Context& context, NormalParams)
+static void repeat_last_select(Context& context, NormalParams)
 {
     context.repeat_last_select();
 }
@@ -404,7 +404,7 @@ void view_commands(Context& context, NormalParams params)
          {{'l'},     "scroll right"}}));
 }
 
-void replace_with_char(Context& context, NormalParams)
+static void replace_with_char(Context& context, NormalParams)
 {
     on_next_key_with_autoinfo(context, "replace-char", KeymapMode::None,
                              [](Key key, Context& context) {
@@ -424,7 +424,7 @@ void replace_with_char(Context& context, NormalParams)
     }, "replace with char", "enter char to replace with\n");
 }
 
-Codepoint swap_case(Codepoint cp)
+static Codepoint swap_case(Codepoint cp)
 {
     Codepoint res = to_lower(cp);
     return res == cp ? to_upper(cp) : res;
@@ -452,7 +452,7 @@ void for_each_codepoint(Context& context, NormalParams)
     selections.insert(strings, InsertMode::Replace);
 }
 
-void command(const Context& context, EnvVarMap env_vars)
+static void command(const Context& context, EnvVarMap env_vars)
 {
     if (not CommandManager::has_instance())
         throw runtime_error{"commands are not supported"};
@@ -501,7 +501,7 @@ void command(const Context& context, EnvVarMap env_vars)
         });
 }
 
-void command(Context& context, NormalParams params)
+static void command(Context& context, NormalParams params)
 {
     EnvVarMap env_vars = {
         { "count", to_string(params.count) },
@@ -510,7 +510,7 @@ void command(Context& context, NormalParams params)
     command(context, std::move(env_vars));
 }
 
-BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView after)
+static BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView after)
 {
     const auto lines_before = before | split_after<StringView>('\n') | gather<Vector<StringView>>();
     const auto lines_after = after | split_after<StringView>('\n') | gather<Vector<StringView>>();
@@ -662,7 +662,7 @@ void insert_output(Context& context, NormalParams)
         });
 }
 
-void yank(Context& context, NormalParams params)
+static void yank(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
     RegisterManager::instance()[reg].set(context, context.selections_content());
@@ -694,7 +694,7 @@ void change(Context& context, NormalParams params)
     enter_insert_mode<InsertMode::Replace>(context, params);
 }
 
-InsertMode adapt_for_linewise(InsertMode mode)
+static InsertMode adapt_for_linewise(InsertMode mode)
 {
     switch (mode)
     {
@@ -975,7 +975,7 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
         context.window().force_redraw();
 }
 
-void select_regex(Context& context, NormalParams params)
+static void select_regex(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
     const int capture = params.count;
@@ -997,7 +997,7 @@ void select_regex(Context& context, NormalParams params)
     });
 }
 
-void split_regex(Context& context, NormalParams params)
+static void split_regex(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
     const int capture = params.count;
@@ -1019,7 +1019,7 @@ void split_regex(Context& context, NormalParams params)
     });
 }
 
-void split_lines(Context& context, NormalParams params)
+static void split_lines(Context& context, NormalParams params)
 {
     const LineCount count{params.count == 0 ? 1 : params.count};
     auto& selections = context.selections();
@@ -1046,7 +1046,7 @@ void split_lines(Context& context, NormalParams params)
     selections = std::move(res);
 }
 
-void select_boundaries(Context& context, NormalParams)
+static void select_boundaries(Context& context, NormalParams)
 {
     auto& selections = context.selections();
     Vector<Selection> res;
@@ -1059,7 +1059,7 @@ void select_boundaries(Context& context, NormalParams)
     selections = std::move(res);
 }
 
-void join_lines_select_spaces(Context& context, NormalParams)
+static void join_lines_select_spaces(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
     Vector<Selection> selections;
@@ -1083,7 +1083,7 @@ void join_lines_select_spaces(Context& context, NormalParams)
     context.selections().insert(" "_str, InsertMode::Replace);
 }
 
-void join_lines(Context& context, NormalParams params)
+static void join_lines(Context& context, NormalParams params)
 {
     SelectionList sels{context.selections()};
     auto restore_sels = on_scope_end([&]{
@@ -1133,7 +1133,7 @@ void keep(Context& context, NormalParams params)
     });
 }
 
-void keep_pipe(Context& context, NormalParams)
+static void keep_pipe(Context& context, NormalParams)
 {
     context.input_handler().prompt(
         "keep pipe:", {}, {}, context.faces()["Prompt"],
@@ -1525,7 +1525,7 @@ void select_to_next_char(Context& context, NormalParams params)
     }, get_title(), "enter char to select to");
 }
 
-void start_or_end_macro_recording(Context& context, NormalParams params)
+static void start_or_end_macro_recording(Context& context, NormalParams params)
 {
     if (context.input_handler().is_recording())
         context.input_handler().stop_recording();
@@ -1538,13 +1538,13 @@ void start_or_end_macro_recording(Context& context, NormalParams params)
     }
 }
 
-void end_macro_recording(Context& context, NormalParams)
+static void end_macro_recording(Context& context, NormalParams)
 {
     if (context.input_handler().is_recording())
         context.input_handler().stop_recording();
 }
 
-void replay_macro(Context& context, NormalParams params)
+static void replay_macro(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '@');
     if (not is_basic_alpha(reg) and reg != '@')
@@ -1586,14 +1586,14 @@ void jump(Context& context, NormalParams params)
     context.selections_write_only() = jump;
 }
 
-void push_selections(Context& context, NormalParams)
+static void push_selections(Context& context, NormalParams)
 {
     context.push_jump(true);
     context.print_status({ format("saved {} selections", context.selections().size()),
                            context.faces()["Information"] });
 }
 
-void align(Context& context, NormalParams)
+static void align(Context& context, NormalParams)
 {
     auto& selections = context.selections();
     auto& buffer = context.buffer();
@@ -1644,7 +1644,7 @@ void align(Context& context, NormalParams)
     }
 }
 
-void copy_indent(Context& context, NormalParams params)
+static void copy_indent(Context& context, NormalParams params)
 {
     int selection = params.count;
     auto& buffer = context.buffer();
@@ -1681,7 +1681,7 @@ void copy_indent(Context& context, NormalParams params)
     }
 }
 
-void tabs_to_spaces(Context& context, NormalParams params)
+static void tabs_to_spaces(Context& context, NormalParams params)
 {
     auto& buffer = context.buffer();
     const ColumnCount opt_tabstop = context.options()["tabstop"].get<int>();
@@ -1706,7 +1706,7 @@ void tabs_to_spaces(Context& context, NormalParams params)
         SelectionList{ buffer, std::move(tabs) }.insert(spaces, InsertMode::Replace);
 }
 
-void spaces_to_tabs(Context& context, NormalParams params)
+static void spaces_to_tabs(Context& context, NormalParams params)
 {
     auto& buffer = context.buffer();
     const ColumnCount opt_tabstop = context.options()["tabstop"].get<int>();
@@ -1742,7 +1742,7 @@ void spaces_to_tabs(Context& context, NormalParams params)
         SelectionList{ buffer, std::move(spaces) }.insert("\t"_str, InsertMode::Replace);
 }
 
-void trim_selections(Context& context, NormalParams)
+static void trim_selections(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
     auto& selections = context.selections();
@@ -1773,7 +1773,7 @@ void trim_selections(Context& context, NormalParams)
         selections.remove(i);
 }
 
-SelectionList read_selections_from_register(char reg, Context& context)
+static SelectionList read_selections_from_register(char reg, Context& context)
 {
     if (not is_basic_alpha(reg) and reg != '^')
         throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
@@ -1809,7 +1809,7 @@ enum class CombineOp
     SelectShortest,
 };
 
-CombineOp key_to_combine_op(Key key)
+static CombineOp key_to_combine_op(Key key)
 {
     switch (key.key)
     {
@@ -1824,7 +1824,7 @@ CombineOp key_to_combine_op(Key key)
     throw runtime_error{format("no such combine operator: '{}'", key.key)};
 }
 
-void combine_selection(const Buffer& buffer, Selection& sel, const Selection& other, CombineOp op)
+static void combine_selection(const Buffer& buffer, Selection& sel, const Selection& other, CombineOp op)
 {
     switch (op)
     {
@@ -1950,7 +1950,7 @@ void restore_selections(Context& context, NormalParams params)
         combine_selections(context, std::move(selections), set_selections, "combine selections from register");
 }
 
-void undo(Context& context, NormalParams params)
+static void undo(Context& context, NormalParams params)
 {
     Buffer& buffer = context.buffer();
     size_t timestamp = buffer.timestamp();
@@ -1964,7 +1964,7 @@ void undo(Context& context, NormalParams params)
         throw runtime_error("nothing left to undo");
 }
 
-void redo(Context& context, NormalParams params)
+static void redo(Context& context, NormalParams params)
 {
     Buffer& buffer = context.buffer();
     size_t timestamp = buffer.timestamp();
@@ -2001,7 +2001,7 @@ void move_in_history(Context& context, NormalParams params)
                             history_id, max_history_id));
 }
 
-void exec_user_mappings(Context& context, NormalParams params)
+static void exec_user_mappings(Context& context, NormalParams params)
 {
     on_next_key_with_autoinfo(context, "user-mapping", KeymapMode::None,
                              [params](Key key, Context& context) mutable {
@@ -2073,13 +2073,13 @@ void move_cursor(Context& context, NormalParams params)
     selections.sort_and_merge_overlapping();
 }
 
-void select_whole_buffer(Context& context, NormalParams)
+static void select_whole_buffer(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
     context.selections_write_only() = SelectionList{buffer, {{0,0}, {buffer.back_coord(), max_column}}};
 }
 
-void keep_selection(Context& context, NormalParams p)
+static void keep_selection(Context& context, NormalParams p)
 {
     auto& selections = context.selections();
     const int index = p.count ? p.count-1 : selections.main_index();
@@ -2090,7 +2090,7 @@ void keep_selection(Context& context, NormalParams p)
     selections.check_invariant();
 }
 
-void remove_selection(Context& context, NormalParams p)
+static void remove_selection(Context& context, NormalParams p)
 {
     auto& selections = context.selections();
     const int index = p.count ? p.count-1 : selections.main_index();
@@ -2103,13 +2103,13 @@ void remove_selection(Context& context, NormalParams p)
     selections.check_invariant();
 }
 
-void clear_selections(Context& context, NormalParams)
+static void clear_selections(Context& context, NormalParams)
 {
     for (auto& sel : context.selections())
         sel.anchor() = sel.cursor();
 }
 
-void flip_selections(Context& context, NormalParams)
+static void flip_selections(Context& context, NormalParams)
 {
     for (auto& sel : context.selections())
     {
@@ -2120,7 +2120,7 @@ void flip_selections(Context& context, NormalParams)
     context.selections().check_invariant();
 }
 
-void ensure_forward(Context& context, NormalParams)
+static void ensure_forward(Context& context, NormalParams)
 {
     for (auto& sel : context.selections())
     {
@@ -2131,13 +2131,13 @@ void ensure_forward(Context& context, NormalParams)
     context.selections().check_invariant();
 }
 
-void merge_consecutive(Context& context, NormalParams params)
+static void merge_consecutive(Context& context, NormalParams params)
 {
     ensure_forward(context, params);
     context.selections().merge_consecutive();
 }
 
-void force_redraw(Context& context, NormalParams)
+static void force_redraw(Context& context, NormalParams)
 {
     if (context.has_client())
     {

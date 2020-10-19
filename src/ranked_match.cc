@@ -29,7 +29,7 @@ UsedLetters used_letters(StringView str)
     return res;
 }
 
-bool matches(UsedLetters query, UsedLetters letters)
+static bool matches(UsedLetters query, UsedLetters letters)
 {
     return (query & letters) == query;
 }
