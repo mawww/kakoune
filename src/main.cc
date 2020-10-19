@@ -740,7 +740,8 @@ int run_server(StringView session, StringView server_init,
     }
 
     EventManager        event_manager;
-    Server              server{session.empty() ? to_string(getpid()) : session.str()};
+    Server              server{session.empty() ? to_string(getpid()) : session.str(),
+                               (bool)(flags & ServerFlags::Daemon)};
 
     StringRegistry      string_registry;
     GlobalScope         global_scope;
@@ -832,7 +833,7 @@ int run_server(StringView session, StringView server_init,
 
     try
     {
-        if (not (flags & ServerFlags::Daemon))
+        if (not server.is_daemon())
         {
             local_client = client_manager.create_client(
                  create_local_ui(ui_type), getpid(), {}, get_env_vars(), client_init, std::move(init_coord),
@@ -849,8 +850,7 @@ int run_server(StringView session, StringView server_init,
         }
 
         while (not terminate and
-               (not client_manager.empty() or server.negotiating() or
-                (flags & ServerFlags::Daemon)))
+               (not client_manager.empty() or server.negotiating() or server.is_daemon()))
         {
             client_manager.redraw_clients();
 

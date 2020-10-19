@@ -623,7 +623,7 @@ const CommandDesc force_kill_cmd = {
 template<bool force>
 void quit(const ParametersParser& parser, Context& context, const ShellContext&)
 {
-    if (not force and ClientManager::instance().count() == 1)
+    if (not force and ClientManager::instance().count() == 1 and not Server::instance().is_daemon())
         ensure_all_buffers_are_saved();
 
     const int status = parser.positional_count() > 0 ? str_to_int(parser[0]) : 0;

@@ -50,7 +50,7 @@ String session_path(StringView session);
 
 struct Server : public Singleton<Server>
 {
-    Server(String session_name);
+    Server(String session_name, bool daemon);
     ~Server();
     const String& session() const { return m_session; }
 
@@ -59,11 +59,14 @@ struct Server : public Singleton<Server>
 
     bool negotiating() const { return not m_accepters.empty(); }
 
+    bool is_daemon() const { return m_is_daemon; }
+
 private:
     class Accepter;
     void remove_accepter(Accepter* accepter);
 
     String m_session;
+    bool m_is_daemon;
     std::unique_ptr<FDWatcher> m_listener;
     Vector<std::unique_ptr<Accepter>, MemoryDomain::Remote> m_accepters;
 };

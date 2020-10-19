@@ -849,8 +849,8 @@ private:
     MsgReader m_reader;
 };
 
-Server::Server(String session_name)
-    : m_session{std::move(session_name)}
+Server::Server(String session_name, bool is_daemon)
+    : m_session{std::move(session_name)}, m_is_daemon{is_daemon}
 {
     if (not all_of(m_session, is_identifier))
         throw runtime_error{format("invalid session name: '{}'", session_name)};
