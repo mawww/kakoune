@@ -1744,7 +1744,8 @@ void insert_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& 
     for (auto line = range.begin; line < range.end; ++line)
     {
         const StringView l = buffer[line];
-        for (auto&& m : RegexIterator{l.begin(), l.end(), vm})
+        const auto flags = RegexExecFlags::NotEndOfLine; // buffer line already ends with \n
+        for (auto&& m : RegexIterator{l.begin(), l.end(), vm, flags})
         {
             const bool with_capture = capture and m[1].matched and
                                       m[0].second - m[0].first < std::numeric_limits<uint16_t>::max();
