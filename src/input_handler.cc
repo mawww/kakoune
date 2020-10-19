@@ -991,6 +991,15 @@ public:
         }
         else
         {
+            if (key == ' ' and
+                (m_completions.flags & Completions::Flags::Menu) and
+                not (m_completions.flags & Completions::Flags::Quoted) and
+                m_current_completion == -1 and not m_completions.candidates.empty())
+            {
+                m_line_editor.insert_from(line.char_count_to(m_completions.start),
+                                          m_completions.candidates.front());
+            }
+
             m_line_editor.handle_key(key);
             clear_completions();
             m_refresh_completion_pending = true;

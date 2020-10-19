@@ -628,10 +628,9 @@ Completions CommandManager::complete_command_name(const Context& context, String
             | transform(&CommandMap::Item::key);
 
     auto aliases = context.aliases().flatten_aliases()
-            | transform(&HashItem<String, String>::key)
-            | filter([](auto& alias) { return alias.length() > 3; });
+            | transform(&HashItem<String, String>::key);
 
-    return {0, query.length(), Kakoune::complete(query, query.length(), concatenated(commands, aliases))};
+    return {0, query.length(), Kakoune::complete(query, query.length(), concatenated(commands, aliases)), Completions::Flags::Menu};
 }
 
 Completions CommandManager::complete_module_name(StringView query) const
@@ -672,17 +671,42 @@ Completions CommandManager::complete(const Context& context,
     kak_assert(not tokens.empty());
     const auto& token = tokens.back();
 
+    auto requote = [](Completions completions, Token::Type token_type) {
+        if (completions.flags & Completions::Flags::Quoted)
+            return completions;
+
+        if (token_type == Token::Type::Raw)
+        {
+            for (auto& c : completions.candidates)
+            {
+                if (c.substr(0_byte, 1_byte) == "%" or any_of(c, [](auto i) { return contains("; \t'\"", i); }))
+                    c = quote(c);
+            }
+        }
+        else if (token_type == Token::Type::RawQuoted)
+        {
+            kak_assert(completions.start > 0);
+            --completions.start;
+            completions.flags |= Completions::Flags::Quoted;
+            for (auto& c : completions.candidates)
+                c = quote(c);
+        }
+        else
+            kak_assert(false);
+
+        return completions;
+    };
+
+    const ByteCount start = token.pos;
+    const ByteCount cursor_pos_in_token = cursor_pos - start;
+
     // command name completion
     if (tokens.size() == 1 and (token.type == Token::Type::Raw or
                                 token.type == Token::Type::RawQuoted))
     {
-        auto cmd_start = token.pos;
-        StringView query = command_line.substr(cmd_start, cursor_pos - cmd_start);
-        return offset_pos(complete_command_name(context, query), cmd_start);
+        StringView query = command_line.substr(start, cursor_pos_in_token);
+        return requote(offset_pos(complete_command_name(context, query), start), token.type);
     }
-
-    const ByteCount start = token.pos;
-    const ByteCount cursor_pos_in_token = cursor_pos - start;
 
     switch (token.type)
     {
@@ -714,11 +738,7 @@ Completions CommandManager::complete(const Context& context,
 
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
-    case Token::Type::RawEval:
     {
-        if (token.type != Token::Type::Raw and token.type != Token::Type::RawQuoted)
-            return Completions{};
-
         StringView command_name = tokens.front().content;
         if (command_name != m_last_complete_command)
         {
@@ -744,20 +764,11 @@ Completions CommandManager::complete(const Context& context,
         Vector<String> params;
         for (auto it = tokens.begin() + 1; it != tokens.end(); ++it)
             params.push_back(it->content);
-        Completions completions = offset_pos(command_it->value.completer(
+        return requote(offset_pos(command_it->value.completer(
             context, flags, params, tokens.size() - 2,
-            cursor_pos_in_token), start);
-
-        if (not (completions.flags & Completions::Flags::Quoted) and token.type == Token::Type::Raw)
-        {
-            for (auto& c : completions.candidates)
-                c = (not c.empty() and c[0] == '%') or
-                        any_of(c, [](auto i) { return contains("; \t'\"", i); }) ?
-                            format("'{}'", replace(c, "'", "''")) : c;
-        }
-
-        return completions;
+            cursor_pos_in_token), start), token.type);
     }
+    case Token::Type::RawEval:
     default:
         break;
     }

@@ -7,6 +7,9 @@ released versions.
 
 * `set-option -remove` support for substracting/removing from option values
 
+* Menu completions such as command name completion are now auto-inserted on
+  space
+
 == Kakoune 2020.09.01
 
 * The `repl` and `send-text` aliases have been renamed respectively into
