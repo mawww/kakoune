@@ -2385,7 +2385,7 @@ const CommandDesc unset_face_cmd = {
 
 const CommandDesc rename_client_cmd = {
     "rename-client",
-    "nc",
+    nullptr,
     "rename-client <name>: set current client name to <name>",
     single_param,
     CommandFlags::None,

@@ -123,7 +123,6 @@ of the file onto the filesystem
 == Clients and Sessions
 
 *rename-client* <name>::
-    *alias* nc +
     set current client name
 
 *rename-session* <name>::
