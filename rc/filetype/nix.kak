@@ -63,7 +63,7 @@ add-highlighter shared/nix/code/ regex \b(rec)\b\s*\{ 1:keyword
 add-highlighter shared/nix/code/ regex '[^.]\s*\b(builtins|inherit|baseNameOf|derivation|dirOf|fetchTarball|import|isNull|map|removeAttrs|throw|toString)\b\s*[^=]' 1:builtin
 
 add-highlighter shared/nix/code/ regex '\b\s*(\.)\s*\b'  1:operator
-add-highlighter shared/nix/code/ regex '-'         0:operator
+add-highlighter shared/nix/code/ regex '[^-a-zA-Z0-9_](-+)' 1:operator
 add-highlighter shared/nix/code/ regex '\?'        0:operator
 add-highlighter shared/nix/code/ regex '\+\+=?'    0:operator
 add-highlighter shared/nix/code/ regex '(\*|/|\+)' 0:operator
