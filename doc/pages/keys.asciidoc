@@ -794,6 +794,15 @@ The following keys are recognized by this mode to help with editing
 *<c-v>*::
     insert next keystroke without interpreting it
 
+*<c-x>*::
+    explicit completion query, followed by:
+
+    *f*:::
+        explicit file completion
+
+    *w*:::
+        explicit word completion (from current buffer)
+
 *<c-o>*::
     toggle automatic completion
 

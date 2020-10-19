@@ -17,6 +17,7 @@
 #include "user_interface.hh"
 #include "utf8.hh"
 #include "window.hh"
+#include "word_db.hh"
 
 namespace Kakoune
 {
@@ -929,9 +930,40 @@ public:
                 m_refresh_completion_pending = true;
             }
         }
+        else if (key == ctrl('x'))
+        {
+            on_next_key_with_autoinfo(context(), "explicit-completion", KeymapMode::None,
+                [this](Key key, Context&) {
+                    m_explicit_completer = PromptCompleter{};
+
+                    if (key.key == 'f')
+                        use_explicit_completer([](const Context& context, StringView token) {
+                            return complete_filename(token, context.options()["ignored_files"].get<Regex>(),
+                                                     token.length(), FilenameFlags::Expand);
+                        });
+                    else if (key.key == 'w')
+                        use_explicit_completer([](const Context& context, StringView token) {
+                            CandidateList candidates;
+                            for_n_best(get_word_db(context.buffer()).find_matching(token),
+                                       100, [](auto& lhs, auto& rhs){ return rhs < lhs; },
+                                       [&](RankedMatch& m) {
+                                candidates.push_back(m.candidate().str());
+                                return true;
+                            });
+                            return candidates;
+                        });
+
+                    if (m_explicit_completer)
+                        refresh_completions(CompletionFlags::None);
+                }, "enter completion type",
+                "f: filename\n"
+                "w: buffer word\n");
+        }
         else if (key == ctrl('o'))
         {
+            m_explicit_completer = PromptCompleter{};
             m_auto_complete = not m_auto_complete;
+
             if (m_auto_complete)
                 refresh_completions(CompletionFlags::Fast);
             else if (context().has_client())
@@ -995,17 +1027,37 @@ public:
     }
 
 private:
+    template<typename Completer>
+    void use_explicit_completer(Completer&& completer)
+    {
+        m_explicit_completer = [completer](const Context& context, CompletionFlags flags, StringView content, ByteCount cursor_pos) {
+            Optional<Token> last_token;
+            CommandParser parser{content.substr(0_byte, cursor_pos)};
+            while (auto token = parser.read_token(false))
+                last_token = std::move(token);
+
+            if (last_token and (last_token->pos + last_token->content.length() < cursor_pos))
+                last_token.reset();
+
+            auto token_start = last_token.map([&](auto&& t) { return t.pos; }).value_or(cursor_pos);
+            auto token_content = last_token.map([](auto&& t) -> StringView { return t.content; }).value_or(StringView{});
+
+            return Completions{token_start, cursor_pos, completer(context, token_content)};
+        };
+    }
+
     void refresh_completions(CompletionFlags flags)
     {
         try
         {
             m_refresh_completion_pending = false;
-            if (not m_completer)
+            auto& completer = m_explicit_completer ? m_explicit_completer : m_completer;
+            if (not completer)
                 return;
             m_current_completion = -1;
             const String& line = m_line_editor.line();
-            m_completions = m_completer(context(), flags, line,
-                                        line.byte_count_to(m_line_editor.cursor_pos()));
+            m_completions = completer(context(), flags, line,
+                                      line.byte_count_to(m_line_editor.cursor_pos()));
             const bool menu = (bool)(m_completions.flags & Completions::Flags::Menu);
             if (context().has_client())
             {
@@ -1075,6 +1127,7 @@ private:
 
     PromptCallback  m_callback;
     PromptCompleter m_completer;
+    PromptCompleter m_explicit_completer;
     const String   m_prompt;
     Face           m_prompt_face;
     Completions    m_completions;
