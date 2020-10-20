@@ -46,6 +46,8 @@ struct {
 } constexpr version_notes[] = { {
         0,
         "» {+u}set-option -remove{} support\n"
+        "» prompts auto select {+i}menu{} completions on space\n"
+        "» explicit completion support ({+b}<c-x>...{}) in prompts\n"
     }, {
         20200901,
         "» daemon mode does not fork anymore\n"
