@@ -771,11 +771,16 @@ public:
     {
         const String& line = m_line_editor.line();
 
+        auto can_auto_insert_completion = [&] {
+            const bool has_completions = not m_completions.candidates.empty();
+            const bool completion_selected = m_current_completion != -1;
+            const bool text_entered = m_completions.start != line.byte_count_to(m_line_editor.cursor_pos());
+            return has_completions and not completion_selected and text_entered;
+        };
+
         if (key == Key::Return)
         {
-            if ((m_completions.flags & Completions::Flags::Menu) and
-                m_current_completion == -1 and
-                not m_completions.candidates.empty())
+            if ((m_completions.flags & Completions::Flags::Menu) and can_auto_insert_completion())
             {
                 const String& completion = m_completions.candidates.front();
                 m_line_editor.insert_from(line.char_count_to(m_completions.start),
@@ -976,7 +981,7 @@ public:
         {
             try
             {
-                m_line_editor.reset(expand(m_line_editor.line(), context()), m_empty_text);
+                m_line_editor.reset(expand(line, context()), m_empty_text);
             }
             catch (std::runtime_error& error)
             {
@@ -993,12 +998,10 @@ public:
         {
             if (key == ' ' and
                 (m_completions.flags & Completions::Flags::Menu) and
-                not (m_completions.flags & Completions::Flags::Quoted) and
-                m_current_completion == -1 and not m_completions.candidates.empty())
-            {
+                not (m_completions.flags & Completions::Flags::Quoted) and // if token is quoted, this space does not end it
+                can_auto_insert_completion())
                 m_line_editor.insert_from(line.char_count_to(m_completions.start),
                                           m_completions.candidates.front());
-            }
 
             m_line_editor.handle_key(key);
             clear_completions();
