@@ -452,22 +452,24 @@ void for_each_codepoint(Context& context, NormalParams)
     selections.insert(strings, InsertMode::Replace);
 }
 
-void command(const Context& context, EnvVarMap env_vars)
+void command(const Context& context, EnvVarMap env_vars, char reg = 0)
 {
     if (not CommandManager::has_instance())
         throw runtime_error{"commands are not supported"};
 
     CommandManager::instance().clear_last_complete_command();
 
+    String default_command = context.main_sel_register_value(reg ? reg : ':').str();
+
     context.input_handler().prompt(
-        ":", {}, context.main_sel_register_value(':').str(),
+        ":", {}, default_command,
         context.faces()["Prompt"], PromptFlags::DropHistoryEntriesWithBlankPrefix,
         ':',
         [](const Context& context, CompletionFlags flags,
            StringView cmd_line, ByteCount pos) {
                return CommandManager::instance().complete(context, flags, cmd_line, pos);
         },
-        [env_vars = std::move(env_vars)](StringView cmdline, PromptEvent event, Context& context) {
+        [env_vars = std::move(env_vars), default_command](StringView cmdline, PromptEvent event, Context& context) {
             if (context.has_client())
             {
                 context.client().info_hide();
@@ -491,12 +493,9 @@ void command(const Context& context, EnvVarMap env_vars)
             if (event == PromptEvent::Validate)
             {
                 if (cmdline.empty())
-                    cmdline = context.main_sel_register_value(':');
-                else if (not is_blank(cmdline[0]))
-                    RegisterManager::instance()[':'].set(context, cmdline.str());
+                    cmdline = default_command;
 
-                CommandManager::instance().execute(
-                    cmdline, context, { {}, env_vars });
+                CommandManager::instance().execute(cmdline, context, { {}, env_vars });
             }
         });
 }
@@ -507,7 +506,7 @@ void command(Context& context, NormalParams params)
         { "count", to_string(params.count) },
         { "register", String{&params.reg, 1} }
     };
-    command(context, std::move(env_vars));
+    command(context, std::move(env_vars), params.reg);
 }
 
 BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView after)
@@ -545,22 +544,22 @@ BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, Strin
 }
 
 template<bool replace>
-void pipe(Context& context, NormalParams)
+void pipe(Context& context, NormalParams params)
 {
     const char* prompt = replace ? "pipe:" : "pipe-to:";
+    String default_command = context.main_sel_register_value(params.reg ? params.reg : '|').str();
+
     context.input_handler().prompt(
-        prompt, {}, context.main_sel_register_value("|").str(), context.faces()["Prompt"],
+        prompt, {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
         shell_complete,
-        [](StringView cmdline, PromptEvent event, Context& context)
+        [default_command](StringView cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
                 return;
 
             if (cmdline.empty())
-                cmdline = context.main_sel_register_value("|");
-            else
-                RegisterManager::instance()['|'].set(context, cmdline.str());
+                cmdline = default_command;
 
             if (cmdline.empty())
                 return;
@@ -626,22 +625,22 @@ void pipe(Context& context, NormalParams)
 }
 
 template<InsertMode mode>
-void insert_output(Context& context, NormalParams)
+void insert_output(Context& context, NormalParams params)
 {
     const char* prompt = mode == InsertMode::Insert ? "insert-output:" : "append-output:";
+    String default_command = context.main_sel_register_value(params.reg ? params.reg : '|').str();
+
     context.input_handler().prompt(
-        prompt, {}, context.main_sel_register_value("|").str(), context.faces()["Prompt"],
+        prompt, {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
         shell_complete,
-        [](StringView cmdline, PromptEvent event, Context& context)
+        [default_command](StringView cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
                 return;
 
             if (cmdline.empty())
-                cmdline = context.main_sel_register_value("|");
-            else
-                RegisterManager::instance()['|'].set(context, cmdline.str());
+                cmdline = default_command;
 
             if (cmdline.empty())
                 return;
@@ -1133,14 +1132,22 @@ void keep(Context& context, NormalParams params)
     });
 }
 
-void keep_pipe(Context& context, NormalParams)
+void keep_pipe(Context& context, NormalParams params)
 {
+    String default_command = context.main_sel_register_value(params.reg ? params.reg : '|').str();
     context.input_handler().prompt(
-        "keep pipe:", {}, {}, context.faces()["Prompt"],
+        "keep pipe:", {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|', shell_complete,
-        [](StringView cmdline, PromptEvent event, Context& context) {
+        [default_command](StringView cmdline, PromptEvent event, Context& context) {
             if (event != PromptEvent::Validate)
                 return;
+
+            if (cmdline.empty())
+                cmdline = default_command;
+
+            if (cmdline.empty())
+                return;
+
             const Buffer& buffer = context.buffer();
             auto& shell_manager = ShellManager::instance();
             Vector<Selection> keep;
