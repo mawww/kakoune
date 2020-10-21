@@ -18,8 +18,10 @@ define-command -docstring %{
         fi
         if [ $# -eq 0 ]; then cmd="${SHELL:-sh}"; else cmd="$@"; fi
         # The escape sequence in the printf command sets the terminal's title:
-        setsid ${kak_opt_termcmd} "printf '\e]2;kak_repl_window\a' \
+        setsid ${kak_opt_termcmd} "DISABLE_AUTO_TITLE=false \ # disable zsh auto title
+        	&& printf '\e]2;kak_repl_window\a' \    
                 && ${cmd}" < /dev/null > /dev/null 2>&1 &
+
 }}
 
 define-command x11-send-text -docstring "send the selected text to the repl window" %{
