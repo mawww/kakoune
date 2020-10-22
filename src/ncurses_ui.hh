@@ -168,6 +168,7 @@ private:
     int m_shift_function_key = default_shift_function_key;
 
     bool m_set_title = true;
+    String m_title_line;
 
     bool m_dirty = false;
 

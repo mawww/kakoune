@@ -327,8 +327,10 @@ are exclusively available to built-in options.
     interface implementation. The NCurses UI support the following options:
 
         *ncurses_set_title*:::
-            if *yes* or *true*, the terminal emulator title will
-            be changed
+            if not set to *no* or *false*, the terminal emulator
+            title will be changed. if set to *yes* or *true*, the
+            default title line will be used, otherwise the value
+            of this option will be used as the title line
 
         *ncurses_status_on_top*:::
             if *yes*, or *true* the status line will be placed
