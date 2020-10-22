@@ -48,9 +48,9 @@ for full details). For example:
 
 * `echo "x%val{session}x"` echoes the current session ID, surrounded by `x`
 
-* `echo %{%val{session}}"` echoes the the literal text `%val{session}`
+* `echo %{%val{session}}` echoes the the literal text `%val{session}`
 
-* `echo %sh{ echo %val{session} }"` echoes the literal text `%val{session}`
+* `echo %sh{ echo %val{session} }` echoes the literal text `%val{session}`
 
 Like "variable expansion" and "command substitution" in shell programming,
 Kakoune expansions can expand to multiple "words" - that is, separate
