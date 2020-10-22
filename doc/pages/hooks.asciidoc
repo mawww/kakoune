@@ -205,17 +205,10 @@ vars are available:
 
 == Disabling Hooks
 
-Any normal mode command can be prefixed with `\ ` which will disable hook
-execution for the duration of the command (including the duration of modes
-the command could move to, so `\i` will disable hooks for the whole insert
-session).
-
-As autoindentation is implemented in terms of hooks, this can be used to
-disable it when pasting text.
-
-A less temporary alternative is to set the `disabled_hooks` option which
-accepts a regex describing which hooks won't be executed.
-For example indentation hooks can be disabled with '.*-indent'.
+Hooks can be disabled temporarily by prefixing any normal mode command by `\`
+(see <<keys#,`:doc keys`>>) and permanently by setting the `disabled_hooks` option
+which accepts a regex describing which hooks won't be executed. For example
+indentation hooks can be disabled with '.*-indent'.
 
 Finally, hook execution can be disabled while using the `execute-keys` or
 `evaluate-commands` commands by using the `-no-hooks` switch.
