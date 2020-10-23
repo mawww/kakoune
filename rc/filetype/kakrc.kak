@@ -66,7 +66,7 @@ evaluate-commands %sh{
                 normal insert menu prompt goto view user object
                 number-lines show-matching show-whitespaces fill regex dynregex group flag-lines
                 ranges line column wrap ref regions region default-region replace-ranges"
-    types="int bool str regex int-list str-list completions line-specs range-specs"
+    types="int bool str regex int-list str-list completions line-specs range-specs str-to-str-map"
     values="default black red green yellow blue magenta cyan white yes no false true"
 
     join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
