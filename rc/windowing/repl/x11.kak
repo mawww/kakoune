@@ -4,6 +4,8 @@ hook global ModuleLoaded x11 %{
 
 provide-module x11-repl %{
 
+declare-option -docstring "window id of the REPL window" str x11_repl_id
+
 # termcmd should already be set in x11.kak
 define-command -docstring %{
     x11-repl [<arguments>]: create a new window for repl interaction
@@ -17,16 +19,19 @@ define-command -docstring %{
            exit
         fi
         if [ $# -eq 0 ]; then cmd="${SHELL:-sh}"; else cmd="$@"; fi
-        # The escape sequence in the printf command sets the terminal's title:
-        setsid ${kak_opt_termcmd} "printf '\e]2;kak_repl_window\a' \
-                && ${cmd}" < /dev/null > /dev/null 2>&1 &
+        # put the window id of the REPL into the option x11_repl_id
+        wincmd=$(printf 'printf "evaluate-commands -try-client %s \
+                    set-option current x11_repl_id ${WINDOWID}" | kak -p %s' \
+                    "${kak_client}" "${kak_session}")
+        setsid ${kak_opt_termcmd} "${SHELL} -c '${wincmd} && ${cmd}'" \
+            < /dev/null > /dev/null 2>&1 &
 }}
 
 define-command x11-send-text -docstring "send the selected text to the repl window" %{
     evaluate-commands %sh{
         printf %s\\n "${kak_selection}" | xsel -i ||
         echo 'fail x11-send-text: failed to run xsel, see *debug* buffer for details' &&
-        xdotool search --name kak_repl_window key --clearmodifiers Shift+Insert ||
+        xdotool windowactivate "${kak_opt_x11_repl_id}" key --clearmodifiers Shift+Insert ||
         echo 'fail x11-send-text: failed to run xdotool, see *debug* buffer for details'
     }
 }
