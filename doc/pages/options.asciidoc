@@ -17,8 +17,9 @@ set-option [-add|-remove] <scope> <name> <values>...
 <<scopes#,`:doc scopes`>>). *current* relates to the narrowest scope in
 which the option is already set.
 
-Multiple <values> can be given as separate arguments when the option is a
-list or map.
+When the option is a list or a map, multiple <values> can be given as
+separate arguments, or can be omitted altogether in order to empty the
+option.
 
 If `-add` or `-remove` is specified, the new value is respectively *added*
 to or *removed* from the current one instead of replacing it (the exact
