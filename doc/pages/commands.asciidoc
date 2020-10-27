@@ -58,7 +58,7 @@ of the file onto the filesystem
         Otherwise, does nothing.
 
 
-*write[!]* [-sync] [-atomic] [<filename>]::
+*write[!]* [-sync] [-method <writemethod>] [<filename>]::
     *alias* w +
     write buffer to <filename> or use its name if filename is not
     given. If the file is write-protected, its permissions are temporarily
@@ -68,11 +68,20 @@ of the file onto the filesystem
     *-sync*:::
         Synchronise the filesystem after the write
 
-    *-atomic*:::
-        Force writing to a temporary file then renaming to the target file
-        so that the modification appears atomically.
+    *-method <writemethod>*:::
+        Enforce write method instead of relying on the `writemethod` option
 
-*write-all* [-sync]::
+        `replace`::::
+            Write to a temporary file then rename to the target file so that
+            the modification appears atomically.
+
+        `overwrite`::::
+            Open the existing file and overwrite its content with the new
+            content.
+
+        (See <<options#builtin-options,`:doc options builtin-options`>>)
+
+*write-all* [-sync] [-method <writemethod>]::
     *alias* wa +
     write all changed buffers that are associated with a file
 
@@ -82,12 +91,12 @@ of the file onto the filesystem
     unsaved buffer remaining. If specified, the client exit status
     will be set to <exit status>
 
-*write-quit[!]* [-sync] [<exit status>]::
+*write-quit[!]* [-sync] [-method <writemethod>] [<exit status>]::
     *alias* wq +
     write current buffer and quit current client. If specified, the client
     exit status will be set to <exit status>
 
-*write-all-quit* [-sync] [<exit status>]::
+*write-all-quit* [-sync] [-method <writemethod>] [<exit status>]::
     *alias* waq +
     write all buffers and quit. If specified, the client exit status
     will be set to <exit status>

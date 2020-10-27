@@ -23,7 +23,7 @@ define-command -params ..1 \
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
         printf %s\\n "
-            evaluate-commands -no-hooks write -sync -atomic ${dir}/buf
+            evaluate-commands -no-hooks write -sync -method replace ${dir}/buf
             evaluate-commands -draft %{
                 edit! -fifo ${dir}/fifo -debug *clang-output*
                 set-option buffer filetype make

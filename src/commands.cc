@@ -456,12 +456,21 @@ const CommandDesc force_edit_cmd = {
 const ParameterDesc write_params{
     {
         { "sync", { false, "force the synchronization of the file onto the filesystem" } },
-        { "atomic", { false, "force the writemethod to replace" } },
+        { "method", { true, "explicite writemethod (replace|overwrite)" } },
     },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
 };
 
-void do_write_buffer(Context& context, Optional<String> filename, WriteFlags flags, bool atomic = false)
+auto parse_write_method(StringView str)
+{
+    constexpr auto desc = enum_desc(Meta::Type<WriteMethod>{});
+    auto it = find_if(desc, [str](const EnumDesc<WriteMethod>& d) { return d.name == str; });
+    if (it == desc.end())
+        throw runtime_error(format("invalid writemethod '{}'", str));
+    return it->value;
+}
+
+void do_write_buffer(Context& context, Optional<String> filename, WriteFlags flags, Optional<WriteMethod> write_method = {})
 {
     Buffer& buffer = context.buffer();
     const bool is_file = (bool)(buffer.flags() & Buffer::Flags::File);
@@ -477,10 +486,10 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
         throw runtime_error("cannot overwrite the buffer when in readonly mode");
 
     auto effective_filename = not filename ? buffer.name() : parse_filename(*filename);
-    auto mode = atomic ? WriteMethod::Replace : context.options()["writemethod"].get<WriteMethod>();
+    auto method = write_method.value_or_compute([&] { return context.options()["writemethod"].get<WriteMethod>(); });
 
     context.hooks().run_hook(Hook::BufWritePre, effective_filename, context);
-    write_buffer_to_file(buffer, effective_filename, mode, flags);
+    write_buffer_to_file(buffer, effective_filename, method, flags);
     context.hooks().run_hook(Hook::BufWritePost, effective_filename, context);
 }
 
@@ -491,7 +500,7 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
                            parser.positional_count() > 0 ? parser[0] : Optional<String>{},
                            (parser.get_switch("sync") ? WriteFlags::Sync : WriteFlags::None) |
                            (force ? WriteFlags::Force : WriteFlags::None),
-                           (bool)parser.get_switch("atomic"));
+                           parser.get_switch("method").map(parse_write_method));
 }
 
 const CommandDesc write_cmd = {
@@ -518,7 +527,7 @@ const CommandDesc force_write_cmd = {
     write_buffer<true>,
 };
 
-void write_all_buffers(const Context& context, bool sync = false, bool atomic = false)
+void write_all_buffers(const Context& context, bool sync = false, Optional<WriteMethod> write_method = {})
 {
     // Copy buffer list because hooks might be creating/deleting buffers
     Vector<SafePtr<Buffer>> buffers;
@@ -532,10 +541,10 @@ void write_all_buffers(const Context& context, bool sync = false, bool atomic = 
              buffer->is_modified())
             and !(buffer->flags() & Buffer::Flags::ReadOnly))
         {
-            auto mode = atomic ? WriteMethod::Replace : context.options()["writemethod"].get<WriteMethod>();
+            auto method = write_method.value_or_compute([&] { return context.options()["writemethod"].get<WriteMethod>(); });
             auto flags = sync ? WriteFlags::Sync : WriteFlags::None;
             buffer->run_hook_in_own_context(Hook::BufWritePre, buffer->name(), context.name());
-            write_buffer_to_file(*buffer, buffer->name(), mode, flags);
+            write_buffer_to_file(*buffer, buffer->name(), method, flags);
             buffer->run_hook_in_own_context(Hook::BufWritePost, buffer->name(), context.name());
         }
     }
@@ -554,7 +563,8 @@ const CommandDesc write_all_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&){
         write_all_buffers(context,
-                          (bool)parser.get_switch("sync"), (bool)parser.get_switch("atomic"));
+                          (bool)parser.get_switch("sync"),
+                          parser.get_switch("method").map(parse_write_method));
     }
 };
 
@@ -661,7 +671,9 @@ template<bool force>
 void write_quit(const ParametersParser& parser, Context& context,
                 const ShellContext& shell_context)
 {
-    do_write_buffer(context, {}, parser.get_switch("sync") ? WriteFlags::Sync : WriteFlags::None);
+    do_write_buffer(context, {},
+                    parser.get_switch("sync") ? WriteFlags::Sync : WriteFlags::None,
+                    parser.get_switch("method").map(parse_write_method));
     quit<force>(parser, context, shell_context);
 }
 
@@ -700,7 +712,9 @@ const CommandDesc write_all_quit_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
-        write_all_buffers(context, (bool)parser.get_switch("sync"));
+        write_all_buffers(context,
+                          (bool)parser.get_switch("sync"),
+                          parser.get_switch("method").map(parse_write_method));
         quit<false>(parser, context, shell_context);
     }
 };
