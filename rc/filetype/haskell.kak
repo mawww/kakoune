@@ -35,7 +35,7 @@ provide-module haskell %[
 add-highlighter shared/haskell regions
 add-highlighter shared/haskell/code default-region group
 add-highlighter shared/haskell/string       region (?<!'\\)(?<!')"                 (?<!\\)(\\\\)*"  fill string
-add-highlighter shared/haskell/macro        region ^\h*?\K#                        (?<!\\)\n        fill meta
+add-highlighter shared/haskell/macro        region ^\K#                            (?<!\\)\n        fill meta
 add-highlighter shared/haskell/pragma       region -recurse \{- \{-#               '#-\}'           fill meta
 add-highlighter shared/haskell/comment      region -recurse \{- \{-                  -\}            fill comment
 add-highlighter shared/haskell/line_comment region --(?:[^!#$%&*+./<>?@\\\^|~=]|$) $                fill comment
