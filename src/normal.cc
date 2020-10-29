@@ -1691,8 +1691,9 @@ void copy_indent(Context& context, NormalParams params)
 void tabs_to_spaces(Context& context, NormalParams params)
 {
     auto& buffer = context.buffer();
-    const ColumnCount opt_tabstop = context.options()["tabstop"].get<int>();
-    const ColumnCount tabstop = params.count == 0 ? opt_tabstop : params.count;
+    const ColumnCount tabstop = params.count == 0 ?
+                                context.options()["tabstop"].get<int>()
+                              : params.count;
     Vector<Selection> tabs;
     Vector<String> spaces;
     for (auto& sel : context.selections())
@@ -1702,7 +1703,7 @@ void tabs_to_spaces(Context& context, NormalParams params)
         {
             if (*it == '\t')
             {
-                ColumnCount col = get_column(buffer, opt_tabstop, it.coord());
+                ColumnCount col = get_column(buffer, tabstop, it.coord());
                 ColumnCount end_col = (col / tabstop + 1) * tabstop;
                 tabs.emplace_back(it.coord());
                 spaces.emplace_back(' ', end_col - col);
@@ -1716,8 +1717,9 @@ void tabs_to_spaces(Context& context, NormalParams params)
 void spaces_to_tabs(Context& context, NormalParams params)
 {
     auto& buffer = context.buffer();
-    const ColumnCount opt_tabstop = context.options()["tabstop"].get<int>();
-    const ColumnCount tabstop = params.count == 0 ? opt_tabstop : params.count;
+    const ColumnCount tabstop = params.count == 0 ?
+                                context.options()["tabstop"].get<int>()
+                              : params.count;
     Vector<Selection> spaces;
     for (auto& sel : context.selections())
     {
@@ -1728,7 +1730,7 @@ void spaces_to_tabs(Context& context, NormalParams params)
             {
                 auto spaces_beg = it;
                 auto spaces_end = spaces_beg+1;
-                ColumnCount col = get_column(buffer, opt_tabstop, spaces_end.coord());
+                ColumnCount col = get_column(buffer, tabstop, spaces_end.coord());
                 while (spaces_end != end and
                        *spaces_end == ' ' and (col % tabstop) != 0)
                 {
