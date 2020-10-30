@@ -13,8 +13,9 @@ define-command -docstring %{
     -params .. \
     -shell-completion \
     x11-repl %{ x11-terminal sh -c %{
+        winid="${WINDOWID:-$(xdotool search --pid ${PPID} | tail -1)}"
         printf "evaluate-commands -try-client $1 \
-            'set-option current x11_repl_id ${WINDOWID}'" | kak -p "$2"
+            'set-option current x11_repl_id ${winid}'" | kak -p "$2"
         shift 2;
         [ "$1" ] && "$@" || "$SHELL"
     } -- %val{client} %val{session} %arg{@}
