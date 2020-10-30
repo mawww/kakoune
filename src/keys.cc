@@ -229,6 +229,10 @@ UnitTest test_keys{[]()
          alt('j'),
          ctrl('r'),
          shift(Key::Up),
+         ctrl('['),
+         ctrl('\\'),
+         ctrl(']'),
+         ctrl('_'),
     };
     String keys_as_str;
     for (auto& key : keys)
