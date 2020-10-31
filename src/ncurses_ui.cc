@@ -623,8 +623,19 @@ Optional<Key> NCursesUI::get_next_key()
             kill(0, SIGTSTP); // We suspend at this line
             return {};
         }
+        // Special case: you can type NUL with Ctrl-2 or Ctrl-Shift-2 or
+        // Ctrl-Backtick, but the most straightforward way is Ctrl-Space.
+        if (c == 0)
+            return ctrl(' ');
+        // Represent Ctrl-letter combinations in lower-case, to be clear
+        // that Shift is not involved.
         if (c < 27)
             return ctrl(c - 1 + 'a');
+        // Represent Ctrl-symbol combinations in "upper-case", as they are
+        // traditionally-rendered.
+        // Note that Escape is handled elsewhere.
+        if (c < 32)
+            return ctrl(c - 1 + 'A');
 
        struct Sentinel{};
        struct CharIterator
