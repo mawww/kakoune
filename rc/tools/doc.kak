@@ -2,7 +2,6 @@ declare-option -docstring "name of the client in which documentation is to be di
     str docsclient
 
 declare-option -hidden range-specs doc_render_ranges
-declare-option -hidden range-specs doc_render_links
 declare-option -hidden range-specs doc_links
 declare-option -hidden range-specs doc_anchors
 
@@ -28,10 +27,10 @@ define-command -hidden doc-parse-links %{
         execute-keys -draft s <lt><lt>.*,|<gt><gt> <ret> d
         execute-keys H
         set-option buffer doc_links %val{timestamp}
-        set-option buffer doc_render_links %val{timestamp}
+        update-option buffer doc_render_ranges
         evaluate-commands -itersel %{
             set-option -add buffer doc_links "%val{selection_desc}|%reg{1}"
-            set-option -add buffer doc_render_links "%val{selection_desc}|default+u"
+            set-option -add buffer doc_render_ranges "%val{selection_desc}|default+u"
         }
     } }
 }
@@ -129,7 +128,6 @@ define-command -params 1 -hidden doc-render %{
 
     set-option buffer readonly true
     add-highlighter buffer/ ranges doc_render_ranges
-    add-highlighter buffer/ ranges doc_render_links
     add-highlighter buffer/ wrap -word -indent
     map buffer normal <ret> ': doc-follow-link<ret>'
 }
