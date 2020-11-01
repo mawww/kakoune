@@ -13,53 +13,58 @@
 debug    = yes
 static   = no
 
-suffix   = .opt
-
 CXX      = g++
-CXXFLAGS = -pedantic -std=gnu++14 -Wall -Wno-unused-parameter -Wno-reorder -Wno-sign-compare -Wno-address -Wno-noexcept-type -Wno-unknown-attributes -Wno-unknown-warning-option
+CXXFLAGS = -pedantic -std=c++17 -g -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-address
 CPPFLAGS =
 LDFLAGS  =
 LIBS     =
 
 ifeq ($(debug),yes)
-	CXXFLAGS += -g
-	CPPFLAGS += -DKAK_DEBUG
-	suffix = .debug
+    CPPFLAGS += -DKAK_DEBUG
+    CXXFLAGS += -g
+    suffix = .debug
 else
-	CXXFLAGS += -O3
+    ifeq ($(debug),no)
+        CXXFLAGS += -O3
+        suffix = .opt
+    else
+        error debug should be either yes or no
+    endif
 endif
 
 ifeq ($(static),yes)
-	LIBS += -ltinfo -lgpm
-	LDFLAGS += -static -pthread
+    PKG_CONFIG_FLAGS += --static
+    LDFLAGS += -static -pthread
 endif
 
 ifeq (@(TUP_PLATFORM),macosx)
-	LIBS += -lncurses
-	CPPFLAGS += -I/usr/local/opt/ncurses/include
-	LDFLAGS += -L/usr/local/opt/ncurses/lib
+    LIBS += -lncurses
+    CPPFLAGS += -I/usr/local/opt/ncurses/include
+    LDFLAGS += -L/usr/local/opt/ncurses/lib
 else
-	ifeq (@(TUP_PLATFORM),win32)
-		LIBS += -lncursesw -ldbghelp
-		CPPFLAGS += -D_XOPEN_SOURCE=700
-	else
-		LIBS += `pkg-config --libs ncursesw`
-		CPPFLAGS += `pkg-config --cflags ncursesw`
-
-		ifeq ($(CXX),g++)
-			LDFLAGS += -rdynamic
-		endif
-	endif
+    ifeq (@(TUP_PLATFORM),win32)
+        LIBS += -lncursesw -ldbghelp
+        CPPFLAGS += -D_XOPEN_SOURCE=700
+    else
+        LIBS += `pkg-config --libs ncursesw $(PKG_CONFIG_FLAGS)`
+        CPPFLAGS += `pkg-config --cflags ncursesw $(PKG_CONFIG_FLAGS)`
+        LDFLAGS += -rdynamic
+    endif
 endif
 
 ifeq ($(CXX),clang++)
-	CXXFLAGS += -Wno-unknown-attributes
+    CXXFLAGS += -frelaxed-template-template-args
+endif
+ifeq ($(CXX),g++)
+    CXXFLAGS += -Wno-init-list-lifetime
 endif
 
-!cxx = |> $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c %f -o %o |>
-!ld = |> $(CXX) $(LDFLAGS) $(LIBS) %f -o %o |>
-!ln = |> ln -sf %f %o |>
+!cxx = |> ^ CC %f^ $(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF %O.d -c %f -o %o |>
+!ld = |> ^ LD %o^ $(CXX) $(LDFLAGS) %f $(LIBS) -o %o |>
+!ln = |> ^ LN %o^ ln -sf %f %o |>
 
-:foreach *.cc |> !cxx |> .%B$(suffix).o {objects}
-:{objects} |> !ld |> kak$(suffix)
-:kak$(suffix) |> !ln |> kak
+: foreach *.cc |> !cxx |> .%B$(suffix).o | .%B$(suffix).d {objs}
+: |> ^ MK %o^ printf "%%s" "namespace Kakoune { const char* version = \"`if [ -f .version ]; then cat .version; elif  [ -d ../.git ]; then git describe --tags HEAD; else echo \"unknown\"; fi`\"; }" > .version.cc.tmp; if cmp -s .version.cc.tmp .version.cc; then rm .version.cc.tmp; else mv .version.cc.tmp .version.cc; fi |> .version.cc
+: .version.cc |> ^ CC %f^ $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c %f -o %o |> %B.o
+: {objs} .version.o |> !ld |> kak$(suffix)
+: kak$(suffix) |> !ln |> kak
