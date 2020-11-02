@@ -316,7 +316,7 @@ bool NCursesUI::Palette::set_change_colors(bool change_colors)
 }
 
 static sig_atomic_t resize_pending = 0;
-static sig_atomic_t sighup_raised = 0;
+static sig_atomic_t stdin_closed = 0;
 
 template<sig_atomic_t* signal_flag>
 static void signal_handler(int)
@@ -351,7 +351,7 @@ NCursesUI::NCursesUI()
     enable_mouse(true);
 
     set_signal_handler(SIGWINCH, &signal_handler<&resize_pending>);
-    set_signal_handler(SIGHUP, &signal_handler<&sighup_raised>);
+    set_signal_handler(SIGHUP, &signal_handler<&stdin_closed>);
     set_signal_handler(SIGTSTP, [](int){ NCursesUI::instance().suspend(); });
 
     check_resize(true);
@@ -577,7 +577,7 @@ void NCursesUI::check_resize(bool force)
 
 Optional<Key> NCursesUI::get_next_key()
 {
-    if (sighup_raised)
+    if (stdin_closed)
     {
         set_signal_handler(SIGWINCH, SIG_DFL);
         set_signal_handler(SIGHUP, SIG_DFL);
@@ -596,9 +596,13 @@ Optional<Key> NCursesUI::get_next_key()
     }
 
     static auto get_char = []() -> Optional<unsigned char> {
-        unsigned char c = 0;
-        if (fd_readable(STDIN_FILENO) and read(STDIN_FILENO, &c, 1) == 1)
+        if (not fd_readable(STDIN_FILENO))
+            return {};
+
+        if (unsigned char c = 0; read(STDIN_FILENO, &c, 1) == 1)
             return c;
+
+        stdin_closed = 1;
         return {};
     };
 
