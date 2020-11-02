@@ -40,6 +40,8 @@ following format:
             dim
         *i*:::
             italic
+        *s*:::
+            strikethrough
         *F*:::
             final, override the previous face instead of merging with it,
             and this face will only be replaced if another face with

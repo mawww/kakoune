@@ -183,7 +183,7 @@ void TerminalUI::Screen::set_face(const Face& face)
 {
     static constexpr int fg_table[]{ 39, 30, 31, 32, 33, 34, 35, 36, 37, 90, 91, 92, 93, 94, 95, 96, 97 };
     static constexpr int bg_table[]{ 49, 40, 41, 42, 43, 44, 45, 46, 47, 100, 101, 102, 103, 104, 105, 106, 107 };
-    static constexpr int attr_table[]{ 0, 4, 7, 5, 1, 2, 3 };
+    static constexpr int attr_table[]{ 0, 4, 7, 5, 1, 2, 3, 9 };
 
     auto set_color = [](bool fg, const Color& color, bool join) {
         if (join)
@@ -201,7 +201,7 @@ void TerminalUI::Screen::set_face(const Face& face)
     bool join = false;
     if (face.attributes != m_active_face.attributes)
     {
-        for (int i = 0; i < sizeof(attr_table) / sizeof(int); ++i)
+        for (int i = 0; i < std::size(attr_table); ++i)
         {
             if (face.attributes & (Attribute)(1 << i))
                 printf(";%d", attr_table[i]);

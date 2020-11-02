@@ -43,6 +43,7 @@ static FaceRegistry::FaceSpec parse_face(StringView facedesc)
                 case 'B': face.attributes |= Attribute::Blink; break;
                 case 'd': face.attributes |= Attribute::Dim; break;
                 case 'i': face.attributes |= Attribute::Italic; break;
+                case 's': face.attributes |= Attribute::Strikethrough; break;
                 case 'f': face.attributes |= Attribute::FinalFg; break;
                 case 'g': face.attributes |= Attribute::FinalBg; break;
                 case 'a': face.attributes |= Attribute::FinalAttr; break;

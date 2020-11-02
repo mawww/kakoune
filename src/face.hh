@@ -9,17 +9,18 @@ namespace Kakoune
 
 enum class Attribute : int
 {
-    Normal    = 0,
-    Underline = 1 << 1,
-    Reverse   = 1 << 2,
-    Blink     = 1 << 3,
-    Bold      = 1 << 4,
-    Dim       = 1 << 5,
-    Italic    = 1 << 6,
-    FinalFg   = 1 << 7,
-    FinalBg   = 1 << 8,
-    FinalAttr = 1 << 9,
-    Final     = FinalFg | FinalBg | FinalAttr
+    Normal        = 0,
+    Underline     = 1 << 1,
+    Reverse       = 1 << 2,
+    Blink         = 1 << 3,
+    Bold          = 1 << 4,
+    Dim           = 1 << 5,
+    Italic        = 1 << 6,
+    Strikethrough = 1 << 7,
+    FinalFg       = 1 << 8,
+    FinalBg       = 1 << 9,
+    FinalAttr     = 1 << 10,
+    Final         = FinalFg | FinalBg | FinalAttr
 };
 
 constexpr bool with_bit_ops(Meta::Type<Attribute>) { return true; }
