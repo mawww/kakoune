@@ -415,7 +415,10 @@ define-command -hidden c-family-alternative-file %{
             *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
                 for alt_dir in "$@"; do
                     for ext in h hh hpp hxx H; do
-                        altname="${dir}/${alt_dir}/${file_noext}.${ext}"
+                        case "$alt_dir" in
+                        /*) altname="${alt_dir}/${file_noext}.${ext}" ;;
+                        *) altname="${dir}/${alt_dir}/${file_noext}.${ext}" ;;
+                        esac
                         if [ -f ${altname} ]; then
                             printf 'edit %%{%s}\n' "${altname}"
                             exit
@@ -426,7 +429,10 @@ define-command -hidden c-family-alternative-file %{
             *.h|*.hh|*.hpp|*.hxx|*.H)
                 for alt_dir in "$@"; do
                     for ext in c cc cpp cxx C m; do
-                        altname="${dir}/${alt_dir}/${file_noext}.${ext}"
+                        case "$alt_dir" in
+                        /*) altname="${alt_dir}/${file_noext}.${ext}" ;;
+                        *) altname="${dir}/${alt_dir}/${file_noext}.${ext}" ;;
+                        esac
                         if [ -f ${altname} ]; then
                             printf 'edit %%{%s}\n' "${altname}"
                             exit
