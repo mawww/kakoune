@@ -748,12 +748,14 @@ void paste_all(Context& context, NormalParams params)
     Vector<Selection> result;
     for (auto& ins_pos : insert_pos)
     {
-        ByteCount pos = 0;
+        ByteCount pos_offset = 0;
+        BufferCoord pos = ins_pos;
         for (auto offset : offsets)
         {
-            result.emplace_back(buffer.advance(ins_pos, pos),
-                                buffer.advance(ins_pos, offset-1));
-            pos = offset;
+            BufferCoord end = buffer.advance(pos, offset - pos_offset - 1);
+            result.emplace_back(pos, end);
+            pos = buffer.next(end);
+            pos_offset = offset;
         }
     }
     if (not result.empty())
