@@ -18,6 +18,8 @@ class Buffer;
 class WordDB : public OptionManagerWatcher
 {
 public:
+    static constexpr CharCount max_word_len = 50;
+
     WordDB(const Buffer& buffer);
     ~WordDB();
     WordDB(const WordDB&) = delete;

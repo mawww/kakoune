@@ -21,8 +21,6 @@ WordDB& get_word_db(const Buffer& buffer)
 
 struct WordSplitter
 {
-    static constexpr CharCount max_word_len = 50;
-
     struct Iterator
     {
         Iterator(const char* begin, const WordSplitter& splitter)
@@ -48,7 +46,7 @@ struct WordSplitter
                     utf8::to_next(m_word_end, end);
                     ++word_len;
                 }
-                if (m_word_begin == end or word_len < max_word_len)
+                if (m_word_begin == end or word_len < WordDB::max_word_len)
                     break;
             }
 

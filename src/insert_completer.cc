@@ -86,9 +86,12 @@ InsertCompletion complete_word(const SelectionList& sels,
     HashMap<StringView, int> sel_word_counts;
     for (int i = 0; i < sels.size(); ++i)
     {
+        int len = 0;
+        auto is_short_enough_word = [&] (Codepoint c) { return len++ < WordDB::max_word_len && is_word_pred(c); };
+
         Utf8It end{buffer.iterator_at(sels[i].cursor()), buffer};
         Utf8It begin = end-1;
-        if (not skip_while_reverse(begin, buffer.begin(), is_word_pred) and
+        if (not skip_while_reverse(begin, buffer.begin(), is_short_enough_word) and
             begin < end) // (begin might == end if end == buffer.begin())
             ++begin;
 
@@ -98,10 +101,13 @@ InsertCompletion complete_word(const SelectionList& sels,
             prefix = buffer.substr(word_begin, end.base().coord());
         }
 
-        skip_while(end, buffer.end(), is_word_pred);
+        skip_while(end, buffer.end(), is_short_enough_word);
 
-        StringView word = buffer.substr(begin.base().coord(), end.base().coord());
-        ++sel_word_counts[word];
+        if (len <= WordDB::max_word_len)
+        {
+            StringView word = buffer.substr(begin.base().coord(), end.base().coord());
+            ++sel_word_counts[word];
+        }
     }
 
     struct RankedMatchAndBuffer : RankedMatch
