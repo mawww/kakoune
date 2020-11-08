@@ -19,7 +19,7 @@ define-command -hidden -params 1.. tmux-repl-impl %{
         tmux_args="$1"
         shift
         tmux $tmux_args "$@"
-        printf "set-option global tmux_repl_id '%s'" $(tmux display-message -p '#{session_id}:#{window_id}.#{pane_id}')
+        printf "set-option current tmux_repl_id '%s'" $(tmux display-message -p '#{session_id}:#{window_id}.#{pane_id}')
     }
 }
 
