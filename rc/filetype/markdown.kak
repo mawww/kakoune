@@ -82,7 +82,7 @@ add-highlighter shared/markdown/inline/text/ regex ^\h*(>\h*)+ 0:comment
 add-highlighter shared/markdown/inline/text/ regex "\H( {2,})$" 1:+r@meta
 
 # Inline code
-add-highlighter shared/markdown/inline/text/ regex "^    [^\n]*" 0:meta
+add-highlighter shared/markdown/inline/text/ regex "^( {4}|\t)+([^\n]+)" 2:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
