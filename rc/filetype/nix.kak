@@ -18,6 +18,7 @@ hook global WinSetOption filetype=nix %{
     hook window InsertChar .* -group nix-indent nix-indent-on-char
     hook window InsertChar \n -group nix-indent nix-indent-on-new-line
 
+    set-option buffer extra_word_chars _ -
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window nix-.+ }
 }
 
