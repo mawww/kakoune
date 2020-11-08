@@ -53,6 +53,10 @@ define-command -params ..1 -docstring %{
                         # nothing
                     }
 
+                    else if (/^\+/) {
+                        # required to ignore undocumented aspell functionality
+                    }
+
                     else if (/^$/) {
                         line_num++
                     }
