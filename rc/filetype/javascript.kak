@@ -81,9 +81,9 @@ define-command -hidden init-javascript-filetype -params 1 %~
     add-highlighter "shared/%arg{1}/comment_line"  region //   '$'                     fill comment
     add-highlighter "shared/%arg{1}/comment"       region /\*  \*/                     fill comment
     add-highlighter "shared/%arg{1}/shebang"       region ^#!  $                       fill meta
+    add-highlighter "shared/%arg{1}/division" region '[\w\)\]]\K(/|(\h+/\h+))' '(?=\w)' group # Help Kakoune to better detect /…/ literals
     add-highlighter "shared/%arg{1}/regex"         region /    (?<!\\)(\\\\)*/[gimuy]* fill meta
     add-highlighter "shared/%arg{1}/jsx"           region -recurse (?<![\w<])<[a-zA-Z>][\w:.-]* (?<![\w<])<[a-zA-Z>][\w:.-]*(?!\hextends)(?=[\s/>])(?!>\()) (</.*?>|/>) regions
-    add-highlighter "shared/%arg{1}/division" region '[\w\)\]]\K(/|(\h+/\h+))' '(?=\w)' group # Help Kakoune to better detect /…/ literals
 
     # Regular expression flags are: g → global match, i → ignore case, m → multi-lines, u → unicode, y → sticky
     # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
