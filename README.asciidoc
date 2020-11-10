@@ -171,6 +171,9 @@ pacman -S kakoune
 ====
 Kakoune is found in portage as
 https://packages.gentoo.org/packages/app-editors/kakoune[app-editors/kakoune]
+--------------------------------
+emerge kakoune
+--------------------------------
 ====
 
 [TIP]
