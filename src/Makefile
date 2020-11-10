@@ -77,7 +77,8 @@ else ifeq ($(os),OpenBSD)
     CPPFLAGS += -D'KAK_BIN_PATH="$(bindir)/kak"' -I/usr/local/include
     LDFLAGS += -L/usr/local/lib
     mandir := $(DESTDIR)$(PREFIX)/man/man1
-else ifneq (,$(findstring CYGWIN,$(os)))
+else ifneq (,$(findstring _NT,$(os)))
+    # Both Cygwin and MSYS2 have "_NT" in their uname.
     CPPFLAGS += -D_XOPEN_SOURCE=700
     LIBS += -lncursesw -ldbghelp
 else ifeq ($(os),SunOS)
