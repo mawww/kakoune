@@ -69,12 +69,12 @@ No other escaping takes place in balanced strings.
 Other words are non-quoted. Non-quoted words end either on a whitespaces
 or a `;`.
 
-If they start with `\\` followed by `%`, `'` or `"`, then that leading
-`\\` is discarded.
+If they start with `\` followed by `%`, `'` or `"`, then that leading
+`\` is discarded.
 
-If a whitespace or `;` is preceded by `\\`, then the `\\` is discarded
-and the whitespace or `;` becomes part of the word. Any other `\\`
-is treated as a literal `\\`.
+If a whitespace or `;` is preceded by `\`, then the `\` is discarded
+and the whitespace or `;` becomes part of the word. Any other `\`
+is treated as a literal `\`.
 
 == Typed Expansions
 

@@ -85,9 +85,10 @@ the right of the end of each selection.
 
 == Disabling Hooks
 
-Any normal mode command can be prefixed with *\* which will disable hook execution
+Any normal mode command can be prefixed with `\` which will disable hook execution
 for the duration for the command (including the duration of modes the command could
-move to, so *\i* will disable hooks for the whole insert session).
+move to, so `\i` will disable hooks for the whole insert session) (see
+<<hooks#,`:doc hooks`>>).
 
 As autoindentation is implemented in terms of hooks, this can be used to disable
 it when pasting text.
