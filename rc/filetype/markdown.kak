@@ -59,9 +59,9 @@ add-highlighter shared/markdown/codeblock region -match-capture \
     ^(\h*)```\h*$ \
     fill meta
 
-add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^\h*((?=[-*])|$) regions
-add-highlighter shared/markdown/listblock/marker region \A [-*]\s fill bullet
-add-highlighter shared/markdown/listblock/content default-region ref markdown/inline
+add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^\h*((?=[-*])|$) group
+add-highlighter shared/markdown/listblock/ ref markdown/inline
+add-highlighter shared/markdown/listblock/marker regex ^\h*([-*])\s 1:bullet
 
 add-highlighter shared/markdown/inline/code region -match-capture (`+) (`+) fill mono
 
