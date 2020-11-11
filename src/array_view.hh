@@ -30,8 +30,8 @@ public:
     template<size_t N>
     constexpr ArrayView(T(&array)[N]) : m_pointer(array), m_size(N) {}
 
-    template<typename Container,
-             typename = std::enable_if_t<sizeof(decltype(*std::declval<Container>().data())) == sizeof(T)>>
+    template<typename Container>
+        requires (sizeof(decltype(*std::declval<Container>().data())) == sizeof(T))
     constexpr ArrayView(Container&& c)
         : m_pointer(c.data()), m_size(c.size()) {}
 

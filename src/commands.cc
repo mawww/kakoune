@@ -70,9 +70,8 @@ template<> struct PerArgumentCommandCompleter<>
 template<typename Completer, typename... Rest>
 struct PerArgumentCommandCompleter<Completer, Rest...> : PerArgumentCommandCompleter<Rest...>
 {
-    template<typename C, typename... R,
-             typename = std::enable_if_t<not std::is_base_of<PerArgumentCommandCompleter<>,
-                                         std::remove_reference_t<C>>::value>>
+    template<typename C, typename... R>
+        requires (not std::is_base_of_v<PerArgumentCommandCompleter<>, std::remove_reference_t<C>>)
     PerArgumentCommandCompleter(C&& completer, R&&... rest)
       : PerArgumentCommandCompleter<Rest...>(std::forward<R>(rest)...),
         m_completer(std::forward<C>(completer)) {}

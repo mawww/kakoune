@@ -11,16 +11,14 @@ namespace Kakoune
 
 size_t hash_data(const char* data, size_t len);
 
-template<typename Type>
-std::enable_if_t<std::is_integral<Type>::value, size_t>
-constexpr hash_value(const Type& val)
+template<typename Type> requires std::is_integral_v<Type>
+constexpr size_t hash_value(const Type& val)
 {
     return (size_t)val;
 }
 
-template<typename Type>
-std::enable_if_t<std::is_enum<Type>::value, size_t>
-constexpr hash_value(const Type& val)
+template<typename Type> requires std::is_enum_v<Type>
+constexpr size_t hash_value(const Type& val)
 {
     return hash_value((std::underlying_type_t<Type>)val);
 }

@@ -136,13 +136,11 @@ decltype(auto) to_string(const StronglyTypedNumber<RealType, ValueType>& val)
 namespace detail
 {
 
-template<typename T> constexpr bool is_string = std::is_convertible<T, StringView>::value;
-
-template<typename T, class = std::enable_if_t<not is_string<T>>>
-decltype(auto) format_param(const T& val) { return to_string(val); }
-
-template<typename T, class = std::enable_if_t<is_string<T>>>
+template<typename T> requires std::is_convertible_v<T, StringView> 
 StringView format_param(const T& val) { return val; }
+
+template<typename T> requires (not std::is_convertible_v<T, StringView>) 
+decltype(auto) format_param(const T& val) { return to_string(val); }
 
 }
 

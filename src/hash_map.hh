@@ -182,12 +182,7 @@ struct HashMap
         return m_items.back().value;
     }
 
-    template<typename KeyType>
-    using EnableIfHashCompatible = std::enable_if_t<
-        IsHashCompatible<Key, std::decay_t<KeyType>>
-    >;
-
-    template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
+    template<typename KeyType> requires IsHashCompatible<Key, KeyType>
     constexpr int find_index(const KeyType& key, size_t hash) const
     {
         for (auto slot = m_index.compute_slot(hash); slot < m_index.size(); ++slot)
@@ -201,13 +196,13 @@ struct HashMap
         return -1;
     }
 
-    template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
+    template<typename KeyType> requires IsHashCompatible<Key, KeyType>
     constexpr int find_index(const KeyType& key) const { return find_index(key, hash_value(key)); }
 
-    template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
+    template<typename KeyType> requires IsHashCompatible<Key, KeyType>
     constexpr bool contains(const KeyType& key) const { return find_index(key) >= 0; }
 
-    template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
+    template<typename KeyType> requires IsHashCompatible<Key, std::remove_cvref_t<KeyType>>
     constexpr Value& operator[](KeyType&& key)
     {
         const auto hash = hash_value(key);
@@ -221,7 +216,7 @@ struct HashMap
         return m_items.back().value;
     }
 
-    template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
+    template<typename KeyType> requires IsHashCompatible<Key, KeyType>
     constexpr void remove(const KeyType& key)
     {
         const auto hash = hash_value(key);
@@ -234,7 +229,7 @@ struct HashMap
         }
     }
 
-    template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
+    template<typename KeyType> requires IsHashCompatible<Key, KeyType>
     constexpr void unordered_remove(const KeyType& key)
     {
         const auto hash = hash_value(key);
@@ -249,10 +244,10 @@ struct HashMap
         }
     }
 
-    template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
+    template<typename KeyType> requires IsHashCompatible<Key, KeyType>
     constexpr void erase(const KeyType& key) { unordered_remove(key); }
 
-    template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
+    template<typename KeyType> requires IsHashCompatible<Key, KeyType>
     constexpr void remove_all(const KeyType& key)
     {
         const auto hash = hash_value(key);
@@ -275,14 +270,14 @@ struct HashMap
 
     const Item& item(size_t index) const { return m_items[index]; }
 
-    template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
+    template<typename KeyType> requires IsHashCompatible<Key, KeyType>
     constexpr iterator find(const KeyType& key)
     {
         auto index = find_index(key);
         return index >= 0 ? begin() + index : end();
     }
 
-    template<typename KeyType, typename = EnableIfHashCompatible<KeyType>>
+    template<typename KeyType> requires IsHashCompatible<Key, KeyType>
     constexpr const_iterator find(const KeyType& key) const
     {
         return const_cast<HashMap*>(this)->find(key);
