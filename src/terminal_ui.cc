@@ -26,6 +26,8 @@ using std::max;
 
 void TerminalUI::Window::create(const DisplayCoord& p, const DisplayCoord& s)
 {
+    kak_assert(p.line >= 0 and p.column >= 0);
+    kak_assert(s.line >= 0 and s.column >= 0);
     pos = p;
     size = s;
     lines.resize((int)size.line);
@@ -960,7 +962,7 @@ void TerminalUI::menu_show(ConstArrayView<DisplayLine> items,
     }
     else if (not is_inline)
         line = m_status_on_top ? 1_line : m_dimensions.line - height;
-    else if (line + height > m_dimensions.line)
+    else if (line + height > m_dimensions.line and anchor.line >= height)
         line = anchor.line - height;
 
     const auto width = is_search ? m_dimensions.column - m_dimensions.column / 2
