@@ -64,7 +64,7 @@ add-highlighter shared/sh/code/alias regex \balias(\h+[-+]\w)*\h+([\w-.]+)= 2:va
 add-highlighter shared/sh/code/function regex ^\h*(\S+)\h*\(\) 1:function
 
 add-highlighter shared/sh/code/unscoped_expansion regex (?<!\\)(?:\\\\)*\K\$(\w+|#|@|\?|\$|!|-|\*) 0:value
-add-highlighter shared/sh/double_string/expansion regex (?<!\\)(?:\\\\)*\K\$(\w+|\{.+?\}) 0:value
+add-highlighter shared/sh/double_string/expansion regex (?<!\\)(?:\\\\)*\K\$(\w+|#|@|\?|\$|!|-|\*|\{.+?\}) 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
