@@ -83,28 +83,12 @@ public:
     { m_value %= other.m_value; return static_cast<RealType&>(*this); }
 
     [[gnu::always_inline]]
-    constexpr friend bool operator==(RealType lhs, RealType rhs)
+    constexpr friend auto operator==(RealType lhs, RealType rhs)
     { return lhs.m_value == rhs.m_value; }
 
     [[gnu::always_inline]]
-    constexpr friend bool operator!=(RealType lhs, RealType rhs)
-    { return lhs.m_value != rhs.m_value; }
-
-    [[gnu::always_inline]]
-    constexpr friend bool operator<(RealType lhs, RealType rhs)
-    { return lhs.m_value < rhs.m_value; }
-
-    [[gnu::always_inline]]
-    constexpr friend bool operator<=(RealType lhs, RealType rhs)
-    { return lhs.m_value <= rhs.m_value; }
-
-    [[gnu::always_inline]]
-    constexpr friend bool operator>(RealType lhs, RealType rhs)
-    { return lhs.m_value > rhs.m_value; }
-
-    [[gnu::always_inline]]
-    constexpr friend bool operator>=(RealType lhs, RealType rhs)
-    { return lhs.m_value >= rhs.m_value; }
+    constexpr friend auto operator<=>(RealType lhs, RealType rhs)
+    { return lhs.m_value <=> rhs.m_value; }
 
     [[gnu::always_inline]]
     constexpr bool operator!() const

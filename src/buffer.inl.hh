@@ -107,43 +107,15 @@ inline bool BufferIterator::operator==(const BufferIterator& iterator) const noe
     return m_buffer == iterator.m_buffer and m_coord == iterator.m_coord;
 }
 
-inline bool BufferIterator::operator!=(const BufferIterator& iterator) const noexcept
-{
-    return m_buffer != iterator.m_buffer or m_coord != iterator.m_coord;
-}
-
-inline bool BufferIterator::operator<(const BufferIterator& iterator) const noexcept
+inline std::strong_ordering BufferIterator::operator<=>(const BufferIterator& iterator) const noexcept
 {
     kak_assert(m_buffer == iterator.m_buffer);
-    return (m_coord < iterator.m_coord);
-}
-
-inline bool BufferIterator::operator<=(const BufferIterator& iterator) const noexcept
-{
-    kak_assert(m_buffer == iterator.m_buffer);
-    return (m_coord <= iterator.m_coord);
-}
-
-inline bool BufferIterator::operator>(const BufferIterator& iterator) const noexcept
-{
-    kak_assert(m_buffer == iterator.m_buffer);
-    return (m_coord > iterator.m_coord);
-}
-
-inline bool BufferIterator::operator>=(const BufferIterator& iterator) const noexcept
-{
-    kak_assert(m_buffer == iterator.m_buffer);
-    return (m_coord >= iterator.m_coord);
+    return (m_coord <=> iterator.m_coord);
 }
 
 inline bool BufferIterator::operator==(const BufferCoord& coord) const noexcept
 {
     return m_coord == coord;
-}
-
-inline bool BufferIterator::operator!=(const BufferCoord& coord) const noexcept
-{
-    return m_coord != coord;
 }
 
 [[gnu::always_inline]]

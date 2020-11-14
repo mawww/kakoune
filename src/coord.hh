@@ -42,43 +42,16 @@ struct LineAndColumn
     }
 
     [[gnu::always_inline]]
-    constexpr bool operator< (EffectiveType other) const
+    constexpr auto operator<=> (EffectiveType other) const
     {
-        return (line != other.line) ? line < other.line
-                                    : column < other.column;
-    }
-
-    [[gnu::always_inline]]
-    constexpr bool operator<= (EffectiveType other) const
-    {
-        return (line != other.line) ? line < other.line
-                                    : column <= other.column;
-    }
-
-    [[gnu::always_inline]]
-    constexpr bool operator> (EffectiveType other) const
-    {
-        return (line != other.line) ? line > other.line
-                                    : column > other.column;
-    }
-
-    [[gnu::always_inline]]
-    constexpr bool operator>= (EffectiveType other) const
-    {
-        return (line != other.line) ? line > other.line
-                                    : column >= other.column;
+        return (line != other.line) ? line <=> other.line
+                                    : column <=> other.column;
     }
 
     [[gnu::always_inline]]
     constexpr bool operator== (EffectiveType other) const
     {
         return line == other.line and column == other.column;
-    }
-
-    [[gnu::always_inline]]
-    constexpr bool operator!= (EffectiveType other) const
-    {
-        return line != other.line or column != other.column;
     }
 
     friend constexpr size_t hash_value(const EffectiveType& val)
