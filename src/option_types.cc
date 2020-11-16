@@ -9,7 +9,7 @@ UnitTest test_option_parsing{[]{
     {
         auto repr = option_to_strings(value);
         kak_assert(strs == ConstArrayView<String>{repr});
-        auto parsed = option_from_strings(Meta::Type<std::decay_t<decltype(value)>>{}, strs);
+        auto parsed = option_from_strings(Meta::Type<std::remove_cvref_t<decltype(value)>>{}, strs);
         kak_assert(parsed == value);
     };
 

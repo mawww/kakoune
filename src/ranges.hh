@@ -15,7 +15,7 @@ namespace Kakoune
 template<typename Func> struct ViewFactory { Func func; };
 
 template<typename Func>
-ViewFactory<std::decay_t<Func>>
+ViewFactory<std::remove_cvref_t<Func>>
 make_view_factory(Func&& func) { return {std::forward<Func>(func)}; }
 
 template<typename Range, typename Func>
@@ -25,7 +25,7 @@ decltype(auto) operator| (Range&& range, ViewFactory<Func> factory)
 }
 
 template<typename Range>
-struct decay_range_impl { using type = std::decay_t<Range>; };
+struct decay_range_impl { using type = std::remove_cvref_t<Range>; };
 
 template<typename Range>
 struct decay_range_impl<Range&> { using type = Range&; };
@@ -261,11 +261,11 @@ inline auto transform(Transform t)
     });
 }
 
-template<typename T, typename U, typename = void>
+template<typename T, typename U>
 struct is_pointer_like : std::false_type {};
 
-template<typename T, typename U>
-struct is_pointer_like<T, U, std::enable_if_t<std::is_same_v<std::decay_t<decltype(*std::declval<U>())>, std::decay_t<T>>>> : std::true_type {};
+template<typename T, typename U> requires std::is_same_v<std::remove_cvref_t<decltype(*std::declval<U>())>, std::remove_cvref_t<T>>
+struct is_pointer_like<T, U> : std::true_type {};
 
 template<typename M, typename T>
 inline auto transform(M T::*member)
@@ -547,7 +547,7 @@ auto elements()
             return *it;
         };
         // Note that initializer lists elements are guaranteed to be sequenced
-        Array<std::decay_t<decltype(*begin(range))>, sizeof...(Indexes)> res{{elem(Indexes)...}};
+        Array<std::remove_cvref_t<decltype(*begin(range))>, sizeof...(Indexes)> res{{elem(Indexes)...}};
         if (exact_size and ++it != end_it)
             throw ExceptionType{++i};
         return res;

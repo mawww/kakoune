@@ -18,7 +18,7 @@ struct Value
 
     template<typename T> requires (not std::is_same_v<Value, T>)
     Value(T&& val)
-        : m_value{new Model<std::decay_t<T>>{std::forward<T>(val)}} {}
+        : m_value{new Model<std::remove_cvref_t<T>>{std::forward<T>(val)}} {}
 
     Value(const Value& val) = delete;
     Value(Value&&) = default;

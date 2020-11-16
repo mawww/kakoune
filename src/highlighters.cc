@@ -509,8 +509,8 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
     }
 
     auto make_hl = [](auto& regex_getter, auto& face_getter) {
-        return std::make_unique<DynamicRegexHighlighter<std::decay_t<decltype(regex_getter)>,
-                                                        std::decay_t<decltype(face_getter)>>>(
+        return std::make_unique<DynamicRegexHighlighter<std::remove_cvref_t<decltype(regex_getter)>,
+                                                        std::remove_cvref_t<decltype(face_getter)>>>(
             std::move(regex_getter), std::move(face_getter));
     };
     auto get_face = [faces=std::move(faces)](const Context& context, const Regex& regex){
