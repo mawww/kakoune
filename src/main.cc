@@ -49,6 +49,7 @@ struct {
         "» prompts auto select {+i}menu{} completions on space\n"
         "» explicit completion support ({+b}<c-x>...{}) in prompts\n"
         "» {+u}write -atomic{} was replaced with {+u}write -method <method>{}\n"
+        "» Added $-register for selection index, starting at zero\n"
     }, {
         20200901,
         "» daemon mode does not fork anymore\n"
