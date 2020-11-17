@@ -65,6 +65,7 @@ static const HashMap<String, Codepoint> reg_names = {
     { "percent", '%' },
     { "dot", '.' },
     { "hash", '#' },
+    { "dollar", '$' },
     { "underscore", '_' },
     { "colon", ':' }
 };

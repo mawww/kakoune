@@ -399,6 +399,17 @@ void register_registers()
             return res;
         }));
 
+    register_manager.add_register('$', make_dyn_reg(
+        "$",
+        [](const Context& context) {
+            const size_t count = context.selections().size();
+            StringList res;
+            res.reserve(count);
+            for (size_t i = 0; i < count; ++i)
+                res.push_back(to_string((int)i));
+            return res;
+        }));
+
     for (size_t i = 0; i < 10; ++i)
     {
         register_manager.add_register('0'+i, make_dyn_reg(
