@@ -59,8 +59,8 @@ evaluate-commands %sh{
               change-directory colorscheme debug declare-option declare-user-mode define-command
               delete-buffer delete-buffer! echo edit edit! enter-user-mode evaluate-commands execute-keys
               fail hook info kill kill! map menu nop on-key prompt provide-module quit quit!
-              remove-highlighter remove-hooks rename-client rename-session require-module select
-              set-face set-option set-register source trigger-user-hook try
+              remove-highlighter remove-hooks rename-buffer rename-client rename-session require-module
+              select set-face set-option set-register source trigger-user-hook try
               unalias unmap unset-face unset-option update-option
               write write! write-all write-all-quit write-quit write-quit!"
     attributes="global buffer window current
