@@ -630,7 +630,9 @@ Completions CommandManager::complete_command_name(const Context& context, String
     auto aliases = context.aliases().flatten_aliases()
             | transform(&HashItem<String, String>::key);
 
-    return {0, query.length(), Kakoune::complete(query, query.length(), concatenated(commands, aliases)), Completions::Flags::Menu};
+    return {0, query.length(),
+            Kakoune::complete(query, query.length(), concatenated(commands, aliases)),
+            Completions::Flags::Menu | Completions::Flags::NoEmpty};
 }
 
 Completions CommandManager::complete_module_name(StringView query) const

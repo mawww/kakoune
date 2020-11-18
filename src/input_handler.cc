@@ -775,7 +775,10 @@ public:
             const bool has_completions = not m_completions.candidates.empty();
             const bool completion_selected = m_current_completion != -1;
             const bool text_entered = m_completions.start != line.byte_count_to(m_line_editor.cursor_pos());
-            return has_completions and not completion_selected and text_entered;
+            return (m_completions.flags & Completions::Flags::Menu) and
+                has_completions and
+                not completion_selected and
+                (not (m_completions.flags & Completions::Flags::NoEmpty) or text_entered);
         };
 
         if (key == Key::Return)
@@ -997,7 +1000,6 @@ public:
         else
         {
             if (key == ' ' and
-                (m_completions.flags & Completions::Flags::Menu) and
                 not (m_completions.flags & Completions::Flags::Quoted) and // if token is quoted, this space does not end it
                 can_auto_insert_completion())
                 m_line_editor.insert_from(line.char_count_to(m_completions.start),
