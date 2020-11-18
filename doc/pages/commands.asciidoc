@@ -111,7 +111,7 @@ of the file onto the filesystem
     Debug buffers are skipped.
     (See <<buffers#debug-buffers,`:doc buffers debug-buffers`>>)
 
-*buffer-prev*::
+*buffer-previous*::
     *alias* bp +
     switch to the previous buffer.
     Debug buffers are skipped.
