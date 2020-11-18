@@ -60,9 +60,9 @@ add-highlighter shared/ruby/              region -recurse \( '%[rxRX]\('  \)    
 add-highlighter shared/ruby/              region -recurse \{ '%[rxRX]\{'  \}         fill meta
 add-highlighter shared/ruby/              region -recurse \[ '%[rxRX]\['  \]         fill meta
 add-highlighter shared/ruby/              region -recurse  < '%[rxRX]<'    >         fill meta
-add-highlighter shared/ruby/              region -match-capture '%[qwQW]?([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill string
-add-highlighter shared/ruby/              region -match-capture '%[isIS]([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill variable
-add-highlighter shared/ruby/              region -match-capture '%[rxRX]([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill meta
+add-highlighter shared/ruby/              region -match-capture '%[qwQW]?([^\s0-9A-Za-z\(\{\[<>\]\}\)])' ([^\s0-9A-Za-z\(\{\[<>\]\}\)]) fill string
+add-highlighter shared/ruby/              region -match-capture '%[isIS]([^\s0-9A-Za-z\(\{\[<>\]\}\)])' ([^\s0-9A-Za-z\(\{\[<>\]\}\)]) fill variable
+add-highlighter shared/ruby/              region -match-capture '%[rxRX]([^\s0-9A-Za-z\(\{\[<>\]\}\)])' ([^\s0-9A-Za-z\(\{\[<>\]\}\)]) fill meta
 add-highlighter shared/ruby/heredoc region -match-capture '<<[-~]?(?!self)(\w+)'      '^\h*(\w+)$' fill string
 add-highlighter shared/ruby/division region '[\w\)\]]\K(/|(\h+/\h+))' '\w' group # Help Kakoune to better detect /…/ literals
 
