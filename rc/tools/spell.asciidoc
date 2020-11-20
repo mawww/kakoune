@@ -1,0 +1,80 @@
+= spell.kak: spell checking functionality
+
+This script adds spell checking functionality to Kakoune.
+
+== Commands
+
+This file implements the following commands:
+*spell*::
+    spell checking of the current buffer
+*spell-add*::
+    add selected word to the dictionary
+*spell-clear*::
+    clear spell check highlighters
+*spell-next*::
+    jump to the next misspelled word
+*spell-replace*::
+    replace misspelled word with suggestions from the dictionary
+
+== Options
+
+You can control spell.kak behavior with the following options:
+
+*spell_lang*::
+    Default language to use with spell commands. (eg. `en_US`,
+`en_GB`, `hu_HU`)
+
+*spellcmd*::
+    Spelling backend to use. If not specified spell.kak will try in the
+following order:
+    - `aspell`
+    - `hunspell`
+    - `nuspell`
+
+== Setup
+
+spell.kak works fine without setting up `spell_lang` and `spellcmd`. If
+`spellcmd` is not defined spell.kak will search for available alternatives.
+However if You want to specify the backend just set the `spellcmd` option which
+will disable the automatic detection.
+
+Aspell, hunspell, nuspell will determine the spell check language based on
+locale settings, if You leave `spell_lang` option empty.
+
+Below a simple configuration example:
+
+---
+set-option global spell_lang 'hu_HU'
+set-option global spell_cmd 'nuspell'
+---
+
+== Usage
+
+Using the setup below You will be able to spell content in various languages and
+call the following commands from the spell user mode.
+
+---
+set-option global spell_cmd 'nuspell'
+declare-user-mode spell
+define-command -hidden -params 0 _spell-replace %{
+    hook -always -once window ModeChange push:prompt:next-key\[user.spell\] %{
+        execute-keys <esc>
+    }
+    hook -once -always window NormalIdle .* %{
+        enter-user-mode -lock spell
+        spell
+    }
+    spell-replace
+}
+map global spell a ': spell-add; spell<ret>' -docstring 'add to dictionary'
+map global spell r ': _spell-replace<ret>' -docstring 'suggest replacements'
+map global spell n ': spell-next<ret>' -docstring 'next misspelling'
+map global spell h ': set current spell_lang hu_HU; spell<ret>' -docstring 'Hungarian check'
+map global spell e ': set current spell_lang en_US; spell<ret>' -docstring 'English check'
+map global normal <í> ': enter-user-mode -lock spell<ret>'
+
+hook global ModeChange push:[^:]*:next-key\[user.spell\] %{
+    hook -once -always window NormalIdle .* spell-clear
+}
+---
+
