@@ -35,7 +35,7 @@ provide-module python %§
 
 add-highlighter shared/python regions
 add-highlighter shared/python/code default-region group
-add-highlighter shared/python/docstring     region -match-capture ("""|''') (?<!\\)(?:\\\\)*("""|''') regions
+add-highlighter shared/python/docstring     region -match-capture ^\h*("""|''') (?<!\\)(?:\\\\)*("""|''') regions
 add-highlighter shared/python/double_string region '"'   (?<!\\)(\\\\)*"  fill string
 add-highlighter shared/python/single_string region "'"   (?<!\\)(\\\\)*'  fill string
 add-highlighter shared/python/documentation region '##'  '$'              fill documentation
@@ -53,7 +53,7 @@ add-highlighter shared/python/code/ regex '\b\d+\.' 0:value
 # Imaginary formats
 add-highlighter shared/python/code/ regex '\b\d+\+\d+[jJ]\b' 0:value
 
-add-highlighter shared/python/docstring/ default-region fill string
+add-highlighter shared/python/docstring/ default-region fill comment
 add-highlighter shared/python/docstring/ region '>>> \K'    '\z' ref python
 add-highlighter shared/python/docstring/ region '\.\.\. \K'    '\z' ref python
 
