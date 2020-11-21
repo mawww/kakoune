@@ -56,6 +56,17 @@ String join(const Container& container, StringView joiner)
     return res;
 }
 
+template<typename Container>
+String join(const Container& container)
+{
+    String res;
+    for (const auto& str : container)
+    {
+        res += str;
+    }
+    return res;
+}
+
 inline bool prefix_match(StringView str, StringView prefix)
 {
     return str.substr(0_byte, prefix.length()) == prefix;

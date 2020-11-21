@@ -189,9 +189,24 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
             descs.emplace_back(std::move(keys), built_in.docstring);
     }
 
+    // To combine mapped keys with the same command and docstrings (synomyms),
+    // we need a map (command, docstring) -> mapped keys
+    HashMap<std::pair<String, String>, Vector<String>> synonyms;
     for (auto& key : keymaps.get_mapped_keys(mode))
-        descs.emplace_back(key_to_str(key),
-                           keymaps.get_mapping(key, mode).docstring);
+    {
+        KeymapManager::KeymapInfo key_info = keymaps.get_mapping(key, mode);
+        std::pair<String, String> cmd_and_docstr = {join(key_info.keys | transform(key_to_str)),
+                                                    key_info.docstring};
+        if (synonyms.contains(cmd_and_docstr)) {
+          synonyms[cmd_and_docstr].push_back(key_to_str(key));
+        } else {
+          synonyms.insert({std::move(cmd_and_docstr), {key_to_str(key)}});
+        }
+    }
+
+    for (auto& [cmd_and_docstr, keys] : synonyms) {
+        descs.emplace_back(join(keys, ',', false), cmd_and_docstr.second);
+    }
 
     auto max_len = 0_col;
     for (auto& desc : descs)
