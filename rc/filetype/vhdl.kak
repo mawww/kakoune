@@ -181,7 +181,7 @@ define-command -hidden vhdl-insert-on-new-line %[
 		evaluate-commands %[
 			try %[
 				# Validate previous line and that it is not closed yet.
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)((then|(.*:\h*)?if\b.*\bthen)$)<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(else|end|elsif)\b<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)((then|(.*:\h*)?if\b.*\bthen)$)<ret> }i<a-x> <a-K>^<c-r>x(?i)end\b<ret>
 				# Don't add for "if ... generate", it requires "end generate;".
 				execute-keys -draft k<a-x> <a-K>(?i)\bgenerate\b<ret>
 				execute-keys -draft o<c-r>xend<space>if<semicolon><esc>
@@ -190,7 +190,7 @@ define-command -hidden vhdl-insert-on-new-line %[
 		# Wisely add "end generate;".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i).*\bgenerate$<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i).*\bgenerate$<ret> }i<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
 				# Don't add in case of comment line.
 				execute-keys -draft k<a-x> <a-K>^\h*--<ret>
 				execute-keys -draft o<c-r>xend<space>generate<semicolon><esc>
@@ -199,78 +199,78 @@ define-command -hidden vhdl-insert-on-new-line %[
 		# Wisely add "end case;".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)(case|.*\h*:\h*case)\b<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)end<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)(case|.*\h*:\h*case)\b<ret> }i<a-x> <a-K>^<c-r>x(?i)end<ret>
 				execute-keys -draft o<c-r>xend<space>case<semicolon><esc>
 			]
 		]
 		# Wisely add "begin" and "end block;".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)((block|.*:\h*block)\b)<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)((block|.*:\h*block)\b)<ret> }i<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
 				execute-keys -draft o<c-r>xbegin<ret><c-r>xend<space>block<semicolon><esc>
 			]
 		]
 		# Wisely add "begin" and "end process;".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)(.*:\h*)?(postponed\h+)?process\b<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)(.*:\h*)?(postponed\h+)?process\b<ret> }i<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
 				execute-keys -draft o<c-r>xbegin<ret><c-r>xend<space>process<semicolon><esc>
 			]
 		]
 		# Wisely add "end loop;".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)(.*\bloop|.*\h*:\h*(for|loop))$<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(end)<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)(.*\bloop|.*\h*:\h*(for|loop))$<ret> }i<a-x> <a-K>^<c-r>x(?i)(end)<ret>
 				execute-keys -draft o<c-r>xend<space>loop<semicolon><esc>
 			]
 		]
 		# Wisely add "end protected;".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)(type\b.*\bis\h+protected)$<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(end)<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)(type\b.*\bis\h+protected)$<ret> }i<a-x> <a-K>^<c-r>x(?i)(end)<ret>
 				execute-keys -draft o<c-r>xend<space>protected<semicolon><esc>
 			]
 		]
 		# Wisely add "end record;".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)(type\b.*\bis\h+record\h*)$<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(end)<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)(type\b.*\bis\h+record\h*)$<ret> }i<a-x> <a-K>^<c-r>x(?i)(end)<ret>
 				execute-keys -draft o<c-r>xend<space>record<semicolon><esc>
 			]
 		]
 		# Wisely add ");" for "type ... is (".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)(type\b.*\bis\h+\(\h*)$<ret> J}iJ<a-x> <a-K>^<c-r>x(\))<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)(type\b.*\bis\h+\(\h*)$<ret> }i<a-x> <a-K>^<c-r>x(\))<ret>
 				execute-keys -draft o<c-r>x)<semicolon><esc>
 			]
 		]
 		# Wisely add "end entity;".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^(?i)\h*entity\b.*\bis$<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
+				execute-keys -draft k<a-x> <a-k>^(?i)\h*entity\b.*\bis$<ret> }i<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
 				execute-keys -draft o<c-r>xend<space>entity<semicolon><esc>
 			]
 		]
 		# Wisely add "begin" and "end function;".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^(?i)(\h*\)?\h*return\b.*\bis$)<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
+				execute-keys -draft k<a-x> <a-k>^(?i)(\h*\)?\h*return\b.*\bis$)<ret> }i<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
 				execute-keys -draft o<c-r>xbegin<ret><c-r>xend<space>function<semicolon><esc>
 			]
 			try %[
-				execute-keys -draft k<a-x> <a-k>^(?i)(\h*((pure|impure)\h+)?function\b.*\bis$)<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
+				execute-keys -draft k<a-x> <a-k>^(?i)(\h*((pure|impure)\h+)?function\b.*\bis$)<ret> }i<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
 				execute-keys -draft o<c-r>xbegin<ret><c-r>xend<space>function<semicolon><esc>
 			]
 		]
 		# Wisely add "begin" and "end procedure;".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^(?i)(\h*procedure\b.*\bis$)<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)\b(begin|end)\b<ret>
+				execute-keys -draft k<a-x> <a-k>^(?i)(\h*procedure\b.*\bis$)<ret> }i<a-x> <a-K>^<c-r>x(?i)\b(begin|end)\b<ret>
 				execute-keys -draft o<c-r>xbegin<ret><c-r>xend<space>procedure<semicolon><esc>
 			]
 			try %[
-			execute-keys -draft k<a-x> <a-k>^(?i)\h*\)\h*\bis$<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)\b(begin|end)\b<ret>
+			execute-keys -draft k<a-x> <a-k>^(?i)\h*\)\h*\bis$<ret> }i<a-x> <a-K>^<c-r>x(?i)\b(begin|end)\b<ret>
 			# Verify that line with opening parenthesis contains "procedure" keyword.
 			execute-keys -draft k<a-x> s\)<ret> <a-m><semicolon> <a-x><a-k> (?i)\bprocedure\b<ret>
 			execute-keys -draft o<c-r>xbegin<ret><c-r>xend<space>procedure<semicolon><esc>
@@ -279,7 +279,7 @@ define-command -hidden vhdl-insert-on-new-line %[
 		# Wisely add "end package;".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^(?i)(package\b)<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(end)<ret>
+				execute-keys -draft k<a-x> <a-k>^(?i)(package\b)<ret> }i<a-x> <a-K>^<c-r>x(?i)(end)<ret>
 				# Make sure it is not package body.
 				execute-keys -draft k<a-x><a-K>(?i)\bbody\b<ret>
 				execute-keys -draft oend<space>package<semicolon><esc>
@@ -288,56 +288,56 @@ define-command -hidden vhdl-insert-on-new-line %[
 		# Wisely add "end package body;".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^(?i)(package\h+body\b)<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(end)<ret>
+				execute-keys -draft k<a-x> <a-k>^(?i)(package\h+body\b)<ret> }i<a-x> <a-K>^<c-r>x(?i)(end)<ret>
 				execute-keys -draft oend<space>package<space>body<semicolon><esc>
 			]
 		]
 		# Wisely add "begin" and "end architecture;".
 		evaluate-commands %[
 			try %[
-			execute-keys -draft k<a-x> <a-k>^(?i)\h*architecture\b<ret> J}iJ<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
+			execute-keys -draft k<a-x> <a-k>^(?i)\h*architecture\b<ret> }i<a-x> <a-K>^<c-r>x(?i)(begin|end)<ret>
 			execute-keys -draft o<c-r>xbegin<ret><c-r>xend<space>architecture<semicolon><esc>
 			]
 		]
 		# Wisely add ");" for "port (".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)port\h*\($<ret> J}iJ<a-x> <a-K>^<c-r>x(\)\;)<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)port\h*\($<ret> }i<a-x> <a-K>^<c-r>x(\)\;)<ret>
 				execute-keys -draft o<c-r>x)<semicolon><esc>
 			]
 		]
 		# Wisely add ");" for "port map (".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)port\h+map\h*\($<ret> J}iJ<a-x> <a-K>^<c-r>x(\)\;)<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)port\h+map\h*\($<ret> }i<a-x> <a-K>^<c-r>x(\)\;)<ret>
 				execute-keys -draft o<c-r>x)<semicolon><esc>
 			]
 		]
 		# Wisely add ");" for "generic (".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)generic\h*\($<ret> J}iJ<a-x> <a-K>^<c-r>x(\)\;)<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)generic\h*\($<ret> }i<a-x> <a-K>^<c-r>x(\)\;)<ret>
 				execute-keys -draft o<c-r>x)<semicolon><esc>
 			]
 		]
 		# Wisely add ")" for "generic map (".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)generic\h+map\h*\($<ret> J}iJ<a-x> <a-K>^<c-r>x(\))<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)generic\h+map\h*\($<ret> }i<a-x> <a-K>^<c-r>x(\))<ret>
 				execute-keys -draft o<c-r>x)<esc>
 			]
 		]
 		# Wisely add ") return ;" for "[pure|impure] function ... (".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)(pure\b|impure\b)?\h*function\b.*\h*\($<ret> J}iJ<a-x> <a-K>^<c-r>x(\)\h*return.*)<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)(pure\b|impure\b)?\h*function\b.*\h*\($<ret> }i<a-x> <a-K>^<c-r>x(\)\h*return.*)<ret>
 				execute-keys -draft o<c-r>x)<space>return<space><semicolon><esc>
 			]
 		]
 		# Wisely add ");" for "procedure ... (".
 		evaluate-commands %[
 			try %[
-				execute-keys -draft k<a-x> <a-k>^\h*(?i)procedure\b.*\h*\($<ret> J}iJ<a-x> <a-K>^<c-r>x(\)\h*\;)<ret>
+				execute-keys -draft k<a-x> <a-k>^\h*(?i)procedure\b.*\h*\($<ret> }i<a-x> <a-K>^<c-r>x(\)\h*\;)<ret>
 				execute-keys -draft o<c-r>x)<semicolon><esc>
 			]
 		]
