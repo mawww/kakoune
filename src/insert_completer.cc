@@ -348,7 +348,8 @@ InsertCompletion complete_line(const SelectionList& sels,
     const ColumnCount tabstop = options["tabstop"].get<int>();
     const ColumnCount column = get_column(buffer, tabstop, cursor_pos);
 
-    StringView prefix = buffer[cursor_pos.line].substr(0_byte, cursor_pos.column);
+    StringView prefix = trim_indent(buffer[cursor_pos.line].substr(0_byte, cursor_pos.column));
+    BufferCoord replace_begin = buffer.advance(cursor_pos, -prefix.length());
     InsertCompletion::CandidateList candidates;
 
     auto add_candidates = [&](const Buffer& buf) {
@@ -356,12 +357,16 @@ InsertCompletion complete_line(const SelectionList& sels,
         {
             if (buf.name() == buffer.name() && l == cursor_pos.line)
                 continue;
-            const StringView line = buf[l];
+
+            const StringView line = trim_indent(buf[l]);
+
+            if (line.length() == 0)
+              continue;
+
             if (prefix == line.substr(0_byte, prefix.length()))
             {
-                StringView candidate = line.substr(0_byte, line.length()-1);
-                candidates.push_back({candidate.str(), "",
-                                      {expand_tabs(candidate, tabstop, column), {}}});
+                StringView candidate = trim_indent(line.substr(0_byte, line.length()));
+                candidates.push_back({candidate.str(), "", {expand_tabs(candidate, tabstop, column), {}} });
                 // perf: it's unlikely the user intends to search among >10 candidates anyway
                 if (candidates.size() == 100)
                     break;
@@ -384,7 +389,7 @@ InsertCompletion complete_line(const SelectionList& sels,
         return {};
     std::sort(candidates.begin(), candidates.end());
     candidates.erase(std::unique(candidates.begin(), candidates.end()), candidates.end());
-    return { std::move(candidates), cursor_pos.line, cursor_pos, buffer.timestamp() };
+    return { std::move(candidates), replace_begin, cursor_pos, buffer.timestamp() };
 }
 
 }
