@@ -202,9 +202,8 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
         synonyms[cmd_and_docstr].push_back(key_to_str(key));
     }
 
-    for (auto& [cmd_and_docstr, keys] : synonyms) {
+    for (auto& [cmd_and_docstr, keys] : synonyms)
         descs.emplace_back(join(keys, ',', false), cmd_and_docstr.second);
-    }
 
     auto max_len = 0_col;
     for (auto& desc : descs)
