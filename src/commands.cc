@@ -2542,20 +2542,21 @@ void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool l
                              [mode_name, mode, lock](Key key, Context& context) mutable {
         if (key == Key::Escape)
             return;
-        if (not context.keymaps().is_mapped(key, mode))
-            return;
 
-        auto& mapping = context.keymaps().get_mapping(key, mode);
-        ScopedSetBool disable_keymaps(context.keymaps_disabled());
+        if (context.keymaps().is_mapped(key, mode))
+        {
+            auto& mapping = context.keymaps().get_mapping(key, mode);
+            ScopedSetBool disable_keymaps(context.keymaps_disabled());
 
-        InputHandler::ScopedForceNormal force_normal{context.input_handler(), {}};
+            InputHandler::ScopedForceNormal force_normal{context.input_handler(), {}};
 
-        ScopedEdition edition(context);
-        for (auto& key : mapping.keys)
-            context.input_handler().handle_key(key);
+            ScopedEdition edition(context);
+            for (auto& key : mapping.keys)
+                context.input_handler().handle_key(key);
+        }
 
         if (lock)
-            enter_user_mode(context, std::move(mode_name), mode, true);
+            return enter_user_mode(context, std::move(mode_name), mode, true);
     }, lock ? format("{} (lock)", mode_name) : mode_name,
     build_autoinfo_for_mapping(context, mode, {}));
 }
