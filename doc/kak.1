@@ -101,15 +101,22 @@ execute \fIcommand\fR after the server initialization phase
 
 .TP
 .BR \-f " " \fIkeys\fR
-enter in \fIfilter mode\fR: select the whole file, then execute \fIkeys\fR
+enter in \fIfilter mode\fR: select the whole file, execute \fIkeys\fR and
+print the resulting buffer. The exit code is set to 2 if errors have occurred
+when applying \fIkeys\fR to any given buffer, or to 1 if other errors have
+occurred. The resulting buffer is not printed in either case. Note that
+\fIkeys\fR will be applied to all the given files even if an error has been
+raised while processing any of them
 
 .TP
 .BR \-i " " \fIsuffix\fR
-backup the files on which a filter is applied using the given suffix
+in \fIfilter mode\fR, backup the target file by appending \fIsuffix\fR to
+the extension
 
 .TP
 .BR \-q
-when in \fIfilter mode\fR, don't print any errors
+in \fIfilter mode\fR, don't print any errors that occurred while executing
+keys
 
 .TP
 .BR \-p " " \fIsession_id\fR
