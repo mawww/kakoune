@@ -178,6 +178,7 @@ public:
           m_idle_timer{TimePoint::max(),
                        context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
+              RefPtr<InputMode> keep_alive{this}; // hook could trigger pop_mode()
               context().hooks().run_hook(Hook::NormalIdle, "", context());
           }},
           m_fs_check_timer{TimePoint::max(),
@@ -754,6 +755,7 @@ public:
           m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Prompt},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
+                           RefPtr<InputMode> keep_alive{this}; // hook or m_callback could trigger pop_mode()
                            if (m_auto_complete and m_refresh_completion_pending)
                                refresh_completions(CompletionFlags::Fast);
                            if (m_line_changed)
@@ -1213,6 +1215,7 @@ public:
           m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Insert},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                        Timer::Callback{} : [this](Timer&) {
+                           RefPtr<InputMode> keep_alive{this}; // hook could trigger pop_mode()
                            m_completer.update(m_auto_complete);
                            context().hooks().run_hook(Hook::InsertIdle, "", context());
                        }},
