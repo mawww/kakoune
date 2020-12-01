@@ -1596,6 +1596,7 @@ void InputHandler::pop_mode(InputMode* mode)
     kak_assert(m_mode_stack.back().get() == mode);
     kak_assert(m_mode_stack.size() > 1);
 
+    RefPtr<InputMode> keep_alive{mode}; // Ensure prev_name stays valid
     StringView prev_name = mode->name();
 
     current_mode().on_disabled(false);
