@@ -27,7 +27,7 @@ add-highlighter shared/sh/double_string region  %{(?<!\\)(?:\\\\)*\K"} %{(?<!\\)
 add-highlighter shared/sh/single_string region %{(?<!\\)(?:\\\\)*\K'} %{'} fill string
 add-highlighter shared/sh/expansion region -recurse (?<!\\)(?:\\\\)*\K\$\{ (?<!\\)(?:\\\\)*\K\$\{ \}|\n fill value
 add-highlighter shared/sh/comment region (?<!\\)(?:\\\\)*(?:^|\h)\K# '$' fill comment
-add-highlighter shared/sh/heredoc region -match-capture '<<-?\h*''?(\w+)''?' '^\t*(\w+)$' fill string
+add-highlighter shared/sh/heredoc region -match-capture '<<-?\h*''?(\w+)''?' '^\h*(\w+)$' fill string
 
 add-highlighter shared/sh/arithmetic/expansion ref sh/double_string/expansion
 add-highlighter shared/sh/double_string/fill fill string
