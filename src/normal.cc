@@ -2106,7 +2106,7 @@ void remove_selection(Context& context, NormalParams p)
     if (index >= selections.size())
         throw runtime_error{format("invalid selection index: {}", index)};
     if (selections.size() == 1)
-        throw runtime_error{"cannot remove the last selection"};
+        throw no_selections_remaining{};
 
     selections.remove(index);
     selections.check_invariant();
