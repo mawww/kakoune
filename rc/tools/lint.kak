@@ -14,6 +14,14 @@ declare-option -hidden int lint_warning_count
 declare-option -docstring "name of the client in which utilities display information" \
     str toolsclient
 
+define-command -hidden -params 1 lint-open-output-buffer %{
+    evaluate-commands -try-client %opt{toolsclient} %{
+        edit! -fifo "%arg{1}/fifo" -debug *lint-output*
+        set-option buffer filetype make
+        set-option buffer make_current_error_line 0
+    }
+}
+
 define-command \
     -hidden \
     -params 1 \
@@ -41,14 +49,6 @@ define-command \
 
         # A directory to keep all our temporary data.
         dir=$(mktemp -d "${TMPDIR:-/tmp}"/kak-lint.XXXXXXXX)
-
-        # A fifo to send the results back to a Kakoune buffer.
-        mkfifo "$dir"/fifo
-        printf '%s\n' "evaluate-commands -try-client '$kak_opt_toolsclient' %{
-                  edit! -fifo $(kakquote "$dir/fifo") -debug *lint-output*
-                  set-option buffer filetype make
-                  set-option buffer make_current_error_line 0
-              }"
 
         # Write all the selection descriptions to files.
         eval set -- "$kak_selections_desc"
@@ -206,6 +206,10 @@ define-command \
             printf "eval -client %s 'lint-show-diagnostics; lint-show-counters'" \
                 "$kak_client"
         fi | kak -p "$kak_session"
+
+        # A fifo to send the results back to a Kakoune buffer.
+        mkfifo "$dir"/fifo
+        printf 'lint-open-output-buffer %s' "$(kakquote "$dir")" | kak -p "$kak_session"
 
         # We are done here. Send the results to Kakoune,
         # and clean up.
