@@ -54,7 +54,7 @@ add-highlighter shared/python/code/ regex '\b\d+\.' 0:value
 # Imaginary formats
 add-highlighter shared/python/code/ regex '\b\d+\+\d+[jJ]\b' 0:value
 
-add-highlighter shared/python/docstring/ default-region fill comment
+add-highlighter shared/python/docstring/ default-region fill documentation
 add-highlighter shared/python/docstring/ region '(>>>|\.\.\.) \K'    (?=''')|(?=""") ref python
 
 evaluate-commands %sh{
