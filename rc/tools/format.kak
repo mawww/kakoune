@@ -16,8 +16,8 @@ define-command format-selections -docstring "Format the selections individually"
     }
     evaluate-commands -draft -no-hooks -save-regs '|' %{
         set-register '|' %{
-            format_in="$(mktemp "${TMPDIR:-/tmp}"/kak-formatter-XXXXXX)"
-            format_out="$(mktemp "${TMPDIR:-/tmp}"/kak-formatter-XXXXXX)"
+            format_in="$(mktemp "${TMPDIR:-/tmp}"/kak-formatter.XXXXXX)"
+            format_out="$(mktemp "${TMPDIR:-/tmp}"/kak-formatter.XXXXXX)"
 
             cat > "$format_in"
             eval "$kak_opt_formatcmd" < "$format_in" > "$format_out"
