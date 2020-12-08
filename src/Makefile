@@ -55,6 +55,7 @@ PREFIX ?= /usr/local
 DESTDIR ?= # root dir
 
 bindir := $(DESTDIR)$(PREFIX)/bin
+libexecdir := $(DESTDIR)$(PREFIX)/libexec/kak
 sharedir := $(DESTDIR)$(PREFIX)/share/kak
 docdir := $(DESTDIR)$(PREFIX)/share/doc/kak
 mandir := $(DESTDIR)$(PREFIX)/share/man/man1
@@ -162,6 +163,7 @@ distclean: clean
 
 installdirs:
 	install -d $(bindir) \
+		$(libexecdir) \
 		$(sharedir)/rc \
 		$(sharedir)/colors \
 		$(sharedir)/doc \
@@ -170,6 +172,7 @@ installdirs:
 
 install: kak man installdirs
 	install -m 0755 kak $(bindir)
+	ln -rsf $(bindir)/kak $(libexecdir)/kak
 	install -m 0644 ../share/kak/kakrc $(sharedir)
 	install -m 0644 ../doc/pages/*.asciidoc $(sharedir)/doc
 	cp -r ../rc/* $(sharedir)/rc

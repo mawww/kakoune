@@ -72,7 +72,7 @@ ShellManager::ShellManager(ConstArrayView<EnvVarDesc> builtin_env_vars)
     // have access to the kak command regardless of if the user installed it
     {
         const char* path = getenv("PATH");
-        auto new_path = format("{}:{}", path, split_path(get_kak_binary_path()).first);
+        auto new_path = format("{}../libexec/kak:{}", split_path(get_kak_binary_path()).first, path);
         setenv("PATH", new_path.c_str(), 1);
     }
 }
