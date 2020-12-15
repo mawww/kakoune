@@ -45,112 +45,49 @@ hook global WinCreate .*\.cc %{ add-highlighter number-lines }
 The parameter string associated with each hook is described after the hook
 name. Hooks with no description will always use an empty string.
 
-*NormalIdle*::
-    a certain duration has passed since the last keypress in normal mode
+*BufClose* `buffer name`::
+    executed when a buffer is deleted, while it is still valid
 
-*NormalKey* `key`::
-    a key is received in normal mode. This hook will not trigger when the user
-    presses a key on the left-hand side of a normal-mode mapping (see
-    <<mapping#,`:doc mapping`>>), but will trigger for keys on the right-hand
-    side. See also `RawKey` below.
-
-*InsertIdle*::
-    a certain duration has passed since the last keypress in insert mode
-
-*InsertKey* `key`::
-    a key is received in insert mode. This hook will not trigger when the user
-    presses a key on the left-hand side of a insert-mode mapping (see
-    <<mapping#,`:doc mapping`>>), but will trigger for keys on the right-hand
-    side. See also `RawKey` below.
-
-*InsertChar* `char`::
-    a character is received in insert mode
-
-*InsertDelete* `deleted char`::
-    a character is deleted in insert mode
-
-*InsertMove* `move key`::
-    the cursor moved (without inserting) in insert mode
-
-*PromptIdle*::
-    a certain duration has passed since the last keypress in prompt mode
-
-*WinCreate* `buffer name`::
-    a window was created. This hook is executed in draft context, so any
-    changes to selections or input state will be discarded.
-
-*WinClose* `buffer name`::
-    a window was destroyed. This hook is executed in a draft context, so any
-    changes to selections or input state will be discarded.
-
-*WinResize* `<line>.<column>`::
-    a window was resized. This hook is executed in a draft context, so any
-    changes to selections or input state will be discarded.
-
-*WinDisplay* `buffer name`::
-    a client switched to displaying the given buffer.
-
-*WinSetOption* `<option_name>=<new_value>`::
-    an option was set in a window context. This hook is executed in a draft
-    context, so any changes to selections or input state will be discarded.
-
-*GlobalSetOption* `<option_name>=<new_value>`::
-    an option was set at the global scope
-
-*BufSetOption* `<option_name>=<new_value>`::
-    an option was set in a buffer context
-
-*BufNewFile* `filename`::
-    a buffer for a new file has been created
-
-*BufOpenFile* `filename`::
-    a buffer for an existing file has been created
+*BufCloseFifo*::
+    executed when a fifo buffer closes its fifo file descriptor either
+    because the buffer is being deleted or the writing end has been closed
 
 *BufCreate* `filename`::
     a buffer has been created
 
-*BufWritePre* `filename`::
-    executed just before a buffer is written
-
-*BufWritePost* `filename`::
-    executed just after a buffer is written
-
-*BufReload* `filename`::
-    executed after a buffer reload has been triggered by an external
-    modification to its file
-
-*BufClose* `buffer name`::
-    executed when a buffer is deleted, while it is still valid
+*BufNewFile* `filename`::
+    a buffer for a new file has been created
 
 *BufOpenFifo* `buffer name`::
     executed when a buffer opens a fifo
+
+*BufOpenFile* `filename`::
+    a buffer for an existing file has been created
 
 *BufReadFifo* `<start line>.<start column>,<end line>.<end column>`::
     executed after some data has been read from a fifo and inserted in
     the buffer. The hook param contains the range of text that was just
     inserted, in a format compatible with the `select` command.
 
-*BufCloseFifo*::
-    executed when a fifo buffer closes its fifo file descriptor either
-    because the buffer is being deleted or the writing end has been closed
+*BufReload* `filename`::
+    executed after a buffer reload has been triggered by an external
+    modification to its file
 
-*ClientCreate* `client name`::
-    executed when a new client is created.
+*BufSetOption* `<option_name>=<new_value>`::
+    an option was set in a buffer context
+
+*BufWritePost* `filename`::
+    executed just after a buffer is written
+
+*BufWritePre* `filename`::
+    executed just before a buffer is written
 
 *ClientClose* `client name`::
     executed when a client is closed, after it was removed from the client
     list.
 
-*RuntimeError* `error message`::
-    an error was encountered while executing a user command
-
-*ModeChange* `[push|pop]:<old mode>:<new mode>`::
-    Triggered whenever a mode is pushed or removed from the mode stack.
-    The mode name can be things like 'normal' or 'insert' for regular
-    interactive modes, or 'next-key[<name>]' for sub-modes where Kakoune
-    prompts for a key. For example, `g` in normal mode pushes 'next-key[goto]'
-    mode, the `enter-user-mode foo` command pushes 'next-key[user.foo]' mode,
-    and the `on-key -mode-name bar` command pushes 'next-key[bar]' mode.
+*ClientCreate* `client name`::
+    executed when a new client is created.
 
 *KakBegin* `session name`::
     kakoune has started, this hook is called just after reading the user
@@ -165,13 +102,57 @@ name. Hooks with no description will always use an empty string.
 *FocusOut* `client name`::
     on supported clients, triggered when the client gets unfocused
 
-*InsertCompletionShow*::
-    Triggered when the insert completion menu gets displayed
+*GlobalSetOption* `<option_name>=<new_value>`::
+    an option was set at the global scope
+
+*InsertChar* `char`::
+    a character is received in insert mode
 
 *InsertCompletionHide* `completion`::
     Triggered when the insert completion menu gets hidden, the list of
     inserted completions text ranges is passed as filtering text, in the
     same format the `select` command expects.
+
+*InsertCompletionShow*::
+    Triggered when the insert completion menu gets displayed
+
+*InsertDelete* `deleted char`::
+    a character is deleted in insert mode
+
+*InsertIdle*::
+    a certain duration has passed since the last keypress in insert mode
+
+*InsertKey* `key`::
+    a key is received in insert mode. This hook will not trigger when the user
+    presses a key on the left-hand side of a insert-mode mapping (see
+    <<mapping#,`:doc mapping`>>), but will trigger for keys on the right-hand
+    side. See also `RawKey` below.
+
+*InsertMove* `move key`::
+    the cursor moved (without inserting) in insert mode
+
+*ModeChange* `[push|pop]:<old mode>:<new mode>`::
+    Triggered whenever a mode is pushed or removed from the mode stack.
+    The mode name can be things like 'normal' or 'insert' for regular
+    interactive modes, or 'next-key[<name>]' for sub-modes where Kakoune
+    prompts for a key. For example, `g` in normal mode pushes 'next-key[goto]'
+    mode, the `enter-user-mode foo` command pushes 'next-key[user.foo]' mode,
+    and the `on-key -mode-name bar` command pushes 'next-key[bar]' mode.
+
+*ModuleLoaded* `module`::
+    Triggered after a module is evaluated by the first `require-module` call
+
+*NormalIdle*::
+    a certain duration has passed since the last keypress in normal mode
+
+*NormalKey* `key`::
+    a key is received in normal mode. This hook will not trigger when the user
+    presses a key on the left-hand side of a normal-mode mapping (see
+    <<mapping#,`:doc mapping`>>), but will trigger for keys on the right-hand
+    side. See also `RawKey` below.
+
+*PromptIdle*::
+    a certain duration has passed since the last keypress in prompt mode
 
 *RawKey* `key`::
     Triggered whenever a key is pressed by the user, regardless of what mode
@@ -183,12 +164,31 @@ name. Hooks with no description will always use an empty string.
 *RegisterModified* `register`::
     Triggered after a register has been written to.
 
-*ModuleLoaded* `module`::
-    Triggered after a module is evaluated by the first `require-module` call
+*RuntimeError* `error message`::
+    an error was encountered while executing a user command
 
 *User* `param`::
     Triggered  via the `trigger-user-hook` command. Provides a way for plugins
     to introduce custom hooks by specifying what *param* would be.
+
+*WinClose* `buffer name`::
+    a window was destroyed. This hook is executed in a draft context, so any
+    changes to selections or input state will be discarded.
+
+*WinCreate* `buffer name`::
+    a window was created. This hook is executed in draft context, so any
+    changes to selections or input state will be discarded.
+
+*WinDisplay* `buffer name`::
+    a client switched to displaying the given buffer.
+
+*WinResize* `<line>.<column>`::
+    a window was resized. This hook is executed in a draft context, so any
+    changes to selections or input state will be discarded.
+
+*WinSetOption* `<option_name>=<new_value>`::
+    an option was set in a window context. This hook is executed in a draft
+    context, so any changes to selections or input state will be discarded.
 
 Note that some hooks will not consider underlying scopes depending on what
 context they are bound to be run into, e.g. the `BufWritePost` hook is a buffer
