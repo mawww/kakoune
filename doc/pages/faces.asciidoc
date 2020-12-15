@@ -28,31 +28,31 @@ following format:
 
 'attributes'::
     string whose individual letters set an attribute:
-        *u*:::
-            underline
-        *r*:::
-            reverse
         *b*:::
             bold
-        *B*:::
-            blink
         *d*:::
             dim
         *i*:::
             italic
-        *F*:::
-            final, override the previous face instead of merging with it,
-            and this face will only be replaced if another face with
-            the final attribute is applied
+        *r*:::
+            reverse
+        *u*:::
+            underline
+        *B*:::
+            blink
+        *a*:::
+            final attributes, as final but only applies to face's
+            attributes
         *f*:::
             final foreground, as final but only applies to face's
             foreground color
         *g*:::
             final background, as final but only applies to face's
             background color
-        *a*:::
-            final attributes, as final but only applies to face's
-            attributes
+        *F*:::
+            final, override the previous face instead of merging with it,
+            and this face will only be replaced if another face with
+            the final attribute is applied
 
 'base'::
     The base face on which this face applies, which can be any face name,
