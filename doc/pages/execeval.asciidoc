@@ -22,12 +22,13 @@ when the commands have been executed: */*, *"*, *|*, *^*, *@*.
 
 == Optional switches
 
+*-buffer* <names>::
+    execute in the context of each buffers in the comma separated list
+    *names*. `*` as a name can be used to iterate on all non-debug buffers
+    (See <<buffers#debug-buffers, `:doc buffers`>>)
+
 *-client* <name>::
     execute in the context of the client named *name*
-
-*-try-client* <name>::
-    execute in the context of the client named *name* if such client
-    exists, or else in the current context
 
 *-draft*::
     execute in a copy of the context of the selected client. Modifications
@@ -40,14 +41,13 @@ when the commands have been executed: */*, *"*, *|*, *^*, *@*.
     selection. This permits avoiding cases where the selections may
     get merged
 
-*-buffer* <names>::
-    execute in the context of each buffers in the comma separated list
-    *names*. `*` as a name can be used to iterate on all non-debug buffers
-    (See <<buffers#debug-buffers, `:doc buffers`>>)
-
 *-save-regs* <regs>::
     regs is a string of registers to be restored after execution (overwrites
     the list of registers saved by default, c.f. description)
+
+*-try-client* <name>::
+    execute in the context of the client named *name* if such client
+    exists, or else in the current context
 
 == evaluate-commands specific switches
 
