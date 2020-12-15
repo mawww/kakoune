@@ -63,34 +63,58 @@ text and their set of valid values.
 Some types are usable for user defined options while some other types
 are exclusively available to built-in options.
 
+*bool*::
+    a boolean value, yes/true or no/false
+
+*completions*::
+    a list of `<text>|<select cmd>|<menu text>` candidates,
+    except for the first element which follows the
+    `<line>.<column>[+<length>]@<timestamp>` format to define where the
+    completion apply in the buffer.
+
+    Select commands are arbitrary Kakoune commands that will be executed
+    each time the element is selected in the menu. The common use case is
+    to display element specific documentation.
+
+    Markup can be used in the menu text.
+    (see <<faces#markup-strings,`:doc faces markup-strings`>>)
+
+    `set -add` adds given completions to the list. +
+    `set -remove` removes given completions from the list. +
+
+*coord*::
+    a line, column pair (separated by a comma)
+    Cannot be used with `declare-option`
+
+*enum(value1|value2|...)*::
+    an enum, taking one of the given values
+    Cannot be used with `declare-option`
+
+*flags(value1|value2|...)*::
+    a set of flags, taking a combination of the given values joined by a
+    '|' character.
+
+    `set -add` adds the given flags to the combination. +
+    `set -remove` removes the given flags to the combination. +
+
+    Cannot be used with `declare-option`
+
 *int*::
     an integer number.
 
     `set -add` performs a math addition. +
     `set -remove` performs a math substraction. +
 
-*bool*::
-    a boolean value, yes/true or no/false
+*line-specs*::
+    a list of a line number and a corresponding flag (`<line>|<flag
+    text>`), except for the first element which is just the timestamp
+    of the buffer. When `update-option` is used on an option of this
+    type, its lines get updated according to all the buffer modifications
+    that happened since its timestamp.
+    See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
 
-*str*::
-    a string, some freeform text
-
-*regex*::
-    as a string but the set commands will complain if the entered text
-    is not a valid regex
-
-*coord*::
-    a line, column pair (separated by a comma)
-    Cannot be used with `declare-option`
-
-*<type>-list*::
-    a list, elements are specified as separate arguments to the command.
-
-    `set -add` appends the new element to the list. +
-    `set -remove` removes each given element from the list. +
-
-    Only `int-list` and `str-list` options can be created with
-    `declare-option`.
+    `set -add` appends the new specs to the list. +
+    `set -remove` removes the given specs from the list. +
 
 *range-specs*::
     a timestamp (like `%val{timestamp}`,
@@ -127,45 +151,21 @@ are exclusively available to built-in options.
 
     See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
 
-*line-specs*::
-    a list of a line number and a corresponding flag (`<line>|<flag
-    text>`), except for the first element which is just the timestamp
-    of the buffer. When `update-option` is used on an option of this
-    type, its lines get updated according to all the buffer modifications
-    that happened since its timestamp.
-    See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
+*regex*::
+    as a string but the set commands will complain if the entered text
+    is not a valid regex
 
-    `set -add` appends the new specs to the list. +
-    `set -remove` removes the given specs from the list. +
+*str*::
+    a string, some freeform text
 
-*completions*::
-    a list of `<text>|<select cmd>|<menu text>` candidates,
-    except for the first element which follows the
-    `<line>.<column>[+<length>]@<timestamp>` format to define where the
-    completion apply in the buffer.
+*<type>-list*::
+    a list, elements are specified as separate arguments to the command.
 
-    Select commands are arbitrary Kakoune commands that will be executed
-    each time the element is selected in the menu. The common use case is
-    to display element specific documentation.
+    `set -add` appends the new element to the list. +
+    `set -remove` removes each given element from the list. +
 
-    Markup can be used in the menu text.
-    (see <<faces#markup-strings,`:doc faces markup-strings`>>)
-
-    `set -add` adds given completions to the list. +
-    `set -remove` removes given completions from the list. +
-
-*enum(value1|value2|...)*::
-    an enum, taking one of the given values
-    Cannot be used with `declare-option`
-
-*flags(value1|value2|...)*::
-    a set of flags, taking a combination of the given values joined by a
-    '|' character.
-
-    `set -add` adds the given flags to the combination. +
-    `set -remove` removes the given flags to the combination. +
-
-    Cannot be used with `declare-option`
+    Only `int-list` and `str-list` options can be created with
+    `declare-option`.
 
 *<type>-to-<type>-map*::
     a list of `key=value` pairs.
