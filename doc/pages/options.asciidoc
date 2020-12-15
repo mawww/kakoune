@@ -206,10 +206,6 @@ are exclusively available to built-in options.
     completion engines to use for insert mode completion (they are tried
     in order until one generates candidates). Existing completers are:
 
-    *word=all*, *word=buffer*:::
-        which complete using words in all buffers (*word=all*)
-        or only the current one (*word=buffer*)
-
     *filename*:::
         which tries to detect when a filename is being entered and
         provides completion based on local filesystem
@@ -221,6 +217,10 @@ are exclusively available to built-in options.
     *option=<opt-name>*:::
         where *opt-name* is an option of type 'completions' whose
         contents will be used
+
+    *word=all*, *word=buffer*:::
+        which complete using words in all buffers (*word=all*)
+        or only the current one (*word=buffer*)
 
 *debug* `flags(hooks|shell|profile|keys|commands)`::
     dump various debug information in the '\*debug*' buffer
@@ -327,31 +327,31 @@ are exclusively available to built-in options.
     a list of `key=value` pairs that are forwarded to the user
     interface implementation. The NCurses UI support the following options:
 
-        *ncurses_set_title*:::
-            if *yes* or *true*, the terminal emulator title will
-            be changed
-
-        *ncurses_status_on_top*:::
-            if *yes*, or *true* the status line will be placed
-            at the top of the terminal rather than at the bottom
-
         *ncurses_assistant*:::
             specify the nice assistant displayed in info boxes,
             can be *clippy* (the default), *cat*, *dilbert* or *none*
-
-        *ncurses_enable_mouse*:::
-            boolean option that enables mouse support
 
         *ncurses_change_colors*:::
             boolean option that can disable color palette changing if the
             terminfo enables it but the terminal does not support it.
 
-        *ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
-            specify which button send for wheel down/up events
+        *ncurses_enable_mouse*:::
+            boolean option that enables mouse support
+
+        *ncurses_set_title*:::
+            if *yes* or *true*, the terminal emulator title will
+            be changed
 
         *ncurses_shift_function_key*:::
             Function key from which shifted function key start, if the
             terminal sends F13 for <s-F1>, this should be set to 12.
+
+        *ncurses_status_on_top*:::
+            if *yes*, or *true* the status line will be placed
+            at the top of the terminal rather than at the bottom
+
+        *ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
+            specify which button send for wheel down/up events
 
 *writemethod* `enum(overwrite|replace)`::
     _default_ overwrite +
