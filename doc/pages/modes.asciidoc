@@ -22,6 +22,13 @@ To customize key mappings in various modes, refer to <<mapping#,`:doc mapping`>>
 
 == Builtin modes
 
+The default mode of operation under which all primitives (see
+<<keys#,`:doc keys`>>) are triggered is the
+<<normal mode,`:doc modes normal-mode`>>.
+
+Writing text into the current buffer is achieved by entering
+<<insert mode,`:doc modes insert-mode`>>.
+
 === Goto mode
 
 Goto mode provides commands dedicated to jumping either inside a buffer
