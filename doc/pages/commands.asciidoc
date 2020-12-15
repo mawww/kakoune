@@ -20,10 +20,30 @@ of the file onto the filesystem
     given. Buffers that do not appear in the parameters will remain at the
     end of the list, keeping their current order.
 
+*buffer* <name>::
+    *alias* b +
+    switch to buffer <name>
+
+*buffer-next*::
+    *alias* bn +
+    switch to the next buffer.
+    Debug buffers are skipped.
+    (See <<buffers#debug-buffers,`:doc buffers debug-buffers`>>)
+
+*buffer-previous*::
+    *alias* bp +
+    switch to the previous buffer.
+    Debug buffers are skipped.
+    (See <<buffers#debug-buffers,`:doc buffers debug-buffers`>>)
+
 *change-directory* [<directory>]::
     *alias* cd +
     change the current directory to *directory*, or the home directory if
     unspecified
+
+*delete-buffer[!]* [<name>]::
+    *alias* db +
+    delete current buffer or the buffer <name> if specified
 
 *edit[!]* [<switches>] <filename> [<line> [<column>]]::
     *alias* e +
@@ -57,6 +77,19 @@ of the file onto the filesystem
         buffer down to make the new data visible.
         Otherwise, does nothing.
 
+*quit[!]* [<exit status>]::
+    *alias* q +
+    exit Kakoune, use quit! to force quitting even if there is some
+    unsaved buffer remaining. If specified, the client exit status
+    will be set to <exit status>
+
+*rename-buffer* [-file|-scratch] <name>::
+    set current buffer name, if *-scratch* or *-file* is given, ensure
+    the buffer is set to the corresponding type.
+
+*source* <filename> <param>...::
+    execute commands in <filename>
+    parameters are available in the sourced script as `%arg{0}`, `%arg{1}`, …
 
 *write[!]* [-sync] [-method <writemethod>] [<filename>]::
     *alias* w +
@@ -85,10 +118,9 @@ of the file onto the filesystem
     *alias* wa +
     write all changed buffers that are associated with a file
 
-*quit[!]* [<exit status>]::
-    *alias* q +
-    exit Kakoune, use quit! to force quitting even if there is some
-    unsaved buffer remaining. If specified, the client exit status
+*write-all-quit* [-sync] [-method <writemethod>] [<exit status>]::
+    *alias* waq +
+    write all buffers and quit. If specified, the client exit status
     will be set to <exit status>
 
 *write-quit[!]* [-sync] [-method <writemethod>] [<exit status>]::
@@ -96,50 +128,17 @@ of the file onto the filesystem
     write current buffer and quit current client. If specified, the client
     exit status will be set to <exit status>
 
-*write-all-quit* [-sync] [-method <writemethod>] [<exit status>]::
-    *alias* waq +
-    write all buffers and quit. If specified, the client exit status
-    will be set to <exit status>
-
-*buffer* <name>::
-    *alias* b +
-    switch to buffer <name>
-
-*buffer-next*::
-    *alias* bn +
-    switch to the next buffer.
-    Debug buffers are skipped.
-    (See <<buffers#debug-buffers,`:doc buffers debug-buffers`>>)
-
-*buffer-previous*::
-    *alias* bp +
-    switch to the previous buffer.
-    Debug buffers are skipped.
-    (See <<buffers#debug-buffers,`:doc buffers debug-buffers`>>)
-
-*delete-buffer[!]* [<name>]::
-    *alias* db +
-    delete current buffer or the buffer <name> if specified
-
-*rename-buffer* [-file|-scratch] <name>::
-    set current buffer name, if *-scratch* or *-file* is given, ensure
-    the buffer is set to the corresponding type.
-
-*source* <filename> <param>...::
-    execute commands in <filename>
-    parameters are available in the sourced script as `%arg{0}`, `%arg{1}`, …
-
 == Clients and Sessions
+
+*kill[!]* [<exit status>]::
+    terminate the current session, all the clients as well as the server.
+    If specified, the server and clients exit status will be set to <exit status>
 
 *rename-client* <name>::
     set current client name
 
 *rename-session* <name>::
     set current session name
-
-*kill[!]* [<exit status>]::
-    terminate the current session, all the clients as well as the server.
-    If specified, the server and clients exit status will be set to <exit status>
 
 == Options
 
@@ -168,18 +167,22 @@ of the file onto the filesystem
 
 == Commands and Keys
 
-*define-command* [<switches>] <name> <command>::
-    *alias* def +
-    define a new command (See <<declaring-new-commands,Declaring new commands>>)
-
 *alias* <scope> <name> <command>::
     define a new alias named *name* in *scope*
     (See <<aliases,Using aliases>> and <<scopes#,`:doc scopes`>>)
 
-*unalias* <scope> <name> [<command>]::
-    remove an alias if its current value is the same as the one passed
-    as an optional parameter, remove it unconditionally otherwise
-    (See <<aliases,Using aliases>> and <<scopes#,`:doc scopes`>>)
+*declare-user-mode* <name>::
+    declare a new user keymap mode
+
+*define-command* [<switches>] <name> <command>::
+    *alias* def +
+    define a new command (See <<declaring-new-commands,Declaring new commands>>)
+
+*enter-user-mode* [<switches>] <name>::
+    enable <name> keymap mode for next key
+
+    *-lock*:::
+        stay in mode until `<esc>` is pressed
 
 *evaluate-commands* [<switches>] <command> ...::
     *alias* eval +
@@ -194,18 +197,14 @@ of the file onto the filesystem
     bind a list of keys to a combination (See <<mapping#,`:doc mapping`>>
     and <<scopes#,`:doc scopes`>>)
 
+*unalias* <scope> <name> [<command>]::
+    remove an alias if its current value is the same as the one passed
+    as an optional parameter, remove it unconditionally otherwise
+    (See <<aliases,Using aliases>> and <<scopes#,`:doc scopes`>>)
+
 *unmap* <scope> <mode> <key> [<expected>]::
     unbind a key combination (See <<mapping#,`:doc mapping`>>
     and <<scopes#,`:doc scopes`>>)
-
-*declare-user-mode* <name>::
-    declare a new user keymap mode
-
-*enter-user-mode* [<switches>] <name>::
-    enable <name> keymap mode for next key
-
-    *-lock*:::
-        stay in mode until `<esc>` is pressed
 
 == Hooks
 
@@ -223,6 +222,14 @@ of the file onto the filesystem
     the current context. (See <<hooks#,`:doc hooks`>>)
 
 == Display
+
+*add-highlighter* [<switches>] <highlighter_path> <highlighter_parameters> ...::
+    *alias* addhl +
+    add a highlighter to the current window
+    (See <<highlighters#,`:doc highlighters`>>)
+
+*colorscheme* <name>::
+    load named colorscheme
 
 *echo* [<switches>] <text>::
     show *text* in status line, with the following *switches*:
@@ -252,6 +259,11 @@ of the file onto the filesystem
             also wrap each arguments in single quotes and escape
             embedded quotes in a shell compatible way.
 
+*remove-highlighter* <highlighter_path>::
+    *alias* rmhl +
+    remove the highlighter whose id is *highlighter_id*
+    (See <<highlighters#,`:doc highlighters`>>)
+
 *set-face* <scope> <name> <facespec>::
     *alias* face +
     define a face in *scope*
@@ -261,73 +273,17 @@ of the file onto the filesystem
     Remove a face definition from *scope*
     (See <<faces#,`:doc faces`>> and <<scopes#,`:doc scopes`>>)
 
-*colorscheme* <name>::
-    load named colorscheme
-
-*add-highlighter* [<switches>] <highlighter_path> <highlighter_parameters> ...::
-    *alias* addhl +
-    add a highlighter to the current window
-    (See <<highlighters#,`:doc highlighters`>>)
-
-*remove-highlighter* <highlighter_path>::
-    *alias* rmhl +
-    remove the highlighter whose id is *highlighter_id*
-    (See <<highlighters#,`:doc highlighters`>>)
-
 == Helpers
 
 Kakoune provides some helper commands that can be used to define composite
 commands in scripts. They are also available in the interactive mode,
 but not really useful in that context.
 
-*prompt* [<switches>] <prompt> <command>::
-    prompt the user for a string, when the user validates, executes the
-    command. The entered text is available in the `text` value accessible
-    through `$kak_text` in shells or `%val{text}` in commands.
+*debug* {info,buffers,options,memory,shared-strings,profile-hash-maps,faces,mappings}::
+    print some debug information in the *\*debug** buffer
 
-    The *-init <str>* switch allows setting initial content, the
-    *-password* switch hides the entered text and clears the register
-    after command execution.
-
-    The *-on-change* and *-on-abort* switches, followed by a command
-    will have this command executed whenever the prompt content changes
-    or the prompt is aborted, respectively.
-
-    Completion support can be controlled with the same switches provided
-    by the *define-command* command, see
-    <<declaring-new-commands,Declaring new commands>>.
-
-    For *-shell-script-completion* and *-shell-script-candidates*
-    completions, token_to_complete will always be 1, and the full
-    prompt content will be passed as a single token. In other words,
-    word splitting does not take place.
-
-    NOTE: The prompt is displayed in and receives input from the
-    current client context, so inside a draft context like
-    `evaluate-commands -draft`, it is invisible and only responds to
-    an `execute-keys` command in the same context.
-
-*on-key* <command>::
-    wait for next key from user, then execute <command>, the key is
-    available through the `key` value, accessible through `$kak_key`
-    in shells, or `%val{key}` in commands.
-
-    NOTE: The key press must come from the current client context,
-    so inside a draft context like `evaluate-commands -draft`, it only
-    responds to an `execute-keys` command in the same context.
-
-*menu* [<switches>] <label1> <commands1> <label2> <commands2> ...::
-    display a menu using labels, the selected label’s commands are
-    executed. The *menu* command can take an *-auto-single* argument, to automatically
-    run commands when only one choice is provided, and a *-select-cmds*
-    argument, in which case menu takes three argument per item, the
-    last one being a command to execute when the item is selected (but
-    not validated)
-
-    NOTE: The menu is displayed in and receives input from the
-    current client context, so inside a draft context like
-    `evaluate-commands -draft`, it is invisible and only responds to
-    an `execute-keys` command in the same context.
+*fail* <text>::
+    raise an error, uses <text> as its description
 
 *info* [<switches>] <text>::
     display text in an information box with the following *switches*:
@@ -364,26 +320,57 @@ but not really useful in that context.
     NOTE: The info box is displayed in the current client context,
     so inside a draft context like `eval -draft`, it is invisible.
 
-*try* <commands> [catch <on_error_commands>]...::
-    prevent an error in *commands* from aborting the whole command
-    execution, execute *on_error_commands* instead. If nothing is to be
-    done on error, the catch part can be omitted. If an error is raised
-    in the *on_error_commands*, that error is propagated, except if
-    another *catch* and *on_error_commands* parameter follows, in which
-    case those commands get executed, and so-on. During error commands,
-    the description of the last raised error is available as `$kak_error`
-    in the shell, or `%val{error}` in commands.
+*menu* [<switches>] <label1> <commands1> <label2> <commands2> ...::
+    display a menu using labels, the selected label’s commands are
+    executed. The *menu* command can take an *-auto-single* argument, to automatically
+    run commands when only one choice is provided, and a *-select-cmds*
+    argument, in which case menu takes three argument per item, the
+    last one being a command to execute when the item is selected (but
+    not validated)
+
+    NOTE: The menu is displayed in and receives input from the
+    current client context, so inside a draft context like
+    `evaluate-commands -draft`, it is invisible and only responds to
+    an `execute-keys` command in the same context.
 
 *nop*::
     does nothing, but arguments will be evaluated (e.g. shell expansion)
 
-*fail* <text>::
-    raise an error, uses <text> as its description
+*on-key* <command>::
+    wait for next key from user, then execute <command>, the key is
+    available through the `key` value, accessible through `$kak_key`
+    in shells, or `%val{key}` in commands.
 
-*set-register* <name> <contents>...::
-    *alias* reg +
-    set register *name* to *content*, each content parameter is assigned to
-    a different string in the register. (See <<registers#,`:doc registers`>>)
+    NOTE: The key press must come from the current client context,
+    so inside a draft context like `evaluate-commands -draft`, it only
+    responds to an `execute-keys` command in the same context.
+
+*prompt* [<switches>] <prompt> <command>::
+    prompt the user for a string, when the user validates, executes the
+    command. The entered text is available in the `text` value accessible
+    through `$kak_text` in shells or `%val{text}` in commands.
+
+    The *-init <str>* switch allows setting initial content, the
+    *-password* switch hides the entered text and clears the register
+    after command execution.
+
+    The *-on-change* and *-on-abort* switches, followed by a command
+    will have this command executed whenever the prompt content changes
+    or the prompt is aborted, respectively.
+
+    Completion support can be controlled with the same switches provided
+    by the *define-command* command, see
+    <<declaring-new-commands,Declaring new commands>>.
+
+    For *-shell-script-completion* and *-shell-script-candidates*
+    completions, token_to_complete will always be 1, and the full
+    prompt content will be passed as a single token. In other words,
+    word splitting does not take place.
+
+    NOTE: The prompt is displayed in and receives input from the
+    current client context, so inside a draft context like
+    `evaluate-commands -draft`, it is invisible and only responds to
+    an `execute-keys` command in the same context.
 
 *select* [<switches>] <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>...::
     replace the current selections with the ones described in the arguments
@@ -401,8 +388,20 @@ but not really useful in that context.
     both *-codepoint* and *-display-column* are only valid if *-timestamp*
     matches the current buffer timestamp (or is not specified).
 
-*debug* {info,buffers,options,memory,shared-strings,profile-hash-maps,faces,mappings}::
-    print some debug information in the *\*debug** buffer
+*set-register* <name> <contents>...::
+    *alias* reg +
+    set register *name* to *content*, each content parameter is assigned to
+    a different string in the register. (See <<registers#,`:doc registers`>>)
+
+*try* <commands> [catch <on_error_commands>]...::
+    prevent an error in *commands* from aborting the whole command
+    execution, execute *on_error_commands* instead. If nothing is to be
+    done on error, the catch part can be omitted. If an error is raised
+    in the *on_error_commands*, that error is propagated, except if
+    another *catch* and *on_error_commands* parameter follows, in which
+    case those commands get executed, and so-on. During error commands,
+    the description of the last raised error is available as `$kak_error`
+    in the shell, or `%val{error}` in commands.
 
 == Module commands
 
