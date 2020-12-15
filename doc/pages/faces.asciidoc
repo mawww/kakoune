@@ -64,62 +64,62 @@ following format:
 The following default faces are used by color schemes to highlight certain
 areas of the user interface:
 
+*BufferPadding*::
+    face applied on the `~` characters that follow the last line of a buffer
+
 *Default*::
     default colors
-
-*PrimarySelection*::
-    main selection face for every selected character except the cursor
-
-*SecondarySelection*::
-    secondary selection face for every selected character except the cursor
-
-*PrimaryCursor*::
-    cursor of the primary selection
-
-*SecondaryCursor*::
-    cursor of the secondary selection
-
-*PrimaryCursorEol*::
-    cursor of the primary selection when it lies on an end of line character
-
-*SecondaryCursorEol*::
-    cursor of the secondary selection when it lies on an end of line character
-
-*MenuForeground*::
-    face for the selected element in menus
-
-*MenuBackground*::
-    face for the not selected elements in menus
-
-*MenuInfo*::
-    face for additional information for elements in menus
-
-*Information*::
-    face for the informations windows and information messages
 
 *Error*::
     face of error messages
 
-*StatusLine*::
-    face used for the status line
+*Information*::
+    face for the informations windows and information messages
 
-*StatusLineMode*::
-    face used for the current mode except the normal mode
+*MenuBackground*::
+    face for the not selected elements in menus
 
-*StatusLineInfo*::
-    face used for special information
+*MenuForeground*::
+    face for the selected element in menus
 
-*StatusLineValue*::
-    face used for special values (numeric prefixes, registers, etc.)
+*MenuInfo*::
+    face for additional information for elements in menus
 
-*StatusCursor*::
-    face used for the status line cursor
+*PrimaryCursor*::
+    cursor of the primary selection
+
+*PrimaryCursorEol*::
+    cursor of the primary selection when it lies on an end of line character
+
+*PrimarySelection*::
+    main selection face for every selected character except the cursor
 
 *Prompt*::
     face used prompt displayed on the status line
 
-*BufferPadding*::
-    face applied on the `~` characters that follow the last line of a buffer
+*SecondaryCursor*::
+    cursor of the secondary selection
+
+*SecondaryCursorEol*::
+    cursor of the secondary selection when it lies on an end of line character
+
+*SecondarySelection*::
+    secondary selection face for every selected character except the cursor
+
+*StatusCursor*::
+    face used for the status line cursor
+
+*StatusLine*::
+    face used for the status line
+
+*StatusLineInfo*::
+    face used for special information
+
+*StatusLineMode*::
+    face used for the current mode except the normal mode
+
+*StatusLineValue*::
+    face used for special values (numeric prefixes, registers, etc.)
 
 === Builtin highlighters faces
 
