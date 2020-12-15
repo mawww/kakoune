@@ -28,6 +28,25 @@ highlighter is replaced with the new one.
 
 == Convenient highlighters
 
+*number-lines* [options]::
+    show line numbers using the `LineNumbers`, `LineNumberCursor` and `LineNumbersWrapped` faces,
+    with the following *options*: 
+
+    *-relative*:::
+        show line numbers relative to the main cursor line
+
+    *-hlcursor*:::
+        highlight the cursor line with a separate face
+
+    *-separator* <separator text>:::
+        specify a string to separate the line numbers column from
+        the rest of the buffer (default is '|')
+
+    *-min-digits* <num>:::
+        always reserve room for at least *num* digits,
+        so text doesn't jump around as lines are added or removed
+        (default is 2)
+
 *show-matching*::
     highlight matching char of the character under the selections' cursor
     using `MatchingChar` face
@@ -51,25 +70,6 @@ highlighter is replaced with the new one.
     *-tabpad* <separator>:::
         a one character long separator that will be appended to tabulations to honor the *tabstop* option
 
-*number-lines* [options]::
-    show line numbers using the `LineNumbers`, `LineNumberCursor` and `LineNumbersWrapped` faces,
-    with the following *options*: 
-
-    *-relative*:::
-        show line numbers relative to the main cursor line
-
-    *-hlcursor*:::
-        highlight the cursor line with a separate face
-
-    *-separator* <separator text>:::
-        specify a string to separate the line numbers column from
-        the rest of the buffer (default is '|')
-
-    *-min-digits* <num>:::
-        always reserve room for at least *num* digits,
-        so text doesn't jump around as lines are added or removed
-        (default is 2)
-
 *wrap* [options]::
     soft wrap buffer text at window width, with the following *options*:
 
@@ -88,11 +88,20 @@ highlighter is replaced with the new one.
 
 == General highlighters
 
-*fill* <face>::
-    fill using the given *face*, mostly useful with regions highlighters
-
 *column* <number> <face>::
     highlight column *number* with face *face*
+
+*dynregex* <expression> <capture_id>:<face> ...::
+    similar to regex, but expand (like a command parameter would) the
+    given expression before building a regex from the result.
+    This highlights all the current search matches in italic:
+
+-----------------------------------------------
+add-highlighter window/ dynregex '%reg{/}' 0:+i
+-----------------------------------------------
+
+*fill* <face>::
+    fill using the given *face*, mostly useful with regions highlighters
 
 *line* <number> <face>::
     highlight line *number* with face *face*
@@ -110,15 +119,6 @@ add-highlighter window/ regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
     capture_id can be either the capture number, or its name if a
     named capture is used in the regex (See
     <<regex#Groups, `:doc regex Groups`>>)
-
-*dynregex* <expression> <capture_id>:<face> ...::
-    similar to regex, but expand (like a command parameter would) the
-    given expression before building a regex from the result.
-    This highlights all the current search matches in italic:
-
------------------------------------------------
-add-highlighter window/ dynregex '%reg{/}' 0:+i
------------------------------------------------
 
 == Specs highlighters
 
