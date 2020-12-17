@@ -216,7 +216,16 @@ define-command \
         cat "$dir"/result > "$dir"/fifo
         rm -rf "$dir"
 
-        } & ) >"$dir"/stderr 2>&1 </dev/null
+        # We don't need the cleanup hook any more, the files are gone
+        printf "eval -buffer '%s' 'remove-hooks buffer lint-cleanup'" "$kak_bufname" | kak -p "$kak_session"
+
+        } & ) >"$dir"/stderr 2>&1 </dev/null &
+
+        readonly pid_async_worker=$!
+        # Make sure temporary files are cleaned up, asynchronous processes killed
+        printf "hook -once -always -group lint-cleanup buffer BufClose .* '
+            nop %%sh{ rm -rf \"%s\"; kill %d }
+        '" "$dir" "$pid_async_worker"
     }
 }
 
