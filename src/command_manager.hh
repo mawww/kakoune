@@ -21,7 +21,8 @@ class Context;
 using CommandParameters = ConstArrayView<String>;
 using CommandFunc = std::function<void (const ParametersParser& parser,
                                         Context& context,
-                                        const ShellContext& shell_context)>;
+                                        const ShellContext& shell_context,
+                                        bool)>;
 
 using CommandCompleter = std::function<Completions (const Context& context,
                                                     CompletionFlags,
@@ -99,12 +100,14 @@ class CommandManager : public Singleton<CommandManager>
 {
 public:
     void execute(StringView command_line, Context& context,
-                 const ShellContext& shell_context = ShellContext{});
+                 const ShellContext& shell_context = ShellContext{},
+                 bool tainted = false);
 
     void execute_single_command(CommandParameters params,
                                 Context& context,
                                 const ShellContext& shell_context,
-                                BufferCoord pos = {});
+                                BufferCoord pos = {},
+                                bool tainted = false);
 
 
     Completions complete(const Context& context, CompletionFlags flags,
@@ -134,7 +137,7 @@ public:
 
     void register_module(String module_name, String commands);
 
-    void load_module(StringView module_name, Context& context);
+    void load_module(StringView module_name, Context& context, bool tainted = false);
 
     Completions complete_module_name(StringView query) const;
 

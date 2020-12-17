@@ -340,11 +340,11 @@ struct CommandDesc
     CommandFlags flags;
     CommandHelper helper;
     CommandCompleter completer;
-    void (*func)(const ParametersParser&, Context&, const ShellContext&);
+    void (*func)(const ParametersParser&, Context&, const ShellContext& shell_context, bool tainted);
 };
 
 template<bool force_reload>
-void edit(const ParametersParser& parser, Context& context, const ShellContext&)
+void edit(const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
 {
     const bool scratch = (bool)parser.get_switch("scratch");
 
@@ -494,7 +494,7 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
 }
 
 template<bool force = false>
-void write_buffer(const ParametersParser& parser, Context& context, const ShellContext&)
+void write_buffer(const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
 {
     return do_write_buffer(context,
                            parser.positional_count() > 0 ? parser[0] : Optional<String>{},
@@ -561,7 +561,7 @@ const CommandDesc write_all_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&){
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted){
         write_all_buffers(context,
                           (bool)parser.get_switch("sync"),
                           parser.get_switch("method").map(parse_write_method));
@@ -591,7 +591,7 @@ static void ensure_all_buffers_are_saved()
 }
 
 template<bool force>
-void kill(const ParametersParser& parser, Context& context, const ShellContext&)
+void kill(const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
 {
     auto& client_manager = ClientManager::instance();
 
@@ -631,7 +631,7 @@ const CommandDesc force_kill_cmd = {
 };
 
 template<bool force>
-void quit(const ParametersParser& parser, Context& context, const ShellContext&)
+void quit(const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
 {
     if (not force and ClientManager::instance().count() == 1 and not Server::instance().is_daemon())
         ensure_all_buffers_are_saved();
@@ -669,12 +669,12 @@ const CommandDesc force_quit_cmd = {
 
 template<bool force>
 void write_quit(const ParametersParser& parser, Context& context,
-                const ShellContext& shell_context)
+                const ShellContext& shell_context, bool tainted)
 {
     do_write_buffer(context, {},
                     parser.get_switch("sync") ? WriteFlags::Sync : WriteFlags::None,
                     parser.get_switch("method").map(parse_write_method));
-    quit<force>(parser, context, shell_context);
+    quit<force>(parser, context, shell_context, tainted);
 }
 
 const CommandDesc write_quit_cmd = {
@@ -710,12 +710,12 @@ const CommandDesc write_all_quit_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         write_all_buffers(context,
                           (bool)parser.get_switch("sync"),
                           parser.get_switch("method").map(parse_write_method));
-        quit<false>(parser, context, shell_context);
+        quit<false>(parser, context, shell_context, tainted);
     }
 };
 
@@ -727,7 +727,7 @@ const CommandDesc buffer_cmd = {
     CommandFlags::None,
     CommandHelper{},
     make_completer(menu(complete_buffer_name<true>)),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         Buffer& buffer = BufferManager::instance().get_buffer(parser[0]);
         if (&buffer != &context.buffer())
@@ -739,7 +739,7 @@ const CommandDesc buffer_cmd = {
 };
 
 template<bool next>
-void cycle_buffer(const ParametersParser& parser, Context& context, const ShellContext&)
+void cycle_buffer(const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
 {
     Buffer* oldbuf = &context.buffer();
     auto it = find_if(BufferManager::instance(),
@@ -796,7 +796,7 @@ const CommandDesc buffer_previous_cmd = {
 };
 
 template<bool force>
-void delete_buffer(const ParametersParser& parser, Context& context, const ShellContext&)
+void delete_buffer(const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
 {
     BufferManager& manager = BufferManager::instance();
     Buffer& buffer = parser.positional_count() == 0 ? context.buffer() : manager.get_buffer(parser[0]);
@@ -844,7 +844,7 @@ const CommandDesc rename_buffer_cmd = {
     CommandFlags::None,
     CommandHelper{},
     filename_completer<false>,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         if (parser.get_switch("scratch") and parser.get_switch("file"))
             throw runtime_error("scratch and file are incompatible switches");
@@ -944,7 +944,7 @@ const CommandDesc arrange_buffers_cmd = {
     {
         return complete_buffer_name<false>(context, flags, params.back(), cursor_pos);
     },
-    [](const ParametersParser& parser, Context&, const ShellContext&)
+    [](const ParametersParser& parser, Context&, const ShellContext& shell_context, bool tainted)
     {
         BufferManager::instance().arrange_buffers(parser.positionals_from(0));
     }
@@ -973,7 +973,7 @@ const CommandDesc add_highlighter_cmd = {
         return "";
     },
     highlighter_cmd_completer<true>,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         HighlighterRegistry& registry = HighlighterRegistry::instance();
 
@@ -1013,7 +1013,7 @@ const CommandDesc remove_highlighter_cmd = {
     CommandFlags::None,
     CommandHelper{},
     highlighter_cmd_completer<false>,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         StringView path = parser[0];
         if (not path.empty() and path.back() == '/') // ignore trailing /
@@ -1057,7 +1057,7 @@ const CommandDesc add_hook_cmd = {
                       const String& prefix, ByteCount cursor_pos)
                    { return CommandManager::instance().complete(
                          context, flags, prefix, cursor_pos); }),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         auto descs = enum_desc(Meta::Type<Hook>{});
         auto it = find_if(descs, [&](const EnumDesc<Hook>& desc) { return desc.name == parser[1]; });
@@ -1101,7 +1101,7 @@ const CommandDesc remove_hook_cmd = {
         }
         return {};
     },
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         get_scope(parser[0], context).hooks().remove_hooks(Regex{parser[1]});
     }
@@ -1115,7 +1115,7 @@ const CommandDesc trigger_user_hook_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         context.hooks().run_hook(Hook::User, parser[0], context);
     }
@@ -1129,7 +1129,7 @@ Vector<String> params_to_shell(const ParametersParser& parser)
     return vars;
 }
 
-void define_command(const ParametersParser& parser, Context& context, const ShellContext&)
+void define_command(const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
 {
     const String& cmd_name = parser[0];
     auto& cm = CommandManager::instance();
@@ -1167,7 +1167,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
             min = max = (size_t)str_to_int(counts);
 
         desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, min, max };
-        cmd = [=](const ParametersParser& parser, Context& context, const ShellContext& sc) {
+        cmd = [=](const ParametersParser& parser, Context& context, const ShellContext& sc, bool) {
             CommandManager::instance().execute(commands, context,
                                                { params_to_shell(parser), sc.env_vars });
         };
@@ -1175,7 +1175,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     else
     {
         desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 0 };
-        cmd = [=](const ParametersParser& parser, Context& context, const ShellContext& sc) {
+        cmd = [=](const ParametersParser& parser, Context& context, const ShellContext& sc, bool) {
             CommandManager::instance().execute(commands, context, { {}, sc.env_vars });
         };
     }
@@ -1249,6 +1249,9 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
 
     auto docstring = trim_indent(parser.get_switch("docstring").value_or(StringView{}));
 
+    if (tainted and not (flags & CommandFlags::Hidden))
+        write_to_debug_buffer(format("COMMAND\t{}\t{}\t{}\n", cmd_name, parser.get_switch("params").value_or("0"), docstring));
+
     cm.register_command(cmd_name, cmd, docstring, desc, flags, CommandHelper{}, completer);
 }
 
@@ -1287,10 +1290,13 @@ const CommandDesc alias_cmd = {
     CommandFlags::None,
     CommandHelper{},
     make_completer(complete_scope, complete_nothing, complete_command_name),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         if (not CommandManager::instance().command_defined(parser[2]))
             throw runtime_error(format("no such command: '{}'", parser[2]));
+
+        if (tainted)
+            write_to_debug_buffer(format("ALIAS\t{}\t{}\n", parser[1], parser[2]));
 
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
         aliases.add_alias(parser[1], parser[2]);
@@ -1314,7 +1320,7 @@ const CommandDesc unalias_cmd = {
     CommandFlags::None,
     CommandHelper{},
     make_completer(complete_scope, complete_alias, complete_command_name),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
         if (parser.positional_count() == 3 and
@@ -1338,7 +1344,7 @@ const CommandDesc echo_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         String message;
         if (auto quoting = parser.get_switch("quoting"))
@@ -1395,7 +1401,7 @@ const CommandDesc debug_cmd = {
                          "profile-hash-maps", "faces", "mappings", "regex"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     }),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         if (parser[0] == "info")
         {
@@ -1499,19 +1505,26 @@ const CommandDesc source_cmd = {
     CommandFlags::None,
     CommandHelper{},
     filename_completer<true>,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
         const bool profile = debug_flags & DebugFlags::Profile;
+        const bool file_introspection = debug_flags & DebugFlags::FileIntrospection;
         auto start_time = profile ? Clock::now() : Clock::time_point{};
 
         String path = real_path(parse_filename(parser[0]));
         MappedFile file_content{path};
         try
         {
+            if (file_introspection or tainted)
+                write_to_debug_buffer(format("SOURCE\t{}\n", path));
+
             auto params = parser | skip(1) | gather<Vector<String>>();
             CommandManager::instance().execute(file_content, context,
-                                               {params, {{"source", path}}});
+                                               {params, {{"source", path}}},
+                                               file_introspection or tainted);
+            if (file_introspection or tainted)
+                write_to_debug_buffer("ENDSOURCE\n");
         }
         catch (Kakoune::runtime_error& err)
         {
@@ -1584,7 +1597,7 @@ const CommandDesc set_option_cmd = {
         }
         return Completions{};
     },
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         bool add = (bool)parser.get_switch("add");
         bool remove = (bool)parser.get_switch("remove");
@@ -1626,7 +1639,7 @@ const CommandDesc unset_option_cmd = {
     CommandFlags::None,
     option_doc_helper,
     complete_option,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         auto& options = get_options(parser[0], context, parser[1]);
         if (&options == &GlobalScope::instance().options())
@@ -1646,7 +1659,7 @@ const CommandDesc update_option_cmd = {
     CommandFlags::None,
     option_doc_helper,
     complete_option,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         Option& opt = get_options(parser[0], context, parser[1]).get_local_option(parser[1]);
         opt.update(context);
@@ -1682,7 +1695,7 @@ const CommandDesc declare_option_cmd = {
                auto c = {"int", "bool", "str", "regex", "int-list", "str-list", "completions", "line-specs", "range-specs", "str-to-str-map"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     }),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         Option* opt = nullptr;
 
@@ -1719,6 +1732,9 @@ const CommandDesc declare_option_cmd = {
 
         if (parser.positional_count() > 2)
             opt->set_from_strings(parser.positionals_from(2));
+
+        if (tainted and not (flags & OptionFlags::Hidden))
+            write_to_debug_buffer(format("OPTION\t{}\t{}\t{}\t{}\n", parser[1], parser[0], opt->get_as_string(Quoting::Raw), docstring));
     }
 };
 
@@ -1761,7 +1777,7 @@ const CommandDesc map_key_cmd = {
     CommandFlags::None,
     CommandHelper{},
     map_key_completer<false>,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
         KeymapMode keymap_mode = parse_keymap_mode(parser[1], keymaps.user_modes());
@@ -1786,7 +1802,7 @@ const CommandDesc unmap_key_cmd = {
     CommandFlags::None,
     CommandHelper{},
     map_key_completer<true>,
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
         KeymapMode keymap_mode = parse_keymap_mode(parser[1], keymaps.user_modes());
@@ -1988,7 +2004,7 @@ const CommandDesc execute_keys_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         context_wrap(parser, context, "/\"|^@:", [](const ParametersParser& parser, Context& context) {
             ScopedSetBool disable_keymaps(context.keymaps_disabled(), not parser.get_switch("with-maps"));
@@ -2018,7 +2034,7 @@ const CommandDesc evaluate_commands_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         context_wrap(parser, context, {}, [&](const ParametersParser& parser, Context& context) {
             const bool no_hooks = context.hooks_disabled() or parser.get_switch("no-hooks");
@@ -2065,7 +2081,7 @@ const CommandDesc prompt_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         const String& command = parser[1];
         auto initstr = parser.get_switch("init").value_or(StringView{});
@@ -2156,7 +2172,7 @@ const CommandDesc menu_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         const bool with_select_cmds = (bool)parser.get_switch("select-cmds");
         const bool markup = (bool)parser.get_switch("markup");
@@ -2214,7 +2230,7 @@ const CommandDesc on_key_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         String command = parser[0];
 
@@ -2244,7 +2260,7 @@ const CommandDesc info_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         if (not context.has_client())
             return;
@@ -2297,7 +2313,7 @@ const CommandDesc try_catch_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         if ((parser.positional_count() % 2) != 1)
             throw wrong_argument_count();
@@ -2374,9 +2390,12 @@ const CommandDesc set_face_cmd = {
     CommandFlags::None,
     face_doc_helper,
     make_completer(complete_scope, complete_face, complete_face),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         get_scope(parser[0], context).faces().add_face(parser[1], parser[2], true);
+
+        if (tainted)
+            write_to_debug_buffer(format("FACE\t{}\t{}\n", parser[1], parser[2]));
 
         for (auto& client : ClientManager::instance())
             client->force_redraw();
@@ -2391,7 +2410,7 @@ const CommandDesc unset_face_cmd = {
     CommandFlags::None,
     face_doc_helper,
     make_completer(complete_scope, complete_face),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
        get_scope(parser[0], context).faces().remove_face(parser[1]);
     }
@@ -2405,7 +2424,7 @@ const CommandDesc rename_client_cmd = {
     CommandFlags::None,
     CommandHelper{},
     make_single_word_completer([](const Context& context){ return context.name(); }),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         const String& name = parser[0];
         if (not all_of(name, is_identifier))
@@ -2431,7 +2450,7 @@ const CommandDesc set_register_cmd = {
              return { 0_byte, cursor_pos,
                       RegisterManager::instance().complete_register_name(prefix, cursor_pos) };
         }),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         RegisterManager::instance()[parser[0]].set(context, parser.positionals_from(1));
     }
@@ -2453,7 +2472,7 @@ const CommandDesc select_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         auto& buffer = context.buffer();
         const size_t timestamp = parser.get_switch("timestamp").map(str_to_int_ifp).cast<size_t>().value_or(buffer.timestamp());
@@ -2482,7 +2501,7 @@ const CommandDesc change_directory_cmd = {
                                         context.options()["ignored_files"].get<Regex>(),
                                         cursor_pos, FilenameFlags::OnlyDirectories) };
         }),
-    [](const ParametersParser& parser, Context&, const ShellContext&)
+    [](const ParametersParser& parser, Context&, const ShellContext& shell_context, bool tainted)
     {
         StringView target = parser.positional_count() == 1 ? StringView{parser[0]} : "~";
         if (chdir(parse_filename(target).c_str()) != 0)
@@ -2500,7 +2519,7 @@ const CommandDesc rename_session_cmd = {
     CommandFlags::None,
     CommandHelper{},
     make_single_word_completer([](const Context&){ return Server::instance().session(); }),
-    [](const ParametersParser& parser, Context&, const ShellContext&)
+    [](const ParametersParser& parser, Context&, const ShellContext& shell_context, bool tainted)
     {
         if (not Server::instance().rename_session(parser[0]))
             throw runtime_error(format("unable to rename current session: '{}' may be already in use", parser[0]));
@@ -2515,7 +2534,7 @@ const CommandDesc fail_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context&, const ShellContext&)
+    [](const ParametersParser& parser, Context&, const ShellContext& shell_context, bool tainted)
     {
         throw failure{fix_atom_text(join(parser, " "))};
     }
@@ -2529,8 +2548,10 @@ const CommandDesc declare_user_mode_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
+        if (tainted)
+            write_to_debug_buffer(format("USERMODE\t{}\n", parser[0]));
         context.keymaps().add_user_mode(std::move(parser[0]));
     }
 };
@@ -2581,7 +2602,7 @@ const CommandDesc enter_user_mode_cmd = {
         }
         return {};
     },
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         auto lock = (bool)parser.get_switch("lock");
         KeymapMode mode = parse_keymap_mode(parser[0], context.keymaps().user_modes());
@@ -2601,7 +2622,7 @@ const CommandDesc provide_module_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         const String& module_name = parser[0];
         auto& cm = CommandManager::instance();
@@ -2611,6 +2632,10 @@ const CommandDesc provide_module_cmd = {
 
         if (cm.module_defined(module_name) and not parser.get_switch("override"))
             throw runtime_error(format("module '{}' already defined", module_name));
+
+        if (tainted)
+            write_to_debug_buffer(format("MODULE\t{}\n", module_name));
+
         cm.register_module(module_name, parser[1]);
     }
 };
@@ -2626,7 +2651,7 @@ const CommandDesc require_module_cmd = {
          [](const Context&, CompletionFlags, const String& prefix, ByteCount cursor_pos) {
             return CommandManager::instance().complete_module_name(prefix.substr(0, cursor_pos));
         }),
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context, bool tainted)
     {
         CommandManager::instance().load_module(parser[0], context);
     }
@@ -2637,7 +2662,7 @@ const CommandDesc require_module_cmd = {
 void register_commands()
 {
     CommandManager& cm = CommandManager::instance();
-    cm.register_command("nop", [](const ParametersParser&, Context&, const ShellContext&){}, "do nothing", {});
+    cm.register_command("nop", [](const ParametersParser&, Context&, const ShellContext&, bool){}, "do nothing", {});
 
     auto register_command = [&](const CommandDesc& c)
     {
