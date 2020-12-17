@@ -11,14 +11,14 @@ hook global BufCreate .*[.](rust|rs) %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=rust %[
+hook global WinSetOption filetype=rust %<
     require-module rust
     hook window ModeChange pop:insert:.* -group rust-trim-indent rust-trim-indent
     hook window InsertChar \n -group rust-indent rust-indent-on-new-line
     hook window InsertChar \{ -group rust-indent rust-indent-on-opening-curly-brace
-    hook window InsertChar [)}] -group rust-indent rust-indent-on-closing
+    hook window InsertChar [)}\]] -group rust-indent rust-indent-on-closing
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window rust-.+ }
-]
+>
 
 hook -group rust-highlight global WinSetOption filetype=rust %{
     add-highlighter window/rust ref rust
@@ -150,8 +150,8 @@ define-command -hidden rust-indent-on-new-line %~
             try %+ execute-keys -draft k <a-x> <a-k> ^\h*where\b <ret> hh <a-?> ^\h*\b(impl|fn|struct|enum|union)\b <ret> <a-S> 1<a-&> +
             # preserve previous line indent
             try %{ execute-keys -draft <semicolon> K <a-&> }
-            # indent after lines ending with [{(].+ and move first parameter to own line
-            try %< execute-keys -draft [c[({],[)}] <ret> <a-k> \A[({][^\n]+\n[^\n]*\n?\z <ret> L i<ret><esc> <gt> <a-S> <a-&> >
+            # indent after lines ending with [{([].+ and move first parameter to own line
+            try %< execute-keys -draft [c[({[],[)}\]] <ret> <a-k> \A[({[][^\n]+\n[^\n]*\n?\z <ret> L i<ret><esc> <gt> <a-S> <a-&> >
             # indent after non-empty lines not starting with operator and not ending with , or ; or {
             # XXX simplify this into a single <a-k> without s
             try %< execute-keys -draft k <a-x> s [^\h].+ <ret> <a-K> \A[-+*/&|^})<gt><lt>#] <ret> <a-K> [,<semicolon>{](\h*/[/*].*|)$ <ret> j <a-gt> >
@@ -181,11 +181,11 @@ define-command -hidden rust-indent-on-opening-curly-brace %[
     _
 ]
 
-define-command -hidden rust-indent-on-closing %[
+define-command -hidden rust-indent-on-closing %~
     evaluate-commands -draft -itersel %_
         # align to opening curly brace or paren when alone on a line
-        try %< execute-keys -draft <a-h> <a-k> ^\h*[)}]$ <ret> h m <a-S> 1<a-&> >
+        try %< execute-keys -draft <a-h> <a-k> ^\h*[)}\]]$ <ret> h m <a-S> 1<a-&> >
     _
-]
+~
 
 §

@@ -1,3 +1,5 @@
     Foo {bar,%( )
 
     foo(bar,%( )
+
+    vec![bar,%( )
