@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](lua) %{
+hook global BufCreate .*[.](lua|rockspec) %{
     set-option buffer filetype lua
 }
 
