@@ -96,7 +96,7 @@ hook global BufSetOption filetype=(ocaml|coq) %{
 }
 
 hook global BufSetOption filetype=perl %{
-set-option buffer comment_block_begin '#['
+    set-option buffer comment_block_begin '#['
     set-option buffer comment_block_end ']'
 }
 
