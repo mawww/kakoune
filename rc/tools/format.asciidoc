@@ -1,0 +1,21 @@
+= Format
+
+== Aliases
+
+*format*::
+	_default_ format-buffer +
+
+== Commands
+
+*format-buffer*::
+	_parameters_ 0 +
+	Format the contents of the buffer
+
+*format-selections*::
+	_parameters_ 0 +
+	Format the selections individually
+
+== Options
+
+*formatcmd* `str`::
+	shell command used for the 'format-selections' and 'format-buffer' commands

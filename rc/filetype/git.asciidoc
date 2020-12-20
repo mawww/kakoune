@@ -1,0 +1,7 @@
+= Git
+
+== Modules
+
+*git-commit*::
+*git-notes*::
+*git-rebase*::

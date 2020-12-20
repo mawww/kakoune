@@ -1,0 +1,5 @@
+= Haml
+
+== Modules
+
+*haml*::

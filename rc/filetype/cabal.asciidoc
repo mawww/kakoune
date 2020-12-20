@@ -1,0 +1,5 @@
+= Cabal
+
+== Modules
+
+*cabal*::

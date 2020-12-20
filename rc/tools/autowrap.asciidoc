@@ -1,0 +1,27 @@
+= Autowrap
+
+== Commands
+
+*autowrap-disable*::
+	_parameters_ 0 +
+	Disable automatic line wrapping
+
+*autowrap-enable*::
+	_parameters_ 0 +
+	Automatically wrap the lines in which characters are inserted
+
+== Options
+
+*autowrap_column* `int`::
+	_default_ 80 +
+	maximum amount of characters per line, after which a newline character will be inserted
+
+*autowrap_fmtcmd* `str`::
+	_default_ fold -s -w %c +
+	command to which the paragraphs to wrap will be passed
+all occurences of '%c' are replaced with `autowrap_column`
+
+*autowrap_format_paragraph* `bool`::
+	_default_ false +
+	when enabled, paragraph formatting will reformat the whole paragraph in which characters are being inserted
+This can potentially break formatting of documents containing markup (e.g. markdown)

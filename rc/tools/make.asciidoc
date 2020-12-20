@@ -1,0 +1,32 @@
+= Make
+
+== Commands
+
+*make*::
+	_parameters_ .. +
+	make [<arguments>]: make utility wrapper
+	All the optional arguments are forwarded to the make utility
+
+*make-next-error*::
+	_parameters_ 0 +
+	Jump to the next make error
+
+*make-previous-error*::
+	_parameters_ 0 +
+	Jump to the previous make error
+
+== Options
+
+*jumpclient* `str`::
+	name of the client in which all source code jumps will be executed
+
+*make_error_pattern* `str`::
+	_default_  (?:fatal )?error: +
+	pattern that describes lines containing information about errors in the output of the `makecmd` command
+
+*makecmd* `str`::
+	_default_ make +
+	shell command run to build the project
+
+*toolsclient* `str`::
+	name of the client in which utilities display information
