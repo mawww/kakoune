@@ -214,8 +214,8 @@ public:
 
     void on_disabled(bool temporary) override
     {
-        m_idle_timer.set_next_date(TimePoint::max());
-        m_fs_check_timer.set_next_date(TimePoint::max());
+        m_idle_timer.disable();
+        m_fs_check_timer.disable();
 
         if (not temporary and m_hooks_disabled)
         {
@@ -1136,7 +1136,7 @@ private:
         if (not temporary)
             context().print_status({});
 
-        m_idle_timer.set_next_date(TimePoint::max());
+        m_idle_timer.disable();
         if (context().has_client())
             context().client().menu_hide();
     }
@@ -1239,7 +1239,7 @@ public:
 
     void on_disabled(bool temporary) override
     {
-        m_idle_timer.set_next_date(TimePoint::max());
+        m_idle_timer.disable();
 
         if (not temporary)
         {

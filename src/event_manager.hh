@@ -66,7 +66,8 @@ public:
     ~Timer();
 
     TimePoint next_date() const { return m_date; }
-    void      set_next_date(TimePoint date) { m_date = date; }
+    void set_next_date(TimePoint date) { m_date = date; }
+    void disable() { m_date = TimePoint::max(); }
     void run(EventMode mode);
 
 private:
