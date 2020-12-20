@@ -4,7 +4,7 @@
 
 *man*::
 	_parameters_ ..1 +
-	man [<page>]: manpage viewer wrapper
+	manpage viewer wrapper
 	If no argument is passed to the command, the selection will be used as page
 	The page can be a word, or a word directly followed by a section number between parenthesis, e.g. kak(1)
 

@@ -4,4 +4,4 @@
 
 *editorconfig-load*::
 	_parameters_ ..1 +
-	editorconfig-load [file]: set formatting behavior according to editorconfig
+	set formatting behavior according to editorconfig

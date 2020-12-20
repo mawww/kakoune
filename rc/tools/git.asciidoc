@@ -4,7 +4,7 @@
 
 *git*::
 	_parameters_ 1.. +
-	git [<arguments>]: git wrapping helper
+	git wrapping helper
 	All the optional arguments are forwarded to the git utility
 	Available commands:
 	    add

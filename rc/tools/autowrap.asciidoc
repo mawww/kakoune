@@ -19,9 +19,9 @@
 *autowrap_fmtcmd* `str`::
 	_default_ fold -s -w %c +
 	command to which the paragraphs to wrap will be passed
-all occurences of '%c' are replaced with `autowrap_column`
+	all occurences of '%c' are replaced with `autowrap_column`
 
 *autowrap_format_paragraph* `bool`::
 	_default_ false +
 	when enabled, paragraph formatting will reformat the whole paragraph in which characters are being inserted
-This can potentially break formatting of documents containing markup (e.g. markdown)
+	This can potentially break formatting of documents containing markup (e.g. markdown)

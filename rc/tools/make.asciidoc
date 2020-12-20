@@ -4,7 +4,7 @@
 
 *make*::
 	_parameters_ .. +
-	make [<arguments>]: make utility wrapper
+	make utility wrapper
 	All the optional arguments are forwarded to the make utility
 
 *make-next-error*::

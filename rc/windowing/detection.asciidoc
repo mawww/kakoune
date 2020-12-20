@@ -4,6 +4,6 @@
 
 *windowing_modules* `str-list`::
 	_default_ tmux screen kitty iterm x11 +
-	Ordered list of windowing modules to try and load. An empty list disables
-both automatic module loading and environment detection, enabling complete
-manual control of the module loading.
+	Ordered list of windowing modules to try and load. An empty list
+	disables both automatic module loading and environment detection,
+	enabling complete manual control of the module loading.

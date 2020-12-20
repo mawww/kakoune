@@ -4,7 +4,7 @@
 
 *spell*::
 	_parameters_ ..1 +
-	spell [<language>]: spell check the current buffer
+	spell check the current buffer
 
 	The first optional argument is the language against which the check will be performed (overrides `spell_lang`)
 	Formats of language supported:

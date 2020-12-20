@@ -4,7 +4,7 @@
 
 *grep*::
 	_parameters_ .. +
-	grep [<arguments>]: grep utility wrapper
+	grep utility wrapper
 	All optional arguments are forwarded to the grep utility
 
 *grep-next-match*::

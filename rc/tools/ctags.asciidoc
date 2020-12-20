@@ -32,7 +32,7 @@
 
 *ctags-search*::
 	_parameters_ ..1 +
-	ctags-search [<symbol>]: jump to a symbol's definition
+	jump to a symbol's definition
 	If no symbol is passed then the current selection is used as symbol name
 
 *ctags-update-tags*::

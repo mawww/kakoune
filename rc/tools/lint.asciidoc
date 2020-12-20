@@ -45,20 +45,16 @@ are displayed.
 
 *lint-selections*::
 	_parameters_ 0..2 +
-	lint-selections [<switches>]: Check each selection with a linter.
+	Check each selection with a linter
 
 	Switches:
-	    -command <cmd>      Use the given linter.
-	                        If not given, the lintcmd option is used.
-
-	See `:doc lint` for details.
+		-command <cmd>	Use the given linter.
+						If not given, the `lintcmd` option is used.
 
 == Options
 
 *lintcmd* `str`::
 	The shell command used by lint-buffer and lint-selections.
-
-See `:doc lint` for details.
 
 *toolsclient* `str`::
 	name of the client in which utilities display information

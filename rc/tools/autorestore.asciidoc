@@ -18,24 +18,16 @@ or put it in your `kakrc` to disable the feature forever.
 	_parameters_ 0 +
 	Disable automatic backup recovering
 
-	See `:doc autorestore` for details.
-
 *autorestore-purge-backups*::
 	_parameters_ 0 +
 	Remove all the backups of the current buffer
 
-	See `:doc autorestore` for details.
-
 *autorestore-restore-buffer*::
 	_parameters_ 0 +
 	Restore the backup for the current file if it exists
-
-	See `:doc autorestore` for details.
 
 == Options
 
 *autorestore_purge_restored* `bool`::
 	_default_ true +
 	Remove backups once they've been restored
-
-See `:doc autorestore` for details.
