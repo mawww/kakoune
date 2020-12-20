@@ -3,3 +3,6 @@
 
     foo(
         bar
+
+    vec![
+        bar
