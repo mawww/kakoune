@@ -54,7 +54,7 @@ define-command -hidden doc-parse-anchors %{
     } }
 }
 
-define-command doc-jump-to-anchor -params 1 %{
+define-command -hidden doc-jump-to-anchor -params 1 %{
     update-option buffer doc_anchors
     evaluate-commands %sh{
         anchor="$1"
@@ -71,7 +71,7 @@ define-command doc-jump-to-anchor -params 1 %{
     }
 }
 
-define-command doc-follow-link %{
+define-command -hidden doc-follow-link %{
     update-option buffer doc_links
     evaluate-commands %sh{
         eval "set -- $kak_quoted_opt_doc_links"
