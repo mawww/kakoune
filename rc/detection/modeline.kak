@@ -36,8 +36,7 @@ define-command -hidden modeline-parse-impl %{
                         unix) value="lf";;
                         dos) value="crlf";;
                         *)
-                            printf 'echo -debug %s' "$(kakquote "Unsupported file format: ${value}")" \
-                               | kak -p "${kak_session}";
+                            printf '%s\n' "Unsupported file format: ${value}" >&2
                             return;;
                     esac
                 ;;
@@ -52,8 +51,7 @@ define-command -hidden modeline-parse-impl %{
                     key="spell_lang";
                     value="${value%%,*}";;
                 *)
-                    printf 'echo -debug %s' "$(kakquote "Unsupported vim variable: ${key}")" \
-                       | kak -p "${kak_session}";
+                    printf '%s\n' "Unsupported vim variable: ${key}" >&2
                     return;;
             esac
 
@@ -78,8 +76,9 @@ define-command -hidden modeline-parse-impl %{
         case "${kak_selection}" in
             *vi:*|*vim:*) type_selection="vim";;
             *kak:*|*kakoune:*) type_selection="kakoune";;
-            *) printf 'echo -debug %s' "$(kakquote "Unsupported modeline format: ${kak_selection}")" \
-                   | kak -p "${kak_session}"; exit 1 ;;
+            *)
+                printf 'fail %s\n' "$(kakquote "Unsupported modeline format: ${kak_selection}")"
+                exit 1 ;;
         esac
 
         # The following subshell will keep the actual options of the modeline, and strip:
