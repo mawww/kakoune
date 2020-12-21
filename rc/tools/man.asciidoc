@@ -1,0 +1,33 @@
+= Man
+
+== Commands
+
+*man*::
+	_parameters_ ..1 +
+	manpage viewer wrapper
+	If no argument is passed to the command, the selection will be used as page
+	The page can be a word, or a word directly followed by a section number between parenthesis, e.g. kak(1)
+
+*man-jump*::
+	_parameters_ 0 +
+	Try to jump to a man page
+
+*man-link-next*::
+	_parameters_ 0 +
+	Go to next man page link
+
+*man-link-prev*::
+	_parameters_ 0 +
+	Go to previous man page link
+
+*man-search*::
+	_parameters_ 2 +
+
+== Options
+
+*docsclient* `str`::
+	name of the client in which documentation is to be displayed
+
+== User Modes
+
+*man-mode*::

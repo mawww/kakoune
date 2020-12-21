@@ -1,0 +1,5 @@
+= Hbs
+
+== Modules
+
+*hbs*::

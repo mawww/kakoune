@@ -1,0 +1,7 @@
+= Exherbo
+
+== Modules
+
+*exheres*::
+*glep42*::
+*paludis*::

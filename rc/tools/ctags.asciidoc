@@ -1,0 +1,62 @@
+= Ctags
+
+== Commands
+
+*ctags-complete*::
+	_parameters_ 0 +
+	Complete the current selection
+
+*ctags-disable-autocomplete*::
+	_parameters_ 0 +
+	Disable automatic ctags completion
+
+*ctags-disable-autoinfo*::
+	_parameters_ 0 +
+	Disable automatic ctags information displaying
+
+*ctags-enable-autocomplete*::
+	_parameters_ 0 +
+	Enable automatic ctags completion
+
+*ctags-enable-autoinfo*::
+	_parameters_ 0 +
+	Automatically display ctags information about function
+
+*ctags-funcinfo*::
+	_parameters_ 0 +
+	Display ctags information about a selected function
+
+*ctags-generate*::
+	_parameters_ 0 +
+	Generate tag file asynchronously
+
+*ctags-search*::
+	_parameters_ ..1 +
+	jump to a symbol's definition
+	If no symbol is passed then the current selection is used as symbol name
+
+*ctags-update-tags*::
+	_parameters_ 0 +
+	Update tags for the given file
+
+== Options
+
+*ctags_min_chars* `int`::
+	_default_ 3 +
+	minimum characters before triggering autocomplete
+
+*ctagscmd* `str`::
+	_default_ ctags -R --fields=+S +
+	shell command to run
+
+*ctagsfiles* `str-list`::
+	_default_ tags +
+	list of paths to tag files to parse when looking up a symbol
+
+*ctagspaths* `str`::
+	_default_ . +
+	path to the directory in which the tags file will be generated
+
+*readtagscmd* `str`::
+	_default_ readtags +
+	shell command to run

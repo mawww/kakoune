@@ -1,0 +1,27 @@
+= Comment
+
+== Commands
+
+*align-selections-left*::
+	_parameters_ 0 +
+	extend selections to the left to align with the leftmost selected column
+
+*comment-block*::
+	_parameters_ 0 +
+	(un)comment selections using block comments
+
+*comment-line*::
+	_parameters_ 0 +
+	(un)comment selected lines using line comments
+
+== Options
+
+*comment_block_begin* `str`::
+	characters inserted before a commented block
+
+*comment_block_end* `str`::
+	characters inserted after a commented block
+
+*comment_line* `str`::
+	_default_ # +
+	characters inserted at the beginning of a commented line

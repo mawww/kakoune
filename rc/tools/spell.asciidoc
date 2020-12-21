@@ -1,0 +1,31 @@
+= Spell
+
+== Commands
+
+*spell*::
+	_parameters_ ..1 +
+	spell check the current buffer
+
+	The first optional argument is the language against which the check will be performed (overrides `spell_lang`)
+	Formats of language supported:
+	  - ISO language code, e.g. 'en'
+	  - language code above followed by a dash or underscore with an ISO country code, e.g. 'en-US'
+
+*spell-add*::
+	_parameters_ 0.. +
+	Add the current selection to the dictionary
+
+*spell-clear*::
+	_parameters_ 0 +
+
+*spell-next*::
+	_parameters_ 0 +
+
+*spell-replace*::
+	_parameters_ 0 +
+	Suggest replacement words for the current selection, against the last language used by the spell-check command
+
+== Options
+
+*spell_lang* `str`::
+	default language to use when none is passed to the spell-check command

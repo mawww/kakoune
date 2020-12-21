@@ -1,0 +1,11 @@
+= Diff
+
+== Commands
+
+*diff-select-file*::
+	_parameters_ 0 +
+	Select surrounding patch file
+
+*diff-select-hunk*::
+	_parameters_ 0 +
+	Select surrounding patch hunk

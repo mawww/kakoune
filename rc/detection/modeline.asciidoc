@@ -1,0 +1,13 @@
+= Modeline
+
+== Commands
+
+*modeline-parse*::
+	_parameters_ 0 +
+	Read and interpret vi-format modelines at the beginning/end of the buffer
+
+== Options
+
+*modelines* `int`::
+	_default_ 5 +
+	amount of lines that will be checked at the beginning and the end of the buffer

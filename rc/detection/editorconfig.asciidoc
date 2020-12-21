@@ -1,0 +1,7 @@
+= Editorconfig
+
+== Commands
+
+*editorconfig-load*::
+	_parameters_ ..1 +
+	set formatting behavior according to editorconfig

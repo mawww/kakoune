@@ -1,0 +1,18 @@
+= Gopls
+
+== Commands
+
+*gopls*::
+	_parameters_ 1 +
+	gopls command wrapper
+
+	All commands are forwarded to gopls utility
+	Available commands are:
+	    format
+	    imports
+	    definition
+	    references
+
+== Modules
+
+*gopls*::

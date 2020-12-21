@@ -1,0 +1,11 @@
+= Etc
+
+== Modules
+
+*etc-fstab*::
+*etc-group*::
+*etc-gshadow*::
+*etc-hosts*::
+*etc-passwd*::
+*etc-resolv-conf*::
+*etc-shadow*::

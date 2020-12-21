@@ -1,0 +1,30 @@
+= Git
+
+== Commands
+
+*git*::
+	_parameters_ 1.. +
+	git wrapping helper
+	All the optional arguments are forwarded to the git utility
+	Available commands:
+	    add
+	    rm
+	    blame
+	    commit
+	    checkout
+	    diff
+	    hide-blame
+	    hide-diff
+	    init
+	    log
+	    next-hunk
+	    previous-hunk
+	    show
+	    show-diff
+	    status
+	    update-diff
+
+== Options
+
+*docsclient* `str`::
+	name of the client in which documentation is to be displayed

@@ -1,0 +1,28 @@
+= Grep
+
+== Commands
+
+*grep*::
+	_parameters_ .. +
+	grep utility wrapper
+	All optional arguments are forwarded to the grep utility
+
+*grep-next-match*::
+	_parameters_ 0 +
+	Jump to the next grep match
+
+*grep-previous-match*::
+	_parameters_ 0 +
+	Jump to the previous grep match
+
+== Options
+
+*grepcmd* `str`::
+	_default_ grep -RHn +
+	shell command run to search for subtext in a file/directory
+
+*jumpclient* `str`::
+	name of the client in which all source code jumps will be executed
+
+*toolsclient* `str`::
+	name of the client in which utilities display information

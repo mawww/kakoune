@@ -1,0 +1,5 @@
+= Haskell
+
+== Modules
+
+*haskell*::

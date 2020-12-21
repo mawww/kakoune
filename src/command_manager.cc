@@ -55,7 +55,7 @@ void CommandManager::register_module(String module_name, String commands)
     m_modules[module_name] = { Module::State::Registered, std::move(commands) };
 }
 
-void CommandManager::load_module(StringView module_name, Context& context)
+void CommandManager::load_module(StringView module_name, Context& context, bool tainted)
 {
     auto module = m_modules.find(module_name);
     if (module == m_modules.end())
@@ -73,7 +73,7 @@ void CommandManager::load_module(StringView module_name, Context& context)
         auto restore_state = on_scope_end([&] { module->value.state = Module::State::Registered; });
 
         Context empty_context{Context::EmptyContextFlag{}};
-        execute(module->value.commands, empty_context);
+        execute(module->value.commands, empty_context, ShellContext{}, tainted);
     }
     module->value.commands.clear();
     module->value.state = Module::State::Loaded;
@@ -496,7 +496,8 @@ StringView resolve_alias(const Context& context, StringView name)
 void CommandManager::execute_single_command(CommandParameters params,
                                             Context& context,
                                             const ShellContext& shell_context,
-                                            BufferCoord pos)
+                                            BufferCoord pos,
+                                            bool tainted)
 {
     if (params.empty())
         return;
@@ -521,7 +522,7 @@ void CommandManager::execute_single_command(CommandParameters params,
     {
         ParametersParser parameter_parser(param_view,
                                           command_it->value.param_desc);
-        command_it->value.func(parameter_parser, context, shell_context);
+        command_it->value.func(parameter_parser, context, shell_context, tainted);
     }
     catch (failure& error)
     {
@@ -536,7 +537,8 @@ void CommandManager::execute_single_command(CommandParameters params,
 }
 
 void CommandManager::execute(StringView command_line,
-                             Context& context, const ShellContext& shell_context)
+                             Context& context, const ShellContext& shell_context,
+                             bool tainted)
 {
     CommandParser parser(command_line);
 
@@ -550,7 +552,7 @@ void CommandManager::execute(StringView command_line,
 
         if (token.type == Token::Type::CommandSeparator)
         {
-            execute_single_command(params, context, shell_context, command_coord);
+            execute_single_command(params, context, shell_context, command_coord, tainted);
             params.clear();
         }
         else if (token.type == Token::Type::ArgExpand and token.content == '@')
@@ -564,7 +566,7 @@ void CommandManager::execute(StringView command_line,
                           std::make_move_iterator(tokens.end()));
         }
     }
-    execute_single_command(params, context, shell_context, command_coord);
+    execute_single_command(params, context, shell_context, command_coord, tainted);
 }
 
 Optional<CommandInfo> CommandManager::command_info(const Context& context, StringView command_line) const

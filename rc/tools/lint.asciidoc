@@ -1,26 +1,60 @@
-= Integrate with tools that check files for problems.
+= Lint
 
-Many file-formats have "lint" tools that check for common problems and point out
-where they occur. Most of these tools produce output in the traditional message
-format:
+Many file-formats have "lint" tools that check for common problems and
+point out where they occur. This plugin allows each reported error or
+warning to appear as a marker in the left-hand margin of the buffer that was
+checked. When the main cursor moves onto that line, the associated messages
+are displayed.
 
-----
-{filename}:{line}:{column}: {kind}: {message}
-----
+== Aliases
 
-If the 'kind' field contains 'error', the message is treated as an error,
-otherwise it is assumed to be a warning.
+*lint*::
+	_default_ lint-buffer +
 
-The `:lint-buffer` and `:lint-selections` commands will run the shell command
-specified in the `lintcmd` option, passing it the path to a temporary file
-containing the text to be linted. The results are collected in the
-`*lint-output*` buffer, and analyze it. If `toolsclient` is set, the
-`*lint-output*` buffer will be displayed in the named client.
+== Commands
 
-Each reported error or warning causes a marker to appear in the left-hand
-margin of the buffer that was checked. When the main cursor moves onto that
-line, the associated messages are displayed. If they get distracting, you can
-turn off the markers and messages with the `:lint-hide-diagnostics` command.
+*lint-buffer*::
+	_parameters_ 0 +
+	Check the current buffer with the command set in `lintcmd`, whose
+	output is expected to be in the traditional message format:
 
-You can also use `:lint-next-message` and `:lint-previous-message` to jump
-between the lines with messages.
+	----
+	{filename}:{line}:{column}: {kind}: {message}
+	----
+
+	If the 'kind' field contains 'error', the message is treated as an
+	error, otherwise it is assumed to be a warning.
+
+	The shell command specified in the `lintcmd` option is passed the
+	path to a temporary file containing the text to be linted.
+
+	The results are collected into the `*lint-output*` buffer, opened
+	in the client named in the `toolsclient` option.
+
+*lint-hide-diagnostics*::
+	_parameters_ 0 +
+	Hide line markers and disable automatic diagnostic displaying
+
+*lint-next-message*::
+	_parameters_ 0 +
+	Jump to the next line that contains a lint message
+
+*lint-previous-message*::
+	_parameters_ 0 +
+	Jump to the previous line that contains a lint message
+
+*lint-selections*::
+	_parameters_ 0..2 +
+	Check each selection with a linter
+
+	Switches:
+		-command <cmd>	Use the given linter.
+						If not given, the `lintcmd` option is used.
+
+== Options
+
+*lintcmd* `str`::
+	The shell command used by lint-buffer and lint-selections.
+
+*toolsclient* `str`::
+	name of the client in which utilities display information
