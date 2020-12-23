@@ -1392,7 +1392,7 @@ const CommandDesc debug_cmd = {
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
                auto c = {"info", "buffers", "options", "memory", "shared-strings",
-                         "profile-hash-maps", "faces", "mappings", "regex"};
+                         "profile-hash-maps", "faces", "mappings", "regex", "registers"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
@@ -1484,6 +1484,20 @@ const CommandDesc debug_cmd = {
 
             write_to_debug_buffer(format(" * {}:\n{}",
                                   parser[1], dump_regex(compile_regex(parser[1], RegexCompileFlags::Optimize))));
+        }
+        else if (parser[0] == "registers")
+        {
+            write_to_debug_buffer("Register info:");
+            for (auto&& [name, reg] : RegisterManager::instance())
+            {
+                auto content = reg->get(context);
+
+                if (content.size() == 1 and content[0] == "")
+                    continue;
+
+                write_to_debug_buffer(format(" * {} = {}\n", name,
+                    join(content | transform(quote), "\n     = ")));
+            }
         }
         else
             throw runtime_error(format("no such debug command: '{}'", parser[0]));
