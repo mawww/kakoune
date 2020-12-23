@@ -46,11 +46,11 @@ mode.
 
 join line with next:
  * vim: J
- * kak: alt-J
+ * kak: <a-J>
 
 delete to line end:
  * vim: d$
- * kak: alt-ld or Gld
+ * kak: <a-l>d or Gld
 
 some classic vim moves are not bound to the same key, this is due to Kakoune
 using shifted moves to append to selection, so moves that were bound to non
@@ -60,9 +60,9 @@ alphabetic chars had to change.
   block, if you want to get a selection from current point to next block end,
   you should use <space>M (<space> clears the selection to one character)
 
-* 0 and $ became alt-h and alt-l. Another binding is gh and gl.
+* 0 and $ became <a-h> and <a-l>. Another binding is gh and gl.
 
 :[gv]/re/cmd
-to emulate :g or :v, use % to select the whole buffer, alt-s to get
-one selection by line, and then alt-k or alt-K in order to keep only the
+to emulate :g or :v, use % to select the whole buffer, <a-s> to get
+one selection by line, and then <a-k> or <a-K> in order to keep only the
 selections matching (or not matching) the entered regex.
