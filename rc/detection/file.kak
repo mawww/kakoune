@@ -10,6 +10,7 @@ hook global BufOpenFile .* %{ evaluate-commands %sh{
             text/x-script.*) filetype="${mime#text/x-script.}" ;;
             text/x-*) filetype="${mime#text/x-}" ;;
             text/*)   filetype="${mime#text/}" ;;
+            application/x-shellscript) filetype="sh" ;;
             application/x-*) filetype="${mime#application/x-}" ;;
             application/*) filetype="${mime#application/}" ;;
             *) exit ;;
