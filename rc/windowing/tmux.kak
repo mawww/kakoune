@@ -55,7 +55,10 @@ If no client is passed then the current one is used' \
         if [ $# -eq 1 ]; then
             printf "evaluate-commands -client '%s' focus" "$1"
         elif [ -n "${kak_client_env_TMUX}" ]; then
-            TMUX="${kak_client_env_TMUX}" tmux select-pane -t "${kak_client_env_TMUX_PANE}" > /dev/null
+            # select-pane makes the pane active in the window, but does not select the window. Both select-pane
+            # and select-window should be invoked in order to select a pane on a currently not focused window.
+            TMUX="${kak_client_env_TMUX}" tmux select-window -t "${kak_client_env_TMUX_PANE}" \; \
+                                               select-pane   -t "${kak_client_env_TMUX_PANE}" > /dev/null
         fi
     }
 }
