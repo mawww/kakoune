@@ -195,6 +195,10 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context) -> Vector<String>
         { return BufferManager::instance() | transform(&Buffer::display_name) | gather<Vector>(); }
     }, {
+        "buffilelist", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return BufferManager::instance() | transform(&Buffer::name) | gather<Vector>(); }
+    }, {
         "buf_line_count", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return {to_string(context.buffer().line_count())}; }
