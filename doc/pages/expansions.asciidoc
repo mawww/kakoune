@@ -201,7 +201,7 @@ The following expansions are supported (with required context _in italics_):
     `%val{bufname}`)
 
 *%val{buffilelist}*::
-    quoted list of the full path of currently-open buffers (as seen in
+    quoted list of the full file paths of currently-open buffers (as seen in
     `%val{buffile}`)
 
 *%val{bufname}*::
