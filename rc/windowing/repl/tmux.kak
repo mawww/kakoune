@@ -41,9 +41,9 @@ define-command -hidden tmux-send-text -params 0..1 -docstring %{
     } %{
     nop %sh{
         if [ $# -eq 0 ]; then
-            tmux set-buffer -b kak_selection "${kak_selection}"
+            tmux set-buffer -b kak_selection -- "${kak_selection}"
         else
-            tmux set-buffer -b kak_selection "$1"
+            tmux set-buffer -b kak_selection -- "$1"
         fi
         tmux paste-buffer -b kak_selection -t "$kak_opt_tmux_repl_id"
     }
