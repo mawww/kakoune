@@ -200,6 +200,10 @@ The following expansions are supported (with required context _in italics_):
     quoted list of the names of currently-open buffers (as seen in
     `%val{bufname}`)
 
+*%val{buffilelist}*::
+    quoted list of the full path of currently-open buffers (as seen in
+    `%val{buffile}`)
+
 *%val{bufname}*::
     _in buffer, window scope_ +
     name of the current buffer
