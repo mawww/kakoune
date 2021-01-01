@@ -210,6 +210,63 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
     return res;
 }
 
+void command(const Context& context, EnvVarMap env_vars, char reg = 0)
+{
+    if (not CommandManager::has_instance())
+        throw runtime_error{"commands are not supported"};
+
+    CommandManager::instance().clear_last_complete_command();
+
+    String default_command = context.main_sel_register_value(reg ? reg : ':').str();
+
+    context.input_handler().prompt(
+        ":", {}, default_command,
+        context.faces()["Prompt"], PromptFlags::DropHistoryEntriesWithBlankPrefix,
+        ':',
+        [](const Context& context, CompletionFlags flags,
+           StringView cmd_line, ByteCount pos) {
+               return CommandManager::instance().complete(context, flags, cmd_line, pos);
+        },
+        [env_vars = std::move(env_vars), default_command](StringView cmdline, PromptEvent event, Context& context) {
+            if (context.has_client())
+            {
+                context.client().info_hide();
+                if (event == PromptEvent::Change)
+                {
+                    auto info = CommandManager::instance().command_info(context, cmdline);
+                    context.input_handler().set_prompt_face(context.faces()[info ? "Prompt" : "Error"]);
+
+                    auto autoinfo = context.options()["autoinfo"].get<AutoInfo>();
+                    if (autoinfo & AutoInfo::Command)
+                    {
+                        if (cmdline.length() == 1 and is_horizontal_blank(cmdline[0_byte]))
+                            context.client().info_show("prompt",
+                                                       "commands preceded by a blank wont be saved to history",
+                                                       {}, InfoStyle::Prompt);
+                        else if (info and not info->info.empty())
+                            context.client().info_show(info->name, info->info, {}, InfoStyle::Prompt);
+                    }
+                }
+            }
+            if (event == PromptEvent::Validate)
+            {
+                if (cmdline.empty())
+                    cmdline = default_command;
+
+                CommandManager::instance().execute(cmdline, context, { {}, env_vars });
+            }
+        });
+}
+
+void command(Context& context, NormalParams params)
+{
+    EnvVarMap env_vars = {
+        { "count", to_string(params.count) },
+        { "register", String{&params.reg, 1} }
+    };
+    command(context, std::move(env_vars), params.reg);
+}
+
 template<SelectMode mode>
 void goto_commands(Context& context, NormalParams params)
 {
@@ -223,7 +280,7 @@ void goto_commands(Context& context, NormalParams params)
     else
     {
         on_next_key_with_autoinfo(context, "goto", KeymapMode::Goto,
-                                 [](Key key, Context& context) {
+                                 [params](Key key, Context& context) {
             auto cp = key.codepoint();
             if (not cp or key == Key::Escape)
                 return;
@@ -327,6 +384,16 @@ void goto_commands(Context& context, NormalParams params)
                 select_coord<mode>(buffer, *pos, context.selections());
                 break;
             }
+            case ';':
+            {
+                EnvVarMap env_vars = {
+                    { "count", to_string(params.count) },
+                    { "register", String{&params.reg, 1} },
+                    { "select_mode", option_to_string(mode, Quoting::Raw) },
+                };
+                command(context, std::move(env_vars));
+                return;
+            }
             }
         }, (mode == SelectMode::Extend ? "goto (extend to)" : "goto"),
         build_autoinfo_for_mapping(context, KeymapMode::Goto,
@@ -341,7 +408,8 @@ void goto_commands(Context& context, NormalParams params)
              {{'c'},    "window center"},
              {{'a'},    "last buffer"},
              {{'f'},    "file"},
-             {{'.'},    "last buffer change"}}));
+             {{'.'},    "last buffer change"},
+             {{';'},    "run command in goto context"}}));
     }
 }
 
@@ -450,63 +518,6 @@ void for_each_codepoint(Context& context, NormalParams)
         strings.push_back(std::move(str));
     }
     selections.insert(strings, InsertMode::Replace);
-}
-
-void command(const Context& context, EnvVarMap env_vars, char reg = 0)
-{
-    if (not CommandManager::has_instance())
-        throw runtime_error{"commands are not supported"};
-
-    CommandManager::instance().clear_last_complete_command();
-
-    String default_command = context.main_sel_register_value(reg ? reg : ':').str();
-
-    context.input_handler().prompt(
-        ":", {}, default_command,
-        context.faces()["Prompt"], PromptFlags::DropHistoryEntriesWithBlankPrefix,
-        ':',
-        [](const Context& context, CompletionFlags flags,
-           StringView cmd_line, ByteCount pos) {
-               return CommandManager::instance().complete(context, flags, cmd_line, pos);
-        },
-        [env_vars = std::move(env_vars), default_command](StringView cmdline, PromptEvent event, Context& context) {
-            if (context.has_client())
-            {
-                context.client().info_hide();
-                if (event == PromptEvent::Change)
-                {
-                    auto info = CommandManager::instance().command_info(context, cmdline);
-                    context.input_handler().set_prompt_face(context.faces()[info ? "Prompt" : "Error"]);
-
-                    auto autoinfo = context.options()["autoinfo"].get<AutoInfo>();
-                    if (autoinfo & AutoInfo::Command)
-                    {
-                        if (cmdline.length() == 1 and is_horizontal_blank(cmdline[0_byte]))
-                            context.client().info_show("prompt",
-                                                       "commands preceded by a blank wont be saved to history",
-                                                       {}, InfoStyle::Prompt);
-                        else if (info and not info->info.empty())
-                            context.client().info_show(info->name, info->info, {}, InfoStyle::Prompt);
-                    }
-                }
-            }
-            if (event == PromptEvent::Validate)
-            {
-                if (cmdline.empty())
-                    cmdline = default_command;
-
-                CommandManager::instance().execute(cmdline, context, { {}, env_vars });
-            }
-        });
-}
-
-void command(Context& context, NormalParams params)
-{
-    EnvVarMap env_vars = {
-        { "count", to_string(params.count) },
-        { "register", String{&params.reg, 1} }
-    };
-    command(context, std::move(env_vars), params.reg);
 }
 
 BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView after)
