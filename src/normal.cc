@@ -416,14 +416,13 @@ void goto_commands(Context& context, NormalParams params)
 template<bool lock>
 void view_commands(Context& context, NormalParams params)
 {
-    const int count = params.count;
     on_next_key_with_autoinfo(context, "view", KeymapMode::View,
-                             [count](Key key, Context& context) {
+                             [params](Key key, Context& context) {
         if (key == Key::Escape)
             return;
 
         if (lock)
-            view_commands<true>(context, { count, 0 });
+            view_commands<true>(context, { params.count, 0 });
 
         auto cp = key.codepoint();
         if (not cp or not context.has_window())
@@ -448,17 +447,26 @@ void view_commands(Context& context, NormalParams params)
             window.display_line_at(cursor.line, window.dimensions().line-1);
             break;
         case 'h':
-            window.scroll(-std::max<ColumnCount>(1, count));
+            window.scroll(-std::max<ColumnCount>(1, params.count));
             break;
         case 'j':
-            scroll_window(context,  std::max<LineCount>(1, count));
+            scroll_window(context,  std::max<LineCount>(1, params.count));
             break;
         case 'k':
-            scroll_window(context, -std::max<LineCount>(1, count));
+            scroll_window(context, -std::max<LineCount>(1, params.count));
             break;
         case 'l':
-            window.scroll( std::max<ColumnCount>(1, count));
+            window.scroll( std::max<ColumnCount>(1, params.count));
             break;
+        case ';':
+        {
+            EnvVarMap env_vars = {
+                { "count", to_string(params.count) },
+                { "register", String{&params.reg, 1} },
+            };
+            command(context, std::move(env_vars));
+            return;
+        }
         }
     }, lock ? "view (lock)" : "view",
     build_autoinfo_for_mapping(context, KeymapMode::View,
@@ -469,7 +477,8 @@ void view_commands(Context& context, NormalParams params)
          {{'h'},     "scroll left"},
          {{'j'},     "scroll down"},
          {{'k'},     "scroll up"},
-         {{'l'},     "scroll right"}}));
+         {{'l'},     "scroll right"},
+         {{';'},     "run command in view context"}}));
 }
 
 void replace_with_char(Context& context, NormalParams)
