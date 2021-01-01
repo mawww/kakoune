@@ -456,7 +456,7 @@ const CommandDesc force_edit_cmd = {
 const ParameterDesc write_params{
     {
         { "sync", { false, "force the synchronization of the file onto the filesystem" } },
-        { "method", { true, "explicite writemethod (replace|overwrite)" } },
+        { "method", { true, "explicit writemethod (replace|overwrite)" } },
     },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
 };
