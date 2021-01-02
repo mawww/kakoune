@@ -20,6 +20,7 @@
 #include "window.hh"
 
 #include <cstdio>
+#include <limits>
 
 namespace Kakoune
 {

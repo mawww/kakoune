@@ -1,5 +1,3 @@
-#include <utility>
-
 #include "input_handler.hh"
 
 #include "buffer_manager.hh"
@@ -18,6 +16,9 @@
 #include "utf8.hh"
 #include "window.hh"
 #include "word_db.hh"
+
+#include <utility>
+#include <limits>
 
 namespace Kakoune
 {

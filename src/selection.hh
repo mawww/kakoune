@@ -3,6 +3,8 @@
 
 #include "buffer.hh"
 
+#include <limits>
+
 namespace Kakoune
 {
 

@@ -10,6 +10,7 @@
 #include "string.hh"
 #include "unicode.hh"
 
+#include <limits>
 #include <cerrno>
 #include <cstdlib>
 #include <cstdio>

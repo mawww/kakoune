@@ -12,6 +12,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <limits>
 
 namespace Kakoune
 {
