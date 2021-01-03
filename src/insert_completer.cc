@@ -421,7 +421,6 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
     const auto suffix_len = std::max(0_byte, buffer.distance(cursor_pos, m_completions.end));
 
     auto ref = buffer.string(m_completions.begin, m_completions.end);
-    ForwardChangesTracker changes_tracker;
     Vector<BufferRange> ranges;
     for (auto& sel : selections)
     {
