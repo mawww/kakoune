@@ -162,7 +162,7 @@ mode to do your change. Globally replacing foo with bar would be done with
 .Global replace
 video::video/global-replace.webm[align="center", options="autoplay,loop"]
 
-Multiple selections provides us with a very powerful to express structural
+Multiple selections provides us with a very powerful means to express structural
 selection: we can subselect matches inside the current selections, keep
 selections containing/not containing a match, split selections on a regex,
 swap selections contents...
