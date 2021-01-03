@@ -5,6 +5,9 @@ released versions.
 
 == Development version
 
+* Shell expansions only trim the last trailing newline instead of all of
+  them to make is possible to losslessly pass text through `%sh{...}`. 
+
 * `set-option -remove` support for subtracting/removing from option values
 
 * Menu completions such as command name completion are now auto-inserted on
