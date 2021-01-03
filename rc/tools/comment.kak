@@ -95,6 +95,12 @@ hook global BufSetOption filetype=(ocaml|coq) %{
     set-option buffer comment_block_end ' *)'
 }
 
+hook global BufSetOption filetype=((free|object)?pascal|delphi) %{
+    set-option buffer comment-line '//'
+    set-option buffer comment_block_begin '{'
+    set-option buffer comment_block_end '}'
+}
+
 hook global BufSetOption filetype=perl %{
     set-option buffer comment_block_begin '#['
     set-option buffer comment_block_end ']'
