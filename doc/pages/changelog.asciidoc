@@ -5,13 +5,13 @@ released versions.
 
 == Development version
 
-* `set-option -remove` support for substracting/removing from option values
+* `set-option -remove` support for subtracting/removing from option values
 
 * Menu completions such as command name completion are now auto-inserted on
   space
 
 * `write -atomic` was replaced with `write -method [replace|overwrite]` to
-  make both write method available explicitely
+  make both write methods available explicitly
 
 == Kakoune 2020.09.01
 
