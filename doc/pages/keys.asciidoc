@@ -451,6 +451,10 @@ Searches use the */* register by default (See <<registers#,`:doc registers`>>)
     *.*:::
         go to last buffer modification position
 
+    *;*, *<semicolon>*:::
+        run a command with additional expansions describing the selection
+        context (See <<expansions#,`:doc expansions`>>)
+
 == View commands
 
 *v*, *V*::
@@ -481,6 +485,10 @@ Searches use the */* register by default (See <<registers#,`:doc registers`>>)
 
     *l*:::
         scroll the window `count` columns right
+
+    *;*, *<semicolon>*:::
+        run a command with additional expansions describing the selection
+        context (See <<expansions#,`:doc expansions`>>)
 
 == Marks
 

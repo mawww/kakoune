@@ -226,9 +226,9 @@ The following expansions are supported (with required context _in italics_):
     directory containing the user configuration
 
 *%val{count}*::
-    _in `map` command <keys> parameter and `<a-;>` from object menu_ +
-    current count when the mapping was triggered, defaults to 0 if no
-    count given
+    _in `map` command <keys> parameter, `<a-;>` from the object menu, and
+    `<semicolon>` from the goto and view menus_ +
+    current count when the mapping was triggered, defaults to 0 if no count given
 
 *%val{cursor_byte_offset}*::
     _in window scope_ +
@@ -302,7 +302,8 @@ The following expansions are supported (with required context _in italics_):
     beginning, and `to_end` if the user wants to select to the end
 
 *%val{register}*::
-    _in `map` command <keys> parameter and `<a-;>` from the object menu_ +
+    _in `map` command <keys> parameter, `<a-;>` from the object menu, and
+    `<semicolon>` from the goto and view menus_ +
     current register when the mapping was triggered
 
 *%val{runtime}*::
@@ -310,7 +311,8 @@ The following expansions are supported (with required context _in italics_):
     Kakoune's binary location if `$KAKOUNE_RUNTIME` is not set
 
 *%val{select_mode}*::
-    _for commands executed from the object menu's `<a-;>` only_ +
+    _for commands executed from the object menu's `<a-;>` and the goto menu's
+    `<semicolon>` only_ +
     `replace` if the new selection should replace the existing, `extend`
     otherwise
 
