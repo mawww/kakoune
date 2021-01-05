@@ -15,7 +15,7 @@ kitty-terminal <program> [<arguments>]: create a new terminal as a kitty window
 The program passed as argument will be executed in the new terminal' \
 %{
     nop %sh{
-        kitty @ new-window --no-response --window-type $kak_opt_kitty_window_type --cwd "$PWD" "$@"
+        kitty @ new-window --no-response --window-type $kak_opt_kitty_window_type --cwd "$PWD" -m=id:$kak_client_env_KITTY_WINDOW_ID "$@"
     }
 }
 
@@ -24,7 +24,7 @@ kitty-terminal-tab <program> [<arguments>]: create a new terminal as kitty tab
 The program passed as argument will be executed in the new terminal' \
 %{
     nop %sh{
-        kitty @ new-window --no-response --new-tab --cwd "$PWD" "$@"
+        kitty @ new-window --no-response --new-tab --cwd "$PWD" -m=id:$kak_client_env_KITTY_WINDOW_ID "$@"
     }
 }
 
