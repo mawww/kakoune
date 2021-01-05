@@ -59,9 +59,17 @@ add-highlighter shared/markdown/codeblock region -match-capture \
     ^(\h*)```\h*$ \
     fill meta
 
-add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^\h*((?=[-*])|$) group
-add-highlighter shared/markdown/listblock/ ref markdown/inline
-add-highlighter shared/markdown/listblock/marker regex ^\h*([-*])\s 1:bullet
+add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^\h*((?=[-*])|$) regions
+add-highlighter shared/markdown/listblock/g default-region group
+add-highlighter shared/markdown/listblock/g/ ref markdown/inline
+add-highlighter shared/markdown/listblock/g/marker regex ^\h*([-*])\s 1:bullet
+
+# https://spec.commonmark.org/0.29/#link-destination
+# This repetition is not pretty but shell escaping is worse
+add-highlighter shared/markdown/angle_bracket_url region (?<=<)([a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=>)|\n fill link
+add-highlighter shared/markdown/url region -recurse \( ([a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=\))|\s fill link
+add-highlighter shared/markdown/listblock/angle_bracket_url region (?<=<)([a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=>)|\n fill link
+add-highlighter shared/markdown/listblock/url region -recurse \( ([a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=\))|\s fill link
 
 add-highlighter shared/markdown/inline/code region -match-capture (`+) (`+) fill mono
 
@@ -76,8 +84,6 @@ add-highlighter shared/markdown/inline/text/ regex (?<!\*)(\*([^\s*]|([^\s*](\n?
 add-highlighter shared/markdown/inline/text/ regex (?<!_)(_([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))_)(?!_) 1:+i
 add-highlighter shared/markdown/inline/text/ regex (?<!\*)(\*\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*\*)(?!\*) 1:+b
 add-highlighter shared/markdown/inline/text/ regex (?<!_)(__([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))__)(?!_) 1:+b
-add-highlighter shared/markdown/inline/text/ regex <(([a-z]+://.*?)|((mailto:)?[\w+-]+@[a-z]+[.][a-z]+))> 0:link
-add-highlighter shared/markdown/inline/text/ regex ^\[[^\]\n]*\]:\h*([^\n]*) 1:link
 add-highlighter shared/markdown/inline/text/ regex ^\h*(>\h*)+ 0:comment
 add-highlighter shared/markdown/inline/text/ regex "\H( {2,})$" 1:+r@meta
 
