@@ -87,4 +87,4 @@ several scopes altogether, consequently ignoring some values of a given
 object.
 
 Example: the *window* scope is never considered when resolving the
-values of options when writing a buffer (e.g. 'BOM', 'eolformat').
+values of options when writing a buffer (e.g. 'BOM', 'eolformat', 'newline_at_eof').

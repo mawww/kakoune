@@ -129,7 +129,7 @@ public:
 
     enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
 
-    Buffer(String name, Flags flags, StringView data = {},
+    Buffer(String name, Flags flags, Optional<StringView> data = {},
            timespec fs_timestamp = InvalidTime);
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
@@ -210,7 +210,7 @@ public:
     void run_hook_in_own_context(Hook hook, StringView param,
                                  String client_name = {});
 
-    void reload(StringView data, timespec fs_timestamp = InvalidTime);
+    void reload(Optional<StringView> data, timespec fs_timestamp = InvalidTime);
 
     void check_invariant() const;
 

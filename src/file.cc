@@ -323,13 +323,16 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
     if (buffer.options()["BOM"].get<ByteOrderMark>() == ByteOrderMark::Utf8)
         writer.write("\xEF\xBB\xBF");
 
+    bool newline_at_eof = buffer.options()["newline_at_eof"].get<bool>();
+
     for (LineCount i = 0; i < buffer.line_count(); ++i)
     {
         // end of lines are written according to eolformat but always
         // stored as \n
         StringView linedata = buffer[i];
         writer.write(linedata.substr(0, linedata.length()-1));
-        writer.write(eoldata);
+        if (i < buffer.line_count() - 1 or newline_at_eof)
+            writer.write(eoldata);
     }
 }
 

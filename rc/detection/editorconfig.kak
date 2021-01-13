@@ -24,6 +24,7 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
                     /indent_size=/              { indent_size = $2 == "tab" ? 4 : $2  }
                     /tab_width=/                { tab_width = $2 }
                     /end_of_line=/              { end_of_line = $2 }
+                    /insert_final_newline=/     { insert_final_newline = $2 }
                     /charset=/                  { charset = $2 }
                     /trim_trailing_whitespace=/ { trim_trailing_whitespace = $2 }
                     /max_line_length=/          { max_line_length = $2 }
@@ -42,6 +43,9 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
                         }
                         if (end_of_line == "lf" || end_of_line == "crlf") {
                             print "set-option buffer eolformat " end_of_line
+                        }
+                        if (insert_final_newline == "false" || insert_final_newline == "true") {
+                            print "set-option buffer newline_at_eof " insert_final_newline
                         }
                         if (charset == "utf-8-bom") {
                             print "set-option buffer BOM utf8"

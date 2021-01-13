@@ -25,7 +25,7 @@ BufferManager::~BufferManager()
 }
 
 Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
-                                     StringView data, timespec fs_timestamp)
+                                     Optional<StringView> data, timespec fs_timestamp)
 {
     auto path = real_path(parse_filename(name));
     for (auto& buf : m_buffers)
@@ -84,8 +84,8 @@ Buffer& BufferManager::get_first_buffer()
 {
     if (all_of(m_buffers, [](auto& b) { return (b->flags() & Buffer::Flags::Debug); }))
         create_buffer("*scratch*", Buffer::Flags::None,
-                      "*** this is a *scratch* buffer which won't be automatically saved ***\n"
-                      "*** use it for notes or open a file buffer with the :edit command ***\n");
+                     {"*** this is a *scratch* buffer which won't be automatically saved ***\n"
+                      "*** use it for notes or open a file buffer with the :edit command ***\n"});
 
     return *m_buffers.back();
 }

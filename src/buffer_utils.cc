@@ -89,7 +89,7 @@ Buffer* open_file_buffer(StringView filename, Buffer::Flags flags)
 {
     MappedFile file_data{parse_filename(filename)};
     return BufferManager::instance().create_buffer(
-        filename.str(), Buffer::Flags::File | flags, file_data, file_data.st.st_mtim);
+        filename.str(), Buffer::Flags::File | flags, {file_data}, file_data.st.st_mtim);
 }
 
 Buffer* open_or_create_file_buffer(StringView filename, Buffer::Flags flags)
@@ -100,7 +100,7 @@ Buffer* open_or_create_file_buffer(StringView filename, Buffer::Flags flags)
     {
         MappedFile file_data{path};
         return buffer_manager.create_buffer(filename.str(), Buffer::Flags::File | flags,
-                                            file_data, file_data.st.st_mtim);
+                                            {file_data}, file_data.st.st_mtim);
     }
     return buffer_manager.create_buffer(
         filename.str(), Buffer::Flags::File | Buffer::Flags::New,
@@ -111,7 +111,7 @@ void reload_file_buffer(Buffer& buffer)
 {
     kak_assert(buffer.flags() & Buffer::Flags::File);
     MappedFile file_data{buffer.name()};
-    buffer.reload(file_data, file_data.st.st_mtim);
+    buffer.reload({file_data}, file_data.st.st_mtim);
     buffer.flags() &= ~Buffer::Flags::New;
 }
 
@@ -241,7 +241,7 @@ void write_to_debug_buffer(StringView str)
         String line = str + (eol_back ? "\n" : "\n\n");
         BufferManager::instance().create_buffer(
             debug_buffer_name.str(), Buffer::Flags::NoUndo | Buffer::Flags::Debug | Buffer::Flags::ReadOnly,
-            line, InvalidTime);
+            {line}, InvalidTime);
     }
 }
 

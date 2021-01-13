@@ -232,11 +232,11 @@ UnitTest test_word_db{[]()
     };
 
     Buffer buffer("test", Buffer::Flags::None,
-                  "tchou mutch\n"
+                 {"tchou mutch\n"
                   "tchou kanaky tchou\n"
                   "\n"
                   "tchaa tchaa\n"
-                  "allo\n");
+                  "allo\n"});
     WordDB word_db(buffer);
     auto res = word_db.find_matching("");
     std::sort(res.begin(), res.end(), cmp_words);

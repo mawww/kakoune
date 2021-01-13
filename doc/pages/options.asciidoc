@@ -204,6 +204,11 @@ are exclusively available to built-in options.
     define if the file should be written with a unicode byte order mark;
     values of this option assigned to the `window` scope are ignored
 
+*newline_at_eof* `bool`::
+    _default_ true +
+    whether a newline is written at the end of file, this is autodetected;
+    values of this option assigned to the `window` scope are ignored
+
 *readonly* `bool`::
     _default_ false +
     prevent modifications from being saved to disk, all buffers if set
