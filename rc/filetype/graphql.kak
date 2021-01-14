@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](graphql) %{
+hook global BufCreate .*[.](graphqls?) %{
     set-option buffer filetype graphql
 }
 
