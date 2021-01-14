@@ -49,7 +49,8 @@ add-highlighter shared/graphql/object/field/ regex ^\h*([A-Za-z][A-Za-z0-9_-]*)\
 # Values
 add-highlighter shared/graphql/object/field/values regex \b(true|false|null|\d+(?:\.\d+)?(?:[eE][+-]?\d*)?)\b 0:value
 add-highlighter shared/graphql/object/field/variables regex \$[a-zA-Z0-9]+\b 0:variable
-add-highlighter shared/graphql/object/field/string regex '"[^"]*"' 0:string
+# add-highlighter shared/graphql/object/field/string regex '"([^"]|\\")*"' 0:string
+add-highlighter shared/graphql/object/field/string regex '"(?:[^"\\]|\\.)*"' 0:string
 
 # Meta
 add-highlighter shared/graphql/object/field/directives regex @(?:include|skip) 0:meta
