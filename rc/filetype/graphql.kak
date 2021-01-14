@@ -43,7 +43,7 @@ add-highlighter shared/graphql/object region -recurse \{ [{] [}] regions
 add-highlighter shared/graphql/object/line-description region '#' '\n' fill comment
 add-highlighter shared/graphql/object/block-description region '"""' '"""' fill comment
 add-highlighter shared/graphql/object/field default-region group
-add-highlighter shared/graphql/object/field/ regex ([A-Za-z][A-Za-z0-9_-]*)(?:\([\w\d\h,:$=]*\))?\h*[:{] 1:attribute
+add-highlighter shared/graphql/object/field/ regex ([A-Za-z][A-Za-z0-9_-]*)(?:\([\w\d\h,:$=!"_]*\))?\h*[:{] 1:attribute
 add-highlighter shared/graphql/object/field/ regex ^\h*([A-Za-z][A-Za-z0-9_-]*)\h*$ 1:attribute
 
 # Values
