@@ -36,7 +36,7 @@ provide-module zig %§
 add-highlighter shared/zig regions
 add-highlighter shared/zig/code default-region group
 
-add-highlighter shared/zig/doc_comment region '///[^/]' '$' fill documentation
+add-highlighter shared/zig/doc_comment region '///(?=[^/])' '$' fill documentation
 add-highlighter shared/zig/comment region '//' '$' fill comment
 
 # strings and characters
