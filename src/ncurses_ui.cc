@@ -610,16 +610,19 @@ Optional<Key> NCursesUI::get_next_key()
     if (not c)
         return {};
 
-    static constexpr auto convert = [](Codepoint c) -> Codepoint {
+    const cc_t erase = m_original_termios.c_cc[VERASE];
+    auto convert = [erase](Codepoint c) -> Codepoint {
         if (c == control('m') or c == control('j'))
             return Key::Return;
         if (c == control('i'))
             return Key::Tab;
-        if (c == control('h') or c == 127)
+        if (c == erase)
             return Key::Backspace;
+        if (c == 127) // when it's not backspace
+            return Key::Delete;
         return c;
     };
-    auto parse_key = [](unsigned char c) -> Key {
+    auto parse_key = [&convert](unsigned char c) -> Key {
         if (Codepoint cp = convert(c); cp > 255)
             return Key{cp};
         if (c == control('z'))
@@ -652,7 +655,7 @@ Optional<Key> NCursesUI::get_next_key()
        return Key{utf8::codepoint(CharIterator{c}, Sentinel{})};
     };
 
-    auto parse_csi = [this]() -> Optional<Key> {
+    auto parse_csi = [this, &convert]() -> Optional<Key> {
         auto next_char = [] { return get_char().value_or((unsigned char)0xff); };
         int params[16] = {};
         auto c = next_char();
