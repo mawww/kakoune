@@ -47,7 +47,7 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
                             print "set-option buffer BOM utf8"
                         }
                         if (trim_trailing_whitespace == "true") {
-                            print "hook buffer BufWritePre \"" file "\" -group editorconfig-hooks %{ try %{ execute-keys -draft %{ %s\\h+$<ret>d } } }"
+                            print "hook buffer BufWritePre \"" file "\" -group editorconfig-hooks %{ try %{ execute-keys -draft %{ %s\\h+$|\\n+\\z<ret>d } } }"
                         }
                         if (max_line_length && max_line_length != "off") {
                             print "set window autowrap_column " max_line_length
