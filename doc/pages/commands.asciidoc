@@ -434,7 +434,7 @@ the alternative key namings `<semicolon>` and `<a-semicolon>` can be used.
 New commands can be defined using the *define-command* command:
 
 *define-command* [<switches>] <command_name> <commands>::
-    *commands* is a string containing the commands to execute, and *switches*
+    *commands* is a string containing the space-separated commands to be executed, and *switches*
     can be any combination of the following parameters:
 
     *-params* <num>:::
