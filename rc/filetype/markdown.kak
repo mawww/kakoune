@@ -47,7 +47,7 @@ evaluate-commands %sh{
     ruby rust sass scala scss sh swift toml tupfile typescript yaml sql
   "
   for lang in ${languages}; do
-    printf 'add-highlighter shared/markdown/%s region -match-capture ^(\h*)```\h*(%s|\\{=%s\\}))\\b   ^(\h*)``` regions\n' "${lang}" "${lang}" "${lang}"
+    printf 'add-highlighter shared/markdown/%s region -match-capture ^(\h*)```\h*(%s|\\{[.=]?%s\\}))\\b   ^(\h*)``` regions\n' "${lang}" "${lang}" "${lang}"
     printf 'add-highlighter shared/markdown/%s/ default-region fill meta\n' "${lang}"
     [ "${lang}" = kak ] && ref=kakrc || ref="${lang}"
     printf 'add-highlighter shared/markdown/%s/inner region \A```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${ref}"
@@ -100,7 +100,7 @@ define-command -hidden markdown-indent-on-new-line %{
 
 define-command -hidden markdown-load-languages %{
     evaluate-commands -draft %{ try %{
-        execute-keys 'gtGbGls```\h*\{?=?\K[^}\s]+<ret>'
+        execute-keys 'gtGbGls```\h*\{?[.=]?\K[^}\s]+<ret>'
         evaluate-commands -itersel %{ require-module %val{selection} }
     }}
 }
