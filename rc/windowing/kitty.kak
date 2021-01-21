@@ -15,7 +15,7 @@ kitty-terminal <program> [<arguments>]: create a new terminal as a kitty window
 The program passed as argument will be executed in the new terminal' \
 %{
     nop %sh{
-        if [[ -z ${kak_client_env_KITTY_LISTEN_ON:-} ]]; then
+        if [ -z "$kak_client_env_KITTY_LISTEN_ON" ]; then
             kitty @ new-window --no-response --window-type "$kak_opt_kitty_window_type" --cwd "$PWD" "$@"
         else
             kitty @ --to "$kak_client_env_KITTY_LISTEN_ON" new-window --no-response --window-type "$kak_opt_kitty_window_type" --cwd "$PWD" "$@"
