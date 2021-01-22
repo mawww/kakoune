@@ -1203,7 +1203,7 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
         {
             const Codepoint opening = *match;
             const Codepoint closing = *(match+1);
-            while (it != buffer.end())
+            while (it.base().coord() <= range.end)
             {
                 if (*it == opening)
                     ++level;
@@ -1230,7 +1230,7 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
                                     false, apply_face(face));
                     break;
                 }
-                if (it == buffer.begin())
+                if (it.base().coord() <= range.begin)
                     break;
                 --it;
             }
