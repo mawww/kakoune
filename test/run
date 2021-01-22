@@ -54,7 +54,7 @@ main() {
     touch in; cp in out
     session="kak-tests"
     rm -f "$(session_path $session)"
-    $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" >ui-out <ui-in &
+    $DEBUGGER $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" >ui-out <ui-in &
     kakpid=$!
 
     failed=0
