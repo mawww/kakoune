@@ -136,31 +136,31 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
 {
     static const Regex re(R"(\bkak_(quoted_)?(\w+)\b)");
 
-    Vector<String> kak_env;
+    Vector<String> env;
     for (auto&& match : RegexIterator{cmdline.begin(), cmdline.end(), re})
     {
         StringView name{match[2].first, match[2].second};
-        Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
 
         auto match_name = [&](const String& s) {
             return s.substr(0_byte, name.length()) == name and
                    s.substr(name.length(), 1_byte) == "=";
         };
-        if (any_of(kak_env, match_name))
+        if (any_of(env, match_name))
             continue;
 
-        auto var_it = shell_context.env_vars.find(name);
         try
         {
+            Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
+            auto var_it = shell_context.env_vars.find(name);
             String value = var_it != shell_context.env_vars.end() ?
                 var_it->value : join(ShellManager::instance().get_val(name, context) | transform(quoter(quoting)), ' ', false);
 
             StringView quoted{match[1].first, match[1].second};
-            kak_env.push_back(format("kak_{}{}={}", quoted, name, value));
+            env.push_back(format("kak_{}{}={}", quoted, name, value));
         } catch (runtime_error&) {}
     }
 
-    return kak_env;
+    return env;
 }
 
 }
