@@ -28,7 +28,11 @@ kitty-terminal-tab <program> [<arguments>]: create a new terminal as kitty tab
 The program passed as argument will be executed in the new terminal' \
 %{
     nop %sh{
-        kitty @ new-window --no-response --new-tab --cwd "$PWD" "$@"
+        if [ -z "$kak_client_env_KITTY_LISTEN_ON" ]; then
+            kitty @ new-window --no-response --new-tab --cwd "$PWD" "$@"
+        else
+            kitty @ --to "$kak_client_env_KITTY_LISTEN_ON" new-window --no-response --new-tab --cwd "$PWD" "$@"
+        fi
     }
 }
 
@@ -40,8 +44,13 @@ If no client is passed then the current one is used' \
         if [ $# -eq 1 ]; then
             printf "evaluate-commands -client '%s' focus" "$1"
         else
-            kitty @ focus-tab --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
-            kitty @ focus-window --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
+            if [ -z "$kak_client_env_KITTY_LISTEN_ON" ]; then
+                kitty @ focus-tab --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
+                kitty @ focus-window --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
+            else
+                kitty @ --to "$kak_client_env_KITTY_LISTEN_ON" focus-tab --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
+                kitty @ --to "$kak_client_env_KITTY_LISTEN_ON" focus-window --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
+            fi
         fi
     }
 }
