@@ -105,7 +105,7 @@ template<typename Func>
 pid_t spawn_shell(const char* shell, StringView cmdline,
                   ConstArrayView<String> params,
                   ConstArrayView<String> kak_env,
-                  Func setup_child)
+                  Func setup_child) noexcept
 {
     Vector<const char*> envptrs;
     for (char** envp = environ; *envp; ++envp)
@@ -128,6 +128,8 @@ pid_t spawn_shell(const char* shell, StringView cmdline,
     setup_child();
 
     execve(shell, (char* const*)execparams.data(), (char* const*)envptrs.data());
+    char buffer[1024];
+    write(STDERR_FILENO, format_to(buffer, "execve failed: {}\n", errno));
     _exit(-1);
     return -1;
 }
