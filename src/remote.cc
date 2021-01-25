@@ -604,6 +604,10 @@ void make_session_directory()
         // set sticky bit on the shared kakoune directory
         make_directory(format("{}/kakoune", tmpdir()), 01777);
     }
+    else if (struct stat st;
+             stat(xdg_runtime_dir.zstr(), &st) == 0 && st.st_uid != geteuid())
+        throw runtime_error("XDG_RUNTIME_DIR is not owned by current user");
+
     make_directory(session_directory(), 0711);
 }
 
