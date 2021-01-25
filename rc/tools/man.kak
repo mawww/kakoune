@@ -38,8 +38,13 @@ define-command -hidden -params ..3 man-impl %{ evaluate-commands %sh{
     colout=$(mktemp "${TMPDIR:-/tmp}"/kak-man.XXXXXX)
     env MANWIDTH=${kak_window_range##* } man "$@" > "$manout" 2> "$manerr"
     retval=$?
-    col -b -x > ${colout} < ${manout}
+    if command -v col >/dev/null; then
+        col -b -x > ${colout} < ${manout}
+    else
+        sed 's/.//g' > ${colout} < ${manout}
+    fi
     rm ${manout}
+
     if [ "${retval}" -eq 0 ]; then
         printf %s\\n "
                 edit -scratch %{*$buffer_name ${*}*}
