@@ -115,6 +115,10 @@ hook global BufSetOption filetype=python %{
     set-option buffer comment_block_end "'''"
 }
 
+hook global BufSetOption filetype=r %{
+    set-option buffer comment_line '#'
+}
+
 hook global BufSetOption filetype=ragel %{
     set-option buffer comment_line '%%'
     set-option buffer comment_block_begin '%%{'
