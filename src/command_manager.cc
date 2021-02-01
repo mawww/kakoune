@@ -323,7 +323,7 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
             content, context, {}, ShellManager::Flags::WaitForStdout,
             shell_context).first;
 
-        if (str.back() == '\n')
+        if (not str.empty() and str.back() == '\n')
             str.resize(str.length() - 1, 0);
 
         return {str};
