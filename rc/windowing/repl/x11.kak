@@ -26,7 +26,7 @@ define-command x11-send-text -params 0..1 -docstring %{
         If no text is passed, then the selection is used
         } %{
     evaluate-commands %sh{
-        ([ "$#" -gt 0 ] && printf "%s\\n" "$1" || printf "%s\\n" "${kak_selection}" ) | xsel -i ||
+        ([ "$#" -gt 0 ] && printf "%s" "$1" || printf "%s" "${kak_selection}" ) | xsel -i ||
         echo 'fail x11-send-text: failed to run xsel, see *debug* buffer for details' &&
         kak_winid=$(xdotool getactivewindow) &&
         xdotool windowactivate "${kak_opt_x11_repl_id}" key --clearmodifiers Shift+Insert &&
