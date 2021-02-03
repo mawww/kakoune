@@ -20,12 +20,44 @@ inline bool is_eol(Codepoint c) noexcept
 
 inline bool is_horizontal_blank(Codepoint c) noexcept
 {
-    return c == ' ' or c == '\t';
+    // Characters considered whitespace by ECMA Regex Spec
+    //  minus vertical tab
+    // <https://262.ecma-international.org/11.0/#sec-white-space>
+    return c == '\t'      or
+           c == '\f'      or
+           c == ' '       or
+           c == U'\u00A0' or
+           c == U'\uFEFF' or
+           c == U'\u1680' or
+           c == U'\u2000' or
+           c == U'\u2001' or
+           c == U'\u2002' or
+           c == U'\u2003' or
+           c == U'\u2004' or
+           c == U'\u2005' or
+           c == U'\u2006' or
+           c == U'\u2007' or
+           c == U'\u2008' or
+           c == U'\u2009' or
+           c == U'\u200A' or
+           c == U'\u2028' or
+           c == U'\u2029' or
+           c == U'\u202F' or
+           c == U'\u205F' or
+           c == U'\u3000' ;
 }
 
 inline bool is_blank(Codepoint c) noexcept
 {
-    return c == ' ' or c == '\t' or c == '\n';
+    // Characters considered Line Terminators by ECMA Regex Spec
+    //  plus vertical tab
+    // <https://262.ecma-international.org/11.0/#sec-line-terminators>
+    return c == '\n'              or
+           c == '\r'              or
+           c == '\v'              or
+           c == U'\u2028'         or
+           c == U'\u2029'         or
+           is_horizontal_blank(c) ;
 }
 
 enum WordType { Word, WORD };
