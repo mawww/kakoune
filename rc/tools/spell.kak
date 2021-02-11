@@ -148,7 +148,6 @@ define-command \
     -docstring "Suggest replacement words for the current selection, against the last language used by the spell-check command" \
     spell-replace %{
     prompt \
-        -init %val{selection} \
         -shell-script-candidates %{
             options=""
             if [ -n "$kak_opt_spell_last_lang" ]; then
