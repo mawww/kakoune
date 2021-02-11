@@ -32,7 +32,7 @@ add-highlighter shared/java/inline_documentation region /// $ fill documentation
 add-highlighter shared/java/line_comment region // $ fill comment
 
 add-highlighter shared/java/code/ regex %{\b(this|true|false|null)\b} 0:value
-add-highlighter shared/java/code/ regex "\b(void|int|char|unsigned|float|boolean|double)\b" 0:type
+add-highlighter shared/java/code/ regex "\b(void|byte|short|int|long|char|unsigned|float|boolean|double)\b" 0:type
 add-highlighter shared/java/code/ regex "\b(while|for|if|else|do|static|switch|case|default|class|interface|enum|goto|break|continue|return|import|try|catch|throw|new|package|extends|implements|throws|instanceof)\b" 0:keyword
 add-highlighter shared/java/code/ regex "\b(final|public|protected|private|abstract|synchronized|native|transient|volatile)\b" 0:attribute
 add-highlighter shared/java/code/ regex "(?<!\w)@\w+\b" 0:meta
