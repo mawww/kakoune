@@ -131,6 +131,15 @@ brew install kakoune
 ====
 
 [TIP]
+.MacPorts (macOS)
+====
+---------------------------------
+sudo port selfupdate
+sudo port install kakoune
+---------------------------------
+====
+
+[TIP]
 .Fedora supported versions and Rawhide
 ====
 ---------------------------------
