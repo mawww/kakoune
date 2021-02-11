@@ -620,6 +620,8 @@ Optional<Key> NCursesUI::get_next_key()
             return Key::Backspace;
         if (c == 127) // when it's not backspace
             return Key::Delete;
+        if (c == 27)
+            return Key::Escape;
         return c;
     };
     auto parse_key = [&convert](unsigned char c) -> Key {
