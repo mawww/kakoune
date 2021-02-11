@@ -9,6 +9,6 @@ hook global BufCreate .*/systemd/.+\.(automount|conf|link|mount|network|path|ser
 
     # NOTE: INI files define the commenting character to be `;`, which won't work in `systemd` files
     hook -once buffer BufSetOption comment_line=.+ %{
-        set-option buffer comment_line "#"
+        set-option buffer comment_line "# "
     }
 }
