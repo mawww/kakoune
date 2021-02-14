@@ -2146,6 +2146,22 @@ void merge_consecutive(Context& context, NormalParams params)
     context.selections().merge_consecutive();
 }
 
+void merge_overlapping(Context& context, NormalParams params)
+{
+    ensure_forward(context, params);
+    context.selections().merge_overlapping();
+}
+
+void duplicate_selections(Context& context, NormalParams params)
+{
+    SelectionList& sels = context.selections();
+    Vector<Selection> new_sels;
+    const int count = params.count ? params.count : 2;
+    for (const auto& sel : sels)
+        new_sels.insert(new_sels.end(), count, sel);
+    context.selections().set(std::move(new_sels), sels.main_index() * count);
+}
+
 void force_redraw(Context& context, NormalParams)
 {
     if (context.has_client())
@@ -2258,6 +2274,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {alt(';')}, {"swap selections cursor and anchor", flip_selections} },
     { {alt(':')}, {"ensure selection cursor is after anchor", ensure_forward} },
     { {alt('_')}, {"merge consecutive selections", merge_consecutive} },
+    { {'+'}, {"duplicate each selection", duplicate_selections} },
+    { {alt('+')}, {"merge overlapping selections", merge_overlapping} },
 
     { {'w'}, {"select to next word start", repeated<&select<SelectMode::Replace, select_to_next_word<Word>>>} },
     { {'e'}, {"select to next word end", repeated<select<SelectMode::Replace, select_to_next_word_end<Word>>>} },

@@ -286,6 +286,12 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
 *<a-_>*::
     merge contiguous selections together (works across lines as well)
 
+*<+>*, *<plus>*::
+    duplicate each selection (generating overlapping selections)
+
+*<a-+>*, *<a-plus>*::
+    merge overlapping selections
+
 *>*, *<gt>*::
     indent selected lines
 

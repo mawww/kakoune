@@ -48,7 +48,7 @@ void SelectionList::set(Vector<Selection> list, size_t main)
     m_selections = std::move(list);
     m_main = main;
     m_timestamp = m_buffer->timestamp();
-    sort_and_merge_overlapping();
+    sort();
     check_invariant();
 }
 
