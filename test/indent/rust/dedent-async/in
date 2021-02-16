@@ -3,3 +3,6 @@
 
     foo().await%( )
 
+    foo()
+        .await?%( )
+

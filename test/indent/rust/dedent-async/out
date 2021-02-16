@@ -5,3 +5,7 @@
     foo().await
         bar
 
+    foo()
+        .await?
+        bar
+

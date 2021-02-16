@@ -157,8 +157,8 @@ define-command -hidden rust-indent-on-new-line %~
             try %< execute-keys -draft k <a-x> s [^\h].+ <ret> <a-K> \A[-+*/&|^})<gt><lt>#] <ret> <a-K> [,<semicolon>{](\h*/[/*].*|)$ <ret> j <a-gt> >
             # indent after lines ending with {
             try %< execute-keys -draft k <a-x> <a-k> \{$ <ret> j <a-gt> >
-            # dedent after lines starting with . and ending with } or ) or , or ; or .await
-            try %_ execute-keys -draft k <a-x> <a-k> ^\h*\. <ret> <a-k>([}),<semicolon>]|\.await)\h*$ <ret> j <a-lt> _
+            # dedent after lines starting with . and ending with } or ) or , or ; or .await (} or ) or .await maybe with ?)
+            try %_ execute-keys -draft k <a-x> <a-k> ^\h*\. <ret> <a-k> ([,<semicolon>]|(([})]|\.await)\?*))\h*$ <ret> j <a-lt> _
             # dedent after lines ending with " => {}" - part of empty match
             try %# execute-keys -draft k <a-x> <a-k> \ =>\ \{\}\h*$ <ret> j <a-lt> #
             # align to opening curly brace or paren when newline is inserted before a single closing
