@@ -1,0 +1,4 @@
+match a {
+    Some(a) => {}
+    bar
+
