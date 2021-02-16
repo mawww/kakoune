@@ -1,6 +1,6 @@
 # Line comments
 declare-option -docstring "characters inserted at the beginning of a commented line" \
-    str comment_line '#'
+    str comment_line '# '
 
 # Block comments
 declare-option -docstring "characters inserted before a commented block" \
@@ -10,25 +10,25 @@ declare-option -docstring "characters inserted after a commented block" \
 
 # Default comments for all languages
 hook global BufSetOption filetype=asciidoc %{
-    set-option buffer comment_line '//'
+    set-option buffer comment_line '// '
     set-option buffer comment_block_begin '////'
     set-option buffer comment_block_end '////'
 }
 
 hook global BufSetOption filetype=(c|cpp|dart|gluon|go|java|javascript|objc|php|rust|sass|scala|scss|swift|typescript) %{
-    set-option buffer comment_line '//'
+    set-option buffer comment_line '// '
     set-option buffer comment_block_begin '/*'
     set-option buffer comment_block_end '*/'
 }
 
 hook global BufSetOption filetype=(cabal|haskell|moon|idris|elm|dhall) %{
-    set-option buffer comment_line '--'
+    set-option buffer comment_line '-- '
     set-option buffer comment_block_begin '{-'
     set-option buffer comment_block_end '-}'
 }
 
 hook global BufSetOption filetype=clojure %{
-    set-option buffer comment_line '#_'
+    set-option buffer comment_line '#_ '
     set-option buffer comment_block_begin '(comment '
     set-option buffer comment_block_end ')'
 }
@@ -45,17 +45,17 @@ hook global BufSetOption filetype=css %{
 }
 
 hook global BufSetOption filetype=d %{
-    set-option buffer comment_line '//'
+    set-option buffer comment_line '// '
     set-option buffer comment_block_begin '/+'
     set-option buffer comment_block_end '+/'
 }
 
 hook global BufSetOption filetype=(gas|ini) %{
-    set-option buffer comment_line ';'
+    set-option buffer comment_line '; '
 }
 
 hook global BufSetOption filetype=haml %{
-    set-option buffer comment_line '-#'
+    set-option buffer comment_line '-# '
 }
 
 hook global BufSetOption filetype=(html|xml) %{
@@ -65,21 +65,21 @@ hook global BufSetOption filetype=(html|xml) %{
 }
 
 hook global BufSetOption filetype=(latex|mercury) %{
-    set-option buffer comment_line '%'
+    set-option buffer comment_line '% '
 }
 
 hook global BufSetOption filetype=ledger %{
-    set-option buffer comment_line ';'
+    set-option buffer comment_line '; '
 }
 
 hook global BufSetOption filetype=lisp %{
-    set-option buffer comment_line ';'
+    set-option buffer comment_line '; '
     set-option buffer comment_block_begin '#|'
     set-option buffer comment_block_end '|#'
 }
 
 hook global BufSetOption filetype=lua %{
-    set-option buffer comment_line '--'
+    set-option buffer comment_line '-- '
     set-option buffer comment_block_begin '--[['
     set-option buffer comment_block_end ']]'
 }
@@ -107,7 +107,7 @@ hook global BufSetOption filetype=perl %{
 }
 
 hook global BufSetOption filetype=(pug|zig) %{
-    set-option buffer comment_line '//'
+    set-option buffer comment_line '// '
 }
 
 hook global BufSetOption filetype=python %{
@@ -116,11 +116,11 @@ hook global BufSetOption filetype=python %{
 }
 
 hook global BufSetOption filetype=r %{
-    set-option buffer comment_line '#'
+    set-option buffer comment_line '# '
 }
 
 hook global BufSetOption filetype=ragel %{
-    set-option buffer comment_line '%%'
+    set-option buffer comment_line '%% '
     set-option buffer comment_block_begin '%%{'
     set-option buffer comment_block_end '}%%'
 }
@@ -173,14 +173,14 @@ define-command comment-line -docstring '(un)comment selected lines using line co
         }
 
         try %{
-            set-register / "\A\Q%opt{comment_line}\E\h?"
+            set-register / "\A\Q%opt{comment_line}\E"
 
             try %{
                 # See if there are any uncommented lines in the selection
                 execute-keys -draft <a-K><ret>
 
                 # There are uncommented lines, so comment everything
-                set-register '"' "%opt{comment_line} "
+                set-register '"' "%opt{comment_line}"
                 align-selections-left
                 execute-keys P
             } catch %{
