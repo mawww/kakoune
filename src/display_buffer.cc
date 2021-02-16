@@ -113,7 +113,10 @@ DisplayLine::iterator DisplayLine::split(iterator it, ColumnCount count)
 
 DisplayLine::iterator DisplayLine::split(BufferCoord pos)
 {
-    auto it = find_if(begin(), end(), [pos](const DisplayAtom& a) { return a.type() == DisplayAtom::Range and a.end() > pos; });
+    auto it = find_if(begin(), end(), [pos](const DisplayAtom& a) {
+        return (a.has_buffer_range() && a.begin() >= pos) ||
+               (a.type() == DisplayAtom::Range and a.end() > pos);
+    });
     if (it == end() or it->begin() >= pos)
         return it;
     return ++split(it, pos);
