@@ -1815,7 +1815,30 @@ void scroll_window(Context& context, LineCount offset, bool mouse_dragging)
     DisplayCoord win_pos = window.position();
     DisplayCoord win_dim = window.dimensions();
 
-    if ((offset < 0 and win_pos.line == 0) or (offset > 0 and win_pos.line == line_count - 1))
+    // window is on top, but cursor is not; allow cursor to move towards
+    // the top.
+    if (offset < 0 and win_pos.line == 0) {
+        SelectionList& selections = context.selections();
+        Selection& main_selection = selections.main();
+        const BufferCoord anchor = main_selection.anchor();
+        const BufferCoord cursor = main_selection.cursor();
+        auto line = clamp(cursor.line + offset, 0_line, buffer.line_count() - 1);
+
+        using std::min; using std::max;
+        // This is not exactly a clamp, and must be done in this order as
+        // byte_count_to could return line length
+        auto col = min(max(cursor.column, buffer[line].byte_count_to(win_pos.column)),
+                    buffer[line].length()-1);
+        BufferCoord new_cursor = { line, col };
+        BufferCoord new_anchor = (mouse_dragging or new_cursor == cursor) ? anchor : new_cursor;
+
+        main_selection = { new_anchor, new_cursor };
+        selections.sort_and_merge_overlapping();
+        return;
+    }
+
+
+    if ((offset > 0 and win_pos.line == line_count - 1))
         return;
 
     const DisplayCoord max_offset{(win_dim.line - 1)/2, (win_dim.column - 1)/2};
