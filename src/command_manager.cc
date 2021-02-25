@@ -627,7 +627,7 @@ Completions CommandManager::complete_command_name(const Context& context, String
 
     return {0, query.length(),
             Kakoune::complete(query, query.length(), concatenated(commands, aliases)),
-            Completions::Flags::Menu | Completions::Flags::NoEmpty};
+            Completions::Flags::Menu | Completions::Flags::NoEmpty | Completions::Flags::Quoted};
 }
 
 Completions CommandManager::complete_module_name(StringView query) const
@@ -669,7 +669,8 @@ Completions CommandManager::complete(const Context& context,
     const auto& token = tokens.back();
 
     auto requote = [](Completions completions, Token::Type token_type) {
-        if (completions.flags & Completions::Flags::Quoted)
+        if ((completions.flags & Completions::Flags::Quoted) or
+            completions.start != 0)
             return completions;
 
         if (token_type == Token::Type::Raw)
@@ -682,7 +683,6 @@ Completions CommandManager::complete(const Context& context,
         }
         else if (token_type == Token::Type::RawQuoted)
         {
-            kak_assert(completions.start > 0);
             --completions.start;
             completions.flags |= Completions::Flags::Quoted;
             for (auto& c : completions.candidates)
@@ -702,7 +702,7 @@ Completions CommandManager::complete(const Context& context,
                                 token.type == Token::Type::RawQuoted))
     {
         StringView query = command_line.substr(start, cursor_pos_in_token);
-        return requote(offset_pos(complete_command_name(context, query), start), token.type);
+        return offset_pos(complete_command_name(context, query), start);
     }
 
     switch (token.type)
@@ -761,9 +761,9 @@ Completions CommandManager::complete(const Context& context,
         Vector<String> params;
         for (auto it = tokens.begin() + 1; it != tokens.end(); ++it)
             params.push_back(it->content);
-        return requote(offset_pos(command_it->value.completer(
+        return offset_pos(requote(command_it->value.completer(
             context, flags, params, tokens.size() - 2,
-            cursor_pos_in_token), start), token.type);
+            cursor_pos_in_token), token.type), start);
     }
     case Token::Type::RawEval:
     default:
