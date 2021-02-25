@@ -20,13 +20,13 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
             /*) # $kak_buffile is a full path that starts with a '/'
                 printf %s\\n "remove-hooks buffer editorconfig-hooks"
                 editorconfig "$file" | awk -v file="$file" -F= -- '
-                    /indent_style=/             { indent_style = $2 }
-                    /indent_size=/              { indent_size = $2 == "tab" ? 4 : $2  }
-                    /tab_width=/                { tab_width = $2 }
-                    /end_of_line=/              { end_of_line = $2 }
-                    /charset=/                  { charset = $2 }
-                    /trim_trailing_whitespace=/ { trim_trailing_whitespace = $2 }
-                    /max_line_length=/          { max_line_length = $2 }
+                    $1 == "indent_style"             { indent_style = $2 }
+                    $1 == "indent_size"              { indent_size = $2 == "tab" ? 4 : $2 }
+                    $1 == "tab_width"                { tab_width = $2 }
+                    $1 == "end_of_line"              { end_of_line = $2 }
+                    $1 == "charset"                  { charset = $2 }
+                    $1 == "trim_trailing_whitespace" { trim_trailing_whitespace = $2 }
+                    $1 == "max_line_length"          { max_line_length = $2 }
 
                     END {
                         if (indent_style == "tab") {
@@ -34,7 +34,7 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
                             print "set-option buffer aligntab true"
                         }
                         if (indent_style == "space") {
-                            print "set-option buffer indentwidth " (indent_size == "tab" ? 4 : indent_size)
+                            print "set-option buffer indentwidth " indent_size
                             print "set-option buffer aligntab false"
                         }
                         if (indent_size || tab_width) {
