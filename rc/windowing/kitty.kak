@@ -15,10 +15,15 @@ kitty-terminal <program> [<arguments>]: create a new terminal as a kitty window
 The program passed as argument will be executed in the new terminal' \
 %{
     nop %sh{
+        local match=""
+        if [ -n "$kak_client_env_KITTY_WINDOW_ID" ]; then
+            match="--match=id:$kak_client_env_KITTY_WINDOW_ID"
+        fi
+
         if [ -z "$kak_client_env_KITTY_LISTEN_ON" ]; then
-            kitty @ new-window --no-response --window-type "$kak_opt_kitty_window_type" --cwd "$PWD" "$@"
+            kitty @ new-window --no-response --window-type "$kak_opt_kitty_window_type" --cwd "$PWD" $match "$@"
         else
-            kitty @ --to "$kak_client_env_KITTY_LISTEN_ON" new-window --no-response --window-type "$kak_opt_kitty_window_type" --cwd "$PWD" "$@"
+            kitty @ --to "$kak_client_env_KITTY_LISTEN_ON" new-window --no-response --window-type "$kak_opt_kitty_window_type" --cwd "$PWD" $match "$@"
         fi
     }
 }
@@ -28,10 +33,15 @@ kitty-terminal-tab <program> [<arguments>]: create a new terminal as kitty tab
 The program passed as argument will be executed in the new terminal' \
 %{
     nop %sh{
+        local match=""
+        if [ -n "$kak_client_env_KITTY_WINDOW_ID" ]; then
+            match="--match=id:$kak_client_env_KITTY_WINDOW_ID"
+        fi
+
         if [ -z "$kak_client_env_KITTY_LISTEN_ON" ]; then
-            kitty @ new-window --no-response --new-tab --cwd "$PWD" "$@"
+            kitty @ new-window --no-response --new-tab --cwd "$PWD" $match "$@"
         else
-            kitty @ --to "$kak_client_env_KITTY_LISTEN_ON" new-window --no-response --new-tab --cwd "$PWD" "$@"
+            kitty @ --to "$kak_client_env_KITTY_LISTEN_ON" new-window --no-response --new-tab --cwd "$PWD" $match "$@"
         fi
     }
 }
@@ -45,11 +55,11 @@ If no client is passed then the current one is used' \
             printf "evaluate-commands -client '%s' focus" "$1"
         else
             if [ -z "$kak_client_env_KITTY_LISTEN_ON" ]; then
-                kitty @ focus-tab --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
-                kitty @ focus-window --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
+                kitty @ focus-tab --no-response --match=id:$kak_client_env_KITTY_WINDOW_ID
+                kitty @ focus-window --no-response --match=id:$kak_client_env_KITTY_WINDOW_ID
             else
-                kitty @ --to "$kak_client_env_KITTY_LISTEN_ON" focus-tab --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
-                kitty @ --to "$kak_client_env_KITTY_LISTEN_ON" focus-window --no-response -m=id:$kak_client_env_KITTY_WINDOW_ID
+                kitty @ --to "$kak_client_env_KITTY_LISTEN_ON" focus-tab --no-response --match=id:$kak_client_env_KITTY_WINDOW_ID
+                kitty @ --to "$kak_client_env_KITTY_LISTEN_ON" focus-window --no-response --match=id:$kak_client_env_KITTY_WINDOW_ID
             fi
         fi
     }
