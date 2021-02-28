@@ -16,7 +16,7 @@ hook global WinSetOption filetype=ninja %{
 
     set-option window static_words %opt{ninja_static_words}
 
-    hook window ModeChange insert:.* -group ninja-trim-indent  ninja-trim-indent
+    hook window ModeChange pop:insert:.* -group ninja-trim-indent ninja-trim-indent
     hook window InsertChar \n -group ninja-indent ninja-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
     hook window ModeChange pop:insert:.* -group ninja-trim-indent %{ try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d } }

@@ -15,7 +15,7 @@ hook global WinSetOption filetype=gluon %{
     require-module gluon
 
     set-option window extra_word_chars '_' "'"
-    hook window ModeChange insert:.* -group gluon-trim-indent gluon-trim-indent
+    hook window ModeChange pop:insert:.* -group gluon-trim-indent gluon-trim-indent
     hook window InsertChar \n -group gluon-indent gluon-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{
