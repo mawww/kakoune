@@ -14,7 +14,7 @@ hook global BufCreate .*[.](dhall) %{
 hook global WinSetOption filetype=dhall %{
     require-module dhall
 
-    hook window ModeChange insert:.* -group dhall-trim-indent  dhall-trim-indent
+    hook window ModeChange pop:insert:.* -group dhall-trim-indent dhall-trim-indent
     hook window InsertChar \n -group dhall-indent dhall-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window dhall-.+ }
