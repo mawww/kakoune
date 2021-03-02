@@ -627,7 +627,7 @@ Completions CommandManager::complete_command_name(const Context& context, String
 
     return {0, query.length(),
             Kakoune::complete(query, query.length(), concatenated(commands, aliases)),
-            Completions::Flags::Menu | Completions::Flags::NoEmpty | Completions::Flags::Quoted};
+            Completions::Flags::Menu | Completions::Flags::NoEmpty};
 }
 
 Completions CommandManager::complete_module_name(StringView query) const
@@ -682,12 +682,7 @@ Completions CommandManager::complete(const Context& context,
             }
         }
         else if (token_type == Token::Type::RawQuoted)
-        {
-            --completions.start;
             completions.flags |= Completions::Flags::Quoted;
-            for (auto& c : completions.candidates)
-                c = quote(c);
-        }
         else
             kak_assert(false);
 
@@ -702,7 +697,7 @@ Completions CommandManager::complete(const Context& context,
                                 token.type == Token::Type::RawQuoted))
     {
         StringView query = command_line.substr(start, cursor_pos_in_token);
-        return offset_pos(complete_command_name(context, query), start);
+        return offset_pos(requote(complete_command_name(context, query), token.type), start);
     }
 
     switch (token.type)
