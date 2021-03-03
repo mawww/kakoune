@@ -25,17 +25,6 @@ in contexts where only alphanumeric identifiers are possible.
 
 All normal-mode commands using a register default to a specific one if not specified:
 
-*"* (dquote)::
-    default delete / copy / paste / replace register, used by:
-    *c*, *d*, *y*, *p*, *<a-p>*, *<P>*, *<a-P>*, *R* and *<a-R>*
-    (see <<keys#changes, `:doc keys changes`>>)
-
-*/* (slash)::
-    default search / regex register, used by:
-    */*, *<a-/>*, *?*, *<a-?>*, *n*, *<a-n>*, *N*, *<a-N>*, ***, *<a-*>*,
-    *s*, *S*, *<a-k>* and *<a-K>*
-    (see <<keys#searching, `:doc keys searching`>>)
-
 *@* (arobase)::
     default macro register, used by:
     *q* and *Q*
@@ -47,18 +36,29 @@ All normal-mode commands using a register default to a specific one if not speci
     (see <<keys#marks, `:doc keys marks`>>
     and <<registers#marks, `:doc registers marks`>>)
 
+*"* (dquote)::
+    default delete / copy / paste / replace register, used by:
+    *c*, *d*, *y*, *p*, *<a-p>*, *<P>*, *<a-P>*, *R* and *<a-R>*
+    (see <<keys#changes, `:doc keys changes`>>)
+
 *|* (pipe)::
     default shell command register, used by commands that spawn a subshell:
     *|*, *<a-|>*, *!* and *<a-!>*
     (see <<keys#changes-through-external-programs, `:doc keys changes-through-external-programs`>>)
+
+*/* (slash)::
+    default search / regex register, used by:
+    */*, *<a-/>*, *?*, *<a-?>*, *n*, *<a-n>*, *N*, *<a-N>*, ***, *<a-*>*,
+    *s*, *S*, *<a-k>* and *<a-K>*
+    (see <<keys#searching, `:doc keys searching`>>)
 
 == Special registers
 
 Some registers are not general purposes, they cannot be written to, but they
 contain some special data
 
-*%* (percent)::
-    current buffer name
+*:* (colon)::
+    last entered command
 
 *.* (dot)::
     current selection contents
@@ -66,11 +66,11 @@ contain some special data
 *#* (hash)::
     selection indices (first selection has 1, second has 2, ...)
 
+*%* (percent)::
+    current buffer name
+
 *_* (underscore)::
     null register, always empty
-
-*:* (colon)::
-    last entered command
 
 == Integer registers
 

@@ -63,34 +63,58 @@ text and their set of valid values.
 Some types are usable for user defined options while some other types
 are exclusively available to built-in options.
 
+*bool*::
+    a boolean value, yes/true or no/false
+
+*completions*::
+    a list of `<text>|<select cmd>|<menu text>` candidates,
+    except for the first element which follows the
+    `<line>.<column>[+<length>]@<timestamp>` format to define where the
+    completion apply in the buffer.
+
+    Select commands are arbitrary Kakoune commands that will be executed
+    each time the element is selected in the menu. The common use case is
+    to display element specific documentation.
+
+    Markup can be used in the menu text.
+    (see <<faces#markup-strings,`:doc faces markup-strings`>>)
+
+    `set -add` adds given completions to the list. +
+    `set -remove` removes given completions from the list. +
+
+*coord*::
+    a line, column pair (separated by a comma)
+    Cannot be used with `declare-option`
+
+*enum(value1|value2|...)*::
+    an enum, taking one of the given values
+    Cannot be used with `declare-option`
+
+*flags(value1|value2|...)*::
+    a set of flags, taking a combination of the given values joined by a
+    '|' character.
+
+    `set -add` adds the given flags to the combination. +
+    `set -remove` removes the given flags to the combination. +
+
+    Cannot be used with `declare-option`
+
 *int*::
     an integer number.
 
     `set -add` performs a math addition. +
     `set -remove` performs a math substraction. +
 
-*bool*::
-    a boolean value, yes/true or no/false
+*line-specs*::
+    a list of a line number and a corresponding flag (`<line>|<flag
+    text>`), except for the first element which is just the timestamp
+    of the buffer. When `update-option` is used on an option of this
+    type, its lines get updated according to all the buffer modifications
+    that happened since its timestamp.
+    See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
 
-*str*::
-    a string, some freeform text
-
-*regex*::
-    as a string but the set commands will complain if the entered text
-    is not a valid regex
-
-*coord*::
-    a line, column pair (separated by a comma)
-    Cannot be used with `declare-option`
-
-*<type>-list*::
-    a list, elements are specified as separate arguments to the command.
-
-    `set -add` appends the new element to the list. +
-    `set -remove` removes each given element from the list. +
-
-    Only `int-list` and `str-list` options can be created with
-    `declare-option`.
+    `set -add` appends the new specs to the list. +
+    `set -remove` removes the given specs from the list. +
 
 *range-specs*::
     a timestamp (like `%val{timestamp}`,
@@ -127,45 +151,21 @@ are exclusively available to built-in options.
 
     See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
 
-*line-specs*::
-    a list of a line number and a corresponding flag (`<line>|<flag
-    text>`), except for the first element which is just the timestamp
-    of the buffer. When `update-option` is used on an option of this
-    type, its lines get updated according to all the buffer modifications
-    that happened since its timestamp.
-    See <<highlighters#specs-highlighters,`:doc highlighters specs-highlighters`>>)
+*regex*::
+    as a string but the set commands will complain if the entered text
+    is not a valid regex
 
-    `set -add` appends the new specs to the list. +
-    `set -remove` removes the given specs from the list. +
+*str*::
+    a string, some freeform text
 
-*completions*::
-    a list of `<text>|<select cmd>|<menu text>` candidates,
-    except for the first element which follows the
-    `<line>.<column>[+<length>]@<timestamp>` format to define where the
-    completion apply in the buffer.
+*<type>-list*::
+    a list, elements are specified as separate arguments to the command.
 
-    Select commands are arbitrary Kakoune commands that will be executed
-    each time the element is selected in the menu. The common use case is
-    to display element specific documentation.
+    `set -add` appends the new element to the list. +
+    `set -remove` removes each given element from the list. +
 
-    Markup can be used in the menu text.
-    (see <<faces#markup-strings,`:doc faces markup-strings`>>)
-
-    `set -add` adds given completions to the list. +
-    `set -remove` removes given completions from the list. +
-
-*enum(value1|value2|...)*::
-    an enum, taking one of the given values
-    Cannot be used with `declare-option`
-
-*flags(value1|value2|...)*::
-    a set of flags, taking a combination of the given values joined by a
-    '|' character.
-
-    `set -add` adds the given flags to the combination. +
-    `set -remove` removes the given flags to the combination. +
-
-    Cannot be used with `declare-option`
+    Only `int-list` and `str-list` options can be created with
+    `declare-option`.
 
 *<type>-to-<type>-map*::
     a list of `key=value` pairs.
@@ -180,80 +180,31 @@ are exclusively available to built-in options.
 
 == Builtin options
 
-*tabstop* `int`::
-    _default_ 8 +
-    width of a tab character
+*aligntab* `bool`::
+    _default_ false +
+    use tabs for alignment command
 
-*indentwidth* `int`::
-    _default_ 4 +
-    width (in spaces) used for indentation, 0 means a tab character
+*autocomplete* `flags(insert|prompt)`::
+    _default_ insert|prompt +
+    automatically display possible completions in the enabled modes.
 
-*scrolloff* `coord`::
-    _default_ 0,0 +
-    number of lines, columns to keep visible around the cursor when
-    scrolling
+*autoinfo* `flags(command|onkey|normal)`::
+    _default_ command|onkey +
+    display automatic information box in the enabled contexts
 
-*eolformat* `enum(lf|crlf)`::
-    _default_ lf +
-    the format of end of lines when writing a buffer, this is autodetected
-    on load; values of this option assigned to the `window` scope are
-    ignored
+*autoreload* `enum(yes|no|ask)`::
+    _default_ ask +
+    auto reload the buffers when an external modification is detected
 
 *BOM* `enum(none|utf8)`::
     _default_ none +
     define if the file should be written with a unicode byte order mark;
     values of this option assigned to the `window` scope are ignored
 
-*readonly* `bool`::
-    _default_ false +
-    prevent modifications from being saved to disk, all buffers if set
-    to `true` in the `global` scope, or current buffer if set in the
-    `buffer` scope; values of this option assigned to the `window`
-    scope are ignored
-
-*incsearch* `bool`::
-    _default_ true +
-    execute search as it is typed
-
-*aligntab* `bool`::
-    _default_ false +
-    use tabs for alignment command
-
-*autoinfo* `flags(command|onkey|normal)`::
-    _default_ command|onkey +
-    display automatic information box in the enabled contexts
-
-*autocomplete* `flags(insert|prompt)`::
-    _default_ insert|prompt +
-    automatically display possible completions in the enabled modes.
-
-*ignored_files* `regex`::
-    filenames matching this regex won't be considered as candidates
-    on filename completion (except if the text being completed already
-    matches it)
-
-*disabled_hooks* `regex`::
-    hooks whose group matches this regex won't be executed. For example
-    indentation hooks can be disabled with `.*-indent`.
-    (See <<hooks#disabling-hooks,`:doc hooks`>>)
-
-*filetype* `str`::
-    arbitrary string defining the type of the file. Filetype dependent
-    actions should hook on this option changing for activation/deactivation
-
-*path* `str-list`::
-    _default_ ./ %/ /usr/include +
-    directories to search for *gf* command and filenames completion
-    `%/` represents the current buffer directory
-
 *completers* `completer-list`::
     _default_ filename word=all +
     completion engines to use for insert mode completion (they are tried
     in order until one generates candidates). Existing completers are:
-
-    *word=all*, *word=buffer*:::
-        which complete using words in all buffers (*word=all*)
-        or only the current one (*word=buffer*)
 
     *filename*:::
         which tries to detect when a filename is being entered and
@@ -267,43 +218,60 @@ are exclusively available to built-in options.
         where *opt-name* is an option of type 'completions' whose
         contents will be used
 
-*static_words* `str-list`::
-    list of words that are always added to completion candidates
-    when completing words in insert mode
+    *word=all*, *word=buffer*:::
+        which complete using words in all buffers (*word=all*)
+        or only the current one (*word=buffer*)
+
+*debug* `flags(hooks|shell|profile|keys|commands)`::
+    dump various debug information in the '\*debug*' buffer
+
+*disabled_hooks* `regex`::
+    hooks whose group matches this regex won't be executed. For example
+    indentation hooks can be disabled with `.*-indent`.
+    (See <<hooks#disabling-hooks,`:doc hooks`>>)
+
+*eolformat* `enum(lf|crlf)`::
+    _default_ lf +
+    the format of end of lines when writing a buffer, this is autodetected
+    on load; values of this option assigned to the `window` scope are
+    ignored
 
 *extra_word_chars* `codepoint-list`::
     a list of all additional codepoints that should be considered
     as word character. This must be set on the buffer, not the window,
     for word completion to offer words containing these codepoints.
 
-*matching_pairs* `codepoint-list`::
-    _default_ ( ) { } [ ] < > +
-    a list of codepoints that are to be treated as matching pairs
-    for the *m* command.
+*filetype* `str`::
+    arbitrary string defining the type of the file. Filetype dependent
+    actions should hook on this option changing for activation/deactivation
 
-*autoreload* `enum(yes|no|ask)`::
-    _default_ ask +
-    auto reload the buffers when an external modification is detected
-
-*writemethod* `enum(overwrite|replace)`::
-    _default_ overwrite +
-    method used to write buffers to file, `overwrite` will open the
-    existing file and write on top of the previous data, `replace`
-    will open a temporary file next to the target file, write it and
-    then rename it to the target file.
-
-*debug* `flags(hooks|shell|profile|keys|commands)`::
-    dump various debug information in the '\*debug*' buffer
+*fs_check_timeout* `int`::
+    _default_ 500 +
+    timeout, in milliseconds, between checks in normal mode of modifications
+    of the file associated with the current buffer on the filesystem.
 
 *idle_timeout* `int`::
     _default_ 50 +
     timeout, in milliseconds, with no user input that will trigger the
     *PromptIdle*, *InsertIdle* and *NormalIdle* hooks, and autocompletion.
 
-*fs_check_timeout* `int`::
-    _default_ 500 +
-    timeout, in milliseconds, between checks in normal mode of modifications
-    of the file associated with the current buffer on the filesystem.
+*ignored_files* `regex`::
+    filenames matching this regex won't be considered as candidates
+    on filename completion (except if the text being completed already
+    matches it)
+
+*incsearch* `bool`::
+    _default_ true +
+    execute search as it is typed
+
+*indentwidth* `int`::
+    _default_ 4 +
+    width (in spaces) used for indentation, 0 means a tab character
+
+*matching_pairs* `codepoint-list`::
+    _default_ ( ) { } [ ] < > +
+    a list of codepoints that are to be treated as matching pairs
+    for the *m* command.
 
 *modelinefmt* `string`::
     A format string used to generate the mode line, that string is
@@ -323,35 +291,22 @@ are exclusively available to built-in options.
 
     The default value is '%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]'
 
-*ui_options* `str-to-str-map`::
-    a list of `key=value` pairs that are forwarded to the user
-    interface implementation. The NCurses UI support the following options:
+*path* `str-list`::
+    _default_ ./ %/ /usr/include +
+    directories to search for *gf* command and filenames completion
+    `%/` represents the current buffer directory
 
-        *ncurses_set_title*:::
-            if *yes* or *true*, the terminal emulator title will
-            be changed
+*readonly* `bool`::
+    _default_ false +
+    prevent modifications from being saved to disk, all buffers if set
+    to `true` in the `global` scope, or current buffer if set in the
+    `buffer` scope; values of this option assigned to the `window`
+    scope are ignored
 
-        *ncurses_status_on_top*:::
-            if *yes*, or *true* the status line will be placed
-            at the top of the terminal rather than at the bottom
-
-        *ncurses_assistant*:::
-            specify the nice assistant displayed in info boxes,
-            can be *clippy* (the default), *cat*, *dilbert* or *none*
-
-        *ncurses_enable_mouse*:::
-            boolean option that enables mouse support
-
-        *ncurses_change_colors*:::
-            boolean option that can disable color palette changing if the
-            terminfo enables it but the terminal does not support it.
-
-        *ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
-            specify which button send for wheel down/up events
-
-        *ncurses_shift_function_key*:::
-            Function key from which shifted function key start, if the
-            terminal sends F13 for <s-F1>, this should be set to 12.
+*scrolloff* `coord`::
+    _default_ 0,0 +
+    number of lines, columns to keep visible around the cursor when
+    scrolling
 
 [[startup-info]]
 *startup_info_version* `int`::
@@ -359,6 +314,51 @@ are exclusively available to built-in options.
     Controls which messages will be displayed in the startup info box, only messages
     relating to a Kakoune version greater than this value will be displayed. Versions
     are written as a single number: Like `20180413` for version `2018.04.13`
+
+*static_words* `str-list`::
+    list of words that are always added to completion candidates
+    when completing words in insert mode
+
+*tabstop* `int`::
+    _default_ 8 +
+    width of a tab character
+
+*ui_options* `str-to-str-map`::
+    a list of `key=value` pairs that are forwarded to the user
+    interface implementation. The NCurses UI support the following options:
+
+        *ncurses_assistant*:::
+            specify the nice assistant displayed in info boxes,
+            can be *clippy* (the default), *cat*, *dilbert* or *none*
+
+        *ncurses_change_colors*:::
+            boolean option that can disable color palette changing if the
+            terminfo enables it but the terminal does not support it.
+
+        *ncurses_enable_mouse*:::
+            boolean option that enables mouse support
+
+        *ncurses_set_title*:::
+            if *yes* or *true*, the terminal emulator title will
+            be changed
+
+        *ncurses_shift_function_key*:::
+            Function key from which shifted function key start, if the
+            terminal sends F13 for <s-F1>, this should be set to 12.
+
+        *ncurses_status_on_top*:::
+            if *yes*, or *true* the status line will be placed
+            at the top of the terminal rather than at the bottom
+
+        *ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
+            specify which button send for wheel down/up events
+
+*writemethod* `enum(overwrite|replace)`::
+    _default_ overwrite +
+    method used to write buffers to file, `overwrite` will open the
+    existing file and write on top of the previous data, `replace`
+    will open a temporary file next to the target file, write it and
+    then rename it to the target file.
 
 == Current values
 

@@ -22,16 +22,20 @@ To customize key mappings in various modes, refer to <<mapping#,`:doc mapping`>>
 
 == Builtin modes
 
-=== Normal mode
+The default mode of operation under which all primitives (see
+<<keys#,`:doc keys`>>) are triggered is the
+<<normal mode,`:doc modes normal-mode`>>.
 
-Normal mode is the default mode. It provides commands to manipulate
-selections, such as general movement, text object selection, searching,
-splitting, and commands to manipulate the text underlying the current
-selections, such as yanking, pasting, deleting…
+Writing text into the current buffer is achieved by entering
+<<insert mode,`:doc modes insert-mode`>>.
 
-It also provides commands to enter other modes.
+=== Goto mode
 
-See normal commands <<keys#movement,`:doc keys movement`>>.
+Goto mode provides commands dedicated to jumping either inside a buffer
+(such as jumping to buffer start/end, window top/bottom) or to another
+(such as jumping to the file whose path is currently selected).
+
+See goto commands <<keys#goto-commands,`:doc keys goto-commands`>>.
 
 === Insert mode
 
@@ -52,25 +56,28 @@ Normal mode for a single command, before returning to Insert mode.
 
 See insert commands <<keys#insert-mode,`:doc keys insert-mode`>>.
 
-=== Goto mode
-
-Goto mode provides commands dedicated to jumping either inside a buffer
-(such as jumping to buffer start/end, window top/bottom) or to another
-(such as jumping to the file whose path is currently selected).
-
-See goto commands <<keys#goto-commands,`:doc keys goto-commands`>>.
-
-=== View mode
-
-View mode provides commands dedicated to controlling the window, such
-as scrolling or centering the main selection cursor.
-
-See view commands <<keys#view-commands,`:doc keys view-commands`>>.
-
 === Menu mode
 
 Menu mode is entered when a menu is displayed with the `menu` command.
 Mappings are used to filter and select intended items.
+
+=== Normal mode
+
+Normal mode is the default mode. It provides commands to manipulate
+selections, such as general movement, text object selection, searching,
+splitting, and commands to manipulate the text underlying the current
+selections, such as yanking, pasting, deleting…
+
+It also provides commands to enter other modes.
+
+See normal commands <<keys#movement,`:doc keys movement`>>.
+
+=== Object mode
+
+Mode entered with `<a-i>`, `<a-a>` and various combinations of `[]{}` keys.
+It aims at crafting semantic selections, often called *text-objects*.
+
+See object commands <<keys#object-commands,`:doc keys object-commands`>>.
 
 === Prompt mode
 
@@ -80,18 +87,18 @@ line of text is edited and then validated with `<ret>` or abandoned with
 
 See prompt commands <<keys#prompt-commands,`:doc keys prompt-commands`>>.
 
-=== Object mode
-
-Mode entered with `<a-i>`, `<a-a>` and various combinations of `[]{}` keys.
-It aims at crafting semantic selections, often called *text-objects*.
-
-See object commands <<keys#object-commands,`:doc keys object-commands`>>.
-
 === User mode
 
 Mode entered with `,` (comma key). The user mode is empty by default and is
 the opportunity to store custom mappings with no risk to shadow builtin ones.
 The context of execution is always the Normal mode.
+
+=== View mode
+
+View mode provides commands dedicated to controlling the window, such
+as scrolling or centering the main selection cursor.
+
+See view commands <<keys#view-commands,`:doc keys view-commands`>>.
 
 == User modes
 
