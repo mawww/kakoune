@@ -658,7 +658,11 @@ private:
         {
             if (m_current != m_next)
                 return;
-            const auto new_capacity = m_capacity ? m_capacity * 2 : 4;
+
+            constexpr int32_t initial_capacity = 64 / sizeof(Thread);
+            static_assert(initial_capacity >= 4);
+
+            const auto new_capacity = m_capacity ? m_capacity * 2 : initial_capacity;
             const auto next_count = m_capacity - m_next;
             const auto new_next = new_capacity - next_count;
             Thread* new_data = new Thread[new_capacity];
