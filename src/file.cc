@@ -512,14 +512,20 @@ CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
     auto [dirname, fileprefix] = split_path(prefix);
     auto parsed_dirname = parse_filename(dirname);
 
-    const bool check_ignored_regex = not ignored_regex.empty() and
-        not regex_match(fileprefix.begin(), fileprefix.end(), ignored_regex);
+    Optional<ThreadedRegexVM<const char*, RegexMode::Forward | RegexMode::AnyMatch | RegexMode::NoSaves>> vm;
+    if (not ignored_regex.empty())
+    {
+        vm.emplace(*ignored_regex.impl());
+        if (vm->exec(fileprefix.begin(), fileprefix.end(), fileprefix.begin(), fileprefix.end(), RegexExecFlags::None))
+            vm.reset();
+    }
+
     const bool only_dirs = (flags & FilenameFlags::OnlyDirectories);
 
-    auto filter = [&ignored_regex, check_ignored_regex, only_dirs](const dirent& entry, struct stat& st)
+    auto filter = [&vm, only_dirs](const dirent& entry, struct stat& st)
     {
         StringView name{entry.d_name};
-        return (not check_ignored_regex or not regex_match(name.begin(), name.end(), ignored_regex)) and
+        return (not vm or not vm->exec(name.begin(), name.end(), name.begin(), name.end(), RegexExecFlags::None)) and
                (not only_dirs or S_ISDIR(st.st_mode));
     };
     auto files = list_files(parsed_dirname, filter);
