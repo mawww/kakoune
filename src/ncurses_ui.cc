@@ -134,6 +134,19 @@ static constexpr StringView assistant_cat[] =
       R"(      \_\   \_\  )",
       R"(                 )"};
 
+static constexpr StringView assistant_cat_ascii[] =
+    { R"(  ___            )",
+      R"( (__ \           )",
+      R"(   / /          /)",
+      R"(  .' '-.        |)",
+      R"( '      "       |)",
+      R"( \       /\_/|  |)",
+      R"(  | .         \ |)",
+      R"(  \_J`    | | | /)",
+      R"(      ' \__- _/  )",
+      R"(      \_\   \_\  )",
+      R"(                 )"};
+
 static constexpr StringView assistant_clippy[] =
     { " ╭──╮   ",
       " │  │   ",
@@ -144,6 +157,16 @@ static constexpr StringView assistant_clippy[] =
       " ╰───╯  ",
       "        " };
 
+static constexpr StringView assistant_clippy_ascii[] =
+    { " ,--.   ",
+      " |  |   ",
+      " @  @  /",
+      " || || |",
+      " || || /",
+      " |`-'|  ",
+      " `---'  ",
+      "        " };
+
 static constexpr StringView assistant_dilbert[] =
     { R"(  დოოოოოდ   )",
       R"(  |     |   )",
@@ -152,6 +175,18 @@ static constexpr StringView assistant_dilbert[] =
       R"( Ͼ   ∪   Ͽ │)",
       R"(  |     |  ╯)",
       R"( ˏ`-.ŏ.-´ˎ  )",
+      R"(     @      )",
+      R"(      @     )",
+      R"(            )"};
+
+static constexpr StringView assistant_dilbert_ascii[] =
+    { R"(  mmmmmmm   )",
+      R"(  |     |   )",
+      R"(  |     |  /)",
+      R"(  |-O O-|  |)",
+      R"( C|  U  |D |)",
+      R"(  |     |  /)",
+      R"( ,`-.o.-'.  )",
       R"(     @      )",
       R"(      @     )",
       R"(            )"};
@@ -501,8 +536,10 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     else if (remaining > 2)
     {
         DisplayLine trimmed_mode_line = mode_line;
-        trimmed_mode_line.trim(mode_len + 2 - remaining, remaining - 2);
-        trimmed_mode_line.insert(trimmed_mode_line.begin(), { "…", {} });
+        String ellipsis = m_ascii ? "..." : "…";
+        trimmed_mode_line.trim(mode_len + 1 + ellipsis.column_length() - remaining,
+                               remaining - 1 - ellipsis.column_length());
+        trimmed_mode_line.insert(trimmed_mode_line.begin(), { ellipsis, {} });
         kak_assert(trimmed_mode_line.length() == remaining - 1);
 
         ColumnCount col = m_dimensions.column - remaining + 1;
@@ -856,8 +893,9 @@ void NCursesUI::draw_menu()
                 m_menu.draw(m_palette, DisplayAtom(" "), m_menu.bg);
             else
             {
-                m_menu.move_cursor({0, win_width+2});
-                m_menu.draw(m_palette, DisplayAtom("…"), m_menu.bg);
+                String ellipsis = m_ascii ? "..." : "…";
+                m_menu.move_cursor({0, win_width + 3 - ellipsis.column_length()});
+                m_menu.draw(m_palette, DisplayAtom(ellipsis), m_menu.bg);
             }
             pos += item_width + 1;
         }
@@ -895,7 +933,9 @@ void NCursesUI::draw_menu()
         }
         const bool is_mark = line >= mark_line and line < mark_line + mark_height;
         m_menu.move_cursor({line, m_menu.size.column - 1});
-        m_menu.draw(m_palette, DisplayAtom(is_mark ? "█" : "░"), m_menu.bg);
+        const Codepoint filled = m_ascii ? L' ' : L'█';
+        const Codepoint empty = m_ascii ? L' ' : L'░';
+        m_menu.draw(m_palette, DisplayAtom(String{is_mark ? filled : empty}), (m_ascii && is_mark) ? m_menu.fg : m_menu.bg);
     }
     m_dirty = true;
 }
@@ -1199,8 +1239,15 @@ void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& conte
 
     for (auto line = 0_line; line < size.line; ++line)
     {
-        constexpr Codepoint dash{L'─'};
-        constexpr Codepoint dotted_dash{L'┄'};
+        const Codepoint top_left = m_ascii ? L'+' : L'╭';
+        const Codepoint top_right = m_ascii ? L'+' : L'╮';
+        const Codepoint bottom_left = m_ascii ? L'+' : L'╰';
+        const Codepoint bottom_right = m_ascii ? L'+' : L'╯';
+        const Codepoint dash = m_ascii ? L'-' : L'─';
+        const Codepoint dotted_dash = m_ascii ? L'-' : L'┄';
+        const Codepoint vertical_line = m_ascii ? L'|' : L'│';
+        const Codepoint left_pointing_tee = m_ascii ? L'|' : L'┤';
+        const Codepoint right_pointing_tee = m_ascii ? L'|' : L'├';
         m_info.move_cursor(line);
         if (assisted)
         {
@@ -1216,26 +1263,41 @@ void NCursesUI::info_show(const DisplayLine& title, const DisplayLineList& conte
         else if (line == 0)
         {
             if (title.atoms().empty() or content_size.column < 2)
-                draw_atoms("╭─" + String{dash, content_size.column} + "─╮");
+            {
+                draw_atoms(String{top_left} +
+                           String{dash, content_size.column + 2} +
+                           String{top_right});
+            }
             else
             {
                 auto trimmed_title = title;
                 trimmed_title.trim(0, content_size.column - 2);
                 auto dash_count = content_size.column - trimmed_title.length() - 2;
-                String left{dash, dash_count / 2};
-                String right{dash, dash_count - dash_count / 2};
-                draw_atoms("╭─" + left + "┤", trimmed_title, "├" + right +"─╮");
+                String left{dash, dash_count / 2 + 1};
+                String right{dash, dash_count - dash_count / 2 + 1};
+                draw_atoms(String{top_left} + left + String{left_pointing_tee},
+                           trimmed_title,
+                           String{right_pointing_tee} + right + String{top_right});
             }
         }
         else if (line < size.line - 1 and line <= lines.size())
         {
             auto info_line = lines[(int)line - 1];
             const bool trimmed = info_line.trim(0, content_size.column);
-            const ColumnCount padding = content_size.column - info_line.length();
-            draw_atoms("│ ", info_line, String{' ', padding} + (trimmed ? "…│" : " │"));
+            ColumnCount padding = content_size.column - info_line.length();
+            if (trimmed && m_ascii)
+              padding -= 2;
+            String ellipsis = m_ascii ? "..." : "…";
+            draw_atoms(String{vertical_line} + " ",
+                       info_line,
+                       String{' ', padding} + (trimmed ? ellipsis : " ") + String{vertical_line});
         }
         else if (line == std::min<LineCount>((int)lines.size() + 1, size.line - 1))
-            draw_atoms("╰─" + String(line > lines.size() ? dash : dotted_dash, content_size.column) + "─╯");
+        {
+            draw_atoms(String{bottom_left} +
+                       String(line > lines.size() ? dash : dotted_dash, content_size.column + 2) +
+                       String{bottom_right});
+        }
     }
     m_dirty = true;
 }
@@ -1302,13 +1364,19 @@ void NCursesUI::enable_mouse(bool enabled)
 void NCursesUI::set_ui_options(const Options& options)
 {
     {
+        auto it = options.find("ncurses_ascii"_sv);
+        m_ascii = it != options.end() and
+            (it->value == "yes" or it->value == "true");
+    }
+
+    {
         auto it = options.find("ncurses_assistant"_sv);
         if (it == options.end() or it->value == "clippy")
-            m_assistant = assistant_clippy;
+            m_assistant = m_ascii ? assistant_clippy_ascii : assistant_clippy;
         else if (it->value == "cat")
-            m_assistant = assistant_cat;
+            m_assistant = m_ascii ? assistant_cat_ascii : assistant_cat;
         else if (it->value == "dilbert")
-            m_assistant = assistant_dilbert;
+            m_assistant = m_ascii ? assistant_dilbert_ascii : assistant_dilbert;
         else if (it->value == "none" or it->value == "off")
             m_assistant = ConstArrayView<StringView>{};
     }

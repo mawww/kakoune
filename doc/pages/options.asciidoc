@@ -335,6 +335,10 @@ are exclusively available to built-in options.
             if *yes*, or *true* the status line will be placed
             at the top of the terminal rather than at the bottom
 
+        *ncurses_ascii*:::
+            if *yes*, or *true*, use ASCII instead of Unicode characters
+            for info boxes, assistant, etc.
+
         *ncurses_assistant*:::
             specify the nice assistant displayed in info boxes,
             can be *clippy* (the default), *cat*, *dilbert* or *none*
