@@ -1523,6 +1523,9 @@ private:
 BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).first; }
 BufferCoord& get_last(RangeAndString& r) { return std::get<0>(r).last; }
 
+BufferCoord& get_first(InclusiveBufferRange& r) { return r.first; }
+BufferCoord& get_last(InclusiveBufferRange& r) { return r.last; }
+
 void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt)
 {
     std::sort(opt.begin(), opt.end(),
@@ -1633,6 +1636,57 @@ private:
             }
         }
     }
+};
+
+struct MarkHighlighter : Highlighter
+{
+    MarkHighlighter(String reg_name, StringView face)
+        : Highlighter{HighlightPass::Colorize}
+        , m_reg_name{std::move(reg_name)}
+        , m_face{face} {}
+
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    {
+        if (params.size() != 2)
+            throw runtime_error("wrong parameter count");
+
+        return std::make_unique<MarkHighlighter>(params[0], params[1]);
+    }
+
+private:
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
+    {
+        auto& buffer = context.context.buffer();
+        const Face face = context.context.faces()[m_face];
+
+        auto content = RegisterManager::instance()[m_reg_name].get(context.context);
+        struct error : runtime_error { error(size_t) : runtime_error{"expected <buffer>@<timestamp>@main_index"} {} };
+        const auto desc = content[0] | split<StringView>('@') | static_gather<error, 3>();
+        size_t timestamp = str_to_int(desc[1]);
+
+        if (timestamp > buffer.timestamp())
+            throw runtime_error{"register '{}' refers to an invalid timestamp"};
+
+        Vector<InclusiveBufferRange> ranges = content | skip(1) 
+            | transform([](StringView str){ return option_from_string(Meta::Type<InclusiveBufferRange>{}, str); })
+            | gather<Vector<InclusiveBufferRange>>();
+
+        update_ranges(buffer, timestamp, ranges);
+
+        for (auto& range : ranges)
+        {
+            try
+            {
+                if (buffer.is_valid(range.first) and (buffer.is_valid(range.last) and not buffer.is_end(range.last)))
+                    highlight_range(display_buffer, range.first, buffer.char_next(range.last), false, apply_face(face));
+            }
+            catch (runtime_error&)
+            {}
+        }
+    }
+
+    const String m_reg_name;
+    const String m_face;
 };
 
 HighlightPass parse_passes(StringView str)
@@ -2305,6 +2359,11 @@ void register_highlighters()
           "Parameters: <option name>\n"
           "Use the range-specs option given as parameter to highlight buffer\n"
           "each spec is interpreted as a display line to display in place of the range\n" } });
+    registry.insert({
+        "mark",
+        { MarkHighlighter::create,
+          "Parameters: <register name> <face>\n"
+          "Highlight the selections saved in register <register name> with <face>\n" } });
     registry.insert({
         "line",
         { create_line_highlighter,

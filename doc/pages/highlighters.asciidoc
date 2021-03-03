@@ -97,6 +97,9 @@ highlighter is replaced with the new one.
 *line* <number> <face>::
     highlight line *number* with face *face*
 
+*mark* <register> <face>::
+    highlight selections saved in register *register* with face *face*
+
 *regex* <regex> <capture_id>:<face> ...::
     highlight a regex, takes the regex as first parameter, followed by
     any number of face parameters.
