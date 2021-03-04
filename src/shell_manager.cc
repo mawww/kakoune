@@ -165,6 +165,49 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
     return env;
 }
 
+FDWatcher make_pipe_reader(Pipe& pipe, String& contents)
+{
+    return {pipe.read_fd(), FdEvents::Read,
+            [&contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) {
+        char buffer[1024];
+        while (fd_readable(pipe.read_fd()))
+        {
+            size_t size = ::read(pipe.read_fd(), buffer, sizeof(buffer));
+            if (size <= 0)
+            {
+                pipe.close_read_fd();
+                watcher.disable();
+                return;
+            }
+            contents += StringView{buffer, buffer+size};
+        }
+    }};
+}
+
+FDWatcher make_pipe_writer(Pipe& pipe, StringView contents)
+{
+    int flags = fcntl(pipe.write_fd(), F_GETFL, 0);
+    fcntl(pipe.write_fd(), F_SETFL, flags | O_NONBLOCK);
+    return {pipe.write_fd(), FdEvents::Write,
+            [contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) mutable {
+        while (fd_writable(pipe.write_fd()))
+        {
+            ssize_t size = ::write(pipe.write_fd(), contents.begin(),
+                                   (size_t)contents.length());
+            if (size > 0)
+                contents = contents.substr(ByteCount{(int)size});
+            if (size == -1 and (errno == EAGAIN or errno == EWOULDBLOCK))
+                return;
+            if (size < 0 or contents.empty())
+            {
+                pipe.close_write_fd();
+                watcher.disable();
+                return;
+            }
+        }
+    }};
+}
+
 }
 
 std::pair<String, int> ShellManager::eval(
@@ -213,58 +256,10 @@ std::pair<String, int> ShellManager::eval(
 
     auto wait_time = Clock::now();
 
-    struct PipeReader : FDWatcher
-    {
-        PipeReader(Pipe& pipe, String& contents)
-            : FDWatcher(pipe.read_fd(), FdEvents::Read,
-                        [&contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) {
-                            char buffer[1024];
-                            while (fd_readable(pipe.read_fd()))
-                            {
-                                size_t size = ::read(pipe.read_fd(), buffer, 1024);
-                                if (size <= 0)
-                                {
-                                    pipe.close_read_fd();
-                                    watcher.disable();
-                                    return;
-                                }
-                                contents += StringView{buffer, buffer+size};
-                            }
-                        })
-        {}
-    };
-
-    struct PipeWriter : FDWatcher
-    {
-        PipeWriter(Pipe& pipe, StringView contents)
-            : FDWatcher(pipe.write_fd(), FdEvents::Write,
-                        [contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) mutable {
-                            while (fd_writable(pipe.write_fd()))
-                            {
-                                ssize_t size = ::write(pipe.write_fd(), contents.begin(),
-                                                       (size_t)contents.length());
-                                if (size > 0)
-                                    contents = contents.substr(ByteCount{(int)size});
-                                if (size == -1 and (errno == EAGAIN or errno == EWOULDBLOCK))
-                                    return;
-                                if (size < 0 or contents.empty())
-                                {
-                                    pipe.close_write_fd();
-                                    watcher.disable();
-                                    return;
-                                }
-                            }
-                        })
-        {
-            int flags = fcntl(pipe.write_fd(), F_GETFL, 0);
-            fcntl(pipe.write_fd(), F_SETFL, flags | O_NONBLOCK);
-        }
-    };
-
     String stdout_contents, stderr_contents;
-    PipeReader stdout_reader{child_stdout, stdout_contents};
-    PipeReader stderr_reader{child_stderr, stderr_contents};
-    PipeWriter stdin_writer{child_stdin, input};
+    auto stdout_reader = make_pipe_reader(child_stdout, stdout_contents);
+    auto stderr_reader = make_pipe_reader(child_stderr, stderr_contents);
+    auto stdin_writer = make_pipe_writer(child_stdin, input);
 
     // block SIGCHLD to make sure we wont receive it before
     // our call to pselect, that will end up blocking indefinitly.
