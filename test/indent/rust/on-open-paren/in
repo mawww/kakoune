@@ -27,6 +27,11 @@
         T: Debug
         %( )
 
+    pub(crate) struct X<T>
+    where
+        T: Debug
+        %( )
+
     struct X<T> where T: Debug %( )
 
     enum X<T>
