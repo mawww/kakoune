@@ -3,6 +3,16 @@
         T: Debug
         %( )
 
+    pub async fn foo<T>(x: T)
+    where
+        T: Debug
+        %( )
+
+    pub(in std::fmt) const unsafe extern "C" fn foo<T>(x: T)
+    where
+        T: Debug
+        %( )
+
     fn foo<T>(x: T) where T: Debug %( )
 
     impl<T> X for T
