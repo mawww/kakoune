@@ -38,6 +38,7 @@ constexpr StringView option_type_name(Meta::Type<RangeAndStringList>)
 }
 void option_update(RangeAndStringList& opt, const Context& context);
 void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt);
+bool option_add_from_strings(Vector<RangeAndString, MemoryDomain::Options>& opt, ConstArrayView<String> strs);
 
 }
 
