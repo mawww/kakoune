@@ -3,6 +3,7 @@
 #include "alias_registry.hh"
 #include "assert.hh"
 #include "buffer_utils.hh"
+#include "clock.hh"
 #include "context.hh"
 #include "flags.hh"
 #include "file.hh"
@@ -488,6 +489,37 @@ StringView resolve_alias(const Context& context, StringView name)
     return alias.empty() ? name : alias;
 }
 
+class CommandLogger
+{
+private:
+    DebugFlags m_debug_flags;
+    Clock::time_point m_start;
+    CommandParameters const& m_params;
+
+public:
+    CommandLogger(Context& context, CommandParameters const& params)
+        : m_params(params)
+    {
+        m_debug_flags = context.options()["debug"].get<DebugFlags>();
+        if (not (m_debug_flags & DebugFlags::Commands))
+            return;
+        write_to_debug_buffer(format("command {}", join(params, ' ')));
+        if (m_debug_flags & DebugFlags::Profile)
+            m_start = Clock::now();
+    }
+
+    ~CommandLogger()
+    {
+        if (not (m_debug_flags & DebugFlags::Profile))
+            return;
+        if (not (m_debug_flags & DebugFlags::Commands))
+            return;
+        auto end = Clock::now();
+        auto full = std::chrono::duration_cast<std::chrono::microseconds>(end - m_start);
+        write_to_debug_buffer(format("command {} took {} us", m_params[0], full.count()));
+    }
+};
+
 void CommandManager::execute_single_command(CommandParameters params,
                                             Context& context,
                                             const ShellContext& shell_context,
@@ -508,10 +540,7 @@ void CommandManager::execute_single_command(CommandParameters params,
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);
 
-    const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
-    if (debug_flags & DebugFlags::Commands)
-        write_to_debug_buffer(format("command {} {}", params[0], join(param_view, ' ')));
-
+    CommandLogger logger(context, params);
     try
     {
         ParametersParser parameter_parser(param_view,
@@ -528,6 +557,7 @@ void CommandManager::execute_single_command(CommandParameters params,
                               params[0], error.what()));
         throw;
     }
+
 }
 
 void CommandManager::execute(StringView command_line,
