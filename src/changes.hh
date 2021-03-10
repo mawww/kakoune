@@ -53,8 +53,10 @@ void update_forward(ConstArrayView<Buffer::Change> changes, RangeContainer& rang
             changes_tracker.update(*it++);
     };
 
-    for (auto& range : ranges)
-        update_range(changes_tracker, range, advance_while_relevant);
+    auto range_it = std::lower_bound(ranges.begin(), ranges.end(), changes.front(),
+                                     [](auto& range, const Buffer::Change& change) { return get_last(range) < change.begin; });
+    for (auto end = ranges.end(); range_it != end; ++range_it)
+        update_range(changes_tracker, *range_it, advance_while_relevant);
 }
 
 template<typename RangeContainer>

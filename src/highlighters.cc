@@ -1523,19 +1523,34 @@ private:
 BufferCoord& get_first(RangeAndString& r) { return std::get<0>(r).first; }
 BufferCoord& get_last(RangeAndString& r) { return std::get<0>(r).last; }
 
+bool option_element_compare(RangeAndString const& lhs, RangeAndString const& rhs)
+{
+    return std::get<0>(lhs).first == std::get<0>(rhs).first ?
+        std::get<0>(lhs).last < std::get<0>(rhs).last
+      : std::get<0>(lhs).first < std::get<0>(rhs).first;
+}
+
 void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt)
 {
-    std::sort(opt.begin(), opt.end(),
-              [](auto& lhs, auto& rhs) {
-        return std::get<0>(lhs).first == std::get<0>(rhs).first ?
-            std::get<0>(lhs).last < std::get<0>(rhs).last
-          : std::get<0>(lhs).first < std::get<0>(rhs).first;
-    });
+    std::sort(opt.begin(), opt.end(), option_element_compare);
 }
 
 void option_update(RangeAndStringList& opt, const Context& context)
 {
     update_ranges(context.buffer(), opt.prefix, opt.list);
+}
+
+bool option_add_from_strings(Vector<RangeAndString, MemoryDomain::Options>& opt, ConstArrayView<String> strs)
+{
+    auto vec = option_from_strings(Meta::Type<Vector<RangeAndString, MemoryDomain::Options>>{}, strs);
+    if (vec.empty())
+        return false;
+    auto middle = opt.insert(opt.end(),
+                             std::make_move_iterator(vec.begin()),
+                             std::make_move_iterator(vec.end()));
+    std::sort(middle, opt.end(), option_element_compare);
+    std::inplace_merge(opt.begin(), middle, opt.end(), option_element_compare);
+    return true;
 }
 
 struct RangesHighlighter : OptionBasedHighlighter<RangeAndStringList, RangesHighlighter>
