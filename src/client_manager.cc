@@ -84,8 +84,9 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
     return contains(m_clients, client) ? client : nullptr;
 }
 
-void ClientManager::process_pending_inputs()
+bool ClientManager::process_pending_inputs()
 {
+    bool processed_some_input = false;
     while (true)
     {
         bool had_input = false;
@@ -101,12 +102,14 @@ void ClientManager::process_pending_inputs()
                 continue;
             }
             had_input = m_clients[i]->process_pending_inputs() or had_input;
+            processed_some_input |= had_input;
             ++i;
         }
 
         if (not had_input)
             break;
     }
+    return processed_some_input;
 }
 
 bool ClientManager::has_pending_inputs() const
