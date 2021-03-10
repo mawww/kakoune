@@ -133,7 +133,7 @@ void rpc_call(StringView method, Args&&... args)
 }
 
 JsonUI::JsonUI()
-    : m_stdin_watcher{0, FdEvents::Read,
+    : m_stdin_watcher{0, FdEvents::Read, EventMode::Urgent,
                       [this](FDWatcher&, FdEvents, EventMode mode) {
         parse_requests(mode);
       }}, m_dimensions{24, 80}

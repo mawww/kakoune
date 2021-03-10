@@ -133,7 +133,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
     struct FifoWatcher : FDWatcher
     {
         FifoWatcher(int fd, Buffer& buffer, bool scroll)
-            : FDWatcher(fd, FdEvents::Read,
+            : FDWatcher(fd, FdEvents::Read, EventMode::Normal,
                         [](FDWatcher& watcher, FdEvents, EventMode mode) {
                             if (mode == EventMode::Normal)
                                 static_cast<FifoWatcher&>(watcher).read_fifo();

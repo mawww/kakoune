@@ -167,7 +167,7 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
 
 FDWatcher make_pipe_reader(Pipe& pipe, String& contents)
 {
-    return {pipe.read_fd(), FdEvents::Read,
+    return {pipe.read_fd(), FdEvents::Read, EventMode::Urgent,
             [&contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) {
         char buffer[1024];
         while (fd_readable(pipe.read_fd()))
@@ -188,7 +188,7 @@ FDWatcher make_pipe_writer(Pipe& pipe, StringView contents)
 {
     int flags = fcntl(pipe.write_fd(), F_GETFL, 0);
     fcntl(pipe.write_fd(), F_SETFL, flags | O_NONBLOCK);
-    return {pipe.write_fd(), FdEvents::Write,
+    return {pipe.write_fd(), FdEvents::Write, EventMode::Urgent,
             [contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) mutable {
         while (fd_writable(pipe.write_fd()))
         {

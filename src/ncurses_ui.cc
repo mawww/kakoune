@@ -327,7 +327,7 @@ static void signal_handler(int)
 
 NCursesUI::NCursesUI()
     : m_cursor{CursorMode::Buffer, {}},
-      m_stdin_watcher{STDIN_FILENO, FdEvents::Read,
+      m_stdin_watcher{STDIN_FILENO, FdEvents::Read, EventMode::Urgent,
                       [this](FDWatcher&, FdEvents, EventMode) {
         if (not m_on_key)
             return;

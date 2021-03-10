@@ -461,7 +461,7 @@ static bool send_data(int fd, RemoteBuffer& buffer, Optional<int> ancillary_fd =
 }
 
 RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
-    : m_socket_watcher(socket,  FdEvents::Read | FdEvents::Write,
+    : m_socket_watcher(socket,  FdEvents::Read | FdEvents::Write, EventMode::Urgent,
                        [this](FDWatcher& watcher, FdEvents events, EventMode) {
           const int sock = watcher.fd();
           try
@@ -663,7 +663,7 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
         m_socket_watcher->events() |= FdEvents::Write;
      });
 
-    m_socket_watcher.reset(new FDWatcher{sock, FdEvents::Read | FdEvents::Write,
+    m_socket_watcher.reset(new FDWatcher{sock, FdEvents::Read | FdEvents::Write, EventMode::Urgent,
                            [this, reader = MsgReader{}](FDWatcher& watcher, FdEvents events, EventMode) mutable {
         const int sock = watcher.fd();
         if (events & FdEvents::Write and send_data(sock, m_send_buffer))
@@ -777,7 +777,7 @@ class Server::Accepter
 {
 public:
     Accepter(int socket)
-        : m_socket_watcher(socket, FdEvents::Read,
+        : m_socket_watcher(socket, FdEvents::Read, EventMode::Urgent,
                            [this](FDWatcher&, FdEvents, EventMode mode) {
                                handle_available_input(mode);
                            })
@@ -888,7 +888,7 @@ Server::Server(String session_name, bool is_daemon)
 
         m_accepters.emplace_back(new Accepter{sock});
     };
-    m_listener.reset(new FDWatcher{listen_sock, FdEvents::Read, accepter});
+    m_listener.reset(new FDWatcher{listen_sock, FdEvents::Read, EventMode::Urgent, accepter});
 }
 
 bool Server::rename_session(StringView name)
