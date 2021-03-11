@@ -23,7 +23,7 @@ declare-option -docstring \
 "Ordered list of windowing modules to try and load. An empty list disables
 both automatic module loading and environment detection, enabling complete
 manual control of the module loading." \
-str-list windowing_modules 'tmux' 'screen' 'kitty' 'iterm' 'x11'
+str-list windowing_modules 'tmux' 'screen' 'kitty' 'iterm' 'x11' 'wayland'
 
 hook -group windowing global KakBegin .* %{
 
