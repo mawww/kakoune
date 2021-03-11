@@ -361,7 +361,8 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
     bool replace = method == WriteMethod::Replace;
     bool force = flags & WriteFlags::Force;
 
-    if ((replace or force) and ::stat(zfilename, &st) != 0)
+    if ((replace or force) and (::stat(zfilename, &st) != 0 or
+                                (sb.st_mode & S_IFMT) != S_IFREG))
     {
         force = false;
         replace = false;
