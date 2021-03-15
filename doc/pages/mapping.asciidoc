@@ -159,19 +159,37 @@ In normal mode:
 Shift version of those mappings exist as well
 (for example `<s-left>` maps to `H`).
 
+
 == Additional notes
 
-Some keys cannot be mapped directly but they can still mapped by `c-v` to directly insert their keycode as an argument to map.
+Some keys cannot be mapped directly but they can still mapped by either: typing `c-v` before the key to insert the keycode directly or by using an alias.
 
-  * `<c-space>`
-  * `<c-_>`
-  * `<c-/>` (`<c-7>`)
-  * `<c-^>` (`<c-6>`, `<c-~>`)
+Here some of the aliases that can be used:
 
-In order to map these keys type `<c-v>` before the key in the command. For example:
+*<c-space>*::
+  <c-2>, <c-@>, <c-`>
 
----------------------------------------
-map global normal '�' ': comment-line<ret>' -docstring "<c-/> to comment/uncomment selection"
-                   ^
-                   Ctrl+v Ctrl+/ were used here to insert this
----------------------------------------
+*<esc>*::
+  <c-[>, <c-3>, <c-{>
+
+*<c-\>*::
+  <c-4>
+
+*<c-]>*::
+  <c-5>, <c-}>
+
+*<c-^>*::
+  <c-6>, <c-s-6>, <c-~>
+
+*<c-_>*::
+  <c-7>, <c-/>
+
+*<backspace>*::
+  <c-8>, on some terminals <c-h>
+
+*<tab>*::
+  <c-i>
+
+*<ret>*::
+  <c-j>, <c-m>
+
