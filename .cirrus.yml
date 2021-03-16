@@ -1,6 +1,6 @@
 freebsd_task:
     freebsd_instance:
-        image_family: freebsd-12-1
+        image_family: freebsd-12-2
     gmake_script: pkg install -y gmake
     matrix:
         - name: freebsd_clang
