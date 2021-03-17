@@ -162,9 +162,9 @@ Shift version of those mappings exist as well
 
 == Additional notes
 
-Some keys cannot be mapped directly but they can still mapped by either: typing `c-v` before the key to insert the keycode directly or by using an alias.
+Some keys cannot be mapped directly but they can still mapped by using an alias.
 
-Here some of the aliases that can be used:
+Here some of the keys that may be maped this way followed by one or more aliases:
 
 *<c-space>*::
   <c-2>, <c-@>, <c-`>
