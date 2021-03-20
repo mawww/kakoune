@@ -1107,14 +1107,13 @@ struct LineNumbersHighlighter : Highlighter
             throw runtime_error("separator length is limited to 10 bytes");
 
         Optional<StringView> separator_cursor = parser.get_switch("separator-cursor");
-        if (separator_cursor.value_or(separator).length() != separator.length()) {
+        if (separator_cursor && (*separator_cursor).length() != separator.length()) {
             // Throw runtime error instead?
-            write_to_debug_buffer("line-numbers: Separator for active line should have the same length as seperator");
+            write_to_debug_buffer("number-lines: Separator for active line should have the same length as `separator`");
             separator_cursor.reset();
         }
 
-        // Effectively separator_cursor?.str(), except idk how to code in C++
-        Optional<String> separator_cursor_str = separator_cursor ? separator_cursor->str() : Optional<String>{};
+        auto separator_cursor_str = separator_cursor.map([](auto&& t){ return t.str(); });
 
         int min_digits = parser.get_switch("min-digits").map(str_to_int).value_or(2);
         if (min_digits < 0)
