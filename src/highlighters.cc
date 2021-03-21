@@ -1151,8 +1151,8 @@ private:
             const auto atom_face = last_line == current_line ? face_wrapped :
                 ((m_hl_cursor_line and is_cursor_line) ? face_absolute : face);
 
-            const auto& separator {is_cursor_line && m_separator_cursor ? *m_separator_cursor
-                                                                        : m_separator};
+            const auto& separator {is_cursor_line && m_separator_cursor && last_line != current_line
+                                   ? *m_separator_cursor : m_separator};
 
             line.insert(line.begin(), {buffer, atom_face});
             line.insert(line.begin() + 1, {separator, face});
