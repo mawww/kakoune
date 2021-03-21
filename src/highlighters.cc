@@ -1103,15 +1103,13 @@ struct LineNumbersHighlighter : Highlighter
         ParametersParser parser(params, param_desc);
 
         StringView separator = parser.get_switch("separator").value_or("│");
+        Optional<StringView> separator_cursor = parser.get_switch("separator-cursor");
+
         if (separator.length() > 10)
             throw runtime_error("separator length is limited to 10 bytes");
 
-        Optional<StringView> separator_cursor = parser.get_switch("separator-cursor");
-        if (separator_cursor && (*separator_cursor).length() != separator.length()) {
-            // Throw runtime error instead?
-            write_to_debug_buffer("number-lines: Separator for active line should have the same length as `separator`");
-            separator_cursor.reset();
-        }
+        if (separator_cursor && (*separator_cursor).column_length() != separator.column_length())
+            throw runtime_error("separator for active line should have the same length as 'separator'");
 
         auto separator_cursor_str = separator_cursor.map([](auto&& t){ return t.str(); });
 
@@ -1121,7 +1119,7 @@ struct LineNumbersHighlighter : Highlighter
         if (min_digits > 10)
             throw runtime_error("min digits is limited to 10");
 
-        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str(), separator_cursor_str, min_digits);
+        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str(), std::move(separator_cursor_str), min_digits);
     }
 
 private:
@@ -1152,10 +1150,11 @@ private:
             snprintf(buffer, 16, format, std::abs(line_to_format));
             const auto atom_face = last_line == current_line ? face_wrapped :
                 ((m_hl_cursor_line and is_cursor_line) ? face_absolute : face);
-            line.insert(line.begin(), {buffer, atom_face});
 
-            const auto separator = is_cursor_line && m_separator_cursor ? *m_separator_cursor
-                                                                        : m_separator;
+            const auto& separator {is_cursor_line && m_separator_cursor ? *m_separator_cursor
+                                                                        : m_separator};
+
+            line.insert(line.begin(), {buffer, atom_face});
             line.insert(line.begin() + 1, {separator, face});
 
             last_line = current_line;
