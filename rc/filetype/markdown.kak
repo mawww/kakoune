@@ -65,15 +65,13 @@ add-highlighter shared/markdown/listblock/g/ ref markdown/inline
 add-highlighter shared/markdown/listblock/g/marker regex ^\h*([-*])\s 1:bullet
 
 # https://spec.commonmark.org/0.29/#link-destination
-# This repetition is not pretty but shell escaping is worse
 add-highlighter shared/markdown/angle_bracket_url region (?<=<)([a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=>)|\n fill link
-add-highlighter shared/markdown/url region -recurse \( ([a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=\))|\s fill link
+add-highlighter shared/markdown/inline/url region -recurse \( ([a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=\))|\s fill link
 add-highlighter shared/markdown/listblock/angle_bracket_url region (?<=<)([a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=>)|\n fill link
-add-highlighter shared/markdown/listblock/url region -recurse \( ([a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=\))|\s fill link
 
 try %{
     require-module html
-    add-highlighter shared/markdown/tag region (?i)</?[a-z][a-z0-9-]*\s*([a-z_:]|(?=>)) > ref html/tag
+    add-highlighter shared/markdown/inline/tag region (?i)</?[a-z][a-z0-9-]*\s*([a-z_:]|(?=>)) > ref html/tag
 }
 
 add-highlighter shared/markdown/inline/code region -match-capture (`+) (`+) fill mono
