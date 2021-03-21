@@ -1082,7 +1082,7 @@ private:
 
 struct LineNumbersHighlighter : Highlighter
 {
-    LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator, Optional<String> separator_cursor, int min_digits)
+    LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator, String separator_cursor, int min_digits)
       : Highlighter{HighlightPass::Move},
         m_relative{relative},
         m_hl_cursor_line{hl_cursor_line},
@@ -1103,15 +1103,13 @@ struct LineNumbersHighlighter : Highlighter
         ParametersParser parser(params, param_desc);
 
         StringView separator = parser.get_switch("separator").value_or("│");
-        Optional<StringView> separator_cursor = parser.get_switch("separator-cursor");
+        StringView separator_cursor = parser.get_switch("separator-cursor").value_or(separator);
 
         if (separator.length() > 10)
             throw runtime_error("separator length is limited to 10 bytes");
 
-        if (separator_cursor && (*separator_cursor).column_length() != separator.column_length())
+        if (separator_cursor.column_length() != separator.column_length())
             throw runtime_error("separator for active line should have the same length as 'separator'");
-
-        auto separator_cursor_str = separator_cursor.map([](auto&& t){ return t.str(); });
 
         int min_digits = parser.get_switch("min-digits").map(str_to_int).value_or(2);
         if (min_digits < 0)
@@ -1119,7 +1117,7 @@ struct LineNumbersHighlighter : Highlighter
         if (min_digits > 10)
             throw runtime_error("min digits is limited to 10");
 
-        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str(), std::move(separator_cursor_str), min_digits);
+        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str(), separator_cursor.str(), min_digits);
     }
 
 private:
@@ -1151,8 +1149,8 @@ private:
             const auto atom_face = last_line == current_line ? face_wrapped :
                 ((m_hl_cursor_line and is_cursor_line) ? face_absolute : face);
 
-            const auto& separator {is_cursor_line && m_separator_cursor && last_line != current_line
-                                   ? *m_separator_cursor : m_separator};
+            const auto& separator = is_cursor_line && last_line != current_line
+                                    ? m_separator_cursor : m_separator;
 
             line.insert(line.begin(), {buffer, atom_face});
             line.insert(line.begin() + 1, {separator, face});
@@ -1187,7 +1185,7 @@ private:
     const bool m_relative;
     const bool m_hl_cursor_line;
     const String m_separator;
-    const Optional<String> m_separator_cursor;
+    const String m_separator_cursor;
     const int m_min_digits;
 };
 
