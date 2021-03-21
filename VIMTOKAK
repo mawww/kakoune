@@ -1,16 +1,16 @@
 Vi(m) to Kakoune:
 =================
 
-Kakoune is inspired heavily by Vim, it strives to be as efficient as Vim,
+Kakoune is inspired heavily by Vim. It strives to be as efficient as Vim,
 more consistent and simpler. A big difference is that a lot of special
 features in Vim just become regular interactions of basic features in
 Kakoune.
 
 Operations and moves are reversed in Kakoune. First select whatever text
-you want to operate on, and then use an modifying operation. That makes
-things more consistent (Vim needs a separate x and d operation because
-of the operator -> move order, Kakoune only needs the d operation). That
-also allows more complex selections.
+you want to operate on, and then use a modifying operation. That makes
+things more consistent: Vim needs separate x and d operations because
+of the operator -> move order, while Kakoune only needs the d operation.
+Selecting first also allows more complex selections.
 
 delete a word:
  * vim: dw
@@ -29,9 +29,9 @@ global replace:
  * kak: %sword<ret>creplacement<esc>
 
 Explanation: '%' selects the entire buffer, 's' opens a prompt for a
-regex, <ret> validates the regex and replace the selection with one
-per matches (hence, all occurences of word are selected). 'c' deletes
-the selection contents and enter insert mode, replacement is typed
+regex, <ret> validates the regex and replaces the selection with one
+per match (hence all occurences of "word" are selected). 'c' deletes
+the selection contents and enters insert mode where "replacement" is typed,
 and <esc> goes back to normal mode.
 
 Note that the Kakoune version is one key less, and is not a special
@@ -41,8 +41,7 @@ replace in current curly braces block:
  * vim: viB:s/word/replacement<ret>
  * kak: <a-i>Bsword<ret>creplacement<esc>
 
-Here again, we need to rely on another Vim special feature, visual
-mode.
+Here again, Vim had to rely on a special feature, visual mode.
 
 join line with next:
  * vim: J
@@ -52,17 +51,17 @@ delete to line end:
  * vim: d$
  * kak: <a-l>d or Gld
 
-some classic vim moves are not bound to the same key, this is due to Kakoune
-using shifted moves to append to selection, so moves that were bound to non
-alphabetic chars had to change.
+Some classic Vim moves are not bound to the same key. Kakoune
+uses shifted moves to extend the selection, so Vim moves that were bound to
+shifted characters had to change.
 
-* % become m (for matching), however m will replace selection with the next
-  block, if you want to get a selection from current point to next block end,
-  you should use <space>M (<space> clears the selection to one character)
+* % became m (for "matching"). However, m replaces the selection with the next
+  block. If you want to get a selection from the current point to the next
+  block's end, you should use ;M (; reduces the selection to one character).
 
-* 0 and $ became <a-h> and <a-l>. Another binding is gh and gl.
+* 0 and $ became <a-h> and <a-l>. Equivalent bindings are gh and gl.
 
 :[gv]/re/cmd
-to emulate :g or :v, use % to select the whole buffer, <a-s> to get
-one selection by line, and then <a-k> or <a-K> in order to keep only the
+To emulate :g or :v, use % to select the whole buffer, <a-s> to get
+one selection per line, and then <a-k> or <a-K> to keep only the
 selections matching (or not matching) the entered regex.
