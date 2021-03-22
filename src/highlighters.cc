@@ -1082,12 +1082,12 @@ private:
 
 struct LineNumbersHighlighter : Highlighter
 {
-    LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator, String separator_cursor, int min_digits)
+    LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator, String cursor_separator, int min_digits)
       : Highlighter{HighlightPass::Move},
         m_relative{relative},
         m_hl_cursor_line{hl_cursor_line},
         m_separator{std::move(separator)},
-        m_separator_cursor{std::move(separator_cursor)},
+        m_cursor_separator{std::move(cursor_separator)},
         m_min_digits{min_digits} {}
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
@@ -1095,7 +1095,7 @@ struct LineNumbersHighlighter : Highlighter
         static const ParameterDesc param_desc{
             { { "relative", { false, "" } },
               { "separator", { true, "" } },
-              { "separator-cursor", { true, "" } },
+              { "cursor-separator", { true, "" } },
               { "min-digits", { true, "" } },
               { "hlcursor", { false, "" } } },
             ParameterDesc::Flags::None, 0, 0
@@ -1103,12 +1103,12 @@ struct LineNumbersHighlighter : Highlighter
         ParametersParser parser(params, param_desc);
 
         StringView separator = parser.get_switch("separator").value_or("│");
-        StringView separator_cursor = parser.get_switch("separator-cursor").value_or(separator);
+        StringView cursor_separator = parser.get_switch("cursor-separator").value_or(separator);
 
         if (separator.length() > 10)
             throw runtime_error("separator length is limited to 10 bytes");
 
-        if (separator_cursor.column_length() != separator.column_length())
+        if (cursor_separator.column_length() != separator.column_length())
             throw runtime_error("separator for active line should have the same length as 'separator'");
 
         int min_digits = parser.get_switch("min-digits").map(str_to_int).value_or(2);
@@ -1117,7 +1117,7 @@ struct LineNumbersHighlighter : Highlighter
         if (min_digits > 10)
             throw runtime_error("min digits is limited to 10");
 
-        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str(), separator_cursor.str(), min_digits);
+        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str(), cursor_separator.str(), min_digits);
     }
 
 private:
@@ -1150,7 +1150,7 @@ private:
                 ((m_hl_cursor_line and is_cursor_line) ? face_absolute : face);
 
             const auto& separator = is_cursor_line && last_line != current_line
-                                    ? m_separator_cursor : m_separator;
+                                    ? m_cursor_separator : m_separator;
 
             line.insert(line.begin(), {buffer, atom_face});
             line.insert(line.begin() + 1, {separator, face});
@@ -1185,7 +1185,7 @@ private:
     const bool m_relative;
     const bool m_hl_cursor_line;
     const String m_separator;
-    const String m_separator_cursor;
+    const String m_cursor_separator;
     const int m_min_digits;
 };
 
@@ -2284,7 +2284,7 @@ void register_highlighters()
         "number-lines",
         { LineNumbersHighlighter::create,
           "Display line numbers \n"
-          "Parameters: -relative, -hlcursor, -separator <separator text>, -separator-cursor <separator text>, -min-digits <cols>\n" } });
+          "Parameters: -relative, -hlcursor, -separator <separator text>, -cursor-separator <separator text>, -min-digits <cols>\n" } });
     registry.insert({
         "show-matching",
         { create_matching_char_highlighter,
