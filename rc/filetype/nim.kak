@@ -51,8 +51,10 @@ evaluate-commands %sh{
     # Grammar
     opchars='[=+-/<>@$~&%|!?^.:\\*]'
     opnocol='[=+-/<>@$~&%|!?^.\\*]'
-    suffix="('?([iIuU](8|16|32|64)|[fF](32|64)?|[dDuU]|[fF]))?"
-    floatsuffix="('?([fF](32|64)?|[dD]|[fF]))?"
+    letter='A-Za-z\u000080-\u10FFFF'
+    customsuffix="'[${letter}](_?[${letter}0-9])*"
+    suffix="(${customsuffix}|[iIuU](8|16|32|64)|[fF](32|64)?|[dDuU])?"
+    floatsuffix="(${customsuffix}|[fF](32|64)?|[dD])?"
     hexdigit='[0-9a-fA-F]'
     octdigit='[0-7]'
     bindigit='[01]'
