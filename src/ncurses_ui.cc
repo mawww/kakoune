@@ -657,7 +657,19 @@ Optional<Key> NCursesUI::get_next_key()
        return Key{utf8::codepoint(CharIterator{c}, Sentinel{})};
     };
 
-    auto parse_csi = [this, &convert]() -> Optional<Key> {
+    auto parse_mask = [](int mask) {
+        mask = std::max(mask - 1, 0);
+        Key::Modifiers mod = Key::Modifiers::None;
+        if (mask & 1)
+            mod |= Key::Modifiers::Shift;
+        if (mask & 2)
+            mod |= Key::Modifiers::Alt;
+        if (mask & 4)
+            mod |= Key::Modifiers::Control;
+        return mod;
+    };
+
+    auto parse_csi = [this, &convert, &parse_mask]() -> Optional<Key> {
         auto next_char = [] { return get_char().value_or((unsigned char)0xff); };
         int params[16] = {};
         auto c = next_char();
@@ -679,17 +691,6 @@ Optional<Key> NCursesUI::get_next_key()
         if (c != '$' and (c < 0x40 or c > 0x7e))
             return {};
 
-        auto parse_mask = [](int mask) {
-            Key::Modifiers mod = Key::Modifiers::None;
-            if (mask & 1)
-                mod |= Key::Modifiers::Shift;
-            if (mask & 2)
-                mod |= Key::Modifiers::Alt;
-            if (mask & 4)
-                mod |= Key::Modifiers::Control;
-            return mod;
-        };
-
         auto mouse_button = [this](Key::Modifiers mod, Key::MouseButton button, Codepoint coord, bool release) {
             auto mask = 1 << (int)button;
             if (not release)
@@ -710,7 +711,7 @@ Optional<Key> NCursesUI::get_next_key()
                     (Codepoint)((down ? 1 : -1) * m_wheel_scroll_amount)};
         };
 
-        auto masked_key = [&](Codepoint key) { return Key{parse_mask(std::max(params[1] - 1, 0)), key}; };
+        auto masked_key = [&](Codepoint key) { return Key{parse_mask(params[1]), key}; };
 
         switch (c)
         {
