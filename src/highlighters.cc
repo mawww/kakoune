@@ -1049,7 +1049,7 @@ private:
                 {
                     auto coord = it.coord();
                     Codepoint cp = utf8::read_codepoint(it, end);
-                    if (cp == '\t' or cp == ' ' or cp == '\n' or cp == 0xA0)
+                    if (cp == '\t' or cp == ' ' or cp == '\n' or cp == 0xA0 or cp == 0x202F)
                     {
                         if (coord != begin.coord())
                             atom_it = ++line.split(atom_it, coord);
@@ -1067,7 +1067,7 @@ private:
                             atom_it->replace(m_spc);
                         else if (cp == '\n')
                             atom_it->replace(m_lf);
-                        else if (cp == 0xA0)
+                        else if (cp == 0xA0 or cp == 0x202F)
                             atom_it->replace(m_nbsp);
                         atom_it->face = merge_faces(atom_it->face, whitespaceface);
                         break;
