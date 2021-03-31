@@ -669,16 +669,18 @@ Completions CommandManager::complete(const Context& context,
     const auto& token = tokens.back();
 
     auto requote = [](Completions completions, Token::Type token_type) {
-        if ((completions.flags & Completions::Flags::Quoted) or
-            completions.start != 0)
+        if (completions.flags & Completions::Flags::Quoted)
             return completions;
 
         if (token_type == Token::Type::Raw)
         {
-            for (auto& c : completions.candidates)
+            const bool at_token_start = completions.start == 0;
+            for (auto& candidate : completions.candidates)
             {
-                if (c.substr(0_byte, 1_byte) == "%" or any_of(c, [](auto i) { return contains("; \t'\"", i); }))
-                    c = quote(c);
+                const StringView to_escape = ";\n \t";
+                if ((at_token_start and candidate.substr(0_byte, 1_byte) == "%") or
+                    any_of(candidate, [&](auto c) { return contains(to_escape, c); }))
+                    candidate = at_token_start ? quote(candidate) : escape(candidate, to_escape, '\\');
             }
         }
         else if (token_type == Token::Type::RawQuoted)
