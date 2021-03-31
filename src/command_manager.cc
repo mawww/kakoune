@@ -508,9 +508,17 @@ void CommandManager::execute_single_command(CommandParameters params,
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);
 
-    const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
+    auto debug_flags = context.options()["debug"].get<DebugFlags>();
+    auto start = (debug_flags & DebugFlags::Profile) ? Clock::now() : Clock::time_point{};
     if (debug_flags & DebugFlags::Commands)
-        write_to_debug_buffer(format("command {} {}", params[0], join(param_view, ' ')));
+        write_to_debug_buffer(format("command {}", join(params, ' ')));
+
+    on_scope_end([&] {
+        if (not (debug_flags & DebugFlags::Profile))
+            return;
+        auto full = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start);
+        write_to_debug_buffer(format("command {} took {} us", params[0], full.count()));
+    });
 
     try
     {
