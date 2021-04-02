@@ -106,7 +106,7 @@ define-command -hidden markdown-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # remove trailing white spaces
-        try %{ execute-keys -draft -itersel %{ k<a-x> s \h+$ <ret> d } }
+        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
     }
 }
 
