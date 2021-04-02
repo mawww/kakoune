@@ -48,7 +48,7 @@ evaluate-commands %sh{
     ruby rust sass scala scss sh swift toml tupfile typescript yaml sql
   "
   for lang in ${languages}; do
-    printf 'add-highlighter shared/markdown/%s region -match-capture ^(\h*)```\h*(%s|\\{[.=]?%s\\}))\\b   ^(\h*)``` regions\n' "${lang}" "${lang}" "${lang}"
+    printf 'add-highlighter shared/markdown/%s region -match-capture ^(\h*)```\h*(%s\\b|\\{[.=]?%s\\})   ^(\h*)``` regions\n' "${lang}" "${lang}" "${lang}"
     printf 'add-highlighter shared/markdown/%s/ default-region fill meta\n' "${lang}"
     [ "${lang}" = kak ] && ref=kakrc || ref="${lang}"
     printf 'add-highlighter shared/markdown/%s/inner region \A```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${ref}"
