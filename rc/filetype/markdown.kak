@@ -14,6 +14,7 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
 hook global WinSetOption filetype=markdown %{
     require-module markdown
 
+    hook window InsertChar \n -group markdown-insert markdown-insert-on-new-line
     hook window InsertChar \n -group markdown-indent markdown-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window markdown-.+ }
 }
@@ -96,10 +97,12 @@ add-highlighter shared/markdown/inline/text/ regex "^( {4}|\t)+([^\n]+)" 2:meta
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden markdown-insert-on-new-line %{
+    try %{ execute-keys -draft -itersel k <a-x> s ^\h*\K((>\h*)+([*+-]\h)?|(>\h*)*[*+-]\h)\h* <ret> y gh j P }
+}
+
 define-command -hidden markdown-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
-        # copy block quote(s), list item prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K((>\h*)+([*+-]\h)?|(>\h*)*[*+-]\h)\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # remove trailing white spaces
