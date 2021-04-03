@@ -12,7 +12,7 @@ hook -group man-highlight global WinSetOption filetype=man %{
     # Command line options
     add-highlighter window/man-highlight/ regex '^ {7}-[^\s,]+(,\s+-[^\s,]+)*' 0:list
     # References to other manpages
-    add-highlighter window/man-highlight/ regex [-a-zA-Z0-9_.]+\([a-z0-9]+\) 0:header
+    add-highlighter window/man-highlight/ regex '(\w|\d|-|_|((-|‐)\n +))+\(\d\)' 0:header
 
     map window normal <ret> ': man-jump<ret>'
 
@@ -33,18 +33,13 @@ define-command -hidden -params ..3 man-impl %{ evaluate-commands %sh{
         exit
     fi
     shift
-    manout=$(mktemp "${TMPDIR:-/tmp}"/kak-man.XXXXXX)
-    manerr=$(mktemp "${TMPDIR:-/tmp}"/kak-man.XXXXXX)
-    colout=$(mktemp "${TMPDIR:-/tmp}"/kak-man.XXXXXX)
+    manout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
+    manerr=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
+    colout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
     env MANWIDTH=${kak_window_range##* } man "$@" > "$manout" 2> "$manerr"
     retval=$?
-    if command -v col >/dev/null; then
-        col -b -x > ${colout} < ${manout}
-    else
-        sed 's/.//g' > ${colout} < ${manout}
-    fi
+    col -b -x > ${colout} < ${manout}
     rm ${manout}
-
     if [ "${retval}" -eq 0 ]; then
         printf %s\\n "
                 edit -scratch %{*$buffer_name ${*}*}
@@ -130,10 +125,43 @@ define-command man-link %{ evaluate-commands -save-regs / %{
 
 define-command -docstring 'Try to jump to a man page' \
 man-jump %{
-  try %{ man-link } catch %{ man-link-here } catch %{ fail 'Not a valid man page link' }
-  try %{ man } catch %{ fail 'No man page link to follow' }
+  try %{
+      # Gets us reliably to the start of a word,
+      # and deletes any new-line wraps before the cursor.
+      try %{
+        execute-keys '<a-:><a-;>l<a-f> ;[ dhs‐<ret>d'
+      }
+      # Move 2 chars ahead
+      execute-keys '2l'
+      try %{
+        # Tries to delete any new-line wraps after the cursor
+        execute-keys -draft 'F(s(‐|-)\n<ret>dwd;'
+        # Opens the man page
+        try %{ man-link } catch %{ man-link-here } catch %{ fail 'Not a valid man page link' }
+        try %{ man } catch %{ fail 'No man page link to follow' }
+        # Resets the new-line wrap
+        try %{ execute-keys -draft ':bp<ret>uu;<a-f> :bn<ret>' }
+      } catch %{
+        # Tries to open the page
+        try %{ man-link } catch %{ man-link-here } catch %{ fail 'Not a valid man page link' }
+        try %{ man } catch %{ fail 'No man page link to follow' }
+        # Resets the modifications.
+        try %{ execute-keys -draft ':bp<ret>u;<a-f> :bn<ret>' }
+      }
+  # If we fail, undo all the damage (does
+  # put you at the start of a word though but
+  # close as i can get)
+  } catch %{
+    execute-keys "u<a-:><a-;>;"
+    # Error Message
+    fail "No man page link to follow"
+  }
 }
 
+define-command -hidden man-jump-raw %{
+
+}
+  
 # Suggested keymaps for a user mode
 declare-user-mode man-mode
 
@@ -141,7 +169,7 @@ define-command man-mode-map -params 3 %{
   map global man-mode %arg[1] %arg[2] -docstring %arg[3]
 } -hidden
 
-man-mode-map 'g' ': man-jump<ret>' 'Jump to a man page using selected man page link'
+  man-mode-map 'g' ': man-jump<ret>' 'Jump to a man page using selected man page link'
 man-mode-map 'j' ': try %{ man-link-next }<ret>' 'Go to next man page link'
 man-mode-map 'k' ': try %{ man-link-prev }<ret>' 'Go to previous man page link'
 man-mode-map 'm' ': man<space>' 'Look up a man page'
