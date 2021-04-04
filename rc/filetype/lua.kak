@@ -105,7 +105,7 @@ define-command -hidden lua-indent-on-new-line %{
         # preserve previous non-empty line indent
         try %{ execute-keys -draft <space><a-?>^[^\n]+$<ret>s\A|.\z<ret>)<a-&> }
         # indent after start structure
-        try %{ execute-keys -draft <a-?>^[^\n]*\w+[^\n]*$<ret><a-k>^\h*(else|elseif|for|function|if|while)\b<ret><a-:><semicolon><a-gt> }
+        try %{ execute-keys -draft <a-?>^[^\n]*\w+[^\n]*$<ret><a-k>\b(else|elseif|for|function|if|while)\b<ret><a-K>\bend\b<ret><a-:><semicolon><a-gt> }
     }
 }
 
@@ -116,8 +116,9 @@ define-command -hidden lua-insert-on-new-line %[
         # wisely add end structure
         evaluate-commands -save-regs x %[
             try %{ execute-keys -draft k<a-x>s^\h+<ret>"xy } catch %{ reg x '' } # Save previous line indent in register x
-            try %[ execute-keys -draft k<a-x> <a-k>^<c-r>x(for|function|if|while)<ret> J}iJ<a-x> <a-K>^<c-r>x(else|end|elseif)$<ret> # Validate previous line and that it is not closed yet
-                   execute-keys -draft o<c-r>xend<esc> ] # auto insert end
+            try %[ execute-keys -draft k<a-x> <a-k>^<c-r>x\b[^\n]*(for|function|if|while)<ret><a-K>\bend\b<ret> J}iJ<a-x> <a-K>^<c-r>x(else|end|elseif)$<ret> # Validate previous line and that it is not closed yet
+                   execute-keys -draft o<c-r>xend<esc> # auto insert end
+                   execute-keys -draft k<a-x><a-k>\(function\b<ret>jjA)<esc> ] # auto insert ) for anonymous function
         ]
     ]
 ]

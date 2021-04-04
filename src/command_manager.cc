@@ -508,9 +508,17 @@ void CommandManager::execute_single_command(CommandParameters params,
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);
 
-    const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
+    auto debug_flags = context.options()["debug"].get<DebugFlags>();
+    auto start = (debug_flags & DebugFlags::Profile) ? Clock::now() : Clock::time_point{};
     if (debug_flags & DebugFlags::Commands)
-        write_to_debug_buffer(format("command {} {}", params[0], join(param_view, ' ')));
+        write_to_debug_buffer(format("command {}", join(params, ' ')));
+
+    on_scope_end([&] {
+        if (not (debug_flags & DebugFlags::Profile))
+            return;
+        auto full = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start);
+        write_to_debug_buffer(format("command {} took {} us", params[0], full.count()));
+    });
 
     try
     {
@@ -669,16 +677,18 @@ Completions CommandManager::complete(const Context& context,
     const auto& token = tokens.back();
 
     auto requote = [](Completions completions, Token::Type token_type) {
-        if ((completions.flags & Completions::Flags::Quoted) or
-            completions.start != 0)
+        if (completions.flags & Completions::Flags::Quoted)
             return completions;
 
         if (token_type == Token::Type::Raw)
         {
-            for (auto& c : completions.candidates)
+            const bool at_token_start = completions.start == 0;
+            for (auto& candidate : completions.candidates)
             {
-                if (c.substr(0_byte, 1_byte) == "%" or any_of(c, [](auto i) { return contains("; \t'\"", i); }))
-                    c = quote(c);
+                const StringView to_escape = ";\n \t";
+                if ((at_token_start and candidate.substr(0_byte, 1_byte) == "%") or
+                    any_of(candidate, [&](auto c) { return contains(to_escape, c); }))
+                    candidate = at_token_start ? quote(candidate) : escape(candidate, to_escape, '\\');
             }
         }
         else if (token_type == Token::Type::RawQuoted)
