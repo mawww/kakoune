@@ -474,7 +474,14 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     while (line_index < dim.line + line_offset)
     {
         m_window.move_cursor(line_index++);
-        m_window.draw(m_palette, DisplayAtom("~"), face);
+        if (m_padding_fill)
+        {
+            ColumnCount column_index = 0;
+            while (column_index++ < dim.column)
+                m_window.draw(m_palette, m_padding_char, face);
+        }
+        else
+            m_window.draw(m_palette, m_padding_char, face);
     }
 
     m_dirty = true;
@@ -1360,6 +1367,22 @@ void NCursesUI::set_ui_options(const Options& options)
         auto wheel_scroll_amount_it = options.find("ncurses_wheel_scroll_amount"_sv);
         m_wheel_scroll_amount = wheel_scroll_amount_it != options.end() ?
             str_to_int_ifp(wheel_scroll_amount_it->value).value_or(3) : 3;
+    }
+
+    {
+        auto it = options.find("ncurses_padding_char"_sv);
+        if (it == options.end())
+            m_padding_char = DisplayAtom("~");
+        else if (it->value.length() < 1)
+            m_padding_char = DisplayAtom(" ");
+        else
+            m_padding_char = DisplayAtom(it->value);
+    }
+
+    {
+        auto it = options.find("ncurses_padding_fill"_sv);
+        m_padding_fill = it != options.end() and
+            (it->value == "yes" or it->value == "true");
     }
 }
 

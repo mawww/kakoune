@@ -169,6 +169,9 @@ private:
 
     bool m_set_title = true;
 
+    DisplayAtom m_padding_char = DisplayAtom("~");
+    bool m_padding_fill = false;
+
     bool m_dirty = false;
 
     bool m_resize_pending = false;

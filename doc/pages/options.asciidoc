@@ -353,6 +353,15 @@ are exclusively available to built-in options.
             Function key from which shifted function key start, if the
             terminal sends F13 for <s-F1>, this should be set to 12.
 
+        *ncurses_padding_char*:::
+            character used to indicate the area out of the displayed buffer
+            (defaults to '~')
+
+        *ncurses_padding_fill*:::
+            if *yes* or *true*, fill the padding area with the padding character
+            instead of displaying a single character at the beginning of the
+            padding line (defaults to *false*)
+
 [[startup-info]]
 *startup_info_version* `int`::
     _default_ 0 +
