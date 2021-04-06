@@ -40,10 +40,10 @@ add-highlighter shared/d/code default-region group
 add-highlighter shared/d/string region %{(?<!')(?<!'\\)"} %{(?<!\\)(?:\\\\)*"} group
 add-highlighter shared/d/verbatim_string region %{(?<!')(?<!'\\)`} %{(?<!\\)(?:\\\\)*`} fill meta
 add-highlighter shared/d/verbatim_string_prefixed region %{r`([^(]*)\(} %{\)([^)]*)`} fill meta
-add-highlighter shared/d/docstring1 region '/\+\+' '\+/' fill documentation
+add-highlighter shared/d/docstring1 region -recurse '/\+' '/\+\+' '\+/' fill documentation
 add-highlighter shared/d/docstring2 region '/\*\*' '\*/' fill documentation
 add-highlighter shared/d/docstring3 region /// $ fill documentation
-add-highlighter shared/d/disabled region '/\+[^+]?' '\+/' fill comment
+add-highlighter shared/d/disabled region -recurse '/\+' '/\+[^+]?' '\+/' fill comment
 add-highlighter shared/d/comment1 region '/\*[^*]?' '\*/' fill comment
 add-highlighter shared/d/comment2 region '//[^/]?' $ fill comment
 
