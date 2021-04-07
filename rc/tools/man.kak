@@ -143,14 +143,15 @@ man-jump %{
     execute-keys "<a-f> "
   } catch %{
 	# Corrects everything
-    execute-keys "ww"
-    execute-keys "<a-f> "
+    execute-keys "wwl"
+    execute-keys "<a-f> ;"
   }
 
   evaluate-commands -draft %{
 	# Goes to the next bracket or whitespace. This should be a bracket
 	execute-keys "/(?<![\s])( |\()"
 	execute-keys "<ret>"
+
 	
 	try %{
 	  # Tests for a bracket
