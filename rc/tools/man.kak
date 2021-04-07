@@ -130,8 +130,44 @@ define-command man-link %{ evaluate-commands -save-regs / %{
 
 define-command -docstring 'Try to jump to a man page' \
 man-jump %{
-  try %{ man-link } catch %{ man-link-here } catch %{ fail 'Not a valid man page link' }
-  try %{ man } catch %{ fail 'No man page link to follow' }
+  # Get to the start of the expression
+  execute-keys "<a-f> "
+
+  # Tries to select a multiline expression
+  try %{
+    # Tries to go back
+    execute-keys "bB"
+    # Attempts to select a newline,
+    # if you can then this means a wrap.
+    execute-keys "s$<ret>"
+    execute-keys "<a-f> "
+  } catch %{
+	# Corrects everything
+    execute-keys "ww"
+    execute-keys "<a-f> "
+  }
+
+  evaluate-commands -draft %{
+	# Goes to the next bracket or whitespace. This should be a bracket
+	execute-keys "/(?<![\s])( |\()"
+	execute-keys "<ret>"
+	
+	try %{
+	  # Tests for a bracket
+      execute-keys "s\(<ret>"
+	} catch %{
+      fail "No man page link to follow"
+	}
+  }
+
+  # Selects the whole word
+  execute-keys "l;F)"
+
+  # Run the commands
+  evaluate-commands %sh{
+	man_link=$(echo $kak_selection | perl -pe 's/[-‐]//g' | sed "s/ //g")
+    echo try %{ man $man_link } catch %{ fail "No man page link to follow" }
+  }
 }
 
 # Suggested keymaps for a user mode
