@@ -12,7 +12,7 @@ hook -group man-highlight global WinSetOption filetype=man %{
     # Command line options
     add-highlighter window/man-highlight/ regex '^ {7}-[^\s,]+(,\s+-[^\s,]+)*' 0:list
     # References to other manpages
-    add-highlighter window/man-highlight/ regex [-a-zA-Z0-9_.]+\([a-z0-9]+\) 0:header
+    add-highlighter window/man-highlight/ regex '(\w|\d|-|_|((-|‐)\n +))+\([\d|\w]+\)' 0:header
 
     map window normal <ret> ': man-jump<ret>'
 
