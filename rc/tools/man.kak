@@ -165,7 +165,7 @@ man-jump %{
 
   # Run the commands
   evaluate-commands %sh{
-	man_link=$(echo $kak_selection | perl -pe 's/[-‐]//g' | sed "s/ //g")
+	man_link=$(echo $kak_selection | sed -e '1h;2,$H;$!d;g' -e 's/[-‐]//g' | sed "s/ //g")
     echo try %{ man $man_link } catch %{ fail "No man page link to follow" }
   }
 }
