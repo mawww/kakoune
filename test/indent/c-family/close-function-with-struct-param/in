@@ -1,0 +1,8 @@
+void f(int i,
+       struct S s)
+{
+%( )
+
+void g(int i,
+       struct S s) {
+%( )

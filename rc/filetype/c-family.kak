@@ -134,7 +134,7 @@ define-command -hidden c-family-indent-on-closing-curly-brace %[
 
 define-command -hidden c-family-insert-on-closing-curly-brace %[
     # add a semicolon after a closing brace if part of a class, union or struct definition
-    try %[ execute-keys -itersel -draft hm<a-x>B<a-x><a-k>\A\h*(class|struct|union|enum)<ret> '<a-;>;i;<esc>' ]
+    try %[ execute-keys -itersel -draft hm<a-x>B<a-x> <a-K>\A[^\n]+\)\h*(\{|$)<ret> <a-k>\A\h*(class|struct|union|enum)<ret> '<a-;>;i;<esc>' ]
 ]
 
 define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel -draft %[
