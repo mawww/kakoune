@@ -150,7 +150,7 @@ show_diff() {
 }
 
 finished_commands() {
-  printf %s 'eval -client client0 %{
+  printf %s 'eval -client 0 %{
                eval -buffer *debug* write debug
                nop %sh{
             '

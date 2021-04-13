@@ -39,7 +39,7 @@ String ClientManager::generate_name() const
 {
     for (int i = 0; true; ++i)
     {
-        String name = format("client{}", i);
+        String name = to_string(i);
         if (not client_name_exists(name))
             return name;
     }
