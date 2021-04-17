@@ -37,7 +37,8 @@ add-highlighter shared/sass regions
 add-highlighter shared/sass/code default-region group
 add-highlighter shared/sass/single_string  region '"' (?<!\\)(\\\\)*" fill string
 add-highlighter shared/sass/double_string  region "'" "'"             fill string
-add-highlighter shared/sass/comment        region '/' '$'             fill comment
+add-highlighter shared/sass/comment        region '//' '$'            fill comment
+add-highlighter shared/sass/css_comment    region /[*] [*]/           fill comment
 
 add-highlighter shared/sass/code/ regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:variable
 add-highlighter shared/sass/code/ regex &|@[A-Za-z][A-Za-z0-9_-]* 0:meta
@@ -64,7 +65,7 @@ define-command -hidden sass-indent-on-closing-brace %<
 define-command -hidden sass-indent-on-new-line %<
     evaluate-commands -draft -itersel %<
         # copy '/' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K/{2,}\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
