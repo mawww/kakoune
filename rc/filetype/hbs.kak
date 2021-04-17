@@ -35,10 +35,10 @@ require-module html
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter shared/hbs regions
-add-highlighter shared/hbs/comment          region \{\{!-- --\}\} fill comment
-add-highlighter shared/hbs/comment_alt      region \{\{!   \}\}   fill comment
-add-highlighter shared/hbs/block-expression region \{\{[#/]   \}\}   regions
-add-highlighter shared/hbs/expression 		region \{\{    \}\}   regions
+add-highlighter shared/hbs/comment          region \{\{!--  --\}\} fill comment
+add-highlighter shared/hbs/comment_alt      region \{\{!      \}\} fill comment
+add-highlighter shared/hbs/block-expression region \{\{[#/]   \}\} regions
+add-highlighter shared/hbs/expression       region \{\{       \}\} regions
 
 define-command -hidden add-mutual-highlighters -params 1 %~
     add-highlighter "shared/hbs/%arg{1}/code" default-region group
