@@ -1446,7 +1446,7 @@ const CommandDesc debug_cmd = {
             write_to_debug_buffer({});
             write_to_debug_buffer(format("  Total: {}", total));
             #if defined(__GLIBC__) || defined(__CYGWIN__)
-            write_to_debug_buffer(format("  Malloced: {}", mallinfo().uordblks));
+            write_to_debug_buffer(format("  Malloced: {}", mallinfo2().uordblks));
             #endif
         }
         else if (parser[0] == "shared-strings")
