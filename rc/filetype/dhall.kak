@@ -15,6 +15,7 @@ hook global WinSetOption filetype=dhall %{
     require-module dhall
 
     hook window ModeChange pop:insert:.* -group dhall-trim-indent dhall-trim-indent
+    hook window InsertChar \n -group dhall-insert dhall-insert-on-new-line
     hook window InsertChar \n -group dhall-indent dhall-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window dhall-.+ }
@@ -80,10 +81,14 @@ define-command -hidden dhall-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden dhall-indent-on-new-line %{
+define-command -hidden dhall-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+    }
+}
+define-command -hidden dhall-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line

@@ -16,6 +16,7 @@ hook global WinSetOption filetype=cue %[
 
     # cleanup trailing whitespaces when exiting insert mode
     hook window ModeChange pop:insert:.* -group cue-trim-indent cue-trim-indent
+    hook window InsertChar \n -group cue-insert cue-insert-on-new-line
     hook window InsertChar \n -group cue-indent cue-indent-on-new-line
     hook window InsertChar \{ -group cue-indent cue-indent-on-opening-curly-brace
     hook window InsertChar [)}] -group cue-indent cue-indent-on-closing
@@ -124,21 +125,27 @@ define-command -hidden cue-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden cue-indent-on-new-line %~
+define-command -hidden cue-insert-on-new-line %~
     evaluate-commands -draft -itersel %<
         # copy // comments prefix and following white spaces
-        try %{
-            execute-keys -draft k <a-x> s ^\h*\K//[!/]?\h* <ret> y gh j P
-        } catch %|
-            # preserve previous line indent
-            try %{ execute-keys -draft <semicolon> K <a-&> }
+        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K//[!/]?\h* <ret> y<c-o>P<esc> }
+    >
+~
+
+define-command -hidden cue-indent-on-new-line %~
+    evaluate-commands -draft -itersel %<
+        # preserve previous line indent
+        try %{ execute-keys -draft <semicolon> K <a-&> }
+        try %<
+            # only if we didn't copy a comment
+            execute-keys -draft <a-x> <a-K> ^\h*// <ret>
             # indent after lines ending with { or (
             try %[ execute-keys -draft k <a-x> <a-k> [{(]\h*$ <ret> j <a-gt> ]
             # indent after lines ending with [{(].+ and move first parameter to own line
             try %< execute-keys -draft [c[({],[)}] <ret> <a-k> \A[({][^\n]+\n[^\n]*\n?\z <ret> L i<ret><esc> <gt> <a-S> <a-&> >
             # deindent closing brace(s) when after cursor
             try %< execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret>  m <a-S> 1<a-&> >
-        |
+        >
         # filter previous line
         try %{ execute-keys -draft k : cue-trim-indent <ret> }
     >

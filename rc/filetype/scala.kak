@@ -15,6 +15,7 @@ hook global WinSetOption filetype=scala %[
     require-module scala
 
     hook window ModeChange pop:insert:.* -group scala-trim-indent  scala-trim-indent
+    hook window InsertChar \n -group scala-insert scala-insert-on-new-line
     hook window InsertChar \n -group scala-indent scala-indent-on-new-line
     hook window InsertChar \} -group scala-indent scala-indent-on-closing-curly-brace
 
@@ -59,10 +60,15 @@ define-command -hidden scala-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden scala-indent-on-new-line %[
+define-command -hidden scala-insert-on-new-line %[
     evaluate-commands -draft -itersel %[
         # copy // comments prefix and following white spaces
-        try %[ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P ]
+        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K#\h* <ret> y<c-o>P<esc> }
+    ]
+]
+
+define-command -hidden scala-indent-on-new-line %[
+    evaluate-commands -draft -itersel %[
         # preserve previous line indent
         try %[ execute-keys -draft <semicolon> K <a-&> ]
         # filter previous line

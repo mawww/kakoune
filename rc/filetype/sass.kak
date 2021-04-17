@@ -16,6 +16,7 @@ hook global WinSetOption filetype=sass %<
 
     hook window ModeChange pop:insert:.* -group sass-trim-indent  sass-trim-indent
     hook window InsertChar \} -group sass-indent sass-indent-on-closing-brace
+    hook window InsertChar \n -group sass-insert sass-insert-on-new-line
     hook window InsertChar \n -group sass-indent sass-indent-on-new-line
     set-option buffer extra_word_chars '_' '-'
 
@@ -62,10 +63,15 @@ define-command -hidden sass-indent-on-closing-brace %<
     >
 >
 
+define-command -hidden sass-insert-on-new-line %<
+    evaluate-commands -draft -itersel %<
+        # copy // comment prefix and following white spaces
+        try %{ execute-keys -draft k <a-x> s ^\h*\K/{2,}\h* <ret> y gh j P }
+    >
+>
+
 define-command -hidden sass-indent-on-new-line %<
     evaluate-commands -draft -itersel %<
-        # copy '/' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K/{2,}\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line

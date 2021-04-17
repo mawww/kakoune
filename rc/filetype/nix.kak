@@ -16,6 +16,7 @@ hook global WinSetOption filetype=nix %{
 
     hook window ModeChange pop:insert:.* -group nix-trim-indent  nix-trim-indent
     hook window InsertChar .* -group nix-indent nix-indent-on-char
+    hook window InsertChar \n -group nix-insert nix-insert-on-new-line
     hook window InsertChar \n -group nix-indent nix-indent-on-new-line
 
     set-option buffer extra_word_chars _ -
@@ -100,10 +101,15 @@ define-command -hidden nix-indent-on-char %<
     >
 >
 
-define-command -hidden nix-indent-on-new-line %<
+define-command -hidden nix-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
         # copy // comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+    >
+>
+
+define-command -hidden nix-indent-on-new-line %<
+    evaluate-commands -draft -itersel %<
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line

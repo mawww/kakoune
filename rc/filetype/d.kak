@@ -18,6 +18,7 @@ hook global WinSetOption filetype=d %{
 
     # cleanup trailing whitespaces when exiting insert mode
     hook window ModeChange pop:insert:.* -group d-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group d-insert d-insert-on-new-line
     hook window InsertChar \n -group d-indent d-indent-on-new-line
     hook window InsertChar \{ -group d-indent d-indent-on-opening-curly-brace
     hook window InsertChar \} -group d-indent d-indent-on-closing-curly-brace
@@ -105,6 +106,13 @@ add-highlighter shared/d/code/ regex "\bmodule\s+([\w_-]+)\b" 1:module
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden d-insert-on-new-line %~
+    evaluate-commands -draft -itersel %=
+        # copy // comments prefix and following white spaces
+        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc> }
+    =
+~
+
 define-command -hidden d-indent-on-new-line %~
     evaluate-commands -draft -itersel %=
         # preserve previous line indent
@@ -115,8 +123,6 @@ define-command -hidden d-indent-on-new-line %~
         try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
         # align to opening paren of previous line
         try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
-        # copy // comments prefix and following white spaces
-        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc> }
         # indent after a switch's case/default statements
         try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
         # indent after if|else|while|for

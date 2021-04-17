@@ -16,6 +16,7 @@ hook global WinSetOption filetype=gluon %{
 
     set-option window extra_word_chars '_' "'"
     hook window ModeChange pop:insert:.* -group gluon-trim-indent gluon-trim-indent
+    hook window InsertChar \n -group gluon-insert gluon-insert-on-new-line
     hook window InsertChar \n -group gluon-indent gluon-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{
@@ -78,10 +79,15 @@ define-command -hidden gluon-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden gluon-indent-on-new-line %~
+define-command -hidden gluon-insert-on-new-line %~
     evaluate-commands -draft -itersel %_
         # copy // and /// comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K///?\h* <ret> y gh j P }
+    _
+~
+
+define-command -hidden gluon-indent-on-new-line %~
+    evaluate-commands -draft -itersel %_
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line

@@ -10,6 +10,7 @@ hook global WinSetOption filetype=i3 %[
 
     # cleanup trailing whitespaces when exiting insert mode
     hook window ModeChange pop:insert:.* -group i3-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group i3-insert i3-insert-on-new-line
     hook window InsertChar \n -group i3-indent i3-indent-on-new-line
     hook window InsertChar \} -group i3-indent i3-indent-on-closing-curly-brace
 
@@ -67,10 +68,15 @@ add-highlighter shared/i3/code/ regex "client\.(focused_inactive|focused|unfocus
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden i3-indent-on-new-line %~
+define-command -hidden i3-insert-on-new-line %~
     evaluate-commands -draft -itersel %=
         # copy # comments prefix
         try %{ execute-keys -draft k<a-x> s ^\h*#\h* <ret> y jgh P }
+    =
+~
+
+define-command -hidden i3-indent-on-new-line %~
+    evaluate-commands -draft -itersel %=
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon>K<a-&> }
         # indent after lines ending with {

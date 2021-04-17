@@ -15,6 +15,7 @@ hook global WinSetOption filetype=coffee %{
     require-module coffee
 
     hook window ModeChange pop:insert:.* -group coffee-trim-indent  coffee-trim-indent
+    hook window InsertChar \n -group coffee-insert coffee-insert-on-new-line
     hook window InsertChar \n -group coffee-indent coffee-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window coffee-.+ }
@@ -70,10 +71,15 @@ define-command -hidden coffee-trim-indent %{
     }
 }
 
-define-command -hidden coffee-indent-on-new-line %{
+define-command -hidden coffee-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s '^\h*\K#\h*' <ret> y gh j P }
+    }
+}
+
+define-command -hidden coffee-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line

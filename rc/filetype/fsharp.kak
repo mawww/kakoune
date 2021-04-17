@@ -15,6 +15,7 @@ hook global WinSetOption filetype=fsharp %{
     require-module fsharp
 
     # indent on newline
+    hook window InsertChar \n -group fsharp-insert fsharp-insert-on-new-line
     hook window InsertChar \n -group fsharp-indent fsharp-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window fsharp-.+ }
@@ -124,10 +125,15 @@ add-highlighter shared/fsharp/code/ regex "\B(\(\))\B" 0:value
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden fsharp-insert-on-new-line %{
+    evaluate-commands -draft -itersel %{
+        # copy // comments prefix and following white spaces
+        try %{ execute-keys -draft k <a-x> s ^\h*//\h* <ret> y jgh P }
+    }
+}
+
 define-command -hidden fsharp-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
-        # copy '//' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*//\h* <ret> y jgh P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # cleanup trailing whitespaces from previous line

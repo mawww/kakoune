@@ -15,6 +15,7 @@ hook global WinSetOption filetype=cucumber %{
     require-module cucumber
 
     hook window ModeChange pop:insert:.* -group cucumber-trim-indent  cucumber-trim-indent
+    hook window InsertChar \n -group cucumber-insert cucumber-insert-on-new-line
     hook window InsertChar \n -group cucumber-indent cucumber-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window cucumber-.+ }
@@ -80,10 +81,15 @@ define-command -hidden cucumber-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden cucumber-indent-on-new-line %{
+define-command -hidden cucumber-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+    }
+}
+
+define-command -hidden cucumber-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line

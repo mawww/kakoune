@@ -18,6 +18,7 @@ hook global WinSetOption filetype=purescript %{
 
     set-option buffer extra_word_chars '_' "'"
     hook window ModeChange pop:insert:.* -group purescript-trim-indent  purescript-trim-indent
+    hook window InsertChar \n -group purescript-insert purescript-insert-on-new-line
     hook window InsertChar \n -group purescript-indent purescript-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window purescript-.+ }
@@ -96,10 +97,15 @@ define-command -hidden purescript-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden purescript-indent-on-new-line %{
+define-command -hidden purescript-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+    }
+}
+
+define-command -hidden purescript-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # align to first clause

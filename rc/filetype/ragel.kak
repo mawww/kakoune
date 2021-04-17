@@ -18,6 +18,7 @@ hook global WinSetOption filetype=ragel %{
 
     hook window ModeChange pop:insert:.* -group ragel-trim-indent  ragel-trim-indent
     hook window InsertChar .* -group ragel-indent ragel-indent-on-char
+    hook window InsertChar \n -group ragel-insert ragel-insert-on-new-line
     hook window InsertChar \n -group ragel-indent ragel-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window ragel-.+ }
@@ -60,10 +61,15 @@ define-command -hidden ragel-indent-on-char %<
     >
 >
 
-define-command -hidden ragel-indent-on-new-line %<
+define-command -hidden ragel-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
         # copy _#_ comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+    >
+>
+
+define-command -hidden ragel-indent-on-new-line %<
+    evaluate-commands -draft -itersel %<
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
