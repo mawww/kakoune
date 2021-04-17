@@ -108,8 +108,8 @@ add-highlighter shared/nim/code/ regex %{'(\\([rcnlftvabe\\"']|0*[12]?\d?\d|x[0-
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden nim-indent-on-new-line %{
-    eval -draft -itersel %{
+define-command -hidden nim-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
         # preserve previous line indent
