@@ -387,7 +387,7 @@ define-command -hidden c-family-insert-include-guards %{
     evaluate-commands %sh{
         case "${kak_opt_c_include_guard_style}" in
             ifdef)
-                echo 'execute-keys ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>'
+                echo 'execute-keys ggi<c-r>%<ret><esc>ggI/<esc>xs^.*/<ret>dxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>'
                 ;;
             pragma)
                 echo 'execute-keys ggi#pragma<space>once<esc>'
