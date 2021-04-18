@@ -393,7 +393,10 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
 
         buffer->flags() &= ~Buffer::Flags::NoHooks;
         if (parser.get_switch("readonly"))
+        {
             buffer->flags() |= Buffer::Flags::ReadOnly;
+            buffer->options()["readonly"].set(true);
+        }
     }
 
     Buffer* current_buffer = context.has_buffer() ? &context.buffer() : nullptr;
