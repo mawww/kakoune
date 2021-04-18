@@ -5,22 +5,25 @@ namespace Kakoune
 {
 
 void Scope::add_linked(SharedScope& scope, Context& context) {
-    if (contains(m_linked, &scope)) {
+    if (contains(m_linked, &scope))
         throw runtime_error("scope already linked");
-    }
+        
     m_linked.emplace_back(&scope);
     
     m_hooks.add_linked(scope.hooks());
+    m_keymaps.add_linked(scope.keymaps());
     
     m_hooks.run_hook(Hook::ScopeLinked, scope.get_name(), context);
 }
 
 void Scope::remove_linked(SharedScope& scope, Context& context) {
-    if (!contains(m_linked, &scope)) {
+    if (!contains(m_linked, &scope))
         throw runtime_error("scope not linked");
-    }
+        
     unordered_erase(m_linked, SafePtr<SharedScope>(&scope));
+    
     m_hooks.remove_linked(scope.hooks());
+    m_keymaps.remove_linked(scope.keymaps());
     
     m_hooks.run_hook(Hook::ScopeUnlinked, scope.get_name(), context);
 }
