@@ -657,7 +657,19 @@ Optional<Key> NCursesUI::get_next_key()
        return Key{utf8::codepoint(CharIterator{c}, Sentinel{})};
     };
 
-    auto parse_csi = [this, &convert]() -> Optional<Key> {
+    auto parse_mask = [](int mask) {
+        mask = std::max(mask - 1, 0);
+        Key::Modifiers mod = Key::Modifiers::None;
+        if (mask & 1)
+            mod |= Key::Modifiers::Shift;
+        if (mask & 2)
+            mod |= Key::Modifiers::Alt;
+        if (mask & 4)
+            mod |= Key::Modifiers::Control;
+        return mod;
+    };
+
+    auto parse_csi = [this, &convert, &parse_mask]() -> Optional<Key> {
         auto next_char = [] { return get_char().value_or((unsigned char)0xff); };
         int params[16] = {};
         auto c = next_char();
@@ -679,17 +691,6 @@ Optional<Key> NCursesUI::get_next_key()
         if (c != '$' and (c < 0x40 or c > 0x7e))
             return {};
 
-        auto parse_mask = [](int mask) {
-            Key::Modifiers mod = Key::Modifiers::None;
-            if (mask & 1)
-                mod |= Key::Modifiers::Shift;
-            if (mask & 2)
-                mod |= Key::Modifiers::Alt;
-            if (mask & 4)
-                mod |= Key::Modifiers::Control;
-            return mod;
-        };
-
         auto mouse_button = [this](Key::Modifiers mod, Key::MouseButton button, Codepoint coord, bool release) {
             auto mask = 1 << (int)button;
             if (not release)
@@ -710,7 +711,7 @@ Optional<Key> NCursesUI::get_next_key()
                     (Codepoint)((down ? 1 : -1) * m_wheel_scroll_amount)};
         };
 
-        auto masked_key = [&](Codepoint key) { return Key{parse_mask(std::max(params[1] - 1, 0)), key}; };
+        auto masked_key = [&](Codepoint key) { return Key{parse_mask(params[1]), key}; };
 
         switch (c)
         {
@@ -725,6 +726,7 @@ Optional<Key> NCursesUI::get_next_key()
         case 'B': return masked_key(Key::Down);
         case 'C': return masked_key(Key::Right);
         case 'D': return masked_key(Key::Left);
+        case 'E': return masked_key('5');        // Numeric keypad 5
         case 'F': return masked_key(Key::End);   // PC/xterm style
         case 'H': return masked_key(Key::Home);  // PC/xterm style
         case 'P': return masked_key(Key::F1);
@@ -791,19 +793,46 @@ Optional<Key> NCursesUI::get_next_key()
         return {};
     };
 
-    auto parse_ss3 = []() -> Optional<Key> {
-        switch (get_char().value_or((unsigned char)0xff))
+    auto parse_ss3 = [&parse_mask]() -> Optional<Key> {
+        int raw_mask = 0;
+        char code = '0';
+        do {
+            raw_mask = raw_mask * 10 + (code - '0');
+            code = get_char().value_or((unsigned char)0xff);
+        } while (code >= '0' and code <= '9');
+
+        switch (code)
         {
-        case 'A': return Key{Key::Up};
-        case 'B': return Key{Key::Down};
-        case 'C': return Key{Key::Right};
-        case 'D': return Key{Key::Left};
-        case 'F': return Key{Key::End};
-        case 'H': return Key{Key::Home};
-        case 'P': return Key{Key::F1};
-        case 'Q': return Key{Key::F2};
-        case 'R': return Key{Key::F3};
-        case 'S': return Key{Key::F4};
+        case ' ': return Key{parse_mask(raw_mask), ' '};
+        case 'A': return Key{parse_mask(raw_mask), Key::Up};
+        case 'B': return Key{parse_mask(raw_mask), Key::Down};
+        case 'C': return Key{parse_mask(raw_mask), Key::Right};
+        case 'D': return Key{parse_mask(raw_mask), Key::Left};
+        case 'F': return Key{parse_mask(raw_mask), Key::End};
+        case 'H': return Key{parse_mask(raw_mask), Key::Home};
+        case 'I': return Key{parse_mask(raw_mask), Key::Tab};
+        case 'M': return Key{parse_mask(raw_mask), Key::Return};
+        case 'P': return Key{parse_mask(raw_mask), Key::F1};
+        case 'Q': return Key{parse_mask(raw_mask), Key::F2};
+        case 'R': return Key{parse_mask(raw_mask), Key::F3};
+        case 'S': return Key{parse_mask(raw_mask), Key::F4};
+        case 'X': return Key{parse_mask(raw_mask), '='};
+        case 'j': return Key{parse_mask(raw_mask), '*'};
+        case 'k': return Key{parse_mask(raw_mask), '+'};
+        case 'l': return Key{parse_mask(raw_mask), ','};
+        case 'm': return Key{parse_mask(raw_mask), '-'};
+        case 'n': return Key{parse_mask(raw_mask), '.'};
+        case 'o': return Key{parse_mask(raw_mask), '/'};
+        case 'p': return Key{parse_mask(raw_mask), '0'};
+        case 'q': return Key{parse_mask(raw_mask), '1'};
+        case 'r': return Key{parse_mask(raw_mask), '2'};
+        case 's': return Key{parse_mask(raw_mask), '3'};
+        case 't': return Key{parse_mask(raw_mask), '4'};
+        case 'u': return Key{parse_mask(raw_mask), '5'};
+        case 'v': return Key{parse_mask(raw_mask), '6'};
+        case 'w': return Key{parse_mask(raw_mask), '7'};
+        case 'x': return Key{parse_mask(raw_mask), '8'};
+        case 'y': return Key{parse_mask(raw_mask), '9'};
         default: return {};
         }
     };
