@@ -190,14 +190,28 @@ const ParameterDesc single_param{ {}, ParameterDesc::Flags::None, 1, 1 };
 const ParameterDesc single_optional_param{ {}, ParameterDesc::Flags::None, 0, 1 };
 const ParameterDesc double_params{ {}, ParameterDesc::Flags::None, 2, 2 };
 
-static constexpr auto scopes = { "global", "buffer", "window" };
+static constexpr auto local_scopes = { "global", "buffer", "window" };
 
-static Completions complete_scope(const Context&, CompletionFlags,
-                                  const String& prefix, ByteCount cursor_pos)
+static Completions complete_local_scope(const Context&, CompletionFlags,
+                                        const String& prefix, ByteCount cursor_pos)
 {
-   return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
+    return { 0_byte, cursor_pos, complete(prefix, cursor_pos, local_scopes) };
 }
 
+static Completions complete_shared_scope(const Context&, CompletionFlags,
+                                         const String& prefix, ByteCount cursor_pos)
+{
+    return SharedScopeManager::instance().complete_scope(prefix, cursor_pos);
+}
+
+static Completions complete_scope(const Context& ctx, CompletionFlags flags,
+                                  const String& prefix, ByteCount cursor_pos)
+{
+    auto local = complete_local_scope(ctx, flags, prefix, cursor_pos);
+    auto shared = complete_shared_scope(ctx, flags, prefix, cursor_pos);
+    shared.candidates.insert(shared.candidates.end(), local.candidates.begin(), local.candidates.end());
+    return shared;
+}
 
 static Completions complete_command_name(const Context& context, CompletionFlags,
                                          const String& prefix, ByteCount cursor_pos)
@@ -311,7 +325,7 @@ private:
     Completer m_completer;
 };
 
-Scope* get_scope_ifp(StringView scope, const Context& context)
+Scope* get_local_scope_ifp(StringView scope, const Context& context)
 {
     if (prefix_match("global", scope))
         return &GlobalScope::instance();
@@ -322,6 +336,20 @@ Scope* get_scope_ifp(StringView scope, const Context& context)
     else if (prefix_match(scope, "buffer="))
         return &BufferManager::instance().get_buffer(scope.substr(7_byte));
     return nullptr;
+}
+
+Scope& get_local_scope(StringView scope, const Context& context)
+{
+    if (auto s = get_local_scope_ifp(scope, context))
+        return *s;
+    throw runtime_error(format("no such scope: '{}'", scope));
+}
+
+Scope* get_scope_ifp(StringView scope, const Context& context)
+{
+    if (auto s = get_local_scope_ifp(scope, context)) 
+        return s;
+    return SharedScopeManager::instance().get_scope_ifp(scope);
 }
 
 Scope& get_scope(StringView scope, const Context& context)
@@ -1092,7 +1120,7 @@ const CommandDesc remove_hook_cmd = {
     {
         if (token_to_complete == 0)
             return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, scopes) };
+                     complete(params[0], pos_in_token, local_scopes) };
         else if (token_to_complete == 1)
         {
             if (auto scope = get_scope_ifp(params[0], context))
@@ -1743,7 +1771,7 @@ static Completions map_key_completer(const Context& context, CompletionFlags fla
 {
     if (token_to_complete == 0)
         return { 0_byte, params[0].length(),
-                 complete(params[0], pos_in_token, scopes) };
+                 complete(params[0], pos_in_token, local_scopes) };
     if (token_to_complete == 1)
     {
         auto& user_modes = get_scope(params[0], context).keymaps().user_modes();
@@ -2646,6 +2674,63 @@ const CommandDesc require_module_cmd = {
     }
 };
 
+
+const CommandDesc declare_shared_scope_cmd = {
+    "declare-shared-scope",
+    nullptr,
+    "declare-shared-scope <name>: Declare a shared scope with <name>",
+    single_param,
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        SharedScopeManager::instance().register_scope(parser[0]);
+    }
+};
+
+const CommandDesc link_scope_cmd = {
+    "link-scope",
+    nullptr,
+    "link-scope <local-scope> <shared-scope>: link <shared scope> into <local-scope>",
+    double_params,
+    CommandFlags::None,
+    CommandHelper{},
+    make_completer(complete_local_scope, complete_shared_scope),
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        auto& local_scope = get_local_scope(parser[0], context);
+        auto& shared_scope = SharedScopeManager::instance().get_scope(parser[1]);
+        local_scope.add_linked(shared_scope, context);
+    }
+};
+
+const CommandDesc unlink_scope_cmd = {
+    "unlink-scope",
+    nullptr,
+    "unlink-scope <local-scope> <shared-scope>: unlink <shared scope> from <local-scope>",
+    double_params,
+    CommandFlags::None,
+    CommandHelper{},
+    [](const Context& context, CompletionFlags flags,
+       CommandParameters params, size_t token_to_complete,
+       ByteCount pos_in_token) -> Completions
+    {
+        if (token_to_complete == 0) {
+            return complete_local_scope(context, flags, params[0], pos_in_token);
+        } else if (token_to_complete == 1) {
+            auto& local_scope = get_local_scope(params[0], context);
+            return local_scope.complete_linked(params[1], pos_in_token);
+        }
+        return {};
+    },
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        auto& local_scope = get_local_scope(parser[0], context);
+        auto& shared_scope = SharedScopeManager::instance().get_scope(parser[1]);
+        local_scope.remove_linked(shared_scope, context);
+    }
+};
 }
 
 void register_commands()
@@ -2715,6 +2800,9 @@ void register_commands()
     register_command(enter_user_mode_cmd);
     register_command(provide_module_cmd);
     register_command(require_module_cmd);
+    register_command(declare_shared_scope_cmd);
+    register_command(link_scope_cmd);
+    register_command(unlink_scope_cmd);
 }
 
 }
