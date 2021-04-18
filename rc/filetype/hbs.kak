@@ -12,6 +12,7 @@ hook global WinSetOption filetype=hbs %{
     require-module hbs
 
     hook window ModeChange pop:insert:.* -group hbs-trim-indent hbs-trim-indent
+    hook window InsertChar \n -group hbs-insert hbs-insert-on-new-line
     hook window InsertChar \n -group hbs-indent hbs-indent-on-new-line
     hook window InsertChar .* -group hbs-indent hbs-indent-on-char
     hook window InsertChar '>' -group hbs-indent html-indent-on-greater-than
@@ -35,10 +36,10 @@ require-module html
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter shared/hbs regions
-add-highlighter shared/hbs/comment          region \{\{!-- --\}\} fill comment
-add-highlighter shared/hbs/comment_alt      region \{\{!   \}\}   fill comment
-add-highlighter shared/hbs/block-expression region \{\{[#/]   \}\}   regions
-add-highlighter shared/hbs/expression 		region \{\{    \}\}   regions
+add-highlighter shared/hbs/comment          region \{\{!--  --\}\} fill comment
+add-highlighter shared/hbs/comment_alt      region \{\{!      \}\} fill comment
+add-highlighter shared/hbs/block-expression region \{\{[#/]   \}\} regions
+add-highlighter shared/hbs/expression       region \{\{       \}\} regions
 
 define-command -hidden add-mutual-highlighters -params 1 %~
     add-highlighter "shared/hbs/%arg{1}/code" default-region group
@@ -75,10 +76,15 @@ define-command -hidden hbs-indent-on-char %[
     ]
 ]
 
-define-command -hidden hbs-indent-on-new-line %{
+define-command -hidden hbs-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '/' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y j p }
+    }
+}
+
+define-command -hidden hbs-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line

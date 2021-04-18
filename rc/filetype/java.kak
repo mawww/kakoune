@@ -10,6 +10,7 @@ hook global WinSetOption filetype=java %{
 
     # cleanup trailing whitespaces when exiting insert mode
     hook window ModeChange pop:insert:.* -group java-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group java-insert java-insert-on-new-line
     hook window InsertChar \n -group java-indent java-indent-on-new-line
     hook window InsertChar \{ -group java-indent java-indent-on-opening-curly-brace
     hook window InsertChar \} -group java-indent java-indent-on-closing-curly-brace
@@ -40,6 +41,11 @@ add-highlighter shared/java/code/ regex "(?<!\w)@\w+\b" 0:meta
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden java-insert-on-new-line %[
+        # copy // comments prefix and following white spaces
+        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc> }
+]
+
 define-command -hidden java-indent-on-new-line %~
     evaluate-commands -draft -itersel %=
         # preserve previous line indent
@@ -50,8 +56,6 @@ define-command -hidden java-indent-on-new-line %~
         try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
         # align to opening paren of previous line
         try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
-        # copy // comments prefix
-        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,} <ret> y<c-o>P<esc> }
         # indent after a switch's case/default statements
         try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
         # indent after keywords

@@ -15,6 +15,7 @@ hook global WinSetOption filetype=cabal %[
     require-module cabal
 
     hook window ModeChange pop:insert:.* -group cabal-trim-indent  cabal-trim-indent
+    hook window InsertChar \n -group cabal-insert cabal-insert-on-new-line
     hook window InsertChar \n -group cabal-indent cabal-indent-on-new-line
     hook window InsertChar \{ -group cabal-indent cabal-indent-on-opening-curly-brace
     hook window InsertChar \} -group cabal-indent cabal-indent-on-closing-curly-brace
@@ -50,10 +51,15 @@ define-command -hidden cabal-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden cabal-indent-on-new-line %[
+define-command -hidden cabal-insert-on-new-line %[
     evaluate-commands -draft -itersel %[
         # copy '--' comment prefix and following white spaces
         try %[ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P ]
+    ]
+]
+
+define-command -hidden cabal-indent-on-new-line %[
+    evaluate-commands -draft -itersel %[
         # preserve previous line indent
         try %[ execute-keys -draft <semicolon> K <a-&> ]
         # filter previous line

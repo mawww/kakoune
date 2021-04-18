@@ -15,6 +15,7 @@ hook global WinSetOption filetype=elm %{
     require-module elm
 
     hook window ModeChange pop:insert:.* -group elm-trim-indent  elm-trim-indent
+    hook window InsertChar \n -group elm-insert elm-insert-on-new-line
     hook window InsertChar \n -group elm-indent elm-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elm-.+ }
@@ -61,10 +62,15 @@ define-command -hidden elm-indent-after "
  execute-keys -draft <semicolon> k x <a-k> ^\\h*if|[=(]$|\\b(case\\h+[\\w']+\\h+of|let|in)$|(\\{\\h+\\w+|\\w+\\h+->)$ <ret> j <a-gt>
 "
 
-define-command -hidden elm-indent-on-new-line %{
+define-command -hidden elm-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+    }
+}
+
+define-command -hidden elm-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # align to first clause

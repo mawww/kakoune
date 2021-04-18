@@ -17,6 +17,7 @@ hook global WinSetOption filetype=ninja %{
     set-option window static_words %opt{ninja_static_words}
 
     hook window ModeChange pop:insert:.* -group ninja-trim-indent ninja-trim-indent
+    hook window InsertChar \n -group ninja-insert ninja-insert-on-new-line
     hook window InsertChar \n -group ninja-indent ninja-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
     hook window ModeChange pop:insert:.* -group ninja-trim-indent %{ try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d } }
@@ -84,10 +85,15 @@ define-command -hidden ninja-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden ninja-indent-on-new-line %{
+define-command -hidden ninja-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+    }
+}
+
+define-command -hidden ninja-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line

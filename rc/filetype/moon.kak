@@ -16,6 +16,7 @@ hook global WinSetOption filetype=moon %{
 
     hook window ModeChange pop:insert:.* -group moon-trim-indent  moon-trim-indent
     hook window InsertChar .* -group moon-indent moon-indent-on-char
+    hook window InsertChar \n -group moon-insert moon-insert-on-new-line
     hook window InsertChar \n -group moon-indent moon-indent-on-new-line
 
     alias window alt moon-alternative-file
@@ -96,10 +97,15 @@ define-command -hidden moon-indent-on-char %{
     }
 }
 
-define-command -hidden moon-indent-on-new-line %{
+define-command -hidden moon-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^ \h * \K -- \h * <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+    }
+}
+
+define-command -hidden moon-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line

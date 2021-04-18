@@ -18,6 +18,7 @@ hook global WinSetOption filetype=dart %{
 
     # cleanup trailing whitespaces when exiting insert mode
     hook window ModeChange pop:insert:.* -group dart-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group dart-insert dart-insert-on-new-line
     hook window InsertChar \n -group dart-indent dart-indent-on-new-line
     hook window InsertChar \{ -group dart-indent dart-indent-on-opening-curly-brace
     hook window InsertChar \} -group dart-indent dart-indent-on-closing-curly-brace
@@ -81,6 +82,13 @@ evaluate-commands %sh{
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden dart-insert-on-new-line %~
+    evaluate-commands -draft -itersel %=
+        # copy // comments prefix and following white spaces
+        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc> }
+    =
+~
+
 define-command -hidden dart-indent-on-new-line %~
     evaluate-commands -draft -itersel %=
         # preserve previous line indent
@@ -91,8 +99,6 @@ define-command -hidden dart-indent-on-new-line %~
         try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
         # align to opening paren of previous line
         try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
-        # copy // comments prefix
-        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,} <ret> y<c-o>P<esc> }
         # indent after a switch's case/default statements
         try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
         # indent after if|else|while|for

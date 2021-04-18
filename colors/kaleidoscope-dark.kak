@@ -70,7 +70,7 @@ evaluate-commands %sh{
     dark_grey="rgb:555555"
 
     # NOTE: Do not use any color that hasn't been defined above (no hardcoding)
-    cat <<- EOF
+    cat <<EOF
 
     # For Code
     set-face global keyword ${vibrant_blue}

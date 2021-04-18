@@ -17,6 +17,7 @@ hook global WinSetOption filetype=(javascript|typescript) %{
 
     hook window ModeChange pop:insert:.* -group "%val{hook_param_capture_1}-trim-indent" javascript-trim-indent
     hook window InsertChar .* -group "%val{hook_param_capture_1}-indent" javascript-indent-on-char
+    hook window InsertChar \n -group "%val{hook_param_capture_1}-insert" javascript-insert-on-new-line
     hook window InsertChar \n -group "%val{hook_param_capture_1}-indent" javascript-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* "
@@ -52,10 +53,15 @@ define-command -hidden javascript-indent-on-char %<
     >
 >
 
-define-command -hidden javascript-indent-on-new-line %<
+define-command -hidden javascript-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
         # copy // comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K/{2,}\h* <ret> y gh j P }
+    >
+>
+
+define-command -hidden javascript-indent-on-new-line %<
+    evaluate-commands -draft -itersel %<
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line

@@ -13,6 +13,7 @@ hook global WinSetOption filetype=php %{
 
     hook window ModeChange pop:insert:.* -group php-trim-indent  php-trim-indent
     hook window InsertChar .* -group php-indent php-indent-on-char
+    hook window InsertChar \n -group php-insert php-insert-on-new-line
     hook window InsertChar \n -group php-indent php-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window php-.+ }
@@ -81,20 +82,25 @@ define-command -hidden php-indent-on-char %<
     >
 >
 
-define-command -hidden php-indent-on-new-line %<
+define-command -hidden php-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
         # copy // comments or docblock * prefix and following white spaces
-        try %{ execute-keys -draft s [^/] <ret> k <a-x> s ^\h*\K(?://|[*][^/])\h* <ret> y gh j P }
+        try %{ execute-keys -draft s [^/] <ret> k <a-x> s ^\h*\K(?://|[*][^/])\h* <ret> y gh j P
+        # append " * " on lines starting a multiline /** or /* comment
+        try %{ execute-keys -draft k <a-x> s ^\h*/[*][* ]? <ret> j gi i <space>*<space> }
+    >
+>
+
+define-command -hidden php-indent-on-new-line %<
+    evaluate-commands -draft -itersel %<
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : php-trim-indent <ret> }
         # indent after lines beginning / ending with opener token
         try %_ execute-keys -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
-        # append " * " on lines starting a multiline /** or /* comment
-    	try %{ execute-keys -draft k <a-x> s ^\h*/[*][* ]? <ret> j gi i <space>*<space> }
-    	# deindent closer token(s) when after cursor
-    	try %_ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> _
+        # deindent closer token(s) when after cursor
+        try %_ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> _
     >
 >
 

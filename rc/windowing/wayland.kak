@@ -47,7 +47,7 @@ define-command wayland-focus -params ..1 -client-completion -docstring '
 wayland-focus [<kakoune_client>]: focus a given client''s window
 If no client is passed, then the current client is used' \
 %{
-	fail There is no way to focus another window on Wayland
+    fail There is no way to focus another window on Wayland
 }
 
 alias global focus wayland-focus

@@ -15,6 +15,7 @@ hook global WinSetOption filetype=haml %{
     require-module haml
 
     hook window ModeChange pop:insert:.* -group haml-trim-indent  haml-trim-indent
+    hook window InsertChar \n -group haml-insert haml-insert-on-new-line
     hook window InsertChar \n -group haml-indent haml-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window haml-.+ }
@@ -56,10 +57,15 @@ define-command -hidden haml-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden haml-indent-on-new-line %{
+define-command -hidden haml-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '/' comment prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y gh j P }
+    }
+}
+
+define-command -hidden haml-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line

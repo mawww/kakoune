@@ -1,22 +1,22 @@
 # Solarized Dark
 
 evaluate-commands %sh{
-	base03='rgb:002b36'
-	base02='rgb:073642'
-	base01='rgb:586e75'
-	base00='rgb:657b83'
-	base0='rgb:839496'
-	base1='rgb:93a1a1'
-	base2='rgb:eee8d5'
-	base3='rgb:fdf6e3'
-	yellow='rgb:b58900'
-	orange='rgb:cb4b16'
-	red='rgb:dc322f'
-	magenta='rgb:d33682'
-	violet='rgb:6c71c4'
-	blue='rgb:268bd2'
-	cyan='rgb:2aa198'
-	green='rgb:859900'
+        base03='rgb:002b36'
+        base02='rgb:073642'
+        base01='rgb:586e75'
+        base00='rgb:657b83'
+        base0='rgb:839496'
+        base1='rgb:93a1a1'
+        base2='rgb:eee8d5'
+        base3='rgb:fdf6e3'
+        yellow='rgb:b58900'
+        orange='rgb:cb4b16'
+        red='rgb:dc322f'
+        magenta='rgb:d33682'
+        violet='rgb:6c71c4'
+        blue='rgb:268bd2'
+        cyan='rgb:2aa198'
+        green='rgb:859900'
 
    echo "
         # code

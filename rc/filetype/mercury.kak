@@ -97,7 +97,7 @@ evaluate-commands %sh{
 define-command -hidden mercury-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '%' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\%\h* <ret> y jgh P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\%\h* <ret> y gh j P }
     }
 }
 

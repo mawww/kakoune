@@ -19,6 +19,7 @@ hook global WinSetOption filetype=elixir %{
     require-module elixir
 
     hook window ModeChange pop:insert:.* -group elixir-trim-indent  elixir-trim-indent
+    hook window InsertChar \n -group elixir-insert elixir-insert-on-new-line
     hook window InsertChar \n -group elixir-indent elixir-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elixir-.+ }
@@ -91,15 +92,20 @@ define-command -hidden elixir-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden elixir-indent-on-new-line %{
+define-command -hidden elixir-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+    }
+}
+
+define-command -hidden elixir-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # indent after line ending with:
-	# try %{ execute-keys -draft k x <a-k> (\bdo|\belse|->)$ <ret> & }
-	# filter previous line
+        # try %{ execute-keys -draft k x <a-k> (\bdo|\belse|->)$ <ret> & }
+        # filter previous line
         try %{ execute-keys -draft k : elixir-trim-indent <ret> }
         # indent after lines ending with do or ->
         try %{ execute-keys -draft <semicolon> k x <a-k> ^.+(\bdo|->)$ <ret> j <a-gt> }

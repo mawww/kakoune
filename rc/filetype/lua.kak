@@ -112,7 +112,7 @@ define-command -hidden lua-indent-on-new-line %{
 define-command -hidden lua-insert-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy -- comment prefix and following white spaces
-        try %{ execute-keys -draft k<a-x>s^\h*\K--\h*<ret>yghjP }
+        try %{ execute-keys -draft k<a-x>s^\h*\K--\h*<ret> y gh j P }
         # wisely add end structure
         evaluate-commands -save-regs x %[
             try %{ execute-keys -draft k<a-x>s^\h+<ret>"xy } catch %{ reg x '' } # Save previous line indent in register x

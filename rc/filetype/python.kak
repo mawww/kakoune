@@ -149,6 +149,7 @@ define-command -hidden python-insert-on-new-line %{
         try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
     }
 }
+
 define-command -hidden python-indent-on-new-line %<
     evaluate-commands -draft -itersel %<
         # preserve previous line indent
