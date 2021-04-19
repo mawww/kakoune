@@ -5,9 +5,9 @@
 Commands can be registered to be executed when certain events arise. To
 register a hook use the following command:
 
-------------------------------------------------------------------------------
-hook [-group <group> | -once] <scope> <hook_name> <filtering_regex> <commands>
-------------------------------------------------------------------------------
+------------------------------------------------------------------
+hook [<switches>] <scope> <hook_name> <filtering_regex> <commands>
+------------------------------------------------------------------
 
 *scope* can be one of *global*, *buffer* or *window* (See
 <<scopes#,`:doc scopes`>>).
@@ -21,17 +21,17 @@ commands to be executed.
 *command* is a string containing the commands to execute when the hook
 is called.
 
-If *group* is given, make this hook part of the named group. Groups are used
-for removing hooks with the following command:
+For *switches*, see <<commands#hooks,`:doc commands hooks`>>.
+
+If a hook is registered with the `-group` switch, it can later be removed with
+the `remove-hooks` command:
 
 ----------------------------
 remove-hooks <scope> <group>
 ----------------------------
 
-A call to the command above will remove every hook in *scope* whose group
-matches the given *group* regex.
-
-If `-once` is given, the hook is automatically removed after running.
+This command removes all hooks originally registered in *scope* whose
+`-group` switch matches the regex *group*.
 
 For example to automatically use line numbering with .cc files, use the
 following command:
