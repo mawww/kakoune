@@ -1450,7 +1450,7 @@ const CommandDesc debug_cmd = {
             write_to_debug_buffer(format("  Total: {}", total));
             #if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 33))
             write_to_debug_buffer(format("  Malloced: {}", mallinfo2().uordblks));
-            #else if defined(__GLIBC__) || defined(__CYGWIN__)
+            #elif defined(__GLIBC__) || defined(__CYGWIN__)
             write_to_debug_buffer(format("  Malloced: {}", mallinfo().uordblks));
             #endif
         }
