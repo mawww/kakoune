@@ -209,13 +209,26 @@ of the file onto the filesystem
 
 == Hooks
 
-*hook* [-group <group>] <scope> <hook_name> <filtering_regex> <command>::
+*hook* [<switches>] <scope> <hook_name> <filtering_regex> <command>::
     execute *command* whenever a *hook_name* is triggered in *scope*
     (See <<hooks#,`:doc hooks`>> and <<scopes#,`:doc scopes`>>)
 
+    *-group <groupname>*:::
+        Add this hook to the *groupname* group, so it can be removed by the
+        `remove-hooks` command (below)
+        or disabled with the `disabled_hooks` option
+        (see <<options#builtin-options,`:doc options builtin-options`>>).
+
+    *-once*:::
+        This hook will be automatically removed after it has been executed.
+
+    *-always*:::
+        This hook will run even while hooks are disabled.
+        See <<hooks#disabling-hooks,`:doc hooks disabling-hooks`>>.
+
 *remove-hooks* <scope> <group>::
     *alias* rmhooks +
-    remove every hooks in *scope* that are part of the given *group*
+    remove every hook in *scope* whose group matches the regex *group*
     (See <<hooks#,`:doc hooks`>> and <<scopes#,`:doc scopes`>>)
 
 *trigger-user-hook* <param>::
