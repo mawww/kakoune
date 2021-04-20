@@ -1,7 +1,7 @@
 test do
-    
+    foo
 end
 
 e.map do |element|
-    
+    bar
 end
