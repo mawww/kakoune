@@ -22,7 +22,11 @@ define-command -hidden -params 2.. tmux-terminal-impl %{
         shift
         # ideally we should escape single ';' to stop tmux from interpreting it as a new command
         # but that's probably too rare to care
-        TMUX=$tmux tmux $tmux_args env TMPDIR="$TMPDIR" "$@" < /dev/null > /dev/null 2>&1 &
+        if [ -n "$TMPDIR" ]; then
+            TMUX=$tmux tmux $tmux_args env TMPDIR="$TMPDIR" "$@" < /dev/null > /dev/null 2>&1 &
+        else
+            TMUX=$tmux tmux $tmux_args "$@" < /dev/null > /dev/null 2>&1 &
+        fi
     }
 }
 
