@@ -132,7 +132,7 @@ define-command -params 1 -hidden doc-render %{
     map buffer normal <ret> ': doc-follow-link<ret>'
 }
 
-define-command -params 1..2 \
+define-command -params 0..2 \
     -shell-script-candidates %{
         if [ "$kak_token_to_complete" -eq 0 ]; then
             find -L \
@@ -165,12 +165,16 @@ define-command -params 1..2 \
         See `:doc doc` for details.
     } %{
     evaluate-commands %sh{
+        topic="doc"
+        if [ $# -ge 1 ]; then
+            topic="$1"
+        fi
         page=$(
             find -L \
                 "${kak_config}/autoload/" \
                 "${kak_runtime}/doc/" \
                 "${kak_runtime}/rc/" \
-                -type f -name "$1.asciidoc" |
+                -type f -name "$topic.asciidoc" |
                 head -1
         )
         if [ -f "${page}" ]; then
