@@ -138,6 +138,11 @@ be used:
 *<F1>*, *<F2>*, ...*<F12>*::
     Function keys.
 
+*<semicolon>*, *<percent>*::
+    The *;* and *%* characters, these keys allow reducing the amount of
+    backslash escaping in scripts (for example, `exec \%` becomes `exec
+    <percent>`)
+
 NOTE: Although Kakoune allows many key combinations to be mapped, not every
 possible combination can be triggered. For example, due to limitations in
 the way terminals handle control characters, mappings like *<c-s-a>* are
