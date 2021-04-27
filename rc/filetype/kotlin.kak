@@ -82,9 +82,9 @@ add-highlighter shared/kotlin/code/kotlin_target regex @(delegate|field|file|get
 add-highlighter shared/kotlin/code/kotlin_soft   regex \b(by|catch|constructor|dynamic|finally|get|import|init|set|where)\b 1:keyword
 add-highlighter shared/kotlin/code/kotlin_hard   regex \b(as|as\?|break|class|continue|do|else|false|for|fun|if|in|!in|interface|is|!is|null|object|package|return|super|this|throw|true|try|typealias|val|var|when|while)\b 1:keyword
 
-add-highlighter shared/kotlin/code/kotlin_modifier regex \b(actual|abstract|annotation|companion|const|crossinline|data|enum|expect|external|final|infix|inline|inner|internal|lateinit|noinline|open|operator|out|override|private|protected|public|reified|sealed|suspend|tailrec|vararg)\b(?=[\s\n]) 1:attribute
+add-highlighter shared/kotlin/code/modifier regex \b(actual|abstract|annotation|companion|const|crossinline|data|enum|expect|external|final|infix|inline|inner|internal|lateinit|noinline|open|operator|out|override|private|protected|public|reified|sealed|suspend|tailrec|vararg)\b(?=[\s\n]) 1:attribute
 
-add-highlighter shared/kotlin/code/kotlin_type regex \b(Annotation|Any|Boolean|BooleanArray|Byte|ByteArray|Char|Character|CharArray|CharSequence|Class|ClassLoader|Cloneable|Comparable|Compiler|DeprecationLevel|Double|DoubleArray|Enum|Float|FloatArray|Function|Int|IntArray|Integer|Lazy|LazyThreadSafetyMode|Long|LongArray|Math|Nothing|Number|Object|Package|Pair|Process|Runnable|Runtime|SecurityManager|Short|ShortArray|StackTraceElement|StrictMath|String|StringBuffer|System|Thread|ThreadGroup|ThreadLocal|Triple|Unit|Void)\b(?=[^<]) 1:type
+add-highlighter shared/kotlin/code/type regex \b(Annotation|Any|Boolean|BooleanArray|Byte|ByteArray|Char|Character|CharArray|CharSequence|Class|ClassLoader|Cloneable|Comparable|Compiler|DeprecationLevel|Double|DoubleArray|Enum|Float|FloatArray|Function|Int|IntArray|Integer|Lazy|LazyThreadSafetyMode|Long|LongArray|Math|Nothing|Number|Object|Package|Pair|Process|Runnable|Runtime|SecurityManager|Short|ShortArray|StackTraceElement|StrictMath|String|StringBuffer|System|Thread|ThreadGroup|ThreadLocal|Triple|Unit|Void)\b(?=[^<]) 1:type
 
 # Kdoc --------------------------------------------------------------------------------------------- #
 # ‾‾‾‾
@@ -164,7 +164,7 @@ evaluate-commands %sh{
 
   # ------------------------------------------------------------------------------------------------ #
 
-  printf %s\\n "add-highlighter shared/kotlin/code/kotlin_errors_exceptions regex \b($(join "${kotlin_errors_exceptions}" '|'))\b 0:type"
+  printf %s\\n "add-highlighter shared/kotlin/code/errors_exceptions regex \b($(join "${kotlin_errors_exceptions}" '|'))\b 0:type"
 }
 §
 # ------------------------------------------------------------------------------------------------- #
