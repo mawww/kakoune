@@ -807,7 +807,8 @@ public:
             m_callback(line, PromptEvent::Validate, context());
             return;
         }
-        else if (key == Key::Escape or key == ctrl('c'))
+        else if (key == Key::Escape or key == ctrl('c') or
+                 ((key == Key::Backspace or key == ctrl('h')) and line.empty()))
         {
             history_push(line);
             context().print_status(DisplayLine{});
