@@ -477,8 +477,11 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         if (m_padding_fill)
         {
             ColumnCount column_index = 0;
-            while (column_index++ < dim.column)
+            while (column_index < dim.column)
+            {
                 m_window.draw(m_palette, m_padding_char, face);
+                column_index += m_padding_char.length();
+            }
         }
         else
             m_window.draw(m_palette, m_padding_char, face);
@@ -1372,8 +1375,10 @@ void NCursesUI::set_ui_options(const Options& options)
     {
         auto it = options.find("ncurses_padding_char"_sv);
         if (it == options.end())
+            // Defaults to tilde.
             m_padding_char = DisplayAtom("~");
-        else if (it->value.length() < 1)
+        else if (it->value.column_length() < 1)
+            // Do not allow empty string, use space instead.
             m_padding_char = DisplayAtom(" ");
         else
             m_padding_char = DisplayAtom(it->value);
