@@ -60,27 +60,27 @@ add-highlighter shared/kotlin/comment region /\* \*/ fill comment
 add-highlighter shared/kotlin/inline_documentation region /// $ fill documentation
 add-highlighter shared/kotlin/line_comment region // $ fill comment
 
-add-highlighter shared/kotlin/code/kotlin_annotations regex @\w+\b|\b\w+@(?=\{) 0:meta
-add-highlighter shared/kotlin/code/kotlin_identifiers regex \b(field|it)\b 1:variable
-add-highlighter shared/kotlin/code/kotlin_fields      regex \.([A-Za-z_][\w]*)\s*?\. 1:type
+add-highlighter shared/kotlin/code/annotations regex @\w+\b|\b\w+@(?=\{) 0:meta
+add-highlighter shared/kotlin/code/identifiers regex \b(field|it)\b 1:variable
+add-highlighter shared/kotlin/code/fields      regex \.([A-Za-z_][\w]*)\s*?\. 1:type
 
-# As at 15 March 2021, kotlin_method see: https://regex101.com/r/Mhy4HG/1
-add-highlighter shared/kotlin/code/kotlin_methods     regex ::([A-Za-z_][\w]*)|\.([A-Za-z_][\w]*)\s*?[\(\{]|\.([A-Za-z_][\w]*)[\s\)\}>](?=[^\(\{]) 1:function 2:function 3:function
+# As at 15 March 2021, method see: https://regex101.com/r/Mhy4HG/1
+add-highlighter shared/kotlin/code/methods     regex ::([A-Za-z_][\w]*)|\.([A-Za-z_][\w]*)\s*?[\(\{]|\.([A-Za-z_][\w]*)[\s\)\}>](?=[^\(\{]) 1:function 2:function 3:function
 
 # Test suite functions: fun `this is a valid character function test`()
-add-highlighter shared/kotlin/code/kotlin_fun_tests   regex ^\h*?fun\s*?`(.[^<>\[\]\\\.]+?)`\h*?(?=\() 1:default+uF
-add-highlighter shared/kotlin/code/kotlin_delimiters  regex (\(|\)|\[|\]|\{|\}|\;|') 1:operator
-add-highlighter shared/kotlin/code/kotlin_operators   regex (\+|-|\*|&|=|\\|\?|%|\|-|!|\||->|\.|,|<|>|:|\^|/) 1:operator
-add-highlighter shared/kotlin/code/kotlin_numbers     regex \b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)([LlFf])?\b 0:value
+add-highlighter shared/kotlin/code/fun_tests   regex ^\h*?fun\s*?`(.[^<>\[\]\\\.]+?)`\h*?(?=\() 1:default+uF
+add-highlighter shared/kotlin/code/delimiters  regex (\(|\)|\[|\]|\{|\}|\;|') 1:operator
+add-highlighter shared/kotlin/code/operators   regex (\+|-|\*|&|=|\\|\?|%|\|-|!|\||->|\.|,|<|>|:|\^|/) 1:operator
+add-highlighter shared/kotlin/code/numbers     regex \b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)([LlFf])?\b 0:value
 
 # Generics need improvement, as after a colon will match as a constant only.
 # val program: IOU = XXXX; val cat: DOG = XXXX. matches IOU or DOG as a
 # CONSTANT when it could be generics. See: https://regex101.com/r/VPO5LE/7
-add-highlighter shared/kotlin/code/kotlin_constants_and_generics regex ((?<==\h)\([A-Z][A-Z0-9_]+\b(?=[<:\;])|\b(?<!<)[A-Z][A-Z0-9_]+(?=[^>\)]))\b|\b((?<!=\s)(?<!\.)[A-Z]+\d*?(?![\(\;:])(?=[,\)>\s]))\b 1:meta 2:type
+add-highlighter shared/kotlin/code/constants_and_generics regex ((?<==\h)\([A-Z][A-Z0-9_]+\b(?=[<:\;])|\b(?<!<)[A-Z][A-Z0-9_]+(?=[^>\)]))\b|\b((?<!=\s)(?<!\.)[A-Z]+\d*?(?![\(\;:])(?=[,\)>\s]))\b 1:meta 2:type
 
-add-highlighter shared/kotlin/code/kotlin_target regex @(delegate|field|file|get|param|property|receiver|set|setparam)(?=:) 0:meta
-add-highlighter shared/kotlin/code/kotlin_soft   regex \b(by|catch|constructor|dynamic|finally|get|import|init|set|where)\b 1:keyword
-add-highlighter shared/kotlin/code/kotlin_hard   regex \b(as|as\?|break|class|continue|do|else|false|for|fun|if|in|!in|interface|is|!is|null|object|package|return|super|this|throw|true|try|typealias|val|var|when|while)\b 1:keyword
+add-highlighter shared/kotlin/code/target regex @(delegate|field|file|get|param|property|receiver|set|setparam)(?=:) 0:meta
+add-highlighter shared/kotlin/code/soft   regex \b(by|catch|constructor|dynamic|finally|get|import|init|set|where)\b 1:keyword
+add-highlighter shared/kotlin/code/hard   regex \b(as|as\?|break|class|continue|do|else|false|for|fun|if|in|!in|interface|is|!is|null|object|package|return|super|this|throw|true|try|typealias|val|var|when|while)\b 1:keyword
 
 add-highlighter shared/kotlin/code/modifier regex \b(actual|abstract|annotation|companion|const|crossinline|data|enum|expect|external|final|infix|inline|inner|internal|lateinit|noinline|open|operator|out|override|private|protected|public|reified|sealed|suspend|tailrec|vararg)\b(?=[\s\n]) 1:attribute
 
