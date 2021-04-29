@@ -94,6 +94,7 @@ evaluate-commands %sh[
     types="
         bit bit_vector
         boolean
+        character
         file_open_state file_origin_kind
         integer natural positive
         line line_vector
