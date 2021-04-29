@@ -67,28 +67,38 @@ add-highlighter shared/rust/macro_attributes/ default-region fill meta
 add-highlighter shared/rust/macro_attributes/string region %{(?<!')"} (?<!\\)(\\\\)*" fill string
 add-highlighter shared/rust/macro_attributes/raw_string region -match-capture %{(?<!')r(#*)"} %{"(#*)} fill string
 
-add-highlighter shared/rust/code/long_quoted          regex "('\w+)[^']" 1:meta
-add-highlighter shared/rust/code/field_or_parameter   regex (_?\w+)(?::)(?!:) 1:variable
-add-highlighter shared/rust/code/namespace            regex [a-zA-Z](\w+)?(\h+)?(?=::) 0:module
-add-highlighter shared/rust/code/field                regex ((?<!\.\.)(?<=\.))_?[a-zA-Z]\w*\b 0:meta
-add-highlighter shared/rust/code/function_call        regex _?[a-zA-Z]\w*\s*(?=\() 0:function
-add-highlighter shared/rust/code/user_defined_type    regex \b[A-Z]\w*\b 0:type
-add-highlighter shared/rust/code/function_declaration regex (?:fn\h+)(_?\w+)(?:<[^>]+?>)?\( 1:function
-add-highlighter shared/rust/code/variable_declaration regex (?:let\h+(?:mut\h+)?)(_?\w+) 1:variable
-add-highlighter shared/rust/code/macro                regex \b[A-z0-9_]+! 0:meta
-# the number literals syntax is defined here:
-# https://doc.rust-lang.org/reference/tokens.html#numbers
-add-highlighter shared/rust/code/values regex \b(?:self|true|false|[0-9][_0-9]*(?:\.[0-9][_0-9]*|(?:\.[0-9][_0-9]*)?E[\+\-][_0-9]+)(?:f(?:32|64))?|(?:0x[_0-9a-fA-F]+|0o[_0-7]+|0b[_01]+|[0-9][_0-9]*)(?:(?:i|u|f)(?:8|16|32|64|128|size))?)\b 0:value
-add-highlighter shared/rust/code/attributes regex \b(?:trait|struct|enum|union|type|mut|ref|static|const|default)\b 0:attribute
-# the language keywords are defined here, but many of them are reserved and unused yet:
-# https://doc.rust-lang.org/reference/keywords.html
-add-highlighter shared/rust/code/keywords             regex \b(?:let|as|fn|return|match|if|else|loop|for|in|while|break|continue|move|box|where|impl|dyn|pub|unsafe|async|await|mod|crate|use|extern)\b 0:keyword
-add-highlighter shared/rust/code/char_character       regex "'([^\\]|\\(.|x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]{1,6}\}))'" 0:green
-# TODO highlight error for unicode or single escape byte character
-add-highlighter shared/rust/code/byte_character       regex b'([\x00-\x5B\x5D-\x7F]|\\(.|x[0-9a-fA-F]{2}))' 0:yellow
-add-highlighter shared/rust/code/builtin_types        regex \b(?:u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64|bool|char|str|Self)\b 0:type
-add-highlighter shared/rust/code/return               regex \breturn\b 0:meta
+add-highlighter shared/rust/code/operators_arithmetic   regex (\+|-|/|\*|=|\^|&|\||!|>|<|%)=? 0:operator
+add-highlighter shared/rust/code/operators_as           regex \bas\b 0:operator
+add-highlighter shared/rust/code/ref_ref                regex (&\h+[&~@*])[^)=\s\t\r\n] 1:type
+add-highlighter shared/rust/code/ref                    regex ([&~@*])[^)=\s\t\r\n] 1:type
+add-highlighter shared/rust/code/operators_logic        regex &&|\|\| 0:operator
 
+add-highlighter shared/rust/code/lifetime_or_loop_label regex ('([a-zA-Z]\w+|_\w+))\b 1:meta
+add-highlighter shared/rust/code/namespace              regex \b[a-zA-Z](\w+)?(\h+)?(?=::) 0:module
+add-highlighter shared/rust/code/mod_path_sep           regex :: 0:meta
+add-highlighter shared/rust/code/question_mark          regex \? 0:meta
+# the language keywords are defined here, but many of   them are reserved and unused yet:
+# https://doc.rust-lang.org/reference/keywords.html
+add-highlighter shared/rust/code/function_call          regex _?[a-zA-Z]\w*\s*(?=\() 0:function
+add-highlighter shared/rust/code/generic_function_call  regex _?[a-zA-Z]\w*\s*(?=::<) 0:function
+add-highlighter shared/rust/code/function_declaration   regex (?:fn\h+)(_?\w+)(?:<[^>]+?>)?\( 1:function
+add-highlighter shared/rust/code/keywords               regex \b(?:let|as|fn|return|match|if|else|loop|for|in|while|break|continue|box|where|impl|dyn|unsafe|async|await|mod|crate|use|extern|trait|struct|enum|union|type|default)\b 0:keyword
+add-highlighter shared/rust/code/storage                regex \b(move|mut|ref|static|const)\b 0:type
+# after let can be an arbitrary pattern match
+add-highlighter shared/rust/code/macro                  regex \b\w+! 0:meta
+# the number literals syntax is defined here:
+# https://doc.rust-lang.org/reference/tokens.html#numb  ers
+add-highlighter shared/rust/code/values                 regex \b(?:self|true|false|[0-9][_0-9]*(?:\.[0-9][_0-9]*|(?:\.[0-9][_0-9]*)?E[\+\-][_0-9]+)(?:f(?:32|64))?|(?:0x[_0-9a-fA-F]+|0o[_0-7]+|0b[_01]+|[0-9][_0-9]*)(?:(?:i|u|f)(?:8|16|32|64|128|size))?)\b 0:value
+add-highlighter shared/rust/code/char_character         regex "'([^\\]|\\(.|x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]{1,6}\}))'" 0:green
+# TODO highlight error for unicode or single escape by  te character
+add-highlighter shared/rust/code/byte_character         regex b'([\x00-\x5B\x5D-\x7F]|\\(.|x[0-9a-fA-F]{2}))' 0:yellow
+add-highlighter shared/rust/code/builtin_types          regex \b(?:u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64|bool|char|str|Self)\b 0:type
+add-highlighter shared/rust/code/return                 regex \breturn\b 0:meta
+
+add-highlighter shared/rust/code/enum                   regex \b(Option|Result)\b 0:type
+add-highlighter shared/rust/code/enum_variant           regex \b(Some|None|Ok|Err)\b 0:value
+add-highlighter shared/rust/code/std_traits             regex \b(Copy|Send|Sized|Sync|Drop|Fn|FnMut|FnOnce|Box|ToOwned|Clone|PartialEq|PartialOrd|Eq|Ord|AsRef|AsMut|Into|From|Default|Iterator|Extend|IntoIterator|DoubleEndedIterator|ExactSizeIterator|SliceConcatExt|String|ToString|Vec)\b 0:type
+ 
 # Commands
 # ‾‾‾‾‾‾‾‾
 

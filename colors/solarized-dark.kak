@@ -21,13 +21,13 @@ evaluate-commands %sh{
    echo "
         # code
         face global value              ${cyan}
-        face global type               ${red}
+        face global type               ${yellow}
         face global variable           ${blue}
         face global module             ${cyan}
         face global function           ${blue}
         face global string             ${cyan}
         face global keyword            ${green}
-        face global operator           ${yellow}
+        face global operator           ${green}
         face global attribute          ${violet}
         face global comment            ${base01}
         face global documentation      comment
